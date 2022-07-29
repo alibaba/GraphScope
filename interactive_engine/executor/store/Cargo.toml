@@ -3,6 +3,7 @@
 members = [
     "global_query",
     "groot",
+    "exp_store"
 ]
 
 [profile.release]

@@ -23,12 +23,6 @@ extern crate walkdir;
 #[macro_use]
 extern crate log;
 
-use clap::{App, Arg};
-
-use timely::dataflow::channels::pact::Exchange as PactExchange;
-use timely::dataflow::operators::{Exchange, Input, Inspect, Operator, Probe};
-use timely::dataflow::{InputHandle, ProbeHandle};
-
 use std::cell::RefCell;
 use std::fmt::Debug;
 use std::fs::{read_dir, File};
@@ -36,17 +30,18 @@ use std::io::prelude::*;
 use std::io::BufReader;
 use std::path::PathBuf;
 use std::rc::Rc;
-
-use serde::{Deserialize, Serialize};
-
-use graph_store::config::{DIR_GRAPH_SCHEMA, FILE_SCHEMA};
-use graph_store::ldbc::{
-    get_partition_names, is_hidden_file, is_vertex_file, LDBCParser, SPLITTER,
-};
-use graph_store::parser::{parse_properties, EdgeMeta, ParserTrait, VertexMeta};
-use graph_store::prelude::*;
 use std::str::FromStr;
 use std::sync::Arc;
+
+use clap::{App, Arg};
+use graph_store::config::{DIR_GRAPH_SCHEMA, FILE_SCHEMA};
+use graph_store::ldbc::{get_partition_names, is_hidden_file, is_vertex_file, LDBCParser, SPLITTER};
+use graph_store::parser::{parse_properties, EdgeMeta, ParserTrait, VertexMeta};
+use graph_store::prelude::*;
+use serde::{Deserialize, Serialize};
+use timely::dataflow::channels::pact::Exchange as PactExchange;
+use timely::dataflow::operators::{Exchange, Input, Inspect, Operator, Probe};
+use timely::dataflow::{InputHandle, ProbeHandle};
 
 pub static DEFAULT_BATCH: usize = 100_000;
 
@@ -74,10 +69,18 @@ macro_rules! run_dataflow {
                 .root_dir($graph_dir)
                 .number_vertex_labels($num_vlabels)
                 .partition(index)
-                .schema_file(&$graph_dir.join(DIR_GRAPH_SCHEMA).join(FILE_SCHEMA));
+                .schema_file(
+                    &$graph_dir
+                        .join(DIR_GRAPH_SCHEMA)
+                        .join(FILE_SCHEMA),
+                );
 
             let mut graph: MutableGraphDB<DefaultId, InternalId, $ntable, $etable> = config.new();
-            let schema = Arc::new(config.schema().expect("Read graph schema error!"));
+            let schema = Arc::new(
+                config
+                    .schema()
+                    .expect("Read graph schema error!"),
+            );
 
             let mut vertices_data: Vec<(DefaultId, Label, Row)> = Vec::with_capacity(DEFAULT_BATCH);
             let mut edges_data: Vec<(DefaultId, DefaultId, LabelId, Row)> =
@@ -86,12 +89,10 @@ macro_rules! run_dataflow {
             vertex_stream
                 .binary_notify(
                     &edge_stream,
-                    PactExchange::new(|vertex: &(VertexMeta<DefaultId>, String)| {
-                        vertex.0.global_id as u64
+                    PactExchange::new(|vertex: &(VertexMeta<DefaultId>, String)| vertex.0.global_id as u64),
+                    PactExchange::new(|edge: &(DefaultId, Direction, EdgeMeta<DefaultId>, String)| {
+                        edge.0 as u64
                     }),
-                    PactExchange::new(
-                        |edge: &(DefaultId, Direction, EdgeMeta<DefaultId>, String)| edge.0 as u64,
-                    ),
                     "Partition Graph Data",
                     None,
                     move |input1, input2, output, notificator| {
@@ -321,7 +322,10 @@ fn main() {
     let mut num_machines = 1;
     if matches.is_present("machines") {
         timely_args.push("-n".to_string());
-        let machines = matches.value_of("machines").unwrap().to_string();
+        let machines = matches
+            .value_of("machines")
+            .unwrap()
+            .to_string();
         num_machines = machines.parse().unwrap();
 
         timely_args.push(machines);
@@ -329,12 +333,22 @@ fn main() {
 
     if matches.is_present("processor") {
         timely_args.push("-p".to_string());
-        timely_args.push(matches.value_of("processor").unwrap().to_string());
+        timely_args.push(
+            matches
+                .value_of("processor")
+                .unwrap()
+                .to_string(),
+        );
     }
 
     if matches.is_present("host_file") {
         timely_args.push("-h".to_string());
-        timely_args.push(matches.value_of("host_file").unwrap().to_string());
+        timely_args.push(
+            matches
+                .value_of("host_file")
+                .unwrap()
+                .to_string(),
+        );
     }
 
     let ldbc_part_prefix = "part-";
@@ -342,19 +356,40 @@ fn main() {
     // The ldbc data will be stored according to each type of vertex/edge,
     // each vertex/edge has a directory, and inside the directory it maintains the original
     // partition of the data in the name of "part_00000, part_00001"
-    let ldbc_data_dir = matches.value_of("ldbc_dir").map(PathBuf::from).unwrap();
-    let graph_dir = matches.value_of("graph_db_dir").map(PathBuf::from).unwrap();
-    let raw_partitions: usize = matches.value_of("raw_partitions").unwrap().parse().unwrap();
+    let ldbc_data_dir = matches
+        .value_of("ldbc_dir")
+        .map(PathBuf::from)
+        .unwrap();
+    let graph_dir = matches
+        .value_of("graph_db_dir")
+        .map(PathBuf::from)
+        .unwrap();
+    let raw_partitions: usize = matches
+        .value_of("raw_partitions")
+        .unwrap()
+        .parse()
+        .unwrap();
     let is_whole_data = matches.is_present("is_whole_data");
     let is_only_out_edges = matches.is_present("is_only_out_edges");
-    let ppt_store_opt: PropertyStorageOpt =
-        matches.value_of("ppt_store_opt").unwrap().parse().unwrap();
-    let num_vlabels: usize = matches.value_of("num_vertex_labels").unwrap().parse().unwrap();
+    let ppt_store_opt: PropertyStorageOpt = matches
+        .value_of("ppt_store_opt")
+        .unwrap()
+        .parse()
+        .unwrap();
+    let num_vlabels: usize = matches
+        .value_of("num_vertex_labels")
+        .unwrap()
+        .parse()
+        .unwrap();
 
     let config = GraphDBConfig::default()
         .root_dir(&graph_dir)
         .number_vertex_labels(num_vlabels)
-        .schema_file(&graph_dir.join(DIR_GRAPH_SCHEMA).join(FILE_SCHEMA));
+        .schema_file(
+            &graph_dir
+                .join(DIR_GRAPH_SCHEMA)
+                .join(FILE_SCHEMA),
+        );
 
     let mut vertex_dirs = Vec::new();
     let mut edge_dirs = Vec::new();
@@ -405,8 +440,7 @@ fn main() {
             let num_readers = if is_whole_data { peers / num_machines } else { peers };
 
             // Get the partitions that are meant to be read by current worker
-            let partitions =
-                get_partition_names(ldbc_part_prefix, index, num_readers, raw_partitions);
+            let partitions = get_partition_names(ldbc_part_prefix, index, num_readers, raw_partitions);
 
             // Send vertex_data
             for (vertex_type, vertex_dir) in &vertex_dirs {
@@ -421,10 +455,7 @@ fn main() {
 
                 let mut count = 0;
                 for partition in &partitions {
-                    info!(
-                        "Worker {} process vertex: {:?}, partition {}",
-                        index, vertex_dir, partition
-                    );
+                    info!("Worker {} process vertex: {:?}, partition {}", index, vertex_dir, partition);
                     let _file = File::open(vertex_dir.join(&partition));
                     if _file.is_err() {
                         // Log and skip processing current file

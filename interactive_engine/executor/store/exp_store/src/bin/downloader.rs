@@ -18,15 +18,15 @@ extern crate timely;
 #[macro_use]
 extern crate log;
 
-use clap::{App, Arg};
-
-use graph_store::common::*;
-use graph_store::ldbc::{get_partition_names, is_hidden_file};
-use graph_store::utils::*;
 use std::fs::create_dir_all;
 use std::path::PathBuf;
 use std::process::Command;
 use std::sync::Mutex;
+
+use clap::{App, Arg};
+use graph_store::common::*;
+use graph_store::ldbc::{get_partition_names, is_hidden_file};
+use graph_store::utils::*;
 
 fn main() {
     env_logger::init();
@@ -86,26 +86,49 @@ fn main() {
 
     if matches.is_present("machines") {
         timely_args.push("-n".to_string());
-        let machines = matches.value_of("machines").unwrap().to_string();
+        let machines = matches
+            .value_of("machines")
+            .unwrap()
+            .to_string();
         timely_args.push(machines);
     }
 
     if matches.is_present("processor") {
         timely_args.push("-p".to_string());
-        timely_args.push(matches.value_of("processor").unwrap().to_string());
+        timely_args.push(
+            matches
+                .value_of("processor")
+                .unwrap()
+                .to_string(),
+        );
     }
 
     if matches.is_present("host_file") {
         timely_args.push("-h".to_string());
-        timely_args.push(matches.value_of("host_file").unwrap().to_string());
+        timely_args.push(
+            matches
+                .value_of("host_file")
+                .unwrap()
+                .to_string(),
+        );
     }
 
     let ldbc_part_prefix = "part-";
     let hdfs_bin = format!("{}/bin/hdfs", matches.value_of("hadoop_home").unwrap());
-    let hdfs_dir = matches.value_of("hdfs_dir").unwrap().to_string();
-    let local_dir = matches.value_of("local_dir").map(PathBuf::from).unwrap();
+    let hdfs_dir = matches
+        .value_of("hdfs_dir")
+        .unwrap()
+        .to_string();
+    let local_dir = matches
+        .value_of("local_dir")
+        .map(PathBuf::from)
+        .unwrap();
 
-    let raw_partitions: usize = matches.value_of("raw_partitions").unwrap().parse().unwrap();
+    let raw_partitions: usize = matches
+        .value_of("raw_partitions")
+        .unwrap()
+        .parse()
+        .unwrap();
     let lock = Mutex::new(0_u32);
 
     timely::execute_from_args(timely_args.into_iter(), move |root| {
@@ -131,7 +154,10 @@ fn main() {
                 if let Some(index) = item.rfind("hdfs") {
                     let hdfs_path = item.chars().skip(index).collect::<String>();
                     if let Some(index2) = hdfs_path.rfind("/") {
-                        let fname = hdfs_path.chars().skip(index2 + 1).collect::<String>();
+                        let fname = hdfs_path
+                            .chars()
+                            .skip(index2 + 1)
+                            .collect::<String>();
                         let local_path = local_dir.join(&fname);
                         {
                             let _hold_lock = lock.lock();
@@ -141,12 +167,8 @@ fn main() {
                         }
 
                         if !is_hidden_file(&fname) {
-                            let partitions = get_partition_names(
-                                ldbc_part_prefix,
-                                worker,
-                                peers,
-                                raw_partitions,
-                            );
+                            let partitions =
+                                get_partition_names(ldbc_part_prefix, worker, peers, raw_partitions);
                             for partition in partitions {
                                 let local_file = local_path.join(&partition);
 
@@ -162,10 +184,7 @@ fn main() {
                                         worker, local_file, status
                                     );
                                 } else {
-                                    info!(
-                                        "Worker {}: {:?} already exists. Skipped!",
-                                        worker, local_file,
-                                    )
+                                    info!("Worker {}: {:?} already exists. Skipped!", worker, local_file,)
                                 }
                             }
                         }

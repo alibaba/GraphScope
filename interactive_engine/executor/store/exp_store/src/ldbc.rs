@@ -15,16 +15,6 @@
 
 // Contains some dummy codes for LDBC dataset
 
-use super::graph_db::*;
-use super::graph_db_impl::LargeGraphDB;
-use crate::common::{DefaultId, InternalId, LabelId, INVALID_LABEL_ID};
-use crate::config::{GraphDBConfig, JsonConf};
-use crate::error::{GDBError, GDBResult};
-use crate::graph_db_impl::MutableGraphDB;
-use crate::parser::{parse_properties, EdgeMeta, ParserTrait, VertexMeta};
-use crate::schema::{LDBCGraphSchema, Schema, ID_FIELD, LABEL_FIELD};
-use csv::{Reader, ReaderBuilder};
-use petgraph::graph::IndexType;
 use std::fmt::Debug;
 use std::fmt::Formatter;
 use std::fmt::Result as FmtResult;
@@ -37,6 +27,18 @@ use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Instant;
 
+use csv::{Reader, ReaderBuilder};
+use petgraph::graph::IndexType;
+
+use super::graph_db::*;
+use super::graph_db_impl::LargeGraphDB;
+use crate::common::{DefaultId, InternalId, LabelId, INVALID_LABEL_ID};
+use crate::config::{GraphDBConfig, JsonConf};
+use crate::error::{GDBError, GDBResult};
+use crate::graph_db_impl::MutableGraphDB;
+use crate::parser::{parse_properties, EdgeMeta, ParserTrait, VertexMeta};
+use crate::schema::{LDBCGraphSchema, Schema, ID_FIELD, LABEL_FIELD};
+
 /// A ldbc raw file ends with "_0_0.csv"
 pub static LDBC_SUFFIX: &'static str = "_0_0.csv";
 
@@ -46,9 +48,7 @@ pub static SPLITTER: &'static str = "|";
 pub static PARTITION_PREFIX: &'static str = "part-";
 
 /// Given a worker of ID `worker`, identify the files it will processed
-pub fn get_partition_names(
-    prefix: &str, worker: usize, peers: usize, num_parts: usize,
-) -> Vec<String> {
+pub fn get_partition_names(prefix: &str, worker: usize, peers: usize, num_parts: usize) -> Vec<String> {
     let shares = (num_parts as f32 / peers as f32).ceil() as usize;
     let mut parts = Vec::with_capacity(shares);
     for i in 0..shares {
@@ -79,8 +79,12 @@ pub enum LDBCParser<G = DefaultId> {
 
 impl<G> LDBCParser<G> {
     pub fn vertex_parser(vertex_type_id: LabelId, schema: Arc<dyn Schema>) -> GDBResult<Self> {
-        let header = schema.get_vertex_schema(vertex_type_id).ok_or(GDBError::InvalidTypeError)?;
-        let id_field = header.get(ID_FIELD).ok_or(GDBError::FieldNotExistError)?;
+        let header = schema
+            .get_vertex_schema(vertex_type_id)
+            .ok_or(GDBError::InvalidTypeError)?;
+        let id_field = header
+            .get(ID_FIELD)
+            .ok_or(GDBError::FieldNotExistError)?;
         let label_field = header.get(LABEL_FIELD);
 
         Ok(LDBCParser::Vertex(LDBCVertexParser {
@@ -139,8 +143,7 @@ pub struct LDBCVertexParser<G = DefaultId> {
 /// In `LDBCVertexParser`, a vertex's global id is identified by:
 ///     `label_id << LABEL_SHIFT_BITS | ldbc_id`,
 /// where label_id and ldbc_id are in the vertex's ldbc raw data
-pub const LABEL_SHIFT_BITS: usize =
-    8 * (std::mem::size_of::<DefaultId>() - std::mem::size_of::<LabelId>());
+pub const LABEL_SHIFT_BITS: usize = 8 * (std::mem::size_of::<DefaultId>() - std::mem::size_of::<LabelId>());
 
 impl<G: IndexType> LDBCVertexParser<G> {
     pub fn to_global_id(ldbc_id: usize, label_id: LabelId) -> G {
@@ -278,8 +281,7 @@ impl<G: IndexType + Eq + FromStr + Send + Sync, I: IndexType + Send + Sync> Grap
         let mut num_vertices = 0_usize;
         let graph_db = &mut self.graph_builder;
         let schema = self.graph_schema.clone();
-        let parser =
-            LDBCParser::<G>::vertex_parser(vertex_type, schema).expect("Get vertex parser error!");
+        let parser = LDBCParser::<G>::vertex_parser(vertex_type, schema).expect("Get vertex parser error!");
         let timer = Instant::now();
         let mut start;
         let mut end;
@@ -353,9 +355,8 @@ impl<G: IndexType + Eq + FromStr + Send + Sync, I: IndexType + Send + Sync> Grap
         let mut num_edges = 0_usize;
         let graph_db = &mut self.graph_builder;
         let schema = self.graph_schema.clone();
-        let parser =
-            LDBCParser::<G>::edge_parser(src_vertex_type, dst_vertex_type, edge_type, schema)
-                .expect("Get edge parser error!");
+        let parser = LDBCParser::<G>::edge_parser(src_vertex_type, dst_vertex_type, edge_type, schema)
+            .expect("Get edge parser error!");
         let timer = Instant::now();
         let mut start;
         let mut end;
@@ -367,10 +368,9 @@ impl<G: IndexType + Eq + FromStr + Send + Sync, I: IndexType + Send + Sync> Grap
                 let record_iter_cloned = record_iter.clone();
 
                 if let Ok(edge_meta) = parser.parse_edge_meta(record_iter) {
-                    if let Ok(properties) = parse_properties(
-                        record_iter_cloned,
-                        self.graph_schema.get_edge_header(edge_type),
-                    ) {
+                    if let Ok(properties) =
+                        parse_properties(record_iter_cloned, self.graph_schema.get_edge_header(edge_type))
+                    {
                         end = timer.elapsed().as_secs_f64();
                         self.perf_metrics.edge_parse_time_s += end - start;
                         start = end;
@@ -380,16 +380,10 @@ impl<G: IndexType + Eq + FromStr + Send + Sync, I: IndexType + Send + Sync> Grap
                             || keep_vertex(edge_meta.dst_global_id, self.peers, self.work_id)
                         {
                             if !graph_db.is_vertex_local(edge_meta.src_global_id) {
-                                graph_db.add_corner_vertex(
-                                    edge_meta.src_global_id,
-                                    edge_meta.src_label_id,
-                                );
+                                graph_db.add_corner_vertex(edge_meta.src_global_id, edge_meta.src_label_id);
                             }
                             if !graph_db.is_vertex_local(edge_meta.dst_global_id) {
-                                graph_db.add_corner_vertex(
-                                    edge_meta.dst_global_id,
-                                    edge_meta.dst_label_id,
-                                );
+                                graph_db.add_corner_vertex(edge_meta.dst_global_id, edge_meta.dst_label_id);
                             }
                             if properties.len() > 0 {
                                 if graph_db
@@ -452,7 +446,10 @@ impl<G: IndexType + Eq + FromStr + Send + Sync, I: IndexType + Send + Sync> Grap
                 .has_headers(false)
                 .from_reader(BufReader::new(File::open(&vertex_file).unwrap()));
 
-            if let Some(vertex_type_id) = self.graph_schema.get_vertex_label_id(&vertex_type) {
+            if let Some(vertex_type_id) = self
+                .graph_schema
+                .get_vertex_label_id(&vertex_type)
+            {
                 info!("Process vertex type & file {:?} {:?}", vertex_type, vertex_file);
                 self.load_vertices_to_db(vertex_type_id, rdr);
             } else {
@@ -461,7 +458,10 @@ impl<G: IndexType + Eq + FromStr + Send + Sync, I: IndexType + Send + Sync> Grap
         }
 
         for (edge_type, edge_file) in edge_files {
-            if let Some(label_tuple) = self.graph_schema.get_edge_label_tuple(&edge_type) {
+            if let Some(label_tuple) = self
+                .graph_schema
+                .get_edge_label_tuple(&edge_type)
+            {
                 info!("Process edge type & file {} {:?}", edge_type, edge_file);
                 let rdr = ReaderBuilder::new()
                     .delimiter(self.delim)
@@ -490,16 +490,15 @@ impl<G: IndexType + Eq + FromStr + Send + Sync, I: IndexType + Send + Sync> Grap
 
 impl<G: FromStr + Send + Sync + IndexType, I: Send + Sync + IndexType> GraphLoader<G, I> {
     pub fn new<D: AsRef<Path>>(
-        raw_data_dir: D, graph_data_dir: D, schema_file: D, number_vertex_labels: usize,
-        work_id: usize, peers: usize,
+        raw_data_dir: D, graph_data_dir: D, schema_file: D, number_vertex_labels: usize, work_id: usize,
+        peers: usize,
     ) -> GraphLoader<G, I> {
         let config = GraphDBConfig::default()
             .root_dir(graph_data_dir)
             .number_vertex_labels(number_vertex_labels)
             .partition(work_id);
 
-        let schema =
-            LDBCGraphSchema::from_json_file(schema_file).expect("Read graph schema error!");
+        let schema = LDBCGraphSchema::from_json_file(schema_file).expect("Read graph schema error!");
 
         Self {
             raw_data_dir: raw_data_dir.as_ref().to_path_buf(),
@@ -533,8 +532,11 @@ impl<G: FromStr + Send + Sync + IndexType, I: Send + Sync + IndexType> GraphLoad
 }
 
 fn get_fname_from_path(path: &PathBuf) -> GDBResult<&str> {
-    let fname =
-        path.file_name().ok_or(GDBError::UnknownError)?.to_str().ok_or(GDBError::UnknownError)?;
+    let fname = path
+        .file_name()
+        .ok_or(GDBError::UnknownError)?
+        .to_str()
+        .ok_or(GDBError::UnknownError)?;
 
     Ok(fname)
 }
@@ -611,13 +613,15 @@ impl Debug for PerfMetrices {
 
 #[cfg(test)]
 mod test {
+    use std::collections::HashMap;
+
+    use itertools::Itertools;
+
     use super::*;
     use crate::common::Label;
     use crate::config::JsonConf;
     use crate::parser::DataType;
     use crate::table::{ItemType, Row};
-    use itertools::Itertools;
-    use std::collections::HashMap;
 
     static CHINA_ID: DefaultId = 1;
     static BEIJING_ID: DefaultId = 446;
@@ -631,17 +635,29 @@ mod test {
         let expected_results: Vec<&str> = record.split('|').collect();
 
         let mut index = 0;
-        for (name, dt) in graph.get_schema().get_vertex_header(vertex.get_label()[0]).unwrap() {
+        for (name, dt) in graph
+            .get_schema()
+            .get_vertex_header(vertex.get_label()[0])
+            .unwrap()
+        {
             // does not store LABEL as properties
             match dt {
                 DataType::String => {
                     assert_eq!(
-                        vertex.get_property(name).unwrap().as_str().unwrap(),
+                        vertex
+                            .get_property(name)
+                            .unwrap()
+                            .as_str()
+                            .unwrap(),
                         expected_results[index]
                     )
                 }
                 _ => assert_eq!(
-                    vertex.get_property(name).unwrap().as_u64().unwrap(),
+                    vertex
+                        .get_property(name)
+                        .unwrap()
+                        .as_u64()
+                        .unwrap(),
                     expected_results[index].parse::<u64>().unwrap()
                 ),
             }
@@ -680,11 +696,7 @@ mod test {
         assert!(properties.is_ok());
         assert_eq!(
             properties.unwrap(),
-            Row::from(vec![
-                object!(0),
-                object!("Kam_Air"),
-                object!("http://dbpedia.org/resource/Kam_Air")
-            ])
+            Row::from(vec![object!(0), object!("Kam_Air"), object!("http://dbpedia.org/resource/Kam_Air")])
         );
 
         // Test parsing a place record from LDBC
@@ -709,11 +721,7 @@ mod test {
         // Not label field will be skipped in the properties
         assert_eq!(
             properties.unwrap(),
-            Row::from(vec![
-                object!(0),
-                object!("India"),
-                object!("http://dbpedia.org/resource/India"),
-            ])
+            Row::from(vec![object!(0), object!("India"), object!("http://dbpedia.org/resource/India"),])
         );
 
         // Test edge parser
@@ -776,7 +784,10 @@ mod test {
             check_properties(&graphdb, &vertices[index], records[index]);
         }
 
-        let all_properties = graphdb.get_vertex(CHINA_ID).unwrap().clone_all_properties();
+        let all_properties = graphdb
+            .get_vertex(CHINA_ID)
+            .unwrap()
+            .clone_all_properties();
 
         let expected_all_properties: HashMap<String, ItemType> = vec![
             ("id".to_string(), object!(1)),
@@ -797,12 +808,7 @@ mod test {
 
         assert_eq!(
             in_vertices,
-            vec![
-                (BEIJING_ID, [0, 9]),
-                (SHANGHAI_ID, [0, 9]),
-                (PDD_ID, [5, 11]),
-                (TSINGHUA_ID, [5, 12])
-            ],
+            vec![(BEIJING_ID, [0, 9]), (SHANGHAI_ID, [0, 9]), (PDD_ID, [5, 11]), (TSINGHUA_ID, [5, 12])],
         );
 
         let in_vertices: Vec<(DefaultId, Label)> = graphdb
@@ -883,10 +889,7 @@ mod test {
             .sorted()
             .collect();
 
-        assert_eq!(
-            vertices_place,
-            vec![(CHINA_ID, [0, 8]), (BEIJING_ID, [0, 9]), (SHANGHAI_ID, [0, 9]),],
-        );
+        assert_eq!(vertices_place, vec![(CHINA_ID, [0, 8]), (BEIJING_ID, [0, 9]), (SHANGHAI_ID, [0, 9]),],);
 
         let vertices_city: Vec<(DefaultId, Label)> = graphdb
             .get_all_vertices(Some(&vec![9]))
