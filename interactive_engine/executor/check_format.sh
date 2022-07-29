@@ -14,6 +14,11 @@
 # limitations under the License.
 
 CURRENT=$(pwd)
+if ! rustup toolchain list | grep -q nightly; then
+  echo 'Installing nightly toolchain...'
+  rustup toolchain install nightly
+  rustup component add rustfmt --toolchain nightly-x86_64-unknown-linux-gnu
+fi
 cd ${CURRENT}/assembly/
 cargo +nightly fmt -- --check
 cd ${CURRENT}/common/dyn_type/
