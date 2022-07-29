@@ -81,6 +81,20 @@ jobs:
         source ${HOME}/.bashrc
         cd ${GITHUB_WORKSPACE}/interactive_engine/executor/ir/compiler && make test
 
+    - name: CommonType Unit Test
+      run: |
+        source ${HOME}/.bashrc
+        cd ${GITHUB_WORKSPACE}/interactive_engine/executor/common/dyn_type && cargo test
+
+    - name: Store Unit Test
+        run: |
+          source ${HOME}/.bashrc
+          cd ${GITHUB_WORKSPACE}/interactive_engine/executor/store/exp_store && cargo test
+        # TODO: fix ut in groot
+        # cd ${GITHUB_WORKSPACE}/interactive_engine/executor/store/groot && cargo test
+        # TODO: add ut in global_query
+        # cd ${GITHUB_WORKSPACE}/interactive_engine/executor/store/global_query && cargo test
+
     - name: Ir Integration Test on Experimental Store
       run: |
         source ${HOME}/.bashrc
