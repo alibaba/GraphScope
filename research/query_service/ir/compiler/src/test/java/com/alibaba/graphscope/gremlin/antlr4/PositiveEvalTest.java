@@ -903,7 +903,7 @@ public class PositiveEvalTest {
         Assert.assertEquals(
                 g.V().as("a").select("a").by(__.out(__.range(1, 2)).endV().count()),
                 eval("g.V().as(\"a\").select(\"a\").by(out(\"1..2\").endV().count())"));
-                eval("g.V().has(\"name\", TextP.notContaining(\"marko\"))");
+        eval("g.V().has(\"name\", TextP.notContaining(\"marko\"))");
     }
 
     @Test
