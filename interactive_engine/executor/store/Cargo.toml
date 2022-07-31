@@ -25,6 +25,9 @@ rocksdb = { version = "0.18.0", features = ["snappy", "lz4", "zstd", "zlib"], de
 
 maxgraph-common = { path = "../../rust-common" }
 
+[dev-dependencies]
+rand = "0.7.3"
+
 [build-dependencies]
 protoc-grpcio = "3.0"
 
