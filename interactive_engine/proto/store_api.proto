@@ -18,7 +18,6 @@ syntax = "proto3";
 option java_package = "com.alibaba.maxgraph.proto";
 
 package tinkerpop;
-import "gremlin_query.proto";
 import "sdk/message.proto";
 
 // The store service definition.

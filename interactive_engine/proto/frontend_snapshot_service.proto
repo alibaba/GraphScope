@@ -15,7 +15,6 @@
  */
 syntax = "proto3";
 
-import "sdk/common.proto";
 import "sdk/model.proto";
 
 option java_package = "com.alibaba.maxgraph.proto.groot";
