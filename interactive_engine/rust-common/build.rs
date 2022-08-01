@@ -45,7 +45,7 @@ fn generate_rust_protos() {
     let mut files = vec![];
     visit_dirs(Path::new(proto_root), &mut |e| {
         let p = e.path().to_str().unwrap().to_owned();
-        if p.ends_with(".proto") && !p.contains("biz_cognitive_graph") {
+        if p.ends_with(".proto") {
             files.push(p);
         }
     });
