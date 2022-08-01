@@ -1,0 +1,24 @@
+[package]
+name = "gaia_runtime"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+log = "0.4"
+log4rs = "0.8.0"
+serde = "1.0.72"
+serde_derive = "1.0.72"
+serde_json = "1.0.3"
+structopt = "0.2"
+lru_time_cache = "0.8.0"
+dotproperties = "0.1.0"
+tokio = { version = "1.0", features = ["macros", "sync"] }
+
+global_query = { path = "../../store/global_query" , features = ["with_v6d"] }
+pegasus = { path = "../../engine/pegasus/pegasus", package = "pegasus" }
+pegasus_network = { path = "../../engine/pegasus/network" }
+pegasus_server = { path = "../../engine/pegasus/server" }
+runtime_integration =  { path = "../../ir/integrated", features = ["with_v6d"] }
+
