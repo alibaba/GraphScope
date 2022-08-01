@@ -87,7 +87,7 @@ class DefaultPropertyWorker {
 
   template <class... Args>
   void Query(Args&&... args) {
-    double t = GetCurrentTime();
+    double t = grape::GetCurrentTime();
 
     auto& graph = context_->fragment();
 
@@ -106,14 +106,14 @@ class DefaultPropertyWorker {
     messages_.FinishARound();
 
     if (comm_spec_.worker_id() == grape::kCoordinatorRank) {
-      VLOG(1) << "[Coordinator]: Finished PEval, time: " << GetCurrentTime() - t
-              << " sec";
+      VLOG(1) << "[Coordinator]: Finished PEval, time: "
+              << grape::GetCurrentTime() - t << " sec";
     }
 
     int step = 1;
 
     while (!messages_.ToTerminate()) {
-      t = GetCurrentTime();
+      t = grape::GetCurrentTime();
       round++;
       messages_.StartARound();
 
@@ -122,8 +122,8 @@ class DefaultPropertyWorker {
       messages_.FinishARound();
 
       if (comm_spec_.worker_id() == grape::kCoordinatorRank) {
-        VLOG(1) << "[Coordinator]: Finished IncEval - " << step << ", time: "
-                << GetCurrentTime() - t << " sec";
+        VLOG(1) << "[Coordinator]: Finished IncEval - " << step
+                << ", time: " << grape::GetCurrentTime() - t << " sec";
       }
       ++step;
     }
