@@ -36,7 +36,7 @@ env:
   GSS_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store
 
 jobs:
-  groot-gremlin-test:
+  gremlin-test:
     # Require the host is able to run docker without sudo and
     # can `ssh localhost` without password, which may need to
     # be configured manually when a new self-hosted runner is added.
@@ -97,7 +97,7 @@ jobs:
         path: interactive_engine/distribution/target/maxgraph.tar.gz
         retention-days: 5
 
-  groot-helm-test:
+  helm-test:
     runs-on: [self-hosted, "47.242.9.60"]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     needs: [gremlin-test]
