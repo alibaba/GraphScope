@@ -19,7 +19,7 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::sync::Arc;
 
-use maxgraph_common::proto::schema::*;
+use crate::db::proto::schema::*;
 use protobuf::Message;
 
 use super::data_type::DataType;

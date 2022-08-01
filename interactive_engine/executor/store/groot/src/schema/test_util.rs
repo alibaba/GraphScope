@@ -16,7 +16,7 @@
 #![cfg(test)]
 use std::sync::Arc;
 
-use maxgraph_common::proto::schema::*;
+use crate::db::proto::schema::*;
 
 use super::data_type::*;
 use super::prop_def::*;

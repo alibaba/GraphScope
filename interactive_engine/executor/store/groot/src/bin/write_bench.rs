@@ -6,7 +6,7 @@ use std::sync::atomic::{AtomicI64, AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
-use maxgraph_common::util::{fs, Timer};
+use self::db::util::{fs, Timer};
 use maxgraph_store::db::api::multi_version_graph::MultiVersionGraph;
 use maxgraph_store::db::api::{GraphConfigBuilder, TypeDefBuilder, Value, ValueType};
 use maxgraph_store::db::graph::store::GraphStore;

@@ -17,7 +17,7 @@ use std::cell::UnsafeCell;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
-use maxgraph_common::proto as protos;
+use crate::db::proto as protos;
 
 use super::prop_def::*;
 use super::relation::Relation;
