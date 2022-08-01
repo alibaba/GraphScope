@@ -14,28 +14,11 @@
 //! limitations under the License.
 
 #![allow(bare_trait_objects)]
-pub mod cluster;
 pub mod common;
-pub mod coordinator;
-pub mod coordinator_grpc;
-pub mod data;
-pub mod data_grpc;
-pub mod gremlin_query;
-pub mod gremlin_query_grpc;
-pub mod gremlin_service;
-pub mod gremlin_service_grpc;
-pub mod hb;
 pub mod message;
-pub mod query_flow;
-pub mod scheduler_monitor;
-pub mod scheduler_monitor_grpc;
 pub mod schema;
 pub mod store_api;
 pub mod store_api_grpc;
-pub mod lambda_service;
-pub mod lambda_service_grpc;
-pub mod remote_api;
-pub mod remote_api_grpc;
 pub mod meta_service;
 
 
