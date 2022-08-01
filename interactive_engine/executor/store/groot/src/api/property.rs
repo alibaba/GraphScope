@@ -24,7 +24,7 @@ use crate::error::*;
 use crate::schema::prelude::*;
 use crate::unwrap_ok_or;
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, Debug)]
 pub enum Property {
     Bool(bool),
     Char(u8),
@@ -110,6 +110,15 @@ impl PartialOrd for Property {
 
             (Property::Null, Property::Null) => Some(std::cmp::Ordering::Equal),
             _ => None,
+        }
+    }
+}
+
+impl PartialEq for Property {
+    fn eq(&self, other: &Property) -> bool {
+        match self.partial_cmp(other) {
+            Some(ord) => ord == std::cmp::Ordering::Equal,
+            _ => false,
         }
     }
 }
@@ -769,7 +778,6 @@ pub fn parse_proerty_as_string(data: Vec<u8>, data_type: &DataType) -> Option<St
 
 #[cfg(test)]
 mod tests {
-    use std::cmp::Ordering;
 
     use super::*;
 
@@ -838,60 +846,60 @@ mod tests {
         // cmp numbers
         let p1 = Property::Short(10);
         let p2 = Property::Long(10);
-        assert_eq!(Ordering::Equal, p1.partial_cmp(&p2).expect("cmp failed"));
+        assert!(p1 == p2);
 
         let p1 = Property::Short(10);
         let p2 = Property::Long(5);
-        assert_eq!(Ordering::Greater, p1.partial_cmp(&p2).expect("cmp failed"));
+        assert!(p1 > p2);
 
         let p1 = Property::Float(10.0);
         let p2 = Property::Float(10.0);
-        assert_eq!(Ordering::Equal, p1.partial_cmp(&p2).expect("cmp failed"));
+        assert!(p1 == p2);
 
         let p1 = Property::Float(10.0);
         let p2 = Property::Short(5);
-        assert_eq!(Ordering::Greater, p1.partial_cmp(&p2).expect("cmp failed"));
+        assert!(p1 > p2);
 
         let p1 = Property::Double(5.0);
         let p2 = Property::Long(10);
-        assert_eq!(Ordering::Less, p1.partial_cmp(&p2).expect("cmp failed"));
+        assert!(p1 < p2);
 
         let p1 = Property::Float(10.0);
         let p2 = Property::Double(20.0);
-        assert_eq!(Ordering::Less, p1.partial_cmp(&p2).expect("cmp failed"));
+        assert!(p1 < p2);
 
         // cmp objects
         let p1 = Property::String("hello".to_owned());
         let p2 = Property::String("hello".to_owned());
-        assert_eq!(Ordering::Equal, p1.partial_cmp(&p2).expect("cmp failed"));
+        assert!(p1 == p2);
 
         let p1 = Property::String("hello".to_owned());
         let p2 = Property::Bytes("hello".as_bytes().to_vec());
-        assert_eq!(None, p1.partial_cmp(&p2));
+        assert!(!(p1 == p2));
 
         // cmp list
         let p1 = Property::ListInt(vec![1, 2, 3, 4]);
         let p2 = Property::ListInt(vec![1, 2, 3, 4]);
-        assert_eq!(Ordering::Equal, p1.partial_cmp(&p2).expect("cmp failed"));
+        assert!(p1 == p2);
 
         let p1 = Property::ListInt(vec![1, 2, 3, 4]);
         let p2 = Property::ListLong(vec![1, 2, 3, 4]);
-        assert_eq!(Ordering::Equal, p1.partial_cmp(&p2).expect("cmp failed"));
+        assert!(p1 == p2);
 
         let p1 = Property::ListLong(vec![1, 2, 3, 4]);
         let p2 = Property::ListInt(vec![1, 2, 3, 5]);
-        assert_eq!(Ordering::Less, p1.partial_cmp(&p2).expect("cmp failed"));
+        assert!(p1 < p2);
 
         let p1 = Property::ListInt(vec![1, 2, 3, 4]);
         let p2 = Property::ListFloat(vec![1.0, 2.0, 3.0, 4.0]);
-        assert_eq!(Ordering::Equal, p1.partial_cmp(&p2).expect("cmp failed"));
+        assert!(p1 == p2);
 
         let p1 = Property::ListFloat(vec![1.0, 2.0, 3.0, 4.0]);
         let p2 = Property::ListDouble(vec![1.0, 2.0, 3.0, 4.0]);
-        assert_eq!(Ordering::Equal, p1.partial_cmp(&p2).expect("cmp failed"));
+        assert!(p1 == p2);
 
         let p1 = Property::ListInt(vec![1, 2, 3, 4]);
         let p2 = Property::ListDouble(vec![0.5, 2.0, 3.0, 4.0]);
-        assert_eq!(Ordering::Greater, p1.partial_cmp(&p2).expect("cmp failed"));
+        assert!(p1 > p2);
     }
 }
