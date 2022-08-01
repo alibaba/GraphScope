@@ -54,6 +54,8 @@ class HostsClusterLauncher(Launcher):
         hosts=None,
         port=None,
         etcd_addrs=None,
+        etcd_listening_client_port=None,
+        etcd_listening_peer_port=None,
         num_workers=None,
         vineyard_socket=None,
         timeout_seconds=None,
@@ -63,6 +65,8 @@ class HostsClusterLauncher(Launcher):
         self._hosts = hosts
         self._port = port
         self._etcd_addrs = etcd_addrs
+        self._etcd_listening_client_port = (etcd_listening_client_port,)
+        self._etcd_listening_peer_port = (etcd_listening_peer_port,)
         self._num_workers = num_workers
         self._vineyard_socket = vineyard_socket
         self._timeout_seconds = timeout_seconds
@@ -109,6 +113,17 @@ class HostsClusterLauncher(Launcher):
 
         if self._etcd_addrs is not None:
             cmd.extend(["--etcd_addrs", self._etcd_addrs])
+        if self._etcd_listening_client_port is not None:
+            cmd.extend(
+                ["--etcd_listening_client_port", self._etcd_listening_client_port]
+            )
+        if self._etcd_listening_peer_port is not None:
+            cmd.extend(
+                [
+                    "--etcd_listening_peer_port",
+                    self._saved_locals["etcd_listening_peer_port"],
+                ]
+            )
 
         if self._vineyard_shared_mem is not None:
             cmd.extend(["--vineyard_shared_mem", self._vineyard_shared_mem])

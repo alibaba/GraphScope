@@ -124,6 +124,8 @@ class LocalLauncher(Launcher):
         num_workers,
         hosts,
         etcd_addrs,
+        etcd_listening_client_port,
+        etcd_listening_peer_port,
         vineyard_socket,
         shared_mem,
         log_level,
@@ -134,6 +136,8 @@ class LocalLauncher(Launcher):
         self._num_workers = num_workers
         self._hosts = hosts
         self._etcd_addrs = etcd_addrs
+        self._etcd_listening_client_port = etcd_listening_client_port
+        self._etcd_listening_peer_port = etcd_listening_peer_port
         self._vineyard_socket = vineyard_socket
         self._shared_mem = shared_mem
         self._glog_level = parse_as_glog_level(log_level)
@@ -344,8 +348,14 @@ class LocalLauncher(Launcher):
 
     def _launch_etcd(self):
         etcd_exec = self._find_etcd()
-        self._etcd_peer_port = 2380 if is_free_port(2380) else get_free_port()
-        self._etcd_client_port = 2379 if is_free_port(2379) else get_free_port()
+        if is_free_port(self._etcd_listening_client_port):
+            self._etcd_client_port = self._etcd_listening_client_port
+        else:
+            self._etcd_client_port = get_free_port()
+        if is_free_port(self._etcd_listening_peer_port):
+            self._etcd_peer_port = self._etcd_listening_peer_port
+        else:
+            self._etcd_peer_port = get_free_port()
         if len(self._hosts) > 1:
             self._etcd_endpoint = "http://{0}:{1}".format(
                 socket.gethostname(), str(self._etcd_client_port)
