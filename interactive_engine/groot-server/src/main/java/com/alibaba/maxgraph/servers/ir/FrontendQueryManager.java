@@ -20,8 +20,8 @@ import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.groot.frontend.SnapshotUpdateCommitter;
+import com.alibaba.maxgraph.common.util.CommonUtil;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,19 +48,9 @@ public class FrontendQueryManager extends IrMetaQueryCallback {
 
     public void start() {
         updateExecutor =
-                Executors.newSingleThreadScheduledExecutor((new ThreadFactoryBuilder())
-                                .setNameFormat("groot-snapshot-manager" + "-%d")
-                                .setDaemon(true)
-                                .setUncaughtExceptionHandler(
-                                        (t, e) -> {
-                                            logger.error(
-                                                    "exception in serviceName: "
-                                                            + "groot-snapshot-manager"
-                                                            + ", thread: "
-                                                            + t.getName());
-                                        })
-                                .build());
-
+                Executors.newSingleThreadScheduledExecutor(
+                        CommonUtil.createFactoryWithDefaultExceptionHandler(
+                                "groot-snapshot-manager", logger));
         updateExecutor.scheduleWithFixedDelay(
                 new UpdateSnapshot(), 5000, 2000, TimeUnit.MILLISECONDS);
     }
