@@ -555,7 +555,7 @@ jobs:
         python3 -m pytest --exitfirst -s -v -m "not slow" \
             $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/readwrite/tests
 
-  gie-test:
+  gie-test-on-k8s:
     runs-on: [self-hosted, ubuntu2004]
     needs: [build-wheels, changes]
     if: ${{ needs.changes.outputs.gie-function-test == 'true' && github.repository == 'alibaba/GraphScope' }}

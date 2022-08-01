@@ -105,7 +105,7 @@ jobs:
     steps:
     - run: 'echo "No action required" '
 
-  gie-test:
+  gie-test-on-k8s:
     runs-on: ubuntu-20.04
     needs: [build-wheels, changes]
     if: ${{ (needs.changes.outputs.gie-function-test == 'false' || github.ref == 'refs/heads/main') && github.repository == 'alibaba/GraphScope' }}
