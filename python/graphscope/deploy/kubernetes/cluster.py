@@ -469,14 +469,14 @@ class KubernetesClusterLauncher(Launcher):
             cmd.extend(
                 [
                     "--etcd_listening_client_port",
-                    self._saved_locals["etcd_listening_client_port"],
+                    str(self._saved_locals["etcd_listening_client_port"]),
                 ]
             )
         if self._saved_locals["etcd_listening_peer_port"] is not None:
             cmd.extend(
                 [
                     "--etcd_listening_peer_port",
-                    self._saved_locals["etcd_listening_peer_port"],
+                    str(self._saved_locals["etcd_listening_peer_port"]),
                 ]
             )
         return ["-c", " ".join(cmd)]
