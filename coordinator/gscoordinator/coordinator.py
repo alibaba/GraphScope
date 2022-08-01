@@ -1548,8 +1548,8 @@ def parse_sys_args():
     )
     parser.add_argument(
         "--etcd_listening_peer_port",
-        type=str,
-        default=None,
+        type=int,
+        default=2380,
         help="The port that etcd server will beind to for accepting peer connections. Defaults to 2380.",
     )
     parser.add_argument(
