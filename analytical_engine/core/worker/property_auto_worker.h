@@ -26,6 +26,7 @@
 #include "grape/communication/communicator.h"
 #include "grape/config.h"
 #include "grape/parallel/parallel_engine.h"
+#include "grape/util.h"
 #include "grape/worker/comm_spec.h"
 
 #include "core/parallel/property_auto_message_manager.h"
@@ -81,6 +82,8 @@ class PropertyAutoWorker {
 
   template <class... Args>
   void Query(Args&&... args) {
+    double t = GetCurrentTime();
+
     auto& graph = context_->fragment();
 
     MPI_Barrier(comm_spec_.comm());
@@ -98,12 +101,14 @@ class PropertyAutoWorker {
     messages_.FinishARound();
 
     if (comm_spec_.worker_id() == grape::kCoordinatorRank) {
-      VLOG(1) << "[Coordinator]: Finished PEval";
+      VLOG(1) << "[Coordinator]: Finished PEval, time: " << GetCurrentTime() - t
+              << " sec";
     }
 
     int step = 1;
 
     while (!messages_.ToTerminate()) {
+      t = GetCurrentTime();
       round++;
       messages_.StartARound();
 
@@ -112,7 +117,8 @@ class PropertyAutoWorker {
       messages_.FinishARound();
 
       if (comm_spec_.worker_id() == grape::kCoordinatorRank) {
-        VLOG(1) << "[Coordinator]: Finished IncEval - " << step;
+        VLOG(1) << "[Coordinator]: Finished IncEval - " << step << ", time: "
+                << GetCurrentTime() - t << " sec";
       }
       ++step;
     }
