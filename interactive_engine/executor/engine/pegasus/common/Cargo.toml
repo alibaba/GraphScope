@@ -7,7 +7,7 @@ edition = "2018"
 [dependencies]
 log = "0.4"
 crossbeam-channel = "0.4.4"
-crossbeam-queue = "0.1"
+crossbeam-queue = "0.3"
 crossbeam-deque = "0.7"
 crossbeam-utils = "0.8.7"
 backtrace = "0.3.45"

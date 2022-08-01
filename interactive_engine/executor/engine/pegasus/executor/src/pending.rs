@@ -50,7 +50,7 @@ impl<T: Send> PendingPool<T> {
     pub fn fill<F: FnMut(PendingPool<T>)>(&mut self, mut consume: F) {
         for inflow in self.inflows.iter() {
             if !inflow.is_empty() {
-                while let Ok(item) = inflow.pop() {
+                while let Some(item) = inflow.pop() {
                     self.pool.push(Some(item));
                 }
             }

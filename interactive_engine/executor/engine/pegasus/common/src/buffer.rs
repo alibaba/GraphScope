@@ -16,7 +16,7 @@ impl<D> BufferRecycleHook<D> {
             if !self.dropped.load(Ordering::SeqCst) {
                 buf.clear();
                 return if let Err(e) = self.proxy.push(buf) {
-                    Some(e.0)
+                    Some(e)
                 } else {
                     // trace!("try to recycle buf with capacity={}", cap);
                     None
@@ -324,7 +324,7 @@ impl<D, F: BufferFactory<D>> BufferPool<D, F> {
     }
 
     pub fn fetch(&mut self) -> Option<Buffer<D>> {
-        if let Ok(mut buf) = self.recycle.pop() {
+        if let Some(mut buf) = self.recycle.pop() {
             // self reuse;
             buf.clear();
             buf.insert_recycle_hook(self.get_hook());
@@ -353,7 +353,7 @@ impl<D, F: BufferFactory<D>> BufferPool<D, F> {
 
     pub fn release(&mut self) {
         if !self.recycle.is_empty() {
-            while let Ok(batch) = self.recycle.pop() {
+            while let Some(batch) = self.recycle.pop() {
                 self.factory.release(batch);
                 self.alloc = self.alloc.wrapping_sub(1);
             }
@@ -392,7 +392,7 @@ impl<D, F: BufferFactory<D>> BufferFactory<D> for BufferPool<D, F> {
     }
 
     fn try_reuse(&mut self) -> Option<Buffer<D>> {
-        if let Ok(mut batch) = self.recycle.pop() {
+        if let Some(mut batch) = self.recycle.pop() {
             batch.insert_recycle_hook(self.get_hook());
             return Some(batch);
         } else {

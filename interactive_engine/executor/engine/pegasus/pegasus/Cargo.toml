@@ -11,7 +11,7 @@ pegasus_network = { path = "../network" }
 pegasus_executor = { path = "../executor" }
 pegasus_graph = { path = "../graph" }
 crossbeam-channel = "0.4.4"
-crossbeam-queue = "0.1"
+crossbeam-queue = "0.3"
 crossbeam-utils = "0.8.7"
 log = "0.4"
 smallvec = "1.6"

@@ -54,7 +54,7 @@ impl Inbox {
             // reset success;
             // let tx = self.tx.load(Ordering::SeqCst);
             assert!(!tx.is_null());
-            while let Ok(pre) = self.buffer.pop() {
+            while let Some(pre) = self.buffer.pop() {
                 if let Err(_) = unsafe { (*tx).send(pre) } {
                     error!("Inbox#reset_tx: send pre data in buffer failure;");
                     break;

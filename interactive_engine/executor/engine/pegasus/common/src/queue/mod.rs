@@ -16,7 +16,7 @@
 mod steal;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use crossbeam_queue::{PopError, PushError, SegQueue};
+use crossbeam_queue::SegQueue;
 pub use steal::{WorkStealFactory, WorkStealQueue};
 
 pub struct BoundLinkQueue<T> {
@@ -30,9 +30,9 @@ impl<T> BoundLinkQueue<T> {
         BoundLinkQueue { queue: SegQueue::new(), len: AtomicUsize::new(0), cap }
     }
 
-    pub fn push(&self, item: T) -> Result<(), PushError<T>> {
+    pub fn push(&self, item: T) -> Result<(), T> {
         if self.len.load(Ordering::SeqCst) == self.cap {
-            Err(PushError(item))
+            Err(item)
         } else {
             self.queue.push(item);
             self.len.fetch_add(1, Ordering::SeqCst);
@@ -40,9 +40,9 @@ impl<T> BoundLinkQueue<T> {
         }
     }
 
-    pub fn pop(&self) -> Result<T, PopError> {
+    pub fn pop(&self) -> Option<T> {
         let result = self.queue.pop();
-        if !result.is_err() {
+        if !result.is_none() {
             self.len.fetch_sub(1, Ordering::SeqCst);
         }
         result
