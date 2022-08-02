@@ -25,9 +25,9 @@
         </fileSet>
         <fileSet>
             <directory>${project.parent.basedir}/frontend/target</directory>
-            <outputDirectory>/</outputDirectory>
+            <outputDirectory>lib</outputDirectory>
             <includes>
-                <include>ir*.jar</include>
+                <include>frontend*.jar</include>
             </includes>
         </fileSet>
         <fileSet>
@@ -36,6 +36,22 @@
             <includes>
                 <include>libir_core*</include>
             </includes>
+        </fileSet>
+        <fileSet>
+            <directory>${project.parent.basedir}/executor/assembly/target/debug</directory>
+            <includes>
+                <include>gaia_executor</include>
+            </includes>
+            <fileMode>0755</fileMode>
+            <outputDirectory>bin</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>${project.parent.basedir}/executor/assembly/target/release</directory>
+            <includes>
+                <include>gaia_executor</include>
+            </includes>
+            <fileMode>0755</fileMode>
+            <outputDirectory>bin</outputDirectory>
         </fileSet>
     </fileSets>
 

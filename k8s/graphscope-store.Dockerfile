@@ -8,7 +8,7 @@ ARG profile=debug
 ENV profile=$profile
 
 COPY . /home/graphscope/gs
-COPY ./interactive_engine/assembly/conf/maven.settings.xml /home/graphscope/.m2/settings.xml
+COPY ./interactive_engine/assembly/src/conf/maven.settings.xml /home/graphscope/.m2/settings.xml
 
 USER graphscope
 
@@ -25,7 +25,7 @@ RUN sudo chown -R $(id -u):$(id -g) /home/graphscope/gs /home/graphscope/.m2 && 
         && echo "build with profile: $profile" \
         && source ~/.cargo/env \
         && cd /home/graphscope/gs/interactive_engine \
-        && mvn clean package -Pgroot -DskipTests --quiet -Drust.compile.mode="$profile" \
+        && mvn clean package -P groot -DskipTests --quiet -Drust.compile.mode="$profile" \
         && mv /home/graphscope/gs/interactive_engine/assembly/target/groot.tar.gz /home/graphscope/gs/groot.tar.gz; \
     fi
 

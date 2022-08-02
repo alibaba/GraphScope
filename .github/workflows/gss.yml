@@ -81,14 +81,14 @@ jobs:
         export RUSTC_WRAPPER=/usr/local/bin/sccache
         sccache --start-server
         cd ${GITHUB_WORKSPACE}/interactive_engine
-        mvn clean install -Pgroot -Drust.compile.mode=debug -DskipTests --quiet
+        mvn clean install -P groot -Drust.compile.mode=debug -DskipTests --quiet
 
         sccache --show-stats
 
     - name: Gremlin Test
       run: |
         cd interactive_engine/groot-server
-        mvn test -Pgremlin-test
+        mvn test -P gremlin-test
 
     - name: Upload tools for helm test to Artifact
       uses: actions/upload-artifact@v2

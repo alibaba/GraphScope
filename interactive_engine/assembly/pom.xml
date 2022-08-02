@@ -12,14 +12,6 @@
 
   <artifactId>assembly</artifactId>
 
-  <dependencies>
-    <dependency>
-      <groupId>com.alibaba.maxgraph</groupId>
-      <artifactId>maxgraph-executor</artifactId>
-      <version>${project.parent.version}</version>
-    </dependency>
-  </dependencies>
-
   <profiles>
     <profile>
       <id>dev</id>
@@ -28,28 +20,18 @@
       </activation>
     </profile>
     <profile>
-      <id>graphscope</id>
+      <id>graphscope-assembly</id>
       <build>
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-assembly-plugin</artifactId>
-            <version>2.5.5</version>
             <configuration>
+              <finalName>graphscope</finalName>
               <descriptors>
-                <descriptor>src/assembly/graphscope.xml</descriptor>
+                <descriptor>graphscope.xml</descriptor>
               </descriptors>
-              <finalName>graphscope-assembly</finalName>
-              <appendAssemblyId>false</appendAssemblyId>
             </configuration>
-            <executions>
-              <execution>
-                <phase>package</phase>
-                <goals>
-                  <goal>single</goal>
-                </goals>
-              </execution>
-            </executions>
           </plugin>
         </plugins>
       </build>
@@ -57,33 +39,26 @@
       <dependency>
         <groupId>com.alibaba.maxgraph</groupId>
         <artifactId>frontend</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
       </dependency>
+        <dependency>
+          <groupId>com.alibaba.maxgraph</groupId>
+          <artifactId>maxgraph-executor</artifactId>
+        </dependency>
       </dependencies>
     </profile>
     <profile>
-      <id>groot</id>
+      <id>groot-assembly</id>
       <build>
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-assembly-plugin</artifactId>
-            <version>2.5.5</version>
             <configuration>
               <finalName>groot</finalName>
-              <appendAssemblyId>false</appendAssemblyId>
               <descriptors>
-                <descriptor>src/assembly/groot.xml</descriptor>
+                <descriptor>groot.xml</descriptor>
               </descriptors>
             </configuration>
-            <executions>
-              <execution>
-                <phase>package</phase>
-                <goals>
-                  <goal>single</goal>
-                </goals>
-              </execution>
-            </executions>
           </plugin>
         </plugins>
       </build>
@@ -91,17 +66,18 @@
         <dependency>
           <groupId>com.alibaba.maxgraph</groupId>
           <artifactId>groot-server</artifactId>
-          <version>${project.parent.version}</version>
         </dependency>
         <dependency>
           <groupId>com.alibaba.maxgraph</groupId>
           <artifactId>data_load_tools</artifactId>
-          <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>com.alibaba.maxgraph</groupId>
+          <artifactId>maxgraph-executor</artifactId>
         </dependency>
         <dependency>
           <groupId>com.alibaba.maxgraph</groupId>
           <artifactId>c-end-lgraph</artifactId>
-          <version>${project.parent.version}</version>
         </dependency>
       </dependencies>
     </profile>
