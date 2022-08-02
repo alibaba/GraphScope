@@ -10,8 +10,10 @@ fi
 
 if [ "$(uname -s)" = "Darwin" ]; then
     SUFFIX="dylib"
+    STRIP_OPTION="-u"
 else
     SUFFIX="so"
+    STRIP_OPTION=""
 fi
 
 cd assembly;
@@ -26,5 +28,5 @@ fi
 rm -rf $(pwd)/target/${MODE}/build
 rm -rf $(pwd)/target/${MODE}/deps
 
-strip $(pwd)/target/${MODE}/libmaxgraph_ffi.${SUFFIX}
+strip ${STRIP_OPTION} $(pwd)/target/${MODE}/libmaxgraph_ffi.${SUFFIX}
 ln -sf $(pwd)/target/${MODE}/libmaxgraph_ffi.${SUFFIX} ./target/libmaxgraph_ffi.${SUFFIX}

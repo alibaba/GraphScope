@@ -24,7 +24,6 @@ pub mod schema;
 
 #[macro_use]
 extern crate log;
-extern crate maxgraph_common;
 #[allow(unused_imports)]
 #[macro_use]
 extern crate serde_json;

@@ -19,13 +19,13 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::sync::Arc;
 
-use maxgraph_common::proto::schema::*;
 use protobuf::Message;
 
 use super::data_type::DataType;
 use super::prop_def::PropDef;
 use super::type_def::*;
 use super::{LabelId, PropId, Schema};
+use crate::db::proto::schema::*;
 
 #[derive(Debug, Default)]
 pub struct SchemaImpl {

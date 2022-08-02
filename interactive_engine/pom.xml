@@ -657,7 +657,6 @@
                 <exclude>com/alibaba/maxgraph/rpc/GremlinService.class</exclude>
                 <exclude>com/alibaba/maxgraph/rpc/MaxGraphServiceGrpc.class</exclude>
                 <exclude>com/alibaba/maxgraph/Message.class</exclude>
-                <exclude>com/alibaba/maxgraph/QueryFlowOuterClass.class</exclude>
                 <exclude>com/alibaba/maxgraph/id_client/proto/*</exclude>
               </excludes>
             </instrumentation>
