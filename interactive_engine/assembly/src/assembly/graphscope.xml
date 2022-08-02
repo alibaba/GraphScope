@@ -1,0 +1,54 @@
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.0.0 http://maven.apache.org/xsd/assembly-2.0.0.xsd">
+    <id>graphscope</id>
+    <formats>
+        <format>tar.gz</format>
+    </formats>
+
+    <fileSets>
+        <fileSet>
+            <directory>${project.basedir}/src/bin/graphscope</directory>
+            <outputDirectory>bin</outputDirectory>
+            <includes>
+                <include>*</include>
+            </includes>
+            <fileMode>0755</fileMode>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/src/conf/graphscope</directory>
+            <outputDirectory>conf</outputDirectory>
+            <includes>
+                <include>*</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>${project.parent.basedir}/frontend/target</directory>
+            <outputDirectory>/</outputDirectory>
+            <includes>
+                <include>ir*.jar</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>${project.parent.basedir}/executor/ir/target/release</directory>
+            <outputDirectory>lib</outputDirectory>
+            <includes>
+                <include>libir_core*</include>
+            </includes>
+        </fileSet>
+    </fileSets>
+
+    <dependencySets>
+        <dependencySet>
+            <outputDirectory>lib</outputDirectory>
+            <unpack>false</unpack>
+            <excludes>
+                <exclude>org.apache.tinkerpop:gremlin-test</exclude>
+                <exclude>org.codehaus.groovy:groovy-sql</exclude>
+                <exclude>org.hamcrest:hamcrest-all</exclude>
+                <exclude>com.carrotsearch:junit-benchmarks</exclude>
+            </excludes>
+        </dependencySet>
+    </dependencySets>
+</assembly>

@@ -15,7 +15,7 @@ USER graphscope
 RUN sudo chown -R $(id -u):$(id -g) /home/graphscope/gs /home/graphscope/.m2 && \
     cd /home/graphscope/gs && \
     if [ "${CI}" == "true" ]; then \
-        mv artifacts/maxgraph.tar.gz ./maxgraph.tar.gz; \
+        mv artifacts/groot.tar.gz ./groot.tar.gz; \
     else \
         echo "install cppkafka" \
         && sudo yum update -y && sudo yum install -y librdkafka-devel \
@@ -25,8 +25,8 @@ RUN sudo chown -R $(id -u):$(id -g) /home/graphscope/gs /home/graphscope/.m2 && 
         && echo "build with profile: $profile" \
         && source ~/.cargo/env \
         && cd /home/graphscope/gs/interactive_engine \
-        && mvn clean package -Pv2 -DskipTests --quiet -Drust.compile.mode="$profile" \
-        && mv /home/graphscope/gs/interactive_engine/distribution/target/maxgraph.tar.gz /home/graphscope/gs/maxgraph.tar.gz; \
+        && mvn clean package -Pgroot -DskipTests --quiet -Drust.compile.mode="$profile" \
+        && mv /home/graphscope/gs/interactive_engine/assembly/target/groot.tar.gz /home/graphscope/gs/groot.tar.gz; \
     fi
 
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
@@ -34,9 +34,9 @@ FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
 COPY --from=builder /opt/vineyard/ /usr/local/
 
 COPY ./k8s/ready_probe.sh /tmp/ready_probe.sh
-COPY --from=builder /home/graphscope/gs/maxgraph.tar.gz /tmp/maxgraph.tar.gz
-RUN sudo tar -zxf /tmp/maxgraph.tar.gz -C /usr/local
-RUN rm /tmp/maxgraph.tar.gz
+COPY --from=builder /home/graphscope/gs/groot.tar.gz /tmp/groot.tar.gz
+RUN sudo tar -zxf /tmp/groot.tar.gz -C /usr/local
+RUN rm /tmp/groot.tar.gz
 
 # init log directory
 RUN sudo mkdir /var/log/graphscope \

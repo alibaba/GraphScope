@@ -30,7 +30,7 @@
     </dependency>
     <dependency>
       <groupId>com.alibaba.maxgraph</groupId>
-      <artifactId>groot</artifactId>
+      <artifactId>groot-module</artifactId>
       <version>${project.parent.version}</version>
       <exclusions>
         <exclusion>

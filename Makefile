@@ -111,7 +111,7 @@ endif
 gie:
 	# frontend/executor
 	cd $(WORKING_DIR)/interactive_engine && \
-	mvn clean package -DskipTests -Pjava-release --quiet
+	mvn clean package -DskipTests -Pgraphscope --quiet
 	# executor
 	cd $(WORKING_DIR)/interactive_engine/executor/assembly/v6d && \
 	rustup component add rustfmt && \
@@ -122,7 +122,7 @@ gie:
 	fi
 	# install
 	mkdir -p $(WORKING_DIR)/.install_prefix && \
-	tar -xf $(WORKING_DIR)/interactive_engine/assembly/target/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz --strip-components 1 -C $(WORKING_DIR)/.install_prefix && \
+	tar -xf $(WORKING_DIR)/interactive_engine/assembly/target/graphscope.tar.gz --strip-components 1 -C $(WORKING_DIR)/.install_prefix && \
 	cp $(WORKING_DIR)/interactive_engine/executor/assembly/target/$(BUILD_TYPE)/gaia_executor $(WORKING_DIR)/.install_prefix/bin/gaia_executor && \
 	sudo cp -r $(WORKING_DIR)/.install_prefix/* $(INSTALL_PREFIX) && \
 	rm -fr $(WORKING_DIR)/.install_prefix
