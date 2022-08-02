@@ -864,7 +864,7 @@ class KubernetesClusterLauncher(Launcher):
     def _get_etcd_endpoints(self):
         etcd_addrs = []
         if self._etcd_addrs is None:
-            port = self._random_etcd_listen_client_service_port
+            port = self._etcd_listening_client_port
             etcd_addrs.append("%s:%s" % (self._etcd_service_name, port))
             for i in range(self._etcd_num_pods):
                 etcd_addrs.append("%s-%d:%s" % (self._etcd_name, i, port))
