@@ -182,7 +182,12 @@ public interface IrCoreLibrary extends Library {
 
     FfiNameOrId.ByValue noneNameOrId();
 
-    FfiNameOrId.ByValue cstrAsNameOrId(String name);
+    default FfiNameOrId.ByValue cstrAsNameOrId(String name) {
+        FfiNameOrId.ByValue ffiName = new FfiNameOrId.ByValue();
+        ffiName.opt = FfiNameIdOpt.Name;
+        ffiName.name = name;
+        return ffiName;
+    }
 
     FfiConst.ByValue cstrAsConst(String value);
 
