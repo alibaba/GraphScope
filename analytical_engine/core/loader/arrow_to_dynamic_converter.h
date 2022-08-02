@@ -182,7 +182,7 @@ class ArrowToDynamicConverter {
     // dynamic_frag.Init again.
     std::vector<int> inner_oe_degree(dst_vm->GetInnerVertexSize(fid), 0);
     std::vector<int> inner_ie_degree(dst_vm->GetInnerVertexSize(fid), 0);
-    std::vector<int> outer_oe_degree(ovnum, 0)
+    std::vector<int> outer_oe_degree(ovnum, 0);
     std::vector<int> outer_ie_degree(ovnum, 0);
     ska::flat_hash_map<vid_t, vid_t> ovg2i;
     vid_t ov_index = 0, index = 0;;
