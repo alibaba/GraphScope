@@ -8,7 +8,7 @@ ARG profile=debug
 ENV profile=$profile
 
 COPY . /home/graphscope/gs
-COPY ./interactive_engine/deploy/docker/dockerfile/maven.settings.xml /home/graphscope/.m2/settings.xml
+COPY ./interactive_engine/assembly/conf/maven.settings.xml /home/graphscope/.m2/settings.xml
 
 USER graphscope
 
