@@ -519,11 +519,11 @@ class GraphSchema:
         return self._edge_labels_to_add[-1]
 
     def drop(self, label, src_label=None, dst_label=None):
-        for item in itertools.chain(self.vertex_labels, self._vertex_labels_to_add):
+        for item in itertools.chain(self._vertex_labels, self._vertex_labels_to_add):
             if label == item.label:
                 self._vertex_labels_to_drop.append(VertexLabel(label))
                 return
-        for item in itertools.chain(self.edge_labels, self._edge_labels_to_add):
+        for item in itertools.chain(self._edge_labels, self._edge_labels_to_add):
             if label == item.label:
                 label_to_drop = EdgeLabel(label)
                 if src_label and dst_label:
