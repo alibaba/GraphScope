@@ -52,7 +52,7 @@
 //! `g++ -o test test.cc -std=c++11 -L. -lir_core`
 
 use std::convert::{TryFrom, TryInto};
-use std::ffi::{c_void, CStr};
+use std::ffi::{c_void, CString};
 use std::os::raw::c_char;
 
 use ir_common::expr_parse::str_to_expr_pb;
@@ -200,15 +200,13 @@ impl From<FfiResult> for FfiData {
 
 pub(crate) fn cstr_to_string(cstr: *const c_char) -> Result<String, FfiResult> {
     if !cstr.is_null() {
-        let str_result = unsafe { CStr::from_ptr(cstr) }.to_str();
-        if let Ok(str) = str_result {
-            Ok(str.to_string())
-        } else {
-            Err(FfiResult::new(
+        let cstring = unsafe { CString::from_raw(cstr as *mut c_char) };
+        cstring.into_string().map_err(|e| {
+            FfiResult::new(
                 ResultCode::CStringError,
-                "error parsing C string into Rust string".to_string(),
-            ))
-        }
+                format!("error parsing C string into Rust string, reason {:?}", e),
+            )
+        })
     } else {
         Ok("".to_string())
     }
