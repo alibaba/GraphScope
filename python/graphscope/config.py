@@ -50,6 +50,8 @@ class GSConfig(object):
 
     # etcd resource configuration
     etcd_addrs = None
+    etcd_listening_client_port = 2379
+    etcd_listening_peer_port = 2380
     k8s_etcd_num_pods = 1
     k8s_etcd_cpu = 1.0
     k8s_etcd_mem = "512Mi"

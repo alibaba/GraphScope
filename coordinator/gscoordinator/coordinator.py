@@ -1541,6 +1541,18 @@ def parse_sys_args():
         help="The addr of external etcd cluster, with formats like 'etcd01:port,etcd02:port,etcd03:port' ",
     )
     parser.add_argument(
+        "--etcd_listening_client_port",
+        type=int,
+        default=2379,
+        help="The port that etcd server will beind to for accepting client connections. Defaults to 2379.",
+    )
+    parser.add_argument(
+        "--etcd_listening_peer_port",
+        type=int,
+        default=2380,
+        help="The port that etcd server will beind to for accepting peer connections. Defaults to 2380.",
+    )
+    parser.add_argument(
         "--k8s_etcd_num_pods",
         type=int,
         default=3,
@@ -1653,6 +1665,8 @@ def launch_graphscope():
             coordinator_name=args.k8s_coordinator_name,
             coordinator_service_name=args.k8s_coordinator_service_name,
             etcd_addrs=args.etcd_addrs,
+            etcd_listening_client_port=args.etcd_listening_client_port,
+            etcd_listening_peer_port=args.etcd_listening_peer_port,
             etcd_num_pods=args.k8s_etcd_num_pods,
             etcd_cpu=args.k8s_etcd_cpu,
             etcd_mem=args.k8s_etcd_mem,
@@ -1684,6 +1698,8 @@ def launch_graphscope():
             num_workers=args.num_workers,
             hosts=args.hosts,
             etcd_addrs=args.etcd_addrs,
+            etcd_listening_client_port=args.etcd_listening_client_port,
+            etcd_listening_peer_port=args.etcd_listening_peer_port,
             vineyard_socket=args.vineyard_socket,
             shared_mem=args.vineyard_shared_mem,
             log_level=args.log_level,
