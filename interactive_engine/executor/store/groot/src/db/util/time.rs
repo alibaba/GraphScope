@@ -13,9 +13,9 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::time::{SystemTime, UNIX_EPOCH, Duration, Instant};
-use std::thread;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::thread;
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 pub fn current_time_millis() -> u64 {
     let now = SystemTime::now();
@@ -25,7 +25,9 @@ pub fn current_time_millis() -> u64 {
 
 pub fn current_time_secs() -> u64 {
     let now = SystemTime::now();
-    now.duration_since(UNIX_EPOCH).unwrap().as_secs()
+    now.duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs()
 }
 
 pub fn duration_to_millis(d: &Duration) -> f64 {
@@ -33,7 +35,7 @@ pub fn duration_to_millis(d: &Duration) -> f64 {
 }
 
 pub fn duration_to_nanos(d: &Duration) -> u64 {
-    d.as_secs()  * 1000_000_000 + d.subsec_nanos() as u64
+    d.as_secs() * 1000_000_000 + d.subsec_nanos() as u64
 }
 
 pub fn sleep_ms(ms: u64) {
@@ -54,16 +56,14 @@ pub struct SleepGuard<'a> {
 
 impl<'a> SleepGuard<'a> {
     fn new(flag: &'a AtomicUsize, target: usize) -> Self {
-        SleepGuard {
-            flag,
-            target,
-        }
+        SleepGuard { flag, target }
     }
 }
 
 impl<'a> Drop for SleepGuard<'a> {
     fn drop(&mut self) {
-        self.flag.store(self.target + 1, Ordering::Relaxed);
+        self.flag
+            .store(self.target + 1, Ordering::Relaxed);
     }
 }
 
@@ -73,9 +73,7 @@ pub struct Timer {
 
 impl Timer {
     pub fn new() -> Self {
-        Timer {
-            timer: Instant::now(),
-        }
+        Timer { timer: Instant::now() }
     }
 
     pub fn elapsed_ms(&self) -> f64 {

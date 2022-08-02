@@ -16,14 +16,13 @@
 #![cfg(test)]
 use std::sync::Arc;
 
-use crate::db::proto::schema::*;
-
 use super::data_type::*;
 use super::prop_def::*;
 use super::relation::*;
 use super::schema::*;
 use super::type_def::*;
 use super::{LabelId, PropId, Schema};
+use crate::db::proto::schema::*;
 
 pub fn create_prop_def_proto(
     prop_id: PropId, name: &str, data_type: DataType, comment: &str,

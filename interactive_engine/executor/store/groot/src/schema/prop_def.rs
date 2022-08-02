@@ -15,10 +15,9 @@
 
 use std::cell::UnsafeCell;
 
-use crate::db::proto::schema::*;
-
 use super::data_type::DataType;
 use super::PropId;
+use crate::db::proto::schema::*;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Hash)]
 pub struct PropDef {

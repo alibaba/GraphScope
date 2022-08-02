@@ -6,10 +6,11 @@ use std::sync::atomic::{AtomicI64, AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
-use self::db::util::{fs, Timer};
 use maxgraph_store::db::api::multi_version_graph::MultiVersionGraph;
 use maxgraph_store::db::api::{GraphConfigBuilder, TypeDefBuilder, Value, ValueType};
 use maxgraph_store::db::graph::store::GraphStore;
+
+use self::db::util::{fs, Timer};
 
 fn main() {
     let args: Vec<String> = env::args().collect();

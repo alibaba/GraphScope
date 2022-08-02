@@ -17,12 +17,11 @@ use std::cell::UnsafeCell;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
-use crate::db::proto as protos;
-
 use super::prop_def::*;
 use super::relation::Relation;
 use super::LabelId;
 use super::{DataType, PropId};
+use crate::db::proto as protos;
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Type {
