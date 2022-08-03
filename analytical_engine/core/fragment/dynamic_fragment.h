@@ -64,8 +64,6 @@ struct DynamicFragmentTraits {
       grape::FilterConstAdjList<vid_t, edata_t,
                                 std::function<bool(const nbr_t&)>>;
 
-  // using csr_t = grape::MutableCSR<vid_t, nbr_t>;
-  // using csr_builder_t = grape::MutableCSRBuilder<vid_t, nbr_t>;
   using csr_t = grape::DeMutableCSR<vid_t, nbr_t>;
   using csr_builder_t = grape::DeMutableCSRBuilder<vid_t, nbr_t>;
   using mirror_vertices_t = std::vector<grape::Vertex<vid_t>>;
