@@ -31,7 +31,7 @@ jobs:
         if [ -z "${r}" ];then export hn=$(hostname); sudo -E bash -c 'echo "127.0.0.1 ${hn}" >> /etc/hosts'; fi
         cat /etc/hosts
 
-        /bin/bash ${GITHUB_WORKSPACE}/scripts/install_deps.sh --dev --verbose
+        /bin/bash ${GITHUB_WORKSPACE}/scripts/install_deps.sh --dev --grape-jdk --verbose
 
     - name: Build GraphScope
       run: |

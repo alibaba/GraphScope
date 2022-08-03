@@ -1,25 +1,25 @@
-# MaxGraph Rust Project
+# GIE Rust Project
 
-This project contains all `rust` modules of MaxGraph, including:
+This project contains all `rust` modules of GIE, including:
+- Common
+- Assembly
+- IR
+- Engine
 - Store
-- Runtime
-- Id Service
 
-This crate act as the parent of all the sub-crates. 
-
-To format all sub-crates, run:
+To format the crates, cd each crate and run:
 
 ```bash
 cargo +nightly fmt
 ```
 
-To compile all sub-crates, run:
+To compile the crates, cd each crate and run:
 
 ```bash
 cargo build --workspace
 ```
 
-To test all sub-crates, run:
+To test the crates, cd each crate and run:
 
 ```bash
 cargo test --workspace

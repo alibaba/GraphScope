@@ -85,6 +85,8 @@ public class OfflineBuildOdps {
         String ossBucketName = properties.getProperty(OSS_BUCKET_NAME);
         String ossObjectName = properties.getProperty(OSS_OBJECT_NAME);
 
+        // The table format is `project.table` or `table`;
+        // For partitioned table, the format is `project.table|p1=1/p2=2` or `table|p1=1/p2=2`
         String columnMappingConfigStr = properties.getProperty(COLUMN_MAPPING_CONFIG);
         String graphEndpoint = properties.getProperty(GRAPH_ENDPOINT);
         String username = properties.getProperty(USER_NAME);
@@ -122,13 +124,12 @@ public class OfflineBuildOdps {
                 (fileName, fileColumnMapping) -> {
                     ColumnMappingInfo columnMappingInfo =
                             fileColumnMapping.toColumnMappingInfo(schema);
-                    columnMappingInfos.put(fileName, columnMappingInfo);
+                    // Note the project and partition is stripped (if exists)
+                    columnMappingInfos.put(getTableName(fileName), columnMappingInfo);
                     tableType.put(fileName, schema.getElement(columnMappingInfo.getLabelId()));
                 });
         String ldbcCustomize = properties.getProperty(LDBC_CUSTOMIZE, "true");
         long splitSize = Long.valueOf(properties.getProperty(SPLIT_SIZE, "256"));
-        boolean loadAfterBuild =
-                properties.getProperty(LOAD_AFTER_BUILD, "false").equalsIgnoreCase("true");
         boolean skipHeader = properties.getProperty(SKIP_HEADER, "true").equalsIgnoreCase("true");
 
         JobConf job = new JobConf();
@@ -147,27 +148,9 @@ public class OfflineBuildOdps {
         job.set(OSS_OBJECT_NAME, ossObjectName);
 
         for (Map.Entry<String, GraphElement> entry : tableType.entrySet()) {
-            if (entry.getValue() instanceof GraphVertex) {
+            if (entry.getValue() instanceof GraphVertex || entry.getValue() instanceof GraphEdge) {
                 String name = entry.getKey();
-                if (name.contains(".")) {
-                    String[] items = name.split("\\.");
-                    InputUtils.addTable(
-                            TableInfo.builder().projectName(items[0]).tableName(items[1]).build(),
-                            job);
-                } else {
-                    InputUtils.addTable(TableInfo.builder().tableName(name).build(), job);
-                }
-            }
-            if (entry.getValue() instanceof GraphEdge) {
-                String name = entry.getKey();
-                if (name.contains(".")) {
-                    String[] items = name.split("\\.");
-                    InputUtils.addTable(
-                            TableInfo.builder().projectName(items[0]).tableName(items[1]).build(),
-                            job);
-                } else {
-                    InputUtils.addTable(TableInfo.builder().tableName(name).build(), job);
-                }
+                InputUtils.addTable(parseTableURL(name), job);
             }
         }
 
@@ -179,13 +162,7 @@ public class OfflineBuildOdps {
         job.setMapOutputKeySchema(SchemaUtils.fromString("key:string"));
         job.setMapOutputValueSchema(SchemaUtils.fromString("value:string"));
 
-        if (outputTable.contains(".")) {
-            String[] items = outputTable.split("\\.");
-            OutputUtils.addTable(
-                    TableInfo.builder().projectName(items[0]).tableName(items[1]).build(), job);
-        } else {
-            OutputUtils.addTable(TableInfo.builder().tableName(outputTable).build(), job);
-        }
+        OutputUtils.addTable(parseTableURL(outputTable), job);
 
         String dataPath = Paths.get(ossBucketName, ossObjectName).toString();
         Map<String, String> outputMeta = new HashMap<>();
@@ -205,5 +182,48 @@ public class OfflineBuildOdps {
         } catch (Exception e) {
             throw new IOException(e);
         }
+    }
+
+    private static String getTableName(String tableFullName) {
+        String tableName;
+        if (tableFullName.contains(".")) {
+            String[] items = tableFullName.split("\\.");
+            tableName = items[1];
+        } else {
+            tableName = tableFullName;
+        }
+        if (tableName.contains("|")) {
+            String[] items = tableName.split("\\|");
+            tableName = items[0];
+        }
+        return tableName;
+    }
+
+    private static TableInfo parseTableURL(String tableFullName) {
+        String projectName = null;
+        String tableName = null;
+        String partitionSpec = null;
+        if (tableFullName.contains(".")) {
+            String[] items = tableFullName.split("\\.");
+            projectName = items[0];
+            tableName = items[1];
+        } else {
+            tableName = tableFullName;
+        }
+        if (tableName.contains("|")) {
+            String[] items = tableName.split("\\|");
+            tableName = items[0];
+            partitionSpec = items[1];
+        }
+
+        TableInfo.TableInfoBuilder builder = TableInfo.builder();
+        if (projectName != null) {
+            builder.projectName(projectName);
+        }
+        builder.tableName(tableName);
+        if (partitionSpec != null) {
+            builder.partSpec(partitionSpec);
+        }
+        return builder.build();
     }
 }

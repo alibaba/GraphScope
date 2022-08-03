@@ -22,8 +22,8 @@
     <module>sdk-common</module>
     <module>tests</module>
     <module>distribution</module>
-    <module>../research/engine/pegasus/clients/java/client</module>
-    <module>../research/query_service/ir/compiler</module>
+    <module>executor/engine/pegasus/clients/java/client</module>
+    <module>executor/ir/compiler</module>
     <module>frontend</module>
   </modules>
 
@@ -657,7 +657,6 @@
                 <exclude>com/alibaba/maxgraph/rpc/GremlinService.class</exclude>
                 <exclude>com/alibaba/maxgraph/rpc/MaxGraphServiceGrpc.class</exclude>
                 <exclude>com/alibaba/maxgraph/Message.class</exclude>
-                <exclude>com/alibaba/maxgraph/QueryFlowOuterClass.class</exclude>
                 <exclude>com/alibaba/maxgraph/id_client/proto/*</exclude>
               </excludes>
             </instrumentation>

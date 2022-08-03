@@ -26,7 +26,7 @@ function _start {
     if [ -z "$GS_TEST_DIR" ]; then
         export GS_TEST_DIR=$curdir/src/main/resources
     fi
-    cd $curdir/../deploy/testing && python3 maxgraph_test_server.py ${_port} &
+    cd $curdir && python3 maxgraph_test_server.py ${_port} &
     sleep 5s
     curl -XPOST http://localhost:${_port} -d 'import graphscope'
     curl -XPOST http://localhost:${_port} -d 'graphscope.set_option(show_log=True)'

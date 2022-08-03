@@ -44,7 +44,7 @@
       </includes>
     </fileSet>
     <fileSet>
-      <directory>${project.basedir}/../../research/query_service/ir/target/release</directory>
+      <directory>${project.basedir}/../executor/ir/target/release</directory>
       <outputDirectory>lib</outputDirectory>
       <includes>
         <include>libir_core*</include>

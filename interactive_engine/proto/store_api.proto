@@ -18,8 +18,25 @@ syntax = "proto3";
 option java_package = "com.alibaba.maxgraph.proto";
 
 package tinkerpop;
-import "gremlin_query.proto";
 import "sdk/message.proto";
+import "sdk/model.proto";
+
+message VertexId {
+    int64 id      =  1;
+    int32 typeId  =  2;
+}
+
+message VertexRequest {
+    repeated VertexId ids  =  1;
+    bool     order         =  2;
+    string   orderKey      =  3;
+    int32    limit          =  4;
+}
+
+message VertexResponse {
+    VertexId id  =  1;
+    bytes pros    =  2;
+}
 
 // The store service definition.
 service StoreService {
