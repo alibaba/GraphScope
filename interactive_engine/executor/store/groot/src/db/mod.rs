@@ -5,5 +5,5 @@ pub mod graph;
 #[allow(bare_trait_objects)]
 pub mod proto;
 pub mod storage;
-mod util;
+pub mod util;
 pub mod wrapper;

@@ -9,8 +9,7 @@ use std::time::Duration;
 use maxgraph_store::db::api::multi_version_graph::MultiVersionGraph;
 use maxgraph_store::db::api::{GraphConfigBuilder, TypeDefBuilder, Value, ValueType};
 use maxgraph_store::db::graph::store::GraphStore;
-
-use self::db::util::{fs, Timer};
+use maxgraph_store::db::util::{fs, time};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -61,7 +60,7 @@ fn main() {
         .unwrap();
     println!("schema created");
     let str_len = 100;
-    let timer = Timer::new();
+    let timer = time::Timer::new();
     let mut tmp_time = 0.0;
     let mut tmp_count = 0;
     let val = "c".repeat(str_len);
