@@ -76,11 +76,11 @@ spec:
                      -e "s/INGESTOR/$(DNS_NAME_PREFIX_INGESTOR)/g" \
                      -e "s/COORDINATOR/$(DNS_NAME_PREFIX_COORDINATOR)/g" \
                      -e "s/STORE/$(DNS_NAME_PREFIX_STORE)/g" \
-                     -e "s@LOG4RS_CONFIG@${GRAPHSCOPE_HOME}/maxgraph/conf/log4rs.yml@g" \
+                     -e "s@LOG4RS_CONFIG@${GRAPHSCOPE_HOME}/groot/conf/log4rs.yml@g" \
             /etc/graphscope-store/my.cnf.tpl | sudo tee /etc/graphscope-store/my.cnf
 
             LOG_NAME=graphscope-store MAXGRAPH_CONF_FILE=/etc/graphscope-store/my.cnf \
-              ${GRAPHSCOPE_HOME}/maxgraph/bin/store_ctl.sh maxgraph $(EXECUTOR)
+              ${GRAPHSCOPE_HOME}/groot/bin/store_ctl.sh maxgraph $(EXECUTOR)
           env:
             - name: DEBUG
               value: "false"
