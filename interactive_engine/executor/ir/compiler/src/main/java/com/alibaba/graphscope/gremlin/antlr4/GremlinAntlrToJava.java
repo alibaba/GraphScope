@@ -17,13 +17,13 @@
 package com.alibaba.graphscope.gremlin.antlr4;
 
 import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
+import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSBaseVisitor;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 
 import java.util.function.Supplier;
 
@@ -34,7 +34,9 @@ public class GremlinAntlrToJava extends GremlinGSBaseVisitor<Object> {
     final GremlinGSBaseVisitor<GraphTraversal> tvisitor;
 
     private static GremlinAntlrToJava instance;
-    private static Supplier<GraphTraversal<?, ?>> traversalSupplier = __::start;
+    // return nested traversal as IrCustomizedTraversal type
+    private static Supplier<GraphTraversal<?, ?>> traversalSupplier =
+            () -> new IrCustomizedTraversal<>();
 
     public static GremlinAntlrToJava getInstance(GraphTraversalSource g) {
         if (instance == null) {

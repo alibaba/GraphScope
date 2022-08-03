@@ -23,11 +23,11 @@ import com.alibaba.graphscope.common.intermediate.operator.InterOpBase;
 import com.alibaba.graphscope.common.intermediate.operator.ProjectOp;
 import com.alibaba.graphscope.common.jna.type.FfiJoinKind;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
+import com.alibaba.graphscope.gremlin.antlr4.__;
 import com.alibaba.graphscope.gremlin.transform.TraversalParentTransformFactory;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
@@ -220,5 +220,32 @@ public class SelectStepTest {
         Pair sndEntry = exprWithAlias.get(1);
         Assert.assertEquals("@b_2_1", sndEntry.getValue0());
         Assert.assertEquals(ArgUtils.asFfiAlias("b_2_1", false), sndEntry.getValue1());
+    }
+
+    // g.V().as("a").select("a").by(out("1..2").endV().count())
+    @Test
+    public void g_V_as_select_a_by_out_1_2_endV_count_test() {
+        Traversal traversal = g.V().as("a").select("a").by(__.out(__.range(1, 2)).endV().count());
+        List<InterOpBase> ops = getApplyWithProject(traversal);
+
+        Assert.assertEquals(2, ops.size());
+
+        ApplyOp applyOp = (ApplyOp) ops.get(0);
+        Assert.assertEquals(FfiJoinKind.Inner, applyOp.getJoinKind().get().applyArg());
+        InterOpCollection subOps =
+                (InterOpCollection) applyOp.getSubOpCollection().get().applyArg();
+        Assert.assertEquals(4, subOps.unmodifiableCollection().size());
+        Assert.assertEquals(
+                ArgUtils.asFfiAlias("a_1_0", false), applyOp.getAlias().get().applyArg());
+
+        ProjectOp projectOp = (ProjectOp) ops.get(1);
+        List<Pair> exprWithAlias = (List<Pair>) projectOp.getExprWithAlias().get().applyArg();
+        Assert.assertEquals(1, exprWithAlias.size());
+
+        Pair firstEntry = exprWithAlias.get(0);
+        // expression
+        Assert.assertEquals("@a_1_0", firstEntry.getValue0());
+        // alias
+        Assert.assertEquals(ArgUtils.asFfiNoneAlias(), firstEntry.getValue1());
     }
 }
