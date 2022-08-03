@@ -185,7 +185,7 @@ class ArrowToDynamicConverter {
     std::vector<int> outer_oe_degree(ovnum, 0);
     std::vector<int> outer_ie_degree(ovnum, 0);
     ska::flat_hash_map<vid_t, vid_t> ovg2i;
-    vid_t ov_index = 0, index = 0;;
+    vid_t ov_index = 0, index = 0;
     for (label_id_t v_label = 0; v_label < src_frag->vertex_label_num();
          v_label++) {
       auto inner_vertices = src_frag->InnerVertices(v_label);
@@ -229,7 +229,8 @@ class ArrowToDynamicConverter {
                     index = ov_index;
                     ++ov_index;
                   }
-                  src_frag->directed() ? outer_ie_degree[index]++ : outer_oe_degree[index]++;
+                  src_frag->directed() ? outer_ie_degree[index]++
+                                       : outer_oe_degree[index]++;
                 }
                 dynamic::Value edge_data(rapidjson::kObjectType);
                 PropertyConverter<src_fragment_t>::EdgeValue(
@@ -269,9 +270,8 @@ class ArrowToDynamicConverter {
     }
 
     dynamic_frag->Init(src_frag->fid(), src_frag->directed(), vertices, edges,
-                       inner_oe_degree, outer_oe_degree,
-                       inner_ie_degree, outer_ie_degree,
-                       thread_num);
+                       inner_oe_degree, outer_oe_degree, inner_ie_degree,
+                       outer_ie_degree, thread_num);
 
     initFragmentSchema(dynamic_frag, src_frag->schema());
 
