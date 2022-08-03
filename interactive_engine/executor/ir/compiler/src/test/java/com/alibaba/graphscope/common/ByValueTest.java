@@ -16,19 +16,17 @@
 
 package com.alibaba.graphscope.common;
 
-import com.alibaba.graphscope.common.jna.IrCoreLibrary;
+import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.jna.type.*;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 public class ByValueTest {
-    private static IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
-
     @Test
     public void cstrAsNameOrIdTest() {
         String tag = "p";
-        FfiNameOrId.ByValue nameOrId = irCoreLib.cstrAsNameOrId(tag);
+        FfiNameOrId.ByValue nameOrId = ArgUtils.asNameOrId(tag);
         Assert.assertEquals(FfiNameIdOpt.Name, nameOrId.opt);
         Assert.assertEquals(tag, nameOrId.name);
     }
@@ -36,7 +34,7 @@ public class ByValueTest {
     @Test
     public void cstrAsConstTest() {
         String value = "marko";
-        FfiConst.ByValue ffiConst = irCoreLib.cstrAsConst(value);
+        FfiConst.ByValue ffiConst = ArgUtils.asConst(value);
         Assert.assertEquals(FfiDataType.Str, ffiConst.dataType);
         Assert.assertEquals(value, ffiConst.cstr);
     }
@@ -44,27 +42,27 @@ public class ByValueTest {
     @Test
     public void int64AsConstTest() {
         long value = 10L;
-        FfiConst.ByValue ffiConst = irCoreLib.int64AsConst(value);
+        FfiConst.ByValue ffiConst = ArgUtils.asConst(value);
         Assert.assertEquals(FfiDataType.I64, ffiConst.dataType);
         Assert.assertEquals(value, ffiConst.int64);
     }
 
     @Test
     public void asLabelKeyTest() {
-        FfiProperty.ByValue property = irCoreLib.asLabelKey();
+        FfiProperty.ByValue property = ArgUtils.asKey(ArgUtils.LABEL);
         Assert.assertEquals(FfiPropertyOpt.Label, property.opt);
     }
 
     @Test
     public void asIdKeyTest() {
-        FfiProperty.ByValue property = irCoreLib.asIdKey();
+        FfiProperty.ByValue property = ArgUtils.asKey(ArgUtils.ID);
         Assert.assertEquals(FfiPropertyOpt.Id, property.opt);
     }
 
     @Test
     public void asPropertyKeyTest() {
         String key = "age";
-        FfiProperty.ByValue property = irCoreLib.asPropertyKey(irCoreLib.cstrAsNameOrId(key));
+        FfiProperty.ByValue property = ArgUtils.asKey(key);
         Assert.assertEquals(FfiPropertyOpt.Key, property.opt);
         Assert.assertEquals(FfiNameIdOpt.Name, property.key.opt);
         Assert.assertEquals(key, property.key.name);
@@ -73,7 +71,7 @@ public class ByValueTest {
     @Test
     public void asVarTagOnlyTest() {
         String tag = "p";
-        FfiVariable.ByValue variable = irCoreLib.asVarTagOnly(irCoreLib.cstrAsNameOrId(tag));
+        FfiVariable.ByValue variable = ArgUtils.asVar(tag, "");
         Assert.assertEquals(FfiNameIdOpt.Name, variable.tag.opt);
         Assert.assertEquals(tag, variable.tag.name);
         Assert.assertEquals(FfiPropertyOpt.None, variable.property.opt);
@@ -82,8 +80,7 @@ public class ByValueTest {
     @Test
     public void asVarPropertyOnlyTest() {
         String key = "age";
-        FfiVariable.ByValue variable =
-                irCoreLib.asVarPropertyOnly(irCoreLib.asPropertyKey(irCoreLib.cstrAsNameOrId(key)));
+        FfiVariable.ByValue variable = ArgUtils.asVar("", key);
         Assert.assertEquals(FfiPropertyOpt.Key, variable.property.opt);
         Assert.assertEquals(FfiNameIdOpt.Name, variable.property.key.opt);
         Assert.assertEquals(key, variable.property.key.name);
@@ -94,10 +91,7 @@ public class ByValueTest {
     public void asVarTest() {
         String tag = "p";
         String key = "age";
-        FfiVariable.ByValue variable =
-                irCoreLib.asVar(
-                        irCoreLib.cstrAsNameOrId(tag),
-                        irCoreLib.asPropertyKey(irCoreLib.cstrAsNameOrId(key)));
+        FfiVariable.ByValue variable = ArgUtils.asVar(tag, key);
         Assert.assertEquals(FfiNameIdOpt.Name, variable.tag.opt);
         Assert.assertEquals(tag, variable.tag.name);
         Assert.assertEquals(FfiPropertyOpt.Key, variable.property.opt);
@@ -107,7 +101,7 @@ public class ByValueTest {
 
     @Test
     public void asNoneVarTest() {
-        FfiVariable.ByValue variable = irCoreLib.asNoneVar();
+        FfiVariable.ByValue variable = ArgUtils.asNoneVar();
         Assert.assertEquals(FfiPropertyOpt.None, variable.property.opt);
         Assert.assertEquals(FfiNameIdOpt.None, variable.tag.opt);
     }

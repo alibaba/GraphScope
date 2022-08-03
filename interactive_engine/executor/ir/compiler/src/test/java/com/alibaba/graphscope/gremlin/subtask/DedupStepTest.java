@@ -53,7 +53,7 @@ public class DedupStepTest {
         Traversal traversal = g.V().dedup();
         DedupOp op = (DedupOp) getApplyWithDedup(traversal).get(0);
 
-        FfiVariable.ByValue expectedVar = ArgUtils.asFfiNoneVar();
+        FfiVariable.ByValue expectedVar = ArgUtils.asNoneVar();
         Assert.assertEquals(
                 Collections.singletonList(expectedVar), op.getDedupKeys().get().applyArg());
     }
@@ -63,7 +63,7 @@ public class DedupStepTest {
         Traversal traversal = g.V().dedup().by("name");
         DedupOp op = (DedupOp) getApplyWithDedup(traversal).get(0);
 
-        FfiVariable.ByValue expectedVar = ArgUtils.asFfiVar("", "name");
+        FfiVariable.ByValue expectedVar = ArgUtils.asVar("", "name");
         Assert.assertEquals(
                 Collections.singletonList(expectedVar), op.getDedupKeys().get().applyArg());
     }
@@ -73,7 +73,7 @@ public class DedupStepTest {
         Traversal traversal = g.V().dedup().by(__.values("name"));
         DedupOp op = (DedupOp) getApplyWithDedup(traversal).get(0);
 
-        FfiVariable.ByValue expectedVar = ArgUtils.asFfiVar("", "name");
+        FfiVariable.ByValue expectedVar = ArgUtils.asVar("", "name");
         Assert.assertEquals(
                 Collections.singletonList(expectedVar), op.getDedupKeys().get().applyArg());
     }
@@ -89,10 +89,10 @@ public class DedupStepTest {
                 (InterOpCollection) applyOp.getSubOpCollection().get().applyArg();
         Assert.assertEquals(2, subOps.unmodifiableCollection().size());
         Assert.assertEquals(
-                ArgUtils.asFfiAlias("~alias_1_0", false), applyOp.getAlias().get().applyArg());
+                ArgUtils.asAlias("~alias_1_0", false), applyOp.getAlias().get().applyArg());
 
         DedupOp dedupOp = (DedupOp) ops.get(1);
-        FfiVariable.ByValue expectedVar = ArgUtils.asFfiVar("~alias_1_0", "");
+        FfiVariable.ByValue expectedVar = ArgUtils.asVar("~alias_1_0", "");
         Assert.assertEquals(
                 Collections.singletonList(expectedVar), dedupOp.getDedupKeys().get().applyArg());
     }
@@ -102,7 +102,7 @@ public class DedupStepTest {
         Traversal traversal = g.V().as("a").dedup("a").by("name");
         DedupOp op = (DedupOp) getApplyWithDedup(traversal).get(0);
 
-        FfiVariable.ByValue expectedVar = ArgUtils.asFfiVar("a", "name");
+        FfiVariable.ByValue expectedVar = ArgUtils.asVar("a", "name");
         Assert.assertEquals(
                 Collections.singletonList(expectedVar), op.getDedupKeys().get().applyArg());
     }
@@ -113,7 +113,7 @@ public class DedupStepTest {
         DedupOp op = (DedupOp) getApplyWithDedup(traversal).get(0);
 
         Assert.assertEquals(
-                Arrays.asList(ArgUtils.asFfiVar("a", "name"), ArgUtils.asFfiVar("b", "name")),
+                Arrays.asList(ArgUtils.asVar("a", "name"), ArgUtils.asVar("b", "name")),
                 op.getDedupKeys().get().applyArg());
     }
 
@@ -122,7 +122,7 @@ public class DedupStepTest {
         Traversal traversal = g.V().dedup().by(T.label);
         DedupOp op = (DedupOp) getApplyWithDedup(traversal).get(0);
 
-        FfiVariable.ByValue expectedVar = ArgUtils.asFfiVar("", "~label");
+        FfiVariable.ByValue expectedVar = ArgUtils.asVar("", "~label");
         Assert.assertEquals(
                 Collections.singletonList(expectedVar), op.getDedupKeys().get().applyArg());
     }
@@ -132,7 +132,7 @@ public class DedupStepTest {
         Traversal traversal = g.V().dedup().by(T.id);
         DedupOp op = (DedupOp) getApplyWithDedup(traversal).get(0);
 
-        FfiVariable.ByValue expectedVar = ArgUtils.asFfiVar("", "~id");
+        FfiVariable.ByValue expectedVar = ArgUtils.asVar("", "~id");
         Assert.assertEquals(
                 Collections.singletonList(expectedVar), op.getDedupKeys().get().applyArg());
     }

@@ -24,8 +24,8 @@ import com.sun.jna.Structure;
 public class FfiVariable extends Structure {
     public static class ByValue extends FfiVariable implements Structure.ByValue {}
 
-    public FfiNameOrId.ByValue tag;
-    public FfiProperty.ByValue property;
+    public FfiNameOrId.ByValue tag = new FfiNameOrId.ByValue();
+    public FfiProperty.ByValue property = new FfiProperty.ByValue();
 
     @Override
     public boolean equals(Object o) {

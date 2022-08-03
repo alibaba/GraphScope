@@ -39,11 +39,11 @@ public class ProjectOpTest {
     public void projectTagKeyTest() throws IOException {
         ScanFusionOp scanOp = new ScanFusionOp();
         scanOp.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
-        scanOp.setAlias(new OpArg(ArgUtils.asFfiAlias("a", true), Function.identity()));
+        scanOp.setAlias(new OpArg(ArgUtils.asAlias("a", true), Function.identity()));
 
         ProjectOp projectOp = new ProjectOp();
         String projectExpr = "@a.name";
-        FfiAlias.ByValue alias = ArgUtils.asFfiAlias("a_name", false);
+        FfiAlias.ByValue alias = ArgUtils.asAlias("a_name", false);
         List<Pair> exprWithAlias = Collections.singletonList(Pair.with(projectExpr, alias));
         projectOp.setExprWithAlias(new OpArg(exprWithAlias, Function.identity()));
 
@@ -56,11 +56,11 @@ public class ProjectOpTest {
     public void projectTagKeysTest() throws IOException {
         ScanFusionOp scanOp = new ScanFusionOp();
         scanOp.setScanOpt(new OpArg<>(FfiScanOpt.Entity, Function.identity()));
-        scanOp.setAlias(new OpArg(ArgUtils.asFfiAlias("a", true), Function.identity()));
+        scanOp.setAlias(new OpArg(ArgUtils.asAlias("a", true), Function.identity()));
 
         ProjectOp op = new ProjectOp();
         String projectExpr = "{@a.name, @a.id}";
-        FfiAlias.ByValue alias = ArgUtils.asFfiAlias("a_{name, id}", false);
+        FfiAlias.ByValue alias = ArgUtils.asAlias("a_{name, id}", false);
         List<Pair> exprWithAlias = Collections.singletonList(Pair.with(projectExpr, alias));
         op.setExprWithAlias(new OpArg(exprWithAlias, Function.identity()));
 

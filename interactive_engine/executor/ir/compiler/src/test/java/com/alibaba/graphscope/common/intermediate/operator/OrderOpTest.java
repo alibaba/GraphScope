@@ -39,7 +39,7 @@ public class OrderOpTest {
         OrderOp op = new OrderOp();
         op.setOrderVarWithOrder(
                 new OpArg(
-                        Arrays.asList(Pair.with(ArgUtils.asFfiNoneVar(), FfiOrderOpt.Asc)),
+                        Arrays.asList(Pair.with(ArgUtils.asNoneVar(), FfiOrderOpt.Asc)),
                         Function.identity()));
         irPlan = DedupOpTest.getTestIrPlan(op);
         Assert.assertEquals(
@@ -49,7 +49,7 @@ public class OrderOpTest {
     @Test
     public void orderByLabelTest() throws IOException {
         OrderOp op = new OrderOp();
-        FfiVariable.ByValue var = ArgUtils.asFfiVar("", "~label");
+        FfiVariable.ByValue var = ArgUtils.asVar("", "~label");
         op.setOrderVarWithOrder(
                 new OpArg(Arrays.asList(Pair.with(var, FfiOrderOpt.Asc)), Function.identity()));
         irPlan = DedupOpTest.getTestIrPlan(op);
@@ -60,7 +60,7 @@ public class OrderOpTest {
     @Test
     public void orderLimitTest() throws IOException {
         OrderOp op = new OrderOp();
-        FfiVariable.ByValue var = ArgUtils.asFfiNoneVar();
+        FfiVariable.ByValue var = ArgUtils.asNoneVar();
         op.setOrderVarWithOrder(
                 new OpArg(Arrays.asList(Pair.with(var, FfiOrderOpt.Asc)), Function.identity()));
         op.setLower(new OpArg(Integer.valueOf(1), Function.identity()));

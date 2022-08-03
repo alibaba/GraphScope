@@ -69,7 +69,8 @@ public class VertexStepTest {
         ExpandOp expandOp = (ExpandOp) ops.get(1);
         Assert.assertEquals(true, expandOp.getIsEdge().get().applyArg());
         Assert.assertEquals(
-                Arrays.asList(ArgUtils.asFfiTag("knows")), expandOp.getParams().get().getTables());
+                Arrays.asList(ArgUtils.asNameOrId("knows")),
+                expandOp.getParams().get().getTables());
     }
 
     // fuse outE + has("name", ...)
@@ -120,7 +121,7 @@ public class VertexStepTest {
         ExpandOp expandOp = (ExpandOp) ops.get(1);
         Assert.assertEquals(true, expandOp.getIsEdge().get().applyArg());
         Assert.assertEquals("@.weight == 1.0", expandOp.getParams().get().getPredicate().get());
-        Assert.assertEquals(ArgUtils.asFfiAlias("a", true), expandOp.getAlias().get().applyArg());
+        Assert.assertEquals(ArgUtils.asAlias("a", true), expandOp.getAlias().get().applyArg());
 
         GetVOp getVOp = (GetVOp) ops.get(2);
         Assert.assertEquals(FfiVOpt.End, getVOp.getGetVOpt().get().applyArg());
@@ -138,7 +139,7 @@ public class VertexStepTest {
         ExpandOp expandOp = (ExpandOp) ops.get(1);
         Assert.assertEquals(true, expandOp.getIsEdge().get().applyArg());
         Assert.assertEquals("@.weight == 1.0", expandOp.getParams().get().getPredicate().get());
-        Assert.assertEquals(ArgUtils.asFfiAlias("a", true), expandOp.getAlias().get().applyArg());
+        Assert.assertEquals(ArgUtils.asAlias("a", true), expandOp.getAlias().get().applyArg());
 
         GetVOp op = (GetVOp) ops.get(2);
         Assert.assertEquals(FfiVOpt.End, op.getGetVOpt().get().applyArg());

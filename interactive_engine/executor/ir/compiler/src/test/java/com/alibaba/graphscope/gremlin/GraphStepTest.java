@@ -89,7 +89,7 @@ public class GraphStepTest {
     public void g_V_as_test() {
         Traversal traversal = g.V().as("a");
         ScanFusionOp op = (ScanFusionOp) generateInterOpFromBuilder(traversal, 0);
-        FfiAlias.ByValue expected = ArgUtils.asFfiAlias("a", true);
+        FfiAlias.ByValue expected = ArgUtils.asAlias("a", true);
         Assert.assertEquals(expected, op.getAlias().get().applyArg());
     }
 
@@ -97,7 +97,7 @@ public class GraphStepTest {
     public void g_E_as_test() {
         Traversal traversal = g.E().as("a");
         ScanFusionOp op = (ScanFusionOp) generateInterOpFromBuilder(traversal, 0);
-        FfiAlias.ByValue expected = ArgUtils.asFfiAlias("a", true);
+        FfiAlias.ByValue expected = ArgUtils.asAlias("a", true);
         Assert.assertEquals(expected, op.getAlias().get().applyArg());
     }
 
@@ -113,7 +113,7 @@ public class GraphStepTest {
         Assert.assertEquals("@.name == \"marko\"", expr);
         // table is "person"
         FfiNameOrId.ByValue table = op.getParams().get().getTables().get(0);
-        Assert.assertEquals(ArgUtils.asFfiTag("person"), table);
+        Assert.assertEquals(ArgUtils.asNameOrId("person"), table);
         // index_predicate is null
         Assert.assertEquals(false, op.getIds().isPresent());
     }

@@ -211,7 +211,7 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
         String tag = (splitExpr[0].length() > 0) ? splitExpr[0].substring(1) : splitExpr[0];
         // property "" indicates none
         String property = (splitExpr.length > 1) ? splitExpr[1] : "";
-        return ArgUtils.asFfiVar(tag, property);
+        return ArgUtils.asVar(tag, property);
     }
 
     default Map<String, Traversal.Admin> getProjectTraversals(TraversalParent parent) {
@@ -265,7 +265,7 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
         Set<String> labels = step.getLabels();
         if (labels != null && !labels.isEmpty()) {
             String label = labels.iterator().next();
-            alias = ArgUtils.asFfiAlias(label, true);
+            alias = ArgUtils.asAlias(label, true);
         }
         // set to NONE by default
         return new ArgAggFn(aggOpt, alias);

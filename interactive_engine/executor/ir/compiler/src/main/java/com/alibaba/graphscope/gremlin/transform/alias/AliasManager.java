@@ -24,7 +24,7 @@ public class AliasManager {
         int stepIdx = prefix.getStepIdx();
         int subTraversalId = prefix.getSubTraversalIdx();
         String alias = prefix.getPrefix() + "_" + stepIdx + "_" + subTraversalId;
-        return ArgUtils.asFfiAlias(alias, false);
+        return ArgUtils.asAlias(alias, false);
     }
 
     // prefix is as the gremlin result key which is used to display

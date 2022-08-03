@@ -54,8 +54,8 @@ public class MatchStepTest {
             String expectedEnd,
             FfiJoinKind expectedJoin,
             int expectedBinderSize) {
-        return sentence.getStartTag().equals(ArgUtils.asFfiAlias(expectedStart, true))
-                && sentence.getEndTag().equals(ArgUtils.asFfiAlias(expectedEnd, true))
+        return sentence.getStartTag().equals(ArgUtils.asAlias(expectedStart, true))
+                && sentence.getEndTag().equals(ArgUtils.asAlias(expectedEnd, true))
                 && sentence.getJoinKind() == expectedJoin
                 && sentence.getBinders().unmodifiableCollection().size() == expectedBinderSize;
     }

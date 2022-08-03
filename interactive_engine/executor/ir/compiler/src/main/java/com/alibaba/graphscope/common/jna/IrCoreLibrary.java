@@ -180,39 +180,6 @@ public interface IrCoreLibrary extends Library {
     FfiResult.ByValue appendPatternOperator(
             Pointer plan, Pointer pattern, int parent, IntByReference oprIdx);
 
-    FfiNameOrId.ByValue noneNameOrId();
-
-    default FfiNameOrId.ByValue cstrAsNameOrId(String name) {
-        FfiNameOrId.ByValue ffiName = new FfiNameOrId.ByValue();
-        ffiName.opt = FfiNameIdOpt.Name;
-        ffiName.name = name;
-        return ffiName;
-    }
-
-    FfiConst.ByValue cstrAsConst(String value);
-
-    FfiConst.ByValue int32AsConst(int value);
-
-    FfiConst.ByValue int64AsConst(long value);
-
-    FfiProperty.ByValue asNoneKey();
-
-    FfiProperty.ByValue asLabelKey();
-
-    FfiProperty.ByValue asIdKey();
-
-    FfiProperty.ByValue asLenKey();
-
-    FfiProperty.ByValue asPropertyKey(FfiNameOrId.ByValue key);
-
-    FfiVariable.ByValue asVarTagOnly(FfiNameOrId.ByValue tag);
-
-    FfiVariable.ByValue asVarPropertyOnly(FfiProperty.ByValue property);
-
-    FfiVariable.ByValue asVar(FfiNameOrId.ByValue tag, FfiProperty.ByValue property);
-
-    FfiVariable.ByValue asNoneVar();
-
     void destroyFfiData(FfiData.ByValue value);
 
     FfiResult.ByValue setSchema(String schemaJson);

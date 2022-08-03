@@ -37,7 +37,7 @@ public class ArgAggFn {
         this.aggregate = aggregate;
         this.alias = alias;
         // set to none by default
-        this.var = ArgUtils.asFfiNoneVar();
+        this.var = ArgUtils.asNoneVar();
     }
 
     public FfiVariable.ByValue getVar() {

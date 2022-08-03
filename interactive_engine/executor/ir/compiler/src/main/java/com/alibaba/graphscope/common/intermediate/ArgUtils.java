@@ -17,75 +17,95 @@
 package com.alibaba.graphscope.common.intermediate;
 
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
-import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.*;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class ArgUtils {
-    private static IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
-    private static String LABEL = "~label";
-    private static String ID = "~id";
-    private static String LEN = "~len";
+    public static String LABEL = "~label";
+    public static String ID = "~id";
+    public static String LEN = "~len";
     public static String PROPERTY_ALL = "~all";
 
-    public static FfiConst.ByValue asFfiConst(int id) {
-        return irCoreLib.int32AsConst(id);
+    public static FfiConst.ByValue asConst(int id) {
+        FfiConst.ByValue ffiConst = new FfiConst.ByValue();
+        ffiConst.dataType = FfiDataType.I32;
+        ffiConst.int32 = id;
+        return ffiConst;
     }
 
-    public static FfiConst.ByValue asFfiConst(long id) {
-        return irCoreLib.int64AsConst(id);
+    public static FfiConst.ByValue asConst(long id) {
+        FfiConst.ByValue ffiConst = new FfiConst.ByValue();
+        ffiConst.dataType = FfiDataType.I64;
+        ffiConst.int64 = id;
+        return ffiConst;
     }
 
-    // "" indicates NONE
-    public static FfiProperty.ByValue asFfiProperty(String property) {
-        if (property.isEmpty()) {
-            return irCoreLib.asNoneKey();
-        } else if (property.equals(LABEL)) {
-            return irCoreLib.asLabelKey();
-        } else if (property.equals(ID)) {
-            return irCoreLib.asIdKey();
-        } else if (property.equals(LEN)) {
-            return irCoreLib.asLenKey();
-        } else {
-            return irCoreLib.asPropertyKey(irCoreLib.cstrAsNameOrId(property));
+    public static FfiConst.ByValue asConst(String str) {
+        FfiConst.ByValue ffiConst = new FfiConst.ByValue();
+        ffiConst.dataType = FfiDataType.Str;
+        ffiConst.cstr = str;
+        return ffiConst;
+    }
+
+    // "" or null indicates NONE or HEAD
+    public static FfiNameOrId.ByValue asNameOrId(String tag) {
+        FfiNameOrId.ByValue ffiName = new FfiNameOrId.ByValue();
+        if (!StringUtils.isEmpty(tag)) {
+            ffiName.name = tag;
+            ffiName.opt = FfiNameIdOpt.Name;
         }
+        return ffiName;
     }
 
-    // "" indicates NONE or HEAD
-    public static FfiNameOrId.ByValue asFfiTag(String tag) {
-        if (tag.isEmpty()) {
-            return irCoreLib.noneNameOrId();
-        } else {
-            return irCoreLib.cstrAsNameOrId(tag);
+    public static FfiNameOrId.ByValue asNoneNameOrId() {
+        return new FfiNameOrId.ByValue();
+    }
+
+    // "" or null indicates NONE
+    public static FfiProperty.ByValue asKey(String property) {
+        FfiProperty.ByValue ffiProperty = new FfiProperty.ByValue();
+        if (!StringUtils.isEmpty(property)) {
+            if (property.equals(LABEL)) {
+                ffiProperty.opt = FfiPropertyOpt.Label;
+            } else if (property.equals(ID)) {
+                ffiProperty.opt = FfiPropertyOpt.Id;
+            } else if (property.equals(LEN)) {
+                ffiProperty.opt = FfiPropertyOpt.Len;
+            } else {
+                ffiProperty.opt = FfiPropertyOpt.Key;
+                ffiProperty.key = asNameOrId(property);
+            }
         }
+        return ffiProperty;
     }
 
-    public static FfiNameOrId.ByValue asFfiNoneTag() {
-        return irCoreLib.noneNameOrId();
+    public static FfiProperty.ByValue asNoneKey() {
+        return new FfiProperty.ByValue();
     }
 
-    public static FfiVariable.ByValue asFfiVar(String tag, String property) {
-        FfiNameOrId.ByValue ffiTag = asFfiTag(tag);
-        FfiProperty.ByValue ffiProperty = asFfiProperty(property);
-        return irCoreLib.asVar(ffiTag, ffiProperty);
+    public static FfiVariable.ByValue asVar(String tag, String property) {
+        FfiVariable.ByValue ffiVar = new FfiVariable.ByValue();
+        ffiVar.tag = asNameOrId(tag);
+        ffiVar.property = asKey(property);
+        return ffiVar;
     }
 
-    public static FfiVariable.ByValue asFfiNoneVar() {
-        return irCoreLib.asNoneVar();
+    public static FfiVariable.ByValue asNoneVar() {
+        return new FfiVariable.ByValue();
     }
 
-    public static FfiAlias.ByValue asFfiNoneAlias() {
-        FfiNameOrId.ByValue alias = irCoreLib.noneNameOrId();
+    public static FfiAlias.ByValue asAlias(String aliasName, boolean isQueryGiven) {
         FfiAlias.ByValue ffiAlias = new FfiAlias.ByValue();
-        ffiAlias.alias = alias;
-        ffiAlias.isQueryGiven = false;
+        ffiAlias.alias = asNameOrId(aliasName);
+        ffiAlias.isQueryGiven = isQueryGiven;
         return ffiAlias;
     }
 
-    public static FfiAlias.ByValue asFfiAlias(String aliasName, boolean isQueryGiven) {
-        FfiNameOrId.ByValue alias = irCoreLib.cstrAsNameOrId(aliasName);
+    public static FfiAlias.ByValue asNoneAlias() {
         FfiAlias.ByValue ffiAlias = new FfiAlias.ByValue();
-        ffiAlias.alias = alias;
-        ffiAlias.isQueryGiven = isQueryGiven;
+        ffiAlias.alias = asNoneNameOrId();
+        ffiAlias.isQueryGiven = false;
         return ffiAlias;
     }
 

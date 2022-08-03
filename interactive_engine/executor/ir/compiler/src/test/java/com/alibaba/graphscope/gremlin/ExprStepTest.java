@@ -48,6 +48,6 @@ public class ExprStepTest {
 
         List<Pair> exprWithAlias = (List<Pair>) projectOp.getExprWithAlias().get().applyArg();
         Assert.assertEquals("@.name", exprWithAlias.get(0).getValue0());
-        Assert.assertEquals(ArgUtils.asFfiNoneAlias(), exprWithAlias.get(0).getValue1());
+        Assert.assertEquals(ArgUtils.asNoneAlias(), exprWithAlias.get(0).getValue1());
     }
 }

@@ -38,7 +38,7 @@ public class GroupOpTest {
     public void countTest() throws IOException {
         GroupOp op = new GroupOp();
         op.setGroupByKeys(new OpArg(Collections.emptyList(), Function.identity()));
-        ArgAggFn aggFn = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("values", false));
+        ArgAggFn aggFn = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asAlias("values", false));
         op.setGroupByValues(new OpArg(Collections.singletonList(aggFn), Function.identity()));
 
         irPlan = DedupOpTest.getTestIrPlan(op);
@@ -49,7 +49,7 @@ public class GroupOpTest {
     public void countAsTest() throws IOException {
         GroupOp op = new GroupOp();
         op.setGroupByKeys(new OpArg(Collections.emptyList(), Function.identity()));
-        ArgAggFn aggFn = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("a", true));
+        ArgAggFn aggFn = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asAlias("a", true));
         op.setGroupByValues(new OpArg(Collections.singletonList(aggFn), Function.identity()));
 
         irPlan = DedupOpTest.getTestIrPlan(op);
@@ -61,10 +61,10 @@ public class GroupOpTest {
     public void groupTest() throws IOException {
         GroupOp op = new GroupOp();
         Pair<FfiVariable.ByValue, FfiAlias.ByValue> groupKey =
-                Pair.with(ArgUtils.asFfiNoneVar(), ArgUtils.asFfiAlias("keys", false));
+                Pair.with(ArgUtils.asNoneVar(), ArgUtils.asAlias("keys", false));
         op.setGroupByKeys(new OpArg(Collections.singletonList(groupKey), Function.identity()));
 
-        ArgAggFn aggFn = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.asFfiAlias("values", false));
+        ArgAggFn aggFn = new ArgAggFn(FfiAggOpt.ToList, ArgUtils.asAlias("values", false));
         op.setGroupByValues(new OpArg(Collections.singletonList(aggFn), Function.identity()));
 
         irPlan = DedupOpTest.getTestIrPlan(op);
