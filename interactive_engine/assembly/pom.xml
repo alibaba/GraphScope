@@ -39,10 +39,12 @@
       <dependency>
         <groupId>com.alibaba.maxgraph</groupId>
         <artifactId>frontend</artifactId>
+        <version>${project.parent.version}</version>
       </dependency>
         <dependency>
           <groupId>com.alibaba.maxgraph</groupId>
           <artifactId>maxgraph-executor</artifactId>
+          <version>${project.parent.version}</version>
         </dependency>
       </dependencies>
     </profile>
@@ -66,18 +68,22 @@
         <dependency>
           <groupId>com.alibaba.maxgraph</groupId>
           <artifactId>groot-server</artifactId>
+          <version>${project.parent.version}</version>
         </dependency>
         <dependency>
           <groupId>com.alibaba.maxgraph</groupId>
           <artifactId>data_load_tools</artifactId>
+          <version>${project.parent.version}</version>
         </dependency>
         <dependency>
           <groupId>com.alibaba.maxgraph</groupId>
           <artifactId>maxgraph-executor</artifactId>
+          <version>${project.parent.version}</version>
         </dependency>
         <dependency>
           <groupId>com.alibaba.maxgraph</groupId>
           <artifactId>c-end-lgraph</artifactId>
+          <version>${project.parent.version}</version>
         </dependency>
       </dependencies>
     </profile>
