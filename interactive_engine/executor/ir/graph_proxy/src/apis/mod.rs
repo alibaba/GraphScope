@@ -19,8 +19,8 @@ pub mod read_graph;
 pub mod write_graph;
 
 pub use graph::element::{
-    DefaultDetails, Details, DynDetails, Edge, Element, EmptyDetails, GraphElement, GraphObject, GraphPath,
-    PropKey, PropertyValue, Vertex, VertexOrEdge,
+    DefaultDetails, Details, DynDetails, Edge, Element, GraphElement, GraphObject, GraphPath, PropKey,
+    PropertyValue, Vertex, VertexOrEdge,
 };
 pub use graph::{read_id, write_id, Direction, QueryParams, ID};
 pub use partitioner::Partitioner;

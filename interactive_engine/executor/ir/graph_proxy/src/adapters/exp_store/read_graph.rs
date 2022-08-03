@@ -362,7 +362,7 @@ fn to_runtime_vertex(v: LocalVertex<'static, DefaultId>, prop_keys: Option<Vec<N
 fn to_empty_vertex(v: LocalVertex<'static, DefaultId>) -> Vertex {
     let id = v.get_id() as ID;
     let label = encode_runtime_v_label(&v);
-    Vertex::new(id, Some(label), DynDetails::empty())
+    Vertex::new(id, Some(label), DynDetails::default())
 }
 
 #[inline]

@@ -141,7 +141,7 @@ where
                 .partition_manager
                 .get_vertex_id_by_primary_keys(store_label_id, store_indexed_values.as_ref())
             {
-                Ok(Some(Vertex::new(vid as ID, Some(label_id.clone()), DynDetails::empty())))
+                Ok(Some(Vertex::new(vid as ID, Some(label_id.clone()), DynDetails::default())))
             } else {
                 Ok(None)
             }
@@ -395,7 +395,7 @@ where
 fn to_empty_vertex<V: StoreVertex>(v: &V) -> Vertex {
     let id = v.get_id() as ID;
     let label = encode_runtime_v_label(v);
-    Vertex::new(id, Some(label), DynDetails::empty())
+    Vertex::new(id, Some(label), DynDetails::default())
 }
 
 #[inline]
