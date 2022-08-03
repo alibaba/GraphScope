@@ -1,0 +1,186 @@
+/**
+ * Copyright 2020 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+package job_proto;
+option java_package = "com.alibaba.pegasus.service.job.protocol";
+option java_outer_classname = "JobClient";
+
+message Repartition {
+  bytes resource  = 1;
+}
+
+message Broadcast {
+  bytes resource = 1;
+}
+
+message Aggregate {
+  uint32 target = 1;
+}
+
+message Communicate {
+  oneof ch_kind {
+    Repartition to_another  = 1;
+    Broadcast to_others  = 2;
+    Aggregate to_one     = 3;
+  }
+}
+
+message Source {
+  bytes resource = 1;
+}
+
+message Map {
+  bytes resource = 1;
+}
+
+message FlatMap {
+  bytes resource = 1;
+}
+
+message Filter {
+  bytes resource = 1;
+}
+
+message Sink {
+  bytes resource = 1;
+}
+
+message LeftJoin {
+  bytes resource = 1;
+}
+
+message Limit {
+  uint32 limit = 2;
+}
+
+message Dedup {
+  bytes resource = 1;
+}
+
+message SortBy {
+  int64 limit = 1;
+  bytes compare = 2;
+}
+
+enum AccumKind {
+  CNT       = 0;
+  SUM       = 1;
+  MAX       = 2;
+  MIN       = 3;
+  TO_LIST   = 4;
+  TO_SET    = 5;
+  CUSTOM    = 6;
+}
+
+message Fold {
+  AccumKind accum = 1;
+  bytes resource  = 2;
+  FlatMap unfold  = 3;
+}
+
+message GroupBy {
+  AccumKind accum = 1;
+  bytes resource = 2;
+  FlatMap unfold  = 3;
+}
+
+message Merge {
+  repeated TaskPlan tasks = 1;
+}
+
+message Iteration {
+  uint32 max_iters = 1;
+  Filter until    = 2;
+  TaskPlan body   = 3;
+}
+
+message IterationEmit {
+  enum EmitKind {
+    EMIT_BEFORE = 0;
+    EMIT_AFTER = 1;
+  }
+  uint32 max_iters = 1;
+  Filter until    = 2;
+  TaskPlan body   = 3;
+  EmitKind emit_kind = 4;
+}
+
+message Apply {
+  LeftJoin join = 1;
+  TaskPlan task = 2;
+}
+
+message SegmentApply {
+  LeftJoin join = 1;
+  TaskPlan task = 2;
+}
+
+message Join {
+  enum JoinKind {
+    // Inner join
+    INNER = 0;
+    // Left outer join
+    LEFT_OUTER = 1;
+    // Right outer join
+    RIGHT_OUTER = 2;
+    // Full outer join
+    FULL_OUTER = 3;
+    // Left semi-join, right alternative can be naturally adapted
+    SEMI = 4;
+    // Left anti-join, right alternative can be naturally adapted
+    ANTI = 5;
+    // aka. Cartesian product
+    TIMES = 6;
+  }
+  JoinKind kind = 1;
+  bytes resource = 2;
+  TaskPlan left_task = 3;
+  TaskPlan right_task = 4;
+}
+
+message KeyBy {
+  bytes key_selector  = 2;
+}
+
+message FilterMap {
+  bytes resource = 1;
+}
+
+message OperatorDef {
+  oneof op_kind {
+    Communicate comm = 1;
+    Map map = 3;
+    FlatMap flat_map = 4;
+    Filter filter = 5;
+    Limit limit = 6;
+    SortBy sort = 7;
+    Fold fold = 8;
+    GroupBy group = 9;
+    Merge merge = 10;
+    Iteration iterate = 11;
+    Apply apply = 12;
+    Dedup dedup = 13;
+    SegmentApply seg_apply = 14;
+    Join join = 15;
+    KeyBy key_by = 16;
+    FilterMap filter_map = 17;
+    IterationEmit iterate_emit = 18;
+  }
+}
+
+message TaskPlan {
+  repeated OperatorDef plan = 1;
+}

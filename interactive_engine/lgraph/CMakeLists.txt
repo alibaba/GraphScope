@@ -73,7 +73,7 @@ else ()
   set(DYLIB_SUFFIX "so")
 endif ()
 
-set(Maxgraph_FFI_LIB_DIR ${Lgraph_SOURCE_DIR}/../executor/target)
+set(Maxgraph_FFI_LIB_DIR ${Lgraph_SOURCE_DIR}/../executor/assembly/target)
 set(Maxgraph_FFI_LIB ${Maxgraph_FFI_LIB_DIR}/libmaxgraph_ffi.${DYLIB_SUFFIX})
 
 # Add library

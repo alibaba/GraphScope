@@ -27,6 +27,7 @@
 #include "grape/communication/sync_comm.h"
 #include "grape/parallel/default_message_manager.h"
 #include "grape/parallel/parallel_engine.h"
+#include "grape/util.h"
 
 namespace gs {
 
@@ -86,6 +87,8 @@ class DefaultWorker {
 
   template <class... Args>
   void Query(Args&&... args) {
+    double t = grape::GetCurrentTime();
+
     auto& graph = context_->fragment();
 
     MPI_Barrier(comm_spec_.comm());
@@ -103,12 +106,14 @@ class DefaultWorker {
     messages_.FinishARound();
 
     if (comm_spec_.worker_id() == grape::kCoordinatorRank) {
-      VLOG(1) << "[Coordinator]: Finished PEval";
+      VLOG(1) << "[Coordinator]: Finished PEval, time: "
+              << grape::GetCurrentTime() - t << " sec";
     }
 
     int step = 1;
 
     while (!messages_.ToTerminate()) {
+      t = grape::GetCurrentTime();
       round++;
       messages_.StartARound();
 
@@ -117,7 +122,8 @@ class DefaultWorker {
       messages_.FinishARound();
 
       if (comm_spec_.worker_id() == grape::kCoordinatorRank) {
-        VLOG(1) << "[Coordinator]: Finished IncEval - " << step;
+        VLOG(1) << "[Coordinator]: Finished IncEval - " << step
+                << ", time: " << grape::GetCurrentTime() - t << " sec";
       }
       ++step;
     }

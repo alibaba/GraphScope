@@ -278,8 +278,8 @@ class GraphSchema:
                 edge_kinds[edge_label] = []
             edge_kinds[edge_label].append(
                 (
-                    id_to_label[kind.src_vertex_label_id.id],
-                    id_to_label[kind.dst_vertex_label_id.id],
+                    kind.src_vertex_label,
+                    kind.dst_vertex_label,
                 )
             )
         for type_def_pb in graph_def.type_defs:
@@ -519,11 +519,11 @@ class GraphSchema:
         return self._edge_labels_to_add[-1]
 
     def drop(self, label, src_label=None, dst_label=None):
-        for item in itertools.chain(self.vertex_labels, self._vertex_labels_to_add):
+        for item in itertools.chain(self._vertex_labels, self._vertex_labels_to_add):
             if label == item.label:
                 self._vertex_labels_to_drop.append(VertexLabel(label))
                 return
-        for item in itertools.chain(self.edge_labels, self._edge_labels_to_add):
+        for item in itertools.chain(self._edge_labels, self._edge_labels_to_add):
             if label == item.label:
                 label_to_drop = EdgeLabel(label)
                 if src_label and dst_label:
