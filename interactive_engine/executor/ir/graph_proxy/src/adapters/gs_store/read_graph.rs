@@ -400,6 +400,7 @@ fn to_empty_vertex<V: StoreVertex>(v: &V) -> Vertex {
 
 #[inline]
 fn to_runtime_edge<E: StoreEdge>(e: &E) -> Edge {
+    // TODO: LazyEdgeDetails
     let id = e.get_edge_id() as ID;
     let label = encode_runtime_e_label(e);
     let properties = e
