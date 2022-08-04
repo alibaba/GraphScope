@@ -388,7 +388,7 @@ where
     let id = v.get_id() as ID;
     let label = encode_runtime_v_label(&v);
     let details = LazyVertexDetails::new(v, prop_keys);
-    Vertex::new(id, Some(label), DynDetails::with(details))
+    Vertex::new(id, Some(label), DynDetails::lazy(details))
 }
 
 #[inline]

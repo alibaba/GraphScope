@@ -130,6 +130,10 @@ pub trait Details: std::fmt::Debug + Send + Sync + AsAny {
     fn insert_property(&mut self, key: NameOrId, value: Object);
 }
 
+/// Properties in Runtime, including:
+/// Empty when no property required. e.g., for an id-only Vertex.
+/// Default when properties required. Usually, these properties cannot be accessed locally, thus need to be carried with the GraphElement.
+/// Lazy when properties required. Usually, these properties can be accessed locally, thus can be queried when used.
 #[derive(Clone, Debug)]
 pub enum DynDetails {
     Empty,
@@ -148,7 +152,7 @@ impl DynDetails {
         DynDetails::Default(default)
     }
 
-    pub fn with<P: Details + 'static>(p: P) -> Self {
+    pub fn lazy<P: Details + 'static>(p: P) -> Self {
         DynDetails::Lazy(Arc::new(p))
     }
 }
@@ -199,6 +203,7 @@ impl Encode for DynDetails {
             }
             DynDetails::Default(default) => {
                 writer.write_u8(1)?;
+                writer.write_u64(default.len() as u64)?;
                 for (k, v) in default {
                     k.write_to(writer)?;
                     v.write_to(writer)?;
@@ -211,8 +216,8 @@ impl Encode for DynDetails {
                         // If no properties required, hint as Empty DynDetails
                         writer.write_u8(0)?;
                     } else {
-                        // Otherwise, hint as LazyDetails
-                        writer.write_u8(2)?;
+                        // Otherwise, hint as DefaultDetails
+                        writer.write_u8(1)?;
                         writer.write_u64(len as u64)?;
                         for (k, v) in all_props {
                             k.write_to(writer)?;
@@ -235,7 +240,7 @@ impl Decode for DynDetails {
         if kind == 0 {
             // Empty DynDetails
             Ok(DynDetails::default())
-        } else if kind == 1 || kind == 2 {
+        } else if kind == 1 {
             // For either DefaultDetails or LazyDetails(with required details), we decoded as DefaultDetails
             let len = reader.read_u64()?;
             let mut map = HashMap::with_capacity(len as usize);
