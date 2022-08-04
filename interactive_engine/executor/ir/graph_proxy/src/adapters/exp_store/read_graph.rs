@@ -231,12 +231,11 @@ impl ReadGraph for ExpStore {
         // Besides, we guarantee only one worker (on each server) is going to scan (with params.partitions.is_some())
         if params.partitions.is_some() {
             let label_ids = encode_storage_vertex_label(&params.labels);
-            let store = self.store;
             let props = params.columns.clone();
             let result = self
                 .store
                 .get_all_vertices(label_ids.as_ref())
-                .map(move |v| to_runtime_vertex(v, store, props.clone()));
+                .map(move |v| to_runtime_vertex(v, props.clone()));
 
             Ok(filter_limit!(result, params.filter, params.limit))
         } else {
@@ -255,12 +254,11 @@ impl ReadGraph for ExpStore {
     fn scan_edge(&self, params: &QueryParams) -> GraphProxyResult<Box<dyn Iterator<Item = Edge> + Send>> {
         if params.partitions.is_some() {
             let label_ids = encode_storage_edge_label(&params.labels);
-            let store = self.store;
             let props = params.columns.clone();
             let result = self
                 .store
                 .get_all_edges(label_ids.as_ref())
-                .map(move |e| to_runtime_edge(e, store, props.clone()));
+                .map(move |e| to_runtime_edge(e, props.clone()));
 
             Ok(filter_limit!(result, params.filter, params.limit))
         } else {
@@ -274,7 +272,7 @@ impl ReadGraph for ExpStore {
         let mut result = Vec::with_capacity(ids.len());
         for id in ids {
             if let Some(local_vertex) = self.store.get_vertex(*id as DefaultId) {
-                let v = to_runtime_vertex(local_vertex, self.store, params.columns.clone());
+                let v = to_runtime_vertex(local_vertex, params.columns.clone());
                 result.push(v);
             }
         }
@@ -288,7 +286,7 @@ impl ReadGraph for ExpStore {
         for id in ids {
             let eid = encode_store_e_id(id);
             if let Some(local_edge) = self.store.get_edge(eid) {
-                let e = to_runtime_edge(local_edge, self.store, params.columns.clone());
+                let e = to_runtime_edge(local_edge, params.columns.clone());
                 result.push(e);
             }
         }
@@ -309,7 +307,7 @@ impl ReadGraph for ExpStore {
                 Direction::In => graph.get_in_vertices(v as DefaultId, edge_label_ids.as_ref()),
                 Direction::Both => graph.get_both_vertices(v as DefaultId, edge_label_ids.as_ref()),
             }
-            .map(move |v| to_runtime_vertex(v, graph, None));
+            .map(move |v| to_empty_vertex(v));
             Ok(filter_limit!(iter, filter, limit))
         });
         Ok(stmt)
@@ -331,7 +329,7 @@ impl ReadGraph for ExpStore {
                 Direction::In => graph.get_in_edges(v as DefaultId, edge_label_ids.as_ref()),
                 Direction::Both => graph.get_both_edges(v as DefaultId, edge_label_ids.as_ref()),
             }
-            .map(move |e| to_runtime_edge(e, graph, props.clone()));
+            .map(move |e| to_runtime_edge(e, props.clone()));
             Ok(filter_limit!(iter, filter, limit))
         });
         Ok(stmt)
@@ -351,26 +349,29 @@ pub fn create_exp_store() {
 }
 
 #[inline]
-fn to_runtime_vertex(
-    v: LocalVertex<DefaultId>, store: &'static LargeGraphDB<DefaultId, InternalId>,
-    prop_keys: Option<Vec<NameOrId>>,
-) -> Vertex {
+fn to_runtime_vertex(v: LocalVertex<'static, DefaultId>, prop_keys: Option<Vec<NameOrId>>) -> Vertex {
     // For vertices, we query properties via vid
+    let id = v.get_id() as ID;
     let label = encode_runtime_v_label(&v);
-    let details = LazyVertexDetails::new(v.get_id(), prop_keys, store);
-    Vertex::new(v.get_id() as ID, Some(label), DynDetails::new(details))
+    let details = LazyVertexDetails::new(v, prop_keys);
+    Vertex::new(id, Some(label), DynDetails::lazy(details))
 }
 
 #[inline]
-fn to_runtime_edge(
-    e: LocalEdge<DefaultId, InternalId>, store: &'static LargeGraphDB<DefaultId, InternalId>,
-    prop_keys: Option<Vec<NameOrId>>,
-) -> Edge {
+fn to_empty_vertex(v: LocalVertex<'static, DefaultId>) -> Vertex {
+    let id = v.get_id() as ID;
+    let label = encode_runtime_v_label(&v);
+    Vertex::new(id, Some(label), DynDetails::default())
+}
+
+#[inline]
+fn to_runtime_edge(e: LocalEdge<'static, DefaultId, InternalId>, prop_keys: Option<Vec<NameOrId>>) -> Edge {
     let id = encode_runtime_e_id(&e);
     let label = encode_runtime_e_label(&e);
-    let details = LazyEdgeDetails::new(e.get_edge_id(), prop_keys, store);
     let src_id = e.get_src_id();
     let dst_id = e.get_dst_id();
+    let from_src = e.is_from_start();
+    let details = LazyEdgeDetails::new(e, prop_keys);
     let store_src_label: LabelId = (src_id >> LABEL_SHIFT_BITS) as LabelId;
     let store_dst_label: LabelId = (dst_id >> LABEL_SHIFT_BITS) as LabelId;
     let src_label = encode_runtime_label(store_src_label);
@@ -381,8 +382,8 @@ fn to_runtime_edge(
         Some(label),
         src_id as ID,
         dst_id as ID,
-        e.is_from_start(),
-        DynDetails::new(details),
+        from_src,
+        DynDetails::lazy(details),
     );
 
     e.set_src_label(Some(src_label));
@@ -394,46 +395,26 @@ fn to_runtime_edge(
 /// That is, the required properties will not be materialized until LazyVertexDetails need to be shuffled.
 #[allow(dead_code)]
 struct LazyVertexDetails {
-    pub id: DefaultId,
     // prop_keys specify the properties we would save for later queries after shuffle,
     // excluding the ones used only when local property fetching.
     // Specifically, Some(vec![]) indicates we need all properties
-    // and None indicates we do not need any property,
+    // and None indicates we do not need any property
     prop_keys: Option<Vec<NameOrId>>,
     inner: AtomicPtr<LocalVertex<'static, DefaultId>>,
-    store: &'static LargeGraphDB<DefaultId, InternalId>,
 }
 
 impl_as_any!(LazyVertexDetails);
 
 impl LazyVertexDetails {
-    pub fn new(
-        id: DefaultId, prop_keys: Option<Vec<NameOrId>>,
-        store: &'static LargeGraphDB<DefaultId, InternalId>,
-    ) -> Self {
-        LazyVertexDetails { id, prop_keys, inner: AtomicPtr::default(), store }
+    pub fn new(v: LocalVertex<'static, DefaultId>, prop_keys: Option<Vec<NameOrId>>) -> Self {
+        let ptr = Box::into_raw(Box::new(v));
+        LazyVertexDetails { prop_keys, inner: AtomicPtr::new(ptr) }
     }
 
     fn get_vertex_ptr(&self) -> Option<*mut LocalVertex<'static, DefaultId>> {
-        let mut ptr = self.inner.load(Ordering::SeqCst);
+        let ptr = self.inner.load(Ordering::SeqCst);
         if ptr.is_null() {
-            if let Some(v) = self.store.get_vertex(self.id) {
-                let v = Box::new(v);
-                let new_ptr = Box::into_raw(v);
-                let swapped = self.inner.swap(new_ptr, Ordering::SeqCst);
-                if swapped.is_null() {
-                    ptr = new_ptr;
-                } else {
-                    unsafe {
-                        std::ptr::drop_in_place(new_ptr);
-                    }
-                    ptr = swapped
-                };
-                Some(ptr)
-            } else {
-                info!("Have not found vertex {:?} in exp_store", self.id);
-                None
-            }
+            None
         } else {
             Some(ptr)
         }
@@ -443,7 +424,6 @@ impl LazyVertexDetails {
 impl fmt::Debug for LazyVertexDetails {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("LazyVertexDetails")
-            .field("id", &self.id)
             .field("properties", &self.prop_keys)
             .field("inner", &self.inner)
             .finish()
@@ -501,13 +481,14 @@ impl Details for LazyVertexDetails {
         Some(all_props)
     }
 
-    fn insert_property(&mut self, key: NameOrId, _value: Object) -> Option<Object> {
+    fn insert_property(&mut self, key: NameOrId, _value: Object) {
         if let Some(prop_keys) = self.prop_keys.as_mut() {
-            prop_keys.push(key);
+            if !prop_keys.is_empty() {
+                prop_keys.push(key);
+            }
         } else {
             self.prop_keys = Some(vec![key]);
         }
-        None
     }
 }
 
@@ -526,46 +507,26 @@ impl Drop for LazyVertexDetails {
 /// That is, the required properties will not be materialized until LazyEdgeDetails need to be shuffled.
 #[allow(dead_code)]
 struct LazyEdgeDetails {
-    pub eid: EdgeId<DefaultId>,
     // prop_keys specify the properties we would save for later queries after shuffle,
     // excluding the ones used only when local property fetching.
     // Specifically, Some(vec![]) indicates we need all properties
     // and None indicates we do not need any property,
     prop_keys: Option<Vec<NameOrId>>,
     inner: AtomicPtr<LocalEdge<'static, DefaultId, InternalId>>,
-    store: &'static LargeGraphDB<DefaultId, InternalId>,
 }
 
 impl_as_any!(LazyEdgeDetails);
 
 impl LazyEdgeDetails {
-    pub fn new(
-        eid: EdgeId<DefaultId>, prop_keys: Option<Vec<NameOrId>>,
-        store: &'static LargeGraphDB<DefaultId, InternalId>,
-    ) -> Self {
-        LazyEdgeDetails { eid, prop_keys, inner: AtomicPtr::default(), store }
+    pub fn new(e: LocalEdge<'static, DefaultId, InternalId>, prop_keys: Option<Vec<NameOrId>>) -> Self {
+        let ptr = Box::into_raw(Box::new(e));
+        LazyEdgeDetails { prop_keys, inner: AtomicPtr::new(ptr) }
     }
 
     fn get_edge_ptr(&self) -> Option<*mut LocalEdge<'static, DefaultId, InternalId>> {
-        let mut ptr = self.inner.load(Ordering::SeqCst);
+        let ptr = self.inner.load(Ordering::SeqCst);
         if ptr.is_null() {
-            if let Some(e) = self.store.get_edge(self.eid) {
-                let e = Box::new(e);
-                let new_ptr = Box::into_raw(e);
-                let swapped = self.inner.swap(new_ptr, Ordering::SeqCst);
-                if swapped.is_null() {
-                    ptr = new_ptr;
-                } else {
-                    unsafe {
-                        std::ptr::drop_in_place(new_ptr);
-                    }
-                    ptr = swapped
-                };
-                Some(ptr)
-            } else {
-                info!("Have not found edge {:?} in exp_store", self.eid);
-                None
-            }
+            None
         } else {
             Some(ptr)
         }
@@ -575,7 +536,7 @@ impl LazyEdgeDetails {
 impl fmt::Debug for LazyEdgeDetails {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("LazyEdgeDetails")
-            .field("eid", &self.eid)
+            .field("prop_keys", &self.prop_keys)
             .field("inner", &self.inner)
             .finish()
     }
@@ -634,13 +595,14 @@ impl Details for LazyEdgeDetails {
         Some(all_props)
     }
 
-    fn insert_property(&mut self, key: NameOrId, _value: Object) -> Option<Object> {
+    fn insert_property(&mut self, key: NameOrId, _value: Object) {
         if let Some(prop_keys) = self.prop_keys.as_mut() {
-            prop_keys.push(key);
+            if !prop_keys.is_empty() {
+                prop_keys.push(key);
+            }
         } else {
             self.prop_keys = Some(vec![key]);
         }
-        None
     }
 }
 

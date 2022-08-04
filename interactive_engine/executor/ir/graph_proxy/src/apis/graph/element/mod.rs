@@ -22,7 +22,7 @@ use ir_common::NameOrId;
 pub use path::GraphPath;
 pub use path::VertexOrEdge;
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
-pub use property::{DefaultDetails, Details, DynDetails, PropKey, PropertyValue};
+pub use property::{Details, DynDetails, PropKey, PropertyValue};
 pub use vertex::Vertex;
 
 use crate::apis::ID;

@@ -21,6 +21,7 @@ mod common;
 mod test {
     use std::sync::Arc;
 
+    use dyn_type::object;
     use graph_proxy::apis::{Details, Element, GraphElement};
     use graph_proxy::{create_exp_store, SimplePartition};
     use graph_store::ldbc::LDBCVertexParser;
@@ -158,30 +159,29 @@ mod test {
         assert_eq!(result_edges, expected_edges)
     }
 
-    // g.V().in('knows') with required properties
+    // g.V().inE('knows') with required properties
     #[test]
-    fn expand_inv_with_label_property_test() {
-        let query_param = query_params(vec!["knows".into()], vec!["name".into()], None);
+    fn expand_ine_with_label_property_test() {
+        let query_param = query_params(vec!["knows".into()], vec!["weight".into()], None);
         let expand_opr_pb = pb::EdgeExpand {
             v_tag: None,
             direction: 1,
             params: Some(query_param),
-            is_edge: false,
+            is_edge: true,
             alias: None,
         };
         let mut result = expand_test(expand_opr_pb);
         let mut result_ids_with_prop = vec![];
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
-        let expected_ids_with_prop =
-            vec![(v1, "marko".to_string().into()), (v1, "marko".to_string().into())];
+        let expected_dst_ids_with_prop = vec![(v1, object!(0.5)), (v1, object!(1.0))];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None).unwrap().as_graph_edge() {
                 result_ids_with_prop.push((
-                    element.id() as usize,
+                    element.get_other_id() as usize,
                     element
                         .details()
                         .unwrap()
-                        .get_property(&"name".into())
+                        .get_property(&"weight".into())
                         .unwrap()
                         .try_to_owned()
                         .unwrap(),
@@ -189,7 +189,7 @@ mod test {
             }
         }
 
-        assert_eq!(result_ids_with_prop, expected_ids_with_prop)
+        assert_eq!(result_ids_with_prop, expected_dst_ids_with_prop)
     }
 
     // g.V().both()
