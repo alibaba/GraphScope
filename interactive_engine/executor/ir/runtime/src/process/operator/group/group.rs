@@ -83,7 +83,7 @@ mod tests {
     use std::collections::{HashMap, HashSet};
 
     use dyn_type::Object;
-    use graph_proxy::apis::{DefaultDetails, DynDetails, Vertex};
+    use graph_proxy::apis::{DynDetails, Vertex};
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
     use ir_common::NameOrId;
@@ -110,7 +110,7 @@ mod tests {
             vec![("id".into(), object!(3)), ("age".into(), object!(27)), ("name".into(), object!("marko"))]
                 .into_iter()
                 .collect();
-        Vertex::new(3, Some("person".into()), DynDetails::new(DefaultDetails::new(map3)))
+        Vertex::new(3, Some("person".into()), DynDetails::new(map3))
     }
 
     fn group_test(group_opr_pb: pb::GroupBy) -> ResultStream<Record> {

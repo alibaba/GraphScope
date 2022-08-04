@@ -32,8 +32,8 @@ use pegasus_common::downcast::*;
 
 use crate::apis::graph::PKV;
 use crate::apis::{
-    from_fn, register_graph, DefaultDetails, Details, Direction, DynDetails, Edge, PropertyValue,
-    QueryParams, ReadGraph, Statement, Vertex, ID,
+    from_fn, register_graph, Details, Direction, DynDetails, Edge, PropertyValue, QueryParams, ReadGraph,
+    Statement, Vertex, ID,
 };
 use crate::utils::expr::eval_pred::EvalPred;
 use crate::{filter_limit, limit_n};
@@ -388,7 +388,7 @@ where
     let id = v.get_id() as ID;
     let label = encode_runtime_v_label(&v);
     let details = LazyVertexDetails::new(v, prop_keys);
-    Vertex::new(id, Some(label), DynDetails::new(details))
+    Vertex::new(id, Some(label), DynDetails::with(details))
 }
 
 #[inline]
@@ -408,13 +408,8 @@ fn to_runtime_edge<E: StoreEdge>(e: &E) -> Edge {
         .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val))
         .collect();
     // TODO: new an edge with with_from_src()
-    let mut edge = Edge::new(
-        id,
-        Some(label),
-        e.get_src_id() as ID,
-        e.get_dst_id() as ID,
-        DynDetails::new(DefaultDetails::new(properties)),
-    );
+    let mut edge =
+        Edge::new(id, Some(label), e.get_src_id() as ID, e.get_dst_id() as ID, DynDetails::new(properties));
     edge.set_src_label(Some(NameOrId::Id(e.get_src_label_id() as KeyId)));
     edge.set_dst_label(Some(NameOrId::Id(e.get_dst_label_id() as KeyId)));
     edge
@@ -438,12 +433,12 @@ fn edge_trim(mut edge: Edge, columns: Option<&Vec<NameOrId>>) -> Edge {
                         .unwrap_or(Object::None),
                 );
             }
-            *details = DynDetails::new(DefaultDetails::new(trimmed_details));
+            *details = DynDetails::new(trimmed_details);
         }
     } else {
         // None means no properties are needed
         let details = edge.get_details_mut();
-        *details = DynDetails::new(DefaultDetails::default());
+        *details = DynDetails::default();
     }
     edge
 }

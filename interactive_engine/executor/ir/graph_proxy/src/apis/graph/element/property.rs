@@ -15,9 +15,7 @@
 
 use std::collections::HashMap;
 use std::convert::TryFrom;
-use std::fmt;
 use std::io;
-use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 
 use dyn_type::{BorrowObject, Object};
@@ -132,7 +130,7 @@ pub trait Details: std::fmt::Debug + Send + Sync + AsAny {
     fn insert_property(&mut self, key: NameOrId, value: Object);
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum DynDetails {
     Empty,
     Default(HashMap<NameOrId, Object>),
@@ -146,12 +144,12 @@ impl Default for DynDetails {
 }
 
 impl DynDetails {
-    pub fn new<P: Details + 'static>(p: P) -> Self {
-        DynDetails::Lazy(Arc::new(p))
+    pub fn new(default: HashMap<NameOrId, Object>) -> Self {
+        DynDetails::Default(default)
     }
 
-    pub fn with(default: HashMap<NameOrId, Object>) -> Self {
-        DynDetails::Default(default)
+    pub fn with<P: Details + 'static>(p: P) -> Self {
+        DynDetails::Lazy(Arc::new(p))
     }
 }
 
@@ -181,7 +179,7 @@ impl Details for DynDetails {
             DynDetails::Empty => {
                 let mut default = HashMap::new();
                 default.insert(key, value);
-                *self = DynDetails::with(default);
+                *self = DynDetails::new(default);
             }
             DynDetails::Default(default) => {
                 default.insert(key, value);
@@ -190,14 +188,6 @@ impl Details for DynDetails {
                 Arc::get_mut(lazy).map(|e| e.insert_property(key, value));
             }
         }
-    }
-}
-
-impl fmt::Debug for DynDetails {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("DynDetails")
-            .field("properties", &format!("{:?}", &self))
-            .finish()
     }
 }
 
@@ -258,75 +248,5 @@ impl Decode for DynDetails {
         } else {
             Err(io::Error::from(io::ErrorKind::Other))
         }
-    }
-}
-
-#[allow(dead_code)]
-#[derive(Clone, Debug, Default)]
-pub struct DefaultDetails {
-    inner: HashMap<NameOrId, Object>,
-}
-
-#[allow(dead_code)]
-impl DefaultDetails {
-    pub fn new(properties: HashMap<NameOrId, Object>) -> Self {
-        DefaultDetails { inner: properties }
-    }
-}
-
-impl_as_any!(DefaultDetails);
-
-impl Deref for DefaultDetails {
-    type Target = HashMap<NameOrId, Object>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.inner
-    }
-}
-
-impl DerefMut for DefaultDetails {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.inner
-    }
-}
-
-impl Details for DefaultDetails {
-    fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
-        self.inner
-            .get(key)
-            .map(|o| PropertyValue::Borrowed(o.as_borrow()))
-    }
-
-    fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
-        // it's actually unreachable!()
-        Some(self.inner.clone())
-    }
-
-    fn insert_property(&mut self, key: NameOrId, value: Object) {
-        self.inner.insert(key, value);
-    }
-}
-
-impl Encode for DefaultDetails {
-    fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
-        writer.write_u64(self.inner.len() as u64)?;
-        for (k, v) in &self.inner {
-            k.write_to(writer)?;
-            v.write_to(writer)?;
-        }
-        Ok(())
-    }
-}
-
-impl Decode for DefaultDetails {
-    fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
-        let len = reader.read_u64()?;
-        let mut map = HashMap::with_capacity(len as usize);
-        for _i in 0..len {
-            let k = <NameOrId>::read_from(reader)?;
-            let v = <Object>::read_from(reader)?;
-            map.insert(k, v);
-        }
-        Ok(DefaultDetails { inner: map })
     }
 }

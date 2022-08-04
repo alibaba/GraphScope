@@ -238,7 +238,7 @@ impl Evaluate for Evaluator {
     /// # use dyn_type::Object;
     /// # use ir_common::NameOrId;
     /// # use graph_proxy::utils::expr::eval::{Context, Evaluator, Evaluate};
-    /// # use graph_proxy::apis::{Vertex,DefaultDetails, DynDetails};
+    /// # use graph_proxy::apis::{Vertex, DynDetails};
     /// # use std::collections::HashMap;
     /// # use std::convert::TryFrom;
     /// # use ir_common::expr_parse::str_to_expr_pb;
@@ -266,12 +266,12 @@ impl Evaluate for Evaluator {
     ///
     ///     let ctxt = Vertices {
     ///         vec: vec![
-    ///             Vertex::new(1, Some(NameOrId::from(1)), DynDetails::new(DefaultDetails::new(
+    ///             Vertex::new(1, Some(NameOrId::from(1)), DynDetails::new(
     ///                 map.clone(),
-    ///             ))),
-    ///             Vertex::new(2, Some(NameOrId::from(2)), DynDetails::new(DefaultDetails::new(
+    ///             )),
+    ///             Vertex::new(2, Some(NameOrId::from(2)), DynDetails::new(
     ///                 map.clone(),
-    ///             ))),
+    ///             )),
     ///         ],
     ///     };
     ///
@@ -574,7 +574,7 @@ mod tests {
     use ir_common::expr_parse::str_to_expr_pb;
 
     use super::*;
-    use crate::apis::{DefaultDetails, DynDetails, Vertex};
+    use crate::apis::{DynDetails, Vertex};
 
     struct Vertices {
         vec: Vec<Vertex>,
@@ -609,8 +609,8 @@ mod tests {
         .collect();
         Vertices {
             vec: vec![
-                Vertex::new(1, Some(9.into()), DynDetails::new(DefaultDetails::new(map1))),
-                Vertex::new(2, Some(11.into()), DynDetails::new(DefaultDetails::new(map2))),
+                Vertex::new(1, Some(9.into()), DynDetails::new(map1)),
+                Vertex::new(2, Some(11.into()), DynDetails::new(map2)),
             ],
         }
     }

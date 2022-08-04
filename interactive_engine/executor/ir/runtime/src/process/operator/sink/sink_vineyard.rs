@@ -160,9 +160,7 @@ mod tests {
 
     use dyn_type::Object;
     use graph_proxy::apis::graph::PKV;
-    use graph_proxy::apis::{
-        DefaultDetails, DynDetails, Edge, Element, GraphElement, Vertex, WriteGraphProxy, ID,
-    };
+    use graph_proxy::apis::{DynDetails, Edge, Element, GraphElement, Vertex, WriteGraphProxy, ID};
     use graph_proxy::{GraphProxyError, GraphProxyResult};
     use ir_common::{NameOrId, OneOrMany};
     use pegasus::api::{Fold, Sink};
@@ -296,8 +294,7 @@ mod tests {
             vec![("id".into(), object!(12)), ("score".into(), object!(11))]
                 .into_iter()
                 .collect();
-        let mut e =
-            Edge::new(encode_eid(1, 2), Some(1.into()), 1, 2, DynDetails::new(DefaultDetails::new(map1)));
+        let mut e = Edge::new(encode_eid(1, 2), Some(1.into()), 1, 2, DynDetails::new(map1));
         e.set_src_label(Some("person".into()));
         e.set_dst_label(Some("person".into()));
         e
@@ -308,8 +305,7 @@ mod tests {
             vec![("id".into(), object!(21)), ("score".into(), object!(22))]
                 .into_iter()
                 .collect();
-        let mut e =
-            Edge::new(encode_eid(2, 1), Some(1.into()), 2, 1, DynDetails::new(DefaultDetails::new(map2)));
+        let mut e = Edge::new(encode_eid(2, 1), Some(1.into()), 2, 1, DynDetails::new(map2));
         e.set_src_label(Some("person".into()));
         e.set_dst_label(Some("person".into()));
         e

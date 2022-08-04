@@ -537,7 +537,7 @@ mod tests {
     use ir_common::NameOrId;
 
     use super::*;
-    use crate::apis::{DefaultDetails, DynDetails, Vertex};
+    use crate::apis::{DynDetails, Vertex};
     use crate::utils::expr::eval::NoneContext;
 
     struct Vertices {
@@ -573,8 +573,8 @@ mod tests {
         .collect();
         Vertices {
             vec: vec![
-                Vertex::new(1, Some(9.into()), DynDetails::new(DefaultDetails::new(map1))),
-                Vertex::new(2, Some(11.into()), DynDetails::new(DefaultDetails::new(map2))),
+                Vertex::new(1, Some(9.into()), DynDetails::new(map1)),
+                Vertex::new(2, Some(11.into()), DynDetails::new(map2)),
             ],
         }
     }

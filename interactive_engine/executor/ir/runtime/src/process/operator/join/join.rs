@@ -43,7 +43,7 @@ impl JoinKeyGen<Record, RecordKey, Record> for algebra_pb::Join {
 
 #[cfg(test)]
 mod tests {
-    use graph_proxy::apis::{DefaultDetails, DynDetails, GraphElement, Vertex, ID};
+    use graph_proxy::apis::{DynDetails, GraphElement, Vertex, ID};
     use ir_common::generated::algebra as pb;
     use ir_common::generated::algebra::join::JoinKind;
     use ir_common::generated::common as common_pb;
@@ -54,16 +54,16 @@ mod tests {
     use crate::process::record::Record;
 
     fn source_s1_gen() -> Box<dyn Iterator<Item = Record> + Send> {
-        let v1 = Vertex::new(1, Some("person".into()), DynDetails::new(DefaultDetails::default()));
-        let v2 = Vertex::new(2, Some("person".into()), DynDetails::new(DefaultDetails::default()));
+        let v1 = Vertex::new(1, Some("person".into()), DynDetails::default());
+        let v2 = Vertex::new(2, Some("person".into()), DynDetails::default());
         let r1 = Record::new(v1, None);
         let r2 = Record::new(v2, None);
         Box::new(vec![r1, r2].into_iter())
     }
 
     fn source_s2_gen() -> Box<dyn Iterator<Item = Record> + Send> {
-        let v3 = Vertex::new(1, Some("person".into()), DynDetails::new(DefaultDetails::default()));
-        let v4 = Vertex::new(4, Some("person".into()), DynDetails::new(DefaultDetails::default()));
+        let v3 = Vertex::new(1, Some("person".into()), DynDetails::default());
+        let v4 = Vertex::new(4, Some("person".into()), DynDetails::default());
         let r3 = Record::new(v3, None);
         let r4 = Record::new(v4, None);
         Box::new(vec![r3, r4].into_iter())

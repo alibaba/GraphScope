@@ -15,7 +15,7 @@
 
 use std::convert::TryInto;
 
-use graph_proxy::apis::{DefaultDetails, DynDetails, Vertex};
+use graph_proxy::apis::{DynDetails, Vertex};
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::get_v::VOpt;
@@ -38,16 +38,10 @@ impl FlatMapFunction<Record, Record> for GetBothVOperator {
     fn exec(&self, input: Record) -> FnResult<Self::Target> {
         if let Some(entry) = input.get(self.start_tag) {
             if let Some(e) = entry.as_graph_edge() {
-                let src_vertex = Vertex::new(
-                    e.src_id,
-                    e.get_src_label().map(|l| l.clone()),
-                    DynDetails::new(DefaultDetails::default()),
-                );
-                let dst_vertex = Vertex::new(
-                    e.dst_id,
-                    e.get_dst_label().map(|l| l.clone()),
-                    DynDetails::new(DefaultDetails::default()),
-                );
+                let src_vertex =
+                    Vertex::new(e.src_id, e.get_src_label().map(|l| l.clone()), DynDetails::default());
+                let dst_vertex =
+                    Vertex::new(e.dst_id, e.get_dst_label().map(|l| l.clone()), DynDetails::default());
                 Ok(Box::new(RecordExpandIter::new(
                     input,
                     self.alias.as_ref(),

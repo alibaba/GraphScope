@@ -159,7 +159,7 @@ mod tests {
     use std::collections::HashMap;
 
     use dyn_type::Object;
-    use graph_proxy::apis::{DefaultDetails, DynDetails, GraphElement, Vertex};
+    use graph_proxy::apis::{DynDetails, GraphElement, Vertex};
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
     use ir_common::NameOrId;
@@ -351,7 +351,7 @@ mod tests {
             vec![("id".into(), object!(3)), ("age".into(), object!(32)), ("name".into(), object!("josh"))]
                 .into_iter()
                 .collect();
-        let v3 = Vertex::new(3, Some("person".into()), DynDetails::new(DefaultDetails::new(map3)));
+        let v3 = Vertex::new(3, Some("person".into()), DynDetails::new(map3));
         let mut r1 = Record::new(v1, Some(TAG_A.into()));
         r1.append(v3.clone(), Some(TAG_B.into()));
         let mut r2 = Record::new(v2, Some(TAG_A.into()));

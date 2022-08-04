@@ -24,7 +24,7 @@ use ir_common::generated::results as result_pb;
 use ir_common::NameOrId;
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 
-use crate::apis::{read_id, write_id, DefaultDetails, DynDetails, Element, GraphElement, ID};
+use crate::apis::{read_id, write_id, DynDetails, Element, GraphElement, ID};
 use crate::utils::expr::eval::Context;
 
 #[derive(Clone, Debug)]
@@ -189,7 +189,7 @@ impl TryFrom<result_pb::Edge> for Edge {
                 .transpose()?,
             e.src_id as ID,
             e.dst_id as ID,
-            DynDetails::new(DefaultDetails::default()),
+            DynDetails::default(),
         );
         edge.set_src_label(
             e.src_label
