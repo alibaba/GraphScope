@@ -10,22 +10,56 @@
   <version>0.0.1-SNAPSHOT</version>
 
   <name>MaxGraph</name>
-  <modules>
-    <module>assembly</module>
-    <module>common</module>
-    <module>data_load_tools</module>
-    <module>executor</module>
-    <module>groot</module>
-    <module>groot-server</module>
-    <module>lgraph</module>
-    <module>sdk</module>
-    <module>sdk-common</module>
-    <module>tests</module>
-    <module>distribution</module>
-    <module>executor/engine/pegasus/clients/java/client</module>
-    <module>executor/ir/compiler</module>
-    <module>frontend</module>
-  </modules>
+  <profiles>
+    <!-- DO NOT CHANGE THE *ORDER* IN WHICH THESE PROFILES ARE DEFINED! -->
+    <profile>
+      <id>graphscope</id>
+      <modules>
+        <module>assembly</module>
+        <module>common</module>
+        <module>executor</module>
+        <module>frontend</module>
+        <module>executor/ir/compiler</module>
+        <module>sdk-common</module>
+      </modules>
+    </profile>
+    <profile>
+      <id>groot</id>
+      <modules>
+        <module>assembly</module>
+        <module>common</module>
+        <module>executor</module>
+        <module>data_load_tools</module>
+        <module>groot-module</module>
+        <module>groot-server</module>
+        <module>lgraph</module>
+        <module>sdk</module>
+        <module>sdk-common</module>
+        <module>executor/ir/compiler</module>
+      </modules>
+    </profile>
+    <profile>
+      <id>default</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <modules>
+        <module>assembly</module>
+        <module>common</module>
+        <module>data_load_tools</module>
+        <module>executor</module>
+        <module>frontend</module>
+        <module>groot-module</module>
+        <module>groot-server</module>
+        <module>lgraph</module>
+        <module>sdk</module>
+        <module>sdk-common</module>
+        <module>tests</module>
+        <module>executor/engine/pegasus/clients/java/client</module>
+        <module>executor/ir/compiler</module>
+      </modules>
+    </profile>
+  </profiles>
 
   <properties>
     <rust.compile.skip>false</rust.compile.skip>
@@ -586,7 +620,7 @@
   </dependencyManagement>
 
   <build>
-    <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
+    <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults -->
       <plugins>
         <plugin>
           <artifactId>maven-clean-plugin</artifactId>
@@ -643,8 +677,6 @@
           <artifactId>protobuf-maven-plugin</artifactId>
           <version>0.6.1</version>
         </plugin>
-
-
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>cobertura-maven-plugin</artifactId>
@@ -661,6 +693,22 @@
               </excludes>
             </instrumentation>
           </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-assembly-plugin</artifactId>
+          <version>2.5.5</version>
+          <configuration>
+            <appendAssemblyId>false</appendAssemblyId>
+          </configuration>
+          <executions>
+            <execution>
+              <phase>package</phase>
+              <goals>
+                <goal>single</goal>
+              </goals>
+            </execution>
+          </executions>
         </plugin>
       </plugins>
     </pluginManagement>

@@ -15,9 +15,6 @@
 
 echo "VINEYARD_ROOT_DIR = $VINEYARD_ROOT_DIR"
 
-current=$(dirname $0)
-export MAXGRAPH_HOME=$(cd ${current}/../../ ;pwd)
-
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${JAVA_HOME}/jre/lib/amd64/server
 
 $@

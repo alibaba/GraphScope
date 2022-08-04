@@ -60,7 +60,7 @@ function _stop {
 
 function _test {
     url=$(cat $tmp_result)
-    cd $curdir && mvn test -Dclient.server.url=${url} -Dskip.tests=false
+    cd $curdir && mvn test -Dclient.server.url=${url} -Dskip.tests=false -Drust.compile.skip=true
 }
 
 opt=$1

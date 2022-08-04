@@ -18,7 +18,7 @@ cat <<END
 
   Commands:
 
-    max_node_gaia                       start max_node of gaia
+    max_node                            start max_node of gaia
     maxgraph                            start maxgraph with v2
     load_tools                          start load_tools of maxgraph
 END
@@ -78,7 +78,7 @@ _setup_maxgraph_env() {
   libpath="$(echo "${MAXGRAPH_HOME}"/lib/*.jar | tr ' ' ':')"
 }
 
-# start max_node of {gaia, v2}
+# start max_node of gaia
 max_node() {
   type=$1; shift
   _setup_maxgraph_env
@@ -137,7 +137,7 @@ while test $# -ne 0; do
   arg=$1; shift
   case $arg in
     -h|--help) usage; exit ;;
-    max_node_gaia) max_node "gaia" "$@"; exit;;
+    max_node) max_node "gaia" "$@"; exit;;
     maxgraph) maxgraph "$@"; exit;;
     load_tools) load_tools "$@"; exit;;
     *)
