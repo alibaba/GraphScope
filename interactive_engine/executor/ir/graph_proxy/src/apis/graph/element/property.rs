@@ -129,17 +129,29 @@ pub trait Details: std::fmt::Debug + Send + Sync + AsAny {
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>>;
 
     /// Insert a property with given property key and value
-    fn insert_property(&mut self, key: NameOrId, value: Object) -> Option<Object>;
+    fn insert_property(&mut self, key: NameOrId, value: Object);
 }
 
-#[derive(Clone, Default)]
-pub struct DynDetails {
-    inner: Option<Arc<dyn Details>>,
+#[derive(Clone)]
+pub enum DynDetails {
+    Empty,
+    Default(HashMap<NameOrId, Object>),
+    Lazy(Arc<dyn Details>),
+}
+
+impl Default for DynDetails {
+    fn default() -> Self {
+        DynDetails::Empty
+    }
 }
 
 impl DynDetails {
     pub fn new<P: Details + 'static>(p: P) -> Self {
-        DynDetails { inner: Some(Arc::new(p)) }
+        DynDetails::Lazy(Arc::new(p))
+    }
+
+    pub fn with(default: HashMap<NameOrId, Object>) -> Self {
+        DynDetails::Default(default)
     }
 }
 
@@ -147,29 +159,36 @@ impl_as_any!(DynDetails);
 
 impl Details for DynDetails {
     fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
-        self.inner
-            .as_ref()
-            .map(|details| details.get_property(key))
-            .unwrap_or(None)
+        match self {
+            DynDetails::Empty => None,
+            DynDetails::Default(default) => default
+                .get(key)
+                .map(|o| PropertyValue::Borrowed(o.as_borrow())),
+            DynDetails::Lazy(lazy) => lazy.get_property(key),
+        }
     }
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
-        self.inner
-            .as_ref()
-            .map(|details| details.get_all_properties())
-            .unwrap_or(None)
+        match self {
+            DynDetails::Empty => None,
+            DynDetails::Default(default) => Some(default.clone()), // should be unreachable
+            DynDetails::Lazy(lazy) => lazy.get_all_properties(),
+        }
     }
 
-    fn insert_property(&mut self, key: NameOrId, value: Object) -> Option<Object> {
-        if let Some(inner) = self.inner.as_mut() {
-            Arc::get_mut(inner)
-                .map(|e| e.insert_property(key, value))
-                .unwrap_or(None)
-        } else {
-            let mut default = HashMap::new();
-            default.insert(key, value);
-            self.inner = Some(Arc::new(DefaultDetails::new(default)));
-            None
+    fn insert_property(&mut self, key: NameOrId, value: Object) {
+        match self {
+            DynDetails::Empty => {
+                let mut default = HashMap::new();
+                default.insert(key, value);
+                *self = DynDetails::with(default);
+            }
+            DynDetails::Default(default) => {
+                default.insert(key, value);
+            }
+            DynDetails::Lazy(lazy) => {
+                Arc::get_mut(lazy).map(|e| e.insert_property(key, value));
+            }
         }
     }
 }
@@ -177,25 +196,26 @@ impl Details for DynDetails {
 impl fmt::Debug for DynDetails {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("DynDetails")
-            .field("properties", &format!("{:?}", &self.inner.as_ref()))
+            .field("properties", &format!("{:?}", &self))
             .finish()
     }
 }
 
 impl Encode for DynDetails {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
-        if let Some(inner) = self.inner.as_ref() {
-            if let Some(default) = inner
-                .as_any_ref()
-                .downcast_ref::<DefaultDetails>()
-            {
-                // hint to be as DefaultDetails
+        match self {
+            DynDetails::Empty => {
+                writer.write_u8(0)?;
+            }
+            DynDetails::Default(default) => {
                 writer.write_u8(1)?;
-                default.write_to(writer)?;
-            } else {
-                // TODO(yyy): handle other kinds of details
-                // for LazyDetails, we write required properties
-                if let Some(all_props) = self.get_all_properties() {
+                for (k, v) in default {
+                    k.write_to(writer)?;
+                    v.write_to(writer)?;
+                }
+            }
+            DynDetails::Lazy(lazy) => {
+                if let Some(all_props) = lazy.get_all_properties() {
                     let len = all_props.len();
                     if len == 0 {
                         // If no properties required, hint as Empty DynDetails
@@ -214,9 +234,6 @@ impl Encode for DynDetails {
                     writer.write_u8(0)?;
                 }
             }
-        } else {
-            // hint as Empty DynDetails
-            writer.write_u8(0)?;
         }
         Ok(())
     }
@@ -230,8 +247,14 @@ impl Decode for DynDetails {
             Ok(DynDetails::default())
         } else if kind == 1 || kind == 2 {
             // For either DefaultDetails or LazyDetails(with required details), we decoded as DefaultDetails
-            let details = <DefaultDetails>::read_from(reader)?;
-            Ok(DynDetails::new(details))
+            let len = reader.read_u64()?;
+            let mut map = HashMap::with_capacity(len as usize);
+            for _i in 0..len {
+                let k = <NameOrId>::read_from(reader)?;
+                let v = <Object>::read_from(reader)?;
+                map.insert(k, v);
+            }
+            Ok(DynDetails::Default(map))
         } else {
             Err(io::Error::from(io::ErrorKind::Other))
         }
@@ -279,8 +302,8 @@ impl Details for DefaultDetails {
         Some(self.inner.clone())
     }
 
-    fn insert_property(&mut self, key: NameOrId, value: Object) -> Option<Object> {
-        self.inner.insert(key, value)
+    fn insert_property(&mut self, key: NameOrId, value: Object) {
+        self.inner.insert(key, value);
     }
 }
 

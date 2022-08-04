@@ -545,15 +545,13 @@ where
         Some(all_props)
     }
 
-    fn insert_property(&mut self, key: NameOrId, _value: Object) -> Option<Object> {
+    fn insert_property(&mut self, key: NameOrId, _value: Object) {
         if let NameOrId::Id(key) = key {
             if let Some(prop_keys) = self.prop_keys.as_mut() {
                 prop_keys.push(key as PropId);
             }
-            None
         } else {
             info!("Have not support insert property by prop_name in gs_store yet");
-            None
         }
     }
 }
