@@ -2,6 +2,6 @@
 
 BASE_DIR=$(dirname "$0")
 
-MAXGRAPH=MAXGRAPH_HOME
-/tmp/hadoop-2.10.1/bin/hadoop jar $MAXGRAPH/loader/data_load_tools-0.0.1-SNAPSHOT.jar com.alibaba.maxgraph.dataload.databuild.OfflineBuild $BASE_DIR/databuild.config
+GROOT=GROOT_HOME
+/tmp/hadoop-2.10.1/bin/hadoop jar $GROOT/loader/data_load_tools-0.0.1-SNAPSHOT.jar com.alibaba.maxgraph.dataload.databuild.OfflineBuild $BASE_DIR/databuild.config
 

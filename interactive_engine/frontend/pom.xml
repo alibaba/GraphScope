@@ -22,10 +22,5 @@
             <artifactId>maxgraph-common</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.alibaba.maxgraph</groupId>
-            <artifactId>maxgraph-sdk-common</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
     </dependencies>
 </project>

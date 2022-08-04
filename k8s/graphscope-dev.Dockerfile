@@ -62,12 +62,12 @@ COPY --from=builder /opt/graphscope /opt/graphscope
 COPY --from=builder /home/graphscope/gs/k8s/precompile.py /tmp/precompile.py
 COPY --from=builder /home/graphscope/gs/k8s/kube_ssh /opt/graphscope/bin/kube_ssh
 COPY --from=builder /home/graphscope/gs/interactive_engine/executor/target/$profile/gaia_executor /opt/graphscope/bin/gaia_executor
-COPY --from=builder /home/graphscope/gs/interactive_engine/assembly/target/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz /opt/graphscope/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz
+COPY --from=builder /home/graphscope/gs/interactive_engine/assembly/target/graphscope.tar.gz /opt/graphscope/graphscope.tar.gz
 
 # install mars
 RUN python3 -m pip install pymars==0.8.0
 
-RUN sudo tar -xf /opt/graphscope/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz --strip-components 1 -C /opt/graphscope \
+RUN sudo tar -xf /opt/graphscope/graphscope.tar.gz --strip-components 1 -C /opt/graphscope \
   && cd /usr/local/dist && pip3 install ./*.whl \
   && cd /opt/graphscope/dist && pip3 install ./*.whl \
   && sudo ln -sf /opt/graphscope/bin/* /usr/local/bin/ \
