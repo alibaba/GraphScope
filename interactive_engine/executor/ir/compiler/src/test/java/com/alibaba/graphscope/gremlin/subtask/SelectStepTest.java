@@ -231,8 +231,7 @@ public class SelectStepTest {
         InterOpCollection subOps =
                 (InterOpCollection) applyOp.getSubOpCollection().get().applyArg();
         Assert.assertEquals(4, subOps.unmodifiableCollection().size());
-        Assert.assertEquals(
-                ArgUtils.asFfiAlias("a_1_0", false), applyOp.getAlias().get().applyArg());
+        Assert.assertEquals(ArgUtils.asAlias("a_1_0", false), applyOp.getAlias().get().applyArg());
 
         ProjectOp projectOp = (ProjectOp) ops.get(1);
         List<Pair> exprWithAlias = (List<Pair>) projectOp.getExprWithAlias().get().applyArg();
@@ -242,6 +241,6 @@ public class SelectStepTest {
         // expression
         Assert.assertEquals("@a_1_0", firstEntry.getValue0());
         // alias
-        Assert.assertEquals(ArgUtils.asFfiNoneAlias(), firstEntry.getValue1());
+        Assert.assertEquals(ArgUtils.asNoneAlias(), firstEntry.getValue1());
     }
 }
