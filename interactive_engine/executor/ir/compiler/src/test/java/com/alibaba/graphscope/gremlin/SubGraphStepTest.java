@@ -60,7 +60,7 @@ public class SubGraphStepTest {
 
         DedupOp op2 = (DedupOp) actualOps.get(1).unmodifiableCollection().get(1);
         Assert.assertEquals(
-                Collections.singletonList(ArgUtils.asFfiNoneVar()),
+                Collections.singletonList(ArgUtils.asNoneVar()),
                 op2.getDedupKeys().get().applyArg());
     }
 
@@ -84,7 +84,7 @@ public class SubGraphStepTest {
 
         DedupOp op2 = (DedupOp) actualOps.get(1).unmodifiableCollection().get(1);
         Assert.assertEquals(
-                Collections.singletonList(ArgUtils.asFfiNoneVar()),
+                Collections.singletonList(ArgUtils.asNoneVar()),
                 op2.getDedupKeys().get().applyArg());
     }
 }

@@ -81,7 +81,7 @@ public class IrPlan implements Closeable {
                     for (int i = 0; i < ffiIds.size(); ++i) {
                         FfiResult e2 =
                                 irCoreLib.orEquivPredicate(
-                                        idsPredicate, irCoreLib.asIdKey(), ffiIds.get(i));
+                                        idsPredicate, ArgUtils.asKey(ArgUtils.ID), ffiIds.get(i));
                         if (e2.code != ResultCode.Success) {
                             throw new InterOpIllegalArgException(
                                     baseOp.getClass(), "ids", "orEquivPredicate returns " + e2.msg);
@@ -509,7 +509,7 @@ public class IrPlan implements Closeable {
         AS_NONE_OP {
             public Pointer apply(InterOpBase baseOp) {
                 Pointer asPtr = irCoreLib.initAsOperator();
-                FfiResult error = irCoreLib.setAsAlias(asPtr, ArgUtils.asFfiNoneAlias());
+                FfiResult error = irCoreLib.setAsAlias(asPtr, ArgUtils.asNoneAlias());
                 if (error != null && error.code != ResultCode.Success) {
                     throw new AppendInterOpException(baseOp.getClass(), error.msg);
                 }

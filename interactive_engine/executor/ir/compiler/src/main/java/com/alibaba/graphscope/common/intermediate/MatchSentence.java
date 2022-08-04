@@ -11,8 +11,8 @@ public class MatchSentence {
 
     public MatchSentence(
             String startTag, String endTag, InterOpCollection binders, FfiJoinKind joinKind) {
-        this.startTag = ArgUtils.asFfiAlias(startTag, true);
-        this.endTag = ArgUtils.asFfiAlias(endTag, true);
+        this.startTag = ArgUtils.asAlias(startTag, true);
+        this.endTag = ArgUtils.asAlias(endTag, true);
         this.joinKind = joinKind;
         this.binders = binders;
     }

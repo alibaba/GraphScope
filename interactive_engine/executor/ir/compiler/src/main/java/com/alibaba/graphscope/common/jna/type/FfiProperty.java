@@ -28,8 +28,8 @@ public class FfiProperty extends Structure {
 
     public static class ByValue extends FfiProperty implements Structure.ByValue {}
 
-    public FfiPropertyOpt opt;
-    public FfiNameOrId.ByValue key;
+    public FfiPropertyOpt opt = FfiPropertyOpt.None;
+    public FfiNameOrId.ByValue key = new FfiNameOrId.ByValue();
 
     @Override
     public boolean equals(Object o) {

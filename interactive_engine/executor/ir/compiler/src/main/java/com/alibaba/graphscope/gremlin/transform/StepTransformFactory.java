@@ -89,7 +89,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             // set labels
             List<String> labels = scanFusionStep.getGraphLabels();
             for (String label : labels) {
-                params.addTable(ArgUtils.asFfiTag(label));
+                params.addTable(ArgUtils.asNameOrId(label));
             }
             List<HasContainer> containers = scanFusionStep.getHasContainers();
             if (!containers.isEmpty()) {
@@ -159,7 +159,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             String[] labels = ((VertexStep) step).getEdgeLabels();
             if (labels.length > 0) {
                 for (String label : labels) {
-                    params.addTable(ArgUtils.asFfiTag(label));
+                    params.addTable(ArgUtils.asNameOrId(label));
                 }
             }
             op.setParams(params);
@@ -191,7 +191,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                     new OpArg<>(
                             expr,
                             (String expr1) -> {
-                                FfiAlias.ByValue alias = ArgUtils.asFfiNoneAlias();
+                                FfiAlias.ByValue alias = ArgUtils.asNoneAlias();
                                 return Arrays.asList(Pair.with(expr1, alias));
                             }));
             return op;
@@ -269,7 +269,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                             selectKey,
                             (String key) -> {
                                 String expr = "@" + selectKey;
-                                FfiAlias.ByValue alias = ArgUtils.asFfiNoneAlias();
+                                FfiAlias.ByValue alias = ArgUtils.asNoneAlias();
                                 return Collections.singletonList(Pair.with(expr, alias));
                             }));
             return op;
@@ -317,7 +317,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                     || mapTraversal instanceof ValueTraversal) {
                 // by head
                 String defaultExpr = "@";
-                FfiAlias.ByValue defaultAlias = ArgUtils.asFfiNoneAlias();
+                FfiAlias.ByValue defaultAlias = ArgUtils.asNoneAlias();
                 if (mapTraversal instanceof ValueTraversal) {
                     defaultExpr = "@." + ((ValueTraversal) mapTraversal).getPropertyKey();
                 }
@@ -531,7 +531,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                                     exprStep.getExpr(),
                                     (String expr) ->
                                             Arrays.asList(
-                                                    Pair.with(expr, ArgUtils.asFfiNoneAlias()))));
+                                                    Pair.with(expr, ArgUtils.asNoneAlias()))));
                     return projectOp;
                 case FILTER:
                 default:
@@ -593,9 +593,9 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                             .map(
                                     (id) -> {
                                         if (id instanceof Integer) {
-                                            return ArgUtils.asFfiConst((Integer) id);
+                                            return ArgUtils.asConst((Integer) id);
                                         } else if (id instanceof Long) {
-                                            return ArgUtils.asFfiConst((Long) id);
+                                            return ArgUtils.asConst((Long) id);
                                         } else {
                                             throw new OpArgIllegalException(
                                                     OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
@@ -607,6 +607,8 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
     protected Function<ScanFusionStep, List<FfiNameOrId.ByValue>> LABELS_FROM_STEP =
             (ScanFusionStep step) -> {
                 List<String> labels = step.getGraphLabels();
-                return labels.stream().map(k -> ArgUtils.asFfiTag(k)).collect(Collectors.toList());
+                return labels.stream()
+                        .map(k -> ArgUtils.asNameOrId(k))
+                        .collect(Collectors.toList());
             };
 }

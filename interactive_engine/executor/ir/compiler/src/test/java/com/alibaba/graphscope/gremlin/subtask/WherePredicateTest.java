@@ -123,14 +123,14 @@ public class WherePredicateTest {
         InterOpCollection subOps = (InterOpCollection) apply1.getSubOpCollection().get().applyArg();
         Assert.assertEquals(3, subOps.unmodifiableCollection().size());
         Assert.assertEquals(
-                ArgUtils.asFfiAlias("~alias_2_0", false), apply1.getAlias().get().applyArg());
+                ArgUtils.asAlias("~alias_2_0", false), apply1.getAlias().get().applyArg());
 
         ApplyOp apply2 = (ApplyOp) ops.get(1);
         Assert.assertEquals(FfiJoinKind.Inner, apply2.getJoinKind().get().applyArg());
         subOps = (InterOpCollection) apply2.getSubOpCollection().get().applyArg();
         Assert.assertEquals(3, subOps.unmodifiableCollection().size());
         Assert.assertEquals(
-                ArgUtils.asFfiAlias("~alias_2_1", false), apply2.getAlias().get().applyArg());
+                ArgUtils.asAlias("~alias_2_1", false), apply2.getAlias().get().applyArg());
 
         SelectOp selectOp = (SelectOp) getApplyWithSelect(traversal).get(2);
         Assert.assertEquals("@~alias_2_0 == @~alias_2_1", selectOp.getPredicate().get().applyArg());

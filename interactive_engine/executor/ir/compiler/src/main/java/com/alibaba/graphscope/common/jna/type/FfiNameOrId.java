@@ -28,7 +28,7 @@ public class FfiNameOrId extends Structure {
 
     public static class ByValue extends FfiNameOrId implements Structure.ByValue {}
 
-    public FfiNameIdOpt opt;
+    public FfiNameIdOpt opt = FfiNameIdOpt.None;
     public String name;
     public int nameId;
 

@@ -64,7 +64,7 @@ public enum PredicateExprTransformFactory implements PredicateExprTransform {
         public String apply(Step arg) {
             WhereTraversalStep.WhereEndStep endStep = (WhereTraversalStep.WhereEndStep) arg;
             String matchTag = endStep.getScopeKeys().iterator().next();
-            P predicate = P.eq(ArgUtils.asFfiVar(matchTag, ""));
+            P predicate = P.eq(ArgUtils.asVar(matchTag, ""));
             return flatPredicate("@", predicate);
         }
     }

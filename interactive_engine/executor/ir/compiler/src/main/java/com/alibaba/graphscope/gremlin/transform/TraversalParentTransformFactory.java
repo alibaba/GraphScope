@@ -102,7 +102,7 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
             // optimize: if there is only one expression, alias with NONE
             if (projectExprWithAlias.size() == 1) {
                 Pair single = projectExprWithAlias.get(0);
-                projectExprWithAlias.set(0, single.setAt1(ArgUtils.asFfiNoneAlias()));
+                projectExprWithAlias.set(0, single.setAt1(ArgUtils.asNoneAlias()));
             }
             ProjectOp op = new ProjectOp();
             op.setExprWithAlias(new OpArg(projectExprWithAlias));
@@ -287,9 +287,7 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
                 String queryAlias = (String) endStep.getLabels().iterator().next();
                 if (groupKeyVarWithAlias.size() == 1) {
                     Pair newPair =
-                            groupKeyVarWithAlias
-                                    .get(0)
-                                    .setAt1(ArgUtils.asFfiAlias(queryAlias, true));
+                            groupKeyVarWithAlias.get(0).setAt1(ArgUtils.asAlias(queryAlias, true));
                     groupKeyVarWithAlias.set(0, newPair);
                 } else if (groupKeyVarWithAlias.size() > 1) {
                     throw new OpArgIllegalException(

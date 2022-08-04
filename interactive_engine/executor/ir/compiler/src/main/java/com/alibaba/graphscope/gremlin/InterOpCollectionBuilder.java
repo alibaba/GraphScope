@@ -150,7 +150,7 @@ public class InterOpCollectionBuilder {
                     }
                     if (!step.getLabels().isEmpty()) {
                         String label = (String) step.getLabels().iterator().next();
-                        op.setAlias(new OpArg(ArgUtils.asFfiAlias(label, true)));
+                        op.setAlias(new OpArg(ArgUtils.asAlias(label, true)));
                     }
                 }
                 opCollection.appendInterOp(op);

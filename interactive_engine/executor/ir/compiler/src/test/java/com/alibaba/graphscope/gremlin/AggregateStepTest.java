@@ -44,7 +44,7 @@ public class AggregateStepTest {
 
         Assert.assertEquals(Collections.emptyList(), op.getGroupByKeys().get().applyArg());
         ArgAggFn expectedValue =
-                new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("~values_1_0", false));
+                new ArgAggFn(FfiAggOpt.Count, ArgUtils.asAlias("~values_1_0", false));
         Assert.assertEquals(
                 Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
     }
@@ -56,7 +56,7 @@ public class AggregateStepTest {
         GroupOp op = (GroupOp) StepTransformFactory.AGGREGATE_STEP.apply(step);
 
         Assert.assertEquals(Collections.emptyList(), op.getGroupByKeys().get().applyArg());
-        ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asFfiAlias("a", true));
+        ArgAggFn expectedValue = new ArgAggFn(FfiAggOpt.Count, ArgUtils.asAlias("a", true));
         Assert.assertEquals(
                 Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
     }
@@ -70,7 +70,7 @@ public class AggregateStepTest {
 
         Assert.assertEquals(Collections.emptyList(), op.getGroupByKeys().get().applyArg());
         ArgAggFn expectedValue =
-                new ArgAggFn(FfiAggOpt.Sum, ArgUtils.asFfiAlias("~values_2_0", false));
+                new ArgAggFn(FfiAggOpt.Sum, ArgUtils.asAlias("~values_2_0", false));
         Assert.assertEquals(
                 Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
     }

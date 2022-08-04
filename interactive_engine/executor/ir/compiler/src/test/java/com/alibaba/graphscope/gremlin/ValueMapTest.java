@@ -43,7 +43,7 @@ public class ValueMapTest {
 
         List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().applyArg();
         Assert.assertEquals("@.~all", exprWithAlias.get(0).getValue0());
-        Assert.assertEquals(ArgUtils.asFfiNoneAlias(), exprWithAlias.get(0).getValue1());
+        Assert.assertEquals(ArgUtils.asNoneAlias(), exprWithAlias.get(0).getValue1());
     }
 
     @Test
@@ -54,7 +54,7 @@ public class ValueMapTest {
 
         List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().applyArg();
         Assert.assertEquals("{@.name, @.id}", exprWithAlias.get(0).getValue0());
-        Assert.assertEquals(ArgUtils.asFfiNoneAlias(), exprWithAlias.get(0).getValue1());
+        Assert.assertEquals(ArgUtils.asNoneAlias(), exprWithAlias.get(0).getValue1());
     }
 
     @Test
@@ -65,6 +65,6 @@ public class ValueMapTest {
 
         List<Pair> exprWithAlias = (List<Pair>) op.getExprWithAlias().get().applyArg();
         Assert.assertEquals("@.name", exprWithAlias.get(0).getValue0());
-        Assert.assertEquals(ArgUtils.asFfiNoneAlias(), exprWithAlias.get(0).getValue1());
+        Assert.assertEquals(ArgUtils.asNoneAlias(), exprWithAlias.get(0).getValue1());
     }
 }

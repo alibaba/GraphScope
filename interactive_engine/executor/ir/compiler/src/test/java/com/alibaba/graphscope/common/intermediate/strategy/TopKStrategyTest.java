@@ -37,7 +37,7 @@ public class TopKStrategyTest {
         InterOpCollection opCollection = new InterOpCollection();
 
         OrderOp orderOp = new OrderOp();
-        List<Pair> orderPair = Arrays.asList(Pair.with(ArgUtils.asFfiNoneVar(), FfiOrderOpt.Asc));
+        List<Pair> orderPair = Arrays.asList(Pair.with(ArgUtils.asNoneVar(), FfiOrderOpt.Asc));
         orderOp.setOrderVarWithOrder(new OpArg(orderPair, Function.identity()));
         opCollection.appendInterOp(orderOp);
 
