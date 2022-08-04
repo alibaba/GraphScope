@@ -16,7 +16,7 @@
 use std::convert::TryInto;
 
 use graph_proxy::apis::{
-    get_graph, DefaultDetails, Direction, DynDetails, GraphElement, GraphObject, Statement, Vertex, ID,
+    get_graph, Direction, DynDetails, GraphElement, GraphObject, Statement, Vertex, ID,
 };
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::KeyId;
@@ -46,7 +46,7 @@ impl<E: Into<GraphObject> + 'static> FlatMapFunction<Record, Record> for EdgeExp
                         GraphObject::E(e) => Vertex::new(
                             e.get_other_id(),
                             e.get_other_label().cloned(),
-                            DynDetails::new(DefaultDetails::default()),
+                            DynDetails::default(),
                         ),
                         _ => {
                             unreachable!()

@@ -200,7 +200,7 @@ pub(crate) mod tests {
     use std::collections::HashMap;
 
     use dyn_type::Object;
-    use graph_proxy::apis::{DefaultDetails, DynDetails, GraphElement, Vertex};
+    use graph_proxy::apis::{DynDetails, GraphElement, Vertex};
     use ir_common::KeyId;
 
     use super::*;
@@ -221,7 +221,7 @@ pub(crate) mod tests {
         ]
         .into_iter()
         .collect();
-        Vertex::new(1, Some("person".into()), DynDetails::new(DefaultDetails::new(map1)))
+        Vertex::new(1, Some("person".into()), DynDetails::new(map1))
     }
 
     pub fn init_vertex2() -> Vertex {
@@ -229,7 +229,7 @@ pub(crate) mod tests {
             vec![("id".into(), object!(2)), ("age".into(), object!(27)), ("name".into(), object!("vadas"))]
                 .into_iter()
                 .collect();
-        Vertex::new(2, Some("person".into()), DynDetails::new(DefaultDetails::new(map2)))
+        Vertex::new(2, Some("person".into()), DynDetails::new(map2))
     }
 
     fn init_record() -> Record {

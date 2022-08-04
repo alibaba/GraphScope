@@ -370,4 +370,111 @@ mod test {
         results.sort_by(|e1, e2| e1.0.cmp(&e2.0));
         assert_eq!(expected_id_names, results)
     }
+
+    // g.V() with an auxilia to update lazy properties
+    #[test]
+    fn auxilia_update_on_lazy_vertex_test() {
+        let auxilia_opr = pb::Auxilia {
+            tag: None,
+            params: Some(query_params(vec![], vec!["name".into()], None)),
+            alias: None,
+        };
+
+        let conf = JobConf::new("auxilia_update_on_lazy_vertex_test");
+        let mut result = pegasus::run(conf, || {
+            let auxilia = auxilia_opr.clone();
+            |input, output| {
+                // input vertex with DynDetails of LazyDetails
+                let mut stream = input.input_from(source_gen(None))?;
+                // update vertex properties
+                let filter_map_func = auxilia.gen_filter_map().unwrap();
+                stream = stream.filter_map(move |input| filter_map_func.exec(input))?;
+                stream.sink_into(output)
+            }
+        })
+        .expect("build job failure");
+
+        let mut expected_id_names: Vec<Object> = vec![
+            object!("marko"),
+            object!("vadas"),
+            object!("lop"),
+            object!("josh"),
+            object!("ripple"),
+            object!("peter"),
+        ];
+
+        let mut results: Vec<Object> = vec![];
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+                let details = element.details().unwrap();
+                results.push(
+                    details
+                        .get_property(&"name".to_string().into())
+                        .unwrap()
+                        .try_to_owned()
+                        .unwrap(),
+                );
+            }
+        }
+        expected_id_names.sort();
+        results.sort();
+        assert_eq!(expected_id_names, results)
+    }
+
+    // g.V().out("knows") with an auxilia to update empty properties
+    #[test]
+    fn auxilia_update_on_empty_vertex_test() {
+        let query_param = query_params(vec!["knows".into()], vec![], None);
+
+        // expand vertex without any properties, i.e., Vertex with None details
+        let expand_opr_pb = pb::EdgeExpand {
+            v_tag: None,
+            direction: 0,
+            params: Some(query_param),
+            is_edge: false,
+            alias: None,
+        };
+
+        let auxilia_opr = pb::Auxilia {
+            tag: None,
+            params: Some(query_params(vec![], vec!["name".into()], None)),
+            alias: None,
+        };
+
+        let conf = JobConf::new("auxilia_update_on_empty_vertex_test");
+        let mut result = pegasus::run(conf, || {
+            let expand = expand_opr_pb.clone();
+            let auxilia = auxilia_opr.clone();
+            |input, output| {
+                let mut stream = input.input_from(source_gen(None))?;
+                let flatmap_func = expand.gen_flat_map().unwrap();
+                // expand vertex with DynDetails::default()
+                stream = stream.flat_map(move |input| flatmap_func.exec(input))?;
+                // update vertex properties
+                let filter_map_func = auxilia.gen_filter_map().unwrap();
+                stream = stream.filter_map(move |input| filter_map_func.exec(input))?;
+                stream.sink_into(output)
+            }
+        })
+        .expect("build job failure");
+
+        let mut expected_id_names: Vec<Object> = vec![object!("vadas"), object!("josh")];
+
+        let mut results: Vec<Object> = vec![];
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+                let details = element.details().unwrap();
+                results.push(
+                    details
+                        .get_property(&"name".to_string().into())
+                        .unwrap()
+                        .try_to_owned()
+                        .unwrap(),
+                );
+            }
+        }
+        expected_id_names.sort();
+        results.sort();
+        assert_eq!(expected_id_names, results)
+    }
 }

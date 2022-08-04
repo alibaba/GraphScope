@@ -15,9 +15,7 @@
 
 use std::collections::HashMap;
 use std::convert::TryFrom;
-use std::fmt;
 use std::io;
-use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 
 use dyn_type::{BorrowObject, Object};
@@ -129,17 +127,33 @@ pub trait Details: std::fmt::Debug + Send + Sync + AsAny {
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>>;
 
     /// Insert a property with given property key and value
-    fn insert_property(&mut self, key: NameOrId, value: Object) -> Option<Object>;
+    fn insert_property(&mut self, key: NameOrId, value: Object);
 }
 
-#[derive(Clone)]
-pub struct DynDetails {
-    inner: Arc<dyn Details>,
+/// Properties in Runtime, including:
+/// Empty when no property required. e.g., for an id-only Vertex.
+/// Default when properties required. Usually, these properties cannot be accessed locally, thus need to be carried with the GraphElement.
+/// Lazy when properties required. Usually, these properties can be accessed locally, thus can be queried when used.
+#[derive(Clone, Debug)]
+pub enum DynDetails {
+    Empty,
+    Default(HashMap<NameOrId, Object>),
+    Lazy(Arc<dyn Details>),
+}
+
+impl Default for DynDetails {
+    fn default() -> Self {
+        DynDetails::Empty
+    }
 }
 
 impl DynDetails {
-    pub fn new<P: Details + 'static>(p: P) -> Self {
-        DynDetails { inner: Arc::new(p) }
+    pub fn new(default: HashMap<NameOrId, Object>) -> Self {
+        DynDetails::Default(default)
+    }
+
+    pub fn lazy<P: Details + 'static>(p: P) -> Self {
+        DynDetails::Lazy(Arc::new(p))
     }
 }
 
@@ -147,51 +161,73 @@ impl_as_any!(DynDetails);
 
 impl Details for DynDetails {
     fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
-        self.inner.get_property(key)
+        match self {
+            DynDetails::Empty => None,
+            DynDetails::Default(default) => default
+                .get(key)
+                .map(|o| PropertyValue::Borrowed(o.as_borrow())),
+            DynDetails::Lazy(lazy) => lazy.get_property(key),
+        }
     }
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
-        self.inner.get_all_properties()
+        match self {
+            DynDetails::Empty => None,
+            DynDetails::Default(default) => Some(default.clone()), // should be unreachable
+            DynDetails::Lazy(lazy) => lazy.get_all_properties(),
+        }
     }
 
-    fn insert_property(&mut self, key: NameOrId, value: Object) -> Option<Object> {
-        Arc::get_mut(&mut self.inner)
-            .map(|e| e.insert_property(key, value))
-            .unwrap_or(None)
-    }
-}
-
-impl fmt::Debug for DynDetails {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("DynDetails")
-            .field("properties", &format!("{:?}", &self.inner.as_ref()))
-            .finish()
+    fn insert_property(&mut self, key: NameOrId, value: Object) {
+        match self {
+            DynDetails::Empty => {
+                let mut default = HashMap::new();
+                default.insert(key, value);
+                *self = DynDetails::new(default);
+            }
+            DynDetails::Default(default) => {
+                default.insert(key, value);
+            }
+            DynDetails::Lazy(lazy) => {
+                Arc::get_mut(lazy).map(|e| e.insert_property(key, value));
+            }
+        }
     }
 }
 
 impl Encode for DynDetails {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
-        if let Some(default) = self
-            .inner
-            .as_any_ref()
-            .downcast_ref::<DefaultDetails>()
-        {
-            // hint to be as DefaultDetails
-            writer.write_u8(1)?;
-            default.write_to(writer)?;
-        } else {
-            // TODO(yyy): handle other kinds of details
-            // for Lazy details, we write id, label, and required properties
-            writer.write_u8(2)?;
-            let all_props = self.get_all_properties();
-            if let Some(all_props) = all_props {
-                writer.write_u64(all_props.len() as u64)?;
-                for (k, v) in all_props {
+        match self {
+            DynDetails::Empty => {
+                writer.write_u8(0)?;
+            }
+            DynDetails::Default(default) => {
+                writer.write_u8(1)?;
+                writer.write_u64(default.len() as u64)?;
+                for (k, v) in default {
                     k.write_to(writer)?;
                     v.write_to(writer)?;
                 }
-            } else {
-                writer.write_u64(0)?;
+            }
+            DynDetails::Lazy(lazy) => {
+                if let Some(all_props) = lazy.get_all_properties() {
+                    let len = all_props.len();
+                    if len == 0 {
+                        // If no properties required, hint as Empty DynDetails
+                        writer.write_u8(0)?;
+                    } else {
+                        // Otherwise, hint as DefaultDetails
+                        writer.write_u8(1)?;
+                        writer.write_u64(len as u64)?;
+                        for (k, v) in all_props {
+                            k.write_to(writer)?;
+                            v.write_to(writer)?;
+                        }
+                    }
+                } else {
+                    // if fetching None, hint as Empty DynDetails
+                    writer.write_u8(0)?;
+                }
             }
         }
         Ok(())
@@ -201,82 +237,21 @@ impl Encode for DynDetails {
 impl Decode for DynDetails {
     fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
         let kind = <u8>::read_from(reader)?;
-        if kind == 1 || kind == 2 {
-            // For either DefaultDetails or LazyDetails, we decoded as DefaultDetails
-            let details = <DefaultDetails>::read_from(reader)?;
-            Ok(DynDetails::new(details))
+        if kind == 0 {
+            // Empty DynDetails
+            Ok(DynDetails::default())
+        } else if kind == 1 {
+            // For either DefaultDetails or LazyDetails(with required details), we decoded as DefaultDetails
+            let len = reader.read_u64()?;
+            let mut map = HashMap::with_capacity(len as usize);
+            for _i in 0..len {
+                let k = <NameOrId>::read_from(reader)?;
+                let v = <Object>::read_from(reader)?;
+                map.insert(k, v);
+            }
+            Ok(DynDetails::Default(map))
         } else {
             Err(io::Error::from(io::ErrorKind::Other))
         }
-    }
-}
-
-#[allow(dead_code)]
-#[derive(Clone, Debug, Default)]
-pub struct DefaultDetails {
-    inner: HashMap<NameOrId, Object>,
-}
-
-#[allow(dead_code)]
-impl DefaultDetails {
-    pub fn new(properties: HashMap<NameOrId, Object>) -> Self {
-        DefaultDetails { inner: properties }
-    }
-}
-
-impl_as_any!(DefaultDetails);
-
-impl Deref for DefaultDetails {
-    type Target = HashMap<NameOrId, Object>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.inner
-    }
-}
-
-impl DerefMut for DefaultDetails {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.inner
-    }
-}
-
-impl Details for DefaultDetails {
-    fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
-        self.inner
-            .get(key)
-            .map(|o| PropertyValue::Borrowed(o.as_borrow()))
-    }
-
-    fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
-        // it's actually unreachable!()
-        Some(self.inner.clone())
-    }
-
-    fn insert_property(&mut self, key: NameOrId, value: Object) -> Option<Object> {
-        self.inner.insert(key, value)
-    }
-}
-
-impl Encode for DefaultDetails {
-    fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
-        writer.write_u64(self.inner.len() as u64)?;
-        for (k, v) in &self.inner {
-            k.write_to(writer)?;
-            v.write_to(writer)?;
-        }
-        Ok(())
-    }
-}
-
-impl Decode for DefaultDetails {
-    fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
-        let len = reader.read_u64()?;
-        let mut map = HashMap::with_capacity(len as usize);
-        for _i in 0..len {
-            let k = <NameOrId>::read_from(reader)?;
-            let v = <Object>::read_from(reader)?;
-            map.insert(k, v);
-        }
-        Ok(DefaultDetails { inner: map })
     }
 }

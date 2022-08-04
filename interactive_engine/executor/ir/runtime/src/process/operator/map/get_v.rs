@@ -15,7 +15,7 @@
 
 use std::convert::TryInto;
 
-use graph_proxy::apis::{DefaultDetails, DynDetails, Vertex};
+use graph_proxy::apis::{DynDetails, Vertex};
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::get_v::VOpt;
@@ -43,8 +43,7 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                     VOpt::Other => (e.get_other_id(), e.get_other_label()),
                     VOpt::Both => unreachable!(),
                 };
-                let vertex =
-                    Vertex::new(id, label.map(|l| l.clone()), DynDetails::new(DefaultDetails::default()));
+                let vertex = Vertex::new(id, label.map(|l| l.clone()), DynDetails::default());
                 input.append(vertex, self.alias.clone());
                 Ok(Some(input))
             } else if let Some(graph_path) = entry.as_graph_path() {

@@ -84,7 +84,7 @@ mod tests {
     use std::collections::HashMap;
 
     use dyn_type::Object;
-    use graph_proxy::apis::{DefaultDetails, Details, DynDetails, Element, GraphElement, Vertex};
+    use graph_proxy::apis::{Details, DynDetails, Element, GraphElement, Vertex};
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
     use ir_common::NameOrId;
@@ -190,7 +190,7 @@ mod tests {
             vec![("id".into(), object!(3)), ("age".into(), object!(20)), ("name".into(), object!("marko"))]
                 .into_iter()
                 .collect();
-        let v3 = Vertex::new(1, Some("person".into()), DynDetails::new(DefaultDetails::new(map3)));
+        let v3 = Vertex::new(1, Some("person".into()), DynDetails::new(map3));
         let mut source = init_source();
         source.push(Record::new(v3, None));
 

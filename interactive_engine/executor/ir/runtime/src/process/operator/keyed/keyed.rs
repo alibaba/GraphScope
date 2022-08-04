@@ -78,7 +78,7 @@ mod tests {
     use std::collections::HashMap;
 
     use dyn_type::Object;
-    use graph_proxy::apis::{DefaultDetails, DynDetails, GraphElement, Vertex, ID};
+    use graph_proxy::apis::{DynDetails, GraphElement, Vertex, ID};
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
     use ir_common::NameOrId;
@@ -96,9 +96,9 @@ mod tests {
             .into_iter()
             .collect();
 
-        let v1 = Vertex::new(1, Some("person".into()), DynDetails::new(DefaultDetails::new(p1)));
-        let v2 = Vertex::new(1, Some("person".into()), DynDetails::new(DefaultDetails::new(p2.clone())));
-        let v3 = Vertex::new(3, Some("person".into()), DynDetails::new(DefaultDetails::new(p2)));
+        let v1 = Vertex::new(1, Some("person".into()), DynDetails::new(p1));
+        let v2 = Vertex::new(1, Some("person".into()), DynDetails::new(p2.clone()));
+        let v3 = Vertex::new(3, Some("person".into()), DynDetails::new(p2));
         let r1 = Record::new(v1, None);
         let r2 = Record::new(v2, None);
         let r3 = Record::new(v3, None);
