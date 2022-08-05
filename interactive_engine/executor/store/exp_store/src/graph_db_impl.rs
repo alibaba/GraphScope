@@ -22,6 +22,7 @@ use petgraph::graph::{edge_index, IndexType};
 use petgraph::prelude::*;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
+use vec_map::VecMap;
 
 use super::graph_db::*;
 use crate::common::*;
@@ -44,12 +45,12 @@ pub struct IndexData<G: Send + Sync + IndexType, I: Send + Sync + IndexType> {
     /// A mapping from global vertex id to internal vertex index.
     global_id_to_index: HashMap<G, NodeIndex<I>>,
     /// Group the internal indices of the vertices by their labels
-    label_indices: HashMap<LabelId, Vec<NodeIndex<I>>>,
+    label_indices: VecMap<Vec<NodeIndex<I>>>,
     /// Grouping the adjacent edges of a vertex by the labels
     /// tuple 0 -> outgoing, tuple 1 -> incoming
-    adjacent_label_indices: Vec<HashMap<LabelId, (Vec<EdgeIndex<I>>, Vec<EdgeIndex<I>>)>>,
+    adjacent_label_indices: HashMap<NodeIndex<I>, HashMap<LabelId, (Vec<EdgeIndex<I>>, Vec<EdgeIndex<I>>)>>,
     /// A mapping from internal vertex index to global vertex id (including corner vertex)
-    index_to_global_id: Vec<G>,
+    index_to_global_id: VecMap<G>,
 }
 
 impl<G, I> IndexData<G, I>
@@ -69,23 +70,21 @@ where
                 .is_none()
             {
                 self.label_indices
-                    .entry(label[0])
-                    .or_default()
+                    .entry(label[0] as usize)
+                    .or_insert_with(Vec::new)
                     .push(internal_id);
                 self.label_indices
-                    .entry(label[1])
-                    .or_default()
+                    .entry(label[1] as usize)
+                    .or_insert_with(Vec::new)
                     .push(internal_id);
             }
         }
-
-        while internal_id.index() >= self.index_to_global_id.len() {
-            self.index_to_global_id.push(G::default());
-            if !is_corner {
-                self.adjacent_label_indices.push(HashMap::new());
-            }
+        if !is_corner {
+            self.adjacent_label_indices
+                .insert(internal_id, HashMap::new());
         }
-        self.index_to_global_id[internal_id.index()] = global_id;
+        self.index_to_global_id
+            .insert(internal_id.index(), global_id);
     }
 
     fn add_edge(
@@ -94,7 +93,7 @@ where
     ) {
         if let Some(label_indices) = self
             .adjacent_label_indices
-            .get_mut(src_internal_id.index())
+            .get_mut(&src_internal_id)
         {
             label_indices
                 .entry(label_id)
@@ -104,7 +103,7 @@ where
         }
         if let Some(label_indices) = self
             .adjacent_label_indices
-            .get_mut(dst_internal_id.index())
+            .get_mut(&dst_internal_id)
         {
             label_indices
                 .entry(label_id)
@@ -116,7 +115,7 @@ where
 
     /// Get all internal ids from a given label
     fn get_indices_of_label(&self, label_id: LabelId) -> Iter<NodeIndex<I>> {
-        if let Some(label_indices) = self.label_indices.get(&label_id) {
+        if let Some(label_indices) = self.label_indices.get(label_id as usize) {
             Iter::from_iter(label_indices.iter().cloned())
         } else {
             Iter::default()
@@ -128,20 +127,14 @@ where
     ) -> Iter<EdgeIndex<I>> {
         match dir {
             Direction::Outgoing => {
-                if let Some(label_indices) = self
-                    .adjacent_label_indices
-                    .get(internal_id.index())
-                {
+                if let Some(label_indices) = self.adjacent_label_indices.get(&internal_id) {
                     if let Some(nbrs) = label_indices.get(&edge_label) {
                         return Iter::from_iter(nbrs.0.iter().cloned());
                     }
                 }
             }
             Direction::Incoming => {
-                if let Some(label_indices) = self
-                    .adjacent_label_indices
-                    .get(internal_id.index())
-                {
+                if let Some(label_indices) = self.adjacent_label_indices.get(&internal_id) {
                     if let Some(nbrs) = label_indices.get(&edge_label) {
                         return Iter::from_iter(nbrs.1.iter().cloned());
                     }
@@ -480,11 +473,7 @@ where
             .global_id_to_index
             .get(&global_id)
         {
-            if let Some(label_indices) = self
-                .index_data
-                .adjacent_label_indices
-                .get(id.index())
-            {
+            if let Some(label_indices) = self.index_data.adjacent_label_indices.get(&id) {
                 label_indices
                     .values()
                     .map(|(_, in_nbrs)| in_nbrs.len())
@@ -504,11 +493,7 @@ where
             .global_id_to_index
             .get(&global_id)
         {
-            if let Some(label_indices) = self
-                .index_data
-                .adjacent_label_indices
-                .get(id.index())
-            {
+            if let Some(label_indices) = self.index_data.adjacent_label_indices.get(&id) {
                 label_indices
                     .values()
                     .map(|(out_nbrs, _)| out_nbrs.len())
@@ -528,11 +513,7 @@ where
             .global_id_to_index
             .get(&global_id)
         {
-            if let Some(label_indices) = self
-                .index_data
-                .adjacent_label_indices
-                .get(id.index())
-            {
+            if let Some(label_indices) = self.index_data.adjacent_label_indices.get(&id) {
                 label_indices
                     .values()
                     .map(|(out_nbrs, in_nbrs)| out_nbrs.len() + in_nbrs.len())
@@ -698,7 +679,11 @@ where
         let mut count = 0;
         if let Some(labels) = _labels {
             for label in labels {
-                if let Some(ids) = self.index_data.label_indices.get(label) {
+                if let Some(ids) = self
+                    .index_data
+                    .label_indices
+                    .get(*label as usize)
+                {
                     count += ids.len();
                 }
             }
