@@ -30,7 +30,6 @@ on:
       - 'learning_engine/**'
       - 'proto/**'
       - 'python/**'
-      - 'research/**'
       - '!**.md'
       - '!**.rst'
 
@@ -80,12 +79,6 @@ jobs:
             - 'python/graphscope/interactive/**'
             - '.github/workflows/ci.yml'
 
-    - name: Setup Java11
-      uses: actions/setup-java@v2
-      with:
-         distribution: 'zulu'
-         java-version: '11'
-
     - name: Cpp Format and Lint Check
       run: |
         # install clang-format
@@ -121,6 +114,26 @@ jobs:
             exit -1
         fi
 
+    - name: Python Format and Lint Check
+      run: |
+        echo "Checking formatting for $GITHUB_REPOSITORY"
+        pip3 install -r coordinator/requirements-dev.txt
+        pushd python
+        python3 -m isort --check --diff .
+        python3 -m black --check --diff .
+        python3 -m flake8 .
+        popd
+        pushd coordinator
+        python3 -m isort --check --diff .
+        python3 -m black --check --diff .
+        python3 -m flake8 .
+
+    - name: Setup Java11
+      uses: actions/setup-java@v2
+      with:
+         distribution: 'zulu'
+         java-version: '11'
+
     - name: Java Format and Lint Check
       run: |
         wget https://github.com/google/google-java-format/releases/download/v1.13.0/google-java-format-1.13.0-all-deps.jar
@@ -153,20 +166,6 @@ jobs:
             echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
             exit -1
         fi
-
-    - name: Python Format and Lint Check
-      run: |
-        echo "Checking formatting for $GITHUB_REPOSITORY"
-        pip3 install -r coordinator/requirements-dev.txt
-        pushd python
-        python3 -m isort --check --diff .
-        python3 -m black --check --diff .
-        python3 -m flake8 .
-        popd
-        pushd coordinator
-        python3 -m isort --check --diff .
-        python3 -m black --check --diff .
-        python3 -m flake8 .
 
   build-wheels:
     # Require the user id of the self-hosted is 1001, which may need to be
@@ -613,12 +612,10 @@ jobs:
           minikube image load graphscope/graphscope:${SHORT_SHA}
 
           export PYTHONPATH=${GITHUB_WORKSPACE}/python:${PYTHONPATH}
-          cd ${GITHUB_WORKSPACE}/interactive_engine && mvn clean install --quiet -DskipTests -Pjava-release
+          cd ${GITHUB_WORKSPACE}/interactive_engine && mvn clean install --quiet -DskipTests -Drust.compile.skip=true -P graphscope,graphscope-assembly
           cd ${GITHUB_WORKSPACE}/interactive_engine/tests
-          # TODO: Skip the tests as some cases are not supported yet.
-          # issue: https://github.com/alibaba/GraphScope/issues/1802
           # ./function_test.sh 8111 1 graphscope/graphscope:${SHORT_SHA}
-          # ./function_test.sh 8112 2 graphscope/graphscope:${SHORT_SHA}
+          ./function_test.sh 8112 2 graphscope/graphscope:${SHORT_SHA}
 
   k8s-test:
     runs-on: [self-hosted, ubuntu2004]

@@ -15,6 +15,7 @@ limitations under the License.
 
 #ifndef ANALYTICAL_ENGINE_APPS_SSSP_SSSP_PATH_H_
 #define ANALYTICAL_ENGINE_APPS_SSSP_SSSP_PATH_H_
+
 #include <limits>
 #include <utility>
 #include <vector>

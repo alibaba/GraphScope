@@ -173,11 +173,19 @@ class ArrowToDynamicConverter {
     auto& allocators = dynamic_frag->allocators_;
     std::vector<std::vector<internal_vertex_t>> vertices(thread_num);
     std::vector<std::vector<edge_t>> edges(thread_num);
+    vid_t ovnum = 0;
+    for (label_id_t label = 0; label < src_frag->vertex_label_num(); ++label) {
+      ovnum += src_frag->GetOuterVerticesNum(label);
+    }
 
     // we record the degree messages here to avoid fetch these messages in
     // dynamic_frag.Init again.
-    std::vector<int> oe_degree(dst_vm->GetInnerVertexSize(fid), 0);
-    std::vector<int> ie_degree(dst_vm->GetInnerVertexSize(fid), 0);
+    std::vector<int> inner_oe_degree(dst_vm->GetInnerVertexSize(fid), 0);
+    std::vector<int> inner_ie_degree(dst_vm->GetInnerVertexSize(fid), 0);
+    std::vector<int> outer_oe_degree(ovnum, 0);
+    std::vector<int> outer_ie_degree(ovnum, 0);
+    ska::flat_hash_map<vid_t, vid_t> ovg2i;
+    vid_t ov_index = 0, index = 0;
     for (label_id_t v_label = 0; v_label < src_frag->vertex_label_num();
          v_label++) {
       auto inner_vertices = src_frag->InnerVertices(v_label);
@@ -207,11 +215,23 @@ class ArrowToDynamicConverter {
                  e_label++) {
               auto e_data = src_frag->edge_data_table(e_label);
               auto oe = src_frag->GetOutgoingAdjList(u, e_label);
-              oe_degree[lid] += oe.Size();
+              inner_oe_degree[lid] += oe.Size();
               for (auto& e : oe) {
                 auto v = e.get_neighbor();
                 auto e_id = e.edge_id();
                 vid_t v_gid = gid2Gid(src_frag->Vertex2Gid(v));
+                if (src_frag->IsOuterVertex(v)) {
+                  auto iter = ovg2i.find(v_gid);
+                  if (iter != ovg2i.end()) {
+                    index = iter->second;
+                  } else {
+                    ovg2i.emplace(v_gid, ov_index);
+                    index = ov_index;
+                    ++ov_index;
+                  }
+                  src_frag->directed() ? outer_ie_degree[index]++
+                                       : outer_oe_degree[index]++;
+                }
                 dynamic::Value edge_data(rapidjson::kObjectType);
                 PropertyConverter<src_fragment_t>::EdgeValue(
                     e_data, e_id, edge_data, (*allocators)[tid]);
@@ -220,12 +240,23 @@ class ArrowToDynamicConverter {
 
               if (src_frag->directed()) {
                 auto ie = src_frag->GetIncomingAdjList(u, e_label);
-                ie_degree[lid] += ie.Size();
+                inner_ie_degree[lid] += ie.Size();
                 for (auto& e : ie) {
                   auto v = e.get_neighbor();
                   if (src_frag->IsOuterVertex(v)) {
                     auto e_id = e.edge_id();
                     vid_t v_gid = gid2Gid(src_frag->GetOuterVertexGid(v));
+                    if (src_frag->IsOuterVertex(v)) {
+                      auto iter = ovg2i.find(v_gid);
+                      if (iter != ovg2i.end()) {
+                        index = iter->second;
+                      } else {
+                        ovg2i.emplace(v_gid, ov_index);
+                        index = ov_index;
+                        ++ov_index;
+                      }
+                      outer_oe_degree[index]++;
+                    }
                     dynamic::Value edge_data(rapidjson::kObjectType);
                     PropertyConverter<src_fragment_t>::EdgeValue(
                         e_data, e_id, edge_data, (*allocators)[tid]);
@@ -239,7 +270,8 @@ class ArrowToDynamicConverter {
     }
 
     dynamic_frag->Init(src_frag->fid(), src_frag->directed(), vertices, edges,
-                       oe_degree, ie_degree, thread_num);
+                       inner_oe_degree, outer_oe_degree, inner_ie_degree,
+                       outer_ie_degree, thread_num);
 
     initFragmentSchema(dynamic_frag, src_frag->schema());
 

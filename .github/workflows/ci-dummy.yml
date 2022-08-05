@@ -16,7 +16,6 @@ on:
       - '!learning_engine/**'
       - '!proto/**'
       - '!python/**'
-      - '!research/**'
       - '**.md'
       - '**.rst'
 

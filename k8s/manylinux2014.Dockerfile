@@ -5,7 +5,7 @@ FROM registry.cn-hongkong.aliyuncs.com/graphscope/manylinux2014:2021-10-14-14ac0
 
 # yum install dependencies
 RUN yum install -y autoconf m4 git krb5-devel perl-IPC-Cmd rapidjson-devel \
-        libcurl-devel libevent-devel libgsasl-devel libunwind-devel.x86_64 \
+        libcurl-devel libevent-devel libgsasl-devel libunwind-devel \
         libuuid-devel libxml2-devel libzip libzip-devel minizip minizip-devel \
         make net-tools rsync telnet unzip vim wget which zip bind-utils sudo \
         msgpack-devel && \
@@ -245,14 +245,6 @@ RUN mkdir -p /tmp/maven /usr/share/maven/ref \
     && rm -f /tmp/apache-maven.tar.gz \
     && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn \
     && export LD_LIBRARY_PATH=$(echo "$LD_LIBRARY_PATH" | sed "s/::/:/g")
-
-# go, zetcd
-RUN cd /tmp && \
-    wget --no-verbose https://golang.org/dl/go1.15.5.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go1.15.5.linux-amd64.tar.gz && \
-    export PATH=${PATH}::/usr/local/go/bin && \
-    go get github.com/etcd-io/zetcd/cmd/zetcd && \
-    cp $(go env GOPATH)/bin/zetcd /usr/local/bin/zetcd
 
 # patchelf
 RUN cd /tmp && \

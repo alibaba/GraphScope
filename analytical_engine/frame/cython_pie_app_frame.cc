@@ -27,6 +27,8 @@
 #include <string>
 #include <utility>
 
+#include <arrow/api.h>
+
 #include "grape/util.h"
 
 #include "vineyard/graph/fragment/arrow_fragment.h"

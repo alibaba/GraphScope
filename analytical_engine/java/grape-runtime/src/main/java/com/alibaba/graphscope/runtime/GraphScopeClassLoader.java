@@ -29,8 +29,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.Vector;
 import java.util.stream.Collectors;
 
@@ -43,17 +45,12 @@ import java.util.stream.Collectors;
  * jvm environment provided by class loaders, which can avoid possible class conflicts.
  */
 public class GraphScopeClassLoader {
-
     private static Logger logger = LoggerFactory.getLogger(GraphScopeClassLoader.class);
     private static String FFI_TYPE_FACTORY_CLASS = "com.alibaba.graphscope.runtime.FFITypeFactory";
 
     static {
         try {
-            String GS_HOME = System.getenv("GRAPHSCOPE_HOME");
-            if (Objects.isNull(GS_HOME) || GS_HOME.isEmpty()) {
-                GS_HOME = "/opt/graphscope";
-            }
-            System.load(GS_HOME + "/lib/libgrape-jni.so");
+            System.loadLibrary("grape-jni");
             logger.info("loaded jni lib");
         } catch (Exception e) {
             e.printStackTrace();
@@ -303,7 +300,6 @@ public class GraphScopeClassLoader {
     }
 
     private static class ClassScope {
-
         private static java.lang.reflect.Field LIBRARIES = null;
 
         static {
@@ -325,8 +321,28 @@ public class GraphScopeClassLoader {
          */
         public static String[] getLoadedLibraries(final ClassLoader loader)
                 throws IllegalAccessException {
-            final Vector<String> libraries = (Vector<String>) LIBRARIES.get(loader);
-            return libraries.toArray(new String[] {});
+            if (getVersion() == 8) {
+                final Vector<String> libraries = (Vector<String>) LIBRARIES.get(loader);
+                return libraries.toArray(new String[] {});
+            } else if (getVersion() >= 11) {
+                final Set<String> libraries = (HashSet<String>) LIBRARIES.get(loader);
+                return libraries.toArray(new String[] {});
+            } else {
+                throw new IllegalStateException("Not supported version" + getVersion());
+            }
         }
+    }
+
+    private static int getVersion() {
+        String version = System.getProperty("java.version");
+        if (version.startsWith("1.")) {
+            version = version.substring(2, 3);
+        } else {
+            int dot = version.indexOf(".");
+            if (dot != -1) {
+                version = version.substring(0, dot);
+            }
+        }
+        return Integer.parseInt(version);
     }
 }

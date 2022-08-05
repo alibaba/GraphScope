@@ -20,11 +20,34 @@ GraphScope is a unified distributed graph computing platform that provides a one
 
 Visit our website at [graphscope.io](https://graphscope.io) to learn more.
 
+## Table of Contents
+
+- [Getting Started](#getting-started)
+  - [Installation for Standalone Mode](#installation-for-standalone-mode)
+- [Demo: Node Classification on Citation Network](#demo-node-classification-on-citation-network)
+  - [Loading a graph](#loading-a-graph)
+  - [Interactive query](#interactive-query)
+  - [Graph analytics](#graph-analytics)
+  - [Graph neural networks (GNNs)](#graph-neural-networks-gnns)
+- [Graph Processing on Kubernetes](#processing-large-graph-on-kubernetes-cluster)
+  - [Creating a session](#creating-a-session)
+  - [Loading graphs and graph computation](#loading-a-graph-and-processing-computation-tasks)
+  - [Closing the session](#closing-the-session)
+- [Development](#development)
+  - [Building from source](#building-on-local)
+  - [Building Docker images](#building-docker-images)
+  - [Building the client library](#building-client-library)
+  - [Testing](#testing)
+- [Documentation](#documentation)
+- [License](#license)
+- [Publications](#publications)
+- [Joining our Community!](#contributing)
+
 ## Getting Started
 
 We provide a [Playground](https://try.graphscope.app) with a managed JupyterLab. [Try GraphScope](https://try.graphscope.app) straight away in your browser!
 
-GraphScope supports run in standalone mode or on clusters managed by [Kubernetes](https://kubernetes.io/) within containers. For quickly getting started, 
+GraphScope supports run in standalone mode or on clusters managed by [Kubernetes](https://kubernetes.io/) within containers. For quickly getting started,
 let's begin with the standalone mode.
 
 
@@ -207,10 +230,10 @@ config = {
 train(config, lg)
 ```
 
-A python script with the entire process is availabe [here](https://colab.research.google.com/github/alibaba/GraphScope/blob/main/tutorials/1_node_classification_on_citation.ipynb), you may try it out by yourself. 
+A python script with the entire process is availabe [here](https://colab.research.google.com/github/alibaba/GraphScope/blob/main/tutorials/1_node_classification_on_citation.ipynb), you may try it out by yourself.
 
 
-### Processing Large Graph on Kubernetes Cluster
+## Processing Large Graph on Kubernetes Cluster
 
 GraphScope is designed for processing large graphs, which are usually hard to fit in the memory of a single machine.
 With [Vineyard](https://github.com/v6d-io/v6d) as the distributed in-memory data manager, GraphScope supports run on a cluster managed by Kubernetes(k8s).
@@ -227,11 +250,11 @@ Alternatively, you can set up a local k8s cluster for testing with [Kind](https:
 
 If you did not install the `graphscope` package in the above step, you can install a subset of the whole package with client functions only.
 
-```bash 
+```bash
 pip3 install graphscope-client
 ```
 
-Next, let's revisit the example by running on a cluster instead. 
+Next, let's revisit the example by running on a cluster instead.
 
 <div align="center">
     <img src="https://graphscope.io/docs/_images/how-it-works.png" width="600" alt="how-it-works" />
@@ -303,13 +326,13 @@ Please note that we have not hardened this release for production use and it lac
 
 ### Building on local
 
-To build graphscope Python package and the engine bineries, you need to install some dependencies and build tools.
+To build graphscope Python package and the engine binaries, you need to install some dependencies and build tools.
 
 ```bash
 ./scripts/install_deps.sh --dev
 
 # With argument --cn to speed up the download if you are in China.
-./scripts/install_deps.sh --dev --cn 
+./scripts/install_deps.sh --dev --cn
 ```
 
 Then you can build GraphScope with pre-configured `make` commands.

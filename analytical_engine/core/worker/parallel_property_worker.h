@@ -26,6 +26,7 @@
 #include "grape/communication/communicator.h"
 #include "grape/config.h"
 #include "grape/parallel/parallel_engine.h"
+#include "grape/util.h"
 #include "grape/worker/comm_spec.h"
 
 #include "core/parallel/parallel_property_message_manager.h"
@@ -86,12 +87,11 @@ class ParallelPropertyWorker {
 
   template <class... Args>
   void Query(Args&&... args) {
+    double t = grape::GetCurrentTime();
+
     MPI_Barrier(comm_spec_.comm());
 
     context_->Init(messages_, std::forward<Args>(args)...);
-    if (comm_spec_.worker_id() == grape::kCoordinatorRank) {
-      VLOG(1) << "[Coordinator]: Finished Init";
-    }
 
     int round = 0;
 
@@ -104,12 +104,14 @@ class ParallelPropertyWorker {
     messages_.FinishARound();
 
     if (comm_spec_.worker_id() == grape::kCoordinatorRank) {
-      VLOG(1) << "[Coordinator]: Finished PEval";
+      VLOG(1) << "[Coordinator]: Finished PEval, time: "
+              << grape::GetCurrentTime() - t << " sec";
     }
 
     int step = 1;
 
     while (!messages_.ToTerminate()) {
+      t = grape::GetCurrentTime();
       round++;
       messages_.StartARound();
 
@@ -118,7 +120,8 @@ class ParallelPropertyWorker {
       messages_.FinishARound();
 
       if (comm_spec_.worker_id() == grape::kCoordinatorRank) {
-        VLOG(1) << "[Coordinator]: Finished IncEval - " << step;
+        VLOG(1) << "[Coordinator]: Finished IncEval - " << step
+                << ", time: " << grape::GetCurrentTime() - t << " sec";
       }
       ++step;
     }

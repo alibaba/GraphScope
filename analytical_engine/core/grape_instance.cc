@@ -198,7 +198,8 @@ bl::result<void> GrapeInstance::unloadGraph(const rpc::GSParams& params) {
 }
 
 bl::result<std::string> GrapeInstance::loadApp(const rpc::GSParams& params) {
-  std::string app_name = "app_" + generateId();
+  BOOST_LEAF_AUTO(algo_name, params.Get<std::string>(rpc::APP_ALGO));
+  std::string app_name = "app_" + algo_name + "_" + generateId();
 
   BOOST_LEAF_AUTO(lib_path, params.Get<std::string>(rpc::APP_LIBRARY_PATH));
 
@@ -264,6 +265,9 @@ bl::result<std::string> GrapeInstance::query(const rpc::GSParams& params,
   BOOST_LEAF_AUTO(app, object_manager_.GetObject<AppEntry>(app_name));
   BOOST_LEAF_AUTO(wrapper,
                   object_manager_.GetObject<IFragmentWrapper>(graph_name));
+
+  VLOG(1) << "Query app, application name: " << app_name
+          << ", graph name: " << graph_name;
 
   auto fragment = wrapper->fragment();
   auto spec = grape::DefaultParallelEngineSpec();

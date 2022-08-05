@@ -26,11 +26,12 @@ function _start {
     if [ -z "$GS_TEST_DIR" ]; then
         export GS_TEST_DIR=$curdir/src/main/resources
     fi
-    cd $curdir/../deploy/testing && python3 maxgraph_test_server.py ${_port} &
+    cd $curdir && python3 maxgraph_test_server.py ${_port} &
     sleep 5s
     curl -XPOST http://localhost:${_port} -d 'import graphscope'
     curl -XPOST http://localhost:${_port} -d 'graphscope.set_option(show_log=True)'
     curl -XPOST http://localhost:${_port} -d 'from graphscope.framework.loader import Loader'
+    curl -XPOST http://localhost:${_port} -d 'from graphscope.dataset import load_modern_graph'
     curl_sess="curl -XPOST http://localhost:${_port} -d 'session = graphscope.session(num_workers=${workers}, k8s_volumes={\"data\": {\"type\": \"hostPath\", \"field\": {\"path\": \"${GS_TEST_DIR}\", \"type\": \"Directory\"}, \"mounts\": {\"mountPath\": \"/testingdata\"}}}, k8s_coordinator_cpu=1.0, k8s_coordinator_mem='\''4Gi'\'', k8s_vineyard_cpu=1.0, k8s_vineyard_mem='\''4Gi'\'', vineyard_shared_mem='\''4Gi'\'', k8s_engine_cpu=1.0, k8s_engine_mem='\''4Gi'\'', k8s_etcd_num_pods=3, k8s_etcd_cpu=2, k8s_gs_image='\''${gs_image}'\'')' --write-out %{http_code} --silent --output ./curl.tmp"
 
     echo $curl_sess
@@ -59,7 +60,7 @@ function _stop {
 
 function _test {
     url=$(cat $tmp_result)
-    cd $curdir && mvn test -Dclient.server.url=${url} -Dskip.tests=false
+    cd $curdir && mvn test -Dclient.server.url=${url} -Dskip.tests=false -Drust.compile.skip=true
 }
 
 opt=$1

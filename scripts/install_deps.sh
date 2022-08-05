@@ -26,6 +26,7 @@ PLATFORM=
 OS_VERSION=
 VERBOSE=false
 CN_MIRROR=false
+GRAPE_JDK=false
 packages_to_install=()
 
 err() {
@@ -63,6 +64,7 @@ cat <<END
     --verbose            Print the debug logging information
     --k8s                Install the dependencies for running GraphScope on k8s locally
     --dev                Install the dependencies for build GraphScope on local
+    --grape-jdk          Install the dependecies for GraphScope grape jdk on local
     --cn                 Use tsinghua mirror for brew when install dependencies on macOS
 END
 }
@@ -169,6 +171,7 @@ init_basic_packages() {
       libprotobuf-dev
       librdkafka-dev
       libre2-dev
+      libc-ares-dev
       libsnappy-dev
       libssl-dev
       libunwind-dev
@@ -185,7 +188,6 @@ init_basic_packages() {
       git
       rapidjson-dev
       libmsgpack-dev
-      golang-go
     )
   elif [[ "${PLATFORM}" == *"CentOS"* ]]; then
     BASIC_PACKGES_TO_INSTALL=(
@@ -224,7 +226,6 @@ init_basic_packages() {
       curl
       rapidjson-devel
       msgpack-devel
-      golang
     )
   else
     BASIC_PACKGES_TO_INSTALL=(
@@ -244,7 +245,6 @@ init_basic_packages() {
       libomp
       rapidjson
       msgpack-cxx
-      go
     )
   fi
   readonly BASIC_PACKGES_TO_INSTALL
@@ -393,7 +393,6 @@ write_envs_config() {
         echo "export JAVA_HOME=\$(/usr/libexec/java_home -v11)"
       fi
       echo "export PATH=\$HOME/.cargo/bin:\${JAVA_HOME}/bin:/usr/local/go/bin:\$PATH"
-      echo "export PATH=\$(go env GOPATH)/bin:\$PATH"
       echo "export OPENSSL_ROOT_DIR=${homebrew_prefix}/opt/openssl"
       echo "export OPENSSL_LIBRARIES=${homebrew_prefix}/opt/openssl/lib"
       echo "export OPENSSL_SSL_LIBRARY=${homebrew_prefix}/opt/openssl/lib/libssl.dylib"
@@ -405,8 +404,7 @@ write_envs_config() {
       if [ -z "${JAVA_HOME}" ]; then
         echo "export JAVA_HOME=/usr/lib/jvm/default-java"
       fi
-      echo "export PATH=\${JAVA_HOME}/bin:\$HOME/.cargo/bin:/usr/local/go/bin:\$PATH"
-      echo "export PATH=\$(go env GOPATH)/bin:\$PATH"
+      echo "export PATH=\${JAVA_HOME}/bin:\$HOME/.cargo/bin:\$PATH"
     } >> ${OUTPUT_ENV_FILE}
   else
     {
@@ -414,8 +412,7 @@ write_envs_config() {
       if [ -z "${JAVA_HOME}" ]; then
         echo "export JAVA_HOME=/usr/lib/jvm/java"
       fi
-      echo "export PATH=\${JAVA_HOME}/bin:\$HOME/.cargo/bin:\$PATH:/usr/local/go/bin"
-      echo "export PATH=\$(go env GOPATH)/bin:\$PATH"
+      echo "export PATH=\${JAVA_HOME}/bin:\$HOME/.cargo/bin:\$PATH"
     } >> ${OUTPUT_ENV_FILE}
   fi
 }
@@ -481,6 +478,60 @@ install_vineyard() {
   popd
 
   rm -fr /tmp/v6d
+}
+
+
+##########################
+# Install fastFFI.
+# Globals:
+#   PLATFORM
+# Arguments:
+#   None
+# Outputs:
+#   output log to stdout, output error to stderr.
+##########################
+install_fastFFI() {
+  log "Building and installing fastFFI."
+  if [[ -d /opt/fastFFI && -d ${HOME}/.m2/repository/com/alibaba/fastffi ]]; then
+    log "fastFFI already installed, skip."
+    return 0
+  fi
+
+  if [ -z "${PLATFORM}" ]; then
+    get_os_version
+  fi
+  if [[ -d /opt/fastFFI ]]; then
+    sudo rm -fr /opt/fastFFI
+  fi
+  sudo git clone https://github.com/alibaba/fastFFI.git /opt/fastFFI
+  sudo chown -R $(id -u):$(id -g) /opt/fastFFI
+  pushd /opt/fastFFI
+  git checkout a166c6287f2efb938c27fb01b3d499932d484f9c
+
+  if [[ "${PLATFORM}" == *"Darwin"* ]]; then
+    declare -r homebrew_prefix=$(brew --prefix)
+    export LLVM11_HOME=${homebrew_prefix}/opt/llvm/
+
+    # only install "ffi&annotation-processsor" on macOS, because
+    # llvm4jni not compatible for Apple M1 chip.
+    mvn clean install -DskipTests -pl :ffi,annotation-processor,llvm4jni-runtime -am --quiet
+  elif [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
+    sudo apt update -y
+    sudo apt-get install -y llvm-11-dev lld-11 clang-11
+    export LLVM11_HOME=/usr/lib/llvm-11
+    export PATH=${LLVM11_HOME}/bin:${PATH}
+    mvn clean install -DskipTests --quiet
+  else
+    sudo dnf install -y llvm lld clang
+    export LLVM11_HOME=/usr/include/llvm
+    mvn clean install -DskipTests --quiet
+  fi
+
+  {
+    echo "export LLVM11_HOME=${LLVM11_HOME}"
+  } >> ${OUTPUT_ENV_FILE}
+
+  popd
 }
 
 ##########################
@@ -574,10 +625,7 @@ install_dependencies() {
 
     if [[ "${packages_to_install[*]}" =~ "apache-arrow" ]]; then
       log "Installing apache-arrow."
-      sudo dnf install -y epel-release || sudo dnf install -y \
-        https://dl.fedoraproject.org/pub/epel/epel-release-latest-$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1).noarch.rpm
-      sudo dnf install -y https://apache.jfrog.io/artifactory/arrow/centos/$(cut -d: -f5 /etc/system-release-cpe | cut -d. -f1)/apache-arrow-release-latest.rpm
-      sudo dnf install -y arrow-devel
+      sudo dnf install -y libarrow-devel
       # remove apache-arrow from packages_to_install
       packages_to_install=("${packages_to_install[@]/apache-arrow}")
     fi
@@ -662,6 +710,8 @@ install_dependencies() {
     popd
     rm -fr /tmp/grpc
 
+    export LD_LIBRARY_PATH=/usr/local/lib
+
   elif [[ "${PLATFORM}" == *"Darwin"* ]]; then
     if [[ ${CN_MIRROR} == true ]]; then
       # set brew to tsinghua mirror
@@ -677,10 +727,8 @@ install_dependencies() {
     if [[ ${CN_MIRROR} == true && "${packages_to_install[*]}" =~ "openjdk@11" ]]; then
       # packages_to_install contains jdk
       log "Installing openjdk11."
-      wget -c https://graphscope.oss-cn-beijing.aliyuncs.com/dependencies/OpenJDK11U-jdk_x64_mac_hotspot_11.0.13_8.tar.gz \
-        -P /tmp
-      sudo tar xf /tmp/OpenJDK11U-jdk_x64_mac_hotspot_11.0.13_8.tar.gz -C /Library/Java/JavaVirtualMachines/
-      rm -fr /tmp/OpenJDK11U-jdk_x64_mac_hotspot_11.0.13_8.tar.gz
+      # we need arm64-base jvm, install from brew.
+      brew install --ignore-dependencies openjdk@11
       # remove jdk from packages_to_install
       packages_to_install=("${packages_to_install[@]/openjdk@11}")
     fi
@@ -704,11 +752,7 @@ install_dependencies() {
       brew install ${packages_to_install[*]} || true
     fi
 
-    if [[ "$(uname -m)" == "x86_64" ]]; then
-      declare -r homebrew_prefix="/usr/local"
-    else
-      declare -r homebrew_prefix="/opt/homebrew"
-    fi
+    declare -r homebrew_prefix=$(brew --prefix)
     export OPENSSL_ROOT_DIR=${homebrew_prefix}/opt/openssl
     export OPENSSL_LIBRARIES=${homebrew_prefix}/opt/openssl/lib
     export OPENSSL_SSL_LIBRARY=${homebrew_prefix}/opt/openssl/lib/libssl.dylib
@@ -716,10 +760,6 @@ install_dependencies() {
     export CXX=${homebrew_prefix}/opt/llvm/bin/clang++
     export CPPFLAGS=-I${homebrew_prefix}/opt/llvm/include
   fi
-
-  log "Installing zetcd."
-  GO111MODULE="auto" go get github.com/etcd-io/zetcd/cmd/zetcd
-  sudo cp ${HOME}/go/bin/zetcd /usr/local/bin/zetcd
 
   log "Installing python packages for vineyard codegen."
   pip3 install -U pip --user
@@ -893,6 +933,7 @@ install_deps_dev() {
       --verbose)         VERBOSE=true; readonly VERBOSE; ;;
       --cn)              CN_MIRROR=true; readonly CN_MIRROR; ;;
       --vineyard_prefix) DEPS_PREFIX=$1; readonly DEPS_PREFIX; shift ;;
+      --grape-jdk)       GRAPE_JDK=true; readonly GRAPE_JDK; ;;
       *)
         echo "unrecognized option '${arg}'"
         usage; exit;;
@@ -917,6 +958,17 @@ install_deps_dev() {
   $ source ${OUTPUT_ENV_FILE}
   $ make graphscope\n
   to build and develop GraphScope."
+  if [[ ${GRAPE_JDK} == true ]]; then
+    install_fastFFI
+  else
+    {
+      echo "export ENABLE_JAVA_SDK=OFF"
+    } >> ${OUTPUT_ENV_FILE}
+    succ_msg=${succ_msg}"\n
+    Note: For simplify, The script doesn't install grape-jdk dependency by default. If you want to use grape jdk, use command:\n
+    $ ./install_deps.sh --grape-jdk
+    to install grape-jdk dependency."
+  fi
   succ "${succ_msg}"
 }
 
@@ -983,6 +1035,7 @@ while test $# -ne 0; do
     --verbose)        VERBOSE=true; readonly VERBOSE; ;;
     --cn)             CN_MIRROR=true; readonly CN_MIRROR; ;;
     --dev) install_deps_dev "$@"; exit;;
+    --grape-jdk) install_fastFFI "$@"; exit;;
     --k8s) install_deps_k8s "$@"; exit;;
     *)
       echo "unrecognized option '${arg}'"

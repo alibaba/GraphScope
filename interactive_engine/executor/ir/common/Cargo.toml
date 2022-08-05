@@ -1,0 +1,18 @@
+[package]
+name = "ir_common"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+dyn_type = {path = "../../common/dyn_type"}
+pegasus_common = { path = "../../engine/pegasus/common" }
+prost = "0.9"
+serde = { version = "1.0", features = ["derive"] }
+tonic = "0.4"
+
+[build-dependencies]
+prost-build = "0.9"
+
+[features]
+default = []
+proto_inplace = []

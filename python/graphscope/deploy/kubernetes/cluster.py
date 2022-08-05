@@ -88,6 +88,8 @@ class KubernetesClusterLauncher(Launcher):
         k8s_coordinator_cpu=None,
         k8s_coordinator_mem=None,
         etcd_addrs=None,
+        etcd_listening_client_port=None,
+        etcd_listening_peer_port=None,
         k8s_etcd_num_pods=None,
         k8s_etcd_cpu=None,
         k8s_etcd_mem=None,
@@ -463,6 +465,20 @@ class KubernetesClusterLauncher(Launcher):
             )
         if self._saved_locals["etcd_addrs"] is not None:
             cmd.extend(["--etcd_addrs", self._saved_locals["etcd_addrs"]])
+        if self._saved_locals["etcd_listening_client_port"] is not None:
+            cmd.extend(
+                [
+                    "--etcd_listening_client_port",
+                    str(self._saved_locals["etcd_listening_client_port"]),
+                ]
+            )
+        if self._saved_locals["etcd_listening_peer_port"] is not None:
+            cmd.extend(
+                [
+                    "--etcd_listening_peer_port",
+                    str(self._saved_locals["etcd_listening_peer_port"]),
+                ]
+            )
         return ["-c", " ".join(cmd)]
 
     def _create_services(self):

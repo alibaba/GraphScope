@@ -1,0 +1,112 @@
+{
+  "entities": [
+    {
+      "label": {
+        "id": 1,
+        "name": "software"
+      },
+      "columns": [
+        {
+          "key": {
+            "id": 0,
+            "name": "name"
+          },
+          "data_type": 4,
+          "is_primary_key": false
+        },
+        {
+          "key": {
+            "id": 2,
+            "name": "lang"
+          },
+          "data_type": 4,
+          "is_primary_key": false
+        }
+      ]
+    },
+    {
+      "label": {
+        "id": 0,
+        "name": "person"
+      },
+      "columns": [
+        {
+          "key": {
+            "id": 0,
+            "name": "name"
+          },
+          "data_type": 4,
+          "is_primary_key": false
+        },
+        {
+          "key": {
+            "id": 1,
+            "name": "age"
+          },
+          "data_type": 1,
+          "is_primary_key": false
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "label": {
+        "id": 0,
+        "name": "knows"
+      },
+      "entity_pairs": [
+        {
+          "src": {
+            "id": 0,
+            "name": "person"
+          },
+          "dst": {
+            "id": 0,
+            "name": "person"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "key": {
+            "id": 3,
+            "name": "weight"
+          },
+          "data_type": 3,
+          "is_primary_key": false
+        }
+      ]
+    },
+    {
+      "label": {
+        "id": 1,
+        "name": "created"
+      },
+      "entity_pairs": [
+        {
+          "src": {
+            "id": 0,
+            "name": "person"
+          },
+          "dst": {
+            "id": 0,
+            "name": "software"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "key": {
+            "id": 3,
+            "name": "weight"
+          },
+          "data_type": 3,
+          "is_primary_key": false
+        }
+      ]
+    }
+  ],
+  "is_table_id": true,
+  "is_column_id": false
+}

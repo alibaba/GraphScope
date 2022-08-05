@@ -25,7 +25,6 @@ import com.alibaba.graphscope.loader.GraphDataBufferManager;
 import com.alibaba.graphscope.loader.LoaderBase;
 import com.alibaba.graphscope.stdcxx.FFIByteVecVector;
 import com.alibaba.graphscope.stdcxx.FFIIntVecVector;
-import com.alibaba.graphscope.utils.LoadLibrary;
 import com.google.common.base.Preconditions;
 
 import org.apache.giraph.conf.GiraphConfiguration;
@@ -54,7 +53,6 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URLClassLoader;
-import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -66,22 +64,12 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Load from a file on system.
  */
 public class FileLoader implements LoaderBase {
-
     private static Logger logger = LoggerFactory.getLogger(FileLoader.class);
 
     private static String LIB_PATH = "/opt/graphscope/lib/libgrape-jni.so";
     private static AtomicInteger LOADER_ID = new AtomicInteger(0);
     private static AtomicInteger V_CALLABLE_ID = new AtomicInteger(0);
     private static AtomicInteger E_CALLABLE_ID = new AtomicInteger(0);
-
-    static {
-        String gsHome = System.getenv("GRAPHSCOPE_HOME");
-        logger.info("graphscope home: {}", gsHome);
-        if (Objects.nonNull(gsHome) && !gsHome.isEmpty()) {
-            LIB_PATH = gsHome + "/lib/libgrape-jni.so";
-        }
-        LoadLibrary.invoke(LIB_PATH);
-    }
 
     private int loaderId;
     private int threadNum;
@@ -354,7 +342,6 @@ public class FileLoader implements LoaderBase {
     }
 
     class VertexLoaderCallable implements Callable<Long> {
-
         private int threadId;
         private int callableId;
         private BufferedReader bufferedReader;
@@ -447,7 +434,6 @@ public class FileLoader implements LoaderBase {
     }
 
     class EdgeLoaderCallable implements Callable<Long> {
-
         private int threadId;
         private int callableId;
         private BufferedReader bufferedReader;

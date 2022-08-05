@@ -60,13 +60,13 @@ interactive_engine/rust-common/src/proto/*
 !interactive_engine/rust-common/src/proto/mod.rs
 **/generated/
 
-interactive_engine/executor/store/src/db/proto/*
-!interactive_engine/executor/store/src/db/proto/mod.rs
+interactive_engine/executor/store/groot/src/db/proto/*
+!interactive_engine/executor/store/groot/src/db/proto/mod.rs
 interactive_engine/data_load_tools/dependency-reduced-pom.xml
 interactive_engine/gaia-adaptor/dependency-reduced-pom.xml
 interactive_engine/executor/Cargo.lock
-research/engine/pegasus/benchmark/src/graph/storage/clickhouse/pb_gen/*
-research/query_service/ir/Cargo.lock
+interactive_engine/executor/engine/pegasus/benchmark/src/graph/storage/clickhouse/pb_gen/*
+interactive_engine/executor/ir/Cargo.lock
 
 # java sdk
 java/**/dependency-reduced-pom.xml
@@ -76,5 +76,5 @@ coordinator/graphlearn*
 
 # Lock files
 Chart.lock
-Cargo.lock
+**/Cargo.lock
 package.lock
