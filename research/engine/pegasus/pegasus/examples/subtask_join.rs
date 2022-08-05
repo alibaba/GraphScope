@@ -6,6 +6,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Instant;
 use structopt::StructOpt;
+use rand::Rng;
 
 /// This query begin from a set of sampling vertices (number specified by `source`)
 /// and do i-hop search before enter subtask (specified by `i`),
@@ -83,14 +84,11 @@ fn main() {
         conf.reset_servers(ServerConf::All);
     }
 
-    // let src = if let Some(ref source_file) = config.source_path {
-    //     get_source(source_file)
-    // } else {
-    //     graph.sample_vertices(config.source as usize, 0.5)
-    // };
-
-    let mut src = Vec::new();
-    src.push(1);
+    let src = if let Some(ref source_file) = config.source_path {
+        get_source(source_file)
+    } else {
+        graph.sample_vertices(config.source as usize, 0.5)
+    };
 
     let inner_hop = config.inner_hop;
     let outer_hop = config.outer_hop;
@@ -109,16 +107,19 @@ fn main() {
             for _i in 0..outer_hop {
                 let graph_clone = graph.clone();
                 stream = stream.repartition(|id| Ok(*id));
-                // if let Some(degree) = degree {
-                //     stream = stream.flat_map(move |_id| {
-                //         Ok(graph_clone
-                //             .sample_neighbors(degree as usize)
-                //             .into_iter())
-                //     })?;
-                // } else {
-                //     stream = stream.flat_map(move |id| Ok(graph_clone.get_neighbors(id)))?;
-                // }
-                stream = stream.flat_map(move |id| Ok(graph_clone.get_neighbors(id)))?;
+                if let Some(degree) = degree {
+                    stream = stream.flat_map(move |_id| {
+                        Ok(graph_clone
+                            .get_neighbors(_id)
+                            .filter(move |_v| {
+                                let mut rng = rand::thread_rng();
+                                rng.gen_bool(degree as f64)
+                            })
+                            .into_iter())
+                    })?;
+                } else {
+                    stream = stream.flat_map(move |id| Ok(graph_clone.get_neighbors(id)))?;
+                }
             }
             let (main, sub) = stream.repartition(|id| Ok(*id)).copied()?;
 
@@ -126,22 +127,23 @@ fn main() {
             for _j in 0..inner_hop {
                 let g = graph.clone();
                 sub_stream = sub_stream.repartition(|pair| Ok(pair.value));
-                // if let Some(degree) = degree {
-                //     sub_stream = sub_stream.flat_map(move |pair| {
-                //         Ok(g.sample_neighbors(degree as usize)
-                //             .into_iter()
-                //             .map(move |n| Pair { key: pair.key, value: n }))
-                //     })?;
-                // } else {
-                //     sub_stream = sub_stream.flat_map(move |pair| {
-                //         Ok(g.get_neighbors(pair.value)
-                //             .map(move |n| Pair { key: pair.key, value: n }))
-                //     })?;
-                // }
-                sub_stream = sub_stream.flat_map(move |pair| {
-                    Ok(g.get_neighbors(pair.value)
-                        .map(move |n| Pair { key: pair.key, value: n }))
-                })?;
+                if let Some(degree) = degree {
+                    sub_stream = sub_stream.flat_map(move |pair| {
+                        Ok(g
+                            .get_neighbors(pair.value)
+                            .filter(move |_v| {
+                                let mut rng = rand::thread_rng();
+                                rng.gen_bool(degree as f64)
+                            })
+                            .into_iter()
+                            .map(move |n| Pair { key: pair.key, value: n }))
+                    })?;
+                } else {
+                    sub_stream = sub_stream.flat_map(move |pair| {
+                        Ok(g.get_neighbors(pair.value)
+                            .map(move |n| Pair { key: pair.key, value: n }))
+                    })?;
+                }
             }
             let sub_count = sub_stream
                 .fold_partition(HashMap::new(), || {

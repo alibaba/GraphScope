@@ -35,10 +35,10 @@ about = "Search k-hop neighbors on parallel dataflow using apply method"
 )]
 struct Config {
     /// the number of hops before subtask
-    #[structopt(short = "i", default_value = "2")]
+    #[structopt(short = "i", default_value = "1")]
     outer_hop: u32,
     /// the number of hops in subtask
-    #[structopt(short = "j", default_value = "2")]
+    #[structopt(short = "j", default_value = "1")]
     inner_hop: u32,
     /// the number of start vertices sampling from graph
     #[structopt(short = "s", default_value = "100")]
@@ -97,14 +97,14 @@ fn main() {
         conf.reset_servers(ServerConf::All);
     }
 
-    // let src = if let Some(ref source_file) = config.source_path {
-    //     get_source(source_file)
-    // } else {
-    //     graph.sample_vertices(config.source as usize, 0.1)
-    // };
+    let src = if let Some(ref source_file) = config.source_path {
+        get_source(source_file)
+    } else {
+        graph.sample_vertices(config.source as usize, 0.1)
+    };
 
-    let mut src = Vec::new();
-    src.push(1);
+    // let mut src = Vec::new();
+    // src.push(1);
 
     let inner_hop = config.inner_hop;
     let outer_hop = config.outer_hop;
@@ -131,7 +131,6 @@ fn main() {
                                 let mut rng = rand::thread_rng();
                                 rng.gen_bool(degree as f64)
                             })
-                            // .sample_neighbors(degree as usize)
                             .into_iter())
                     })?;
                 } else {
