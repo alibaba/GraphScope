@@ -44,6 +44,12 @@ pub struct Iter<'a, T> {
     inner: Box<dyn Iterator<Item = T> + 'a + Send>,
 }
 
+impl<'a, T: 'a + Send> Default for Iter<'a, T> {
+    fn default() -> Self {
+        Iter::from_iter(Vec::<T>::new().into_iter())
+    }
+}
+
 impl<'a, T> Iter<'a, T> {
     pub fn new(iter: Box<dyn Iterator<Item = T> + 'a + Send>) -> Self {
         Iter { inner: iter }

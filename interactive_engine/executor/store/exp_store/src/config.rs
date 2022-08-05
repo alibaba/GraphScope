@@ -277,7 +277,8 @@ impl GraphDBConfig {
             graph,
             vertex_prop_table,
             edge_prop_table,
-            index_data: IndexData::new(self.number_vertex_labels),
+            index_data: IndexData::default(),
+            corner_global_id_to_index: Default::default(),
         }
     }
 

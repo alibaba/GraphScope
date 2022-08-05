@@ -18,7 +18,7 @@ use std::fs::create_dir_all;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use petgraph::graph::{edge_index, EdgeReference, IndexType};
+use petgraph::graph::{edge_index, IndexType};
 use petgraph::prelude::*;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -39,15 +39,15 @@ use crate::utils::{Iter, IterList};
 /// graph database. This structure maintains the mapping of:
 ///     global id <-> internal index
 ///     label id -> all vertices' global ids that have the given label
-#[derive(Serialize, Deserialize)]
+#[derive(Default, Deserialize, Serialize)]
 pub struct IndexData<G: Send + Sync + IndexType, I: Send + Sync + IndexType> {
     /// A mapping from global vertex id to internal vertex index.
     global_id_to_index: HashMap<G, NodeIndex<I>>,
     /// Group the internal indices of the vertices by their labels
-    label_indices: Vec<Vec<NodeIndex<I>>>,
-    /// A mapping from global vertex id to corner internal vertex index. The corner vertexs
-    /// are the vertexs that do not belong to current partition, but included by edges.
-    corner_global_id_to_index: HashMap<G, NodeIndex<I>>,
+    label_indices: HashMap<LabelId, Vec<NodeIndex<I>>>,
+    /// Grouping the adjacent edges of a vertex by the labels
+    /// tuple 0 -> outgoing, tuple 1 -> incoming
+    adjacent_label_indices: Vec<HashMap<LabelId, (Vec<EdgeIndex<I>>, Vec<EdgeIndex<I>>)>>,
     /// A mapping from internal vertex index to global vertex id (including corner vertex)
     index_to_global_id: Vec<G>,
 }
@@ -57,77 +57,99 @@ where
     G: Send + Sync + IndexType,
     I: Send + Sync + IndexType,
 {
-    pub fn new(num_labels: usize) -> Self {
-        let mut label_indices = Vec::with_capacity(num_labels);
-        for _ in 0..num_labels {
-            label_indices.push(Vec::new())
-        }
-        Self {
-            global_id_to_index: HashMap::new(),
-            label_indices,
-            corner_global_id_to_index: HashMap::new(),
-            index_to_global_id: Vec::new(),
-        }
-    }
-
     /// Add a vertex of given global_id, label_id, and internal_id.
     ///
     /// If the vertex already presents, update the value and return `false`,
     /// otherwise insert the value and return `true`
-    fn add_vertex(
-        &mut self, global_id: G, label: Label, internal_id: NodeIndex<I>, is_corner: bool,
-    ) -> bool {
-        let existed = if !is_corner {
-            let max_label_id =
-                if label[1] != INVALID_LABEL_ID { std::cmp::max(label[0], label[1]) } else { label[0] }
-                    as usize;
-            // only a non-corner vertex will be inserted in the labelled vectors.
-            while max_label_id >= self.label_indices.len() {
-                self.label_indices.push(vec![]);
-            }
-
-            self.label_indices[label[0] as usize].push(internal_id);
-            if label[1] != INVALID_LABEL_ID {
-                self.label_indices[label[1] as usize].push(internal_id);
-            }
-
-            self.global_id_to_index
+    fn add_vertex(&mut self, global_id: G, label: Label, internal_id: NodeIndex<I>, is_corner: bool) {
+        if !is_corner {
+            if self
+                .global_id_to_index
                 .insert(global_id, internal_id)
-                .is_some()
-        } else {
-            self.corner_global_id_to_index
-                .insert(global_id, internal_id)
-                .is_some()
-        };
+                .is_none()
+            {
+                self.label_indices
+                    .entry(label[0])
+                    .or_default()
+                    .push(internal_id);
+                self.label_indices
+                    .entry(label[1])
+                    .or_default()
+                    .push(internal_id);
+            }
+        }
 
         while internal_id.index() >= self.index_to_global_id.len() {
             self.index_to_global_id.push(G::default());
+            if !is_corner {
+                self.adjacent_label_indices.push(HashMap::new());
+            }
         }
         self.index_to_global_id[internal_id.index()] = global_id;
-
-        !existed
     }
 
-    /// Get internal id from a given global id for both a local vertex and a corner vertex.
-    /// Return `None` if the vertex does not present.
-    fn get_internal_id(&self, global_id: G) -> Option<NodeIndex<I>> {
-        let local_id = self.global_id_to_index.get(&global_id);
-        if local_id.is_some() {
-            local_id.cloned()
-        } else {
-            self.corner_global_id_to_index
-                .get(&global_id)
-                .cloned()
+    fn add_edge(
+        &mut self, src_internal_id: NodeIndex<I>, dst_internal_id: NodeIndex<I>, label_id: LabelId,
+        edge_id: EdgeIndex<I>,
+    ) {
+        if let Some(label_indices) = self
+            .adjacent_label_indices
+            .get_mut(src_internal_id.index())
+        {
+            label_indices
+                .entry(label_id)
+                .or_default()
+                .0
+                .push(edge_id); // push outgoing
+        }
+        if let Some(label_indices) = self
+            .adjacent_label_indices
+            .get_mut(dst_internal_id.index())
+        {
+            label_indices
+                .entry(label_id)
+                .or_default()
+                .1
+                .push(edge_id); // push incoming
         }
     }
 
     /// Get all internal ids from a given label
     fn get_indices_of_label(&self, label_id: LabelId) -> Iter<NodeIndex<I>> {
-        if let Some(label_indices) = self.label_indices.get(label_id as usize) {
+        if let Some(label_indices) = self.label_indices.get(&label_id) {
             Iter::from_iter(label_indices.iter().cloned())
         } else {
-            Iter::from_iter(vec![].into_iter())
+            Iter::default()
         }
+    }
+
+    fn get_adj_edges_of_label(
+        &self, internal_id: NodeIndex<I>, edge_label: LabelId, dir: Direction,
+    ) -> Iter<EdgeIndex<I>> {
+        match dir {
+            Direction::Outgoing => {
+                if let Some(label_indices) = self
+                    .adjacent_label_indices
+                    .get(internal_id.index())
+                {
+                    if let Some(nbrs) = label_indices.get(&edge_label) {
+                        return Iter::from_iter(nbrs.0.iter().cloned());
+                    }
+                }
+            }
+            Direction::Incoming => {
+                if let Some(label_indices) = self
+                    .adjacent_label_indices
+                    .get(internal_id.index())
+                {
+                    if let Some(nbrs) = label_indices.get(&edge_label) {
+                        return Iter::from_iter(nbrs.1.iter().cloned());
+                    }
+                }
+            }
+        }
+
+        Iter::default()
     }
 
     /// Get global id from a given internal id
@@ -139,10 +161,8 @@ where
 
     fn shrink_to_fit(&mut self) {
         self.global_id_to_index.shrink_to_fit();
-        for indices in &mut self.label_indices {
-            indices.shrink_to_fit();
-        }
-        self.corner_global_id_to_index.shrink_to_fit();
+        self.label_indices.shrink_to_fit();
+        self.adjacent_label_indices.shrink_to_fit();
         self.index_to_global_id.shrink_to_fit();
     }
 }
@@ -217,17 +237,15 @@ where
         }
     }
 
-    fn edge_ref_to_local_edge(
-        &self, edge: EdgeReference<LabelId, I>, from_start: bool,
-    ) -> Option<LocalEdge<G, I>> {
-        let src_global_id = self.index_data.get_global_id(edge.source());
-        let dst_global_id = self.index_data.get_global_id(edge.target());
+    fn index_to_local_edge(&self, edge_id: EdgeIndex<I>, from_start: bool) -> Option<LocalEdge<G, I>> {
+        let end_point = self.graph.edge_endpoints(edge_id).unwrap();
+        let src_global_id = self.index_data.get_global_id(end_point.0);
+        let dst_global_id = self.index_data.get_global_id(end_point.1);
 
         if src_global_id.is_some() && dst_global_id.is_some() {
-            let edge_id = edge.id();
-            let label = *edge.weight();
+            let label = *self.graph.edge_weight(edge_id).unwrap();
             let mut local_edge =
-                LocalEdge::new(src_global_id.unwrap(), dst_global_id.unwrap(), label, edge.id());
+                LocalEdge::new(src_global_id.unwrap(), dst_global_id.unwrap(), label, edge_id);
             local_edge = local_edge.with_from_start(from_start);
             if let Some(properties) = self.get_all_edge_property(&edge_id) {
                 local_edge = local_edge.with_properties(RowWithSchema::new(
@@ -258,30 +276,30 @@ where
     fn _get_adj_vertices(
         &self, src_id: G, edge_label: Option<LabelId>, dir: Direction,
     ) -> Iter<LocalVertex<G>> {
-        let index = self.index_data.get_internal_id(src_id);
-        if index.is_some() {
-            Iter::from_iter(
-                self.graph
-                    .edges_directed(index.unwrap(), dir)
-                    .filter(move |edge| {
-                        if edge_label.is_some() {
-                            self.graph.edge_weight(edge.id()) == edge_label.as_ref()
-                        } else {
-                            true
-                        }
-                    })
-                    .map(move |edge| {
-                        if dir == Direction::Outgoing {
-                            self.index_to_local_vertex(edge.target(), false)
-                                .unwrap()
-                        } else {
-                            self.index_to_local_vertex(edge.source(), false)
-                                .unwrap()
-                        }
-                    }),
-            )
+        if let Some(&index) = self.index_data.global_id_to_index.get(&src_id) {
+            if let Some(label) = edge_label {
+                Iter::from_iter(
+                    self.index_data
+                        .get_adj_edges_of_label(index, label, dir)
+                        .map(move |edge_id| {
+                            let (source, target) = self.graph.edge_endpoints(edge_id).unwrap();
+                            let node = if dir == Direction::Outgoing { target } else { source };
+                            self.index_to_local_vertex(node, false).unwrap()
+                        }),
+                )
+            } else {
+                Iter::from_iter(
+                    self.graph
+                        .edges_directed(index, dir)
+                        .map(move |edge| {
+                            let node =
+                                if dir == Direction::Outgoing { edge.target() } else { edge.source() };
+                            self.index_to_local_vertex(node, false).unwrap()
+                        }),
+                )
+            }
         } else {
-            Iter::from_iter(vec![].into_iter())
+            Iter::default()
         }
     }
 
@@ -291,76 +309,83 @@ where
     fn _get_adj_vertices_of_labels(
         &self, src_id: G, edge_labels: Vec<LabelId>, dir: Direction,
     ) -> Iter<LocalVertex<G>> {
-        let index = self.index_data.get_internal_id(src_id);
-        if index.is_some() {
-            Iter::from_iter(
-                self.graph
-                    .edges_directed(index.unwrap(), dir)
-                    .filter(move |edge| edge_labels.contains(self.graph.edge_weight(edge.id()).unwrap()))
-                    .map(move |edge| {
-                        if dir == Direction::Outgoing {
-                            self.index_to_local_vertex(edge.target(), false)
-                                .unwrap()
-                        } else {
-                            self.index_to_local_vertex(edge.source(), false)
-                                .unwrap()
-                        }
-                    }),
-            )
+        if !edge_labels.is_empty() {
+            if let Some(&index) = self.index_data.global_id_to_index.get(&src_id) {
+                let mut iters = vec![];
+                for label in edge_labels {
+                    iters.push(
+                        self.index_data
+                            .get_adj_edges_of_label(index, label, dir)
+                            .map(move |edge_id| {
+                                let (source, target) = self.graph.edge_endpoints(edge_id).unwrap();
+                                let node = if dir == Direction::Outgoing { target } else { source };
+                                self.index_to_local_vertex(node, false).unwrap()
+                            }),
+                    );
+                }
+                Iter::from_iter(IterList::new(iters))
+            } else {
+                Iter::default()
+            }
         } else {
-            Iter::from_iter(vec![].into_iter())
+            self._get_adj_vertices(src_id, None, dir)
         }
     }
 
     fn _get_adj_edges(
         &self, src_id: G, edge_label: Option<LabelId>, dir: Direction,
     ) -> Iter<LocalEdge<G, I>> {
-        let index = self.index_data.get_internal_id(src_id);
-        if index.is_some() {
-            Iter::from_iter(
-                self.graph
-                    .edges_directed(index.unwrap(), dir)
-                    .filter(move |edge| {
-                        if edge_label.is_some() {
-                            self.graph.edge_weight(edge.id()) == edge_label.as_ref()
-                        } else {
-                            true
-                        }
-                    })
-                    .map(move |edge| {
-                        if dir == Direction::Outgoing {
-                            self.edge_ref_to_local_edge(edge, true).unwrap()
-                        } else {
-                            self.edge_ref_to_local_edge(edge, false)
+        if let Some(&index) = self.index_data.global_id_to_index.get(&src_id) {
+            if let Some(label) = edge_label {
+                Iter::from_iter(
+                    self.index_data
+                        .get_adj_edges_of_label(index, label, dir)
+                        .map(move |edge| {
+                            self.index_to_local_edge(edge, dir == Direction::Outgoing)
                                 .unwrap()
-                        }
-                    }),
-            )
+                        }),
+                )
+            } else {
+                Iter::from_iter(
+                    self.graph
+                        .edges_directed(index, dir)
+                        .map(move |edge_ref| {
+                            self.index_to_local_edge(edge_ref.id(), dir == Direction::Outgoing)
+                                .unwrap()
+                        }),
+                )
+            }
         } else {
-            Iter::from_iter(vec![].into_iter())
+            Iter::default()
         }
     }
 
     fn _get_adj_edges_of_labels(
         &self, src_id: G, edge_labels: Vec<LabelId>, dir: Direction,
     ) -> Iter<LocalEdge<G, I>> {
-        let index = self.index_data.get_internal_id(src_id);
-        if index.is_some() {
-            Iter::from_iter(
-                self.graph
-                    .edges_directed(index.unwrap(), dir)
-                    .filter(move |edge| edge_labels.contains(self.graph.edge_weight(edge.id()).unwrap()))
-                    .map(move |edge| {
-                        if dir == Direction::Outgoing {
-                            self.edge_ref_to_local_edge(edge, true).unwrap()
-                        } else {
-                            self.edge_ref_to_local_edge(edge, false)
-                                .unwrap()
-                        }
-                    }),
-            )
+        if !edge_labels.is_empty() {
+            if let Some(&index) = self.index_data.global_id_to_index.get(&src_id) {
+                let mut iters = vec![];
+                for label in edge_labels {
+                    iters.push(
+                        self.index_data
+                            .get_adj_edges_of_label(index, label, dir)
+                            .map(move |edge_id| {
+                                if dir == Direction::Outgoing {
+                                    self.index_to_local_edge(edge_id, true).unwrap()
+                                } else {
+                                    self.index_to_local_edge(edge_id, false)
+                                        .unwrap()
+                                }
+                            }),
+                    );
+                }
+                Iter::from_iter(IterList::new(iters))
+            } else {
+                Iter::default()
+            }
         } else {
-            Iter::from_iter(vec![].into_iter())
+            self._get_adj_edges(src_id, None, dir)
         }
     }
 
@@ -421,7 +446,10 @@ where
                 }
             })
             // Can safely unwrap, as the edge must present
-            .map(move |edge| self.edge_ref_to_local_edge(edge, true).unwrap());
+            .map(move |edge| {
+                self.index_to_local_edge(edge.id(), true)
+                    .unwrap()
+            });
 
         Iter::from_iter(result_iter)
     }
@@ -437,17 +465,33 @@ where
                     false
                 }
             })
-            .map(move |edge| self.edge_ref_to_local_edge(edge, true).unwrap());
+            .map(move |edge| {
+                self.index_to_local_edge(edge.id(), true)
+                    .unwrap()
+            });
 
         Iter::from_iter(result_iter)
     }
 
     /// Get incoming degree of a vertex
     pub fn in_degree(&self, global_id: G) -> usize {
-        if let Some(id) = self.index_data.get_internal_id(global_id) {
-            self.graph
-                .neighbors_directed(id, Direction::Incoming)
-                .count()
+        if let Some(&id) = self
+            .index_data
+            .global_id_to_index
+            .get(&global_id)
+        {
+            if let Some(label_indices) = self
+                .index_data
+                .adjacent_label_indices
+                .get(id.index())
+            {
+                label_indices
+                    .values()
+                    .map(|(_, in_nbrs)| in_nbrs.len())
+                    .sum()
+            } else {
+                0
+            }
         } else {
             0
         }
@@ -455,10 +499,23 @@ where
 
     /// Get outgoing degree of a vertex
     pub fn out_degree(&self, global_id: G) -> usize {
-        if let Some(id) = self.index_data.get_internal_id(global_id) {
-            self.graph
-                .neighbors_directed(id, Direction::Outgoing)
-                .count()
+        if let Some(&id) = self
+            .index_data
+            .global_id_to_index
+            .get(&global_id)
+        {
+            if let Some(label_indices) = self
+                .index_data
+                .adjacent_label_indices
+                .get(id.index())
+            {
+                label_indices
+                    .values()
+                    .map(|(out_nbrs, _)| out_nbrs.len())
+                    .sum()
+            } else {
+                0
+            }
         } else {
             0
         }
@@ -466,8 +523,23 @@ where
 
     /// Get both incoming and outgoing degree of a vertex
     pub fn degree(&self, global_id: G) -> usize {
-        if let Some(id) = self.index_data.get_internal_id(global_id) {
-            self.graph.neighbors_undirected(id).count()
+        if let Some(&id) = self
+            .index_data
+            .global_id_to_index
+            .get(&global_id)
+        {
+            if let Some(label_indices) = self
+                .index_data
+                .adjacent_label_indices
+                .get(id.index())
+            {
+                label_indices
+                    .values()
+                    .map(|(out_nbrs, in_nbrs)| out_nbrs.len() + in_nbrs.len())
+                    .sum()
+            } else {
+                0
+            }
         } else {
             0
         }
@@ -483,22 +555,20 @@ where
     /// Print the statistics for debugging
     pub fn print_statistics(&self) {
         println!("Statics of the graph in partition: {}", self.partition);
-        for (label, ids) in self.index_data.label_indices.iter().enumerate() {
+        for (label, ids) in self.index_data.label_indices.iter() {
             println!("Label {:?}, number of vertices {:?}", label, ids.len());
         }
         println!(
             "Vertex property size: {:?},\n \
             Edge property size: {:?},\n \
             Size of global_id_to_index (local vertices): {:?},\n \
-            Size of corner_global_id_to_index (corner vertices): {:?},\n \
             Size of index_to_global_id: {:?},\n \
-            Number of all vertices (local + corner): {:?},\n \
+            Number of vertices (local + corner): {:?},\n \
             Number of edges: {:?}
             ",
             self.vertex_prop_table.len(),
             self.edge_prop_table.len(),
             self.index_data.global_id_to_index.len(),
-            self.index_data.corner_global_id_to_index.len(),
             self.index_data.index_to_global_id.len(),
             self.graph.node_count(),
             self.graph.edge_count(),
@@ -570,7 +640,7 @@ where
     }
 
     fn get_vertex(&self, id: G) -> Option<LocalVertex<G>> {
-        if let Some(index) = self.index_data.get_internal_id(id) {
+        if let Some(&index) = self.index_data.global_id_to_index.get(&id) {
             self.index_to_local_vertex(index, true)
         } else {
             None
@@ -627,12 +697,8 @@ where
     fn count_all_vertices(&self, _labels: Option<&Vec<LabelId>>) -> usize {
         let mut count = 0;
         if let Some(labels) = _labels {
-            for &label in labels {
-                if let Some(ids) = self
-                    .index_data
-                    .label_indices
-                    .get(label as usize)
-                {
+            for label in labels {
+                if let Some(ids) = self.index_data.label_indices.get(label) {
                     count += ids.len();
                 }
             }
@@ -692,6 +758,9 @@ pub struct MutableGraphDB<
     pub(crate) edge_prop_table: E,
     /// The index data that maintains the mapping between vertices' global ids and their internal ids
     pub(crate) index_data: IndexData<G, I>,
+    /// A mapping from global vertex id to corner internal vertex index. The corner vertices
+    /// are the vertices that do not belong to current partition, but included by edges.
+    pub(crate) corner_global_id_to_index: HashMap<G, NodeIndex<I>>,
 }
 
 /// for graph construction
@@ -734,37 +803,53 @@ where
     /// Unlike `Self::add_vertex_internal`:
     ///     ** Will not update a corner vertex's label if it already presents **.
     fn add_corner_vertex_internal(&mut self, global_id: G, label_id: LabelId) -> (bool, NodeIndex<I>) {
-        if let Some(existed_vertex) = self
+        if let Some(existed_vertex) = self.corner_global_id_to_index.get(&global_id) {
+            (false, existed_vertex.clone())
+        } else {
+            let label = [label_id, INVALID_LABEL_ID];
+            let index = self.graph.add_node(label);
+            self.index_data
+                .add_vertex(global_id, label, index, true);
+            self.corner_global_id_to_index
+                .insert(global_id, index);
+
+            (true, index)
+        }
+    }
+
+    fn get_internal_id(&self, global_id: G) -> Option<NodeIndex<I>> {
+        if let Some(node) = self
             .index_data
-            .corner_global_id_to_index
+            .global_id_to_index
             .get(&global_id)
         {
-            return (false, existed_vertex.clone());
+            Some(node.clone())
+        } else {
+            self.corner_global_id_to_index
+                .get(&global_id)
+                .cloned()
         }
-        let label = [label_id, INVALID_LABEL_ID];
-        let index = self.graph.add_node(label);
-        self.index_data
-            .add_vertex(global_id, label, index, true);
-
-        (true, index)
     }
 
     /// A private function that adds an edge into the graph database.
     /// Before the adding of an edge, the vertex of both ends must already present.
     /// If this is the case, return the internal id of the edge, otherwise, return `None` value
     fn add_edge_internal(
-        &mut self, global_src_id: G, global_dst_id: G, label_id: LabelId,
+        &mut self, global_src_id: G, global_dst_id: G, edge_label: LabelId,
     ) -> Option<EdgeIndex<I>> {
-        let _src_index = self.index_data.get_internal_id(global_src_id);
-        let _dst_index = self.index_data.get_internal_id(global_dst_id);
+        let _src_index = self.get_internal_id(global_src_id);
+        let _dst_index = self.get_internal_id(global_dst_id);
 
         if _src_index.is_some() && _dst_index.is_some() {
             let src_index = _src_index.unwrap();
             let dst_index = _dst_index.unwrap();
-            Some(
-                self.graph
-                    .add_edge(src_index, dst_index, label_id),
-            )
+            let edge_id = self
+                .graph
+                .add_edge(src_index, dst_index, edge_label);
+            self.index_data
+                .add_edge(src_index, dst_index, edge_label, edge_id);
+
+            Some(edge_id)
         } else {
             None
         }
@@ -848,7 +933,11 @@ where
     }
 
     fn add_or_update_vertex_properties(&mut self, global_id: G, properties: Row) -> GDBResult<Option<Row>> {
-        if let Some(internal_id) = self.index_data.get_internal_id(global_id) {
+        if let Some(&internal_id) = self
+            .index_data
+            .global_id_to_index
+            .get(&global_id)
+        {
             self.vertex_prop_table
                 .insert(internal_id.index(), properties)
         } else {
@@ -1047,6 +1136,7 @@ mod test {
             ]
         );
 
+        graph.print_statistics();
         // we have added vertex PIDS[0], PIDS[1], PIDS[2], and edge PIDS[0]-PIDS[1] twice (multi-edges)
         assert_eq!(3, graph.count_all_vertices(None));
         assert_eq!(2, graph.count_all_edges(None));
