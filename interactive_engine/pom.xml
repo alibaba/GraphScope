@@ -19,6 +19,7 @@
         <module>common</module>
         <module>executor</module>
         <module>frontend</module>
+        <module>executor/engine/pegasus/clients/java/client</module>
         <module>executor/ir/compiler</module>
         <module>sdk-common</module>
       </modules>
@@ -35,6 +36,7 @@
         <module>lgraph</module>
         <module>sdk</module>
         <module>sdk-common</module>
+        <module>executor/engine/pegasus/clients/java/client</module>
         <module>executor/ir/compiler</module>
       </modules>
     </profile>
