@@ -13,8 +13,6 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::sync::Arc;
-
 use maxgraph_store::api::prelude::Property;
 use maxgraph_store::api::{LabelId, PartitionId, VertexId};
 

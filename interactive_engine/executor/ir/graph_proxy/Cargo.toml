@@ -14,6 +14,7 @@ dyn_type = { path = "../../common/dyn_type" }
 ir_common = {path = "../common"}
 pegasus = { path = "../../engine/pegasus/pegasus" }
 pegasus_common = { path = "../../engine/pegasus/common" }
+hashbrown = "0.12"
 
 [features]
 default = []
