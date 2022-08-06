@@ -17,14 +17,17 @@
 #
 
 """Monitor coordinator by prometheus"""
+from copy import copy
 from prometheus_client import start_http_server
-from prometheus_client import Summary
+from prometheus_client.metrics_core import GaugeMetricFamily
 from prometheus_client import Counter
 from prometheus_client import Gauge
 import prometheus_client
 import functools
 import timeit
-
+import re
+import time
+import copy
 
 op_name_dict = {
     0: "CREATE_GRAPH",
@@ -81,23 +84,47 @@ prometheus_client.REGISTRY.unregister(prometheus_client.PLATFORM_COLLECTOR)
 prometheus_client.REGISTRY.unregister(prometheus_client.GC_COLLECTOR)
 
 
+class APguage(object):
+    def __init__(self, name="",docs="", labels=["app","graph","round"]) -> None:
+        self.name = name
+        self.docs = docs
+        self.labels = labels
+
+        self.app_name = ""
+        self.graph_name = ""
+
+        self.metrics = []
+        
+    def collect(self):
+        metrics = copy.copy(self.metrics)
+        self.metrics = []
+        return metrics
+
+    def add_metric(self,round_name,value):
+        if self.app_name == "" or self.graph_name == "":
+            return
+        g = GaugeMetricFamily(self.name, self.docs, labels=self.labels)
+        g.add_metric([self.app_name, self.graph_name,round_name], value, time.time())
+        self.metrics.append(g)
+
 class Monitor:
+    app_name = ""
+    graph_name = ""
+    
+    label_pat = re.compile("^.+Query.+name:\s+app_(.+)_.+,.+name:\s+(.+)$")
+    data_pat = re.compile("^.+Finished\s+(.+val.*),\s+time:\s+(.+)\s+.+$")
+    
     sessionState = Gauge("session_state", "The session's state: 1 contected or 0 closed")
 
     analyticalRequestCounter = Counter("analytical_request", "Count requests of analytical requests")
-    # Guage or Summary?
-    #  A same op on different graphs is very different, so we use "Gauge" to monitor the instant processing time but not using "Summary" or "Histogram".
     analyticalRequestGauge = Gauge("analytical_request_time", "The analytical opration task time", ["op_name"])
 
     interactiveRequestCounter = Counter("interactive_request", "Count requests of interactive requests")
     interactiveRequestGauge = Gauge("interactive_request_time", "The interactive opration task time", ["op_name"])
 
-
-    # learningJobTotal = Counter("learning_task_total", "The learning engine's counter", ["session_id"])
-    # learningMessageCounter = Counter("learning_engine_message_counter", "The learning engine's message counter", [
-    #                                  "session_id", "op_name"])
-    # learningTimeConsume = Summary("learning_task_time_consume", "The learning engine's time summary", [
-    #                               "session_id","op_name"])
+    # analyticalPerformace = GaugeMetricFamily("analytical_performance", "The analytical opration task time of each round", ["app_name","graph_name","round"])
+    analyticalPerformace = APguage("analytical_performance", "The analytical opration task time of each round", ["app","graph","round"])
+    prometheus_client.REGISTRY.register(analyticalPerformace)
 
     @classmethod
     def startServer(cls, port=9968 ,addr="0.0.0.0"):

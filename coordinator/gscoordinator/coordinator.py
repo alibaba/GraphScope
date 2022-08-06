@@ -101,7 +101,7 @@ from gscoordinator.utils import to_maxgraph_schema
 from gscoordinator.version import __version__
 
 
-from gscoordinator.monitor_utils import Monitor
+from gscoordinator.monitor import Monitor
 
 
 
@@ -1666,7 +1666,7 @@ def parse_sys_args():
         type=str2bool,
         nargs="?",
         const=True,
-        default=False,
+        default=True,
         help="Enable monitor or not.",
     )
     parser.add_argument(
@@ -1765,9 +1765,11 @@ def launch_graphscope():
 
     server.start()
     if args.monitor:
-        Monitor.startServer(args.monitor_port, args.monitor_host)
-        logger.info("Coordinator monitor server listen at %s:%d", args.monitor_host, args.monitor_port)
-        
+        try:
+            Monitor.startServer(args.monitor_port, args.monitor_host)
+            logger.info("Coordinator monitor server listen at %s:%d", args.monitor_host, args.monitor_port)
+        except:
+            logger.exception("Failed to start monitor server")
     # handle SIGTERM signal
     def terminate(signum, frame):
         coordinator_service_servicer._cleanup()
