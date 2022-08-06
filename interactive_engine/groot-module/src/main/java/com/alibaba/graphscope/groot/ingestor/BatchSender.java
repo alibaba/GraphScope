@@ -189,8 +189,16 @@ public class BatchSender implements MetricsAgent {
             int operationCount = 0;
             int batchCount = 0;
             while (operationCount < this.sendOperationLimit
-                    && batchCount < this.receiverQueueSize
-                    && (dataBatch = buffer.poll()) != null) {
+                    && batchCount < this.receiverQueueSize) {
+                try {
+                    dataBatch = buffer.poll(1000L, TimeUnit.MILLISECONDS);
+                } catch (InterruptedException e) {
+                    dataBatch = null;
+                    logger.warn("polling send buffer interrupted", e);
+                }
+                if (dataBatch == null) {
+                    break;
+                }
                 dataToSend.add(dataBatch);
                 operationCount += dataBatch.getSize();
                 batchCount++;
