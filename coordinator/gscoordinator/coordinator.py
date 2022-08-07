@@ -20,7 +20,6 @@
 
 import argparse
 import atexit
-from cgi import print_arguments
 import datetime
 import functools
 import json

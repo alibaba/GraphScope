@@ -111,6 +111,9 @@ class TemGuage(object):
 
 
 class Monitor:
+    """This class is used to collect monitor decorators.
+    """
+    
     app_name = ""
     graph_name = ""
 
@@ -126,7 +129,6 @@ class Monitor:
     interactiveRequestCounter = Counter("interactive_request", "Count requests of interactive requests")
     interactiveRequestGauge = Gauge("interactive_request_time", "The interactive opration task time", ["op_name"])
 
-    # analyticalPerformace = GaugeMetricFamily("analytical_performance", "The analytical opration task time of each round", ["app_name","graph_name","round"])
     analyticalPerformace = TemGuage("analytical_performance",
                                     "The analytical opration task time of each round", ["app", "graph", "round"])
 
