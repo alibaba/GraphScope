@@ -20,6 +20,7 @@
 
 import argparse
 import atexit
+from cgi import print_arguments
 import datetime
 import functools
 import json
@@ -98,6 +99,11 @@ from gscoordinator.utils import op_pre_process
 from gscoordinator.utils import str2bool
 from gscoordinator.utils import to_maxgraph_schema
 from gscoordinator.version import __version__
+
+
+from gscoordinator.monitor import Monitor
+
+
 
 # endpoint of prelaunch analytical engine
 GS_DEBUG_ENDPOINT = os.environ.get("GS_DEBUG_ENDPOINT", "")
@@ -260,6 +266,7 @@ class CoordinatorServiceServicer(
         for result in self.ConnectSessionWrapped(request, context):
             return result
 
+    @Monitor.connectSession
     def _ConnectSession(self, request, context):
         # A session is already connected.
         if self._request:
@@ -357,6 +364,7 @@ class CoordinatorServiceServicer(
 
     HeartBeatWrapped = catch_unknown_errors(message_pb2.HeartBeatResponse())(_HeartBeat)
 
+    @Monitor.runOnAnalyticalEngine
     def run_on_analytical_engine(  # noqa: C901
         self,
         dag_def: op_def_pb2.DagDef,
@@ -498,6 +506,8 @@ class CoordinatorServiceServicer(
                 self._object_manager.pop(op.attr[types_pb2.APP_NAME].s.decode())
         return response_head, response_bodies
 
+    
+    @Monitor.runOnInteractiveEngine
     def run_on_interactive_engine(self, dag_def: op_def_pb2.DagDef):
         response_head = message_pb2.RunStepResponse(
             head=message_pb2.RunStepResponseHead()
@@ -616,6 +626,7 @@ class CoordinatorServiceServicer(
             error_code = error_codes_pb2.COORDINATOR_INTERNAL_ERROR
             head = None
             bodies = None
+
             try:
                 # run on analytical engine
                 if run_dag_on == GSEngine.analytical_engine:
@@ -804,6 +815,7 @@ class CoordinatorServiceServicer(
         for result in self.CloseSessionWrapped(request, context):
             return result
 
+    @Monitor.closeSession
     def _CloseSession(self, request, context):
         """
         Disconnect session, note that it doesn't clean up any resources.
@@ -1271,6 +1283,7 @@ class CoordinatorServiceServicer(
             key=op.key,
         )
 
+    @Monitor.cleanup
     def _cleanup(self, cleanup_instance=True, is_dangling=False):
         # clean up session resources.
         for key in self._object_manager.keys():
@@ -1648,6 +1661,26 @@ def parse_sys_args():
         default="registry.cn-hongkong.aliyuncs.com/graphscope/dataset:{__version__}",
         help="Docker image to mount the dataset bucket",
     )
+    parser.add_argument(
+        "--monitor",
+        type=str2bool,
+        nargs="?",
+        const=True,
+        default=True,
+        help="Enable monitor or not.",
+    )
+    parser.add_argument(
+        "--monitor_port",
+        type=int,
+        default=9968,
+        help="Coordinator service port.",
+    )
+    parser.add_argument(
+        "--monitor_host",
+        type=str,
+        default="0.0.0.0",
+        help="list of comma seperated hostnames of graphscope engine workers.",
+    )
     return parser.parse_args()
 
 
@@ -1731,7 +1764,12 @@ def launch_graphscope():
     logger.info("Coordinator server listen at 0.0.0.0:%d", args.port)
 
     server.start()
-
+    if args.monitor:
+        try:
+            Monitor.startServer(args.monitor_port, args.monitor_host)
+            logger.info("Coordinator monitor server listen at %s:%d", args.monitor_host, args.monitor_port)
+        except:
+            logger.exception("Failed to start monitor server")
     # handle SIGTERM signal
     def terminate(signum, frame):
         coordinator_service_servicer._cleanup()
