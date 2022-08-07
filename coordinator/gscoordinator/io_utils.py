@@ -66,7 +66,7 @@ class StdStreamWrapper(ObjectWrapper):
         
         label_p = Monitor.label_pat.match(line)
         if label_p is not None:
-            Monitor.analyticalPerformace.app_name, Monitor.analyticalPerformace.graph_name = label_p.group(1), label_p.group(2)
+            Monitor.app_name, Monitor.graph_name = label_p.group(1), label_p.group(2)
         data_p = Monitor.data_pat.match(line)
         if data_p is not None:
             round_name, val = data_p.group(1), data_p.group(2)
@@ -76,8 +76,8 @@ class StdStreamWrapper(ObjectWrapper):
                 round_name = round_name.split("-")[-1].strip()
                 if len(round_name) == 1:
                     round_name = "0" + round_name
-            Monitor.analyticalPerformace.add_metric(round_name,float(val))
-            # Monitor.analyticalPerformace.labels(Monitor.app_name, Monitor.graph_name, round_name).set(float(val))
+            Monitor.analyticalPerformace.add_metric([Monitor.app_name, Monitor.graph_name,round_name],float(val))
+            
         self._stream_backup.write(line)
         self._stream_backup.flush()
         line = line.encode("utf-8", "ignore").decode("utf-8")

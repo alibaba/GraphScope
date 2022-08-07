@@ -84,50 +84,57 @@ prometheus_client.REGISTRY.unregister(prometheus_client.PLATFORM_COLLECTOR)
 prometheus_client.REGISTRY.unregister(prometheus_client.GC_COLLECTOR)
 
 
-class APguage(object):
-    def __init__(self, name="",docs="", labels=["app","graph","round"]) -> None:
+class TemGuage(object):
+    """A temporary Gague.
+    It will clear the old metrics once they are collected.
+    """
+
+    def __init__(self, name: str, docs: str, labels: list) -> None:
         self.name = name
         self.docs = docs
         self.labels = labels
-
-        self.app_name = ""
-        self.graph_name = ""
-
         self.metrics = []
-        
+
     def collect(self):
         metrics = copy.copy(self.metrics)
         self.metrics = []
         return metrics
 
-    def add_metric(self,round_name,value):
-        if self.app_name == "" or self.graph_name == "":
-            return
+    def add_metric(self, label_names, value):
+        if not isinstance(label_names, list):
+            raise TypeError("label_names must be a list")
+        if len(label_names) != len(self.labels):
+            raise ValueError("{0} labels are expected, but {1} labels are given".format(len(self.labels), len(label_names)))
         g = GaugeMetricFamily(self.name, self.docs, labels=self.labels)
-        g.add_metric([self.app_name, self.graph_name,round_name], value, time.time())
+        g.add_metric(label_names, value, time.time())
         self.metrics.append(g)
+
 
 class Monitor:
     app_name = ""
     graph_name = ""
-    
+
     label_pat = re.compile("^.+Query.+name:\s+app_(.+)_.+,.+name:\s+(.+)$")
     data_pat = re.compile("^.+Finished\s+(.+val.*),\s+time:\s+(.+)\s+.+$")
-    
+
     sessionState = Gauge("session_state", "The session's state: 1 contected or 0 closed")
 
     analyticalRequestCounter = Counter("analytical_request", "Count requests of analytical requests")
-    analyticalRequestGauge = Gauge("analytical_request_time", "The analytical opration task time", ["op_name"])
+    # analyticalRequestGauge = Gauge("analytical_request_time", "The analytical opration task time", ["op_name"])
+    analyticalRequestGauge = TemGuage("analytical_request_time", "The analytical opration task time", ["op_name"])
 
     interactiveRequestCounter = Counter("interactive_request", "Count requests of interactive requests")
     interactiveRequestGauge = Gauge("interactive_request_time", "The interactive opration task time", ["op_name"])
 
     # analyticalPerformace = GaugeMetricFamily("analytical_performance", "The analytical opration task time of each round", ["app_name","graph_name","round"])
-    analyticalPerformace = APguage("analytical_performance", "The analytical opration task time of each round", ["app","graph","round"])
+    analyticalPerformace = TemGuage("analytical_performance",
+                                    "The analytical opration task time of each round", ["app", "graph", "round"])
+
     prometheus_client.REGISTRY.register(analyticalPerformace)
+    prometheus_client.REGISTRY.register(analyticalRequestGauge)
 
     @classmethod
-    def startServer(cls, port=9968 ,addr="0.0.0.0"):
+    def startServer(cls, port=9968, addr="0.0.0.0"):
         start_http_server(port=port, addr=addr)
 
     @classmethod
@@ -163,33 +170,29 @@ class Monitor:
         @functools.wraps(func)
         def runOnAnalyticalEngineWarp(instance, dag_def, dag_bodies, loader_op_bodies):
             cls.analyticalRequestCounter.inc()
-            session_id,ops = instance._session_id, dag_def.op
-            if not session_id:
-                session_id = ""
-            
+
             start_time = timeit.default_timer()
             res = func(instance, dag_def, dag_bodies, loader_op_bodies)
             end_time = timeit.default_timer()
 
+            ops = dag_def.op
             op_name = cls.__get_op_name(ops)
-            cls.analyticalRequestGauge.labels(op_name).set(end_time - start_time)
+            cls.analyticalRequestGauge.add_metric([op_name], end_time-start_time)
+            # cls.analyticalRequestGauge.labels(op_name).set(end_time - start_time)
             return res
         return runOnAnalyticalEngineWarp
-        
+
     @classmethod
     def runOnInteractiveEngine(cls, func):
         @functools.wraps(func)
         def runOnInteractiveEngineWarp(instance, dag_def):
             cls.interactiveRequestCounter.inc()
-            session_id,ops = instance._session_id, dag_def.op
-            if not session_id:
-                session_id = ""
-            
+
             start_time = timeit.default_timer()
             res = func(instance, dag_def)
             end_time = timeit.default_timer()
-            
 
+            ops = dag_def.op
             op_name = cls.__get_op_name(ops)
             cls.interactiveRequestGauge.labels(op_name).set(end_time - start_time)
             return res
