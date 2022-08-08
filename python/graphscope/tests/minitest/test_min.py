@@ -95,7 +95,7 @@ def simple_flow(sess, ogbn_small_script):
     paper_features = []
     for i in range(128):
         paper_features.append("feat_" + str(i))
-    lg = sess.learning(
+    lg = sess.graphlearn(
         graph,
         nodes=[("paper", paper_features)],
         edges=[("paper", "cites", "paper")],

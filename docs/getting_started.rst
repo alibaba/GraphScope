@@ -193,8 +193,8 @@ features of each paper node.
     # project the projected graph to simple graph.
     simple_g = sub_graph.project(vertices={"paper": []}, edges={"cites": []})
 
-    ret1 = graphscope.kcore(simple_g, k=5)
-    ret2 = graphscope.triangle(simple_g)
+    ret1 = graphscope.k_core(simple_g, k=5)
+    ret2 = graphscope.triangles(simple_g)
 
     # add the results as new columns to the citation graph
     sub_graph = sub_graph.add_column(ret1, {"kcore": "r"})
@@ -225,7 +225,7 @@ features following the last step.
     paper_features.append("tc")
 
     # launch a learning engine.
-    lg = sess.learning(sub_graph, nodes=[("paper", paper_features)],
+    lg = sess.graphlearn(sub_graph, nodes=[("paper", paper_features)],
                        edges=[("paper", "cites", "paper")],
                        gen_labels=[
                             ("train", "paper", 100, (0, 75)),
@@ -264,7 +264,7 @@ Then we define the training and testing process, and run it.
         graphscope.learning.reset_default_tf_graph()
         trainer = LocalTFTrainer(model_fn,
                                  epoch=config["epoch"],
-                                 optimizer=gl.get_tf_optimizer(
+                                 optimizer=get_tf_optimizer(
                                  config["learning_algo"],
                                  config["learning_rate"],
                                  config["weight_decay"]))
