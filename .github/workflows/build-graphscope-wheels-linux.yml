@@ -1,15 +1,48 @@
 name: Build GraphScope Wheels on Linux
 
+#on:
+  #workflow_dispatch:
+  #schedule:
+     #The notifications for scheduled workflows are sent to the user who
+     #last modified the cron syntax in the workflow file.
+     #Trigger the workflow at 03:00(CST) every day.
+    #- cron:  '00 19 * * *'
+  #push:
+    #tags:
+      #- "v*"
+
 on:
-  workflow_dispatch:
-  schedule:
-    # The notifications for scheduled workflows are sent to the user who
-    # last modified the cron syntax in the workflow file.
-    # Trigger the workflow at 03:00(CST) every day.
-    - cron:  '00 19 * * *'
+  # Trigger the workflow on push or pull request,
+  # but only for the main branch
   push:
-    tags:
-      - "v*"
+    branches:
+      - main
+    paths-ignore:
+      - 'CONTRIBUTORS'
+      - 'LICENSE'
+      - 'NOTICE.txt'
+      - '**.md'
+      - '**.rst'
+      - 'docs/**'
+      - 'demo/**'
+      - 'scripts/**'
+      - 'tutorials/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/ci.yml'
+      - 'Makefile'
+      - 'analytical_engine/**'
+      - 'charts/**'
+      - 'coordinator/**'
+      - 'interactive_engine/**'
+      - 'k8s/**'
+      - 'learning_engine/**'
+      - 'proto/**'
+      - 'python/**'
+      - '!**.md'
+      - '!**.rst'
 
 env:
   DOCKER_URL: registry.cn-hongkong.aliyuncs.com
@@ -19,7 +52,7 @@ env:
 
 jobs:
   build-wheels:
-    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
+    # if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
     runs-on: ubuntu-20.04
 
     steps:
@@ -41,10 +74,10 @@ jobs:
 
         cd ${GITHUB_WORKSPACE}/k8s
         # build graphscope wheels
-        sudo -E -u graphscope make graphscope-py3-package
+        sudo -E -u runner make graphscope-py3-package
 
         # build client wheels
-        sudo -E -u graphscope make graphscope-client-py3-package
+        sudo -E -u runner make graphscope-client-py3-package
 
         # package
         cd ${GITHUB_WORKSPACE}
@@ -86,7 +119,7 @@ jobs:
         packages_dir: upload_pypi/
 
   build-image:
-    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
+    # if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
     runs-on: ubuntu-20.04
     needs: [build-wheels]
 
@@ -145,7 +178,7 @@ jobs:
         sudo docker push ${{ env.DATASET_IMAGE }}:${{ steps.tag.outputs.TAG }}
 
   ubuntu-python-test:
-    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    # if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     runs-on: ubuntu-20.04
     needs: [build-wheels]
     strategy:
@@ -195,7 +228,7 @@ jobs:
         python3 -m pytest -s -v $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/minitest
 
   centos-test:
-    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    # if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     runs-on: ubuntu-20.04
     needs: [build-wheels]
     container:
