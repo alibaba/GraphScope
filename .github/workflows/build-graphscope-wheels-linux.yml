@@ -30,19 +30,6 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - '.github/workflows/ci.yml'
-      - 'Makefile'
-      - 'analytical_engine/**'
-      - 'charts/**'
-      - 'coordinator/**'
-      - 'interactive_engine/**'
-      - 'k8s/**'
-      - 'learning_engine/**'
-      - 'proto/**'
-      - 'python/**'
-      - '!**.md'
-      - '!**.rst'
 
 env:
   DOCKER_URL: registry.cn-hongkong.aliyuncs.com
