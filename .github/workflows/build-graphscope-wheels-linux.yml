@@ -1,35 +1,15 @@
 name: Build GraphScope Wheels on Linux
 
-#on:
-  #workflow_dispatch:
-  #schedule:
-     #The notifications for scheduled workflows are sent to the user who
-     #last modified the cron syntax in the workflow file.
-     #Trigger the workflow at 03:00(CST) every day.
-    #- cron:  '00 19 * * *'
-  #push:
-    #tags:
-      #- "v*"
-
 on:
-  # Trigger the workflow on push or pull request,
-  # but only for the main branch
+  workflow_dispatch:
+  schedule:
+     The notifications for scheduled workflows are sent to the user who
+     last modified the cron syntax in the workflow file.
+     Trigger the workflow at 03:00(CST) every day.
+    - cron:  '00 19 * * *'
   push:
-    branches:
-      - main
-    paths-ignore:
-      - 'CONTRIBUTORS'
-      - 'LICENSE'
-      - 'NOTICE.txt'
-      - '**.md'
-      - '**.rst'
-      - 'docs/**'
-      - 'demo/**'
-      - 'scripts/**'
-      - 'tutorials/**'
-  pull_request:
-    branches:
-      - main
+    tags:
+      - "v*"
 
 env:
   DOCKER_URL: registry.cn-hongkong.aliyuncs.com
@@ -39,7 +19,7 @@ env:
 
 jobs:
   build-wheels:
-    # if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
+    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
     runs-on: ubuntu-20.04
 
     steps:
@@ -58,6 +38,12 @@ jobs:
         r=`cat /etc/hosts | grep $(hostname) || true`
         if [ -z "${r}" ];then export hn=$(hostname); sudo -E bash -c 'echo "127.0.0.1 ${hn}" >> /etc/hosts'; fi
         cat /etc/hosts
+
+        # change the version for nightly release
+        # 0.15.0 -> 0.15.0a20220808
+        time=$(date "+%Y%m%d")
+        version=$(cat ${GITHUB_WORKSPACE}/VERSION)
+        if [ "${{ GITHUB.REF }}" == "refs/heads/main" ];then echo "${version}a${time}" >> ${GITHUB_WORKSPACE}/VERSION; fi
 
         cd ${GITHUB_WORKSPACE}/k8s
         # build graphscope wheels
@@ -98,7 +84,6 @@ jobs:
         packages_dir: upload_pypi/
 
     - name: Publish distribution to PyPI
-      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
       uses: pypa/gh-action-pypi-publish@v1.4.2
       with:
         user: __token__
@@ -106,7 +91,7 @@ jobs:
         packages_dir: upload_pypi/
 
   build-image:
-    # if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
+    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
     runs-on: ubuntu-20.04
     needs: [build-wheels]
 
@@ -137,6 +122,23 @@ jobs:
         # dataset image
         make dataset-image
 
+    - name: Release Nightly Image
+      if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+      env:
+        docker_password: ${{ secrets.DOCKER_PASSWORD }}
+        docker_username: ${{ secrets.DOCKER_USER }}
+      run: |
+        echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.DOCKER_URL }} --password-stdin
+        # graphscope image
+        sudo docker tag graphscope/graphscope:${SHORT_SHA} ${{ env.GS_IMAGE }}:latest
+        sudo docker push ${{ env.GS_IMAGE }}:latest
+        # jupyter image
+        sudo docker tag graphscope/jupyter:${SHORT_SHA} ${{ env.JUPYTER_IMAGE }}:latest
+        sudo docker push ${{ env.JUPYTER_IMAGE }}:latest
+        # dataset image
+        sudo docker tag graphscope/dataset:${SHORT_SHA} ${{ env.DATASET_IMAGE }}:latest
+        sudo dockler push ${{ env.DATASET_IMAGE }}:latest
+
     - name: Extract Tag Name
       if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
       id: tag
@@ -149,23 +151,18 @@ jobs:
         docker_username: ${{ secrets.DOCKER_USER }}
       run: |
         echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.DOCKER_URL }} --password-stdin
-        sudo docker tag graphscope/graphscope:${SHORT_SHA} \
-            ${{ env.GS_IMAGE }}:${{ steps.tag.outputs.TAG }}
+        # graphscope image
+        sudo docker tag graphscope/graphscope:${SHORT_SHA} ${{ env.GS_IMAGE }}:${{ steps.tag.outputs.TAG }}
         sudo docker push ${{ env.GS_IMAGE }}:${{ steps.tag.outputs.TAG }}
-        sudo docker tag graphscope/graphscope:${SHORT_SHA} \
-            ${{ env.GS_IMAGE }}:latest
-        sudo docker push ${{ env.GS_IMAGE }}:latest
         # jupyter image
-        sudo docker tag graphscope/jupyter:${SHORT_SHA} \
-            ${{ env.JUPYTER_IMAGE }}:${{ steps.tag.outputs.TAG }}
+        sudo docker tag graphscope/jupyter:${SHORT_SHA} ${{ env.JUPYTER_IMAGE }}:${{ steps.tag.outputs.TAG }}
         sudo docker push ${{ env.JUPYTER_IMAGE }}:${{ steps.tag.outputs.TAG }}
         # dataset image
-        sudo docker tag graphscope/dataset:${SHORT_SHA} \
-            ${{ env.DATASET_IMAGE }}:${{ steps.tag.outputs.TAG }}
+        sudo docker tag graphscope/dataset:${SHORT_SHA} ${{ env.DATASET_IMAGE }}:${{ steps.tag.outputs.TAG }}
         sudo docker push ${{ env.DATASET_IMAGE }}:${{ steps.tag.outputs.TAG }}
 
   ubuntu-python-test:
-    # if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     runs-on: ubuntu-20.04
     needs: [build-wheels]
     strategy:
@@ -215,7 +212,7 @@ jobs:
         python3 -m pytest -s -v $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/minitest
 
   centos-test:
-    # if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     runs-on: ubuntu-20.04
     needs: [build-wheels]
     container:
