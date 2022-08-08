@@ -97,7 +97,9 @@ def _get_extra_data():
         elif platform.system() == "Darwin":
             suffix = "dylib"
         else:
-            raise RuntimeError("Get library suffix failed on {0}".format(platform.system()))
+            raise RuntimeError(
+                "Get library suffix failed on {0}".format(platform.system())
+            )
         return suffix
 
     name = os.environ.get("package_name", "gs-coordinator")
