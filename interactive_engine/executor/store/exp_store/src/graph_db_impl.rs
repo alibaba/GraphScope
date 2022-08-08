@@ -73,10 +73,12 @@ where
                     .entry(label[0] as usize)
                     .or_insert_with(Vec::new)
                     .push(internal_id);
-                self.label_indices
-                    .entry(label[1] as usize)
-                    .or_insert_with(Vec::new)
-                    .push(internal_id);
+                if label[1] != INVALID_LABEL_ID {
+                    self.label_indices
+                        .entry(label[1] as usize)
+                        .or_insert_with(Vec::new)
+                        .push(internal_id);
+                }
             }
         }
         if !is_corner {
