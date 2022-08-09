@@ -21,7 +21,7 @@
 
 from packaging import version
 
-from graphscope.version import __pre_release__
+from graphscope.version import __is_prerelease__
 from graphscope.version import __version__
 
 
@@ -41,7 +41,7 @@ class GSConfig(object):
     k8s_etcd_image = "quay.io/coreos/etcd:v3.4.13"
     k8s_gs_image = (
         "registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:nightly"
-        if __pre_release__
+        if __is_prerelease__
         else f"registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:{__version__}"
     )
 
