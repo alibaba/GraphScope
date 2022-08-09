@@ -19,6 +19,9 @@
 """ GraphScope default configuration.
 """
 
+from packaging import version
+
+from graphscope.version import __pre_release__
 from graphscope.version import __version__
 
 
@@ -37,7 +40,9 @@ class GSConfig(object):
     # image
     k8s_etcd_image = "quay.io/coreos/etcd:v3.4.13"
     k8s_gs_image = (
-        f"registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:{__version__}"
+        "registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:nightly"
+        if __pre_release__
+        else f"registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:{__version__}"
     )
 
     # image pull configuration
