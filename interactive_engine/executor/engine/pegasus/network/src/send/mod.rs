@@ -210,6 +210,7 @@ pub(crate) fn start_net_sender(
         let mut net_tx = NetSender::new(remote.addr, writer);
         let tx = net_tx.get_outbox_tx().as_ref().expect("");
         while check_remotes_send_ready(local_id, &vec![remote.id]) {
+            remove_remote_sender(local_id, remote.id);
             std::thread::sleep(Duration::from_secs(5));
         }
         add_remote_sender(local_id, &remote, tx);
@@ -229,6 +230,7 @@ pub(crate) fn start_net_sender(
         let mut net_tx = NetSender::new(remote.addr, conn);
         let tx = net_tx.get_outbox_tx().as_ref().expect("");
         while check_remotes_send_ready(local_id, &vec![remote.id]) {
+            remove_remote_sender(local_id, remote.id);
             std::thread::sleep(Duration::from_secs(5));
         }
         add_remote_sender(local_id, &remote, &tx);
