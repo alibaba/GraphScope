@@ -24,7 +24,7 @@ use serde::Serialize;
 
 use crate::common::{Label, LabelId};
 use crate::error::{GDBError, GDBResult};
-use crate::graph_db_impl::{IndexData, LargeGraphDB, MutableGraphDB};
+use crate::graph_db::petgraph_impl::{IndexData, LargeGraphDB, MutableGraphDB};
 use crate::io::import;
 use crate::schema::LDBCGraphSchema;
 use crate::table::PropertyTableTrait;

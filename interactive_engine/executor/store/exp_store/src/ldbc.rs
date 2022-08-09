@@ -31,11 +31,10 @@ use csv::{Reader, ReaderBuilder};
 use petgraph::graph::IndexType;
 
 use super::graph_db::*;
-use super::graph_db_impl::LargeGraphDB;
 use crate::common::{DefaultId, InternalId, LabelId, INVALID_LABEL_ID};
 use crate::config::{GraphDBConfig, JsonConf};
 use crate::error::{GDBError, GDBResult};
-use crate::graph_db_impl::MutableGraphDB;
+use crate::graph_db::petgraph_impl::{LargeGraphDB, MutableGraphDB};
 use crate::parser::{parse_properties, EdgeMeta, ParserTrait, VertexMeta};
 use crate::schema::{LDBCGraphSchema, Schema, ID_FIELD, LABEL_FIELD};
 

@@ -17,7 +17,6 @@ pub mod common;
 pub mod config;
 pub mod error;
 pub mod graph_db;
-pub mod graph_db_impl;
 pub mod io;
 pub mod ldbc;
 pub mod parser;
