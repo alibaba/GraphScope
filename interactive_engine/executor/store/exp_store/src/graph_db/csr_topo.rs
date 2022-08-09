@@ -480,7 +480,6 @@ mod tests {
         let e5 = mut_topo.add_edge(n3, n1, 1);
 
         let topo: CsrTopo<u32> = mut_topo.into();
-        println!("{:?}", topo);
 
         assert_eq!(topo.get_node_label(n0), Some([0, 0]));
         assert_eq!(topo.get_node_label(n1), Some([1, 0]));

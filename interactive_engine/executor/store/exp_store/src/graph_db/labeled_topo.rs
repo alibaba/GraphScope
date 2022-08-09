@@ -90,7 +90,7 @@ pub trait MutLabeledTopology<I: IndexType> {
     ) -> EdgeIndex<I>;
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Default, Serialize, Deserialize)]
 pub(crate) struct PGWrapper<I: IndexType> {
     inner: DiGraph<Label, LabelId, I>,
     /// Grouping the adjacent edges of a vertex by the labels
@@ -176,5 +176,76 @@ impl<I: IndexType> MutLabeledTopology<I> for PGWrapper<I> {
             .push(edge_id);
 
         edge_id
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use petgraph::graph::{edge_index, node_index};
+
+    use super::*;
+
+    #[test]
+    fn test_pgwrapper() {
+        let mut topo = PGWrapper::<u32>::default();
+        let n0 = topo.add_node([0, 0]);
+        let n1 = topo.add_node([1, 0]);
+        let n2 = topo.add_node([2, 0]);
+        let n3 = topo.add_node([3, 0]);
+
+        let e0 = topo.add_edge(n0, n1, 0);
+        let e1 = topo.add_edge(n1, n0, 1);
+        let e2 = topo.add_edge(n0, n2, 0);
+        let e3 = topo.add_edge(n1, n2, 1);
+        let e4 = topo.add_edge(n2, n3, 2);
+        let e5 = topo.add_edge(n3, n1, 1);
+
+        assert_eq!(topo.get_edge_end_points(e0), Some((n0, n1)));
+        assert_eq!(topo.get_edge_end_points(e1), Some((n1, n0)));
+        assert_eq!(topo.get_edge_end_points(e2), Some((n0, n2)));
+        assert_eq!(topo.get_edge_end_points(e3), Some((n1, n2)));
+        assert_eq!(topo.get_edge_end_points(e4), Some((n2, n3)));
+        assert_eq!(topo.get_edge_end_points(e5), Some((n3, n1)));
+
+        assert_eq!(
+            topo.get_adjacent_edges_iter(n0, Some(0), Direction::Outgoing)
+                .collect::<Vec<EdgeIndex<u32>>>(),
+            vec![e0, e2]
+        );
+        assert_eq!(
+            topo.get_adjacent_edges_iter(n0, Some(1), Direction::Incoming)
+                .collect::<Vec<EdgeIndex<u32>>>(),
+            vec![e1]
+        );
+        assert_eq!(
+            topo.get_adjacent_nodes_iter(n0, Some(0), Direction::Outgoing)
+                .collect::<Vec<NodeIndex<u32>>>(),
+            vec![n1, n2]
+        );
+        assert_eq!(
+            topo.get_adjacent_nodes_iter(n0, Some(1), Direction::Incoming)
+                .collect::<Vec<NodeIndex<u32>>>(),
+            vec![n1]
+        );
+        assert_eq!(
+            topo.get_adjacent_nodes_of_labels_iter(n1, vec![0], Direction::Incoming)
+                .collect::<Vec<NodeIndex<u32>>>(),
+            vec![n0]
+        );
+        assert_eq!(
+            topo.get_adjacent_nodes_of_labels_iter(n1, vec![1], Direction::Incoming)
+                .collect::<Vec<NodeIndex<u32>>>(),
+            vec![n3]
+        );
+        assert_eq!(
+            topo.get_adjacent_nodes_of_labels_iter(n1, vec![0, 1], Direction::Incoming)
+                .collect::<Vec<NodeIndex<u32>>>(),
+            vec![n0, n3]
+        );
+        assert_eq!(
+            topo.get_adjacent_edges_of_labels_iter(n1, vec![0, 1], Direction::Incoming)
+                .collect::<Vec<EdgeIndex<u32>>>(),
+            vec![e0, e5]
+        );
     }
 }
