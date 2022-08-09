@@ -19,8 +19,6 @@
 """ GraphScope default configuration.
 """
 
-from packaging import version
-
 from graphscope.version import __is_prerelease__
 from graphscope.version import __version__
 
@@ -109,7 +107,9 @@ class GSConfig(object):
     # Demo dataset related
     mount_dataset = None
     k8s_dataset_image = (
-        f"registry.cn-hongkong.aliyuncs.com/graphscope/dataset:{__version__}"
+        "registry.cn-hongkong.aliyuncs.com/graphscope/dataset:nightly"
+        if __is_prerelease__
+        else f"registry.cn-hongkong.aliyuncs.com/graphscope/dataset:{__version__}"
     )
 
     # download_retries
