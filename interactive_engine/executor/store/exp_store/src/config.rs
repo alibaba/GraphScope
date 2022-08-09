@@ -24,7 +24,7 @@ use serde::Serialize;
 
 use crate::common::{Label, LabelId};
 use crate::error::{GDBError, GDBResult};
-use crate::graph_db::petgraph_impl::{IndexData, LargeGraphDB, MutableGraphDB};
+use crate::graph_db::graph_db_impl::{IndexData, LargeGraphDB, MutableGraphDB};
 use crate::io::import;
 use crate::schema::LDBCGraphSchema;
 use crate::table::PropertyTableTrait;
@@ -232,14 +232,14 @@ impl GraphDBConfig {
         let e_prop_handle = std::thread::spawn(move || E::import(&file_edge_ppt_data));
         let index_handle = std::thread::spawn(move || import::<IndexData<G, I>, _>(&file_index_data));
 
-        let graph = graph_handle.join()??;
+        let topology = graph_handle.join()??;
         let vertex_prop_table = v_prop_handle.join()??;
         let edge_prop_table = e_prop_handle.join()??;
         let index_data = index_handle.join()??;
 
         let graph_db = LargeGraphDB {
             partition: which_part,
-            graph,
+            topology,
             graph_schema: Arc::new(graph_schema),
             vertex_prop_table,
             edge_prop_table,
@@ -259,7 +259,7 @@ impl GraphDBConfig {
         N: PropertyTableTrait + Sync,
         E: PropertyTableTrait + Sync,
     {
-        let graph = DiGraph::<_, _, I>::with_capacity(self.init_vertices, self.init_edges);
+        let topology = DiGraph::<_, _, I>::with_capacity(self.init_vertices, self.init_edges);
         let partition_dir = self
             .root_dir
             .join(DIR_BINARY_DATA)
@@ -274,7 +274,7 @@ impl GraphDBConfig {
         MutableGraphDB {
             root_dir: self.root_dir.clone(),
             partition: self.partition,
-            graph,
+            topology,
             vertex_prop_table,
             edge_prop_table,
             index_data: IndexData::default(),

@@ -29,7 +29,8 @@ use crate::table::*;
 use crate::utils::Iter;
 
 pub mod csr_topo;
-pub mod petgraph_impl;
+pub mod graph_db_impl;
+pub mod labeled_topo;
 
 /// Edge id is associated with its start/end-vertex's id given by `G`, and an internal index
 /// associated with the start/end vertex.
