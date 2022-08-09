@@ -42,8 +42,8 @@ jobs:
         docker_username: ${{ secrets.DOCKER_USER }}
       run: |
         echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.DOCKER_URL }} --password-stdin
-        sudo docker tag graphscope/graphscope-store:${SHORT_SHA} ${{ env.GSS_IMAGE }}:latest
-        sudo docker push ${{ env.GSS_IMAGE }}:latest
+        sudo docker tag graphscope/graphscope-store:${SHORT_SHA} ${{ env.GSS_IMAGE }}:nightly
+        sudo docker push ${{ env.GSS_IMAGE }}:nightly
 
     - name: Extract Tag Name
       if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
