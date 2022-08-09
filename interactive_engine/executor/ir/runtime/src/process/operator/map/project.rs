@@ -156,7 +156,7 @@ impl FilterMapFuncGen for algebra_pb::Project {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
+    use hashbrown::HashMap;
 
     use dyn_type::Object;
     use graph_proxy::apis::{DynDetails, GraphElement, Vertex};

@@ -81,7 +81,7 @@ impl TryFrom<algebra_pb::OrderBy> for RecordCompare {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
+    use hashbrown::HashMap;
 
     use dyn_type::Object;
     use graph_proxy::apis::{Details, DynDetails, Element, GraphElement, Vertex};

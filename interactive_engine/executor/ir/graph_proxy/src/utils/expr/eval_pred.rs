@@ -529,7 +529,7 @@ impl TryFrom<pb::IndexPredicate> for PEvaluator {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
+    use hashbrown::HashMap;
 
     use dyn_type::object;
     use dyn_type::Object;
