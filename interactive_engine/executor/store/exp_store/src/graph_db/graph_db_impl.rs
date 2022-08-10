@@ -326,7 +326,7 @@ where
             .filter_map(move |e| {
                 let start_node = self.topology.get_edge_end_points(e).unwrap().0;
                 if self._is_vertex_local(start_node) {
-                    if self.topology.get_edge_label(e) == label_id {
+                    if label_id.is_none() || self.topology.get_edge_label(e) == label_id {
                         self.index_to_local_edge(e, true)
                     } else {
                         None
@@ -403,16 +403,16 @@ where
         println!(
             "Vertex property size: {:?},\n \
             Edge property size: {:?},\n \
-            Size of global_id_to_index (local vertices): {:?},\n \
-            Size of index_to_global_id: {:?},\n \
+            Size of global_id_to_index (i.e. number of local vertices): {:?},\n \
             Number of vertices (local + corner): {:?},\n \
-            Number of edges: {:?}
+            Number of edges (start node is local): {:?} \n \
+            Number of edges: {:?},
             ",
             self.vertex_prop_table.len(),
             self.edge_prop_table.len(),
             self.index_data.global_id_to_index.len(),
-            self.index_data.index_to_global_id.len(),
             self.topology.nodes_count(),
+            self.count_all_edges(None),
             self.topology.edges_count(),
         );
     }
@@ -539,8 +539,8 @@ where
     }
 
     fn count_all_vertices(&self, _labels: Option<&Vec<LabelId>>) -> usize {
-        let mut count = 0;
         if let Some(labels) = _labels {
+            let mut count = 0;
             for label in labels {
                 if let Some(ids) = self
                     .index_data
@@ -550,32 +550,15 @@ where
                     count += ids.len();
                 }
             }
-        } else {
-            count = self.index_data.global_id_to_index.len()
-        }
 
-        count
+            count
+        } else {
+            self.index_data.global_id_to_index.len()
+        }
     }
 
     fn count_all_edges(&self, _labels: Option<&Vec<LabelId>>) -> usize {
-        let edge_iter = self
-            .topology
-            .get_edge_indices()
-            .filter(|&e| self._is_vertex_local(self.topology.get_edge_end_points(e).unwrap().0));
-
-        if let Some(labels) = _labels {
-            edge_iter
-                .filter(move |&edge| {
-                    if let Some(l) = self.topology.get_edge_label(edge) {
-                        labels.contains(&l)
-                    } else {
-                        false
-                    }
-                })
-                .count()
-        } else {
-            edge_iter.count()
-        }
+        self.get_all_edges(_labels).count()
     }
 
     fn get_schema(&self) -> Arc<dyn Schema> {
