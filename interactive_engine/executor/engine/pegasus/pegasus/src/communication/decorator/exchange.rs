@@ -352,7 +352,11 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeByDataPush<D> {
                             let mut new_end = end.clone();
                             new_end.total_send = 0;
                             new_end.global_total_send = 0;
-                            p.sync_end(new_end, DynPeers::empty())?;
+                            if end.tag.is_root() {
+                                p.sync_end(new_end, DynPeers::all())?;
+                            } else {
+                                p.sync_end(new_end, DynPeers::empty())?;
+                            }
                         }
                     } else {
                         // not the first batch;
@@ -407,7 +411,11 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeByDataPush<D> {
                     } else {
                         // multi source;
                         self.pushes[target].push(batch)?;
-                        let children = DynPeers::single(target as u32);
+                        let children = if end.tag.is_root() {
+                            DynPeers::all()
+                        } else {
+                            DynPeers::single(target as u32)
+                        };
                         for i in 0..self.pushes.len() {
                             let mut new_end = end.clone();
                             if i != target {
