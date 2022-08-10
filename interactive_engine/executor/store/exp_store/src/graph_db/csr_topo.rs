@@ -40,7 +40,7 @@ impl RangeIndex {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 struct MutEdgeVec<I: IndexType> {
     /// An adjacent list which maps each node's id (as index)
     /// to its adjacent edges (together with its label)
@@ -53,7 +53,7 @@ struct MutEdgeVec<I: IndexType> {
 
 impl<I: IndexType> From<MutEdgeVec<I>> for EdgeVec<I> {
     fn from(adj: MutEdgeVec<I>) -> Self {
-        let mut offsets = vec![LabeledOffset::default(); adj.node_count() + 1];
+        let mut offsets = vec![RangeByLabel::default(); adj.node_count() + 1];
         let mut offsets_no_label = vec![0; adj.node_count() + 1];
         let mut edges = Vec::with_capacity(adj.edge_count());
         for (node, mut label_vec) in adj.edges.into_iter() {
@@ -71,19 +71,19 @@ impl<I: IndexType> From<MutEdgeVec<I>> for EdgeVec<I> {
             }
             offsets_no_label[node + 1] = num_edges;
         }
-        let last_node = offsets_no_label.len() - 1;
+
         for node in 1..offsets_no_label.len() {
             offsets_no_label[node] += offsets_no_label[node - 1];
         }
         for (node, offset) in offsets_no_label.drain(..).enumerate() {
-            if node < last_node {
-                for (_, ranges) in offsets[node].inner.iter_mut() {
-                    ranges.start += offset;
-                }
-            } else {
+            if offsets[node].inner.is_empty() {
                 offsets[node]
                     .inner
                     .insert(INVALID_LABEL_ID, RangeIndex::new(offset, 0));
+            } else {
+                for (_, ranges) in offsets[node].inner.iter_mut() {
+                    ranges.start += offset;
+                }
             }
         }
 
@@ -120,16 +120,16 @@ impl<I: IndexType> MutEdgeVec<I> {
 }
 
 #[derive(Debug, Default, PartialEq, Eq, Clone, Serialize, Deserialize)]
-struct LabeledOffset {
-    inner: IndexMap<LabelId, RangeIndex>,
+struct RangeByLabel<I: IndexType> {
+    inner: IndexMap<I, RangeIndex>,
 }
 
-impl LabeledOffset {
-    pub fn get_index(&self) -> usize {
-        self.inner.first().unwrap().1.start
+impl<I: IndexType> RangeByLabel<I> {
+    pub fn get_index(&self) -> Option<usize> {
+        self.inner.first().map(|(_, r)| r.start)
     }
 
-    pub fn get_range(&self, label: LabelId) -> Option<(usize, usize)> {
+    pub fn get_range(&self, label: I) -> Option<(usize, usize)> {
         self.inner
             .get(&label)
             .map(|range| (range.start, range.start + range.off as usize))
@@ -142,7 +142,7 @@ struct EdgeVec<I: IndexType> {
     /// * `offsets[i]`: maintain the adjacent edges of the node of id i,
     /// * `offsets[i][j]` maintains the start and end indices of the adjacent edges of
     /// the label j for node i, if node i has connection to the edge of label j
-    offsets: Vec<LabeledOffset>,
+    offsets: Vec<RangeByLabel<LabelId>>,
     /// A vector to maintain edges' id
     edges: Vec<EdgeIndex<I>>,
 }
@@ -157,8 +157,12 @@ impl<I: IndexType> EdgeVec<I> {
     pub fn degree(&self, node: NodeIndex<I>) -> usize {
         if self.has_node(node) {
             // must at least have an index
-            let start = self.offsets[node.index()].get_index();
-            let end = self.offsets[node.index() + 1].get_index();
+            let start = self.offsets[node.index()]
+                .get_index()
+                .unwrap_or(0);
+            let end = self.offsets[node.index() + 1]
+                .get_index()
+                .unwrap_or(0);
 
             end - start
         } else {
@@ -190,9 +194,12 @@ impl<I: IndexType + Send + Sync> EdgeVec<I> {
                     &[]
                 }
             } else {
-                let start = self.offsets[node.index()].get_index();
-                let end = self.offsets[node.index() + 1].get_index();
-
+                let start = self.offsets[node.index()]
+                    .get_index()
+                    .unwrap_or(0);
+                let end = self.offsets[node.index() + 1]
+                    .get_index()
+                    .unwrap_or(0);
                 &self.edges[start..end]
             }
         } else {
@@ -223,7 +230,7 @@ impl<I: IndexType + Send + Sync> EdgeVec<I> {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 struct MutBiDirEdges<I: IndexType> {
     incoming: MutEdgeVec<I>,
     outgoing: MutEdgeVec<I>,
@@ -242,12 +249,25 @@ struct BiDirEdges<I: IndexType> {
     outgoing: EdgeVec<I>,
 }
 
-#[derive(Default)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+struct EdgeTuple<I: IndexType> {
+    start_node: NodeIndex<I>,
+    end_node: NodeIndex<I>,
+    label: LabelId,
+}
+
+impl<I: IndexType> EdgeTuple<I> {
+    pub fn new(start_node: NodeIndex<I>, end_node: NodeIndex<I>, label: LabelId) -> Self {
+        Self { start_node, end_node, label }
+    }
+}
+
+#[derive(Default, Clone)]
 pub struct MutTopo<I: IndexType> {
     /// Record the label of nodes
     nodes: Vec<Label>,
     /// Record the edge's both end nodes' index
-    edges: Vec<(NodeIndex<I>, NodeIndex<I>)>,
+    edges: Vec<EdgeTuple<I>>,
     /// Record the adjacent edges/nodes of nodes, per each label
     adj_edges: MutBiDirEdges<I>,
     /// Record the currently seen max node's id
@@ -256,7 +276,22 @@ pub struct MutTopo<I: IndexType> {
     max_seen_edge_id: usize,
 }
 
-impl<I: IndexType> MutLabeledTopology<I> for MutTopo<I> {
+impl<I: IndexType + Send + Sync> MutLabeledTopology for MutTopo<I> {
+    type I = I;
+    type T = CsrTopo<I>;
+
+    fn current_nodes_count(&self) -> usize {
+        self.nodes.len()
+    }
+
+    fn current_edges_count(&self) -> usize {
+        self.edges.len()
+    }
+
+    fn get_node_label_mut(&mut self, node: NodeIndex<I>) -> Option<&mut Label> {
+        self.nodes.get_mut(node.index())
+    }
+
     #[inline]
     fn add_node(&mut self, label: Label) -> NodeIndex<I> {
         let node_id = NodeIndex::new(self.max_seen_node_id);
@@ -270,7 +305,8 @@ impl<I: IndexType> MutLabeledTopology<I> for MutTopo<I> {
         &mut self, start_node_id: NodeIndex<I>, end_node_id: NodeIndex<I>, edge_label: LabelId,
     ) -> EdgeIndex<I> {
         let edge_id = EdgeIndex::new(self.max_seen_edge_id);
-        self.edges.push((start_node_id, end_node_id));
+        self.edges
+            .push(EdgeTuple::new(start_node_id, end_node_id, edge_label));
         self.adj_edges
             .outgoing
             .add_edge(edge_id, edge_label, start_node_id);
@@ -280,6 +316,10 @@ impl<I: IndexType> MutLabeledTopology<I> for MutTopo<I> {
         self.max_seen_edge_id += 1;
 
         edge_id
+    }
+
+    fn into_immutable(self) -> Self::T {
+        self.into()
     }
 }
 
@@ -299,32 +339,10 @@ pub struct CsrTopo<I: IndexType> {
     /// To maintain the label of nodes
     nodes: Vec<Label>,
     /// Record the edge's both end nodes' index
-    edges: Vec<(NodeIndex<I>, NodeIndex<I>)>,
+    edges: Vec<EdgeTuple<I>>,
     /// To maintain the neighbors (edges and/or nodes) of nodes in a CSR structure,
     /// per each label, in both directions
     csr: BiDirEdges<I>,
-}
-
-impl<I: IndexType> CsrTopo<I> {
-    #[inline]
-    pub fn in_degree(&self, node: NodeIndex<I>) -> usize {
-        self.csr.incoming.degree(node)
-    }
-
-    #[inline]
-    pub fn out_degree(&self, node: NodeIndex<I>) -> usize {
-        self.csr.outgoing.degree(node)
-    }
-
-    #[inline]
-    pub fn degree(&self, node: NodeIndex<I>) -> usize {
-        self.in_degree(node) + self.out_degree(node)
-    }
-
-    #[inline]
-    pub fn get_node_label(&self, node: NodeIndex<I>) -> Option<Label> {
-        self.nodes.get(node.index()).cloned()
-    }
 }
 
 impl<I: IndexType + Send + Sync> CsrTopo<I> {
@@ -345,7 +363,9 @@ impl<I: IndexType + Send + Sync> CsrTopo<I> {
     }
 }
 
-impl<I: IndexType + Sync + Send> LabeledTopology<I> for CsrTopo<I> {
+impl<I: IndexType + Sync + Send> LabeledTopology for CsrTopo<I> {
+    type I = I;
+
     #[inline]
     fn nodes_count(&self) -> usize {
         self.nodes.len()
@@ -357,8 +377,40 @@ impl<I: IndexType + Sync + Send> LabeledTopology<I> for CsrTopo<I> {
     }
 
     #[inline]
+    fn in_degree(&self, node: NodeIndex<I>) -> usize {
+        self.csr.incoming.degree(node)
+    }
+
+    #[inline]
+    fn out_degree(&self, node: NodeIndex<I>) -> usize {
+        self.csr.outgoing.degree(node)
+    }
+
+    #[inline]
+    fn get_node_label(&self, node: NodeIndex<I>) -> Option<Label> {
+        self.nodes.get(node.index()).cloned()
+    }
+
+    #[inline]
+    fn get_edge_label(&self, edge: EdgeIndex<I>) -> Option<LabelId> {
+        self.edges.get(edge.index()).map(|e| e.label)
+    }
+
+    #[inline]
     fn get_edge_end_points(&self, edge: EdgeIndex<I>) -> Option<(NodeIndex<I>, NodeIndex<I>)> {
-        self.edges.get(edge.index()).cloned()
+        self.edges
+            .get(edge.index())
+            .map(|e| (e.start_node, e.end_node))
+    }
+
+    #[inline]
+    fn get_node_indices(&self) -> Iter<NodeIndex<I>> {
+        Iter::from_iter((0..self.nodes_count()).map(|i| NodeIndex::new(i)))
+    }
+
+    #[inline]
+    fn get_edge_indices(&self) -> Iter<EdgeIndex<I>> {
+        Iter::from_iter((0..self.edges_count()).map(|i| EdgeIndex::new(i)))
     }
 
     #[inline]
@@ -386,6 +438,40 @@ impl<I: IndexType + Sync + Send> LabeledTopology<I> for CsrTopo<I> {
                 .incoming
                 .adjacent_edges_of_labels_iter(node, edge_labels),
         }
+    }
+
+    #[inline]
+    fn get_adjacent_nodes_iter(
+        &self, node: NodeIndex<I>, label: Option<LabelId>, dir: Direction,
+    ) -> Iter<NodeIndex<I>> {
+        Iter::from_iter(
+            self.get_adjacent_edges_iter(node, label, dir)
+                .map(move |e| {
+                    // can safely unwrap due to inner function
+                    let (s, t) = self.get_edge_end_points(e).unwrap();
+                    match dir {
+                        Direction::Outgoing => t,
+                        Direction::Incoming => s,
+                    }
+                }),
+        )
+    }
+
+    #[inline]
+    fn get_adjacent_nodes_of_labels_iter(
+        &self, node: NodeIndex<I>, labels: Vec<LabelId>, dir: Direction,
+    ) -> Iter<NodeIndex<I>> {
+        Iter::from_iter(
+            self.get_adjacent_edges_of_labels_iter(node, labels, dir)
+                .map(move |e| {
+                    // can safely unwrap due to inner function
+                    let (s, t) = self.get_edge_end_points(e).unwrap();
+                    match dir {
+                        Direction::Outgoing => t,
+                        Direction::Incoming => s,
+                    }
+                }),
+        )
     }
 }
 

@@ -761,6 +761,7 @@ mod test {
         // load whole graph
         loader.load().expect("Load ldbc data error!");
         let graphdb = loader.into_graph();
+        graphdb.print_statistics();
 
         // Check the loaded properties
         let records: Vec<&str> = vec![

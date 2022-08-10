@@ -18,13 +18,13 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Instant;
 
-use petgraph::graph::{DiGraph, IndexType};
+use petgraph::graph::IndexType;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use crate::common::{Label, LabelId};
 use crate::error::{GDBError, GDBResult};
 use crate::graph_db::graph_db_impl::{IndexData, LargeGraphDB, MutableGraphDB};
+use crate::graph_db::labeled_topo::{LabeledTopology, MutLabeledTopology};
 use crate::io::import;
 use crate::schema::LDBCGraphSchema;
 use crate::table::PropertyTableTrait;
@@ -170,10 +170,11 @@ impl GraphDBConfig {
     }
 
     /// Open an existing **read-only** graph database from `Self::root_dir`.
-    pub fn open<G, I, N, E>(&self) -> GDBResult<LargeGraphDB<G, I, N, E>>
+    pub fn open<G, I, T, N, E>(&self) -> GDBResult<LargeGraphDB<G, I, T, N, E>>
     where
         G: IndexType + Serialize + DeserializeOwned + Send + Sync,
         I: IndexType + Serialize + DeserializeOwned + Send + Sync,
+        T: LabeledTopology<I = I> + Serialize + DeserializeOwned + Send + Sync + 'static,
         N: PropertyTableTrait + Send + Sync + 'static,
         E: PropertyTableTrait + Send + Sync + 'static,
     {
@@ -226,8 +227,7 @@ impl GraphDBConfig {
         let file_edge_ppt_data = partition_dir.join(FILE_EDGE_PPT_DATA);
         let file_index_data = partition_dir.join(FILE_INDEX_DATA);
 
-        let graph_handle =
-            std::thread::spawn(move || import::<DiGraph<Label, LabelId, I>, _>(&file_graph_struct));
+        let graph_handle = std::thread::spawn(move || import::<T, _>(&file_graph_struct));
         let v_prop_handle = std::thread::spawn(move || N::import(&file_node_ppt_data));
         let e_prop_handle = std::thread::spawn(move || E::import(&file_edge_ppt_data));
         let index_handle = std::thread::spawn(move || import::<IndexData<G, I>, _>(&file_index_data));
@@ -252,14 +252,15 @@ impl GraphDBConfig {
     }
 
     /// New a graph database to build from the raw data
-    pub fn new<G, I, N, E>(&self) -> MutableGraphDB<G, I, N, E>
+    pub fn new<G, I, T, N, E>(&self) -> MutableGraphDB<G, I, T, N, E>
     where
         G: Eq + IndexType + Send + Sync,
         I: IndexType + Send + Sync,
+        T: MutLabeledTopology<I = I> + Default + Send + Sync,
         N: PropertyTableTrait + Sync,
         E: PropertyTableTrait + Sync,
     {
-        let topology = DiGraph::<_, _, I>::with_capacity(self.init_vertices, self.init_edges);
+        let topology = T::default();
         let partition_dir = self
             .root_dir
             .join(DIR_BINARY_DATA)

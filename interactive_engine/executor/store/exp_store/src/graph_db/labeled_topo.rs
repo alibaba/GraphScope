@@ -17,25 +17,45 @@ use std::collections::HashMap;
 
 use petgraph::graph::{DiGraph, IndexType};
 use petgraph::prelude::{Direction, EdgeIndex, EdgeRef, NodeIndex};
+use serde::{Deserialize, Serialize};
 
 use crate::common::{Label, LabelId};
 use crate::utils::{Iter, IterList};
 
-pub trait LabeledTopology<I: IndexType + Send + Sync> {
-    // immutable apis
+pub trait LabeledTopology {
+    type I: IndexType + Send + Sync;
+
     fn nodes_count(&self) -> usize;
 
     fn edges_count(&self) -> usize;
 
-    fn get_edge_end_points(&self, edge: EdgeIndex<I>) -> Option<(NodeIndex<I>, NodeIndex<I>)>;
+    fn in_degree(&self, node: NodeIndex<Self::I>) -> usize;
+
+    fn out_degree(&self, node: NodeIndex<Self::I>) -> usize;
+
+    fn degree(&self, node: NodeIndex<Self::I>) -> usize {
+        self.in_degree(node) + self.out_degree(node)
+    }
+
+    fn get_node_label(&self, node: NodeIndex<Self::I>) -> Option<Label>;
+
+    fn get_edge_label(&self, edge: EdgeIndex<Self::I>) -> Option<LabelId>;
+
+    fn get_edge_end_points(
+        &self, edge: EdgeIndex<Self::I>,
+    ) -> Option<(NodeIndex<Self::I>, NodeIndex<Self::I>)>;
+
+    fn get_node_indices(&self) -> Iter<NodeIndex<Self::I>>;
+
+    fn get_edge_indices(&self) -> Iter<EdgeIndex<Self::I>>;
 
     fn get_adjacent_edges_iter(
-        &self, node: NodeIndex<I>, label: Option<LabelId>, dir: Direction,
-    ) -> Iter<EdgeIndex<I>>;
+        &self, node: NodeIndex<Self::I>, label: Option<LabelId>, dir: Direction,
+    ) -> Iter<EdgeIndex<Self::I>>;
 
     fn get_adjacent_edges_of_labels_iter(
-        &self, node: NodeIndex<I>, labels: Vec<LabelId>, dir: Direction,
-    ) -> Iter<EdgeIndex<I>> {
+        &self, node: NodeIndex<Self::I>, labels: Vec<LabelId>, dir: Direction,
+    ) -> Iter<EdgeIndex<Self::I>> {
         let mut iters = vec![];
         for label in labels.into_iter().rev() {
             iters.push(self.get_adjacent_edges_iter(node, Some(label), dir));
@@ -45,60 +65,38 @@ pub trait LabeledTopology<I: IndexType + Send + Sync> {
     }
 
     fn get_adjacent_nodes_iter(
-        &self, node: NodeIndex<I>, label: Option<LabelId>, dir: Direction,
-    ) -> Iter<NodeIndex<I>>
-    where
-        Self: Sync,
-    {
-        Iter::from_iter(
-            self.get_adjacent_edges_iter(node, label, dir)
-                .map(move |e| {
-                    // can safely unwrap due to inner function
-                    let (s, t) = self.get_edge_end_points(e).unwrap();
-                    match dir {
-                        Direction::Outgoing => t,
-                        Direction::Incoming => s,
-                    }
-                }),
-        )
-    }
+        &self, node: NodeIndex<Self::I>, label: Option<LabelId>, dir: Direction,
+    ) -> Iter<NodeIndex<Self::I>>;
 
     fn get_adjacent_nodes_of_labels_iter(
-        &self, node: NodeIndex<I>, labels: Vec<LabelId>, dir: Direction,
-    ) -> Iter<NodeIndex<I>>
-    where
-        Self: Sync,
-    {
-        Iter::from_iter(
-            self.get_adjacent_edges_of_labels_iter(node, labels, dir)
-                .map(move |e| {
-                    // can safely unwrap due to inner function
-                    let (s, t) = self.get_edge_end_points(e).unwrap();
-                    match dir {
-                        Direction::Outgoing => t,
-                        Direction::Incoming => s,
-                    }
-                }),
-        )
-    }
+        &self, node: NodeIndex<Self::I>, labels: Vec<LabelId>, dir: Direction,
+    ) -> Iter<NodeIndex<Self::I>>;
 }
 
-pub trait MutLabeledTopology<I: IndexType> {
-    fn add_node(&mut self, label: Label) -> NodeIndex<I>;
+pub trait MutLabeledTopology {
+    type I: IndexType + Send + Sync;
+    type T: LabeledTopology<I = Self::I>;
+
+    fn current_nodes_count(&self) -> usize;
+    fn current_edges_count(&self) -> usize;
+    fn get_node_label_mut(&mut self, node: NodeIndex<Self::I>) -> Option<&mut Label>;
+    fn add_node(&mut self, label: Label) -> NodeIndex<Self::I>;
     fn add_edge(
-        &mut self, start_node: NodeIndex<I>, end_node: NodeIndex<I>, label: LabelId,
-    ) -> EdgeIndex<I>;
+        &mut self, start_node: NodeIndex<Self::I>, end_node: NodeIndex<Self::I>, label: LabelId,
+    ) -> EdgeIndex<Self::I>;
+    fn into_immutable(self) -> Self::T;
 }
 
 #[derive(Clone, Default, Serialize, Deserialize)]
-pub(crate) struct PGWrapper<I: IndexType> {
+pub struct PGWrapper<I: IndexType> {
     inner: DiGraph<Label, LabelId, I>,
     /// Grouping the adjacent edges of a vertex by the labels
     /// tuple 0 -> outgoing, tuple 1 -> incoming
     adjacent_label_indices: HashMap<NodeIndex<I>, HashMap<LabelId, (Vec<EdgeIndex<I>>, Vec<EdgeIndex<I>>)>>,
 }
 
-impl<I: IndexType + Send + Sync> LabeledTopology<I> for PGWrapper<I> {
+impl<I: IndexType + Send + Sync> LabeledTopology for PGWrapper<I> {
+    type I = I;
     #[inline]
     fn nodes_count(&self) -> usize {
         self.inner.node_count()
@@ -110,8 +108,72 @@ impl<I: IndexType + Send + Sync> LabeledTopology<I> for PGWrapper<I> {
     }
 
     #[inline]
+    fn in_degree(&self, node: NodeIndex<I>) -> usize {
+        if let Some(label_indices) = self.adjacent_label_indices.get(&node) {
+            let mut degree = 0;
+            for (_, (_, in_neighbors)) in label_indices {
+                degree += in_neighbors.len();
+            }
+            degree
+        } else {
+            self.inner
+                .neighbors_directed(node, Direction::Incoming)
+                .count()
+        }
+    }
+
+    #[inline]
+    fn out_degree(&self, node: NodeIndex<I>) -> usize {
+        if let Some(label_indices) = self.adjacent_label_indices.get(&node) {
+            let mut degree = 0;
+            for (_, (out_neighbors, _)) in label_indices {
+                degree += out_neighbors.len();
+            }
+            degree
+        } else {
+            self.inner
+                .neighbors_directed(node, Direction::Outgoing)
+                .count()
+        }
+    }
+
+    #[inline]
+    fn degree(&self, node: NodeIndex<I>) -> usize {
+        if let Some(label_indices) = self.adjacent_label_indices.get(&node) {
+            let mut degree = 0;
+            for (_, (out_neighbors, in_neighbors)) in label_indices {
+                degree += out_neighbors.len();
+                degree += in_neighbors.len();
+            }
+            degree
+        } else {
+            self.inner.neighbors(node).count()
+        }
+    }
+
+    #[inline]
+    fn get_node_label(&self, node: NodeIndex<I>) -> Option<Label> {
+        self.inner.node_weight(node).cloned()
+    }
+
+    #[inline]
+    fn get_edge_label(&self, edge: EdgeIndex<I>) -> Option<LabelId> {
+        self.inner.edge_weight(edge).cloned()
+    }
+
+    #[inline]
     fn get_edge_end_points(&self, edge: EdgeIndex<I>) -> Option<(NodeIndex<I>, NodeIndex<I>)> {
         self.inner.edge_endpoints(edge)
+    }
+
+    #[inline]
+    fn get_node_indices(&self) -> Iter<NodeIndex<I>> {
+        Iter::from_iter(self.inner.node_indices())
+    }
+
+    #[inline]
+    fn get_edge_indices(&self) -> Iter<EdgeIndex<I>> {
+        Iter::from_iter(self.inner.edge_indices())
     }
 
     fn get_adjacent_edges_iter(
@@ -147,9 +209,58 @@ impl<I: IndexType + Send + Sync> LabeledTopology<I> for PGWrapper<I> {
             )
         }
     }
+
+    #[inline]
+    fn get_adjacent_nodes_iter(
+        &self, node: NodeIndex<I>, label: Option<LabelId>, dir: Direction,
+    ) -> Iter<NodeIndex<I>> {
+        Iter::from_iter(
+            self.get_adjacent_edges_iter(node, label, dir)
+                .map(move |e| {
+                    // can safely unwrap due to inner function
+                    let (s, t) = self.get_edge_end_points(e).unwrap();
+                    match dir {
+                        Direction::Outgoing => t,
+                        Direction::Incoming => s,
+                    }
+                }),
+        )
+    }
+
+    #[inline]
+    fn get_adjacent_nodes_of_labels_iter(
+        &self, node: NodeIndex<I>, labels: Vec<LabelId>, dir: Direction,
+    ) -> Iter<NodeIndex<I>> {
+        Iter::from_iter(
+            self.get_adjacent_edges_of_labels_iter(node, labels, dir)
+                .map(move |e| {
+                    // can safely unwrap due to inner function
+                    let (s, t) = self.get_edge_end_points(e).unwrap();
+                    match dir {
+                        Direction::Outgoing => t,
+                        Direction::Incoming => s,
+                    }
+                }),
+        )
+    }
 }
 
-impl<I: IndexType> MutLabeledTopology<I> for PGWrapper<I> {
+impl<I: IndexType + Send + Sync> MutLabeledTopology for PGWrapper<I> {
+    type I = I;
+    type T = PGWrapper<I>;
+
+    fn current_nodes_count(&self) -> usize {
+        self.inner.node_count()
+    }
+
+    fn current_edges_count(&self) -> usize {
+        self.inner.edge_count()
+    }
+
+    fn get_node_label_mut(&mut self, node: NodeIndex<I>) -> Option<&mut Label> {
+        self.inner.node_weight_mut(node)
+    }
+
     #[inline]
     fn add_node(&mut self, label: Label) -> NodeIndex<I> {
         self.inner.add_node(label)
@@ -177,12 +288,14 @@ impl<I: IndexType> MutLabeledTopology<I> for PGWrapper<I> {
 
         edge_id
     }
+
+    fn into_immutable(self) -> Self::T {
+        self
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use petgraph::graph::{edge_index, node_index};
-
     use super::*;
 
     #[test]

@@ -75,7 +75,8 @@ macro_rules! run_dataflow {
                         .join(FILE_SCHEMA),
                 );
 
-            let mut graph: MutableGraphDB<DefaultId, InternalId, $ntable, $etable> = config.new();
+            let mut graph: MutableGraphDB<DefaultId, InternalId, MutTopo<InternalId>, $ntable, $etable> =
+                config.new();
             let schema = Arc::new(
                 config
                     .schema()
@@ -199,8 +200,8 @@ macro_rules! run_dataflow {
                             vertices_data.shrink_to_fit();
                             edges_data.shrink_to_fit();
                             graph.shrink_to_fit();
-                            let num_vertices = graph.node_count();
-                            let num_edges = graph.edge_count();
+                            let num_vertices = graph.nodes_count();
+                            let num_edges = graph.edges_count();
 
                             println!(
                                 "Worker {}: received {} vertices, {} edges",
