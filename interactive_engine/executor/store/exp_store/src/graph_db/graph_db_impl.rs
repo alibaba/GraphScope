@@ -13,11 +13,11 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::collections::HashMap;
 use std::fs::create_dir_all;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use ahash::HashMap;
 use petgraph::graph::{edge_index, IndexType};
 use petgraph::prelude::*;
 use serde::de::DeserializeOwned;

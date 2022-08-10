@@ -13,8 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::collections::HashMap;
-
+use ahash::HashMap;
 use petgraph::graph::{DiGraph, IndexType};
 use petgraph::prelude::{Direction, EdgeIndex, EdgeRef, NodeIndex};
 use serde::{Deserialize, Serialize};

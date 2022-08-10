@@ -14,7 +14,7 @@
 //! limitations under the License.
 //!
 
-use halfbrown::HashMap;
+use ahash::{HashMap, HashMapExt};
 use indexmap::map::IndexMap;
 use itertools::Itertools;
 use petgraph::graph::IndexType;
