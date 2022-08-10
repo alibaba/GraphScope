@@ -43,7 +43,7 @@ jobs:
         # 0.15.0 -> 0.15.0a20220808
         time=$(date "+%Y%m%d")
         version=$(cat ${GITHUB_WORKSPACE}/VERSION)
-        if [ "${{ GITHUB.REF }}" == "refs/heads/main" ];then echo "${version}a${time}" >> ${GITHUB_WORKSPACE}/VERSION; fi
+        if [ "${{ GITHUB.REF }}" == "refs/heads/main" ];then echo "${version}a${time}" > ${GITHUB_WORKSPACE}/VERSION; fi
 
         cd ${GITHUB_WORKSPACE}/k8s
         # build graphscope wheels
