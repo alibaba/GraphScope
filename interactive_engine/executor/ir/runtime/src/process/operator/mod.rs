@@ -37,7 +37,7 @@ use ir_common::{KeyId, NameOrId};
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::error::{FnExecError, FnExecResult};
-use crate::process::record::{CommonObject, Entry, Record, RecordElement};
+use crate::process::record::{CommonObject, Entry, Record};
 
 #[derive(Clone, Debug, Default)]
 pub struct TagKey {
@@ -74,7 +74,7 @@ impl TagKey {
     }
 
     fn get_key(&self, entry: &Arc<Entry>, prop_key: &PropKey) -> FnExecResult<Entry> {
-        if let Entry::Element(RecordElement::OnGraph(element)) = entry.as_ref() {
+        if let Entry::Element(element) = entry.as_ref() {
             let prop_obj = match prop_key {
                 PropKey::Id => element.id().into(),
                 PropKey::Label => element

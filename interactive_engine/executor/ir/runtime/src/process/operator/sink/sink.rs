@@ -19,7 +19,7 @@ use std::convert::TryInto;
 use std::ops::Deref;
 
 use dyn_type::Object;
-use graph_proxy::apis::{Edge, GraphElement, GraphObject, GraphPath, Vertex, VertexOrEdge};
+use graph_proxy::apis::{Edge, GraphElement, GraphPath, Vertex, VertexOrEdge};
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::sink_default::MetaType;
 use ir_common::generated::common as common_pb;
@@ -63,15 +63,15 @@ impl RecordSinkEncoder {
 
     fn element_to_pb(&self, e: &RecordElement) -> result_pb::Element {
         let inner = match e {
-            RecordElement::OnGraph(GraphObject::V(v)) => {
+            RecordElement::V(v) => {
                 let vertex_pb = self.vertex_to_pb(v);
                 Some(result_pb::element::Inner::Vertex(vertex_pb))
             }
-            RecordElement::OnGraph(GraphObject::E(e)) => {
+            RecordElement::E(e) => {
                 let edge_pb = self.edge_to_pb(e);
                 Some(result_pb::element::Inner::Edge(edge_pb))
             }
-            RecordElement::OnGraph(GraphObject::P(p)) => {
+            RecordElement::P(p) => {
                 let path_pb = self.path_to_pb(p);
                 Some(result_pb::element::Inner::GraphPath(path_pb))
             }

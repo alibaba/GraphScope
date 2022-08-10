@@ -20,9 +20,7 @@ use std::ops::Add;
 use std::sync::Arc;
 
 use dyn_type::{BorrowObject, Object};
-use graph_proxy::apis::{
-    DynDetails, Edge, Element, GraphElement, GraphObject, GraphPath, Vertex, VertexOrEdge,
-};
+use graph_proxy::apis::{DynDetails, Edge, Element, GraphElement, GraphPath, Vertex, VertexOrEdge};
 use graph_proxy::utils::expr::eval::Context;
 use ir_common::error::ParsePbError;
 use ir_common::generated::results as result_pb;
@@ -46,28 +44,30 @@ pub enum CommonObject {
 
 #[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]
 pub enum RecordElement {
-    OnGraph(GraphObject),
+    V(Vertex),
+    E(Edge),
+    P(GraphPath),
     OffGraph(CommonObject),
 }
 
 impl RecordElement {
     fn as_graph_vertex(&self) -> Option<&Vertex> {
         match self {
-            RecordElement::OnGraph(GraphObject::V(v)) => Some(v),
+            RecordElement::V(v) => Some(v),
             _ => None,
         }
     }
 
     fn as_graph_edge(&self) -> Option<&Edge> {
         match self {
-            RecordElement::OnGraph(GraphObject::E(e)) => Some(e),
+            RecordElement::E(e) => Some(e),
             _ => None,
         }
     }
 
     fn as_graph_path(&self) -> Option<&GraphPath> {
         match self {
-            RecordElement::OnGraph(GraphObject::P(graph_path)) => Some(graph_path),
+            RecordElement::P(p) => Some(p),
             _ => None,
         }
     }
@@ -81,7 +81,7 @@ impl RecordElement {
 
     fn as_mut_graph_path(&mut self) -> Option<&mut GraphPath> {
         match self {
-            RecordElement::OnGraph(GraphObject::P(graph_path)) => Some(graph_path),
+            RecordElement::P(graph_path) => Some(graph_path),
             _ => None,
         }
     }
@@ -217,19 +217,19 @@ impl Record {
 
 impl Into<Entry> for Vertex {
     fn into(self) -> Entry {
-        Entry::Element(RecordElement::OnGraph(GraphObject::V(self)))
+        Entry::Element(RecordElement::V(self))
     }
 }
 
 impl Into<Entry> for Edge {
     fn into(self) -> Entry {
-        Entry::Element(RecordElement::OnGraph(GraphObject::E(self)))
+        Entry::Element(RecordElement::E(self))
     }
 }
 
 impl Into<Entry> for GraphPath {
     fn into(self) -> Entry {
-        Entry::Element(RecordElement::OnGraph(GraphObject::P(self)))
+        Entry::Element(RecordElement::P(self))
     }
 }
 
@@ -239,12 +239,6 @@ impl Into<Entry> for VertexOrEdge {
             VertexOrEdge::V(v) => v.into(),
             VertexOrEdge::E(e) => e.into(),
         }
-    }
-}
-
-impl Into<Entry> for GraphObject {
-    fn into(self) -> Entry {
-        Entry::Element(RecordElement::OnGraph(self))
     }
 }
 
@@ -283,21 +277,27 @@ impl Context<RecordElement> for Record {
 impl Element for RecordElement {
     fn details(&self) -> Option<&DynDetails> {
         match self {
-            RecordElement::OnGraph(graph_obj) => graph_obj.details(),
+            RecordElement::V(v) => v.details(),
+            RecordElement::E(e) => e.details(),
+            RecordElement::P(p) => p.details(),
             RecordElement::OffGraph(_) => None,
         }
     }
 
     fn as_graph_element(&self) -> Option<&dyn GraphElement> {
         match self {
-            RecordElement::OnGraph(graph) => Some(graph),
+            RecordElement::V(v) => v.as_graph_element(),
+            RecordElement::E(e) => e.as_graph_element(),
+            RecordElement::P(p) => p.as_graph_element(),
             RecordElement::OffGraph(_) => None,
         }
     }
 
     fn len(&self) -> usize {
         match self {
-            RecordElement::OnGraph(graph_obj) => graph_obj.len(),
+            RecordElement::V(v) => v.len(),
+            RecordElement::E(e) => e.len(),
+            RecordElement::P(p) => p.len(),
             RecordElement::OffGraph(obj) => match obj {
                 CommonObject::None => 0,
                 CommonObject::Prop(obj) => obj.len(),
@@ -308,12 +308,34 @@ impl Element for RecordElement {
 
     fn as_borrow_object(&self) -> BorrowObject {
         match self {
-            RecordElement::OnGraph(graph_obj) => graph_obj.as_borrow_object(),
+            RecordElement::V(v) => v.as_borrow_object(),
+            RecordElement::E(e) => e.as_borrow_object(),
+            RecordElement::P(p) => p.as_borrow_object(),
             RecordElement::OffGraph(obj_element) => match obj_element {
                 CommonObject::None => BorrowObject::None,
                 CommonObject::Prop(obj) => obj.as_borrow(),
                 CommonObject::Count(cnt) => (*cnt).into(),
             },
+        }
+    }
+}
+
+impl GraphElement for RecordElement {
+    fn id(&self) -> u64 {
+        match self {
+            RecordElement::V(v) => v.id(),
+            RecordElement::E(e) => e.id(),
+            RecordElement::P(p) => p.id(),
+            RecordElement::OffGraph(_) => 0, // fake id
+        }
+    }
+
+    fn label(&self) -> Option<&NameOrId> {
+        match self {
+            RecordElement::V(v) => v.label(),
+            RecordElement::E(e) => e.label(),
+            RecordElement::P(p) => p.label(),
+            RecordElement::OffGraph(_) => None,
         }
     }
 }
@@ -348,14 +370,14 @@ impl<E> RecordExpandIter<E> {
     }
 }
 
-impl<E: Into<GraphObject>> Iterator for RecordExpandIter<E> {
+impl<E: Into<Entry>> Iterator for RecordExpandIter<E> {
     type Item = Record;
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut record = self.origin.clone();
         match self.children.next() {
             Some(elem) => {
-                record.append(elem.into(), self.tag.clone());
+                record.append(elem, self.tag.clone());
                 Some(record)
             }
             None => None,
@@ -375,7 +397,7 @@ impl<E> RecordPathExpandIter<E> {
     }
 }
 
-impl<E: Into<GraphObject>> Iterator for RecordPathExpandIter<E> {
+impl<E: Into<Entry>> Iterator for RecordPathExpandIter<E> {
     type Item = Record;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -385,17 +407,20 @@ impl<E: Into<GraphObject>> Iterator for RecordPathExpandIter<E> {
             Some(elem) => {
                 let graph_obj = elem.into();
                 match graph_obj {
-                    GraphObject::V(v) => {
-                        curr_path.append(v);
-                        record.append(curr_path, None);
-                        Some(record)
-                    }
-                    GraphObject::E(e) => {
-                        curr_path.append(e);
-                        record.append(curr_path, None);
-                        Some(record)
-                    }
-                    GraphObject::P(_) => None,
+                    Entry::Element(graph_element) => match graph_element {
+                        RecordElement::V(v) => {
+                            curr_path.append(v);
+                            record.append(curr_path, None);
+                            Some(record)
+                        }
+                        RecordElement::E(e) => {
+                            curr_path.append(e);
+                            record.append(curr_path, None);
+                            Some(record)
+                        }
+                        _ => None,
+                    },
+                    Entry::Collection(_) => None,
                 }
             }
             None => None,
@@ -443,12 +468,20 @@ impl Decode for CommonObject {
 impl Encode for RecordElement {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
         match self {
-            RecordElement::OnGraph(graph_obj) => {
+            RecordElement::V(v) => {
                 writer.write_u8(0)?;
-                graph_obj.write_to(writer)?;
+                v.write_to(writer)?;
+            }
+            RecordElement::E(e) => {
+                writer.write_u8(1)?;
+                e.write_to(writer)?;
+            }
+            RecordElement::P(p) => {
+                writer.write_u8(2)?;
+                p.write_to(writer)?;
             }
             RecordElement::OffGraph(object_element) => {
-                writer.write_u8(1)?;
+                writer.write_u8(3)?;
                 object_element.write_to(writer)?;
             }
         }
@@ -461,10 +494,18 @@ impl Decode for RecordElement {
         let opt = reader.read_u8()?;
         match opt {
             0 => {
-                let graph_obj = <GraphObject>::read_from(reader)?;
-                Ok(RecordElement::OnGraph(graph_obj))
+                let v = <Vertex>::read_from(reader)?;
+                Ok(RecordElement::V(v))
             }
             1 => {
+                let e = <Edge>::read_from(reader)?;
+                Ok(RecordElement::E(e))
+            }
+            2 => {
+                let p = <GraphPath>::read_from(reader)?;
+                Ok(RecordElement::P(p))
+            }
+            3 => {
                 let object_element = <CommonObject>::read_from(reader)?;
                 Ok(RecordElement::OffGraph(object_element))
             }
@@ -588,15 +629,9 @@ impl TryFrom<result_pb::Element> for RecordElement {
     fn try_from(e: result_pb::Element) -> Result<Self, Self::Error> {
         if let Some(inner) = e.inner {
             match inner {
-                result_pb::element::Inner::Vertex(v) => {
-                    Ok(RecordElement::OnGraph(GraphObject::V(v.try_into()?)))
-                }
-                result_pb::element::Inner::Edge(e) => {
-                    Ok(RecordElement::OnGraph(GraphObject::E(e.try_into()?)))
-                }
-                result_pb::element::Inner::GraphPath(p) => {
-                    Ok(RecordElement::OnGraph(GraphObject::P(p.try_into()?)))
-                }
+                result_pb::element::Inner::Vertex(v) => Ok(RecordElement::V(v.try_into()?)),
+                result_pb::element::Inner::Edge(e) => Ok(RecordElement::E(e.try_into()?)),
+                result_pb::element::Inner::GraphPath(p) => Ok(RecordElement::P(p.try_into()?)),
                 result_pb::element::Inner::Object(o) => {
                     Ok(RecordElement::OffGraph(CommonObject::Prop(o.try_into()?)))
                 }

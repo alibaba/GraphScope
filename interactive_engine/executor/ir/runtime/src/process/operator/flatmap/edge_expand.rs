@@ -15,25 +15,23 @@
 
 use std::convert::TryInto;
 
-use graph_proxy::apis::{
-    get_graph, Direction, DynDetails, GraphElement, GraphObject, Statement, Vertex, ID,
-};
+use graph_proxy::apis::{get_graph, Direction, DynDetails, GraphElement, Statement, Vertex, ID};
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::KeyId;
 use pegasus::api::function::{DynIter, FlatMapFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenError, FnGenResult};
 use crate::process::operator::flatmap::FlatMapFuncGen;
-use crate::process::record::{Record, RecordExpandIter, RecordPathExpandIter};
+use crate::process::record::{Entry, Record, RecordElement, RecordExpandIter, RecordPathExpandIter};
 
-pub struct EdgeExpandOperator<E: Into<GraphObject>> {
+pub struct EdgeExpandOperator<E: Into<Entry>> {
     start_v_tag: Option<KeyId>,
     edge_or_end_v_tag: Option<KeyId>,
     stmt: Box<dyn Statement<ID, E>>,
     getv_flag: bool,
 }
 
-impl<E: Into<GraphObject> + 'static> FlatMapFunction<Record, Record> for EdgeExpandOperator<E> {
+impl<E: Into<Entry> + 'static> FlatMapFunction<Record, Record> for EdgeExpandOperator<E> {
     type Target = DynIter<Record>;
 
     fn exec(&self, input: Record) -> FnResult<Self::Target> {
@@ -43,7 +41,7 @@ impl<E: Into<GraphObject> + 'static> FlatMapFunction<Record, Record> for EdgeExp
                 let iter = self.stmt.exec(id)?;
                 if self.getv_flag {
                     let neighbors_iter = iter.map(|e| match e.into() {
-                        GraphObject::E(e) => Vertex::new(
+                        Entry::Element(RecordElement::E(e)) => Vertex::new(
                             e.get_other_id(),
                             e.get_other_label().cloned(),
                             DynDetails::default(),
