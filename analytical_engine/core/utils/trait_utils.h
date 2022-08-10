@@ -18,30 +18,12 @@
 
 #include <type_traits>
 
+#include "vineyard/common/util/static_if.h"
+
 namespace gs {
 template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T,
           typename VERTEX_MAP_T>
 class ArrowFlattenedFragment;
-
-template <typename T, typename F>
-auto static_if(std::true_type, T t, F f) {
-  return t;
-}
-
-template <typename T, typename F>
-auto static_if(std::false_type, T t, F f) {
-  return f;
-}
-
-template <bool B, typename T, typename F>
-auto static_if(T t, F f) {
-  return static_if(std::integral_constant<bool, B>{}, t, f);
-}
-
-template <bool B, typename T>
-auto static_if(T t) {
-  return static_if(std::integral_constant<bool, B>{}, t, [](auto&&...) {});
-}
 
 template <typename T>
 struct is_flattened_fragment {

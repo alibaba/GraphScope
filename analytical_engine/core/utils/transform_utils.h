@@ -807,7 +807,7 @@ class TransformUtils<
                                           grape::InArchive& arc) {
     for (auto& v : range) {
       int label_id = 0;
-      static_if<is_flattened_fragment<FRAG_T>::value>(
+      vineyard::static_if<is_flattened_fragment<FRAG_T>::value>(
           [&](auto& frag, auto& v, auto& label_id) {
             label_id = frag.vertex_label(v);
           })(frag_, v, label_id);

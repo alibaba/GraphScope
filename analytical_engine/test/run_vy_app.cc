@@ -583,22 +583,27 @@ int main(int argc, char** argv) {
 
     vineyard::ObjectID fragment_id;
     {
-      auto loader = std::make_unique<
-          gs::ArrowFragmentLoader<vineyard::property_graph_types::OID_TYPE,
-                                  vineyard::property_graph_types::VID_TYPE>>(
-          client, comm_spec, efiles, vfiles, directed != 0);
+      using oid_t = vineyard::property_graph_types::OID_TYPE;
+      using vid_t = vineyard::property_graph_types::VID_TYPE;
       if (with_local_vertex_map) {
-        fragment_id = bl::try_handle_all(
-            [&loader]() { return loader->LoadFragmentWithLocalVertexMap(); },
-            [](const vineyard::GSError& e) {
-              LOG(FATAL) << e.error_msg;
-              return 0;
-            },
-            [](const bl::error_info& unmatched) {
-              LOG(FATAL) << "Unmatched error " << unmatched;
-              return 0;
-            });
+        using vertex_map_t = vineyard::ArrowLocalVertexMap<
+            typename vineyard::InternalType<oid_t>::type, vid_t>;
+        auto loader = std::make_unique<
+            gs::ArrowFragmentLoader<oid_t, vid_t, vertex_map_t>>(
+            client, comm_spec, efiles, vfiles, directed != 0);
+        fragment_id =
+            bl::try_handle_all([&loader]() { return loader->LoadFragment(); },
+                               [](const vineyard::GSError& e) {
+                                 LOG(FATAL) << e.error_msg;
+                                 return 0;
+                               },
+                               [](const bl::error_info& unmatched) {
+                                 LOG(FATAL) << "Unmatched error " << unmatched;
+                                 return 0;
+                               });
       } else {
+        auto loader = std::make_unique<gs::ArrowFragmentLoader<oid_t, vid_t>>(
+            client, comm_spec, efiles, vfiles, directed != 0);
         fragment_id =
             bl::try_handle_all([&loader]() { return loader->LoadFragment(); },
                                [](const vineyard::GSError& e) {

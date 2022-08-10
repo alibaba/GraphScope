@@ -102,7 +102,7 @@ class AllPairsShortestPathLength
           v = e.get_neighbor();
           distv = ctx.length[s][v];
           double edata = 1.0;
-          static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
+          vineyard::static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
               [&](auto& e, auto& data) {
                 data = static_cast<double>(e.get_data());
               })(e, edata);
