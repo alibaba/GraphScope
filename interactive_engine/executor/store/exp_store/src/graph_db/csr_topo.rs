@@ -15,7 +15,6 @@
 //!
 
 use halfbrown::HashMap;
-
 use indexmap::map::IndexMap;
 use itertools::Itertools;
 use petgraph::graph::IndexType;

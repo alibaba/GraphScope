@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::collections::BTreeMap;
 use std::path::Path;
 
 use dyn_type::{BorrowObject, Object};
@@ -23,7 +24,6 @@ use serde::ser::Error as SerError;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::error::{GDBError, GDBResult};
-use std::collections::BTreeMap;
 
 /// A generic datatype for each item in a row
 pub type ItemType = Object;
@@ -298,7 +298,7 @@ impl PropertyTableTrait for PropertyTable {
         let mut table = crate::io::import::<Self, _>(path)?;
         match &mut table.properties {
             Table::Dense(inner) => inner.shrink_to_fit(),
-            Table::Sparse(_) => {},
+            Table::Sparse(_) => {}
         }
         Ok(table)
     }
