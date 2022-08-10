@@ -239,7 +239,7 @@ impl Evaluate for Evaluator {
     /// # use ir_common::NameOrId;
     /// # use graph_proxy::utils::expr::eval::{Context, Evaluator, Evaluate};
     /// # use graph_proxy::apis::{Vertex, DynDetails};
-    /// # use hashbrown::HashMap;
+    /// # use ahash::HashMap;
     /// # use std::convert::TryFrom;
     /// # use ir_common::expr_parse::str_to_expr_pb;
     /// # use graph_proxy::utils::expr::eval_pred::EvalPred;
@@ -569,7 +569,7 @@ impl InnerOpr {
 
 #[cfg(test)]
 mod tests {
-    use hashbrown::HashMap;
+    use ahash::HashMap;
 
     use ir_common::expr_parse::str_to_expr_pb;
 

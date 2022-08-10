@@ -155,7 +155,7 @@ impl SinkGen for SinkVineyardOp {
 #[cfg(test)]
 mod tests {
 
-    use hashbrown::HashMap;
+    use ahash::{HashMap, HashMapExt};
     use std::sync::{Arc, Mutex};
 
     use dyn_type::Object;

@@ -80,7 +80,7 @@ impl MapFunction<(RecordKey, Record), Record> for GroupMap {
 
 #[cfg(test)]
 mod tests {
-    use hashbrown::HashMap;
+    use ahash::HashMap;
     use std::collections::HashSet;
 
     use dyn_type::Object;

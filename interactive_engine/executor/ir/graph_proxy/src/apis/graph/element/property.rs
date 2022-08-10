@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use hashbrown::HashMap;
+use ahash::{HashMap, HashMapExt};
 use std::convert::TryFrom;
 use std::io;
 use std::sync::Arc;
