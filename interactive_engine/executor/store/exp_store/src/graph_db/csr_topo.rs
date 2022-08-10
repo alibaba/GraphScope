@@ -26,20 +26,6 @@ use crate::common::{Label, LabelId, INVALID_LABEL_ID};
 use crate::graph_db::labeled_topo::{LabeledTopology, MutLabeledTopology};
 use crate::utils::{Iter, IterList};
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-pub struct RangeIndex<I: IndexType> {
-    /// The starting index of the range
-    start: I,
-    /// The offset
-    off: I,
-}
-
-impl<I: IndexType> RangeIndex<I> {
-    pub fn new(start: I, off: I) -> Self {
-        Self { start, off }
-    }
-}
-
 #[derive(Clone, Debug, Default)]
 struct MutEdgeVec<I: IndexType> {
     /// An adjacent list which maps each node's id (as index)
@@ -64,7 +50,7 @@ impl<I: IndexType> From<MutEdgeVec<I>> for EdgeVec<I> {
                     vec.sort();
                     offsets[node]
                         .inner
-                        .insert(label, RangeIndex::new(I::new(num_edges), I::new(vec.len())));
+                        .insert(label, (I::new(num_edges), I::new(vec.len())));
                     num_edges += vec.len();
                     edges.extend(vec.drain(..));
                 }
@@ -79,10 +65,10 @@ impl<I: IndexType> From<MutEdgeVec<I>> for EdgeVec<I> {
             if offsets[node].inner.is_empty() {
                 offsets[node]
                     .inner
-                    .insert(INVALID_LABEL_ID, RangeIndex::new(I::new(offset), I::default()));
+                    .insert(INVALID_LABEL_ID, (I::new(offset), I::default()));
             } else {
                 for (_, range) in offsets[node].inner.iter_mut() {
-                    range.start = I::new(range.start.index() + offset);
+                    range.0 = I::new(range.0.index() + offset);
                 }
             }
         }
@@ -121,24 +107,27 @@ impl<I: IndexType> MutEdgeVec<I> {
 
 #[derive(Debug, Default, PartialEq, Eq, Clone, Serialize, Deserialize)]
 struct RangeByLabel<K: IndexType, V: IndexType> {
-    inner: IndexMap<K, RangeIndex<V>>,
+    /// K -> the key refers to label
+    /// (V, V) -> the first element refers to the starting index in the sparse row,
+    ///        -> the second element refers to the size of the elements regarding the given `K`
+    inner: IndexMap<K, (V, V)>,
 }
 
 impl<K: IndexType, V: IndexType> RangeByLabel<K, V> {
     pub fn get_index(&self) -> Option<usize> {
-        self.inner.first().map(|(_, r)| r.start.index())
+        self.inner.first().map(|(_, r)| r.0.index())
     }
 
     pub fn get_range(&self, label: K) -> Option<(usize, usize)> {
         self.inner
             .get(&label)
-            .map(|range| (range.start.index(), range.start.index() + range.off.index()))
+            .map(|range| (range.0.index(), range.0.index() + range.1.index()))
     }
 }
 
+/// This is an extension of a typical CSR structure to support label indexing.
 #[derive(Debug, Default, PartialEq, Eq, Clone, Serialize, Deserialize)]
 struct EdgeVec<I: IndexType> {
-    /// This is an extension of a typical CSR structure to support label indexing.
     /// * `offsets[i]`: maintain the adjacent edges of the node of id i,
     /// * `offsets[i][j]` maintains the start and end indices of the adjacent edges of
     /// the label j for node i, if node i has connection to the edge of label j
