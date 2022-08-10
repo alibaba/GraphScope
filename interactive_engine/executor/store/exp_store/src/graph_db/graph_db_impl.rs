@@ -29,7 +29,7 @@ use crate::config::{
     DIR_BINARY_DATA, FILE_EDGE_PPT_DATA, FILE_GRAPH_STRUCT, FILE_INDEX_DATA, FILE_NODE_PPT_DATA,
 };
 use crate::error::{GDBError, GDBResult};
-use crate::graph_db::labeled_topo::{LabeledTopology, MutLabeledTopology, PGWrapper};
+use crate::graph_db::labeled_topo::{LabeledTopology, MutLabeledTopology};
 use crate::graph_db::*;
 use crate::io::export;
 use crate::schema::{LDBCGraphSchema, Schema};

@@ -14,7 +14,7 @@
 //! limitations under the License.
 //!
 
-use std::collections::HashMap;
+use halfbrown::HashMap;
 
 use indexmap::map::IndexMap;
 use itertools::Itertools;
@@ -27,15 +27,15 @@ use crate::graph_db::labeled_topo::{LabeledTopology, MutLabeledTopology};
 use crate::utils::{Iter, IterList};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-pub struct RangeIndex {
+pub struct RangeIndex<I: IndexType> {
     /// The starting index of the range
-    start: usize,
+    start: I,
     /// The offset
-    off: u32,
+    off: I,
 }
 
-impl RangeIndex {
-    pub fn new(start: usize, off: u32) -> Self {
+impl<I: IndexType> RangeIndex<I> {
+    pub fn new(start: I, off: I) -> Self {
         Self { start, off }
     }
 }
@@ -64,7 +64,7 @@ impl<I: IndexType> From<MutEdgeVec<I>> for EdgeVec<I> {
                     vec.sort();
                     offsets[node]
                         .inner
-                        .insert(label, RangeIndex::new(num_edges, vec.len() as u32));
+                        .insert(label, RangeIndex::new(I::new(num_edges), I::new(vec.len())));
                     num_edges += vec.len();
                     edges.extend(vec.drain(..));
                 }
@@ -79,10 +79,10 @@ impl<I: IndexType> From<MutEdgeVec<I>> for EdgeVec<I> {
             if offsets[node].inner.is_empty() {
                 offsets[node]
                     .inner
-                    .insert(INVALID_LABEL_ID, RangeIndex::new(offset, 0));
+                    .insert(INVALID_LABEL_ID, RangeIndex::new(I::new(offset), I::default()));
             } else {
-                for (_, ranges) in offsets[node].inner.iter_mut() {
-                    ranges.start += offset;
+                for (_, range) in offsets[node].inner.iter_mut() {
+                    range.start = I::new(range.start.index() + offset);
                 }
             }
         }
@@ -100,7 +100,7 @@ impl<I: IndexType> MutEdgeVec<I> {
             .entry(end_node.index())
             .or_insert(HashMap::new())
             .entry(label)
-            .or_default()
+            .or_insert_with(Vec::new)
             .push(edge);
         if end_node > self.max_seen_node_id {
             self.max_seen_node_id = end_node;
@@ -120,19 +120,19 @@ impl<I: IndexType> MutEdgeVec<I> {
 }
 
 #[derive(Debug, Default, PartialEq, Eq, Clone, Serialize, Deserialize)]
-struct RangeByLabel<I: IndexType> {
-    inner: IndexMap<I, RangeIndex>,
+struct RangeByLabel<K: IndexType, V: IndexType> {
+    inner: IndexMap<K, RangeIndex<V>>,
 }
 
-impl<I: IndexType> RangeByLabel<I> {
+impl<K: IndexType, V: IndexType> RangeByLabel<K, V> {
     pub fn get_index(&self) -> Option<usize> {
-        self.inner.first().map(|(_, r)| r.start)
+        self.inner.first().map(|(_, r)| r.start.index())
     }
 
-    pub fn get_range(&self, label: I) -> Option<(usize, usize)> {
+    pub fn get_range(&self, label: K) -> Option<(usize, usize)> {
         self.inner
             .get(&label)
-            .map(|range| (range.start, range.start + range.off as usize))
+            .map(|range| (range.start.index(), range.start.index() + range.off.index()))
     }
 }
 
@@ -142,7 +142,7 @@ struct EdgeVec<I: IndexType> {
     /// * `offsets[i]`: maintain the adjacent edges of the node of id i,
     /// * `offsets[i][j]` maintains the start and end indices of the adjacent edges of
     /// the label j for node i, if node i has connection to the edge of label j
-    offsets: Vec<RangeByLabel<LabelId>>,
+    offsets: Vec<RangeByLabel<LabelId, I>>,
     /// A vector to maintain edges' id
     edges: Vec<EdgeIndex<I>>,
 }

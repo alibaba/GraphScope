@@ -13,7 +13,6 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::collections::HashMap;
 use std::path::Path;
 
 use dyn_type::{BorrowObject, Object};
@@ -24,6 +23,7 @@ use serde::ser::Error as SerError;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::error::{GDBError, GDBResult};
+use std::collections::BTreeMap;
 
 /// A generic datatype for each item in a row
 pub type ItemType = Object;
@@ -174,7 +174,7 @@ impl<'a> RowRef<'a> {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 enum Table {
     Dense(Vec<Row>),
-    Sparse(HashMap<usize, Row>),
+    Sparse(BTreeMap<usize, Row>),
 }
 
 /// Define the functions that operate on a `PropertyTable`
@@ -229,7 +229,7 @@ pub struct PropertyTable {
 impl PropertyTable {
     /// Create a new sparse table
     pub fn new_sparse() -> Self {
-        Self { properties: Table::Sparse(HashMap::new()) }
+        Self { properties: Table::Sparse(BTreeMap::new()) }
     }
 
     /// Create a new dense table
@@ -298,7 +298,7 @@ impl PropertyTableTrait for PropertyTable {
         let mut table = crate::io::import::<Self, _>(path)?;
         match &mut table.properties {
             Table::Dense(inner) => inner.shrink_to_fit(),
-            Table::Sparse(inner) => inner.shrink_to_fit(),
+            Table::Sparse(_) => {},
         }
         Ok(table)
     }
@@ -314,7 +314,7 @@ enum SimpleType {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SingleValueTable {
-    property: HashMap<usize, SimpleType>,
+    property: BTreeMap<usize, SimpleType>,
 }
 
 impl PropertyTableTrait for SingleValueTable {
@@ -357,7 +357,7 @@ impl PropertyTableTrait for SingleValueTable {
     }
 
     fn new<P: AsRef<Path>>(_path: P) -> Self {
-        Self { property: HashMap::new() }
+        Self { property: BTreeMap::new() }
     }
 
     fn export<P: AsRef<Path>>(&self, path: P) -> GDBResult<()> {
@@ -366,10 +366,7 @@ impl PropertyTableTrait for SingleValueTable {
     }
 
     fn import<P: AsRef<Path>>(path: P) -> GDBResult<Self> {
-        let mut table = crate::io::import::<Self, _>(path)?;
-        table.property.shrink_to_fit();
-
-        Ok(table)
+        Ok(crate::io::import::<Self, _>(path)?)
     }
 }
 
