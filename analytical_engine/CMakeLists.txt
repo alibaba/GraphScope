@@ -7,7 +7,8 @@ string(REGEX REPLACE "\n$" "" GRAPHSCOPE_ANALYTICAL_VERSION "${GRAPHSCOPE_ANALYT
 if (POLICY CMP0048)
     cmake_policy(SET CMP0048 NEW)
 endif ()
-project(analytical_engine LANGUAGES C CXX VERSION ${GRAPHSCOPE_ANALYTICAL_VERSION})
+project(analytical_engine LANGUAGES C CXX)
+set(PROJECT_VERSION ${GRAPHSCOPE_ANALYTICAL_VERSION})
 
 option(NETWORKX "networkx on?" ON)
 option(BUILD_TESTS "Build unit test" ON)
