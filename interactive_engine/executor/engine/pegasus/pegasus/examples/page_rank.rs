@@ -214,7 +214,7 @@ impl Iterator for ScatterItemIter {
         }
 
         loop {
-            if let Ok((p, r)) = self.pr.pop() {
+            if let Some((p, r)) = self.pr.pop() {
                 let neighbors = self.graph.get_neighbors(p);
                 if neighbors.len() > 0 {
                     let update = self.damping_factor * (r / neighbors.len() as f64);
