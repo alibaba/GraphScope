@@ -43,95 +43,53 @@ pub enum CommonObject {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]
-pub enum RecordElement {
+pub enum Entry {
     V(Vertex),
     E(Edge),
     P(GraphPath),
     OffGraph(CommonObject),
-}
-
-impl RecordElement {
-    fn as_graph_vertex(&self) -> Option<&Vertex> {
-        match self {
-            RecordElement::V(v) => Some(v),
-            _ => None,
-        }
-    }
-
-    fn as_graph_edge(&self) -> Option<&Edge> {
-        match self {
-            RecordElement::E(e) => Some(e),
-            _ => None,
-        }
-    }
-
-    fn as_graph_path(&self) -> Option<&GraphPath> {
-        match self {
-            RecordElement::P(p) => Some(p),
-            _ => None,
-        }
-    }
-
-    fn as_common_object(&self) -> Option<&CommonObject> {
-        match self {
-            RecordElement::OffGraph(common_obj) => Some(common_obj),
-            _ => None,
-        }
-    }
-
-    fn as_mut_graph_path(&mut self) -> Option<&mut GraphPath> {
-        match self {
-            RecordElement::P(graph_path) => Some(graph_path),
-            _ => None,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]
-pub enum Entry {
-    Element(RecordElement),
-    Collection(Vec<RecordElement>),
+    Collection(Vec<Entry>),
 }
 
 impl Entry {
     pub fn as_graph_vertex(&self) -> Option<&Vertex> {
         match self {
-            Entry::Element(record_element) => record_element.as_graph_vertex(),
+            Entry::V(v) => Some(v),
             _ => None,
         }
     }
 
     pub fn as_graph_edge(&self) -> Option<&Edge> {
         match self {
-            Entry::Element(record_element) => record_element.as_graph_edge(),
+            Entry::E(e) => Some(e),
             _ => None,
         }
     }
 
     pub fn as_graph_path(&self) -> Option<&GraphPath> {
         match self {
-            Entry::Element(record_element) => record_element.as_graph_path(),
+            Entry::P(p) => Some(p),
             _ => None,
         }
     }
 
     pub fn as_common_object(&self) -> Option<&CommonObject> {
         match self {
-            Entry::Element(record_element) => record_element.as_common_object(),
+            Entry::OffGraph(common_object) => Some(common_object),
             _ => None,
         }
     }
 
     pub fn as_mut_graph_path(&mut self) -> Option<&mut GraphPath> {
         match self {
-            Entry::Element(record_element) => record_element.as_mut_graph_path(),
+            Entry::P(graph_path) => Some(graph_path),
             _ => None,
         }
     }
 
     pub fn is_none(&self) -> bool {
         match self {
-            Entry::Element(RecordElement::OffGraph(CommonObject::None)) => true,
+            Entry::OffGraph(CommonObject::None) => true,
             _ => false,
         }
     }
@@ -217,19 +175,19 @@ impl Record {
 
 impl Into<Entry> for Vertex {
     fn into(self) -> Entry {
-        Entry::Element(RecordElement::V(self))
+        Entry::V(self)
     }
 }
 
 impl Into<Entry> for Edge {
     fn into(self) -> Entry {
-        Entry::Element(RecordElement::E(self))
+        Entry::E(self)
     }
 }
 
 impl Into<Entry> for GraphPath {
     fn into(self) -> Entry {
-        Entry::Element(RecordElement::P(self))
+        Entry::P(self)
     }
 }
 
@@ -244,18 +202,12 @@ impl Into<Entry> for VertexOrEdge {
 
 impl Into<Entry> for CommonObject {
     fn into(self) -> Entry {
-        Entry::Element(RecordElement::OffGraph(self))
+        Entry::OffGraph(self)
     }
 }
 
-impl Into<Entry> for RecordElement {
-    fn into(self) -> Entry {
-        Entry::Element(self)
-    }
-}
-
-impl Context<RecordElement> for Record {
-    fn get(&self, tag: Option<&NameOrId>) -> Option<&RecordElement> {
+impl Context<Entry> for Record {
+    fn get(&self, tag: Option<&NameOrId>) -> Option<&Entry> {
         let tag = if let Some(tag) = tag {
             match tag {
                 // TODO: may better throw an unsupported error if tag is a string_tag
@@ -267,75 +219,81 @@ impl Context<RecordElement> for Record {
         };
         self.get(tag)
             .map(|entry| match entry.as_ref() {
-                Entry::Element(element) => Some(element),
                 Entry::Collection(_) => None,
+                _ => Some(entry.as_ref()),
             })
             .unwrap_or(None)
     }
 }
 
-impl Element for RecordElement {
+impl Element for Entry {
     fn details(&self) -> Option<&DynDetails> {
         match self {
-            RecordElement::V(v) => v.details(),
-            RecordElement::E(e) => e.details(),
-            RecordElement::P(p) => p.details(),
-            RecordElement::OffGraph(_) => None,
+            Entry::V(v) => v.details(),
+            Entry::E(e) => e.details(),
+            Entry::P(p) => p.details(),
+            Entry::OffGraph(_) => None,
+            Entry::Collection(_) => None,
         }
     }
 
     fn as_graph_element(&self) -> Option<&dyn GraphElement> {
         match self {
-            RecordElement::V(v) => v.as_graph_element(),
-            RecordElement::E(e) => e.as_graph_element(),
-            RecordElement::P(p) => p.as_graph_element(),
-            RecordElement::OffGraph(_) => None,
+            Entry::V(v) => v.as_graph_element(),
+            Entry::E(e) => e.as_graph_element(),
+            Entry::P(p) => p.as_graph_element(),
+            Entry::OffGraph(_) => None,
+            Entry::Collection(_) => None,
         }
     }
 
     fn len(&self) -> usize {
         match self {
-            RecordElement::V(v) => v.len(),
-            RecordElement::E(e) => e.len(),
-            RecordElement::P(p) => p.len(),
-            RecordElement::OffGraph(obj) => match obj {
+            Entry::V(v) => v.len(),
+            Entry::E(e) => e.len(),
+            Entry::P(p) => p.len(),
+            Entry::OffGraph(obj) => match obj {
                 CommonObject::None => 0,
                 CommonObject::Prop(obj) => obj.len(),
                 CommonObject::Count(_) => 1,
             },
+            Entry::Collection(c) => c.len(),
         }
     }
 
     fn as_borrow_object(&self) -> BorrowObject {
         match self {
-            RecordElement::V(v) => v.as_borrow_object(),
-            RecordElement::E(e) => e.as_borrow_object(),
-            RecordElement::P(p) => p.as_borrow_object(),
-            RecordElement::OffGraph(obj_element) => match obj_element {
+            Entry::V(v) => v.as_borrow_object(),
+            Entry::E(e) => e.as_borrow_object(),
+            Entry::P(p) => p.as_borrow_object(),
+            Entry::OffGraph(obj_element) => match obj_element {
                 CommonObject::None => BorrowObject::None,
                 CommonObject::Prop(obj) => obj.as_borrow(),
                 CommonObject::Count(cnt) => (*cnt).into(),
             },
+            Entry::Collection(_v) => unreachable!(), // TODO: fake None
         }
     }
 }
 
-impl GraphElement for RecordElement {
+impl GraphElement for Entry {
     fn id(&self) -> u64 {
         match self {
-            RecordElement::V(v) => v.id(),
-            RecordElement::E(e) => e.id(),
-            RecordElement::P(p) => p.id(),
-            RecordElement::OffGraph(_) => 0, // fake id
+            Entry::V(v) => v.id(),
+            Entry::E(e) => e.id(),
+            Entry::P(p) => p.id(),
+            Entry::OffGraph(_) => 0,   // TODO: fake id
+            Entry::Collection(_) => 0, // TODO: fake id
         }
     }
 
     fn label(&self) -> Option<&NameOrId> {
         match self {
-            RecordElement::V(v) => v.label(),
-            RecordElement::E(e) => e.label(),
-            RecordElement::P(p) => p.label(),
-            RecordElement::OffGraph(_) => None,
+            Entry::V(v) => v.label(),
+            Entry::E(e) => e.label(),
+            Entry::P(p) => p.label(),
+            Entry::OffGraph(_) => None,
+            Entry::Collection(_) => None,
         }
     }
 }
@@ -407,20 +365,17 @@ impl<E: Into<Entry>> Iterator for RecordPathExpandIter<E> {
             Some(elem) => {
                 let graph_obj = elem.into();
                 match graph_obj {
-                    Entry::Element(graph_element) => match graph_element {
-                        RecordElement::V(v) => {
-                            curr_path.append(v);
-                            record.append(curr_path, None);
-                            Some(record)
-                        }
-                        RecordElement::E(e) => {
-                            curr_path.append(e);
-                            record.append(curr_path, None);
-                            Some(record)
-                        }
-                        _ => None,
-                    },
-                    Entry::Collection(_) => None,
+                    Entry::V(v) => {
+                        curr_path.append(v);
+                        record.append(curr_path, None);
+                        Some(record)
+                    }
+                    Entry::E(e) => {
+                        curr_path.append(e);
+                        record.append(curr_path, None);
+                        Some(record)
+                    }
+                    _ => None,
                 }
             }
             None => None,
@@ -465,64 +420,27 @@ impl Decode for CommonObject {
     }
 }
 
-impl Encode for RecordElement {
-    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
-        match self {
-            RecordElement::V(v) => {
-                writer.write_u8(0)?;
-                v.write_to(writer)?;
-            }
-            RecordElement::E(e) => {
-                writer.write_u8(1)?;
-                e.write_to(writer)?;
-            }
-            RecordElement::P(p) => {
-                writer.write_u8(2)?;
-                p.write_to(writer)?;
-            }
-            RecordElement::OffGraph(object_element) => {
-                writer.write_u8(3)?;
-                object_element.write_to(writer)?;
-            }
-        }
-        Ok(())
-    }
-}
-
-impl Decode for RecordElement {
-    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
-        let opt = reader.read_u8()?;
-        match opt {
-            0 => {
-                let v = <Vertex>::read_from(reader)?;
-                Ok(RecordElement::V(v))
-            }
-            1 => {
-                let e = <Edge>::read_from(reader)?;
-                Ok(RecordElement::E(e))
-            }
-            2 => {
-                let p = <GraphPath>::read_from(reader)?;
-                Ok(RecordElement::P(p))
-            }
-            3 => {
-                let object_element = <CommonObject>::read_from(reader)?;
-                Ok(RecordElement::OffGraph(object_element))
-            }
-            _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "unreachable")),
-        }
-    }
-}
-
 impl Encode for Entry {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
         match self {
-            Entry::Element(element) => {
+            Entry::V(v) => {
                 writer.write_u8(0)?;
-                element.write_to(writer)?
+                v.write_to(writer)?;
+            }
+            Entry::E(e) => {
+                writer.write_u8(1)?;
+                e.write_to(writer)?;
+            }
+            Entry::P(p) => {
+                writer.write_u8(2)?;
+                p.write_to(writer)?;
+            }
+            Entry::OffGraph(object_element) => {
+                writer.write_u8(3)?;
+                object_element.write_to(writer)?;
             }
             Entry::Collection(collection) => {
-                writer.write_u8(1)?;
+                writer.write_u8(4)?;
                 collection.write_to(writer)?
             }
         }
@@ -535,11 +453,23 @@ impl Decode for Entry {
         let opt = reader.read_u8()?;
         match opt {
             0 => {
-                let record = <RecordElement>::read_from(reader)?;
-                Ok(Entry::Element(record))
+                let v = <Vertex>::read_from(reader)?;
+                Ok(Entry::V(v))
             }
             1 => {
-                let collection = <Vec<RecordElement>>::read_from(reader)?;
+                let e = <Edge>::read_from(reader)?;
+                Ok(Entry::E(e))
+            }
+            2 => {
+                let p = <GraphPath>::read_from(reader)?;
+                Ok(Entry::P(p))
+            }
+            3 => {
+                let object_element = <CommonObject>::read_from(reader)?;
+                Ok(Entry::OffGraph(object_element))
+            }
+            4 => {
+                let collection = <Vec<Entry>>::read_from(reader)?;
                 Ok(Entry::Collection(collection))
             }
             _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "unreachable")),
@@ -610,7 +540,7 @@ impl TryFrom<result_pb::Entry> for Entry {
     fn try_from(entry_pb: result_pb::Entry) -> Result<Self, Self::Error> {
         if let Some(inner) = entry_pb.inner {
             match inner {
-                result_pb::entry::Inner::Element(e) => Ok(Entry::Element(e.try_into()?)),
+                result_pb::entry::Inner::Element(e) => Ok(e.try_into()?),
                 result_pb::entry::Inner::Collection(c) => Ok(Entry::Collection(
                     c.collection
                         .into_iter()
@@ -624,16 +554,16 @@ impl TryFrom<result_pb::Entry> for Entry {
     }
 }
 
-impl TryFrom<result_pb::Element> for RecordElement {
+impl TryFrom<result_pb::Element> for Entry {
     type Error = ParsePbError;
     fn try_from(e: result_pb::Element) -> Result<Self, Self::Error> {
         if let Some(inner) = e.inner {
             match inner {
-                result_pb::element::Inner::Vertex(v) => Ok(RecordElement::V(v.try_into()?)),
-                result_pb::element::Inner::Edge(e) => Ok(RecordElement::E(e.try_into()?)),
-                result_pb::element::Inner::GraphPath(p) => Ok(RecordElement::P(p.try_into()?)),
+                result_pb::element::Inner::Vertex(v) => Ok(Entry::V(v.try_into()?)),
+                result_pb::element::Inner::Edge(e) => Ok(Entry::E(e.try_into()?)),
+                result_pb::element::Inner::GraphPath(p) => Ok(Entry::P(p.try_into()?)),
                 result_pb::element::Inner::Object(o) => {
-                    Ok(RecordElement::OffGraph(CommonObject::Prop(o.try_into()?)))
+                    Ok(Entry::OffGraph(CommonObject::Prop(o.try_into()?)))
                 }
             }
         } else {
@@ -667,11 +597,9 @@ impl Add for Entry {
     type Output = Entry;
 
     fn add(self, rhs: Self) -> Self::Output {
-        if let Entry::Element(RecordElement::OffGraph(o1)) = self {
-            if let Entry::Element(RecordElement::OffGraph(o2)) = rhs {
-                return o1.add(o2).into();
-            }
+        match (self, rhs) {
+            (Entry::OffGraph(o1), Entry::OffGraph(o2)) => o1.add(o2).into(),
+            _ => CommonObject::None.into(),
         }
-        CommonObject::None.into()
     }
 }

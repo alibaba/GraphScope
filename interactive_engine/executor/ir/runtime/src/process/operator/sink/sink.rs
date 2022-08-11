@@ -30,7 +30,7 @@ use prost::Message;
 
 use crate::error::FnGenResult;
 use crate::process::operator::sink::{SinkGen, Sinker};
-use crate::process::record::{CommonObject, Entry, Record, RecordElement};
+use crate::process::record::{CommonObject, Entry, Record};
 
 #[derive(Debug)]
 pub struct RecordSinkEncoder {
@@ -43,10 +43,6 @@ pub struct RecordSinkEncoder {
 impl RecordSinkEncoder {
     fn entry_to_pb(&self, e: &Entry) -> result_pb::Entry {
         let inner = match e {
-            Entry::Element(element) => {
-                let element_pb = self.element_to_pb(element);
-                Some(result_pb::entry::Inner::Element(element_pb))
-            }
             Entry::Collection(collection) => {
                 let mut collection_pb = Vec::with_capacity(collection.len());
                 for element in collection.into_iter() {
@@ -57,25 +53,29 @@ impl RecordSinkEncoder {
                     collection: collection_pb,
                 }))
             }
+            _ => {
+                let element_pb = self.element_to_pb(e);
+                Some(result_pb::entry::Inner::Element(element_pb))
+            }
         };
         result_pb::Entry { inner }
     }
 
-    fn element_to_pb(&self, e: &RecordElement) -> result_pb::Element {
+    fn element_to_pb(&self, e: &Entry) -> result_pb::Element {
         let inner = match e {
-            RecordElement::V(v) => {
+            Entry::V(v) => {
                 let vertex_pb = self.vertex_to_pb(v);
                 Some(result_pb::element::Inner::Vertex(vertex_pb))
             }
-            RecordElement::E(e) => {
+            Entry::E(e) => {
                 let edge_pb = self.edge_to_pb(e);
                 Some(result_pb::element::Inner::Edge(edge_pb))
             }
-            RecordElement::P(p) => {
+            Entry::P(p) => {
                 let path_pb = self.path_to_pb(p);
                 Some(result_pb::element::Inner::GraphPath(path_pb))
             }
-            RecordElement::OffGraph(o) => match o {
+            Entry::OffGraph(o) => match o {
                 CommonObject::None => Some(result_pb::element::Inner::Object(Object::None.into())),
                 CommonObject::Prop(obj) => {
                     let obj_pb = self.object_to_pb(obj.clone());
@@ -91,6 +91,9 @@ impl RecordSinkEncoder {
                     Some(result_pb::element::Inner::Object(value_pb))
                 }
             },
+            Entry::Collection(_) => {
+                unreachable!()
+            }
         };
         result_pb::Element { inner }
     }

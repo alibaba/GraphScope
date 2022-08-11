@@ -101,16 +101,7 @@ impl Accumulator<Entry, Entry> for EntryAccumulator {
                 Ok(CommonObject::Count(cnt).into())
             }
             EntryAccumulator::ToList(list) => {
-                let list_entry = list
-                    .finalize()?
-                    .into_iter()
-                    .map(|entry| match entry {
-                        Entry::Element(e) => Ok(e.clone()),
-                        Entry::Collection(_) => {
-                            Err(FnExecError::unsupported_error("fold collections is not supported yet"))
-                        }
-                    })
-                    .collect::<Result<Vec<_>, _>>()?;
+                let list_entry = list.finalize()?;
                 Ok(Entry::Collection(list_entry))
             }
             EntryAccumulator::ToMin(min) => min
@@ -120,16 +111,7 @@ impl Accumulator<Entry, Entry> for EntryAccumulator {
                 .finalize()?
                 .ok_or(FnExecError::accum_error("max_entry is none")),
             EntryAccumulator::ToSet(set) => {
-                let set_entry = set
-                    .finalize()?
-                    .into_iter()
-                    .map(|entry| match entry {
-                        Entry::Element(e) => Ok(e.clone()),
-                        Entry::Collection(_) => {
-                            Err(FnExecError::unsupported_error("set of collections is not supported yet"))
-                        }
-                    })
-                    .collect::<Result<Vec<_>, _>>()?;
+                let set_entry = set.finalize()?;
                 Ok(Entry::Collection(set_entry))
             }
             EntryAccumulator::ToDistinctCount(distinct_count) => {

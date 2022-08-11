@@ -27,7 +27,7 @@ use pegasus::api::function::{FilterMapFunction, FnResult};
 use crate::error::{FnExecResult, FnGenResult};
 use crate::process::operator::map::FilterMapFuncGen;
 use crate::process::operator::TagKey;
-use crate::process::record::{CommonObject, Entry, Record, RecordElement};
+use crate::process::record::{CommonObject, Entry, Record};
 
 /// Project entries with specified tags or further their properties.
 /// Notice that when projecting a single column, if the result is a None-Entry,
@@ -55,7 +55,7 @@ pub enum Projector {
 fn exec_projector(input: &Record, projector: &Projector) -> FnExecResult<Arc<Entry>> {
     let entry = match projector {
         Projector::ExprProjector(evaluator) => {
-            let projected_result = evaluator.eval::<RecordElement, Record>(Some(&input))?;
+            let projected_result = evaluator.eval::<Entry, Record>(Some(&input))?;
             Arc::new(
                 match projected_result {
                     Object::None => CommonObject::None,
