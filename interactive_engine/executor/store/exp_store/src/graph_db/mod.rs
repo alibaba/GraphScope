@@ -28,6 +28,14 @@ use crate::schema::Schema;
 use crate::table::*;
 use crate::utils::Iter;
 
+pub mod csr_topo;
+pub mod graph_db_impl;
+pub mod labeled_topo;
+
+pub use csr_topo::{CsrTopo, MutTopo};
+pub use graph_db_impl::{LargeGraphDB, MutableGraphDB};
+pub use labeled_topo::{LabeledTopology, MutLabeledTopology, PGWrapper};
+
 /// Edge id is associated with its start/end-vertex's id given by `G`, and an internal index
 /// associated with the start/end vertex.
 pub type EdgeId<G> = (G, usize);

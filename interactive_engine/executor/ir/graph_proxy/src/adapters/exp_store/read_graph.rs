@@ -692,8 +692,10 @@ mod tests {
         let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
 
         let out_iter = GRAPH.get_out_vertices(v1, Some(&vec![0]));
-        let out: Vec<DefaultId> = out_iter.map(|v| v.get_id()).collect();
-        assert_eq!(out, vec![v4, v2]);
+        let mut out: Vec<DefaultId> = out_iter.map(|v| v.get_id()).collect();
+        out.sort();
+
+        assert_eq!(out, vec![v2, v4]);
     }
 
     #[test]
