@@ -21,7 +21,6 @@
         <module>frontend</module>
         <module>executor/engine/pegasus/clients/java/client</module>
         <module>compiler</module>
-        <module>executor/engine/pegasus/clients/java/client</module>
         <module>sdk-common</module>
       </modules>
     </profile>
