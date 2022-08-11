@@ -14,6 +14,7 @@ dyn_type = { path = "../../common/dyn_type" }
 ir_common = {path = "../common"}
 pegasus = { path = "../../engine/pegasus/pegasus" }
 pegasus_common = { path = "../../engine/pegasus/common" }
+ahash = "0.8"
 
 [features]
 default = []
