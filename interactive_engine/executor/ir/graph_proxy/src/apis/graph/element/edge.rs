@@ -174,8 +174,7 @@ impl PartialEq for Edge {
 impl PartialOrd for Edge {
     // TODO: not sure if it is reasonable. Edge may be not comparable.
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.as_borrow_object()
-            .partial_cmp(&other.as_borrow_object())
+        self.id().partial_cmp(&other.id())
     }
 }
 
