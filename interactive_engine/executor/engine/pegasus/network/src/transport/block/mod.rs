@@ -15,6 +15,8 @@
 
 use std::io;
 use std::net::{SocketAddr, TcpListener, TcpStream, ToSocketAddrs};
+use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
 use std::time::Duration;
 
 use crate::receive::start_net_receiver;
@@ -54,8 +56,9 @@ pub fn listen_on<A: ToSocketAddrs>(
                                     if params.is_nonblocking {
                                         stream.set_nonblocking(true).ok();
                                     }
-                                    start_net_sender(server_id, remote, &params, &hook, write_half);
-                                    start_net_receiver(server_id, remote, hb, &params, &hook, stream);
+                                    let recv_poisoned = Arc::new(AtomicBool::new(false));
+                                    start_net_sender(server_id, remote, &params, &hook, &recv_poisoned, write_half);
+                                    start_net_receiver(server_id, remote, hb, &params, recv_poisoned, stream);
                                 }
                             } else {
                                 warn!("server {} is connected and already in use;", remote_id);
@@ -111,8 +114,9 @@ pub fn connect<A: ToSocketAddrs>(
                 let read_half = conn
                     .try_clone()
                     .expect("clone tcp stream failure;");
-                start_net_sender(local_id, remote, &params, &state, conn);
-                start_net_receiver(local_id, remote, hb_sec, &params, &state, read_half);
+                let recv_poisoned = Arc::new(AtomicBool::new(false));
+                start_net_sender(local_id, remote, &params, &state, &recv_poisoned, conn);
+                start_net_receiver(local_id, remote, hb_sec, &params, recv_poisoned, read_half);
             } else {
                 return Err(NetError::ConflictConnect(remote_id));
             }

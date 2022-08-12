@@ -110,7 +110,7 @@ pub fn register_remotes_receiver<T: Decode + 'static>(
 }
 
 pub fn start_net_receiver(
-    local: u64, remote: Server, hb_sec: u32, params: &ConnectionParams, state: &Arc<AtomicBool>,
+    local: u64, remote: Server, hb_sec: u32, params: &ConnectionParams, poisoned: Arc<AtomicBool>,
     conn: TcpStream,
 ) {
     //    let decoder = DefaultBlockDecoder::new(conn);
@@ -123,17 +123,17 @@ pub fn start_net_receiver(
     let mut net_recv = NetReceiver::new(hb_sec as u64, remote.addr, conn, decoder);
     let register = net_recv.get_inbox_register();
     add_remote_register(local, remote.id, register);
-    let disconnected = state.clone();
+    //let disconnected = state.clone();
     let guard = std::thread::Builder::new()
         .name(format!("net-recv-{}-{}", remote.id, local))
         .spawn(move || {
             while !crate::is_shutdown(local) {
                 if let Err(e) = net_recv.recv() {
                     error!("fail to read data from server {:?}, caused by {:?};", remote, e);
+                    poisoned.store(true, Ordering::SeqCst);
                     break;
                 }
             }
-            disconnected.store(true, Ordering::SeqCst);
             remove_remote_register(local, remote.id);
             info!("IPC receiver recv from {:?} exit;", remote);
         })
