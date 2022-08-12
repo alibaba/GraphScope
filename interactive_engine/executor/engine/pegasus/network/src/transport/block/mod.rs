@@ -15,8 +15,8 @@
 
 use std::io;
 use std::net::{SocketAddr, TcpListener, TcpStream, ToSocketAddrs};
-use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
+use std::sync::Arc;
 use std::time::Duration;
 
 use crate::receive::start_net_receiver;
@@ -57,8 +57,22 @@ pub fn listen_on<A: ToSocketAddrs>(
                                         stream.set_nonblocking(true).ok();
                                     }
                                     let recv_poisoned = Arc::new(AtomicBool::new(false));
-                                    start_net_sender(server_id, remote, &params, &hook, &recv_poisoned, write_half);
-                                    start_net_receiver(server_id, remote, hb, &params, recv_poisoned, stream);
+                                    start_net_sender(
+                                        server_id,
+                                        remote,
+                                        &params,
+                                        &hook,
+                                        &recv_poisoned,
+                                        write_half,
+                                    );
+                                    start_net_receiver(
+                                        server_id,
+                                        remote,
+                                        hb,
+                                        &params,
+                                        recv_poisoned,
+                                        stream,
+                                    );
                                 }
                             } else {
                                 warn!("server {} is connected and already in use;", remote_id);
