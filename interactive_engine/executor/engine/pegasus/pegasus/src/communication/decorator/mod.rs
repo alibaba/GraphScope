@@ -25,7 +25,7 @@ use crate::errors::IOError;
 use crate::graph::Port;
 use crate::progress::EndOfScope;
 use crate::tag::tools::map::TidyTagMap;
-use crate::PROFILE_FLAG;
+use crate::PROFILE_COMM_FLAG;
 use crate::{Data, Tag};
 pub mod aggregate;
 pub mod broadcast;
@@ -120,9 +120,9 @@ impl<T: Data> Push<MicroBatch<T>> for LocalMicroBatchPush<T> {
                 c.1 += batch.len();
             }
         }
-        if *PROFILE_FLAG {
+        if *PROFILE_COMM_FLAG {
             info_worker!(
-                "push batches local: output[{:?}_{:?}] push batch of {:?} to channel[{}] to self, len = {}",
+                "push batches: \t\t[local_{:?}_{:?}]\t\t push batch of {:?} to channel[{}] to self, len = {}",
                 self.ch_info.source_port,
                 self.ch_info.target_port,
                 batch.tag,

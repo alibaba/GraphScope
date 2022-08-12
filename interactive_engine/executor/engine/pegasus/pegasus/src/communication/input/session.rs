@@ -19,7 +19,7 @@ use crate::communication::input::input::InputBlockGuard;
 use crate::communication::input::InputHandle;
 use crate::data::MicroBatch;
 use crate::errors::{ErrorKind, JobExecError};
-use crate::PROFILE_FLAG;
+use crate::PROFILE_COMM_FLAG;
 use crate::{Data, Tag};
 
 pub struct InputSession<'a, D: Data> {
@@ -55,7 +55,7 @@ impl<'a, D: Data> InputSession<'a, D> {
             } else {
                 if let Some(mut batch) = self.input.next()? {
                     let is_last = batch.is_last();
-                    if *PROFILE_FLAG {
+                    if *PROFILE_COMM_FLAG {
                         if !batch.is_empty() {
                             info_worker!("handle batch of {:?}, len = {}", batch.tag, batch.len());
                         }
@@ -114,7 +114,7 @@ impl<'a, D: Data> InputSession<'a, D> {
     {
         while let Some(mut batch) = self.input.next_of(tag)? {
             let is_last = batch.is_last();
-            if *PROFILE_FLAG {
+            if *PROFILE_COMM_FLAG {
                 if !batch.is_empty() {
                     info_worker!("handle batch of {:?}, len = {}", batch.tag, batch.len());
                 }

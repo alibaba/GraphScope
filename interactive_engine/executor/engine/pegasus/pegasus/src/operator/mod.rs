@@ -33,8 +33,8 @@ use crate::progress::EndOfScope;
 use crate::schedule::state::inbound::InputEndNotify;
 use crate::schedule::state::outbound::OutputCancelState;
 use crate::tag::tools::map::TidyTagMap;
-use crate::PROFILE_FLAG;
 use crate::{Data, Tag};
+use crate::{PROFILE_COMM_FLAG, PROFILE_TIME_FLAG};
 
 pub trait Notifiable: Send + 'static {
     fn on_end(&mut self, n: End, outputs: &[Box<dyn OutputProxy>]) -> Result<(), JobExecError>;
@@ -320,11 +320,7 @@ impl Operator {
     #[inline]
     pub fn fire(&mut self) -> Result<(), JobExecError> {
         let _f = Finally::new(self.exec_st.clone());
-        if *PROFILE_FLAG {
-            info_worker!("fire operator {:?}", self.info);
-        } else {
-            debug_worker!("fire operator {:?}", self.info);
-        }
+        debug_worker!("fire operator {:?}", self.info);
         self.fire_times += 1;
 
         let mut result = self.fire_inner();
@@ -346,8 +342,8 @@ impl Operator {
         for output in self.outputs.iter() {
             output.flush()?;
         }
-        if *PROFILE_FLAG {
-            info_worker!("after fire operator {:?}", self.info);
+        if *PROFILE_COMM_FLAG {
+            info_worker!("after fire operator \t\t{:?}\t\t", self.info);
         } else {
             debug_worker!("after fire operator {:?}", self.info);
         }
@@ -375,9 +371,9 @@ impl Operator {
                 warn_worker!("close operator {:?}'s output failure, caused by {}", self.info, err);
             }
         }
-        if *PROFILE_FLAG {
+        if *PROFILE_TIME_FLAG {
             info_worker!(
-                "operator finished {:?}, fired {} times, avg fire use {}us, time_cost={:.2}ms",
+                "operator finished \t\t{:?}\t\t, fired {} times, avg fire use {}us, in ms time_cost = {:.2}",
                 self.info,
                 self.fire_times,
                 self.exec_st.get() / self.fire_times,

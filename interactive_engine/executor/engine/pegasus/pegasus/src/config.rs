@@ -14,8 +14,8 @@
 //! limitations under the License.
 
 use crate::errors::StartupError;
-use crate::PROFILE_FLAG;
 use crate::{get_servers, get_servers_len};
+use crate::{PROFILE_COMM_FLAG, PROFILE_TIME_FLAG};
 use ahash::AHasher;
 use pegasus_network::config::NetworkConfig;
 use serde::Deserialize;
@@ -179,8 +179,11 @@ impl JobConf {
 
 impl Default for JobConf {
     fn default() -> Self {
-        let plan_print =
-            if *PROFILE_FLAG { log_enabled!(log::Level::Info) } else { log_enabled!(log::Level::Trace) };
+        let plan_print = if *PROFILE_COMM_FLAG | *PROFILE_TIME_FLAG {
+            log_enabled!(log::Level::Info)
+        } else {
+            log_enabled!(log::Level::Trace)
+        };
         JobConf {
             job_id: 0,
             job_name: "anonymity".to_owned(),
