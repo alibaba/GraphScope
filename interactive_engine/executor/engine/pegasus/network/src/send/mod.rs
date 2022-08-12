@@ -209,10 +209,6 @@ pub(crate) fn start_net_sender(
         let writer = std::io::BufWriter::with_capacity(params.buffer, conn);
         let mut net_tx = NetSender::new(remote.addr, writer);
         let tx = net_tx.get_outbox_tx().as_ref().expect("");
-        while check_remotes_send_ready(local_id, &vec![remote.id]) {
-            remove_remote_sender(local_id, remote.id);
-            std::thread::sleep(Duration::from_secs(5));
-        }
         add_remote_sender(local_id, &remote, tx);
         let recv_poisoned = recv_poisoned.clone();
         std::thread::Builder::new()
@@ -230,10 +226,6 @@ pub(crate) fn start_net_sender(
     } else {
         let mut net_tx = NetSender::new(remote.addr, conn);
         let tx = net_tx.get_outbox_tx().as_ref().expect("");
-        while check_remotes_send_ready(local_id, &vec![remote.id]) {
-            remove_remote_sender(local_id, remote.id);
-            std::thread::sleep(Duration::from_secs(5));
-        }
         add_remote_sender(local_id, &remote, &tx);
         let recv_poisoned = recv_poisoned.clone();
         std::thread::Builder::new()
