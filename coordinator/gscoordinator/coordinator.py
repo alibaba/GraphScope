@@ -1672,7 +1672,7 @@ def parse_sys_args():
     parser.add_argument(
         "--monitor_host",
         type=str,
-        default="0.0.0.0",
+        default="127.0.0.1",
         help="list of comma seperated hostnames of graphscope engine workers.",
     )
     return parser.parse_args()
