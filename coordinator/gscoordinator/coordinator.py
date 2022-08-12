@@ -74,6 +74,7 @@ from gscoordinator.dag_manager import DAGManager
 from gscoordinator.dag_manager import GSEngine
 from gscoordinator.dag_manager import split_op_result
 from gscoordinator.launcher import LocalLauncher
+from gscoordinator.monitor import Monitor
 from gscoordinator.object_manager import GraphMeta
 from gscoordinator.object_manager import GremlinResultSet
 from gscoordinator.object_manager import InteractiveQueryManager
@@ -98,11 +99,6 @@ from gscoordinator.utils import op_pre_process
 from gscoordinator.utils import str2bool
 from gscoordinator.utils import to_maxgraph_schema
 from gscoordinator.version import __version__
-
-
-from gscoordinator.monitor import Monitor
-
-
 
 # endpoint of prelaunch analytical engine
 GS_DEBUG_ENDPOINT = os.environ.get("GS_DEBUG_ENDPOINT", "")
@@ -505,7 +501,6 @@ class CoordinatorServiceServicer(
                 self._object_manager.pop(op.attr[types_pb2.APP_NAME].s.decode())
         return response_head, response_bodies
 
-    
     @Monitor.runOnInteractiveEngine
     def run_on_interactive_engine(self, dag_def: op_def_pb2.DagDef):
         response_head = message_pb2.RunStepResponse(
@@ -1763,12 +1758,22 @@ def launch_graphscope():
     logger.info("Coordinator server listen at 0.0.0.0:%d", args.port)
 
     server.start()
+
     if args.monitor:
         try:
             Monitor.startServer(args.monitor_port, args.monitor_host)
-            logger.info("Coordinator monitor server listen at %s:%d", args.monitor_host, args.monitor_port)
-        except:
-            logger.exception("Failed to start monitor server")
+            logger.info(
+                "Coordinator monitor server listen at %s:%d",
+                args.monitor_host,
+                args.monitor_port,
+            )
+        except Exception as e:
+            logger.error(
+                "Failed to start monitor server {0}:{1} : {2}".format(
+                    args.monitor_host, args.monitor_port, e
+                )
+            )
+
     # handle SIGTERM signal
     def terminate(signum, frame):
         coordinator_service_servicer._cleanup()

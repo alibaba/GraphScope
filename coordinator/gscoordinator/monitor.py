@@ -17,17 +17,17 @@
 #
 
 """Monitor coordinator by prometheus"""
-from copy import copy
-from prometheus_client import start_http_server
-from prometheus_client.metrics_core import GaugeMetricFamily
-from prometheus_client import Counter
-from prometheus_client import Gauge
-import prometheus_client
+import copy
 import functools
-import timeit
 import re
 import time
-import copy
+import timeit
+
+import prometheus_client
+from prometheus_client import Counter
+from prometheus_client import Gauge
+from prometheus_client import start_http_server
+from prometheus_client.metrics_core import GaugeMetricFamily
 
 op_name_dict = {
     0: "CREATE_GRAPH",
@@ -76,7 +76,7 @@ op_name_dict = {
     80: "FROM_NUMPY",
     81: "FROM_DATAFRAME",
     82: "FROM_FILE",
-    90: "GET_ENGINE_CONFIG"
+    90: "GET_ENGINE_CONFIG",
 }
 
 prometheus_client.REGISTRY.unregister(prometheus_client.PROCESS_COLLECTOR)
@@ -104,33 +104,49 @@ class TemGuage(object):
         if not isinstance(label_names, list):
             raise TypeError("label_names must be a list")
         if len(label_names) != len(self.labels):
-            raise ValueError("{0} labels are expected, but {1} labels are given".format(len(self.labels), len(label_names)))
+            raise ValueError(
+                "{0} labels are expected, but {1} labels are given".format(
+                    len(self.labels), len(label_names)
+                )
+            )
         g = GaugeMetricFamily(self.name, self.docs, labels=self.labels)
         g.add_metric(label_names, value, time.time())
         self.metrics.append(g)
 
 
 class Monitor:
-    """This class is used to collect monitor decorators.
-    """
-    
+    """This class is used to collect monitor decorators."""
+
     app_name = ""
     graph_name = ""
 
     label_pat = re.compile("^.+Query.+name:\s+app_(.+)_.+,.+name:\s+(.+)$")
     data_pat = re.compile("^.+Finished\s+(.+val.*),\s+time:\s+(.+)\s+.+$")
 
-    sessionState = Gauge("session_state", "The session's state: 1 contected or 0 closed")
+    sessionState = Gauge(
+        "session_state", "The session's state: 1 contected or 0 closed"
+    )
 
-    analyticalRequestCounter = Counter("analytical_request", "Count requests of analytical requests")
+    analyticalRequestCounter = Counter(
+        "analytical_request", "Count requests of analytical requests"
+    )
     # analyticalRequestGauge = Gauge("analytical_request_time", "The analytical opration task time", ["op_name"])
-    analyticalRequestGauge = TemGuage("analytical_request_time", "The analytical opration task time", ["op_name"])
+    analyticalRequestGauge = TemGuage(
+        "analytical_request_time", "The analytical opration task time", ["op_name"]
+    )
 
-    interactiveRequestCounter = Counter("interactive_request", "Count requests of interactive requests")
-    interactiveRequestGauge = Gauge("interactive_request_time", "The interactive opration task time", ["op_name"])
+    interactiveRequestCounter = Counter(
+        "interactive_request", "Count requests of interactive requests"
+    )
+    interactiveRequestGauge = Gauge(
+        "interactive_request_time", "The interactive opration task time", ["op_name"]
+    )
 
-    analyticalPerformace = TemGuage("analytical_performance",
-                                    "The analytical opration task time of each round", ["app", "graph", "round"])
+    analyticalPerformace = TemGuage(
+        "analytical_performance",
+        "The analytical opration task time of each round",
+        ["app", "graph", "round"],
+    )
 
     prometheus_client.REGISTRY.register(analyticalPerformace)
     prometheus_client.REGISTRY.register(analyticalRequestGauge)
@@ -147,6 +163,7 @@ class Monitor:
             if result and result.session_id:
                 cls.sessionState.set(1)
             return result
+
         return connectSessionWarp
 
     @classmethod
@@ -156,6 +173,7 @@ class Monitor:
             if request and request.session_id:
                 cls.sessionState.set(0)
             return func(instance, request, context)
+
         return closeSessionWrap
 
     @classmethod
@@ -165,6 +183,7 @@ class Monitor:
             func(instance, *args, **kwargs)
             cls.sessionState.set(0)
             return
+
         return cleanupWrap
 
     @classmethod
@@ -179,9 +198,10 @@ class Monitor:
 
             ops = dag_def.op
             op_name = cls.__get_op_name(ops)
-            cls.analyticalRequestGauge.add_metric([op_name], end_time-start_time)
+            cls.analyticalRequestGauge.add_metric([op_name], end_time - start_time)
             # cls.analyticalRequestGauge.labels(op_name).set(end_time - start_time)
             return res
+
         return runOnAnalyticalEngineWarp
 
     @classmethod
@@ -198,6 +218,7 @@ class Monitor:
             op_name = cls.__get_op_name(ops)
             cls.interactiveRequestGauge.labels(op_name).set(end_time - start_time)
             return res
+
         return runOnInteractiveEngineWarp
 
     @classmethod

@@ -20,7 +20,9 @@ from queue import Queue
 
 from tqdm import tqdm
 from tqdm.utils import ObjectWrapper
+
 from gscoordinator.monitor import Monitor
+
 
 class LoadingProgressTracker:
     progbar = None
@@ -63,7 +65,7 @@ class StdStreamWrapper(ObjectWrapper):
         line = self._filter_progress(line)
         if line is None:
             return
-        
+
         label_p = Monitor.label_pat.match(line)
         if label_p is not None:
             Monitor.app_name, Monitor.graph_name = label_p.group(1), label_p.group(2)
@@ -76,8 +78,10 @@ class StdStreamWrapper(ObjectWrapper):
                 round_name = round_name.split("-")[-1].strip()
                 if len(round_name) == 1:
                     round_name = "0" + round_name
-            Monitor.analyticalPerformace.add_metric([Monitor.app_name, Monitor.graph_name,round_name],float(val))
-            
+            Monitor.analyticalPerformace.add_metric(
+                [Monitor.app_name, Monitor.graph_name, round_name], float(val)
+            )
+
         self._stream_backup.write(line)
         self._stream_backup.flush()
         line = line.encode("utf-8", "ignore").decode("utf-8")
