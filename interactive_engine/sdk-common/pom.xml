@@ -146,7 +146,7 @@
           <protocArtifact>com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}
           </protocArtifact>
           <pluginId>proto</pluginId>
-          <pluginArtifact>io.grpc:protoc-gen-grpc-java:1.0.0:exe:${os.detected.classifier}
+          <pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:${os.detected.classifier}
           </pluginArtifact>
           <outputDirectory>src/main/generated</outputDirectory>
           <clearOutputDirectory>false</clearOutputDirectory>

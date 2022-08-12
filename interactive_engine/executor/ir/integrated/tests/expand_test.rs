@@ -120,12 +120,13 @@ mod test {
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
         let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
-        let expected_edges = vec![(v1, v4), (v1, v2)];
+        let expected_edges = vec![(v1, v2), (v1, v4)];
         while let Some(Ok(record)) = result.next() {
             if let Some(e) = record.get(None).unwrap().as_graph_edge() {
                 result_edges.push((e.src_id as usize, e.dst_id as usize));
             }
         }
+        result_edges.sort();
         assert_eq!(result_edges, expected_edges)
     }
 

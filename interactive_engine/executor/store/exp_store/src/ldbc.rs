@@ -31,11 +31,10 @@ use csv::{Reader, ReaderBuilder};
 use petgraph::graph::IndexType;
 
 use super::graph_db::*;
-use super::graph_db_impl::LargeGraphDB;
 use crate::common::{DefaultId, InternalId, LabelId, INVALID_LABEL_ID};
 use crate::config::{GraphDBConfig, JsonConf};
 use crate::error::{GDBError, GDBResult};
-use crate::graph_db_impl::MutableGraphDB;
+use crate::graph_db::graph_db_impl::{LargeGraphDB, MutableGraphDB};
 use crate::parser::{parse_properties, EdgeMeta, ParserTrait, VertexMeta};
 use crate::schema::{LDBCGraphSchema, Schema, ID_FIELD, LABEL_FIELD};
 
@@ -71,7 +70,6 @@ pub fn is_vertex_file(fname: &str) -> bool {
 }
 
 /// `LDBCParser` defines parsing from the original LDBC-generated raw files.
-#[derive(Clone)]
 pub enum LDBCParser<G = DefaultId> {
     Vertex(LDBCVertexParser<G>),
     Edge(LDBCEdgeParser<G>),
@@ -98,13 +96,13 @@ impl<G> LDBCParser<G> {
 
     pub fn edge_parser(
         src_vertex_type_id: LabelId, dst_vertex_type_id: LabelId, edge_type_id: LabelId,
-        schema: Arc<dyn Schema>,
+        _schema: Arc<dyn Schema>,
     ) -> GDBResult<Self> {
         Ok(LDBCParser::Edge(LDBCEdgeParser {
             src_vertex_type: src_vertex_type_id,
             dst_vertex_type: dst_vertex_type_id,
             edge_type: edge_type_id,
-            schema,
+            // schema,
             ph: PhantomData,
         }))
     }
@@ -194,12 +192,11 @@ impl<G: FromStr + PartialEq + Default + IndexType> ParserTrait<G> for LDBCVertex
 }
 
 /// Define parsing a LDBC edge
-#[derive(Clone)]
 pub struct LDBCEdgeParser<G = DefaultId> {
     src_vertex_type: LabelId,
     dst_vertex_type: LabelId,
     edge_type: LabelId,
-    schema: Arc<dyn Schema>,
+    // schema: Arc<dyn Schema>,
     ph: PhantomData<G>,
 }
 
@@ -762,6 +759,7 @@ mod test {
         // load whole graph
         loader.load().expect("Load ldbc data error!");
         let graphdb = loader.into_graph();
+        graphdb.print_statistics();
 
         // Check the loaded properties
         let records: Vec<&str> = vec![
