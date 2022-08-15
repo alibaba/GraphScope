@@ -189,6 +189,10 @@ jobs:
         helm test ci --timeout 5m0s
         cd ${GITHUB_WORKSPACE}/python
         python3 -m pytest -s -vvv graphscope/tests/kubernetes/test_store_service.py -k test_demo_after_restart
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      if: always()
+
     - name: Clean
       if: always()
       run: |
