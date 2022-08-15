@@ -65,13 +65,13 @@ jobs:
     - name: Build Ir on Experimental Store
       run: |
         source ${HOME}/.bashrc
-        cd ${GITHUB_WORKSPACE}/interactive_engine/executor/ir/compiler
+        cd ${GITHUB_WORKSPACE}/interactive_engine/compiler
         make build
 
     - name: Ir Unit Test
       run: |
         source ${HOME}/.bashrc
-        cd ${GITHUB_WORKSPACE}/interactive_engine/executor/ir/compiler && make test
+        cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && make test
 
     - name: CommonType Unit Test
       run: |
@@ -90,7 +90,7 @@ jobs:
     - name: Ir Integration Test on Experimental Store
       run: |
         source ${HOME}/.bashrc
-        cd ${GITHUB_WORKSPACE}/interactive_engine/executor/ir/compiler && ./ir_exprimental_ci.sh
+        cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && ./ir_exprimental_ci.sh
 
     - name: Upload GIE log
       if: always()
