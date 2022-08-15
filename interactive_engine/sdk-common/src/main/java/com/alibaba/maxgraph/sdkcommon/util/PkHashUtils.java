@@ -14,6 +14,7 @@
 package com.alibaba.maxgraph.sdkcommon.util;
 
 import java.nio.ByteBuffer;
+import java.nio.Buffer;
 import java.util.List;
 
 /**
@@ -31,7 +32,7 @@ public final class PkHashUtils {
 
     public static long hash(int labelId, List<byte[]> pks) {
         ByteBuffer buffer = THREAD_BUFFER.get();
-        buffer.clear();
+        ((Buffer) buffer).clear();
         buffer.putInt(labelId);
         for (byte[] pk : pks) {
             buffer.putInt(pk.length);

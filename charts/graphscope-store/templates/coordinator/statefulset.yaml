@@ -167,7 +167,7 @@ spec:
         resources:
           requests:
             storage: {{ .Values.coordinator.persistence.size | quote }}
-        {{ include "graphscope-store.storage.class" .Values.coordinator.persistence }}
+        {{ include "graphscope-store.storageClass" . | nindent 8 }}
         {{- if .Values.coordinator.persistence.selector }}
         selector: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.coordinator.persistence.selector "context" $) | nindent 10 }}
         {{- end -}}
