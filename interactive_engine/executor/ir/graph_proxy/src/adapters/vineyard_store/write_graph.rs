@@ -19,7 +19,7 @@ use global_query::store_impl::v6d::read_ffi::*;
 use global_query::store_impl::v6d::write_ffi::*;
 use ir_common::generated::common as common_pb;
 use ir_common::generated::schema as schema_pb;
-use ir_common::{KeyId, NameOrId, OneOrMany};
+use ir_common::{KeyId, LabelId, NameOrId, OneOrMany};
 
 use crate::apis::graph::PKV;
 use crate::apis::{Details, DynDetails, WriteGraphProxy};
@@ -56,9 +56,8 @@ impl VineyardGraphWriter {
         }
     }
 
-    fn encode_ffi_label(&self, key: NameOrId) -> GraphProxyResult<FfiLabelId> {
-        let key_id = self.encode_key(key)?;
-        Ok(key_id as FfiLabelId)
+    fn encode_ffi_label(&self, label: LabelId) -> GraphProxyResult<FfiLabelId> {
+        Ok(label as FfiLabelId)
     }
 
     fn encode_key(&self, key: NameOrId) -> GraphProxyResult<KeyId> {
@@ -89,7 +88,7 @@ impl VineyardGraphWriter {
 
 impl WriteGraphProxy for VineyardGraphWriter {
     fn add_vertex(
-        &mut self, label: NameOrId, vertex_pk: PKV, properties: Option<DynDetails>,
+        &mut self, label: LabelId, vertex_pk: PKV, properties: Option<DynDetails>,
     ) -> GraphProxyResult<()> {
         let vertex_id = self.encode_ffi_id(vertex_pk)?;
         let label_id = self.encode_ffi_label(label)?;
@@ -107,8 +106,8 @@ impl WriteGraphProxy for VineyardGraphWriter {
     }
 
     fn add_edge(
-        &mut self, label: NameOrId, src_vertex_label: NameOrId, src_vertex_pk: PKV,
-        dst_vertex_label: NameOrId, dst_vertex_pk: PKV, properties: Option<DynDetails>,
+        &mut self, label: LabelId, src_vertex_label: LabelId, src_vertex_pk: PKV,
+        dst_vertex_label: LabelId, dst_vertex_pk: PKV, properties: Option<DynDetails>,
     ) -> GraphProxyResult<()> {
         let edge_label = self.encode_ffi_label(label)?;
         let src_id = self.encode_ffi_id(src_vertex_pk)?;

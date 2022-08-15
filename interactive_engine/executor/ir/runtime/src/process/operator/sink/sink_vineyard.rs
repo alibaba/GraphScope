@@ -217,8 +217,8 @@ mod tests {
             let dst_id = self.encode_id(dst_vertex_pk);
             let eid = encode_eid(src_id, dst_id);
             let mut edge = Edge::new(eid, Some(label.clone()), src_id, dst_id, properties.unwrap().clone());
-            edge.set_src_label(Some(src_vertex_label.clone()));
-            edge.set_src_label(Some(dst_vertex_label.clone()));
+            edge.set_src_label(src_vertex_label.clone());
+            edge.set_src_label(dst_vertex_label.clone());
             self.edges
                 .lock()
                 .map_err(|_e| GraphProxyError::write_graph_error("add_edge failed"))?

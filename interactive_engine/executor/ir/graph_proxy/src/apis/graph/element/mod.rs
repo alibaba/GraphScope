@@ -18,7 +18,7 @@ use std::hash::Hash;
 
 use dyn_type::{BorrowObject, Object};
 pub use edge::Edge;
-use ir_common::NameOrId;
+use ir_common::LabelId;
 pub use path::GraphPath;
 pub use path::VertexOrEdge;
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
@@ -53,7 +53,7 @@ pub trait Element {
 /// `GraphElement` is a special `Element` with extra properties of `id` and `label`.
 pub trait GraphElement: Element {
     fn id(&self) -> ID;
-    fn label(&self) -> Option<&NameOrId>;
+    fn label(&self) -> Option<&LabelId>;
 }
 
 impl Element for () {
@@ -156,7 +156,7 @@ impl GraphElement for GraphObject {
         }
     }
 
-    fn label(&self) -> Option<&NameOrId> {
+    fn label(&self) -> Option<&LabelId> {
         match self {
             GraphObject::V(v) => v.label(),
             GraphObject::E(e) => e.label(),

@@ -20,14 +20,16 @@ use std::sync::Arc;
 
 use dyn_type::{Object, Primitives};
 use global_query::store_api::prelude::Property;
-use global_query::store_api::{Edge as StoreEdge, LabelId, PartitionId, Vertex as StoreVertex, VertexId};
+use global_query::store_api::{
+    Edge as StoreEdge, LabelId as StoreLabelId, PartitionId, Vertex as StoreVertex, VertexId,
+};
 use global_query::store_api::{PropId, SnapshotId};
 use global_query::{
     GlobalGraphQuery, GraphPartitionManager, PartitionLabeledVertexIds, PartitionVertexIds,
 };
 use graph_store::utils::IterList;
-use ir_common::{KeyId, NameOrId};
-use ir_common::{NameOrId as Label, OneOrMany};
+use ir_common::OneOrMany;
+use ir_common::{KeyId, LabelId, NameOrId};
 use pegasus_common::downcast::*;
 
 use crate::apis::graph::PKV;
@@ -120,7 +122,7 @@ where
     }
 
     fn index_scan_vertex(
-        &self, label_id: &NameOrId, primary_key: &PKV, _params: &QueryParams,
+        &self, label_id: &LabelId, primary_key: &PKV, _params: &QueryParams,
     ) -> GraphProxyResult<Option<Vertex>> {
         // get_vertex_id_by_primary_keys() is a global query function, that is,
         // you can query vertices (with only vertex id) by pks on any graph partitions (not matter locally or remotely).
@@ -410,8 +412,8 @@ fn to_runtime_edge<E: StoreEdge>(e: &E) -> Edge {
     // TODO: new an edge with with_from_src()
     let mut edge =
         Edge::new(id, Some(label), e.get_src_id() as ID, e.get_dst_id() as ID, DynDetails::new(properties));
-    edge.set_src_label(Some(NameOrId::Id(e.get_src_label_id() as KeyId)));
-    edge.set_dst_label(Some(NameOrId::Id(e.get_dst_label_id() as KeyId)));
+    edge.set_src_label(e.get_src_label_id() as LabelId);
+    edge.set_dst_label(e.get_dst_label_id() as LabelId);
     edge
 }
 
@@ -597,7 +599,7 @@ fn encode_storage_prop_keys(prop_names: Option<&Vec<NameOrId>>) -> GraphProxyRes
                     )),
                     NameOrId::Id(prop_id) => Ok(*prop_id as PropId),
                 })
-                .collect::<Result<Vec<LabelId>, _>>()?;
+                .collect::<Result<Vec<StoreLabelId>, _>>()?;
             Ok(Some(encoded_prop_ids))
         }
     } else {
@@ -606,31 +608,26 @@ fn encode_storage_prop_keys(prop_names: Option<&Vec<NameOrId>>) -> GraphProxyRes
 }
 
 #[inline]
-fn encode_storage_labels(labels: &Vec<Label>) -> GraphProxyResult<Vec<LabelId>> {
+fn encode_storage_labels(labels: &Vec<LabelId>) -> GraphProxyResult<Vec<StoreLabelId>> {
     labels
         .iter()
         .map(|label| encode_storage_label(label))
-        .collect::<Result<Vec<LabelId>, _>>()
+        .collect::<Result<Vec<StoreLabelId>, _>>()
 }
 
 #[inline]
-fn encode_storage_label(label: &NameOrId) -> GraphProxyResult<LabelId> {
-    match label {
-        Label::Str(_) => {
-            Err(GraphProxyError::query_store_error("encode storage label error, should provide label_id"))
-        }
-        Label::Id(id) => Ok(*id as LabelId),
-    }
+fn encode_storage_label(label: &LabelId) -> GraphProxyResult<StoreLabelId> {
+    Ok(*label as StoreLabelId)
 }
 
 #[inline]
-fn encode_runtime_v_label<V: StoreVertex>(v: &V) -> NameOrId {
-    NameOrId::Id(v.get_label_id() as KeyId)
+fn encode_runtime_v_label<V: StoreVertex>(v: &V) -> LabelId {
+    v.get_label_id() as LabelId
 }
 
 #[inline]
-fn encode_runtime_e_label<E: StoreEdge>(e: &E) -> NameOrId {
-    NameOrId::Id(e.get_label_id() as KeyId)
+fn encode_runtime_e_label<E: StoreEdge>(e: &E) -> LabelId {
+    e.get_label_id() as LabelId
 }
 
 #[inline]
@@ -722,7 +719,7 @@ fn encode_store_prop_val(prop_val: Object) -> Property {
 }
 
 /// Transform type of ids to PartitionLabeledVertexIds as required by graphscope store,
-/// which consists of (PartitionId, Vec<(Option<LabelId>, Vec<VertexId>)>)
+/// which consists of (PartitionId, Vec<(Option<StoreLabelId>, Vec<VertexId>)>)
 fn get_partition_label_vertex_ids(
     ids: &[ID], graph_partition_manager: Arc<dyn GraphPartitionManager>,
 ) -> Vec<PartitionLabeledVertexIds> {

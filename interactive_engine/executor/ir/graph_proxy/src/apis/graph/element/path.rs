@@ -21,7 +21,7 @@ use std::hash::{Hash, Hasher};
 use dyn_type::BorrowObject;
 use ir_common::error::ParsePbError;
 use ir_common::generated::results as result_pb;
-use ir_common::NameOrId;
+use ir_common::LabelId;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::apis::{DynDetails, Edge, Element, GraphElement, Vertex, ID};
@@ -127,7 +127,7 @@ impl GraphElement for VertexOrEdge {
         }
     }
 
-    fn label(&self) -> Option<&NameOrId> {
+    fn label(&self) -> Option<&LabelId> {
         match self {
             VertexOrEdge::V(v) => v.label(),
             VertexOrEdge::E(e) => e.label(),
@@ -169,7 +169,7 @@ impl GraphElement for GraphPath {
         }
     }
 
-    fn label(&self) -> Option<&NameOrId> {
+    fn label(&self) -> Option<&LabelId> {
         None
     }
 }

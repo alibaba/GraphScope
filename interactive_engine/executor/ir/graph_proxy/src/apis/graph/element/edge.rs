@@ -21,7 +21,7 @@ use std::io;
 use dyn_type::BorrowObject;
 use ir_common::error::ParsePbError;
 use ir_common::generated::results as result_pb;
-use ir_common::NameOrId;
+use ir_common::{LabelId, NameOrId};
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::apis::{read_id, write_id, DynDetails, Element, GraphElement, ID};
@@ -30,11 +30,11 @@ use crate::utils::expr::eval::Context;
 #[derive(Clone, Debug)]
 pub struct Edge {
     id: ID,
-    label: Option<NameOrId>,
+    label: Option<LabelId>,
     pub src_id: ID,
     pub dst_id: ID,
-    pub src_label: Option<NameOrId>,
-    pub dst_label: Option<NameOrId>,
+    pub src_label: Option<LabelId>,
+    pub dst_label: Option<LabelId>,
     /// An indicator for whether this edge is obtained from the source or destination vertex
     from_src: bool,
     details: DynDetails,
@@ -63,13 +63,13 @@ impl GraphElement for Edge {
         self.id
     }
 
-    fn label(&self) -> Option<&NameOrId> {
+    fn label(&self) -> Option<&LabelId> {
         self.label.as_ref()
     }
 }
 
 impl Edge {
-    pub fn new(id: ID, label: Option<NameOrId>, src: ID, dst: ID, details: DynDetails) -> Self {
+    pub fn new(id: ID, label: Option<LabelId>, src: ID, dst: ID, details: DynDetails) -> Self {
         Edge {
             id,
             label,
@@ -83,24 +83,24 @@ impl Edge {
     }
 
     pub fn with_from_src(
-        id: ID, label: Option<NameOrId>, src: ID, dst: ID, from_src: bool, details: DynDetails,
+        id: ID, label: Option<LabelId>, src: ID, dst: ID, from_src: bool, details: DynDetails,
     ) -> Self {
         Edge { id, label, src_id: src, dst_id: dst, src_label: None, dst_label: None, from_src, details }
     }
 
-    pub fn set_src_label(&mut self, label: Option<NameOrId>) {
-        self.src_label = label;
+    pub fn set_src_label(&mut self, label: LabelId) {
+        self.src_label = Some(label);
     }
 
-    pub fn set_dst_label(&mut self, label: Option<NameOrId>) {
-        self.dst_label = label;
+    pub fn set_dst_label(&mut self, label: LabelId) {
+        self.dst_label = Some(label);
     }
 
-    pub fn get_src_label(&self) -> Option<&NameOrId> {
+    pub fn get_src_label(&self) -> Option<&LabelId> {
         self.src_label.as_ref()
     }
 
-    pub fn get_dst_label(&self) -> Option<&NameOrId> {
+    pub fn get_dst_label(&self) -> Option<&LabelId> {
         self.dst_label.as_ref()
     }
 
@@ -112,7 +112,7 @@ impl Edge {
         }
     }
 
-    pub fn get_other_label(&self) -> Option<&NameOrId> {
+    pub fn get_other_label(&self) -> Option<&LabelId> {
         if self.from_src {
             self.get_dst_label()
         } else {
@@ -142,11 +142,11 @@ impl Encode for Edge {
 impl Decode for Edge {
     fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
         let id = read_id(reader)?;
-        let label = <Option<NameOrId>>::read_from(reader)?;
+        let label = <Option<LabelId>>::read_from(reader)?;
         let src_id = read_id(reader)?;
         let dst_id = read_id(reader)?;
-        let src_label = <Option<NameOrId>>::read_from(reader)?;
-        let dst_label = <Option<NameOrId>>::read_from(reader)?;
+        let src_label = <Option<LabelId>>::read_from(reader)?;
+        let dst_label = <Option<LabelId>>::read_from(reader)?;
         let from_src = <bool>::read_from(reader)?;
         let details = <DynDetails>::read_from(reader)?;
         Ok(Edge { id, label, src_id, dst_id, src_label, dst_label, from_src, details })
@@ -181,7 +181,7 @@ impl PartialOrd for Edge {
 impl TryFrom<result_pb::Edge> for Edge {
     type Error = ParsePbError;
     fn try_from(e: result_pb::Edge) -> Result<Self, Self::Error> {
-        let mut edge = Edge::new(
+        let edge = Edge::new(
             e.id as ID,
             e.label
                 .map(|label| label.try_into())
@@ -190,16 +190,13 @@ impl TryFrom<result_pb::Edge> for Edge {
             e.dst_id as ID,
             DynDetails::default(),
         );
-        edge.set_src_label(
-            e.src_label
-                .map(|label| label.try_into())
-                .transpose()?,
-        );
-        edge.set_dst_label(
-            e.dst_label
-                .map(|label| label.try_into())
-                .transpose()?,
-        );
+        // TODO: set label for edges
+        // if let Some(src_label) = e.src_label {
+        //     edge.set_src_label(src_label);
+        // }
+        // if let Some(dst_label) = e.dst_label {
+        //     edge.set_dst_label(dst_label);
+        // }
         Ok(edge)
     }
 }

@@ -453,10 +453,7 @@ impl Evaluate for Operand {
                                     .as_graph_element()
                                     .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?
                                     .label()
-                                    .map(|label| match label {
-                                        NameOrId::Str(str) => str.clone().into(),
-                                        NameOrId::Id(id) => (*id).into(),
-                                    })
+                                    .map(|label| (*label).into())
                                     .ok_or(ExprEvalError::GetNoneFromContext)?,
                                 PropKey::Len => element.len().into(),
                                 PropKey::All => element

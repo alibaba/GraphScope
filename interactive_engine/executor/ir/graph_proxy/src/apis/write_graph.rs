@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use ir_common::NameOrId;
+use ir_common::LabelId;
 
 use crate::apis::graph::PKV;
 use crate::apis::DynDetails;
@@ -23,13 +23,13 @@ use crate::GraphProxyResult;
 pub trait WriteGraphProxy: Send + Sync {
     /// Add a vertex
     fn add_vertex(
-        &mut self, label: NameOrId, vertex_pk: PKV, properties: Option<DynDetails>,
+        &mut self, label: LabelId, vertex_pk: PKV, properties: Option<DynDetails>,
     ) -> GraphProxyResult<()>;
 
     /// Add an edge
     fn add_edge(
-        &mut self, label: NameOrId, src_vertex_label: NameOrId, src_vertex_pk: PKV,
-        dst_vertex_label: NameOrId, dst_vertex_pk: PKV, properties: Option<DynDetails>,
+        &mut self, label: LabelId, src_vertex_label: LabelId, src_vertex_pk: PKV,
+        dst_vertex_label: LabelId, dst_vertex_pk: PKV, properties: Option<DynDetails>,
     ) -> GraphProxyResult<()>;
 
     /// A hint of all vertices/edges are added.
