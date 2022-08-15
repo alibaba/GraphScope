@@ -98,19 +98,10 @@ jobs:
         retention-days: 5
 
   helm-test:
-    runs-on: [self-hosted, "47.242.9.60"]
+    runs-on: [self-hosted, ubuntu2004 ]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     needs: [gremlin-test]
     steps:
-    - name: Clean Up
-      run: |
-        echo "CI is running on host $(curl -s 'https://api.ipify.org')"
-        sudo chmod -R a+wrx ${GITHUB_WORKSPACE}
-        sudo rm -rf ./* || true
-        find ./ -name "*.egg-info" | xargs sudo rm -rf || true
-        find ./ -name "*.whl" | xargs sudo rm -rf || true
-        find ./ -name "*_pb2.py" | xargs sudo rm -rf || true
-        find ./ -name "*_pb2_grpc.py" | xargs sudo rm -rf || true
     - uses: actions/checkout@v2
       with:
         submodules: true
@@ -130,6 +121,26 @@ jobs:
         CI: true
       run: |
         make graphscope-store-image
+
+    - name: Setup SSH
+      run: |
+        ssh-keygen -t rsa -f ~/.ssh/id_rsa -N ''
+        cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+        chmod og-wx ~/.ssh/authorized_keys
+        echo "StrictHostKeyChecking no" >> ~/.ssh/config
+        sudo /etc/init.d/ssh start
+
+    - name: Kubernetes Test
+      run: |
+        minikube start --base-image='registry-vpc.cn-hongkong.aliyuncs.com/graphscope/kicbase:v0.0.30' \
+                       --cpus='12' --memory='32000mb' --disk-size='40000mb' \
+                       --mount=true
+        # retag image for helm test
+        sudo docker tag graphscope/graphscope-store:${SHORT_SHA} \
+            ${{ env.GSS_IMAGE }}:${SHORT_SHA}
+
+        minikube image load ${{ env.GSS_IMAGE }}:${SHORT_SHA}
+
     - name: Python Test with Helm Deployment
       env:
         JAVA_HOME: /usr/lib/jvm/default-java
@@ -139,11 +150,6 @@ jobs:
         # see .github/workflows/hadoop_scripts/offline_load.sh.template
         pushd artifacts
         tar -zxf ./groot.tar.gz
-        # download gstest
-        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
-        # retag image for helm test
-        sudo docker tag graphscope/graphscope-store:${SHORT_SHA} \
-            ${{ env.GSS_IMAGE }}:${SHORT_SHA}
         # update helm dependency
         cd ${GITHUB_WORKSPACE}/charts/graphscope-store
         helm dependency update
@@ -156,6 +162,8 @@ jobs:
         export GREMLIN_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[1].nodePort}" services ci-graphscope-store-frontend)
         export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
         # 2. deploy hadoop hdfs
+        # download gstest
+        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
         cd /tmp
         wget -q https://mirror.cogentco.com/pub/apache/hadoop/common/hadoop-2.10.1/hadoop-2.10.1.tar.gz
         tar -zxf hadoop-2.10.1.tar.gz
@@ -190,13 +198,3 @@ jobs:
         cd ${GITHUB_WORKSPACE}/python
         python3 -m pytest -s -vvv graphscope/tests/kubernetes/test_store_service.py -k test_demo_after_restart
 
-    - name: Clean
-      if: always()
-      run: |
-        HADOOP_SSH_OPTS="-o StrictHostKeyChecking=no" /tmp/hadoop-2.10.1/sbin/stop-dfs.sh || true
-        rm -rf /tmp/hadoop* || true
-        helm uninstall ci || true
-        kubectl delete pvc -l app.kubernetes.io/instance=ci --wait=false || true
-        kubectl delete pod ci-graphscope-store-frontend-test-grpc-service ci-graphscope-store-frontend-test-gremlin-service --wait=false || true
-        sudo docker rmi -f graphscope/graphscope-store:${SHORT_SHA}
-        sudo docker rmi -f ${{ env.GSS_IMAGE }}:${SHORT_SHA} || true
