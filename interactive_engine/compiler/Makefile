@@ -21,19 +21,19 @@ ifeq ($(UNAME_S),Darwin)
 endif
 
 build:
-	cd $(CUR_DIR)/../../engine/pegasus/clients/java/client && \
+	cd $(CUR_DIR)/../executor/engine/pegasus/clients/java/client && \
 		mvn clean install -DskipTests --quiet $(OSFLAG) && \
-		cd $(CUR_DIR)/../integrated && cargo build --release --bin start_rpc_server && \
+		cd $(CUR_DIR)/../executor/ir/integrated && cargo build --release --bin start_rpc_server && \
 		cd $(CUR_DIR) && mvn clean package -DskipTests --quiet $(OSFLAG)
 
 clean:
-	cd $(CUR_DIR)/../../engine/pegasus/clients/java/client && mvn clean && \
-	cd $(CUR_DIR)/../ && cargo clean && \
+	cd $(CUR_DIR)/../executor/engine/pegasus/clients/java/client && mvn clean && \
+	cd $(CUR_DIR)/../executor/ir && cargo clean && \
 	cd $(CUR_DIR) && mvn clean
 
 test:
-	cd $(CUR_DIR)/../ && cargo test && \
-	cd $(CUR_DIR)/../ && cargo test --features with_v6d && \
+	cd $(CUR_DIR)/../executor/ir && cargo test && \
+	cd $(CUR_DIR)/../executor/ir && cargo test --features with_v6d && \
 	cd $(CUR_DIR) && mvn test
 
 # start rpc server
@@ -43,15 +43,15 @@ gremlin_test:
 
 submit:
 	cd $(CUR_DIR) && $(java) \
-	  -cp ".:./target/libs/*:./target/ir-compiler-1.0-SNAPSHOT.jar" \
-	  -Djna.library.path=../target/release \
+	  -cp ".:./target/libs/*:./target/compiler-1.0-SNAPSHOT.jar" \
+	  -Djna.library.path=../executor/ir/target/release \
 	  com.alibaba.graphscope.common.SubmitPlanServiceMain \
 	  $(OPT)
 
 run:
 	cd $(CUR_DIR) && $(java) \
-	  -cp ".:./target/libs/*:./target/ir-compiler-1.0-SNAPSHOT.jar" \
-	  -Djna.library.path=../target/release \
+	  -cp ".:./target/libs/*:./target/compiler-1.0-SNAPSHOT.jar" \
+	  -Djna.library.path=../executor/ir/target/release \
 	  -Dgraph.schema=${graph.schema} \
 	  com.alibaba.graphscope.gremlin.service.GraphServiceMain
 
