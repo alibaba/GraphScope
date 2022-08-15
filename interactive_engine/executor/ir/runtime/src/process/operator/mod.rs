@@ -30,7 +30,7 @@ use std::convert::TryFrom;
 use std::sync::Arc;
 
 use dyn_type::Object;
-use graph_proxy::apis::{Details, Element, GraphElement, PropKey};
+use graph_proxy::apis::{Details, Element, PropKey};
 use ir_common::error::ParsePbError;
 use ir_common::generated::common as common_pb;
 use ir_common::{KeyId, NameOrId};
@@ -74,59 +74,67 @@ impl TagKey {
     }
 
     fn get_key(&self, element: &Arc<Entry>, prop_key: &PropKey) -> FnExecResult<Entry> {
-        let prop_obj = match prop_key {
-            PropKey::Id => element.id().into(),
-            PropKey::Label => element
-                .label()
-                .cloned()
-                .map(|label| match label {
-                    NameOrId::Str(str) => str.into(),
-                    NameOrId::Id(id) => id.into(),
-                })
-                .unwrap_or(Object::None),
-            PropKey::Len => (element.len() as u64).into(),
-            PropKey::All => {
-                let details = element
-                    .details()
-                    .ok_or(FnExecError::unexpected_data_error(
-                        "Get key failed since get details from a graph element failed",
-                    ))?;
+        if let Some(element) = element.as_graph_element() {
+            let prop_obj = match prop_key {
+                PropKey::Id => element.id().into(),
+                PropKey::Label => element
+                    .label()
+                    .cloned()
+                    .map(|label| match label {
+                        NameOrId::Str(str) => str.into(),
+                        NameOrId::Id(id) => id.into(),
+                    })
+                    .unwrap_or(Object::None),
+                PropKey::Len => (element.len() as u64).into(),
+                PropKey::All => {
+                    let details = element
+                        .details()
+                        .ok_or(FnExecError::unexpected_data_error(
+                            "Get key failed since get details from a graph element failed",
+                        ))?;
 
-                if let Some(properties) = details.get_all_properties() {
-                    properties
-                        .into_iter()
-                        .map(|(key, value)| {
-                            let obj_key: Object = match key {
-                                NameOrId::Str(str) => str.into(),
-                                NameOrId::Id(id) => id.into(),
-                            };
-                            (obj_key, value)
-                        })
-                        .collect::<Vec<(Object, Object)>>()
-                        .into()
-                } else {
-                    Object::None
+                    if let Some(properties) = details.get_all_properties() {
+                        properties
+                            .into_iter()
+                            .map(|(key, value)| {
+                                let obj_key: Object = match key {
+                                    NameOrId::Str(str) => str.into(),
+                                    NameOrId::Id(id) => id.into(),
+                                };
+                                (obj_key, value)
+                            })
+                            .collect::<Vec<(Object, Object)>>()
+                            .into()
+                    } else {
+                        Object::None
+                    }
                 }
-            }
-            PropKey::Key(key) => {
-                let details = element
-                    .details()
-                    .ok_or(FnExecError::unexpected_data_error(
-                        "Get key failed since get details from a graph element failed",
-                    ))?;
-                if let Some(properties) = details.get_property(key) {
-                    properties
-                        .try_to_owned()
-                        .ok_or(FnExecError::unexpected_data_error("unable to own the `BorrowObject`"))?
-                } else {
-                    Object::None
+                PropKey::Key(key) => {
+                    let details = element
+                        .details()
+                        .ok_or(FnExecError::unexpected_data_error(
+                            "Get key failed since get details from a graph element failed",
+                        ))?;
+                    if let Some(properties) = details.get_property(key) {
+                        properties
+                            .try_to_owned()
+                            .ok_or(FnExecError::unexpected_data_error("unable to own the `BorrowObject`"))?
+                    } else {
+                        Object::None
+                    }
                 }
-            }
-        };
+            };
 
-        match prop_obj {
-            Object::None => Ok(CommonObject::None.into()),
-            _ => Ok(CommonObject::Prop(prop_obj).into()),
+            match prop_obj {
+                Object::None => Ok(CommonObject::None.into()),
+                _ => Ok(CommonObject::Prop(prop_obj).into()),
+            }
+        } else {
+            Err(FnExecError::unexpected_data_error(&format!(
+                "
+                Get key failed since get details from a none-graph element {:?} ",
+                element
+            )))
         }
     }
 }

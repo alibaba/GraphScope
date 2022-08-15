@@ -271,29 +271,7 @@ impl Element for Entry {
                 CommonObject::Prop(obj) => obj.as_borrow(),
                 CommonObject::Count(cnt) => (*cnt).into(),
             },
-            Entry::Collection(_v) => unreachable!(), // TODO: fake None
-        }
-    }
-}
-
-impl GraphElement for Entry {
-    fn id(&self) -> u64 {
-        match self {
-            Entry::V(v) => v.id(),
-            Entry::E(e) => e.id(),
-            Entry::P(p) => p.id(),
-            Entry::OffGraph(_) => 0,   // TODO: fake id
-            Entry::Collection(_) => 0, // TODO: fake id
-        }
-    }
-
-    fn label(&self) -> Option<&NameOrId> {
-        match self {
-            Entry::V(v) => v.label(),
-            Entry::E(e) => e.label(),
-            Entry::P(p) => p.label(),
-            Entry::OffGraph(_) => None,
-            Entry::Collection(_) => None,
+            Entry::Collection(_) => unreachable!(),
         }
     }
 }
