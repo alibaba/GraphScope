@@ -44,6 +44,10 @@ public class __ {
                 ((IrCustomizedTraversal) start()).out(rangeTraversal, labels);
     }
 
+    public static GraphTraversal<?, Vertex> in(final String... edgeLabels) {
+        return start().in(edgeLabels);
+    }
+
     public static GraphTraversal<?, ?> endV() {
         return ((IrCustomizedTraversal) start()).endV();
     }

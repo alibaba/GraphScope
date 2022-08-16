@@ -101,6 +101,7 @@ public class IrCustomizedTraversal<S, E> extends DefaultTraversal<S, E>
         return this.asAdmin().addStep(new GroupStep<>(this.asAdmin()));
     }
 
+    @Override
     public <K> GraphTraversal<S, Map<K, Long>> groupCount() {
         this.asAdmin().getBytecode().addStep("groupCount", new Object[0]);
         return this.asAdmin().addStep(new GroupCountStep<>(this.asAdmin()));
