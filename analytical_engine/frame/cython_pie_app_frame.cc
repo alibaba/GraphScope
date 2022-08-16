@@ -27,7 +27,7 @@
 #include <string>
 #include <utility>
 
-#include <arrow/api.h>
+#include "arrow/api.h"
 
 #include "grape/util.h"
 
