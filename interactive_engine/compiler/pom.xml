@@ -5,7 +5,7 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>ir-compiler</artifactId>
+    <artifactId>compiler</artifactId>
     <groupId>com.alibaba.graphscope</groupId>
     <version>1.0-SNAPSHOT</version>
 
@@ -131,7 +131,7 @@
                     <pluginId>grpc-java</pluginId>
                     <pluginArtifact>io.grpc:protoc-gen-grpc-java:${protoc.grpc.version}:exe:${os.detected.classifier}
                     </pluginArtifact>
-                    <protoSourceRoot>${project.basedir}/../proto/</protoSourceRoot>
+                    <protoSourceRoot>${project.basedir}/../executor/ir/proto</protoSourceRoot>
                     <outputDirectory>src/main/generated/</outputDirectory>
                     <clearOutputDirectory>false</clearOutputDirectory>
                 </configuration>
@@ -211,7 +211,7 @@
                 <version>${maven.surefire.version}</version>
                 <configuration>
                     <argLine>
-                        -Djna.library.path=${project.basedir}/../target/release
+                        -Djna.library.path=${project.basedir}/../executor/ir/target/release
                     </argLine>
                     <excludes>
                         <exclude>**/IrGremlinTest.java</exclude>
