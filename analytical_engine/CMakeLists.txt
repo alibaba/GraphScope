@@ -325,6 +325,10 @@ if (BUILD_TESTS)
     target_include_directories(run_ctx PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
     target_link_libraries(run_ctx gs_proto)
 
+    add_vineyard_app(run_property_ctx SRCS test/run_property_ctx.cc)
+    target_include_directories(run_property_ctx PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
+    target_link_libraries(run_property_ctx gs_proto)
+
     add_vineyard_app(run_pregel_app SRCS test/run_pregel_app.cc)
 
     add_vineyard_app(run_string_oid SRCS test/run_string_oid.cc)
