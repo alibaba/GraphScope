@@ -204,8 +204,17 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             int stepIdx = TraversalHelper.stepIndex(step, step.getTraversal());
             GroupOp op = new GroupOp();
             op.setGroupByKeys(new OpArg(Collections.emptyList()));
-            ArgAggFn aggFn = TraversalParentTransformFactory.GROUP_BY_STEP.getAggFn(step, stepIdx);
+            ArgAggFn aggFn =
+                    TraversalParentTransformFactory.GROUP_BY_STEP.getAggFn(step, stepIdx, 0);
             op.setGroupByValues(new OpArg(Collections.singletonList(aggFn)));
+            // count().as('a'), 'a' is the alias of aggregate result instead of the group result
+            // here remove the alias from the group step
+            FfiAlias.ByValue aggAlias = aggFn.getAlias();
+            if (aggAlias != null
+                    && aggAlias.alias != null
+                    && aggAlias.alias.opt == FfiNameIdOpt.Name) {
+                step.removeLabel(aggFn.getAlias().alias.name);
+            }
             return op;
         }
     },

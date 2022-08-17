@@ -25,13 +25,16 @@
 
 package com.alibaba.graphscope.gremlin.plugin.step;
 
+import com.alibaba.graphscope.gremlin.antlr4.GremlinAntlrToJava;
 import com.google.common.base.Objects;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal.Admin;
 import org.apache.tinkerpop.gremlin.process.traversal.Traverser;
+import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.ByModulating;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
+import org.apache.tinkerpop.gremlin.process.traversal.step.map.CountGlobalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.ReducingBarrierStep;
 import org.apache.tinkerpop.gremlin.process.traversal.traverser.TraverserRequirement;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
@@ -41,6 +44,7 @@ import java.util.*;
 // rewrite GroupCount to enable multiple group keys
 public class GroupCountStep<S, E> extends ReducingBarrierStep<S, Map<E, Long>>
         implements TraversalParent, ByModulating, MultiByModulating {
+    private char state = 'k';
     private List<Admin<S, E>> keyTraversalList;
 
     public GroupCountStep(Traversal.Admin traversal) {
@@ -51,13 +55,25 @@ public class GroupCountStep<S, E> extends ReducingBarrierStep<S, Map<E, Long>>
     // by single key
     @Override
     public void modulateBy(final Traversal.Admin<?, ?> keyTraversal) {
-        this.keyTraversalList.add(this.integrateChild(keyTraversal));
+        if ('k' == this.state) {
+            this.keyTraversalList.add(this.integrateChild(keyTraversal));
+            this.state = 'x';
+        } else {
+            throw new IllegalStateException(
+                    "The key traversals for groupCount()-step have already been set: " + this);
+        }
     }
 
     // by multiple keys
     @Override
-    public void modulateBy(final List<Admin<?, ?>> kvTraversals) {
-        kvTraversals.forEach(k -> this.keyTraversalList.add(this.integrateChild(k)));
+    public void modulateBy(final List<Admin<?, ?>> keyTraversals) {
+        if ('k' == this.state) {
+            keyTraversals.forEach(k -> this.keyTraversalList.add(this.integrateChild(k)));
+            this.state = 'x';
+        } else {
+            throw new IllegalStateException(
+                    "The key traversals for groupCount()-step have already been set: " + this);
+        }
     }
 
     @Override
@@ -69,6 +85,18 @@ public class GroupCountStep<S, E> extends ReducingBarrierStep<S, Map<E, Long>>
     public Set<TraverserRequirement> getRequirements() {
         return this.getSelfAndChildRequirements(
                 new TraverserRequirement[] {TraverserRequirement.BULK});
+    }
+
+    public List<Admin<S, E>> getKeyTraversalList() {
+        return (keyTraversalList == null || keyTraversalList.isEmpty())
+                ? Collections.singletonList(new IdentityTraversal())
+                : keyTraversalList;
+    }
+
+    public List<Admin<S, E>> getValueTraversalList() {
+        Traversal.Admin countTraversal = GremlinAntlrToJava.getTraversalSupplier().get().asAdmin();
+        countTraversal.addStep(new CountGlobalStep(countTraversal));
+        return Collections.singletonList(countTraversal);
     }
 
     @Override

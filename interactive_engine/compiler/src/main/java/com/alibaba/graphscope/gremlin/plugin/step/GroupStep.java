@@ -51,14 +51,13 @@ public final class GroupStep<S, K, V> extends ReducingBarrierStep<S, Map<K, V>>
         super(traversal);
         this.keyTraversalList = new ArrayList<>();
         this.valueTraversalList = new ArrayList<>();
-        this.valueTraversalList.add(this.integrateChild(__.fold().asAdmin()));
     }
 
     // by single key or value
     @Override
     public void modulateBy(final Admin<?, ?> kvTraversal) {
         if ('k' == this.state) {
-            this.keyTraversalList = Collections.singletonList(this.integrateChild(kvTraversal));
+            this.keyTraversalList.add(this.integrateChild(kvTraversal));
             this.state = 'v';
         } else {
             if ('v' != this.state) {
@@ -66,10 +65,7 @@ public final class GroupStep<S, K, V> extends ReducingBarrierStep<S, Map<K, V>>
                         "The key and value traversals for group()-step have already been set: "
                                 + this);
             }
-
-            this.valueTraversalList =
-                    Collections.singletonList(
-                            this.integrateChild(convertValueTraversal(kvTraversal)));
+            this.valueTraversalList.add(this.integrateChild(convertValueTraversal(kvTraversal)));
             this.state = 'x';
         }
     }
@@ -86,7 +82,6 @@ public final class GroupStep<S, K, V> extends ReducingBarrierStep<S, Map<K, V>>
                         "The key and value traversals for group()-step have already been set: "
                                 + this);
             }
-            this.valueTraversalList.clear();
             kvTraversals.forEach(
                     k ->
                             this.valueTraversalList.add(
@@ -111,11 +106,8 @@ public final class GroupStep<S, K, V> extends ReducingBarrierStep<S, Map<K, V>>
     @Override
     public List<Admin<?, ?>> getLocalChildren() {
         List<Admin<?, ?>> children = new ArrayList();
-        if (null != this.keyTraversalList) {
-            children.addAll(this.keyTraversalList);
-        }
-
-        children.addAll(this.valueTraversalList);
+        children.addAll(getKeyTraversalList());
+        children.addAll(getValueTraversalList());
         return children;
     }
 
@@ -128,11 +120,15 @@ public final class GroupStep<S, K, V> extends ReducingBarrierStep<S, Map<K, V>>
     }
 
     public List<Admin<S, K>> getKeyTraversalList() {
-        return keyTraversalList;
+        return (keyTraversalList == null || keyTraversalList.isEmpty())
+                ? Collections.singletonList(new IdentityTraversal())
+                : keyTraversalList;
     }
 
     public List<Admin<S, K>> getValueTraversalList() {
-        return valueTraversalList;
+        return (valueTraversalList == null || valueTraversalList.isEmpty())
+                ? Collections.singletonList(this.integrateChild(__.fold().asAdmin()))
+                : valueTraversalList;
     }
 
     @Override
