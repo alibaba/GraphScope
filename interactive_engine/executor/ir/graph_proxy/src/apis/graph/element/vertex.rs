@@ -45,18 +45,12 @@ impl Vertex {
 }
 
 impl Element for Vertex {
-    fn details(&self) -> Option<&DynDetails> {
-        Some(&self.details)
-    }
-
     fn as_graph_element(&self) -> Option<&dyn GraphElement> {
         Some(self)
     }
-
     fn len(&self) -> usize {
         1
     }
-
     fn as_borrow_object(&self) -> BorrowObject {
         self.id().into()
     }
@@ -66,9 +60,11 @@ impl GraphElement for Vertex {
     fn id(&self) -> ID {
         self.id
     }
-
     fn label(&self) -> Option<&LabelId> {
         self.label.as_ref()
+    }
+    fn details(&self) -> Option<&DynDetails> {
+        Some(&self.details)
     }
 }
 

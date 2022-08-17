@@ -41,10 +41,6 @@ pub struct Edge {
 }
 
 impl Element for Edge {
-    fn details(&self) -> Option<&DynDetails> {
-        Some(&self.details)
-    }
-
     fn as_graph_element(&self) -> Option<&dyn GraphElement> {
         Some(self)
     }
@@ -62,9 +58,11 @@ impl GraphElement for Edge {
     fn id(&self) -> ID {
         self.id
     }
-
     fn label(&self) -> Option<&LabelId> {
         self.label.as_ref()
+    }
+    fn details(&self) -> Option<&DynDetails> {
+        Some(&self.details)
     }
 }
 

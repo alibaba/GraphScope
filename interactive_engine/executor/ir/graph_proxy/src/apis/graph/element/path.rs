@@ -91,12 +91,6 @@ impl GraphPath {
 }
 
 impl Element for VertexOrEdge {
-    fn details(&self) -> Option<&DynDetails> {
-        match self {
-            VertexOrEdge::V(v) => v.details(),
-            VertexOrEdge::E(e) => e.details(),
-        }
-    }
     fn as_graph_element(&self) -> Option<&dyn GraphElement> {
         match self {
             VertexOrEdge::V(v) => v.as_graph_element(),
@@ -133,13 +127,15 @@ impl GraphElement for VertexOrEdge {
             VertexOrEdge::E(e) => e.label(),
         }
     }
+    fn details(&self) -> Option<&DynDetails> {
+        match self {
+            VertexOrEdge::V(v) => v.details(),
+            VertexOrEdge::E(e) => e.details(),
+        }
+    }
 }
 
 impl Element for GraphPath {
-    fn details(&self) -> Option<&DynDetails> {
-        None
-    }
-
     fn as_graph_element(&self) -> Option<&dyn GraphElement> {
         Some(self)
     }
@@ -170,6 +166,9 @@ impl GraphElement for GraphPath {
     }
 
     fn label(&self) -> Option<&LabelId> {
+        None
+    }
+    fn details(&self) -> Option<&DynDetails> {
         None
     }
 }

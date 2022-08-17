@@ -20,7 +20,7 @@ use std::ops::Add;
 use std::sync::Arc;
 
 use dyn_type::{BorrowObject, Object};
-use graph_proxy::apis::{DynDetails, Edge, Element, GraphElement, GraphPath, Vertex, VertexOrEdge};
+use graph_proxy::apis::{Edge, Element, GraphElement, GraphPath, Vertex, VertexOrEdge};
 use graph_proxy::utils::expr::eval::Context;
 use ir_common::error::ParsePbError;
 use ir_common::generated::results as result_pb;
@@ -227,16 +227,6 @@ impl Context<Entry> for Record {
 }
 
 impl Element for Entry {
-    fn details(&self) -> Option<&DynDetails> {
-        match self {
-            Entry::V(v) => v.details(),
-            Entry::E(e) => e.details(),
-            Entry::P(p) => p.details(),
-            Entry::OffGraph(_) => None,
-            Entry::Collection(_) => None,
-        }
-    }
-
     fn as_graph_element(&self) -> Option<&dyn GraphElement> {
         match self {
             Entry::V(v) => v.as_graph_element(),

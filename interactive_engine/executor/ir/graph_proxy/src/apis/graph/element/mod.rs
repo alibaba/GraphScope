@@ -30,11 +30,6 @@ mod vertex;
 
 /// An `Element` is an abstraction of the data filed in an IR `Record`.
 pub trait Element {
-    /// To obtain the data maintained by the element, mostly is a hash-table with key-value mappings,
-    /// `None` by default, if there is no data.
-    fn details(&self) -> Option<&DynDetails> {
-        None
-    }
     /// Try to turn the `Element` into a `GraphElement`,
     /// `None` by default, if it is not a `GraphElement`
     fn as_graph_element(&self) -> Option<&dyn GraphElement> {
@@ -50,6 +45,9 @@ pub trait Element {
 pub trait GraphElement: Element {
     fn id(&self) -> ID;
     fn label(&self) -> Option<&LabelId>;
+    /// To obtain the data maintained by the graph_element, mostly is a hash-table with key-value mappings,
+    /// `None` by default, if there is no data.
+    fn details(&self) -> Option<&DynDetails>;
 }
 
 impl Element for () {
