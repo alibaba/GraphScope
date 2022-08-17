@@ -62,7 +62,7 @@ public class GremlinResultAnalyzer {
                 parserType = GremlinResultParserFactory.PROJECT_VALUE;
             } else if (Utils.equalClass(step, GroupCountStep.class)
                     || Utils.equalClass(step, GroupStep.class)) {
-                parserType = GremlinResultParserFactory.GROUP;
+                parserType = GroupResultParser.create(step);
             } else if (Utils.equalClass(step, UnionStep.class)) {
                 parserType = GremlinResultParserFactory.UNION;
             } else if (Utils.equalClass(step, SubgraphStep.class)) {
