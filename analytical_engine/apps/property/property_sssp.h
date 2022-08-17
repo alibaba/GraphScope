@@ -25,6 +25,7 @@ limitations under the License.
 #include "grape/grape.h"
 
 #include "core/app/property_app_base.h"
+#include "core/context/labeled_vertex_property_context.h"
 #include "core/context/vertex_property_context.h"
 #include "core/parallel/property_message_manager.h"
 

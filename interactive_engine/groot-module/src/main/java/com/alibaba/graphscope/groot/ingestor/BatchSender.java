@@ -171,7 +171,7 @@ public class BatchSender implements MetricsAgent {
     private void sendBatch() {
         SendTask sendTask;
         try {
-            sendTask = this.sendTasks.poll(100L, TimeUnit.MILLISECONDS);
+            sendTask = this.sendTasks.poll(1000L, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             logger.warn("polling send task interrupted", e);
             return;
@@ -191,7 +191,7 @@ public class BatchSender implements MetricsAgent {
             while (operationCount < this.sendOperationLimit
                     && batchCount < this.receiverQueueSize) {
                 try {
-                    dataBatch = buffer.poll(1000L, TimeUnit.MILLISECONDS);
+                    dataBatch = buffer.poll(100L, TimeUnit.MILLISECONDS);
                 } catch (InterruptedException e) {
                     dataBatch = null;
                     logger.warn("polling send buffer interrupted", e);
