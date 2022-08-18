@@ -268,7 +268,7 @@ static inline Type GetType(const rapidjson::Value& val) {
 
 // Type string to Type
 static inline rpc::graph::DataTypePb Str2RpcType(const std::string& s) {
-  const static std::map<std::string, rpc::graph::DataTypePb> str2type = {
+  static const std::map<std::string, rpc::graph::DataTypePb> str2type = {
       {"NULL", rpc::graph::DataTypePb::NULLVALUE},
       {"BOOL", rpc::graph::DataTypePb::BOOL},
       {"INT", rpc::graph::DataTypePb::INT},
@@ -281,7 +281,7 @@ static inline rpc::graph::DataTypePb Str2RpcType(const std::string& s) {
 }
 
 static inline rpc::graph::DataTypePb DynamicType2RpcType(const Type& t) {
-  const static std::map<Type, rpc::graph::DataTypePb> type2type = {
+  static const std::map<Type, rpc::graph::DataTypePb> type2type = {
       {Type::kNullType, rpc::graph::DataTypePb::NULLVALUE},
       {Type::kBoolType, rpc::graph::DataTypePb::BOOL},
       {Type::kInt64Type, rpc::graph::DataTypePb::LONG},

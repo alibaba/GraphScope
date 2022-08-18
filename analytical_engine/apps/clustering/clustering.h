@@ -16,6 +16,7 @@ limitations under the License.
 #ifndef ANALYTICAL_ENGINE_APPS_CLUSTERING_CLUSTERING_H_
 #define ANALYTICAL_ENGINE_APPS_CLUSTERING_CLUSTERING_H_
 
+#include <unordered_map>
 #include <utility>
 #include <vector>
 

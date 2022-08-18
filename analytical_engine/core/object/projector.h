@@ -18,6 +18,7 @@
 
 #include <iosfwd>
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "boost/leaf/error.hpp"
