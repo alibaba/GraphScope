@@ -191,7 +191,8 @@ pub fn fetch_remote_sender<T: Encode + 'static>(
 }
 
 pub(crate) fn start_net_sender(
-    local_id: u64, remote: Server, params: &ConnectionParams, state: &Arc<AtomicBool>, conn: TcpStream,
+    local_id: u64, remote: Server, params: &ConnectionParams, state: &Arc<AtomicBool>,
+    recv_poisoned: &Arc<AtomicBool>, conn: TcpStream,
 ) {
     let mut is_block = !params.is_nonblocking;
     let params = params.get_write_params();
@@ -209,15 +210,12 @@ pub(crate) fn start_net_sender(
         let writer = std::io::BufWriter::with_capacity(params.buffer, conn);
         let mut net_tx = NetSender::new(remote.addr, writer);
         let tx = net_tx.get_outbox_tx().as_ref().expect("");
-        while check_remotes_send_ready(local_id, &vec![remote.id]) {
-            remove_remote_sender(local_id, remote.id);
-            std::thread::sleep(Duration::from_secs(5));
-        }
         add_remote_sender(local_id, &remote, tx);
+        let recv_poisoned = recv_poisoned.clone();
         std::thread::Builder::new()
             .name(format!("net-sender-{}", remote.id))
             .spawn(move || {
-                busy_send(&mut net_tx, is_block, timeout, local_id, remote.id);
+                busy_send(&mut net_tx, is_block, timeout, local_id, remote.id, recv_poisoned);
                 disconnected.store(true, Ordering::SeqCst);
                 net_tx
                     .take_writer()
@@ -229,15 +227,12 @@ pub(crate) fn start_net_sender(
     } else {
         let mut net_tx = NetSender::new(remote.addr, conn);
         let tx = net_tx.get_outbox_tx().as_ref().expect("");
-        while check_remotes_send_ready(local_id, &vec![remote.id]) {
-            remove_remote_sender(local_id, remote.id);
-            std::thread::sleep(Duration::from_secs(5));
-        }
         add_remote_sender(local_id, &remote, &tx);
+        let recv_poisoned = recv_poisoned.clone();
         std::thread::Builder::new()
             .name(format!("net-sender-{}", remote.id))
             .spawn(move || {
-                busy_send(&mut net_tx, is_block, timeout, local_id, remote.id);
+                busy_send(&mut net_tx, is_block, timeout, local_id, remote.id, recv_poisoned);
                 disconnected.store(true, Ordering::SeqCst);
                 net_tx
                     .take_writer()
@@ -249,9 +244,12 @@ pub(crate) fn start_net_sender(
     crate::add_network_thread(local_id, guard);
 }
 
-fn busy_send<W: Write>(net_tx: &mut NetSender<W>, block: bool, timeout: u64, local: u64, remote: u64) {
+fn busy_send<W: Write>(
+    net_tx: &mut NetSender<W>, block: bool, timeout: u64, local: u64, remote: u64,
+    recv_poisoned: Arc<AtomicBool>,
+) {
     let heart_beat_tick = crossbeam_channel::tick(Duration::from_secs(5));
-    while !crate::is_shutdown(local) {
+    while !crate::is_shutdown(local) && !recv_poisoned.load(Ordering::SeqCst) {
         let result = if block { net_tx.send(timeout) } else { net_tx.try_send(timeout) };
         match result {
             Ok(true) => {
