@@ -407,6 +407,11 @@ message SinkVineyard {
   schema.Schema graph_schema = 2;
 }
 
+// FusedOperator. Noticed that we only fused for map or filter related operators.
+message FusedOperator {
+  repeated LogicalPlan.Operator oprs = 1;
+}
+
 // A logical plan of graph relation algebra forms a DAG, where each node is an operator and the
 // edge indicates the execution flow.
 message LogicalPlan {
@@ -427,6 +432,7 @@ message LogicalPlan {
       Auxilia auxilia = 13;
       As as = 14;
       Sink sink = 15;
+      FusedOperator fused = 16;
       // Saving the room for relational operators
       GetV vertex = 30;
       EdgeExpand edge = 31;
