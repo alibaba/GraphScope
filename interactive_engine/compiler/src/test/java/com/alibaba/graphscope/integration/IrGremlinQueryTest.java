@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-
 package com.alibaba.graphscope.integration;
+
+import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.dedup;
 
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 
@@ -30,14 +31,14 @@ import org.junit.Test;
 
 import java.util.Map;
 
-import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.dedup;
-
 public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
-    public abstract Traversal<Vertex, Map<Object, Long>> get_g_V_group_by_by_dedup_count_order_by_key();
+    public abstract Traversal<Vertex, Map<Object, Long>>
+            get_g_V_group_by_by_dedup_count_order_by_key();
 
     @Test
     public void g_V_group_by_by_dedup_count_test() {
-        Traversal<Vertex, Map<Object, Long>> traversal = this.get_g_V_group_by_by_dedup_count_order_by_key();
+        Traversal<Vertex, Map<Object, Long>> traversal =
+                this.get_g_V_group_by_by_dedup_count_order_by_key();
         this.printTraversalForm(traversal);
 
         String expected =
@@ -52,7 +53,12 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
         @Override
         public Traversal<Vertex, Map<Object, Long>> get_g_V_group_by_by_dedup_count_order_by_key() {
-           return (IrCustomizedTraversal)g.V().group().by().by(dedup().count()).order().by(__.select(Column.keys).values("id"), Order.asc);
+            return (IrCustomizedTraversal)
+                    g.V().group()
+                            .by()
+                            .by(dedup().count())
+                            .order()
+                            .by(__.select(Column.keys).values("id"), Order.asc);
         }
     }
 }
