@@ -263,6 +263,11 @@ message EdgeExpand {
     IN = 1;
     BOTH = 2;
   }
+  enum ExpandOpt {
+    ExpandV = 0;
+    ExpandE = 1;
+    ExpandD = 2;
+  }
   // The tag that refers to the starting vertex
   common.NameOrId v_tag = 1;
   // The direction of the expanded edge
@@ -273,9 +278,11 @@ message EdgeExpand {
   // **always** applies to the edge for now (may be fixed later) .
   QueryParams params = 3;
   // Whether the expansion is for edge?
+  // TODO: remove is_edge
   bool is_edge = 4;
   // An optional alias for the object of the expansion
   common.NameOrId alias = 5;
+  ExpandOpt expand_opt = 6;
 }
 
 message PathStart {
