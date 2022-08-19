@@ -43,7 +43,7 @@ impl<E: Into<GraphObject> + 'static> FlatMapFunction<Record, Record> for EdgeExp
                 let id = v.id();
                 let iter = self.stmt.exec(id)?;
                 match self.expand_opt {
-                    ExpandOpt::ExpandV => {
+                    ExpandOpt::Vertex => {
                         let neighbors_iter = iter.map(|e| match e.into() {
                             GraphObject::E(e) => Vertex::new(
                                 e.get_other_id(),
@@ -60,10 +60,10 @@ impl<E: Into<GraphObject> + 'static> FlatMapFunction<Record, Record> for EdgeExp
                             Box::new(neighbors_iter),
                         )))
                     }
-                    ExpandOpt::ExpandE => {
+                    ExpandOpt::Edge => {
                         Ok(Box::new(RecordExpandIter::new(input, self.alias.as_ref(), iter)))
                     }
-                    ExpandOpt::ExpandD => {
+                    ExpandOpt::Degree => {
                         let degree = iter.count();
                         input.append(CommonObject::Count(degree as u64), self.alias);
                         Ok(Box::new(vec![input].into_iter()))
@@ -113,7 +113,7 @@ impl FlatMapFuncGen for algebra_pb::EdgeExpand {
         );
 
         match expand_opt {
-            ExpandOpt::ExpandV => {
+            ExpandOpt::Vertex => {
                 if query_params.filter.is_some() {
                     // Expand vertices with filters on edges.
                     // This can be regarded as a combination of EdgeExpand (with is_edge = true) + GetV
@@ -122,7 +122,7 @@ impl FlatMapFuncGen for algebra_pb::EdgeExpand {
                         start_v_tag,
                         alias: edge_or_end_v_tag,
                         stmt,
-                        expand_opt: ExpandOpt::ExpandV,
+                        expand_opt: ExpandOpt::Vertex,
                     };
                     Ok(Box::new(edge_expand_operator))
                 } else {
@@ -132,7 +132,7 @@ impl FlatMapFuncGen for algebra_pb::EdgeExpand {
                         start_v_tag,
                         alias: edge_or_end_v_tag,
                         stmt,
-                        expand_opt: ExpandOpt::ExpandE,
+                        expand_opt: ExpandOpt::Edge,
                     };
                     Ok(Box::new(edge_expand_operator))
                 }

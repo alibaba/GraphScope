@@ -264,9 +264,9 @@ message EdgeExpand {
     BOTH = 2;
   }
   enum ExpandOpt {
-    ExpandV = 0;
-    ExpandE = 1;
-    ExpandD = 2;
+    Vertex = 0;
+    Edge = 1;
+    Degree = 2;
   }
   // The tag that refers to the starting vertex
   common.NameOrId v_tag = 1;
