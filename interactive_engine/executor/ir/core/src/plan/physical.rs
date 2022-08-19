@@ -650,8 +650,8 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec![], columns)),
-            is_edge,
             alias,
+            expand_opt: if is_edge { 1 } else { 0 },
         }
     }
 
@@ -1159,7 +1159,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec!["knows".into()], vec![])),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         });
         let limit_opr =
@@ -1246,7 +1246,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec!["knows".into()], vec![])),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
 
@@ -1320,7 +1320,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec!["knows".into()], vec![])),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
 
@@ -1374,7 +1374,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec!["knows".into()], vec![])),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
 
@@ -1495,7 +1495,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec![], vec![])),
-            is_edge: false,
+            expand_opt: 0,
             alias: Some(1.into()),
         };
 
@@ -1573,7 +1573,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec![], vec![])),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         });
         let join_opr =

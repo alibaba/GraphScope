@@ -49,7 +49,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec!["knows".into()], vec![], None)),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
 
@@ -61,7 +61,7 @@ mod test {
                 vec![],
                 str_to_expr_pb("@.lange=\"Java\"".to_string()).ok(),
             )),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
 
@@ -137,7 +137,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec!["knows".into()], vec![], None)),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
 
@@ -145,7 +145,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec!["created".into()], vec![], None)),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
 

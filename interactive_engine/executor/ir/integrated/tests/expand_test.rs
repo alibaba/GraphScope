@@ -86,7 +86,7 @@ mod test {
     #[test]
     fn expand_outv_test() {
         let expand_opr_pb =
-            pb::EdgeExpand { v_tag: None, direction: 0, params: None, is_edge: false, alias: None };
+            pb::EdgeExpand { v_tag: None, direction: 0, params: None, expand_opt: 0, alias: None };
         let mut result = expand_test(expand_opr_pb);
         let mut result_ids = vec![];
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
@@ -112,7 +112,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_param),
-            is_edge: true,
+            expand_opt: 1,
             alias: None,
         };
         let mut result = expand_test(expand_opr_pb);
@@ -138,7 +138,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_param),
-            is_edge: true,
+            expand_opt: 1,
             alias: None,
         };
         let mut result = expand_test(expand_opr_pb);
@@ -168,7 +168,7 @@ mod test {
             v_tag: None,
             direction: 1,
             params: Some(query_param),
-            is_edge: true,
+            expand_opt: 1,
             alias: None,
         };
         let mut result = expand_test(expand_opr_pb);
@@ -201,7 +201,7 @@ mod test {
             v_tag: None,
             direction: 2,
             params: Some(query_param),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
         let mut result = expand_test(expand_opr_pb);
@@ -221,7 +221,7 @@ mod test {
             v_tag: Some(TAG_A.into()),
             direction: 0,
             params: Some(query_param),
-            is_edge: false,
+            expand_opt: 0,
             alias: Some(TAG_B.into()),
         };
         let mut result = expand_test_with_source_tag(TAG_A.into(), expand_opr_pb);
@@ -258,7 +258,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_param),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
 
@@ -299,7 +299,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(edge_query_param),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
         let vertex_query_param = query_params(vec![], vec![], str_to_expr_pb("@.id == 2".to_string()).ok());
@@ -340,7 +340,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_param),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
         let mut result = expand_test(expand_opr_pb);
@@ -362,7 +362,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec!["knows".into()], vec![], None)),
-            is_edge: true,
+            expand_opt: 1,
             alias: None,
         };
 
@@ -411,7 +411,7 @@ mod test {
             v_tag: None,
             direction: 1,
             params: Some(query_params(vec!["created".into()], vec![], None)),
-            is_edge: true,
+            expand_opt: 1,
             alias: None,
         };
 
@@ -460,7 +460,7 @@ mod test {
             v_tag: None,
             direction: 2,
             params: Some(query_params(vec!["knows".into()], vec![], None)),
-            is_edge: true,
+            expand_opt: 1,
             alias: None,
         };
 
@@ -509,7 +509,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec!["knows".into()], vec![], None)),
-            is_edge: true,
+            expand_opt: 1,
             alias: None,
         };
 

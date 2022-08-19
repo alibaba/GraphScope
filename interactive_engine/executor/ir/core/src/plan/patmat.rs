@@ -1177,8 +1177,8 @@ mod test {
                     v_tag: None,
                     direction: 0,
                     params: Some(query_params()),
-                    is_edge,
                     alias: None,
+                    expand_opt: if is_edge { 1 } else { 0 },
                 })),
             }],
             end: y.and_then(|s| s.try_into().ok()),
@@ -1199,7 +1199,7 @@ mod test {
                     v_tag: None,
                     direction: 0,
                     params: Some(params),
-                    is_edge: false,
+                    expand_opt: 0,
                     alias: None,
                 })),
             }],
@@ -1501,7 +1501,7 @@ mod test {
                 v_tag: None,
                 direction: 1, // check this has been reversed from 0 to 1
                 params: Some(query_params()),
-                is_edge: false,
+                expand_opt: 0,
                 alias: None
             }
             .into()

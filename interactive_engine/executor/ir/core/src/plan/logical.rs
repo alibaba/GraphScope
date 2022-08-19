@@ -1906,7 +1906,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec![], vec![])),
-            is_edge: false,
+            expand_opt: 0,
             alias: Some("here".into()),
         };
         plan.append_operator_as_node(expand.into(), vec![0])
@@ -1979,7 +1979,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec![], vec![])),
-            is_edge: true,
+            expand_opt: 1,
             alias: Some("e".into()),
         };
         plan.append_operator_as_node(expand.into(), vec![0])
@@ -2117,7 +2117,7 @@ mod test {
             v_tag: Some("a".into()),
             direction: 0,
             params: Some(query_params(vec!["knows".into()], vec![])),
-            is_edge: true,
+            expand_opt: 1,
             alias: Some("b".into()),
         };
         opr_id = plan
@@ -2284,7 +2284,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec![], vec![])),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
         let oprid = plan
@@ -2499,7 +2499,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec![], vec![])),
-            is_edge: true,
+            expand_opt: 1,
             alias: None,
         };
         let subtask = plan
@@ -2623,7 +2623,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec![], vec![])),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
         let filter = pb::Select { predicate: Some(str_to_expr_pb("@.age > 10".to_string()).unwrap()) };
@@ -2718,7 +2718,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec![], vec![])),
-            is_edge: false,
+            expand_opt: 0,
             alias: Some("o".into()),
         };
 
@@ -2792,7 +2792,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec![], vec![])),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
         let root_id = plan
