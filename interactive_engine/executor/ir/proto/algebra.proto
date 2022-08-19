@@ -277,12 +277,10 @@ message EdgeExpand {
   // the `is_edge` indicator, with one exception that the `tables` parameter in `EdgeExpand`
   // **always** applies to the edge for now (may be fixed later) .
   QueryParams params = 3;
-  // Whether the expansion is for edge?
-  // TODO: remove is_edge
-  bool is_edge = 4;
   // An optional alias for the object of the expansion
-  common.NameOrId alias = 5;
-  ExpandOpt expand_opt = 6;
+  common.NameOrId alias = 4;
+  // Expand option, i.e., expand vertices/edges/degree.
+  ExpandOpt expand_opt = 5;
 }
 
 message PathStart {

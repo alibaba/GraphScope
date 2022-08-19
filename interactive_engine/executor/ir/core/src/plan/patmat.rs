@@ -140,7 +140,9 @@ impl TryFrom<pb::pattern::Sentence> for BaseSentence {
                     }
                     Some(Item::Edge(e)) => {
                         if id == size - 1 {
-                            if e.is_edge {
+                            let expand_opt: pb::edge_expand::ExpandOpt =
+                                unsafe { ::std::mem::transmute(e.expand_opt) };
+                            if expand_opt.eq(&pb::edge_expand::ExpandOpt::Edge) {
                                 end_as = BindingOpt::Edge;
                             }
                         }
@@ -295,7 +297,9 @@ impl BasicSentence for BaseSentence {
                     match opr {
                         Opr::Vertex(_) => {}
                         Opr::Edge(edge) => {
-                            if edge.is_edge {
+                            let expand_opt: pb::edge_expand::ExpandOpt =
+                                unsafe { ::std::mem::transmute(edge.expand_opt) };
+                            if expand_opt.eq(&pb::edge_expand::ExpandOpt::Edge) {
                                 result = false;
                                 break;
                             }

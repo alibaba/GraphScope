@@ -170,7 +170,9 @@ impl AsPhysical for pb::EdgeExpand {
                 let columns = node_meta.get_columns();
                 let is_all_columns = node_meta.is_all_columns();
                 if !columns.is_empty() || is_all_columns {
-                    if !self.is_edge {
+                    let expand_opt: pb::edge_expand::ExpandOpt =
+                        unsafe { ::std::mem::transmute(self.expand_opt) };
+                    if expand_opt.eq(&pb::edge_expand::ExpandOpt::Vertex) {
                         // Expand to adjacent vertices
                         let new_params = pb::QueryParams {
                             tables: vec![],

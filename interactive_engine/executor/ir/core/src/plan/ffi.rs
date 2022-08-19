@@ -1707,6 +1707,7 @@ mod graph {
     }
 
     /// To initialize an edge expand operator from an expand base
+    // TODO: provide init with ExpandOption
     #[no_mangle]
     pub extern "C" fn init_edgexpd_operator(is_edge: bool, dir: FfiDirection) -> *const c_void {
         let edgexpd = Box::new(pb::EdgeExpand {
@@ -1720,9 +1721,7 @@ mod graph {
                 predicate: None,
                 extra: HashMap::new(),
             }),
-            is_edge,
             alias: None,
-            // TODO: remove is_edge
             expand_opt: if is_edge {
                 1 // ExpandE
             } else {
