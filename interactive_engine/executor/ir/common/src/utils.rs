@@ -595,6 +595,7 @@ impl pb::logical_plan::operator::Opr {
             Opr::PathStart(_) => "PathStart",
             Opr::PathEnd(_) => "PathEnd",
             Opr::Pattern(_) => "Pattern",
+            Opr::Fused(_) => "Fused",
         };
         name.to_string()
     }
