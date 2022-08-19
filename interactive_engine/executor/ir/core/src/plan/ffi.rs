@@ -1722,6 +1722,12 @@ mod graph {
             }),
             is_edge,
             alias: None,
+            // TODO: remove is_edge
+            expand_opt: if is_edge {
+                1 // ExpandE
+            } else {
+                0 // ExpandV
+            },
         });
 
         Box::into_raw(edgexpd) as *const c_void
