@@ -13,12 +13,12 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use ahash::{HashMap, HashMapExt};
 use std::fmt;
 use std::path::Path;
 use std::sync::atomic::{AtomicPtr, Ordering};
 use std::sync::Arc;
 
+use ahash::{HashMap, HashMapExt};
 use dyn_type::{object, Object};
 use graph_store::common::LabelId;
 use graph_store::config::{JsonConf, DIR_GRAPH_SCHEMA, FILE_SCHEMA};

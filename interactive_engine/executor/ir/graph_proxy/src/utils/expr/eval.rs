@@ -570,7 +570,6 @@ impl InnerOpr {
 #[cfg(test)]
 mod tests {
     use ahash::HashMap;
-
     use ir_common::expr_parse::str_to_expr_pb;
 
     use super::*;
