@@ -47,10 +47,12 @@ import java.util.function.Function;
 public interface TraversalParentTransform extends Function<TraversalParent, List<InterOpBase>> {
     default ExprResult getSubTraversalAsExpr(ExprArg exprArg) {
         int size = exprArg.size();
+        // return a result representing the traversal cannot be converted to expression
+        final ExprResult defaultNonExpr = (new ExprResult()).addTagExpr("", Optional.empty());
         // the followings are considered as expressions instead of apply
         if (size <= 1) {
             if (exprArg.isEmpty()) { // by()
-                return (new ExprResult(true)).addTagExpr("", "@");
+                return (new ExprResult()).addTagExpr("", Optional.of("@"));
             } else {
                 Step step = exprArg.getStartStep();
                 if (step instanceof PropertyMapStep) { // valueMap(..)
@@ -65,10 +67,12 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
                             stringBuilder.append("@." + mapKeys[i]);
                         }
                         stringBuilder.append("}");
-                        return (new ExprResult(true)).addTagExpr("", stringBuilder.toString());
+                        return (new ExprResult())
+                                .addTagExpr("", Optional.of(stringBuilder.toString()));
                     } else {
                         // valueMap() -> @.~all
-                        return (new ExprResult(true)).addTagExpr("", "@." + ArgUtils.PROPERTY_ALL);
+                        return (new ExprResult())
+                                .addTagExpr("", Optional.of("@." + ArgUtils.PROPERTY_ALL));
                     }
                 } else if (step instanceof PropertiesStep) { // values(..)
                     String[] mapKeys = ((PropertiesStep) step).getPropertyKeys();
@@ -82,7 +86,7 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
                                 OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
                                 "use valueMap(..) instead if there are multiple project keys");
                     }
-                    return (new ExprResult(true)).addTagExpr("", "@." + mapKeys[0]);
+                    return (new ExprResult()).addTagExpr("", Optional.of("@." + mapKeys[0]));
                 } else if (step instanceof SelectOneStep || step instanceof SelectStep) {
                     // select('a'), select('a').by()
                     // select('a').by('name'/values/valueMap)
@@ -91,7 +95,6 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
                     Map<String, Traversal.Admin> selectBys =
                             getProjectTraversals((TraversalParent) step);
                     ExprResult exprRes = new ExprResult();
-                    boolean isExprPattern = true;
                     for (Map.Entry<String, Traversal.Admin> entry : selectBys.entrySet()) {
                         String k = entry.getKey();
                         Traversal.Admin v = entry.getValue();
@@ -99,29 +102,28 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
                                 getSubTraversalAsExpr(new ExprArg(v)).getSingleExpr();
                         if (byExpr.isPresent()) {
                             String expr = byExpr.get().replace("@", "@" + k);
-                            exprRes.addTagExpr(k, expr);
+                            exprRes.addTagExpr(k, Optional.of(expr));
                         } else {
-                            isExprPattern = false;
+                            exprRes.addTagExpr(k, Optional.empty());
                         }
                     }
-                    return exprRes.setExprPattern(isExprPattern);
+                    return exprRes;
                 } else if (step instanceof WhereTraversalStep.WhereStartStep) { // where(as('a'))
                     WhereTraversalStep.WhereStartStep startStep =
                             (WhereTraversalStep.WhereStartStep) step;
                     String selectKey = (String) startStep.getScopeKeys().iterator().next();
-                    return (new ExprResult(true)).addTagExpr(selectKey, "@" + selectKey);
+                    return (new ExprResult()).addTagExpr(selectKey, Optional.of("@" + selectKey));
                 } else if (step instanceof TraversalMapStep) { // select(keys), select(values)
                     ProjectOp mapOp =
                             (ProjectOp) StepTransformFactory.TRAVERSAL_MAP_STEP.apply(step);
                     List<Pair> pairs = (List<Pair>) mapOp.getExprWithAlias().get().applyArg();
                     String mapExpr = (String) pairs.get(0).getValue0();
                     String mapKey = mapExpr.substring(1);
-                    return (new ExprResult(true)).addTagExpr(mapKey, mapExpr);
+                    return (new ExprResult()).addTagExpr(mapKey, Optional.of(mapExpr));
                 } else if (step instanceof DedupGlobalStep) {
                     // support the pattern of dedup by variables, i.e. dedup().by("name") or
                     // dedup("a").by("name")
                     ExprResult exprRes = new ExprResult();
-                    boolean isExprPattern = true;
 
                     DedupGlobalStep dedupStep = (DedupGlobalStep) step;
                     List<Traversal.Admin> traversals = dedupStep.getLocalChildren();
@@ -145,14 +147,14 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
                     for (String key : dedupKeys) {
                         if (exprOpt.isPresent()) { // dedup().by("name") or dedup("a").by("name")
                             String expr = exprOpt.get().replace("@", "@" + key);
-                            exprRes.addTagExpr(key, expr);
+                            exprRes.addTagExpr(key, Optional.of(expr));
                         } else { // dedup().by(out().count())
-                            isExprPattern = false;
+                            exprRes.addTagExpr(key, Optional.empty());
                         }
                     }
-                    return exprRes.setExprPattern(isExprPattern);
+                    return exprRes;
                 } else {
-                    return new ExprResult(false);
+                    return defaultNonExpr;
                 }
             }
         } else if (size == 2) {
@@ -164,7 +166,7 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
                         getSubTraversalAsExpr((new ExprArg(Collections.singletonList(endStep))))
                                 .getSingleExpr();
                 if (!propertyExpr.isPresent()) {
-                    return new ExprResult(false);
+                    return defaultNonExpr;
                 }
                 String selectKey = null;
                 if (startStep
@@ -182,12 +184,12 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
                     selectKey = mapExpr.substring(1);
                 }
                 String expr = propertyExpr.get().replace("@", "@" + selectKey);
-                return (new ExprResult(true)).addTagExpr(selectKey, expr);
+                return (new ExprResult()).addTagExpr(selectKey, Optional.of(expr));
             } else {
-                return new ExprResult(false);
+                return defaultNonExpr;
             }
         } else {
-            return new ExprResult(false);
+            return defaultNonExpr;
         }
     }
 
@@ -240,9 +242,10 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
     // and get the alias which will be attached to the aggregated value (alias is generated by
     // AliasManager in an automatic way or is given by the query)
     // and get aggregate variable, set to NONE by default
-    default ArgAggFn getAggFn(Step step, int stepIdx) {
+    default ArgAggFn getAggFn(Step step, int stepIdx, int subId) {
         FfiAlias.ByValue alias =
-                AliasManager.getFfiAlias(new AliasArg(AliasPrefixType.GROUP_VALUES, stepIdx));
+                AliasManager.getFfiAlias(
+                        new AliasArg(AliasPrefixType.GROUP_VALUES, stepIdx, subId));
         FfiAggOpt aggOpt;
         if (step instanceof CountGlobalStep) {
             aggOpt = FfiAggOpt.Count;
