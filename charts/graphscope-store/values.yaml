@@ -81,8 +81,13 @@ executorQueryStoreThreadCount: 2
 log4rsConfig: "LOG4RS_CONFIG"
 
 
-
+## Key-value pair seperated by ^
+## For example extraConfig=k1=v1^k2=v2
 extraConfig: ""
+
+auth:
+  username: ""
+  password: ""
 
 ## Role Based Access
 ## ref: https://kubernetes.io/docs/admin/authorization/rbac/

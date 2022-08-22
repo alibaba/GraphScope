@@ -115,7 +115,10 @@ Common parameters
 +-------------------+--------------------------------------------+-----------------------------------+
 | javaOpts          | Java options                               | ""                                |
 +-------------------+--------------------------------------------+-----------------------------------+
-
+| auth.username     | Username                                   | ""                                |
++-------------------+--------------------------------------------+-----------------------------------+
+| auth.password     | Password                                   | ""                                |
++-------------------+--------------------------------------------+-----------------------------------+
 
 
 Statefulset parameters
@@ -178,12 +181,12 @@ Specify each parameter using the `--set key=value[,key=value]` argument to `helm
       --set image.tag=latest graphscope/graphscope-store
 
 
-Add multiple extra config to the component which is defined in the configmap by `--set extraConfig=k1=v1:k2=v2`. Note we use `:` to seperate config items. For example,
+Add multiple extra config to the component which is defined in the configmap by `--set extraConfig=k1=v1^k2=v2`. Note we use `^` to seperate config items. For example,
 
 .. code:: bash
 
     $ helm install my-release \
-      --set extraConfig=k1=v1:k2=v2 graphscope/graphscope-store
+      --set extraConfig=k1=v1^k2=v2 graphscope/graphscope-store
 
 
 Alternatively, a YAML file that specifies the values for the parameters can be provided while installing the chart. For example,

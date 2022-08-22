@@ -72,6 +72,10 @@ data:
     gaia.rpc.port=60000
     gaia.engine.port=60001
 
+    ## Auth config
+    auth.username={{ .Values.auth.username }}
+    auth.password={{ .Values.auth.password }}
+
     ## Extra Config
     {{- if .Values.extraConfig }}
     {{- $config_list := regexSplit "\\^" .Values.extraConfig -1 }}
