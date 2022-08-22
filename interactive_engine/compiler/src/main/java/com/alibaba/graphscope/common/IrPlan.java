@@ -45,9 +45,6 @@ import java.util.function.Function;
 public class IrPlan implements Closeable {
     private static IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
     private Pointer ptrPlan;
-    private IrMeta meta;
-    // to identify a unique json file which contains the logic plan from ir_core
-    private String planName;
 
     // call libc to transform from InterOpBase to c structure
     private enum TransformFactory implements Function<InterOpBase, Pointer> {
@@ -577,9 +574,7 @@ public class IrPlan implements Closeable {
         }
     }
 
-    public IrPlan(IrMeta meta, InterOpCollection opCollection, String planName) {
-        this.meta = meta;
-        this.planName = planName;
+    public IrPlan(IrMeta meta, InterOpCollection opCollection) {
         irCoreLib.setSchema(meta.getSchema());
         this.ptrPlan = irCoreLib.initLogicalPlan();
         // add snapshot to QueryParams

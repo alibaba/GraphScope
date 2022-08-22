@@ -13,48 +13,7 @@
             </Policies>
             <DefaultRolloverStrategy max="4"/>
         </RollingFile>
-
-        <RollingFile name="alert" fileName="${sys:logbasedir}/alert.log" filePattern="alert.log.%i">
-            <PatternLayout pattern="%m%n"/>
-            <Policies>
-                <SizeBasedTriggeringPolicy size="32 MB"/>
-            </Policies>
-            <DefaultRolloverStrategy max="1"/>
-        </RollingFile>
-
-        <RollingFile name="schedule" fileName="${sys:logbasedir}/schedule.log" filePattern="schedule.log.%i">
-            <PatternLayout pattern="%m%n"/>
-            <Policies>
-                <SizeBasedTriggeringPolicy size="32 MB"/>
-            </Policies>
-            <DefaultRolloverStrategy max="1"/>
-        </RollingFile>
-
-        <RollingFile name="store" fileName="${sys:logbasedir}/store.log" filePattern="store.log.%i">
-            <PatternLayout pattern="%m%n"/>
-            <Policies>
-                <SizeBasedTriggeringPolicy size="32 MB"/>
-            </Policies>
-            <DefaultRolloverStrategy max="1"/>
-        </RollingFile>
-
-        <RollingFile name="realtime" fileName="${sys:logbasedir}/realtime.log" filePattern="realtime.log.%i">
-            <PatternLayout pattern="%m%n"/>
-            <Policies>
-                <SizeBasedTriggeringPolicy size="32 MB"/>
-            </Policies>
-            <DefaultRolloverStrategy max="1"/>
-        </RollingFile>
-
-        <RollingFile name="query" fileName="${sys:logbasedir}/query.log" filePattern="query.log.%i">
-            <PatternLayout pattern="%m%n"/>
-            <Policies>
-                <SizeBasedTriggeringPolicy size="32 MB"/>
-            </Policies>
-            <DefaultRolloverStrategy max="1"/>
-        </RollingFile>
-
-        <RollingFile name="runtime" fileName="${sys:logbasedir}/runtime.log" filePattern="runtime.log.%i">
+        <RollingFile name="Metric" fileName="${sys:logbasedir}/metric.log" filePattern="metric.log.%d{yyyy-MM-dd}.%i.log">
             <PatternLayout pattern="%m%n"/>
             <Policies>
                 <SizeBasedTriggeringPolicy size="32 MB"/>
@@ -69,30 +28,15 @@
         <Logger name="io.grpc" level="INFO" additivity="true"/>
         <Logger name="io.netty" level="INFO" additivity="true"/>
         <Logger name="com.github.dockerjava" level="INFO" additivity="true"/>
+        <Logger name="MetricLog" level="INFO" additivity="false">
+            <AppenderRef ref="Metric"/>
+        </Logger>
 
         <!-- main logger -->
         <Root level="INFO">
             <AppenderRef ref="RollingFile"/>
         </Root>
 
-        <Logger name="AlertLog" level="INFO" additivity="false">
-            <AppenderRef ref="alert"/>
-        </Logger>
-        <Logger name="ScheduleLog" level="INFO" additivity="false">
-            <AppenderRef ref="schedule"/>
-        </Logger>
-        <Logger name="StoreLog" level="INFO" additivity="false">
-            <AppenderRef ref="store"/>
-        </Logger>
-        <Logger name="RealtimeLog" level="INFO" additivity="false">
-            <AppenderRef ref="realtime"/>
-        </Logger>
-        <Logger name="QueryLog" level="INFO" additivity="false">
-            <AppenderRef ref="query"/>
-        </Logger>
-        <Logger name="RuntimeLog" level="INFO" additivity="false">
-            <AppenderRef ref="runtime"/>
-        </Logger>
     </Loggers>
 
 </Configuration>

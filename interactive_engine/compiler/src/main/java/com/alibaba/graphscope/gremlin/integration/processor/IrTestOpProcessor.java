@@ -91,15 +91,16 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                             String script = getScript(byteCode);
                             Traversal traversal =
                                     (Traversal) scriptEngine.eval(script, this.context);
-
                             applyStrategies(traversal);
 
+                            long jobId = JOB_ID_COUNTER.incrementAndGet();
                             processTraversal(
                                     traversal,
                                     new GremlinTestResultProcessor(
                                             ctx,
                                             GremlinResultAnalyzer.analyze(traversal),
                                             testGraph),
+                                    jobId,
                                     script);
                         });
                 return op;
