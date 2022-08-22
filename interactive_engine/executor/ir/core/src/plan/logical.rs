@@ -266,9 +266,21 @@ impl LogicalPlan {
         Self { nodes, max_node_id: node_id + 1, meta }
     }
 
+    pub fn num_nodes(&self) -> usize {
+        self.nodes.len()
+    }
+
     /// Get a node reference from the logical plan
     pub fn get_node(&self, id: NodeId) -> Option<NodeType> {
         self.nodes.get(id as usize).cloned()
+    }
+
+    /// Get first node in the logical plan
+    pub fn get_first_node(&self) -> Option<NodeType> {
+        self.nodes
+            .iter()
+            .next()
+            .map(|tuple| tuple.1.clone())
     }
 
     pub fn get_meta(&self) -> &PlanMeta {
@@ -897,7 +909,10 @@ fn get_or_set_tag_id(tag_pb: &mut common_pb::NameOrId, plan_meta: &mut PlanMeta)
     if let Some(tag_item) = tag_pb.item.as_mut() {
         let (_, tag_id) = match tag_item {
             Item::Name(tag) => plan_meta.get_or_set_tag_id(tag),
-            Item::Id(id) => (true, *id as TagId),
+            Item::Id(id) => {
+                plan_meta.set_max_tag_id(*id as TagId + 1);
+                (true, *id as TagId)
+            }
         };
         *tag_pb = (tag_id as i32).into();
 

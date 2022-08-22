@@ -412,7 +412,8 @@ message SinkVineyard {
   schema.Schema graph_schema = 2;
 }
 
-// FusedOperator. Noticed that we only fused for map or filter related operators.
+// Fusing multiple operators as one single operator if possible.
+// Noticed that we only fused for map or filter related operators.
 message FusedOperator {
   repeated LogicalPlan.Operator oprs = 1;
 }

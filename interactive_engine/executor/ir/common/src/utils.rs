@@ -509,6 +509,12 @@ impl From<pb::PathEnd> for pb::logical_plan::Operator {
     }
 }
 
+impl From<pb::FusedOperator> for pb::logical_plan::Operator {
+    fn from(opr: pb::FusedOperator) -> Self {
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Fused(opr)) }
+    }
+}
+
 /*
 impl From<pb::ShortestPathExpand> for pb::logical_plan::Operator {
     fn from(opr: pb::ShortestPathExpand) -> Self {
