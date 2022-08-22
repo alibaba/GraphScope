@@ -172,29 +172,33 @@ impl AsPhysical for pb::EdgeExpand {
                 if !columns.is_empty() || is_all_columns {
                     let expand_opt: pb::edge_expand::ExpandOpt =
                         unsafe { ::std::mem::transmute(self.expand_opt) };
-                    if expand_opt.eq(&pb::edge_expand::ExpandOpt::Vertex) {
-                        // Expand to adjacent vertices
-                        let new_params = pb::QueryParams {
-                            tables: vec![],
-                            columns: columns
+                    match expand_opt {
+                        pb::edge_expand::ExpandOpt::Vertex => {
+                            // Expand to adjacent vertices
+                            let new_params = pb::QueryParams {
+                                tables: vec![],
+                                columns: columns
+                                    .into_iter()
+                                    .map(|tag| tag.into())
+                                    .collect(),
+                                is_all_columns,
+                                limit: None,
+                                predicate: None,
+                                extra: Default::default(),
+                            };
+                            auxilia.params = Some(new_params);
+                            auxilia.alias = self.alias.clone();
+                            self.alias = None;
+                            is_adding_auxilia = true;
+                        }
+                        pb::edge_expand::ExpandOpt::Edge => {
+                            params.columns = columns
                                 .into_iter()
                                 .map(|tag| tag.into())
-                                .collect(),
-                            is_all_columns,
-                            limit: None,
-                            predicate: None,
-                            extra: Default::default(),
-                        };
-                        auxilia.params = Some(new_params);
-                        auxilia.alias = self.alias.clone();
-                        self.alias = None;
-                        is_adding_auxilia = true;
-                    } else {
-                        params.columns = columns
-                            .into_iter()
-                            .map(|tag| tag.into())
-                            .collect();
-                        params.is_all_columns = is_all_columns;
+                                .collect();
+                            params.is_all_columns = is_all_columns;
+                        }
+                        _ => {}
                     }
                 }
             }
@@ -651,7 +655,7 @@ mod test {
             direction: 0,
             params: Some(query_params(vec![], columns)),
             alias,
-            expand_opt: if is_edge { 1 } else { 0 },
+            expand_opt: is_edge as i32,
         }
     }
 
