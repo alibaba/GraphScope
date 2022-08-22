@@ -67,7 +67,8 @@ public class IrSchemaParser {
                         true);
         String json = JSON.toJson(schemaMap);
         // logger.info("graph schema is {}, ir schema is {}", graphSchema.formatJson(), json);
-        return json;    }
+        return json;
+    }
 
     private Map<String, Object> getVertex(GraphSchema graphSchema, GraphVertex vertex) {
         return getElement(graphSchema, vertex);

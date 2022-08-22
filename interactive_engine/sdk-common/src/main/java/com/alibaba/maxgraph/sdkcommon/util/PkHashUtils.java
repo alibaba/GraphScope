@@ -13,8 +13,8 @@
  */
 package com.alibaba.maxgraph.sdkcommon.util;
 
-import java.nio.ByteBuffer;
 import java.nio.Buffer;
+import java.nio.ByteBuffer;
 import java.util.List;
 
 /**

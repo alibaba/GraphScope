@@ -43,6 +43,7 @@ if sys.version_info >= (3, 6):
             return os.fspath(path)
         return path
 
+
 elif sys.version_info >= (3, 4):
 
     def _path_to_string(path):
@@ -51,6 +52,7 @@ elif sys.version_info >= (3, 4):
         if isinstance(path, pathlib.Path):
             return str(path)
         return path
+
 
 else:
 
@@ -254,7 +256,7 @@ def download_file(  # noqa: C901
         error_msg_tpl = "URL fetch failure on {}:{} -- {}"
         try:
             for retry in range(max_retries):
-                backoff = max(2**retry, 1.0)
+                backoff = max(2 ** retry, 1.0)
                 try:
                     urlretrieve(origin, fpath, show_progress)
                 except urllib.error.HTTPError as e:

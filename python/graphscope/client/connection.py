@@ -99,7 +99,9 @@ class Connection:
         self._client_id = None
         self._metadata = self._encode_metadata(username, password)
         graph_url = "ws://%s/gremlin" % self._gremlin_endpoint
-        self._conn = DriverRemoteConnection(graph_url, "g", username=username, password=password)
+        self._conn = DriverRemoteConnection(
+            graph_url, "g", username=username, password=password
+        )
 
     def __del__(self):
         self.close()
@@ -151,6 +153,7 @@ class Connection:
         secret = base64.b64encode(secret.encode("utf-8")).decode("utf-8")
         metadata = [("authorization", "Basic " + secret)]
         return metadata
+
 
 def conn(addr, gremlin_endpoint, username="", password=""):
     return Connection(addr, gremlin_endpoint, username, password)
