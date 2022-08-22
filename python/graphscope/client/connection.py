@@ -20,6 +20,7 @@
 """
 
 import base64
+
 import grpc
 from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
 from gremlin_python.process.anonymous_traversal import traversal
