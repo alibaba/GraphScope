@@ -152,39 +152,6 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
             return ParserUtils.getKeyName(builder.build(), FfiKeyType.Column);
         }
     },
-    GROUP {
-        @Override
-        public Object parseFrom(IrResult.Results results) {
-            logger.debug("{}", results);
-            IrResult.Record record = results.getRecord();
-            Object key = null;
-            Object value = null;
-            for (IrResult.Column column : record.getColumnsList()) {
-                OuterExpression.NameOrId columnName = column.getNameOrId();
-                if (columnName.getItemCase() != OuterExpression.NameOrId.ItemCase.NAME) {
-                    throw new GremlinResultParserException(
-                            "column key in group should be ItemCase.NAME");
-                }
-                String alias = columnName.getName();
-                Object parseEntry = ParserUtils.parseEntry(column.getEntry());
-                if (parseEntry instanceof EmptyValue) continue;
-                if (AliasManager.isGroupKeysPrefix(alias)) {
-                    key = parseEntry;
-                } else {
-                    value = parseEntry;
-                }
-            }
-            // if value is null then ignore, i.e.
-            // g.V().values("age").group() => {35=[35], 27=[27], 32=[32], 29=[29]}
-            if (value == null) return EmptyValue.INSTANCE;
-            // if key is null then output null key with the corresponding value, i.e.
-            // g.V().group().by("age") => {29=[v[1]], null=[v[72057594037927939],
-            // v[72057594037927941]], 27=[v[2]], 32=[v[4]], 35=[v[6]]}
-            Map data = new HashMap();
-            data.put(key, value);
-            return data;
-        }
-    },
     UNION {
         @Override
         public Object parseFrom(IrResult.Results results) {
@@ -224,21 +191,7 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
                                 entry.getInnerCase() + " is unsupported yet");
                 }
             } else if (columns > 1) { // project or group
-                IrResult.Column column = results.getRecord().getColumnsList().get(0);
-                OuterExpression.NameOrId columnName = column.getNameOrId();
-                if (columnName.getItemCase() == OuterExpression.NameOrId.ItemCase.NAME) {
-                    String name = columnName.getName();
-                    if (AliasManager.isGroupKeysPrefix(name)
-                            || AliasManager.isGroupValuesPrefix(name)) {
-                        return GROUP;
-                    } else {
-                        return PROJECT_VALUE;
-                    }
-                } else {
-                    throw new GremlinResultParserException(
-                            "column key should be ItemCase.NAME to differentiate between group and"
-                                    + " project");
-                }
+                return PROJECT_VALUE;
             } else {
                 throw new GremlinResultParserException("columns should not be empty");
             }

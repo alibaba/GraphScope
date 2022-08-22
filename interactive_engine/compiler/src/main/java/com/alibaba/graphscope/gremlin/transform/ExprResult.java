@@ -19,48 +19,26 @@ package com.alibaba.graphscope.gremlin.transform;
 import java.util.*;
 
 public class ExprResult {
-    // if all of the by_traversals can be converted to expressions, return true
-    // otherwise false
-    private boolean isExprPattern;
-    // store the tag and the corresponding by_traversal as expression if it can be converted
+    // store the tag and the corresponding by_traversal as expression if it can be converted,
+    // otherwise is Optional.empty
     // especially, tag is "" if no tag exists, i.e. values(..), valueMap(..)
-    private Map<String, String> tagExprMap;
+    private Map<String, Optional<String>> tagExprMap;
 
     public ExprResult() {
-        this.isExprPattern = false;
         this.tagExprMap = new LinkedHashMap<>();
     }
 
-    public ExprResult(boolean isExprPattern) {
-        this.tagExprMap = new LinkedHashMap<>();
-        this.isExprPattern = isExprPattern;
+    public Map<String, Optional<String>> getTagExprMap() {
+        return Collections.unmodifiableMap(tagExprMap);
     }
 
-    public List<String> getExprs() {
-        return new ArrayList<>(tagExprMap.values());
+    public ExprResult addTagExpr(String tag, Optional<String> exprOpt) {
+        this.tagExprMap.put(tag, exprOpt);
+        return this;
     }
 
+    // return the first expression in tagExprMap
     public Optional<String> getSingleExpr() {
-        List<String> exprs = getExprs();
-        return exprs.isEmpty() ? Optional.empty() : Optional.of(exprs.get(0));
-    }
-
-    public Optional<String> getTagExpr(String tag) {
-        String expr = tagExprMap.get(tag);
-        return (expr == null || expr.isEmpty()) ? Optional.empty() : Optional.of(expr);
-    }
-
-    public boolean isExprPattern() {
-        return this.isExprPattern;
-    }
-
-    public ExprResult addTagExpr(String tag, String expr) {
-        tagExprMap.put(tag, expr);
-        return this;
-    }
-
-    public ExprResult setExprPattern(boolean exprPattern) {
-        isExprPattern = exprPattern;
-        return this;
+        return this.tagExprMap.values().iterator().next();
     }
 }
