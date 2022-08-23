@@ -35,7 +35,7 @@ mod test {
     use runtime::process::operator::flatmap::FlatMapFuncGen;
     use runtime::process::operator::map::FilterMapFuncGen;
     use runtime::process::operator::source::SourceOperator;
-    use runtime::process::record::Record;
+    use runtime::process::record::{CommonObject, Record};
 
     use crate::common::test::*;
 
@@ -61,6 +61,43 @@ mod test {
             }
         })
         .expect("build job failure");
+        result
+    }
+
+    fn expand_degree_fused_test(expand: pb::EdgeExpand) -> ResultStream<Record> {
+        let conf = JobConf::new("expand_degree_fused_test");
+        let mut fused = pb::FusedOperator { oprs: vec![] };
+        fused.oprs.push(
+            pb::Auxilia {
+                tag: None,
+                params: None,
+                alias: Some(common_pb::NameOrId { item: Some(common_pb::name_or_id::Item::Id(0)) }),
+            }
+            .into(),
+        );
+        fused.oprs.push(expand.into());
+        fused.oprs.push(
+            pb::Project {
+                mappings: vec![pb::project::ExprAlias {
+                    expr: str_to_expr_pb("@0".to_string()).ok(),
+                    alias: None,
+                }],
+                is_append: true,
+            }
+            .into(),
+        );
+
+        let result = pegasus::run(conf, || {
+            let fused = fused.clone();
+            |input, output| {
+                let mut stream = input.input_from(source_gen(None))?;
+                let flat_map_func = fused.gen_flat_map().unwrap();
+                stream = stream.flat_map(move |input| flat_map_func.exec(input))?;
+                stream.sink_into(output)
+            }
+        })
+        .expect("build job failure");
+
         result
     }
 
@@ -549,5 +586,101 @@ mod test {
         }
         result_ids.sort();
         assert_eq!(result_ids, expected_ids)
+    }
+
+    // g.V().as(0).select(0).by(out().count().as(1))
+    #[test]
+    fn expand_out_degree_test() {
+        let expand_opr_pb = pb::EdgeExpand {
+            v_tag: None,
+            direction: 0,
+            params: None,
+            expand_opt: 2,
+            alias: Some(1.into()),
+        };
+        let mut pegasus_result = expand_degree_fused_test(expand_opr_pb);
+        let mut results = vec![];
+        let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
+        let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
+        let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
+        let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
+        let v5: DefaultId = LDBCVertexParser::to_global_id(5, 1);
+        let v6: DefaultId = LDBCVertexParser::to_global_id(6, 0);
+        let mut expected_results = vec![(v1, 3), (v2, 0), (v3, 0), (v4, 2), (v5, 0), (v6, 1)];
+        while let Some(Ok(record)) = pegasus_result.next() {
+            if let Some(v) = record.get(None).unwrap().as_graph_vertex() {
+                if let Some(CommonObject::Count(degree)) = record.get(Some(1)).unwrap().as_common_object() {
+                    results.push((v.id() as DefaultId, *degree));
+                }
+            }
+        }
+        results.sort();
+        expected_results.sort();
+
+        assert_eq!(results, expected_results)
+    }
+
+    // g.V().as(0).select(0).by(in().count().as(1))
+    #[test]
+    fn expand_in_degree_test() {
+        let expand_opr_pb = pb::EdgeExpand {
+            v_tag: None,
+            direction: 1,
+            params: None,
+            expand_opt: 2,
+            alias: Some(1.into()),
+        };
+        let mut pegasus_result = expand_degree_fused_test(expand_opr_pb);
+        let mut results = vec![];
+        let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
+        let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
+        let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
+        let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
+        let v5: DefaultId = LDBCVertexParser::to_global_id(5, 1);
+        let v6: DefaultId = LDBCVertexParser::to_global_id(6, 0);
+        let mut expected_results = vec![(v1, 0), (v2, 1), (v3, 3), (v4, 1), (v5, 1), (v6, 0)];
+        while let Some(Ok(record)) = pegasus_result.next() {
+            if let Some(v) = record.get(None).unwrap().as_graph_vertex() {
+                if let Some(CommonObject::Count(degree)) = record.get(Some(1)).unwrap().as_common_object() {
+                    results.push((v.id() as DefaultId, *degree));
+                }
+            }
+        }
+        results.sort();
+        expected_results.sort();
+
+        assert_eq!(results, expected_results)
+    }
+
+    // g.V().as(0).select(0).by(both().count().as(1))
+    #[test]
+    fn expand_both_degree_test() {
+        let expand_opr_pb = pb::EdgeExpand {
+            v_tag: None,
+            direction: 2,
+            params: None,
+            expand_opt: 2,
+            alias: Some(1.into()),
+        };
+        let mut pegasus_result = expand_degree_fused_test(expand_opr_pb);
+        let mut results = vec![];
+        let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
+        let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
+        let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
+        let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
+        let v5: DefaultId = LDBCVertexParser::to_global_id(5, 1);
+        let v6: DefaultId = LDBCVertexParser::to_global_id(6, 0);
+        let mut expected_results = vec![(v1, 3), (v2, 1), (v3, 3), (v4, 3), (v5, 1), (v6, 1)];
+        while let Some(Ok(record)) = pegasus_result.next() {
+            if let Some(v) = record.get(None).unwrap().as_graph_vertex() {
+                if let Some(CommonObject::Count(degree)) = record.get(Some(1)).unwrap().as_common_object() {
+                    results.push((v.id() as DefaultId, *degree));
+                }
+            }
+        }
+        results.sort();
+        expected_results.sort();
+
+        assert_eq!(results, expected_results)
     }
 }

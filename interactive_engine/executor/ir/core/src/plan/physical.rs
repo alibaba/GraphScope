@@ -549,7 +549,9 @@ impl AsPhysical for LogicalPlan {
                             .get_or_set_tag_id(&format!("~expand_degree_{:?}", curr_node_id))
                             .1 as i32;
                         fused.oprs.push(
-                            pb::As {
+                            pb::Auxilia {
+                                tag: None,
+                                params: None,
                                 alias: Some(common_pb::NameOrId {
                                     item: Some(common_pb::name_or_id::Item::Id(new_tag)),
                                 }),
@@ -558,7 +560,14 @@ impl AsPhysical for LogicalPlan {
                         );
                         fused.oprs.push(expand_degree.into());
                         fused.oprs.push(
-                            pb::Select { predicate: str_to_expr_pb(format!("@{:?}", new_tag)).ok() }.into(),
+                            pb::Project {
+                                mappings: vec![pb::project::ExprAlias {
+                                    expr: str_to_expr_pb(format!("@{:?}", new_tag)).ok(),
+                                    alias: None,
+                                }],
+                                is_append: true,
+                            }
+                            .into(),
                         );
                         builder.filter_map(pb::logical_plan::Operator::from(fused).encode_to_vec());
                     } else {
@@ -1654,14 +1663,25 @@ mod test {
         expected_builder.repartition(vec![]);
         let mut fused = pb::FusedOperator { oprs: vec![] };
         fused.oprs.push(
-            pb::As { alias: Some(common_pb::NameOrId { item: Some(common_pb::name_or_id::Item::Id(2)) }) }
-                .into(),
+            pb::Auxilia {
+                tag: None,
+                params: None,
+                alias: Some(common_pb::NameOrId { item: Some(common_pb::name_or_id::Item::Id(2)) }),
+            }
+            .into(),
         );
         expand.alias = Some(1.into()); // must carry `Apply`'s alias
         fused.oprs.push(expand.into());
-        fused
-            .oprs
-            .push(pb::Select { predicate: str_to_expr_pb("@2".to_string()).ok() }.into());
+        fused.oprs.push(
+            pb::Project {
+                mappings: vec![pb::project::ExprAlias {
+                    expr: str_to_expr_pb("@2".to_string()).ok(),
+                    alias: None,
+                }],
+                is_append: true,
+            }
+            .into(),
+        );
         expected_builder.filter_map(pb::logical_plan::Operator::from(fused).encode_to_vec());
 
         assert_eq!(expected_builder, builder);
