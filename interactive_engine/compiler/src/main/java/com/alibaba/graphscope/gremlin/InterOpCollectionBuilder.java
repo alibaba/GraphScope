@@ -50,7 +50,12 @@ public class InterOpCollectionBuilder {
     }
 
     public InterOpCollection build() throws OpArgIllegalException, UnsupportedStepException {
-        InterOpCollection opCollection = new InterOpCollection();
+        return build(new InterOpBase() {});
+    }
+
+    public InterOpCollection build(InterOpBase parent)
+            throws OpArgIllegalException, UnsupportedStepException {
+        InterOpCollection opCollection = new InterOpCollection(parent);
         List<Step> steps = traversal.asAdmin().getSteps();
         for (Step step : steps) {
             List<InterOpBase> opList = new ArrayList<>();

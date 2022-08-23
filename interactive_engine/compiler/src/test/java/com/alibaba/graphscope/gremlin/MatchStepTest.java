@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.intermediate.operator.ExpandOp;
 import com.alibaba.graphscope.common.intermediate.operator.GetVOp;
 import com.alibaba.graphscope.common.intermediate.operator.MatchOp;
 import com.alibaba.graphscope.common.intermediate.operator.SelectOp;
+import com.alibaba.graphscope.common.jna.type.FfiExpandOpt;
 import com.alibaba.graphscope.common.jna.type.FfiJoinKind;
 import com.alibaba.graphscope.common.jna.type.FfiVOpt;
 import com.alibaba.graphscope.gremlin.antlr4.__;
@@ -75,7 +76,7 @@ public class MatchStepTest {
         Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 2));
 
         ExpandOp op = (ExpandOp) sentence.getBinders().unmodifiableCollection().get(0);
-        Assert.assertEquals(false, op.getIsEdge().get().applyArg());
+        Assert.assertEquals(FfiExpandOpt.Vertex, op.getExpandOpt().get().applyArg());
 
         SelectOp selectOp = (SelectOp) sentence.getBinders().unmodifiableCollection().get(1);
         Assert.assertEquals("@.~label == \"person\"", selectOp.getPredicate().get().applyArg());
@@ -89,7 +90,7 @@ public class MatchStepTest {
         Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 2));
 
         ExpandOp op = (ExpandOp) sentence.getBinders().unmodifiableCollection().get(0);
-        Assert.assertEquals(false, op.getIsEdge().get().applyArg());
+        Assert.assertEquals(FfiExpandOpt.Vertex, op.getExpandOpt().get().applyArg());
 
         SelectOp selectOp = (SelectOp) sentence.getBinders().unmodifiableCollection().get(1);
         Assert.assertEquals("@.name == \"marko\"", selectOp.getPredicate().get().applyArg());
@@ -105,7 +106,7 @@ public class MatchStepTest {
         Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 1));
         ExpandOp op = (ExpandOp) sentence.getBinders().unmodifiableCollection().get(0);
         Assert.assertEquals("knows", op.getParams().get().getTables().get(0).name);
-        Assert.assertEquals(true, op.getIsEdge().get().applyArg());
+        Assert.assertEquals(FfiExpandOpt.Edge, op.getExpandOpt().get().applyArg());
     }
 
     // fuse outE + has("weight", 1.0)
@@ -116,7 +117,7 @@ public class MatchStepTest {
         Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 1));
         ExpandOp op = (ExpandOp) sentence.getBinders().unmodifiableCollection().get(0);
         Assert.assertEquals("@.weight == 1.0", op.getParams().get().getPredicate().get());
-        Assert.assertEquals(true, op.getIsEdge().get().applyArg());
+        Assert.assertEquals(FfiExpandOpt.Edge, op.getExpandOpt().get().applyArg());
     }
 
     // outV + hasLabel("person") -> getV + filter
@@ -159,7 +160,7 @@ public class MatchStepTest {
         Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 2));
 
         ExpandOp op = (ExpandOp) sentence.getBinders().unmodifiableCollection().get(0);
-        Assert.assertEquals(false, op.getIsEdge().get().applyArg());
+        Assert.assertEquals(FfiExpandOpt.Vertex, op.getExpandOpt().get().applyArg());
         Assert.assertEquals("knows", op.getParams().get().getTables().get(0).name);
 
         SelectOp selectOp = (SelectOp) sentence.getBinders().unmodifiableCollection().get(1);
@@ -184,7 +185,7 @@ public class MatchStepTest {
 
         ExpandOp expandOp = (ExpandOp) sentence.getBinders().unmodifiableCollection().get(0);
         Assert.assertEquals("@.weight == 1.0", expandOp.getParams().get().getPredicate().get());
-        Assert.assertEquals(false, expandOp.getIsEdge().get().applyArg());
+        Assert.assertEquals(FfiExpandOpt.Vertex, expandOp.getExpandOpt().get().applyArg());
 
         SelectOp selectOp = (SelectOp) sentence.getBinders().unmodifiableCollection().get(1);
         Assert.assertEquals("@.name == \"marko\"", selectOp.getPredicate().get().applyArg());

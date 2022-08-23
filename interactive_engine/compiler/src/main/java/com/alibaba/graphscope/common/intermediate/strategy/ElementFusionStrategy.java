@@ -16,12 +16,14 @@
 
 package com.alibaba.graphscope.common.intermediate.strategy;
 
+import com.alibaba.graphscope.common.intermediate.ArgAggFn;
+import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.intermediate.operator.*;
-import com.alibaba.graphscope.common.jna.type.FfiDirection;
-import com.alibaba.graphscope.common.jna.type.FfiVOpt;
+import com.alibaba.graphscope.common.jna.type.*;
 
 import java.util.List;
+import java.util.Optional;
 
 // fuse outE + filter, outE + filter + has
 public class ElementFusionStrategy implements InterOpStrategy {
@@ -53,10 +55,18 @@ public class ElementFusionStrategy implements InterOpStrategy {
                     && i + 1 < original.size()
                     && (next = original.get(i + 1)) instanceof GetVOp
                     && canFuseExpandWithGetV((ExpandOp) cur, (GetVOp) next)) {
-                ((ExpandOp) cur).setEdgeOpt(new OpArg(false));
+                ((ExpandOp) cur).setEdgeOpt(new OpArg(FfiExpandOpt.Vertex));
                 if (next.getAlias().isPresent()) {
                     cur.setAlias(next.getAlias().get());
                 }
+                opCollection.removeInterOp(i + 1);
+            }
+            // fuse out + count nested in apply
+            if (opCollection.getParent() instanceof ApplyOp
+                    && cur instanceof ExpandOp
+                    && i + 1 < original.size()
+                    && isCount(original.get(i + 1))) {
+                ((ExpandOp) cur).setEdgeOpt(new OpArg(FfiExpandOpt.Degree));
                 opCollection.removeInterOp(i + 1);
             }
         }
@@ -79,7 +89,22 @@ public class ElementFusionStrategy implements InterOpStrategy {
 
     private boolean isExpandEdge(InterOpBase op) {
         return op instanceof ExpandOp
-                && (Boolean) ((ExpandOp) op).getIsEdge().get().applyArg() == true;
+                && ((ExpandOp) op).getExpandOpt().get().applyArg() == FfiExpandOpt.Edge;
+    }
+
+    private boolean isCount(InterOpBase op) {
+        if (!(op instanceof GroupOp)) return false;
+        Optional<OpArg> groupKeysOpt = ((GroupOp) op).getGroupByKeys();
+        Optional<OpArg> groupValuesOpt = ((GroupOp) op).getGroupByValues();
+        if (!groupKeysOpt.isPresent() || !groupValuesOpt.isPresent()) return false;
+        List groupKeys = (List) groupKeysOpt.get().applyArg();
+        List<ArgAggFn> groupValues = (List<ArgAggFn>) groupValuesOpt.get().applyArg();
+        return groupKeys
+                        .isEmpty() // count: group_key represent as empty_list, group_value
+                                   // represent as Count(None)
+                && groupValues.size() == 1
+                && groupValues.get(0).getAggregate() == FfiAggOpt.Count
+                && groupValues.get(0).getVar().equals(ArgUtils.asNoneVar());
     }
 
     private boolean canFuseExpandWithGetV(ExpandOp expandOp, GetVOp getVOp) {

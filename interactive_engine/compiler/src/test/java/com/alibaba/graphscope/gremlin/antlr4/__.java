@@ -44,6 +44,10 @@ public class __ {
                 ((IrCustomizedTraversal) start()).out(rangeTraversal, labels);
     }
 
+    public static GraphTraversal<?, Edge> outE(final String... edgeLabels) {
+        return start().outE(edgeLabels);
+    }
+
     public static GraphTraversal<?, ?> endV() {
         return ((IrCustomizedTraversal) start()).endV();
     }
@@ -78,5 +82,9 @@ public class __ {
 
     public static <A> GraphTraversal<?, ?> sum() {
         return start().sum();
+    }
+
+    public static <A> GraphTraversal<?, ?> has(final String propertyKey, final Object value) {
+        return start().has(propertyKey, value);
     }
 }

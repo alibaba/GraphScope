@@ -80,10 +80,7 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
                     copy.asAdmin().addStep(new SelectOneStep(copy.asAdmin(), Pop.last, k));
                     v.asAdmin().getSteps().forEach(s -> copy.asAdmin().addStep((Step) s));
                     applyOp.setSubOpCollection(
-                            new OpArg<>(
-                                    copy,
-                                    (Traversal traversal) ->
-                                            (new InterOpCollectionBuilder(traversal)).build()));
+                            new OpArg(new InterOpCollectionBuilder(copy).build(applyOp)));
                     // column key of apply result
                     FfiAlias.ByValue applyAlias =
                             AliasManager.getFfiAlias(
@@ -146,10 +143,7 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
                     // copy steps in by(..) to apply
                     byTraversal.getSteps().forEach(s -> copy.asAdmin().addStep((Step) s));
                     applyOp.setSubOpCollection(
-                            new OpArg<>(
-                                    copy,
-                                    (Traversal traversal) ->
-                                            (new InterOpCollectionBuilder(traversal)).build()));
+                            new OpArg(new InterOpCollectionBuilder(copy).build(applyOp)));
                     FfiAlias.ByValue applyAlias =
                             AliasManager.getFfiAlias(
                                     new AliasArg(AliasPrefixType.DEFAULT, stepIdx, subId));
@@ -199,10 +193,7 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
                     ApplyOp applyOp = new ApplyOp();
                     applyOp.setJoinKind(new OpArg(FfiJoinKind.Inner));
                     applyOp.setSubOpCollection(
-                            new OpArg<>(
-                                    admin,
-                                    (Traversal traversal) ->
-                                            (new InterOpCollectionBuilder(traversal)).build()));
+                            new OpArg(new InterOpCollectionBuilder(admin).build(applyOp)));
                     FfiAlias.ByValue applyAlias =
                             AliasManager.getFfiAlias(
                                     new AliasArg(AliasPrefixType.DEFAULT, stepIdx, i));
@@ -258,10 +249,7 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
                 ApplyOp applyOp = new ApplyOp();
                 applyOp.setJoinKind(new OpArg(FfiJoinKind.Inner));
                 applyOp.setSubOpCollection(
-                        new OpArg<>(
-                                groupKeyTraversal,
-                                (Traversal traversal) ->
-                                        (new InterOpCollectionBuilder(traversal)).build()));
+                        new OpArg(new InterOpCollectionBuilder(groupKeyTraversal).build(applyOp)));
                 FfiAlias.ByValue applyAlias =
                         AliasManager.getFfiAlias(new AliasArg(AliasPrefixType.GROUP_KEYS, stepIdx));
                 applyOp.setAlias(new OpArg(applyAlias, Function.identity()));
@@ -463,10 +451,7 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
                 // copy steps in by(..) to apply
                 whereby.getSteps().forEach(s -> copy.asAdmin().addStep((Step) s));
                 applyOp.setSubOpCollection(
-                        new OpArg<>(
-                                copy,
-                                (Traversal traversal) ->
-                                        (new InterOpCollectionBuilder(traversal)).build()));
+                        new OpArg(new InterOpCollectionBuilder(copy).build(applyOp)));
                 FfiAlias.ByValue applyAlias =
                         AliasManager.getFfiAlias(
                                 new AliasArg(
@@ -503,10 +488,7 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
                 FfiJoinKind joinKind = FfiJoinKind.Semi;
                 applyOp.setJoinKind(new OpArg(joinKind, Function.identity()));
                 applyOp.setSubOpCollection(
-                        new OpArg<>(
-                                subTraversal,
-                                (Traversal traversal) ->
-                                        (new InterOpCollectionBuilder(traversal)).build()));
+                        new OpArg(new InterOpCollectionBuilder(subTraversal).build(applyOp)));
                 return Collections.singletonList(applyOp);
             }
         }
@@ -540,10 +522,7 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
                 FfiJoinKind joinKind = FfiJoinKind.Anti;
                 applyOp.setJoinKind(new OpArg(joinKind));
                 applyOp.setSubOpCollection(
-                        new OpArg<>(
-                                subTraversal,
-                                (Traversal traversal) ->
-                                        (new InterOpCollectionBuilder(traversal)).build()));
+                        new OpArg(new InterOpCollectionBuilder(subTraversal).build(applyOp)));
                 return Collections.singletonList(applyOp);
             }
         }

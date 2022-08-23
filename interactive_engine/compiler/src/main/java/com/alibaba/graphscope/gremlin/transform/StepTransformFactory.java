@@ -149,9 +149,9 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                             (VertexStep) step,
                             (VertexStep s1) -> {
                                 if (s1.returnsEdge()) {
-                                    return Boolean.valueOf(true);
+                                    return FfiExpandOpt.Edge;
                                 } else {
-                                    return Boolean.valueOf(false);
+                                    return FfiExpandOpt.Vertex;
                                 }
                             }));
 
@@ -395,13 +395,13 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         @Override
         public InterOpBase apply(Step step) {
             MatchStep matchStep = (MatchStep) step;
-            List<MatchSentence> sentences = getSentences(matchStep);
             MatchOp matchOp = new MatchOp();
+            List<MatchSentence> sentences = getSentences(matchStep, matchOp);
             matchOp.setSentences(new OpArg(sentences));
             return matchOp;
         }
 
-        private List<MatchSentence> getSentences(MatchStep matchStep) {
+        private List<MatchSentence> getSentences(MatchStep matchStep, MatchOp matchOp) {
             List<Traversal.Admin> matchTraversals = matchStep.getGlobalChildren();
             List<MatchSentence> sentences = new ArrayList<>();
             matchTraversals.forEach(

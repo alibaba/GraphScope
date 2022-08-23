@@ -21,21 +21,21 @@ import java.util.Optional;
 public class ExpandOp extends InterOpBase {
     public ExpandOp() {
         super();
-        this.isEdge = Optional.empty();
+        this.expandOpt = Optional.empty();
         this.direction = Optional.empty();
         this.params = Optional.empty();
     }
 
-    // out or outE
-    private Optional<OpArg> isEdge;
+    // FfiExpandOpt
+    private Optional<OpArg> expandOpt;
 
     // in/out/both
     private Optional<OpArg> direction;
 
     private Optional<QueryParams> params;
 
-    public Optional<OpArg> getIsEdge() {
-        return isEdge;
+    public Optional<OpArg> getExpandOpt() {
+        return expandOpt;
     }
 
     public Optional<OpArg> getDirection() {
@@ -50,8 +50,8 @@ public class ExpandOp extends InterOpBase {
         this.direction = Optional.of(direction);
     }
 
-    public void setEdgeOpt(OpArg isEdge) {
-        this.isEdge = Optional.of(isEdge);
+    public void setEdgeOpt(OpArg expandOpt) {
+        this.expandOpt = Optional.of(expandOpt);
     }
 
     public void setParams(QueryParams params) {

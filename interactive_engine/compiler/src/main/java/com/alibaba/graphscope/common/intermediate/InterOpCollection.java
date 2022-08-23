@@ -36,6 +36,7 @@ import java.util.Optional;
 
 // collection of intermediate operators
 public class InterOpCollection {
+    private InterOpBase parent;
     private List<InterOpBase> opCollection;
     private static List<InterOpStrategy> strategies =
             Arrays.asList(TopKStrategy.INSTANCE, ElementFusionStrategy.INSTANCE);
@@ -43,7 +44,8 @@ public class InterOpCollection {
     private static List<InterOpProcessor> processors =
             Arrays.asList(SubGraphProjectProcessor.INSTANCE, SinkOutputProcessor.INSTANCE);
 
-    public InterOpCollection() {
+    public InterOpCollection(InterOpBase parent) {
+        this.parent = parent;
         opCollection = new ArrayList<>();
     }
 
@@ -57,6 +59,10 @@ public class InterOpCollection {
 
     public void removeInterOp(int i) {
         opCollection.remove(i);
+    }
+
+    public InterOpBase getParent() {
+        return parent;
     }
 
     public static void applyStrategies(InterOpCollection opCollection) {

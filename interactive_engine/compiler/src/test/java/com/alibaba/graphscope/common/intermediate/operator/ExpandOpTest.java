@@ -19,6 +19,7 @@ package com.alibaba.graphscope.common.intermediate.operator;
 import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.jna.type.FfiDirection;
+import com.alibaba.graphscope.common.jna.type.FfiExpandOpt;
 import com.alibaba.graphscope.common.utils.FileUtils;
 
 import org.junit.After;
@@ -34,7 +35,7 @@ public class ExpandOpTest {
     @Test
     public void edgeOptTest() throws IOException {
         ExpandOp op = new ExpandOp();
-        op.setEdgeOpt(new OpArg<>(Boolean.valueOf(true), Function.identity()));
+        op.setEdgeOpt(new OpArg<>(FfiExpandOpt.Edge, Function.identity()));
         op.setDirection(new OpArg<>(FfiDirection.Out, Function.identity()));
         irPlan = DedupOpTest.getTestIrPlan(op);
         String actual = irPlan.getPlanAsJson();
@@ -44,7 +45,7 @@ public class ExpandOpTest {
     @Test
     public void labelsTest() throws IOException {
         ExpandOp op = new ExpandOp();
-        op.setEdgeOpt(new OpArg<>(Boolean.valueOf(true), Function.identity()));
+        op.setEdgeOpt(new OpArg<>(FfiExpandOpt.Edge, Function.identity()));
         op.setDirection(new OpArg<>(FfiDirection.Out, Function.identity()));
 
         QueryParams params = new QueryParams();
@@ -59,7 +60,7 @@ public class ExpandOpTest {
     @Test
     public void aliasTest() throws IOException {
         ExpandOp op = new ExpandOp();
-        op.setEdgeOpt(new OpArg<>(Boolean.valueOf(true), Function.identity()));
+        op.setEdgeOpt(new OpArg<>(FfiExpandOpt.Edge, Function.identity()));
         op.setDirection(new OpArg<>(FfiDirection.Out, Function.identity()));
         op.setAlias(new OpArg(ArgUtils.asAlias("a", true), Function.identity()));
         irPlan = DedupOpTest.getTestIrPlan(op);

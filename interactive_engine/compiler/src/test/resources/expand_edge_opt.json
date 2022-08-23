@@ -14,8 +14,8 @@
               "predicate": null,
               "extra": {}
             },
-            "is_edge": true,
-            "alias": null
+            "alias": null,
+            "expand_opt": 1
           }
         }
       },

@@ -18,6 +18,7 @@ package com.alibaba.graphscope.gremlin;
 
 import com.alibaba.graphscope.common.intermediate.operator.PathExpandOp;
 import com.alibaba.graphscope.common.jna.type.FfiDirection;
+import com.alibaba.graphscope.common.jna.type.FfiExpandOpt;
 import com.alibaba.graphscope.common.jna.type.FfiNameOrId;
 import com.alibaba.graphscope.gremlin.antlr4.__;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
@@ -41,7 +42,7 @@ public class PathExpandStepTest {
         PathExpandOp op = (PathExpandOp) StepTransformFactory.PATH_EXPAND_STEP.apply(step);
 
         Assert.assertEquals(FfiDirection.Out, op.getDirection().get().applyArg());
-        Assert.assertEquals(false, op.getIsEdge().get().applyArg());
+        Assert.assertEquals(FfiExpandOpt.Vertex, op.getExpandOpt().get().applyArg());
         Assert.assertEquals(1, op.getLower().get().applyArg());
         Assert.assertEquals(2, op.getUpper().get().applyArg());
     }
@@ -53,7 +54,7 @@ public class PathExpandStepTest {
         PathExpandOp op = (PathExpandOp) StepTransformFactory.PATH_EXPAND_STEP.apply(step);
 
         Assert.assertEquals(FfiDirection.Out, op.getDirection().get().applyArg());
-        Assert.assertEquals(false, op.getIsEdge().get().applyArg());
+        Assert.assertEquals(FfiExpandOpt.Vertex, op.getExpandOpt().get().applyArg());
         Assert.assertEquals(1, op.getLower().get().applyArg());
         Assert.assertEquals(2, op.getUpper().get().applyArg());
         FfiNameOrId.ByValue label = op.getParams().get().getTables().get(0);
