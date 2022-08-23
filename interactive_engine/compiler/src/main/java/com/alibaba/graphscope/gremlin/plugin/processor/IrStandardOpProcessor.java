@@ -317,7 +317,6 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                 script,
                 jobName,
                 irPlan.getPlanAsJson());
-
         byte[] physicalPlanBytes = irPlan.toPhysicalBytes(configs);
         irPlan.close();
 
