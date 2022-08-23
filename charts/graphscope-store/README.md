@@ -129,11 +129,11 @@ $ helm install my-release \
 ```
 
 Add multiple extra config to the component which is defined in the configmap by
-`--set extraConfig=k1=v1^k2=v2`. Note we use `^` to seperate config items. For example,
+`--set extraConfig=k1=v1;k2=v2`. Note we use `;` to seperate config items. For example,
 
 ```bash
 $ helm install my-release \
-  --set extraConfig=k1=v1^k2=v2 graphscope/graphscope-store
+  --set extraConfig=k1=v1;k2=v2 graphscope/graphscope-store
 ```
 
 

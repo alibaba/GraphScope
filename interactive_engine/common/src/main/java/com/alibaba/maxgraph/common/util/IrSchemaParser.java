@@ -65,9 +65,7 @@ public class IrSchemaParser {
                         true,
                         "is_column_id",
                         true);
-        String json = JSON.toJson(schemaMap);
-        // logger.info("graph schema is {}, ir schema is {}", graphSchema.formatJson(), json);
-        return json;
+        return JSON.toJson(schemaMap);
     }
 
     private Map<String, Object> getVertex(GraphSchema graphSchema, GraphVertex vertex) {

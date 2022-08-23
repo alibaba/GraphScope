@@ -78,7 +78,7 @@ data:
 
     ## Extra Config
     {{- if .Values.extraConfig }}
-    {{- $config_list := regexSplit "\\^" .Values.extraConfig -1 }}
+    {{- $config_list := regexSplit ";" .Values.extraConfig -1 }}
     {{- range $config_list }}
     {{ . }}
     {{- end }}

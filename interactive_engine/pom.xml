@@ -33,6 +33,7 @@
         <module>data_load_tools</module>
         <module>groot-module</module>
         <module>groot-server</module>
+        <module>lgraph</module>
         <module>sdk</module>
         <module>sdk-common</module>
         <module>executor/engine/pegasus/clients/java/client</module>
