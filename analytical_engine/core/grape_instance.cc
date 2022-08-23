@@ -184,13 +184,14 @@ bl::result<void> GrapeInstance::unloadGraph(const rpc::GSParams& params) {
           client_->GetObject(frag_group_id));
       auto fid = comm_spec_.WorkerToFrag(comm_spec_.worker_id());
       auto frag_id = fg->Fragments().at(fid);
-      VY_OK_OR_RAISE(client_->DelData(frag_id, false, true));
-    }
-    MPI_Barrier(comm_spec_.comm());
-    if (exists) {
+
+      // delete the fragment group first
       if (comm_spec_.worker_id() == 0) {
         VINEYARD_SUPPRESS(client_->DelData(frag_group_id, false, true));
       }
+      // ensure all fragments get deleted
+      MPI_Barrier(comm_spec_.comm());
+      VINEYARD_SUPPRESS(client_->DelData(frag_id, false, true));
     }
   }
   VLOG(1) << "Unloading Graph " << graph_name;
@@ -255,7 +256,26 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::projectToSimple(
                   projector->Project(wrapper, projected_graph_name, params));
   BOOST_LEAF_CHECK(object_manager_.PutObject(projected_wrapper));
 
-  return projected_wrapper->graph_def();
+  auto graph_def = projected_wrapper->graph_def();
+  if (!graph_def.has_extension()) {
+    return graph_def;
+  }
+  gs::rpc::graph::VineyardInfoPb vy_info;
+  // gather fragment id
+  graph_def.extension().UnpackTo(&vy_info);
+  if (vy_info.vineyard_id() == 0) {
+    return graph_def;
+  }
+  VY_OK_OR_RAISE(client_->Persist(vy_info.vineyard_id()));
+  // contruct fragment group
+  BOOST_LEAF_AUTO(frag_group_id,
+                  vineyard::ConstructFragmentGroup(
+                      *client_, vy_info.vineyard_id(), comm_spec_));
+  // return graph def with vineyard id attached
+  gs::rpc::graph::VineyardInfoPb new_vy_info = vy_info;
+  new_vy_info.set_vineyard_id(frag_group_id);
+  graph_def.mutable_extension()->PackFrom(new_vy_info);
+  return graph_def;
 }
 
 bl::result<std::string> GrapeInstance::query(const rpc::GSParams& params,
