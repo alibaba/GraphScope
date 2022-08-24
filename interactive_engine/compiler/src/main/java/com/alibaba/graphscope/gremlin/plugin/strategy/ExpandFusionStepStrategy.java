@@ -79,16 +79,15 @@ public class ExpandFusionStepStrategy
             }
         }
         // fuse out + count nested in apply
-        if (isApply(traversal)) {
-            if (traversal.getSteps().size() == 2
-                    && traversal.getStartStep() instanceof ExpandFusionStep
-                    && traversal.getEndStep() instanceof CountGlobalStep) {
-                ExpandFusionStep expandStep = (ExpandFusionStep) traversal.getStartStep();
-                CountGlobalStep countStep = (CountGlobalStep) traversal.getEndStep();
-                expandStep.setExpandOpt(FfiExpandOpt.Degree);
-                TraversalHelper.copyLabels(countStep, countStep.getPreviousStep(), false);
-                traversal.removeStep(countStep);
-            }
+        if (isApply(traversal)
+                && traversal.getSteps().size() == 2
+                && traversal.getStartStep() instanceof ExpandFusionStep
+                && traversal.getEndStep() instanceof CountGlobalStep) {
+            ExpandFusionStep expandStep = (ExpandFusionStep) traversal.getStartStep();
+            CountGlobalStep countStep = (CountGlobalStep) traversal.getEndStep();
+            expandStep.setExpandOpt(FfiExpandOpt.Degree);
+            TraversalHelper.copyLabels(countStep, countStep.getPreviousStep(), false);
+            traversal.removeStep(countStep);
         }
     }
 
