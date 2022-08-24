@@ -22,6 +22,7 @@
 use ir_common::expr_parse::str_to_expr_pb;
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
+use ir_common::generated::common::expr_opr::Item;
 use ir_common::KeyId;
 use pegasus_client::builder::{JobBuilder, Plan};
 use pegasus_server::job_pb as server_pb;
@@ -506,6 +507,40 @@ impl AsPhysical for NodeType {
     }
 }
 
+fn extract_expand_degree(node: NodeType) -> Option<pb::EdgeExpand> {
+    if let Some(pb::logical_plan::operator::Opr::Edge(edgexpd)) = &node.borrow().opr.opr {
+        if edgexpd.expand_opt == 2 {
+            // expand to degree
+            return Some(edgexpd.clone());
+        }
+    }
+
+    None
+}
+
+fn extract_project_single_tag(node: NodeType) -> Option<common_pb::NameOrId> {
+    if let Some(pb::logical_plan::operator::Opr::Project(project)) = &node.borrow().opr.opr {
+        if project.mappings.len() == 1 {
+            if let Some(expr) = &project.mappings.first().unwrap().expr {
+                if expr.operators.len() == 1 {
+                    if let Some(expr_opr) = expr.operators.first() {
+                        match expr_opr.item.as_ref().unwrap() {
+                            Item::Var(var) => {
+                                if var.property.is_none() {
+                                    return var.tag.clone(); // project tag only
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    None
+}
+
 impl AsPhysical for LogicalPlan {
     fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         use pb::join::JoinKind;
@@ -521,12 +556,22 @@ impl AsPhysical for LogicalPlan {
                 let mut sub_bldr = JobBuilder::default();
                 if let Some(subplan) = self.extract_subplan(curr_node.clone()) {
                     let mut expand_degree_opt = None;
-                    if subplan.num_nodes() == 1 {
-                        if let Some(node) = subplan.get_first_node() {
-                            if let Some(Edge(edgexpd)) = &node.borrow().opr.opr {
-                                if edgexpd.expand_opt == 2 {
-                                    // expand to degree
-                                    expand_degree_opt = Some(edgexpd.clone())
+                    if subplan.num_nodes() <= 2 {
+                        if subplan.num_nodes() == 1 {
+                            expand_degree_opt = subplan
+                                .get_first_node()
+                                .and_then(|node| extract_expand_degree(node));
+                        } else {
+                            let first_node_opt = subplan.get_first_node();
+                            let second_node_opt = subplan.get_last_node();
+                            let tag_opt: Option<common_pb::NameOrId> =
+                                first_node_opt.and_then(|node| extract_project_single_tag(node));
+                            if let Some(tag) = tag_opt {
+                                if let Some(mut expand_degree) =
+                                    second_node_opt.and_then(|node| extract_expand_degree(node))
+                                {
+                                    expand_degree.v_tag = Some(tag);
+                                    expand_degree_opt = Some(expand_degree);
                                 }
                             }
                         }
@@ -1670,6 +1715,85 @@ mod test {
             }
             .into(),
         );
+        expand.alias = Some(1.into()); // must carry `Apply`'s alias
+        fused.oprs.push(expand.into());
+        fused.oprs.push(
+            pb::Project {
+                mappings: vec![pb::project::ExprAlias {
+                    expr: str_to_expr_pb("@2".to_string()).ok(),
+                    alias: None,
+                }],
+                is_append: true,
+            }
+            .into(),
+        );
+        expected_builder.flat_map(pb::logical_plan::Operator::from(fused).encode_to_vec());
+
+        assert_eq!(expected_builder, builder);
+    }
+
+    #[test]
+    fn apply_as_physical_with_select_expand_degree_fuse() {
+        let mut plan = LogicalPlan::default();
+        // g.V().as("0").select().by(select("0").out().count().as("degree"))
+        // select("0").out().degree() fused
+        plan.meta = plan.meta.with_partition();
+
+        // g.V()
+        let scan: pb::logical_plan::Operator = pb::Scan {
+            scan_opt: 0,
+            alias: Some(0.into()),
+            params: Some(query_params(vec![], vec![])),
+            idx_predicate: None,
+        }
+        .into();
+
+        let opr_id = plan
+            .append_operator_as_node(scan.clone(), vec![])
+            .unwrap();
+
+        // .select("0").out().count()
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("@0".to_string()).ok(),
+                alias: None,
+            }],
+            is_append: true,
+        };
+        let mut expand = build_edgexpd(2, vec![], None);
+        let subplan_id = plan
+            .append_operator_as_node(project.into(), vec![])
+            .unwrap();
+        plan.append_operator_as_node(expand.clone().into(), vec![subplan_id])
+            .unwrap();
+
+        // Select().by()
+        let apply: pb::logical_plan::Operator =
+            pb::Apply { join_kind: 4, tags: vec![], subtask: subplan_id as i32, alias: Some(1.into()) }
+                .into();
+        plan.append_operator_as_node(apply.clone(), vec![opr_id])
+            .unwrap();
+
+        let mut builder = JobBuilder::default();
+        let mut meta = plan.meta.clone();
+        plan.add_job_builder(&mut builder, &mut meta)
+            .unwrap();
+
+        let mut expected_builder = JobBuilder::default();
+        expected_builder.add_source(scan.encode_to_vec());
+        expected_builder.repartition(
+            common_pb::NameOrIdKey { key: Some(common_pb::NameOrId::from(0)) }.encode_to_vec(),
+        );
+        let mut fused = pb::FusedOperator { oprs: vec![] };
+        fused.oprs.push(
+            pb::Auxilia {
+                tag: None,
+                params: None,
+                alias: Some(common_pb::NameOrId { item: Some(common_pb::name_or_id::Item::Id(2)) }),
+            }
+            .into(),
+        );
+        expand.v_tag = Some(0.into());
         expand.alias = Some(1.into()); // must carry `Apply`'s alias
         fused.oprs.push(expand.into());
         fused.oprs.push(
