@@ -569,7 +569,7 @@ impl AsPhysical for LogicalPlan {
                             }
                             .into(),
                         );
-                        builder.filter_map(pb::logical_plan::Operator::from(fused).encode_to_vec());
+                        builder.flat_map(pb::logical_plan::Operator::from(fused).encode_to_vec());
                     } else {
                         subplan.add_job_builder(&mut sub_bldr, plan_meta)?;
                         let plan = sub_bldr.take_plan();
@@ -1621,7 +1621,7 @@ mod test {
     }
 
     #[test]
-    fn apply_as_physical_case2() {
+    fn apply_as_physical_with_expand_degree_fuse() {
         let mut plan = LogicalPlan::default();
         // g.V().as("0").select("0").by(out().count().as("degree"))
         // out().degree() fused
@@ -1682,7 +1682,7 @@ mod test {
             }
             .into(),
         );
-        expected_builder.filter_map(pb::logical_plan::Operator::from(fused).encode_to_vec());
+        expected_builder.flat_map(pb::logical_plan::Operator::from(fused).encode_to_vec());
 
         assert_eq!(expected_builder, builder);
     }
