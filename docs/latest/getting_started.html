@@ -285,8 +285,8 @@ features of each paper node.</p>
 <span class="c1"># project the projected graph to simple graph.</span>
 <span class="n">simple_g</span> <span class="o">=</span> <span class="n">sub_graph</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;paper&quot;</span><span class="p">:</span> <span class="p">[]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;cites&quot;</span><span class="p">:</span> <span class="p">[]})</span>
 
-<span class="n">ret1</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">kcore</span><span class="p">(</span><span class="n">simple_g</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-<span class="n">ret2</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">triangle</span><span class="p">(</span><span class="n">simple_g</span><span class="p">)</span>
+<span class="n">ret1</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">k_core</span><span class="p">(</span><span class="n">simple_g</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">ret2</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">triangles</span><span class="p">(</span><span class="n">simple_g</span><span class="p">)</span>
 
 <span class="c1"># add the results as new columns to the citation graph</span>
 <span class="n">sub_graph</span> <span class="o">=</span> <span class="n">sub_graph</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="n">ret1</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;kcore&quot;</span><span class="p">:</span> <span class="s2">&quot;r&quot;</span><span class="p">})</span>
@@ -312,7 +312,7 @@ features following the last step.</p>
 <span class="n">paper_features</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;tc&quot;</span><span class="p">)</span>
 
 <span class="c1"># launch a learning engine.</span>
-<span class="n">lg</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">learning</span><span class="p">(</span><span class="n">sub_graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;paper&quot;</span><span class="p">,</span> <span class="n">paper_features</span><span class="p">)],</span>
+<span class="n">lg</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">graphlearn</span><span class="p">(</span><span class="n">sub_graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;paper&quot;</span><span class="p">,</span> <span class="n">paper_features</span><span class="p">)],</span>
                    <span class="n">edges</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;paper&quot;</span><span class="p">,</span> <span class="s2">&quot;cites&quot;</span><span class="p">,</span> <span class="s2">&quot;paper&quot;</span><span class="p">)],</span>
                    <span class="n">gen_labels</span><span class="o">=</span><span class="p">[</span>
                         <span class="p">(</span><span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;paper&quot;</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">75</span><span class="p">)),</span>
@@ -349,7 +349,7 @@ features following the last step.</p>
     <span class="n">graphscope</span><span class="o">.</span><span class="n">learning</span><span class="o">.</span><span class="n">reset_default_tf_graph</span><span class="p">()</span>
     <span class="n">trainer</span> <span class="o">=</span> <span class="n">LocalTFTrainer</span><span class="p">(</span><span class="n">model_fn</span><span class="p">,</span>
                              <span class="n">epoch</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;epoch&quot;</span><span class="p">],</span>
-                             <span class="n">optimizer</span><span class="o">=</span><span class="n">gl</span><span class="o">.</span><span class="n">get_tf_optimizer</span><span class="p">(</span>
+                             <span class="n">optimizer</span><span class="o">=</span><span class="n">get_tf_optimizer</span><span class="p">(</span>
                              <span class="n">config</span><span class="p">[</span><span class="s2">&quot;learning_algo&quot;</span><span class="p">],</span>
                              <span class="n">config</span><span class="p">[</span><span class="s2">&quot;learning_rate&quot;</span><span class="p">],</span>
                              <span class="n">config</span><span class="p">[</span><span class="s2">&quot;weight_decay&quot;</span><span class="p">]))</span>
@@ -445,6 +445,16 @@ Then, the coordinator will dealloc all the applied resources in the k8s cluster.
             
               
                 <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.16.0/index.html">v0.16.0</a></dd>
               
             
 
