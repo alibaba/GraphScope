@@ -81,8 +81,13 @@ executorQueryStoreThreadCount: 2
 log4rsConfig: "LOG4RS_CONFIG"
 
 
-
+## Key-value pair seperated by ;
+## For example extraConfig=k1=v1;k2=v2
 extraConfig: ""
+
+auth:
+  username: ""
+  password: ""
 
 ## Role Based Access
 ## ref: https://kubernetes.io/docs/admin/authorization/rbac/
@@ -100,6 +105,16 @@ serviceAccount:
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
   name: ""
+
+persistence:
+    ## Persistent Volume Storage Class
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack)
+    ##
+    storageClass: ""
 
 ## Name of existing ConfigMap with GraphScope configuration.
 ## NOTE: When it's set the 'configuration' parameter is ignored
@@ -139,15 +154,15 @@ store:
   ##
   affinity: {}
 
-  ## Node labels for GraphScope store pods assignment
-  ## ref: https://kubernetes.io/docs/user-guide/node-selection/
-  ##
-  nodeSelector: {}
-
   ## Tolerations for GraphScope store pods assignment
   ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
   ##
   tolerations: []
+
+  ## Node labels for GraphScope store pods assignment
+  ## ref: https://kubernetes.io/docs/user-guide/node-selection/
+  ##
+  nodeSelector: {}
 
   ## GraphScope store Pod security context
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
@@ -207,14 +222,6 @@ store:
     ## NOTE: When it's set the rest of persistence parameters are ignored
     ##
     # existingClaim:
-    ## Persistent Volume Storage Class
-    ## If defined, storageClassName: <storageClass>
-    ## If set to "-", storageClassName: "", which disables dynamic provisioning
-    ## If undefined (the default) or set to null, no storageClassName spec is
-    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
-    ##   GKE, AWS & OpenStack)
-    ##
-    storageClass: ""
     ## Persistent Volume Claim annotations
     ##
     annotations: {}
@@ -301,15 +308,15 @@ frontend:
   ##
   affinity: {}
 
-  ## Node labels for GraphScope store pods assignment
-  ## ref: https://kubernetes.io/docs/user-guide/node-selection/
-  ##
-  nodeSelector: {}
-
   ## Tolerations for GraphScope store pods assignment
   ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
   ##
   tolerations: []
+
+  ## Node labels for GraphScope store pods assignment
+  ## ref: https://kubernetes.io/docs/user-guide/node-selection/
+  ##
+  nodeSelector: {}
 
   ## GraphScope store container's resource requests and limits
   ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
@@ -450,15 +457,15 @@ ingestor:
   ##
   affinity: {}
 
-  ## Node labels for GraphScope store pods assignment
-  ## ref: https://kubernetes.io/docs/user-guide/node-selection/
-  ##
-  nodeSelector: {}
-
   ## Tolerations for GraphScope store pods assignment
   ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
   ##
   tolerations: []
+
+  ## Node labels for GraphScope store pods assignment
+  ## ref: https://kubernetes.io/docs/user-guide/node-selection/
+  ##
+  nodeSelector: {}
 
   ## GraphScope store container's resource requests and limits
   ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
@@ -562,15 +569,15 @@ coordinator:
   ##
   affinity: {}
 
-  ## Node labels for GraphScope store pods assignment
-  ## ref: https://kubernetes.io/docs/user-guide/node-selection/
-  ##
-  nodeSelector: {}
-
   ## Tolerations for GraphScope store pods assignment
   ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
   ##
   tolerations: []
+
+  ## Node labels for GraphScope store pods assignment
+  ## ref: https://kubernetes.io/docs/user-guide/node-selection/
+  ##
+  nodeSelector: {}
 
   ## GraphScope store container's resource requests and limits
   ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
@@ -618,14 +625,6 @@ coordinator:
     ## NOTE: When it's set the rest of persistence parameters are ignored
     ##
     # existingClaim:
-    ## Persistent Volume Storage Class
-    ## If defined, storageClassName: <storageClass>
-    ## If set to "-", storageClassName: "", which disables dynamic provisioning
-    ## If undefined (the default) or set to null, no storageClassName spec is
-    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
-    ##   GKE, AWS & OpenStack)
-    ##
-    storageClass: ""
     ## Persistent Volume Claim annotations
     ##
     annotations: {}
@@ -699,4 +698,5 @@ externalKafka:
   servers: []
 
 global:
+  imageRegistry: ""
   storageClass: ""

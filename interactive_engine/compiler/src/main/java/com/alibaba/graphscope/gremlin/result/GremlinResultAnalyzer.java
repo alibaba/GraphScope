@@ -19,6 +19,8 @@ package com.alibaba.graphscope.gremlin.result;
 import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.exception.UnsupportedStepException;
 import com.alibaba.graphscope.gremlin.plugin.step.ExprStep;
+import com.alibaba.graphscope.gremlin.plugin.step.GroupCountStep;
+import com.alibaba.graphscope.gremlin.plugin.step.GroupStep;
 import com.alibaba.graphscope.gremlin.plugin.step.PathExpandStep;
 import com.alibaba.graphscope.gremlin.plugin.step.ScanFusionStep;
 
@@ -60,7 +62,7 @@ public class GremlinResultAnalyzer {
                 parserType = GremlinResultParserFactory.PROJECT_VALUE;
             } else if (Utils.equalClass(step, GroupCountStep.class)
                     || Utils.equalClass(step, GroupStep.class)) {
-                parserType = GremlinResultParserFactory.GROUP;
+                parserType = GroupResultParser.create(step);
             } else if (Utils.equalClass(step, UnionStep.class)) {
                 parserType = GremlinResultParserFactory.UNION;
             } else if (Utils.equalClass(step, SubgraphStep.class)) {

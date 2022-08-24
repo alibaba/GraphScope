@@ -211,4 +211,16 @@ public class NegativeEvalTest {
         }
         Assert.fail();
     }
+
+    // g.V().group().by('name', 'age') is unsupported
+    @Test
+    public void g_V_group_by_name_age_test() {
+        try {
+            scriptEngine.eval("g.V().group().by('name', 'age')", context);
+        } catch (InvalidGremlinScriptException e) {
+            // expected error
+            return;
+        }
+        Assert.fail();
+    }
 }

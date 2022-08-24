@@ -275,35 +275,54 @@ traversalMethod_groupCount
 	: 'groupCount' LPAREN RPAREN (DOT traversalMethod_group_keyby)?
 	;
 
-// group().by()
-// group().by('name')
+traversalMethod_group_keyby
+    : 'by' LPAREN RPAREN                   // group().by()
+    | 'by' LPAREN stringLiteral RPAREN     // group().by('name')
+    | 'by' LPAREN nonStringKeyByList RPAREN
+    ;
+
 // group().by(values('name'))
 // group().by(values('name').as('key'))
 // group().by(out().count())
-traversalMethod_group_keyby
-    : 'by' LPAREN RPAREN
-    | 'by' LPAREN stringLiteral RPAREN
-    | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_values (DOT traversalMethod_as)? RPAREN
-    | 'by' LPAREN nestedTraversal RPAREN
+// group().by(out().count().as('key'))
+nonStringKeyBy
+    : nestedTraversal
     ;
 
-// group().by(...).by()
-// group().by(...).by(fold().as("value"))
-// group().by(...).by(count())
-// group().by(...).by(count().as("value"))
-// group().by(...).by("name") = group().by(...).by(values("name").fold())
-// group().by(...).by(sum()/min()/max()/mean()/fold())
+// group().by(values('name').as('k1'), values('age').as('k2'))
+// group().by(out().count().as('k1'), in().count().as('k2'))
+nonStringKeyByList
+    : nonStringKeyBy (COMMA nonStringKeyBy)*
+    ;
+
+traversalMethod_group_valueby
+    : 'by' LPAREN RPAREN                   // group().by(...).by()
+    | 'by' LPAREN stringLiteral RPAREN     // group().by(...).by("name") = group().by(...).by(values("name").fold())
+    | 'by' LPAREN nonStringValueByList RPAREN
+    ;
+
+// group().by(...).by(count()/sum()/min()/max()/mean()/fold())
+
 // group().by(...).by(select("a").count()/sum()/min()/max()/mean()/fold())
 // group().by(...).by(select("a").by("name").count()/sum()/min()/max()/mean()/fold())
 // group().by(...).by(select("a").values("name").count()/sum()/min()/max()/mean()/fold())
-// group().by(...).by(dedup().count()) = countDistinct
-// group().by(...).by(dedup().fold()) = toSet
-traversalMethod_group_valueby
-    : 'by' LPAREN RPAREN
-    | 'by' LPAREN stringLiteral RPAREN
-    | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? (traversalMethod_select DOT)? (traversalMethod_values DOT)? traversalMethod_aggregate_func (DOT traversalMethod_as)? RPAREN
-    | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_dedup DOT traversalMethod_count (DOT traversalMethod_as)? RPAREN
-    | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_dedup DOT traversalMethod_fold (DOT traversalMethod_as)? RPAREN
+
+// group().by(...).by(dedup().count()) = countDistinct('@')
+// group().by(...).by(dedup('a').count()) = countDistinct('@a')
+// group().by(...).by(dedup('a').by('name').count()) = countDistinct('@a.name')
+
+// group().by(...).by(dedup().fold()) = toSet('@')
+// group().by(...).by(dedup('a').fold()) = toSet('@a')
+// group().by(...).by(dedup('a').by('name').fold()) = toSet('@a.name')
+nonStringValueBy
+    : (ANON_TRAVERSAL_ROOT DOT)? (traversalMethod_select DOT)? (traversalMethod_values DOT)? traversalMethod_aggregate_func (DOT traversalMethod_as)?
+    | (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_dedup DOT traversalMethod_count (DOT traversalMethod_as)?
+    | (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_dedup DOT traversalMethod_fold (DOT traversalMethod_as)?
+    ;
+
+// i.e. group().by(...).by(count().as('a'), sum().as('b'))
+nonStringValueByList
+    : nonStringValueBy (COMMA nonStringValueBy)*
     ;
 
 traversalMethod_aggregate_func

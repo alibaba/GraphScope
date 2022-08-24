@@ -71,7 +71,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
                 });
         Assert.assertEquals(
                 "{0=[v[2], v[72057594037927939], v[72057594037927941]], 1=[v[6]], 2=[v[4]],"
-                    + " 3=[v[1]]}",
+                        + " 3=[v[1]]}",
                 result.toString());
         Assert.assertFalse(traversal.hasNext());
     }

@@ -77,7 +77,9 @@ import javax.script.Bindings;
 import javax.script.SimpleBindings;
 
 public class IrStandardOpProcessor extends StandardOpProcessor {
+    private static Logger metricLogger = LoggerFactory.getLogger("MetricLog");
     private static Logger logger = LoggerFactory.getLogger(IrStandardOpProcessor.class);
+
     protected static final AtomicLong JOB_ID_COUNTER = new AtomicLong(0L);
     protected Graph graph;
     protected GraphTraversalSource g;
@@ -106,6 +108,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
             final Context ctx,
             final Supplier<GremlinExecutor> gremlinExecutorSupplier,
             final AbstractEvalOpProcessor.BindingSupplier bindingsSupplier) {
+        long startTime = System.currentTimeMillis();
         com.codahale.metrics.Timer.Context timerContext = evalOpTimer.time();
         RequestMessage msg = ctx.getRequestMessage();
         GremlinExecutor gremlinExecutor = gremlinExecutorSupplier.get();
@@ -115,9 +118,9 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         String language = AntlrToJavaScriptEngineFactory.ENGINE_NAME;
         Bindings bindings = new SimpleBindings();
 
+        long jobId = JOB_ID_COUNTER.incrementAndGet();
         GremlinExecutor.LifeCycle lifeCycle =
-                createLifeCycle(ctx, gremlinExecutorSupplier, bindingsSupplier, script);
-
+                createLifeCycle(ctx, gremlinExecutorSupplier, bindingsSupplier, jobId, script);
         try {
             CompletableFuture<Object> evalFuture =
                     gremlinExecutor.eval(script, language, bindings, lifeCycle);
@@ -128,6 +131,14 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                 "query \"{}\" total execution time is {} ms",
                                 script,
                                 elapsed / 1000000.0f);
+                        boolean isSuccess = (t == null);
+                        metricLogger.info(
+                                "{} | {} | {} | {} | {}",
+                                jobId,
+                                script,
+                                isSuccess,
+                                elapsed / 1000000.0f,
+                                startTime);
                         if (t != null) {
                             Optional<Throwable> possibleTemporaryException =
                                     determineIfTemporaryException(t);
@@ -236,6 +247,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
             Context ctx,
             Supplier<GremlinExecutor> gremlinExecutorSupplier,
             BindingSupplier bindingsSupplier,
+            long jobId,
             String script) {
         final RequestMessage msg = ctx.getRequestMessage();
         final Settings settings = ctx.getSettings();
@@ -273,6 +285,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                             traversal,
                                             new GremlinResultProcessor(
                                                     ctx, GremlinResultAnalyzer.analyze(traversal)),
+                                            jobId,
                                             script);
                                 }
                             } catch (InvalidProtocolBufferException e) {
@@ -286,7 +299,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
 
     // add script argument to print with ir plan
     protected void processTraversal(
-            Traversal traversal, ResultProcessor resultProcessor, String script)
+            Traversal traversal, ResultProcessor resultProcessor, long jobId, String script)
             throws InvalidProtocolBufferException, IOException, RuntimeException {
         IrMeta irMeta = metaQueryCallback.beforeExec();
 
@@ -296,17 +309,14 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         // add sink operator
         InterOpCollection.process(opCollection);
 
-        long jobId = JOB_ID_COUNTER.incrementAndGet();
         String jobName = "ir_plan_" + jobId;
-
-        IrPlan irPlan = new IrPlan(irMeta, opCollection, jobName);
+        IrPlan irPlan = new IrPlan(irMeta, opCollection);
         // print script and jobName with ir plan
         logger.info(
                 "gremlin query \"{}\", job conf name \"{}\", ir plan {}",
                 script,
                 jobName,
                 irPlan.getPlanAsJson());
-
         byte[] physicalPlanBytes = irPlan.toPhysicalBytes(configs);
         irPlan.close();
 

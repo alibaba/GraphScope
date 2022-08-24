@@ -22,6 +22,8 @@ import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.gremlin.exception.UnsupportedStepException;
 import com.alibaba.graphscope.gremlin.plugin.step.ExprStep;
+import com.alibaba.graphscope.gremlin.plugin.step.GroupCountStep;
+import com.alibaba.graphscope.gremlin.plugin.step.GroupStep;
 import com.alibaba.graphscope.gremlin.plugin.step.PathExpandStep;
 import com.alibaba.graphscope.gremlin.plugin.step.ScanFusionStep;
 import com.alibaba.graphscope.gremlin.transform.StepTransformFactory;

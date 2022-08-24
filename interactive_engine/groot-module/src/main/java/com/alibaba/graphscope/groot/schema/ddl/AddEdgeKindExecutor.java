@@ -31,7 +31,6 @@ public class AddEdgeKindExecutor extends AbstractDdlExecutor {
     @Override
     public DdlResult execute(ByteString ddlBlob, GraphDef graphDef, int partitionCount)
             throws InvalidProtocolBufferException {
-
         EdgeKindPb edgeKindPb = EdgeKindPb.parseFrom(ddlBlob);
         EdgeKind edgeKind = EdgeKind.parseProto(edgeKindPb);
         long version = graphDef.getSchemaVersion();

@@ -6,14 +6,14 @@ import java.io.IOException;
 
 public class LoadTool {
 
-    public static void ingest(String path, boolean isFromOSS, String uniquePath)
+    public static void ingest(String configPath, boolean isFromOSS, String uniquePath)
             throws IOException {
-        new IngestDataCommand(path, isFromOSS, uniquePath).run();
+        new IngestDataCommand(configPath, isFromOSS, uniquePath).run();
     }
 
-    public static void commit(String path, boolean isFromOSS, String uniquePath)
+    public static void commit(String configPath, boolean isFromOSS, String uniquePath)
             throws IOException {
-        new CommitDataCommand(path, isFromOSS, uniquePath).run();
+        new CommitDataCommand(configPath, isFromOSS, uniquePath).run();
     }
 
     public static void main(String[] args) throws ParseException, IOException {
@@ -50,23 +50,23 @@ public class LoadTool {
         CommandLineParser parser = new DefaultParser();
         CommandLine commandLine = parser.parse(options, args);
         String command = commandLine.getOptionValue("command");
-        String path = null;
+        String configPath = null;
         String uniquePath = null;
         boolean isFromOSS = false;
         if (commandLine.hasOption("oss")) {
             isFromOSS = true;
-            path = commandLine.getOptionValue("oss");
+            configPath = commandLine.getOptionValue("oss");
             uniquePath = commandLine.getOptionValue("u");
         } else {
-            path = commandLine.getOptionValue("dir");
+            configPath = commandLine.getOptionValue("dir");
         }
 
         if (commandLine.hasOption("help") || command == null) {
             printHelp(options);
         } else if (command.equalsIgnoreCase("ingest")) {
-            ingest(path, isFromOSS, uniquePath);
+            ingest(configPath, isFromOSS, uniquePath);
         } else if (command.equalsIgnoreCase("commit")) {
-            commit(path, isFromOSS, uniquePath);
+            commit(configPath, isFromOSS, uniquePath);
         } else {
             printHelp(options);
         }
