@@ -21,11 +21,9 @@ import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.gremlin.exception.UnsupportedStepException;
-import com.alibaba.graphscope.gremlin.plugin.step.ExprStep;
+import com.alibaba.graphscope.gremlin.plugin.step.*;
 import com.alibaba.graphscope.gremlin.plugin.step.GroupCountStep;
 import com.alibaba.graphscope.gremlin.plugin.step.GroupStep;
-import com.alibaba.graphscope.gremlin.plugin.step.PathExpandStep;
-import com.alibaba.graphscope.gremlin.plugin.step.ScanFusionStep;
 import com.alibaba.graphscope.gremlin.transform.StepTransformFactory;
 import com.alibaba.graphscope.gremlin.transform.TraversalParentTransformFactory;
 
@@ -52,12 +50,7 @@ public class InterOpCollectionBuilder {
     }
 
     public InterOpCollection build() throws OpArgIllegalException, UnsupportedStepException {
-        return build(new InterOpBase() {});
-    }
-
-    public InterOpCollection build(InterOpBase parent)
-            throws OpArgIllegalException, UnsupportedStepException {
-        InterOpCollection opCollection = new InterOpCollection(parent);
+        InterOpCollection opCollection = new InterOpCollection();
         List<Step> steps = traversal.asAdmin().getSteps();
         for (Step step : steps) {
             List<InterOpBase> opList = new ArrayList<>();
@@ -66,8 +59,8 @@ public class InterOpCollectionBuilder {
                 opList.add(StepTransformFactory.GRAPH_STEP.apply(step));
             } else if (Utils.equalClass(step, ScanFusionStep.class)) {
                 opList.add(StepTransformFactory.SCAN_FUSION_STEP.apply(step));
-            } else if (Utils.equalClass(step, VertexStep.class)) {
-                opList.add(StepTransformFactory.VERTEX_STEP.apply(step));
+            } else if (Utils.equalClass(step, ExpandFusionStep.class)) {
+                opList.add(StepTransformFactory.EXPAND_FUSION_STEP.apply(step));
             } else if (Utils.equalClass(step, HasStep.class)) {
                 opList.add(StepTransformFactory.HAS_STEP.apply(step));
             } else if (Utils.equalClass(step, RangeGlobalStep.class)) {

@@ -22,10 +22,7 @@ public class SelectOp extends InterOpBase {
     public SelectOp() {
         super();
         this.predicate = Optional.empty();
-        this.type = FilterType.NONE;
     }
-
-    private FilterType type;
 
     private Optional<OpArg> predicate;
 
@@ -35,19 +32,5 @@ public class SelectOp extends InterOpBase {
 
     public void setPredicate(OpArg predicate) {
         this.predicate = Optional.of(predicate);
-    }
-
-    public void setType(FilterType type) {
-        this.type = type;
-    }
-
-    public FilterType getType() {
-        return type;
-    }
-
-    public enum FilterType {
-        NONE,
-        HAS,
-        WHERE,
     }
 }

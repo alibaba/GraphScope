@@ -78,7 +78,7 @@ public class EmptyTest {
         Traversal traversal = g.V().out();
         IrStandardOpProcessor.applyStrategies(traversal);
         Step step = traversal.asAdmin().getEndStep();
-        ExpandOp op = (ExpandOp) StepTransformFactory.VERTEX_STEP.apply(step);
+        ExpandOp op = (ExpandOp) StepTransformFactory.EXPAND_FUSION_STEP.apply(step);
         Assert.assertEquals(true, op.getParams().get().getTables().isEmpty());
     }
 }

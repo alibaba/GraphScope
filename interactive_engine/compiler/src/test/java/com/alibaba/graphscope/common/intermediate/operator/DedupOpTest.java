@@ -52,7 +52,7 @@ public class DedupOpTest {
     }
 
     public static IrPlan getTestIrPlan(InterOpBase op, InterOpBase... ops) {
-        InterOpCollection opCollection = new InterOpCollection(new InterOpBase() {});
+        InterOpCollection opCollection = new InterOpCollection();
         opCollection.appendInterOp(op);
         if (ops != null) {
             for (InterOpBase op1 : ops) {
