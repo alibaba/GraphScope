@@ -89,6 +89,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Developer Guide</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#building-and-testing-graphscope-locally-with-docker">Building and Testing GraphScope locally with Docker</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#building-and-testing-graphscope-on-kubernetes">Building and Testing GraphScope on Kubernetes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#building-and-testing-graphscope-on-local">Building and Testing GraphScope on local</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#build-python-wheels">Build Python Wheels</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#linux">Linux</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#macos">MacOS</a></li>
@@ -192,6 +193,55 @@ python3 setup.py install
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
 
 <span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">k8s_gs_image</span><span class="o">=</span><span class="s1">&#39;graphscope/graphscope:SHORTSHA&#39;</span><span class="p">)</span>
+
+<span class="c1"># ...</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="building-and-testing-graphscope-on-local">
+<h2>Building and Testing GraphScope on local<a class="headerlink" href="#building-and-testing-graphscope-on-local" title="Permalink to this headline"></a></h2>
+<p>To build graphscope Python package and the engine binaries, some dependencies and build tools need to be installed.</p>
+<p>To make life easier, we provide a script to install the dependencies and build tools.
+the script is supported on the following 64-bit systems:</p>
+<ul class="simple">
+<li><p>Ubuntu 18.04 or later</p></li>
+<li><p>CentOS 8 or later</p></li>
+<li><p>macOS 11.2.1 (Big Sur) or later, with both Intel chip and Apple M1 chip</p></li>
+</ul>
+<p>The script would install following dependencies or tools which needed by GraphScope building:
+- C++ compiler (gcc or llvm)
+- cmake (&gt;=3.1)
+- java sdk (&gt;=8)
+- maven
+- boost (&gt;=1.66)
+- apache-arrow
+- rust (&gt; 1.52.0)
+- etcd
+- openmpi
+- protobuf
+- grpc
+- libgrape-lite (the core of analytical engine)
+- vineyard
+- fastFFI (for grape-jdk)</p>
+<p>First, you need to <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span></code> the latest version of code from our <a class="reference external" href="https://github.com/alibaba/GraphScope">repo</a>
+and run the command:</p>
+<p>The <cite>install_deps.sh</cite> does not install the grape-jdk dependency <cite>fastFFI</cite> by default.
+If you don’t care about <cite>grape jdk &lt;https://github.com/alibaba/GraphScope/blob/main/analytical_engine/java/README.md&gt;</cite>,
+you can ignore this phase. But if you want to use the grape jdk of GraphScope,
+you need to run the command after install the default dependencies.</p>
+<p>Then you can build GraphScope with pre-configured <cite>make</cite> commands.</p>
+<p><a href="#id3"><span class="problematic" id="id4">``</span></a><a href="#id5"><span class="problematic" id="id6">`</span></a>bash
+# to make graphscope whole package, including python package + engine binaries.
+make graphscope</p>
+<p># or make the engine components
+# make gie
+# make gae
+# make gle
+<a href="#id7"><span class="problematic" id="id8">``</span></a><a href="#id9"><span class="problematic" id="id10">`</span></a></p>
+<p>To test the newly built binaries, manually open a session:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
+
+<span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s2">&quot;hosts&quot;</span><span class="p">)</span>
 
 <span class="c1"># ...</span>
 </pre></div>
@@ -306,6 +356,16 @@ for C++ and <a class="reference external" href="https://github.com/psf/black#the
             
               
                 <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.16.0/index.html">v0.16.0</a></dd>
               
             
 

@@ -277,6 +277,14 @@ $ <span class="nb">echo</span> <span class="s2">&quot;GREMLIN endpoint is: </spa
 <td><p>Java options</p></td>
 <td><p>“”</p></td>
 </tr>
+<tr class="row-even"><td><p>auth.username</p></td>
+<td><p>Username</p></td>
+<td><p>“”</p></td>
+</tr>
+<tr class="row-odd"><td><p>auth.password</p></td>
+<td><p>Password</p></td>
+<td><p>“”</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -380,9 +388,9 @@ $ <span class="nb">echo</span> <span class="s2">&quot;GREMLIN endpoint is: </spa
   --set image.tag<span class="o">=</span>latest graphscope/graphscope-store
 </pre></div>
 </div>
-<p>Add multiple extra config to the component which is defined in the configmap by <cite>–set extraConfig=k1=v1:k2=v2</cite>. Note we use <cite>:</cite> to seperate config items. For example,</p>
+<p>Add multiple extra config to the component which is defined in the configmap by <cite>–set extraConfig=k1=v1;k2=v2</cite>. Note we use <cite>;</cite> to seperate config items. For example,</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ helm install my-release <span class="se">\</span>
-  --set <span class="nv">extraConfig</span><span class="o">=</span><span class="nv">k1</span><span class="o">=</span>v1:k2<span class="o">=</span>v2 graphscope/graphscope-store
+  --set <span class="nv">extraConfig</span><span class="o">=</span><span class="nv">k1</span><span class="o">=</span>v1<span class="p">;</span><span class="nv">k2</span><span class="o">=</span>v2 graphscope/graphscope-store
 </pre></div>
 </div>
 <p>Alternatively, a YAML file that specifies the values for the parameters can be provided while installing the chart. For example,</p>
@@ -825,6 +833,16 @@ For an edge type, the mapping info should includes 1) label of the edge type, 2)
             
               
                 <dd><a href="index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="v0.16.0/index.html">v0.16.0</a></dd>
               
             
 
