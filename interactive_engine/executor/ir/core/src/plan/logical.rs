@@ -283,6 +283,15 @@ impl LogicalPlan {
             .map(|tuple| tuple.1.clone())
     }
 
+    /// Get first node in the logical plan
+    pub fn get_last_node(&self) -> Option<NodeType> {
+        self.nodes
+            .iter()
+            .rev()
+            .next()
+            .map(|tuple| tuple.1.clone())
+    }
+
     pub fn get_meta(&self) -> &PlanMeta {
         &self.meta
     }
