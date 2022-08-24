@@ -107,6 +107,7 @@ impl AsPhysical for pb::Select {
                     is_all_columns: columns_opt.is_all(),
                     limit: None,
                     predicate: None,
+                    sample_ratio: 1.0,
                     extra: Default::default(),
                 };
                 params.predicate = self.predicate.clone();
@@ -186,6 +187,7 @@ impl AsPhysical for pb::EdgeExpand {
                                 is_all_columns,
                                 limit: None,
                                 predicate: None,
+                                sample_ratio: 1.0,
                                 extra: Default::default(),
                             };
                             auxilia.params = Some(new_params);
@@ -314,6 +316,7 @@ impl AsPhysical for pb::GetV {
                         is_all_columns: false,
                         limit: None,
                         predicate: None,
+                        sample_ratio: 1.0,
                         extra: Default::default(),
                     };
 
@@ -731,6 +734,7 @@ mod test {
             is_all_columns: false,
             limit: None,
             predicate: None,
+            sample_ratio: 1.0,
             extra: HashMap::new(),
         }
     }
@@ -779,6 +783,7 @@ mod test {
                 is_all_columns: false,
                 limit: None,
                 predicate: str_to_expr_pb(expr.to_string()).ok(),
+                sample_ratio: 1.0,
                 extra: Default::default(),
             }),
             alias: None,
@@ -1209,6 +1214,7 @@ mod test {
                     is_all_columns: false,
                     limit: None,
                     predicate: str_to_expr_pb("@.age > 10".to_string()).ok(),
+                    sample_ratio: 1.0,
                     extra: Default::default(),
                 }),
                 alias: None,
@@ -1237,6 +1243,7 @@ mod test {
                     is_all_columns: false,
                     limit: None,
                     predicate: str_to_expr_pb("@.age > 10".to_string()).ok(),
+                    sample_ratio: 1.0,
                     extra: Default::default(),
                 }),
                 alias: None,
@@ -1645,6 +1652,7 @@ mod test {
                 is_all_columns: false,
                 limit: None,
                 predicate: str_to_expr_pb("@.lang == \"Java\"".to_string()).ok(),
+                sample_ratio: 1.0,
                 extra: Default::default(),
             }),
             alias: None,

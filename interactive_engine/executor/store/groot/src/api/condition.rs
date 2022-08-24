@@ -54,6 +54,7 @@ impl OrCondition {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct NotCondition {
     sub_condition: Box<Condition>,

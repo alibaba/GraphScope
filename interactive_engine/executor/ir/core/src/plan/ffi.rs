@@ -841,6 +841,7 @@ mod params {
             is_all_columns: false,
             limit: None,
             predicate: None,
+            sample_ratio: 1.0,
             extra: HashMap::new(),
         });
 
@@ -898,6 +899,15 @@ mod params {
     pub extern "C" fn set_params_is_all_columns(ptr_params: *const c_void) -> FfiResult {
         let mut params = unsafe { Box::from_raw(ptr_params as *mut pb::QueryParams) };
         params.is_all_columns = true;
+        std::mem::forget(params);
+
+        FfiResult::success()
+    }
+
+    #[no_mangle]
+    pub extern "C" fn set_params_sample_ratio(ptr_params: *const c_void, sample_ratio: f64) -> FfiResult {
+        let mut params = unsafe { Box::from_raw(ptr_params as *mut pb::QueryParams) };
+        params.sample_ratio = sample_ratio;
         std::mem::forget(params);
 
         FfiResult::success()
@@ -1450,6 +1460,7 @@ mod scan {
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
+                sample_ratio: 1.0,
                 extra: HashMap::new(),
             }),
             idx_predicate: None,
@@ -1728,6 +1739,7 @@ mod graph {
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
+                sample_ratio: 1.0,
                 extra: HashMap::new(),
             }),
             alias: None,
@@ -1801,6 +1813,7 @@ mod graph {
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
+                sample_ratio: 1.0,
                 extra: HashMap::new(),
             }),
             alias: None,
