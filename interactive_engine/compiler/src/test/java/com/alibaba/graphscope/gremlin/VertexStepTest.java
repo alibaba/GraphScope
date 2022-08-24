@@ -46,8 +46,10 @@ public class VertexStepTest {
     @Test
     public void g_V_out() {
         Traversal traversal = g.V().out();
+        IrStandardOpProcessor.applyStrategies(traversal);
+
         Step vertexStep = traversal.asAdmin().getEndStep();
-        ExpandOp op = (ExpandOp) StepTransformFactory.VERTEX_STEP.apply(vertexStep);
+        ExpandOp op = (ExpandOp) StepTransformFactory.EXPAND_FUSION_STEP.apply(vertexStep);
         Assert.assertEquals(FfiDirection.Out, op.getDirection().get().applyArg());
         Assert.assertEquals(FfiExpandOpt.Vertex, op.getExpandOpt().get().applyArg());
     }
@@ -55,8 +57,10 @@ public class VertexStepTest {
     @Test
     public void g_V_outE() {
         Traversal traversal = g.V().outE();
+        IrStandardOpProcessor.applyStrategies(traversal);
+
         Step vertexStep = traversal.asAdmin().getEndStep();
-        ExpandOp op = (ExpandOp) StepTransformFactory.VERTEX_STEP.apply(vertexStep);
+        ExpandOp op = (ExpandOp) StepTransformFactory.EXPAND_FUSION_STEP.apply(vertexStep);
         Assert.assertEquals(FfiDirection.Out, op.getDirection().get().applyArg());
         Assert.assertEquals(FfiExpandOpt.Edge, op.getExpandOpt().get().applyArg());
     }

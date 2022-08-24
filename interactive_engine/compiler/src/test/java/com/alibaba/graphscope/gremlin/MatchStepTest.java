@@ -64,6 +64,8 @@ public class MatchStepTest {
     @Test
     public void g_V_match_as_a_out_as_b_test() {
         Traversal traversal = g.V().match(__.as("a").out().as("b"));
+        IrStandardOpProcessor.applyStrategies(traversal);
+
         MatchSentence sentence = getSentences(traversal).get(0);
         Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 1));
     }
@@ -72,6 +74,8 @@ public class MatchStepTest {
     @Test
     public void g_V_match_as_a_out_hasLabel_as_b_test() {
         Traversal traversal = g.V().match(__.as("a").out().hasLabel("person").as("b"));
+        IrStandardOpProcessor.applyStrategies(traversal);
+
         MatchSentence sentence = getSentences(traversal).get(0);
         Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 2));
 
@@ -86,6 +90,8 @@ public class MatchStepTest {
     @Test
     public void g_V_match_as_a_out_hasProp_as_b_test() {
         Traversal traversal = g.V().match(__.as("a").out().has("name", "marko").as("b"));
+        IrStandardOpProcessor.applyStrategies(traversal);
+
         MatchSentence sentence = getSentences(traversal).get(0);
         Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 2));
 
@@ -113,6 +119,8 @@ public class MatchStepTest {
     @Test
     public void g_V_match_as_a_outE_hasProp_as_b_test() {
         Traversal traversal = g.V().match(__.as("a").outE().has("weight", 1.0).as("b"));
+        IrStandardOpProcessor.applyStrategies(traversal);
+
         MatchSentence sentence = getSentences(traversal).get(0);
         Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 1));
         ExpandOp op = (ExpandOp) sentence.getBinders().unmodifiableCollection().get(0);
@@ -124,6 +132,8 @@ public class MatchStepTest {
     @Test
     public void g_V_match_as_a_outE_outV_hasLabel_as_b_test() {
         Traversal traversal = g.V().match(__.as("a").outE().outV().hasLabel("person").as("b"));
+        IrStandardOpProcessor.applyStrategies(traversal);
+
         MatchSentence sentence = getSentences(traversal).get(0);
         Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 3));
 
@@ -138,6 +148,8 @@ public class MatchStepTest {
     @Test
     public void g_V_match_as_a_outE_outV_hasProp_as_b_test() {
         Traversal traversal = g.V().match(__.as("a").outE().outV().has("name", "marko").as("b"));
+        IrStandardOpProcessor.applyStrategies(traversal);
+
         MatchSentence sentence = getSentences(traversal).get(0);
         Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 3));
 
@@ -179,6 +191,7 @@ public class MatchStepTest {
                                         .inV()
                                         .has("name", "marko")
                                         .as("b"));
+        IrStandardOpProcessor.applyStrategies(traversal);
 
         MatchSentence sentence = getSentences(traversal).get(0);
         Assert.assertTrue(isEqualWith(sentence, "a", "b", FfiJoinKind.Inner, 2));
@@ -194,6 +207,8 @@ public class MatchStepTest {
     @Test
     public void g_V_match_as_a_out_as_b_out_as_c_test() {
         Traversal traversal = g.V().match(__.as("a").out().as("b"), __.as("b").out().as("c"));
+        IrStandardOpProcessor.applyStrategies(traversal);
+
         MatchSentence sentence1 = getSentences(traversal).get(0);
         MatchSentence sentence2 = getSentences(traversal).get(1);
         Assert.assertTrue(isEqualWith(sentence1, "a", "b", FfiJoinKind.Inner, 1));
@@ -204,6 +219,8 @@ public class MatchStepTest {
     public void g_V_match_as_a_out_as_b_where_test() {
         Traversal traversal =
                 g.V().match(__.as("a").out().as("b"), __.where(__.as("a").out().as("c")));
+        IrStandardOpProcessor.applyStrategies(traversal);
+
         MatchSentence sentence1 = getSentences(traversal).get(0);
         MatchSentence sentence2 = getSentences(traversal).get(1);
         Assert.assertTrue(isEqualWith(sentence1, "a", "b", FfiJoinKind.Inner, 1));
@@ -214,6 +231,8 @@ public class MatchStepTest {
     public void g_V_match_as_a_out_as_b_not_test() {
         Traversal traversal =
                 g.V().match(__.as("a").out().as("b"), __.not(__.as("a").out().as("c")));
+        IrStandardOpProcessor.applyStrategies(traversal);
+
         MatchSentence sentence1 = getSentences(traversal).get(0);
         MatchSentence sentence2 = getSentences(traversal).get(1);
         Assert.assertTrue(isEqualWith(sentence1, "a", "b", FfiJoinKind.Inner, 1));

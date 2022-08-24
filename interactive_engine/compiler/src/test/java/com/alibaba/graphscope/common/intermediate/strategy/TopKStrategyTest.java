@@ -18,7 +18,6 @@ package com.alibaba.graphscope.common.intermediate.strategy;
 
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
-import com.alibaba.graphscope.common.intermediate.operator.InterOpBase;
 import com.alibaba.graphscope.common.intermediate.operator.LimitOp;
 import com.alibaba.graphscope.common.intermediate.operator.OpArg;
 import com.alibaba.graphscope.common.intermediate.operator.OrderOp;
@@ -35,7 +34,7 @@ import java.util.function.Function;
 public class TopKStrategyTest {
     @Test
     public void orderLimitTest() {
-        InterOpCollection opCollection = new InterOpCollection(new InterOpBase() {});
+        InterOpCollection opCollection = new InterOpCollection();
 
         OrderOp orderOp = new OrderOp();
         List<Pair> orderPair = Arrays.asList(Pair.with(ArgUtils.asNoneVar(), FfiOrderOpt.Asc));
