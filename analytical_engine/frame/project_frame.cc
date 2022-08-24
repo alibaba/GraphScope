@@ -81,6 +81,12 @@ class ProjectSimpleFrame<
     rpc::graph::GraphDefPb graph_def;
     graph_def.set_key(projected_graph_name);
     graph_def.set_graph_type(rpc::graph::ARROW_PROJECTED);
+    gs::rpc::graph::VineyardInfoPb vy_info;
+    if (graph_def.has_extension()) {
+      graph_def.extension().UnpackTo(&vy_info);
+    }
+    vy_info.set_vineyard_id(projected_frag->id());
+    graph_def.mutable_extension()->PackFrom(vy_info);
 
     setGraphDef(projected_frag, v_label_id, e_label_id, v_prop_id, e_prop_id,
                 graph_def);

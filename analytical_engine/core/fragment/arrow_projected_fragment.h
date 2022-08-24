@@ -467,6 +467,8 @@ class ArrowProjectedFragment
 
     meta.AddMember("arrow_fragment", fragment->meta());
     meta.AddMember("arrow_projected_vertex_map", vm->meta());
+    meta.AddKeyValue("vertex_label_num_", 1);
+    meta.AddKeyValue("edge_label_num_", 1);
 
     std::shared_ptr<vineyard::NumericArray<int64_t>> ie_offsets_begin,
         ie_offsets_end;
