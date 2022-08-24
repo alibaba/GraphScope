@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.integration;
 
 import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.dedup;
+import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.outE;
 
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 
@@ -29,11 +30,13 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Map;
+import java.util.*;
 
 public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     public abstract Traversal<Vertex, Map<Object, Long>>
             get_g_V_group_by_by_dedup_count_order_by_key();
+
+    public abstract Traversal<Vertex, Map<Object, List>> get_g_V_group_by_outE_count_order_by_key();
 
     @Test
     public void g_V_group_by_by_dedup_count_test() {
@@ -49,6 +52,30 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         Assert.assertFalse(traversal.hasNext());
     }
 
+    @Test
+    public void g_V_group_by_outE_count_test() {
+        Traversal<Vertex, Map<Object, List>> traversal =
+                this.get_g_V_group_by_outE_count_order_by_key();
+        this.printTraversalForm(traversal);
+        Map<Object, List> result = traversal.next();
+        Assert.assertEquals(4, result.size());
+        result.forEach(
+                (k, v) -> {
+                    Collections.sort(
+                            v,
+                            (Object o1, Object o2) -> {
+                                long v1Id = (long) ((Vertex) o1).id();
+                                long v2Id = (long) ((Vertex) o2).id();
+                                return (int) (v1Id - v2Id);
+                            });
+                });
+        Assert.assertEquals(
+                "{0=[v[2], v[72057594037927939], v[72057594037927941]], 1=[v[6]], 2=[v[4]],"
+                    + " 3=[v[1]]}",
+                result.toString());
+        Assert.assertFalse(traversal.hasNext());
+    }
+
     public static class Traversals extends IrGremlinQueryTest {
 
         @Override
@@ -59,6 +86,12 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
                             .by(dedup().count())
                             .order()
                             .by(__.select(Column.keys).values("id"), Order.asc);
+        }
+
+        @Override
+        public Traversal<Vertex, Map<Object, List>> get_g_V_group_by_outE_count_order_by_key() {
+            return (IrCustomizedTraversal)
+                    g.V().group().by(outE().count()).order().by(__.select(Column.keys));
         }
     }
 }

@@ -63,7 +63,8 @@ public class ElementFusionStrategy implements InterOpStrategy {
             }
             // fuse out + count nested in apply
             if (opCollection.getParent() instanceof ApplyOp
-                    && cur instanceof ExpandOp
+                    && i == 0
+                    && cur instanceof ExpandOp // cur is expand op
                     && i + 1 < original.size()
                     && isCount(original.get(i + 1))) {
                 ((ExpandOp) cur).setEdgeOpt(new OpArg(FfiExpandOpt.Degree));
@@ -99,9 +100,8 @@ public class ElementFusionStrategy implements InterOpStrategy {
         if (!groupKeysOpt.isPresent() || !groupValuesOpt.isPresent()) return false;
         List groupKeys = (List) groupKeysOpt.get().applyArg();
         List<ArgAggFn> groupValues = (List<ArgAggFn>) groupValuesOpt.get().applyArg();
-        return groupKeys
-                        .isEmpty() // count: group_key represent as empty_list, group_value
-                                   // represent as Count(None)
+        return groupKeys.isEmpty() // count: group_key represent as empty_list, group_value
+                // represent as Count(None)
                 && groupValues.size() == 1
                 && groupValues.get(0).getAggregate() == FfiAggOpt.Count
                 && groupValues.get(0).getVar().equals(ArgUtils.asNoneVar());
