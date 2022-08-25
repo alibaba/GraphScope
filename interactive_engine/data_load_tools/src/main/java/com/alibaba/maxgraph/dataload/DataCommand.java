@@ -19,7 +19,7 @@ import java.util.*;
 
 public abstract class DataCommand {
 
-    protected String dataPath;
+    protected String configPath;
     protected String graphEndpoint;
     protected GraphSchema schema;
     protected Map<String, ColumnMappingInfo> columnMappingInfos;
@@ -37,8 +37,8 @@ public abstract class DataCommand {
     protected final String USER_NAME = "auth.username";
     protected final String PASS_WORD = "auth.password";
 
-    public DataCommand(String dataPath, boolean isFromOSS, String uniquePath) throws IOException {
-        this.dataPath = dataPath;
+    public DataCommand(String configPath, boolean isFromOSS, String uniquePath) throws IOException {
+        this.configPath = configPath;
         this.uniquePath = uniquePath;
         initialize(isFromOSS);
     }
@@ -46,7 +46,7 @@ public abstract class DataCommand {
     private void initialize(boolean isFromOSS) throws IOException {
         if (isFromOSS) {
             Properties properties = new Properties();
-            try (InputStream is = new FileInputStream(this.dataPath)) {
+            try (InputStream is = new FileInputStream(this.configPath)) {
                 properties.load(is);
             } catch (IOException e) {
                 throw e;
@@ -59,13 +59,13 @@ public abstract class DataCommand {
             username = properties.getProperty(USER_NAME);
             password = properties.getProperty(PASS_WORD);
 
-            dataPath =
+            configPath =
                     "oss://"
                             + Paths.get(
                                     Paths.get(ossEndPoint, ossBucketName).toString(),
                                     ossObjectName);
 
-            Map<String, String> ossInfo = new HashMap<String, String>();
+            Map<String, String> ossInfo = new HashMap<>();
             ossInfo.put(OSS_ENDPOINT, ossEndPoint);
             ossInfo.put(OSS_ACCESS_ID, ossAccessId);
             ossInfo.put(OSS_ACCESS_KEY, ossAccessKey);
@@ -75,8 +75,8 @@ public abstract class DataCommand {
             this.metaData = ossFileObj.readBuffer(ossBucketName, ossObjectName, metaFileName);
             ossFileObj.close();
         } else {
-            FileSystem fs = new Path(this.dataPath).getFileSystem(new Configuration());
-            try (FSDataInputStream inputStream = fs.open(new Path(this.dataPath, "META"))) {
+            FileSystem fs = new Path(this.configPath).getFileSystem(new Configuration());
+            try (FSDataInputStream inputStream = fs.open(new Path(this.configPath, "META"))) {
                 this.metaData = inputStream.readUTF();
             }
         }

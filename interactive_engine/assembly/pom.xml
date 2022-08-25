@@ -43,7 +43,7 @@
       </dependency>
         <dependency>
           <groupId>com.alibaba.maxgraph</groupId>
-          <artifactId>maxgraph-executor</artifactId>
+          <artifactId>executor</artifactId>
           <version>${project.parent.version}</version>
         </dependency>
       </dependencies>
@@ -77,7 +77,7 @@
         </dependency>
         <dependency>
           <groupId>com.alibaba.maxgraph</groupId>
-          <artifactId>maxgraph-executor</artifactId>
+          <artifactId>executor</artifactId>
           <version>${project.parent.version}</version>
         </dependency>
         <dependency>

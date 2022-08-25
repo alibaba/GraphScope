@@ -463,6 +463,8 @@ class CoordinatorServiceServicer(
             if op.op in (
                 types_pb2.CREATE_GRAPH,
                 types_pb2.PROJECT_GRAPH,
+                types_pb2.PROJECT_TO_SIMPLE,
+                types_pb2.TRANSFORM_GRAPH,
                 types_pb2.ADD_LABELS,
                 types_pb2.ADD_COLUMN,
             ):

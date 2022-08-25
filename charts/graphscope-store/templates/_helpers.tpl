@@ -70,7 +70,27 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 Return the proper graphscope-store image name
 */}}
 {{- define "graphscope-store.image" -}}
-{{ include "graphscope-store.images.image" . }}
+{{ include "graphscope-store.images.image" (dict "imageRoot" .Values.image "global" .Values.global) }}
+{{- end -}}
+
+{{/*
+Return the proper image name
+{{ include "graphscope-store.images.image" ( dict "imageRoot" .Values.path.to.the.image "global" $) }}
+*/}}
+{{- define "graphscope-store.images.image" -}}
+{{- $registryName := .imageRoot.registry -}}
+{{- $repositoryName := .imageRoot.repository -}}
+{{- $tag := .imageRoot.tag | toString -}}
+{{- if .global }}
+    {{- if .global.imageRegistry }}
+     {{- $registryName = .global.imageRegistry -}}
+    {{- end -}}
+{{- end -}}
+{{- if $registryName }}
+{{- printf "%s/%s:%s" $registryName $repositoryName $tag -}}
+{{- else -}}
+{{- printf "%s:%s" $repositoryName $tag -}}
+{{- end -}}
 {{- end -}}
 
 {{/*
@@ -120,40 +140,41 @@ Usage:
 {{- end -}}
 
 
+
+
 {{/*
-Return the proper image name
-{{ include "graphscope-store.images.image" . }}
+Return the proper Storage Class
 */}}
-{{- define "graphscope-store.images.image" -}}
-{{- $tag := .Chart.AppVersion | toString -}}
-{{- with .Values.image -}}
-{{- if .tag -}}
-{{- $tag = .tag | toString -}}
-{{- end -}}
-{{- if .registry -}}
-{{- printf "%s/%s:%s" .registry .repository $tag -}}
+{{- define "graphscope-store.storageClass" -}}
+{{/*
+Helm 2.11 supports the assignment of a value to a variable defined in a different scope,
+but Helm 2.9 and 2.10 does not support it, so we need to implement this if-else logic.
+*/}}
+{{- if .Values.global -}}
+    {{- if .Values.global.storageClass -}}
+        {{- if (eq "-" .Values.global.storageClass) -}}
+            {{- printf "storageClassName: \"\"" -}}
+        {{- else }}
+            {{- printf "storageClassName: %s" .Values.global.storageClass -}}
+        {{- end -}}
+    {{- else -}}
+        {{- if .Values.persistence.storageClass -}}
+              {{- if (eq "-" .Values.persistence.storageClass) -}}
+                  {{- printf "storageClassName: \"\"" -}}
+              {{- else }}
+                  {{- printf "storageClassName: %s" .Values.persistence.storageClass -}}
+              {{- end -}}
+        {{- end -}}
+    {{- end -}}
 {{- else -}}
-{{- printf "%s:%s" .repository $tag -}}
+    {{- if .Values.persistence.storageClass -}}
+        {{- if (eq "-" .Values.persistence.storageClass) -}}
+            {{- printf "storageClassName: \"\"" -}}
+        {{- else }}
+            {{- printf "storageClassName: %s" .Values.persistence.storageClass -}}
+        {{- end -}}
+    {{- end -}}
 {{- end -}}
-{{- end -}}
-{{- end -}}
-
-
-{{/*
-Return  the proper Storage Class
-{{ include "graphscope-store.storage.class" .Values.path.to.the.persistence }}
-*/}}
-{{- define "graphscope-store.storage.class" -}}
-
-{{- $storageClass := .storageClass -}}
-{{- if $storageClass -}}
-  {{- if (eq "-" $storageClass) -}}
-      {{- printf "storageClassName: \"\"" -}}
-  {{- else }}
-      {{- printf "storageClassName: %s" $storageClass -}}
-  {{- end -}}
-{{- end -}}
-
 {{- end -}}
 
 {{/*

@@ -319,12 +319,13 @@ public class StoreService implements MetricsAgent {
         this.ingestExecutor.execute(
                 () -> {
                     try {
-                        logger.info("ingest data [" + path + "]");
+                        logger.info("ingesting data [{}]", path);
                         ingestDataInternal(path, callback);
                     } catch (Exception e) {
                         logger.error("ingest data failed. path [" + path + "]", e);
                         callback.onError(e);
                     }
+                    logger.info("ingest data [{}] complete", path);
                 });
     }
 
@@ -339,6 +340,7 @@ public class StoreService implements MetricsAgent {
             GraphPartition partition = entry.getValue();
             String fileName = "part-r-" + String.format("%05d", pid) + ".sst";
             String fullPath = path + "/" + fileName;
+            logger.info("downloading {}", fullPath);
             this.downloadExecutor.execute(
                     () -> {
                         try {
@@ -364,6 +366,7 @@ public class StoreService implements MetricsAgent {
         } catch (FileNotFoundException fnfe) {
             // Ignore
         }
+        logger.info("cleared directory {}", downloadPath);
         Files.createDirectories(downloadPath);
     }
 

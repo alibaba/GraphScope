@@ -141,7 +141,7 @@ public class JnaGraphStore implements GraphPartition {
             storage.downloadData(sstPath, sstLocalPath);
             String sstMD5Value = getFileMD5(sstLocalPath);
             if (!chkMD5Value.equals(sstMD5Value)) {
-                throw new IOException("CheckSum failed!");
+                throw new IOException("CheckSum failed for " + sstPath);
             }
         } else if ("hdfs".equals(scheme)) {
             storage.downloadData(sstPath, sstLocalPath);

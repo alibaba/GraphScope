@@ -530,11 +530,6 @@ impl GraphStore {
                 });
                 res_unwrap!(res, open, config, path)
             }
-            "alibtree" => {
-                let msg = format!("alibtree is not supported yet");
-                let err = gen_graph_err!(GraphErrorCode::NotSupported, msg, open, config, path);
-                Err(err)
-            }
             unknown => {
                 let msg = format!("unknown storage {}", unknown);
                 let err = gen_graph_err!(GraphErrorCode::NotSupported, msg, open, config, path);

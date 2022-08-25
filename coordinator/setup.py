@@ -45,17 +45,6 @@ def get_version(file):
     return __version__
 
 
-def get_lib_suffix():
-    suffix = ""
-    if platform.system() == "Linux":
-        suffix = "so"
-    elif platform.system() == "Darwin":
-        suffix = "dylib"
-    else:
-        raise RuntimeError("Get library suffix failed on {0}".format(platform.system()))
-    return suffix
-
-
 repo_root = os.path.dirname(os.path.abspath(__file__))
 version = get_version(os.path.join(repo_root, "..", "VERSION"))
 
@@ -101,6 +90,18 @@ def _get_extra_data():
             )
         return openmpi_prefix
 
+    def __get_lib_suffix():
+        suffix = ""
+        if platform.system() == "Linux":
+            suffix = "so"
+        elif platform.system() == "Darwin":
+            suffix = "dylib"
+        else:
+            raise RuntimeError(
+                "Get library suffix failed on {0}".format(platform.system())
+            )
+        return suffix
+
     name = os.environ.get("package_name", "gs-coordinator")
     RUNTIME_ROOT = "graphscope.runtime"
 
@@ -114,7 +115,7 @@ def _get_extra_data():
         data = {
             "/opt/graphscope/lib/": os.path.join(RUNTIME_ROOT, "lib"),
             "/usr/local/lib/libvineyard_internal_registry.{0}".format(
-                get_lib_suffix()
+                __get_lib_suffix()
             ): os.path.join(RUNTIME_ROOT, "lib"),
         }
 

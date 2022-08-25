@@ -25,6 +25,8 @@
 #include "vineyard/graph/fragment/arrow_fragment.h"
 
 #include "apps/property/property_sssp.h"
+#include "core/context/i_context.h"
+#include "core/context/labeled_vertex_property_context.h"
 #include "core/loader/arrow_fragment_loader.h"
 #include "core/utils/transform_utils.h"
 
@@ -46,136 +48,136 @@ void RunPropertySSSP(std::shared_ptr<GraphType> fragment,
   MPI_Barrier(comm_spec.comm());
   worker->Query(4);
 
-  std::shared_ptr<gs::IContext> ctx = worker->GetContext();
+  auto ctx = worker->GetContext();
 
   worker->Finalize();
 
-  std::shared_ptr<gs::ILabeledVertexPropertyContext> t_ctx =
-      std::dynamic_pointer_cast<gs::ILabeledVertexPropertyContext>(ctx);
+  std::shared_ptr<gs::LabeledVertexPropertyContextWrapper<GraphType>> t_ctx =
+      std::dynamic_pointer_cast<
+          gs::LabeledVertexPropertyContextWrapper<GraphType>>(ctx);
   MPI_Barrier(comm_spec.comm());
   {
-    grape::InArchive arc;
-    t_ctx->to_nd_array(arc, comm_spec, "r:label0.property0", "", "");
+    auto selector = gs::LabeledSelector::parse("r:label0.property0").value();
+    auto arc = t_ctx->ToNdArray(comm_spec, selector, {"", ""}).value();
     if (comm_spec.fid() == 0) {
-      output_nd_array(std::move(arc), out_prefix + "nd_array_result_0");
+      gs::output_nd_array(std::move(*arc), out_prefix + "nd_array_result_0");
     } else {
-      CHECK(arc.Empty());
+      CHECK(arc->Empty());
     }
   }
   MPI_Barrier(comm_spec.comm());
   {
-    grape::InArchive arc;
-    t_ctx->to_nd_array(arc, comm_spec, "r:label1.property0", "", "");
+    auto selector = gs::LabeledSelector::parse("r:label1.property0").value();
+    auto arc = t_ctx->ToNdArray(comm_spec, selector, {"", ""}).value();
     if (comm_spec.fid() == 0) {
-      output_nd_array(std::move(arc), out_prefix + "nd_array_result_1");
+      gs::output_nd_array(std::move(*arc), out_prefix + "nd_array_result_1");
     } else {
-      CHECK(arc.Empty());
+      CHECK(arc->Empty());
     }
   }
   MPI_Barrier(comm_spec.comm());
   {
-    grape::InArchive arc;
-    t_ctx->to_nd_array(arc, comm_spec, "r:label2.property0", "", "");
+    auto selector = gs::LabeledSelector::parse("r:label2.property0").value();
+    auto arc = t_ctx->ToNdArray(comm_spec, selector, {"", ""}).value();
     if (comm_spec.fid() == 0) {
-      output_nd_array(std::move(arc), out_prefix + "nd_array_result_2");
+      gs::output_nd_array(std::move(*arc), out_prefix + "nd_array_result_2");
     } else {
-      CHECK(arc.Empty());
+      CHECK(arc->Empty());
     }
   }
   MPI_Barrier(comm_spec.comm());
   {
-    grape::InArchive arc;
-    t_ctx->to_nd_array(arc, comm_spec, "r:label3.property0", "", "");
+    auto selector = gs::LabeledSelector::parse("r:label3.property0").value();
+    auto arc = t_ctx->ToNdArray(comm_spec, selector, {"", ""}).value();
     if (comm_spec.fid() == 0) {
-      output_nd_array(std::move(arc), out_prefix + "nd_array_result_3");
+      gs::output_nd_array(std::move(*arc), out_prefix + "nd_array_result_3");
     } else {
-      CHECK(arc.Empty());
+      CHECK(arc->Empty());
     }
   }
   MPI_Barrier(comm_spec.comm());
   {
-    grape::InArchive arc;
-    t_ctx->to_nd_array(arc, comm_spec, "v:label0.id", "", "");
+    auto selector = gs::LabeledSelector::parse("r:label0.id").value();
+    auto arc = t_ctx->ToNdArray(comm_spec, selector, {"", ""}).value();
     if (comm_spec.fid() == 0) {
-      output_nd_array(std::move(arc), out_prefix + "nd_array_id_0");
+      gs::output_nd_array(std::move(*arc), out_prefix + "nd_array_id_0");
     } else {
-      CHECK(arc.Empty());
+      CHECK(arc->Empty());
     }
   }
   MPI_Barrier(comm_spec.comm());
   {
-    grape::InArchive arc;
-    t_ctx->to_nd_array(arc, comm_spec, "v:label1.id", "", "");
+    auto selector = gs::LabeledSelector::parse("r:label1.id").value();
+    auto arc = t_ctx->ToNdArray(comm_spec, selector, {"", ""}).value();
     if (comm_spec.fid() == 0) {
-      output_nd_array(std::move(arc), out_prefix + "nd_array_id_1");
+      gs::output_nd_array(std::move(*arc), out_prefix + "nd_array_id_1");
     } else {
-      CHECK(arc.Empty());
+      CHECK(arc->Empty());
     }
   }
   MPI_Barrier(comm_spec.comm());
   {
-    grape::InArchive arc;
-    t_ctx->to_nd_array(arc, comm_spec, "v:label2.id", "", "");
+    auto selector = gs::LabeledSelector::parse("r:label2.id").value();
+    auto arc = t_ctx->ToNdArray(comm_spec, selector, {"", ""}).value();
     if (comm_spec.fid() == 0) {
-      output_nd_array(std::move(arc), out_prefix + "nd_array_id_2");
+      gs::output_nd_array(std::move(*arc), out_prefix + "nd_array_id_2");
     } else {
-      CHECK(arc.Empty());
+      CHECK(arc->Empty());
     }
   }
   MPI_Barrier(comm_spec.comm());
   {
-    grape::InArchive arc;
-    t_ctx->to_nd_array(arc, comm_spec, "v:label3.id", "", "");
+    auto selector = gs::LabeledSelector::parse("r:label3.id").value();
+    auto arc = t_ctx->ToNdArray(comm_spec, selector, {"", ""}).value();
     if (comm_spec.fid() == 0) {
-      output_nd_array(std::move(arc), out_prefix + "nd_array_id_3");
+      gs::output_nd_array(std::move(*arc), out_prefix + "nd_array_id_3");
     } else {
-      CHECK(arc.Empty());
+      CHECK(arc->Empty());
     }
   }
   MPI_Barrier(comm_spec.comm());
   {
-    grape::InArchive arc;
-    t_ctx->to_nd_array(arc, comm_spec, "v:label0.property0", "", "");
+    auto selector = gs::LabeledSelector::parse("v:label0.property0").value();
+    auto arc = t_ctx->ToNdArray(comm_spec, selector, {"", ""}).value();
     if (comm_spec.fid() == 0) {
-      output_nd_array(std::move(arc), out_prefix + "nd_array_property_0");
+      gs::output_nd_array(std::move(*arc), out_prefix + "nd_array_property_0");
     } else {
-      CHECK(arc.Empty());
+      CHECK(arc->Empty());
     }
   }
   MPI_Barrier(comm_spec.comm());
   {
-    grape::InArchive arc;
-    t_ctx->to_nd_array(arc, comm_spec, "v:label1.property0", "", "");
+    auto selector = gs::LabeledSelector::parse("v:label1.property0").value();
+    auto arc = t_ctx->ToNdArray(comm_spec, selector, {"", ""}).value();
     if (comm_spec.fid() == 0) {
-      output_nd_array(std::move(arc), out_prefix + "nd_array_property_1");
+      gs::output_nd_array(std::move(*arc), out_prefix + "nd_array_property_1");
     } else {
-      CHECK(arc.Empty());
+      CHECK(arc->Empty());
     }
   }
   MPI_Barrier(comm_spec.comm());
   {
-    grape::InArchive arc;
-    t_ctx->to_nd_array(arc, comm_spec, "v:label2.property0", "", "");
+    auto selector = gs::LabeledSelector::parse("v:label2.property0").value();
+    auto arc = t_ctx->ToNdArray(comm_spec, selector, {"", ""}).value();
     if (comm_spec.fid() == 0) {
-      output_nd_array(std::move(arc), out_prefix + "nd_array_property_2");
+      gs::output_nd_array(std::move(*arc), out_prefix + "nd_array_property_2");
     } else {
-      CHECK(arc.Empty());
+      CHECK(arc->Empty());
     }
   }
   MPI_Barrier(comm_spec.comm());
   {
-    grape::InArchive arc;
-    t_ctx->to_nd_array(arc, comm_spec, "v:label3.property0", "", "");
+    auto selector = gs::LabeledSelector::parse("v:label3.property0").value();
+    auto arc = t_ctx->ToNdArray(comm_spec, selector, {"", ""}).value();
     if (comm_spec.fid() == 0) {
-      output_nd_array(std::move(arc), out_prefix + "nd_array_property_3");
+      gs::output_nd_array(std::move(*arc), out_prefix + "nd_array_property_3");
     } else {
-      CHECK(arc.Empty());
+      CHECK(arc->Empty());
     }
   }
 
   MPI_Barrier(comm_spec.comm());
   {
-    grape::InArchive arc;
     std::vector<std::pair<std::string, std::string>> selector_list;
     selector_list.emplace_back("id", "v:label0.id");
     selector_list.emplace_back("result", "r:label0.property0");
@@ -183,17 +185,19 @@ void RunPropertySSSP(std::shared_ptr<GraphType> fragment,
     selector_list.emplace_back("result2", "r:label0.property0");
 
     std::string selectors = gs::generate_selectors(selector_list);
-    t_ctx->to_pandas(arc, comm_spec, selectors, "", "");
+    auto parsed_selectors =
+        gs::LabeledSelector::ParseSelectors(selectors).value();
+    auto arc =
+        t_ctx->ToDataframe(comm_spec, parsed_selectors, {"", ""}).value();
 
     if (comm_spec.fid() == 0) {
-      output_dataframe(std::move(arc), out_prefix + "dataframe_0");
+      gs::output_dataframe(std::move(*arc), out_prefix + "dataframe_0");
     } else {
-      CHECK(arc.Empty());
+      CHECK(arc->Empty());
     }
   }
 
   {
-    grape::InArchive arc;
     std::vector<std::pair<std::string, std::string>> selector_list;
     selector_list.emplace_back("id", "v:label1.id");
     selector_list.emplace_back("result", "r:label1.property0");
@@ -201,17 +205,19 @@ void RunPropertySSSP(std::shared_ptr<GraphType> fragment,
     selector_list.emplace_back("result2", "r:label1.property0");
 
     std::string selectors = gs::generate_selectors(selector_list);
-    t_ctx->to_pandas(arc, comm_spec, selectors, "", "");
+    auto parsed_selectors =
+        gs::LabeledSelector::ParseSelectors(selectors).value();
+    auto arc =
+        t_ctx->ToDataframe(comm_spec, parsed_selectors, {"", ""}).value();
 
     if (comm_spec.fid() == 0) {
-      output_dataframe(std::move(arc), out_prefix + "dataframe_1");
+      gs::output_dataframe(std::move(*arc), out_prefix + "dataframe_1");
     } else {
-      CHECK(arc.Empty());
+      CHECK(arc->Empty());
     }
   }
 
   {
-    grape::InArchive arc;
     std::vector<std::pair<std::string, std::string>> selector_list;
     selector_list.emplace_back("id", "v:label2.id");
     selector_list.emplace_back("result", "r:label2.property0");
@@ -219,17 +225,19 @@ void RunPropertySSSP(std::shared_ptr<GraphType> fragment,
     selector_list.emplace_back("result2", "r:label2.property0");
 
     std::string selectors = gs::generate_selectors(selector_list);
-    t_ctx->to_pandas(arc, comm_spec, selectors, "", "");
+    auto parsed_selectors =
+        gs::LabeledSelector::ParseSelectors(selectors).value();
+    auto arc =
+        t_ctx->ToDataframe(comm_spec, parsed_selectors, {"", ""}).value();
 
     if (comm_spec.fid() == 0) {
-      output_dataframe(std::move(arc), out_prefix + "dataframe_2");
+      gs::output_dataframe(std::move(*arc), out_prefix + "dataframe_2");
     } else {
-      CHECK(arc.Empty());
+      CHECK(arc->Empty());
     }
   }
 
   {
-    grape::InArchive arc;
     std::vector<std::pair<std::string, std::string>> selector_list;
     selector_list.emplace_back("id", "v:label3.id");
     selector_list.emplace_back("result", "r:label3.property0");
@@ -237,12 +245,15 @@ void RunPropertySSSP(std::shared_ptr<GraphType> fragment,
     selector_list.emplace_back("result2", "r:label3.property0");
 
     std::string selectors = gs::generate_selectors(selector_list);
-    t_ctx->to_pandas(arc, comm_spec, selectors, "", "");
+    auto parsed_selectors =
+        gs::LabeledSelector::ParseSelectors(selectors).value();
+    auto arc =
+        t_ctx->ToDataframe(comm_spec, parsed_selectors, {"", ""}).value();
 
     if (comm_spec.fid() == 0) {
-      output_dataframe(std::move(arc), out_prefix + "dataframe_3");
+      gs::output_dataframe(std::move(*arc), out_prefix + "dataframe_3");
     } else {
-      CHECK(arc.Empty());
+      CHECK(arc->Empty());
     }
   }
 }

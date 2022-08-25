@@ -20,7 +20,7 @@
         <module>executor</module>
         <module>frontend</module>
         <module>executor/engine/pegasus/clients/java/client</module>
-        <module>executor/ir/compiler</module>
+        <module>compiler</module>
         <module>sdk-common</module>
       </modules>
     </profile>
@@ -37,7 +37,7 @@
         <module>sdk</module>
         <module>sdk-common</module>
         <module>executor/engine/pegasus/clients/java/client</module>
-        <module>executor/ir/compiler</module>
+        <module>compiler</module>
       </modules>
     </profile>
     <profile>
@@ -58,7 +58,7 @@
         <module>sdk-common</module>
         <module>tests</module>
         <module>executor/engine/pegasus/clients/java/client</module>
-        <module>executor/ir/compiler</module>
+        <module>compiler</module>
       </modules>
     </profile>
   </profiles>
@@ -69,7 +69,7 @@
     <rust.compile.skip.clean>true</rust.compile.skip.clean>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <log4j2.version>[2.17.1,)</log4j2.version>
-    <hadoop.version>3.2.3</hadoop.version>
+    <hadoop.version>3.2.4</hadoop.version>
     <grpc.version>1.42.1</grpc.version>
     <tinkerpop.version>3.5.1</tinkerpop.version>
     <slf4j.version>1.7.21</slf4j.version>

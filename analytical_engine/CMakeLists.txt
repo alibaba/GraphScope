@@ -7,7 +7,8 @@ string(REGEX REPLACE "\n$" "" GRAPHSCOPE_ANALYTICAL_VERSION "${GRAPHSCOPE_ANALYT
 if (POLICY CMP0048)
     cmake_policy(SET CMP0048 NEW)
 endif ()
-project(analytical_engine LANGUAGES C CXX VERSION ${GRAPHSCOPE_ANALYTICAL_VERSION})
+project(analytical_engine LANGUAGES C CXX)
+set(PROJECT_VERSION ${GRAPHSCOPE_ANALYTICAL_VERSION})
 
 option(NETWORKX "networkx on?" ON)
 option(BUILD_TESTS "Build unit test" ON)
@@ -323,6 +324,10 @@ if (BUILD_TESTS)
     add_vineyard_app(run_ctx SRCS test/run_ctx.cc)
     target_include_directories(run_ctx PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
     target_link_libraries(run_ctx gs_proto)
+
+    add_vineyard_app(run_property_ctx SRCS test/run_property_ctx.cc)
+    target_include_directories(run_property_ctx PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
+    target_link_libraries(run_property_ctx gs_proto)
 
     add_vineyard_app(run_pregel_app SRCS test/run_pregel_app.cc)
 

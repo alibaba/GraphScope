@@ -27,6 +27,7 @@ use maxgraph_store::db::proto::model::ConfigPb;
 
 use crate::executor::gaia::engine_ports_response::EnginePortsResponse;
 use crate::executor::gaia::gaia_server::GaiaServer;
+use pegasus_network::config::ServerAddr;
 
 pub type EngineHandle = *const c_void;
 pub type GraphHandle = *const c_void;
@@ -83,12 +84,12 @@ pub extern "C" fn updatePeerView(engine_handle: EngineHandle, peer_view_string_r
             let mut fields = item.split("#");
             let id = fields.next().unwrap().parse::<u64>().unwrap();
             let addr_str = fields.next().unwrap();
-            let mut addr_iter = addr_str
-                .to_socket_addrs()
-                .expect(format!("parse addr failed [{}]", addr_str).as_str());
-            (id, addr_iter.next().unwrap())
+            let mut fileds = addr_str.split(":");
+            let hostname = fileds.next().unwrap();
+            let port = fileds.next().unwrap().parse::<u16>().unwrap();
+            (id, ServerAddr::new(String::from(hostname), port))
         })
-        .collect::<Vec<(u64, SocketAddr)>>();
+        .collect::<Vec<(u64, ServerAddr)>>();
     let engine_ptr = unsafe { to_mut(&*(engine_handle as *const GaiaServer)) };
     engine_ptr.update_peer_view(peer_view);
 }

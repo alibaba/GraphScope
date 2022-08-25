@@ -80,7 +80,8 @@ impl MapFunction<(RecordKey, Record), Record> for GroupMap {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::{HashMap, HashSet};
+    use ahash::HashMap;
+    use std::collections::HashSet;
 
     use dyn_type::Object;
     use graph_proxy::apis::{DynDetails, Vertex};

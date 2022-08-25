@@ -15,6 +15,7 @@ pegasus_server = { path = "../../engine/pegasus/server" }
 graph_proxy = { path="../graph_proxy" }
 prost = "0.9"
 vec_map = "0.8.2"
+ahash = "0.8"
 
 [features]
 default = []
