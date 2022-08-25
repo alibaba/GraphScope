@@ -18,6 +18,7 @@ package com.alibaba.graphscope.gremlin.plugin.strategy;
 
 import com.alibaba.graphscope.common.jna.type.FfiExpandOpt;
 import com.alibaba.graphscope.gremlin.plugin.step.ExpandFusionStep;
+import com.alibaba.graphscope.gremlin.plugin.step.GroupCountStep;
 import com.alibaba.graphscope.gremlin.plugin.step.GroupStep;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
