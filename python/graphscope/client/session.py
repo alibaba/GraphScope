@@ -1088,6 +1088,107 @@ class Session(object):
         with default_session(self):
             return graphscope.load_from(*args, **kwargs)
 
+    def save_to(self, path, graph_list, **kwargs):
+        """Save the session resource
+        Resource includes Graph lists, config_params and DAG.
+        Args:
+            path (str): supported storages are local, hdfs, oss, s3
+            graph_list (list): list of class:`Graph`
+        """
+        logger.info("save session to :" + path)
+
+        # matedata
+        matedata = {}
+        graph_op_keys = []
+        # save graph
+        for g in graph_list:
+            graph_op_keys.append(g.op.key)
+            graph_path = os.path.join(path, g.op.key)
+            g.save_to(graph_path)
+        # save matedata
+        matedata["graph_op_keys"] = graph_op_keys
+        matedata_file_path = os.path.join(path, "matedata.json")
+        with open(matedata_file_path, "w") as f:
+            json.dump(matedata, f)
+
+        # save session_config
+        session_config_file_path = os.path.join(path, "session_config.json")
+        with open(session_config_file_path, "w") as f:
+            json.dump(self._config_params, f)
+
+        # save dag
+        dag_file_path = os.path.join(path, "dag.json")
+        with open(dag_file_path, "wb") as f:
+            pickle.dump(self._dag, f)
+
+    @classmethod
+    def restore(self, path, **kwargs):
+        """Construct a `Session` from `path`.
+        It will read all serialization files, which including Session config, Graphs and Dag.
+        It works at the session with HOST mode.
+        Args:
+            path (str): Path contains the serialization files.
+
+        Returns:
+            `Session`: A new session object.
+        """
+        # read matedata
+        matedata_path = os.path.join(path, "matedata.json")
+        with open(matedata_path, "rb") as f:
+            matedata = json.load(f)
+
+        # load session config
+        session_path = os.path.join(path, "session_config.json")
+        with open(session_path, "rb") as f:
+            config_json = json.load(f)
+
+        # create session
+        sess = Session(config_json)
+
+        # load graph
+        graph_op_keys = matedata["graph_op_keys"]
+        graph_dic = {}
+        for key in graph_op_keys:
+            graph_path = os.path.join(path, key)
+            graph_dic[key] = Graph.load_from(graph_path, sess)
+
+        # load dag
+        dag_file_path = os.path.join(path, "dag.json")
+        with open(dag_file_path, "rb") as f:
+            old_dag = pickle.load(f)
+
+        # v is the operation in dag
+        for k, v in old_dag._ops_by_key.items():
+            # if v not in graph_op_keys, change v's parents
+            if v.key not in graph_op_keys:
+                temp_parent_op = []
+                # find the mapping
+                for parent_op in v._parents:
+                    flag = 0
+                    for g_k, g_v in graph_dic.items():
+                        if parent_op.key == g_k:
+                            temp_parent_op.append(g_v.op)
+                            flag = 1
+                            break
+                    if flag == 0:
+                        temp_parent_op.append(parent_op)
+                v._parents = temp_parent_op
+                for _ in range(len(v._op_def.parents)):
+                    v._op_def.parents.pop()
+                v._op_def.parents.extend([op.key for op in temp_parent_op])
+                v.evaluated = False
+                v._session_id = sess.session_id
+                if v.type == types_pb2.APP or v.type == types_pb2.RUN_APP:
+                    sess._dag.add_op(v)
+                else:
+                    sess._dag.add_op(v)
+                    sess.run(v)
+            else:
+                graph_dic[v.key].op._session_id = sess._session_id
+                sess._dag.add_op(graph_dic[v.key].op)
+
+        return sess
+
     def _run_on_local(self):
         self._config_params["port"] = None
         self._config_params["vineyard_socket"] = ""

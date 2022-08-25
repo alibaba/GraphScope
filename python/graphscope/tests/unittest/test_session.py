@@ -23,6 +23,7 @@ import tempfile
 import pytest
 
 import graphscope
+from graphscope import Session
 from graphscope.dataset import load_p2p_network
 
 COORDINATOR_HOME = os.path.join(os.path.dirname(__file__), "../", "../coordinator")
@@ -161,3 +162,16 @@ def test_with():
     with sess:
         pass
     assert sess.info["status"] == "closed"
+
+
+def test_restore():
+    with tempfile.TemporaryDirectory() as dir_name:
+        graph = load_p2p_network()
+        ret1 = graphscope.k_core(graph, k=5)
+        sess = graphscope.get_default_session()
+        graph_list = []
+        graph_list.append(graph)
+        sess.save_to(dir_name, graph_list)
+
+        new_sess = Session.restore(dir_name)
+        new_sess.close()
