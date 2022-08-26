@@ -110,9 +110,12 @@ std::shared_ptr<DispatchResult> Dispatcher::processCmd(
         return r;
       },
       [&](const bl::error_info& unmatched) {
-        LOG(FATAL) << "BUG: Unmatched error, some function may return a new "
-                      "type of error";
-        return nullptr;
+        auto r = std::make_shared<DispatchResult>(comm_spec_.worker_id());
+        std::stringstream error;
+        error << "Unmatched error detected: " << unmatched;
+        r->set_error(ErrorCodeToProto(vineyard::ErrorCode::kUnspecificError),
+                     error.str());
+        return r;
       });
 
   if (!r->message().empty()) {
