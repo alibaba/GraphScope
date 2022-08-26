@@ -1076,4 +1076,14 @@ public class PositiveEvalTest {
         Assert.assertEquals(__.count().as("a"), valueTraversals.get(0));
         Assert.assertEquals(__.sum().as("b"), valueTraversals.get(1));
     }
+
+    @Test
+    public void g_V_coin() {
+        Assert.assertEquals(g.V().coin(0.5), eval("g.V().coin(0.5)"));
+    }
+
+    @Test
+    public void g_E_coin() {
+        Assert.assertEquals(g.E().coin(0.5), eval("g.E().coin(0.5)"));
+    }
 }

@@ -74,6 +74,9 @@ public class GremlinResultAnalyzer {
                     || Utils.equalClass(step, WhereTraversalStep.class)
                     || Utils.equalClass(step, NotStep.class)) {
                 // do nothing;
+            } else if (Utils.equalClass(step, CoinStep.class)) {
+                throw new UnsupportedStepException(
+                        step.getClass(), "coin() should follow V() or E()");
             } else {
                 throw new UnsupportedStepException(step.getClass(), "unimplemented yet");
             }

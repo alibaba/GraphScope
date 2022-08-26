@@ -568,6 +568,16 @@ public class IrPlan implements Closeable {
                             "setParamsIsAllColumns returns " + error.msg);
                 }
             }
+            Optional<Double> sampleRatioOpt = params.getSampleRatioOpt();
+            if (sampleRatioOpt.isPresent()) {
+                FfiResult error = irCoreLib.setParamsSampleRatio(ptrParams, sampleRatioOpt.get());
+                if (error.code != ResultCode.Success) {
+                    throw new InterOpIllegalArgException(
+                            InterOpBase.class,
+                            "setIsAll",
+                            "setParamsSampleRatio returns " + error.msg);
+                }
+            }
             return ptrParams;
         }
     }

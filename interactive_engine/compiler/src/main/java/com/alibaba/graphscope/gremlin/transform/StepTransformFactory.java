@@ -25,6 +25,7 @@ import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.intermediate.process.SinkGraph;
 import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
+import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.antlr4.GremlinAntlrToJava;
 import com.alibaba.graphscope.gremlin.plugin.step.*;
 import com.alibaba.graphscope.gremlin.plugin.step.GroupCountStep;
@@ -90,10 +91,17 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             for (String label : labels) {
                 params.addTable(ArgUtils.asNameOrId(label));
             }
+            // set predicate
             List<HasContainer> containers = scanFusionStep.getHasContainers();
             if (!containers.isEmpty()) {
                 String predicate = PredicateExprTransformFactory.HAS_STEP.apply(scanFusionStep);
                 params.setPredicate(predicate);
+            }
+            // set sampleRatio if present
+            CoinStep coinStep = scanFusionStep.getCoinStep();
+            if (coinStep != null) {
+                double probability = Utils.getFieldValue(CoinStep.class, coinStep, "probability");
+                params.setSampleRatio(probability);
             }
             op.setParams(params);
 
