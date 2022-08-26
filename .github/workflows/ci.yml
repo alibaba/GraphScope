@@ -358,6 +358,10 @@ jobs:
         # install pytest
         python3 -m pip install pytest pytest-cov
 
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      if: true
+
     - name: Run Python Test
       if: ${{ needs.changes.outputs.gae-python == 'true' }}
       env:
