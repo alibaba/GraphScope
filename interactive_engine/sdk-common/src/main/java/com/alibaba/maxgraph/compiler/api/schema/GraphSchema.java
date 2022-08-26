@@ -71,7 +71,7 @@ public interface GraphSchema {
             for (GraphProperty primaryKeyProp : vertex.getPrimaryKeyList()) {
                 propertyNamesArray.add(primaryKeyProp.getName());
             }
-            indexObject.put("propertyNames", propertyNamesArray);
+            indexObject.put("primaryKeyList", propertyNamesArray);
             indexArray.add(indexObject);
             typeObject.put("indexes", indexArray);
 

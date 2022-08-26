@@ -16,18 +16,11 @@ package com.alibaba.graphscope.groot.schema.ddl;
 import com.alibaba.graphscope.groot.operation.Operation;
 import com.alibaba.graphscope.groot.schema.request.DdlException;
 import com.alibaba.maxgraph.proto.groot.TypeDefPb;
-import com.alibaba.maxgraph.sdkcommon.schema.EdgeKind;
-import com.alibaba.maxgraph.sdkcommon.schema.GraphDef;
-import com.alibaba.maxgraph.sdkcommon.schema.LabelId;
-import com.alibaba.maxgraph.sdkcommon.schema.PropertyDef;
-import com.alibaba.maxgraph.sdkcommon.schema.TypeDef;
+import com.alibaba.maxgraph.sdkcommon.schema.*;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public abstract class AbstractDropTypeExecutor extends AbstractDdlExecutor {
 
@@ -40,9 +33,28 @@ public abstract class AbstractDropTypeExecutor extends AbstractDdlExecutor {
         String label = typeDef.getLabel();
         if (!graphDef.hasLabel(label)) {
             throw new DdlException(
-                    "label [" + label + "] not exists, schema version [" + version + "]");
+                    "label [ " + label + " ] not exists, schema version [ " + version + " ]");
         }
         LabelId labelId = graphDef.getLabelId(label);
+        if (typeDef.getTypeEnum() == TypeEnum.VERTEX) {
+            for (Map.Entry<LabelId, Set<EdgeKind>> kv : graphDef.getIdToKinds().entrySet()) {
+                for (EdgeKind kind : kv.getValue()) {
+                    String srcLabel = kind.getSrcVertexLabel();
+                    String dstLabel = kind.getDstVertexLabel();
+                    if (srcLabel.equals(label) || dstLabel.equals(label)) {
+                        throw new DdlException(
+                                "cannot drop label [ "
+                                        + label
+                                        + " ], since it has related edgeKinds [ "
+                                        + srcLabel
+                                        + " ] -> [ "
+                                        + dstLabel
+                                        + " ]");
+                    }
+                }
+            }
+        }
+
         Set<EdgeKind> edgeKindSet = graphDef.getIdToKinds().get(labelId);
         if (edgeKindSet != null && edgeKindSet.size() > 0) {
             throw new DdlException(

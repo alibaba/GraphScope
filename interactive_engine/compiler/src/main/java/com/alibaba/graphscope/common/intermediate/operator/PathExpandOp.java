@@ -34,8 +34,8 @@ public class PathExpandOp extends ExpandOp {
         if (other.getAlias().isPresent()) {
             setAlias(other.getAlias().get());
         }
-        if (other.getIsEdge().isPresent()) {
-            setEdgeOpt(other.getIsEdge().get());
+        if (other.getExpandOpt().isPresent()) {
+            setEdgeOpt(other.getExpandOpt().get());
         }
         if (other.getDirection().isPresent()) {
             setDirection(other.getDirection().get());

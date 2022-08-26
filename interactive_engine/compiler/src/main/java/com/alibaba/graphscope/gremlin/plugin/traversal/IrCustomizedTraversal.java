@@ -16,8 +16,7 @@
 
 package com.alibaba.graphscope.gremlin.plugin.traversal;
 
-import com.alibaba.graphscope.gremlin.plugin.step.ExprStep;
-import com.alibaba.graphscope.gremlin.plugin.step.PathExpandStep;
+import com.alibaba.graphscope.gremlin.plugin.step.*;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
@@ -27,6 +26,9 @@ import org.apache.tinkerpop.gremlin.process.traversal.util.DefaultTraversal;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
+
+import java.util.List;
+import java.util.Map;
 
 public class IrCustomizedTraversal<S, E> extends DefaultTraversal<S, E>
         implements GraphTraversal.Admin<S, E> {
@@ -84,5 +86,24 @@ public class IrCustomizedTraversal<S, E> extends DefaultTraversal<S, E>
     public GraphTraversal<S, Vertex> endV() {
         this.asAdmin().getBytecode().addStep("endV", new Object[0]);
         return this.asAdmin().addStep(new EdgeVertexStep(this.asAdmin(), Direction.IN));
+    }
+
+    public GraphTraversal<S, E> by(List<Traversal.Admin<?, ?>> kvTraversals) {
+        this.asAdmin().getBytecode().addStep("by", new Object[0]);
+        MultiByModulating multiBy = (MultiByModulating) this.asAdmin().getEndStep();
+        multiBy.modulateBy(kvTraversals);
+        return this;
+    }
+
+    @Override
+    public <K, V> GraphTraversal<S, Map<K, V>> group() {
+        this.asAdmin().getBytecode().addStep("group", new Object[0]);
+        return this.asAdmin().addStep(new GroupStep<>(this.asAdmin()));
+    }
+
+    @Override
+    public <K> GraphTraversal<S, Map<K, Long>> groupCount() {
+        this.asAdmin().getBytecode().addStep("groupCount", new Object[0]);
+        return this.asAdmin().addStep(new GroupCountStep<>(this.asAdmin()));
     }
 }

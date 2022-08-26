@@ -27,6 +27,9 @@ import com.alibaba.graphscope.common.jna.type.FfiAlias;
 import com.alibaba.graphscope.common.jna.type.FfiJoinKind;
 import com.alibaba.graphscope.common.jna.type.FfiVariable;
 import com.alibaba.graphscope.gremlin.antlr4.__;
+import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
+import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
+import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 import com.alibaba.graphscope.gremlin.transform.TraversalParentTransformFactory;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -38,14 +41,16 @@ import org.javatuples.Pair;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 public class GroupStepTest {
     private Graph graph = TinkerFactory.createModern();
-    private GraphTraversalSource g = graph.traversal();
+    private GraphTraversalSource g = graph.traversal(IrCustomizedTraversalSource.class);
 
     private List<InterOpBase> getApplyWithGroup(Traversal traversal) {
+        IrStandardOpProcessor.applyStrategies(traversal);
         TraversalParent parent = (TraversalParent) traversal.asAdmin().getEndStep();
         return TraversalParentTransformFactory.GROUP_BY_STEP.apply(parent);
     }
@@ -282,7 +287,7 @@ public class GroupStepTest {
         Assert.assertEquals(FfiJoinKind.Inner, applyOp.getJoinKind().get().applyArg());
         InterOpCollection subOps =
                 (InterOpCollection) applyOp.getSubOpCollection().get().applyArg();
-        Assert.assertEquals(2, subOps.unmodifiableCollection().size());
+        Assert.assertEquals(1, subOps.unmodifiableCollection().size());
         Assert.assertEquals(
                 ArgUtils.asAlias("~keys_1_0", false), applyOp.getAlias().get().applyArg());
 
@@ -449,5 +454,88 @@ public class GroupStepTest {
                 Collections.singletonList(expectedKey), op.getGroupByKeys().get().applyArg());
         Assert.assertEquals(
                 Collections.singletonList(expectedValue), op.getGroupByValues().get().applyArg());
+    }
+
+    // group().by(values('name').as('a'), values('age').as('b'))
+    @Test
+    public void g_V_group_by_values_name_as_a_values_age_as_b_test() {
+        Traversal traversal =
+                ((IrCustomizedTraversal) g.V().group())
+                        .by(Arrays.asList(__.values("name").as("a"), __.values("age").as("b")));
+        GroupOp op = (GroupOp) getApplyWithGroup(traversal).get(0);
+
+        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedK1 =
+                Pair.with(ArgUtils.asVar("", "name"), ArgUtils.asAlias("a", true));
+        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedK2 =
+                Pair.with(ArgUtils.asVar("", "age"), ArgUtils.asAlias("b", true));
+        Assert.assertEquals(
+                Arrays.asList(expectedK1, expectedK2), op.getGroupByKeys().get().applyArg());
+
+        ArgAggFn expectedV =
+                new ArgAggFn(
+                        FfiAggOpt.ToList,
+                        ArgUtils.asAlias("~values_1_0", false),
+                        ArgUtils.asVar("", ""));
+        Assert.assertEquals(
+                Collections.singletonList(expectedV), op.getGroupByValues().get().applyArg());
+    }
+
+    // group().by(out().count().as('a'), in().count().as('b'))
+    @Test
+    public void g_V_group_by_out_count_as_a_in_count_as_b_test() {
+        Traversal traversal =
+                ((IrCustomizedTraversal) g.V().group())
+                        .by(Arrays.asList(__.out().count().as("a"), __.in().count().as("b")));
+        List<InterOpBase> ops = getApplyWithGroup(traversal);
+
+        ApplyOp applyOp1 = (ApplyOp) ops.get(0);
+        Assert.assertEquals(FfiJoinKind.Inner, applyOp1.getJoinKind().get().applyArg());
+        InterOpCollection subOps =
+                (InterOpCollection) applyOp1.getSubOpCollection().get().applyArg();
+        Assert.assertEquals(1, subOps.unmodifiableCollection().size());
+        Assert.assertEquals(
+                ArgUtils.asAlias("~keys_1_0", false), applyOp1.getAlias().get().applyArg());
+
+        ApplyOp applyOp2 = (ApplyOp) ops.get(1);
+        Assert.assertEquals(FfiJoinKind.Inner, applyOp2.getJoinKind().get().applyArg());
+        subOps = (InterOpCollection) applyOp2.getSubOpCollection().get().applyArg();
+        Assert.assertEquals(1, subOps.unmodifiableCollection().size());
+        Assert.assertEquals(
+                ArgUtils.asAlias("~keys_1_1", false), applyOp2.getAlias().get().applyArg());
+
+        GroupOp groupOp = (GroupOp) ops.get(2);
+        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedK1 =
+                Pair.with(ArgUtils.asVar("~keys_1_0", ""), ArgUtils.asAlias("a", true));
+        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedK2 =
+                Pair.with(ArgUtils.asVar("~keys_1_1", ""), ArgUtils.asAlias("b", true));
+        Assert.assertEquals(
+                Arrays.asList(expectedK1, expectedK2), groupOp.getGroupByKeys().get().applyArg());
+
+        ArgAggFn expectedValue =
+                new ArgAggFn(FfiAggOpt.ToList, ArgUtils.asAlias("~values_1_0", false));
+        Assert.assertEquals(
+                Collections.singletonList(expectedValue),
+                groupOp.getGroupByValues().get().applyArg());
+    }
+
+    // group().by(...).by(count().as('a'), sum().as('b'))
+    @Test
+    public void g_V_group_by_by_count_as_a_sum_as_b_test() {
+        Traversal traversal =
+                ((IrCustomizedTraversal) g.V().group().by())
+                        .by(Arrays.asList(__.count().as("a"), __.sum().as("b")));
+        GroupOp op = (GroupOp) getApplyWithGroup(traversal).get(0);
+
+        Pair<FfiVariable.ByValue, FfiAlias.ByValue> expectedK =
+                Pair.with(ArgUtils.asVar("", ""), ArgUtils.asAlias("~keys_1_0", false));
+        Assert.assertEquals(
+                Collections.singletonList(expectedK), op.getGroupByKeys().get().applyArg());
+
+        ArgAggFn expectedV1 =
+                new ArgAggFn(FfiAggOpt.Count, ArgUtils.asAlias("a", true), ArgUtils.asVar("", ""));
+        ArgAggFn expectedV2 =
+                new ArgAggFn(FfiAggOpt.Sum, ArgUtils.asAlias("b", true), ArgUtils.asVar("", ""));
+        Assert.assertEquals(
+                Arrays.asList(expectedV1, expectedV2), op.getGroupByValues().get().applyArg());
     }
 }

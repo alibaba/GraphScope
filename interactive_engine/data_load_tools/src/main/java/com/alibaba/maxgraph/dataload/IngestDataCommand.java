@@ -19,7 +19,7 @@ public class IngestDataCommand extends DataCommand {
                         .setPassword(password)
                         .build();
         // dataPath = Paths.get(dataPath, uniquePath).toString();
-        dataPath = dataPath + "/" + uniquePath;
-        client.ingestData(dataPath);
+        configPath = configPath + "/" + uniquePath;
+        client.ingestData(configPath);
     }
 }

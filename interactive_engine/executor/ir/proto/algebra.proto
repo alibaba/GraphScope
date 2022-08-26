@@ -263,6 +263,11 @@ message EdgeExpand {
     IN = 1;
     BOTH = 2;
   }
+  enum ExpandOpt {
+    Vertex = 0;
+    Edge = 1;
+    Degree = 2;
+  }
   // The tag that refers to the starting vertex
   common.NameOrId v_tag = 1;
   // The direction of the expanded edge
@@ -272,10 +277,10 @@ message EdgeExpand {
   // the `is_edge` indicator, with one exception that the `tables` parameter in `EdgeExpand`
   // **always** applies to the edge for now (may be fixed later) .
   QueryParams params = 3;
-  // Whether the expansion is for edge?
-  bool is_edge = 4;
   // An optional alias for the object of the expansion
-  common.NameOrId alias = 5;
+  common.NameOrId alias = 4;
+  // Expand option, i.e., expand vertices/edges/degree.
+  ExpandOpt expand_opt = 5;
 }
 
 message PathStart {
@@ -407,6 +412,12 @@ message SinkVineyard {
   schema.Schema graph_schema = 2;
 }
 
+// Fusing multiple operators as one single operator if possible.
+// Noticed that we only fused for map or filter related operators.
+message FusedOperator {
+  repeated LogicalPlan.Operator oprs = 1;
+}
+
 // A logical plan of graph relation algebra forms a DAG, where each node is an operator and the
 // edge indicates the execution flow.
 message LogicalPlan {
@@ -427,6 +438,7 @@ message LogicalPlan {
       Auxilia auxilia = 13;
       As as = 14;
       Sink sink = 15;
+      FusedOperator fused = 16;
       // Saving the room for relational operators
       GetV vertex = 30;
       EdgeExpand edge = 31;

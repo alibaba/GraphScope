@@ -45,9 +45,6 @@ import java.util.function.Function;
 public class IrPlan implements Closeable {
     private static IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
     private Pointer ptrPlan;
-    private IrMeta meta;
-    // to identify a unique json file which contains the logic plan from ir_core
-    private String planName;
 
     // call libc to transform from InterOpBase to c structure
     private enum TransformFactory implements Function<InterOpBase, Pointer> {
@@ -131,14 +128,13 @@ public class IrPlan implements Closeable {
                             baseOp.getClass(), "direction", "not present");
                 }
                 FfiDirection ffiDirection = (FfiDirection) direction.get().applyArg();
-                Optional<OpArg> edgeOpt = op.getIsEdge();
+                Optional<OpArg> edgeOpt = op.getExpandOpt();
                 if (!edgeOpt.isPresent()) {
                     throw new InterOpIllegalArgException(
                             baseOp.getClass(), "edgeOpt", "not present");
                 }
-                Boolean isEdge = (Boolean) edgeOpt.get().applyArg();
-                Pointer expand = irCoreLib.initEdgexpdOperator(isEdge, ffiDirection);
-
+                FfiExpandOpt expandOpt = (FfiExpandOpt) edgeOpt.get().applyArg();
+                Pointer expand = irCoreLib.initEdgexpdOperator(expandOpt, ffiDirection);
                 // set params
                 Optional<QueryParams> paramsOpt = op.getParams();
                 if (paramsOpt.isPresent()) {
@@ -149,7 +145,6 @@ public class IrPlan implements Closeable {
                                 baseOp.getClass(), "params", "setEdgexpdParams returns " + e1.msg);
                     }
                 }
-
                 Optional<OpArg> aliasOpt = baseOp.getAlias();
                 if (aliasOpt.isPresent() && ClassUtils.equalClass(baseOp, ExpandOp.class)) {
                     FfiAlias.ByValue alias = (FfiAlias.ByValue) aliasOpt.get().applyArg();
@@ -577,9 +572,7 @@ public class IrPlan implements Closeable {
         }
     }
 
-    public IrPlan(IrMeta meta, InterOpCollection opCollection, String planName) {
-        this.meta = meta;
-        this.planName = planName;
+    public IrPlan(IrMeta meta, InterOpCollection opCollection) {
         irCoreLib.setSchema(meta.getSchema());
         this.ptrPlan = irCoreLib.initLogicalPlan();
         // add snapshot to QueryParams

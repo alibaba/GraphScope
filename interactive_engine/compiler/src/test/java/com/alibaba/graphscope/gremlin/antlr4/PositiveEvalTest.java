@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.gremlin.antlr4;
 
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngine;
+import com.alibaba.graphscope.gremlin.plugin.step.GroupStep;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 
@@ -34,6 +35,8 @@ import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.List;
 
 import javax.script.Bindings;
 import javax.script.ScriptContext;
@@ -1039,5 +1042,38 @@ public class PositiveEvalTest {
     public void g_V_as_select_by_id_test() {
         Assert.assertEquals(
                 g.V().as("a").select("a").by(T.id), eval("g.V().as(\"a\").select(\"a\").by(T.id)"));
+    }
+
+    // group().by(values('name').as('a'), values('age').as('b'))
+    @Test
+    public void g_V_group_by_values_name_as_a_values_age_as_b_test() {
+        Traversal groupTraversal =
+                (Traversal) eval("g.V().group().by(values('name').as('a'), values('age').as('b'))");
+        GroupStep groupStep = (GroupStep) groupTraversal.asAdmin().getEndStep();
+        List<Traversal.Admin> keyTraversals = groupStep.getKeyTraversalList();
+        Assert.assertEquals(__.values("name").as("a"), keyTraversals.get(0));
+        Assert.assertEquals(__.values("age").as("b"), keyTraversals.get(1));
+    }
+
+    // group().by(out().count().as('a'), in().count().as('b'))
+    @Test
+    public void g_V_group_by_out_count_as_a_in_count_as_b_test() {
+        Traversal groupTraversal =
+                (Traversal) eval("g.V().group().by(out().count().as('a'), in().count().as('b'))");
+        GroupStep groupStep = (GroupStep) groupTraversal.asAdmin().getEndStep();
+        List<Traversal.Admin> keyTraversals = groupStep.getKeyTraversalList();
+        Assert.assertEquals(__.out().count().as("a"), keyTraversals.get(0));
+        Assert.assertEquals(__.in().count().as("b"), keyTraversals.get(1));
+    }
+
+    // group().by(...).by(count().as('a'), sum().as('b'))
+    @Test
+    public void g_V_group_by_by_count_as_a_sum_as_b_test() {
+        Traversal groupTraversal =
+                (Traversal) eval("g.V().group().by().by(count().as('a'), sum().as('b'))");
+        GroupStep groupStep = (GroupStep) groupTraversal.asAdmin().getEndStep();
+        List<Traversal.Admin> valueTraversals = groupStep.getValueTraversalList();
+        Assert.assertEquals(__.count().as("a"), valueTraversals.get(0));
+        Assert.assertEquals(__.sum().as("b"), valueTraversals.get(1));
     }
 }

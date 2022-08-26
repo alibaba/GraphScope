@@ -143,7 +143,7 @@ impl<D: Debug + Eq + Hash + Send + 'static> Accumulator<D, Vec<D>> for ToSet<D> 
 
 impl<D: Encode + Eq + Hash> Encode for ToSet<D> {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
-        writer.write_u64(self.inner.len() as u64)?;
+        writer.write_u32(self.inner.len() as u32)?;
         for data in self.inner.iter() {
             data.write_to(writer)?;
         }
@@ -317,7 +317,7 @@ impl<D: Debug + Eq + Hash + Send + 'static> Accumulator<D, u64> for DistinctCoun
 
 impl<D: Encode + Eq + Hash> Encode for DistinctCount<D> {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
-        writer.write_u64(self.inner.len() as u64)?;
+        writer.write_u32(self.inner.len() as u32)?;
         for data in self.inner.iter() {
             data.write_to(writer)?;
         }

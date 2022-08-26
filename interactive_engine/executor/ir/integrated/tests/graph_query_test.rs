@@ -45,7 +45,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
         let source_opr_bytes = pb::logical_plan::Operator::from(source_opr).encode_to_vec();
@@ -139,7 +139,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
 

@@ -55,7 +55,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
 
@@ -102,7 +102,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
 
@@ -154,7 +154,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
 
@@ -210,7 +210,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
 
@@ -266,7 +266,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
 
@@ -431,7 +431,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_param),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
 

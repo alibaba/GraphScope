@@ -67,6 +67,7 @@ impl GaiaServer {
     pub fn start(&'static self) -> GraphResult<(u16, u16)> {
         let gaia_config = make_gaia_config(self.config.clone());
         let gaia_rpc_config = make_gaia_rpc_config(self.config.clone());
+        info!("Server config {:?}\nRPC config {:?}", gaia_config, gaia_rpc_config);
         let (server_port, rpc_port) = self.rpc_runtime.block_on(async {
             let query_maxgraph = QueryGrootGraph::new(self.graph.clone(), self.graph.clone());
             let job_compiler = query_maxgraph.initialize_job_assembly();
@@ -96,7 +97,7 @@ impl GaiaServer {
         Ok((server_port, rpc_port))
     }
 
-    pub fn update_peer_view(&self, peer_view: Vec<(u64, SocketAddr)>) {
+    pub fn update_peer_view(&self, peer_view: Vec<(u64, ServerAddr)>) {
         self.detector
             .update_peer_view(peer_view.into_iter());
     }

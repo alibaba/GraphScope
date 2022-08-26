@@ -159,7 +159,7 @@ public class ClientDdlService extends ClientDdlGrpc.ClientDdlImplBase {
                                 .setDstVertexLabel(edgeKind.getDstVertexLabel())
                                 .setDstVertexLabelId(
                                         LabelIdPb.newBuilder()
-                                                .setId(edgeKind.getSrcVertexLabelId().getId()))
+                                                .setId(edgeKind.getDstVertexLabelId().getId()))
                                 .build();
                 builder.addEdgeKinds(edgeKindPb);
             }

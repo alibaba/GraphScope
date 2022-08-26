@@ -69,6 +69,9 @@ public class IrGremlinTestSuite extends AbstractGremlinSuite {
 
                 // match
                 MatchTest.CountMatchTraversals.class,
+
+                // others
+                IrGremlinQueryTest.Traversals.class,
             };
 
     private static final Class<?>[] testsToEnforce =
@@ -102,6 +105,9 @@ public class IrGremlinTestSuite extends AbstractGremlinSuite {
 
                 // match
                 MatchTest.CountMatchTraversals.class,
+
+                // others
+                IrGremlinQueryTest.Traversals.class,
             };
 
     public IrGremlinTestSuite(final Class<?> klass, final RunnerBuilder builder)

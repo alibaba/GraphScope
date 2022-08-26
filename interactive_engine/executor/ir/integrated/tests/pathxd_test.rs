@@ -29,7 +29,7 @@ mod test {
 
     use crate::common::test::*;
 
-    // g.V().hasLabel(PERSON_LABEL).both("1..3", "knows")
+    // g.V().hasLabel("person").both("1..3", "knows")
     fn init_path_expand_request(is_whole_path: bool) -> JobRequest {
         let source_opr = pb::logical_plan::Operator::from(pb::Scan {
             scan_opt: 0,
@@ -42,7 +42,7 @@ mod test {
             v_tag: None,
             direction: 2,
             params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
 
@@ -81,7 +81,7 @@ mod test {
             v_tag: None,
             direction: 2,
             params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
 
@@ -118,7 +118,7 @@ mod test {
             v_tag: None,
             direction: 2,
             params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
 
