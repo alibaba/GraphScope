@@ -42,7 +42,7 @@ mod test {
             v_tag: None,
             direction: 2,
             params: Some(query_params(vec!["knows".into()], vec![], None)),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
 
@@ -81,7 +81,7 @@ mod test {
             v_tag: None,
             direction: 2,
             params: Some(query_params(vec!["knows".into()], vec![], None)),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
 
@@ -118,7 +118,7 @@ mod test {
             v_tag: None,
             direction: 2,
             params: Some(query_params(vec!["knows".into()], vec![], None)),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
 

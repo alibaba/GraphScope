@@ -18,11 +18,10 @@ package com.alibaba.graphscope.common.jna.type;
 
 import com.alibaba.graphscope.common.jna.IntEnum;
 
-public enum FfiBinderOpt implements IntEnum<FfiBinderOpt> {
-    Edge,
-    Path,
+public enum FfiExpandOpt implements IntEnum<FfiExpandOpt> {
     Vertex,
-    Select;
+    Edge,
+    Degree;
 
     @Override
     public int getInt() {
@@ -30,8 +29,8 @@ public enum FfiBinderOpt implements IntEnum<FfiBinderOpt> {
     }
 
     @Override
-    public FfiBinderOpt getEnum(int i) {
-        FfiBinderOpt opts[] = values();
+    public FfiExpandOpt getEnum(int i) {
+        FfiExpandOpt opts[] = values();
         if (i < opts.length && i >= 0) {
             return opts[i];
         }

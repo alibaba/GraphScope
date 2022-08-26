@@ -14,12 +14,12 @@
               "predicate": null,
               "extra": {}
             },
-            "is_edge": true,
             "alias": {
               "item": {
                 "Id": 0
               }
-            }
+            },
+            "expand_opt": 1
           }
         }
       },

@@ -15,8 +15,8 @@
                 "predicate": null,
                 "extra": {}
               },
-              "is_edge": false,
-              "alias": null
+              "alias": null,
+              "expand_opt": 0
             },
             "start_tag": null,
             "is_whole_path": false,

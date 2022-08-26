@@ -17,7 +17,7 @@
 
 host: localhost
 port: 8182
-evaluationTimeout: 300000
+evaluationTimeout: 3000000
 channelizer: com.alibaba.graphscope.gremlin.service.IrWsAndHttpChannelizer
 graphs: {}
 scriptEngines: {

@@ -33,7 +33,7 @@ impl MapFuncGen for algebra_pb::logical_plan::operator::Opr {
     fn gen_map(self) -> FnGenResult<Box<dyn MapFunction<Record, Record>>> {
         match self {
             algebra_pb::logical_plan::operator::Opr::PathEnd(path_end) => path_end.gen_map(),
-            _ => Err(ParsePbError::from("algebra_pb op is not a map"))?,
+            _ => Err(ParsePbError::ParseError(format!("the operator: {:?} is not a `Map`", self)))?,
         }
     }
 }
@@ -49,8 +49,7 @@ impl FilterMapFuncGen for algebra_pb::logical_plan::operator::Opr {
             algebra_pb::logical_plan::operator::Opr::PathStart(path_start) => path_start.gen_filter_map(),
             algebra_pb::logical_plan::operator::Opr::Project(project) => project.gen_filter_map(),
             algebra_pb::logical_plan::operator::Opr::Auxilia(auxilia) => auxilia.gen_filter_map(),
-
-            _ => Err(ParsePbError::from("algebra_pb op is not a map"))?,
+            _ => Err(ParsePbError::ParseError(format!("the operator: {:?} is not a `Map`", self)))?,
         }
     }
 }

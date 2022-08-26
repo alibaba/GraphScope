@@ -128,14 +128,13 @@ public class IrPlan implements Closeable {
                             baseOp.getClass(), "direction", "not present");
                 }
                 FfiDirection ffiDirection = (FfiDirection) direction.get().applyArg();
-                Optional<OpArg> edgeOpt = op.getIsEdge();
+                Optional<OpArg> edgeOpt = op.getExpandOpt();
                 if (!edgeOpt.isPresent()) {
                     throw new InterOpIllegalArgException(
                             baseOp.getClass(), "edgeOpt", "not present");
                 }
-                Boolean isEdge = (Boolean) edgeOpt.get().applyArg();
-                Pointer expand = irCoreLib.initEdgexpdOperator(isEdge, ffiDirection);
-
+                FfiExpandOpt expandOpt = (FfiExpandOpt) edgeOpt.get().applyArg();
+                Pointer expand = irCoreLib.initEdgexpdOperator(expandOpt, ffiDirection);
                 // set params
                 Optional<QueryParams> paramsOpt = op.getParams();
                 if (paramsOpt.isPresent()) {
@@ -146,7 +145,6 @@ public class IrPlan implements Closeable {
                                 baseOp.getClass(), "params", "setEdgexpdParams returns " + e1.msg);
                     }
                 }
-
                 Optional<OpArg> aliasOpt = baseOp.getAlias();
                 if (aliasOpt.isPresent() && ClassUtils.equalClass(baseOp, ExpandOp.class)) {
                     FfiAlias.ByValue alias = (FfiAlias.ByValue) aliasOpt.get().applyArg();

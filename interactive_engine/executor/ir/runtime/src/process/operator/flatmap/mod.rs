@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 mod edge_expand;
+mod fused;
 mod get_v;
 
 use ir_common::error::ParsePbError;
@@ -37,7 +38,8 @@ impl FlatMapFuncGen for algebra_pb::logical_plan::operator::Opr {
             algebra_pb::logical_plan::operator::Opr::Unfold(_unfold) => {
                 Err(FnGenError::unsupported_error("unfold is not supported yet"))
             }
-            _ => Err(ParsePbError::from("algebra_pb op is not a flatmap"))?,
+            algebra_pb::logical_plan::operator::Opr::Fused(fused) => fused.gen_flat_map(),
+            _ => Err(ParsePbError::ParseError(format!("the operator: {:?} is not a `FlatMap`", self)))?,
         }
     }
 }

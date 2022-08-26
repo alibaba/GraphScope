@@ -60,7 +60,7 @@ public interface IrCoreLibrary extends Library {
 
     FfiResult.ByValue setScanAlias(Pointer scan, FfiAlias.ByValue alias);
 
-    Pointer initEdgexpdOperator(boolean isEdge, FfiDirection direction);
+    Pointer initEdgexpdOperator(FfiExpandOpt expandOpt, FfiDirection direction);
 
     FfiResult.ByValue appendEdgexpdOperator(
             Pointer plan, Pointer edgeXpd, int parent, IntByReference oprIdx);

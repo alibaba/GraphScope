@@ -82,7 +82,6 @@ impl TryFrom<algebra_pb::OrderBy> for RecordCompare {
 #[cfg(test)]
 mod tests {
     use ahash::HashMap;
-
     use dyn_type::Object;
     use graph_proxy::apis::{Details, DynDetails, Element, GraphElement, Vertex};
     use ir_common::generated::algebra as pb;

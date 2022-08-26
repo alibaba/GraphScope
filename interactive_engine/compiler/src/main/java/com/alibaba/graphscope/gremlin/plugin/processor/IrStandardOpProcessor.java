@@ -36,6 +36,7 @@ import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
 import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngineFactory;
+import com.alibaba.graphscope.gremlin.plugin.strategy.ExpandFusionStepStrategy;
 import com.alibaba.graphscope.gremlin.plugin.strategy.RemoveUselessStepStrategy;
 import com.alibaba.graphscope.gremlin.plugin.strategy.ScanFusionStepStrategy;
 import com.alibaba.graphscope.gremlin.result.GremlinResultAnalyzer;
@@ -350,6 +351,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         strategies.add(RemoveUselessStepStrategy.instance());
         // fuse outE() + hasLabel(..)
         strategies.add(InlineFilterStrategy.instance());
+        strategies.add(ExpandFusionStepStrategy.instance());
         traversal.asAdmin().applyStrategies();
     }
 }

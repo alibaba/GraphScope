@@ -157,7 +157,6 @@ impl FilterMapFuncGen for algebra_pb::Project {
 #[cfg(test)]
 mod tests {
     use ahash::HashMap;
-
     use dyn_type::Object;
     use graph_proxy::apis::{DynDetails, GraphElement, Vertex};
     use ir_common::expr_parse::str_to_expr_pb;

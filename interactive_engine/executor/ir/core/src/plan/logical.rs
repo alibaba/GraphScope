@@ -266,9 +266,30 @@ impl LogicalPlan {
         Self { nodes, max_node_id: node_id + 1, meta }
     }
 
+    pub fn num_nodes(&self) -> usize {
+        self.nodes.len()
+    }
+
     /// Get a node reference from the logical plan
     pub fn get_node(&self, id: NodeId) -> Option<NodeType> {
         self.nodes.get(id as usize).cloned()
+    }
+
+    /// Get first node in the logical plan
+    pub fn get_first_node(&self) -> Option<NodeType> {
+        self.nodes
+            .iter()
+            .next()
+            .map(|tuple| tuple.1.clone())
+    }
+
+    /// Get first node in the logical plan
+    pub fn get_last_node(&self) -> Option<NodeType> {
+        self.nodes
+            .iter()
+            .rev()
+            .next()
+            .map(|tuple| tuple.1.clone())
     }
 
     pub fn get_meta(&self) -> &PlanMeta {
@@ -897,7 +918,10 @@ fn get_or_set_tag_id(tag_pb: &mut common_pb::NameOrId, plan_meta: &mut PlanMeta)
     if let Some(tag_item) = tag_pb.item.as_mut() {
         let (_, tag_id) = match tag_item {
             Item::Name(tag) => plan_meta.get_or_set_tag_id(tag),
-            Item::Id(id) => (true, *id as TagId),
+            Item::Id(id) => {
+                plan_meta.set_max_tag_id(*id as TagId + 1);
+                (true, *id as TagId)
+            }
         };
         *tag_pb = (tag_id as i32).into();
 
@@ -1039,8 +1063,8 @@ impl AsLogical for pb::EdgeExpand {
             let tag_id = get_or_set_tag_id(alias, plan_meta)?;
             plan_meta.set_tag_nodes(tag_id, vec![plan_meta.get_curr_node()]);
         }
-
-        if !self.is_edge {
+        let expand_opt: pb::edge_expand::ExpandOpt = unsafe { ::std::mem::transmute(self.expand_opt) };
+        if expand_opt == pb::edge_expand::ExpandOpt::Vertex {
             process_columns_meta(plan_meta, false)?;
         }
 
@@ -1906,7 +1930,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec![], vec![])),
-            is_edge: false,
+            expand_opt: 0,
             alias: Some("here".into()),
         };
         plan.append_operator_as_node(expand.into(), vec![0])
@@ -1979,7 +2003,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec![], vec![])),
-            is_edge: true,
+            expand_opt: 1,
             alias: Some("e".into()),
         };
         plan.append_operator_as_node(expand.into(), vec![0])
@@ -2117,7 +2141,7 @@ mod test {
             v_tag: Some("a".into()),
             direction: 0,
             params: Some(query_params(vec!["knows".into()], vec![])),
-            is_edge: true,
+            expand_opt: 1,
             alias: Some("b".into()),
         };
         opr_id = plan
@@ -2284,7 +2308,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec![], vec![])),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
         let oprid = plan
@@ -2499,7 +2523,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec![], vec![])),
-            is_edge: true,
+            expand_opt: 1,
             alias: None,
         };
         let subtask = plan
@@ -2623,7 +2647,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec![], vec![])),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
         let filter = pb::Select { predicate: Some(str_to_expr_pb("@.age > 10".to_string()).unwrap()) };
@@ -2718,7 +2742,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec![], vec![])),
-            is_edge: false,
+            expand_opt: 0,
             alias: Some("o".into()),
         };
 
@@ -2792,7 +2816,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec![], vec![])),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
         let root_id = plan

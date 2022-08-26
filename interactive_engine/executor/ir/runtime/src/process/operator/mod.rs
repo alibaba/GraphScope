@@ -198,7 +198,6 @@ impl Decode for TagKey {
 #[cfg(test)]
 pub(crate) mod tests {
     use ahash::HashMap;
-
     use dyn_type::Object;
     use graph_proxy::apis::{DynDetails, GraphElement, Vertex};
     use ir_common::KeyId;

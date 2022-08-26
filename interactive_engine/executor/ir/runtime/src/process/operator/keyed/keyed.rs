@@ -76,7 +76,6 @@ impl KeyFunctionGen for algebra_pb::Dedup {
 #[cfg(test)]
 mod tests {
     use ahash::HashMap;
-
     use dyn_type::Object;
     use graph_proxy::apis::{DynDetails, GraphElement, Vertex, ID};
     use ir_common::generated::algebra as pb;

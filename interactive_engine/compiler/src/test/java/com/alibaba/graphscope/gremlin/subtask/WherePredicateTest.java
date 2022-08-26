@@ -23,6 +23,7 @@ import com.alibaba.graphscope.common.intermediate.operator.InterOpBase;
 import com.alibaba.graphscope.common.intermediate.operator.SelectOp;
 import com.alibaba.graphscope.common.jna.type.FfiJoinKind;
 import com.alibaba.graphscope.gremlin.antlr4.__;
+import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
 import com.alibaba.graphscope.gremlin.transform.TraversalParentTransformFactory;
 
 import org.apache.tinkerpop.gremlin.process.traversal.P;
@@ -41,6 +42,7 @@ public class WherePredicateTest {
     private GraphTraversalSource g = graph.traversal();
 
     private List<InterOpBase> getApplyWithSelect(Traversal traversal) {
+        IrStandardOpProcessor.applyStrategies(traversal);
         TraversalParent parent = (TraversalParent) traversal.asAdmin().getEndStep();
         return TraversalParentTransformFactory.WHERE_BY_STEP.apply(parent);
     }
@@ -121,18 +123,18 @@ public class WherePredicateTest {
         ApplyOp apply1 = (ApplyOp) ops.get(0);
         Assert.assertEquals(FfiJoinKind.Inner, apply1.getJoinKind().get().applyArg());
         InterOpCollection subOps = (InterOpCollection) apply1.getSubOpCollection().get().applyArg();
-        Assert.assertEquals(3, subOps.unmodifiableCollection().size());
+        Assert.assertEquals(2, subOps.unmodifiableCollection().size());
         Assert.assertEquals(
                 ArgUtils.asAlias("~alias_2_0", false), apply1.getAlias().get().applyArg());
 
         ApplyOp apply2 = (ApplyOp) ops.get(1);
         Assert.assertEquals(FfiJoinKind.Inner, apply2.getJoinKind().get().applyArg());
         subOps = (InterOpCollection) apply2.getSubOpCollection().get().applyArg();
-        Assert.assertEquals(3, subOps.unmodifiableCollection().size());
+        Assert.assertEquals(2, subOps.unmodifiableCollection().size());
         Assert.assertEquals(
                 ArgUtils.asAlias("~alias_2_1", false), apply2.getAlias().get().applyArg());
 
-        SelectOp selectOp = (SelectOp) getApplyWithSelect(traversal).get(2);
+        SelectOp selectOp = (SelectOp) ops.get(2);
         Assert.assertEquals("@~alias_2_0 == @~alias_2_1", selectOp.getPredicate().get().applyArg());
     }
 }

@@ -19,8 +19,10 @@
 //! protobuf structure.
 //!
 
+use ir_common::expr_parse::str_to_expr_pb;
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
+use ir_common::generated::common::expr_opr::Item;
 use ir_common::KeyId;
 use pegasus_client::builder::{JobBuilder, Plan};
 use pegasus_server::job_pb as server_pb;
@@ -170,29 +172,35 @@ impl AsPhysical for pb::EdgeExpand {
                 let columns = node_meta.get_columns();
                 let is_all_columns = node_meta.is_all_columns();
                 if !columns.is_empty() || is_all_columns {
-                    if !self.is_edge {
-                        // Expand to adjacent vertices
-                        let new_params = pb::QueryParams {
-                            tables: vec![],
-                            columns: columns
+                    let expand_opt: pb::edge_expand::ExpandOpt =
+                        unsafe { ::std::mem::transmute(self.expand_opt) };
+                    match expand_opt {
+                        pb::edge_expand::ExpandOpt::Vertex => {
+                            // Expand to adjacent vertices
+                            let new_params = pb::QueryParams {
+                                tables: vec![],
+                                columns: columns
+                                    .into_iter()
+                                    .map(|tag| tag.into())
+                                    .collect(),
+                                is_all_columns,
+                                limit: None,
+                                predicate: None,
+                                extra: Default::default(),
+                            };
+                            auxilia.params = Some(new_params);
+                            auxilia.alias = self.alias.clone();
+                            self.alias = None;
+                            is_adding_auxilia = true;
+                        }
+                        pb::edge_expand::ExpandOpt::Edge => {
+                            params.columns = columns
                                 .into_iter()
                                 .map(|tag| tag.into())
-                                .collect(),
-                            is_all_columns,
-                            limit: None,
-                            predicate: None,
-                            extra: Default::default(),
-                        };
-                        auxilia.params = Some(new_params);
-                        auxilia.alias = self.alias.clone();
-                        self.alias = None;
-                        is_adding_auxilia = true;
-                    } else {
-                        params.columns = columns
-                            .into_iter()
-                            .map(|tag| tag.into())
-                            .collect();
-                        params.is_all_columns = is_all_columns;
+                                .collect();
+                            params.is_all_columns = is_all_columns;
+                        }
+                        _ => {}
                     }
                 }
             }
@@ -499,6 +507,40 @@ impl AsPhysical for NodeType {
     }
 }
 
+fn extract_expand_degree(node: NodeType) -> Option<pb::EdgeExpand> {
+    if let Some(pb::logical_plan::operator::Opr::Edge(edgexpd)) = &node.borrow().opr.opr {
+        if edgexpd.expand_opt == 2 {
+            // expand to degree
+            return Some(edgexpd.clone());
+        }
+    }
+
+    None
+}
+
+fn extract_project_single_tag(node: NodeType) -> Option<common_pb::NameOrId> {
+    if let Some(pb::logical_plan::operator::Opr::Project(project)) = &node.borrow().opr.opr {
+        if project.mappings.len() == 1 {
+            if let Some(expr) = &project.mappings.first().unwrap().expr {
+                if expr.operators.len() == 1 {
+                    if let Some(expr_opr) = expr.operators.first() {
+                        match expr_opr.item.as_ref().unwrap() {
+                            Item::Var(var) => {
+                                if var.property.is_none() {
+                                    return var.tag.clone(); // project tag only
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    None
+}
+
 impl AsPhysical for LogicalPlan {
     fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         use pb::join::JoinKind;
@@ -509,15 +551,78 @@ impl AsPhysical for LogicalPlan {
         debug!("is_partition: {:?}", self.meta.is_partition());
         while curr_node_opt.is_some() {
             let curr_node = curr_node_opt.as_ref().unwrap();
+            let curr_node_id = curr_node.borrow().id;
             if let Some(Apply(apply_opr)) = curr_node.borrow().opr.opr.as_ref() {
                 let mut sub_bldr = JobBuilder::default();
                 if let Some(subplan) = self.extract_subplan(curr_node.clone()) {
-                    subplan.add_job_builder(&mut sub_bldr, plan_meta)?;
-                    let plan = sub_bldr.take_plan();
-                    builder.apply_join(
-                        move |p| *p = plan.clone(),
-                        pb::logical_plan::Operator::from(apply_opr.clone()).encode_to_vec(),
-                    );
+                    let mut expand_degree_opt = None;
+                    if subplan.num_nodes() <= 2 {
+                        if subplan.num_nodes() == 1 {
+                            expand_degree_opt = subplan
+                                .get_first_node()
+                                .and_then(|node| extract_expand_degree(node));
+                        } else {
+                            let first_node_opt = subplan.get_first_node();
+                            let second_node_opt = subplan.get_last_node();
+                            let tag_opt: Option<common_pb::NameOrId> =
+                                first_node_opt.and_then(|node| extract_project_single_tag(node));
+                            if let Some(tag) = tag_opt {
+                                if let Some(mut expand_degree) =
+                                    second_node_opt.and_then(|node| extract_expand_degree(node))
+                                {
+                                    expand_degree.v_tag = Some(tag);
+                                    expand_degree_opt = Some(expand_degree);
+                                }
+                            }
+                        }
+                    }
+                    if let Some(mut expand_degree) = expand_degree_opt {
+                        // The alias of `Apply` becomes the `alias` of `EdgeExpand`
+                        expand_degree.alias = apply_opr.alias.clone();
+                        let key_pb = common_pb::NameOrIdKey { key: expand_degree.v_tag.clone() };
+                        if plan_meta.is_partition() {
+                            builder.repartition(key_pb.encode_to_vec());
+                        }
+                        // If the subtask of apply takes only one operator and the operator is
+                        // `EdgeExpand` with `expand_opt` set as `Degree`, then the following
+                        // fused steps are conducted instead of executing subtask:
+                        //   `As('~expand_degree_<id>')` +
+                        //   `EdgeExpand()` +
+                        //   `Select('~expand_degree_<id>')`
+                        let mut fused = pb::FusedOperator { oprs: vec![] };
+                        let new_tag = plan_meta
+                            .get_or_set_tag_id(&format!("~expand_degree_{:?}", curr_node_id))
+                            .1 as i32;
+                        fused.oprs.push(
+                            pb::Auxilia {
+                                tag: None,
+                                params: None,
+                                alias: Some(common_pb::NameOrId {
+                                    item: Some(common_pb::name_or_id::Item::Id(new_tag)),
+                                }),
+                            }
+                            .into(),
+                        );
+                        fused.oprs.push(expand_degree.into());
+                        fused.oprs.push(
+                            pb::Project {
+                                mappings: vec![pb::project::ExprAlias {
+                                    expr: str_to_expr_pb(format!("@{:?}", new_tag)).ok(),
+                                    alias: None,
+                                }],
+                                is_append: true,
+                            }
+                            .into(),
+                        );
+                        builder.flat_map(pb::logical_plan::Operator::from(fused).encode_to_vec());
+                    } else {
+                        subplan.add_job_builder(&mut sub_bldr, plan_meta)?;
+                        let plan = sub_bldr.take_plan();
+                        builder.apply_join(
+                            move |p| *p = plan.clone(),
+                            pb::logical_plan::Operator::from(apply_opr.clone()).encode_to_vec(),
+                        );
+                    }
                 } else {
                     return Err(IrError::MissingData("Apply::subplan".to_string()));
                 }
@@ -640,16 +745,17 @@ mod test {
         }
     }
 
+    /// `expand_opt`: 0 -> Vertex, 1 -> Edge, 2 -> Degree
     #[allow(dead_code)]
     fn build_edgexpd(
-        is_edge: bool, columns: Vec<common_pb::NameOrId>, alias: Option<common_pb::NameOrId>,
+        expand_opt: i32, columns: Vec<common_pb::NameOrId>, alias: Option<common_pb::NameOrId>,
     ) -> pb::EdgeExpand {
         pb::EdgeExpand {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec![], columns)),
-            is_edge,
             alias,
+            expand_opt,
         }
     }
 
@@ -696,7 +802,7 @@ mod test {
         let mut plan = LogicalPlan::default();
         plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
             .unwrap();
-        plan.append_operator_as_node(build_edgexpd(true, vec![], None).into(), vec![0])
+        plan.append_operator_as_node(build_edgexpd(1, vec![], None).into(), vec![0])
             .unwrap();
         let mut job_builder = JobBuilder::default();
         let mut plan_meta = plan.meta.clone();
@@ -706,7 +812,7 @@ mod test {
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_source(pb::logical_plan::Operator::from(build_scan(vec![])).encode_to_vec());
         expected_builder
-            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(true, vec![], None)).encode_to_vec());
+            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(1, vec![], None)).encode_to_vec());
         expected_builder.sink(vec![]);
 
         assert_eq!(job_builder, expected_builder);
@@ -721,7 +827,7 @@ mod test {
         expected_builder.add_source(pb::logical_plan::Operator::from(build_scan(vec![])).encode_to_vec());
         expected_builder.repartition(vec![]);
         expected_builder
-            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(true, vec![], None)).encode_to_vec());
+            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(1, vec![], None)).encode_to_vec());
         expected_builder.sink(vec![]);
 
         assert_eq!(job_builder, expected_builder);
@@ -735,7 +841,7 @@ mod test {
         let mut plan = LogicalPlan::default();
         plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
             .unwrap();
-        plan.append_operator_as_node(build_edgexpd(false, vec![], None).into(), vec![0])
+        plan.append_operator_as_node(build_edgexpd(0, vec![], None).into(), vec![0])
             .unwrap();
         plan.append_operator_as_node(build_select("@.birthday == 20220101").into(), vec![1])
             .unwrap();
@@ -747,7 +853,7 @@ mod test {
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_source(pb::logical_plan::Operator::from(build_scan(vec![])).encode_to_vec());
         expected_builder
-            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(false, vec![], None)).encode_to_vec());
+            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(0, vec![], None)).encode_to_vec());
         expected_builder.filter_map(
             pb::logical_plan::Operator::from(build_auxilia("@.birthday == 20220101")).encode_to_vec(),
         );
@@ -765,7 +871,7 @@ mod test {
         expected_builder.add_source(pb::logical_plan::Operator::from(build_scan(vec![])).encode_to_vec());
         expected_builder.repartition(vec![]);
         expected_builder
-            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(false, vec![], None)).encode_to_vec());
+            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(0, vec![], None)).encode_to_vec());
         expected_builder.repartition(vec![]);
         expected_builder.filter_map(
             pb::logical_plan::Operator::from(build_auxilia("@.birthday == 20220101")).encode_to_vec(),
@@ -781,7 +887,7 @@ mod test {
         let mut plan = LogicalPlan::default();
         plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
             .unwrap();
-        plan.append_operator_as_node(build_edgexpd(false, vec![], None).into(), vec![0])
+        plan.append_operator_as_node(build_edgexpd(0, vec![], None).into(), vec![0])
             .unwrap();
         plan.append_operator_as_node(build_select("@.~label == \"person\"").into(), vec![1])
             .unwrap();
@@ -793,7 +899,7 @@ mod test {
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_source(pb::logical_plan::Operator::from(build_scan(vec![])).encode_to_vec());
         expected_builder
-            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(false, vec![], None)).encode_to_vec());
+            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(0, vec![], None)).encode_to_vec());
         expected_builder.filter(
             pb::logical_plan::Operator::from(build_select("@.~label == \"person\"")).encode_to_vec(),
         );
@@ -812,9 +918,9 @@ mod test {
         let mut plan = LogicalPlan::default();
         plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
             .unwrap();
-        plan.append_operator_as_node(build_edgexpd(false, vec![], Some(0.into())).into(), vec![0])
+        plan.append_operator_as_node(build_edgexpd(0, vec![], Some(0.into())).into(), vec![0])
             .unwrap();
-        plan.append_operator_as_node(build_edgexpd(false, vec![], Some(1.into())).into(), vec![1])
+        plan.append_operator_as_node(build_edgexpd(0, vec![], Some(1.into())).into(), vec![1])
             .unwrap();
         plan.append_operator_as_node(build_select("@0.age > @1.age").into(), vec![2])
             .unwrap();
@@ -826,7 +932,7 @@ mod test {
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_source(pb::logical_plan::Operator::from(build_scan(vec![])).encode_to_vec());
         expected_builder
-            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(false, vec![], None)).encode_to_vec());
+            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(0, vec![], None)).encode_to_vec());
         expected_builder.filter_map(
             pb::logical_plan::Operator::from(pb::Auxilia {
                 tag: None,
@@ -836,7 +942,7 @@ mod test {
             .encode_to_vec(),
         );
         expected_builder
-            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(false, vec![], None)).encode_to_vec());
+            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(0, vec![], None)).encode_to_vec());
         expected_builder.filter_map(
             pb::logical_plan::Operator::from(pb::Auxilia {
                 tag: None,
@@ -861,7 +967,7 @@ mod test {
         expected_builder.add_source(pb::logical_plan::Operator::from(build_scan(vec![])).encode_to_vec());
         expected_builder.repartition(vec![]);
         expected_builder
-            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(false, vec![], None)).encode_to_vec());
+            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(0, vec![], None)).encode_to_vec());
         expected_builder.repartition(vec![]);
         expected_builder.filter_map(
             pb::logical_plan::Operator::from(pb::Auxilia {
@@ -873,7 +979,7 @@ mod test {
         );
         expected_builder.repartition(vec![]);
         expected_builder
-            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(false, vec![], None)).encode_to_vec());
+            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(0, vec![], None)).encode_to_vec());
         expected_builder.repartition(vec![]);
         expected_builder.filter_map(
             pb::logical_plan::Operator::from(pb::Auxilia {
@@ -896,7 +1002,7 @@ mod test {
         let mut plan = LogicalPlan::default();
         plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
             .unwrap();
-        plan.append_operator_as_node(build_edgexpd(false, vec![], Some(0.into())).into(), vec![0])
+        plan.append_operator_as_node(build_edgexpd(0, vec![], Some(0.into())).into(), vec![0])
             .unwrap();
         plan.append_operator_as_node(build_project("{@0.name, @0.id, @0.age}").into(), vec![1])
             .unwrap();
@@ -908,7 +1014,7 @@ mod test {
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_source(pb::logical_plan::Operator::from(build_scan(vec![])).encode_to_vec());
         expected_builder
-            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(false, vec![], None)).encode_to_vec());
+            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(0, vec![], None)).encode_to_vec());
         expected_builder.filter_map(
             pb::logical_plan::Operator::from(pb::Auxilia {
                 tag: None,
@@ -934,7 +1040,7 @@ mod test {
         expected_builder.add_source(pb::logical_plan::Operator::from(build_scan(vec![])).encode_to_vec());
         expected_builder.repartition(vec![]);
         expected_builder
-            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(false, vec![], None)).encode_to_vec());
+            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(0, vec![], None)).encode_to_vec());
         expected_builder.repartition(vec![]);
         expected_builder.filter_map(
             pb::logical_plan::Operator::from(pb::Auxilia {
@@ -958,7 +1064,7 @@ mod test {
         let mut plan = LogicalPlan::default();
         plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
             .unwrap();
-        plan.append_operator_as_node(build_edgexpd(false, vec![], Some(0.into())).into(), vec![0])
+        plan.append_operator_as_node(build_edgexpd(0, vec![], Some(0.into())).into(), vec![0])
             .unwrap();
         plan.append_operator_as_node(build_project("@0").into(), vec![1])
             .unwrap();
@@ -972,7 +1078,7 @@ mod test {
         expected_builder.add_source(pb::logical_plan::Operator::from(build_scan(vec![])).encode_to_vec());
         expected_builder.repartition(vec![]);
         expected_builder.flat_map(
-            pb::logical_plan::Operator::from(build_edgexpd(false, vec![], Some(0.into()))).encode_to_vec(),
+            pb::logical_plan::Operator::from(build_edgexpd(0, vec![], Some(0.into()))).encode_to_vec(),
         );
         expected_builder.filter_map(pb::logical_plan::Operator::from(build_project("@0")).encode_to_vec());
         expected_builder.sink(vec![]);
@@ -1025,7 +1131,7 @@ mod test {
         let mut plan = LogicalPlan::default();
         plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
             .unwrap();
-        plan.append_operator_as_node(build_edgexpd(true, vec![], None).into(), vec![0])
+        plan.append_operator_as_node(build_edgexpd(1, vec![], None).into(), vec![0])
             .unwrap();
         plan.append_operator_as_node(build_getv(Some(0.into())).into(), vec![1])
             .unwrap();
@@ -1039,7 +1145,7 @@ mod test {
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_source(pb::logical_plan::Operator::from(build_scan(vec![])).encode_to_vec());
         expected_builder
-            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(true, vec![], None)).encode_to_vec());
+            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(1, vec![], None)).encode_to_vec());
         expected_builder.filter_map(pb::logical_plan::Operator::from(build_getv(None)).encode_to_vec());
         expected_builder.filter_map(
             pb::logical_plan::Operator::from(pb::Auxilia {
@@ -1066,7 +1172,7 @@ mod test {
         expected_builder.add_source(pb::logical_plan::Operator::from(build_scan(vec![])).encode_to_vec());
         expected_builder.repartition(vec![]);
         expected_builder
-            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(true, vec![], None)).encode_to_vec());
+            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(1, vec![], None)).encode_to_vec());
         expected_builder.filter_map(pb::logical_plan::Operator::from(build_getv(None)).encode_to_vec());
         expected_builder.repartition(vec![]);
         expected_builder.filter_map(
@@ -1091,7 +1197,7 @@ mod test {
         let mut plan = LogicalPlan::default();
         plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
             .unwrap();
-        plan.append_operator_as_node(build_edgexpd(true, vec![], None).into(), vec![0])
+        plan.append_operator_as_node(build_edgexpd(1, vec![], None).into(), vec![0])
             .unwrap();
         plan.append_operator_as_node(
             pb::GetV {
@@ -1120,7 +1226,7 @@ mod test {
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_source(pb::logical_plan::Operator::from(build_scan(vec![])).encode_to_vec());
         expected_builder
-            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(true, vec![], None)).encode_to_vec());
+            .flat_map(pb::logical_plan::Operator::from(build_edgexpd(1, vec![], None)).encode_to_vec());
         expected_builder.filter_map(pb::logical_plan::Operator::from(build_getv(None)).encode_to_vec());
         expected_builder.filter_map(
             pb::logical_plan::Operator::from(pb::Auxilia {
@@ -1157,7 +1263,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec!["knows".into()], vec![])),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         });
         let limit_opr =
@@ -1244,7 +1350,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec!["knows".into()], vec![])),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
 
@@ -1318,7 +1424,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec!["knows".into()], vec![])),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
 
@@ -1372,7 +1478,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec!["knows".into()], vec![])),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         };
 
@@ -1493,7 +1599,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec![], vec![])),
-            is_edge: false,
+            expand_opt: 0,
             alias: Some(1.into()),
         };
 
@@ -1560,6 +1666,152 @@ mod test {
     }
 
     #[test]
+    fn apply_as_physical_with_expand_degree_fuse() {
+        let mut plan = LogicalPlan::default();
+        // g.V().as("0").select("0").by(out().count().as("degree"))
+        // out().degree() fused
+        plan.meta = plan.meta.with_partition();
+
+        // g.V()
+        let scan: pb::logical_plan::Operator = pb::Scan {
+            scan_opt: 0,
+            alias: Some(0.into()),
+            params: Some(query_params(vec![], vec![])),
+            idx_predicate: None,
+        }
+        .into();
+
+        let opr_id = plan
+            .append_operator_as_node(scan.clone(), vec![])
+            .unwrap();
+
+        // .out().count()
+        let mut expand = build_edgexpd(2, vec![], None);
+        let subplan_id = plan
+            .append_operator_as_node(expand.clone().into(), vec![])
+            .unwrap();
+
+        // Select("0").by()
+        let apply: pb::logical_plan::Operator =
+            pb::Apply { join_kind: 4, tags: vec![], subtask: subplan_id as i32, alias: Some(1.into()) }
+                .into();
+        plan.append_operator_as_node(apply.clone(), vec![opr_id])
+            .unwrap();
+
+        let mut builder = JobBuilder::default();
+        let mut meta = plan.meta.clone();
+        plan.add_job_builder(&mut builder, &mut meta)
+            .unwrap();
+
+        let mut expected_builder = JobBuilder::default();
+        expected_builder.add_source(scan.encode_to_vec());
+        expected_builder.repartition(vec![]);
+        let mut fused = pb::FusedOperator { oprs: vec![] };
+        fused.oprs.push(
+            pb::Auxilia {
+                tag: None,
+                params: None,
+                alias: Some(common_pb::NameOrId { item: Some(common_pb::name_or_id::Item::Id(2)) }),
+            }
+            .into(),
+        );
+        expand.alias = Some(1.into()); // must carry `Apply`'s alias
+        fused.oprs.push(expand.into());
+        fused.oprs.push(
+            pb::Project {
+                mappings: vec![pb::project::ExprAlias {
+                    expr: str_to_expr_pb("@2".to_string()).ok(),
+                    alias: None,
+                }],
+                is_append: true,
+            }
+            .into(),
+        );
+        expected_builder.flat_map(pb::logical_plan::Operator::from(fused).encode_to_vec());
+
+        assert_eq!(expected_builder, builder);
+    }
+
+    #[test]
+    fn apply_as_physical_with_select_expand_degree_fuse() {
+        let mut plan = LogicalPlan::default();
+        // g.V().as("0").select().by(select("0").out().count().as("degree"))
+        // select("0").out().degree() fused
+        plan.meta = plan.meta.with_partition();
+
+        // g.V()
+        let scan: pb::logical_plan::Operator = pb::Scan {
+            scan_opt: 0,
+            alias: Some(0.into()),
+            params: Some(query_params(vec![], vec![])),
+            idx_predicate: None,
+        }
+        .into();
+
+        let opr_id = plan
+            .append_operator_as_node(scan.clone(), vec![])
+            .unwrap();
+
+        // .select("0").out().count()
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("@0".to_string()).ok(),
+                alias: None,
+            }],
+            is_append: true,
+        };
+        let mut expand = build_edgexpd(2, vec![], None);
+        let subplan_id = plan
+            .append_operator_as_node(project.into(), vec![])
+            .unwrap();
+        plan.append_operator_as_node(expand.clone().into(), vec![subplan_id])
+            .unwrap();
+
+        // Select().by()
+        let apply: pb::logical_plan::Operator =
+            pb::Apply { join_kind: 4, tags: vec![], subtask: subplan_id as i32, alias: Some(1.into()) }
+                .into();
+        plan.append_operator_as_node(apply.clone(), vec![opr_id])
+            .unwrap();
+
+        let mut builder = JobBuilder::default();
+        let mut meta = plan.meta.clone();
+        plan.add_job_builder(&mut builder, &mut meta)
+            .unwrap();
+
+        let mut expected_builder = JobBuilder::default();
+        expected_builder.add_source(scan.encode_to_vec());
+        expected_builder.repartition(
+            common_pb::NameOrIdKey { key: Some(common_pb::NameOrId::from(0)) }.encode_to_vec(),
+        );
+        let mut fused = pb::FusedOperator { oprs: vec![] };
+        fused.oprs.push(
+            pb::Auxilia {
+                tag: None,
+                params: None,
+                alias: Some(common_pb::NameOrId { item: Some(common_pb::name_or_id::Item::Id(2)) }),
+            }
+            .into(),
+        );
+        expand.v_tag = Some(0.into());
+        expand.alias = Some(1.into()); // must carry `Apply`'s alias
+        fused.oprs.push(expand.into());
+        fused.oprs.push(
+            pb::Project {
+                mappings: vec![pb::project::ExprAlias {
+                    expr: str_to_expr_pb("@2".to_string()).ok(),
+                    alias: None,
+                }],
+                is_append: true,
+            }
+            .into(),
+        );
+        expected_builder.flat_map(pb::logical_plan::Operator::from(fused).encode_to_vec());
+
+        assert_eq!(expected_builder, builder);
+    }
+
+    #[test]
     fn join_plan_as_physical() {
         let source_opr = pb::logical_plan::Operator::from(pb::Scan {
             scan_opt: 0,
@@ -1571,7 +1823,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(vec![], vec![])),
-            is_edge: false,
+            expand_opt: 0,
             alias: None,
         });
         let join_opr =
