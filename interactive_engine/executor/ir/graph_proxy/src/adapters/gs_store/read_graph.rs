@@ -29,6 +29,7 @@ use graph_store::utils::IterList;
 use ir_common::{KeyId, NameOrId};
 use ir_common::{NameOrId as Label, OneOrMany};
 use pegasus_common::downcast::*;
+use rand::Rng;
 
 use crate::apis::graph::PKV;
 use crate::apis::{
@@ -36,7 +37,7 @@ use crate::apis::{
     Statement, Vertex, ID,
 };
 use crate::utils::expr::eval_pred::EvalPred;
-use crate::{filter_limit, limit_n};
+use crate::{filter_limit, filter_sample, limit_n, sample_s};
 use crate::{GraphProxyError, GraphProxyResult};
 
 // Should be identical to the param_name given by compiler
@@ -113,7 +114,7 @@ where
                     partitions.as_ref(),
                 )
                 .map(move |v| to_runtime_vertex(v, prop_ids.clone()));
-            Ok(filter_limit!(result, filter, None))
+            Ok(filter_sample!(result, filter, params.sample_ratio))
         } else {
             Ok(Box::new(std::iter::empty()))
         }
@@ -182,15 +183,7 @@ where
                 )
                 .map(move |e| to_runtime_edge(&e));
 
-            if let Some(filter) = filter {
-                let columns = params.columns.clone();
-                let filter_result = result
-                    .filter(move |e| filter.eval_bool(Some(e)).unwrap_or(false))
-                    .map(move |e| edge_trim(e, columns.as_ref()));
-                Ok(Box::new(filter_result))
-            } else {
-                Ok(Box::new(result))
-            }
+            Ok(filter_sample!(result, filter, params.sample_ratio))
         } else {
             Ok(Box::new(std::iter::empty()))
         }

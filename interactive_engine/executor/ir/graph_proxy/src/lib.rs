@@ -54,3 +54,44 @@ macro_rules! filter_limit {
         }
     };
 }
+
+#[macro_export]
+macro_rules! sample_s {
+    ($iter: expr, $s: expr) => {
+        if let Some(ratio) = $s {
+            let r = $iter.filter(move |_| {
+                let mut rng = rand::thread_rng();
+                rng.gen_bool(ratio)
+            });
+            Box::new(r)
+        } else {
+            Box::new($iter)
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! filter_sample {
+    ($iter: expr, $f: expr, $s: expr) => {
+        if let Some(ref f) = $f {
+            use crate::utils::expr::eval_pred::EvalPred;
+            let f = f.clone();
+            let r = $iter.filter(move |v| f.eval_bool(Some(v)).unwrap_or(false));
+            sample_s!(r, $s)
+        } else {
+            let r = $iter;
+            sample_s!(r, $s)
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! filter_sample_limit {
+    ($iter: expr, $f: expr, $s: expr, $n: expr) => {
+        if $s.is_some() {
+            filter_sample!($iter, $f, $s)
+        } else {
+            filter_limit!($iter, $f, $n)
+        }
+    };
+}

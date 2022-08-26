@@ -31,6 +31,7 @@ use ir_common::{KeyId, NameOrId};
 use pegasus::configure_with_default;
 use pegasus_common::downcast::*;
 use pegasus_common::impl_as_any;
+use rand::Rng;
 
 use crate::apis::graph::PKV;
 use crate::apis::{
@@ -38,7 +39,8 @@ use crate::apis::{
     Statement, Vertex, ID,
 };
 use crate::errors::{GraphProxyError, GraphProxyResult};
-use crate::{filter_limit, limit_n};
+use crate::{filter_limit, filter_sample, filter_sample_limit, limit_n, sample_s};
+
 const EXP_STORE_PK: KeyId = 0;
 
 lazy_static! {
@@ -237,7 +239,9 @@ impl ReadGraph for ExpStore {
                 .get_all_vertices(label_ids.as_ref())
                 .map(move |v| to_runtime_vertex(v, props.clone()));
 
-            Ok(filter_limit!(result, params.filter, params.limit))
+            // TODO: confirm the logic of filter_sample_limit;
+            // it is defined as filter first, and then sample or limit;
+            Ok(filter_sample_limit!(result, params.filter, params.sample_ratio, params.limit))
         } else {
             Ok(Box::new(std::iter::empty()))
         }
@@ -260,7 +264,7 @@ impl ReadGraph for ExpStore {
                 .get_all_edges(label_ids.as_ref())
                 .map(move |e| to_runtime_edge(e, props.clone()));
 
-            Ok(filter_limit!(result, params.filter, params.limit))
+            Ok(filter_sample_limit!(result, params.filter, params.sample_ratio, params.limit))
         } else {
             Ok(Box::new(std::iter::empty()))
         }
