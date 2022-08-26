@@ -327,7 +327,7 @@ mod tests {
     use crate::process::operator::accum::accumulator::Accumulator;
     use crate::process::operator::accum::AccumFactoryGen;
     use crate::process::operator::tests::{init_source, init_vertex1, init_vertex2, TAG_A, TAG_B};
-    use crate::process::record::{CommonObject, Entry, Record, RecordElement};
+    use crate::process::record::{CommonObject, Entry, Record};
 
     fn fold_test(source: Vec<Record>, fold_opr_pb: pb::GroupBy) -> ResultStream<Record> {
         let conf = JobConf::new("fold_test");
@@ -365,10 +365,7 @@ mod tests {
         let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
         let mut result = fold_test(init_source(), fold_opr_pb);
         let mut fold_result = Entry::Collection(vec![]);
-        let expected_result = Entry::Collection(vec![
-            RecordElement::OnGraph(init_vertex1().into()),
-            RecordElement::OnGraph(init_vertex2().into()),
-        ]);
+        let expected_result = Entry::Collection(vec![init_vertex1().into(), init_vertex2().into()]);
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(Some(TAG_A)) {
                 fold_result = entry.as_ref().clone();
@@ -388,10 +385,7 @@ mod tests {
         let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
         let mut result = fold_test(init_source(), fold_opr_pb);
         let mut fold_result = Entry::Collection(vec![]);
-        let expected_result = Entry::Collection(vec![
-            RecordElement::OnGraph(init_vertex1().into()),
-            RecordElement::OnGraph(init_vertex2().into()),
-        ]);
+        let expected_result = Entry::Collection(vec![init_vertex1().into(), init_vertex2().into()]);
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(None) {
                 fold_result = entry.as_ref().clone();
@@ -414,7 +408,7 @@ mod tests {
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(Some(TAG_A)) {
                 cnt = match entry.as_ref() {
-                    Entry::Element(RecordElement::OffGraph(CommonObject::Count(cnt))) => *cnt,
+                    Entry::OffGraph(CommonObject::Count(cnt)) => *cnt,
                     _ => {
                         unreachable!()
                     }
@@ -441,10 +435,7 @@ mod tests {
         let mut result = fold_test(init_source(), fold_opr_pb);
         let mut fold_result: (Entry, Entry) = (Entry::Collection(vec![]), CommonObject::Count(0).into());
         let expected_result: (Entry, Entry) = (
-            Entry::Collection(vec![
-                RecordElement::OnGraph(init_vertex1().into()),
-                RecordElement::OnGraph(init_vertex2().into()),
-            ]),
+            Entry::Collection(vec![init_vertex1().into(), init_vertex2().into()]),
             CommonObject::Count(2).into(),
         );
         if let Some(Ok(record)) = result.next() {
@@ -480,7 +471,7 @@ mod tests {
             if let Some(entry) = record.get(Some(TAG_A)) {
                 res = match entry.as_ref() {
                     // this is Prop, since get_entry returns entry type of prop
-                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(obj))) => obj.clone(),
+                    Entry::OffGraph(CommonObject::Prop(obj)) => obj.clone(),
                     _ => {
                         unreachable!()
                     }
@@ -507,7 +498,7 @@ mod tests {
             if let Some(entry) = record.get(Some(TAG_A)) {
                 res = match entry.as_ref() {
                     // this is Prop, since get_entry returns entry type of prop
-                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(obj))) => obj.clone(),
+                    Entry::OffGraph(CommonObject::Prop(obj)) => obj.clone(),
                     _ => {
                         unreachable!()
                     }
@@ -538,7 +529,7 @@ mod tests {
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(Some(TAG_A)) {
                 cnt = match entry.as_ref() {
-                    Entry::Element(RecordElement::OffGraph(CommonObject::Count(cnt))) => *cnt,
+                    Entry::OffGraph(CommonObject::Count(cnt)) => *cnt,
                     _ => {
                         unreachable!()
                     }
@@ -563,10 +554,7 @@ mod tests {
         let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
         let mut result = fold_test(source, fold_opr_pb);
         let mut fold_result = Entry::Collection(vec![]);
-        let expected_result = Entry::Collection(vec![
-            RecordElement::OnGraph(init_vertex1().into()),
-            RecordElement::OnGraph(init_vertex2().into()),
-        ]);
+        let expected_result = Entry::Collection(vec![init_vertex1().into(), init_vertex2().into()]);
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(Some(TAG_A)) {
                 fold_result = entry.as_ref().clone();
@@ -595,7 +583,7 @@ mod tests {
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(Some(TAG_A)) {
                 res = match entry.as_ref() {
-                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(obj))) => obj.clone(),
+                    Entry::OffGraph(CommonObject::Prop(obj)) => obj.clone(),
                     _ => {
                         unreachable!()
                     }
@@ -622,7 +610,7 @@ mod tests {
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(None) {
                 res = match entry.as_ref() {
-                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(obj))) => obj.clone(),
+                    Entry::OffGraph(CommonObject::Prop(obj)) => obj.clone(),
                     _ => {
                         unreachable!()
                     }

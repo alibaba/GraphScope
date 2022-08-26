@@ -28,7 +28,7 @@ mod test {
     use pegasus_server::job_pb as server_pb;
     use pegasus_server::JobRequest;
     use prost::Message;
-    use runtime::process::record::{CommonObject, Entry, RecordElement};
+    use runtime::process::record::{CommonObject, Entry};
 
     use crate::common::test::*;
 
@@ -36,7 +36,7 @@ mod test {
         let source_opr = pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(query_params(vec!["person".into()], vec![], None)),
+            params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
             idx_predicate: None,
         };
 
@@ -156,7 +156,7 @@ mod test {
         let source_opr = pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(query_params(vec!["person".into()], vec![], None)),
+            params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
             idx_predicate: None,
         };
 
@@ -228,12 +228,10 @@ mod test {
             match result {
                 Ok(res) => {
                     let record = parse_result(res).unwrap();
-                    if let Entry::Element(RecordElement::OnGraph(vertex)) =
-                        record.get(None).unwrap().as_ref()
-                    {
+                    if let Some(vertex) = record.get(None).unwrap().as_graph_vertex() {
                         // This should be CommonObject::Count(cnt).
                         // We assume it as CommonObject::Prop(cnt) here since we parse it as CommonObject::Prop in parse_result()
-                        if let Entry::Element(RecordElement::OffGraph(CommonObject::Prop(cnt))) =
+                        if let Entry::OffGraph(CommonObject::Prop(cnt)) =
                             record.get(Some(TAG_A)).unwrap().as_ref()
                         {
                             result_collection
@@ -278,15 +276,13 @@ mod test {
             match result {
                 Ok(res) => {
                     let record = parse_result(res).unwrap();
-                    if let Entry::Element(RecordElement::OnGraph(vertex)) =
-                        record.get(None).unwrap().as_ref()
-                    {
-                        if let Entry::Element(RecordElement::OffGraph(CommonObject::Prop(cnt))) =
+                    if let Some(vertex) = record.get(None).unwrap().as_graph_vertex() {
+                        if let Entry::OffGraph(CommonObject::Prop(cnt)) =
                             record.get(Some(TAG_A)).unwrap().as_ref()
                         {
                             result_collection
                                 .push((vertex.id() as DefaultId, Some(cnt.clone().as_u64().unwrap())));
-                        } else if let Entry::Element(RecordElement::OffGraph(CommonObject::None)) =
+                        } else if let Entry::OffGraph(CommonObject::None) =
                             record.get(Some(TAG_A)).unwrap().as_ref()
                         {
                             result_collection.push((vertex.id() as DefaultId, None));

@@ -179,7 +179,7 @@ impl PartialOrd for Edge {
 impl TryFrom<result_pb::Edge> for Edge {
     type Error = ParsePbError;
     fn try_from(e: result_pb::Edge) -> Result<Self, Self::Error> {
-        let edge = Edge::new(
+        let mut edge = Edge::new(
             e.id as ID,
             e.label
                 .map(|label| label.try_into())
@@ -189,12 +189,12 @@ impl TryFrom<result_pb::Edge> for Edge {
             DynDetails::default(),
         );
         // TODO: set label for edges
-        // if let Some(src_label) = e.src_label {
-        //     edge.set_src_label(src_label);
-        // }
-        // if let Some(dst_label) = e.dst_label {
-        //     edge.set_dst_label(dst_label);
-        // }
+        if let Some(src_label) = e.src_label {
+            edge.set_src_label(src_label.try_into()?);
+        }
+        if let Some(dst_label) = e.dst_label {
+            edge.set_dst_label(dst_label.try_into()?);
+        }
         Ok(edge)
     }
 }

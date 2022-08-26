@@ -266,10 +266,10 @@ impl Evaluate for Evaluator {
     ///
     ///     let ctxt = Vertices {
     ///         vec: vec![
-    ///             Vertex::new(1, Some(NameOrId::from(1)), DynDetails::new(
+    ///             Vertex::new(1, Some(1), DynDetails::new(
     ///                 map.clone(),
     ///             )),
-    ///             Vertex::new(2, Some(NameOrId::from(2)), DynDetails::new(
+    ///             Vertex::new(2, Some(2), DynDetails::new(
     ///                 map.clone(),
     ///             )),
     ///         ],
@@ -564,7 +564,6 @@ impl InnerOpr {
 #[cfg(test)]
 mod tests {
     use ahash::HashMap;
-
     use ir_common::expr_parse::str_to_expr_pb;
 
     use super::*;

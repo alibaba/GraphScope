@@ -29,8 +29,8 @@ mod test {
     use pegasus_server::JobRequest;
 
     use crate::common::test::{
-        default_sink_target, initialize, parse_result, query_params, submit_query, TAG_A, TAG_B, TAG_C,
-        TAG_D,
+        default_sink_target, initialize, parse_result, query_params, submit_query, CREATED_LABEL,
+        KNOWS_LABEL, PERSON_LABEL, TAG_A, TAG_B, TAG_C, TAG_D,
     };
 
     // g.V().hasLabel("person").match(
@@ -41,14 +41,14 @@ mod test {
         let source = pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(query_params(vec!["person".into()], vec![], None)),
+            params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
             idx_predicate: None,
         };
 
         let out_knows = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(query_params(vec!["knows".into()], vec![], None)),
+            params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             is_edge: false,
             alias: None,
         };
@@ -57,7 +57,7 @@ mod test {
             v_tag: None,
             direction: 0,
             params: Some(query_params(
-                vec!["created".into()],
+                vec![CREATED_LABEL.into()],
                 vec![],
                 str_to_expr_pb("@.lange=\"Java\"".to_string()).ok(),
             )),
@@ -129,14 +129,14 @@ mod test {
         let source = pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(query_params(vec!["person".into()], vec![], None)),
+            params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
             idx_predicate: None,
         };
 
         let out_knows = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(query_params(vec!["knows".into()], vec![], None)),
+            params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             is_edge: false,
             alias: None,
         };
@@ -144,7 +144,7 @@ mod test {
         let out_created = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(query_params(vec!["created".into()], vec![], None)),
+            params: Some(query_params(vec![CREATED_LABEL.into()], vec![], None)),
             is_edge: false,
             alias: None,
         };

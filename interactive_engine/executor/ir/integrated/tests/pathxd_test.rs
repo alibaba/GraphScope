@@ -29,19 +29,19 @@ mod test {
 
     use crate::common::test::*;
 
-    // g.V().hasLabel("person").both("1..3", "knows")
+    // g.V().hasLabel(PERSON_LABEL).both("1..3", "knows")
     fn init_path_expand_request(is_whole_path: bool) -> JobRequest {
         let source_opr = pb::logical_plan::Operator::from(pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(query_params(vec!["person".into()], vec![], None)),
+            params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
             idx_predicate: None,
         });
 
         let edge_expand = pb::EdgeExpand {
             v_tag: None,
             direction: 2,
-            params: Some(query_params(vec!["knows".into()], vec![], None)),
+            params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             is_edge: false,
             alias: None,
         };
@@ -73,14 +73,14 @@ mod test {
         let source_opr = pb::logical_plan::Operator::from(pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(query_params(vec!["person".into()], vec![], None)),
+            params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
             idx_predicate: None,
         });
 
         let edge_expand = pb::EdgeExpand {
             v_tag: None,
             direction: 2,
-            params: Some(query_params(vec!["knows".into()], vec![], None)),
+            params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             is_edge: false,
             alias: None,
         };
@@ -110,14 +110,14 @@ mod test {
         let source_opr = pb::logical_plan::Operator::from(pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(query_params(vec!["person".into()], vec![], None)),
+            params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
             idx_predicate: None,
         });
 
         let edge_expand = pb::EdgeExpand {
             v_tag: None,
             direction: 2,
-            params: Some(query_params(vec!["knows".into()], vec![], None)),
+            params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             is_edge: false,
             alias: None,
         };

@@ -28,7 +28,7 @@ pub mod test {
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
     use ir_common::generated::results as result_pb;
-    use ir_common::{KeyId, NameOrId};
+    use ir_common::{KeyId, LabelId, NameOrId};
     use lazy_static::lazy_static;
     use pegasus::result::{ResultSink, ResultStream};
     use pegasus::{run_opt, Configuration, JobConf, StartupError};
@@ -36,7 +36,7 @@ pub mod test {
     use pegasus_server::rpc::RpcSink;
     use pegasus_server::JobRequest;
     use prost::Message;
-    use runtime::process::record::{Entry, Record, RecordElement};
+    use runtime::process::record::{Entry, Record};
     use runtime::IRJobAssembly;
     use runtime_integration::{InitializeJobAssembly, QueryExpGraph};
 
@@ -44,6 +44,11 @@ pub mod test {
     pub const TAG_B: KeyId = 1;
     pub const TAG_C: KeyId = 2;
     pub const TAG_D: KeyId = 3;
+
+    pub const PERSON_LABEL: LabelId = 0;
+    pub const SOFTWARE_LABEL: LabelId = 1;
+    pub const KNOWS_LABEL: LabelId = 0;
+    pub const CREATED_LABEL: LabelId = 1;
 
     static INIT: Once = Once::new();
 

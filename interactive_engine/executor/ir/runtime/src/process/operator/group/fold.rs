@@ -81,7 +81,7 @@ mod tests {
 
     use crate::process::functions::FoldGen;
     use crate::process::operator::tests::{init_source, TAG_A};
-    use crate::process::record::{CommonObject, Entry, Record, RecordElement};
+    use crate::process::record::{CommonObject, Entry, Record};
 
     fn count_test(source: Vec<Record>, fold_opr_pb: pb::GroupBy) -> ResultStream<Record> {
         let conf = JobConf::new("fold_test");
@@ -119,7 +119,7 @@ mod tests {
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(None) {
                 cnt = match entry.as_ref() {
-                    Entry::Element(RecordElement::OffGraph(CommonObject::Count(cnt))) => *cnt,
+                    Entry::OffGraph(CommonObject::Count(cnt)) => *cnt,
                     _ => {
                         unreachable!()
                     }
@@ -143,7 +143,7 @@ mod tests {
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(Some(TAG_A)) {
                 cnt = match entry.as_ref() {
-                    Entry::Element(RecordElement::OffGraph(CommonObject::Count(cnt))) => *cnt,
+                    Entry::OffGraph(CommonObject::Count(cnt)) => *cnt,
                     _ => {
                         unreachable!()
                     }

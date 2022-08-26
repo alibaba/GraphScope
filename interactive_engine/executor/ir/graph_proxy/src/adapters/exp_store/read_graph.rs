@@ -13,12 +13,12 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use ahash::{HashMap, HashMapExt};
 use std::fmt;
 use std::path::Path;
 use std::sync::atomic::{AtomicPtr, Ordering};
 use std::sync::Arc;
 
+use ahash::{HashMap, HashMapExt};
 use dyn_type::{object, Object};
 use graph_store::common::LabelId as StoreLabelId;
 use graph_store::config::{JsonConf, DIR_GRAPH_SCHEMA, FILE_SCHEMA};
@@ -664,7 +664,7 @@ fn encode_storage_label(labels: &Vec<LabelId>) -> Option<Vec<StoreLabelId>> {
 
 #[cfg(test)]
 mod tests {
-    use graph_store::common::StoreLabelId;
+    use graph_store::common::LabelId;
     use graph_store::ldbc::{LDBCVertexParser, LABEL_SHIFT_BITS};
     use graph_store::prelude::{DefaultId, GlobalStoreTrait};
 
@@ -688,8 +688,8 @@ mod tests {
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 1);
 
-        let v1_label: StoreLabelId = (v1 >> LABEL_SHIFT_BITS) as StoreLabelId;
-        let v2_label: StoreLabelId = (v2 >> LABEL_SHIFT_BITS) as StoreLabelId;
+        let v1_label: LabelId = (v1 >> LABEL_SHIFT_BITS) as LabelId;
+        let v2_label: LabelId = (v2 >> LABEL_SHIFT_BITS) as LabelId;
 
         assert_eq!(v1_label, 0);
         assert_eq!(v2_label, 1);

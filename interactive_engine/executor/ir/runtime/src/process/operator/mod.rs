@@ -196,19 +196,19 @@ impl Decode for TagKey {
 #[cfg(test)]
 pub(crate) mod tests {
     use ahash::HashMap;
-
     use dyn_type::Object;
     use graph_proxy::apis::{DynDetails, GraphElement, Vertex};
-    use ir_common::KeyId;
+    use ir_common::{KeyId, LabelId};
 
     use super::*;
-    use crate::process::record::RecordElement;
 
     pub const TAG_A: KeyId = 0;
     pub const TAG_B: KeyId = 1;
     pub const TAG_C: KeyId = 2;
     pub const TAG_D: KeyId = 3;
     pub const TAG_E: KeyId = 4;
+
+    pub const PERSON_LABEL: LabelId = 0;
 
     pub fn init_vertex1() -> Vertex {
         let map1: HashMap<NameOrId, Object> = vec![
@@ -219,7 +219,7 @@ pub(crate) mod tests {
         ]
         .into_iter()
         .collect();
-        Vertex::new(1, Some("person".into()), DynDetails::new(map1))
+        Vertex::new(1, Some(PERSON_LABEL), DynDetails::new(map1))
     }
 
     pub fn init_vertex2() -> Vertex {
@@ -227,7 +227,7 @@ pub(crate) mod tests {
             vec![("id".into(), object!(2)), ("age".into(), object!(27)), ("name".into(), object!("vadas"))]
                 .into_iter()
                 .collect();
-        Vertex::new(2, Some("person".into()), DynDetails::new(map2))
+        Vertex::new(2, Some(PERSON_LABEL), DynDetails::new(map2))
     }
 
     fn init_record() -> Record {
@@ -329,7 +329,7 @@ pub(crate) mod tests {
         let record = init_record();
         let entry = tag_key.get_arc_entry(&record).unwrap();
         match entry.as_ref() {
-            Entry::Element(RecordElement::OffGraph(CommonObject::Prop(obj))) => {
+            Entry::OffGraph(CommonObject::Prop(obj)) => {
                 assert_eq!(obj.clone(), object!(expected));
             }
             _ => {

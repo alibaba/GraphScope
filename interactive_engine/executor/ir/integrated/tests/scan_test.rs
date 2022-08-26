@@ -69,7 +69,7 @@ mod test {
         let source_iter = scan_gen(pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(query_params(vec!["person".into()], vec![], None)),
+            params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
             idx_predicate: None,
         });
         let mut result_ids = vec![];
@@ -94,7 +94,7 @@ mod test {
         let source_iter = scan_gen(pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(query_params(vec!["person".into(), "software".into()], vec![], None)),
+            params: Some(query_params(vec![PERSON_LABEL.into(), SOFTWARE_LABEL.into()], vec![], None)),
             idx_predicate: None,
         });
         let mut result_ids = vec![];

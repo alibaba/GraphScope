@@ -13,11 +13,11 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use ahash::{HashMap, HashMapExt};
 use std::fmt;
 use std::sync::atomic::{AtomicPtr, Ordering};
 use std::sync::Arc;
 
+use ahash::{HashMap, HashMapExt};
 use dyn_type::{Object, Primitives};
 use global_query::store_api::prelude::Property;
 use global_query::store_api::{

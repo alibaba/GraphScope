@@ -155,9 +155,9 @@ impl SinkGen for SinkVineyardOp {
 #[cfg(test)]
 mod tests {
 
-    use ahash::{HashMap, HashMapExt};
     use std::sync::{Arc, Mutex};
 
+    use ahash::{HashMap, HashMapExt};
     use dyn_type::Object;
     use graph_proxy::apis::graph::PKV;
     use graph_proxy::apis::{DynDetails, Edge, Element, GraphElement, Vertex, WriteGraphProxy, ID};

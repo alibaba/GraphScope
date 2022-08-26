@@ -80,9 +80,9 @@ impl MapFunction<(RecordKey, Record), Record> for GroupMap {
 
 #[cfg(test)]
 mod tests {
-    use ahash::HashMap;
     use std::collections::HashSet;
 
+    use ahash::HashMap;
     use dyn_type::Object;
     use graph_proxy::apis::{DynDetails, Vertex};
     use ir_common::generated::algebra as pb;
@@ -94,8 +94,10 @@ mod tests {
 
     use crate::process::functions::GroupGen;
     use crate::process::operator::accum::accumulator::Accumulator;
-    use crate::process::operator::tests::{init_source, init_vertex1, init_vertex2, TAG_A, TAG_B, TAG_C};
-    use crate::process::record::{CommonObject, Entry, Record, RecordElement};
+    use crate::process::operator::tests::{
+        init_source, init_vertex1, init_vertex2, PERSON_LABEL, TAG_A, TAG_B, TAG_C,
+    };
+    use crate::process::record::{CommonObject, Entry, Record};
 
     // v1: marko, 29;
     // v2: vadas, 27;
@@ -111,7 +113,7 @@ mod tests {
             vec![("id".into(), object!(3)), ("age".into(), object!(27)), ("name".into(), object!("marko"))]
                 .into_iter()
                 .collect();
-        Vertex::new(3, Some("person".into()), DynDetails::new(map3))
+        Vertex::new(3, Some(PERSON_LABEL), DynDetails::new(map3))
     }
 
     fn group_test(group_opr_pb: pb::GroupBy) -> ResultStream<Record> {
@@ -161,9 +163,9 @@ mod tests {
         let mut result = group_test(group_opr_pb);
         let mut group_result = HashSet::new();
         let expected_result: HashSet<(Entry, Entry)> = [
-            (init_vertex1().into(), Entry::Collection(vec![RecordElement::OnGraph(init_vertex1().into())])),
-            (init_vertex2().into(), Entry::Collection(vec![RecordElement::OnGraph(init_vertex2().into())])),
-            (init_vertex3().into(), Entry::Collection(vec![RecordElement::OnGraph(init_vertex3().into())])),
+            (init_vertex1().into(), Entry::Collection(vec![(init_vertex1().into())])),
+            (init_vertex2().into(), Entry::Collection(vec![(init_vertex2().into())])),
+            (init_vertex3().into(), Entry::Collection(vec![(init_vertex3().into())])),
         ]
         .iter()
         .cloned()
@@ -195,15 +197,9 @@ mod tests {
         let expected_result: HashSet<(Entry, Entry)> = [
             (
                 CommonObject::Prop(object!("marko")).into(),
-                Entry::Collection(vec![
-                    RecordElement::OnGraph(init_vertex1().into()),
-                    RecordElement::OnGraph(init_vertex3().into()),
-                ]),
+                Entry::Collection(vec![(init_vertex1().into()), (init_vertex3().into())]),
             ),
-            (
-                CommonObject::Prop(object!("vadas")).into(),
-                Entry::Collection(vec![RecordElement::OnGraph(init_vertex2().into())]),
-            ),
+            (CommonObject::Prop(object!("vadas")).into(), Entry::Collection(vec![(init_vertex2().into())])),
         ]
         .iter()
         .cloned()
@@ -240,15 +236,15 @@ mod tests {
         let expected_result: HashSet<((Entry, Entry), Entry)> = [
             (
                 (CommonObject::Prop(object!(1)).into(), CommonObject::Prop(object!("marko")).into()),
-                Entry::Collection(vec![RecordElement::OnGraph(init_vertex1().into())]),
+                Entry::Collection(vec![(init_vertex1().into())]),
             ),
             (
                 (CommonObject::Prop(object!(2)).into(), CommonObject::Prop(object!("vadas")).into()),
-                Entry::Collection(vec![RecordElement::OnGraph(init_vertex2().into())]),
+                Entry::Collection(vec![(init_vertex2().into())]),
             ),
             (
                 (CommonObject::Prop(object!(3)).into(), CommonObject::Prop(object!("marko")).into()),
-                Entry::Collection(vec![RecordElement::OnGraph(init_vertex3().into())]),
+                Entry::Collection(vec![(init_vertex3().into())]),
             ),
         ]
         .iter()
@@ -288,24 +284,15 @@ mod tests {
         let expected_result: HashSet<(Entry, (Entry, Entry))> = [
             (
                 init_vertex1().into(),
-                (
-                    Entry::Collection(vec![RecordElement::OnGraph(init_vertex1().into())]),
-                    CommonObject::Count(1).into(),
-                ),
+                (Entry::Collection(vec![(init_vertex1().into())]), CommonObject::Count(1).into()),
             ),
             (
                 init_vertex2().into(),
-                (
-                    Entry::Collection(vec![RecordElement::OnGraph(init_vertex2().into())]),
-                    CommonObject::Count(1).into(),
-                ),
+                (Entry::Collection(vec![(init_vertex2().into())]), CommonObject::Count(1).into()),
             ),
             (
                 init_vertex3().into(),
-                (
-                    Entry::Collection(vec![RecordElement::OnGraph(init_vertex3().into())]),
-                    CommonObject::Count(1).into(),
-                ),
+                (Entry::Collection(vec![(init_vertex3().into())]), CommonObject::Count(1).into()),
             ),
         ]
         .iter()
