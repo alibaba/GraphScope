@@ -29,25 +29,25 @@ use pegasus::api::function::DynIter;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 use vec_map::VecMap;
 
-#[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]
-pub enum CommonObject {
-    /// a None value used when:
-    /// 1) project a non-exist tag of the record;
-    /// 2) project a non-exist label/property of the record of graph_element;
-    /// 3) the property value returned from store is Object::None (TODO: may need to distinguish this case)
-    None,
-    /// projected property
-    Prop(Object),
-    /// count
-    Count(u64),
-}
+// #[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]
+// pub enum CommonObject {
+//     /// a None value used when:
+//     /// 1) project a non-exist tag of the record;
+//     /// 2) project a non-exist label/property of the record of graph_element;
+//     /// 3) the property value returned from store is Object::None (TODO: may need to distinguish this case)
+//     None,
+//     /// projected property
+//     Prop(Object),
+//     /// count
+//     Count(u64),
+// }
 
 #[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]
 pub enum Entry {
     V(Vertex),
     E(Edge),
     P(GraphPath),
-    OffGraph(CommonObject),
+    OffGraph(Object),
     Collection(Vec<Entry>),
 }
 
@@ -73,7 +73,7 @@ impl Entry {
         }
     }
 
-    pub fn as_common_object(&self) -> Option<&CommonObject> {
+    pub fn as_common_object(&self) -> Option<&Object> {
         match self {
             Entry::OffGraph(common_object) => Some(common_object),
             _ => None,
@@ -89,7 +89,7 @@ impl Entry {
 
     pub fn is_none(&self) -> bool {
         match self {
-            Entry::OffGraph(CommonObject::None) => true,
+            Entry::OffGraph(Object::None) => true,
             _ => false,
         }
     }
@@ -200,7 +200,7 @@ impl Into<Entry> for VertexOrEdge {
     }
 }
 
-impl Into<Entry> for CommonObject {
+impl Into<Entry> for Object {
     fn into(self) -> Entry {
         Entry::OffGraph(self)
     }
@@ -242,11 +242,7 @@ impl Element for Entry {
             Entry::V(v) => v.len(),
             Entry::E(e) => e.len(),
             Entry::P(p) => p.len(),
-            Entry::OffGraph(obj) => match obj {
-                CommonObject::None => 0,
-                CommonObject::Prop(obj) => obj.len(),
-                CommonObject::Count(_) => 1,
-            },
+            Entry::OffGraph(obj) => obj.len(),
             Entry::Collection(c) => c.len(),
         }
     }
@@ -256,11 +252,7 @@ impl Element for Entry {
             Entry::V(v) => v.as_borrow_object(),
             Entry::E(e) => e.as_borrow_object(),
             Entry::P(p) => p.as_borrow_object(),
-            Entry::OffGraph(obj_element) => match obj_element {
-                CommonObject::None => BorrowObject::None,
-                CommonObject::Prop(obj) => obj.as_borrow(),
-                CommonObject::Count(cnt) => (*cnt).into(),
-            },
+            Entry::OffGraph(obj) => obj.as_borrow(),
             Entry::Collection(_) => unreachable!(),
         }
     }
@@ -351,43 +343,6 @@ impl<E: Into<Entry>> Iterator for RecordPathExpandIter<E> {
     }
 }
 
-impl Encode for CommonObject {
-    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
-        match self {
-            CommonObject::None => {
-                writer.write_u8(0)?;
-            }
-            CommonObject::Prop(prop) => {
-                writer.write_u8(1)?;
-                prop.write_to(writer)?;
-            }
-            CommonObject::Count(cnt) => {
-                writer.write_u8(2)?;
-                writer.write_u64(*cnt)?;
-            }
-        }
-        Ok(())
-    }
-}
-
-impl Decode for CommonObject {
-    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
-        let opt = reader.read_u8()?;
-        match opt {
-            0 => Ok(CommonObject::None),
-            1 => {
-                let object = <Object>::read_from(reader)?;
-                Ok(CommonObject::Prop(object))
-            }
-            2 => {
-                let cnt = <u64>::read_from(reader)?;
-                Ok(CommonObject::Count(cnt))
-            }
-            _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "unreachable")),
-        }
-    }
-}
-
 impl Encode for Entry {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
         match self {
@@ -403,9 +358,9 @@ impl Encode for Entry {
                 writer.write_u8(2)?;
                 p.write_to(writer)?;
             }
-            Entry::OffGraph(object_element) => {
+            Entry::OffGraph(obj) => {
                 writer.write_u8(3)?;
-                object_element.write_to(writer)?;
+                obj.write_to(writer)?;
             }
             Entry::Collection(collection) => {
                 writer.write_u8(4)?;
@@ -433,8 +388,8 @@ impl Decode for Entry {
                 Ok(Entry::P(p))
             }
             3 => {
-                let object_element = <CommonObject>::read_from(reader)?;
-                Ok(Entry::OffGraph(object_element))
+                let obj = <Object>::read_from(reader)?;
+                Ok(Entry::OffGraph(obj))
             }
             4 => {
                 let collection = <Vec<Entry>>::read_from(reader)?;
@@ -530,9 +485,7 @@ impl TryFrom<result_pb::Element> for Entry {
                 result_pb::element::Inner::Vertex(v) => Ok(Entry::V(v.try_into()?)),
                 result_pb::element::Inner::Edge(e) => Ok(Entry::E(e.try_into()?)),
                 result_pb::element::Inner::GraphPath(p) => Ok(Entry::P(p.try_into()?)),
-                result_pb::element::Inner::Object(o) => {
-                    Ok(Entry::OffGraph(CommonObject::Prop(o.try_into()?)))
-                }
+                result_pb::element::Inner::Object(o) => Ok(Entry::OffGraph(o.try_into()?)),
             }
         } else {
             Err(ParsePbError::EmptyFieldError("element inner is empty".to_string()))?
@@ -540,34 +493,38 @@ impl TryFrom<result_pb::Element> for Entry {
     }
 }
 
-impl Add for CommonObject {
-    type Output = CommonObject;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        match (self, rhs) {
-            (CommonObject::Prop(o1), CommonObject::Prop(o2)) => match (o1, o2) {
-                (Object::Primitive(p1), Object::Primitive(p2)) => {
-                    CommonObject::Prop(Object::Primitive(p1.add(p2)))
-                }
-                (o1, Object::None) => CommonObject::Prop(o1),
-                (Object::None, o2) => CommonObject::Prop(o2),
-                _ => CommonObject::Prop(Object::None),
-            },
-            (CommonObject::Count(c1), CommonObject::Count(c2)) => CommonObject::Count(c1 + c2),
-            (o1, CommonObject::None) => o1,
-            (CommonObject::None, o2) => o2,
-            _ => CommonObject::None,
-        }
-    }
-}
+// impl Add for CommonObject {
+//     type Output = CommonObject;
+//
+//     fn add(self, rhs: Self) -> Self::Output {
+//         match (self, rhs) {
+//             (CommonObject::Prop(o1), CommonObject::Prop(o2)) => match (o1, o2) {
+//                 (Object::Primitive(p1), Object::Primitive(p2)) => {
+//                     CommonObject::Prop(Object::Primitive(p1.add(p2)))
+//                 }
+//                 (o1, Object::None) => CommonObject::Prop(o1),
+//                 (Object::None, o2) => CommonObject::Prop(o2),
+//                 _ => CommonObject::Prop(Object::None),
+//             },
+//             (CommonObject::Count(c1), CommonObject::Count(c2)) => CommonObject::Count(c1 + c2),
+//             (o1, CommonObject::None) => o1,
+//             (CommonObject::None, o2) => o2,
+//             _ => CommonObject::None,
+//         }
+//     }
+// }
 
 impl Add for Entry {
     type Output = Entry;
 
     fn add(self, rhs: Self) -> Self::Output {
         match (self, rhs) {
-            (Entry::OffGraph(o1), Entry::OffGraph(o2)) => o1.add(o2).into(),
-            _ => CommonObject::None.into(),
+            (Entry::OffGraph(o1), Entry::OffGraph(o2)) => match (o1, o2) {
+                (o, Object::None) | (Object::None, o) => o.into(),
+                (Object::Primitive(p1), Object::Primitive(p2)) => Object::Primitive(p1.add(p2)).into(),
+                _ => Object::None.into(),
+            },
+            _ => Object::None.into(),
         }
     }
 }

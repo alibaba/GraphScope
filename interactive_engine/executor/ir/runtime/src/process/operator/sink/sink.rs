@@ -30,7 +30,7 @@ use prost::Message;
 
 use crate::error::FnGenResult;
 use crate::process::operator::sink::{SinkGen, Sinker};
-use crate::process::record::{CommonObject, Entry, Record};
+use crate::process::record::{Entry, Record};
 
 #[derive(Debug)]
 pub struct RecordSinkEncoder {
@@ -75,22 +75,10 @@ impl RecordSinkEncoder {
                 let path_pb = self.path_to_pb(p);
                 Some(result_pb::element::Inner::GraphPath(path_pb))
             }
-            Entry::OffGraph(o) => match o {
-                CommonObject::None => Some(result_pb::element::Inner::Object(Object::None.into())),
-                CommonObject::Prop(obj) => {
-                    let obj_pb = self.object_to_pb(obj.clone());
-                    Some(result_pb::element::Inner::Object(obj_pb))
-                }
-                CommonObject::Count(cnt) => {
-                    let item = if *cnt <= (i64::MAX as u64) {
-                        common_pb::value::Item::I64(*cnt as i64)
-                    } else {
-                        common_pb::value::Item::Blob(cnt.to_be_bytes().to_vec())
-                    };
-                    let value_pb = common_pb::Value { item: Some(item) };
-                    Some(result_pb::element::Inner::Object(value_pb))
-                }
-            },
+            Entry::OffGraph(o) => {
+                let obj_pb = self.object_to_pb(o.clone());
+                Some(result_pb::element::Inner::Object(obj_pb))
+            }
             Entry::Collection(_) => {
                 unreachable!()
             }

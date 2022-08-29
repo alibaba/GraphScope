@@ -16,7 +16,6 @@
 use std::convert::{TryFrom, TryInto};
 use std::sync::Arc;
 
-use dyn_type::Object;
 use graph_proxy::utils::expr::eval::{Evaluate, Evaluator};
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
@@ -27,7 +26,7 @@ use pegasus::api::function::{FilterMapFunction, FnResult};
 use crate::error::{FnExecResult, FnGenResult};
 use crate::process::operator::map::FilterMapFuncGen;
 use crate::process::operator::TagKey;
-use crate::process::record::{CommonObject, Entry, Record};
+use crate::process::record::{Entry, Record};
 
 /// Project entries with specified tags or further their properties.
 /// Notice that when projecting a single column, if the result is a None-Entry,
@@ -56,13 +55,7 @@ fn exec_projector(input: &Record, projector: &Projector) -> FnExecResult<Arc<Ent
     let entry = match projector {
         Projector::ExprProjector(evaluator) => {
             let projected_result = evaluator.eval::<Entry, Record>(Some(&input))?;
-            Arc::new(
-                match projected_result {
-                    Object::None => CommonObject::None,
-                    _ => CommonObject::Prop(projected_result),
-                }
-                .into(),
-            )
+            Arc::new(projected_result.into())
         }
         Projector::GraphElementProjector(tag_key) => tag_key.get_arc_entry(input)?,
     };

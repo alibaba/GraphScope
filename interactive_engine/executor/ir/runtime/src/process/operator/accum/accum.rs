@@ -17,7 +17,7 @@ use std::collections::HashSet;
 use std::convert::{TryFrom, TryInto};
 use std::ops::Div;
 
-use dyn_type::Primitives;
+use dyn_type::{Object, Primitives};
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::group_by::agg_func::Aggregate;
@@ -30,7 +30,7 @@ use crate::process::operator::accum::accumulator::{
 };
 use crate::process::operator::accum::AccumFactoryGen;
 use crate::process::operator::TagKey;
-use crate::process::record::{CommonObject, Entry, Record};
+use crate::process::record::{Entry, Record};
 
 #[derive(Debug, Clone)]
 pub enum EntryAccumulator {
@@ -98,7 +98,7 @@ impl Accumulator<Entry, Entry> for EntryAccumulator {
         match self {
             EntryAccumulator::ToCount(count) => {
                 let cnt = count.finalize()?;
-                Ok(CommonObject::Count(cnt).into())
+                Ok(object!(cnt).into())
             }
             EntryAccumulator::ToList(list) => {
                 let list_entry = list.finalize()?;
@@ -116,7 +116,7 @@ impl Accumulator<Entry, Entry> for EntryAccumulator {
             }
             EntryAccumulator::ToDistinctCount(distinct_count) => {
                 let cnt = distinct_count.finalize()?;
-                Ok(CommonObject::Count(cnt).into())
+                Ok(object!(cnt).into())
             }
             EntryAccumulator::ToSum(sum) => sum
                 .finalize()?
@@ -127,26 +127,24 @@ impl Accumulator<Entry, Entry> for EntryAccumulator {
                     .ok_or(FnExecError::accum_error("sum_entry is none"))?;
                 let cnt = count.finalize()?;
                 // TODO: confirm if it should be CommonObject::None, or throw error;
-                let result = CommonObject::None.into();
+                let result = (Object::None).into();
                 if cnt == 0 {
                     warn!("cnt value is 0 in accum avg");
                     Ok(result)
                 } else if let Some(sum_val) = sum_entry.as_common_object() {
                     match sum_val {
-                        CommonObject::None => {
+                        Object::None => {
                             warn!("sum value is none in accum avg");
                             Ok(result)
                         }
-                        CommonObject::Prop(prop_val) => {
+                        _ => {
                             let primitive_cnt = Primitives::Float(cnt as f64);
-                            let result = prop_val
+                            let result = sum_val
                                 .as_primitive()
                                 .map(|val| val.div(primitive_cnt))
                                 .map_err(|e| FnExecError::accum_error(&format!("{}", e)))?;
-                            Ok(CommonObject::Prop(result.into()).into())
-                        }
-                        CommonObject::Count(cnt_val) => {
-                            Ok(CommonObject::Prop(object!((*cnt_val) as f64 / cnt as f64)).into())
+                            let result_obj: Object = result.into();
+                            Ok(result_obj.into())
                         }
                     }
                 } else {
@@ -408,7 +406,7 @@ mod tests {
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(Some(TAG_A)) {
                 cnt = match entry.as_ref() {
-                    Entry::OffGraph(CommonObject::Count(cnt)) => *cnt,
+                    Entry::OffGraph(cnt) => cnt.as_i64().unwrap(),
                     _ => {
                         unreachable!()
                     }
@@ -433,11 +431,9 @@ mod tests {
         };
         let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function_1, function_2] };
         let mut result = fold_test(init_source(), fold_opr_pb);
-        let mut fold_result: (Entry, Entry) = (Entry::Collection(vec![]), CommonObject::Count(0).into());
-        let expected_result: (Entry, Entry) = (
-            Entry::Collection(vec![init_vertex1().into(), init_vertex2().into()]),
-            CommonObject::Count(2).into(),
-        );
+        let mut fold_result: (Entry, Entry) = (Entry::Collection(vec![]), object!(0).into());
+        let expected_result: (Entry, Entry) =
+            (Entry::Collection(vec![init_vertex1().into(), init_vertex2().into()]), object!(2).into());
         if let Some(Ok(record)) = result.next() {
             let collection_entry = record
                 .get(Some(TAG_A))
@@ -457,8 +453,8 @@ mod tests {
     // g.V().values('age').min().as("a")
     #[test]
     fn min_test() {
-        let r1 = Record::new(CommonObject::Prop(29.into()), None);
-        let r2 = Record::new(CommonObject::Prop(27.into()), None);
+        let r1 = Record::new(object!(29), None);
+        let r2 = Record::new(object!(27), None);
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 1, // min
@@ -471,7 +467,7 @@ mod tests {
             if let Some(entry) = record.get(Some(TAG_A)) {
                 res = match entry.as_ref() {
                     // this is Prop, since get_entry returns entry type of prop
-                    Entry::OffGraph(CommonObject::Prop(obj)) => obj.clone(),
+                    Entry::OffGraph(obj) => obj.clone(),
                     _ => {
                         unreachable!()
                     }
@@ -484,8 +480,8 @@ mod tests {
     // g.V().values('name').max().as("a")
     #[test]
     fn max_test() {
-        let r1 = Record::new(CommonObject::Prop("marko".into()), None);
-        let r2 = Record::new(CommonObject::Prop("vadas".into()), None);
+        let r1 = Record::new(object!("marko"), None);
+        let r2 = Record::new(object!("vadas"), None);
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 2, // max
@@ -498,7 +494,7 @@ mod tests {
             if let Some(entry) = record.get(Some(TAG_A)) {
                 res = match entry.as_ref() {
                     // this is Prop, since get_entry returns entry type of prop
-                    Entry::OffGraph(CommonObject::Prop(obj)) => obj.clone(),
+                    Entry::OffGraph(obj) => obj.clone(),
                     _ => {
                         unreachable!()
                     }
@@ -529,7 +525,7 @@ mod tests {
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(Some(TAG_A)) {
                 cnt = match entry.as_ref() {
-                    Entry::OffGraph(CommonObject::Count(cnt)) => *cnt,
+                    Entry::OffGraph(cnt) => cnt.as_i64().unwrap(),
                     _ => {
                         unreachable!()
                     }
@@ -569,9 +565,9 @@ mod tests {
     // g.V().values('age').sum().as("a")
     #[test]
     fn sum_test() {
-        let r1 = Record::new(CommonObject::Prop(object!(10)), None);
-        let r2 = Record::new(CommonObject::Prop(object!(20)), None);
-        let r3 = Record::new(CommonObject::Prop(object!(30)), None);
+        let r1 = Record::new(object!(10), None);
+        let r2 = Record::new(object!(20), None);
+        let r3 = Record::new(object!(30), None);
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 0, // sum
@@ -583,7 +579,7 @@ mod tests {
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(Some(TAG_A)) {
                 res = match entry.as_ref() {
-                    Entry::OffGraph(CommonObject::Prop(obj)) => obj.clone(),
+                    Entry::OffGraph(obj) => obj.clone(),
                     _ => {
                         unreachable!()
                     }
@@ -596,9 +592,9 @@ mod tests {
     // g.V().values('age').mean()
     #[test]
     fn avg_test() {
-        let r1 = Record::new(CommonObject::Prop(object!(10)), None);
-        let r2 = Record::new(CommonObject::Prop(object!(20)), None);
-        let r3 = Record::new(CommonObject::Prop(object!(30)), None);
+        let r1 = Record::new(object!(10), None);
+        let r2 = Record::new(object!(20), None);
+        let r3 = Record::new(object!(30), None);
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 7, // avg
@@ -610,7 +606,7 @@ mod tests {
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(None) {
                 res = match entry.as_ref() {
-                    Entry::OffGraph(CommonObject::Prop(obj)) => obj.clone(),
+                    Entry::OffGraph(obj) => obj.clone(),
                     _ => {
                         unreachable!()
                     }

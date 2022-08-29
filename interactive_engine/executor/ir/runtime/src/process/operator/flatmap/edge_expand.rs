@@ -25,7 +25,7 @@ use pegasus::api::function::{DynIter, FlatMapFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenError, FnGenResult};
 use crate::process::operator::flatmap::FlatMapFuncGen;
-use crate::process::record::{CommonObject, Entry, Record, RecordExpandIter, RecordPathExpandIter};
+use crate::process::record::{Entry, Record, RecordExpandIter, RecordPathExpandIter};
 
 pub struct EdgeExpandOperator<E: Into<Entry>> {
     start_v_tag: Option<KeyId>,
@@ -65,7 +65,7 @@ impl<E: Into<Entry> + 'static> FlatMapFunction<Record, Record> for EdgeExpandOpe
                     }
                     ExpandOpt::Degree => {
                         let degree = iter.count();
-                        input.append(CommonObject::Count(degree as u64), self.alias);
+                        input.append(object!(degree), self.alias);
                         Ok(Box::new(vec![input].into_iter()))
                     }
                 }

@@ -37,7 +37,7 @@ use ir_common::{KeyId, NameOrId};
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::error::{FnExecError, FnExecResult};
-use crate::process::record::{CommonObject, Entry, Record};
+use crate::process::record::{Entry, Record};
 
 #[derive(Clone, Debug, Default)]
 pub struct TagKey {
@@ -56,7 +56,7 @@ impl TagKey {
                 Ok(entry.clone())
             }
         } else {
-            Ok(Arc::new((CommonObject::None).into()))
+            Ok(Arc::new((Object::None).into()))
         }
     }
 
@@ -69,7 +69,7 @@ impl TagKey {
                 Ok(entry.as_ref().clone())
             }
         } else {
-            Ok((CommonObject::None).into())
+            Ok((Object::None).into())
         }
     }
 
@@ -122,10 +122,7 @@ impl TagKey {
                 }
             };
 
-            match prop_obj {
-                Object::None => Ok(CommonObject::None.into()),
-                _ => Ok(CommonObject::Prop(prop_obj).into()),
-            }
+            Ok(prop_obj.into())
         } else {
             Err(FnExecError::unexpected_data_error(&format!(
                 "
@@ -233,7 +230,7 @@ pub(crate) mod tests {
     fn init_record() -> Record {
         let vertex1 = init_vertex1();
         let vertex2 = init_vertex2();
-        let object3 = CommonObject::Count(10);
+        let object3 = object!(10);
 
         let mut record = Record::new(vertex1, None);
         record.append(vertex2, Some((0 as KeyId).into()));
@@ -304,7 +301,7 @@ pub(crate) mod tests {
     fn test_get_none_tag_entry() {
         let tag_key = TagKey { tag: None, key: None };
         let record = init_record();
-        let expected = CommonObject::Count(10).into();
+        let expected = object!(10).into();
         let entry = tag_key.get_arc_entry(&record).unwrap();
         assert_eq!(entry.as_ref().clone(), expected)
     }
@@ -329,7 +326,7 @@ pub(crate) mod tests {
         let record = init_record();
         let entry = tag_key.get_arc_entry(&record).unwrap();
         match entry.as_ref() {
-            Entry::OffGraph(CommonObject::Prop(obj)) => {
+            Entry::OffGraph(obj) => {
                 assert_eq!(obj.clone(), object!(expected));
             }
             _ => {
