@@ -180,10 +180,13 @@ bl::result<void> GrapeInstance::unloadGraph(const rpc::GSParams& params) {
     bool exists = false;
     VY_OK_OR_RAISE(client_->Exists(frag_group_id, exists));
     if (exists) {
-      auto fg = std::dynamic_pointer_cast<vineyard::ArrowFragmentGroup>(
-          client_->GetObject(frag_group_id));
+      std::shared_ptr<vineyard::ArrowFragmentGroup> fg;
+      VY_OK_OR_RAISE(client_->GetObject(frag_group_id, fg));
       auto fid = comm_spec_.WorkerToFrag(comm_spec_.worker_id());
       auto frag_id = fg->Fragments().at(fid);
+
+      // ensure all workers obtain the expected information
+      MPI_Barrier(comm_spec_.comm());
 
       // delete the fragment group first
       if (comm_spec_.worker_id() == 0) {
