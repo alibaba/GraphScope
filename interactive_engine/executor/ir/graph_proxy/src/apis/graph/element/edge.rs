@@ -188,7 +188,6 @@ impl TryFrom<result_pb::Edge> for Edge {
             e.dst_id as ID,
             DynDetails::default(),
         );
-        // TODO: set label for edges
         if let Some(src_label) = e.src_label {
             edge.set_src_label(src_label.try_into()?);
         }

@@ -47,7 +47,9 @@ pub trait GraphElement: Element {
     fn label(&self) -> Option<&LabelId>;
     /// To obtain the data maintained by the graph_element, mostly is a hash-table with key-value mappings,
     /// `None` by default, if there is no data.
-    fn details(&self) -> Option<&DynDetails>;
+    fn details(&self) -> Option<&DynDetails> {
+        None
+    }
 }
 
 impl Element for () {

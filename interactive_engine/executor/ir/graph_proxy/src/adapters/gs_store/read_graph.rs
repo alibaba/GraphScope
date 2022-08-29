@@ -28,8 +28,7 @@ use global_query::{
     GlobalGraphQuery, GraphPartitionManager, PartitionLabeledVertexIds, PartitionVertexIds,
 };
 use graph_store::utils::IterList;
-use ir_common::OneOrMany;
-use ir_common::{KeyId, LabelId, NameOrId};
+use ir_common::{KeyId, LabelId, NameOrId, OneOrMany};
 use pegasus_common::downcast::*;
 
 use crate::apis::graph::PKV;

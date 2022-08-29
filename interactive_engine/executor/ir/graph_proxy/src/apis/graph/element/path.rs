@@ -168,9 +168,6 @@ impl GraphElement for GraphPath {
     fn label(&self) -> Option<&LabelId> {
         None
     }
-    fn details(&self) -> Option<&DynDetails> {
-        None
-    }
 }
 
 impl PartialEq for GraphPath {
