@@ -29,19 +29,6 @@ use pegasus::api::function::DynIter;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 use vec_map::VecMap;
 
-// #[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]
-// pub enum CommonObject {
-//     /// a None value used when:
-//     /// 1) project a non-exist tag of the record;
-//     /// 2) project a non-exist label/property of the record of graph_element;
-//     /// 3) the property value returned from store is Object::None (TODO: may need to distinguish this case)
-//     None,
-//     /// projected property
-//     Prop(Object),
-//     /// count
-//     Count(u64),
-// }
-
 #[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]
 pub enum Entry {
     V(Vertex),

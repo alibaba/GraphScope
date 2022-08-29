@@ -35,7 +35,7 @@ mod test {
     use runtime::process::operator::flatmap::FlatMapFuncGen;
     use runtime::process::operator::map::FilterMapFuncGen;
     use runtime::process::operator::source::SourceOperator;
-    use runtime::process::record::{CommonObject, Record};
+    use runtime::process::record::Record;
 
     use crate::common::test::*;
 
@@ -609,8 +609,8 @@ mod test {
         let mut expected_results = vec![(v1, 3), (v2, 0), (v3, 0), (v4, 2), (v5, 0), (v6, 1)];
         while let Some(Ok(record)) = pegasus_result.next() {
             if let Some(v) = record.get(None).unwrap().as_graph_vertex() {
-                if let Some(CommonObject::Count(degree)) = record.get(Some(1)).unwrap().as_common_object() {
-                    results.push((v.id() as DefaultId, *degree));
+                if let Some(degree_obj) = record.get(Some(1)).unwrap().as_common_object() {
+                    results.push((v.id() as DefaultId, degree_obj.as_u64().unwrap()));
                 }
             }
         }
@@ -641,8 +641,8 @@ mod test {
         let mut expected_results = vec![(v1, 0), (v2, 1), (v3, 3), (v4, 1), (v5, 1), (v6, 0)];
         while let Some(Ok(record)) = pegasus_result.next() {
             if let Some(v) = record.get(None).unwrap().as_graph_vertex() {
-                if let Some(CommonObject::Count(degree)) = record.get(Some(1)).unwrap().as_common_object() {
-                    results.push((v.id() as DefaultId, *degree));
+                if let Some(degree_obj) = record.get(Some(1)).unwrap().as_common_object() {
+                    results.push((v.id() as DefaultId, degree_obj.as_u64().unwrap()));
                 }
             }
         }
@@ -673,8 +673,8 @@ mod test {
         let mut expected_results = vec![(v1, 3), (v2, 1), (v3, 3), (v4, 3), (v5, 1), (v6, 1)];
         while let Some(Ok(record)) = pegasus_result.next() {
             if let Some(v) = record.get(None).unwrap().as_graph_vertex() {
-                if let Some(CommonObject::Count(degree)) = record.get(Some(1)).unwrap().as_common_object() {
-                    results.push((v.id() as DefaultId, *degree));
+                if let Some(degree_obj) = record.get(Some(1)).unwrap().as_common_object() {
+                    results.push((v.id() as DefaultId, degree_obj.as_u64().unwrap()));
                 }
             }
         }

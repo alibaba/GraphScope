@@ -46,7 +46,7 @@ pub enum EntryAccumulator {
 }
 
 /// Accumulator for Record, including multiple accumulators for entries(columns) in Record.
-/// Notice that if the entry is a None-Entry (i.e., CommonObject::None), it won't be accumulated.
+/// Notice that if the entry is a None-Entry (i.e., Object::None), it won't be accumulated.
 // TODO: if the none-entry counts, we may further need a flag to identify.
 #[derive(Debug, Clone)]
 pub struct RecordAccumulator {
@@ -126,7 +126,7 @@ impl Accumulator<Entry, Entry> for EntryAccumulator {
                     .finalize()?
                     .ok_or(FnExecError::accum_error("sum_entry is none"))?;
                 let cnt = count.finalize()?;
-                // TODO: confirm if it should be CommonObject::None, or throw error;
+                // TODO: confirm if it should be Object::None, or throw error;
                 let result = (Object::None).into();
                 if cnt == 0 {
                     warn!("cnt value is 0 in accum avg");
@@ -325,7 +325,7 @@ mod tests {
     use crate::process::operator::accum::accumulator::Accumulator;
     use crate::process::operator::accum::AccumFactoryGen;
     use crate::process::operator::tests::{init_source, init_vertex1, init_vertex2, TAG_A, TAG_B};
-    use crate::process::record::{CommonObject, Entry, Record};
+    use crate::process::record::{Entry, Record};
 
     fn fold_test(source: Vec<Record>, fold_opr_pb: pb::GroupBy) -> ResultStream<Record> {
         let conf = JobConf::new("fold_test");
@@ -406,7 +406,7 @@ mod tests {
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(Some(TAG_A)) {
                 cnt = match entry.as_ref() {
-                    Entry::OffGraph(cnt) => cnt.as_i64().unwrap(),
+                    Entry::OffGraph(cnt) => cnt.as_u64().unwrap(),
                     _ => {
                         unreachable!()
                     }
@@ -525,7 +525,7 @@ mod tests {
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(Some(TAG_A)) {
                 cnt = match entry.as_ref() {
-                    Entry::OffGraph(cnt) => cnt.as_i64().unwrap(),
+                    Entry::OffGraph(cnt) => cnt.as_u64().unwrap(),
                     _ => {
                         unreachable!()
                     }
