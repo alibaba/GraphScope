@@ -707,7 +707,13 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
         return graphTraversal.bothV();
     }
 
-    private Traversal visitExpr(
+    @Override
+    public GraphTraversal visitTraversalMethod_coin(
+            final GremlinGSParser.TraversalMethod_coinContext ctx) {
+        return graphTraversal.coin(Double.valueOf(ctx.floatLiteral().getText()));
+    }
+
+    public Traversal visitExpr(
             GremlinGSParser.TraversalMethod_exprContext ctx, ExprStep.Type type) {
         if (ctx.stringLiteral() != null) {
             IrCustomizedTraversal traversal = (IrCustomizedTraversal) graphTraversal;

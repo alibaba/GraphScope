@@ -1358,6 +1358,7 @@ mod test {
             is_all_columns: false,
             limit: None,
             predicate: None,
+            sample_ratio: 1.0,
             extra: HashMap::new(),
         }
     }
@@ -1756,6 +1757,7 @@ mod test {
                 predicate: Some(
                     str_to_expr_pb("@a.~label > \"person\" && @a.age == 10".to_string()).unwrap(),
                 ),
+                sample_ratio: 1.0,
                 extra: HashMap::new(),
             }),
             idx_predicate: Some(vec!["software".to_string()].into()),
@@ -1833,6 +1835,7 @@ mod test {
                 is_all_columns: false,
                 limit: None,
                 predicate: Some(str_to_expr_pb("@.name == \"John\"".to_string()).unwrap()),
+                sample_ratio: 1.0,
                 extra: HashMap::new(),
             }),
             idx_predicate: None,
@@ -2236,6 +2239,7 @@ mod test {
                 is_all_columns: true,
                 limit: None,
                 predicate: None,
+                sample_ratio: 1.0,
                 extra: Default::default(),
             }),
             idx_predicate: None,
@@ -2262,6 +2266,7 @@ mod test {
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
+                sample_ratio: 1.0,
                 extra: Default::default(),
             }),
             idx_predicate: None,

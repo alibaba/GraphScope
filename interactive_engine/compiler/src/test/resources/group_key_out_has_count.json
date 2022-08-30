@@ -12,6 +12,7 @@
               "is_all_columns": false,
               "limit": null,
               "predicate": null,
+              "sample_ratio": 1.0,
               "extra": {}
             },
             "idx_predicate": null
@@ -67,6 +68,7 @@
                   }
                 ]
               },
+              "sample_ratio": 1.0,
               "extra": {}
             },
             "alias": null,

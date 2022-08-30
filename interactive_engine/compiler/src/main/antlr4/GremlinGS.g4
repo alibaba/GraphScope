@@ -81,6 +81,7 @@ traversalMethod
     | traversalMethod_bothV // bothV()
     | traversalMethod_aggregate_func
     | traversalMethod_hasNot // hasNot()
+    | traversalMethod_coin  // coin()
     ;
 
 traversalSourceSpawnMethod_V
@@ -415,6 +416,10 @@ traversalMethod_not
 traversalMethod_union
     : 'union' LPAREN nestedTraversalExpr RPAREN
     ;
+
+traversalMethod_coin
+	: 'coin' LPAREN floatLiteral RPAREN
+	;
 
 nestedTraversalExpr
     : nestedTraversal (COMMA nestedTraversal)*

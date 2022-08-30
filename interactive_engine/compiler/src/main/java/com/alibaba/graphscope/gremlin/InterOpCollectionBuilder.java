@@ -135,6 +135,9 @@ public class InterOpCollectionBuilder {
                 opList.add(StepTransformFactory.SUBGRAPH_STEP.apply(step));
             } else if (Utils.equalClass(step, IdentityStep.class)) {
                 opList.add(StepTransformFactory.IDENTITY_STEP.apply(step));
+            } else if (Utils.equalClass(step, CoinStep.class)) {
+                throw new UnsupportedStepException(
+                        step.getClass(), "coin() should follow V() or E()");
             } else {
                 throw new UnsupportedStepException(step.getClass(), "unimplemented yet");
             }

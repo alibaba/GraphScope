@@ -161,4 +161,38 @@ mod test {
         expected_ids.sort();
         assert_eq!(result_ids, expected_ids)
     }
+
+    // g.V().coin(0.1)
+    #[test]
+    fn scan_sample_test() {
+        let mut params = query_params(vec![], vec![], None);
+        params.sample_ratio = 0.1;
+        let source_iter =
+            scan_gen(pb::Scan { scan_opt: 0, alias: None, params: Some(params), idx_predicate: None });
+        let mut result_count = 0;
+        for record in source_iter {
+            if let Some(_element) = record.get(None).unwrap().as_graph_vertex() {
+                result_count += 1
+            }
+        }
+        // It is almost impossible to sample 6 vertices.
+        assert!(result_count < 6);
+    }
+
+    // g.E().coin(0.1)
+    #[test]
+    fn scan_edge_sample_test() {
+        let mut params = query_params(vec![], vec![], None);
+        params.sample_ratio = 0.1;
+        let source_iter =
+            scan_gen(pb::Scan { scan_opt: 1, alias: None, params: Some(params), idx_predicate: None });
+        let mut result_count = 0;
+        for record in source_iter {
+            if let Some(_element) = record.get(None).unwrap().as_graph_edge() {
+                result_count += 1
+            }
+        }
+        // It is almost impossible to sample 6 edges
+        assert!(result_count < 6);
+    }
 }

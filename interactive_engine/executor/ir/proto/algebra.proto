@@ -188,8 +188,11 @@ message QueryParams {
   Range limit = 4;
   // The optional predicate for the data tuple, which may be pushed down to the storage service
   common.Expression predicate = 5;
+  // Define the sampling ratio, while querying vertex/edge.
+  // 1.0 by default for deterministic case.
+  double sample_ratio = 6;
   // Extra parameters for general-purpose usage
-  map<string, string> extra = 6;
+  map<string, string> extra = 7;
 }
 
 // Scan is an operator that transforms the source data format (defined by the database)
