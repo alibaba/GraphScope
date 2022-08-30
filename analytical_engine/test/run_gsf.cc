@@ -41,6 +41,15 @@ void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
 
   std::shared_ptr<GraphType> fragment =
       std::dynamic_pointer_cast<GraphType>(client.GetObject(id));
+  std::ofstream ofstream;
+  std::string output_path = "/Users/weibin/Dev/GraphScope/analytical_engine/build/graph/r" + std::to_string(fragment->fid());
+  ofstream.open(output_path);
+  for (auto v : fragment->InnerVertices(0)) {
+    for (auto e : fragment->GetOutgoingAdjList(v, 0)) {
+      ofstream << fragment->GetId(v) << " " << fragment->GetId(e.neighbor()) << "\n";
+    }
+  }
+  ofstream.close();
   // std::shared_ptr<FragmentType> projected_fragment =
   //     FragmentType::Project(fragment, 0, 0, 0, 0);
 }

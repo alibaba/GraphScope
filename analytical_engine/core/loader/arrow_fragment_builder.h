@@ -137,10 +137,10 @@ class ArrowFragmentBuilder {
       for (const auto& item : vertex_infos) {
         const auto& vertex_info = item.second;
         int distribute_chunk_num = vertex_info.ChunkNum() / total_parts;
-        gsf::IdType start_id = index * distribute_chunk_num;
+        gsf::IdType start_id = index * distribute_chunk_num * vertex_info.GetChunkSize();
         range_t id_range;
         id_range.first = start_id;
-        id_range.second = (index + 1) * distribute_chunk_num;
+        id_range.second = (index + 1) * distribute_chunk_num * vertex_info.GetChunkSize();
         if (comm_spec_.worker_id() == comm_spec_.worker_num() - 1) {
           distribute_chunk_num += vertex_info.ChunkNum() % total_parts;
           id_range.second = vertex_info.GetOffsetEnd();
@@ -181,8 +181,8 @@ class ArrowFragmentBuilder {
         auto src_label = adj_list_info.GetSrcLabel();
         const auto& vertex_info  = graph_info_->GetVertexInfo(src_label).value();
         int distribute_chunk_num = vertex_info.ChunkNum() / total_parts;
-        gsf::IdType start_id = index * distribute_chunk_num;
-        gsf::IdType end_id = (index + 1) * distribute_chunk_num;
+        gsf::IdType start_id = index * distribute_chunk_num * vertex_info.GetChunkSize();
+        gsf::IdType end_id = (index + 1) * distribute_chunk_num * vertex_info.GetChunkSize();
         gsf::IdType begin_offset, end_offset;
         if (comm_spec_.worker_id() == comm_spec_.worker_num() - 1) {
           distribute_chunk_num += vertex_info.ChunkNum() % total_parts;
@@ -230,6 +230,8 @@ class ArrowFragmentBuilder {
 
   bl::result<vineyard::ObjectID> LoadFragment() {
     partitioner_t partitioner;
+    std::vector<oid_t> empty_list;
+    partitioner.Init(comm_spec_.worker_num(), empty_list);
     initPartitioner(partitioner);
     BOOST_LEAF_AUTO(v_e_tables, LoadVertexEdgeTables());
     // auto& partial_v_tables = raw_v_e_tables.first;
@@ -376,10 +378,10 @@ class ArrowFragmentBuilder {
         const auto& vertex_info = item.second;
         int distribute_chunk_num = vertex_info.ChunkNum() / comm_spec_.worker_num();
         for (int wid = 0; wid < comm_spec_.worker_num(); ++wid) {
-          gsf::IdType begin = vertex_info.GetOffsetBegin() + wid * distribute_chunk_num;
+          gsf::IdType begin = vertex_info.GetOffsetBegin() + wid * distribute_chunk_num * vertex_info.GetChunkSize();
           gsf::IdType end;
           if (wid != comm_spec_.worker_num() - 1) {
-            end = std::min(vertex_info.GetOffsetBegin() + (wid+1) * distribute_chunk_num, vertex_info.GetOffsetEnd());
+            end = std::min(vertex_info.GetOffsetBegin() + (wid+1) * distribute_chunk_num * vertex_info.GetChunkSize(), vertex_info.GetOffsetEnd());
           } else {
             end = vertex_info.GetOffsetEnd();
           }
