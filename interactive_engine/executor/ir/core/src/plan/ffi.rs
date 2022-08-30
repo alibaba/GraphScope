@@ -1862,6 +1862,7 @@ mod graph {
         destroy_ptr::<pb::GetV>(ptr)
     }
 
+    // TODO: initialize an path expand operator with ExpandOpt
     /// To initialize an path expand operator from an expand base
     #[no_mangle]
     pub extern "C" fn init_pathxpd_operator(
@@ -1871,9 +1872,10 @@ mod graph {
         let edgexpd = Box::new(pb::PathExpand {
             base: Some(expand.as_ref().clone()),
             start_tag: None,
-            is_whole_path,
+            path_opt: 0,
             alias: None,
             hop_range: None,
+            result_opt: if is_whole_path { 0 } else { 1 },
         });
 
         Box::into_raw(edgexpd) as *const c_void

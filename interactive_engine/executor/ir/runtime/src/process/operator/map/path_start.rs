@@ -53,7 +53,8 @@ impl FilterMapFuncGen for algebra_pb::PathStart {
             .start_tag
             .map(|tag| tag.try_into())
             .transpose()?;
-        let path_start_operator = PathStartOperator { start_tag, is_whole_path: self.is_whole_path };
+        // TODO: fake is_whole_path for compile
+        let path_start_operator = PathStartOperator { start_tag, is_whole_path: true };
         debug!("Runtime path start operator: {:?}", path_start_operator);
         Ok(Box::new(path_start_operator))
     }

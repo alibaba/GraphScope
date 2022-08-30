@@ -238,7 +238,8 @@ impl AsPhysical for pb::PathExpand {
                 if let Some(base) = &self.base {
                     let path_start = pb::PathStart {
                         start_tag: self.start_tag.clone(),
-                        is_whole_path: self.is_whole_path,
+                        path_opt: self.path_opt,
+                        result_opt: self.result_opt,
                     };
                     simple_add_job_builder(
                         builder,
