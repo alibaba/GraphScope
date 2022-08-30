@@ -192,6 +192,9 @@ add_compile_options(-DENABLE_SELECTOR)
 find_package(Protobuf REQUIRED)
 include_directories(${Protobuf_INCLUDE_DIRS})
 
+find_package(gsf REQUIRED)
+include_directories(${GSF_INCLUDE_DIRS})
+
 if (ENABLE_JAVA_SDK)
 # find jni---------------------------------------------------------------------
     find_package(JNI REQUIRED)
@@ -269,10 +272,10 @@ endif ()
 
 # Test targets
 if (BUILD_TESTS)
-    add_executable(run_app test/run_app.cc core/object/dynamic.cc)
-    target_include_directories(run_app PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps utils apps)
-    target_link_libraries(run_app ${LIBGRAPELITE_LIBRARIES} ${GFLAGS_LIBRARIES} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} ${VINEYARD_LIBRARIES})
-    target_link_libraries(run_app OpenMP::OpenMP_CXX)
+    # add_executable(run_app test/run_app.cc core/object/dynamic.cc)
+    # target_include_directories(run_app PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps utils apps)
+    # target_link_libraries(run_app ${LIBGRAPELITE_LIBRARIES} ${GFLAGS_LIBRARIES} ${CMAKE_DL_LIBS} ${Boost_LIBRARIES} ${VINEYARD_LIBRARIES})
+    # target_link_libraries(run_app OpenMP::OpenMP_CXX)
 
     if (ENABLE_JAVA_SDK)
         add_executable(run_java_app test/run_java_app.cc core/java/javasdk.cc core/object/dynamic.cc)
@@ -286,7 +289,7 @@ if (BUILD_TESTS)
         target_include_directories(property_graph_java_app_benchmarks PRIVATE core utils apps)
         target_compile_definitions(property_graph_java_app_benchmarks PUBLIC ENABLE_JAVA_SDK)
         target_link_libraries(property_graph_java_app_benchmarks gs_proto ${JNI_LIBRARIES} ${Boost_LIBRARIES} ${CMAKE_DL_LIBS}  ${VINEYARD_LIBRARIES})
-        
+
         # giraph runner
         add_executable(giraph_runner test/giraph_runner.cc core/java/javasdk.cc)
         target_include_directories(giraph_runner PRIVATE core utils apps)
@@ -307,49 +310,15 @@ if (BUILD_TESTS)
         cmake_parse_arguments(add_vineyard_app "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
         add_executable(${target} ${add_vineyard_app_SRCS} core/object/dynamic.cc)
         target_include_directories(${target} PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
-        target_link_libraries(${target} gs_proto ${LIBGRAPELITE_LIBRARIES} ${VINEYARD_LIBRARIES})
+        target_link_libraries(${target} gs_proto ${LIBGRAPELITE_LIBRARIES} ${VINEYARD_LIBRARIES} ${GSF_LIBRARIES})
         if (${LIBUNWIND_FOUND})
             target_link_libraries(${target} ${LIBUNWIND_LIBRARIES})
         endif ()
         target_link_libraries(${target} OpenMP::OpenMP_CXX)
     endmacro()
 
-    add_vineyard_app(run_vy_app SRCS test/run_vy_app.cc)
+    add_vineyard_app(run_gsf SRCS test/run_gsf.cc)
 
-    add_vineyard_app(run_load_from_stream SRCS test/run_load_from_stream.cc)
-
-    add_vineyard_app(run_vy_ldbc SRCS test/run_vy_ldbc.cc)
-    target_include_directories(run_vy_ldbc PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
-
-    add_vineyard_app(run_ctx SRCS test/run_ctx.cc)
-    target_include_directories(run_ctx PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
-    target_link_libraries(run_ctx gs_proto)
-
-    add_vineyard_app(run_property_ctx SRCS test/run_property_ctx.cc)
-    target_include_directories(run_property_ctx PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
-    target_link_libraries(run_property_ctx gs_proto)
-
-    add_vineyard_app(run_pregel_app SRCS test/run_pregel_app.cc)
-
-    add_vineyard_app(run_string_oid SRCS test/run_string_oid.cc)
-    target_include_directories(run_string_oid PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
-
-    add_vineyard_app(run_empty_property SRCS test/run_empty_property.cc)
-    target_include_directories(run_empty_property PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
-
-    add_vineyard_app(test_project_string SRCS test/test_project_string.cc)
-
-    add_vineyard_app(basic_graph_benchmarks SRCS benchmarks/basic_graph_benchmarks.cc)
-
-    add_vineyard_app(property_graph_loader SRCS benchmarks/property_graph_loader.cc)
-
-    add_vineyard_app(property_graph_benchmarks SRCS benchmarks/property_graph_benchmarks.cc)
-
-    add_vineyard_app(projected_graph_benchmarks SRCS benchmarks/projected_graph_benchmarks.cc)
-
-    if (NETWORKX)
-        add_vineyard_app(test_convert SRCS test/test_convert.cc)
-    endif ()
 endif ()
 
 # Cpplint
