@@ -22,29 +22,11 @@ pub use adapters::{
     VineyardMultiPartition,
 };
 pub use errors::{GraphProxyError, GraphProxyResult};
-use rand::prelude::ThreadRng;
-use rand::Rng;
 
 mod adapters;
 pub mod apis;
 mod errors;
 pub mod utils;
-
-struct Rand {
-    rng: ThreadRng,
-}
-
-impl Rand {
-    pub fn new() -> Self {
-        Rand { rng: rand::thread_rng() }
-    }
-
-    fn gen_bool(&mut self, p: f64) -> bool {
-        self.rng.gen_bool(p)
-    }
-}
-
-unsafe impl Send for Rand {}
 
 #[macro_export]
 macro_rules! limit_n {
@@ -77,7 +59,7 @@ macro_rules! filter_limit {
 macro_rules! sample_limit {
     ($iter: expr, $s: expr, $n: expr) => {
         if let Some(ratio) = $s {
-            let mut rng = Rand::new();
+            let mut rng: StdRng = SeedableRng::from_entropy();
             let r = $iter.filter(move |_| rng.gen_bool(ratio));
             limit_n!(r, $n)
         } else {

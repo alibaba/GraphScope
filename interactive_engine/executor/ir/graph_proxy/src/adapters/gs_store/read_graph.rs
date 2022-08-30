@@ -29,6 +29,8 @@ use graph_store::utils::IterList;
 use ir_common::{KeyId, NameOrId};
 use ir_common::{NameOrId as Label, OneOrMany};
 use pegasus_common::downcast::*;
+use rand::prelude::StdRng;
+use rand::{Rng, SeedableRng};
 
 use crate::apis::graph::PKV;
 use crate::apis::{
@@ -36,7 +38,6 @@ use crate::apis::{
     Statement, Vertex, ID,
 };
 use crate::utils::expr::eval_pred::EvalPred;
-use crate::Rand;
 use crate::{filter_limit, filter_sample_limit, limit_n, sample_limit};
 use crate::{GraphProxyError, GraphProxyResult};
 

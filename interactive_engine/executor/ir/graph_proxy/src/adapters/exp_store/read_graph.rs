@@ -31,6 +31,8 @@ use ir_common::{KeyId, NameOrId};
 use pegasus::configure_with_default;
 use pegasus_common::downcast::*;
 use pegasus_common::impl_as_any;
+use rand::prelude::StdRng;
+use rand::{Rng, SeedableRng};
 
 use crate::apis::graph::PKV;
 use crate::apis::{
@@ -38,7 +40,6 @@ use crate::apis::{
     Statement, Vertex, ID,
 };
 use crate::errors::{GraphProxyError, GraphProxyResult};
-use crate::Rand;
 use crate::{filter_limit, filter_sample_limit, limit_n, sample_limit};
 
 const EXP_STORE_PK: KeyId = 0;
