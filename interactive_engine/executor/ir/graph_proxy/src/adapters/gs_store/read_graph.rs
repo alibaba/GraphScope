@@ -121,7 +121,7 @@ where
     }
 
     fn index_scan_vertex(
-        &self, label_id: &LabelId, primary_key: &PKV, _params: &QueryParams,
+        &self, label_id: LabelId, primary_key: &PKV, _params: &QueryParams,
     ) -> GraphProxyResult<Option<Vertex>> {
         // get_vertex_id_by_primary_keys() is a global query function, that is,
         // you can query vertices (with only vertex id) by pks on any graph partitions (not matter locally or remotely).
@@ -610,13 +610,13 @@ fn encode_storage_prop_keys(prop_names: Option<&Vec<NameOrId>>) -> GraphProxyRes
 fn encode_storage_labels(labels: &Vec<LabelId>) -> GraphProxyResult<Vec<StoreLabelId>> {
     labels
         .iter()
-        .map(|label| encode_storage_label(label))
+        .map(|label| encode_storage_label(*label))
         .collect::<Result<Vec<StoreLabelId>, _>>()
 }
 
 #[inline]
-fn encode_storage_label(label: &LabelId) -> GraphProxyResult<StoreLabelId> {
-    Ok(*label as StoreLabelId)
+fn encode_storage_label(label: LabelId) -> GraphProxyResult<StoreLabelId> {
+    Ok(label as StoreLabelId)
 }
 
 #[inline]

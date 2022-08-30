@@ -60,8 +60,8 @@ impl GraphElement for Vertex {
     fn id(&self) -> ID {
         self.id
     }
-    fn label(&self) -> Option<&LabelId> {
-        self.label.as_ref()
+    fn label(&self) -> Option<LabelId> {
+        self.label
     }
     fn details(&self) -> Option<&DynDetails> {
         Some(&self.details)

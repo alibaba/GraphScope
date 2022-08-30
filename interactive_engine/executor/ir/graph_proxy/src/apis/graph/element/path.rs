@@ -121,7 +121,7 @@ impl GraphElement for VertexOrEdge {
         }
     }
 
-    fn label(&self) -> Option<&LabelId> {
+    fn label(&self) -> Option<LabelId> {
         match self {
             VertexOrEdge::V(v) => v.label(),
             VertexOrEdge::E(e) => e.label(),
@@ -165,7 +165,7 @@ impl GraphElement for GraphPath {
         }
     }
 
-    fn label(&self) -> Option<&LabelId> {
+    fn label(&self) -> Option<LabelId> {
         None
     }
 }

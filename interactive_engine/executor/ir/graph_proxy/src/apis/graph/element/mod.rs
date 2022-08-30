@@ -44,7 +44,7 @@ pub trait Element {
 /// `GraphElement` is a special `Element` with extra properties of `id` and `label`.
 pub trait GraphElement: Element {
     fn id(&self) -> ID;
-    fn label(&self) -> Option<&LabelId>;
+    fn label(&self) -> Option<LabelId>;
     /// To obtain the data maintained by the graph_element, mostly is a hash-table with key-value mappings,
     /// `None` by default, if there is no data.
     fn details(&self) -> Option<&DynDetails> {

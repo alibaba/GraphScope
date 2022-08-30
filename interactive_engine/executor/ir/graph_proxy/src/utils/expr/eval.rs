@@ -450,7 +450,7 @@ impl Evaluate for Operand {
                                 PropKey::Id => graph_element.id().into(),
                                 PropKey::Label => graph_element
                                     .label()
-                                    .map(|label| (*label).into())
+                                    .map(|label| label.into())
                                     .ok_or(ExprEvalError::GetNoneFromContext)?,
                                 PropKey::Len => graph_element.len().into(),
                                 PropKey::All => graph_element

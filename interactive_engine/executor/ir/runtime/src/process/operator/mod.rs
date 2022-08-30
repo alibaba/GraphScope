@@ -79,7 +79,6 @@ impl TagKey {
                 PropKey::Id => element.id().into(),
                 PropKey::Label => element
                     .label()
-                    .cloned()
                     .map(|label| label.into())
                     .unwrap_or(Object::None),
                 PropKey::Len => (element.len() as u64).into(),
