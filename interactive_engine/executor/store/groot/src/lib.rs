@@ -30,6 +30,7 @@ extern crate serde_json;
 #[macro_use]
 extern crate serde_derive;
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct GraphError {
     kind: GraphErrorKind,

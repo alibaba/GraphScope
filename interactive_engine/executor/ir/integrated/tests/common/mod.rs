@@ -133,6 +133,7 @@ pub mod test {
             is_all_columns: false,
             limit: None,
             predicate,
+            sample_ratio: 1.0,
             extra: HashMap::new(),
         }
     }
@@ -147,6 +148,7 @@ pub mod test {
             is_all_columns: true,
             limit: None,
             predicate,
+            sample_ratio: 1.0,
             extra: HashMap::new(),
         }
     }

@@ -39,6 +39,8 @@ public class QueryParams {
 
     private Map<String, String> extraParams;
 
+    private Optional<Double> sampleRatio;
+
     public QueryParams() {
         this.predicate = Optional.empty();
         this.range = Optional.empty();
@@ -46,6 +48,7 @@ public class QueryParams {
         this.columns = new ArrayList<>();
         this.extraParams = new HashMap<>();
         this.isAllColumns = false;
+        this.sampleRatio = Optional.empty();
     }
 
     public void addTable(FfiNameOrId.ByValue name) {
@@ -98,5 +101,13 @@ public class QueryParams {
 
     public boolean isAllColumns() {
         return isAllColumns;
+    }
+
+    public Optional<Double> getSampleRatioOpt() {
+        return sampleRatio;
+    }
+
+    public void setSampleRatio(double sampleRatio) {
+        this.sampleRatio = Optional.of(sampleRatio);
     }
 }

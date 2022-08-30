@@ -25,6 +25,7 @@ pub type CodecVersion = i32;
 /// | var len prop1 | var len prop2 .... | ... | var len propM |
 /// +---------------+--------------------+-----+---------------+
 /// ↑ this is `var_len_prop_start_offset`
+#[allow(dead_code)]
 #[derive(Clone, Debug)]
 pub struct Codec {
     version: CodecVersion,
@@ -34,7 +35,6 @@ pub struct Codec {
     // internal id to idx
     props: Vec<PropInfo>,
     offsets: Vec<usize>,
-
     fixed_len_prop_count: usize,
     var_len_prop_start_offset: usize,
     null_bytes: Vec<u8>,

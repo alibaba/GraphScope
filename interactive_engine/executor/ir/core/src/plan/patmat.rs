@@ -1164,6 +1164,7 @@ mod test {
             is_all_columns: false,
             limit: None,
             predicate: None,
+            sample_ratio: 1.0,
             extra: HashMap::new(),
         }
     }

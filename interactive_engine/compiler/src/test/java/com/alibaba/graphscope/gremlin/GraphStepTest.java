@@ -118,6 +118,17 @@ public class GraphStepTest {
         Assert.assertEquals(false, op.getIds().isPresent());
     }
 
+    // g.V().coin()
+    @Test
+    public void g_V_coin_test() {
+        Traversal traversal = g.V().coin(0.5);
+        IrStandardOpProcessor.applyStrategies(traversal);
+        Step graphStep = traversal.asAdmin().getStartStep();
+        ScanFusionOp op = (ScanFusionOp) StepTransformFactory.SCAN_FUSION_STEP.apply(graphStep);
+        Assert.assertEquals(FfiScanOpt.Entity, op.getScanOpt().get().applyArg());
+        Assert.assertEquals(Double.valueOf(0.5), op.getParams().get().getSampleRatioOpt().get());
+    }
+
     private InterOpBase generateInterOpFromBuilder(Traversal traversal, int idx) {
         return (new InterOpCollectionBuilder(traversal)).build().unmodifiableCollection().get(idx);
     }

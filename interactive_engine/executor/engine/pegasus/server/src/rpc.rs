@@ -102,6 +102,7 @@ impl Drop for RpcSink {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Clone)]
 pub struct JobServiceImpl<I> {
     inner: Arc<dyn JobAssembly<I>>,

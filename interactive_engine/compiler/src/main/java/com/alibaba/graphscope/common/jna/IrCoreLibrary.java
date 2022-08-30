@@ -196,6 +196,8 @@ public interface IrCoreLibrary extends Library {
 
     FfiResult.ByValue setParamsIsAllColumns(Pointer params);
 
+    FfiResult.ByValue setParamsSampleRatio(Pointer params, double sampleRatio);
+
     FfiResult.ByValue getKeyName(int keyId, FfiKeyType keyType);
 
     FfiResult.ByValue addParamsExtra(Pointer params, String key, String value);
