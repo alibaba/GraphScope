@@ -29,7 +29,6 @@ use graph_store::utils::IterList;
 use ir_common::{KeyId, NameOrId};
 use ir_common::{NameOrId as Label, OneOrMany};
 use pegasus_common::downcast::*;
-use rand::Rng;
 
 use crate::apis::graph::PKV;
 use crate::apis::{
@@ -37,7 +36,8 @@ use crate::apis::{
     Statement, Vertex, ID,
 };
 use crate::utils::expr::eval_pred::EvalPred;
-use crate::{filter_limit, filter_sample, limit_n, sample_s};
+use crate::Rand;
+use crate::{filter_limit, filter_sample_limit, limit_n, sample_limit};
 use crate::{GraphProxyError, GraphProxyResult};
 
 // Should be identical to the param_name given by compiler
@@ -109,12 +109,13 @@ where
                     None,
                     prop_ids.as_ref(),
                     // Zero limit means no limit. Same as follows.
-                    params.limit.unwrap_or(0),
+                    0,
                     // Each worker will scan the partitions pre-allocated in source operator. Same as follows.
                     partitions.as_ref(),
                 )
                 .map(move |v| to_runtime_vertex(v, prop_ids.clone()));
-            Ok(filter_sample!(result, filter, params.sample_ratio))
+            // TODO: currently, we do not push down filters (including filter, sample, limit)
+            Ok(filter_sample_limit!(result, filter, params.sample_ratio, params.limit))
         } else {
             Ok(Box::new(std::iter::empty()))
         }
@@ -178,12 +179,13 @@ where
                     None,
                     None,
                     prop_ids.as_ref(),
-                    params.limit.unwrap_or(0),
+                    0,
                     partitions.as_ref(),
                 )
                 .map(move |e| to_runtime_edge(&e));
-
-            Ok(filter_sample!(result, filter, params.sample_ratio))
+            // TODO: currently, we do not push down filters (including filter, sample, limit)
+            // it is defined as filter > sample > limit; Same as follows.
+            Ok(filter_sample_limit!(result, filter, params.sample_ratio, params.limit))
         } else {
             Ok(Box::new(std::iter::empty()))
         }

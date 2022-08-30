@@ -22,11 +22,29 @@ pub use adapters::{
     VineyardMultiPartition,
 };
 pub use errors::{GraphProxyError, GraphProxyResult};
+use rand::prelude::ThreadRng;
+use rand::Rng;
 
 mod adapters;
 pub mod apis;
 mod errors;
 pub mod utils;
+
+struct Rand {
+    rng: ThreadRng,
+}
+
+impl Rand {
+    pub fn new() -> Self {
+        Rand { rng: rand::thread_rng() }
+    }
+
+    fn gen_bool(&mut self, p: f64) -> bool {
+        self.rng.gen_bool(p)
+    }
+}
+
+unsafe impl Send for Rand {}
 
 #[macro_export]
 macro_rules! limit_n {
@@ -56,31 +74,15 @@ macro_rules! filter_limit {
 }
 
 #[macro_export]
-macro_rules! sample_s {
-    ($iter: expr, $s: expr) => {
+macro_rules! sample_limit {
+    ($iter: expr, $s: expr, $n: expr) => {
         if let Some(ratio) = $s {
-            let r = $iter.filter(move |_| {
-                let mut rng = rand::thread_rng();
-                rng.gen_bool(ratio)
-            });
-            Box::new(r)
-        } else {
-            Box::new($iter)
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! filter_sample {
-    ($iter: expr, $f: expr, $s: expr) => {
-        if let Some(ref f) = $f {
-            use crate::utils::expr::eval_pred::EvalPred;
-            let f = f.clone();
-            let r = $iter.filter(move |v| f.eval_bool(Some(v)).unwrap_or(false));
-            sample_s!(r, $s)
+            let mut rng = Rand::new();
+            let r = $iter.filter(move |_| rng.gen_bool(ratio));
+            limit_n!(r, $n)
         } else {
             let r = $iter;
-            sample_s!(r, $s)
+            limit_n!(r, $n)
         }
     };
 }
@@ -88,10 +90,14 @@ macro_rules! filter_sample {
 #[macro_export]
 macro_rules! filter_sample_limit {
     ($iter: expr, $f: expr, $s: expr, $n: expr) => {
-        if $s.is_some() {
-            filter_sample!($iter, $f, $s)
+        if let Some(ref f) = $f {
+            use crate::utils::expr::eval_pred::EvalPred;
+            let f = f.clone();
+            let r = $iter.filter(move |v| f.eval_bool(Some(v)).unwrap_or(false));
+            sample_limit!(r, $s, $n)
         } else {
-            filter_limit!($iter, $f, $n)
+            let r = $iter;
+            sample_limit!(r, $s, $n)
         }
     };
 }
