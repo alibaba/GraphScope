@@ -50,6 +50,7 @@ public class ScanFusionStepStrategy
             final ScanFusionStep<?, ?> scanFusionStep = new ScanFusionStep<>(originalGraphStep);
             TraversalHelper.replaceStep(originalGraphStep, scanFusionStep, traversal);
             Step<?, ?> currentStep = scanFusionStep.getNextStep();
+            // fuse scan + filter: g.V().has('name', 'marko').has(...).has(...)
             while (currentStep instanceof HasStep || currentStep instanceof NoOpBarrierStep) {
                 if (currentStep instanceof HasStep) {
                     List<HasContainer> originalContainers =
@@ -66,12 +67,15 @@ public class ScanFusionStepStrategy
                 }
                 currentStep = currentStep.getNextStep();
             }
-            // fuse scan + coin
+            // then fuse scan + coin: g.V().coin()
             if (currentStep instanceof CoinStep) {
                 scanFusionStep.setCoinStep((CoinStep) currentStep);
                 TraversalHelper.copyLabels(currentStep, currentStep.getPreviousStep(), false);
                 traversal.removeStep(currentStep);
             }
+            // more complex:
+            // g.V().has(..).coin() -> scan(filter, coin)
+            // g.V().coin().has(..) -> scan(coin) + select(expression)
         }
     }
 }
