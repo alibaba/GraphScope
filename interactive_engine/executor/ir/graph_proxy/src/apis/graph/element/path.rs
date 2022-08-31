@@ -15,16 +15,19 @@
 
 use std::cmp::Ordering;
 use std::collections::hash_map::DefaultHasher;
+use std::collections::HashSet;
 use std::convert::{TryFrom, TryInto};
 use std::hash::{Hash, Hasher};
 
 use dyn_type::BorrowObject;
 use ir_common::error::ParsePbError;
+use ir_common::generated::algebra::path_expand::PathOpt;
+use ir_common::generated::algebra::path_expand::ResultOpt;
 use ir_common::generated::results as result_pb;
 use ir_common::LabelId;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
-use crate::apis::{DynDetails, Edge, Element, GraphElement, Vertex, ID};
+use crate::apis::{read_id, write_id, DynDetails, Edge, Element, GraphElement, Vertex, ID};
 
 #[derive(Clone, Debug, Hash, PartialEq, PartialOrd)]
 pub enum VertexOrEdge {
@@ -44,48 +47,84 @@ impl From<Edge> for VertexOrEdge {
     }
 }
 
-#[derive(Clone, Debug, Hash)]
+#[derive(Clone, Debug)]
 pub enum GraphPath {
-    WHOLE((Vec<VertexOrEdge>, usize)),
-    END((VertexOrEdge, usize)),
+    AllV(Vec<VertexOrEdge>),
+    SimpleAllV((Vec<VertexOrEdge>, HashSet<ID>)),
+    EndV((VertexOrEdge, usize)),
+    SimpleEndV((VertexOrEdge, HashSet<ID>)),
 }
 
 impl GraphPath {
-    // is_whole_path: Whether to preserve the whole path or only the path_end
-    pub fn new<E: Into<VertexOrEdge>>(entry: E, is_whole_path: bool) -> Self {
-        if is_whole_path {
-            let mut path = Vec::new();
-            path.push(entry.into());
-            GraphPath::WHOLE((path, 0))
-        } else {
-            GraphPath::END((entry.into(), 0))
+    pub fn new<E: Into<VertexOrEdge>>(entry: E, path_opt: PathOpt, result_opt: ResultOpt) -> Self {
+        match result_opt {
+            ResultOpt::EndV => match path_opt {
+                PathOpt::Arbitrary => GraphPath::EndV((entry.into(), 1)),
+                PathOpt::Simple => {
+                    let mut set = HashSet::new();
+                    let entry = entry.into();
+                    set.insert(entry.id());
+                    GraphPath::SimpleEndV((entry, set))
+                }
+            },
+            ResultOpt::AllV => match path_opt {
+                PathOpt::Arbitrary => GraphPath::AllV(vec![entry.into()]),
+                PathOpt::Simple => {
+                    let mut set = HashSet::new();
+                    let entry = entry.into();
+                    set.insert(entry.id());
+                    GraphPath::SimpleAllV((vec![entry], set))
+                }
+            },
         }
     }
 
-    pub fn append<E: Into<VertexOrEdge>>(&mut self, entry: E) {
+    // append an entry and return the flag of whether the entry has been appended or not.
+    pub fn append<E: Into<VertexOrEdge>>(&mut self, entry: E) -> bool {
         match self {
-            GraphPath::WHOLE((ref mut path, ref mut weight)) => {
+            GraphPath::AllV(ref mut path) => {
                 path.push(entry.into());
-                *weight += 1;
+                true
             }
-            GraphPath::END((ref mut e, ref mut weight)) => {
+            GraphPath::SimpleAllV((ref mut path, ref mut set)) => {
+                let entry = entry.into();
+                if set.contains(&entry.id()) {
+                    false
+                } else {
+                    set.insert(entry.id());
+                    path.push(entry);
+                    true
+                }
+            }
+            GraphPath::EndV((ref mut e, ref mut weight)) => {
                 *e = entry.into();
                 *weight += 1;
+                true
+            }
+            GraphPath::SimpleEndV((ref mut e, ref mut set)) => {
+                let entry = entry.into();
+                if set.contains(&entry.id()) {
+                    false
+                } else {
+                    set.insert(entry.id());
+                    *e = entry.into();
+                    true
+                }
             }
         }
     }
 
     pub fn get_path_end(&self) -> Option<&VertexOrEdge> {
         match self {
-            GraphPath::WHOLE((ref w, _)) => w.last(),
-            GraphPath::END((ref e, _)) => Some(e),
+            GraphPath::AllV(ref p) | GraphPath::SimpleAllV((ref p, _)) => p.last(),
+            GraphPath::EndV((ref e, _)) | GraphPath::SimpleEndV((ref e, _)) => Some(e),
         }
     }
 
     pub fn take_path(self) -> Option<Vec<VertexOrEdge>> {
         match self {
-            GraphPath::WHOLE((w, _)) => Some(w),
-            GraphPath::END((_, _)) => None,
+            GraphPath::AllV(p) | GraphPath::SimpleAllV((p, _)) => Some(p),
+            GraphPath::EndV(_) | GraphPath::SimpleEndV(_) => None,
         }
     }
 }
@@ -140,10 +179,12 @@ impl Element for GraphPath {
         Some(self)
     }
 
+    // the path len is the number of vertices in the path;
     fn len(&self) -> usize {
         match self {
-            GraphPath::WHOLE((_, weight)) => *weight,
-            GraphPath::END((_, weight)) => *weight,
+            GraphPath::AllV(p) | GraphPath::SimpleAllV((p, _)) => p.len(),
+            GraphPath::EndV((_, weight)) => *weight,
+            GraphPath::SimpleEndV((_, set)) => set.len(),
         }
     }
 
@@ -155,13 +196,13 @@ impl Element for GraphPath {
 impl GraphElement for GraphPath {
     fn id(&self) -> ID {
         match self {
-            GraphPath::WHOLE((path, _)) => {
+            GraphPath::AllV(path) | GraphPath::SimpleAllV((path, _)) => {
                 let ids: Vec<ID> = path.iter().map(|v| v.id()).collect();
                 let mut hasher = DefaultHasher::new();
                 ids.hash(&mut hasher);
                 hasher.finish() as ID
             }
-            GraphPath::END((path_end, _)) => path_end.id(),
+            GraphPath::EndV((path_end, _)) | GraphPath::SimpleEndV((path_end, _)) => path_end.id(),
         }
     }
 
@@ -174,8 +215,14 @@ impl PartialEq for GraphPath {
     fn eq(&self, other: &Self) -> bool {
         // We define eq by structure, ignoring path weight
         match (self, other) {
-            (GraphPath::WHOLE((p1, _)), GraphPath::WHOLE((p2, _))) => p1.eq(p2),
-            (GraphPath::END((p1, _)), GraphPath::END((p2, _))) => p1.eq(p2),
+            (GraphPath::AllV(p1), GraphPath::AllV(p2))
+            | (GraphPath::AllV(p1), GraphPath::SimpleAllV((p2, _)))
+            | (GraphPath::SimpleAllV((p1, _)), GraphPath::AllV(p2))
+            | (GraphPath::SimpleAllV((p1, _)), GraphPath::SimpleAllV((p2, _))) => p1.eq(p2),
+            (GraphPath::EndV((p1, _)), GraphPath::EndV((p2, _)))
+            | (GraphPath::EndV((p1, _)), GraphPath::SimpleEndV((p2, _)))
+            | (GraphPath::SimpleEndV((p1, _)), GraphPath::EndV((p2, _)))
+            | (GraphPath::SimpleEndV((p1, _)), GraphPath::SimpleEndV((p2, _))) => p1.eq(p2),
             _ => false,
         }
     }
@@ -184,8 +231,14 @@ impl PartialOrd for GraphPath {
     // We define partial_cmp by structure, ignoring path weight
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         match (self, other) {
-            (GraphPath::WHOLE((p1, _)), GraphPath::WHOLE((p2, _))) => p1.partial_cmp(p2),
-            (GraphPath::END((p1, _)), GraphPath::END((p2, _))) => p1.partial_cmp(p2),
+            (GraphPath::AllV(p1), GraphPath::AllV(p2))
+            | (GraphPath::AllV(p1), GraphPath::SimpleAllV((p2, _)))
+            | (GraphPath::SimpleAllV((p1, _)), GraphPath::AllV(p2))
+            | (GraphPath::SimpleAllV((p1, _)), GraphPath::SimpleAllV((p2, _))) => p1.partial_cmp(p2),
+            (GraphPath::EndV((p1, _)), GraphPath::EndV((p2, _)))
+            | (GraphPath::EndV((p1, _)), GraphPath::SimpleEndV((p2, _)))
+            | (GraphPath::SimpleEndV((p1, _)), GraphPath::EndV((p2, _)))
+            | (GraphPath::SimpleEndV((p1, _)), GraphPath::SimpleEndV((p2, _))) => p1.partial_cmp(p2),
             _ => None,
         }
     }
@@ -227,18 +280,30 @@ impl Decode for VertexOrEdge {
 impl Encode for GraphPath {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
         match self {
-            GraphPath::WHOLE((path, weight)) => {
+            GraphPath::AllV(path) => {
                 writer.write_u8(0)?;
-                writer.write_u64(path.len() as u64)?;
-                for vertex_or_edge in path {
-                    vertex_or_edge.write_to(writer)?;
-                }
-                writer.write_u64(*weight as u64)?;
+                path.write_to(writer)?;
             }
-            GraphPath::END((path_end, weight)) => {
+            GraphPath::EndV((path_end, weight)) => {
                 writer.write_u8(1)?;
                 path_end.write_to(writer)?;
                 writer.write_u64(*weight as u64)?;
+            }
+            GraphPath::SimpleAllV((path, set)) => {
+                writer.write_u8(2)?;
+                path.write_to(writer)?;
+                writer.write_u64(set.len() as u64)?;
+                for id in set {
+                    write_id(writer, *id)?;
+                }
+            }
+            GraphPath::SimpleEndV((path_end, set)) => {
+                writer.write_u8(3)?;
+                path_end.write_to(writer)?;
+                writer.write_u64(set.len() as u64)?;
+                for id in set {
+                    write_id(writer, *id)?;
+                }
             }
         }
         Ok(())
@@ -250,19 +315,33 @@ impl Decode for GraphPath {
         let opt = reader.read_u8()?;
         match opt {
             0 => {
-                let length = <u64>::read_from(reader)?;
-                let mut path = Vec::with_capacity(length as usize);
-                for _i in 0..length {
-                    let vertex_or_edge = <VertexOrEdge>::read_from(reader)?;
-                    path.push(vertex_or_edge);
-                }
-                let weight = <u64>::read_from(reader)? as usize;
-                Ok(GraphPath::WHOLE((path, weight)))
+                let path = <Vec<VertexOrEdge>>::read_from(reader)?;
+                Ok(GraphPath::AllV(path))
             }
             1 => {
                 let vertex_or_edge = <VertexOrEdge>::read_from(reader)?;
                 let weight = <u64>::read_from(reader)? as usize;
-                Ok(GraphPath::END((vertex_or_edge, weight)))
+                Ok(GraphPath::EndV((vertex_or_edge, weight)))
+            }
+            2 => {
+                let path = <Vec<VertexOrEdge>>::read_from(reader)?;
+                let length = <u64>::read_from(reader)?;
+                let mut set = HashSet::with_capacity(length as usize);
+                for _i in 0..length {
+                    let id = read_id(reader)?;
+                    set.insert(id);
+                }
+                Ok(GraphPath::SimpleAllV((path, set)))
+            }
+            3 => {
+                let vertex_or_edge = <VertexOrEdge>::read_from(reader)?;
+                let length = <u64>::read_from(reader)?;
+                let mut set = HashSet::with_capacity(length as usize);
+                for _i in 0..length {
+                    let id = read_id(reader)?;
+                    set.insert(id);
+                }
+                Ok(GraphPath::SimpleEndV((vertex_or_edge, set)))
             }
             _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "unreachable")),
         }
@@ -296,7 +375,17 @@ impl TryFrom<result_pb::GraphPath> for GraphPath {
             .into_iter()
             .map(|vertex_or_edge| vertex_or_edge.try_into())
             .collect::<Result<Vec<_>, _>>()?;
-        let graph_len = graph_path.len();
-        Ok(GraphPath::WHOLE((graph_path, graph_len)))
+        Ok(GraphPath::AllV(graph_path))
+    }
+}
+
+impl Hash for GraphPath {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            GraphPath::AllV(p) => p.hash(state),
+            GraphPath::SimpleAllV((p, _)) => p.hash(state),
+            GraphPath::EndV((e, _)) => e.hash(state),
+            GraphPath::SimpleEndV((e, _)) => e.hash(state),
+        }
     }
 }
