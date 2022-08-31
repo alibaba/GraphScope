@@ -131,7 +131,7 @@ impl Accumulator<Entry, Entry> for EntryAccumulator {
                 if cnt == 0 {
                     warn!("cnt value is 0 in accum avg");
                     Ok(result)
-                } else if let Some(sum_val) = sum_entry.as_common_object() {
+                } else if let Some(sum_val) = sum_entry.as_object() {
                     match sum_val {
                         Object::None => {
                             warn!("sum value is none in accum avg");

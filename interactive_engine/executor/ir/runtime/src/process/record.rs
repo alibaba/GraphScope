@@ -60,14 +60,14 @@ impl Entry {
         }
     }
 
-    pub fn as_common_object(&self) -> Option<&Object> {
+    pub fn as_object(&self) -> Option<&Object> {
         match self {
-            Entry::OffGraph(common_object) => Some(common_object),
+            Entry::OffGraph(object) => Some(object),
             _ => None,
         }
     }
 
-    pub fn as_mut_graph_path(&mut self) -> Option<&mut GraphPath> {
+    pub fn as_graph_path_mut(&mut self) -> Option<&mut GraphPath> {
         match self {
             Entry::P(graph_path) => Some(graph_path),
             _ => None,
