@@ -69,11 +69,7 @@ class ArrowFragmentBuilder {
 
   const int id_column = 0;
 
-// #ifdef HASH_PARTITION
-//   using partitioner_t = vineyard::HashPartitioner<oid_t>;
-// #else
   using partitioner_t = typename vineyard::SegmentedPartitioner<oid_t>;
-// #endif
   using table_vec_t = std::vector<std::shared_ptr<arrow::Table>>;
   using vertex_table_info_t =
       std::map<std::string, std::pair<range_t, std::shared_ptr<arrow::Table>>>;
@@ -162,9 +158,6 @@ class ArrowFragmentBuilder {
         }
       }
     }
-    // for (const auto& table : v_tables) {
-    //   BOOST_LEAF_CHECK(sanityChecks(table));
-    // }
     LOG_IF(INFO, comm_spec_.worker_id() == 0)
         << "PROGRESS--GRAPH-LOADING-READ-VERTEX-100";
     return v_tables;
@@ -219,10 +212,6 @@ class ArrowFragmentBuilder {
         e_tables.emplace_back(src_label, adj_list_info.GetDstLabel(), adj_list_info.GetEdgeLabel(), table);
       }
     }
-    // for (const auto& table_vec : e_tables) {
-    //   for (const auto& table : table_vec) {
-    //    BOOST_LEAF_CHECK(sanityChecks(table));
-    //   }
     LOG_IF(INFO, comm_spec_.worker_id() == 0)
         << "PROGRESS--GRAPH-LOADING-READ-EDGE-100";
     return e_tables;
@@ -234,14 +223,10 @@ class ArrowFragmentBuilder {
     partitioner.Init(comm_spec_.worker_num(), empty_list);
     initPartitioner(partitioner);
     BOOST_LEAF_AUTO(v_e_tables, LoadVertexEdgeTables());
-    // auto& partial_v_tables = raw_v_e_tables.first;
-    // auto& partial_e_tables = raw_v_e_tables.second;
 
     LOG_IF(INFO, comm_spec_.worker_id() == 0)
         << "PROGRESS--GRAPH-LOADING-CONSTRUCT-VERTEX-0";
 
-    // BOOST_LEAF_AUTO(v_e_tables, preprocessInputs(partitioner, partial_v_tables,
-    //                                              partial_e_tables));
 
     auto& vertex_tables_with_label = v_e_tables.first;
     auto& edge_tables_with_label = v_e_tables.second;
@@ -279,92 +264,6 @@ class ArrowFragmentBuilder {
   }
 
  private:
- /*
-  bl::result<std::pair<vertex_table_info_t, edge_table_info_t>>
-  preprocessInputs(partitioner_t partitioner, const table_vec_t& v_tables,
-                   const table_vec_t& e_tables,
-                   const std::set<std::string>& previous_vertex_labels =
-                       std::set<std::string>()) {
-    vertex_table_info_t vertex_tables_with_label;
-    edge_table_info_t edge_tables_with_label;
-    for (auto table : v_tables) {
-      auto meta = table->schema()->metadata();
-      if (meta == nullptr) {
-        RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
-                        "Metadata of input vertex files shouldn't be empty");
-      }
-
-      int label_meta_index = meta->FindKey(LABEL_TAG);
-      if (label_meta_index == -1) {
-        RETURN_GS_ERROR(
-            vineyard::ErrorCode::kInvalidValueError,
-            "Metadata of input vertex files should contain label name");
-      }
-      std::string label_name = meta->value(label_meta_index);
-      vertex_tables_with_label[label_name] = table;
-    }
-
-    for (auto table : e_table) {
-      auto meta = table->schema()->metadata();
-      int label_meta_index = meta->FindKey(LABEL_TAG);
-      std::string label_name = meta->value(label_meta_index);
-      int src_label_meta_index = meta->FindKey(SRC_LABEL_TAG);
-      std::string src_label_name = meta->value(src_label_meta_index);
-      int dst_label_meta_index = meta->FindKey(DST_LABEL_TAG);
-      std::string dst_label_name = meta->value(dst_label_meta_index);
-      edge_tables_with_label.emplace_back(src_label_name, dst_label_name,
-                                          label_name, table);
-      // Find vertex labels that need to be deduced, i.e. not assigned by user
-      // directly
-    }
-
-    return std::make_pair(vertex_tables_with_label, edge_tables_with_label);
-  }
-  */
-
-/*
-  bl::result<vineyard::ObjectID> resolveVYObject(std::string const& source) {
-    vineyard::ObjectID sourceId = vineyard::InvalidObjectID();
-    // encoding: 'o' prefix for object id, and 's' prefix for object name.
-    CHECK_OR_RAISE(!source.empty() && (source[0] == 'o' || source[0] == 's'));
-    if (source[0] == 'o') {
-      sourceId = vineyard::ObjectIDFromString(source.substr(1));
-    } else {
-      VY_OK_OR_RAISE(client_.GetName(source.substr(1), sourceId, true));
-    }
-    CHECK_OR_RAISE(sourceId != vineyard::InvalidObjectID());
-    return sourceId;
-  }
-
-  /// Do some necessary sanity checks.
-  bl::result<void> sanityChecks(std::shared_ptr<arrow::Table> table) {
-    // We require that there are no identical column names
-    auto names = table->ColumnNames();
-    std::sort(names.begin(), names.end());
-    const auto duplicate = std::adjacent_find(names.begin(), names.end());
-    if (duplicate != names.end()) {
-      auto meta = table->schema()->metadata();
-      int label_meta_index = meta->FindKey(LABEL_TAG);
-      std::string label_name = meta->value(label_meta_index);
-      std::stringstream msg;
-      msg << "Label " << label_name
-          << " has identical property names, which is not allowed. The "
-             "original names are: ";
-      auto origin_names = table->ColumnNames();
-      msg << "[";
-      for (size_t i = 0; i < origin_names.size(); ++i) {
-        if (i != 0) {
-          msg << ", ";
-        }
-        msg << origin_names[i];
-      }
-      msg << "]";
-      RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError, msg.str());
-    }
-    return {};
-  }
-  */
-
   bl::result<void> initPartitioner(partitioner_t& partitioner) {
     if (graph_info_ == nullptr) {
       RETURN_GS_ERROR(
