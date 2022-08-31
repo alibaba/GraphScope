@@ -54,16 +54,16 @@ mod tests {
     use crate::process::record::Record;
 
     fn source_s1_gen() -> Box<dyn Iterator<Item = Record> + Send> {
-        let v1 = Vertex::new(1, Some("person".into()), DynDetails::default());
-        let v2 = Vertex::new(2, Some("person".into()), DynDetails::default());
+        let v1 = Vertex::new(1, None, DynDetails::default());
+        let v2 = Vertex::new(2, None, DynDetails::default());
         let r1 = Record::new(v1, None);
         let r2 = Record::new(v2, None);
         Box::new(vec![r1, r2].into_iter())
     }
 
     fn source_s2_gen() -> Box<dyn Iterator<Item = Record> + Send> {
-        let v3 = Vertex::new(1, Some("person".into()), DynDetails::default());
-        let v4 = Vertex::new(4, Some("person".into()), DynDetails::default());
+        let v3 = Vertex::new(1, None, DynDetails::default());
+        let v4 = Vertex::new(4, None, DynDetails::default());
         let r3 = Record::new(v3, None);
         let r4 = Record::new(v4, None);
         Box::new(vec![r3, r4].into_iter())

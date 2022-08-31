@@ -28,7 +28,7 @@ mod test {
     use pegasus_client::builder::*;
     use pegasus_server::JobRequest;
     use prost::Message;
-    use runtime::process::record::{CommonObject, Entry, RecordElement};
+    use runtime::process::record::Entry;
 
     use crate::common::test::*;
 
@@ -37,14 +37,14 @@ mod test {
         let source_opr = pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(query_params(vec!["person".into()], vec!["id".into()], None)),
+            params: Some(query_params(vec![PERSON_LABEL.into()], vec!["id".into()], None)),
             idx_predicate: None,
         };
         let select_opr = pb::Select { predicate: Some(str_to_expr_pb("@.id == 1".to_string()).unwrap()) };
         let expand_opr = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(query_params(vec!["knows".into()], vec![], None)),
+            params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: None,
         };
@@ -103,7 +103,7 @@ mod test {
         let source_opr = pb::Scan {
             scan_opt: 0,
             alias: None,
-            params: Some(query_params_all_columns(vec!["person".into()], vec![], None)),
+            params: Some(query_params_all_columns(vec![PERSON_LABEL.into()], vec![], None)),
             idx_predicate: None,
         };
 
@@ -138,7 +138,7 @@ mod test {
         let expand_opr = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(query_params(vec!["knows".into()], vec![], None)),
+            params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: None,
         };
@@ -206,10 +206,8 @@ mod test {
             match result {
                 Ok(res) => {
                     let record = parse_result(res).unwrap();
-                    if let Entry::Element(RecordElement::OffGraph(CommonObject::Prop(obj))) =
-                        record.get(None).unwrap().as_ref()
-                    {
-                        result_collection.push(obj.clone().to_string())
+                    if let Entry::OffGraph(obj) = record.get(None).unwrap().as_ref() {
+                        result_collection.push(obj.to_string())
                     }
                 }
                 Err(e) => {
@@ -240,10 +238,8 @@ mod test {
             match result {
                 Ok(res) => {
                     let record = parse_result(res).unwrap();
-                    if let Entry::Element(RecordElement::OffGraph(CommonObject::Prop(obj))) =
-                        record.get(None).unwrap().as_ref()
-                    {
-                        result_collection.push(obj.clone().to_string())
+                    if let Entry::OffGraph(obj) = record.get(None).unwrap().as_ref() {
+                        result_collection.push(obj.to_string())
                     }
                 }
                 Err(e) => {

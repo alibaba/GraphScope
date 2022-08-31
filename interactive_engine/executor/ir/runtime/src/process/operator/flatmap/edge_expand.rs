@@ -16,7 +16,7 @@
 use std::convert::TryInto;
 
 use graph_proxy::apis::{
-    get_graph, Direction, DynDetails, GraphElement, GraphObject, QueryParams, Statement, Vertex, ID,
+    get_graph, Direction, DynDetails, GraphElement, QueryParams, Statement, Vertex, ID,
 };
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::edge_expand::ExpandOpt;
@@ -25,16 +25,16 @@ use pegasus::api::function::{DynIter, FlatMapFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenError, FnGenResult};
 use crate::process::operator::flatmap::FlatMapFuncGen;
-use crate::process::record::{CommonObject, Record, RecordExpandIter, RecordPathExpandIter};
+use crate::process::record::{Entry, Record, RecordExpandIter, RecordPathExpandIter};
 
-pub struct EdgeExpandOperator<E: Into<GraphObject>> {
+pub struct EdgeExpandOperator<E: Into<Entry>> {
     start_v_tag: Option<KeyId>,
     alias: Option<KeyId>,
     stmt: Box<dyn Statement<ID, E>>,
     expand_opt: ExpandOpt,
 }
 
-impl<E: Into<GraphObject> + 'static> FlatMapFunction<Record, Record> for EdgeExpandOperator<E> {
+impl<E: Into<Entry> + 'static> FlatMapFunction<Record, Record> for EdgeExpandOperator<E> {
     type Target = DynIter<Record>;
 
     fn exec(&self, mut input: Record) -> FnResult<Self::Target> {
@@ -45,7 +45,7 @@ impl<E: Into<GraphObject> + 'static> FlatMapFunction<Record, Record> for EdgeExp
                 match self.expand_opt {
                     ExpandOpt::Vertex => {
                         let neighbors_iter = iter.map(|e| match e.into() {
-                            GraphObject::E(e) => Vertex::new(
+                            Entry::E(e) => Vertex::new(
                                 e.get_other_id(),
                                 e.get_other_label().cloned(),
                                 DynDetails::default(),
@@ -65,7 +65,7 @@ impl<E: Into<GraphObject> + 'static> FlatMapFunction<Record, Record> for EdgeExp
                     }
                     ExpandOpt::Degree => {
                         let degree = iter.count();
-                        input.append(CommonObject::Count(degree as u64), self.alias);
+                        input.append(object!(degree), self.alias);
                         Ok(Box::new(vec![input].into_iter()))
                     }
                 }

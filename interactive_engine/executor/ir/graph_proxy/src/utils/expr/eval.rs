@@ -266,10 +266,10 @@ impl Evaluate for Evaluator {
     ///
     ///     let ctxt = Vertices {
     ///         vec: vec![
-    ///             Vertex::new(1, Some(NameOrId::from(1)), DynDetails::new(
+    ///             Vertex::new(1, Some(1), DynDetails::new(
     ///                 map.clone(),
     ///             )),
-    ///             Vertex::new(2, Some(NameOrId::from(2)), DynDetails::new(
+    ///             Vertex::new(2, Some(2), DynDetails::new(
     ///                 map.clone(),
     ///             )),
     ///         ],
@@ -443,23 +443,17 @@ impl Evaluate for Operand {
                 if let Some(ctxt) = context {
                     if let Some(element) = ctxt.get(tag.as_ref()) {
                         let result = if let Some(property) = prop_key {
+                            let graph_element = element
+                                .as_graph_element()
+                                .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?;
                             match property {
-                                PropKey::Id => element
-                                    .as_graph_element()
-                                    .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?
-                                    .id()
-                                    .into(),
-                                PropKey::Label => element
-                                    .as_graph_element()
-                                    .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?
+                                PropKey::Id => graph_element.id().into(),
+                                PropKey::Label => graph_element
                                     .label()
-                                    .map(|label| match label {
-                                        NameOrId::Str(str) => str.clone().into(),
-                                        NameOrId::Id(id) => (*id).into(),
-                                    })
+                                    .map(|label| label.into())
                                     .ok_or(ExprEvalError::GetNoneFromContext)?,
-                                PropKey::Len => element.len().into(),
-                                PropKey::All => element
+                                PropKey::Len => graph_element.len().into(),
+                                PropKey::All => graph_element
                                     .details()
                                     .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?
                                     .get_all_properties()
@@ -476,7 +470,7 @@ impl Evaluate for Operand {
                                             .into()
                                     })
                                     .ok_or(ExprEvalError::GetNoneFromContext)?,
-                                PropKey::Key(key) => element
+                                PropKey::Key(key) => graph_element
                                     .details()
                                     .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?
                                     .get_property(key)

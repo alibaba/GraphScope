@@ -63,6 +63,7 @@ pub mod generated {
 }
 
 pub type KeyId = i32;
+pub type LabelId = i32;
 
 /// Refer to a key of a relation or a graph element, by either a string-type name or an identifier
 #[derive(Debug, PartialEq, Eq, Hash, Clone, PartialOrd, Ord)]

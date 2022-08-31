@@ -22,7 +22,7 @@ use dyn_type::Object;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common as common_pb;
-use ir_common::{NameOrId, OneOrMany};
+use ir_common::{LabelId, NameOrId, OneOrMany};
 use pegasus::codec::{ReadExt, WriteExt};
 
 use crate::utils::expr::eval_pred::PEvaluator;
@@ -66,7 +66,7 @@ impl From<algebra_pb::edge_expand::Direction> for Direction {
 
 #[derive(Default, Debug)]
 pub struct QueryParams {
-    pub labels: Vec<NameOrId>,
+    pub labels: Vec<LabelId>,
     pub limit: Option<usize>,
     pub columns: Option<Vec<NameOrId>>,
     pub partitions: Option<Vec<u64>>,

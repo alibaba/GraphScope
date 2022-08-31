@@ -23,7 +23,7 @@ mod test {
 
     use dyn_type::object;
     use dyn_type::Object;
-    use graph_proxy::apis::{Details, Element, GraphElement};
+    use graph_proxy::apis::{Details, GraphElement};
     use graph_proxy::{create_exp_store, SimplePartition};
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
@@ -54,7 +54,7 @@ mod test {
         let expand_opr = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(query_params(vec!["knows".into()], vec![], None)),
+            params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: None,
         };
@@ -101,7 +101,7 @@ mod test {
         let expand_opr = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(query_params(vec!["knows".into()], vec![], None)),
+            params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: None,
         };
@@ -153,7 +153,7 @@ mod test {
         let expand_opr = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(query_params(vec!["knows".into()], vec![], None)),
+            params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: None,
         };
@@ -209,7 +209,7 @@ mod test {
         let expand_opr = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(query_params(vec!["knows".into()], vec![], None)),
+            params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: None,
         };
@@ -265,7 +265,7 @@ mod test {
         let expand_opr = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(query_params(vec!["knows".into()], vec![], None)),
+            params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: None,
         };
@@ -424,7 +424,7 @@ mod test {
     // g.V().out("knows") with an auxilia to update empty properties
     #[test]
     fn auxilia_update_on_empty_vertex_test() {
-        let query_param = query_params(vec!["knows".into()], vec![], None);
+        let query_param = query_params(vec![KNOWS_LABEL.into()], vec![], None);
 
         // expand vertex without any properties, i.e., Vertex with None details
         let expand_opr_pb = pb::EdgeExpand {

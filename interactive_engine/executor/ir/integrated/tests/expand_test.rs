@@ -22,7 +22,7 @@ mod test {
     use std::sync::Arc;
 
     use dyn_type::object;
-    use graph_proxy::apis::{Details, Element, GraphElement};
+    use graph_proxy::apis::{Details, GraphElement};
     use graph_proxy::{create_exp_store, SimplePartition};
     use graph_store::ldbc::LDBCVertexParser;
     use graph_store::prelude::DefaultId;
@@ -35,7 +35,7 @@ mod test {
     use runtime::process::operator::flatmap::FlatMapFuncGen;
     use runtime::process::operator::map::FilterMapFuncGen;
     use runtime::process::operator::source::SourceOperator;
-    use runtime::process::record::{CommonObject, Record};
+    use runtime::process::record::Record;
 
     use crate::common::test::*;
 
@@ -144,7 +144,7 @@ mod test {
     // g.V().outE().hasLabel("knows")
     #[test]
     fn expand_oute_with_label_test() {
-        let query_param = query_params(vec!["knows".into()], vec![], None);
+        let query_param = query_params(vec![KNOWS_LABEL.into()], vec![], None);
         let expand_opr_pb = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
@@ -170,7 +170,7 @@ mod test {
     // g.V().outE('knows', 'created')
     #[test]
     fn expand_oute_with_many_labels_test() {
-        let query_param = query_params(vec!["knows".into(), "created".into()], vec![], None);
+        let query_param = query_params(vec![KNOWS_LABEL.into(), CREATED_LABEL.into()], vec![], None);
         let expand_opr_pb = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
@@ -200,7 +200,7 @@ mod test {
     // g.V().inE('knows') with required properties
     #[test]
     fn expand_ine_with_label_property_test() {
-        let query_param = query_params(vec!["knows".into()], vec!["weight".into()], None);
+        let query_param = query_params(vec![KNOWS_LABEL.into()], vec!["weight".into()], None);
         let expand_opr_pb = pb::EdgeExpand {
             v_tag: None,
             direction: 1,
@@ -253,7 +253,7 @@ mod test {
     // g.V().as('a').out('knows').as('b')
     #[test]
     fn expand_outv_from_tag_as_tag_test() {
-        let query_param = query_params(vec!["knows".into()], vec![], None);
+        let query_param = query_params(vec![KNOWS_LABEL.into()], vec![], None);
         let expand_opr_pb = pb::EdgeExpand {
             v_tag: Some(TAG_A.into()),
             direction: 0,
@@ -283,7 +283,7 @@ mod test {
     // g.V().as("a").select('a').out("knows")
     #[test]
     fn expand_outv_from_select_tag_test() {
-        let query_param = query_params(vec!["knows".into()], vec![], None);
+        let query_param = query_params(vec![KNOWS_LABEL.into()], vec![], None);
         let project = pb::Project {
             mappings: vec![pb::project::ExprAlias {
                 expr: Some(to_expr_var_pb(Some(TAG_A.into()), None)),
@@ -331,7 +331,7 @@ mod test {
     // g.V().out('knows').has('id',2)
     #[test]
     fn expand_outv_filter_test() {
-        let edge_query_param = query_params(vec!["knows".into()], vec![], None);
+        let edge_query_param = query_params(vec![KNOWS_LABEL.into()], vec![], None);
         let expand_opr_pb = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
@@ -372,7 +372,7 @@ mod test {
     #[test]
     fn expand_outv_filter_error_test() {
         let query_param =
-            query_params(vec!["knows".into()], vec![], str_to_expr_pb("@.id == 2".to_string()).ok());
+            query_params(vec![KNOWS_LABEL.into()], vec![], str_to_expr_pb("@.id == 2".to_string()).ok());
         let expand_opr_pb = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
@@ -398,7 +398,7 @@ mod test {
         let expand_opr = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(query_params(vec!["knows".into()], vec![], None)),
+            params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             expand_opt: 1,
             alias: None,
         };
@@ -447,7 +447,7 @@ mod test {
         let expand_opr = pb::EdgeExpand {
             v_tag: None,
             direction: 1,
-            params: Some(query_params(vec!["created".into()], vec![], None)),
+            params: Some(query_params(vec![CREATED_LABEL.into()], vec![], None)),
             expand_opt: 1,
             alias: None,
         };
@@ -496,7 +496,7 @@ mod test {
         let expand_opr = pb::EdgeExpand {
             v_tag: None,
             direction: 2,
-            params: Some(query_params(vec!["knows".into()], vec![], None)),
+            params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             expand_opt: 1,
             alias: None,
         };
@@ -545,7 +545,7 @@ mod test {
         let expand_opr = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
-            params: Some(query_params(vec!["knows".into()], vec![], None)),
+            params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             expand_opt: 1,
             alias: None,
         };
@@ -609,8 +609,8 @@ mod test {
         let mut expected_results = vec![(v1, 3), (v2, 0), (v3, 0), (v4, 2), (v5, 0), (v6, 1)];
         while let Some(Ok(record)) = pegasus_result.next() {
             if let Some(v) = record.get(None).unwrap().as_graph_vertex() {
-                if let Some(CommonObject::Count(degree)) = record.get(Some(1)).unwrap().as_common_object() {
-                    results.push((v.id() as DefaultId, *degree));
+                if let Some(degree_obj) = record.get(Some(1)).unwrap().as_object() {
+                    results.push((v.id() as DefaultId, degree_obj.as_u64().unwrap()));
                 }
             }
         }
@@ -641,8 +641,8 @@ mod test {
         let mut expected_results = vec![(v1, 0), (v2, 1), (v3, 3), (v4, 1), (v5, 1), (v6, 0)];
         while let Some(Ok(record)) = pegasus_result.next() {
             if let Some(v) = record.get(None).unwrap().as_graph_vertex() {
-                if let Some(CommonObject::Count(degree)) = record.get(Some(1)).unwrap().as_common_object() {
-                    results.push((v.id() as DefaultId, *degree));
+                if let Some(degree_obj) = record.get(Some(1)).unwrap().as_object() {
+                    results.push((v.id() as DefaultId, degree_obj.as_u64().unwrap()));
                 }
             }
         }
@@ -673,8 +673,8 @@ mod test {
         let mut expected_results = vec![(v1, 3), (v2, 1), (v3, 3), (v4, 3), (v5, 1), (v6, 1)];
         while let Some(Ok(record)) = pegasus_result.next() {
             if let Some(v) = record.get(None).unwrap().as_graph_vertex() {
-                if let Some(CommonObject::Count(degree)) = record.get(Some(1)).unwrap().as_common_object() {
-                    results.push((v.id() as DefaultId, *degree));
+                if let Some(degree_obj) = record.get(Some(1)).unwrap().as_object() {
+                    results.push((v.id() as DefaultId, degree_obj.as_u64().unwrap()));
                 }
             }
         }

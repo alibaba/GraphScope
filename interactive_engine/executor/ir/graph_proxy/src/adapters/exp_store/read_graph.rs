@@ -20,14 +20,14 @@ use std::sync::Arc;
 
 use ahash::{HashMap, HashMapExt};
 use dyn_type::{object, Object};
-use graph_store::common::LabelId;
+use graph_store::common::LabelId as StoreLabelId;
 use graph_store::config::{JsonConf, DIR_GRAPH_SCHEMA, FILE_SCHEMA};
 use graph_store::ldbc::{LDBCVertexParser, LABEL_SHIFT_BITS};
 use graph_store::prelude::{
     DefaultId, EdgeId, GlobalStoreTrait, GlobalStoreUpdate, GraphDBConfig, InternalId, LDBCGraphSchema,
     LargeGraphDB, LocalEdge, LocalVertex, MutableGraphDB, Row, INVALID_LABEL_ID,
 };
-use ir_common::{KeyId, NameOrId};
+use ir_common::{KeyId, LabelId, NameOrId};
 use pegasus::configure_with_default;
 use pegasus_common::downcast::*;
 use pegasus_common::impl_as_any;
@@ -233,7 +233,7 @@ impl ReadGraph for ExpStore {
         // therefore, there's no need to use the specific partition id for query.
         // Besides, we guarantee only one worker (on each server) is going to scan (with params.partitions.is_some())
         if params.partitions.is_some() {
-            let label_ids = encode_storage_vertex_label(&params.labels);
+            let label_ids = encode_storage_label(&params.labels);
             let props = params.columns.clone();
             let result = self
                 .store
@@ -248,7 +248,7 @@ impl ReadGraph for ExpStore {
     }
 
     fn index_scan_vertex(
-        &self, _label: &NameOrId, _primary_key: &PKV, _params: &QueryParams,
+        &self, _label: LabelId, _primary_key: &PKV, _params: &QueryParams,
     ) -> GraphProxyResult<Option<Vertex>> {
         Err(GraphProxyError::query_store_error(
             "Experiment storage does not support index_scan_vertex for now",
@@ -257,7 +257,7 @@ impl ReadGraph for ExpStore {
 
     fn scan_edge(&self, params: &QueryParams) -> GraphProxyResult<Box<dyn Iterator<Item = Edge> + Send>> {
         if params.partitions.is_some() {
-            let label_ids = encode_storage_edge_label(&params.labels);
+            let label_ids = encode_storage_label(&params.labels);
             let props = params.columns.clone();
             let result = self
                 .store
@@ -300,7 +300,7 @@ impl ReadGraph for ExpStore {
     fn prepare_explore_vertex(
         &self, direction: Direction, params: &QueryParams,
     ) -> GraphProxyResult<Box<dyn Statement<ID, Vertex>>> {
-        let edge_label_ids = encode_storage_edge_label(params.labels.as_ref());
+        let edge_label_ids = encode_storage_label(params.labels.as_ref());
         let filter = params.filter.clone();
         let limit = params.limit.clone();
         let graph = self.store;
@@ -320,7 +320,7 @@ impl ReadGraph for ExpStore {
     fn prepare_explore_edge(
         &self, direction: Direction, params: &QueryParams,
     ) -> GraphProxyResult<Box<dyn Statement<ID, Edge>>> {
-        let edge_label_ids = encode_storage_edge_label(&params.labels);
+        let edge_label_ids = encode_storage_label(&params.labels);
         let filter = params.filter.clone();
         let limit = params.limit.clone();
         let graph = self.store;
@@ -376,8 +376,8 @@ fn to_runtime_edge(e: LocalEdge<'static, DefaultId, InternalId>, prop_keys: Opti
     let dst_id = e.get_dst_id();
     let from_src = e.is_from_start();
     let details = LazyEdgeDetails::new(e, prop_keys);
-    let store_src_label: LabelId = (src_id >> LABEL_SHIFT_BITS) as LabelId;
-    let store_dst_label: LabelId = (dst_id >> LABEL_SHIFT_BITS) as LabelId;
+    let store_src_label: StoreLabelId = (src_id >> LABEL_SHIFT_BITS) as StoreLabelId;
+    let store_dst_label: StoreLabelId = (dst_id >> LABEL_SHIFT_BITS) as StoreLabelId;
     let src_label = encode_runtime_label(store_src_label);
     let dst_label = encode_runtime_label(store_dst_label);
 
@@ -390,8 +390,8 @@ fn to_runtime_edge(e: LocalEdge<'static, DefaultId, InternalId>, prop_keys: Opti
         DynDetails::lazy(details),
     );
 
-    e.set_src_label(Some(src_label));
-    e.set_dst_label(Some(dst_label));
+    e.set_src_label(src_label);
+    e.set_dst_label(dst_label);
     e
 }
 
@@ -622,63 +622,48 @@ impl Drop for LazyEdgeDetails {
 }
 
 /// Edge's ID is encoded by its internal index
+#[inline]
 fn encode_runtime_e_id(e: &LocalEdge<DefaultId, InternalId>) -> ID {
     let ei = e.get_edge_id();
     ei.1 as ID
 }
 
+#[inline]
 pub fn encode_store_e_id(e: &ID) -> EdgeId<DefaultId> {
     // TODO(longbin) To only use in current partition
     (0, *e as usize)
 }
 
-fn encode_runtime_label(l: LabelId) -> NameOrId {
-    NameOrId::Id(l as KeyId)
+#[inline]
+fn encode_runtime_label(l: StoreLabelId) -> LabelId {
+    l as LabelId
 }
 
-fn encode_runtime_v_label(v: &LocalVertex<DefaultId>) -> NameOrId {
+#[inline]
+fn encode_runtime_v_label(v: &LocalVertex<DefaultId>) -> LabelId {
     encode_runtime_label(v.get_label()[0])
 }
 
-fn encode_runtime_e_label(e: &LocalEdge<DefaultId, InternalId>) -> NameOrId {
+#[inline]
+fn encode_runtime_e_label(e: &LocalEdge<DefaultId, InternalId>) -> LabelId {
     encode_runtime_label(e.get_label())
 }
 
 /// Transform string-typed labels into a id-typed labels.
 /// `is_true_label` records whether the label is an actual label, or already transformed into
 /// an id-type.
-fn labels_to_ids(labels: &Vec<NameOrId>, is_vertex: bool) -> Option<Vec<LabelId>> {
+#[inline]
+fn encode_storage_label(labels: &Vec<LabelId>) -> Option<Vec<StoreLabelId>> {
     if labels.is_empty() {
         None
     } else {
         Some(
             labels
                 .iter()
-                .map(|label| match label {
-                    NameOrId::Str(s) => {
-                        let label_id = if is_vertex {
-                            (*GRAPH).get_schema().get_vertex_label_id(s)
-                        } else {
-                            (*GRAPH)
-                                .get_schema()
-                                .get_edge_label_id(s)
-                                .map(|id| id)
-                        };
-                        label_id.unwrap_or(INVALID_LABEL_ID)
-                    }
-                    NameOrId::Id(id) => *id as LabelId,
-                })
-                .collect::<Vec<LabelId>>(),
+                .map(|label| *label as StoreLabelId)
+                .collect::<Vec<StoreLabelId>>(),
         )
     }
-}
-
-fn encode_storage_vertex_label(labels: &Vec<NameOrId>) -> Option<Vec<LabelId>> {
-    labels_to_ids(labels, true)
-}
-
-fn encode_storage_edge_label(labels: &Vec<NameOrId>) -> Option<Vec<LabelId>> {
-    labels_to_ids(labels, false)
 }
 
 #[cfg(test)]

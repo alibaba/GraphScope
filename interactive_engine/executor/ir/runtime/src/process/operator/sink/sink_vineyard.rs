@@ -17,7 +17,7 @@ use std::convert::TryInto;
 use std::fmt::Debug;
 use std::sync::{Arc, Mutex};
 
-use graph_proxy::apis::{get_graph, Element, GraphElement, WriteGraphProxy};
+use graph_proxy::apis::{get_graph, GraphElement, WriteGraphProxy};
 use graph_proxy::{GraphProxyError, VineyardGraphWriter};
 use ir_common::error::ParsePbError;
 use ir_common::generated::common as common_pb;
@@ -157,19 +157,19 @@ mod tests {
 
     use std::sync::{Arc, Mutex};
 
-    use ahash::{HashMap, HashMapExt};
+    use ahash::HashMap;
     use dyn_type::Object;
     use graph_proxy::apis::graph::PKV;
-    use graph_proxy::apis::{DynDetails, Edge, Element, GraphElement, Vertex, WriteGraphProxy, ID};
+    use graph_proxy::apis::{DynDetails, Edge, GraphElement, Vertex, WriteGraphProxy, ID};
     use graph_proxy::{GraphProxyError, GraphProxyResult};
-    use ir_common::{NameOrId, OneOrMany};
+    use ir_common::{LabelId, NameOrId, OneOrMany};
     use pegasus::api::{Fold, Sink};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
 
     use crate::error::FnExecResult;
     use crate::process::operator::accum::accumulator::Accumulator;
-    use crate::process::operator::tests::{init_source, init_vertex1, init_vertex2};
+    use crate::process::operator::tests::{init_source, init_vertex1, init_vertex2, PERSON_LABEL};
     use crate::process::record::Record;
 
     #[derive(Default, Debug)]
@@ -198,7 +198,7 @@ mod tests {
 
     impl WriteGraphProxy for TestGraphWriter {
         fn add_vertex(
-            &mut self, label: NameOrId, vertex_pk: PKV, properties: Option<DynDetails>,
+            &mut self, label: LabelId, vertex_pk: PKV, properties: Option<DynDetails>,
         ) -> GraphProxyResult<()> {
             let vid = self.encode_id(vertex_pk);
             let vertex = Vertex::new(vid, Some(label.clone()), properties.unwrap().clone());
@@ -210,15 +210,15 @@ mod tests {
         }
 
         fn add_edge(
-            &mut self, label: NameOrId, src_vertex_label: NameOrId, src_vertex_pk: PKV,
-            dst_vertex_label: NameOrId, dst_vertex_pk: PKV, properties: Option<DynDetails>,
+            &mut self, label: LabelId, src_vertex_label: LabelId, src_vertex_pk: PKV,
+            dst_vertex_label: LabelId, dst_vertex_pk: PKV, properties: Option<DynDetails>,
         ) -> GraphProxyResult<()> {
             let src_id = self.encode_id(src_vertex_pk);
             let dst_id = self.encode_id(dst_vertex_pk);
             let eid = encode_eid(src_id, dst_id);
             let mut edge = Edge::new(eid, Some(label.clone()), src_id, dst_id, properties.unwrap().clone());
-            edge.set_src_label(Some(src_vertex_label.clone()));
-            edge.set_src_label(Some(dst_vertex_label.clone()));
+            edge.set_src_label(src_vertex_label.clone());
+            edge.set_src_label(dst_vertex_label.clone());
             self.edges
                 .lock()
                 .map_err(|_e| GraphProxyError::write_graph_error("add_edge failed"))?
@@ -295,8 +295,8 @@ mod tests {
                 .into_iter()
                 .collect();
         let mut e = Edge::new(encode_eid(1, 2), Some(1.into()), 1, 2, DynDetails::new(map1));
-        e.set_src_label(Some("person".into()));
-        e.set_dst_label(Some("person".into()));
+        e.set_src_label(PERSON_LABEL);
+        e.set_dst_label(PERSON_LABEL);
         e
     }
 
@@ -306,8 +306,8 @@ mod tests {
                 .into_iter()
                 .collect();
         let mut e = Edge::new(encode_eid(2, 1), Some(1.into()), 2, 1, DynDetails::new(map2));
-        e.set_src_label(Some("person".into()));
-        e.set_dst_label(Some("person".into()));
+        e.set_src_label(PERSON_LABEL);
+        e.set_dst_label(PERSON_LABEL);
         e
     }
 

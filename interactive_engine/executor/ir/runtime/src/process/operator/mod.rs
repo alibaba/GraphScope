@@ -30,14 +30,14 @@ use std::convert::TryFrom;
 use std::sync::Arc;
 
 use dyn_type::Object;
-use graph_proxy::apis::{Details, Element, GraphElement, PropKey};
+use graph_proxy::apis::{Details, Element, PropKey};
 use ir_common::error::ParsePbError;
 use ir_common::generated::common as common_pb;
 use ir_common::{KeyId, NameOrId};
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::error::{FnExecError, FnExecResult};
-use crate::process::record::{CommonObject, Entry, Record, RecordElement};
+use crate::process::record::{Entry, Record};
 
 #[derive(Clone, Debug, Default)]
 pub struct TagKey {
@@ -56,7 +56,7 @@ impl TagKey {
                 Ok(entry.clone())
             }
         } else {
-            Ok(Arc::new((CommonObject::None).into()))
+            Ok(Arc::new((Object::None).into()))
         }
     }
 
@@ -69,21 +69,17 @@ impl TagKey {
                 Ok(entry.as_ref().clone())
             }
         } else {
-            Ok((CommonObject::None).into())
+            Ok((Object::None).into())
         }
     }
 
-    fn get_key(&self, entry: &Arc<Entry>, prop_key: &PropKey) -> FnExecResult<Entry> {
-        if let Entry::Element(RecordElement::OnGraph(element)) = entry.as_ref() {
+    fn get_key(&self, element: &Arc<Entry>, prop_key: &PropKey) -> FnExecResult<Entry> {
+        if let Some(element) = element.as_graph_element() {
             let prop_obj = match prop_key {
                 PropKey::Id => element.id().into(),
                 PropKey::Label => element
                     .label()
-                    .cloned()
-                    .map(|label| match label {
-                        NameOrId::Str(str) => str.into(),
-                        NameOrId::Id(id) => id.into(),
-                    })
+                    .map(|label| label.into())
                     .unwrap_or(Object::None),
                 PropKey::Len => (element.len() as u64).into(),
                 PropKey::All => {
@@ -125,14 +121,12 @@ impl TagKey {
                 }
             };
 
-            match prop_obj {
-                Object::None => Ok(CommonObject::None.into()),
-                _ => Ok(CommonObject::Prop(prop_obj).into()),
-            }
+            Ok(prop_obj.into())
         } else {
             Err(FnExecError::unexpected_data_error(&format!(
-                "Get key failed when attempt to get prop_key from a non-graph element {:?}",
-                entry
+                "
+                Get key failed since get details from a none-graph element {:?} ",
+                element
             )))
         }
     }
@@ -200,16 +194,17 @@ pub(crate) mod tests {
     use ahash::HashMap;
     use dyn_type::Object;
     use graph_proxy::apis::{DynDetails, GraphElement, Vertex};
-    use ir_common::KeyId;
+    use ir_common::{KeyId, LabelId};
 
     use super::*;
-    use crate::process::record::RecordElement;
 
     pub const TAG_A: KeyId = 0;
     pub const TAG_B: KeyId = 1;
     pub const TAG_C: KeyId = 2;
     pub const TAG_D: KeyId = 3;
     pub const TAG_E: KeyId = 4;
+
+    pub const PERSON_LABEL: LabelId = 0;
 
     pub fn init_vertex1() -> Vertex {
         let map1: HashMap<NameOrId, Object> = vec![
@@ -220,7 +215,7 @@ pub(crate) mod tests {
         ]
         .into_iter()
         .collect();
-        Vertex::new(1, Some("person".into()), DynDetails::new(map1))
+        Vertex::new(1, Some(PERSON_LABEL), DynDetails::new(map1))
     }
 
     pub fn init_vertex2() -> Vertex {
@@ -228,13 +223,13 @@ pub(crate) mod tests {
             vec![("id".into(), object!(2)), ("age".into(), object!(27)), ("name".into(), object!("vadas"))]
                 .into_iter()
                 .collect();
-        Vertex::new(2, Some("person".into()), DynDetails::new(map2))
+        Vertex::new(2, Some(PERSON_LABEL), DynDetails::new(map2))
     }
 
     fn init_record() -> Record {
         let vertex1 = init_vertex1();
         let vertex2 = init_vertex2();
-        let object3 = CommonObject::Count(10);
+        let object3 = object!(10);
 
         let mut record = Record::new(vertex1, None);
         record.append(vertex2, Some((0 as KeyId).into()));
@@ -305,7 +300,7 @@ pub(crate) mod tests {
     fn test_get_none_tag_entry() {
         let tag_key = TagKey { tag: None, key: None };
         let record = init_record();
-        let expected = CommonObject::Count(10).into();
+        let expected = object!(10).into();
         let entry = tag_key.get_arc_entry(&record).unwrap();
         assert_eq!(entry.as_ref().clone(), expected)
     }
@@ -330,7 +325,7 @@ pub(crate) mod tests {
         let record = init_record();
         let entry = tag_key.get_arc_entry(&record).unwrap();
         match entry.as_ref() {
-            Entry::Element(RecordElement::OffGraph(CommonObject::Prop(obj))) => {
+            Entry::OffGraph(obj) => {
                 assert_eq!(obj.clone(), object!(expected));
             }
             _ => {

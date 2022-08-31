@@ -143,7 +143,7 @@ impl SourceOperator {
                         Err(FnGenError::unsupported_error("indexed_scan with empty/multiple labels"))?
                     }
                     if let Some(v) = graph.index_scan_vertex(
-                        &self.query_params.labels[0],
+                        self.query_params.labels[0],
                         indexed_values,
                         &self.query_params,
                     )? {
