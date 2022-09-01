@@ -16,7 +16,10 @@
 
 package com.alibaba.graphscope.gremlin.plugin.step;
 
+import com.alibaba.graphscope.common.jna.type.FfiPathOpt;
+import com.alibaba.graphscope.common.jna.type.FfiResultOpt;
 import com.alibaba.graphscope.gremlin.exception.ExtendGremlinStepException;
+import com.google.common.base.Objects;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeGlobalStep;
@@ -25,6 +28,8 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 
 public class PathExpandStep extends ExpandFusionStep<Vertex> {
     private Traversal rangeTraversal;
+    private FfiPathOpt pathOpt;
+    private FfiResultOpt resultOpt;
 
     public PathExpandStep(
             final Traversal.Admin traversal,
@@ -33,6 +38,8 @@ public class PathExpandStep extends ExpandFusionStep<Vertex> {
             final String... edgeLabels) {
         super(traversal, Vertex.class, direction, edgeLabels);
         this.rangeTraversal = rangeTraversal;
+        this.pathOpt = FfiPathOpt.Simple;
+        this.resultOpt = FfiResultOpt.EndV;
     }
 
     public int getLower() {
@@ -55,5 +62,41 @@ public class PathExpandStep extends ExpandFusionStep<Vertex> {
             throw new ExtendGremlinStepException(
                     "rangeTraversal should only have one RangeGlobalStep");
         }
+    }
+
+    @Override
+    public void configure(final Object... keyValues) {
+        String key = (String) keyValues[0];
+        Object value = keyValues[1];
+        if (key.equals("PathOpt")) {
+            this.pathOpt = (FfiPathOpt) value;
+        } else if (key.equals("ResultOpt")) {
+            this.resultOpt = (FfiResultOpt) value;
+        } else {
+            throw new ExtendGremlinStepException("key " + key + " is invalid");
+        }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        PathExpandStep that = (PathExpandStep) o;
+        return Objects.equal(rangeTraversal, that.rangeTraversal)
+                && pathOpt == that.pathOpt
+                && resultOpt == that.resultOpt;
+    }
+
+    @Override
+    public String toString() {
+        return "PathExpandStep{"
+                + "rangeTraversal="
+                + rangeTraversal
+                + ", pathOpt="
+                + pathOpt
+                + ", resultOpt="
+                + resultOpt
+                + '}';
     }
 }

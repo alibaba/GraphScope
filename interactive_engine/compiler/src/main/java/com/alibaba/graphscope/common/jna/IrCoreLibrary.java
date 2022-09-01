@@ -203,4 +203,8 @@ public interface IrCoreLibrary extends Library {
     FfiResult.ByValue addParamsExtra(Pointer params, String key, String value);
 
     Pointer initSinkGraphOperator(String graphName);
+
+    FfiData.ByValue getEncodedObject();
+
+    void getDecodedObject(FfiData.ByValue res);
 }
