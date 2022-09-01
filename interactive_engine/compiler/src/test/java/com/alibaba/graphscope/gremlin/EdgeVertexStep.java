@@ -17,8 +17,6 @@
 package com.alibaba.graphscope.gremlin;
 
 import com.alibaba.graphscope.common.intermediate.operator.GetVOp;
-import com.alibaba.graphscope.common.jna.IrCoreLibrary;
-import com.alibaba.graphscope.common.jna.type.FfiData;
 import com.alibaba.graphscope.common.jna.type.FfiVOpt;
 import com.alibaba.graphscope.gremlin.transform.StepTransformFactory;
 
@@ -41,13 +39,5 @@ public class EdgeVertexStep {
                         StepTransformFactory.EDGE_VERTEX_STEP.apply(
                                 traversal.asAdmin().getEndStep());
         Assert.assertEquals(FfiVOpt.Both, getVOp.getGetVOpt().get().applyArg());
-    }
-
-    @Test
-    public void test() {
-        IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
-        FfiData.ByValue res = irCoreLib.getEncodedObject();
-        System.out.println(res.len); // print 0
-        irCoreLib.getDecodedObject(res);
     }
 }

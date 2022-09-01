@@ -157,7 +157,7 @@ traversalMethod_bothE
 
 traversalPathOpt
     : 'Simple'
-    | 'VertexDuplicates'  // PathOpt
+    | 'Arbitrary'  // PathOpt
     ;
 
 traversalResultOpt

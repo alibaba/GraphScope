@@ -2,9 +2,9 @@ package com.alibaba.graphscope.common.jna.type;
 
 import com.alibaba.graphscope.common.jna.IntEnum;
 
-public enum FfiPathOpt implements IntEnum<FfiPathOpt> {
-    Simple,
-    VertexDuplicates;
+public enum PathOpt implements IntEnum<PathOpt> {
+    Arbitrary,
+    Simple;
 
     @Override
     public int getInt() {
@@ -12,8 +12,8 @@ public enum FfiPathOpt implements IntEnum<FfiPathOpt> {
     }
 
     @Override
-    public FfiPathOpt getEnum(int i) {
-        FfiPathOpt opts[] = values();
+    public PathOpt getEnum(int i) {
+        PathOpt opts[] = values();
         if (i < opts.length && i >= 0) {
             return opts[i];
         }

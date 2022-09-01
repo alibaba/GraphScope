@@ -16,8 +16,8 @@
 
 package com.alibaba.graphscope.gremlin.antlr4;
 
-import com.alibaba.graphscope.common.jna.type.FfiPathOpt;
-import com.alibaba.graphscope.common.jna.type.FfiResultOpt;
+import com.alibaba.graphscope.common.jna.type.PathOpt;
+import com.alibaba.graphscope.common.jna.type.ResultOpt;
 import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
 import com.alibaba.graphscope.gremlin.plugin.step.ExprStep;
@@ -280,12 +280,6 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     @Override
     public Traversal visitTraversalMethod_inV(GremlinGSParser.TraversalMethod_inVContext ctx) {
         return graphTraversal.inV();
-    }
-
-    @Override
-    public Traversal visitTraversalMethod_endV(GremlinGSParser.TraversalMethod_endVContext ctx) {
-        IrCustomizedTraversal traversal = (IrCustomizedTraversal) graphTraversal;
-        return traversal.endV();
     }
 
     @Override
@@ -749,13 +743,13 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
                     graphTraversal.with(
                             optName,
                             TraversalEnumParser.parseTraversalEnumFromContext(
-                                    FfiPathOpt.class, configCtx.traversalPathOpt()));
+                                    PathOpt.class, configCtx.traversalPathOpt()));
         } else if (configCtx.traversalResultOpt() != null) {
             traversal =
                     graphTraversal.with(
                             optName,
                             TraversalEnumParser.parseTraversalEnumFromContext(
-                                    FfiResultOpt.class, configCtx.traversalResultOpt()));
+                                    ResultOpt.class, configCtx.traversalResultOpt()));
         } else {
             throw new UnsupportedEvalException(
                     ctx.getClass(),

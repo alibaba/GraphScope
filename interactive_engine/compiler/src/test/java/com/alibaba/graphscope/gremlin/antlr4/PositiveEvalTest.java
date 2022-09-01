@@ -16,8 +16,8 @@
 
 package com.alibaba.graphscope.gremlin.antlr4;
 
-import com.alibaba.graphscope.common.jna.type.FfiPathOpt;
-import com.alibaba.graphscope.common.jna.type.FfiResultOpt;
+import com.alibaba.graphscope.common.jna.type.PathOpt;
+import com.alibaba.graphscope.common.jna.type.ResultOpt;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngine;
 import com.alibaba.graphscope.gremlin.plugin.step.GroupStep;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
@@ -27,7 +27,6 @@ import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.TextP;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.NotStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.EdgeVertexStep;
 import org.apache.tinkerpop.gremlin.structure.Direction;
@@ -47,7 +46,7 @@ import javax.script.SimpleScriptContext;
 
 public class PositiveEvalTest {
     private Graph graph;
-    private GraphTraversalSource g;
+    private IrCustomizedTraversalSource g;
     private AntlrToJavaScriptEngine scriptEngine;
     private ScriptContext context;
 
@@ -902,13 +901,16 @@ public class PositiveEvalTest {
                 eval("g.V().has(\"name\", TextP.notContaining(\"marko\"))"));
     }
 
-    // g.V().as("a").select("a").by(out("1..2").endV().count())
+    // g.V().as("a").select("a").by(out("1..2").with("ResultOpt", AllV).count())
     @Test
     public void g_V_as_select_a_by_out_1_2_endV_count_test() {
         Assert.assertEquals(
-                g.V().as("a").select("a").by(__.out(__.range(1, 2)).endV().count()),
-                eval("g.V().as(\"a\").select(\"a\").by(out(\"1..2\").endV().count())"));
-        eval("g.V().has(\"name\", TextP.notContaining(\"marko\"))");
+                g.V().as("a")
+                        .select("a")
+                        .by(__.out(__.range(1, 2)).with("ResultOpt", ResultOpt.AllV).count()),
+                eval(
+                        "g.V().as(\"a\").select(\"a\").by(__.out(\"1..2\").with(\"ResultOpt\","
+                            + " AllV).count())"));
     }
 
     @Test
@@ -1092,39 +1094,11 @@ public class PositiveEvalTest {
     @Test
     public void g_V_path_expand_out_with() {
         Assert.assertEquals(
-                ((IrCustomizedTraversalSource) g)
-                        .V()
-                        .out(__.range(1, 2), "knows", "person")
-                        .with("PathOpt", FfiPathOpt.VertexDuplicates)
-                        .with("ResultOpt", FfiResultOpt.AllV),
+                g.V().out(__.range(1, 2), "knows", "person")
+                        .with("PathOpt", PathOpt.Arbitrary)
+                        .with("ResultOpt", ResultOpt.AllV),
                 eval(
                         "g.V().out(\"1..2\", \"knows\", \"person\").with('PathOpt',"
-                                + " VertexDuplicates).with('ResultOpt', AllV)"));
-    }
-
-    @Test
-    public void g_V_path_expand_in_with() {
-        Assert.assertEquals(
-                ((IrCustomizedTraversalSource) g)
-                        .V()
-                        .in(__.range(1, 2), "knows", "person")
-                        .with("PathOpt", FfiPathOpt.VertexDuplicates)
-                        .with("ResultOpt", FfiResultOpt.AllV),
-                eval(
-                        "g.V().in(\"1..2\", \"knows\", \"person\").with('PathOpt',"
-                                + " VertexDuplicates).with('ResultOpt', AllV)"));
-    }
-
-    @Test
-    public void g_V_path_expand_both_with() {
-        Assert.assertEquals(
-                ((IrCustomizedTraversalSource) g)
-                        .V()
-                        .both(__.range(1, 2), "knows", "person")
-                        .with("PathOpt", FfiPathOpt.VertexDuplicates)
-                        .with("ResultOpt", FfiResultOpt.AllV),
-                eval(
-                        "g.V().both(\"1..2\", \"knows\", \"person\").with('PathOpt',"
-                                + " VertexDuplicates).with('ResultOpt', AllV)"));
+                                + " Arbitrary).with('ResultOpt', AllV)"));
     }
 }

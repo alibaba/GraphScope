@@ -16,6 +16,9 @@
 
 package com.alibaba.graphscope.common.intermediate.operator;
 
+import com.alibaba.graphscope.common.jna.type.PathOpt;
+import com.alibaba.graphscope.common.jna.type.ResultOpt;
+
 import java.util.Optional;
 
 public class PathExpandOp extends ExpandOp {
@@ -23,10 +26,16 @@ public class PathExpandOp extends ExpandOp {
 
     private Optional<OpArg> upper;
 
+    private PathOpt pathOpt;
+
+    private ResultOpt resultOpt;
+
     public PathExpandOp() {
         super();
-        lower = Optional.empty();
-        upper = Optional.empty();
+        this.lower = Optional.empty();
+        this.upper = Optional.empty();
+        this.pathOpt = PathOpt.Arbitrary;
+        this.resultOpt = ResultOpt.EndV;
     }
 
     public PathExpandOp(ExpandOp other) {
@@ -59,5 +68,21 @@ public class PathExpandOp extends ExpandOp {
 
     public void setUpper(OpArg upper) {
         this.upper = Optional.of(upper);
+    }
+
+    public PathOpt getPathOpt() {
+        return pathOpt;
+    }
+
+    public ResultOpt getResultOpt() {
+        return resultOpt;
+    }
+
+    public void setPathOpt(PathOpt pathOpt) {
+        this.pathOpt = pathOpt;
+    }
+
+    public void setResultOpt(ResultOpt resultOpt) {
+        this.resultOpt = resultOpt;
     }
 }

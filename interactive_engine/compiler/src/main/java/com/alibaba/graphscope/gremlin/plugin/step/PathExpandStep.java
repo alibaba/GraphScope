@@ -16,8 +16,8 @@
 
 package com.alibaba.graphscope.gremlin.plugin.step;
 
-import com.alibaba.graphscope.common.jna.type.FfiPathOpt;
-import com.alibaba.graphscope.common.jna.type.FfiResultOpt;
+import com.alibaba.graphscope.common.jna.type.PathOpt;
+import com.alibaba.graphscope.common.jna.type.ResultOpt;
 import com.alibaba.graphscope.gremlin.exception.ExtendGremlinStepException;
 import com.google.common.base.Objects;
 
@@ -28,8 +28,8 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 
 public class PathExpandStep extends ExpandFusionStep<Vertex> {
     private Traversal rangeTraversal;
-    private FfiPathOpt pathOpt;
-    private FfiResultOpt resultOpt;
+    private PathOpt pathOpt;
+    private ResultOpt resultOpt;
 
     public PathExpandStep(
             final Traversal.Admin traversal,
@@ -38,8 +38,9 @@ public class PathExpandStep extends ExpandFusionStep<Vertex> {
             final String... edgeLabels) {
         super(traversal, Vertex.class, direction, edgeLabels);
         this.rangeTraversal = rangeTraversal;
-        this.pathOpt = FfiPathOpt.Simple;
-        this.resultOpt = FfiResultOpt.EndV;
+        // default value
+        this.pathOpt = PathOpt.Arbitrary;
+        this.resultOpt = ResultOpt.EndV;
     }
 
     public int getLower() {
@@ -64,14 +65,22 @@ public class PathExpandStep extends ExpandFusionStep<Vertex> {
         }
     }
 
+    public PathOpt getPathOpt() {
+        return pathOpt;
+    }
+
+    public ResultOpt getResultOpt() {
+        return resultOpt;
+    }
+
     @Override
     public void configure(final Object... keyValues) {
         String key = (String) keyValues[0];
         Object value = keyValues[1];
         if (key.equals("PathOpt")) {
-            this.pathOpt = (FfiPathOpt) value;
+            this.pathOpt = (PathOpt) value;
         } else if (key.equals("ResultOpt")) {
-            this.resultOpt = (FfiResultOpt) value;
+            this.resultOpt = (ResultOpt) value;
         } else {
             throw new ExtendGremlinStepException("key " + key + " is invalid");
         }
@@ -98,5 +107,10 @@ public class PathExpandStep extends ExpandFusionStep<Vertex> {
                 + ", resultOpt="
                 + resultOpt
                 + '}';
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(super.hashCode(), rangeTraversal, pathOpt, resultOpt);
     }
 }
