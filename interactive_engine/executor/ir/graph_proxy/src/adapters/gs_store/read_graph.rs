@@ -594,7 +594,7 @@ fn encode_storage_prop_keys(prop_names: Option<&Vec<NameOrId>>) -> GraphProxyRes
                     )),
                     NameOrId::Id(prop_id) => Ok(*prop_id as PropId),
                 })
-                .collect::<Result<Vec<StoreLabelId>, _>>()?;
+                .collect::<Result<Vec<PropId>, _>>()?;
             Ok(Some(encoded_prop_ids))
         }
     } else {
