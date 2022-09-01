@@ -16,6 +16,8 @@
 
 package com.alibaba.graphscope.gremlin.antlr4;
 
+import com.alibaba.graphscope.common.jna.type.FfiPathOpt;
+import com.alibaba.graphscope.common.jna.type.FfiResultOpt;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngine;
 import com.alibaba.graphscope.gremlin.plugin.step.GroupStep;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
@@ -1085,5 +1087,44 @@ public class PositiveEvalTest {
     @Test
     public void g_E_coin() {
         Assert.assertEquals(g.E().coin(0.5), eval("g.E().coin(0.5)"));
+    }
+
+    @Test
+    public void g_V_path_expand_out_with() {
+        Assert.assertEquals(
+                ((IrCustomizedTraversalSource) g)
+                        .V()
+                        .out(__.range(1, 2), "knows", "person")
+                        .with("PathOpt", FfiPathOpt.VertexDuplicates)
+                        .with("ResultOpt", FfiResultOpt.AllV),
+                eval(
+                        "g.V().out(\"1..2\", \"knows\", \"person\").with('PathOpt',"
+                                + " VertexDuplicates).with('ResultOpt', AllV)"));
+    }
+
+    @Test
+    public void g_V_path_expand_in_with() {
+        Assert.assertEquals(
+                ((IrCustomizedTraversalSource) g)
+                        .V()
+                        .in(__.range(1, 2), "knows", "person")
+                        .with("PathOpt", FfiPathOpt.VertexDuplicates)
+                        .with("ResultOpt", FfiResultOpt.AllV),
+                eval(
+                        "g.V().in(\"1..2\", \"knows\", \"person\").with('PathOpt',"
+                                + " VertexDuplicates).with('ResultOpt', AllV)"));
+    }
+
+    @Test
+    public void g_V_path_expand_both_with() {
+        Assert.assertEquals(
+                ((IrCustomizedTraversalSource) g)
+                        .V()
+                        .both(__.range(1, 2), "knows", "person")
+                        .with("PathOpt", FfiPathOpt.VertexDuplicates)
+                        .with("ResultOpt", FfiResultOpt.AllV),
+                eval(
+                        "g.V().both(\"1..2\", \"knows\", \"person\").with('PathOpt',"
+                                + " VertexDuplicates).with('ResultOpt', AllV)"));
     }
 }
