@@ -1364,13 +1364,14 @@ mod test {
 
         let expand_opr = pb::logical_plan::Operator::from(edge_expand.clone());
         let path_start_opr =
-            pb::logical_plan::Operator::from(pb::PathStart { start_tag: None, is_whole_path: false });
+            pb::logical_plan::Operator::from(pb::PathStart { start_tag: None, path_opt: 0, result_opt: 0 });
         let path_opr = pb::logical_plan::Operator::from(pb::PathExpand {
             base: Some(edge_expand.clone()),
             start_tag: None,
-            is_whole_path: false,
             alias: None,
             hop_range: Some(pb::Range { lower: 1, upper: 4 }),
+            path_opt: 0,
+            result_opt: 0,
         });
         let path_end_opr = pb::logical_plan::Operator::from(pb::PathEnd { alias: None });
 
@@ -1438,13 +1439,14 @@ mod test {
 
         let expand_opr = pb::logical_plan::Operator::from(edge_expand.clone());
         let path_start_opr =
-            pb::logical_plan::Operator::from(pb::PathStart { start_tag: None, is_whole_path: false });
+            pb::logical_plan::Operator::from(pb::PathStart { start_tag: None, path_opt: 0, result_opt: 0 });
         let path_opr = pb::logical_plan::Operator::from(pb::PathExpand {
             base: Some(edge_expand.clone()),
             start_tag: None,
-            is_whole_path: false,
             alias: None,
             hop_range: Some(pb::Range { lower: 3, upper: 4 }),
+            path_opt: 0,
+            result_opt: 0,
         });
         let path_end_opr = pb::logical_plan::Operator::from(pb::PathEnd { alias: None });
 
@@ -1492,13 +1494,14 @@ mod test {
 
         let expand_opr = pb::logical_plan::Operator::from(edge_expand.clone());
         let path_start_opr =
-            pb::logical_plan::Operator::from(pb::PathStart { start_tag: None, is_whole_path: false });
+            pb::logical_plan::Operator::from(pb::PathStart { start_tag: None, path_opt: 0, result_opt: 0 });
         let path_opr = pb::logical_plan::Operator::from(pb::PathExpand {
             base: Some(edge_expand.clone()),
             start_tag: None,
-            is_whole_path: false,
             alias: None,
             hop_range: Some(pb::Range { lower: 0, upper: 4 }),
+            path_opt: 0,
+            result_opt: 0,
         });
         let path_end_opr = pb::logical_plan::Operator::from(pb::PathEnd { alias: None });
 

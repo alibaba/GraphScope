@@ -1862,20 +1862,33 @@ mod graph {
         destroy_ptr::<pb::GetV>(ptr)
     }
 
-    // TODO: initialize an path expand operator with ExpandOpt
+    #[allow(dead_code)]
+    #[repr(i32)]
+    pub enum PathOpt {
+        Arbitrary = 0,
+        Simple = 1,
+    }
+
+    #[allow(dead_code)]
+    #[repr(i32)]
+    pub enum PathResultOpt {
+        EndV = 0,
+        AllV = 1,
+    }
+
     /// To initialize an path expand operator from an expand base
     #[no_mangle]
     pub extern "C" fn init_pathxpd_operator(
-        ptr_expand: *const c_void, is_whole_path: bool,
+        ptr_expand: *const c_void, path_opt: PathOpt, result_opt: PathResultOpt,
     ) -> *const c_void {
         let expand = unsafe { Box::from_raw(ptr_expand as *mut pb::EdgeExpand) };
         let edgexpd = Box::new(pb::PathExpand {
             base: Some(expand.as_ref().clone()),
             start_tag: None,
-            path_opt: 0,
             alias: None,
             hop_range: None,
-            result_opt: if is_whole_path { 0 } else { 1 },
+            path_opt: unsafe { std::mem::transmute::<PathOpt, i32>(path_opt) },
+            result_opt: unsafe { std::mem::transmute::<PathResultOpt, i32>(result_opt) },
         });
 
         Box::into_raw(edgexpd) as *const c_void
