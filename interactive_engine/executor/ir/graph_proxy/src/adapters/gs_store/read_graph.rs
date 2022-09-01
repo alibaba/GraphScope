@@ -108,6 +108,7 @@ where
             let (condition, row_filter_exists_but_not_pushdown) =
                 encode_storage_row_filter_condition(row_filter.as_ref(), self.row_filter_pushdown);
 
+            // props that will be used in futher compute
             let cache_prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
             // props that will be returned by storage layer
             let prop_ids = if self.column_filter_pushdown {
@@ -253,6 +254,7 @@ where
             })
             .unwrap_or(DEFAULT_SNAPSHOT_ID);
 
+        // props that will be used in futher compute
         let cache_prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
         // also need props in filter, because `filter_limit!`
         let prop_ids = if self.column_filter_pushdown {
