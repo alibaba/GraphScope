@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::db::api::condition::Condition;
+use crate::api::Condition;
 use crate::db::api::types::{RocksEdge, RocksVertex};
 use crate::db::api::{
     EdgeId, EdgeKind, GraphResult, LabelId, PropertyId, Records, SerialId, SnapshotId, VertexId,

@@ -126,6 +126,12 @@ impl Decoder {
         IterDecoder::new(self.clone(), data)
     }
 
+    pub fn decode_spec_properties<'a>(
+        &self, data: &'a [u8], prop_ids: Vec<PropertyId>,
+    ) -> SpecIterDecoder<'a> {
+        SpecIterDecoder::new(self.clone(), data, prop_ids)
+    }
+
     pub fn decode_all<'a>(&self, data: &'a [u8]) -> HashMap<PropertyId, ValueRef<'a>> {
         let mut map = HashMap::new();
         let mut iter = self.decode_properties(data);
@@ -258,6 +264,31 @@ impl<'a> IterDecoder<'a> {
             .decoder
             .decode_property_at(&self.reader, idx)?;
         Some((prop_id, v))
+    }
+}
+
+pub struct SpecIterDecoder<'a> {
+    decoder: Decoder,
+    data: &'a [u8],
+    prop_ids: Vec<PropertyId>,
+    cur: usize,
+}
+
+impl<'a> SpecIterDecoder<'a> {
+    pub fn new(decoder: Decoder, data: &'a [u8], props: Vec<PropertyId>) -> Self {
+        SpecIterDecoder { decoder, data, prop_ids: props, cur: 0 }
+    }
+
+    pub fn next(&mut self) -> Option<(PropertyId, ValueRef<'a>)> {
+        while self.cur < self.prop_ids.len() {
+            let prop_id = self.prop_ids[self.cur];
+            let ret = self.decoder.decode_property(self.data, prop_id);
+            self.cur += 1;
+            if ret.is_some() {
+                return ret.map(|value| (prop_id, value));
+            }
+        }
+        None
     }
 }
 

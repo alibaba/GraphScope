@@ -23,6 +23,16 @@ macro_rules! unwrap_ok_or {
     };
 }
 
+#[macro_export]
+macro_rules! unwrap_some_or {
+    ($res: expr, $code: expr) => {
+        match $res {
+            Some(v) => v,
+            None => $code,
+        }
+    };
+}
+
 #[cfg(test)]
 mod test {
     use crate::unwrap_ok_or;

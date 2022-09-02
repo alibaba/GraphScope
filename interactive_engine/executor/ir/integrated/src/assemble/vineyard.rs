@@ -49,7 +49,7 @@ where
     EI: Iterator<Item = E> + Send + 'static,
 {
     fn initialize_job_assembly(&self) -> IRJobAssembly {
-        create_gs_store(self.graph_query.clone(), self.graph_partitioner.clone());
+        create_gs_store(self.graph_query.clone(), self.graph_partitioner.clone(), false, false);
         let partitioner = VineyardMultiPartition::new(
             self.graph_partitioner.clone(),
             self.partition_server_index_mapping.clone(),
