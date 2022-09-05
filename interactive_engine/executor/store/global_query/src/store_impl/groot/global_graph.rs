@@ -75,14 +75,13 @@ impl GlobalGraph {
         }
     }
 
-    fn parse_condition(
-        _condition: Option<&Condition>,
-    ) -> Option<&maxgraph_store::db::api::condition::Condition> {
-        None
-    }
-
-    fn parse_property_id(_prop_ids: Option<&Vec<PropId>>) -> Option<&Vec<PropertyId>> {
-        None
+    fn parse_property_id(prop_ids: Option<&Vec<PropId>>) -> Option<Vec<PropertyId>> {
+        prop_ids.map(|v| {
+            v.to_owned()
+                .into_iter()
+                .map(|i| i as PropertyId)
+                .collect()
+        })
     }
 }
 
@@ -111,10 +110,11 @@ impl GlobalGraphQuery for GlobalGraph {
 
     fn get_out_edges(
         &self, si: SnapshotId, src_ids: Vec<PartitionVertexIds>, edge_labels: &Vec<LabelId>,
-        _condition: Option<&Condition>, _dedup_prop_ids: Option<&Vec<PropId>>,
-        _output_prop_ids: Option<&Vec<PropId>>, limit: usize,
+        condition: Option<&Condition>, _dedup_prop_ids: Option<&Vec<PropId>>,
+        output_prop_ids: Option<&Vec<PropId>>, limit: usize,
     ) -> Box<dyn Iterator<Item = (VertexId, Self::EI)>> {
         let mut res: Vec<(VertexId, Self::EI)> = Vec::new();
+        let property_ids = Self::parse_property_id(output_prop_ids);
         for (partition_id, vertex_ids) in src_ids {
             if let Some(store) = self.graph_partitions.get(&partition_id) {
                 for vertex_id in vertex_ids {
@@ -123,7 +123,7 @@ impl GlobalGraphQuery for GlobalGraph {
                         vertex_out_edges = Box::new(
                             vertex_out_edges.chain(
                                 store
-                                    .get_out_edges(si, vertex_id, None, None, None)
+                                    .get_out_edges(si, vertex_id, None, condition, property_ids.as_ref())
                                     .unwrap(),
                             ),
                         )
@@ -132,7 +132,13 @@ impl GlobalGraphQuery for GlobalGraph {
                             vertex_out_edges = Box::new(
                                 vertex_out_edges.chain(
                                     store
-                                        .get_out_edges(si, vertex_id, Some(*edge_label as i32), None, None)
+                                        .get_out_edges(
+                                            si,
+                                            vertex_id,
+                                            Some(*edge_label as i32),
+                                            condition,
+                                            property_ids.as_ref(),
+                                        )
                                         .unwrap(),
                                 ),
                             )
@@ -171,10 +177,11 @@ impl GlobalGraphQuery for GlobalGraph {
 
     fn get_in_edges(
         &self, si: SnapshotId, src_ids: Vec<PartitionVertexIds>, edge_labels: &Vec<LabelId>,
-        _condition: Option<&Condition>, _dedup_prop_ids: Option<&Vec<PropId>>,
-        _output_prop_ids: Option<&Vec<PropId>>, limit: usize,
+        condition: Option<&Condition>, _dedup_prop_ids: Option<&Vec<PropId>>,
+        output_prop_ids: Option<&Vec<PropId>>, limit: usize,
     ) -> Box<dyn Iterator<Item = (VertexId, Self::EI)>> {
         let mut res: Vec<(VertexId, Self::EI)> = Vec::new();
+        let property_ids = Self::parse_property_id(output_prop_ids);
         for (partition_id, vertex_ids) in src_ids {
             if let Some(store) = self.graph_partitions.get(&partition_id) {
                 for vertex_id in vertex_ids {
@@ -183,7 +190,7 @@ impl GlobalGraphQuery for GlobalGraph {
                         vertex_in_edges = Box::new(
                             vertex_in_edges.chain(
                                 store
-                                    .get_in_edges(si, vertex_id, None, None, None)
+                                    .get_in_edges(si, vertex_id, None, condition, property_ids.as_ref())
                                     .unwrap(),
                             ),
                         )
@@ -192,7 +199,13 @@ impl GlobalGraphQuery for GlobalGraph {
                             vertex_in_edges = Box::new(
                                 vertex_in_edges.chain(
                                     store
-                                        .get_in_edges(si, vertex_id, Some(*edge_label as i32), None, None)
+                                        .get_in_edges(
+                                            si,
+                                            vertex_id,
+                                            Some(*edge_label as i32),
+                                            condition,
+                                            property_ids.as_ref(),
+                                        )
                                         .unwrap(),
                                 ),
                             )
@@ -233,22 +246,30 @@ impl GlobalGraphQuery for GlobalGraph {
     }
 
     fn get_vertex_properties(
-        &self, si: SnapshotId, ids: Vec<PartitionLabeledVertexIds>, _output_prop_ids: Option<&Vec<PropId>>,
+        &self, si: SnapshotId, ids: Vec<PartitionLabeledVertexIds>, output_prop_ids: Option<&Vec<PropId>>,
     ) -> Self::VI {
         let graph_partitions = self.graph_partitions.clone();
+        let property_ids = Self::parse_property_id(output_prop_ids);
         Box::new(
             ids.into_iter()
                 .flat_map(move |(partition_id, label_id_vec)| {
                     let graph_partitions = graph_partitions.clone();
+                    let property_ids = property_ids.clone();
                     label_id_vec
                         .into_iter()
                         .flat_map(move |(label_id, vids)| {
                             let graph_partitions = graph_partitions.clone();
+                            let property_ids = property_ids.clone();
                             vids.into_iter().filter_map(move |vid| {
                                 match graph_partitions.get(&partition_id) {
                                     None => None,
                                     Some(partition) => partition
-                                        .get_vertex(si, vid, label_id.map(|l| l as i32), None)
+                                        .get_vertex(
+                                            si,
+                                            vid,
+                                            label_id.map(|l| l as i32),
+                                            property_ids.as_ref(),
+                                        )
                                         .unwrap(),
                                 }
                             })
@@ -269,7 +290,6 @@ impl GlobalGraphQuery for GlobalGraph {
         _dedup_prop_ids: Option<&Vec<PropId>>, output_prop_ids: Option<&Vec<PropId>>, limit: usize,
         partition_ids: &Vec<PartitionId>,
     ) -> Self::VI {
-        let condition = Self::parse_condition(condition);
         let output_property_ids = Self::parse_property_id(output_prop_ids);
         let partitions = if partition_ids.is_empty() {
             self.graph_partitions
@@ -286,7 +306,7 @@ impl GlobalGraphQuery for GlobalGraph {
                     res = Box::new(
                         res.chain(
                             partition
-                                .scan_vertex(si, None, condition, output_property_ids)
+                                .scan_vertex(si, None, condition, output_property_ids.as_ref())
                                 .unwrap()
                                 .take(Self::get_limit(limit))
                                 .map(|v| v.unwrap()),
@@ -297,7 +317,12 @@ impl GlobalGraphQuery for GlobalGraph {
                         res = Box::new(
                             res.chain(
                                 partition
-                                    .scan_vertex(si, Some(*label as i32), condition, output_property_ids)
+                                    .scan_vertex(
+                                        si,
+                                        Some(*label as i32),
+                                        condition,
+                                        output_property_ids.as_ref(),
+                                    )
                                     .unwrap()
                                     .take(Self::get_limit(limit))
                                     .map(|v| v.unwrap()),
@@ -315,7 +340,6 @@ impl GlobalGraphQuery for GlobalGraph {
         _dedup_prop_ids: Option<&Vec<PropId>>, output_prop_ids: Option<&Vec<PropId>>, limit: usize,
         partition_ids: &Vec<PartitionId>,
     ) -> Self::EI {
-        let condition = Self::parse_condition(condition);
         let output_property_ids = Self::parse_property_id(output_prop_ids);
         let partitions = if partition_ids.is_empty() {
             self.graph_partitions
@@ -332,7 +356,7 @@ impl GlobalGraphQuery for GlobalGraph {
                     res = Box::new(
                         res.chain(
                             partition
-                                .scan_edge(si, None, condition, output_property_ids)
+                                .scan_edge(si, None, condition, output_property_ids.as_ref())
                                 .unwrap()
                                 .take(Self::get_limit(limit))
                                 .map(|e| e.unwrap()),
@@ -343,7 +367,12 @@ impl GlobalGraphQuery for GlobalGraph {
                         res = Box::new(
                             res.chain(
                                 partition
-                                    .scan_edge(si, Some(*label as i32), condition, output_property_ids)
+                                    .scan_edge(
+                                        si,
+                                        Some(*label as i32),
+                                        condition,
+                                        output_property_ids.as_ref(),
+                                    )
                                     .unwrap()
                                     .take(Self::get_limit(limit))
                                     .map(|e| e.unwrap()),

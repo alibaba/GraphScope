@@ -24,6 +24,8 @@ pub enum GraphProxyError {
     QueryStoreError(String),
     /// Query storage error
     WriteGraphError(String),
+    /// filter push down error
+    FilterPushDownError(String),
     /// Not supported error
     UnSupported(String),
 }
@@ -37,6 +39,10 @@ impl GraphProxyError {
         GraphProxyError::WriteGraphError(e.to_string())
     }
 
+    pub fn filter_push_down_error(e: &str) -> Self {
+        GraphProxyError::FilterPushDownError(e.to_string())
+    }
+
     pub fn unsupported_error(e: &str) -> Self {
         GraphProxyError::UnSupported(e.to_string())
     }
@@ -47,6 +53,9 @@ impl std::fmt::Display for GraphProxyError {
         match self {
             GraphProxyError::QueryStoreError(e) => write!(f, "Query store error in graph_proxy {}", e),
             GraphProxyError::WriteGraphError(e) => write!(f, "Write graph error in graph_proxy {}", e),
+            GraphProxyError::FilterPushDownError(e) => {
+                write!(f, "Filter push down error in graph_proxy {}", e)
+            }
             GraphProxyError::UnSupported(e) => write!(f, "Op not supported error in graph_proxy {}", e),
         }
     }

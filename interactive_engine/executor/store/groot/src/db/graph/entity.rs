@@ -1,8 +1,10 @@
+use std::collections::HashSet;
 use std::fmt::{Debug, Formatter};
 
+use super::codec::SpecIterDecoder;
 use crate::api::{Edge, Vertex};
 use crate::db::api::types::{Property, PropertyReader, PropertyValue, RocksEdge, RocksVertex};
-use crate::db::api::{EdgeId, EdgeKind, GraphResult, LabelId, PropertyId, VertexId};
+use crate::db::api::{EdgeId, EdgeKind, GraphResult, LabelId, PropertyId, ValueRef, VertexId};
 use crate::db::graph::codec::{Decoder, IterDecoder};
 use crate::db::storage::RawBytes;
 use crate::schema::PropId;
@@ -45,8 +47,36 @@ impl PropertyImpl {
     }
 }
 
+enum CommonIterDecoder<'a> {
+    All(IterDecoder<'a>),
+    Spec(SpecIterDecoder<'a>),
+    Empty,
+}
+
+impl<'a> CommonIterDecoder<'a> {
+    pub fn next(&mut self) -> Option<(PropertyId, ValueRef<'a>)> {
+        match self {
+            Self::All(iter) => iter.next(),
+            Self::Spec(iter) => iter.next(),
+            Self::Empty => None,
+        }
+    }
+}
+
 pub struct PropertiesIter<'a> {
-    decode_iter: IterDecoder<'a>,
+    decode_iter: CommonIterDecoder<'a>,
+}
+
+impl<'a> PropertiesIter<'a> {
+    pub fn all_columns(decode_iter: IterDecoder<'a>) -> Self {
+        PropertiesIter { decode_iter: CommonIterDecoder::All(decode_iter) }
+    }
+    pub fn spec_columns(decode_iter: SpecIterDecoder<'a>) -> Self {
+        PropertiesIter { decode_iter: CommonIterDecoder::Spec(decode_iter) }
+    }
+    pub fn empty() -> Self {
+        PropertiesIter { decode_iter: CommonIterDecoder::Empty }
+    }
 }
 
 impl<'a> Iterator for PropertiesIter<'a> {
@@ -59,18 +89,38 @@ impl<'a> Iterator for PropertiesIter<'a> {
     }
 }
 
+/// for columns, None means we do not need any properties,
+/// Some means we need given properties (and Some(HashSet[]) means we need all properties)
 pub struct RocksVertexImpl {
     vertex_id: VertexId,
     label_id: LabelId,
     decoder: Option<Decoder>,
     raw_bytes: RawBytes,
+    columns: Option<HashSet<PropId>>,
 }
 
 impl RocksVertexImpl {
     pub fn new(
         vertex_id: VertexId, label_id: LabelId, decoder: Option<Decoder>, raw_bytes: RawBytes,
     ) -> Self {
-        RocksVertexImpl { vertex_id, label_id, decoder, raw_bytes }
+        RocksVertexImpl::with_columns(
+            vertex_id,
+            label_id,
+            decoder,
+            raw_bytes,
+            Some(HashSet::with_capacity(0)),
+        )
+    }
+
+    pub fn with_columns(
+        vertex_id: VertexId, label_id: LabelId, decoder: Option<Decoder>, raw_bytes: RawBytes,
+        columns: Option<HashSet<PropId>>,
+    ) -> Self {
+        RocksVertexImpl { vertex_id, label_id, decoder, raw_bytes, columns }
+    }
+
+    pub fn set_columns(&mut self, columns: Option<HashSet<PropId>>) {
+        self.columns = columns;
     }
 }
 
@@ -79,6 +129,18 @@ impl PropertyReader for RocksVertexImpl {
     type PropertyIterator = Box<dyn Iterator<Item = GraphResult<Self::P>>>;
 
     fn get_property(&self, property_id: PropertyId) -> Option<Self::P> {
+        match self.columns {
+            Some(ref columns) => {
+                if !columns.is_empty() {
+                    if !columns.contains(&(property_id as PropId)) {
+                        return None;
+                    }
+                }
+            }
+            None => {
+                return None;
+            }
+        }
         match &self.decoder {
             None => None,
             Some(decoder) => {
@@ -91,11 +153,30 @@ impl PropertyReader for RocksVertexImpl {
 
     fn get_property_iterator(&self) -> Box<dyn Iterator<Item = GraphResult<Self::P>>> {
         match &self.decoder {
-            None => Box::new(::std::iter::empty()),
+            None => Box::new(std::iter::empty()),
             Some(decoder) => {
                 let bytes = unsafe { std::mem::transmute(self.raw_bytes.to_slice()) };
-                let decode_iter = decoder.decode_properties(bytes);
-                Box::new(PropertiesIter { decode_iter })
+                if let Some(ref columns) = self.columns {
+                    if columns.is_empty() {
+                        // all properties
+                        let decode_iter = decoder.decode_properties(bytes);
+                        Box::new(PropertiesIter::all_columns(decode_iter))
+                    } else {
+                        // properties in columns
+                        let decode_iter = decoder.decode_spec_properties(
+                            bytes,
+                            columns
+                                .clone()
+                                .into_iter()
+                                .map(|i| i as PropertyId)
+                                .collect(),
+                        );
+                        Box::new(PropertiesIter::spec_columns(decode_iter))
+                    }
+                } else {
+                    // no properties
+                    Box::new(PropertiesIter::empty())
+                }
             }
         }
     }
@@ -140,6 +221,18 @@ impl Vertex for RocksVertexImpl {
     }
 
     fn get_property(&self, prop_id: PropId) -> Option<crate::api::prelude::Property> {
+        match self.columns {
+            Some(ref columns) => {
+                if !columns.is_empty() {
+                    if !columns.contains(&(prop_id)) {
+                        return None;
+                    }
+                }
+            }
+            None => {
+                return None;
+            }
+        }
         let property_id = prop_id as i32;
         match &self.decoder {
             None => None,
@@ -157,11 +250,34 @@ impl Vertex for RocksVertexImpl {
 
     fn get_properties(&self) -> Self::PI {
         match &self.decoder {
-            None => Box::new(::std::iter::empty()),
+            None => Box::new(std::iter::empty()),
             Some(decoder) => {
                 let bytes = unsafe { std::mem::transmute(self.raw_bytes.to_slice()) };
-                let decode_iter = decoder.decode_properties(bytes);
-                Box::new(PropertiesIter { decode_iter }.map(|p| p.unwrap().parse_to_property()))
+                let iter = if let Some(ref columns) = self.columns {
+                    if columns.is_empty() {
+                        // all properties
+                        let decode_iter = decoder.decode_properties(bytes);
+                        PropertiesIter::all_columns(decode_iter)
+                    } else {
+                        // properties in columns
+                        let decode_iter = decoder.decode_spec_properties(
+                            bytes,
+                            columns
+                                .clone()
+                                .into_iter()
+                                .map(|i| i as PropertyId)
+                                .collect(),
+                        );
+                        PropertiesIter::spec_columns(decode_iter)
+                    }
+                } else {
+                    // no properties
+                    PropertiesIter::empty()
+                };
+                Box::new(
+                    iter.filter(|p| p.is_ok())
+                        .map(|p| p.unwrap().parse_to_property()),
+                )
             }
         }
     }
@@ -172,13 +288,31 @@ pub struct RocksEdgeImpl {
     edge_relation: EdgeKind,
     decoder: Option<Decoder>,
     raw_bytes: RawBytes,
+    columns: Option<HashSet<PropId>>,
 }
 
 impl RocksEdgeImpl {
     pub fn new(
         edge_id: EdgeId, edge_relation: EdgeKind, decoder: Option<Decoder>, raw_bytes: RawBytes,
     ) -> Self {
-        RocksEdgeImpl { edge_id, edge_relation, decoder, raw_bytes }
+        RocksEdgeImpl::with_columns(
+            edge_id,
+            edge_relation,
+            decoder,
+            raw_bytes,
+            Some(HashSet::with_capacity(0)),
+        )
+    }
+
+    pub fn with_columns(
+        edge_id: EdgeId, edge_relation: EdgeKind, decoder: Option<Decoder>, raw_bytes: RawBytes,
+        columns: Option<HashSet<PropId>>,
+    ) -> Self {
+        RocksEdgeImpl { edge_id, edge_relation, decoder, raw_bytes, columns }
+    }
+
+    pub fn set_columns(&mut self, columns: Option<HashSet<PropId>>) {
+        self.columns = columns;
     }
 }
 
@@ -187,6 +321,18 @@ impl PropertyReader for RocksEdgeImpl {
     type PropertyIterator = Box<dyn Iterator<Item = GraphResult<Self::P>>>;
 
     fn get_property(&self, property_id: PropertyId) -> Option<Self::P> {
+        match self.columns {
+            Some(ref columns) => {
+                if !columns.is_empty() {
+                    if !columns.contains(&(property_id as PropId)) {
+                        return None;
+                    }
+                }
+            }
+            None => {
+                return None;
+            }
+        }
         match &self.decoder {
             None => None,
             Some(decoder) => {
@@ -199,11 +345,30 @@ impl PropertyReader for RocksEdgeImpl {
 
     fn get_property_iterator(&self) -> Box<dyn Iterator<Item = GraphResult<Self::P>>> {
         match &self.decoder {
-            None => Box::new(::std::iter::empty()),
+            None => Box::new(std::iter::empty()),
             Some(decoder) => {
                 let bytes = unsafe { std::mem::transmute(self.raw_bytes.to_slice()) };
-                let decode_iter = decoder.decode_properties(bytes);
-                Box::new(PropertiesIter { decode_iter })
+                if let Some(ref columns) = self.columns {
+                    if columns.is_empty() {
+                        // all properties
+                        let decode_iter = decoder.decode_properties(bytes);
+                        Box::new(PropertiesIter::all_columns(decode_iter))
+                    } else {
+                        // properties in columns
+                        let decode_iter = decoder.decode_spec_properties(
+                            bytes,
+                            columns
+                                .clone()
+                                .into_iter()
+                                .map(|i| i as PropertyId)
+                                .collect(),
+                        );
+                        Box::new(PropertiesIter::spec_columns(decode_iter))
+                    }
+                } else {
+                    // no properties
+                    Box::new(PropertiesIter::empty())
+                }
             }
         }
     }
@@ -264,6 +429,18 @@ impl Edge for RocksEdgeImpl {
     }
 
     fn get_property(&self, prop_id: PropId) -> Option<crate::api::prelude::Property> {
+        match self.columns {
+            Some(ref columns) => {
+                if !columns.is_empty() {
+                    if !columns.contains(&prop_id) {
+                        return None;
+                    }
+                }
+            }
+            None => {
+                return None;
+            }
+        }
         let property_id = prop_id as i32;
         match &self.decoder {
             None => None,
@@ -281,11 +458,34 @@ impl Edge for RocksEdgeImpl {
 
     fn get_properties(&self) -> Self::PI {
         match &self.decoder {
-            None => Box::new(::std::iter::empty()),
+            None => Box::new(std::iter::empty()),
             Some(decoder) => {
                 let bytes = unsafe { std::mem::transmute(self.raw_bytes.to_slice()) };
-                let decode_iter = decoder.decode_properties(bytes);
-                Box::new(PropertiesIter { decode_iter }.map(|p| p.unwrap().parse_to_property()))
+                let iter = if let Some(ref columns) = self.columns {
+                    if columns.is_empty() {
+                        // all properties
+                        let decode_iter = decoder.decode_properties(bytes);
+                        PropertiesIter::all_columns(decode_iter)
+                    } else {
+                        // properties in columns
+                        let decode_iter = decoder.decode_spec_properties(
+                            bytes,
+                            columns
+                                .clone()
+                                .into_iter()
+                                .map(|i| i as PropertyId)
+                                .collect(),
+                        );
+                        PropertiesIter::spec_columns(decode_iter)
+                    }
+                } else {
+                    // no properties
+                    PropertiesIter::empty()
+                };
+                Box::new(
+                    iter.filter(|p| p.is_ok())
+                        .map(|p| p.unwrap().parse_to_property()),
+                )
             }
         }
     }

@@ -13,13 +13,14 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::convert::TryInto;
 use std::fmt;
 use std::sync::atomic::{AtomicPtr, Ordering};
 use std::sync::Arc;
 
 use ahash::{HashMap, HashMapExt};
 use dyn_type::{Object, Primitives};
-use global_query::store_api::prelude::Property;
+use global_query::store_api::prelude::{Condition, Property};
 use global_query::store_api::{
     Edge as StoreEdge, LabelId as StoreLabelId, PartitionId, Vertex as StoreVertex, VertexId,
 };
@@ -38,7 +39,7 @@ use crate::apis::{
     from_fn, register_graph, Details, Direction, DynDetails, Edge, PropertyValue, QueryParams, ReadGraph,
     Statement, Vertex, ID,
 };
-use crate::utils::expr::eval_pred::EvalPred;
+use crate::utils::expr::eval_pred::{EvalPred, PEvaluator};
 use crate::{filter_limit, filter_sample_limit, limit_n, sample_limit};
 use crate::{GraphProxyError, GraphProxyResult};
 
@@ -58,19 +59,27 @@ where
 {
     store: Arc<dyn GlobalGraphQuery<V = V, E = E, VI = VI, EI = EI>>,
     partition_manager: Arc<dyn GraphPartitionManager>,
+    row_filter_pushdown: bool,
+    column_filter_pushdown: bool,
 }
 
 #[allow(dead_code)]
 pub fn create_gs_store<V, VI, E, EI>(
     store: Arc<dyn GlobalGraphQuery<V = V, E = E, VI = VI, EI = EI>>,
-    partition_manager: Arc<dyn GraphPartitionManager>,
+    partition_manager: Arc<dyn GraphPartitionManager>, row_filter_push_down: bool,
+    column_filter_push_down: bool,
 ) where
     V: StoreVertex + 'static,
     VI: Iterator<Item = V> + Send + 'static,
     E: StoreEdge + 'static,
     EI: Iterator<Item = E> + Send + 'static,
 {
-    let graph = GraphScopeStore { store, partition_manager };
+    let graph = GraphScopeStore {
+        store,
+        partition_manager,
+        row_filter_pushdown: row_filter_push_down,
+        column_filter_pushdown: column_filter_push_down,
+    };
     register_graph(Arc::new(graph));
 }
 
@@ -94,8 +103,28 @@ where
                 })
                 .unwrap_or(DEFAULT_SNAPSHOT_ID);
             let label_ids = encode_storage_labels(params.labels.as_ref())?;
-            let prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
-            let filter = params.filter.clone();
+            let row_filter = params.filter.clone();
+
+            let (condition, row_filter_exists_but_not_pushdown) =
+                encode_storage_row_filter_condition(row_filter.as_ref(), self.row_filter_pushdown);
+
+            // props that will be used in futher compute
+            let cache_prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
+            // props that will be returned by storage layer
+            let prop_ids = if self.column_filter_pushdown {
+                if row_filter_exists_but_not_pushdown {
+                    // need to call filter_limit!, so get columns in row_filter and params.columns
+                    extract_needed_columns(row_filter.as_ref(), cache_prop_ids.as_ref())?
+                } else {
+                    // row_filter pushdown success, only need params.columns
+                    cache_prop_ids.clone()
+                }
+            } else {
+                // now, ir assume that it can get all properties from a vertex/edge locally
+                // just column filter is not pushdown.
+                get_all_storage_props()
+            };
+
             let partitions: Vec<PartitionId> = partitions
                 .iter()
                 .map(|pid| *pid as PartitionId)
@@ -106,7 +135,7 @@ where
                     si,
                     label_ids.as_ref(),
                     // None means no filter condition pushed down to storage as not supported yet. Same as follows.
-                    None,
+                    condition.as_ref(),
                     // None means no need to dedup by properties. Same as follows.
                     None,
                     prop_ids.as_ref(),
@@ -115,9 +144,14 @@ where
                     // Each worker will scan the partitions pre-allocated in source operator. Same as follows.
                     partitions.as_ref(),
                 )
-                .map(move |v| to_runtime_vertex(v, prop_ids.clone()));
-            // TODO: currently, we do not push down filters (including filter, sample, limit)
-            Ok(filter_sample_limit!(result, filter, params.sample_ratio, params.limit))
+                .map(move |v| to_runtime_vertex(v, cache_prop_ids.clone()));
+
+            if row_filter_exists_but_not_pushdown {
+                // fall back to call filter_limit! to do row filter
+                Ok(filter_sample_limit!(result, row_filter, params.sample_ratio, params.limit))
+            } else {
+                Ok(sample_limit!(result, params.sample_ratio, params.limit))
+            }
         } else {
             Ok(Box::new(std::iter::empty()))
         }
@@ -165,11 +199,23 @@ where
                 })
                 .unwrap_or(DEFAULT_SNAPSHOT_ID);
             let label_ids = encode_storage_labels(params.labels.as_ref())?;
-            let filter = params.filter.clone();
-            // TODO: Currently, if filter exists, we scan edges with all props for filtering, and then trim the edges by only preserving necessary props;
-            // TODO: In the future, the filter will be pushed to the storage.
-            let prop_ids =
-                if filter.is_some() { None } else { encode_storage_prop_keys(params.columns.as_ref())? };
+            let row_filter = params.filter.clone();
+
+            // the same as above
+            let (condition, row_filter_exists_but_not_pushdown) =
+                encode_storage_row_filter_condition(row_filter.as_ref(), self.row_filter_pushdown);
+
+            let cache_prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
+            let prop_ids = if self.column_filter_pushdown {
+                if row_filter_exists_but_not_pushdown {
+                    extract_needed_columns(row_filter.as_ref(), cache_prop_ids.as_ref())?
+                } else {
+                    cache_prop_ids.clone()
+                }
+            } else {
+                get_all_storage_props()
+            };
+
             let partitions: Vec<PartitionId> = partitions
                 .iter()
                 .map(|pid| *pid as PartitionId)
@@ -178,16 +224,19 @@ where
                 .get_all_edges(
                     si,
                     label_ids.as_ref(),
-                    None,
+                    condition.as_ref(),
                     None,
                     prop_ids.as_ref(),
                     0,
                     partitions.as_ref(),
                 )
                 .map(move |e| to_runtime_edge(&e));
-            // TODO: currently, we do not push down filters (including filter, sample, limit)
-            // it is defined as filter > sample > limit; Same as follows.
-            Ok(filter_sample_limit!(result, filter, params.sample_ratio, params.limit))
+
+            if row_filter_exists_but_not_pushdown {
+                Ok(filter_sample_limit!(result, row_filter, params.sample_ratio, params.limit))
+            } else {
+                Ok(sample_limit!(result, params.sample_ratio, params.limit))
+            }
         } else {
             Ok(Box::new(std::iter::empty()))
         }
@@ -204,13 +253,24 @@ where
                     .unwrap_or(DEFAULT_SNAPSHOT_ID)
             })
             .unwrap_or(DEFAULT_SNAPSHOT_ID);
-        let prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
+
+        // props that will be used in futher compute
+        let cache_prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
+        // also need props in filter, because `filter_limit!`
+        let prop_ids = if self.column_filter_pushdown {
+            extract_needed_columns(params.filter.as_ref(), cache_prop_ids.as_ref())?
+        } else {
+            // column filter not pushdown, ir assume that it can get all props locally
+            get_all_storage_props()
+        };
+
         let filter = params.filter.clone();
         let partition_label_vertex_ids =
             get_partition_label_vertex_ids(ids, self.partition_manager.clone());
+
         let result = store
             .get_vertex_properties(si, partition_label_vertex_ids.clone(), prop_ids.as_ref())
-            .map(move |v| to_runtime_vertex(v, prop_ids.clone()));
+            .map(move |v| to_runtime_vertex(v, cache_prop_ids.clone()));
 
         Ok(filter_limit!(result, filter, None))
     }
@@ -225,7 +285,11 @@ where
     fn prepare_explore_vertex(
         &self, direction: Direction, params: &QueryParams,
     ) -> GraphProxyResult<Box<dyn Statement<ID, Vertex>>> {
-        let filter = params.filter.clone();
+        let row_filter = params.filter.clone();
+
+        let (condition, row_filter_exists_but_not_push_down) =
+            encode_storage_row_filter_condition(row_filter.as_ref(), self.row_filter_pushdown);
+
         let limit = params.limit.clone();
         let store = self.store.clone();
         let partition_manager = self.partition_manager.clone();
@@ -245,7 +309,7 @@ where
                     si,
                     vec![src_id],
                     edge_label_ids.as_ref(),
-                    None,
+                    condition.as_ref(),
                     None,
                     limit.unwrap_or(0),
                 ),
@@ -253,7 +317,7 @@ where
                     si,
                     vec![src_id],
                     edge_label_ids.as_ref(),
-                    None,
+                    condition.as_ref(),
                     None,
                     limit.unwrap_or(0),
                 ),
@@ -263,7 +327,7 @@ where
                         si,
                         vec![src_id.clone()],
                         edge_label_ids.as_ref(),
-                        None,
+                        condition.as_ref(),
                         None,
                         limit.clone().unwrap_or(0),
                     );
@@ -272,7 +336,7 @@ where
                         si,
                         vec![src_id],
                         edge_label_ids.as_ref(),
-                        None,
+                        condition.as_ref(),
                         None,
                         limit.unwrap_or(0),
                     );
@@ -282,7 +346,12 @@ where
             };
             let iters = iter.map(|(_src, vi)| vi).collect();
             let iter_list = IterList::new(iters).map(move |v| to_empty_vertex(&v));
-            Ok(filter_limit!(iter_list, filter, None))
+
+            if row_filter_exists_but_not_push_down {
+                Ok(filter_limit!(iter_list, row_filter, None))
+            } else {
+                Ok(Box::new(iter_list))
+            }
         });
         Ok(stmt)
     }
@@ -298,14 +367,28 @@ where
                     .unwrap_or(DEFAULT_SNAPSHOT_ID)
             })
             .unwrap_or(DEFAULT_SNAPSHOT_ID);
+
         let partition_manager = self.partition_manager.clone();
-        let filter = params.filter.clone();
+        let row_filter = params.filter.clone();
+
+        // the same as above
+        let (condition, row_filter_exists_but_not_pushdown) =
+            encode_storage_row_filter_condition(row_filter.as_ref(), self.row_filter_pushdown);
+
+        let cache_prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
+        let prop_ids = if self.column_filter_pushdown {
+            if row_filter_exists_but_not_pushdown {
+                extract_needed_columns(row_filter.as_ref(), cache_prop_ids.as_ref())?
+            } else {
+                cache_prop_ids.clone()
+            }
+        } else {
+            get_all_storage_props()
+        };
+
         let limit = params.limit.clone();
         let edge_label_ids = encode_storage_labels(params.labels.as_ref())?;
-        // TODO: Currently, if filter exists, we scan edges with all props for filtering, and then trim the edges by only preserving necessary props;
-        // TODO: In the future, the filter will be pushed to the storage.
-        let prop_ids =
-            if filter.is_some() { None } else { encode_storage_prop_keys(params.columns.as_ref())? };
+
         let columns = params.columns.clone();
 
         let stmt = from_fn(move |v: ID| {
@@ -315,7 +398,7 @@ where
                     si,
                     vec![src_id],
                     edge_label_ids.as_ref(),
-                    None,
+                    condition.as_ref(),
                     None,
                     prop_ids.as_ref(),
                     limit.unwrap_or(0),
@@ -324,7 +407,7 @@ where
                     si,
                     vec![src_id],
                     edge_label_ids.as_ref(),
-                    None,
+                    condition.as_ref(),
                     None,
                     prop_ids.as_ref(),
                     limit.unwrap_or(0),
@@ -335,7 +418,7 @@ where
                         si,
                         vec![src_id.clone()],
                         edge_label_ids.as_ref(),
-                        None,
+                        condition.as_ref(),
                         None,
                         prop_ids.as_ref(),
                         limit.clone().unwrap_or(0),
@@ -345,7 +428,7 @@ where
                         si,
                         vec![src_id],
                         edge_label_ids.as_ref(),
-                        None,
+                        condition.as_ref(),
                         None,
                         prop_ids.as_ref(),
                         limit.unwrap_or(0),
@@ -356,7 +439,8 @@ where
             };
             let iters = iter.map(|(_src, ei)| ei).collect();
             let iter_list = IterList::new(iters).map(move |e| to_runtime_edge(&e));
-            if let Some(filter) = filter.clone() {
+            if row_filter_exists_but_not_pushdown {
+                let filter = row_filter.clone().unwrap();
                 let columns = columns.clone();
                 let filter_result = iter_list
                     .filter(move |e| filter.eval_bool(Some(e)).unwrap_or(false))
@@ -510,27 +594,29 @@ where
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
         let mut all_props = HashMap::new();
-        if self.prop_keys.is_none() {
-            // the case of get_all_properties from vertex;
-            if let Some(ptr) = self.get_vertex_ptr() {
-                unsafe {
-                    all_props = (*ptr)
-                        .get_properties()
-                        .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val))
-                        .collect();
+        if let Some(prop_keys) = self.prop_keys.as_ref() {
+            if prop_keys.is_empty() {
+                // the case of get_all_properties from vertex;
+                if let Some(ptr) = self.get_vertex_ptr() {
+                    unsafe {
+                        all_props = (*ptr)
+                            .get_properties()
+                            .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val))
+                            .collect();
+                    }
+                } else {
+                    return None;
                 }
             } else {
-                return None;
-            }
-        } else {
-            let prop_keys = self.prop_keys.as_ref().unwrap();
-            // the case of get_all_properties with prop_keys pre-specified
-            for key in prop_keys.iter() {
-                let key = NameOrId::Id(*key as KeyId);
-                if let Some(prop) = self.get_property(&key) {
-                    all_props.insert(key.clone(), prop.try_to_owned().unwrap());
-                } else {
-                    all_props.insert(key.clone(), Object::None);
+                let prop_keys = self.prop_keys.as_ref().unwrap();
+                // the case of get_all_properties with prop_keys pre-specified
+                for key in prop_keys.iter() {
+                    let key = NameOrId::Id(*key as KeyId);
+                    if let Some(prop) = self.get_property(&key) {
+                        all_props.insert(key.clone(), prop.try_to_owned().unwrap());
+                    } else {
+                        all_props.insert(key.clone(), Object::None);
+                    }
                 }
             }
         }
@@ -575,31 +661,71 @@ where
     }
 }
 
-// TODO: make this identical in GAIA and GlobalGraphQuery
-/// in graphscope store, Option<Vec<PropId>>: None means we need all properties,
-/// and Some means we need given properties (and Some(vec![]) means we do not need any property)
-/// while in ir, None means we do not need any properties,
+/// In ir, None means we do not need any properties,
 /// and Some means we need given properties (and Some(vec![]) means we need all properties)
 #[inline]
 fn encode_storage_prop_keys(prop_names: Option<&Vec<NameOrId>>) -> GraphProxyResult<Option<Vec<PropId>>> {
     if let Some(prop_names) = prop_names {
-        if prop_names.is_empty() {
-            Ok(None)
-        } else {
-            let encoded_prop_ids = prop_names
-                .iter()
-                .map(|prop_key| match prop_key {
-                    NameOrId::Str(_) => Err(GraphProxyError::query_store_error(
-                        "encode storage prop key error, should provide prop_id",
-                    )),
-                    NameOrId::Id(prop_id) => Ok(*prop_id as PropId),
-                })
-                .collect::<Result<Vec<PropId>, _>>()?;
-            Ok(Some(encoded_prop_ids))
+        let ids = prop_names
+            .iter()
+            .map(|prop_key| match prop_key {
+                NameOrId::Str(_) => Err(GraphProxyError::FilterPushDownError(
+                    "encode storage prop key error, should provide prop_id".to_owned(),
+                )),
+                NameOrId::Id(prop_id) => Ok(*prop_id as PropId),
+            })
+            .collect::<Result<Vec<PropId>, _>>()?;
+        Ok(Some(ids))
+    } else {
+        Ok(None)
+    }
+}
+
+/// convert filter in `QueryParams` to storage `Condition` filter
+/// and return a flag that represents row filter exists but not push down
+/// caused by `row_filter_pushdown == false` or  convert error
+#[inline]
+fn encode_storage_row_filter_condition(
+    row_filter: Option<&Arc<PEvaluator>>, row_filter_pushdown: bool,
+) -> (Option<Condition>, bool) {
+    if row_filter_pushdown {
+        let condition = if let Some(filter) = row_filter { filter.as_ref().try_into() } else { Ok(None) };
+        match condition {
+            Ok(cond) => (cond, false),
+            Err(e) => {
+                error!("convert ir filter to store condition error {}", e);
+                (None, row_filter.is_some())
+            }
         }
     } else {
-        Ok(Some(vec![]))
+        (None, row_filter.is_some())
     }
+}
+
+/// get columns used in filter and output
+#[inline]
+fn extract_needed_columns(
+    filter: Option<&Arc<PEvaluator>>, out_columns: Option<&Vec<PropId>>,
+) -> GraphProxyResult<Option<Vec<PropId>>> {
+    use ahash::HashSet;
+
+    use crate::utils::expr::eval_pred::zip_option_vecs;
+
+    let filter_needed = if let Some(filter) = filter { filter.as_ref().extract_prop_ids() } else { None };
+    let columns = zip_option_vecs(filter_needed, out_columns.cloned());
+    // remove duplicated prop ids
+    Ok(columns.map(|v| {
+        v.into_iter()
+            .collect::<HashSet<PropId>>()
+            .into_iter()
+            .collect::<Vec<PropId>>()
+    }))
+}
+
+/// Some(vec![]) means need all properties
+#[inline]
+fn get_all_storage_props() -> Option<Vec<PropId>> {
+    Some(Vec::with_capacity(0))
 }
 
 #[inline]

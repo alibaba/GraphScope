@@ -18,11 +18,13 @@ use std::io::Cursor;
 use std::io::Read;
 use std::io::Write;
 
-use ::byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
+use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
+use dyn_type::{object::RawType, BorrowObject, Object, Primitives};
 
 use crate::error::*;
 use crate::schema::prelude::*;
 use crate::unwrap_ok_or;
+use crate::{GraphError, GraphResult};
 
 #[derive(Clone, Debug)]
 pub enum Property {
@@ -120,6 +122,157 @@ impl PartialEq for Property {
             Some(ord) => ord == std::cmp::Ordering::Equal,
             _ => false,
         }
+    }
+}
+
+impl Property {
+    fn from_primitive(p: &Primitives) -> GraphResult<Property> {
+        match p {
+            Primitives::Byte(v) => Ok(Property::Char(*v as u8)),
+            Primitives::Integer(v) => Ok(Property::Int(*v)),
+            Primitives::Long(v) => Ok(Property::Long(*v)),
+            Primitives::ULLong(v) => {
+                if *v > i64::MAX as u128 {
+                    Err(GraphError::invalid_condition(format!("primitive {} is too large", v)))
+                } else {
+                    Ok(Property::Long(*v as i64))
+                }
+            }
+            Primitives::Float(v) => Ok(Property::Double(*v)),
+        }
+    }
+
+    pub fn from_borrow_object<'a>(bobj: BorrowObject<'a>) -> GraphResult<Property> {
+        match bobj {
+            BorrowObject::Primitive(p) => Self::from_primitive(&p),
+            BorrowObject::String(s) => Ok(Property::String(s.to_owned())),
+            BorrowObject::Blob(bytes) => Ok(Property::Bytes(bytes.to_vec())),
+            BorrowObject::Vector(v) => objects_to_list_property(v),
+            _ => Err(GraphError::invalid_condition(format!("unsupport object type {:?}", bobj))),
+        }
+    }
+
+    pub(crate) fn contains(&self, rhs: &Self) -> GraphResult<bool> {
+        match self {
+            Property::ListBytes(list) => {
+                let right = rhs.get_bytes()?;
+                Ok(list.contains(right))
+            }
+            Property::ListInt(list) => {
+                let right = rhs.get_int()?;
+                Ok(list.contains(&right))
+            }
+            Property::ListLong(list) => {
+                let right = rhs.get_long()?;
+                Ok(list.contains(&right))
+            }
+            Property::ListFloat(list) => {
+                let right = rhs.get_float()?;
+                Ok(list.contains(&right))
+            }
+            Property::ListDouble(list) => {
+                let right = rhs.get_double()?;
+                Ok(list.contains(&right))
+            }
+            Property::ListString(list) => {
+                let right = rhs.get_string()?;
+                Ok(list.contains(right))
+            }
+            Property::String(s) => {
+                let right = rhs.get_string()?;
+                Ok(s.contains(right))
+            }
+            _ => Ok(false),
+        }
+    }
+}
+
+fn objects_to_list_property(v: &[Object]) -> GraphResult<Property> {
+    if v.len() == 0 {
+        return Err(GraphError::invalid_condition("empty list object".to_owned()));
+    }
+    match v[0].raw_type() {
+        RawType::Blob(_) => {
+            let mut res = Vec::with_capacity(v.len());
+            for obj in v {
+                let item = match obj.as_bytes() {
+                    Ok(item) => item,
+                    Err(e) => {
+                        return Err(GraphError::invalid_condition(format!(
+                            "objects_to_list_property error {:?}",
+                            e
+                        )));
+                    }
+                };
+                res.push(item.to_owned());
+            }
+            Ok(Property::ListBytes(res))
+        }
+        RawType::String => {
+            let mut res = Vec::with_capacity(v.len());
+            for obj in v {
+                let item = match obj.as_str() {
+                    Ok(item) => item,
+                    Err(e) => {
+                        return Err(GraphError::invalid_condition(format!(
+                            "objects_to_list_property error {:?}",
+                            e
+                        )));
+                    }
+                };
+                res.push(item.to_string());
+            }
+            Ok(Property::ListString(res))
+        }
+        RawType::Integer => {
+            let mut res = Vec::with_capacity(v.len());
+            for obj in v {
+                let item = match obj.as_i32() {
+                    Ok(item) => item,
+                    Err(e) => {
+                        return Err(GraphError::invalid_condition(format!(
+                            "objects_to_list_property error {:?}",
+                            e
+                        )));
+                    }
+                };
+                res.push(item);
+            }
+            Ok(Property::ListInt(res))
+        }
+        RawType::Long | RawType::ULLong => {
+            let mut res = Vec::with_capacity(v.len());
+            for obj in v {
+                let item = match obj.as_i64() {
+                    Ok(item) => item,
+                    Err(e) => {
+                        return Err(GraphError::invalid_condition(format!(
+                            "objects_to_list_property error {:?}",
+                            e
+                        )));
+                    }
+                };
+                res.push(item);
+            }
+            Ok(Property::ListLong(res))
+        }
+        RawType::Float => {
+            let mut res = Vec::with_capacity(v.len());
+            for obj in v {
+                let item = match obj.as_f64() {
+                    Ok(item) => item,
+                    Err(e) => {
+                        return Err(GraphError::invalid_condition(format!(
+                            "objects_to_list_property error {:?}",
+                            e
+                        )));
+                    }
+                };
+                res.push(item);
+            }
+            Ok(Property::ListDouble(res))
+        }
+        _ => return Err(GraphError::invalid_condition("unsupport list object".to_owned())),
     }
 }
 
@@ -379,6 +532,30 @@ impl Property {
             Property::Double(_) => *data_type == DataType::Double,
             Property::String(_) => *data_type == DataType::String,
             _ => unimplemented!(),
+        }
+    }
+
+    pub(crate) fn get_list_ele_type(&self) -> Result<DataType, String> {
+        match self {
+            &Property::ListInt(_) => Ok(DataType::Int),
+            &Property::ListLong(_) => Ok(DataType::Long),
+            &Property::ListFloat(_) => Ok(DataType::Float),
+            &Property::ListDouble(_) => Ok(DataType::Double),
+            &Property::ListString(_) => Ok(DataType::String),
+            &Property::ListBytes(_) => Ok(DataType::Bytes),
+            _ => Err(format!("not a list type property=>{:?}", self)),
+        }
+    }
+
+    fn is_list_type(&self) -> bool {
+        match self {
+            &Property::ListInt(_)
+            | &Property::ListLong(_)
+            | &Property::ListFloat(_)
+            | &Property::ListDouble(_)
+            | &Property::ListString(_)
+            | &Property::ListBytes(_) => true,
+            _ => false,
         }
     }
 
@@ -901,5 +1078,28 @@ mod tests {
         let p1 = Property::ListInt(vec![1, 2, 3, 4]);
         let p2 = Property::ListDouble(vec![0.5, 2.0, 3.0, 4.0]);
         assert!(p1 > p2);
+    }
+
+    #[test]
+    fn test_property_contains() {
+        let p1 = Property::String("hello world".to_owned());
+        let p2 = Property::String("world".to_owned());
+        assert!(p1.contains(&p2).unwrap());
+
+        let p1 = Property::ListString(vec!["hello world".to_owned()]);
+        let p2 = Property::String("hello world".to_owned());
+        assert!(p1.contains(&p2).unwrap());
+
+        let p1 = Property::ListInt(vec![1, 2, 3, 4]);
+        let p2 = Property::Int(1);
+        assert!(p1.contains(&p2).unwrap());
+
+        let p1 = Property::ListBytes(vec![vec![0_u8, 1_u8]]);
+        let p2 = Property::Bytes(vec![0_u8, 1_u8]);
+        assert!(p1.contains(&p2).unwrap());
+
+        let p1 = Property::ListFloat(vec![1.0, 2.0]);
+        let p2 = Property::Float(1.0);
+        assert!(p1.contains(&p2).unwrap());
     }
 }

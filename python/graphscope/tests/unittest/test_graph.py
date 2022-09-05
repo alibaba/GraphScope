@@ -53,8 +53,13 @@ def test_graph_schema_todict(p2p_property_graph):
             {
                 "label": "person",
                 "properties": [
-                    {"name": "weight", "id": 0, "type": "LONG"},
-                    {"name": "id", "id": 1, "type": "LONG"},
+                    {
+                        "name": "weight",
+                        "id": 0,
+                        "type": "LONG",
+                        "is_primary_key": False,
+                    },
+                    {"name": "id", "id": 1, "type": "LONG", "is_primary_key": False},
                 ],
             }
         ],
@@ -62,9 +67,19 @@ def test_graph_schema_todict(p2p_property_graph):
             {
                 "label": "knows",
                 "properties": [
-                    {"name": "src_label_id", "id": 0, "type": "LONG"},
-                    {"name": "dst_label_id", "id": 1, "type": "LONG"},
-                    {"name": "dist", "id": 2, "type": "LONG"},
+                    {
+                        "name": "src_label_id",
+                        "id": 0,
+                        "type": "LONG",
+                        "is_primary_key": False,
+                    },
+                    {
+                        "name": "dst_label_id",
+                        "id": 1,
+                        "type": "LONG",
+                        "is_primary_key": False,
+                    },
+                    {"name": "dist", "id": 2, "type": "LONG", "is_primary_key": False},
                 ],
                 "relations": [{"src_label": "person", "dst_label": "person"}],
             }

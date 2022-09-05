@@ -11,20 +11,11 @@
 //! distributed under the License is distributed on an "AS IS" BASIS,
 //! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //! See the License for the specific language governing permissions and
-//! limitations under the License.
 
-use crate::db::api::types::PropertyValue;
-use crate::db::api::PropertyId;
+use super::{Edge, Vertex};
+use crate::GraphResult;
 
-#[allow(dead_code)]
-pub enum Condition {
-    And(Box<Condition>, Box<Condition>),
-    Or(Box<Condition>, Box<Condition>),
-    Not(Box<Condition>),
-    LessThan(PropertyId, PropertyValue),
-    LessEqual(PropertyId, PropertyValue),
-    GreaterThan(PropertyId, PropertyValue),
-    GreaterEqual(PropertyId, PropertyValue),
-    Equal(PropertyId, PropertyValue),
-    NotEqual(PropertyId, PropertyValue),
+pub trait ElemFilter {
+    fn filter_vertex<V: Vertex>(&self, vertex: &V) -> GraphResult<bool>;
+    fn filter_edge<E: Edge>(&self, edge: &E) -> GraphResult<bool>;
 }
