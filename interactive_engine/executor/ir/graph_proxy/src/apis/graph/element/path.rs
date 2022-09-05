@@ -179,12 +179,12 @@ impl Element for GraphPath {
         Some(self)
     }
 
-    // the path len is the number of vertices in the path;
+    // the path len is the number of edges in the path;
     fn len(&self) -> usize {
         match self {
-            GraphPath::AllV(p) | GraphPath::SimpleAllV((p, _)) => p.len(),
-            GraphPath::EndV((_, weight)) => *weight,
-            GraphPath::SimpleEndV((_, set)) => set.len(),
+            GraphPath::AllV(p) | GraphPath::SimpleAllV((p, _)) => p.len() - 1,
+            GraphPath::EndV((_, weight)) => *weight - 1,
+            GraphPath::SimpleEndV((_, set)) => set.len() - 1,
         }
     }
 
