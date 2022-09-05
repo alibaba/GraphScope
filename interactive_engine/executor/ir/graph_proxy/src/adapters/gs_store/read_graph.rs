@@ -749,6 +749,9 @@ fn encode_storage_row_filter_condition(
 ) -> (Option<Condition>, bool) {
     if row_filter_pushdown {
         let condition = if let Some(filter) = row_filter { filter.as_ref().try_into() } else { Ok(None) };
+        // gremlin test in ci will compile use debug mode
+        // panic so that developer will know convert failed
+        debug_assert!(condition.is_ok());
         match condition {
             Ok(cond) => (cond, false),
             Err(e) => {
