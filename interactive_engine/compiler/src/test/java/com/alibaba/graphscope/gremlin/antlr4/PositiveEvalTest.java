@@ -16,8 +16,6 @@
 
 package com.alibaba.graphscope.gremlin.antlr4;
 
-import com.alibaba.graphscope.common.jna.type.PathOpt;
-import com.alibaba.graphscope.common.jna.type.ResultOpt;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngine;
 import com.alibaba.graphscope.gremlin.plugin.step.GroupStep;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
@@ -907,10 +905,10 @@ public class PositiveEvalTest {
         Assert.assertEquals(
                 g.V().as("a")
                         .select("a")
-                        .by(__.out(__.range(1, 2)).with("ResultOpt", ResultOpt.AllV).count()),
+                        .by(__.out(__.range(1, 2)).with("ResultOpt", "AllV").count()),
                 eval(
                         "g.V().as(\"a\").select(\"a\").by(__.out(\"1..2\").with(\"ResultOpt\","
-                            + " AllV).count())"));
+                                + " \"AllV\").count())"));
     }
 
     @Test
@@ -1095,10 +1093,10 @@ public class PositiveEvalTest {
     public void g_V_path_expand_out_with() {
         Assert.assertEquals(
                 g.V().out(__.range(1, 2), "knows", "person")
-                        .with("PathOpt", PathOpt.Arbitrary)
-                        .with("ResultOpt", ResultOpt.AllV),
+                        .with("PathOpt", "Arbitrary")
+                        .with("ResultOpt", "AllV"),
                 eval(
-                        "g.V().out(\"1..2\", \"knows\", \"person\").with('PathOpt',"
-                                + " Arbitrary).with('ResultOpt', AllV)"));
+                        "g.V().out(\"1..2\", \"knows\", \"person\").with(\"PathOpt\","
+                                + " \"Arbitrary\").with(\"ResultOpt\", \"AllV\")"));
     }
 }

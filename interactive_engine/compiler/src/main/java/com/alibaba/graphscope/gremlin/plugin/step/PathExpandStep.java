@@ -76,11 +76,11 @@ public class PathExpandStep extends ExpandFusionStep<Vertex> {
     @Override
     public void configure(final Object... keyValues) {
         String key = (String) keyValues[0];
-        Object value = keyValues[1];
+        String value = (String) keyValues[1];
         if (key.equals("PathOpt")) {
-            this.pathOpt = (PathOpt) value;
+            this.pathOpt = PathOpt.valueOf(value);
         } else if (key.equals("ResultOpt")) {
-            this.resultOpt = (ResultOpt) value;
+            this.resultOpt = ResultOpt.valueOf(value);
         } else {
             throw new ExtendGremlinStepException("key " + key + " is invalid");
         }

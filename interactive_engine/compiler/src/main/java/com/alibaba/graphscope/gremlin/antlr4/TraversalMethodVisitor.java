@@ -16,23 +16,24 @@
 
 package com.alibaba.graphscope.gremlin.antlr4;
 
-import com.alibaba.graphscope.common.jna.type.PathOpt;
-import com.alibaba.graphscope.common.jna.type.ResultOpt;
 import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
 import com.alibaba.graphscope.gremlin.plugin.step.ExprStep;
+import com.alibaba.graphscope.gremlin.plugin.step.PathExpandStep;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSBaseVisitor;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
+import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.step.ByModulating;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupGlobalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeGlobalStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.map.GraphStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderGlobalStep;
 import org.apache.tinkerpop.gremlin.structure.Column;
 import org.apache.tinkerpop.gremlin.structure.T;
@@ -147,7 +148,6 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
 
     @Override
     public Traversal visitTraversalMethod_out(GremlinGSParser.TraversalMethod_outContext ctx) {
-        Traversal traversal;
         String[] labels = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
         if (labels != null && labels.length > 0 && isRangeExpression(labels[0])) {
             GraphTraversal nestedRange = GremlinAntlrToJava.getTraversalSupplier().get();
@@ -158,19 +158,12 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
                             Integer.valueOf(ranges[0]),
                             Integer.valueOf(ranges[1]));
             nestedRange.asAdmin().addStep(rangeStep);
-            IrCustomizedTraversal customizedTraversal = (IrCustomizedTraversal) graphTraversal;
+            IrCustomizedTraversal traversal = (IrCustomizedTraversal) graphTraversal;
             labels = Utils.removeStringEle(0, labels);
-            traversal = customizedTraversal.out(nestedRange, labels);
+            return traversal.out(nestedRange, labels);
         } else {
-            traversal = graphTraversal.out(labels);
+            return graphTraversal.out(labels);
         }
-        if (ctx.traversalMethod_with() != null) {
-            List<GremlinGSParser.TraversalMethod_withContext> ctxs = ctx.traversalMethod_with();
-            for (GremlinGSParser.TraversalMethod_withContext ctx1 : ctxs) {
-                traversal = visitTraversalMethod_with(ctx1);
-            }
-        }
-        return traversal;
     }
 
     private boolean isRangeExpression(String label) {
@@ -179,7 +172,6 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
 
     @Override
     public Traversal visitTraversalMethod_in(GremlinGSParser.TraversalMethod_inContext ctx) {
-        Traversal traversal;
         String[] labels = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
         if (labels != null && labels.length > 0 && isRangeExpression(labels[0])) {
             GraphTraversal nestedRange = GremlinAntlrToJava.getTraversalSupplier().get();
@@ -190,24 +182,16 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
                             Integer.valueOf(ranges[0]),
                             Integer.valueOf(ranges[1]));
             nestedRange.asAdmin().addStep(rangeStep);
-            IrCustomizedTraversal customizedTraversal = (IrCustomizedTraversal) graphTraversal;
+            IrCustomizedTraversal traversal = (IrCustomizedTraversal) graphTraversal;
             labels = Utils.removeStringEle(0, labels);
-            traversal = customizedTraversal.in(nestedRange, labels);
+            return traversal.in(nestedRange, labels);
         } else {
-            traversal = graphTraversal.in(labels);
+            return graphTraversal.in(labels);
         }
-        if (ctx.traversalMethod_with() != null) {
-            List<GremlinGSParser.TraversalMethod_withContext> ctxs = ctx.traversalMethod_with();
-            for (GremlinGSParser.TraversalMethod_withContext ctx1 : ctxs) {
-                traversal = visitTraversalMethod_with(ctx1);
-            }
-        }
-        return traversal;
     }
 
     @Override
     public Traversal visitTraversalMethod_both(GremlinGSParser.TraversalMethod_bothContext ctx) {
-        Traversal traversal;
         String[] labels = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
         if (labels != null && labels.length > 0 && isRangeExpression(labels[0])) {
             GraphTraversal nestedRange = GremlinAntlrToJava.getTraversalSupplier().get();
@@ -218,19 +202,12 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
                             Integer.valueOf(ranges[0]),
                             Integer.valueOf(ranges[1]));
             nestedRange.asAdmin().addStep(rangeStep);
-            IrCustomizedTraversal customizedTraversal = (IrCustomizedTraversal) graphTraversal;
+            IrCustomizedTraversal traversal = (IrCustomizedTraversal) graphTraversal;
             labels = Utils.removeStringEle(0, labels);
-            traversal = customizedTraversal.both(nestedRange, labels);
+            return traversal.both(nestedRange, labels);
         } else {
-            traversal = graphTraversal.both(labels);
+            return graphTraversal.both(labels);
         }
-        if (ctx.traversalMethod_with() != null) {
-            List<GremlinGSParser.TraversalMethod_withContext> ctxs = ctx.traversalMethod_with();
-            for (GremlinGSParser.TraversalMethod_withContext ctx1 : ctxs) {
-                traversal = visitTraversalMethod_with(ctx1);
-            }
-        }
-        return traversal;
     }
 
     @Override
@@ -280,6 +257,12 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     @Override
     public Traversal visitTraversalMethod_inV(GremlinGSParser.TraversalMethod_inVContext ctx) {
         return graphTraversal.inV();
+    }
+
+    @Override
+    public Traversal visitTraversalMethod_endV(GremlinGSParser.TraversalMethod_endVContext ctx) {
+        IrCustomizedTraversal traversal = (IrCustomizedTraversal) graphTraversal;
+        return traversal.endV();
     }
 
     @Override
@@ -730,33 +713,24 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     @Override
     public Traversal visitTraversalMethod_coin(
             final GremlinGSParser.TraversalMethod_coinContext ctx) {
+        Step endStep = graphTraversal.asAdmin().getEndStep();
+        if (!(endStep instanceof GraphStep)) {
+            throw new UnsupportedEvalException(
+                    ctx.getClass(), "coin should follow source step, i.e. V().coin(0.2)");
+        }
         return graphTraversal.coin(Double.valueOf(ctx.floatLiteral().getText()));
     }
 
     @Override
     public Traversal visitTraversalMethod_with(GremlinGSParser.TraversalMethod_withContext ctx) {
-        String optName = GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral());
-        GremlinGSParser.WithConfigValueContext configCtx = ctx.withConfigValue();
-        Traversal traversal;
-        if (configCtx.traversalPathOpt() != null) {
-            traversal =
-                    graphTraversal.with(
-                            optName,
-                            TraversalEnumParser.parseTraversalEnumFromContext(
-                                    PathOpt.class, configCtx.traversalPathOpt()));
-        } else if (configCtx.traversalResultOpt() != null) {
-            traversal =
-                    graphTraversal.with(
-                            optName,
-                            TraversalEnumParser.parseTraversalEnumFromContext(
-                                    ResultOpt.class, configCtx.traversalResultOpt()));
-        } else {
+        Step endStep = graphTraversal.asAdmin().getEndStep();
+        if (!(endStep instanceof PathExpandStep)) {
             throw new UnsupportedEvalException(
-                    ctx.getClass(),
-                    "supported pattern is [with('PathOpt', Simple | VertexDuplicates)] or"
-                            + " [with('ResultOpt', EndV | AllV)]");
+                    ctx.getClass(), "with should follow path expand, i.e. out('1..2').with(..)");
         }
-        return traversal;
+        String optKey = GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral(0));
+        String optValue = GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral(1));
+        return graphTraversal.with(optKey, optValue);
     }
 
     private Traversal visitExpr(

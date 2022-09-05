@@ -72,6 +72,7 @@ traversalMethod
     | traversalMethod_where // where()
     | traversalMethod_inV   // inV()
     | traversalMethod_outV  // outV()
+    | traversalMethod_endV  // endV()
     | traversalMethod_otherV  // otherV()
     | traversalMethod_not  // not()
     | traversalMethod_union // union()
@@ -81,6 +82,7 @@ traversalMethod
     | traversalMethod_aggregate_func
     | traversalMethod_hasNot // hasNot()
     | traversalMethod_coin  // coin()
+    | traversalMethod_with  // with()
     ;
 
 traversalSourceSpawnMethod_V
@@ -125,19 +127,19 @@ traversalMethod_hasNot
 // out('str1', ...)
 // out('1..5', 'str1')
 traversalMethod_out
-	: 'out' LPAREN stringLiteralList RPAREN (DOT traversalMethod_with)*
+	: 'out' LPAREN stringLiteralList RPAREN
 	;
 
 // in('str1', ...)
 // in('1..5', 'str1')
 traversalMethod_in
-	: 'in' LPAREN stringLiteralList RPAREN (DOT traversalMethod_with)*
+	: 'in' LPAREN stringLiteralList RPAREN
 	;
 
 // both('str1', ...)
 // both('1..5', 'str1', ...)
 traversalMethod_both
-	: 'both' LPAREN stringLiteralList RPAREN (DOT traversalMethod_with)*
+	: 'both' LPAREN stringLiteralList RPAREN
 	;
 
 // outE('str1', ...), outE().inV()
@@ -155,25 +157,10 @@ traversalMethod_bothE
 	: 'bothE' LPAREN stringLiteralList RPAREN (DOT traversalMethod_otherV)?
 	;
 
-traversalPathOpt
-    : 'Simple'
-    | 'Arbitrary'  // PathOpt
-    ;
-
-traversalResultOpt
-    : 'EndV'
-    | 'AllV'              // ResultOpt
-    ;
-
-withConfigValue
-    : traversalPathOpt
-    | traversalResultOpt
-    ;
-
-// with('PathOpt', Simple)
-// with('ResultOpt', AllV)
+// with('PathOpt', 'Simple' | 'Arbitrary')
+// with('ResultOpt', 'AllV' | 'EndV')
 traversalMethod_with
-    : 'with' LPAREN stringLiteral COMMA withConfigValue RPAREN
+    : 'with' LPAREN stringLiteral COMMA stringLiteral RPAREN
     ;
 
 // outV()
@@ -189,6 +176,11 @@ traversalMethod_inV
 // otherV()
 traversalMethod_otherV
 	: 'otherV' LPAREN RPAREN
+	;
+
+// endV()
+traversalMethod_endV
+	: 'endV' LPAREN RPAREN
 	;
 
 // limit(n)

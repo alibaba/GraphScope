@@ -62,9 +62,7 @@ public class PathExpandStepTest {
     @Test
     public void g_V_path_expand_with_test() {
         Traversal traversal =
-                g.V().out(__.range(1, 2))
-                        .with("PathOpt", PathOpt.Simple)
-                        .with("ResultOpt", ResultOpt.AllV);
+                g.V().out(__.range(1, 2)).with("PathOpt", "Simple").with("ResultOpt", "AllV");
         Step step = traversal.asAdmin().getEndStep();
         PathExpandOp op = (PathExpandOp) StepTransformFactory.PATH_EXPAND_STEP.apply(step);
 
