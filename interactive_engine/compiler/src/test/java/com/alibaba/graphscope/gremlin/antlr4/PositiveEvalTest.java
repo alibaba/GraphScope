@@ -1089,14 +1089,15 @@ public class PositiveEvalTest {
         Assert.assertEquals(g.E().coin(0.5), eval("g.E().coin(0.5)"));
     }
 
+    // g.V().out("1..2", "knows", "created").with("PathOpt", "Arbitrary").with("ResultOpt", "AllV")
     @Test
     public void g_V_path_expand_out_with() {
         Assert.assertEquals(
-                g.V().out(__.range(1, 2), "knows", "person")
+                g.V().out(__.range(1, 2), "knows", "created")
                         .with("PathOpt", "Arbitrary")
                         .with("ResultOpt", "AllV"),
                 eval(
-                        "g.V().out(\"1..2\", \"knows\", \"person\").with(\"PathOpt\","
+                        "g.V().out(\"1..2\", \"knows\", \"created\").with(\"PathOpt\","
                                 + " \"Arbitrary\").with(\"ResultOpt\", \"AllV\")"));
     }
 }

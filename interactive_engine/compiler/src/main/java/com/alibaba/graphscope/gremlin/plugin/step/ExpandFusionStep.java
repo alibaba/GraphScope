@@ -95,4 +95,9 @@ public class ExpandFusionStep<E extends Element> extends VertexStep<E>
                 + expandOpt
                 + '}';
     }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(super.hashCode(), hasContainers, expandOpt);
+    }
 }
