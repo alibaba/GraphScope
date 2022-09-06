@@ -810,7 +810,10 @@ class Session(object):
 
         Note that closing will ignore SIGINT and SIGTERM signal and recover later.
         """
-        with SignalIgnore([signal.SIGINT, signal.SIGTERM]):
+        if threading.currentThread() is threading.main_thread():
+            with SignalIgnore([signal.SIGINT, signal.SIGTERM]):
+                self._close()
+        else:
             self._close()
 
     def _close(self):
