@@ -157,8 +157,9 @@ traversalMethod_bothE
 	: 'bothE' LPAREN stringLiteralList RPAREN (DOT traversalMethod_otherV)?
 	;
 
-// with('PathOpt', 'Simple' | 'Arbitrary')
-// with('ResultOpt', 'AllV' | 'EndV')
+// case-insensitive
+// with('PATH_OPT', 'SIMPLE' | 'ARBITRARY')
+// with('RESULT_OPT', 'ALL_V' | 'END_V')
 traversalMethod_with
     : 'with' LPAREN stringLiteral COMMA stringLiteral RPAREN
     ;

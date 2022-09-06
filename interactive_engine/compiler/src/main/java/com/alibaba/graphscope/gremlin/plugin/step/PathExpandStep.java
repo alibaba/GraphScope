@@ -75,15 +75,50 @@ public class PathExpandStep extends ExpandFusionStep<Vertex> {
 
     @Override
     public void configure(final Object... keyValues) {
-        String key = (String) keyValues[0];
-        String value = (String) keyValues[1];
+        String originalKey = (String) keyValues[0];
+        String originalVal = (String) keyValues[1];
+        String key = toCamelCaseInsensitive(originalKey);
+        String value = toCamelCaseInsensitive(originalVal);
         if (key.equals("PathOpt")) {
-            this.pathOpt = PathOpt.valueOf(value);
+            if (value.equals("Arbitrary") || value.equals("Simple")) {
+                this.pathOpt = PathOpt.valueOf(value);
+            } else {
+                throw new ExtendGremlinStepException(
+                        "value "
+                                + originalVal
+                                + " is invalid, use ARBITRARY or SIMPLE instead (case"
+                                + " insensitive)");
+            }
         } else if (key.equals("ResultOpt")) {
-            this.resultOpt = ResultOpt.valueOf(value);
+            if (value.equals("AllV") || value.equals("EndV")) {
+                this.resultOpt = ResultOpt.valueOf(value);
+            } else {
+                throw new ExtendGremlinStepException(
+                        "value "
+                                + originalVal
+                                + " is invalid, use ALL_V or END_V instead (case insensitive)");
+            }
         } else {
-            throw new ExtendGremlinStepException("key " + key + " is invalid");
+            throw new ExtendGremlinStepException(
+                    "key "
+                            + originalKey
+                            + " is invalid, use PATH_OPT or RESULT_OPT instead (case insensitive)");
         }
+    }
+
+    // convert string of underscore format to camel case in a case-insensitive way
+    private String toCamelCaseInsensitive(String underscore) {
+        String[] splits = underscore.split("_");
+        String camelCase = "";
+        for (int i = 0; i < splits.length; ++i) {
+            String split = splits[i];
+            camelCase +=
+                    split.isEmpty()
+                            ? split
+                            : Character.toUpperCase(split.charAt(0))
+                                    + split.substring(1).toLowerCase();
+        }
+        return camelCase;
     }
 
     @Override

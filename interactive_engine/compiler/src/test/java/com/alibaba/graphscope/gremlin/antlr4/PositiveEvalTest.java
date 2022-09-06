@@ -899,16 +899,16 @@ public class PositiveEvalTest {
                 eval("g.V().has(\"name\", TextP.notContaining(\"marko\"))"));
     }
 
-    // g.V().as("a").select("a").by(out("1..2").with("ResultOpt", AllV).count())
+    // g.V().as("a").select("a").by(out("1..2").with("Result_Opt", AllV).count())
     @Test
     public void g_V_as_select_a_by_out_1_2_endV_count_test() {
         Assert.assertEquals(
                 g.V().as("a")
                         .select("a")
-                        .by(__.out(__.range(1, 2)).with("ResultOpt", "AllV").count()),
+                        .by(__.out(__.range(1, 2)).with("Result_Opt", "All_V").count()),
                 eval(
-                        "g.V().as(\"a\").select(\"a\").by(__.out(\"1..2\").with(\"ResultOpt\","
-                                + " \"AllV\").count())"));
+                        "g.V().as(\"a\").select(\"a\").by(__.out(\"1..2\").with(\"Result_Opt\","
+                                + " \"All_V\").count())"));
     }
 
     @Test
@@ -1089,15 +1089,16 @@ public class PositiveEvalTest {
         Assert.assertEquals(g.E().coin(0.5), eval("g.E().coin(0.5)"));
     }
 
-    // g.V().out("1..2", "knows", "created").with("PathOpt", "Arbitrary").with("ResultOpt", "AllV")
+    // g.V().out("1..2", "knows", "created").with("PATH_OPT", "ARBITRARY").with("RESULT_OPT",
+    // "ALL_V")
     @Test
     public void g_V_path_expand_out_with() {
         Assert.assertEquals(
                 g.V().out(__.range(1, 2), "knows", "created")
-                        .with("PathOpt", "Arbitrary")
-                        .with("ResultOpt", "AllV"),
+                        .with("PATH_OPT", "ARBITRARY")
+                        .with("RESULT_OPT", "ALL_V"),
                 eval(
-                        "g.V().out(\"1..2\", \"knows\", \"created\").with(\"PathOpt\","
-                                + " \"Arbitrary\").with(\"ResultOpt\", \"AllV\")"));
+                        "g.V().out(\"1..2\", \"knows\", \"created\").with(\"PATH_OPT\","
+                                + " \"ARBITRARY\").with(\"RESULT_OPT\", \"ALL_V\")"));
     }
 }
