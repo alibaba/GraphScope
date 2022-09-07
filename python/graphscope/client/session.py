@@ -802,6 +802,14 @@ class Session(object):
                 else:
                     self._disconnected = False
             time.sleep(self._heartbeat_interval_seconds)
+            
+    def connected(self) -> bool:
+        """Check if the session is still connected and available.
+
+        Returns: True or False
+
+        """
+        return not self._disconnected
 
     def close(self):
         """Closes this session.
