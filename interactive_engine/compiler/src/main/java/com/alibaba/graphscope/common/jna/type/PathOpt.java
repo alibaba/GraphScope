@@ -14,12 +14,25 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.gremlin.antlr4;
+package com.alibaba.graphscope.common.jna.type;
 
-import org.apache.tinkerpop.gremlin.process.traversal.P;
+import com.alibaba.graphscope.common.jna.IntEnum;
 
-public class ExprP extends P<String> {
-    public ExprP(String expr) {
-        super(null, expr);
+public enum PathOpt implements IntEnum<PathOpt> {
+    Arbitrary,
+    Simple;
+
+    @Override
+    public int getInt() {
+        return this.ordinal();
+    }
+
+    @Override
+    public PathOpt getEnum(int i) {
+        PathOpt opts[] = values();
+        if (i < opts.length && i >= 0) {
+            return opts[i];
+        }
+        return null;
     }
 }
