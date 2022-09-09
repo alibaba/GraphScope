@@ -47,7 +47,7 @@ where
     fn initialize_job_assembly(&self) -> IRJobAssembly {
         let column_filter_push_down = false;
 
-        #[cfg(column_filter_push_down)]
+        #[cfg(feature = "column_filter_push_down")]
         let column_filter_push_down = true;
 
         create_gs_store(

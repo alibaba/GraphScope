@@ -3,6 +3,7 @@ set -x
 
 MODE=$1
 SKIP=$2
+FEATURE=$3
 
 if [ "$SKIP" = "true" ]; then
     exit 0
@@ -18,9 +19,9 @@ fi
 
 cd assembly;
 if [ "$MODE" = "debug" ]; then
-  ../exec.sh cargo build --workspace
+  ../exec.sh cargo build --workspace --features="$FEATURE"
 elif [ "$MODE" = "release" ]; then
-  ../exec.sh cargo build --workspace --release
+  ../exec.sh cargo build --workspace --release --features="$FEATURE"
 else
   exit 1
 fi
