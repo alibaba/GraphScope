@@ -19,6 +19,8 @@ package com.alibaba.graphscope.common.intermediate.operator;
 import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.jna.type.FfiDirection;
 import com.alibaba.graphscope.common.jna.type.FfiExpandOpt;
+import com.alibaba.graphscope.common.jna.type.PathOpt;
+import com.alibaba.graphscope.common.jna.type.ResultOpt;
 import com.alibaba.graphscope.common.utils.FileUtils;
 
 import org.junit.After;
@@ -36,8 +38,10 @@ public class PathExpandOpTest {
         PathExpandOp op = new PathExpandOp();
         op.setEdgeOpt(new OpArg<>(FfiExpandOpt.Vertex, Function.identity()));
         op.setDirection(new OpArg<>(FfiDirection.Out, Function.identity()));
-        op.setLower(new OpArg(Integer.valueOf(1), Function.identity()));
-        op.setUpper(new OpArg(Integer.valueOf(5), Function.identity()));
+        op.setLower(new OpArg(Integer.valueOf(1)));
+        op.setUpper(new OpArg(Integer.valueOf(5)));
+        op.setPathOpt(PathOpt.Simple);
+        op.setResultOpt(ResultOpt.AllV);
         irPlan = DedupOpTest.getTestIrPlan(op);
         String actual = irPlan.getPlanAsJson();
         Assert.assertEquals(FileUtils.readJsonFromResource("path_expand.json"), actual);

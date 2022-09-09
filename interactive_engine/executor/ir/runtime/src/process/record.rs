@@ -308,24 +308,28 @@ impl<E: Into<Entry>> Iterator for RecordPathExpandIter<E> {
     fn next(&mut self) -> Option<Self::Item> {
         let mut record = self.origin.clone();
         let mut curr_path = self.curr_path.clone();
-        match self.children.next() {
-            Some(elem) => {
-                let graph_obj = elem.into();
-                match graph_obj {
-                    Entry::V(v) => {
-                        curr_path.append(v);
-                        record.append(curr_path, None);
-                        Some(record)
+        loop {
+            match self.children.next() {
+                Some(elem) => {
+                    let graph_obj = elem.into();
+                    match graph_obj {
+                        Entry::V(v) => {
+                            if curr_path.append(v) {
+                                record.append(curr_path, None);
+                                return Some(record);
+                            }
+                        }
+                        Entry::E(e) => {
+                            if curr_path.append(e) {
+                                record.append(curr_path, None);
+                                return Some(record);
+                            }
+                        }
+                        _ => {}
                     }
-                    Entry::E(e) => {
-                        curr_path.append(e);
-                        record.append(curr_path, None);
-                        Some(record)
-                    }
-                    _ => None,
                 }
+                None => return None,
             }
-            None => None,
         }
     }
 }
@@ -479,27 +483,6 @@ impl TryFrom<result_pb::Element> for Entry {
         }
     }
 }
-
-// impl Add for CommonObject {
-//     type Output = CommonObject;
-//
-//     fn add(self, rhs: Self) -> Self::Output {
-//         match (self, rhs) {
-//             (CommonObject::Prop(o1), CommonObject::Prop(o2)) => match (o1, o2) {
-//                 (Object::Primitive(p1), Object::Primitive(p2)) => {
-//                     CommonObject::Prop(Object::Primitive(p1.add(p2)))
-//                 }
-//                 (o1, Object::None) => CommonObject::Prop(o1),
-//                 (Object::None, o2) => CommonObject::Prop(o2),
-//                 _ => CommonObject::Prop(Object::None),
-//             },
-//             (CommonObject::Count(c1), CommonObject::Count(c2)) => CommonObject::Count(c1 + c2),
-//             (o1, CommonObject::None) => o1,
-//             (CommonObject::None, o2) => o2,
-//             _ => CommonObject::None,
-//         }
-//     }
-// }
 
 impl Add for Entry {
     type Output = Entry;
