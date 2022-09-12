@@ -152,7 +152,7 @@ class Monitor:
     prometheus_client.REGISTRY.register(analyticalRequestGauge)
 
     @classmethod
-    def startServer(cls, port=9968, addr="0.0.0.0"):
+    def startServer(cls, port=9968, addr="127.0.0.1"):
         start_http_server(port=port, addr=addr)
 
     @classmethod
@@ -199,7 +199,6 @@ class Monitor:
             ops = dag_def.op
             op_name = cls.__get_op_name(ops)
             cls.analyticalRequestGauge.add_metric([op_name], end_time - start_time)
-            # cls.analyticalRequestGauge.labels(op_name).set(end_time - start_time)
             return res
 
         return runOnAnalyticalEngineWarp
