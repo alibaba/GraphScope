@@ -23,6 +23,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.Compare;
 import org.apache.tinkerpop.gremlin.process.traversal.Contains;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.step.HasContainerHolder;
+import org.apache.tinkerpop.gremlin.process.traversal.step.filter.CoinStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.GraphStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 import org.apache.tinkerpop.gremlin.process.traversal.util.AndP;
@@ -30,16 +31,15 @@ import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 // fuse global ids and labels with the scan operator
 public class ScanFusionStep<S, E extends Element> extends GraphStep<S, E>
         implements HasContainerHolder, AutoCloseable {
     private final List<HasContainer> hasContainers = new ArrayList<>();
     private final List<String> graphLabels = new ArrayList<>();
+    // fuse with coin
+    private CoinStep coinStep = null;
 
     public ScanFusionStep(final GraphStep<S, E> originalGraphStep) {
         super(
@@ -134,5 +134,13 @@ public class ScanFusionStep<S, E extends Element> extends GraphStep<S, E>
             if (container.getKey().equals(key)) return container;
         }
         return null;
+    }
+
+    public CoinStep getCoinStep() {
+        return coinStep;
+    }
+
+    public void setCoinStep(CoinStep coinStep) {
+        this.coinStep = coinStep;
     }
 }

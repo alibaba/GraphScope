@@ -14,7 +14,7 @@
 
 use std::sync::Arc;
 
-use crate::db::api::condition::Condition;
+use crate::api::Condition;
 use crate::db::api::multi_version_graph::MultiVersionGraph;
 use crate::db::api::partition_graph::PartitionGraph;
 use crate::db::api::partition_snapshot::PartitionSnapshot;

@@ -27,6 +27,7 @@ import com.alibaba.graphscope.common.jna.type.FfiAlias;
 import com.alibaba.graphscope.common.jna.type.FfiJoinKind;
 import com.alibaba.graphscope.common.jna.type.FfiVariable;
 import com.alibaba.graphscope.gremlin.antlr4.__;
+import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 import com.alibaba.graphscope.gremlin.transform.TraversalParentTransformFactory;
@@ -49,6 +50,7 @@ public class GroupStepTest {
     private GraphTraversalSource g = graph.traversal(IrCustomizedTraversalSource.class);
 
     private List<InterOpBase> getApplyWithGroup(Traversal traversal) {
+        IrStandardOpProcessor.applyStrategies(traversal);
         TraversalParent parent = (TraversalParent) traversal.asAdmin().getEndStep();
         return TraversalParentTransformFactory.GROUP_BY_STEP.apply(parent);
     }
@@ -285,7 +287,7 @@ public class GroupStepTest {
         Assert.assertEquals(FfiJoinKind.Inner, applyOp.getJoinKind().get().applyArg());
         InterOpCollection subOps =
                 (InterOpCollection) applyOp.getSubOpCollection().get().applyArg();
-        Assert.assertEquals(2, subOps.unmodifiableCollection().size());
+        Assert.assertEquals(1, subOps.unmodifiableCollection().size());
         Assert.assertEquals(
                 ArgUtils.asAlias("~keys_1_0", false), applyOp.getAlias().get().applyArg());
 
@@ -490,14 +492,14 @@ public class GroupStepTest {
         Assert.assertEquals(FfiJoinKind.Inner, applyOp1.getJoinKind().get().applyArg());
         InterOpCollection subOps =
                 (InterOpCollection) applyOp1.getSubOpCollection().get().applyArg();
-        Assert.assertEquals(2, subOps.unmodifiableCollection().size());
+        Assert.assertEquals(1, subOps.unmodifiableCollection().size());
         Assert.assertEquals(
                 ArgUtils.asAlias("~keys_1_0", false), applyOp1.getAlias().get().applyArg());
 
         ApplyOp applyOp2 = (ApplyOp) ops.get(1);
         Assert.assertEquals(FfiJoinKind.Inner, applyOp2.getJoinKind().get().applyArg());
         subOps = (InterOpCollection) applyOp2.getSubOpCollection().get().applyArg();
-        Assert.assertEquals(2, subOps.unmodifiableCollection().size());
+        Assert.assertEquals(1, subOps.unmodifiableCollection().size());
         Assert.assertEquals(
                 ArgUtils.asAlias("~keys_1_1", false), applyOp2.getAlias().get().applyArg());
 

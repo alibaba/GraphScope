@@ -56,7 +56,7 @@ run:
 	  com.alibaba.graphscope.gremlin.service.GraphServiceMain
 
 # start rpc server
-# make run graph.schema:=../core/resource/ldbc_schema.json 
+# make run graph.schema:=../executor/ir/core/resource/ldbc_schema.json 
 ldbc_test:
 	mvn test -Dtest=com.alibaba.graphscope.integration.ldbc.IrLdbcTest $(OSFLAG)
 

@@ -81,6 +81,8 @@ traversalMethod
     | traversalMethod_bothV // bothV()
     | traversalMethod_aggregate_func
     | traversalMethod_hasNot // hasNot()
+    | traversalMethod_coin  // coin()
+    | traversalMethod_with  // with()
     ;
 
 traversalSourceSpawnMethod_V
@@ -154,6 +156,13 @@ traversalMethod_inE
 traversalMethod_bothE
 	: 'bothE' LPAREN stringLiteralList RPAREN (DOT traversalMethod_otherV)?
 	;
+
+// case-insensitive
+// with('PATH_OPT', 'SIMPLE' | 'ARBITRARY')
+// with('RESULT_OPT', 'ALL_V' | 'END_V')
+traversalMethod_with
+    : 'with' LPAREN stringLiteral COMMA stringLiteral RPAREN
+    ;
 
 // outV()
 traversalMethod_outV
@@ -415,6 +424,10 @@ traversalMethod_not
 traversalMethod_union
     : 'union' LPAREN nestedTraversalExpr RPAREN
     ;
+
+traversalMethod_coin
+	: 'coin' LPAREN floatLiteral RPAREN
+	;
 
 nestedTraversalExpr
     : nestedTraversal (COMMA nestedTraversal)*

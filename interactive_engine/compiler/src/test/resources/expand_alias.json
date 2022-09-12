@@ -12,14 +12,15 @@
               "is_all_columns": false,
               "limit": null,
               "predicate": null,
+              "sample_ratio": 1.0,
               "extra": {}
             },
-            "is_edge": true,
             "alias": {
               "item": {
                 "Id": 0
               }
-            }
+            },
+            "expand_opt": 1
           }
         }
       },

@@ -82,9 +82,8 @@ impl TryFrom<algebra_pb::OrderBy> for RecordCompare {
 #[cfg(test)]
 mod tests {
     use ahash::HashMap;
-
     use dyn_type::Object;
-    use graph_proxy::apis::{Details, DynDetails, Element, GraphElement, Vertex};
+    use graph_proxy::apis::{Details, DynDetails, GraphElement, Vertex};
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
     use ir_common::NameOrId;
@@ -93,7 +92,9 @@ mod tests {
     use pegasus::JobConf;
 
     use crate::process::operator::sort::CompareFunctionGen;
-    use crate::process::operator::tests::{init_source, init_source_with_tag, to_var_pb, TAG_A};
+    use crate::process::operator::tests::{
+        init_source, init_source_with_tag, to_var_pb, PERSON_LABEL, TAG_A,
+    };
     use crate::process::record::Record;
 
     fn sort_test(source: Vec<Record>, sort_opr: pb::OrderBy) -> ResultStream<Record> {
@@ -190,7 +191,7 @@ mod tests {
             vec![("id".into(), object!(3)), ("age".into(), object!(20)), ("name".into(), object!("marko"))]
                 .into_iter()
                 .collect();
-        let v3 = Vertex::new(1, Some("person".into()), DynDetails::new(map3));
+        let v3 = Vertex::new(1, Some(PERSON_LABEL), DynDetails::new(map3));
         let mut source = init_source();
         source.push(Record::new(v3, None));
 

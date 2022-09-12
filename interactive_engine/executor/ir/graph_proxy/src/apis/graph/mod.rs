@@ -22,7 +22,7 @@ use dyn_type::Object;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common as common_pb;
-use ir_common::{NameOrId, OneOrMany};
+use ir_common::{LabelId, NameOrId, OneOrMany};
 use pegasus::codec::{ReadExt, WriteExt};
 
 use crate::utils::expr::eval_pred::PEvaluator;
@@ -66,11 +66,12 @@ impl From<algebra_pb::edge_expand::Direction> for Direction {
 
 #[derive(Default, Debug)]
 pub struct QueryParams {
-    pub labels: Vec<NameOrId>,
+    pub labels: Vec<LabelId>,
     pub limit: Option<usize>,
     pub columns: Option<Vec<NameOrId>>,
     pub partitions: Option<Vec<u64>>,
     pub filter: Option<Arc<PEvaluator>>,
+    pub sample_ratio: Option<f64>,
     pub extra_params: Option<HashMap<String, String>>,
 }
 
@@ -83,6 +84,7 @@ impl TryFrom<Option<algebra_pb::QueryParams>> for QueryParams {
                 .with_labels(query_params_pb.tables)?
                 .with_filter(query_params_pb.predicate)?
                 .with_limit(query_params_pb.limit)?
+                .with_sample_ratio(query_params_pb.sample_ratio)?
                 .with_extra_params(query_params_pb.extra)?;
             if query_params_pb.is_all_columns {
                 query_param.with_all_columns()
@@ -119,6 +121,17 @@ impl QueryParams {
             }
         }
         Ok(self)
+    }
+
+    fn with_sample_ratio(mut self, sample_ratio: f64) -> Result<Self, ParsePbError> {
+        if sample_ratio <= 0.0 || sample_ratio > 1.0 {
+            Err(ParsePbError::ParseError(format!("sample ratio must be between 0 and 1, {}", sample_ratio)))
+        } else if sample_ratio == 1.0 {
+            Ok(self)
+        } else {
+            self.sample_ratio = Some(sample_ratio);
+            Ok(self)
+        }
     }
 
     fn with_all_columns(mut self) -> Result<Self, ParsePbError> {

@@ -76,7 +76,6 @@ impl KeyFunctionGen for algebra_pb::Dedup {
 #[cfg(test)]
 mod tests {
     use ahash::HashMap;
-
     use dyn_type::Object;
     use graph_proxy::apis::{DynDetails, GraphElement, Vertex, ID};
     use ir_common::generated::algebra as pb;
@@ -86,6 +85,7 @@ mod tests {
     use pegasus::JobConf;
 
     use crate::process::operator::keyed::KeyFunctionGen;
+    use crate::process::operator::tests::PERSON_LABEL;
     use crate::process::record::Record;
 
     fn source_gen() -> Box<dyn Iterator<Item = Record> + Send> {
@@ -96,9 +96,9 @@ mod tests {
             .into_iter()
             .collect();
 
-        let v1 = Vertex::new(1, Some("person".into()), DynDetails::new(p1));
-        let v2 = Vertex::new(1, Some("person".into()), DynDetails::new(p2.clone()));
-        let v3 = Vertex::new(3, Some("person".into()), DynDetails::new(p2));
+        let v1 = Vertex::new(1, Some(PERSON_LABEL), DynDetails::new(p1));
+        let v2 = Vertex::new(1, Some(PERSON_LABEL), DynDetails::new(p2.clone()));
+        let v3 = Vertex::new(3, Some(PERSON_LABEL), DynDetails::new(p2));
         let r1 = Record::new(v1, None);
         let r2 = Record::new(v2, None);
         let r3 = Record::new(v3, None);

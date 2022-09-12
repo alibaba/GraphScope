@@ -128,14 +128,13 @@ public class IrPlan implements Closeable {
                             baseOp.getClass(), "direction", "not present");
                 }
                 FfiDirection ffiDirection = (FfiDirection) direction.get().applyArg();
-                Optional<OpArg> edgeOpt = op.getIsEdge();
+                Optional<OpArg> edgeOpt = op.getExpandOpt();
                 if (!edgeOpt.isPresent()) {
                     throw new InterOpIllegalArgException(
                             baseOp.getClass(), "edgeOpt", "not present");
                 }
-                Boolean isEdge = (Boolean) edgeOpt.get().applyArg();
-                Pointer expand = irCoreLib.initEdgexpdOperator(isEdge, ffiDirection);
-
+                FfiExpandOpt expandOpt = (FfiExpandOpt) edgeOpt.get().applyArg();
+                Pointer expand = irCoreLib.initEdgexpdOperator(expandOpt, ffiDirection);
                 // set params
                 Optional<QueryParams> paramsOpt = op.getParams();
                 if (paramsOpt.isPresent()) {
@@ -146,7 +145,6 @@ public class IrPlan implements Closeable {
                                 baseOp.getClass(), "params", "setEdgexpdParams returns " + e1.msg);
                     }
                 }
-
                 Optional<OpArg> aliasOpt = baseOp.getAlias();
                 if (aliasOpt.isPresent() && ClassUtils.equalClass(baseOp, ExpandOp.class)) {
                     FfiAlias.ByValue alias = (FfiAlias.ByValue) aliasOpt.get().applyArg();
@@ -357,7 +355,9 @@ public class IrPlan implements Closeable {
 
                 Pointer expand = EXPAND_OP.apply(baseOp);
                 // todo: make isWholePath configurable
-                Pointer pathExpand = irCoreLib.initPathxpdOperator(expand, false);
+                Pointer pathExpand =
+                        irCoreLib.initPathxpdOperator(
+                                expand, pathOp.getPathOpt(), pathOp.getResultOpt());
                 irCoreLib.setPathxpdHops(pathExpand, lower, upper);
 
                 Optional<OpArg> aliasOpt = baseOp.getAlias();
@@ -568,6 +568,16 @@ public class IrPlan implements Closeable {
                             InterOpBase.class,
                             "setIsAll",
                             "setParamsIsAllColumns returns " + error.msg);
+                }
+            }
+            Optional<Double> sampleRatioOpt = params.getSampleRatioOpt();
+            if (sampleRatioOpt.isPresent()) {
+                FfiResult error = irCoreLib.setParamsSampleRatio(ptrParams, sampleRatioOpt.get());
+                if (error.code != ResultCode.Success) {
+                    throw new InterOpIllegalArgException(
+                            InterOpBase.class,
+                            "setIsAll",
+                            "setParamsSampleRatio returns " + error.msg);
                 }
             }
             return ptrParams;

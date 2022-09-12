@@ -60,7 +60,7 @@ public interface IrCoreLibrary extends Library {
 
     FfiResult.ByValue setScanAlias(Pointer scan, FfiAlias.ByValue alias);
 
-    Pointer initEdgexpdOperator(boolean isEdge, FfiDirection direction);
+    Pointer initEdgexpdOperator(FfiExpandOpt expandOpt, FfiDirection direction);
 
     FfiResult.ByValue appendEdgexpdOperator(
             Pointer plan, Pointer edgeXpd, int parent, IntByReference oprIdx);
@@ -150,7 +150,7 @@ public interface IrCoreLibrary extends Library {
     FfiResult.ByValue appendApplyOperator(
             Pointer plan, Pointer apply, int parent, IntByReference oprIdx);
 
-    Pointer initPathxpdOperator(Pointer expand, boolean isWholePath);
+    Pointer initPathxpdOperator(Pointer expand, PathOpt pathOpt, ResultOpt resultOpt);
 
     FfiResult.ByValue setPathxpdAlias(Pointer pathXpd, FfiAlias.ByValue alias);
 
@@ -195,6 +195,8 @@ public interface IrCoreLibrary extends Library {
     FfiResult.ByValue setParamsPredicate(Pointer params, String predicate);
 
     FfiResult.ByValue setParamsIsAllColumns(Pointer params);
+
+    FfiResult.ByValue setParamsSampleRatio(Pointer params, double sampleRatio);
 
     FfiResult.ByValue getKeyName(int keyId, FfiKeyType keyType);
 

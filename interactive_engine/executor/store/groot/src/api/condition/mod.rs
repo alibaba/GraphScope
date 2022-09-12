@@ -13,18 +13,33 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use super::property::*;
-use crate::schema::prelude::*;
+mod operand;
+pub mod predicate;
+#[cfg(test)]
+mod test;
+pub use operand::Operand;
+pub use predicate::CmpOperator;
+pub use predicate::PredCondition;
 
-#[derive(Debug, Clone)]
+use super::filter::ElemFilter;
+use super::{Edge, Vertex};
+use crate::GraphResult;
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum Condition {
     And(AndCondition),
     Or(OrCondition),
     Not(NotCondition),
-    Cmp(CmpCondition),
+    Pred(PredCondition),
 }
 
-#[derive(Debug, Clone)]
+impl Condition {
+    pub fn new(pred: PredCondition) -> Self {
+        Condition::Pred(pred)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct AndCondition {
     pub sub_conditions: Vec<Box<Condition>>,
 }
@@ -39,7 +54,7 @@ impl AndCondition {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct OrCondition {
     sub_conditions: Vec<Box<Condition>>,
 }
@@ -54,7 +69,8 @@ impl OrCondition {
     }
 }
 
-#[derive(Debug, Clone)]
+#[allow(dead_code)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct NotCondition {
     sub_condition: Box<Condition>,
 }
@@ -65,26 +81,60 @@ impl NotCondition {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct CmpCondition {
-    pub key: PropId,
-    pub op: CmpOp,
-    pub value: Property,
-}
-
-impl CmpCondition {
-    pub fn new(key: PropId, op: CmpOp, value: Property) -> Self {
-        CmpCondition { key, op, value }
+impl ElemFilter for Condition {
+    fn filter_vertex<V: Vertex>(&self, vertex: &V) -> GraphResult<bool> {
+        match self {
+            Condition::And(AndCondition { sub_conditions }) => {
+                for sub_cond in sub_conditions.iter() {
+                    if !sub_cond.filter_vertex(vertex)? {
+                        return Ok(false);
+                    }
+                }
+                return Ok(true);
+            }
+            Condition::Or(OrCondition { sub_conditions }) => {
+                for sub_cond in sub_conditions.iter() {
+                    if sub_cond.filter_vertex(vertex)? {
+                        return Ok(true);
+                    }
+                }
+                return Ok(false);
+            }
+            Condition::Not(NotCondition { sub_condition }) => {
+                return Ok(!sub_condition.filter_vertex(vertex)?);
+            }
+            Condition::Pred(pred) => {
+                return pred.filter_vertex(vertex);
+            }
+        }
     }
-}
 
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub enum CmpOp {
-    LessThan,
-    LessEqual,
-    GreaterThan,
-    GreaterEqual,
-    Equal,
+    fn filter_edge<E: Edge>(&self, edge: &E) -> GraphResult<bool> {
+        match self {
+            Condition::And(AndCondition { sub_conditions }) => {
+                for sub_cond in sub_conditions.iter() {
+                    if !sub_cond.filter_edge(edge)? {
+                        return Ok(false);
+                    }
+                }
+                return Ok(true);
+            }
+            Condition::Or(OrCondition { sub_conditions }) => {
+                for sub_cond in sub_conditions.iter() {
+                    if sub_cond.filter_edge(edge)? {
+                        return Ok(true);
+                    }
+                }
+                return Ok(false);
+            }
+            Condition::Not(NotCondition { sub_condition }) => {
+                return Ok(!sub_condition.filter_edge(edge)?);
+            }
+            Condition::Pred(pred) => {
+                return pred.filter_edge(edge);
+            }
+        }
+    }
 }
 
 pub struct ConditionBuilder {
@@ -143,18 +193,4 @@ impl ConditionBuilder {
     pub fn build(&mut self) -> Option<Condition> {
         self.condition.take()
     }
-}
-
-#[test]
-fn test_condition() {
-    let mut builder = ConditionBuilder::new();
-
-    // (prop#1 >= 2 and prop#1 <= 10) or prop#2 == "xxx"
-    let condition = builder
-        .and(Condition::Cmp(CmpCondition::new(1, CmpOp::GreaterEqual, Property::Int(2))))
-        .and(Condition::Cmp(CmpCondition::new(1, CmpOp::LessEqual, Property::Int(10))))
-        .or(Condition::Cmp(CmpCondition::new(2, CmpOp::Equal, Property::String("xxx".to_owned()))))
-        .build()
-        .unwrap();
-    println!("{:?}", condition);
 }

@@ -9,7 +9,6 @@ use crate::db::proto::model::{EdgeIdPb, EdgeKindPb};
 
 #[macro_use]
 pub mod error;
-pub mod condition;
 mod config;
 pub mod multi_version_graph;
 pub mod partition_graph;

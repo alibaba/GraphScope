@@ -23,15 +23,13 @@ import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.intermediate.MatchSentence;
 import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.intermediate.process.SinkGraph;
-import com.alibaba.graphscope.common.intermediate.strategy.ElementFusionStrategy;
 import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
+import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.antlr4.GremlinAntlrToJava;
-import com.alibaba.graphscope.gremlin.plugin.step.ExprStep;
+import com.alibaba.graphscope.gremlin.plugin.step.*;
 import com.alibaba.graphscope.gremlin.plugin.step.GroupCountStep;
 import com.alibaba.graphscope.gremlin.plugin.step.GroupStep;
-import com.alibaba.graphscope.gremlin.plugin.step.PathExpandStep;
-import com.alibaba.graphscope.gremlin.plugin.step.ScanFusionStep;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasArg;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasManager;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasPrefixType;
@@ -82,7 +80,6 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
 
             op.setScanOpt(new OpArg<>(scanFusionStep, SCAN_OPT));
 
-            // set global ids
             if (scanFusionStep.getIds() != null && scanFusionStep.getIds().length > 0) {
                 op.setIds(new OpArg(scanFusionStep, CONST_IDS_FROM_STEP));
             }
@@ -93,10 +90,17 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             for (String label : labels) {
                 params.addTable(ArgUtils.asNameOrId(label));
             }
+            // set predicate
             List<HasContainer> containers = scanFusionStep.getHasContainers();
             if (!containers.isEmpty()) {
                 String predicate = PredicateExprTransformFactory.HAS_STEP.apply(scanFusionStep);
                 params.setPredicate(predicate);
+            }
+            // set sampleRatio if present
+            CoinStep coinStep = scanFusionStep.getCoinStep();
+            if (coinStep != null) {
+                double probability = Utils.getFieldValue(CoinStep.class, coinStep, "probability");
+                params.setSampleRatio(probability);
             }
             op.setParams(params);
 
@@ -107,7 +111,6 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         @Override
         public InterOpBase apply(Step step) {
             SelectOp op = new SelectOp();
-            op.setType(SelectOp.FilterType.HAS);
             List containers = ((HasStep) step).getHasContainers();
             // add corner judgement
             if (!containers.isEmpty()) {
@@ -124,13 +127,14 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             return op;
         }
     },
-    VERTEX_STEP {
+    EXPAND_FUSION_STEP {
         @Override
         public InterOpBase apply(Step step) {
             ExpandOp op = new ExpandOp();
+            ExpandFusionStep expandFusionStep = (ExpandFusionStep) step;
             op.setDirection(
                     new OpArg<>(
-                            (VertexStep) step,
+                            expandFusionStep,
                             (VertexStep s1) -> {
                                 Direction direction = s1.getDirection();
                                 switch (direction) {
@@ -148,21 +152,28 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                             }));
             op.setEdgeOpt(
                     new OpArg<>(
-                            (VertexStep) step,
-                            (VertexStep s1) -> {
-                                if (s1.returnsEdge()) {
-                                    return Boolean.valueOf(true);
+                            expandFusionStep,
+                            (ExpandFusionStep s1) -> {
+                                if (s1.getExpandOpt() == FfiExpandOpt.Edge) {
+                                    return FfiExpandOpt.Edge;
+                                } else if (s1.getExpandOpt() == FfiExpandOpt.Vertex) {
+                                    return FfiExpandOpt.Vertex;
                                 } else {
-                                    return Boolean.valueOf(false);
+                                    return FfiExpandOpt.Degree;
                                 }
                             }));
 
             QueryParams params = new QueryParams();
-            String[] labels = ((VertexStep) step).getEdgeLabels();
+            String[] labels = expandFusionStep.getEdgeLabels();
             if (labels.length > 0) {
                 for (String label : labels) {
                     params.addTable(ArgUtils.asNameOrId(label));
                 }
+            }
+            List<HasContainer> containers = expandFusionStep.getHasContainers();
+            if (!containers.isEmpty()) {
+                String predicate = PredicateExprTransformFactory.HAS_STEP.apply(expandFusionStep);
+                params.setPredicate(predicate);
             }
             op.setParams(params);
             return op;
@@ -223,10 +234,12 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
     PATH_EXPAND_STEP {
         @Override
         public InterOpBase apply(Step step) {
-            PathExpandOp op = new PathExpandOp((ExpandOp) VERTEX_STEP.apply(step));
+            PathExpandOp op = new PathExpandOp((ExpandOp) EXPAND_FUSION_STEP.apply(step));
             PathExpandStep pathStep = (PathExpandStep) step;
             op.setLower(new OpArg(Integer.valueOf(pathStep.getLower())));
             op.setUpper(new OpArg(Integer.valueOf(pathStep.getUpper())));
+            op.setPathOpt(pathStep.getPathOpt());
+            op.setResultOpt(pathStep.getResultOpt());
             return op;
         }
     },
@@ -406,8 +419,8 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         @Override
         public InterOpBase apply(Step step) {
             MatchStep matchStep = (MatchStep) step;
-            List<MatchSentence> sentences = getSentences(matchStep);
             MatchOp matchOp = new MatchOp();
+            List<MatchSentence> sentences = getSentences(matchStep);
             matchOp.setSentences(new OpArg(sentences));
             return matchOp;
         }
@@ -513,8 +526,6 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                                 });
                         InterOpCollection ops =
                                 (new InterOpCollectionBuilder(binderTraversal)).build();
-                        // apply fusion strategy
-                        ElementFusionStrategy.INSTANCE.apply(ops);
                         sentences.add(
                                 new MatchSentence(startTag.get(), endTag.get(), ops, joinKind));
                     });

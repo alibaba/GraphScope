@@ -841,6 +841,7 @@ mod params {
             is_all_columns: false,
             limit: None,
             predicate: None,
+            sample_ratio: 1.0,
             extra: HashMap::new(),
         });
 
@@ -898,6 +899,15 @@ mod params {
     pub extern "C" fn set_params_is_all_columns(ptr_params: *const c_void) -> FfiResult {
         let mut params = unsafe { Box::from_raw(ptr_params as *mut pb::QueryParams) };
         params.is_all_columns = true;
+        std::mem::forget(params);
+
+        FfiResult::success()
+    }
+
+    #[no_mangle]
+    pub extern "C" fn set_params_sample_ratio(ptr_params: *const c_void, sample_ratio: f64) -> FfiResult {
+        let mut params = unsafe { Box::from_raw(ptr_params as *mut pb::QueryParams) };
+        params.sample_ratio = sample_ratio;
         std::mem::forget(params);
 
         FfiResult::success()
@@ -1450,6 +1460,7 @@ mod scan {
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
+                sample_ratio: 1.0,
                 extra: HashMap::new(),
             }),
             idx_predicate: None,
@@ -1706,9 +1717,19 @@ mod graph {
         Both = 2,
     }
 
+    #[allow(dead_code)]
+    #[derive(Copy, Clone)]
+    #[repr(i32)]
+    pub enum FfiExpandOpt {
+        Vertex = 0,
+        Edge = 1,
+        Degree = 2,
+    }
+
     /// To initialize an edge expand operator from an expand base
+    // TODO: provide init with ExpandOption
     #[no_mangle]
-    pub extern "C" fn init_edgexpd_operator(is_edge: bool, dir: FfiDirection) -> *const c_void {
+    pub extern "C" fn init_edgexpd_operator(expand_opt: FfiExpandOpt, dir: FfiDirection) -> *const c_void {
         let edgexpd = Box::new(pb::EdgeExpand {
             v_tag: None,
             direction: unsafe { std::mem::transmute::<FfiDirection, i32>(dir) },
@@ -1718,10 +1739,11 @@ mod graph {
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
+                sample_ratio: 1.0,
                 extra: HashMap::new(),
             }),
-            is_edge,
             alias: None,
+            expand_opt: unsafe { std::mem::transmute::<FfiExpandOpt, i32>(expand_opt) },
         });
 
         Box::into_raw(edgexpd) as *const c_void
@@ -1791,6 +1813,7 @@ mod graph {
                 is_all_columns: false,
                 limit: None,
                 predicate: None,
+                sample_ratio: 1.0,
                 extra: HashMap::new(),
             }),
             alias: None,
@@ -1839,18 +1862,33 @@ mod graph {
         destroy_ptr::<pb::GetV>(ptr)
     }
 
+    #[allow(dead_code)]
+    #[repr(i32)]
+    pub enum PathOpt {
+        Arbitrary = 0,
+        Simple = 1,
+    }
+
+    #[allow(dead_code)]
+    #[repr(i32)]
+    pub enum PathResultOpt {
+        EndV = 0,
+        AllV = 1,
+    }
+
     /// To initialize an path expand operator from an expand base
     #[no_mangle]
     pub extern "C" fn init_pathxpd_operator(
-        ptr_expand: *const c_void, is_whole_path: bool,
+        ptr_expand: *const c_void, path_opt: PathOpt, result_opt: PathResultOpt,
     ) -> *const c_void {
         let expand = unsafe { Box::from_raw(ptr_expand as *mut pb::EdgeExpand) };
         let edgexpd = Box::new(pb::PathExpand {
             base: Some(expand.as_ref().clone()),
             start_tag: None,
-            is_whole_path,
             alias: None,
             hop_range: None,
+            path_opt: unsafe { std::mem::transmute::<PathOpt, i32>(path_opt) },
+            result_opt: unsafe { std::mem::transmute::<PathResultOpt, i32>(result_opt) },
         });
 
         Box::into_raw(edgexpd) as *const c_void

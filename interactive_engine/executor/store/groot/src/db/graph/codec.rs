@@ -25,6 +25,7 @@ pub type CodecVersion = i32;
 /// | var len prop1 | var len prop2 .... | ... | var len propM |
 /// +---------------+--------------------+-----+---------------+
 /// ↑ this is `var_len_prop_start_offset`
+#[allow(dead_code)]
 #[derive(Clone, Debug)]
 pub struct Codec {
     version: CodecVersion,
@@ -34,7 +35,6 @@ pub struct Codec {
     // internal id to idx
     props: Vec<PropInfo>,
     offsets: Vec<usize>,
-
     fixed_len_prop_count: usize,
     var_len_prop_start_offset: usize,
     null_bytes: Vec<u8>,
@@ -124,6 +124,12 @@ impl Decoder {
 
     pub fn decode_properties<'a>(&self, data: &'a [u8]) -> IterDecoder<'a> {
         IterDecoder::new(self.clone(), data)
+    }
+
+    pub fn decode_spec_properties<'a>(
+        &self, data: &'a [u8], prop_ids: Vec<PropertyId>,
+    ) -> SpecIterDecoder<'a> {
+        SpecIterDecoder::new(self.clone(), data, prop_ids)
     }
 
     pub fn decode_all<'a>(&self, data: &'a [u8]) -> HashMap<PropertyId, ValueRef<'a>> {
@@ -258,6 +264,31 @@ impl<'a> IterDecoder<'a> {
             .decoder
             .decode_property_at(&self.reader, idx)?;
         Some((prop_id, v))
+    }
+}
+
+pub struct SpecIterDecoder<'a> {
+    decoder: Decoder,
+    data: &'a [u8],
+    prop_ids: Vec<PropertyId>,
+    cur: usize,
+}
+
+impl<'a> SpecIterDecoder<'a> {
+    pub fn new(decoder: Decoder, data: &'a [u8], props: Vec<PropertyId>) -> Self {
+        SpecIterDecoder { decoder, data, prop_ids: props, cur: 0 }
+    }
+
+    pub fn next(&mut self) -> Option<(PropertyId, ValueRef<'a>)> {
+        while self.cur < self.prop_ids.len() {
+            let prop_id = self.prop_ids[self.cur];
+            let ret = self.decoder.decode_property(self.data, prop_id);
+            self.cur += 1;
+            if ret.is_some() {
+                return ret.map(|value| (prop_id, value));
+            }
+        }
+        None
     }
 }
 

@@ -688,6 +688,12 @@ impl PlanMeta {
         }
     }
 
+    pub fn set_max_tag_id(&mut self, tag_id: TagId) {
+        if self.max_tag_id < tag_id {
+            self.max_tag_id = tag_id;
+        }
+    }
+
     pub fn get_tag_id_mappings(&self) -> &BTreeMap<String, TagId> {
         &self.tag_ids
     }

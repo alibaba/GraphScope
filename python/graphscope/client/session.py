@@ -803,6 +803,14 @@ class Session(object):
                     self._disconnected = False
             time.sleep(self._heartbeat_interval_seconds)
 
+    def connected(self) -> bool:
+        """Check if the session is still connected and available.
+
+        Returns: True or False
+
+        """
+        return not self._disconnected
+
     def close(self):
         """Closes this session.
 
@@ -810,7 +818,10 @@ class Session(object):
 
         Note that closing will ignore SIGINT and SIGTERM signal and recover later.
         """
-        with SignalIgnore([signal.SIGINT, signal.SIGTERM]):
+        if threading.currentThread() is threading.main_thread():
+            with SignalIgnore([signal.SIGINT, signal.SIGTERM]):
+                self._close()
+        else:
             self._close()
 
     def _close(self):

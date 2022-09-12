@@ -24,6 +24,7 @@ import com.alibaba.graphscope.common.intermediate.operator.ProjectOp;
 import com.alibaba.graphscope.common.jna.type.FfiJoinKind;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
 import com.alibaba.graphscope.gremlin.antlr4.__;
+import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
 import com.alibaba.graphscope.gremlin.transform.TraversalParentTransformFactory;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -42,11 +43,13 @@ public class SelectStepTest {
     private GraphTraversalSource g = graph.traversal();
 
     private List<InterOpBase> getApplyWithProject(Traversal traversal) {
+        IrStandardOpProcessor.applyStrategies(traversal);
         TraversalParent parent = (TraversalParent) traversal.asAdmin().getEndStep();
         return TraversalParentTransformFactory.PROJECT_BY_STEP.apply(parent);
     }
 
     private InterOpBase generateInterOpFromBuilder(Traversal traversal, int idx) {
+        IrStandardOpProcessor.applyStrategies(traversal);
         return (new InterOpCollectionBuilder(traversal)).build().unmodifiableCollection().get(idx);
     }
 
@@ -143,7 +146,7 @@ public class SelectStepTest {
         Assert.assertEquals(FfiJoinKind.Inner, applyOp.getJoinKind().get().applyArg());
         InterOpCollection subOps =
                 (InterOpCollection) applyOp.getSubOpCollection().get().applyArg();
-        Assert.assertEquals(3, subOps.unmodifiableCollection().size());
+        Assert.assertEquals(2, subOps.unmodifiableCollection().size());
         Assert.assertEquals(ArgUtils.asAlias("a_1_0", false), applyOp.getAlias().get().applyArg());
 
         ProjectOp projectOp = (ProjectOp) ops.get(1);
@@ -169,7 +172,7 @@ public class SelectStepTest {
         Assert.assertEquals(FfiJoinKind.Inner, applyOp.getJoinKind().get().applyArg());
         InterOpCollection subOps =
                 (InterOpCollection) applyOp.getSubOpCollection().get().applyArg();
-        Assert.assertEquals(3, subOps.unmodifiableCollection().size());
+        Assert.assertEquals(2, subOps.unmodifiableCollection().size());
         Assert.assertEquals(ArgUtils.asAlias("b_2_1", false), applyOp.getAlias().get().applyArg());
 
         ProjectOp projectOp = (ProjectOp) ops.get(1);
