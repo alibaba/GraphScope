@@ -28,7 +28,7 @@ prometheus_client.REGISTRY.unregister(prometheus_client.PROCESS_COLLECTOR)
 prometheus_client.REGISTRY.unregister(prometheus_client.PLATFORM_COLLECTOR)
 prometheus_client.REGISTRY.unregister(prometheus_client.GC_COLLECTOR)
 
-Request_summary = Summary('api_request', 'Time spent processing request', ['api_name', 'success'])
+Request_summary = Summary('gie_request', 'Time spent of gie request processing ', ['success'])
 
 # metric log file in /var/log/graphscope/<random dir>/frontend/metric.log
 def check_log_file():
@@ -59,8 +59,8 @@ def parse_log_file(metric_log):
             list_line = line.split("|")
             if len(list_line) != 5:
                 continue
-            api_name, success, time_cost, _ = map(lambda x: x.strip(), list_line[1:])
-            Request_summary.labels(api_name, success).observe(float(time_cost)/1000)
+            _, success, time_cost, _ = map(lambda x: x.strip(), list_line[1:])
+            Request_summary.labels(success).observe(float(time_cost)/1000)
 
 def start_parse_log():
     while True:
