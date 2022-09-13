@@ -120,8 +120,8 @@ class Monitor:
     app_name = ""
     graph_name = ""
 
-    label_pat = re.compile("^.+Query.+name:\s+app_(.+)_.+,.+name:\s+(.+)$")
-    data_pat = re.compile("^.+Finished\s+(.+val.*),\s+time:\s+(.+)\s+.+$")
+    label_pat = re.compile(r"^.+Query.+name:\s+app_(.+)_.+,.+name:\s+(.+)$")
+    data_pat = re.compile(r"^.+Finished\s+(.+val.*),\s+time:\s+(.+)\s+.+$")
 
     sessionState = Gauge(
         "session_state", "The session's state: 1 contected or 0 closed"
