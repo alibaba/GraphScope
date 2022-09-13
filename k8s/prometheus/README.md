@@ -27,13 +27,14 @@ It collects gie metrics from a metric log `/var/log/graphscope/<?>/frontend/metr
    $ python3 monitor.py 127.0.0.1:12345
    ``` 
 3. start a prometheus server and scrape metrics from gie exporter.  
+   <br/>
    You just need to add a scrape config for gie exporter in prometheus.yml and then start a prometheus server.  
    Config example:  
    ```yaml
    scrape_configs:
      # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
      - job_name: "scope"
-       scrape_interval: 1s
+       scrape_interval: 5s
        # metrics_path defaults to '/metrics'
        # scheme defaults to 'http'.
 
@@ -44,6 +45,7 @@ It collects gie metrics from a metric log `/var/log/graphscope/<?>/frontend/metr
    See [prometheus documentation](https://prometheus.io/docs/introduction/first_steps/) for more details.  
 
 4. start a grafana server and create a monitor dashboard.  
+   <br/>
    Here [gie-grafana.json](https://gist.githubusercontent.com/VincentFF/23613b8f833a7751ce39483ce6643b6a/raw/d40f4e22bb460b4ba04331da15d8129170935340/gie-grafana.json) is a dashboard example for gie monitor. You can import it on grafana dashboard to easily create a gie monitor dashboard.  
 	<br/>
    See [grafana documentation](https://grafana.com/docs/grafana/v9.0/getting-started/get-started-grafana-prometheus/) for more details.  
@@ -53,7 +55,9 @@ It collects gie metrics from a metric log `/var/log/graphscope/<?>/frontend/metr
 Coordinator Exporter is a web exporter for exporting coordinator metrics to Prometheus, which is embedded in coordinator package.  
 
 ### Usage
-1. start a coordinator will start exporter automatically.To specify the host and port of exporter, use `--monitor_port 12345` and `--monitor_host 0.0.0.0`. To disable exporter, use `--monitor False`.  
+1. start a coordinator will start exporter automatically.  
+   <br>
+   To specify the host and port of exporter, use `--monitor_port 12345` and `--monitor_host 0.0.0.0`. To disable exporter, use `--monitor False`.  
    ```bash 
    $ cd GraphScope/coordinator
 
@@ -64,11 +68,12 @@ Coordinator Exporter is a web exporter for exporting coordinator metrics to Prom
    $ python3 -m gscoordinator --num_workers 1 --hosts localst --log_level INFO --timeout_seconds 600 --port 50254 --cluster_type hosts --instance_id svuifn --vineyard_shared_mem 4G --monitor_port 12345 --monitor_host 0.0.0.0
    ```
 2. start a prometheus server and scrape metrics from coordinator exporter.  
+   <br> 
    Here [coordinator-grafana.json](https://gist.githubusercontent.com/VincentFF/23613b8f833a7751ce39483ce6643b6a/raw/d40f4e22bb460b4ba04331da15d8129170935340/coordinator-grafana.json) is a dashboard example for gie monitor. You can import it on grafana dashboard to easily create a gie monitor dashboard.  
    This dashboard integrates node metrics. To collect node metrics, see [node-exporter](https://prometheus.io/docs/guides/node-exporter/).  
    <br/>
    See [prometheus documentation](https://prometheus.io/docs/introduction/first_steps/) for more details.  
 
 3. start a grafana server and make a monitor dashboard.  
-   
+   <br/>
    See [grafana documentation](https://grafana.com/docs/grafana/v9.0/getting-started/get-started-grafana-prometheus/) for more details.  
