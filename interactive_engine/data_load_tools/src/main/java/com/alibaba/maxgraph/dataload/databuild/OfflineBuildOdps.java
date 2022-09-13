@@ -49,7 +49,6 @@ public class OfflineBuildOdps {
     public static final String SPLIT_SIZE = "split.size";
 
     public static final String COLUMN_MAPPINGS = "column.mappings";
-    public static final String LDBC_CUSTOMIZE = "ldbc.customize";
     public static final String LOAD_AFTER_BUILD = "load.after.build";
     public static final String SKIP_HEADER = "skip.header";
 
@@ -128,7 +127,6 @@ public class OfflineBuildOdps {
                     columnMappingInfos.put(getTableName(fileName), columnMappingInfo);
                     tableType.put(fileName, schema.getElement(columnMappingInfo.getLabelId()));
                 });
-        String ldbcCustomize = properties.getProperty(LDBC_CUSTOMIZE, "true");
         long splitSize = Long.valueOf(properties.getProperty(SPLIT_SIZE, "256"));
         boolean skipHeader = properties.getProperty(SKIP_HEADER, "true").equalsIgnoreCase("true");
 
@@ -136,7 +134,6 @@ public class OfflineBuildOdps {
         job.set(SCHEMA_JSON, schemaJson);
         String mappings = objectMapper.writeValueAsString(columnMappingInfos);
         job.set(COLUMN_MAPPINGS, mappings);
-        job.setBoolean(LDBC_CUSTOMIZE, ldbcCustomize.equalsIgnoreCase("true"));
         job.set(SEPARATOR, properties.getProperty(SEPARATOR, "\\|"));
         job.setBoolean(SKIP_HEADER, skipHeader);
         job.set(GRAPH_ENDPOINT, graphEndpoint);

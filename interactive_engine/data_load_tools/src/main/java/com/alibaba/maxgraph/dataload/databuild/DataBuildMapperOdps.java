@@ -42,7 +42,6 @@ public class DataBuildMapperOdps extends MapperBase {
     private Map<String, ColumnMappingInfo> fileToColumnMappingInfo;
 
     private ObjectMapper objectMapper;
-    private boolean ldbcCustomize;
     private Record outKey;
     private Record outVal;
 
@@ -59,8 +58,6 @@ public class DataBuildMapperOdps extends MapperBase {
         this.fileToColumnMappingInfo =
                 this.objectMapper.readValue(
                         columnMappingsJson, new TypeReference<Map<String, ColumnMappingInfo>>() {});
-        this.ldbcCustomize =
-                context.getJobConf().getBoolean(OfflineBuildOdps.LDBC_CUSTOMIZE, false);
         DST_FMT.setTimeZone(TimeZone.getTimeZone("GMT+00:00"));
     }
 
@@ -165,20 +162,6 @@ public class DataBuildMapperOdps extends MapperBase {
                     DataType dataType = propertyDef.getDataType();
 
                     String val = items[colIdx];
-                    if (ldbcCustomize) {
-                        String name = propertyDef.getName();
-                        switch (name) {
-                            case "creationDate":
-                            case "joinDate":
-                                val = convertDate(val);
-                                break;
-                            case "birthday":
-                                val = val.replace("-", "");
-                                break;
-                            default:
-                                break;
-                        }
-                    }
                     PropertyValue propertyValue = new PropertyValue(dataType, val);
                     operationProperties.put(propertyId, propertyValue);
                 });
