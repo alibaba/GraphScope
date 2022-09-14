@@ -20,16 +20,15 @@
   <parent>
     <groupId>com.alibaba.graphscope</groupId>
     <artifactId>grape-jdk-parent</artifactId>
-    <version>0.1</version>
+    <version>${gae.java.version}</version>
   </parent>
 
   <artifactId>grape-jdk</artifactId>
-  <version>0.1</version>
+  <version>${gae.java.version}</version>
   <packaging>jar</packaging>
   <name>grape-jdk</name>
 
   <properties>
-    <alibaba-grape-sdk.version>0.1</alibaba-grape-sdk.version>
     <jacoco.version>0.8.7</jacoco.version>
     <jni.library.name>grape-jni</jni.library.name>
     <jni.library.path>${project.basedir}/target/native/</jni.library.path>

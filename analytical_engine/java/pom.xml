@@ -19,7 +19,7 @@
   <groupId>com.alibaba.graphscope</groupId>
   <artifactId>grape-jdk-parent</artifactId>
 
-  <version>0.1</version>
+  <version>${gae.java.version}</version>
 
   <packaging>pom</packaging>
 
@@ -33,12 +33,11 @@
   </modules>
 
   <properties>
+    <gae.java.version>0.16.0</gae.java.version>
+    <fastffi.version>0.1.1</fastffi.version>
     <compile-testing.version>0.19</compile-testing.version>
     <cupid.sdk.version>3.3.11</cupid.sdk.version>
     <cupid.table.version>1.1.3-SNAPSHOT</cupid.table.version>
-    <fastffi.annotation-processor.version>0.1</fastffi.annotation-processor.version>
-    <fastffi.ffi.version>0.1</fastffi.ffi.version>
-    <fastffi.llvm4jni-runtime.version>0.1</fastffi.llvm4jni-runtime.version>
     <fastjson.version>1.2.83</fastjson.version>
     <google-java-format.version>1.7</google-java-format.version>
     <javapoet.version>1.13.0</javapoet.version>
@@ -71,17 +70,17 @@
       <dependency>
         <groupId>com.alibaba.fastffi</groupId>
         <artifactId>ffi</artifactId>
-        <version>${fastffi.ffi.version}</version>
+        <version>${fastffi.version}</version>
       </dependency>
       <dependency>
         <groupId>com.alibaba.fastffi</groupId>
         <artifactId>annotation-processor</artifactId>
-        <version>${fastffi.annotation-processor.version}</version>
+        <version>${fastffi.version}</version>
       </dependency>
       <dependency>
         <groupId>com.alibaba.fastffi</groupId>
         <artifactId>llvm4jni-runtime</artifactId>
-        <version>${fastffi.llvm4jni-runtime.version}</version>
+        <version>${fastffi.version}</version>
       </dependency>
       <dependency>
         <groupId>com.squareup</groupId>
