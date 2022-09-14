@@ -16,13 +16,11 @@
 package com.alibaba.maxgraph.sdkcommon.io;
 
 import org.apache.tinkerpop.gremlin.structure.io.AbstractIoRegistry;
-import org.apache.tinkerpop.gremlin.structure.io.gryo.GryoIo;
 
 public class MaxGraphIORegistry extends AbstractIoRegistry {
     private static final MaxGraphIORegistry INSTANCE = new MaxGraphIORegistry();
 
-    public MaxGraphIORegistry() {
-    }
+    public MaxGraphIORegistry() {}
 
     public static MaxGraphIORegistry instance() {
         return INSTANCE;
