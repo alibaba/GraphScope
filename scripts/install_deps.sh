@@ -229,6 +229,7 @@ init_basic_packages() {
     )
   else
     BASIC_PACKGES_TO_INSTALL=(
+      apache-arrow
       coreutils
       protobuf
       glog
