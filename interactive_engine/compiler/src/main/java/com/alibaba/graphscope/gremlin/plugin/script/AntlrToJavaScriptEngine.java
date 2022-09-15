@@ -95,7 +95,7 @@ public class AntlrToJavaScriptEngine extends AbstractScriptEngine implements Gre
                         String.format(
                                 "token: %s.",
                                 ((NoViableAltException) t).getStartToken().toString());
-            } else {
+            } else if (t != null) {
                 error += String.format("message: %s.", t.getMessage());
             }
             throw new InvalidGremlinScriptException(error);
