@@ -503,7 +503,7 @@ GraphScope图分析引擎上运行这些示例算法。
 
     cd ${GRAPHSCOPE_REPO}/analytical_engine/java/
     python3 java-app-runner.py --app com.alibaba.graphscope.example.traverse.Traverse 
-                --jar_path /home/graphscope/GraphScope/analytical_engine/java/grape-demo/target/grape-demo-0.1-shaded.jar 
+                --jar_path /home/graphscope/GraphScope/analytical_engine/java/grape-demo/target/grape-demo-0.16.0-shaded.jar 
                 --arguments "maxIteration=10"
 
 在本地验证自定义算法的正确性之后，你可以通过GraphScope的python client来提交运行jar包。一个jar包中可以包含不同的app实现，用户可以多次提交相同的jar包但是运行不同
