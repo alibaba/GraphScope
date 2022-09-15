@@ -1,9 +1,9 @@
 cmake>=3.21.2
 etcd-distro>=3.5.1
 graphscope-client>=0.11.0
-grpcio>=1.44.0
+grpcio<=1.44.0
 kubernetes
-protobuf>=3.20.0,<4
+protobuf>=3.15.0,<=3.18.1
 PyYAML
 vineyard>=0.5.2; sys_platform != "win32"
 vineyard-io>=0.5.2; sys_platform != "win32"
