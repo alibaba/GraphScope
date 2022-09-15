@@ -98,14 +98,6 @@ ifneq ($(INSTALL_PREFIX), /usr/local)
 		sudo ln -sfn ${INSTALL_PREFIX}/lib/cmake/graphscope-analytical /usr/local/lib/cmake/graphscope-analytical; \
 	fi
 endif
-# ifeq (${ENABLE_JAVA_SDK}, ON)
-# 	cd $(WORKING_DIR)/analytical_engine/java && \
-# 	mvn clean install -DskipTests --quiet && \
-# 	sudo cp ${WORKING_DIR}/analytical_engine/java/grape-runtime/target/native/libgrape-jni.* ${INSTALL_PREFIX}/lib/ && \
-# 	sudo cp ${WORKING_DIR}/analytical_engine/java/grape-runtime/target/grape-runtime-0.1-shaded.jar ${INSTALL_PREFIX}/lib/ && \
-# 	sudo mkdir -p ${INSTALL_PREFIX}/conf/ && \
-# 	sudo cp ${WORKING_DIR}/analytical_engine/java/grape_jvm_opts ${INSTALL_PREFIX}/conf/
-# endif
 
 .PHONY: gie
 gie:

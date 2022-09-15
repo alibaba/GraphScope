@@ -374,6 +374,7 @@ add_custom_target(gsa_clformat
     COMMENT "Running clang-format, using clang-format-8 from https://github.com/muttleyxd/clang-tools-static-binaries/releases"
     VERBATIM)
 
+# Install GAE Java SDK
 set(GAE_JAVA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/java/")
 set(GAE_JAVA_RUNTIME_DIR "${GAE_JAVA_DIR}/grape-runtime/")
 set(GAE_JAVA_RUNTIME_JAR "${GAE_JAVA_RUNTIME_DIR}/target/grape-runtime-${GRAPHSCOPE_ANALYTICAL_VERSION}-shaded.jar") 
@@ -384,9 +385,9 @@ add_custom_command(
     COMMENT "Building GAE-java..."
     VERBATIM
 )
-
 install(FILES DESTINATION lib)
 install(FILES "${GAE_JAVA_RUNTIME_DIR}/target/native/libgrape-jni.so" DESTINATION lib)
+install(FILES "${GAE_JAVA_RUNTIME_JAR}" DESTINATION lib)
 install(FILES "${GAE_JAVA_DIR}/grape_jvm_opts" DESTINATION conf)
 
 # Install binaries
