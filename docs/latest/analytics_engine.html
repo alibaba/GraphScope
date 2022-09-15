@@ -627,7 +627,7 @@ A simple bash script is provided to address this need. To verfy your algorithm, 
 To pass params to your contex, put them in <code class="docutils literal notranslate"><span class="pre">params</span></code> like <code class="docutils literal notranslate"><span class="pre">src=6,threadNum=1</span></code>, and these params will be provided in <code class="docutils literal notranslate"><span class="pre">Context::Init</span></code> as a json string. For example,</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> <span class="si">${</span><span class="nv">GRAPHSCOPE_REPO</span><span class="si">}</span>/analytical_engine/java/
 python3 java-app-runner.py --app com.alibaba.graphscope.example.traverse.Traverse
-            --jar_path /home/graphscope/GraphScope/analytical_engine/java/grape-demo/target/grape-demo-0.1-shaded.jar
+            --jar_path /home/graphscope/GraphScope/analytical_engine/java/grape-demo/target/grape-demo-0.16.0-shaded.jar
             --arguments <span class="s2">&quot;maxIteration=10&quot;</span>
 </pre></div>
 </div>
