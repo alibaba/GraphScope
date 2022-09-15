@@ -68,11 +68,12 @@ public class ExpandFusionStepStrategy
                     traversal.removeStep(currentStep);
                     currentStep = currentStep.getNextStep();
                 }
-                // fuse outE + inV
+                // fuse outE + inV or inE + outV or bothE + otherV
                 currentStep = expandFusionStep.getNextStep();
                 if (expandFusionStep.getLabels().isEmpty()
-                        && currentStep instanceof EdgeVertexStep
-                        && canFuseExpandWithGetV(expandFusionStep, (EdgeVertexStep) currentStep)) {
+                        && (currentStep instanceof EdgeVertexStep
+                                || currentStep instanceof EdgeOtherVertexStep)
+                        && canFuseExpandWithGetV(expandFusionStep, currentStep)) {
                     expandFusionStep.setExpandOpt(FfiExpandOpt.Vertex);
                     TraversalHelper.copyLabels(currentStep, currentStep.getPreviousStep(), false);
                     traversal.removeStep(currentStep);
@@ -106,13 +107,14 @@ public class ExpandFusionStepStrategy
                 || parent instanceof NotStep;
     }
 
-    private boolean canFuseExpandWithGetV(
-            ExpandFusionStep expandFusionStep, EdgeVertexStep edgeVertexStep) {
+    private boolean canFuseExpandWithGetV(ExpandFusionStep expandFusionStep, Step getVStep) {
         return expandFusionStep.getDirection() == Direction.OUT
-                        && edgeVertexStep.getDirection() == Direction.IN
+                        && getVStep instanceof EdgeVertexStep
+                        && ((EdgeVertexStep) getVStep).getDirection() == Direction.IN
                 || expandFusionStep.getDirection() == Direction.IN
-                        && edgeVertexStep.getDirection() == Direction.OUT
+                        && getVStep instanceof EdgeVertexStep
+                        && ((EdgeVertexStep) getVStep).getDirection() == Direction.OUT
                 || expandFusionStep.getDirection() == Direction.BOTH
-                        && edgeVertexStep.getDirection() == Direction.BOTH;
+                        && getVStep instanceof EdgeOtherVertexStep;
     }
 }
