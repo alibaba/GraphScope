@@ -376,14 +376,16 @@ add_custom_target(gsa_clformat
 
 set(GAE_JAVA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/java/")
 set(GAE_JAVA_RUNTIME_DIR "${GAE_JAVA_DIR}/grape-runtime/")
+set(GAE_JAVA_RUNTIME_JAR "${GAE_JAVA_RUNTIME_DIR}/target/grape-runtime-${GRAPHSCOPE_ANALYTICAL_VERSION}-shaded.jar") 
 add_custom_command(
+    TARGET gs_proto
     COMMAND mvn clean install -DskipTests --quiet
     WORKING_DIRECTORY ${GAE_JAVA_DIR}
     COMMENT "Building GAE-java..."
     VERBATIM
 )
 
-install(FILES "${GAE_JAVA_RUNTIME_DIR}/target/grape-runtime-${GRAPHSCOPE_ANALYTICAL_VERSION}-shaded.jar" DESTINATION lib)
+install(FILES DESTINATION lib)
 install(FILES "${GAE_JAVA_RUNTIME_DIR}/target/native/libgrape-jni.so" DESTINATION lib)
 install(FILES "${GAE_JAVA_DIR}/grape_jvm_opts" DESTINATION conf)
 
