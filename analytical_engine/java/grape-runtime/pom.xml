@@ -21,11 +21,11 @@
   <parent>
     <groupId>com.alibaba.graphscope</groupId>
     <artifactId>grape-jdk-parent</artifactId>
-    <version>${gae.java.version}</version>
+    <version>0.16.0</version>
   </parent>
   <artifactId>grape-runtime</artifactId>
 
-  <version>${gae.java.version}</version>
+  <version>0.16.0</version>
   <packaging>jar</packaging>
   <name>grape-runtime</name>
 
@@ -55,8 +55,6 @@
     <dependency>
       <groupId>com.alibaba.graphscope</groupId>
       <artifactId>grape-jdk</artifactId>
-      <version>${gae.java.version}</version>
-      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -70,17 +68,8 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>com.diffplug.spotless</groupId>
-        <artifactId>spotless-maven-plugin</artifactId>
-      </plugin>
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>${maven-compiler-plugin.version}</version>
-        <configuration>
-          <!-- Disable annotation processing for ourselves -->
-          <!--          <compilerArgument>-proc:none</compilerArgument>-->
-        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

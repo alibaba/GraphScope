@@ -67,11 +67,6 @@ include_directories(SYSTEM ${LIBGRAPELITE_INCLUDE_DIRS})
 find_package(vineyard 0.2.6 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 
-# # find graphscope analytical engine---------------------------------------------
-# find_package(graphscope-analytical)
-# include_directories(SYSTEM ${GRAPHSCOPE_ANALYTICAL_INCLUDE_DIRS})
-# include_directories(SYSTEM ${GRAPHSCOPE_ANALYTICAL_INCLUDE_DIRS}/proto)
-
 add_library(grape-jni SHARED ${SOURCES})
 target_compile_definitions(grape-jni PUBLIC ENABLE_JAVA_SDK)
 target_include_directories(grape-jni PRIVATE "${PROJECT_SOURCE_DIR}/../../")

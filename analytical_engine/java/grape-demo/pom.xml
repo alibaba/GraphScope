@@ -21,11 +21,11 @@
   <parent>
     <groupId>com.alibaba.graphscope</groupId>
     <artifactId>grape-jdk-parent</artifactId>
-    <version>${gae.java.version}</version>
+    <version>0.16.0</version>
   </parent>
   <artifactId>grape-demo</artifactId>
 
-  <version>${gae.java.version}</version>
+  <version>0.16.0</version>
   <packaging>jar</packaging>
 
   <name>grape-demo</name>
@@ -42,14 +42,10 @@
     <dependency>
       <groupId>com.alibaba.graphscope</groupId>
       <artifactId>grape-jdk</artifactId>
-      <version>${gae.java.version}</version>
-      <classifier>shaded</classifier>
     </dependency>
     <dependency>
       <groupId>com.alibaba.graphscope</groupId>
       <artifactId>giraph-on-grape</artifactId>
-      <version>${gae.java.version}</version>
-      <classifier>shaded</classifier>
     </dependency>
     <dependency>
       <groupId>com.alibaba.fastffi</groupId>
@@ -69,6 +65,10 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
         <executions>
           <execution>
@@ -85,10 +85,6 @@
             </configuration>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <groupId>com.diffplug.spotless</groupId>
-        <artifactId>spotless-maven-plugin</artifactId>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

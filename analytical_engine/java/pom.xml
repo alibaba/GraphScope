@@ -19,7 +19,7 @@
   <groupId>com.alibaba.graphscope</groupId>
   <artifactId>grape-jdk-parent</artifactId>
 
-  <version>${gae.java.version}</version>
+  <version>0.16.0</version>
 
   <packaging>pom</packaging>
 
@@ -34,7 +34,7 @@
 
   <properties>
     <gae.java.version>0.16.0</gae.java.version>
-    <fastffi.version>0.1</fastffi.version>
+    <fastffi.version>0.1.2</fastffi.version>
     <compile-testing.version>0.19</compile-testing.version>
     <cupid.sdk.version>3.3.11</cupid.sdk.version>
     <cupid.table.version>1.1.3-SNAPSHOT</cupid.table.version>
@@ -48,8 +48,6 @@
     <maven-failsafe-plugin.version>3.0.0-M5</maven-failsafe-plugin.version>
     <maven-javadoc-plugin.version>3.0.0</maven-javadoc-plugin.version>
     <maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
-    <maven-spotless-plugin.version>2.17.0</maven-spotless-plugin.version>
-    <!--        <maven-assemly-plugin.version>3.3.0</maven-assemly-plugin.version>-->
     <maven-surefire-plugin.version>3.0.0-M4</maven-surefire-plugin.version>
     <odps.sdk.version>0.36.4</odps.sdk.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -62,6 +60,16 @@
   </properties>
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>com.alibaba.graphscope</groupId>
+        <artifactId>grape-jdk</artifactId>
+        <version>0.16.0</version>
+      </dependency>
+      <dependency>
+        <groupId>com.alibaba.graphscope</groupId>
+        <artifactId>giraph-on-grape</artifactId>
+        <version>0.16.0</version>
+      </dependency>
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
