@@ -17,6 +17,7 @@
       ~session.add_lib
       ~session.as_default
       ~session.close
+      ~session.connected
       ~session.eager
       ~session.g
       ~session.get_config

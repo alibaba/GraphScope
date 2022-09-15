@@ -525,7 +525,7 @@ To pass params to your contex, put them in ``params`` like ``src=6,threadNum=1``
 
     cd ${GRAPHSCOPE_REPO}/analytical_engine/java/
     python3 java-app-runner.py --app com.alibaba.graphscope.example.traverse.Traverse 
-                --jar_path /home/graphscope/GraphScope/analytical_engine/java/grape-demo/target/grape-demo-0.1-shaded.jar 
+                --jar_path /home/graphscope/GraphScope/analytical_engine/java/grape-demo/target/grape-demo-0.16.0-shaded.jar 
                 --arguments "maxIteration=10"
 
 After verifying your algorithm locally, you may try to run your algorithms on GraphScope analytical engine. 
