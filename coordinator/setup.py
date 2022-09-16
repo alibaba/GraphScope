@@ -374,8 +374,9 @@ setup(
     },
     setup_requires=[
         "setuptools_scm>=5.0.0",
-        "grpcio<=1.43.0,>=1.40.0",
-        "grpcio-tools<=1.43.0,>=1.40.0",
+        "grpcio",
+        "grpcio-tools",
+        "protobuf>=3.20.0,<4",
     ],
     package_dir=parsed_package_dir(),
     packages=parsed_packages(),
