@@ -181,7 +181,7 @@ graphscope-client-manylinux2014-py3-nodocker:
 	for py in cp37-cp37m cp38-cp38 cp39-cp39 ; do \
 		cd $(WORKING_DIR)/../python; \
 		export PATH=/opt/python/$$py/bin:$$PATH; \
-		pip3 install -U pip numpy==1.18.5 auditwheel==5.0.0 grpcio<=1.43.0,>=1.40.0 grpcio-tools<=1.43.0,>=1.40.0 wheel; \ 
+		pip3 install -U pip numpy==1.18.5 auditwheel==5.0.0 grpcio<=1.43.0,>=1.40.0 grpcio-tools<=1.43.0,>=1.40.0 wheel; \
 		rm -rf build; \
 		rm -rf dist/*.whl; \
 		python3 setup.py bdist_wheel; \
