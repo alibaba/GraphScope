@@ -72,6 +72,7 @@ mod test {
                 tag: None,
                 params: None,
                 alias: Some(common_pb::NameOrId { item: Some(common_pb::name_or_id::Item::Id(0)) }),
+                remove_tags: vec![],
             }
             .into(),
         );
@@ -340,7 +341,8 @@ mod test {
             alias: None,
         };
         let vertex_query_param = query_params(vec![], vec![], str_to_expr_pb("@.id == 2".to_string()).ok());
-        let auxilia_opr_pb = pb::Auxilia { tag: None, params: Some(vertex_query_param), alias: None };
+        let auxilia_opr_pb =
+            pb::Auxilia { tag: None, params: Some(vertex_query_param), alias: None, remove_tags: vec![] };
 
         let conf = JobConf::new("expand_getv_test");
         let mut result = pegasus::run(conf, || {

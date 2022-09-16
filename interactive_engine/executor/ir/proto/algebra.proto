@@ -258,7 +258,8 @@ message Auxilia {
   QueryParams params = 2;
   // The alias to give if any, which is especially helpful when the entity now refers to the head of the record
   common.NameOrId alias = 3;
-  // The remove_tags refers to the entities that will not be used any longer, and thus can be removed
+  // The remove_tags refers to the entities that will not be used any longer, and thus can be removed.
+  // Specifically, it will remove tags in the end of auxilia. i.e., remove `tag` where auxilia is applied is also allowed.
   repeated common.NameOrId remove_tags = 4;
 }
 

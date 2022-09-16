@@ -795,6 +795,7 @@ mod test {
                 extra: Default::default(),
             }),
             alias: None,
+            remove_tags: vec![],
         }
     }
 
@@ -951,6 +952,7 @@ mod test {
                 tag: None,
                 params: Some(query_params(vec![], vec!["age".into()])),
                 alias: Some(0.into()),
+                remove_tags: vec![],
             })
             .encode_to_vec(),
         );
@@ -961,6 +963,7 @@ mod test {
                 tag: None,
                 params: Some(query_params(vec![], vec!["age".into()])),
                 alias: Some(1.into()),
+                remove_tags: vec![],
             })
             .encode_to_vec(),
         );
@@ -987,6 +990,7 @@ mod test {
                 tag: None,
                 params: Some(query_params(vec![], vec!["age".into()])),
                 alias: Some(0.into()),
+                remove_tags: vec![],
             })
             .encode_to_vec(),
         );
@@ -999,6 +1003,7 @@ mod test {
                 tag: None,
                 params: Some(query_params(vec![], vec!["age".into()])),
                 alias: Some(1.into()),
+                remove_tags: vec![],
             })
             .encode_to_vec(),
         );
@@ -1033,6 +1038,7 @@ mod test {
                 tag: None,
                 params: Some(query_params(vec![], vec!["age".into(), "id".into(), "name".into()])),
                 alias: Some(0.into()),
+                remove_tags: vec![],
             })
             .encode_to_vec(),
         );
@@ -1060,6 +1066,7 @@ mod test {
                 tag: None,
                 params: Some(query_params(vec![], vec!["age".into(), "id".into(), "name".into()])),
                 alias: Some(0.into()),
+                remove_tags: vec![],
             })
             .encode_to_vec(),
         );
@@ -1165,6 +1172,7 @@ mod test {
                 tag: None,
                 params: Some(query_params(vec![], vec!["age".into(), "id".into(), "name".into()])),
                 alias: Some(0.into()),
+                remove_tags: vec![],
             })
             .encode_to_vec(),
         );
@@ -1193,6 +1201,7 @@ mod test {
                 tag: None,
                 params: Some(query_params(vec![], vec!["age".into(), "id".into(), "name".into()])),
                 alias: Some(0.into()),
+                remove_tags: vec![],
             })
             .encode_to_vec(),
         );
@@ -1255,6 +1264,7 @@ mod test {
                     extra: Default::default(),
                 }),
                 alias: None,
+                remove_tags: vec![],
             })
             .encode_to_vec(),
         );
@@ -1667,6 +1677,7 @@ mod test {
                 extra: Default::default(),
             }),
             alias: None,
+            remove_tags: vec![],
         };
 
         expected_builder.apply_join(
@@ -1731,6 +1742,7 @@ mod test {
                 tag: None,
                 params: None,
                 alias: Some(common_pb::NameOrId { item: Some(common_pb::name_or_id::Item::Id(2)) }),
+                remove_tags: vec![],
             }
             .into(),
         );
@@ -1809,6 +1821,7 @@ mod test {
                 tag: None,
                 params: None,
                 alias: Some(common_pb::NameOrId { item: Some(common_pb::name_or_id::Item::Id(2)) }),
+                remove_tags: vec![],
             }
             .into(),
         );
