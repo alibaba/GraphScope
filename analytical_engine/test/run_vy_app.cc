@@ -491,7 +491,7 @@ void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
 }
 
 int main(int argc, char** argv) {
-  if (argc < 9) {
+  if (argc < 8) {
     printf(
         "usage: ./run_vy_app <ipc_socket> <e_label_num> <efiles...> "
         "<v_label_num> <vfiles...> <run_projected>"
