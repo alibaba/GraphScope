@@ -1,7 +1,8 @@
 cmake>=3.21.2
 etcd-distro>=3.5.1
 graphscope-client>=0.11.0
-grpcio<=1.44.0
+grpcio<=1.43.0,>=1.40.0
+grpcio-tools<=1.43.0,>=1.40.0
 kubernetes
 protobuf>=3.15.0,<=3.18.1
 PyYAML
