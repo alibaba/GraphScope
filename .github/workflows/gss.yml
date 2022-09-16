@@ -74,7 +74,7 @@ jobs:
           cmake .. && make -j && sudo make install && \
           rm -fr /tmp/cppkafka
 
-    - name: Build GraphScope Store With column filter push down
+    - name: Build GraphScope Store With Column Filter Push Down
       run: |
         source ${HOME}/.bashrc
         export SCCACHE_DIR=~/.cache/sccache
@@ -85,11 +85,11 @@ jobs:
 
         sccache --show-stats
 
-    - name: Gremlin Test
+    - name: Gremlin Tests with Column Filter Push Down
       run: |
         cd interactive_engine/groot-server
         mvn test -P gremlin-test
-    
+
 
     - name: Build GraphScope Store
       run: |

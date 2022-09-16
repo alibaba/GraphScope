@@ -107,7 +107,7 @@ impl UnsafeBytesWriter {
 }
 
 pub fn parse_pb<M: Message>(buf: &[u8]) -> GraphResult<M> {
-    protobuf::parse_from_bytes::<M>(buf).map_err(|e| GraphError::new(InvalidData, format!("{:?}", e)))
+    Message::parse_from_bytes(buf).map_err(|e| GraphError::new(InvalidData, format!("{:?}", e)))
 }
 
 #[cfg(test)]
