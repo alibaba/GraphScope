@@ -38,6 +38,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
     public abstract Traversal<Vertex, Map<Object, List>> get_g_V_group_by_outE_count_order_by_key();
 
+    public abstract Traversal<Vertex, Object> get_g_VX4X_bothE_as_otherV();
+
     @Test
     public void g_V_group_by_by_dedup_count_test() {
         Traversal<Vertex, Map<Object, Long>> traversal =
@@ -76,6 +78,28 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         Assert.assertFalse(traversal.hasNext());
     }
 
+    @Test
+    public void g_VX4X_bothE_as_otherV() {
+        Traversal<Vertex, Object> traversal =
+            this.get_g_VX4X_bothE_as_otherV();
+        this.printTraversalForm(traversal);
+        int counter = 0;
+
+        List<String> expected =
+            Arrays.asList(
+                "1",
+                "3",
+                "5");
+
+        while (traversal.hasNext()) {
+            Object result = traversal.next();
+            Assert.assertTrue(expected.contains(result.toString()));
+            ++counter;
+        }
+
+        Assert.assertEquals(expected.size(),  counter);
+    }
+
     public static class Traversals extends IrGremlinQueryTest {
 
         @Override
@@ -92,6 +116,12 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         public Traversal<Vertex, Map<Object, List>> get_g_V_group_by_outE_count_order_by_key() {
             return (IrCustomizedTraversal)
                     g.V().group().by(outE().count()).order().by(__.select(Column.keys));
+        }
+
+
+        @Override
+        public Traversal<Vertex, Object> get_g_VX4X_bothE_as_otherV() {
+            return g.V().has("id",4).bothE().as("a").otherV().values("id");
         }
     }
 }
