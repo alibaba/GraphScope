@@ -1,0 +1,84 @@
+# docker ignore the .git directory
+.git
+**/.git
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints
+*.egg-info/
+*.eggs
+python/*.eggs
+
+# coordinator
+coordinator/proto
+
+# python
+python/proto
+
+# Gar file
+*.gar
+
+# dot file
+*.dot
+
+# Protobuf GRPC
+*.pb.*
+*_pb2.py
+*_pb2_grpc.py
+
+# Visual Studio Code
+.vscode/
+.project
+.classpath
+.factorypath
+.settings
+
+# Mac OSX
+.DS_store
+
+# CLion
+.idea/
+cmake-build-*/
+**/*.iml
+**/target/
+
+# Workspace
+workspace/
+
+# generated_docs
+docs/source/reference/
+docs/reference/generated/
+docs/reference/networkx/generated/
+docs/_build/
+
+analytical_engine/build/
+
+# etcd data directory
+default.etcd/
+
+# outer build directory
+build/
+
+interactive_engine/rust-common/src/proto/*
+!interactive_engine/rust-common/src/proto/mod.rs
+**/generated/
+
+interactive_engine/executor/store/groot/src/db/proto/*
+!interactive_engine/executor/store/groot/src/db/proto/mod.rs
+interactive_engine/data_load_tools/dependency-reduced-pom.xml
+interactive_engine/gaia-adaptor/dependency-reduced-pom.xml
+interactive_engine/executor/Cargo.lock
+interactive_engine/executor/engine/pegasus/benchmark/src/graph/storage/clickhouse/pb_gen/*
+interactive_engine/executor/ir/Cargo.lock
+
+# java sdk
+java/**/dependency-reduced-pom.xml
+
+# GraphLearn
+coordinator/graphlearn*
+
+# Lock files
+Chart.lock
+**/Cargo.lock
+package.lock
