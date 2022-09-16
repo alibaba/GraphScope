@@ -714,7 +714,7 @@ fn extract_needed_columns(
     // Some(vec[]) means need all props, so can't merge it with props needed in filter
     if let Some(out_columns) = out_columns {
         if out_columns.is_empty() {
-            return Ok(Some(Vec::with_capacity(0)))
+            return Ok(Some(Vec::with_capacity(0)));
         }
     }
 
