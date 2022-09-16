@@ -175,7 +175,7 @@ if (libgrapelite_FOUND)
 endif()
 
 # find vineyard-----------------------------------------
-find_package(vineyard 0.6.0 QUIET)
+find_package(vineyard 0.8.2 QUIET)
 if (vineyard_FOUND)
   include_directories(AFTER SYSTEM ${VINEYARD_INCLUDE_DIRS})
 endif()
