@@ -75,7 +75,7 @@ jobs:
         # default install to "/opt/graphscope"
         make gae ENABLE_JAVA_SDK=ON BUILD_TEST=ON
         # also make coordinator and client for python test
-        make coordinator && make client
+        make client && make coordinator
 
     - name: Run Cpp Test
       env:
