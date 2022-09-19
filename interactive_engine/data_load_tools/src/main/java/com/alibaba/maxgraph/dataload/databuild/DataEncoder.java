@@ -130,13 +130,11 @@ public class DataEncoder {
         return res;
     }
 
-    public static void clear(Buffer buffer)
-    {
+    public static void clear(Buffer buffer) {
         buffer.clear();
     }
 
-    public static void flip(Buffer buffer)
-    {
+    public static void flip(Buffer buffer) {
         buffer.flip();
     }
 }

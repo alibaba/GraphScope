@@ -22,10 +22,10 @@ import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.rocksdb.SstFileWriter;
-import org.rocksdb.RocksDBException;
-import org.rocksdb.Options;
 import org.rocksdb.EnvOptions;
+import org.rocksdb.Options;
+import org.rocksdb.RocksDBException;
+import org.rocksdb.SstFileWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -76,8 +76,7 @@ public class LoadTool {
         } else if (command.equalsIgnoreCase("ingestAndCommit")) {
             ingest(configPath, isFromOSS, uniquePath);
             commit(configPath, isFromOSS, uniquePath);
-        }
-        else {
+        } else {
             printHelp(options);
         }
     }
