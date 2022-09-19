@@ -22,7 +22,10 @@ import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.rocksdb.*;
+import org.rocksdb.SstFileWriter;
+import org.rocksdb.RocksDBException;
+import org.rocksdb.Options;
+import org.rocksdb.EnvOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,7 +81,7 @@ public class SstOutputFormat extends FileOutputFormat<BytesWritable, BytesWritab
         Configuration conf = job.getConfiguration();
 
         Path file = getDefaultWorkFile(job, ".sst");
-        logger.info("output file [" + file.toString() + "]");
+        logger.info("output file [{}]", file);
         FileSystem fs = file.getFileSystem(conf);
         try {
             return new SstRecordWriter(fs, file);

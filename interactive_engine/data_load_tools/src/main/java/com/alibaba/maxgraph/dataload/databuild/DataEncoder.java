@@ -22,6 +22,7 @@ import com.alibaba.maxgraph.sdkcommon.schema.PropertyValue;
 import com.alibaba.maxgraph.sdkcommon.util.PkHashUtils;
 import com.alibaba.maxgraph.sdkcommon.util.SchemaUtils;
 
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,14 +43,14 @@ public class DataEncoder {
 
     public BytesRef encodeVertexKey(
             GraphVertex type, Map<Integer, PropertyValue> propertiesMap, long tableId) {
-        scratch.clear();
+        clear(scratch);
         List<Integer> pkIds =
                 labelPkIds.computeIfAbsent(type, k -> SchemaUtils.getVertexPrimaryKeyList(type));
         long hashId = getHashId(type.getLabelId(), propertiesMap, pkIds);
         scratch.putLong(tableId << 1);
         scratch.putLong(hashId);
         scratch.putLong(SNAPSHOT_ID);
-        scratch.flip();
+        flip(scratch);
         return new BytesRef(scratch.array(), 0, scratch.limit());
     }
 
@@ -62,7 +63,7 @@ public class DataEncoder {
             Map<Integer, PropertyValue> propertiesMap,
             long tableId,
             boolean outEdge) {
-        scratch.clear();
+        clear(scratch);
         List<Integer> srcPkIds =
                 labelPkIds.computeIfAbsent(
                         srcType, k -> SchemaUtils.getVertexPrimaryKeyList(srcType));
@@ -91,15 +92,15 @@ public class DataEncoder {
         }
         scratch.putLong(eid);
         scratch.putLong(SNAPSHOT_ID);
-        scratch.flip();
+        flip(scratch);
         return new BytesRef(scratch.array(), 0, scratch.limit());
     }
 
     public BytesRef encodeProperties(int labelId, Map<Integer, PropertyValue> propertiesMap) {
-        scratch.clear();
+        clear(scratch);
         Codec codec = this.labelToCodec.get(labelId);
         codec.encode(propertiesMap, scratch);
-        scratch.flip();
+        flip(scratch);
         return new BytesRef(scratch.array(), 0, scratch.limit());
     }
 
@@ -127,5 +128,15 @@ public class DataEncoder {
             res.put(graphEdge.getLabelId(), new Codec(graphEdge));
         }
         return res;
+    }
+
+    public static void clear(Buffer buffer)
+    {
+        buffer.clear();
+    }
+
+    public static void flip(Buffer buffer)
+    {
+        buffer.flip();
     }
 }

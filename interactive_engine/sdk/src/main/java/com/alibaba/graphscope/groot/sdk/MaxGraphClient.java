@@ -88,7 +88,6 @@ public class MaxGraphClient implements Closeable {
     private ClientWriteGrpc.ClientWriteBlockingStub writeStub;
     private ClientBackupGrpc.ClientBackupBlockingStub backupStub;
     private CloseableGremlinClient gremlinClient;
-    private ManagedChannel channel;
     private String clientId = "DEFAULT";
 
     private BatchWriteRequest.Builder batchWriteBuilder;
@@ -280,15 +279,7 @@ public class MaxGraphClient implements Closeable {
 
     @Override
     public void close() {
-        try {
-            if (this.channel != null) {
-                this.channel.shutdown();
-                this.channel.awaitTermination(3000, TimeUnit.MILLISECONDS);
-            }
-            this.gremlinClient.close();
-        } catch (InterruptedException e) {
-            // Ignore
-        }
+        this.gremlinClient.close();
     }
 
     public void clearIngest() {
