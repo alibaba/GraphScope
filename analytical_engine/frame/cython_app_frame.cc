@@ -34,6 +34,12 @@
 
 #include "vineyard/graph/fragment/arrow_fragment.h"
 
+#if defined __has_include
+#if __has_include("vineyard/graph/fragment/arrow_fragment_modifier.h")
+#include "vineyard/graph/fragment/arrow_fragment_modifier.h"
+#endif
+#endif
+
 #include "core/app/app_invoker.h"
 #include "core/app/pregel/cython_vertex_program.h"
 #include "core/app/pregel/export.h"

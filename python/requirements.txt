@@ -1,7 +1,7 @@
 Cython==3.0a6
 gremlinpython>=3.4.9
-grpcio
-grpcio-tools
+grpcio<=1.43.0,>=1.40.0
+grpcio-tools<=1.43.0,>=1.40.0
 kubernetes
 msgpack
 nest_asyncio
@@ -11,7 +11,7 @@ numpy
 orjson
 packaging
 pandas
-protobuf>=3.15.0,<3.19.0
+protobuf>=3.15.0,<=3.18.1
 psutil
 pyarrow<=6.0.0
 pysimdjson
