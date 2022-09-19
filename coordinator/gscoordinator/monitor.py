@@ -56,7 +56,7 @@ op_name_dict = {
     23: "UNLOAD_CONTEXT",
     31: "CREATE_INTERACTIVE_QUERY",
     32: "SUBGRAPH",
-    33: "GREMLIN_QUERYutil",
+    33: "GREMLIN_QUERY",
     34: "FETCH_GREMLIN_RESULT",
     35: "CLOSE_INTERACTIVE_QUERY",
     41: "CREATE_LEARNING_INSTANCE",
@@ -152,7 +152,7 @@ class Monitor:
     prometheus_client.REGISTRY.register(analyticalRequestGauge)
 
     @classmethod
-    def startServer(cls, port=9968, addr="127.0.0.1"):
+    def startServer(cls, port=9968, addr="0.0.0.0"):
         start_http_server(port=port, addr=addr)
 
     @classmethod

@@ -28,7 +28,9 @@ prometheus_client.REGISTRY.unregister(prometheus_client.PROCESS_COLLECTOR)
 prometheus_client.REGISTRY.unregister(prometheus_client.PLATFORM_COLLECTOR)
 prometheus_client.REGISTRY.unregister(prometheus_client.GC_COLLECTOR)
 
-Request_summary = Summary('gie_request', 'Time spent of gie request processing ', ['success'])
+Request_summary = Summary(
+    "gie_request", "Time spent of gie request processing ", ["success"]
+)
 
 # metric log file in /var/log/graphscope/<random dir>/frontend/metric.log
 def check_log_file():
@@ -38,29 +40,30 @@ def check_log_file():
 
     # find metric.log file
     metric_log = None
-    for x in os.listdir(scope_dir):
-        log_file = os.path.join(scope_dir, x, metric_name)
+    for directory in os.listdir(scope_dir):
+        log_file = os.path.join(scope_dir, directory, metric_name)
         if os.path.exists(log_file):
             metric_log = log_file
             break
     return metric_log
 
+
 # parse latest log forever
 def parse_log_file(metric_log):
-    with open(metric_log, "r") as f:
+    with open(metric_log, "r", encoding="utf-8") as f:
         while True:
             line = f.readline()
-            
-            
+
             if not line:
                 time.sleep(1)
                 continue
-            
+
             list_line = line.split("|")
             if len(list_line) != 5:
                 continue
             _, success, time_cost, _ = map(lambda x: x.strip(), list_line[1:])
-            Request_summary.labels(success).observe(float(time_cost)/1000)
+            Request_summary.labels(success).observe(float(time_cost) / 1000)
+
 
 def start_parse_log():
     while True:
@@ -73,12 +76,10 @@ def start_parse_log():
 
 
 def start_server(port=9969, addr="0.0.0.0"):
-    start_http_server(port=port, addr=addr)
-    t = Thread(target=start_parse_log)
-    t.start()
-    t.join()
-
-
+    start_http_server(port, addr)
+    parse = Thread(target=start_parse_log)
+    parse.start()
+    parse.join()
 
 
 if __name__ == "__main__":

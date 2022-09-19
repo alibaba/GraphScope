@@ -1661,21 +1661,15 @@ def parse_sys_args():
         "--monitor",
         type=str2bool,
         nargs="?",
-        const=True,
-        default=True,
-        help="Enable monitor or not.",
+        const=False,
+        default=False,
+        help="Enable or disable prometheus exporter.",
     )
     parser.add_argument(
         "--monitor_port",
         type=int,
         default=9968,
-        help="Coordinator service port.",
-    )
-    parser.add_argument(
-        "--monitor_host",
-        type=str,
-        default="127.0.0.1",
-        help="list of comma seperated hostnames of graphscope engine workers.",
+        help="Coordinator prometheus exporter service port.",
     )
     return parser.parse_args()
 
@@ -1763,16 +1757,15 @@ def launch_graphscope():
 
     if args.monitor:
         try:
-            Monitor.startServer(args.monitor_port, args.monitor_host)
+            Monitor.startServer(args.monitor_port, "0.0.0.0")
             logger.info(
-                "Coordinator monitor server listen at %s:%d",
-                args.monitor_host,
-                args.monitor_port,
+                "Coordinator monitor server listen at 0.0.0.0:%d",
+                args.monitor_port
             )
         except Exception as e:
             logger.error(
-                "Failed to start monitor server {0}:{1} : {2}".format(
-                    args.monitor_host, args.monitor_port, e
+                "Failed to start monitor server 0.0.0.0:{0} : {1}".format(
+                    args.monitor_port, e
                 )
             )
 
