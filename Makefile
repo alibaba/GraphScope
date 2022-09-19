@@ -66,7 +66,7 @@ client: gle
 	pip3 install --user --editable $(WORKING_DIR)/python
 
 .PHONY: coordinator
-coordinator:
+coordinator: client
 	cd $(WORKING_DIR)/coordinator && \
 	pip3 install -r requirements.txt -r requirements-dev.txt --user && \
 	python3 setup.py build_builtin
