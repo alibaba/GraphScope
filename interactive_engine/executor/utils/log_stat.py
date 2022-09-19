@@ -20,10 +20,13 @@
 Profile Tool for Querying on GAIA
 
 This tool provide a way of collecting some information from the log of GAIA, including
-the batch number of intermediate results,
-the communication cost (batches that need to be shuffled intra/inter-processes),
-and the time cost,
-of each operator in the query, help to profile the query phases in GAIA.
+ * the batch number of intermediate results between operators,
+ * the communication cost (batches that need to be shuffled intra/inter-processes) between operators,
+ * the time cost of each operator, and the ratio of operator_time_cost, to total_computation_cost
+ (specifically, total_computation_cost doesn't include communication time.)
+ * the total_computation_cost, and the ratio of total_computation_cost to total_time_cost
+ (Specifically, total_time_cost includes communication time)
+help to profile the query phases in GAIA.
 
 Before using this tool, please start GAIA with
 `PROFILE_TIME_FLAG=true PROFILE_COMM_FLAG=true`,
@@ -41,6 +44,7 @@ def parse_args():
     parser.add_argument("--input", default='executor.log')
     parser.add_argument("--job_id", default='1')
     parser.add_argument("--worker_num", default='2')
+    parser.add_argument("--show_details", default=False)
     args = parser.parse_args()
     return args
 
@@ -117,6 +121,7 @@ def main(args):
             worker_edges = defaultdict(int)
             worker_operator_time_cost = defaultdict(str)
             operator_len = 0
+            computation_cost = 0
             total_timecost = 0
 
             common_prefix = f"[worker_{worker_id}({job_id})]: "
@@ -133,6 +138,7 @@ def main(args):
                     if worker_vertex_desc_flag in line:
                         operator = extract_operator(line)
                         worker_operators[operator] = 0
+                        computation_cost = 0
                     if worker_edge_desc_flag in line:
                         operator = extract_operator(line)
                         job_edge_desc[operator] = 0
@@ -155,17 +161,20 @@ def main(args):
                         operator = extract_operator(line)
                         time_cost = float(extract_val(line))
                         worker_operator_time_cost[operator] = time_cost
+                        computation_cost += time_cost
 
                     job_finished = re.search(f'\[worker_{worker_id}\({job_id}\)\]: job\({job_id}\) .* finished, used (.*) ms;', line)
                     if job_finished:
                         total_timecost = job_finished.group(1)
                         print(job_finished.group())
+                        percentage = computation_cost/float(total_timecost)
+                        print("computation cost is {:.2f} ms, and the ratio of computation cost to total cost is {:.2f}".format(computation_cost, percentage))
 
-
-            print("=========== operator intermediate batches ===========\n", dict(worker_operators))
-            print("=============== operator push batches ===============\n", dict(worker_edges))
-            print("================= operator time cost ================\n", dict(worker_operator_time_cost))
-            draw_time_cost_graph(f'job_{job_id}_{worker_id}_cost', worker_operator_time_cost, job_edge_desc, total_timecost)
+            if args.show_details:
+                print("=========== operator intermediate batches ===========\n", dict(worker_operators))
+                print("=============== operator push batches ===============\n", dict(worker_edges))
+                print("================= operator time cost ================\n", dict(worker_operator_time_cost))
+            draw_time_cost_graph(f'job_{job_id}_{worker_id}_cost', worker_operator_time_cost, job_edge_desc, computation_cost)
 
             # accum process batches of each operator for job
             accum_job_info(worker_operators, job_operators)
