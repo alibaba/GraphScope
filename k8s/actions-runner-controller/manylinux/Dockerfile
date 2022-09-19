@@ -1,4 +1,4 @@
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.8.2
+FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.8.3
 
 ARG TARGETPLATFORM
 ARG RUNNER_VERSION=2.287.1

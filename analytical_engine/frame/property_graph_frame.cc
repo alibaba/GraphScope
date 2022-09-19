@@ -18,6 +18,7 @@
 
 #include "vineyard/client/client.h"
 #include "vineyard/graph/fragment/arrow_fragment.h"
+#include "vineyard/graph/loader/fragment_loader_utils.h"
 
 #include "core/config.h"
 #include "core/error.h"
