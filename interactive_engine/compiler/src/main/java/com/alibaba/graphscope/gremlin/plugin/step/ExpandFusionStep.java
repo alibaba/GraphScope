@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.gremlin.plugin.step;
 
 import com.alibaba.graphscope.common.jna.type.FfiExpandOpt;
+import com.google.common.base.Objects;
 
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -74,5 +75,29 @@ public class ExpandFusionStep<E extends Element> extends VertexStep<E>
 
     public FfiExpandOpt getExpandOpt() {
         return this.expandOpt;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        ExpandFusionStep<?> that = (ExpandFusionStep<?>) o;
+        return Objects.equal(hasContainers, that.hasContainers) && expandOpt == that.expandOpt;
+    }
+
+    @Override
+    public String toString() {
+        return "ExpandFusionStep{"
+                + "hasContainers="
+                + hasContainers
+                + ", expandOpt="
+                + expandOpt
+                + '}';
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(super.hashCode(), hasContainers, expandOpt);
     }
 }

@@ -20,12 +20,13 @@
               "expand_opt": 0
             },
             "start_tag": null,
-            "is_whole_path": false,
             "alias": null,
             "hop_range": {
               "lower": 1,
               "upper": 5
-            }
+            },
+            "path_opt": 1,
+            "result_opt": 1
           }
         }
       },

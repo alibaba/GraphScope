@@ -711,6 +711,13 @@ fn extract_needed_columns(
 
     use crate::utils::expr::eval_pred::zip_option_vecs;
 
+    // Some(vec[]) means need all props, so can't merge it with props needed in filter
+    if let Some(out_columns) = out_columns {
+        if out_columns.is_empty() {
+            return Ok(Some(Vec::with_capacity(0)))
+        }
+    }
+
     let filter_needed = if let Some(filter) = filter { filter.as_ref().extract_prop_ids() } else { None };
     let columns = zip_option_vecs(filter_needed, out_columns.cloned());
     // remove duplicated prop ids

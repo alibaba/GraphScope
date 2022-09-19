@@ -150,7 +150,7 @@ public interface IrCoreLibrary extends Library {
     FfiResult.ByValue appendApplyOperator(
             Pointer plan, Pointer apply, int parent, IntByReference oprIdx);
 
-    Pointer initPathxpdOperator(Pointer expand, boolean isWholePath);
+    Pointer initPathxpdOperator(Pointer expand, PathOpt pathOpt, ResultOpt resultOpt);
 
     FfiResult.ByValue setPathxpdAlias(Pointer pathXpd, FfiAlias.ByValue alias);
 
