@@ -20,6 +20,10 @@ on:
     branches:
       - main
 
+concurrency:
+  group: ${{ github.repository }}-${{ github.event.number || github.head_ref || github.sha }}-${{ github.workflow }}
+  cancel-in-progress: true
+
 jobs:
   build-wheels:
     runs-on: macos-10.15
@@ -91,10 +95,6 @@ jobs:
         popd
         ${GITHUB_WORKSPACE}/scripts/install_deps.sh --dev --verbose
 
-    - name: Setup tmate session
-      if: true
-      uses: mxschmitt/action-tmate@v2
-
     - name: Build Client Wheels
       run: |
         python3 -c "import sys; print(sys.version)"
@@ -113,6 +113,10 @@ jobs:
         # package
         cd ${GITHUB_WORKSPACE}
         tar -zcf client.tar.gz python/dist/
+
+    - name: Setup tmate session
+      if: always()
+      uses: mxschmitt/action-tmate@v2
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
