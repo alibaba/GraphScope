@@ -220,10 +220,10 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
             Ok(state) => {
                 if TaskState::Finished == state {
                     info_worker!(
-                        "job({}) '{}' finished, used {:?};",
+                        "job({}) '{}' finished, used {:?} ms;",
                         self.id.job_id,
                         self.conf.job_name,
-                        self.start.elapsed()
+                        self.start.elapsed().as_millis()
                     )
                 }
                 state
