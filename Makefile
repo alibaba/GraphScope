@@ -156,13 +156,13 @@ unittest:
 .PHONY: minitest
 minitest:
 	cd $(WORKING_DIR)/python && \
-	pip3 install tensorflow==2.5.2 && \
+	pip3 install tensorflow==2.5.2 "pandas<1.5.0" && \
 	python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml --cov-report=term -s -v ./graphscope/tests/minitest
 
 .PHONY: k8stest
 k8stest:
 	cd $(WORKING_DIR)/python && \
-	pip3 install tensorflow==2.5.2 && \
+	pip3 install tensorflow==2.5.2 "pandas<1.5.0" && \
 	python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml --cov-report=term -s -v ./graphscope/tests/kubernetes
 
 .PHONY: clean

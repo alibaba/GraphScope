@@ -182,7 +182,7 @@ graphscope-client-manylinux2014-py3-nodocker:
 		cd $(WORKING_DIR)/../python; \
 		export PATH=/opt/python/$$py/bin:$$PATH; \
 		pip3 install -U pip; \
-		pip3 install "numpy==1.18.5" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" wheel "auditwheel==5.0.0"; \
+		pip3 install "numpy==1.18.5" "pandas<1.5.0" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" wheel "auditwheel==5.0.0"; \
 		rm -rf build; \
 		rm -rf dist/*.whl; \
 		python3 setup.py bdist_wheel; \
@@ -201,7 +201,7 @@ graphscope-client-darwin-py3:
 		export DYLD_LIBRARY_PATH=$(WORKING_DIR)/../learning_engine/graph-learn/built/lib:/usr/local/lib:$$DYLD_LIBRARY_PATH && \
 		cd $(WORKING_DIR)/../python && \
 		pip3 install -U pip && \
-		pip3 install "numpy==1.18.5" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" delocate wheel && \
+		pip3 install "numpy==1.18.5" "pandas<1.5.0" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" delocate wheel && \
 		rm -fr build dist/*.whl || true && \
 		python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
 		for wheel in `ls dist/*.whl`; do \
