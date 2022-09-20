@@ -33,6 +33,12 @@
 
 #include "vineyard/graph/fragment/arrow_fragment.h"
 
+#if defined __has_include
+#if __has_include("vineyard/graph/fragment/arrow_fragment_modifier.h")
+#include "vineyard/graph/fragment/arrow_fragment_modifier.h"
+#endif
+#endif
+
 #include "apps/python_pie/cython_pie_program.h"
 #include "apps/python_pie/export.h"
 #include "apps/python_pie/python_pie_app.h"
