@@ -23,6 +23,8 @@
 #include "vineyard/graph/fragment/property_graph_types.h"
 #include "vineyard/graph/fragment/property_graph_utils.h"
 
+#include "arrow/array.h"
+
 #include "core/context/column.h"
 #include "core/fragment/arrow_projected_fragment.h"
 
@@ -84,6 +86,13 @@ using LongColumn = Column<FRAG_T, uint64_t>;
 
 template <typename FRAG_T>
 using IntColumn = Column<FRAG_T, uint32_t>;
+
+template <typename T>
+using ArrowArrayBuilder = typename vineyard::ConvertToArrowType<T>::BuilderType;
+
+template <typename T>
+using ArrowArray = typename vineyard::ConvertToArrowType<T>::ArrayType;
+
 }  // namespace gs
 
 #endif

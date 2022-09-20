@@ -287,9 +287,9 @@ if (BUILD_TESTS)
         target_include_directories(run_java_app PRIVATE core utils apps)
         target_compile_definitions(run_java_app PUBLIC ENABLE_JAVA_SDK)
         target_link_libraries(run_java_app gs_proto ${GFLAGS_LIBRARIES} ${MPI_CXX_LIBRARIES} ${JNI_LIBRARIES} ${Boost_LIBRARIES}
-                                       ${CMAKE_DL_LIBS} ${VINEYARD_LIBRARIES})
+                                       ${CMAKE_DL_LIBS} ${GLOG_LIBRARIES} ${VINEYARD_LIBRARIES})
 
-        #java app benchmark
+        # java app benchmark
         add_executable(property_graph_java_app_benchmarks benchmarks/property_graph_java_app_benchmarks.cc core/java/javasdk.cc core/object/dynamic.cc)
         target_include_directories(property_graph_java_app_benchmarks PRIVATE core utils apps)
         target_compile_definitions(property_graph_java_app_benchmarks PUBLIC ENABLE_JAVA_SDK)
@@ -300,6 +300,7 @@ if (BUILD_TESTS)
         target_include_directories(giraph_runner PRIVATE core utils apps)
         target_compile_definitions(giraph_runner PUBLIC ENABLE_JAVA_SDK)
         target_link_libraries(giraph_runner ${CMAKE_DL_LIBS} gs_proto ${VINEYARD_LIBRARIES} ${Boost_LIBRARIES} ${GFLAGS_LIBRARIES}  ${JNI_LIBRARIES})
+
 
         if (${LIBUNWIND_FOUND})
             target_link_libraries(run_java_app ${LIBUNWIND_LIBRARIES})

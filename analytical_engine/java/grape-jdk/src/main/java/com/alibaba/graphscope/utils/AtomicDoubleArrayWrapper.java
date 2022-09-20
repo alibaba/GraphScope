@@ -25,6 +25,11 @@ public class AtomicDoubleArrayWrapper {
 
     public AtomicDoubleArrayWrapper() {}
 
+    public AtomicDoubleArrayWrapper(int s) {
+        data = new AtomicDoubleArray(s);
+        size = s;
+    }
+
     public AtomicDoubleArrayWrapper(int s, double defaultValue) {
         size = s;
         data = new AtomicDoubleArray(s);
@@ -87,6 +92,13 @@ public class AtomicDoubleArrayWrapper {
         do {
             preValue = data.get(lid);
         } while (preValue > newValue && !data.compareAndSet(lid, preValue, newValue));
+    }
+
+    public void compareAndSet(int ind, double newValue) {
+        double preValue;
+        do {
+            preValue = data.get(ind);
+        } while (preValue != newValue && !data.compareAndSet(ind, preValue, newValue));
     }
 
     public int getSize() {

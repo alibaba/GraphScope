@@ -16,8 +16,6 @@
 
 package com.alibaba.graphscope.stdcxx;
 
-import static com.alibaba.graphscope.utils.JNILibraryName.JNI_LIBRARY_NAME;
-
 import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.CXXOperator;
 import com.alibaba.fastffi.CXXPointer;
@@ -26,8 +24,9 @@ import com.alibaba.fastffi.CXXTemplate;
 import com.alibaba.fastffi.FFIFactory;
 import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFITypeAlias;
+import com.alibaba.graphscope.utils.JNILibraryName;
 
-@FFIGen(library = JNI_LIBRARY_NAME)
+@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
 @CXXHead(
         value = {"stdint.h"},
         system = {"unordered_map"})
@@ -36,6 +35,7 @@ import com.alibaba.fastffi.FFITypeAlias;
         cxx = {"unsigned", "uint64_t"},
         java = {"java.lang.Integer", "java.lang.Long"})
 public interface StdUnorderedMap<KEY_T, VALUE_T> extends CXXPointer {
+
     int size();
 
     boolean empty();
@@ -49,6 +49,7 @@ public interface StdUnorderedMap<KEY_T, VALUE_T> extends CXXPointer {
 
     @FFIFactory
     interface Factory<KEY_T, VALUE_T> {
+
         StdUnorderedMap<KEY_T, VALUE_T> create();
     }
 }

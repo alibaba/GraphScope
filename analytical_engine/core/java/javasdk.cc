@@ -60,6 +60,12 @@ std::string JString2String(JNIEnv* env, jstring jStr) {
 }
 bool InitWellKnownClasses(JNIEnv* env) {
   gs_class_loader_clz = env->FindClass(GRAPHSCOPE_CLASS_LOADER);
+  if (env->ExceptionCheck()) {
+    env->ExceptionDescribe();
+    env->ExceptionClear();
+    LOG(ERROR) << "Exception in loading graphscope class loader class";
+    return false;
+  }
   CHECK_NOTNULL(gs_class_loader_clz);
   gs_class_loader_clz = (jclass) env->NewGlobalRef(gs_class_loader_clz);
 
@@ -78,9 +84,10 @@ bool InitWellKnownClasses(JNIEnv* env) {
                              "(Ljava/net/URLClassLoader;)Ljava/lang/Class;");
   CHECK_NOTNULL(class_loader_load_communicator_class_methodID);
 
-  class_loader_load_and_create_methodID = env->GetStaticMethodID(
-      gs_class_loader_clz, "loadAndCreate",
-      "(Ljava/net/URLClassLoader;Ljava/lang/String;)Ljava/lang/Object;");
+  class_loader_load_and_create_methodID =
+      env->GetStaticMethodID(gs_class_loader_clz, "loadAndCreate",
+                             "(Ljava/net/URLClassLoader;Ljava/lang/"
+                             "String;Ljava/lang/String;)Ljava/lang/Object;");
   CHECK_NOTNULL(class_loader_load_and_create_methodID);
 
   class_loader_new_gs_class_loader_methodID =
@@ -107,7 +114,7 @@ inline uint64_t getTotalSystemMemory() {
   uint64_t pages = sysconf(_SC_PHYS_PAGES);
   uint64_t page_size = sysconf(_SC_PAGE_SIZE);
   uint64_t ret = pages * page_size;
-  VLOG(1) << "---> getTotalSystemMemory() -> " << ret;
+  VLOG(10) << "---> getTotalSystemMemory() -> " << ret;
   ret = ret / 1024;
   ret = ret / 1024;
   ret = ret / 1024;
@@ -115,10 +122,13 @@ inline uint64_t getTotalSystemMemory() {
 }
 
 void SetupEnv(const int local_num) {
-  int systemMemory = getTotalSystemMemory() / 10;
+  int systemMemory = getTotalSystemMemory() / 5;
   int systemMemoryPerWorker = std::max(systemMemory / local_num, 1);
-  int mnPerWorker = std::max(systemMemoryPerWorker * 7 / 12, 1);
+  int mnPerWorker = std::max(systemMemoryPerWorker * 9 / 12, 1);
 
+  VLOG(10) << "Xmx: " << systemMemoryPerWorker
+           << "g,Xms: " << systemMemoryPerWorker << "g,-Xmn: " << mnPerWorker
+           << "g";
   char kvPair[32000];
   snprintf(kvPair, sizeof(kvPair), "-Xmx%dg -Xms%dg -Xmn%dg",
            systemMemoryPerWorker, systemMemoryPerWorker, mnPerWorker);
@@ -315,13 +325,14 @@ jobject CreateFFIPointer(JNIEnv* env, const char* type_name,
 }
 
 jobject LoadAndCreate(JNIEnv* env, const jobject& url_class_loader_obj,
-                      const char* class_name) {
+                      const char* class_name, const char* serial_path) {
   VLOG(1) << "Loading and creating for class: " << class_name;
   jstring class_name_jstring = env->NewStringUTF(class_name);
+  jstring serial_path_jstring = env->NewStringUTF(serial_path);
 
   jobject res = env->CallStaticObjectMethod(
       gs_class_loader_clz, class_loader_load_and_create_methodID,
-      url_class_loader_obj, class_name_jstring);
+      url_class_loader_obj, class_name_jstring, serial_path_jstring);
   if (env->ExceptionCheck()) {
     env->ExceptionDescribe();
     env->ExceptionClear();
@@ -396,7 +407,7 @@ void InitJavaCommunicator(JNIEnv* env, const jobject& url_class_loader,
     VLOG(1) << "Successfully init communicator.";
     return;
   }
-  VLOG(1) << "No initing since not a sub class from Communicator.";
+  VLOG(10) << "No initing since not a sub class from Communicator.";
 }
 
 std::string GetJavaProperty(JNIEnv* env, const char* property_name) {

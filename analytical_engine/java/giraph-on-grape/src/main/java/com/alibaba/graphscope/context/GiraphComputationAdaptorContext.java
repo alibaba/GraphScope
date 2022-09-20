@@ -26,10 +26,10 @@ import com.alibaba.graphscope.ds.GSVertexArray;
 import com.alibaba.graphscope.factory.GiraphComputationFactory;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.graph.AggregatorManager;
-import com.alibaba.graphscope.graph.EdgeManager;
+import com.alibaba.graphscope.graph.GiraphEdgeManager;
+import com.alibaba.graphscope.graph.GiraphVertexIdManager;
 import com.alibaba.graphscope.graph.VertexDataManager;
 import com.alibaba.graphscope.graph.VertexFactory;
-import com.alibaba.graphscope.graph.VertexIdManager;
 import com.alibaba.graphscope.graph.impl.AggregatorManagerImpl;
 import com.alibaba.graphscope.graph.impl.VertexImpl;
 import com.alibaba.graphscope.parallel.DefaultMessageManager;
@@ -96,7 +96,7 @@ public class GiraphComputationAdaptorContext<OID_T, VID_T, VDATA_T, EDATA_T>
     /**
      * Manages the vertex original id.
      */
-    private VertexIdManager vertexIdManager;
+    private GiraphVertexIdManager vertexIdManager;
     /**
      * Manages the vertex data.
      */
@@ -105,7 +105,7 @@ public class GiraphComputationAdaptorContext<OID_T, VID_T, VDATA_T, EDATA_T>
     /**
      * Edge manager. We can choose to use a immutable edge manager or others.
      */
-    private EdgeManager edgeManager;
+    private GiraphEdgeManager edgeManager;
 
     /**
      * Aggregator manager.
@@ -319,6 +319,7 @@ public class GiraphComputationAdaptorContext<OID_T, VID_T, VDATA_T, EDATA_T>
 
         vertex =
                 VertexFactory.createDefaultVertex(
+                        conf.getGrapeVidClass(),
                         conf.getVertexIdClass(),
                         conf.getVertexValueClass(),
                         conf.getEdgeValueClass(),
@@ -462,7 +463,7 @@ public class GiraphComputationAdaptorContext<OID_T, VID_T, VDATA_T, EDATA_T>
                 logger.debug("inner vertices: " + innerVerticesNum + frag.innerVertices().size());
                 for (long i = 0; i < innerVerticesNum; ++i) {
                     bufferedWriter.write(
-                            vertexIdManager.getId(i)
+                            vertexIdManager.lid2Oid(i)
                                     + "\t"
                                     + vertexDataManager.getVertexData(i)
                                     + "\n");
