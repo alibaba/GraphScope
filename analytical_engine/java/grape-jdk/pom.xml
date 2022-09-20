@@ -24,7 +24,6 @@
   </parent>
 
   <artifactId>grape-jdk</artifactId>
-  <version>0.16.0</version>
   <packaging>jar</packaging>
   <name>grape-jdk</name>
 
@@ -56,6 +55,7 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
+      <scope>provided</scope>
     </dependency>
     <!--    not used in code but needed at runtime,-->
     <dependency>

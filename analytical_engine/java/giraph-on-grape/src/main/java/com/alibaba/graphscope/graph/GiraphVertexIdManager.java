@@ -17,9 +17,5 @@ package com.alibaba.graphscope.graph;
 
 import org.apache.hadoop.io.WritableComparable;
 
-public interface VertexIdManager<GRAPE_VID_T, OID_T extends WritableComparable> {
-
-    OID_T getId(long lid);
-
-    GRAPE_VID_T getLid(OID_T oid);
-}
+public interface GiraphVertexIdManager<GRAPE_VID_T, OID_T extends WritableComparable>
+        extends VertexIdManager<GRAPE_VID_T, OID_T> {}

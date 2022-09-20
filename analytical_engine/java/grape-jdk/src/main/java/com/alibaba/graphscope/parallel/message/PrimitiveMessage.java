@@ -17,15 +17,15 @@ package com.alibaba.graphscope.parallel.message;
 
 import static com.alibaba.graphscope.utils.CppClassName.GS_PRIMITIVE_MESSAGE;
 import static com.alibaba.graphscope.utils.CppHeaderName.CORE_JAVA_JAVA_MESSAGES_H;
-import static com.alibaba.graphscope.utils.JNILibraryName.JNI_LIBRARY_NAME;
 
 import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.FFIFactory;
 import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
+import com.alibaba.graphscope.utils.JNILibraryName;
 
-@FFIGen(library = JNI_LIBRARY_NAME)
+@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
 @CXXHead(CORE_JAVA_JAVA_MESSAGES_H)
 @FFITypeAlias(GS_PRIMITIVE_MESSAGE)
 public interface PrimitiveMessage<T> extends FFIPointer {

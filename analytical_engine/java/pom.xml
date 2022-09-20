@@ -42,16 +42,15 @@
     <google-java-format.version>1.7</google-java-format.version>
     <javapoet.version>1.13.0</javapoet.version>
     <junit.version>4.13.2</junit.version>
-    <logback-classic.version>1.2.3</logback-classic.version>
     <maven-antrun-plugin.version>3.0.0</maven-antrun-plugin.version>
     <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
     <maven-failsafe-plugin.version>3.0.0-M5</maven-failsafe-plugin.version>
     <maven-javadoc-plugin.version>3.0.0</maven-javadoc-plugin.version>
     <maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
     <maven-surefire-plugin.version>3.0.0-M4</maven-surefire-plugin.version>
-    <odps.sdk.version>0.36.4</odps.sdk.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <slf4j-api.version>1.7.25</slf4j-api.version>
+    <slf4j.version>1.7.30</slf4j.version>
+    <log4j.version>1.2.17</log4j.version>
     <dep.netty.version>4.1.36.Final</dep.netty.version>
     <dep.fastutil.version>6.5.4</dep.fastutil.version>
     <dep.kryo.version>4.0.0</dep.kryo.version>
@@ -63,11 +62,13 @@
       <dependency>
         <groupId>com.alibaba.graphscope</groupId>
         <artifactId>grape-jdk</artifactId>
+        <classifier>shaded</classifier>
         <version>0.16.0</version>
       </dependency>
       <dependency>
         <groupId>com.alibaba.graphscope</groupId>
         <artifactId>giraph-on-grape</artifactId>
+        <classifier>shaded</classifier>
         <version>0.16.0</version>
       </dependency>
       <dependency>
@@ -98,12 +99,17 @@
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
-        <version>${slf4j-api.version}</version>
+        <version>${slf4j.version}</version>
       </dependency>
       <dependency>
-        <groupId>ch.qos.logback</groupId>
-        <artifactId>logback-classic</artifactId>
-        <version>${logback-classic.version}</version>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-log4j12</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>log4j</groupId>
+        <artifactId>log4j</artifactId>
+        <version>${log4j.version}</version>
       </dependency>
       <dependency>
         <groupId>com.alibaba</groupId>
@@ -147,6 +153,12 @@
         <artifactId>kryo-serializers</artifactId>
         <version>${dep.kryo-serializers.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-all</artifactId>
+        <version>1.10.19</version>
+        <scope>test</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -162,6 +174,7 @@
             <source>1.8</source>
             <target>1.8</target>
             <showWarnings>true</showWarnings>
+            <forceJavacCompilerUse>true</forceJavacCompilerUse>
           </configuration>
         </plugin>
         <plugin>

@@ -77,6 +77,7 @@ class ArrowFragmentLoader {
   using partitioner_t = vineyard::HashPartitioner<oid_t>;
 #else
   using partitioner_t = SegmentedPartitioner<oid_t>;
+  VLOG(1) << "Using segmented Partitioner";
 #endif
   using table_vec_t = std::vector<std::shared_ptr<arrow::Table>>;
   using vertex_table_info_t =
@@ -95,7 +96,8 @@ class ArrowFragmentLoader {
         vfiles_(vfiles),
         graph_info_(nullptr),
         directed_(directed),
-        generate_eid_(false) {}
+        generate_eid_(false),
+        giraph_enabled_(false) {}
 
   ArrowFragmentLoader(vineyard::Client& client,
                       const grape::CommSpec& comm_spec,
@@ -106,11 +108,40 @@ class ArrowFragmentLoader {
         vfiles_(),
         graph_info_(graph_info),
         directed_(graph_info->directed),
-        generate_eid_(graph_info->generate_eid) {}
+        generate_eid_(graph_info->generate_eid) {
+#ifdef ENABLE_JAVA_SDK
+    // check when vformat or eformat start with giraph. if not, we
+    // giraph_enabled is false;
+    giraph_enabled_ = false;
+    for (auto v : graph_info_->vertices) {
+      if (v->vformat.find("giraph") != std::string::npos) {
+        giraph_enabled_ = true;
+      }
+    }
+    for (auto e : graph_info_->edges) {
+      for (auto sub : e->sub_labels) {
+        if (sub.eformat.find("giraph") != std::string::npos) {
+          giraph_enabled_ = true;
+        }
+      }
+    }
+    LOG(INFO) << "giraph enabled " << giraph_enabled_;
+
+    if (giraph_enabled_) {
+      java_loader_invoker_.SetWorkerInfo(comm_spec_.worker_id(),
+                                         comm_spec_.worker_num(), comm_spec_);
+      java_loader_invoker_.InitJavaLoader("giraph");
+    }
+#endif
+  }
 
   ~ArrowFragmentLoader() = default;
 
-  bl::result<std::pair<table_vec_t, std::vector<table_vec_t>>>
+#ifdef ENABLE_JAVA_SDK
+  JavaLoaderInvoker& GetJavaLoaderInvoker() { return java_loader_invoker_; }
+#endif
+
+  boost::leaf::result<std::pair<table_vec_t, std::vector<table_vec_t>>>
   LoadVertexEdgeTables() {
     if (graph_info_) {
       std::stringstream labels;
@@ -449,27 +480,21 @@ class ArrowFragmentLoader {
   bl::result<std::shared_ptr<arrow::Table>> readTableFromGiraph(
       bool load_vertex, const std::string& file_path, int index,
       int total_parts, const std::string formatter) {
-    if (java_loader_invoker_ == nullptr) {
-      VLOG(1) << "Java loader initializing: worker id: "
-              << comm_spec_.worker_id()
-              << ", worker num: " << comm_spec_.worker_num();
-
-      java_loader_invoker_ = std::make_shared<JavaLoaderInvoker>();
-      java_loader_invoker_->SetWorkerInfo(comm_spec_.worker_id(),
-                                          comm_spec_.worker_num());
-      java_loader_invoker_->InitJavaLoader();
-    }
-
-    if (load_vertex) {
-      // There are cases both vertex and edges are specified in vertex file.
-      // In this case, we load the data in this function, and suppose call
-      // add_edges will be called(empty location),
-      // if location is empty, we just return the previous loaded data.
-      java_loader_invoker_->load_vertices_and_edges(file_path, formatter);
-      return java_loader_invoker_->get_vertex_table();
+    if (giraph_enabled_) {
+      if (load_vertex) {
+        // There are cases both vertex and edges are specified in vertex file.
+        // In this case, we load the data in this function, and suppose call
+        // add_edges will be called(empty location),
+        // if location is empty, we just return the previous loaded data.
+        java_loader_invoker_.load_vertices_and_edges(file_path, formatter);
+        return java_loader_invoker_.get_vertex_table();
+      } else {
+        java_loader_invoker_.load_edges(file_path, formatter);
+        return java_loader_invoker_.get_edge_table();
+      }
     } else {
-      java_loader_invoker_->load_edges(file_path, formatter);
-      return java_loader_invoker_->get_edge_table();
+      LOG(ERROR) << "Please enable giraph in constructor";
+      return std::shared_ptr<arrow::Table>();
     }
     // once set, we will read.
   }
@@ -975,9 +1000,10 @@ class ArrowFragmentLoader {
 
   bool directed_;
   bool generate_eid_;
+  bool giraph_enabled_;
 
 #ifdef ENABLE_JAVA_SDK
-  std::shared_ptr<JavaLoaderInvoker> java_loader_invoker_;
+  JavaLoaderInvoker java_loader_invoker_;
 #endif
 
   std::function<void(vineyard::IIOAdaptor*)> io_deleter_ =

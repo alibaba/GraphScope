@@ -1367,8 +1367,8 @@ def _parse_giraph_app_type(java_class_path, real_algo):
         bufsize=1,
     )
     out, err = parse_user_app_process.communicate()
-    logger.error(err)
-    for line in out.split("\n"):
+    lines = out.split("\n") + err.split("\n")
+    for line in lines:
         logger.info(line)
         if len(line) == 0:
             continue

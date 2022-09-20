@@ -18,7 +18,6 @@ package com.alibaba.graphscope.context.ffi;
 
 import static com.alibaba.graphscope.utils.CppClassName.VERTEX_DATA_CONTEXT;
 import static com.alibaba.graphscope.utils.CppHeaderName.ARROW_PROJECTED_FRAGMENT_H;
-import static com.alibaba.graphscope.utils.JNILibraryName.JNI_LIBRARY_NAME;
 
 import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.CXXReference;
@@ -28,8 +27,9 @@ import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.graphscope.ds.GSVertexArray;
 import com.alibaba.graphscope.utils.CppHeaderName;
+import com.alibaba.graphscope.utils.JNILibraryName;
 
-@FFIGen(library = JNI_LIBRARY_NAME)
+@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
 @CXXHead(CppHeaderName.VERTEX_DATA_CONTEXT_H)
 @CXXHead(ARROW_PROJECTED_FRAGMENT_H)
 @FFITypeAlias(VERTEX_DATA_CONTEXT)

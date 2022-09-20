@@ -18,7 +18,6 @@ package com.alibaba.graphscope.parallel.message;
 
 import static com.alibaba.graphscope.utils.CppClassName.DOUBLE_MSG;
 import static com.alibaba.graphscope.utils.CppHeaderName.CORE_JAVA_JAVA_MESSAGES_H;
-import static com.alibaba.graphscope.utils.JNILibraryName.JNI_LIBRARY_NAME;
 
 import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.FFIFactory;
@@ -26,6 +25,7 @@ import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.fastffi.FFITypeFactory;
+import com.alibaba.graphscope.utils.JNILibraryName;
 
 /**
  * DoubleMsg is a java wrapper for <a
@@ -35,7 +35,7 @@ import com.alibaba.fastffi.FFITypeFactory;
  * Boxing types in value. So to enabling user passing Long,Double,Int as messages, we provide
  * Wrappers for these primitive types. Feel free to use them in messageManger.
  */
-@FFIGen(library = JNI_LIBRARY_NAME)
+@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
 @CXXHead(value = CORE_JAVA_JAVA_MESSAGES_H)
 @FFITypeAlias(value = DOUBLE_MSG)
 public interface DoubleMsg extends FFIPointer {

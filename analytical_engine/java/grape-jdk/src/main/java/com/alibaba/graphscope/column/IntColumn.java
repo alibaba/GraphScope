@@ -23,7 +23,6 @@ import static com.alibaba.graphscope.utils.CppHeaderName.ARROW_FRAGMENT_H;
 import static com.alibaba.graphscope.utils.CppHeaderName.ARROW_PROJECTED_FRAGMENT_H;
 import static com.alibaba.graphscope.utils.CppHeaderName.CORE_JAVA_TYPE_ALIAS_H;
 import static com.alibaba.graphscope.utils.CppHeaderName.GRAPE_TYPES_H;
-import static com.alibaba.graphscope.utils.JNILibraryName.JNI_LIBRARY_NAME;
 
 import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.CXXReference;
@@ -32,8 +31,9 @@ import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.graphscope.ds.GSVertexArray;
 import com.alibaba.graphscope.ds.Vertex;
+import com.alibaba.graphscope.utils.JNILibraryName;
 
-@FFIGen(library = JNI_LIBRARY_NAME)
+@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
 @CXXHead(CORE_JAVA_TYPE_ALIAS_H)
 @CXXHead(system = "cstdint")
 @CXXHead(ARROW_FRAGMENT_H)

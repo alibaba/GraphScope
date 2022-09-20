@@ -87,7 +87,6 @@ class JavaContextBase : public grape::ContextBase {
     JNIEnvMark m;
     if (m.env()) {
       m.env()->DeleteGlobalRef(url_class_loader_object_);
-      InvokeGC(m.env());
       VLOG(1) << "Delete URL class loader";
     } else {
       LOG(ERROR) << "JNI env not available.";
@@ -143,15 +142,15 @@ class JavaContextBase : public grape::ContextBase {
 
   // Set frag_group_id to zero inidicate not available.
   void init(jlong messages_addr, const char* java_message_manager_name,
-            const std::string& params, const std::string& lib_path) {
+            const std::string& params, const std::string& lib_path,
+            int local_num = 1) {
     if (params.empty()) {
       LOG(ERROR) << "no args received";
       return;
     }
-    std::string user_library_name;
-    std::string user_class_path;
+    std::string user_library_name, user_class_path;
     std::string args_str = parseParamsAndSetupJVMEnv(
-        params, lib_path, user_library_name, user_class_path);
+        params, lib_path, user_library_name, user_class_path, local_num);
 
     JavaVM* jvm = GetJavaVM();
     (void) jvm;
@@ -176,50 +175,16 @@ class JavaContextBase : public grape::ContextBase {
         url_class_loader_object_ = env->NewGlobalRef(gs_class_loader_obj);
       }
 
-      {
-        if (!user_library_name.empty()) {
-          // Since we load loadLibraryClass with urlClassLoader, the
-          // fromClass.classLoader literal, which is used in System.load,
-          // should be urlClassLoader.
-          jclass load_library_class = (jclass) LoadClassWithClassLoader(
-              env, url_class_loader_object_, LOAD_LIBRARY_CLASS);
-          CHECK_NOTNULL(load_library_class);
-          jstring user_library_jstring =
-              env->NewStringUTF(user_library_name.c_str());
-          jmethodID load_library_methodID = env->GetStaticMethodID(
-              load_library_class, "invoke", "(Ljava/lang/String;)V");
+      loadJNILibrary(env, user_library_name);
 
-          // call static method
-          env->CallStaticVoidMethod(load_library_class, load_library_methodID,
-                                    user_library_jstring);
-          if (env->ExceptionCheck()) {
-            LOG(ERROR) << "Exception occurred when loading user library";
-            env->ExceptionDescribe();
-            env->ExceptionClear();
-            LOG(ERROR) << "Exiting since exception occurred";
-          }
-          VLOG(1) << "Loaded specified user jni library: " << user_library_name;
-        }
-      }
+      VLOG(1) << "Creating app object: " << app_class_name_;
+      app_object_ =
+          LoadAndCreate(env, url_class_loader_object_, app_class_name_);
+      VLOG(1) << "Successfully created app object with class loader:"
+              << &url_class_loader_object_
+              << ", of type: " << std::string(app_class_name_);
 
-      {
-        VLOG(1) << "Creating app object: " << app_class_name_;
-        app_object_ =
-            LoadAndCreate(env, url_class_loader_object_, app_class_name_);
-        VLOG(1) << "Successfully created app object with class loader:"
-                << &url_class_loader_object_
-                << ", of type: " << std::string(app_class_name_);
-      }
-
-      {
-        std::string _context_class_name_str = getCtxClassNameFromAppObject(env);
-        VLOG(1) << "Context class name: " << _context_class_name_str;
-        context_object_ = LoadAndCreate(env, url_class_loader_object_,
-                                        _context_class_name_str.c_str());
-        VLOG(1) << "Successfully created ctx object with class loader:"
-                << &url_class_loader_object_
-                << ", of type: " << _context_class_name_str;
-      }
+      createContextObj(env);
       jclass context_class = env->GetObjectClass(context_object_);
       CHECK_NOTNULL(context_class);
 
@@ -231,29 +196,7 @@ class JavaContextBase : public grape::ContextBase {
           env, graph_type_str_.c_str(), url_class_loader_object_,
           reinterpret_cast<jlong>(&fragment_));
       CHECK_NOTNULL(fragObject);
-      if (graph_type_str_.find("Immutable") != std::string::npos ||
-          graph_type_str_.find("ArrowProjected") != std::string::npos) {
-        VLOG(1) << "Creating IFragment";
-        // jobject fragment_object_impl_ = env->NewGlobalRef(fragObject);
-        // For immutableFragment and ArrowProjectedFragment, we use a wrapper
-        // Load IFragmentHelper class, and call it functions.
-        jclass ifragment_helper_clz = (jclass) LoadClassWithClassLoader(
-            env, url_class_loader_object_, IFRAGMENT_HELPER_CLASS);
-        CHECK_NOTNULL(ifragment_helper_clz);
-        jmethodID adapt2SimpleFragment_methodID = env->GetStaticMethodID(
-            ifragment_helper_clz, "adapt2SimpleFragment",
-            "(Ljava/lang/Object;)Lcom/alibaba/graphscope/fragment/"
-            "IFragment;");
-        CHECK_NOTNULL(adapt2SimpleFragment_methodID);
-
-        jobject res = (jobject) env->CallStaticObjectMethod(
-            ifragment_helper_clz, adapt2SimpleFragment_methodID, fragObject);
-        CHECK_NOTNULL(res);
-        fragment_object_ = env->NewGlobalRef(res);
-      } else {
-        fragment_object_ = env->NewGlobalRef(fragObject);
-        VLOG(1) << "Creating ArrowFragment";
-      }
+      fragment_object_ = wrapFragObj(env, fragObject);
 
       // 2. Create Message manager Java object
       jobject messagesObject =
@@ -264,42 +207,10 @@ class JavaContextBase : public grape::ContextBase {
 
       // 3. Create arguments array
       {
-        jclass json_class = (jclass) LoadClassWithClassLoader(
-            env, url_class_loader_object_, JSON_CLASS_NAME);
-        if (env->ExceptionCheck()) {
-          env->ExceptionDescribe();
-          env->ExceptionClear();
-          LOG(ERROR) << "Exception in loading json class ";
-        }
-        CHECK_NOTNULL(json_class);
-        jmethodID parse_method = env->GetStaticMethodID(
-            json_class, "parseObject",
-            "(Ljava/lang/String;)Lcom/alibaba/fastjson/JSONObject;");
-        CHECK_NOTNULL(parse_method);
-        VLOG(1) << "User defined kw args: " << args_str;
-        jstring args_jstring = env->NewStringUTF(args_str.c_str());
-        jobject json_object =
-            env->CallStaticObjectMethod(json_class, parse_method, args_jstring);
-        CHECK_NOTNULL(json_object);
+        jobject json_object = createArgsObject(env, args_str);
         // 3.1 If we find a setClassLoaderMethod, then we invoke.(NOt
         // neccessary) this is specially for giraph adaptors
-        {
-          jmethodID set_class_loader_method = env->GetMethodID(
-              context_class, "setClassLoader", SET_CLASS_LOADER_METHOD_SIG);
-          if (set_class_loader_method) {
-            env->CallVoidMethod(context_object_, set_class_loader_method,
-                                url_class_loader_object_);
-            if (env->ExceptionCheck()) {
-              env->ExceptionDescribe();
-              env->ExceptionClear();
-              LOG(ERROR) << "Exception in context Init";
-              return;
-            }
-            VLOG(1) << "Successfully set class loader";
-          } else {
-            VLOG(2) << "No class loader available to set for ctx";
-          }
-        }
+        setContextClassLoader(env, context_class);
 
         // 4. Invoke java method
         env->CallVoidMethod(context_object_, init_method_id, fragment_object_,
@@ -380,8 +291,8 @@ class JavaContextBase : public grape::ContextBase {
   std::string parseParamsAndSetupJVMEnv(const std::string& params,
                                         const std::string lib_path,
                                         std::string& user_library_name,
-                                        std::string& user_class_path) {
-    VLOG(10) << "received params: " << params;
+                                        std::string& user_class_path,
+                                        int local_num) {
     boost::property_tree::ptree pt;
     std::stringstream ss;
     {
@@ -393,10 +304,9 @@ class JavaContextBase : public grape::ContextBase {
       }
     }
 
-    VLOG(10) << "Received json: " << params;
     std::string frag_name = pt.get<std::string>("frag_name");
     CHECK(!frag_name.empty());
-    VLOG(10) << "Parse frag name: " << frag_name;
+    VLOG(1) << "Parse frag name: " << frag_name;
     graph_type_str_ = frag_name;
     // pt.erase("frag_name");
 
@@ -411,8 +321,8 @@ class JavaContextBase : public grape::ContextBase {
     app_class_name_ = new char[strlen(ch) + 1];
     memcpy(app_class_name_, ch, strlen(ch));
     app_class_name_[strlen(ch)] = '\0';
-
     pt.erase("app_class");
+
     boost::filesystem::path lib_path_fs, lib_dir;
     if (!lib_path.empty()) {
       lib_path_fs = lib_path;
@@ -424,7 +334,7 @@ class JavaContextBase : public grape::ContextBase {
     }
 
     user_class_path = libPath2UserClassPath(lib_dir, lib_path_fs, jar_name);
-    VLOG(1) << "user cp: " << user_class_path;
+    VLOG(10) << "user class path: " << user_class_path;
 
     // Giraph adaptor context need to map java graph data to
     // vineyard_id(frag_group_id)
@@ -437,7 +347,7 @@ class JavaContextBase : public grape::ContextBase {
     } else {
       LOG(ERROR) << "Cannot find GRAPE_JVM_OPTS env";
     }
-    SetupEnv(1);
+    SetupEnv(local_num);
     ss.str("");  // reset the stream buffer
     boost::property_tree::json_parser::write_json(ss, pt);
     return ss.str();
@@ -498,6 +408,107 @@ class JavaContextBase : public grape::ContextBase {
       f.close();
     }
     return true;
+  }
+
+  void loadJNILibrary(JNIEnv* env, const std::string& user_library_name) {
+    if (!user_library_name.empty()) {
+      // Since we load loadLibraryClass with urlClassLoader, the
+      // fromClass.classLoader literal, which is used in System.load,
+      // should be urlClassLoader.
+      jclass load_library_class = (jclass) LoadClassWithClassLoader(
+          env, url_class_loader_object_, LOAD_LIBRARY_CLASS);
+      CHECK_NOTNULL(load_library_class);
+      jstring user_library_jstring =
+          env->NewStringUTF(user_library_name.c_str());
+      jmethodID load_library_methodID = env->GetStaticMethodID(
+          load_library_class, "invoke", "(Ljava/lang/String;)V");
+
+      // call static method
+      env->CallStaticVoidMethod(load_library_class, load_library_methodID,
+                                user_library_jstring);
+      if (env->ExceptionCheck()) {
+        LOG(ERROR) << "Exception occurred when loading user library";
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        LOG(ERROR) << "Exiting since exception occurred";
+      }
+      VLOG(1) << "Loaded specified user jni library: " << user_library_name;
+    }
+  }
+
+  void createContextObj(JNIEnv* env) {
+    std::string _context_class_name_str = getCtxClassNameFromAppObject(env);
+    VLOG(1) << "Context class name: " << _context_class_name_str;
+    context_object_ = LoadAndCreate(env, url_class_loader_object_,
+                                    _context_class_name_str.c_str());
+    VLOG(1) << "Successfully created ctx object with class loader:"
+            << &url_class_loader_object_
+            << ", of type: " << _context_class_name_str;
+  }
+
+  jobject wrapFragObj(JNIEnv* env, jobject& fragObject) {
+    if (graph_type_str_.find("Immutable") != std::string::npos ||
+        graph_type_str_.find("ArrowProjected") != std::string::npos) {
+      VLOG(10) << "Creating IFragment";
+      // jobject fragment_object_impl_ = env->NewGlobalRef(fragObject);
+      // For immutableFragment and ArrowProjectedFragment, we use a wrapper
+      // Load IFragmentHelper class, and call it functions.
+      jclass ifragment_helper_clz = (jclass) LoadClassWithClassLoader(
+          env, url_class_loader_object_, IFRAGMENT_HELPER_CLASS);
+      CHECK_NOTNULL(ifragment_helper_clz);
+      jmethodID adapt2SimpleFragment_methodID = env->GetStaticMethodID(
+          ifragment_helper_clz, "adapt2SimpleFragment",
+          "(Ljava/lang/Object;)Lcom/alibaba/graphscope/fragment/"
+          "IFragment;");
+      CHECK_NOTNULL(adapt2SimpleFragment_methodID);
+
+      jobject res = (jobject) env->CallStaticObjectMethod(
+          ifragment_helper_clz, adapt2SimpleFragment_methodID, fragObject);
+      CHECK_NOTNULL(res);
+      return env->NewGlobalRef(res);
+    } else {
+      return env->NewGlobalRef(fragObject);
+      VLOG(1) << "Creating ArrowFragment";
+    }
+  }
+
+  jobject createArgsObject(JNIEnv* env, const std::string& args_str) {
+    jclass json_class = (jclass) LoadClassWithClassLoader(
+        env, url_class_loader_object_, JSON_CLASS_NAME);
+    if (env->ExceptionCheck()) {
+      env->ExceptionDescribe();
+      env->ExceptionClear();
+      LOG(ERROR) << "Exception in loading json class ";
+    }
+    CHECK_NOTNULL(json_class);
+    jmethodID parse_method = env->GetStaticMethodID(
+        json_class, "parseObject",
+        "(Ljava/lang/String;)Lcom/alibaba/fastjson/JSONObject;");
+    CHECK_NOTNULL(parse_method);
+    VLOG(10) << "User defined kw args: " << args_str;
+    jstring args_jstring = env->NewStringUTF(args_str.c_str());
+    jobject json_object =
+        env->CallStaticObjectMethod(json_class, parse_method, args_jstring);
+    CHECK_NOTNULL(json_object);
+    return json_object;
+  }
+
+  void setContextClassLoader(JNIEnv* env, jclass& context_class) {
+    jmethodID set_class_loader_method = env->GetMethodID(
+        context_class, "setClassLoader", SET_CLASS_LOADER_METHOD_SIG);
+    if (set_class_loader_method) {
+      env->CallVoidMethod(context_object_, set_class_loader_method,
+                          url_class_loader_object_);
+      if (env->ExceptionCheck()) {
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        LOG(ERROR) << "Exception in set Class loader";
+        return;
+      }
+      VLOG(1) << "Successfully set class loader";
+    } else {
+      VLOG(2) << "No class loader available to set for ctx";
+    }
   }
 
   std::string graph_type_str_;
