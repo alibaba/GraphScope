@@ -4,7 +4,7 @@
 # the result image includes all runtime stuffs of graphscope, with analytical engine,
 # learning engine and interactive engine installed.
 
-ARG BASE_VERSION=v0.8.2
+ARG BASE_VERSION=v0.8.4
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:$BASE_VERSION as builder
 
 ARG NETWORKX=ON

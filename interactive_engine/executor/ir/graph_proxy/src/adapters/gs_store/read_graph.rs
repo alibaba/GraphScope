@@ -220,17 +220,16 @@ where
                 .iter()
                 .map(|pid| *pid as PartitionId)
                 .collect();
-            let result = store
-                .get_all_edges(
-                    si,
-                    label_ids.as_ref(),
-                    condition.as_ref(),
-                    None,
-                    prop_ids.as_ref(),
-                    0,
-                    partitions.as_ref(),
-                )
-                .map(move |e| to_runtime_edge(&e));
+            let res_iter = store.get_all_edges(
+                si,
+                label_ids.as_ref(),
+                condition.as_ref(),
+                None,
+                prop_ids.as_ref(),
+                0,
+                partitions.as_ref(),
+            );
+            let result = RuntimeEdgeIter::new(res_iter, true);
 
             if row_filter_exists_but_not_pushdown {
                 Ok(filter_sample_limit!(result, row_filter, params.sample_ratio, params.limit))
@@ -393,38 +392,9 @@ where
 
         let stmt = from_fn(move |v: ID| {
             let src_id = get_partition_vertex_id(v, partition_manager.clone());
-            let iter = match direction {
-                Direction::Out => store.get_out_edges(
-                    si,
-                    vec![src_id],
-                    edge_label_ids.as_ref(),
-                    condition.as_ref(),
-                    None,
-                    prop_ids.as_ref(),
-                    limit.unwrap_or(0),
-                ),
-                Direction::In => store.get_in_edges(
-                    si,
-                    vec![src_id],
-                    edge_label_ids.as_ref(),
-                    condition.as_ref(),
-                    None,
-                    prop_ids.as_ref(),
-                    limit.unwrap_or(0),
-                ),
-                Direction::Both => {
-                    let mut iter = vec![];
-                    let out_iter = store.get_out_edges(
-                        si,
-                        vec![src_id.clone()],
-                        edge_label_ids.as_ref(),
-                        condition.as_ref(),
-                        None,
-                        prop_ids.as_ref(),
-                        limit.clone().unwrap_or(0),
-                    );
-                    iter.push(out_iter);
-                    let in_iter = store.get_in_edges(
+            let iter_list = match direction {
+                Direction::Out => {
+                    let mut res_iter = store.get_out_edges(
                         si,
                         vec![src_id],
                         edge_label_ids.as_ref(),
@@ -433,12 +403,61 @@ where
                         prop_ids.as_ref(),
                         limit.unwrap_or(0),
                     );
-                    iter.push(in_iter);
-                    Box::new(IterList::new(iter))
+                    if let Some(ei) = res_iter.next().map(|(_src, ei)| ei) {
+                        let iter = RuntimeEdgeIter::new(ei, true);
+                        IterList::new(vec![iter])
+                    } else {
+                        IterList::new(vec![])
+                    }
+                }
+                Direction::In => {
+                    let mut res_iter = store.get_in_edges(
+                        si,
+                        vec![src_id],
+                        edge_label_ids.as_ref(),
+                        condition.as_ref(),
+                        None,
+                        prop_ids.as_ref(),
+                        limit.unwrap_or(0),
+                    );
+                    if let Some(ei) = res_iter.next().map(|(_dst, ei)| ei) {
+                        let iter = RuntimeEdgeIter::new(ei, false);
+                        IterList::new(vec![iter])
+                    } else {
+                        IterList::new(vec![])
+                    }
+                }
+                Direction::Both => {
+                    let mut res_out_iter = store.get_out_edges(
+                        si,
+                        vec![src_id.clone()],
+                        edge_label_ids.as_ref(),
+                        condition.as_ref(),
+                        None,
+                        prop_ids.as_ref(),
+                        limit.clone().unwrap_or(0),
+                    );
+                    let mut res_in_iter = store.get_in_edges(
+                        si,
+                        vec![src_id],
+                        edge_label_ids.as_ref(),
+                        condition.as_ref(),
+                        None,
+                        prop_ids.as_ref(),
+                        limit.unwrap_or(0),
+                    );
+                    let mut iters = vec![];
+                    if let Some(ei) = res_out_iter.next().map(|(_src, ei)| ei) {
+                        let iter = RuntimeEdgeIter::new(ei, true);
+                        iters.push(iter);
+                    }
+                    if let Some(ei) = res_in_iter.next().map(|(_dst, ei)| ei) {
+                        let iter = RuntimeEdgeIter::new(ei, false);
+                        iters.push(iter);
+                    }
+                    IterList::new(iters)
                 }
             };
-            let iters = iter.map(|(_src, ei)| ei).collect();
-            let iter_list = IterList::new(iters).map(move |e| to_runtime_edge(&e));
             if row_filter_exists_but_not_pushdown {
                 let filter = row_filter.clone().unwrap();
                 let columns = columns.clone();
@@ -479,8 +498,43 @@ fn to_empty_vertex<V: StoreVertex>(v: &V) -> Vertex {
     Vertex::new(id, Some(label), DynDetails::default())
 }
 
+pub struct RuntimeEdgeIter<E, EI>
+where
+    E: StoreEdge + 'static,
+    EI: Iterator<Item = E> + 'static,
+{
+    iter: EI,
+    from_src: bool,
+}
+
+impl<E, EI> RuntimeEdgeIter<E, EI>
+where
+    E: StoreEdge + 'static,
+    EI: Iterator<Item = E> + 'static,
+{
+    pub fn new(iter: EI, from_src: bool) -> Self {
+        RuntimeEdgeIter { iter, from_src }
+    }
+}
+
+impl<E, EI> Iterator for RuntimeEdgeIter<E, EI>
+where
+    E: StoreEdge + 'static,
+    EI: Iterator<Item = E> + 'static,
+{
+    type Item = Edge;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(next) = self.iter.next() {
+            Some(to_runtime_edge(&next, self.from_src))
+        } else {
+            None
+        }
+    }
+}
+
 #[inline]
-fn to_runtime_edge<E: StoreEdge>(e: &E) -> Edge {
+fn to_runtime_edge<E: StoreEdge>(e: &E, from_src: bool) -> Edge {
     // TODO: LazyEdgeDetails
     let id = e.get_edge_id() as ID;
     let label = encode_runtime_e_label(e);
@@ -488,9 +542,14 @@ fn to_runtime_edge<E: StoreEdge>(e: &E) -> Edge {
         .get_properties()
         .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val))
         .collect();
-    // TODO: new an edge with with_from_src()
-    let mut edge =
-        Edge::new(id, Some(label), e.get_src_id() as ID, e.get_dst_id() as ID, DynDetails::new(properties));
+    let mut edge = Edge::with_from_src(
+        id,
+        Some(label),
+        e.get_src_id() as ID,
+        e.get_dst_id() as ID,
+        from_src,
+        DynDetails::new(properties),
+    );
     edge.set_src_label(e.get_src_label_id() as LabelId);
     edge.set_dst_label(e.get_dst_label_id() as LabelId);
     edge
@@ -714,7 +773,7 @@ fn extract_needed_columns(
     // Some(vec[]) means need all props, so can't merge it with props needed in filter
     if let Some(out_columns) = out_columns {
         if out_columns.is_empty() {
-            return Ok(Some(Vec::with_capacity(0)))
+            return Ok(Some(Vec::with_capacity(0)));
         }
     }
 
