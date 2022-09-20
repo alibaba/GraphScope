@@ -380,6 +380,7 @@ check_dependencies() {
 #   output environment export statements to file.
 ##########################
 write_envs_config() {
+  pwd
   if [ -f "${OUTPUT_ENV_FILE}" ]; then
     warning "Found ${OUTPUT_ENV_FILE} exists, remove the environmen config file and generate a new one."
     rm -fr ${OUTPUT_ENV_FILE}
