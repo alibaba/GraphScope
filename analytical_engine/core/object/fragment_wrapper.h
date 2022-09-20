@@ -44,6 +44,7 @@
 #include "vineyard/graph/fragment/arrow_fragment.h"
 #include "vineyard/graph/fragment/arrow_fragment_group.h"
 #include "vineyard/graph/fragment/graph_schema.h"
+#include "vineyard/graph/loader/fragment_loader_utils.h"
 #include "vineyard/graph/utils/context_protocols.h"
 
 #include "core/context/i_context.h"

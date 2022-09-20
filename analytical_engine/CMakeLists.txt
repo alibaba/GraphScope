@@ -13,6 +13,7 @@ set(PROJECT_VERSION ${GRAPHSCOPE_ANALYTICAL_VERSION})
 option(NETWORKX "networkx on?" ON)
 option(BUILD_TESTS "Build unit test" ON)
 option(ENABLE_JAVA_SDK "Build with support for java sdk" ON)
+option(LET_IT_CRASH_ON_EXCEPTION "Disable boost leaf's error handling and let it crash when exception occurs to help debugging" OFF)
 
 # Get system processor
 execute_process(COMMAND uname -m OUTPUT_VARIABLE SYSTEM_PROCESSOR)
@@ -65,6 +66,10 @@ include(CheckCXXCompilerFlag)
 include(CheckLibraryExists)
 include(CheckCXXSourceRuns)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# include /usr/local/lib as cmake installed dependencies will be placed there by default
+include_directories(SYSTEM /usr/local/include)
+
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/proto)
 
@@ -185,7 +190,7 @@ endif ()
 find_package(libgrapelite REQUIRED)
 include_directories(${LIBGRAPELITE_INCLUDE_DIRS})
 
-find_package(vineyard 0.6.0 REQUIRED)
+find_package(vineyard 0.8.4 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 add_compile_options(-DENABLE_SELECTOR)
 
@@ -261,6 +266,9 @@ else()
         ${VINEYARD_LIBRARIES}
         )
 endif()
+if (LET_IT_CRASH_ON_EXCEPTION)
+    target_compile_definitions(grape_engine PRIVATE LET_IT_CRASH_ON_EXCEPTION)
+endif ()
 target_link_libraries(grape_engine PRIVATE OpenMP::OpenMP_CXX)
 
 if (${LIBUNWIND_FOUND})
@@ -373,6 +381,28 @@ add_custom_target(gsa_clformat
     COMMAND clang-format --style=file -i ${FILES_NEED_LINT}
     COMMENT "Running clang-format, using clang-format-8 from https://github.com/muttleyxd/clang-tools-static-binaries/releases"
     VERBATIM)
+
+# Install GAE Java SDK
+if(ENABLE_JAVA_SDK)
+    set(GAE_JAVA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/java/")
+    set(GAE_JAVA_RUNTIME_DIR "${GAE_JAVA_DIR}/grape-runtime/")
+    set(GAE_JAVA_RUNTIME_JAR "${GAE_JAVA_RUNTIME_DIR}/target/grape-runtime-${GRAPHSCOPE_ANALYTICAL_VERSION}-shaded.jar")
+    add_custom_command(
+        OUTPUT "${GAE_JAVA_RUNTIME_DIR}/target/native/libgrape-jni.so"
+        COMMAND mvn clean install -DskipTests --quiet
+        DEPENDS gs_proto
+        WORKING_DIRECTORY ${GAE_JAVA_DIR}
+        COMMENT "Building GAE-java..."
+        VERBATIM
+    )
+    add_custom_target(grape_jni ALL
+        DEPENDS "${GAE_JAVA_RUNTIME_DIR}/target/native/libgrape-jni.so"
+    )
+    install(FILES DESTINATION lib)
+    install(FILES "${GAE_JAVA_RUNTIME_DIR}/target/native/libgrape-jni.so" DESTINATION lib)
+    install(FILES "${GAE_JAVA_RUNTIME_JAR}" DESTINATION lib)
+    install(FILES "${GAE_JAVA_DIR}/grape_jvm_opts" DESTINATION conf)
+endif()
 
 # Install binaries
 macro(install_gsa_binary target)

@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.6.0
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.8.4
       options:
         --shm-size 4096m
     steps:
@@ -75,7 +75,7 @@ jobs:
         # default install to "/opt/graphscope"
         make gae ENABLE_JAVA_SDK=ON BUILD_TEST=ON
         # also make coordinator and client for python test
-        make coordinator && make client
+        make client && make coordinator
 
     - name: Run Cpp Test
       env:
@@ -91,7 +91,7 @@ jobs:
         mvn install -Dmaven.antrun.skip=true --quiet
 
         source ${GRAPHSCOPE_HOME}/conf/grape_jvm_opts
-        export USER_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-demo/target/grape-demo-0.1-shaded.jar
+        export USER_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-demo/target/grape-demo-0.16.0-shaded.jar
         cd ${GITHUB_WORKSPACE}/analytical_engine/build
         ../test/app_tests.sh --test_dir ${GS_TEST_DIR}
 
@@ -101,7 +101,7 @@ jobs:
         RUN_JAVA_TESTS: ON
         GRAPHSCOPE_HOME: /opt/graphscope
       run: |
-        export USER_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-demo/target/grape-demo-0.1-shaded.jar
+        export USER_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-demo/target/grape-demo-0.16.0-shaded.jar
         source ${GRAPHSCOPE_HOME}/conf/grape_jvm_opts
 
         cd ${GITHUB_WORKSPACE}/python

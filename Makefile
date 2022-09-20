@@ -66,7 +66,7 @@ client: gle
 	pip3 install --user --editable $(WORKING_DIR)/python
 
 .PHONY: coordinator
-coordinator:
+coordinator: client
 	cd $(WORKING_DIR)/coordinator && \
 	pip3 install -r requirements.txt -r requirements-dev.txt --user && \
 	python3 setup.py build_builtin
@@ -97,14 +97,6 @@ ifneq ($(INSTALL_PREFIX), /usr/local)
 	else \
 		sudo ln -sfn ${INSTALL_PREFIX}/lib/cmake/graphscope-analytical /usr/local/lib/cmake/graphscope-analytical; \
 	fi
-endif
-ifeq (${ENABLE_JAVA_SDK}, ON)
-	cd $(WORKING_DIR)/analytical_engine/java && \
-	mvn clean install -DskipTests --quiet && \
-	sudo cp ${WORKING_DIR}/analytical_engine/java/grape-runtime/target/native/libgrape-jni.* ${INSTALL_PREFIX}/lib/ && \
-	sudo cp ${WORKING_DIR}/analytical_engine/java/grape-runtime/target/grape-runtime-0.1-shaded.jar ${INSTALL_PREFIX}/lib/ && \
-	sudo mkdir -p ${INSTALL_PREFIX}/conf/ && \
-	sudo cp ${WORKING_DIR}/analytical_engine/java/grape_jvm_opts ${INSTALL_PREFIX}/conf/
 endif
 
 .PHONY: gie

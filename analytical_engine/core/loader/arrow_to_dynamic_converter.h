@@ -67,13 +67,13 @@ struct DynamicWrapper<int64_t> {
 template <>
 struct DynamicWrapper<std::string> {
   static void to_dynamic(arrow::util::string_view s, dynamic::Value& t) {
-    t.SetString(s.to_string());
+    t.SetString(std::string(s));
   }
 
   static void to_dynamic_array(const std::string& label,
                                arrow::util::string_view s, dynamic::Value& t) {
     t.SetArray();
-    t.PushBack(label).PushBack(s.to_string());
+    t.PushBack(label).PushBack(std::string(s));
   }
 };
 

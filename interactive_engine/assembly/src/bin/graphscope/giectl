@@ -102,7 +102,7 @@ start_frontend() {
             -Dlogfilename=${log_dir}/frontend.log
             -Dlogbasedir=${log_dir}/frontend
             -Dlog4j.configurationFile=file:${GRAPHSCOPE_HOME}/conf/log4j2.xml
-            -Djna.library.path=${GRAPHSCOPE_HOME}/lib"
+            -Djna.library.path=${GRAPHSCOPE_HOME}/lib:"
 
   # set frontend config file
   sed -e "s@GRAPH_NAME@${object_id}@g" \
