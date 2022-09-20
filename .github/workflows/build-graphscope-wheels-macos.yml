@@ -191,7 +191,7 @@ jobs:
         popd
 
         # install tensorflow
-        python3 -m pip install pytest "tensorflow<=2.5.2" --user
+        python3 -m pip install pytest "tensorflow<=2.5.2" "pandas<1.5.0" --user
 
     - name: Run Minimum Test
       env:

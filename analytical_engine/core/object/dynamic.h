@@ -270,12 +270,27 @@ static inline Type GetType(const rapidjson::Value& val) {
 static inline rpc::graph::DataTypePb Str2RpcType(const std::string& s) {
   static const std::map<std::string, rpc::graph::DataTypePb> str2type = {
       {"NULL", rpc::graph::DataTypePb::NULLVALUE},
+      {"null", rpc::graph::DataTypePb::NULLVALUE},
       {"BOOL", rpc::graph::DataTypePb::BOOL},
+      {"bool", rpc::graph::DataTypePb::BOOL},
+      {"boolean", rpc::graph::DataTypePb::BOOL},
       {"INT", rpc::graph::DataTypePb::INT},
+      {"int", rpc::graph::DataTypePb::INT},
+      {"int32", rpc::graph::DataTypePb::INT},
+      {"int32_t", rpc::graph::DataTypePb::INT},
       {"LONG", rpc::graph::DataTypePb::LONG},
+      {"long", rpc::graph::DataTypePb::LONG},
+      {"int64", rpc::graph::DataTypePb::LONG},
+      {"int64_t", rpc::graph::DataTypePb::LONG},
       {"FLOAT", rpc::graph::DataTypePb::DOUBLE},
+      {"float", rpc::graph::DataTypePb::DOUBLE},
+      {"float32", rpc::graph::DataTypePb::DOUBLE},
       {"DOUBLE", rpc::graph::DataTypePb::DOUBLE},
+      {"double", rpc::graph::DataTypePb::DOUBLE},
+      {"float64", rpc::graph::DataTypePb::DOUBLE},
       {"STRING", rpc::graph::DataTypePb::STRING},
+      {"str", rpc::graph::DataTypePb::STRING},
+      {"string", rpc::graph::DataTypePb::STRING},
   };
   return str2type.at(s);
 }
