@@ -207,7 +207,6 @@ public interface DefaultMessageManager extends MessageManagerBase {
             @CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex,
             @CXXReference MSG_T msg);
 
-
     /**
      * Send the a vertex's data to other fragment througn outgoing edges.
      *

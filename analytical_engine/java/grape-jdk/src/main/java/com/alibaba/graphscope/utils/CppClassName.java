@@ -78,7 +78,6 @@ public class CppClassName {
     public static final String GS_ARROW_PROJECTED_FRAGMENT_IMPL_STRING_TYPED_ARRAY =
             "gs::arrow_projected_fragment_impl::TypedArray<std::string>";
 
-
     public static final String GS_ARROW_ARRAY_BUILDER = "gs::ArrowArrayBuilder";
     public static final String GS_ARROW_ARRAY = "gs::ArrowArray";
     public static final String GS_ARROW_PROJECTED_FRAGMENT_GETTER =

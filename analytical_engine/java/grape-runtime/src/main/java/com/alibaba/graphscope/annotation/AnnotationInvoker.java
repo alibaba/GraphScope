@@ -23,9 +23,6 @@ import static com.alibaba.graphscope.utils.CppClassName.GS_PRIMITIVE_MESSAGE;
 import static com.alibaba.graphscope.utils.CppClassName.GS_VERTEX_ARRAY;
 import static com.alibaba.graphscope.utils.CppClassName.LONG_MSG;
 import static com.alibaba.graphscope.utils.CppHeaderName.ARROW_FRAGMENT_GROUP_H;
-import static com.alibaba.graphscope.utils.CppHeaderName.ARROW_PROJECTED_FRAGMENT_MAPPER_H;
-import static com.alibaba.graphscope.utils.CppHeaderName.CORE_JAVA_TYPE_ALIAS_H;
-import static com.alibaba.graphscope.utils.CppHeaderName.VINEYARD_JSON_H;
 
 import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.CXXTemplate;
@@ -311,65 +308,65 @@ import com.alibaba.graphscope.utils.CppClassName;
                                     @CXXTemplate(cxx = "int32_t", java = "Integer")
                                 })
                     }),
-        @FFIGen(
-        type = "com.alibaba.graphscope.stdcxx.StdSharedPtr",
-        templates = {
-                @CXXTemplate(
-                        cxx = "gs::DoubleColumn<gs::ArrowFragmentDefault<int64_t>>",
-                        java =
-                                "com.alibaba.graphscope.column.DoubleColumn<com.alibaba.graphscope.fragment.ArrowFragment<java.lang.Long>>"),
-                @CXXTemplate(
-                        cxx = "gs::IntColumn<gs::ArrowFragmentDefault<int64_t>>",
-                        java =
-                                "com.alibaba.graphscope.column.IntColumn<com.alibaba.graphscope.fragment.ArrowFragment<java.lang.Long>>"),
-                @CXXTemplate(
-                        cxx = "gs::LongColumn<gs::ArrowFragmentDefault<int64_t>>",
-                        java =
-                                "com.alibaba.graphscope.column.LongColumn<com.alibaba.graphscope.fragment.ArrowFragment<java.lang.Long>>"),
-                @CXXTemplate(
-                        cxx =
-                                "gs::DoubleColumn<gs::ArrowProjectedFragment<int64_t,uint64_t,int64_t,int64_t>>",
-                        java =
-                                "com.alibaba.graphscope.column.DoubleColumn<com.alibaba.graphscope.fragment.ArrowProjectedFragment<java.lang.Long,java.lang.Long,java.lang.Long,java.lang.Long>>"),
-                @CXXTemplate(
-                        cxx =
-                                "gs::IntColumn<gs::ArrowProjectedFragment<int64_t,uint64_t,int64_t,int64_t>>",
-                        java =
-                                "com.alibaba.graphscope.column.IntColumn<com.alibaba.graphscope.fragment.ArrowProjectedFragment<java.lang.Long,java.lang.Long,java.lang.Long,java.lang.Long>>"),
-                @CXXTemplate(
-                        cxx =
-                                "gs::LongColumn<gs::ArrowProjectedFragment<int64_t,uint64_t,int64_t,int64_t>>",
-                        java =
-                                "com.alibaba.graphscope.column.LongColumn<com.alibaba.graphscope.fragment.ArrowProjectedFragment<java.lang.Long,java.lang.Long,java.lang.Long,java.lang.Long>>"),
-                @CXXTemplate(
-                        cxx =
-                                "gs::DoubleColumn<gs::ArrowProjectedFragment<int64_t,uint64_t,double,int64_t>>",
-                        java =
-                                "com.alibaba.graphscope.column.DoubleColumn<com.alibaba.graphscope.fragment.ArrowProjectedFragment<java.lang.Long,java.lang.Long,java.lang.Double,java.lang.Long>>"),
-                @CXXTemplate(
-                        cxx =
-                                "gs::IntColumn<gs::ArrowProjectedFragment<int64_t,uint64_t,double,int64_t>>",
-                        java =
-                                "com.alibaba.graphscope.column.IntColumn<com.alibaba.graphscope.fragment.ArrowProjectedFragment<java.lang.Long,java.lang.Long,java.lang.Double,java.lang.Long>>"),
-                @CXXTemplate(
-                        cxx =
-                                "gs::LongColumn<gs::ArrowProjectedFragment<int64_t,uint64_t,double,int64_t>>",
-                        java =
-                                "com.alibaba.graphscope.column.LongColumn<com.alibaba.graphscope.fragment.ArrowProjectedFragment<java.lang.Long,java.lang.Long,java.lang.Double,java.lang.Long>>"),
-                @CXXTemplate(
-                        cxx = "gs::ArrowProjectedFragment<int64_t,uint64_t,double,int64_t>",
-                        java =
-                                "com.alibaba.graphscope.fragment.ArrowProjectedFragment<java.lang.Long,java.lang.Long,java.lang.Double,java.lang.Long>"),
-                @CXXTemplate(
-                        cxx =
-                                "gs::ArrowProjectedFragment<int64_t,uint64_t,int64_t,int64_t>",
-                        java =
-                                "com.alibaba.graphscope.fragment.ArrowProjectedFragment<java.lang.Long,java.lang.Long,java.lang.Long,java.lang.Long>"),
-                @CXXTemplate(
-                        cxx = "vineyard::ArrowFragmentGroup",
-                        java = "com.alibaba.graphscope.fragment.ArrowFragmentGroup",
-                        include = {@CXXHead(ARROW_FRAGMENT_GROUP_H)})
-                }),
+            @FFIGen(
+                    type = "com.alibaba.graphscope.stdcxx.StdSharedPtr",
+                    templates = {
+                        @CXXTemplate(
+                                cxx = "gs::DoubleColumn<gs::ArrowFragmentDefault<int64_t>>",
+                                java =
+                                        "com.alibaba.graphscope.column.DoubleColumn<com.alibaba.graphscope.fragment.ArrowFragment<java.lang.Long>>"),
+                        @CXXTemplate(
+                                cxx = "gs::IntColumn<gs::ArrowFragmentDefault<int64_t>>",
+                                java =
+                                        "com.alibaba.graphscope.column.IntColumn<com.alibaba.graphscope.fragment.ArrowFragment<java.lang.Long>>"),
+                        @CXXTemplate(
+                                cxx = "gs::LongColumn<gs::ArrowFragmentDefault<int64_t>>",
+                                java =
+                                        "com.alibaba.graphscope.column.LongColumn<com.alibaba.graphscope.fragment.ArrowFragment<java.lang.Long>>"),
+                        @CXXTemplate(
+                                cxx =
+                                        "gs::DoubleColumn<gs::ArrowProjectedFragment<int64_t,uint64_t,int64_t,int64_t>>",
+                                java =
+                                        "com.alibaba.graphscope.column.DoubleColumn<com.alibaba.graphscope.fragment.ArrowProjectedFragment<java.lang.Long,java.lang.Long,java.lang.Long,java.lang.Long>>"),
+                        @CXXTemplate(
+                                cxx =
+                                        "gs::IntColumn<gs::ArrowProjectedFragment<int64_t,uint64_t,int64_t,int64_t>>",
+                                java =
+                                        "com.alibaba.graphscope.column.IntColumn<com.alibaba.graphscope.fragment.ArrowProjectedFragment<java.lang.Long,java.lang.Long,java.lang.Long,java.lang.Long>>"),
+                        @CXXTemplate(
+                                cxx =
+                                        "gs::LongColumn<gs::ArrowProjectedFragment<int64_t,uint64_t,int64_t,int64_t>>",
+                                java =
+                                        "com.alibaba.graphscope.column.LongColumn<com.alibaba.graphscope.fragment.ArrowProjectedFragment<java.lang.Long,java.lang.Long,java.lang.Long,java.lang.Long>>"),
+                        @CXXTemplate(
+                                cxx =
+                                        "gs::DoubleColumn<gs::ArrowProjectedFragment<int64_t,uint64_t,double,int64_t>>",
+                                java =
+                                        "com.alibaba.graphscope.column.DoubleColumn<com.alibaba.graphscope.fragment.ArrowProjectedFragment<java.lang.Long,java.lang.Long,java.lang.Double,java.lang.Long>>"),
+                        @CXXTemplate(
+                                cxx =
+                                        "gs::IntColumn<gs::ArrowProjectedFragment<int64_t,uint64_t,double,int64_t>>",
+                                java =
+                                        "com.alibaba.graphscope.column.IntColumn<com.alibaba.graphscope.fragment.ArrowProjectedFragment<java.lang.Long,java.lang.Long,java.lang.Double,java.lang.Long>>"),
+                        @CXXTemplate(
+                                cxx =
+                                        "gs::LongColumn<gs::ArrowProjectedFragment<int64_t,uint64_t,double,int64_t>>",
+                                java =
+                                        "com.alibaba.graphscope.column.LongColumn<com.alibaba.graphscope.fragment.ArrowProjectedFragment<java.lang.Long,java.lang.Long,java.lang.Double,java.lang.Long>>"),
+                        @CXXTemplate(
+                                cxx = "gs::ArrowProjectedFragment<int64_t,uint64_t,double,int64_t>",
+                                java =
+                                        "com.alibaba.graphscope.fragment.ArrowProjectedFragment<java.lang.Long,java.lang.Long,java.lang.Double,java.lang.Long>"),
+                        @CXXTemplate(
+                                cxx =
+                                        "gs::ArrowProjectedFragment<int64_t,uint64_t,int64_t,int64_t>",
+                                java =
+                                        "com.alibaba.graphscope.fragment.ArrowProjectedFragment<java.lang.Long,java.lang.Long,java.lang.Long,java.lang.Long>"),
+                        @CXXTemplate(
+                                cxx = "vineyard::ArrowFragmentGroup",
+                                java = "com.alibaba.graphscope.fragment.ArrowFragmentGroup",
+                                include = {@CXXHead(ARROW_FRAGMENT_GROUP_H)})
+                    }),
             @FFIGen(
                     type = "com.alibaba.graphscope.context.ffi.FFILabeledVertexDataContext",
                     templates = {
