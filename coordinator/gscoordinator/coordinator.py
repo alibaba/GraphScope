@@ -1759,8 +1759,7 @@ def launch_graphscope():
         try:
             Monitor.startServer(args.monitor_port, "0.0.0.0")
             logger.info(
-                "Coordinator monitor server listen at 0.0.0.0:%d",
-                args.monitor_port
+                "Coordinator monitor server listen at 0.0.0.0:%d", args.monitor_port
             )
         except Exception as e:
             logger.error(
