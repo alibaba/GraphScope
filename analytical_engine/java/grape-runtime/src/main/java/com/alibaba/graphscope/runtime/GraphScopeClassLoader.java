@@ -177,7 +177,6 @@ public class GraphScopeClassLoader {
      */
     public static Class<?> loadClass(URLClassLoader classLoader, String className)
             throws ClassNotFoundException {
-        // logger.info("Loading class " + className);
         return classLoader.loadClass(formatting(className));
     }
 
