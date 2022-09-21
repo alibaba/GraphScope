@@ -42,7 +42,7 @@ pub enum GDBError {
     OutOfBoundError,
     ParseError,
     InvalidFunctionCallError,
-    InvalidTypeError,
+    InvalidTypeError(String),
     FieldNotExistError,
 }
 

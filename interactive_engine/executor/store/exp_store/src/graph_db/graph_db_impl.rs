@@ -708,11 +708,10 @@ where
         self.topology.current_edges_count()
     }
 
-    pub fn into_graph(self, mut schema: LDBCGraphSchema) -> LargeGraphDB<G, I, T::T, N, E>
+    pub fn into_graph(self, schema: LDBCGraphSchema) -> LargeGraphDB<G, I, T::T, N, E>
     where
         T::T: Send + Sync,
     {
-        schema.trim();
         LargeGraphDB {
             partition: self.partition,
             topology: self.topology.into_immutable(),
@@ -944,7 +943,7 @@ mod test {
             .add_edge_with_properties(PIDS[0], PIDS[3], 12, edge_prop.clone())
             .is_err());
 
-        let schema = LDBCGraphSchema::from_json_file("data/schema.json").expect("Get Schema error!");
+        let schema = LDBCGraphSchema::from_json_file("data/ldbc_schema.json").expect("Get Schema error!");
 
         let graph = graphdb.into_graph(schema);
 
@@ -990,8 +989,8 @@ mod test {
     fn test_get_vertex_edge_by_id() {
         let data_dir = "data/small_data";
         let root_dir = "data/small_data";
-        let schema_file = "data/schema.json";
-        let mut loader = GraphLoader::<DefaultId, u32>::new(data_dir, root_dir, schema_file, 20, 0, 1);
+        let schema_file = "data/ldbc_metadata.json";
+        let mut loader = GraphLoader::<DefaultId, u32>::new(data_dir, root_dir, schema_file, 0, 1);
         // load whole graph
         loader.load().expect("Load graph error!");
         let graphdb = loader.into_graph();
@@ -1230,8 +1229,8 @@ mod test {
     fn test_graph_query() {
         let data_dir = "data/large_data";
         let root_dir = "data/large_data";
-        let schema_file = "data/schema.json";
-        let mut loader = GraphLoader::<DefaultId, u32>::new(data_dir, root_dir, schema_file, 20, 0, 1);
+        let meta_file = "data/ldbc_metadata.json";
+        let mut loader = GraphLoader::<DefaultId, u32>::new(data_dir, root_dir, meta_file, 0, 1);
         // load whole graph
         loader.load().expect("Load graph error!");
         let graphdb = loader.into_graph();
@@ -1244,9 +1243,9 @@ mod test {
         let temp = tempdir::TempDir::new("test_serde").expect("Open temp folder error");
         let data_dir = Path::new("data/large_data");
         let root_dir = temp.path();
-        let schema_file = Path::new("data/schema.json");
-        let mut loader =
-            GraphLoader::<DefaultId, InternalId>::new(&data_dir, &root_dir, &schema_file, 20, 0, 1);
+        let meta_file = Path::new("data/ldbc_metadata.json");
+        let schema_file = Path::new("data/ldbc_schema.json");
+        let mut loader = GraphLoader::<DefaultId, InternalId>::new(&data_dir, &root_dir, &meta_file, 0, 1);
         // load whole graph
         loader.load().expect("Load graph error");
         let graph = loader.into_mutable_graph();

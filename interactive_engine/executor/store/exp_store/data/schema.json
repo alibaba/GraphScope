@@ -1,38 +1,106 @@
 {
   "vertex_type_map": {
-    "PLACE": 0,
-    "PERSON": 1,
+    "CITY": 9,
     "COMMENT": 2,
-    "POST": 3,
+    "COMPANY": 11,
+    "CONTINENT": 10,
+    "COUNTRY": 8,
     "FORUM": 4,
     "ORGANISATION": 5,
-    "TAGCLASS": 6,
+    "PERSON": 1,
+    "PLACE": 0,
+    "POST": 3,
     "TAG": 7,
-    "COUNTRY": 8,
-    "CITY": 9,
-    "CONTINENT": 10,
-    "COMPANY": 11,
+    "TAGCLASS": 6,
     "UNIVERSITY": 12
   },
   "edge_type_map": {
-    "HASCREATOR": 0,
-    "HASTAG": 1,
-    "REPLYOF": 3,
     "CONTAINEROF": 5,
+    "HASCREATOR": 0,
+    "HASINTEREST": 10,
     "HASMEMBER": 6,
     "HASMODERATOR": 7,
-    "HASINTEREST": 10,
+    "HASTAG": 1,
+    "HASTYPE": 21,
     "ISLOCATEDIN": 11,
+    "ISPARTOF": 17,
+    "ISSUBCLASSOF": 22,
     "KNOWS": 12,
     "LIKES": 13,
+    "REPLYOF": 3,
     "STUDYAT": 15,
-    "WORKAT": 16,
-    "ISPARTOF": 17,
-    "HASTYPE": 21,
-    "ISSUBCLASSOF": 22
+    "WORKAT": 16
   },
   "vertex_prop": {
-    "TAGCLASS": [
+    "CITY": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "name",
+        "String"
+      ],
+      [
+        "url",
+        "String"
+      ]
+    ],
+    "COMMENT": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "creationDate",
+        "Date"
+      ],
+      [
+        "locationIP",
+        "String"
+      ],
+      [
+        "browserUsed",
+        "String"
+      ],
+      [
+        "content",
+        "String"
+      ],
+      [
+        "length",
+        "Integer"
+      ]
+    ],
+    "COMPANY": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "name",
+        "String"
+      ],
+      [
+        "url",
+        "String"
+      ]
+    ],
+    "CONTINENT": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "name",
+        "String"
+      ],
+      [
+        "url",
+        "String"
+      ]
+    ],
+    "COUNTRY": [
       [
         "id",
         "ID"
@@ -60,38 +128,18 @@
         "Date"
       ]
     ],
-    "POST": [
+    "ORGANISATION": [
       [
         "id",
         "ID"
       ],
       [
-        "imageFile",
+        "name",
         "String"
       ],
       [
-        "creationDate",
-        "Date"
-      ],
-      [
-        "locationIP",
+        "url",
         "String"
-      ],
-      [
-        "browserUsed",
-        "String"
-      ],
-      [
-        "language",
-        "String"
-      ],
-      [
-        "content",
-        "String"
-      ],
-      [
-        "length",
-        "Integer"
       ]
     ],
     "PERSON": [
@@ -128,20 +176,6 @@
         "String"
       ]
     ],
-    "TAG": [
-      [
-        "id",
-        "ID"
-      ],
-      [
-        "name",
-        "String"
-      ],
-      [
-        "url",
-        "String"
-      ]
-    ],
     "PLACE": [
       [
         "id",
@@ -154,34 +188,16 @@
       [
         "url",
         "String"
-      ],
-      [
-        "~LABEL",
-        "LABEL"
       ]
     ],
-    "ORGANISATION": [
+    "POST": [
       [
         "id",
         "ID"
       ],
       [
-        "~LABEL",
-        "LABEL"
-      ],
-      [
-        "name",
+        "imageFile",
         "String"
-      ],
-      [
-        "url",
-        "String"
-      ]
-    ],
-    "COMMENT": [
-      [
-        "id",
-        "ID"
       ],
       [
         "creationDate",
@@ -196,6 +212,10 @@
         "String"
       ],
       [
+        "language",
+        "String"
+      ],
+      [
         "content",
         "String"
       ],
@@ -203,102 +223,67 @@
         "length",
         "Integer"
       ]
+    ],
+    "TAG": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "name",
+        "String"
+      ],
+      [
+        "url",
+        "String"
+      ]
+    ],
+    "TAGCLASS": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "name",
+        "String"
+      ],
+      [
+        "url",
+        "String"
+      ]
+    ],
+    "UNIVERSITY": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "name",
+        "String"
+      ],
+      [
+        "url",
+        "String"
+      ]
     ]
   },
   "edge_prop": {
-    "HASCREATOR": [
-      [
-        "start_id",
-        "ID"
-      ],
-      [
-        "end_id",
-        "ID"
-      ]
-    ],
-    "HASTAG": [
-      [
-        "start_id",
-        "ID"
-      ],
-      [
-        "end_id",
-        "ID"
-      ]
-    ],
-    "ISLOCATEDIN": [
-      [
-        "start_id",
-        "ID"
-      ],
-      [
-        "end_id",
-        "ID"
-      ]
-    ],
-    "REPLYOF": [
-      [
-        "start_id",
-        "ID"
-      ],
-      [
-        "end_id",
-        "ID"
-      ]
-    ],
-    "CONTAINEROF": [
-      [
-        "start_id",
-        "ID"
-      ],
-      [
-        "end_id",
-        "ID"
-      ]
-    ],
+    "CONTAINEROF": [],
+    "HASCREATOR": [],
+    "HASINTEREST": [],
     "HASMEMBER": [
-      [
-        "start_id",
-        "ID"
-      ],
-      [
-        "end_id",
-        "ID"
-      ],
       [
         "joinDate",
         "Date"
       ]
     ],
-    "HASMODERATOR": [
-      [
-        "start_id",
-        "ID"
-      ],
-      [
-        "end_id",
-        "ID"
-      ]
-    ],
-    "HASINTEREST": [
-      [
-        "start_id",
-        "ID"
-      ],
-      [
-        "end_id",
-        "ID"
-      ]
-    ],
+    "HASMODERATOR": [],
+    "HASTAG": [],
+    "HASTYPE": [],
+    "ISLOCATEDIN": [],
+    "ISPARTOF": [],
+    "ISSUBCLASSOF": [],
     "KNOWS": [
-      [
-        "start_id",
-        "ID"
-      ],
-      [
-        "end_id",
-        "ID"
-      ],
       [
         "creationDate",
         "Date"
@@ -306,27 +291,12 @@
     ],
     "LIKES": [
       [
-        "start_id",
-        "ID"
-      ],
-      [
-        "end_id",
-        "ID"
-      ],
-      [
         "creationDate",
         "Date"
       ]
     ],
+    "REPLYOF": [],
     "STUDYAT": [
-      [
-        "start_id",
-        "ID"
-      ],
-      [
-        "end_id",
-        "ID"
-      ],
       [
         "classYear",
         "Integer"
@@ -334,46 +304,8 @@
     ],
     "WORKAT": [
       [
-        "start_id",
-        "ID"
-      ],
-      [
-        "end_id",
-        "ID"
-      ],
-      [
         "workFrom",
         "Integer"
-      ]
-    ],
-    "ISPARTOF": [
-      [
-        "start_id",
-        "ID"
-      ],
-      [
-        "end_id",
-        "ID"
-      ]
-    ],
-    "HASTYPE": [
-      [
-        "start_id",
-        "ID"
-      ],
-      [
-        "end_id",
-        "ID"
-      ]
-    ],
-    "ISSUBCLASSOF": [
-      [
-        "start_id",
-        "ID"
-      ],
-      [
-        "end_id",
-        "ID"
       ]
     ]
   }

@@ -132,7 +132,7 @@ impl Serialize for Row {
     {
         let mut bytes = Vec::new();
         if self.write_to(&mut bytes).is_ok() {
-            bytes.serialize(serializer)
+            serializer.serialize_bytes(&bytes)
         } else {
             Result::Err(S::Error::custom("Serialize `ItemType` into `Vec<u8>` error!"))
         }
