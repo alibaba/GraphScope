@@ -114,10 +114,6 @@ jobs:
         cd ${GITHUB_WORKSPACE}
         tar -zcf client.tar.gz python/dist/
 
-    - name: Setup tmate session
-      if: always()
-      uses: mxschmitt/action-tmate@v2
-
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:
