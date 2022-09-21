@@ -1,0 +1,222 @@
+{{- if (include "graphscope-store.createConfigmap" .) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "graphscope-store.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "graphscope-store.labels" . | nindent 4 }}
+    app.kubernetes.io/component: configmap
+    {{- if .Values.commonLabels }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+data:
+  modern_loader.json: |-
+    {
+        "vertices": [
+            {
+                "data_path": "$STORE_DATA_PATH/modern_graph/person.csv",
+                "label": "person",
+                "options": "header_row=true&delimiter=|"
+            },
+            {
+                "data_path": "$STORE_DATA_PATH/modern_graph/software.csv",
+                "label": "software",
+                "options": "header_row=true&delimiter=|"
+            }
+        ],
+        "edges": [
+            {
+                "data_path": "$STORE_DATA_PATH/modern_graph/knows.csv",
+                "label": "knows",
+                "src_label": "person",
+                "dst_label": "person",
+                "options": "header_row=true&delimiter=|"
+            },
+            {
+                "data_path": "$STORE_DATA_PATH/modern_graph/created.csv",
+                "label": "created",
+                "src_label": "person",
+                "dst_label": "software",
+                "options": "header_row=true&delimiter=|"
+            }
+        ],
+        "directed": 1,
+        "generate_eid": 1
+    }
+  modern_schema.json: |-
+    {
+      "partitionNum": 1,
+      "types": [
+      {
+        "id": 0,
+        "indexes": [
+        {
+          "propertyNames": [
+            "id"
+          ]
+        }
+        ],
+        "label": "person",
+        "mapping": "[6,1,4]",
+        "propertyDefList": [
+        {
+          "data_type": "STRING",
+          "id": 6,
+          "name": "name"
+        },
+        {
+          "data_type": "LONG",
+          "id": 1,
+          "name": "age"
+        },
+        {
+          "data_type": "LONG",
+          "id": 4,
+          "name": "id"
+        }
+        ],
+        "rawRelationShips": [],
+        "reverse_mapping": "[-1,1,-1,-1,2,-1,0,-1]",
+        "type": "VERTEX",
+        "valid_properties": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": 1,
+        "indexes": [
+        {
+          "propertyNames": [
+            "id"
+          ]
+        }
+        ],
+        "label": "software",
+        "mapping": "[6,5,4]",
+        "propertyDefList": [
+        {
+          "data_type": "STRING",
+          "id": 6,
+          "name": "name"
+        },
+        {
+          "data_type": "STRING",
+          "id": 5,
+          "name": "lang"
+        },
+        {
+          "data_type": "LONG",
+          "id": 4,
+          "name": "id"
+        }
+        ],
+        "rawRelationShips": [],
+        "reverse_mapping": "[-1,-1,-1,-1,2,1,0,-1]",
+        "type": "VERTEX",
+        "valid_properties": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": 2,
+        "indexes": [],
+        "label": "knows",
+        "mapping": "[3,2,7]",
+        "propertyDefList": [
+        {
+          "data_type": "LONG",
+          "id": 3,
+          "name": "eid"
+        },
+        {
+          "data_type": "LONG",
+          "id": 2,
+          "name": "edge_id"
+        },
+        {
+          "data_type": "DOUBLE",
+          "id": 7,
+          "name": "weight"
+        }
+        ],
+        "rawRelationShips": [
+        {
+          "dstVertexLabel": "person",
+          "srcVertexLabel": "person"
+        }
+        ],
+        "reverse_mapping": "[-1,-1,1,0,-1,-1,-1,2]",
+        "type": "EDGE",
+        "valid_properties": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": 3,
+        "indexes": [],
+        "label": "created",
+        "mapping": "[3,2,7]",
+        "propertyDefList": [
+        {
+          "data_type": "LONG",
+          "id": 3,
+          "name": "eid"
+        },
+        {
+          "data_type": "LONG",
+          "id": 2,
+          "name": "edge_id"
+        },
+        {
+          "data_type": "DOUBLE",
+          "id": 7,
+          "name": "weight"
+        }
+        ],
+        "rawRelationShips": [
+        {
+          "dstVertexLabel": "software",
+          "srcVertexLabel": "person"
+        }
+        ],
+        "reverse_mapping": "[-1,-1,1,0,-1,-1,-1,2]",
+        "type": "EDGE",
+        "valid_properties": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      }
+      ],
+      "uniquePropertyNames": "[\"age\",\"edge_id\",\"eid\",\"id\",\"lang\",\"name\",\"weight\"]"
+    }
+{{- end -}}

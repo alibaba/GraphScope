@@ -74,3 +74,8 @@ RUN cd /home/graphscope/gs && \
 # init log directory
 RUN sudo mkdir /var/log/graphscope \
   && sudo chown -R $(id -u):$(id -g) /var/log/graphscope
+
+ENV GRAPHSCOPE_HOME=/home/graphscope/.local/lib/python3.8/site-packages/graphscope.runtime
+ENV OPAL_PREFIX=${GRAPHSCOPE_HOME}/openmpi
+ENV OMPI_MCA_plm_rsh_agent=/usr/bin/kube_ssh
+ENV PATH=${PATH}:${GRAPHSCOPE_HOME}/bin/:${GRAPHSCOPE_HOME}/openmpi/bin/

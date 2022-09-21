@@ -120,10 +120,15 @@ gie:
 	else \
 		cargo build --workspace; \
 	fi
+	# htap_loader
+	cd $(WORKING_DIR)/research/query_service/ir/v6d_ffi/src/native && \
+	cmake . && \
+	make vineyard_htap_loader
 	# install
 	mkdir -p $(WORKING_DIR)/.install_prefix && \
 	tar -xf $(WORKING_DIR)/interactive_engine/assembly/target/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz --strip-components 1 -C $(WORKING_DIR)/.install_prefix && \
 	cp $(WORKING_DIR)/interactive_engine/executor/target/$(BUILD_TYPE)/gaia_executor $(WORKING_DIR)/.install_prefix/bin/gaia_executor && \
+	cp $(WORKING_DIR)/research/query_service/ir/v6d_ffi/src/native/vineyard_htap_loader $(WORKING_DIR)/.install_prefix/bin/vineyard_htap_loader && \
 	sudo cp -r $(WORKING_DIR)/.install_prefix/* $(INSTALL_PREFIX) && \
 	rm -fr $(WORKING_DIR)/.install_prefix
 

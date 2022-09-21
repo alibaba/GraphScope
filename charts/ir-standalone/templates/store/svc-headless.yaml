@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "graphscope-store.store.fullname" . }}-headless
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "graphscope-store.labels" . | nindent 4 }}
+    app.kubernetes.io/component: store
+    {{- if .Values.commonLabels }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- if .Values.commonAnnotations }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+    {{- end }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+    - name: gaia-rpc
+      port: {{ .Values.store.service.gaiaRpc }}
+      targetPort: gaia-rpc
+    - name: gaia-engine
+      port: {{ .Values.store.service.gaiaEngine }}
+      targetPort: gaia-engine
+  selector: {{- include "graphscope-store.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: store

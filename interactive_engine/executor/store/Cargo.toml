@@ -21,9 +21,13 @@ log4rs = "0.8.0"
 grpcio = "0.10"
 grpcio-sys = { version = "0.10", features = ["openssl-vendored"] }
 # deactivation of bzip2 due to https://github.com/rust-rocksdb/rust-rocksdb/issues/609
-rocksdb = { version = "0.18.0", features = ["snappy", "lz4", "zstd", "zlib"], default-features = false }
+# rocksdb = { version = "0.18.0", features = ["snappy", "lz4", "zstd", "zlib"], default-features = false }
 
 maxgraph-common = { path = "../../rust-common" }
+
+[dependencies.rocksdb]
+git = "https://github.com/GoldenLeaves/rust-rocksdb.git"
+rev = "082dfcfbb4b51e61d1c01672951b84cb464601e2"
 
 [build-dependencies]
 protoc-grpcio = "3.0"

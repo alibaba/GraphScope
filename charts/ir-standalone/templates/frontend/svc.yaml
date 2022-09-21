@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "graphscope-store.frontend.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "graphscope-store.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+    {{- if .Values.commonLabels }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- if .Values.commonAnnotations }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+    {{- end }}
+spec:
+  type: {{ .Values.frontend.service.type }}
+  {{- if and (eq .Values.frontend.service.type "ClusterIP") .Values.frontend.service.clusterIP }}
+  clusterIP: {{ .Values.frontend.service.clusterIP }}
+  {{- end }}
+  {{- if and .Values.frontend.service.loadBalancerIP (eq .Values.frontend.service.type "LoadBalancer") }}
+  loadBalancerIP: {{ .Values.frontend.service.loadBalancerIP }}
+  externalTrafficPolicy: {{ .Values.frontend.service.externalTrafficPolicy | quote }}
+  {{- end }}
+  {{- if and (eq .Values.frontend.service.type "LoadBalancer") .Values.frontend.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges: {{- toYaml .Values.frontend.service.loadBalancerSourceRanges | nindent 4 }}
+  {{- end }}
+  ports:
+    - name: gremlin
+      port: {{ .Values.frontend.service.gremlinPort }}
+      protocol: TCP
+      targetPort: gremlin
+      {{- if and (or (eq .Values.frontend.service.type "NodePort") (eq .Values.frontend.service.type "LoadBalancer")) (not (empty .Values.frontend.service.nodePorts.gremlin)) }}
+      {{- if (not (empty .Values.frontend.service.nodePorts.gremlin)) }}
+      nodePort: {{ .Values.frontend.service.nodePorts.gremlin }}
+      {{- else if eq .Values.frontend.service.type "ClusterIP" }}
+      nodePort: null
+      {{- end }}
+      {{- end }}
+  selector: {{ include "graphscope-store.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
