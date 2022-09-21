@@ -417,7 +417,7 @@ if(ENABLE_JAVA_SDK)
         "${GRAPHSCOPE_ANALYTICAL_VERSION}"
     )
     set(GAE_JAVA_RUNTIME_JAR "${GAE_JAVA_RUNTIME_DIR}/target/grape-runtime-${GRAPHSCOPE_ANALYTICAL_JAR_VERSION}-shaded.jar")
-    set(GAE_JAVA_GRAPHX_JAR "${GAE_JAVA_RUNTIME_DIR}/target/graphx-on-graphscope-${GRAPHSCOPE_ANALYTICAL_JAR_VERSION}-shaded.jar")
+    set(GAE_JAVA_GRAPHX_JAR "${GAE_JAVA_DIR}/graphx-on-graphscope/target/graphx-on-graphscope-${GRAPHSCOPE_ANALYTICAL_JAR_VERSION}-shaded.jar")
     add_custom_command(
         OUTPUT "${GAE_JAVA_RUNTIME_DIR}/target/native/libgrape-jni.so"
         COMMAND mvn clean install -DskipTests --quiet
