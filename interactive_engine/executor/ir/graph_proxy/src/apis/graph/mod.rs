@@ -161,7 +161,9 @@ impl QueryParams {
 
     // Extra query params for different storages
     fn with_extra_params(mut self, extra_params_pb: HashMap<String, String>) -> Result<Self, ParsePbError> {
-        self.extra_params = Some(extra_params_pb);
+        if !extra_params_pb.is_empty() {
+            self.extra_params = Some(extra_params_pb);
+        }
         Ok(self)
     }
 
