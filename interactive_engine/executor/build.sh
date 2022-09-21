@@ -4,9 +4,17 @@ set -x
 MODE=$1
 SKIP=$2
 FEATURE=$3
+TARGET=$4
 
 if [ "$SKIP" = "true" ]; then
     exit 0
+fi
+
+if [ "$TARGET" = "v6d" ] || [ "$TARGET" = "groot" ]; then
+    echo "Build target $TARGET"
+else
+    echo "Invalid target, choose from v6d or groot."
+    exit 1
 fi
 
 if [ "$(uname -s)" = "Darwin" ]; then
@@ -17,17 +25,17 @@ else
     STRIP_OPTION=""
 fi
 
-cd assembly;
+cd assembly/$TARGET;
 if [ "$MODE" = "debug" ]; then
-  ../exec.sh cargo build --workspace --features="$FEATURE"
+  cargo build --features="$FEATURE"
 elif [ "$MODE" = "release" ]; then
-  ../exec.sh cargo build --workspace --release --features="$FEATURE"
+  cargo build --release --features="$FEATURE"
 else
+  echo "Invalid mode, choose from debug or release."
   exit 1
 fi
 
-rm -rf $(pwd)/target/${MODE}/build
-rm -rf $(pwd)/target/${MODE}/deps
-
-strip ${STRIP_OPTION} $(pwd)/target/${MODE}/libmaxgraph_ffi.${SUFFIX}
-ln -sf $(pwd)/target/${MODE}/libmaxgraph_ffi.${SUFFIX} ./target/libmaxgraph_ffi.${SUFFIX}
+if [ "$TARGET" = "groot" ]; then
+  strip ${STRIP_OPTION} $(pwd)/target/${MODE}/libmaxgraph_ffi.${SUFFIX}
+  ln -sf $(pwd)/target/${MODE}/libmaxgraph_ffi.${SUFFIX} ./target/libmaxgraph_ffi.${SUFFIX}
+fi

@@ -34,7 +34,8 @@
             <directory>${project.parent.basedir}/executor/ir/target/release</directory>
             <outputDirectory>lib</outputDirectory>
             <includes>
-                <include>libir_core*</include>
+                <include>libir_core.so</include>
+                <include>libir_core.dylib</include>
             </includes>
         </fileSet>
         <fileSet>
