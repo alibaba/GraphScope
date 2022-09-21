@@ -80,6 +80,24 @@ public class OSSFileObj {
         }
     }
 
+    public void uploadFileWithCheckPoint(
+            String ossBucketName, String ossObjectName, File uploadFile) throws IOException {
+        try {
+            UploadFileRequest uploadFileRequest =
+                    new UploadFileRequest(ossBucketName, ossObjectName);
+            uploadFileRequest.setUploadFile(uploadFile.getAbsolutePath());
+            uploadFileRequest.setPartSize(10 * 1024 * 1024);
+            uploadFileRequest.setEnableCheckpoint(true);
+            ossClient.uploadFile(uploadFileRequest);
+        } catch (OSSException oe) {
+            throw new IOException(oe);
+        } catch (ClientException ce) {
+            throw new IOException(ce);
+        } catch (Throwable ce) {
+            throw new IOException(ce);
+        }
+    }
+
     public void createDirectory(String ossBucketName, String ossObjectName, String dirName)
             throws IOException {
         try {
