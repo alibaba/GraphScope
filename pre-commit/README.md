@@ -40,7 +40,7 @@ git secrets --add '[aA][cC][cC][eE][sS][sS].?[sS][eE][cC][rR][eE][tT]\s*=\s*.+'
 
 ### Ignoring False Positives
 
-Sometimes a regular expression might match false positives. For example, write one line code to setup access key from a outer confifuration file look a lot like the pattern of `[aA][cC][cC][eE][sS][sS]*[kK][eE][yY]\s*=\s*.+`. You can specify many different regular expression patterns as false positives using the following command:
+Sometimes a regular expression might match false positives. For example, writing one line code to setup access key from a outer configuration file look a lot like the pattern of `[aA][cC][cC][eE][sS][sS]*[kK][eE][yY]\s*=\s*.+`. You can specify many different regular expression patterns as false positives using the following command:
 
 ```bash
 git secrets --add --allowed --literal 'code line'
