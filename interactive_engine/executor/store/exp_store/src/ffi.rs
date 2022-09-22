@@ -438,30 +438,36 @@ pub extern "C" fn write_edge(buffer: *const c_void, data: FfiEdgeData) -> bool {
 
 /// Finalize write vertices by flushing the buffer into the graph
 #[no_mangle]
-pub extern "C" fn finalize_write_edge(graph_loader: *const c_void, buffer: *const c_void) -> i64 {
+pub extern "C" fn finalize_write_edge(
+    graph_loader: *const c_void, buffer: *const c_void, curr_partition: i64, num_partitions: i64,
+) -> i64 {
     let mut graph = get_boxed_data::<MutableGraphDB<DefaultId, InternalId>>(graph_loader);
     let container = get_boxed_data::<Vec<(EdgeMeta<DefaultId>, Row)>>(buffer);
     let mut count = 0;
     for (edge_meta, row) in container.into_iter() {
-        if graph.is_vertex_local(edge_meta.src_global_id) {
+        if edge_meta.src_global_id as i64 % num_partitions == curr_partition {
             graph.add_vertex(edge_meta.src_global_id, [edge_meta.src_label_id, INVALID_LABEL_ID]);
         } else {
             graph.add_corner_vertex(edge_meta.src_global_id, edge_meta.src_label_id);
         }
-        if graph.is_vertex_local(edge_meta.dst_global_id) {
+        if edge_meta.dst_global_id as i64 % num_partitions == curr_partition {
             graph.add_vertex(edge_meta.dst_global_id, [edge_meta.dst_label_id, INVALID_LABEL_ID]);
         } else {
             graph.add_corner_vertex(edge_meta.dst_global_id, edge_meta.dst_label_id);
         }
-        if graph
-            .add_edge_with_properties(
-                edge_meta.src_global_id,
-                edge_meta.dst_global_id,
-                edge_meta.label_id,
-                row,
-            )
-            .is_ok()
-        {
+        let result = if row.is_empty() {
+            graph.add_edge(edge_meta.src_global_id, edge_meta.dst_global_id, edge_meta.label_id)
+        } else {
+            graph
+                .add_edge_with_properties(
+                    edge_meta.src_global_id,
+                    edge_meta.dst_global_id,
+                    edge_meta.label_id,
+                    row,
+                )
+                .is_ok()
+        };
+        if result {
             count += 1;
         }
     }
