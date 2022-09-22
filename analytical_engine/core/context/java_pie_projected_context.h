@@ -64,9 +64,10 @@ class JavaPIEProjectedContext : public JavaContextBase<FRAG_T> {
   virtual ~JavaPIEProjectedContext() {}
 
   void init(jlong messages_addr, const char* java_message_manager_name,
-            const std::string& params, const std::string& lib_path) {
+            const std::string& params, const std::string& lib_path,
+            int local_num = 1) {
     JavaContextBase<FRAG_T>::init(messages_addr, java_message_manager_name,
-                                  params, lib_path);
+                                  params, lib_path, local_num);
   }
 
   void Output(std::ostream& os) override {
@@ -220,7 +221,6 @@ class JavaPIEProjectedDefaultContext : public JavaPIEProjectedContext<FRAG_T> {
 
   void Init(grape::DefaultMessageManager& messages, const std::string& params,
             const std::string& lib_path) {
-    VLOG(1) << "lib path: " << lib_path;
     JavaPIEProjectedContext<FRAG_T>::init(reinterpret_cast<jlong>(&messages),
                                           _java_projected_message_manager_name,
                                           params, lib_path);
@@ -247,7 +247,6 @@ class JavaPIEProjectedParallelContext : public JavaPIEProjectedContext<FRAG_T> {
 
   void Init(grape::ParallelMessageManager& messages, const std::string& params,
             const std::string& lib_path) {
-    VLOG(1) << "lib path: " << lib_path;
     JavaPIEProjectedContext<FRAG_T>::init(
         reinterpret_cast<jlong>(&messages),
         _java_projected_parallel_message_manager_name, params, lib_path);

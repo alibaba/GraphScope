@@ -35,6 +35,7 @@
 #include "vineyard/common/util/status.h"
 #include "vineyard/common/util/uuid.h"
 #include "vineyard/graph/fragment/arrow_fragment_group.h"
+#include "vineyard/graph/loader/fragment_loader_utils.h"
 #include "vineyard/graph/utils/error.h"
 #include "vineyard/io/io/io_factory.h"
 
@@ -242,83 +243,6 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::projectGraph(
   return new_frag_wrapper->graph_def();
 }
 
-namespace detail {
-
-// a patched version for vineyard::ConstructFragmentGroup, will be dropped
-// after upgrade to vineyard>=0.7.2
-//
-static boost::leaf::result<vineyard::ObjectID> ConstructFragmentGroup(
-    vineyard::Client& client, vineyard::ObjectID frag_id,
-    const grape::CommSpec& comm_spec) {
-  vineyard::ObjectID group_object_id;
-  uint64_t instance_id = client.instance_id();
-
-  MPI_Barrier(comm_spec.comm());
-  VINEYARD_DISCARD(client.SyncMetaData());
-
-  if (comm_spec.worker_id() == 0) {
-    std::vector<uint64_t> gathered_instance_ids(comm_spec.worker_num());
-    std::vector<vineyard::ObjectID> gathered_object_ids(comm_spec.worker_num());
-
-    MPI_Gather(&instance_id, sizeof(uint64_t), MPI_CHAR,
-               &gathered_instance_ids[0], sizeof(uint64_t), MPI_CHAR, 0,
-               comm_spec.comm());
-
-    MPI_Gather(&frag_id, sizeof(vineyard::ObjectID), MPI_CHAR,
-               &gathered_object_ids[0], sizeof(vineyard::ObjectID), MPI_CHAR, 0,
-               comm_spec.comm());
-
-    vineyard::ArrowFragmentGroupBuilder builder;
-    builder.set_total_frag_num(comm_spec.fnum());
-    typename vineyard::ArrowFragmentBase::label_id_t vertex_label_num = 0,
-                                                     edge_label_num = 0;
-
-    vineyard::ObjectMeta meta;
-    if (client.GetMetaData(frag_id, meta).ok()) {
-      if (meta.Haskey("vertex_label_num_")) {
-        vertex_label_num =
-            meta.GetKeyValue<typename vineyard::ArrowFragmentBase::label_id_t>(
-                "vertex_label_num_");
-      }
-      if (meta.Haskey("edge_label_num_")) {
-        edge_label_num =
-            meta.GetKeyValue<typename vineyard::ArrowFragmentBase::label_id_t>(
-                "edge_label_num_");
-      }
-    }
-
-    builder.set_vertex_label_num(vertex_label_num);
-    builder.set_edge_label_num(edge_label_num);
-    for (fid_t i = 0; i < comm_spec.fnum(); ++i) {
-      builder.AddFragmentObject(
-          i, gathered_object_ids[comm_spec.FragToWorker(i)],
-          gathered_instance_ids[comm_spec.FragToWorker(i)]);
-    }
-
-    auto group_object = std::dynamic_pointer_cast<vineyard::ArrowFragmentGroup>(
-        builder.Seal(client));
-    group_object_id = group_object->id();
-    VY_OK_OR_RAISE(client.Persist(group_object_id));
-
-    MPI_Bcast(&group_object_id, sizeof(vineyard::ObjectID), MPI_CHAR, 0,
-              comm_spec.comm());
-  } else {
-    MPI_Gather(&instance_id, sizeof(uint64_t), MPI_CHAR, NULL, sizeof(uint64_t),
-               MPI_CHAR, 0, comm_spec.comm());
-    MPI_Gather(&frag_id, sizeof(vineyard::ObjectID), MPI_CHAR, NULL,
-               sizeof(vineyard::ObjectID), MPI_CHAR, 0, comm_spec.comm());
-
-    MPI_Bcast(&group_object_id, sizeof(vineyard::ObjectID), MPI_CHAR, 0,
-              comm_spec.comm());
-  }
-
-  MPI_Barrier(comm_spec.comm());
-  VINEYARD_DISCARD(client.SyncMetaData());
-  return group_object_id;
-}
-
-}  // namespace detail
-
 bl::result<rpc::graph::GraphDefPb> GrapeInstance::projectToSimple(
     const rpc::GSParams& params) {
   std::string projected_graph_name = "graph_projected_" + generateId();
@@ -349,7 +273,7 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::projectToSimple(
   VY_OK_OR_RAISE(client_->Persist(vy_info.vineyard_id()));
   // contruct fragment group
   BOOST_LEAF_AUTO(frag_group_id,
-                  detail::ConstructFragmentGroup(
+                  vineyard::ConstructFragmentGroup(
                       *client_, vy_info.vineyard_id(), comm_spec_));
   // return graph def with vineyard id attached
   gs::rpc::graph::VineyardInfoPb new_vy_info = vy_info;

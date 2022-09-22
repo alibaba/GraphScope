@@ -46,18 +46,15 @@ public abstract class VertexDataContext<FRAG_T extends IFragment, DATA_T> {
     protected void createFFIContext(
             FRAG_T fragment, Class<? extends DATA_T> dataClass, boolean includeOuter) {
         String fragmentTemplateStr = FFITypeFactoryhelper.getForeignName(fragment.getFFIPointer());
-        logger.info("fragment: " + fragmentTemplateStr);
         this.dataClass = dataClass;
         String contextName =
                 FFITypeFactoryhelper.makeParameterize(
                         CppClassName.VERTEX_DATA_CONTEXT,
                         fragmentTemplateStr,
                         FFITypeFactoryhelper.javaType2CppType(dataClass));
-        logger.info("context name: " + contextName);
         factory = FFITypeFactory.getFactory(FFIVertexDataContext.class, contextName);
         ffiVertexDataContext = factory.create(fragment.getFFIPointer(), includeOuter);
         ffiContextAddress = ffiVertexDataContext.getAddress();
-        logger.info(contextName + ", " + ffiContextAddress);
     }
 
     public GSVertexArray<DATA_T> data() {

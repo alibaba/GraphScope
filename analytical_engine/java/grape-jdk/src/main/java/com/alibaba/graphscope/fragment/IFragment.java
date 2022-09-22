@@ -1,13 +1,30 @@
+/*
+ * Copyright 2022 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  	http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
 package com.alibaba.graphscope.fragment;
 
 import com.alibaba.fastffi.CXXReference;
 import com.alibaba.fastffi.CXXValue;
 import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFIPointer;
-import com.alibaba.graphscope.ds.DestList;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
 import com.alibaba.graphscope.ds.adaptor.AdjList;
+
+import java.io.Serializable;
 
 /**
  * IFragment defines a simple fragment interface, which conforms two different simple fragment
@@ -18,14 +35,14 @@ import com.alibaba.graphscope.ds.adaptor.AdjList;
  * @param <VDATA_T> vertex data type.
  * @param <EDATA_T> edge data type.
  */
-public interface IFragment<OID_T, VID_T, VDATA_T, EDATA_T> {
+public interface IFragment<OID_T, VID_T, VDATA_T, EDATA_T> extends Serializable {
 
     /**
      * Return the underlying fragment type,i.e. ArrowProjected or Simple.
      *
      * @return underlying fragment type.
      */
-    String fragmentType();
+    FragmentType fragmentType();
 
     /**
      * Get the actual fragment FFIPointer we are using.
@@ -50,6 +67,10 @@ public interface IFragment<OID_T, VID_T, VDATA_T, EDATA_T> {
      * @return the number of edges in this fragment.
      */
     long getEdgeNum();
+
+    long getInEdgeNum();
+
+    long getOutEdgeNum();
 
     /**
      * Returns the number of vertices in this fragment.
@@ -219,46 +240,6 @@ public interface IFragment<OID_T, VID_T, VDATA_T, EDATA_T> {
      * @return Global id of the vertex.
      */
     VID_T getInnerVertexGid(@CXXReference Vertex<VID_T> vertex);
-
-    /**
-     * Return the incoming edge destination fragment ID list of a inner vertex.
-     *
-     * <p>For inner vertex v of fragment-0, if outer vertex u and w are parents of v. u belongs to
-     * fragment-1 and w belongs to fragment-2, then 1 and 2 are in incoming edge destination
-     * fragment ID list of v.
-     *
-     * <p>This method is encapsulated in the corresponding sending message API,
-     * SendMsgThroughIEdges, so it is not recommended to use this method directly in application
-     * programs.
-     *
-     * @param vertex Input vertex.
-     * @return The incoming edge destination fragment ID list.
-     */
-    DestList inEdgeDests(@CXXReference Vertex<VID_T> vertex);
-
-    /**
-     * Return the outgoing edge destination fragment ID list of a inner vertex.
-     *
-     * <p>For inner vertex v of fragment-0, if outer vertex u and w are children of v. u belongs to
-     * fragment-1 and w belongs to fragment-2, then 1 and 2 are in outgoing edge destination
-     * fragment ID list of v.
-     *
-     * <p>This method is encapsulated in the corresponding sending message API,
-     * SendMsgThroughOEdges, so it is not recommended to use this method directly in application
-     * programs.
-     *
-     * @param vertex Input vertex.
-     * @return The outgoing edge destination fragment ID list.
-     */
-    DestList outEdgeDests(@CXXReference Vertex<VID_T> vertex);
-
-    /**
-     * Get both the in edges and out edges.
-     *
-     * @param vertex query vertex.
-     * @return The outgoing and incoming edge destination fragment ID list.
-     */
-    DestList inOutEdgeDests(@CXXReference Vertex<VID_T> vertex);
 
     @FFINameAlias("GetIncomingAdjList")
     @CXXValue

@@ -19,7 +19,6 @@ package com.alibaba.graphscope.ds;
 import static com.alibaba.graphscope.utils.CppClassName.GRAPE_DENSE_VERTEX_SET;
 import static com.alibaba.graphscope.utils.CppHeaderName.GRAPE_DENSE_VERTEX_SET_H;
 import static com.alibaba.graphscope.utils.CppHeaderName.GRAPE_WORKER_COMM_SPEC_H;
-import static com.alibaba.graphscope.utils.JNILibraryName.JNI_LIBRARY_NAME;
 
 import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.CXXPointer;
@@ -30,13 +29,14 @@ import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
+import com.alibaba.graphscope.utils.JNILibraryName;
 
 /**
  * Java wrapper for grape <a
  * href="https://github.com/alibaba/libgrape-lite/blob/master/grape/utils/vertex_set.h">DenseVertexSet</a>.
  * DenseVertexSet is able to maintain the indicator information for a vertex range.
  */
-@FFIGen(library = JNI_LIBRARY_NAME)
+@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
 @CXXHead(value = {GRAPE_WORKER_COMM_SPEC_H, GRAPE_DENSE_VERTEX_SET_H})
 @FFITypeAlias(GRAPE_DENSE_VERTEX_SET)
 public interface DenseVertexSet<VID_T> extends FFIPointer, CXXPointer {

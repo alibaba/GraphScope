@@ -43,6 +43,7 @@ limitations under the License.
 namespace bl = boost::leaf;
 
 namespace gs {
+
 using FragmentType =
     vineyard::ArrowFragment<int64_t, vineyard::property_graph_types::VID_TYPE>;
 using ProjectedFragmentType =

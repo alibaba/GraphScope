@@ -43,7 +43,9 @@ import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSo
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.PrintWriter;
 import java.io.Reader;
+import java.io.StringWriter;
 
 import javax.script.*;
 
@@ -96,7 +98,16 @@ public class AntlrToJavaScriptEngine extends AbstractScriptEngine implements Gre
                                 "token: %s.",
                                 ((NoViableAltException) t).getStartToken().toString());
             } else {
-                error += String.format("message: %s.", t.getMessage());
+                if (t == null) {
+                    StringWriter sw = new StringWriter();
+                    PrintWriter pw = new PrintWriter(sw);
+                    e.printStackTrace(pw);
+                    error +=
+                            String.format(
+                                    "message: %s, stacktrace: %s.", e.toString(), sw.toString());
+                } else {
+                    error += String.format("message: %s.", t.getMessage());
+                }
             }
             throw new InvalidGremlinScriptException(error);
         }
