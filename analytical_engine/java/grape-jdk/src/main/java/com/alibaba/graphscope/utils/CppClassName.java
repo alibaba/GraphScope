@@ -64,6 +64,9 @@ public class CppClassName {
             "gs::ParallelPropertyMessageManager";
     public static final String GRAPE_COMMUNICATOR = "grape::Communicator";
     public static final String ARROW_PROJECTED_FRAGMENT = "gs::ArrowProjectedFragment";
+    public static final String ARROW_PROJECTED_FRAGMENT_MAPPER = "gs::ArrowProjectedFragmentMapper";
+    public static final String GRAPHX_FRAGMENT = "gs::GraphXFragment";
+    public static final String GRAPHX_FRAGMENT_BUILDER = "gs::GraphXFragmentBuilder";
     public static final String PROJECTED_ADJ_LIST =
             "gs::arrow_projected_fragment_impl::AdjListDefault";
     public static final String PROJECTED_NBR = "gs::arrow_projected_fragment_impl::NbrDefault";
@@ -78,8 +81,27 @@ public class CppClassName {
     public static final String GS_ARROW_PROJECTED_FRAGMENT_IMPL_STRING_TYPED_ARRAY =
             "gs::arrow_projected_fragment_impl::TypedArray<std::string>";
 
+    public static final String GS_EDGE_PARTITION = "gs::EdgePartition";
+    public static final String GS_GRAPHX_CSR = "gs::GraphXCSR";
+    public static final String GS_GRAPHX_CSR_MAPPER = "gs::GraphXCSRMapper";
+    public static final String GS_GRAPHX_LOCAL_VERTEX_MAP = "gs::LocalVertexMap";
+    public static final String GS_GRAPHX_GRAPHX_VERTEX_MAP = "gs::GraphXVertexMap";
+    public static final String GS_GRAPHX_GRAPHX_VERTEX_MAP_GETTER = "gs::GraphXVertexMapGetter";
+    public static final String GS_BASIC_GRAPHX_CSR_BUILDER = "gs::BasicGraphXCSRBuilder";
+    public static final String GS_VERTEX_DATA = "gs::VertexData";
+    public static final String GS_VERTEX_DATA_GETTER = "gs::VertexDataGetter";
+    public static final String GS_EDGE_DATA = "gs::EdgeData";
+    public static final String GS_STRING_VERTEX_DATA = "gs::VertexData";
+    public static final String GS_STRING_EDGE_DATA = "gs::EdgeData";
+    public static final String GS_STRING_EDGE_DATA_BUILDER = "gs::EdgeDataBuilder";
+    public static final String GS_VERTEX_DATA_BUILDER = "gs::VertexDataBuilder";
+    public static final String GS_EDGE_DATA_BUILDER = "gs::EdgeDataBuilder";
+    public static final String GS_STRING_VERTEX_DATA_BUILDER = "gs::VertexDataBuilder";
+    public static final String GS_DEFAULT_IMMUTABLE_CSR = "gs::DefaultImmutableCSR";
     public static final String GS_ARROW_ARRAY_BUILDER = "gs::ArrowArrayBuilder";
     public static final String GS_ARROW_ARRAY = "gs::ArrowArray";
+    public static final String GS_GRAPHX_LOCAL_VERTEX_MAP_BUILDER =
+            "gs::BasicLocalVertexMapBuilder";
     public static final String GS_ARROW_PROJECTED_FRAGMENT_GETTER =
             "gs::ArrowProjectedFragmentGetter";
 

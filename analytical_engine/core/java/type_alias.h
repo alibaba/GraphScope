@@ -27,6 +27,7 @@
 
 #include "core/context/column.h"
 #include "core/fragment/arrow_projected_fragment.h"
+#include "core/java/graphx/graphx_csr.h"
 
 // Type alias for ease of use of some template types in Java.
 namespace gs {
@@ -86,6 +87,9 @@ using LongColumn = Column<FRAG_T, uint64_t>;
 
 template <typename FRAG_T>
 using IntColumn = Column<FRAG_T, uint32_t>;
+
+template <typename VID_T, typename ED_T>
+using DefaultImmutableCSR = grape::ImmutableCSR<VID_T, grape::Nbr<VID_T, ED_T>>;
 
 template <typename T>
 using ArrowArrayBuilder = typename vineyard::ConvertToArrowType<T>::BuilderType;
