@@ -30,6 +30,7 @@ extern crate serde_json;
 #[macro_use]
 extern crate serde_derive;
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct GraphError {
     kind: GraphErrorKind,
@@ -91,6 +92,12 @@ pub enum GraphErrorKind {
     // data in store error, it's a fatal error
     InternalDataError,
     Other,
+}
+
+impl From<String> for GraphError {
+    fn from(e: String) -> Self {
+        GraphError::not_supported(e)
+    }
 }
 
 pub type GraphResult<T> = Result<T, GraphError>;

@@ -53,7 +53,7 @@ impl FilterFuncGen for algebra_pb::Select {
 
 #[cfg(test)]
 mod tests {
-    use graph_proxy::apis::{Details, Element, GraphElement};
+    use graph_proxy::apis::{Details, GraphElement};
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
     use pegasus::api::{Filter, Sink};
@@ -61,7 +61,7 @@ mod tests {
     use pegasus::JobConf;
 
     use crate::process::operator::filter::FilterFuncGen;
-    use crate::process::operator::tests::init_source;
+    use crate::process::operator::tests::{init_source, PERSON_LABEL};
     use crate::process::record::Record;
 
     fn select_test(source: Vec<Record>, select_opr_pb: pb::Select) -> ResultStream<Record> {
@@ -287,13 +287,13 @@ mod tests {
     #[test]
     fn select_label_test() {
         let select_opr_pb =
-            pb::Select { predicate: Some(str_to_expr_pb("@.~label == \"person\"".to_string()).unwrap()) };
+            pb::Select { predicate: Some(str_to_expr_pb("@.~label == 0".to_string()).unwrap()) };
         let mut result = select_test(init_source(), select_opr_pb);
         let mut count = 0;
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
                 {
-                    assert_eq!(element.label().unwrap().clone(), "person".into());
+                    assert_eq!(element.label().unwrap().clone(), PERSON_LABEL);
                 }
                 count += 1;
             }

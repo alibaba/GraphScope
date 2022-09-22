@@ -23,6 +23,7 @@ import com.alibaba.graphscope.common.intermediate.operator.GetVOp;
 import com.alibaba.graphscope.common.intermediate.operator.InterOpBase;
 import com.alibaba.graphscope.common.intermediate.operator.SelectOp;
 import com.alibaba.graphscope.common.jna.type.FfiDirection;
+import com.alibaba.graphscope.common.jna.type.FfiExpandOpt;
 import com.alibaba.graphscope.common.jna.type.FfiVOpt;
 import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
 import com.alibaba.graphscope.gremlin.transform.StepTransformFactory;
@@ -45,19 +46,23 @@ public class VertexStepTest {
     @Test
     public void g_V_out() {
         Traversal traversal = g.V().out();
+        IrStandardOpProcessor.applyStrategies(traversal);
+
         Step vertexStep = traversal.asAdmin().getEndStep();
-        ExpandOp op = (ExpandOp) StepTransformFactory.VERTEX_STEP.apply(vertexStep);
+        ExpandOp op = (ExpandOp) StepTransformFactory.EXPAND_FUSION_STEP.apply(vertexStep);
         Assert.assertEquals(FfiDirection.Out, op.getDirection().get().applyArg());
-        Assert.assertEquals(false, op.getIsEdge().get().applyArg());
+        Assert.assertEquals(FfiExpandOpt.Vertex, op.getExpandOpt().get().applyArg());
     }
 
     @Test
     public void g_V_outE() {
         Traversal traversal = g.V().outE();
+        IrStandardOpProcessor.applyStrategies(traversal);
+
         Step vertexStep = traversal.asAdmin().getEndStep();
-        ExpandOp op = (ExpandOp) StepTransformFactory.VERTEX_STEP.apply(vertexStep);
+        ExpandOp op = (ExpandOp) StepTransformFactory.EXPAND_FUSION_STEP.apply(vertexStep);
         Assert.assertEquals(FfiDirection.Out, op.getDirection().get().applyArg());
-        Assert.assertEquals(true, op.getIsEdge().get().applyArg());
+        Assert.assertEquals(FfiExpandOpt.Edge, op.getExpandOpt().get().applyArg());
     }
 
     // fuse outE + hasLabel
@@ -67,7 +72,7 @@ public class VertexStepTest {
         // source + expand + sink
         Assert.assertEquals(2, ops.size() - 1);
         ExpandOp expandOp = (ExpandOp) ops.get(1);
-        Assert.assertEquals(true, expandOp.getIsEdge().get().applyArg());
+        Assert.assertEquals(FfiExpandOpt.Edge, expandOp.getExpandOpt().get().applyArg());
         Assert.assertEquals(
                 Arrays.asList(ArgUtils.asNameOrId("knows")),
                 expandOp.getParams().get().getTables());
@@ -80,7 +85,7 @@ public class VertexStepTest {
         // source + expand + sink
         Assert.assertEquals(2, ops.size() - 1);
         ExpandOp expandOp = (ExpandOp) ops.get(1);
-        Assert.assertEquals(true, expandOp.getIsEdge().get().applyArg());
+        Assert.assertEquals(FfiExpandOpt.Edge, expandOp.getExpandOpt().get().applyArg());
         Assert.assertEquals("@.weight == 1.0", expandOp.getParams().get().getPredicate().get());
     }
 
@@ -91,7 +96,7 @@ public class VertexStepTest {
         // source + expand + sink
         Assert.assertEquals(2, ops.size() - 1);
         ExpandOp expandOp = (ExpandOp) ops.get(1);
-        Assert.assertEquals(false, expandOp.getIsEdge().get().applyArg());
+        Assert.assertEquals(FfiExpandOpt.Vertex, expandOp.getExpandOpt().get().applyArg());
         Assert.assertEquals("@.weight == 1.0", expandOp.getParams().get().getPredicate().get());
     }
 
@@ -103,7 +108,7 @@ public class VertexStepTest {
         Assert.assertEquals(3, ops.size() - 1);
 
         ExpandOp expandOp = (ExpandOp) ops.get(1);
-        Assert.assertEquals(false, expandOp.getIsEdge().get().applyArg());
+        Assert.assertEquals(FfiExpandOpt.Vertex, expandOp.getExpandOpt().get().applyArg());
         Assert.assertEquals("@.weight == 1.0", expandOp.getParams().get().getPredicate().get());
 
         SelectOp selectOp = (SelectOp) ops.get(2);
@@ -119,7 +124,7 @@ public class VertexStepTest {
         Assert.assertEquals(3, ops.size() - 1);
 
         ExpandOp expandOp = (ExpandOp) ops.get(1);
-        Assert.assertEquals(true, expandOp.getIsEdge().get().applyArg());
+        Assert.assertEquals(FfiExpandOpt.Edge, expandOp.getExpandOpt().get().applyArg());
         Assert.assertEquals("@.weight == 1.0", expandOp.getParams().get().getPredicate().get());
         Assert.assertEquals(ArgUtils.asAlias("a", true), expandOp.getAlias().get().applyArg());
 
@@ -137,7 +142,7 @@ public class VertexStepTest {
         Assert.assertEquals(4, ops.size() - 1);
 
         ExpandOp expandOp = (ExpandOp) ops.get(1);
-        Assert.assertEquals(true, expandOp.getIsEdge().get().applyArg());
+        Assert.assertEquals(FfiExpandOpt.Edge, expandOp.getExpandOpt().get().applyArg());
         Assert.assertEquals("@.weight == 1.0", expandOp.getParams().get().getPredicate().get());
         Assert.assertEquals(ArgUtils.asAlias("a", true), expandOp.getAlias().get().applyArg());
 
@@ -156,7 +161,7 @@ public class VertexStepTest {
         Assert.assertEquals(3, ops.size() - 1);
 
         ExpandOp expandOp = (ExpandOp) ops.get(1);
-        Assert.assertEquals(false, expandOp.getIsEdge().get().applyArg());
+        Assert.assertEquals(FfiExpandOpt.Vertex, expandOp.getExpandOpt().get().applyArg());
 
         SelectOp selectOp = (SelectOp) ops.get(2);
         Assert.assertEquals("@.~label == \"person\"", selectOp.getPredicate().get().applyArg());
@@ -170,7 +175,7 @@ public class VertexStepTest {
         Assert.assertEquals(3, ops.size() - 1);
 
         ExpandOp expandOp = (ExpandOp) ops.get(1);
-        Assert.assertEquals(false, expandOp.getIsEdge().get().applyArg());
+        Assert.assertEquals(FfiExpandOpt.Vertex, expandOp.getExpandOpt().get().applyArg());
 
         SelectOp selectOp = (SelectOp) ops.get(2);
         Assert.assertEquals("@.name == \"marko\"", selectOp.getPredicate().get().applyArg());

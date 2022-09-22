@@ -357,8 +357,15 @@ class LocalLauncher(Launcher):
         else:
             self._etcd_peer_port = get_free_port()
         if len(self._hosts) > 1:
+            try:
+                local_hostname = socket.gethostname()
+                socket.gethostbyname(
+                    local_hostname
+                )  # make sure the hostname is dns-resolvable
+            except Exception:
+                local_hostname = "127.0.0.1"  # fallback to a must-correct hostname
             self._etcd_endpoint = "http://{0}:{1}".format(
-                socket.gethostname(), str(self._etcd_client_port)
+                local_hostname, str(self._etcd_client_port)
             )
         else:
             self._etcd_endpoint = "http://127.0.0.1:{0}".format(

@@ -21,6 +21,8 @@ use std::convert::{TryFrom, TryInto};
 use dyn_type::arith::Exp;
 use dyn_type::object;
 use dyn_type::{BorrowObject, Object};
+use global_query::store_api::condition::Operand as StoreOperand;
+use global_query::store_api::{prelude::Property, PropId};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::expr_parse::to_suffix_expr;
 use ir_common::generated::common as common_pb;
@@ -29,6 +31,7 @@ use ir_common::{NameOrId, ALL_KEY, ID_KEY, LABEL_KEY, LENGTH_KEY};
 use crate::apis::{Details, Element, PropKey};
 use crate::utils::expr::eval_pred::EvalPred;
 use crate::utils::expr::{ExprEvalError, ExprEvalResult};
+use crate::{GraphProxyError, GraphProxyResult};
 
 /// The trait to define evaluating an expression
 pub trait Evaluate {
@@ -52,6 +55,36 @@ pub enum Operand {
     Var { tag: Option<NameOrId>, prop_key: Option<PropKey> },
     Vars(Vec<Operand>),
     VarMap(Vec<Operand>),
+}
+
+impl Operand {
+    /// only get the PropId, else None
+    pub(crate) fn get_var_prop_id(&self) -> GraphProxyResult<PropId> {
+        match self {
+            Operand::Var { tag: None, prop_key: Some(prop_key) } => match prop_key {
+                PropKey::Key(NameOrId::Id(id)) => Ok(*id as PropId),
+                _ => Err(GraphProxyError::UnSupported(format!("var error {:?}", self))),
+            },
+            _ => Err(GraphProxyError::FilterPushDownError(format!("not a var {:?}", self))),
+        }
+    }
+
+    pub(crate) fn to_store_oprand(&self) -> GraphProxyResult<StoreOperand> {
+        match self {
+            Operand::Var { tag: None, prop_key: Some(prop_key) } => match prop_key {
+                PropKey::Key(NameOrId::Id(id)) => Ok(StoreOperand::PropId(*id as PropId)),
+                PropKey::Label => Ok(StoreOperand::Label),
+                PropKey::Id => Ok(StoreOperand::Id),
+                _ => Err(GraphProxyError::FilterPushDownError(format!("var error {:?}", self))),
+            },
+            Operand::Const(obj) => {
+                let prop = Property::from_borrow_object(obj.as_borrow())
+                    .map_err(|e| GraphProxyError::FilterPushDownError(format!("{:?}", e)));
+                prop.map(StoreOperand::Const)
+            }
+            _ => Err(GraphProxyError::FilterPushDownError(format!("not a var {:?}", self))),
+        }
+    }
 }
 
 /// An inner representation of `common_pb::ExprOpr` for one-shot translation of `common_pb::ExprOpr`.
@@ -266,10 +299,10 @@ impl Evaluate for Evaluator {
     ///
     ///     let ctxt = Vertices {
     ///         vec: vec![
-    ///             Vertex::new(1, Some(NameOrId::from(1)), DynDetails::new(
+    ///             Vertex::new(1, Some(1), DynDetails::new(
     ///                 map.clone(),
     ///             )),
-    ///             Vertex::new(2, Some(NameOrId::from(2)), DynDetails::new(
+    ///             Vertex::new(2, Some(2), DynDetails::new(
     ///                 map.clone(),
     ///             )),
     ///         ],
@@ -443,23 +476,17 @@ impl Evaluate for Operand {
                 if let Some(ctxt) = context {
                     if let Some(element) = ctxt.get(tag.as_ref()) {
                         let result = if let Some(property) = prop_key {
+                            let graph_element = element
+                                .as_graph_element()
+                                .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?;
                             match property {
-                                PropKey::Id => element
-                                    .as_graph_element()
-                                    .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?
-                                    .id()
-                                    .into(),
-                                PropKey::Label => element
-                                    .as_graph_element()
-                                    .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?
+                                PropKey::Id => graph_element.id().into(),
+                                PropKey::Label => graph_element
                                     .label()
-                                    .map(|label| match label {
-                                        NameOrId::Str(str) => str.clone().into(),
-                                        NameOrId::Id(id) => (*id).into(),
-                                    })
+                                    .map(|label| label.into())
                                     .ok_or(ExprEvalError::GetNoneFromContext)?,
-                                PropKey::Len => element.len().into(),
-                                PropKey::All => element
+                                PropKey::Len => graph_element.len().into(),
+                                PropKey::All => graph_element
                                     .details()
                                     .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?
                                     .get_all_properties()
@@ -476,7 +503,7 @@ impl Evaluate for Operand {
                                             .into()
                                     })
                                     .ok_or(ExprEvalError::GetNoneFromContext)?,
-                                PropKey::Key(key) => element
+                                PropKey::Key(key) => graph_element
                                     .details()
                                     .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?
                                     .get_property(key)
@@ -570,7 +597,6 @@ impl InnerOpr {
 #[cfg(test)]
 mod tests {
     use ahash::HashMap;
-
     use ir_common::expr_parse::str_to_expr_pb;
 
     use super::*;

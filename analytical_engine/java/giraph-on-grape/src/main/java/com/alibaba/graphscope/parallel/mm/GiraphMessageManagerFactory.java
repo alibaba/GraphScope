@@ -17,7 +17,7 @@ package com.alibaba.graphscope.parallel.mm;
 
 import com.alibaba.graphscope.communication.FFICommunicator;
 import com.alibaba.graphscope.fragment.IFragment;
-import com.alibaba.graphscope.graph.VertexIdManager;
+import com.alibaba.graphscope.graph.GiraphVertexIdManager;
 import com.alibaba.graphscope.parallel.DefaultMessageManager;
 import com.alibaba.graphscope.parallel.mm.impl.GiraphMpiMessageManager;
 import com.alibaba.graphscope.parallel.mm.impl.GiraphNettyMessageManager;
@@ -48,7 +48,7 @@ public class GiraphMessageManagerFactory {
             NetworkMap networkMap,
             ImmutableClassesGiraphConfiguration conf,
             FFICommunicator communicator,
-            VertexIdManager idManager) {
+            GiraphVertexIdManager idManager) {
         if (mmType.equals("netty")) {
             return createGiraphNettyMM(
                     fragment,
@@ -133,7 +133,7 @@ public class GiraphMessageManagerFactory {
                             Class<? extends GS_VID_T> gsVidClass,
                             Class<? extends GS_OID_T> gsOidClass,
                             FFICommunicator communicator,
-                            VertexIdManager<GS_VID_T, OID_T> vertexIdManager) {
+                            GiraphVertexIdManager<GS_VID_T, OID_T> vertexIdManager) {
         return new GiraphMpiMessageManager<
                 OID_T, VDATA_T, EDATA_T, IN_MSG_T, OUT_MSG_T, GS_VID_T, GS_OID_T>(
                 fragment, mm, conf, communicator, vertexIdManager);

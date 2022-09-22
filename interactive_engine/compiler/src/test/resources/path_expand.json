@@ -13,18 +13,20 @@
                 "is_all_columns": false,
                 "limit": null,
                 "predicate": null,
+                "sample_ratio": 1.0,
                 "extra": {}
               },
-              "is_edge": false,
-              "alias": null
+              "alias": null,
+              "expand_opt": 0
             },
             "start_tag": null,
-            "is_whole_path": false,
             "alias": null,
             "hop_range": {
               "lower": 1,
               "upper": 5
-            }
+            },
+            "path_opt": 1,
+            "result_opt": 1
           }
         }
       },

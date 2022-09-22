@@ -16,8 +16,6 @@
 
 package com.alibaba.graphscope.stdcxx;
 
-import static com.alibaba.graphscope.utils.JNILibraryName.JNI_LIBRARY_NAME;
-
 import com.alibaba.fastffi.CXXPointer;
 import com.alibaba.fastffi.CXXReference;
 import com.alibaba.fastffi.CXXValue;
@@ -33,8 +31,9 @@ import com.alibaba.fastffi.FFISetter;
 import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.fastffi.FFITypeFactory;
 import com.alibaba.fastffi.FFIVector;
+import com.alibaba.graphscope.utils.JNILibraryName;
 
-@FFIGen(library = JNI_LIBRARY_NAME)
+@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
 @FFIMirror
 @FFINameSpace("sample")
 @FFITypeAlias("FFIMirrorSample")
@@ -93,6 +92,10 @@ public interface FFISample extends CXXPointer, FFIJava {
     @FFIGetter
     @CXXReference
     FFIVector<FFIVector<Long>> longVectorVectorField();
+
+    @FFIGetter
+    @CXXReference
+    FFIVector<Byte> vectorBytes();
 
     @FFIFactory
     interface Factory {

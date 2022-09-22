@@ -21,8 +21,8 @@ import com.alibaba.graphscope.context.GiraphComputationAdaptorContext;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.graph.AggregatorManager;
+import com.alibaba.graphscope.graph.GiraphVertexIdManager;
 import com.alibaba.graphscope.graph.VertexDataManager;
-import com.alibaba.graphscope.graph.VertexIdManager;
 import com.alibaba.graphscope.parallel.DefaultMessageManager;
 import com.alibaba.graphscope.parallel.mm.GiraphMessageManager;
 import com.alibaba.graphscope.parallel.mm.MessageIterable;
@@ -111,7 +111,7 @@ public class GiraphComputationAdaptor<OID_T, VID_T, VDATA_T, EDATA_T> extends Co
         Iterable<Writable> messages = MessageIterable.emptyMessageIterable;
 
         VertexDataManager vertexDataManager = ctx.vertex.getVertexDataManager();
-        VertexIdManager vertexIdManager = ctx.vertex.getVertexIdManager();
+        GiraphVertexIdManager vertexIdManager = ctx.vertex.getVertexIdManager();
         int cnt = 0;
         for (Vertex<VID_T> grapeVertex : graph.innerVertices().longIterable()) {
             if (cnt > 5) {
@@ -123,12 +123,12 @@ public class GiraphComputationAdaptor<OID_T, VID_T, VDATA_T, EDATA_T> extends Co
                         "Vertex: "
                                 + grapeVertex.GetValue()
                                 + ", oid: "
-                                + vertexIdManager.getId(lid)
+                                + vertexIdManager.lid2Oid(lid)
                                 + ", vdata: "
                                 + vertexDataManager.getVertexData(lid));
                 Vertex<VID_T> oid_tVertex =
                         (Vertex<VID_T>) FFITypeFactoryhelper.newVertex(Long.class);
-                Long longOid = ((LongWritable) vertexIdManager.getId(lid)).get();
+                Long longOid = ((LongWritable) vertexIdManager.lid2Oid(lid)).get();
                 graph.getVertex((OID_T) longOid, oid_tVertex);
             } else if (ctx.getUserComputation()
                     .getConf()
@@ -139,7 +139,7 @@ public class GiraphComputationAdaptor<OID_T, VID_T, VDATA_T, EDATA_T> extends Co
                         "Vertex: "
                                 + grapeVertex.GetValue()
                                 + ", oid: "
-                                + vertexIdManager.getId(lid)
+                                + vertexIdManager.lid2Oid(lid)
                                 + ", vdata: "
                                 + vertexDataManager.getVertexData(lid));
             }

@@ -22,15 +22,22 @@ import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.CXXOperator;
 import com.alibaba.fastffi.CXXPointer;
 import com.alibaba.fastffi.CXXReference;
+import com.alibaba.fastffi.CXXTemplate;
 import com.alibaba.fastffi.CXXValue;
 import com.alibaba.fastffi.FFIFactory;
+import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFISettablePointer;
 import com.alibaba.fastffi.FFITypeAlias;
+import com.alibaba.graphscope.utils.JNILibraryName;
 
+@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
 @CXXHead(system = {"vector", "string"})
 @CXXHead(CORE_JAVA_TYPE_ALIAS_H)
 @FFITypeAlias("std::vector")
+@CXXTemplate(cxx = "char", java = "java.lang.Byte")
+@CXXTemplate(cxx = "int32_t", java = "java.lang.Integer")
 public interface StdVector<E> extends CXXPointer, FFISettablePointer {
+
     long size();
 
     @CXXOperator("[]")
@@ -73,6 +80,7 @@ public interface StdVector<E> extends CXXPointer, FFISettablePointer {
 
     @FFIFactory
     interface Factory<E> {
+
         StdVector<E> create();
     }
 }

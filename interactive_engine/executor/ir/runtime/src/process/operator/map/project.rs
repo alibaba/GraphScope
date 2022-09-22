@@ -16,7 +16,6 @@
 use std::convert::{TryFrom, TryInto};
 use std::sync::Arc;
 
-use dyn_type::Object;
 use graph_proxy::utils::expr::eval::{Evaluate, Evaluator};
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
@@ -27,7 +26,7 @@ use pegasus::api::function::{FilterMapFunction, FnResult};
 use crate::error::{FnExecResult, FnGenResult};
 use crate::process::operator::map::FilterMapFuncGen;
 use crate::process::operator::TagKey;
-use crate::process::record::{CommonObject, Entry, Record, RecordElement};
+use crate::process::record::{Entry, Record};
 
 /// Project entries with specified tags or further their properties.
 /// Notice that when projecting a single column, if the result is a None-Entry,
@@ -55,14 +54,8 @@ pub enum Projector {
 fn exec_projector(input: &Record, projector: &Projector) -> FnExecResult<Arc<Entry>> {
     let entry = match projector {
         Projector::ExprProjector(evaluator) => {
-            let projected_result = evaluator.eval::<RecordElement, Record>(Some(&input))?;
-            Arc::new(
-                match projected_result {
-                    Object::None => CommonObject::None,
-                    _ => CommonObject::Prop(projected_result),
-                }
-                .into(),
-            )
+            let projected_result = evaluator.eval::<Entry, Record>(Some(&input))?;
+            Arc::new(projected_result.into())
         }
         Projector::GraphElementProjector(tag_key) => tag_key.get_arc_entry(input)?,
     };
@@ -157,7 +150,6 @@ impl FilterMapFuncGen for algebra_pb::Project {
 #[cfg(test)]
 mod tests {
     use ahash::HashMap;
-
     use dyn_type::Object;
     use graph_proxy::apis::{DynDetails, GraphElement, Vertex};
     use ir_common::expr_parse::str_to_expr_pb;
@@ -170,9 +162,9 @@ mod tests {
     use crate::process::operator::map::FilterMapFuncGen;
     use crate::process::operator::tests::{
         init_source, init_source_with_multi_tags, init_source_with_tag, init_vertex1, init_vertex2,
-        to_expr_var_pb, to_expr_vars_pb, TAG_A, TAG_B, TAG_C, TAG_D, TAG_E,
+        to_expr_var_pb, to_expr_vars_pb, PERSON_LABEL, TAG_A, TAG_B, TAG_C, TAG_D, TAG_E,
     };
-    use crate::process::record::{CommonObject, Entry, Record, RecordElement};
+    use crate::process::record::{Entry, Record};
 
     fn project_test(source: Vec<Record>, project_opr_pb: pb::Project) -> ResultStream<Record> {
         let conf = JobConf::new("project_test");
@@ -205,7 +197,7 @@ mod tests {
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
             match res.get(None).unwrap().as_ref() {
-                Entry::Element(RecordElement::OffGraph(CommonObject::Prop(val))) => {
+                Entry::OffGraph(val) => {
                     object_result.push(val.clone());
                 }
                 _ => {}
@@ -232,7 +224,7 @@ mod tests {
             let a_entry = res.get(Some(TAG_A));
             assert_eq!(a_entry, None);
             match res.get(Some(TAG_B)).unwrap().as_ref() {
-                Entry::Element(RecordElement::OffGraph(CommonObject::Prop(val))) => {
+                Entry::OffGraph(val) => {
                     object_result.push(val.clone());
                 }
                 _ => {}
@@ -256,7 +248,7 @@ mod tests {
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
             match res.get(None).unwrap().as_ref() {
-                Entry::Element(RecordElement::OffGraph(CommonObject::Prop(val))) => {
+                Entry::OffGraph(val) => {
                     object_result.push(val.clone());
                 }
                 _ => {}
@@ -290,10 +282,7 @@ mod tests {
             let age_val = res.get(Some(TAG_B)).unwrap();
             let name_val = res.get(Some(TAG_C)).unwrap();
             match (age_val.as_ref(), name_val.as_ref()) {
-                (
-                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(age))),
-                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(name))),
-                ) => {
+                (Entry::OffGraph(age), Entry::OffGraph(name)) => {
                     object_result.push((age.clone(), name.clone()));
                 }
                 _ => {}
@@ -326,10 +315,7 @@ mod tests {
             let age_val = res.get(Some(TAG_B)).unwrap();
             let name_val = res.get(Some(TAG_C)).unwrap();
             match (age_val.as_ref(), name_val.as_ref()) {
-                (
-                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(age))),
-                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(name))),
-                ) => {
+                (Entry::OffGraph(age), Entry::OffGraph(name)) => {
                     object_result.push((age.clone(), name.clone()));
                 }
                 _ => {}
@@ -351,7 +337,7 @@ mod tests {
             vec![("id".into(), object!(3)), ("age".into(), object!(32)), ("name".into(), object!("josh"))]
                 .into_iter()
                 .collect();
-        let v3 = Vertex::new(3, Some("person".into()), DynDetails::new(map3));
+        let v3 = Vertex::new(3, Some(PERSON_LABEL), DynDetails::new(map3));
         let mut r1 = Record::new(v1, Some(TAG_A.into()));
         r1.append(v3.clone(), Some(TAG_B.into()));
         let mut r2 = Record::new(v2, Some(TAG_A.into()));
@@ -383,11 +369,7 @@ mod tests {
             let a_name_val = res.get(Some(TAG_D)).unwrap();
             let b_name_val = res.get(Some(TAG_E)).unwrap();
             match (a_age_val.as_ref(), a_name_val.as_ref(), b_name_val.as_ref()) {
-                (
-                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(a_age))),
-                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(a_name))),
-                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(b_name))),
-                ) => {
+                (Entry::OffGraph(a_age), Entry::OffGraph(a_name), Entry::OffGraph(b_name)) => {
                     object_result.push((a_age.clone(), a_name.clone(), b_name.clone()));
                 }
                 _ => {}
@@ -421,7 +403,7 @@ mod tests {
                 .unwrap();
             let b_entry = res.get(Some(TAG_B)).unwrap().as_ref();
             match b_entry {
-                Entry::Element(RecordElement::OffGraph(CommonObject::Prop(val))) => {
+                Entry::OffGraph(val) => {
                     a_results.push(v.id());
                     b_results.push(val.clone());
                 }
@@ -456,10 +438,7 @@ mod tests {
             let age_val = res.get(Some(TAG_B)).unwrap();
             let name_val = res.get(Some(TAG_C)).unwrap();
             match (age_val.as_ref(), name_val.as_ref()) {
-                (
-                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(age))),
-                    Entry::Element(RecordElement::OffGraph(CommonObject::Prop(name))),
-                ) => {
+                (Entry::OffGraph(age), Entry::OffGraph(name)) => {
                     object_result.push((age.clone(), name.clone()));
                 }
                 _ => {}
@@ -512,7 +491,7 @@ mod tests {
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
             match res.get(None).unwrap().as_ref() {
-                Entry::Element(RecordElement::OffGraph(CommonObject::Prop(val))) => {
+                Entry::OffGraph(val) => {
                     object_result.push(val.clone());
                 }
                 _ => {}
@@ -539,7 +518,7 @@ mod tests {
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
             match res.get(None).unwrap().as_ref() {
-                Entry::Element(RecordElement::OffGraph(CommonObject::Prop(val))) => {
+                Entry::OffGraph(val) => {
                     object_result.push(val.clone());
                 }
                 _ => {}
@@ -586,7 +565,7 @@ mod tests {
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
             match res.get(None).unwrap().as_ref() {
-                Entry::Element(RecordElement::OffGraph(CommonObject::Prop(val))) => {
+                Entry::OffGraph(val) => {
                     object_result.push(val.clone());
                 }
                 _ => {}
@@ -704,10 +683,7 @@ mod tests {
             let c_val = res.get(Some(TAG_C)).unwrap();
             let d_val = res.get(Some(TAG_D)).unwrap();
             match (c_val.as_ref(), d_val.as_ref()) {
-                (
-                    Entry::Element(RecordElement::OffGraph(CommonObject::None)),
-                    Entry::Element(RecordElement::OffGraph(CommonObject::None)),
-                ) => {
+                (Entry::OffGraph(Object::None), Entry::OffGraph(Object::None)) => {
                     assert!(true)
                 }
                 _ => {
@@ -743,10 +719,7 @@ mod tests {
             let c_val = res.get(Some(TAG_C)).unwrap();
             let d_val = res.get(Some(TAG_D)).unwrap();
             match (c_val.as_ref(), d_val.as_ref()) {
-                (
-                    Entry::Element(RecordElement::OffGraph(CommonObject::None)),
-                    Entry::Element(RecordElement::OffGraph(CommonObject::None)),
-                ) => {
+                (Entry::OffGraph(Object::None), Entry::OffGraph(Object::None)) => {
                     assert!(true)
                 }
                 _ => {
@@ -760,8 +733,8 @@ mod tests {
     // g.V().values('id').as('a').select('a').by('id'), throw an unexpected data type error
     #[test]
     fn project_error_test() {
-        let common_obj1 = CommonObject::Prop(object!(1));
-        let common_obj2 = CommonObject::Prop(object!(2));
+        let common_obj1 = object!(1);
+        let common_obj2 = object!(2);
         let r1 = Record::new(common_obj1, Some(TAG_A.into()));
         let r2 = Record::new(common_obj2, Some(TAG_A.into()));
         let source = vec![r1, r2];

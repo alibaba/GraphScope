@@ -28,6 +28,7 @@
 #include "arrow/array/array_binary.h"
 #include "arrow/array/array_primitive.h"
 #include "arrow/array/builder_primitive.h"
+
 #include "grape/fragment/fragment_base.h"
 #include "grape/graph/adj_list.h"
 #include "grape/types.h"
@@ -54,32 +55,47 @@ class TypedArray {
  public:
   using value_type = T;
 
-  TypedArray() : buffer_(NULL) {}
+  TypedArray() : buffer_(NULL), length_(0) {}
+
+  TypedArray(const T* _buffer, size_t length)
+      : buffer_(_buffer), length_(length) {}
 
   explicit TypedArray(std::shared_ptr<arrow::Array> array) {
     if (array == nullptr) {
       buffer_ = NULL;
+      length_ = 0;
     } else {
       buffer_ = std::dynamic_pointer_cast<
                     typename vineyard::ConvertToArrowType<T>::ArrayType>(array)
                     ->raw_values();
+      length_ = array->length();
     }
   }
 
   void Init(std::shared_ptr<arrow::Array> array) {
     if (array == nullptr) {
       buffer_ = NULL;
+      length_ = 0;
     } else {
       buffer_ = std::dynamic_pointer_cast<
                     typename vineyard::ConvertToArrowType<T>::ArrayType>(array)
                     ->raw_values();
+      length_ = array->length();
     }
+  }
+
+  void Init(vineyard::Array<T>& array) {
+    buffer_ = array.data();
+    length_ = array.size();
   }
 
   value_type operator[](size_t loc) const { return buffer_[loc]; }
 
+  size_t GetLength() const { return length_; }
+
  private:
   const T* buffer_;
+  size_t length_;
 };
 
 template <>
@@ -118,6 +134,17 @@ struct TypedArray<std::string> {
   }
 
   value_type operator[](size_t loc) const { return array_->GetView(loc); }
+
+  size_t GetLength() const { return array_ == NULL ? 0 : array_->length(); }
+
+  char* GetRawData() {
+    return reinterpret_cast<char*>(const_cast<uint8_t*>(array_->raw_data()));
+  }
+
+  size_t GetRawDataLength() {
+    int64_t arr_length = array_->length();
+    return array_->value_offset(arr_length);
+  }
 
  private:
   arrow::LargeStringArray* array_;
@@ -336,6 +363,10 @@ class AdjList<VID_T, EID_T, grape::EmptyType> {
 
 }  // namespace arrow_projected_fragment_impl
 
+template <typename OID_T, typename VID_T, typename OLD_VDATA_T,
+          typename NEW_VDATA_T, typename OLD_EDATA_T, typename NEW_EDATA_T>
+class ArrowProjectedFragmentMapper;
+
 /**
  * @brief This class represents the fragment projected from ArrowFragment which
  * contains only one vertex label and edge label. The fragment has no label and
@@ -467,6 +498,8 @@ class ArrowProjectedFragment
 
     meta.AddMember("arrow_fragment", fragment->meta());
     meta.AddMember("arrow_projected_vertex_map", vm->meta());
+    meta.AddKeyValue("vertex_label_num_", 1);
+    meta.AddKeyValue("edge_label_num_", 1);
 
     std::shared_ptr<vineyard::NumericArray<int64_t>> ie_offsets_begin,
         ie_offsets_end;
@@ -607,6 +640,7 @@ class ArrowProjectedFragment
                                       ->column(vertex_prop_)
                                       ->chunk(0));
     }
+
     ovgid_list_ = fragment_->ovgid_lists_[vertex_label_]->GetArray();
     ovg2l_map_ = fragment_->ovg2l_maps_[vertex_label_];
 
@@ -731,6 +765,10 @@ class ArrowProjectedFragment
   inline vid_t GetVerticesNum() const { return tvnum_; }
 
   inline size_t GetEdgeNum() const { return ienum_ + oenum_; }
+
+  inline size_t GetInEdgeNum() const { return ienum_; }
+
+  inline size_t GetOutEdgeNum() const { return oenum_; }
 
   inline size_t GetTotalVerticesNum() const {
     return vm_ptr_->GetTotalVerticesNum();
@@ -924,11 +962,21 @@ class ArrowProjectedFragment
 
   inline const nbr_unit_t* get_out_edges_ptr() const { return oe_ptr_; }
 
+  inline const nbr_unit_t* get_in_edges_ptr() const { return ie_ptr_; }
+
   inline const int64_t* get_oe_offsets_begin_ptr() const {
     return oe_offsets_begin_ptr_;
   }
+
   inline const int64_t* get_oe_offsets_end_ptr() const {
     return oe_offsets_end_ptr_;
+  }
+
+  inline const int64_t* get_ie_offsets_begin_ptr() const {
+    return ie_offsets_begin_ptr_;
+  }
+  inline const int64_t* get_ie_offsets_end_ptr() const {
+    return ie_offsets_end_ptr_;
   }
 
   inline arrow_projected_fragment_impl::TypedArray<EDATA_T>&
@@ -1181,6 +1229,10 @@ class ArrowProjectedFragment
 
   std::vector<vid_t> outer_vertex_offsets_;
   std::vector<std::vector<vertex_t>> mirrors_of_frag_;
+
+  template <typename _OID_T, typename _VID_T, typename _OLD_VDATA_T,
+            typename _NEW_VDATA_T, typename _OLD_EDATA_T, typename _NEW_EDATA_T>
+  friend class ArrowProjectedFragmentMapper;
 };
 
 }  // namespace gs

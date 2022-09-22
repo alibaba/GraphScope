@@ -25,7 +25,6 @@ import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.TextP;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.NotStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.EdgeVertexStep;
 import org.apache.tinkerpop.gremlin.structure.Direction;
@@ -45,7 +44,7 @@ import javax.script.SimpleScriptContext;
 
 public class PositiveEvalTest {
     private Graph graph;
-    private GraphTraversalSource g;
+    private IrCustomizedTraversalSource g;
     private AntlrToJavaScriptEngine scriptEngine;
     private ScriptContext context;
 
@@ -900,13 +899,16 @@ public class PositiveEvalTest {
                 eval("g.V().has(\"name\", TextP.notContaining(\"marko\"))"));
     }
 
-    // g.V().as("a").select("a").by(out("1..2").endV().count())
+    // g.V().as("a").select("a").by(out("1..2").with("Result_Opt", AllV).count())
     @Test
     public void g_V_as_select_a_by_out_1_2_endV_count_test() {
         Assert.assertEquals(
-                g.V().as("a").select("a").by(__.out(__.range(1, 2)).endV().count()),
-                eval("g.V().as(\"a\").select(\"a\").by(out(\"1..2\").endV().count())"));
-        eval("g.V().has(\"name\", TextP.notContaining(\"marko\"))");
+                g.V().as("a")
+                        .select("a")
+                        .by(__.out(__.range(1, 2)).with("Result_Opt", "All_V").count()),
+                eval(
+                        "g.V().as(\"a\").select(\"a\").by(__.out(\"1..2\").with(\"Result_Opt\","
+                                + " \"All_V\").count())"));
     }
 
     @Test
@@ -1075,5 +1077,28 @@ public class PositiveEvalTest {
         List<Traversal.Admin> valueTraversals = groupStep.getValueTraversalList();
         Assert.assertEquals(__.count().as("a"), valueTraversals.get(0));
         Assert.assertEquals(__.sum().as("b"), valueTraversals.get(1));
+    }
+
+    @Test
+    public void g_V_coin() {
+        Assert.assertEquals(g.V().coin(0.5), eval("g.V().coin(0.5)"));
+    }
+
+    @Test
+    public void g_E_coin() {
+        Assert.assertEquals(g.E().coin(0.5), eval("g.E().coin(0.5)"));
+    }
+
+    // g.V().out("1..2", "knows", "created").with("PATH_OPT", "ARBITRARY").with("RESULT_OPT",
+    // "ALL_V")
+    @Test
+    public void g_V_path_expand_out_with() {
+        Assert.assertEquals(
+                g.V().out(__.range(1, 2), "knows", "created")
+                        .with("PATH_OPT", "ARBITRARY")
+                        .with("RESULT_OPT", "ALL_V"),
+                eval(
+                        "g.V().out(\"1..2\", \"knows\", \"created\").with(\"PATH_OPT\","
+                                + " \"ARBITRARY\").with(\"RESULT_OPT\", \"ALL_V\")"));
     }
 }

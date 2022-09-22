@@ -13,11 +13,11 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use ahash::{HashMap, HashMapExt};
 use std::convert::TryFrom;
 use std::io;
 use std::sync::Arc;
 
+use ahash::{HashMap, HashMapExt};
 use dyn_type::{BorrowObject, Object};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::common as pb;

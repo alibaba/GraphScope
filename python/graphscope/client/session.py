@@ -361,6 +361,7 @@ class Session(object):
         with_mars=gs_config.with_mars,
         mount_dataset=gs_config.mount_dataset,
         reconnect=False,
+        hosts=["localhost"],
         **kw,
     ):
         """Construct a new GraphScope session.
@@ -597,6 +598,7 @@ class Session(object):
             "dangling_timeout_seconds",
             "mount_dataset",
             "k8s_dataset_image",
+            "hosts",
         )
         self._deprecated_params = (
             "show_log",
@@ -803,6 +805,14 @@ class Session(object):
                     self._disconnected = False
             time.sleep(self._heartbeat_interval_seconds)
 
+    def connected(self) -> bool:
+        """Check if the session is still connected and available.
+
+        Returns: True or False
+
+        """
+        return not self._disconnected
+
     def close(self):
         """Closes this session.
 
@@ -810,7 +820,10 @@ class Session(object):
 
         Note that closing will ignore SIGINT and SIGTERM signal and recover later.
         """
-        with SignalIgnore([signal.SIGINT, signal.SIGTERM]):
+        if threading.currentThread() is threading.main_thread():
+            with SignalIgnore([signal.SIGINT, signal.SIGTERM]):
+                self._close()
+        else:
             self._close()
 
     def _close(self):
@@ -1076,7 +1089,6 @@ class Session(object):
             return graphscope.load_from(*args, **kwargs)
 
     def _run_on_local(self):
-        self._config_params["hosts"] = ["localhost"]
         self._config_params["port"] = None
         self._config_params["vineyard_socket"] = ""
 
