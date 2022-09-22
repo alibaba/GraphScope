@@ -25,7 +25,7 @@
 
   <artifactId>giraph-on-grape</artifactId>
   <packaging>jar</packaging>
-  <name>giraph-on-grape</name>
+  <name>Giraph on Grape</name>
 
   <properties>
     <benchmark.filter>org.apache.hadoop.io.StdVectorTest.write*</benchmark.filter>

@@ -110,6 +110,12 @@ public class GraphScopeClassLoader {
             URLClassLoader classLoader, String className, String serialPath)
             throws ClassNotFoundException, InstantiationException, IllegalAccessException,
                     InvocationTargetException, NoSuchMethodException {
+        if (className.startsWith("com.alibaba.graphscope.app.GraphXParallelAdaptor")) {
+            return loadGraphXAdaptor(serialPath, classLoader);
+        }
+        if (className.startsWith("com.alibaba.graphscope.context.GraphXParallelAdaptorContext")) {
+            return loadGraphxAdaptorCtx(serialPath, classLoader);
+        }
         logger.info("Load and create: " + formatting(className));
         Class<?> clz = classLoader.loadClass(formatting(className));
         return clz.newInstance();
@@ -343,5 +349,37 @@ public class GraphScopeClassLoader {
             }
         }
         return Integer.parseInt(version);
+    }
+
+    private static Object loadGraphXAdaptor(String serialPath, URLClassLoader classLoader)
+            throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
+                    IllegalAccessException {
+        Class<?> graphxClz =
+                classLoader.loadClass("com.alibaba.graphscope.app.GraphXParallelAdaptor");
+        logger.info("Load clz : {}", graphxClz.getName());
+        Method method = graphxClz.getDeclaredMethod("create", URLClassLoader.class, String.class);
+
+        Object obj = method.invoke(null, classLoader, serialPath);
+        logger.debug("Successfully invoked method, got" + obj);
+        return obj;
+    }
+
+    private static Object loadGraphxAdaptorCtx(String serialPath, URLClassLoader classLoader)
+            throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
+                    IllegalAccessException {
+        logger.debug(
+                "Trying create graphx adaptor context from: "
+                        + serialPath
+                        + " with class loader: "
+                        + classLoader);
+        Class<?> graphxClz =
+                classLoader.loadClass(
+                        "com.alibaba.graphscope.context.GraphXParallelAdaptorContext");
+
+        logger.info("Load clz : {}", graphxClz.getName());
+        Method method = graphxClz.getDeclaredMethod("create", URLClassLoader.class, String.class);
+        Object obj = method.invoke(null, classLoader, serialPath);
+        logger.debug("Successfully invoked method, got" + obj);
+        return obj;
     }
 }
