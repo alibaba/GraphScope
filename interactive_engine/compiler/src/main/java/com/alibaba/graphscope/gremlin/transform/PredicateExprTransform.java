@@ -17,7 +17,7 @@
 package com.alibaba.graphscope.gremlin.transform;
 
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
-import com.alibaba.graphscope.gremlin.antlr4.AnyValue;
+import com.alibaba.graphscope.gremlin.plugin.type.AnyValue;
 
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.tinkerpop.gremlin.process.traversal.*;
