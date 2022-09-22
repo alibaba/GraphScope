@@ -388,6 +388,9 @@ exact_verify "${test_dir}/p2p-31"-triangles
 
 if [[ "${RUN_JAVA_TESTS}" == "ON" ]];
 then
+  run_vy_2 ${np} ./projected_fragment_mapper_test "${socket_file}" 1 "${test_dir}"/projected_property/twitter_property_e "${test_dir}"/projected_property/twitter_property_v 
+  mpirun -n 2 ./graphx_test ${socket_file}
+
   if [[ "${USER_JAR_PATH}"x != ""x ]]
   then
     echo "Running Java tests..."

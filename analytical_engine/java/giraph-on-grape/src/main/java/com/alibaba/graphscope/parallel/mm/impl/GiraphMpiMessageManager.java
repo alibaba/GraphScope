@@ -24,7 +24,7 @@ import com.alibaba.graphscope.ds.PropertyNbrUnit;
 import com.alibaba.graphscope.fragment.ArrowProjectedFragment;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.fragment.adaptor.ArrowProjectedAdaptor;
-import com.alibaba.graphscope.graph.VertexIdManager;
+import com.alibaba.graphscope.graph.GiraphVertexIdManager;
 import com.alibaba.graphscope.graph.impl.VertexImpl;
 import com.alibaba.graphscope.parallel.DefaultMessageManager;
 import com.alibaba.graphscope.serialization.FFIByteVectorOutputStream;
@@ -63,14 +63,14 @@ public class GiraphMpiMessageManager<
     private long nbrUnitEleSize;
     private long nbrUnitInitAddress;
     private ArrowProjectedFragment<GS_OID_T, GS_VID_T, ?, ?> projectedFragment;
-    private VertexIdManager<GS_VID_T, OID_T> idManager;
+    private GiraphVertexIdManager<GS_VID_T, OID_T> idManager;
 
     public GiraphMpiMessageManager(
             IFragment fragment,
             DefaultMessageManager defaultMessageManager,
             ImmutableClassesGiraphConfiguration configuration,
             FFICommunicator communicator,
-            VertexIdManager<GS_VID_T, OID_T> idManager) {
+            GiraphVertexIdManager<GS_VID_T, OID_T> idManager) {
         super(fragment, defaultMessageManager, configuration, communicator);
         this.idManager = idManager;
         THRESHOLD = MAX_OUT_MSG_CACHE_SIZE.get(configuration);
@@ -127,7 +127,7 @@ public class GiraphMpiMessageManager<
      */
     @Override
     public void sendMessage(OID_T dstOid, OUT_MSG_T message) {
-        GS_VID_T lid = idManager.getLid(dstOid);
+        GS_VID_T lid = idManager.oid2Lid(dstOid);
         grapeVertex.SetValue(lid);
         sendMessage(grapeVertex, message);
     }
@@ -160,8 +160,8 @@ public class GiraphMpiMessageManager<
      */
     @Override
     public void sendMessageToAllEdges(Vertex<OID_T, VDATA_T, EDATA_T> vertex, OUT_MSG_T message) {
-        VertexImpl<OID_T, VDATA_T, EDATA_T> vertexImpl =
-                (VertexImpl<OID_T, VDATA_T, EDATA_T>) vertex;
+        VertexImpl<GS_VID_T, OID_T, VDATA_T, EDATA_T> vertexImpl =
+                (VertexImpl<GS_VID_T, OID_T, VDATA_T, EDATA_T>) vertex;
 
         long lid = vertexImpl.getLocalId();
         long offset = idParser.getOffset(lid);

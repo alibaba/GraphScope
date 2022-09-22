@@ -15,19 +15,12 @@
  */
 package com.alibaba.graphscope.graph.impl;
 
-import com.alibaba.fastffi.llvm4jni.runtime.JavaRuntime;
-import com.alibaba.graphscope.ds.PropertyNbrUnit;
-import com.alibaba.graphscope.ds.TypedArray;
-import com.alibaba.graphscope.ds.Vertex;
-import com.alibaba.graphscope.fragment.ArrowProjectedFragment;
 import com.alibaba.graphscope.fragment.IFragment;
-import com.alibaba.graphscope.fragment.adaptor.ArrowProjectedAdaptor;
-import com.alibaba.graphscope.graph.EdgeManager;
+import com.alibaba.graphscope.graph.AbstractEdgeManager;
+import com.alibaba.graphscope.graph.GiraphEdgeManager;
+import com.alibaba.graphscope.graph.GiraphVertexIdManager;
+import com.alibaba.graphscope.graph.GrapeEdge;
 import com.alibaba.graphscope.graph.VertexIdManager;
-import com.alibaba.graphscope.serialization.FFIByteVectorInputStream;
-import com.alibaba.graphscope.serialization.FFIByteVectorOutputStream;
-import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
-import com.google.common.collect.Lists;
 
 import org.apache.giraph.conf.ImmutableClassesGiraphConfiguration;
 import org.apache.giraph.edge.DefaultEdge;
@@ -41,7 +34,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.List;
 
 /**
  * Defeault edge manager, which extract all edata and oids from grape before accessing them in
@@ -61,91 +53,49 @@ public class DefaultImmutableEdgeManager<
                 GRAPE_EDATA_T,
                 GIRAPH_OID_T extends WritableComparable,
                 GIRAPH_EDATA_T extends Writable>
-        implements EdgeManager<GIRAPH_OID_T, GIRAPH_EDATA_T> {
+        extends AbstractEdgeManager<
+                GRAPE_VID_T, GRAPE_OID_T, GIRAPH_OID_T, GRAPE_EDATA_T, GIRAPH_EDATA_T>
+        implements GiraphEdgeManager<GIRAPH_OID_T, GIRAPH_EDATA_T> {
 
     private static Logger logger = LoggerFactory.getLogger(DefaultImmutableEdgeManager.class);
 
     private ImmutableClassesGiraphConfiguration<? super GIRAPH_OID_T, ?, ? super GIRAPH_EDATA_T>
             conf;
-    private VertexIdManager<GRAPE_VID_T, GIRAPH_OID_T> vertexIdManager;
-    private Vertex<GRAPE_VID_T> grapeVertex;
-    private ArrowProjectedFragment<GRAPE_OID_T, GRAPE_VID_T, GRAPE_VDATA_T, GRAPE_EDATA_T> fragment;
-    private PropertyNbrUnit<GRAPE_VID_T> nbrUnit;
-    private long offsetBeginPtrFirstAddr;
-    private long offsetEndPtrFirstAddr;
-
-    private long nbrUnitEleSize;
-    private long nbrUnitInitAddress;
-    private GenericEdgeIterable edgeIterable;
-    private int VID_SHIFT_BITS, VID_SIZE_IN_BYTE;
-    private List<GRAPE_OID_T> oids;
-    private long innerVerticesNum;
-    private int vid_t; // 0 for long ,1 for int
+    private GenericEdgeIterable giraphEdgeIterable;
 
     public DefaultImmutableEdgeManager(
             IFragment<GRAPE_OID_T, GRAPE_VID_T, GRAPE_VDATA_T, GRAPE_EDATA_T> fragment,
-            VertexIdManager<GRAPE_VID_T, ? extends GIRAPH_OID_T> idManager,
+            GiraphVertexIdManager<GRAPE_VID_T, ? extends GIRAPH_OID_T> idManager,
             ImmutableClassesGiraphConfiguration<?, ?, ?> configuration) {
-        this.fragment =
-                ((ArrowProjectedAdaptor<GRAPE_OID_T, GRAPE_VID_T, GRAPE_VDATA_T, GRAPE_EDATA_T>)
-                                fragment)
-                        .getArrowProjectedFragment();
-        grapeVertex =
-                (Vertex<GRAPE_VID_T>)
-                        FFITypeFactoryhelper.newVertex(configuration.getGrapeVidClass());
-        vertexIdManager = (VertexIdManager<GRAPE_VID_T, GIRAPH_OID_T>) idManager;
+
+        //        vertexIdManager = (GiraphVertexIdManager<GRAPE_VID_T, GIRAPH_OID_T>) idManager;
         this.conf =
                 (ImmutableClassesGiraphConfiguration<
                                 ? super GIRAPH_OID_T, ?, ? super GIRAPH_EDATA_T>)
                         configuration;
-
-        if (conf.getGrapeVidClass().equals(Long.class)) {
-            VID_SHIFT_BITS = 3; // shift 3 bits <--> * 8
-            VID_SIZE_IN_BYTE = 8; // long = 8bytes
-            vid_t = 0;
-        } else if (conf.getGrapeVidClass().equals(Integer.class)) {
-            VID_SHIFT_BITS = 2;
-            VID_SIZE_IN_BYTE = 4;
-            vid_t = 1;
-        }
-
-        // Copy all edges to java memory has too much cost, don't copy
-        nbrUnit = this.fragment.getOutEdgesPtr();
-        offsetEndPtrFirstAddr = this.fragment.getOEOffsetsEndPtr();
-        offsetBeginPtrFirstAddr = this.fragment.getOEOffsetsBeginPtr();
-        nbrUnitEleSize = nbrUnit.elementSize();
-        nbrUnitInitAddress = nbrUnit.getAddress();
-        innerVerticesNum = this.fragment.getInnerVerticesNum();
-
-        logger.info(
-                "Nbrunit: [{}], offsetbeginPtr fist: [{}], end [{}]",
-                nbrUnit,
-                offsetBeginPtrFirstAddr,
-                offsetEndPtrFirstAddr);
-        logger.info(
-                "nbr unit element size: {}, init address {}",
-                nbrUnit.elementSize(),
-                nbrUnit.getAddress());
-        Long fragVnum = (Long) fragment.getVerticesNum();
-        oids = Lists.newArrayListWithCapacity(fragVnum.intValue());
-        {
-            if (conf.getGrapeVidClass().equals(Long.class)) {
-                Vertex<Long> longVertex = (Vertex<Long>) grapeVertex;
-                for (long vid = 0; vid < fragVnum.intValue(); ++vid) {
-                    longVertex.SetValue(vid);
-                    oids.add(fragment.getId((Vertex<GRAPE_VID_T>) longVertex));
-                }
-            } else if (conf.getGrapeVidClass().equals(Integer.class)) {
-                Vertex<Integer> intVertex = (Vertex<Integer>) grapeVertex;
-                for (int vid = 0; vid < fragVnum.intValue(); ++vid) {
-                    intVertex.SetValue(vid);
-                    oids.add(fragment.getId((Vertex<GRAPE_VID_T>) intVertex));
-                }
-            } else {
-                throw new IllegalStateException("grape_OID_t shoule be either int or long");
-            }
-        }
-        edgeIterable = new GenericEdgeIterable(this.fragment.getEdataArrayAccessor());
+        init(
+                fragment,
+                (VertexIdManager<GRAPE_VID_T, GIRAPH_OID_T>) idManager,
+                (Class<? extends GIRAPH_OID_T>) conf.getVertexIdClass(),
+                (Class<? extends GRAPE_VID_T>) conf.getGrapeVidClass(),
+                (Class<? extends GRAPE_EDATA_T>) conf.getGrapeEdataClass(),
+                (Class<? extends GIRAPH_EDATA_T>) conf.getEdgeValueClass(),
+                ((inputStream, edatas) -> {
+                    int index2 = 0;
+                    try {
+                        while (inputStream.longAvailable() > 0) {
+                            GIRAPH_EDATA_T edata =
+                                    (GIRAPH_EDATA_T)
+                                            ReflectionUtils.newInstance(conf.getEdgeValueClass());
+                            edata.readFields(inputStream);
+                            edatas.set(index2++, edata);
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    logger.info("read edges num [{}] from stream ", index2);
+                }));
+        giraphEdgeIterable = new GenericEdgeIterable();
     }
 
     /**
@@ -156,9 +106,7 @@ public class DefaultImmutableEdgeManager<
      */
     @Override
     public int getNumEdges(long lid) {
-        long oeBeginOffset = JavaRuntime.getLong(offsetBeginPtrFirstAddr + lid * 8);
-        long oeEndOffset = JavaRuntime.getLong(offsetEndPtrFirstAddr + lid * 8);
-        return (int) (oeEndOffset - oeBeginOffset);
+        return getNumEdgesImpl(lid);
     }
 
     /**
@@ -172,8 +120,10 @@ public class DefaultImmutableEdgeManager<
      */
     @Override
     public Iterable<Edge<GIRAPH_OID_T, GIRAPH_EDATA_T>> getEdges(long lid) {
-        edgeIterable.setLid(lid);
-        return edgeIterable;
+        //        edgeIterable.setLid(lid);
+        //        return edgeIterable;
+        giraphEdgeIterable.setLid(lid);
+        return giraphEdgeIterable;
     }
 
     /**
@@ -269,26 +219,6 @@ public class DefaultImmutableEdgeManager<
         throw new IllegalStateException("not implemented");
     }
 
-    private int grapeEdata2Int() {
-        if (conf.getGrapeEdataClass().equals(Long.class)) {
-            logger.info("edata: Long");
-            return 0;
-        } else if (conf.getGrapeEdataClass().equals(Integer.class)) {
-            logger.info("edata: Int");
-            return 1;
-        } else if (conf.getGrapeEdataClass().equals(Double.class)) {
-            logger.info("edata: Double");
-            return 2;
-        } else if (conf.getGrapeEdataClass().equals(Float.class)) {
-            logger.info("edata: Float");
-            return 3;
-        } else if (conf.getGrapeEdataClass().equals(String.class)) {
-            logger.info("edata: String");
-            return 4;
-        }
-        throw new IllegalStateException("Cannot recognize edata type " + conf.getGrapeEdataClass());
-    }
-
     public interface ImmutableEdgeIterator<
                     EDGE_OID_T extends WritableComparable, EDGE_DATA_T extends Writable>
             extends Iterator<Edge<EDGE_OID_T, EDGE_DATA_T>> {
@@ -297,134 +227,40 @@ public class DefaultImmutableEdgeManager<
     }
 
     public class OnHeapEdgeIterator implements ImmutableEdgeIterator {
-
-        private sun.misc.Unsafe unsafe = JavaRuntime.UNSAFE;
+        private TupleIterator iterator;
         private DefaultEdge<GIRAPH_OID_T, GIRAPH_EDATA_T> edge = new DefaultEdge<>();
-        private long[] nbrUnitAddrs, numOfEdges;
-        private GIRAPH_OID_T[] dstOids;
-        private GIRAPH_EDATA_T[] edatas;
-        private long numEdge, totalNumOfEdges;
-        private int nbrPos;
-        private int[] nbrPositions;
 
-        public OnHeapEdgeIterator(TypedArray<GRAPE_EDATA_T> edataArray) {
-            totalNumOfEdges = getTotalNumOfEdges();
-            nbrUnitAddrs = new long[(int) innerVerticesNum];
-            numOfEdges = new long[(int) innerVerticesNum];
-            nbrPositions = new int[(int) innerVerticesNum];
-            // marks the mapping between lid to start pos of nbr, i.e. offset.
-            // the reason why we don't resuse oeBegin Offset is that eid may not sequential.
-            edatas = (GIRAPH_EDATA_T[]) new Writable[((int) totalNumOfEdges)];
-            dstOids = (GIRAPH_OID_T[]) new WritableComparable[((int) totalNumOfEdges)];
-            try {
-                initArrays(edataArray);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        public OnHeapEdgeIterator(TupleIterator tupleIterator) {
+            this.iterator = tupleIterator;
         }
 
-        private long getTotalNumOfEdges() {
-            long largest =
-                    JavaRuntime.getLong(
-                            offsetEndPtrFirstAddr + ((innerVerticesNum - 1) << VID_SHIFT_BITS));
-            long smallest = JavaRuntime.getLong(offsetBeginPtrFirstAddr + (0 << VID_SHIFT_BITS));
-            return largest - smallest;
-        }
-
+        @Override
         public void setLid(int lid) {
-            numEdge = numOfEdges[lid];
-            nbrPos = nbrPositions[lid];
+            iterator.setLid(lid);
         }
 
+        /**
+         * Returns {@code true} if the iteration has more elements. (In other words, returns {@code
+         * true} if {@link #next} would return an element rather than throwing an exception.)
+         *
+         * @return {@code true} if the iteration has more elements
+         */
         @Override
         public boolean hasNext() {
-            return numEdge > 0;
+            return iterator.hasNext();
         }
 
+        /**
+         * Returns the next element in the iteration.
+         *
+         * @return the next element in the iteration
+         */
         @Override
-        public Edge<GIRAPH_OID_T, GIRAPH_EDATA_T> next() {
-            edge.setTargetVertexId(dstOids[nbrPos]);
-            edge.setValue(edatas[nbrPos++]);
-            numEdge -= 1;
+        public Object next() {
+            GrapeEdge<GRAPE_VID_T, GIRAPH_OID_T, GIRAPH_EDATA_T> grapeEdge = iterator.next();
+            edge.setTargetVertexId(grapeEdge.dstOid);
+            edge.setValue(grapeEdge.value);
             return edge;
-        }
-
-        private void initArrays(TypedArray<GRAPE_EDATA_T> edataArray) throws IOException {
-            int tmpSum = 0;
-            long oeBeginOffset, oeEndOffset;
-            for (long lid = 0; lid < innerVerticesNum; ++lid) {
-                long lidInAddr = (lid << VID_SHIFT_BITS);
-                oeBeginOffset = JavaRuntime.getLong(offsetBeginPtrFirstAddr + lidInAddr);
-                oeEndOffset = JavaRuntime.getLong(offsetEndPtrFirstAddr + lidInAddr);
-                nbrUnitAddrs[(int) lid] = nbrUnitInitAddress + (oeBeginOffset * nbrUnitEleSize);
-                numOfEdges[(int) lid] = oeEndOffset - oeBeginOffset;
-                tmpSum += numOfEdges[(int) lid];
-            }
-            if (tmpSum != totalNumOfEdges) {
-                throw new IllegalStateException("not equal: " + tmpSum + ", " + totalNumOfEdges);
-            }
-
-            // deserialize back from csr.
-            int index = 0;
-            FFIByteVectorOutputStream outputStream = new FFIByteVectorOutputStream();
-            int edataType = grapeEdata2Int();
-            for (int lid = 0; lid < innerVerticesNum; ++lid) {
-                long curAddrr = nbrUnitAddrs[lid];
-                nbrPositions[lid] = index;
-                for (int j = 0; j < numOfEdges[lid]; ++j) {
-                    if (vid_t == 0) {
-                        dstOids[index++] = vertexIdManager.getId(unsafe.getLong(curAddrr));
-                    } else {
-                        dstOids[index++] = vertexIdManager.getId(unsafe.getInt(curAddrr));
-                    }
-
-                    long eid = unsafe.getLong(curAddrr + VID_SIZE_IN_BYTE);
-                    GRAPE_EDATA_T edata = edataArray.get(eid);
-                    switch (edataType) {
-                        case 0:
-                            Long longValue = (Long) edata;
-                            outputStream.writeLong(longValue);
-                            break;
-                        case 1:
-                            Integer intValue = (Integer) edata;
-                            outputStream.writeInt(intValue);
-                            break;
-                        case 2:
-                            Double doubleValue = (Double) edata;
-                            outputStream.writeDouble(doubleValue);
-                            break;
-                        case 3:
-                            Float floatValue = (Float) edata;
-                            outputStream.writeFloat(floatValue);
-                            break;
-                        case 4:
-                            String strValue = (String) edata;
-                            // Write raw bytes not utf
-                            outputStream.writeBytes(strValue);
-                            break;
-                        default:
-                            throw new IllegalStateException("Unexpected edata type: " + edataType);
-                    }
-                    curAddrr += nbrUnitEleSize;
-                }
-            }
-            outputStream.finishSetting();
-            logger.info("Finish creating stream");
-
-            FFIByteVectorInputStream inputStream =
-                    new FFIByteVectorInputStream(outputStream.getVector());
-            int index2 = 0;
-            while (inputStream.longAvailable() > 0) {
-                GIRAPH_EDATA_T edata =
-                        (GIRAPH_EDATA_T) ReflectionUtils.newInstance(conf.getEdgeValueClass());
-                edata.readFields(inputStream);
-                edatas[index2++] = edata;
-            }
-            if (index2 != totalNumOfEdges) {
-                throw new IllegalStateException("Inconsistency occurs in reading vertex data");
-            }
-            logger.info("Finish creating edata array");
-            inputStream.getVector().delete();
         }
     }
 
@@ -432,8 +268,8 @@ public class DefaultImmutableEdgeManager<
 
         private ImmutableEdgeIterator iterator;
 
-        public GenericEdgeIterable(TypedArray<GRAPE_EDATA_T> edataArray) {
-            iterator = new OnHeapEdgeIterator(edataArray);
+        public GenericEdgeIterable() {
+            iterator = new OnHeapEdgeIterator((TupleIterator) edgeIterable.iterator());
         }
 
         public void setLid(long lid) {

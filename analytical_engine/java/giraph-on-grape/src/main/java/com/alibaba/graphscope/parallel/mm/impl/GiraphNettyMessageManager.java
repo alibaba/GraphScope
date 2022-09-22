@@ -170,8 +170,8 @@ public class GiraphNettyMessageManager<
      */
     @Override
     public void sendMessageToAllEdges(Vertex<OID_T, VDATA_T, EDATA_T> vertex, OUT_MSG_T message) {
-        VertexImpl<OID_T, VDATA_T, EDATA_T> vertexImpl =
-                (VertexImpl<OID_T, VDATA_T, EDATA_T>) vertex;
+        VertexImpl<GS_VID_T, OID_T, VDATA_T, EDATA_T> vertexImpl =
+                (VertexImpl<GS_VID_T, OID_T, VDATA_T, EDATA_T>) vertex;
         grapeVertex.SetValue((GS_VID_T) (Long) vertexImpl.getLocalId());
 
         // send msg through outgoing adjlist

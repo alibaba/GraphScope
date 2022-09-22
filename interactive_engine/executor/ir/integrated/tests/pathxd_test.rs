@@ -30,7 +30,8 @@ mod test {
     use crate::common::test::*;
 
     // g.V().hasLabel("person").both("1..3", "knows")
-    fn init_path_expand_request(is_whole_path: bool) -> JobRequest {
+    // result_opt: 0: EndV, 1: AllV;  path_opt: 0: Arbitrary, 1: Simple
+    fn init_path_expand_request(result_opt: i32, path_opt: i32) -> JobRequest {
         let source_opr = pb::logical_plan::Operator::from(pb::Scan {
             scan_opt: 0,
             alias: None,
@@ -49,7 +50,7 @@ mod test {
         let shuffle_opr = common_pb::NameOrIdKey { key: None };
         let expand_opr = pb::logical_plan::Operator::from(edge_expand.clone());
         let path_start_opr =
-            pb::logical_plan::Operator::from(pb::PathStart { start_tag: None, is_whole_path });
+            pb::logical_plan::Operator::from(pb::PathStart { start_tag: None, path_opt, result_opt });
         let path_end_opr = pb::logical_plan::Operator::from(pb::PathEnd { alias: None });
         let sink_opr_bytes = pb::logical_plan::Operator::from(default_sink_pb()).encode_to_vec();
 
@@ -87,8 +88,11 @@ mod test {
 
         let shuffle_opr = common_pb::NameOrIdKey { key: None };
         let expand_opr = pb::logical_plan::Operator::from(edge_expand.clone());
-        let path_start_opr =
-            pb::logical_plan::Operator::from(pb::PathStart { start_tag: None, is_whole_path });
+        let path_start_opr = pb::logical_plan::Operator::from(pb::PathStart {
+            start_tag: None,
+            path_opt: 0,
+            result_opt: if is_whole_path { 1 } else { 0 },
+        });
         let path_end_opr = pb::logical_plan::Operator::from(pb::PathEnd { alias: None });
         let sink_opr_bytes = pb::logical_plan::Operator::from(default_sink_pb()).encode_to_vec();
 
@@ -124,8 +128,11 @@ mod test {
 
         let shuffle_opr = common_pb::NameOrIdKey { key: None };
         let expand_opr = pb::logical_plan::Operator::from(edge_expand.clone());
-        let path_start_opr =
-            pb::logical_plan::Operator::from(pb::PathStart { start_tag: None, is_whole_path });
+        let path_start_opr = pb::logical_plan::Operator::from(pb::PathStart {
+            start_tag: None,
+            path_opt: 0,
+            result_opt: if is_whole_path { 1 } else { 0 },
+        });
         let path_end_opr = pb::logical_plan::Operator::from(pb::PathEnd { alias: None });
         let sink_opr_bytes = pb::logical_plan::Operator::from(default_sink_pb()).encode_to_vec();
 
@@ -144,7 +151,7 @@ mod test {
 
     fn path_expand_whole_query(worker_num: u32) {
         initialize();
-        let request = init_path_expand_request(true);
+        let request = init_path_expand_request(1, 0);
         let mut results = submit_query(request, worker_num);
         let mut result_collection: Vec<Vec<ID>> = vec![];
         let mut expected_result_paths = vec![
@@ -196,7 +203,7 @@ mod test {
 
     fn path_expand_end_query(num_workers: u32) {
         initialize();
-        let request = init_path_expand_request(false);
+        let request = init_path_expand_request(0, 0);
         let mut results = submit_query(request, num_workers);
         let mut result_collection = vec![];
         let expected_result_path_ends = vec![1, 1, 1, 1, 2, 2, 2, 4, 4, 4];
@@ -356,5 +363,81 @@ mod test {
     #[test]
     fn path_expand_range_from_zero_query_w2_test() {
         path_expand_range_from_zero_whole_query(2)
+    }
+
+    fn simple_path_expand_whole_query(worker_num: u32) {
+        initialize();
+        let request = init_path_expand_request(1, 1);
+        let mut results = submit_query(request, worker_num);
+        let mut result_collection: Vec<Vec<ID>> = vec![];
+        let mut expected_result_paths =
+            vec![vec![1, 2], vec![1, 4], vec![2, 1], vec![4, 1], vec![2, 1, 4], vec![4, 1, 2]];
+        while let Some(result) = results.next() {
+            match result {
+                Ok(res) => {
+                    let entry = parse_result(res).unwrap();
+                    if let Some(path) = entry.get(None).unwrap().as_graph_path() {
+                        result_collection.push(
+                            path.clone()
+                                .take_path()
+                                .unwrap()
+                                .into_iter()
+                                .map(|v| v.id())
+                                .collect(),
+                        );
+                    }
+                }
+                Err(e) => {
+                    panic!("err result {:?}", e);
+                }
+            }
+        }
+        expected_result_paths.sort();
+        result_collection.sort();
+        assert_eq!(result_collection, expected_result_paths)
+    }
+
+    #[test]
+    fn simple_path_expand_whole_query_test() {
+        simple_path_expand_whole_query(1)
+    }
+
+    #[test]
+    fn simple_path_expand_whole_query_w2_test() {
+        simple_path_expand_whole_query(2)
+    }
+
+    fn simple_path_expand_end_query(num_workers: u32) {
+        initialize();
+        let request = init_path_expand_request(0, 1);
+        let mut results = submit_query(request, num_workers);
+        let mut result_collection = vec![];
+        let mut expected_result_path_ends = vec![2, 4, 1, 1, 4, 2];
+        while let Some(result) = results.next() {
+            match result {
+                Ok(res) => {
+                    let entry = parse_result(res).unwrap();
+                    if let Some(path) = entry.get(None).unwrap().as_graph_path() {
+                        result_collection.push(path.get_path_end().unwrap().id());
+                    }
+                }
+                Err(e) => {
+                    panic!("err result {:?}", e);
+                }
+            }
+        }
+        expected_result_path_ends.sort();
+        result_collection.sort();
+        assert_eq!(result_collection, expected_result_path_ends)
+    }
+
+    #[test]
+    fn simple_path_expand_end_query_test() {
+        simple_path_expand_end_query(1)
+    }
+
+    #[test]
+    fn simple_path_expand_end_query_w2_test() {
+        simple_path_expand_end_query(2)
     }
 }

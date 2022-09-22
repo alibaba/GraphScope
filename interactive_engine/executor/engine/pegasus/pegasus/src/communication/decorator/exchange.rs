@@ -796,7 +796,7 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeByBatchPush<D> {
         } else {
             assert!(batch.is_empty());
             if let Some(end) = batch.take_end() {
-                if end.contains_source(self.src) {
+                if end.peers_contains(self.src) {
                     for p in self.pushes.iter_mut() {
                         let mut new_end = end.clone();
                         new_end.total_send = 0;

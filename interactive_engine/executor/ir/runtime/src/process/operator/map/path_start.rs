@@ -17,6 +17,8 @@ use std::convert::TryInto;
 
 use graph_proxy::apis::GraphPath;
 use ir_common::generated::algebra as algebra_pb;
+use ir_common::generated::algebra::path_expand::PathOpt;
+use ir_common::generated::algebra::path_expand::ResultOpt;
 use ir_common::KeyId;
 use pegasus::api::function::{FilterMapFunction, FnResult};
 
@@ -27,7 +29,8 @@ use crate::process::record::Record;
 #[derive(Debug)]
 struct PathStartOperator {
     start_tag: Option<KeyId>,
-    is_whole_path: bool,
+    path_opt: PathOpt,
+    result_opt: ResultOpt,
 }
 
 impl FilterMapFunction<Record, Record> for PathStartOperator {
@@ -38,7 +41,7 @@ impl FilterMapFunction<Record, Record> for PathStartOperator {
                 .ok_or(FnExecError::unexpected_data_error(
                     "tag does not refer to a graph vertex element",
                 ))?;
-            let graph_path = GraphPath::new(v.clone(), self.is_whole_path);
+            let graph_path = GraphPath::new(v.clone(), self.path_opt, self.result_opt);
             input.append(graph_path, None);
             Ok(Some(input))
         } else {
@@ -53,7 +56,11 @@ impl FilterMapFuncGen for algebra_pb::PathStart {
             .start_tag
             .map(|tag| tag.try_into())
             .transpose()?;
-        let path_start_operator = PathStartOperator { start_tag, is_whole_path: self.is_whole_path };
+        let path_start_operator = PathStartOperator {
+            start_tag,
+            path_opt: unsafe { std::mem::transmute(self.path_opt) },
+            result_opt: unsafe { std::mem::transmute(self.result_opt) },
+        };
         debug!("Runtime path start operator: {:?}", path_start_operator);
         Ok(Box::new(path_start_operator))
     }

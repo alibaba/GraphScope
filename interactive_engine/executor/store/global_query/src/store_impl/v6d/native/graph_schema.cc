@@ -41,61 +41,6 @@ limitations under the License.
 namespace vineyard {
 namespace htap {
 
-namespace detail {
-
-std::string PropertyTypeToString(PropertyType type) {
-  if (arrow::boolean()->Equals(type)) {
-    return "BOOL";
-  } else if (arrow::int16()->Equals(type)) {
-    return "SHORT";
-  } else if (arrow::int32()->Equals(type)) {
-    return "INT";
-  } else if (arrow::int64()->Equals(type)) {
-    return "LONG";
-  } else if (arrow::float32()->Equals(type)) {
-    return "FLOAT";
-  } else if (arrow::float64()->Equals(type)) {
-    return "DOUBLE";
-  } else if (arrow::utf8()->Equals(type)) {
-    return "STRING";
-  } else if (arrow::large_utf8()->Equals(type)) {
-    return "STRING";
-  }
-  LOG(ERROR) << "Unsupported arrow type " << type->ToString();
-  return "NULL";
-}
-
-std::string toupper(const std::string& s) {
-  std::string upper_s = s;
-  std::transform(s.begin(), s.end(), upper_s.begin(),
-                 [](unsigned char c) { return std::toupper(c); });
-  return upper_s;
-}
-
-PropertyType PropertyTypeFromString(const std::string& type) {
-  auto type_upper = toupper(type);
-  if (type_upper == "BOOL") {
-    return arrow::boolean();
-  } else if (type_upper == "SHORT") {
-    return arrow::int16();
-  } else if (type_upper == "INT") {
-    return arrow::int32();
-  } else if (type_upper == "LONG") {
-    return arrow::int64();
-  } else if (type_upper == "FLOAT") {
-    return arrow::float32();
-  } else if (type_upper == "DOUBLE") {
-    return arrow::float64();
-  } else if (type_upper == "STRING") {
-    return arrow::large_utf8();
-  } else {
-    LOG(ERROR) << "Unsupported property type " << type;
-  }
-  return arrow::null();
-}
-
-}  // namespace detail
-
 MGPropertyGraphSchema::PropertyId MGPropertyGraphSchema::GetPropertyId(
     const std::string& name) {
   PropertyId id;

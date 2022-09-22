@@ -1,0 +1,5 @@
+repos:
+-   repo: https://github.com/awslabs/git-secrets.git
+    rev: master
+    hooks:
+    -   id: git-secrets

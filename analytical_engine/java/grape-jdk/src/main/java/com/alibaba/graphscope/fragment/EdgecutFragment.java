@@ -19,7 +19,6 @@ package com.alibaba.graphscope.fragment;
 import com.alibaba.fastffi.CXXReference;
 import com.alibaba.fastffi.CXXValue;
 import com.alibaba.fastffi.FFINameAlias;
-import com.alibaba.graphscope.ds.DestList;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
 
@@ -181,75 +180,4 @@ public interface EdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T>
     @FFINameAlias("GetInnerVertexGid")
     @CXXValue
     VID_T getInnerVertexGid(@CXXReference Vertex<VID_T> vertex);
-
-    /**
-     * Return the incoming edge destination fragment ID list of a inner vertex.
-     *
-     * <p>For inner vertex v of fragment-0, if outer vertex u and w are parents of v. u belongs to
-     * fragment-1 and w belongs to fragment-2, then 1 and 2 are in incoming edge destination
-     * fragment ID list of v.
-     *
-     * <p>This method is encapsulated in the corresponding sending message API,
-     * SendMsgThroughIEdges, so it is not recommended to use this method directly in application
-     * programs.
-     *
-     * @param vertex Input vertex.
-     * @return The incoming edge destination fragment ID list.
-     */
-    @FFINameAlias("IEDests")
-    @CXXValue
-    DestList inEdgeDests(@CXXReference Vertex<VID_T> vertex);
-
-    /**
-     * Return the outgoing edge destination fragment ID list of a inner vertex.
-     *
-     * <p>For inner vertex v of fragment-0, if outer vertex u and w are children of v. u belongs to
-     * fragment-1 and w belongs to fragment-2, then 1 and 2 are in outgoing edge destination
-     * fragment ID list of v.
-     *
-     * <p>This method is encapsulated in the corresponding sending message API,
-     * SendMsgThroughOEdges, so it is not recommended to use this method directly in application
-     * programs.
-     *
-     * @param vertex Input vertex.
-     * @return The outgoing edge destination fragment ID list.
-     */
-    @FFINameAlias("OEDests")
-    @CXXValue
-    DestList outEdgeDests(@CXXReference Vertex<VID_T> vertex);
-
-    /**
-     * Get both the in edges and out edges.
-     *
-     * @param vertex query vertex.
-     * @return The outgoing and incoming edge destination fragment ID list.
-     */
-    @FFINameAlias("IOEDests")
-    @CXXValue
-    DestList inOutEdgeDests(@CXXReference Vertex<VID_T> vertex);
-
-    //    /**
-    //     * Returns the incoming adjacent inner vertices of v.
-    //     *
-    //     * @param vertex querying vertex.
-    //     * @return The incoming adjacent inner vertices of v.
-    //     */
-    //    @FFINameAlias("GetIncomingInnerVertexAdjList")
-    //    @CXXValue
-    //    GrapeAdjList<VID_T, EDATA_T> getIncomingInnerVertexAdjList(@CXXReference Vertex<VID_T>
-    // vertex);
-    //
-    //    /**
-    //     * Returns the outgoing adjacent inner vertices of v.
-    //     *
-    //     * @param vertex querying vertex.
-    //     * @return The outgoing adjacent inner vertices of v.
-    //     */
-    //    @FFINameAlias("GetOutgoingInnerVertexAdjList")
-    //    @CXXValue
-    //    GrapeAdjList<VID_T, EDATA_T> getOutgoingInnerVertexAdjList(@CXXReference Vertex<VID_T>
-    // vertex);
-    @FFINameAlias("GetData")
-    @CXXReference
-    VDATA_T getData(@CXXReference Vertex<VID_T> vertex);
 }

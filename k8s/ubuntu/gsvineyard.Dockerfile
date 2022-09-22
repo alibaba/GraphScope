@@ -14,7 +14,7 @@ RUN cd /tmp && \
     make -j`nproc` && \
     make install && \
     cd /tmp && \
-    git clone -b v0.6.0 https://github.com/v6d-io/v6d.git --depth=1 && \
+    git clone -b v0.8.5 https://github.com/v6d-io/v6d.git --depth=1 && \
     cd v6d && \
     git submodule update --init && \
     mkdir -p /tmp/v6d/build && \

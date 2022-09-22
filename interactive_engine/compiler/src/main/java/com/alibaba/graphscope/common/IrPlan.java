@@ -355,7 +355,9 @@ public class IrPlan implements Closeable {
 
                 Pointer expand = EXPAND_OP.apply(baseOp);
                 // todo: make isWholePath configurable
-                Pointer pathExpand = irCoreLib.initPathxpdOperator(expand, false);
+                Pointer pathExpand =
+                        irCoreLib.initPathxpdOperator(
+                                expand, pathOp.getPathOpt(), pathOp.getResultOpt());
                 irCoreLib.setPathxpdHops(pathExpand, lower, upper);
 
                 Optional<OpArg> aliasOpt = baseOp.getAlias();

@@ -1,12 +1,28 @@
+/*
+ * Copyright 2022 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  	http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
 package com.alibaba.graphscope.fragment.adaptor;
 
 import com.alibaba.fastffi.CXXReference;
 import com.alibaba.fastffi.FFIPointer;
-import com.alibaba.graphscope.ds.DestList;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
 import com.alibaba.graphscope.ds.adaptor.AdjList;
 import com.alibaba.graphscope.ds.adaptor.GrapeAdjListAdaptor;
+import com.alibaba.graphscope.fragment.FragmentType;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
 
@@ -25,8 +41,8 @@ public class ImmutableEdgecutFragmentAdaptor<OID_T, VID_T, VDATA_T, EDATA_T>
     }
 
     @Override
-    public String fragmentType() {
-        return fragmentType;
+    public FragmentType fragmentType() {
+        return FragmentType.ImmutableEdgecutFragment;
     }
 
     /**
@@ -52,6 +68,16 @@ public class ImmutableEdgecutFragmentAdaptor<OID_T, VID_T, VDATA_T, EDATA_T>
     @Override
     public long getEdgeNum() {
         return fragment.getEdgeNum();
+    }
+
+    @Override
+    public long getInEdgeNum() {
+        return 0;
+    }
+
+    @Override
+    public long getOutEdgeNum() {
+        return 0;
     }
 
     @Override
@@ -172,21 +198,6 @@ public class ImmutableEdgecutFragmentAdaptor<OID_T, VID_T, VDATA_T, EDATA_T>
     @Override
     public VID_T getInnerVertexGid(Vertex<VID_T> vertex) {
         return fragment.getInnerVertexGid(vertex);
-    }
-
-    @Override
-    public DestList inEdgeDests(Vertex<VID_T> vertex) {
-        return inEdgeDests(vertex);
-    }
-
-    @Override
-    public DestList outEdgeDests(Vertex<VID_T> vertex) {
-        return outEdgeDests(vertex);
-    }
-
-    @Override
-    public DestList inOutEdgeDests(Vertex<VID_T> vertex) {
-        return inOutEdgeDests(vertex);
     }
 
     @Override

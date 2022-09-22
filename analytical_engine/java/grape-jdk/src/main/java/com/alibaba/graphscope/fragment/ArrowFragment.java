@@ -26,14 +26,10 @@ import com.alibaba.fastffi.FFIConst;
 import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFIPointer;
-import com.alibaba.fastffi.FFISkip;
 import com.alibaba.fastffi.FFITypeAlias;
-import com.alibaba.graphscope.ds.DestList;
-import com.alibaba.graphscope.ds.EdgeDataColumn;
 import com.alibaba.graphscope.ds.PropertyAdjList;
 import com.alibaba.graphscope.ds.PropertyRawAdjList;
 import com.alibaba.graphscope.ds.Vertex;
-import com.alibaba.graphscope.ds.VertexDataColumn;
 import com.alibaba.graphscope.ds.VertexRange;
 import com.alibaba.graphscope.utils.CppClassName;
 import com.alibaba.graphscope.utils.CppHeaderName;
@@ -204,16 +200,6 @@ public interface ArrowFragment<OID_T> extends FFIPointer {
             @FFIConst @FFITypeAlias(GRAPE_VERTEX + "<uint64_t>") @CXXReference Vertex<Long> vertex,
             int edgeLabelId);
 
-    @FFINameAlias("edge_data_column")
-    @CXXValue
-    <DATA_T> EdgeDataColumn<DATA_T> edgeDataColumn(
-            int vertexLabelId, int propertyId, @FFISkip DATA_T unused);
-
-    @FFINameAlias("vertex_data_column")
-    @CXXValue
-    <DATA_T> VertexDataColumn<DATA_T> vertexDataColumn(
-            int vertexLabelId, int propertyId, @FFISkip DATA_T unused);
-
     @FFINameAlias("GetData<uint64_t>")
     long getLongData(
             @FFITypeAlias(GRAPE_VERTEX + "<uint64_t>") @CXXReference Vertex<Long> vertex,
@@ -312,24 +298,6 @@ public interface ArrowFragment<OID_T> extends FFIPointer {
     @FFINameAlias("GetInnerVertexGid")
     Long getInnerVertexGid(
             @FFITypeAlias(GRAPE_VERTEX + "<uint64_t>") @CXXReference Vertex<Long> vertex);
-
-    @FFINameAlias("IEDests")
-    @CXXValue
-    DestList ieDests(
-            @FFITypeAlias(GRAPE_VERTEX + "<uint64_t>") @CXXReference Vertex<Long> vertex,
-            int edgeLabelId);
-
-    @FFINameAlias("OEDests")
-    @CXXValue
-    DestList oeDests(
-            @FFITypeAlias(GRAPE_VERTEX + "<uint64_t>") @CXXReference Vertex<Long> vertex,
-            int edgeLabelId);
-
-    @FFINameAlias("IOEDests")
-    @CXXValue
-    DestList ioeDests(
-            @FFITypeAlias(GRAPE_VERTEX + "<uint64_t>") @CXXReference Vertex<Long> vertex,
-            int edgeLabelId);
 
     @FFINameAlias("directed")
     boolean directed();

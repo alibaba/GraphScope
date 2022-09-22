@@ -19,18 +19,21 @@ package com.alibaba.graphscope.gremlin.antlr4;
 import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
 import com.alibaba.graphscope.gremlin.plugin.step.ExprStep;
+import com.alibaba.graphscope.gremlin.plugin.step.PathExpandStep;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSBaseVisitor;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
+import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.step.ByModulating;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupGlobalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeGlobalStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.map.GraphStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderGlobalStep;
 import org.apache.tinkerpop.gremlin.structure.Column;
 import org.apache.tinkerpop.gremlin.structure.T;
@@ -696,24 +699,41 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     }
 
     @Override
-    public GraphTraversal visitTraversalMethod_subgraph(
+    public Traversal visitTraversalMethod_subgraph(
             final GremlinGSParser.TraversalMethod_subgraphContext ctx) {
         return graphTraversal.subgraph(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
     }
 
     @Override
-    public GraphTraversal visitTraversalMethod_bothV(
+    public Traversal visitTraversalMethod_bothV(
             final GremlinGSParser.TraversalMethod_bothVContext ctx) {
         return graphTraversal.bothV();
     }
 
     @Override
-    public GraphTraversal visitTraversalMethod_coin(
+    public Traversal visitTraversalMethod_coin(
             final GremlinGSParser.TraversalMethod_coinContext ctx) {
+        Step endStep = graphTraversal.asAdmin().getEndStep();
+        if (!(endStep instanceof GraphStep)) {
+            throw new UnsupportedEvalException(
+                    ctx.getClass(), "coin should follow source step, i.e. V().coin(0.2)");
+        }
         return graphTraversal.coin(Double.valueOf(ctx.floatLiteral().getText()));
     }
 
-    public Traversal visitExpr(
+    @Override
+    public Traversal visitTraversalMethod_with(GremlinGSParser.TraversalMethod_withContext ctx) {
+        Step endStep = graphTraversal.asAdmin().getEndStep();
+        if (!(endStep instanceof PathExpandStep)) {
+            throw new UnsupportedEvalException(
+                    ctx.getClass(), "with should follow path expand, i.e. out('1..2').with(..)");
+        }
+        String optKey = GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral(0));
+        String optValue = GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral(1));
+        return graphTraversal.with(optKey, optValue);
+    }
+
+    private Traversal visitExpr(
             GremlinGSParser.TraversalMethod_exprContext ctx, ExprStep.Type type) {
         if (ctx.stringLiteral() != null) {
             IrCustomizedTraversal traversal = (IrCustomizedTraversal) graphTraversal;

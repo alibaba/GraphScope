@@ -139,7 +139,7 @@ class CType(Enum):
             return CType.Bool
         elif s == "Char" or s == "char":
             return CType.Char
-        elif s == "String" or s == "string":
+        elif s == "String" or s == "string" or s == "str":
             return CType.String
         else:
             raise ValueError("Wrong type: {}".format(s))
