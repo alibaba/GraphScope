@@ -136,6 +136,13 @@ include_directories("${ANALYTICAL_ENGINE_HOME}/openmpi/include"
 set(CMAKE_THREAD_PREFER_PTHREAD ON)
 find_package(Threads REQUIRED)
 
+if (ENABLE_JAVA_SDK)
+    # include jni------------------------------------------------------------------
+    find_package(JNI REQUIRED)
+    include_directories(SYSTEM ${JAVA_INCLUDE_PATH})
+    include_directories(SYSTEM ${JAVA_INCLUDE_PATH2})
+endif()
+
 # find Python-------------------------------------------------------------------
 if (${CYTHON_PREGEL_APP} OR ${CYTHON_PIE_APP})
   find_package (Python COMPONENTS Interpreter Development REQUIRED)
@@ -289,11 +296,6 @@ elseif (CYTHON_PIE_APP)
     set_target_properties(${FRAME_NAME} PROPERTIES COMPILE_FLAGS "-fPIC")
 elseif (JAVA_PIE_APP)
     if (ENABLE_JAVA_SDK)
-        # include jni------------------------------------------------------------------
-        find_package(JNI REQUIRED)
-        include_directories(SYSTEM ${JAVA_INCLUDE_PATH})
-        include_directories(SYSTEM ${JAVA_INCLUDE_PATH2})
-        
         #check whether we are using clang.
         if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
             message(STATUS "Using Clang compiler: ${CMAKE_CXX_COMPILER}")
