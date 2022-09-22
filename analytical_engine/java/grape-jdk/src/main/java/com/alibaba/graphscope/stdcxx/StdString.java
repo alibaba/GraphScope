@@ -16,8 +16,6 @@
 
 package com.alibaba.graphscope.stdcxx;
 
-import static com.alibaba.graphscope.utils.JNILibraryName.JNI_LIBRARY_NAME;
-
 import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.CXXOperator;
 import com.alibaba.fastffi.CXXPointer;
@@ -32,8 +30,9 @@ import com.alibaba.fastffi.FFIStringProvider;
 import com.alibaba.fastffi.FFIStringReceiver;
 import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.fastffi.FFITypeFactory;
+import com.alibaba.graphscope.utils.JNILibraryName;
 
-@FFIGen(library = JNI_LIBRARY_NAME)
+@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
 @CXXHead(system = "string")
 @FFITypeAlias("std::string")
 public interface StdString
@@ -121,6 +120,7 @@ public interface StdString
 
     @FFIFactory
     interface Factory {
+
         StdString create();
 
         default StdString create(@CXXValue String string) {
@@ -132,7 +132,7 @@ public interface StdString
         StdString create(@CXXReference StdString string);
     }
 
-    @FFIGen(library = "ffitest")
+    @FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
     @CXXHead(system = "string")
     @FFITypeAlias("std::string::iterator")
     interface Iterator extends CXXValueRangeElement<Iterator>, FFIPointer {

@@ -19,7 +19,6 @@ package com.alibaba.graphscope.context.ffi;
 import static com.alibaba.graphscope.utils.CppClassName.VERTEX_PROPERTY_CONTEXT;
 import static com.alibaba.graphscope.utils.CppHeaderName.ARROW_PROJECTED_FRAGMENT_H;
 import static com.alibaba.graphscope.utils.CppHeaderName.GRAPE_TYPES_H;
-import static com.alibaba.graphscope.utils.JNILibraryName.JNI_LIBRARY_NAME;
 
 import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.CXXReference;
@@ -36,8 +35,9 @@ import com.alibaba.graphscope.column.LongColumn;
 import com.alibaba.graphscope.context.ContextDataType;
 import com.alibaba.graphscope.stdcxx.StdSharedPtr;
 import com.alibaba.graphscope.utils.CppHeaderName;
+import com.alibaba.graphscope.utils.JNILibraryName;
 
-@FFIGen(library = JNI_LIBRARY_NAME)
+@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
 @CXXHead(system = "cstdint")
 @CXXHead(CppHeaderName.CORE_JAVA_TYPE_ALIAS_H)
 @CXXHead(CppHeaderName.VERTEX_PROPERTY_CONTEXT_H)

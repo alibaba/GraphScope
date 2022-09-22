@@ -32,6 +32,7 @@
 #include "grape/util.h"
 
 #include "vineyard/graph/fragment/arrow_fragment.h"
+
 #if defined __has_include
 #if __has_include("vineyard/graph/fragment/arrow_fragment_modifier.h")
 #include "vineyard/graph/fragment/arrow_fragment_modifier.h"

@@ -23,12 +23,11 @@
     <artifactId>grape-jdk-parent</artifactId>
     <version>0.16.0</version>
   </parent>
+
   <artifactId>grape-demo</artifactId>
-
-  <version>0.16.0</version>
   <packaging>jar</packaging>
+  <name>Grape Demo</name>
 
-  <name>grape-demo</name>
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
@@ -42,10 +41,17 @@
     <dependency>
       <groupId>com.alibaba.graphscope</groupId>
       <artifactId>grape-jdk</artifactId>
+      <classifier>shaded</classifier>
     </dependency>
     <dependency>
       <groupId>com.alibaba.graphscope</groupId>
       <artifactId>giraph-on-grape</artifactId>
+      <classifier>shaded</classifier>
+    </dependency>
+    <dependency>
+      <groupId>com.alibaba.graphscope</groupId>
+      <artifactId>graphx-on-graphscope</artifactId>
+      <classifier>shaded</classifier>
     </dependency>
     <dependency>
       <groupId>com.alibaba.fastffi</groupId>
@@ -56,16 +62,74 @@
       <artifactId>slf4j-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-graphx_2.12</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-sql_2.12</artifactId>
     </dependency>
   </dependencies>
 
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>default-compile</id>
+            <phase>none</phase>
+          </execution>
+          <execution>
+            <id>default-testCompile</id>
+            <phase>none</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>compile</goal>
+              <goal>testCompile</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test</goal>
+            </goals>
+            <phase>test</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test</goal>
+            </goals>
+            <phase>test</phase>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -78,20 +142,27 @@
             <phase>package</phase>
             <configuration>
               <artifactSet>
-                <excludes>
-                  <exclude>org.slf4j:slf4j-log4j12:jar:</exclude>
-                </excludes>
+                <includes>
+                  <include>com.alibaba.graphscope:*</include>
+                  <include>com.alibaba.fastffi:*</include>
+                  <include>org.apache.spark:spark-graphx_2.12*</include>
+                  <include>it.unimi.dsi:fastutil*</include>
+                </includes>
               </artifactSet>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+              <finalName>${uberjar.name}</finalName>
             </configuration>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <skipTests>true</skipTests>
-        </configuration>
       </plugin>
     </plugins>
   </build>

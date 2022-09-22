@@ -23,11 +23,9 @@ import static com.alibaba.graphscope.utils.CppHeaderName.CORE_JAVA_JAVA_MESSAGES
 import static com.alibaba.graphscope.utils.CppHeaderName.CORE_JAVA_TYPE_ALIAS_H;
 import static com.alibaba.graphscope.utils.CppHeaderName.CORE_PARALLEL_PARALLEL_PROPERTY_MESSAGE_MANAGER_H;
 import static com.alibaba.graphscope.utils.CppHeaderName.GRAPE_PARALLEL_MESSAGE_IN_BUFFER_H;
-import static com.alibaba.graphscope.utils.JNILibraryName.JNI_LIBRARY_NAME;
 
 import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.CXXReference;
-import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFISkip;
 import com.alibaba.fastffi.FFITypeAlias;
@@ -43,7 +41,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 /** As PropertyParalleMessager.h has not much difference from ParallelMessageManager. */
-@FFIGen(library = JNI_LIBRARY_NAME)
 @FFITypeAlias(GS_PARALLEL_PROPERTY_MESSAGE_MANAGER)
 @CXXHead({
     CORE_PARALLEL_PARALLEL_PROPERTY_MESSAGE_MANAGER_H,

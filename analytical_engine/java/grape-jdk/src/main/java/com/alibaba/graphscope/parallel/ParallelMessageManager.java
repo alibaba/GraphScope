@@ -23,7 +23,6 @@ import static com.alibaba.graphscope.utils.CppHeaderName.CORE_JAVA_JAVA_MESSAGES
 import static com.alibaba.graphscope.utils.CppHeaderName.GRAPE_ADJ_LIST_H;
 import static com.alibaba.graphscope.utils.CppHeaderName.GRAPE_FRAGMENT_IMMUTABLE_EDGECUT_FRAGMENT_H;
 import static com.alibaba.graphscope.utils.CppHeaderName.GRAPE_PARALLEL_PARALLEL_MESSAGE_MANAGER_H;
-import static com.alibaba.graphscope.utils.JNILibraryName.JNI_LIBRARY_NAME;
 
 import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.CXXReference;
@@ -33,11 +32,11 @@ import com.alibaba.fastffi.FFISkip;
 import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.fragment.ArrowProjectedFragment;
+import com.alibaba.graphscope.fragment.FragmentType;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
-import com.alibaba.graphscope.fragment.adaptor.ArrowProjectedAdaptor;
-import com.alibaba.graphscope.fragment.adaptor.ImmutableEdgecutFragmentAdaptor;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
+import com.alibaba.graphscope.utils.JNILibraryName;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -48,7 +47,7 @@ import java.util.function.Supplier;
  * The parallel message manager, used in serial apps {@link
  * com.alibaba.graphscope.app.ParallelAppBase}.
  */
-@FFIGen(library = JNI_LIBRARY_NAME)
+@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
 @FFITypeAlias(GRAPE_PARALLEL_MESSAGE_MANAGER)
 @CXXHead({
     GRAPE_PARALLEL_PARALLEL_MESSAGE_MANAGER_H,
@@ -65,10 +64,10 @@ public interface ParallelMessageManager extends MessageManagerBase {
             @CXXReference MSG_T msg,
             int channelId,
             @FFISkip VDATA_T vdata) {
-        if (frag.fragmentType().equals(ArrowProjectedAdaptor.fragmentType)) {
+        if (frag.fragmentType().equals(FragmentType.ArrowProjectedFragment)) {
             syncStateOnOuterVertexArrowProjected(
                     (ArrowProjectedFragment) frag.getFFIPointer(), vertex, msg, channelId, vdata);
-        } else if (frag.fragmentType().equals(ImmutableEdgecutFragmentAdaptor.fragmentType)) {
+        } else if (frag.fragmentType().equals(FragmentType.ImmutableEdgecutFragment)) {
             syncStateOnOuterVertexImmutable(
                     (ImmutableEdgecutFragment) frag.getFFIPointer(), vertex, msg, channelId, vdata);
         }
@@ -80,10 +79,10 @@ public interface ParallelMessageManager extends MessageManagerBase {
             @CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex,
             int channelId,
             @FFISkip VDATA_T vdata) {
-        if (frag.fragmentType().equals(ArrowProjectedAdaptor.fragmentType)) {
+        if (frag.fragmentType().equals(FragmentType.ArrowProjectedFragment)) {
             syncStateOnOuterVertexArrowProjectedNoMsg(
                     (ArrowProjectedFragment) frag.getFFIPointer(), vertex, channelId, vdata);
-        } else if (frag.fragmentType().equals(ImmutableEdgecutFragmentAdaptor.fragmentType)) {
+        } else if (frag.fragmentType().equals(FragmentType.ImmutableEdgecutFragment)) {
             syncStateOnOuterVertexImmutableNoMsg(
                     (ImmutableEdgecutFragment) frag.getFFIPointer(), vertex, channelId, vdata);
         }
@@ -96,10 +95,10 @@ public interface ParallelMessageManager extends MessageManagerBase {
             @CXXReference MSG_T msg,
             int channelId,
             @FFISkip VDATA_T unused) {
-        if (frag.fragmentType().equals(ArrowProjectedAdaptor.fragmentType)) {
+        if (frag.fragmentType().equals(FragmentType.ArrowProjectedFragment)) {
             sendMsgThroughOEdgesArrowProjected(
                     (ArrowProjectedFragment) frag.getFFIPointer(), vertex, msg, channelId, unused);
-        } else if (frag.fragmentType().equals(ImmutableEdgecutFragmentAdaptor.fragmentType)) {
+        } else if (frag.fragmentType().equals(FragmentType.ImmutableEdgecutFragment)) {
             sendMsgThroughOEdgesImmutable(
                     (ImmutableEdgecutFragment) frag.getFFIPointer(),
                     vertex,
@@ -116,10 +115,10 @@ public interface ParallelMessageManager extends MessageManagerBase {
             @CXXReference MSG_T msg,
             int channelId,
             @FFISkip VDATA_T unused) {
-        if (frag.fragmentType().equals(ArrowProjectedAdaptor.fragmentType)) {
+        if (frag.fragmentType().equals(FragmentType.ArrowProjectedFragment)) {
             sendMsgThroughEdgesArrowProjected(
                     (ArrowProjectedFragment) frag.getFFIPointer(), vertex, msg, channelId, unused);
-        } else if (frag.fragmentType().equals(ImmutableEdgecutFragmentAdaptor.fragmentType)) {
+        } else if (frag.fragmentType().equals(FragmentType.ImmutableEdgecutFragment)) {
             sendMsgThroughEdgesImmutable(
                     (ImmutableEdgecutFragment) frag.getFFIPointer(),
                     vertex,
@@ -136,10 +135,10 @@ public interface ParallelMessageManager extends MessageManagerBase {
             @CXXReference MSG_T msg,
             int channelId,
             @FFISkip VDATA_T unused) {
-        if (frag.fragmentType().equals(ArrowProjectedAdaptor.fragmentType)) {
+        if (frag.fragmentType().equals(FragmentType.ArrowProjectedFragment)) {
             sendMsgThroughIEdgesArrowProjected(
                     (ArrowProjectedFragment) frag.getFFIPointer(), vertex, msg, channelId, unused);
-        } else if (frag.fragmentType().equals(ImmutableEdgecutFragmentAdaptor.fragmentType)) {
+        } else if (frag.fragmentType().equals(FragmentType.ImmutableEdgecutFragment)) {
             sendMsgThroughIEdgesImmutable(
                     (ImmutableEdgecutFragment) frag.getFFIPointer(),
                     vertex,
@@ -167,6 +166,12 @@ public interface ParallelMessageManager extends MessageManagerBase {
      */
     @FFINameAlias("GetMessageInBuffer")
     boolean getMessageInBuffer(@CXXReference MessageInBuffer buf);
+
+    @FFINameAlias("SendToFragment")
+    <MSG_T> void sendToFragment(int dstFid, @CXXReference MSG_T msg, int channelId);
+
+    //    @FFINameAlias("Channels")
+    //    @CXXReference StdVector<ThreadLocalMessageBuffer<ParallelMessageManagerGen>> channels();
 
     /**
      * Send a msg to the fragment where the querying outer vertex is an inner vertexin another

@@ -24,7 +24,7 @@ import com.alibaba.graphscope.ds.VertexRange;
 import com.alibaba.graphscope.ds.VertexSet;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
-import com.alibaba.graphscope.utils.AtomicDoubleArrayWrapper;
+import com.alibaba.graphscope.utils.AtomicLongArrayWrapper;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
 
 import org.slf4j.Logger;
@@ -36,13 +36,13 @@ import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class SSSPContext extends VertexDataContext<IFragment<Long, Long, Long, Double>, Double>
-        implements ParallelContextBase<Long, Long, Long, Double> {
+public class SSSPContext extends VertexDataContext<IFragment<Long, Long, Long, Long>, Double>
+        implements ParallelContextBase<Long, Long, Long, Long> {
 
     private static Logger logger = LoggerFactory.getLogger(SSSPContext.class);
 
     public ExecutorService executor;
-    public AtomicDoubleArrayWrapper partialResults;
+    public AtomicLongArrayWrapper partialResults;
     public VertexSet curModified;
     public VertexSet nextModified;
 
@@ -60,7 +60,7 @@ public class SSSPContext extends VertexDataContext<IFragment<Long, Long, Long, D
 
     @Override
     public void Init(
-            IFragment<Long, Long, Long, Double> frag,
+            IFragment<Long, Long, Long, Long> frag,
             ParallelMessageManager mm,
             JSONObject jsonObject) {
         createFFIContext(frag, Double.class, false);
@@ -76,7 +76,7 @@ public class SSSPContext extends VertexDataContext<IFragment<Long, Long, Long, D
             threadNum = jsonObject.getInteger("threadNum");
         }
         Long allVertexNum = frag.getVerticesNum();
-        partialResults = new AtomicDoubleArrayWrapper(allVertexNum.intValue(), Double.MAX_VALUE);
+        partialResults = new AtomicLongArrayWrapper(allVertexNum.intValue(), Long.MAX_VALUE);
         curModified = new VertexSet(0, allVertexNum.intValue());
         nextModified = new VertexSet(0, allVertexNum.intValue());
 
@@ -85,7 +85,7 @@ public class SSSPContext extends VertexDataContext<IFragment<Long, Long, Long, D
     }
 
     @Override
-    public void Output(IFragment<Long, Long, Long, Double> frag) {
+    public void Output(IFragment<Long, Long, Long, Long> frag) {
         executor.shutdown();
 
         logger.info("frag: " + frag.fid() + " sendMessageTime: " + sendMessageTime / 1000000000);

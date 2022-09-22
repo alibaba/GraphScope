@@ -234,6 +234,7 @@ init_basic_packages() {
       glog
       gflags
       grpc
+      python3
       zstd
       snappy
       lz4

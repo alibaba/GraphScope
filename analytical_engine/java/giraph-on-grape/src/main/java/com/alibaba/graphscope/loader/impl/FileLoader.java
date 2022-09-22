@@ -16,7 +16,7 @@
 package com.alibaba.graphscope.loader.impl;
 
 import static com.alibaba.graphscope.loader.LoaderUtils.generateTypeInt;
-import static com.alibaba.graphscope.loader.LoaderUtils.getNumLinesOfFile;
+import static com.alibaba.graphscope.utils.FileUtils.getNumLinesOfFile;
 
 import static org.apache.giraph.utils.ReflectionUtils.getTypeArguments;
 
@@ -66,7 +66,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class FileLoader implements LoaderBase {
     private static Logger logger = LoggerFactory.getLogger(FileLoader.class);
 
-    private static String LIB_PATH = "/opt/graphscope/lib/libgrape-jni.so";
     private static AtomicInteger LOADER_ID = new AtomicInteger(0);
     private static AtomicInteger V_CALLABLE_ID = new AtomicInteger(0);
     private static AtomicInteger E_CALLABLE_ID = new AtomicInteger(0);
