@@ -136,13 +136,6 @@ include_directories("${ANALYTICAL_ENGINE_HOME}/openmpi/include"
 set(CMAKE_THREAD_PREFER_PTHREAD ON)
 find_package(Threads REQUIRED)
 
-if (ENABLE_JAVA_SDK)
-    # include jni------------------------------------------------------------------
-    find_package(JNI REQUIRED)
-    include_directories(SYSTEM ${JAVA_INCLUDE_PATH})
-    include_directories(SYSTEM ${JAVA_INCLUDE_PATH2})
-endif()
-
 # find Python-------------------------------------------------------------------
 if (${CYTHON_PREGEL_APP} OR ${CYTHON_PIE_APP})
   find_package (Python COMPONENTS Interpreter Development REQUIRED)
