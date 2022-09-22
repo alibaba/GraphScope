@@ -806,10 +806,8 @@ where
         let mut properties: Vec<(usize, Row)> = Vec::new();
         let mut count = 0;
         for (nid, label, ppt) in iter {
-            let (is_new, inner_id) = self.add_vertex_internal(nid, label);
-            if is_new {
-                count += 1;
-            }
+            let (_, inner_id) = self.add_vertex_internal(nid, label);
+            count += 1;
             // only non-empty properties will be added
             if !ppt.is_empty() {
                 properties.push((inner_id.index(), ppt));
