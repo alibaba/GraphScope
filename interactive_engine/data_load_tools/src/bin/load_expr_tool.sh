@@ -38,6 +38,16 @@ prepare_odps_table() {
         ${odps} -e "create table IF NOT EXISTS ${table_name}(str string);";
         ${odps} -e "tunnel upload -field-delimiter=U\0009 -header=${skip_header} -overwrite=true $file ${table_name}"
     done
+
+    echo "start to create output tables for data encoding ..............."
+    num=`sed '/^encode.output.table.num=/!d;s/.*=//' ${artifacts_dir}/config.ini`
+    for i in `seq 0 $((num-1))`
+    do
+        vertex_table=${graph_name}_encode_vertex_$i
+        edge_table=${graph_name}_encode_edge_$i
+        ${odps} -e "create table IF NOT EXISTS ${vertex_table}(id1:bigint,id2:bigint,id3:bigint,id4:bigint,id5:bigint,bytes:string,len:bigint,code:bigint);";
+        ${odps} -e "create table IF NOT EXISTS ${edge_table}(id1:bigint,id2:bigint,id3:bigint,id4:bigint,id5:bigint,bytes:string,len:bigint,code:bigint);";
+    done
 }
 
 build_data() {
@@ -59,6 +69,16 @@ clean_data() {
         type=${name%.*}
         table_name=${graph_name}_$type
         ${odps} -e "drop table IF EXISTS ${table_name};"
+    done
+
+    echo "start to clean encoding output tables ..............."
+    num=`sed '/^encode.output.table.num=/!d;s/.*=//' ${artifacts_dir}/config.ini`
+    for i in `seq 0 $((num-1))`
+    do
+        vertex_table=${graph_name}_encode_vertex_$i
+        edge_table=${graph_name}_encode_edge_$i
+        ${odps} -e "drop table IF EXISTS ${vertex_table};";
+        ${odps} -e "drop table IF EXISTS ${edge_table};";
     done
 
     rm -rf ${artifacts_dir}
