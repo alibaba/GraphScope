@@ -75,12 +75,16 @@ enum Logical {
   WITHIN = 6;
   // A binary not-containment check operator, e.g 5 WITHOUT [1, 2, 3, 4]
   WITHOUT = 7;
+  // A binary operator to verify whether a string is a prefix of another string
+  STARTSWITH = 8;
+  // A binary operator to verify whether a string is a suffix of another string
+  ENDSWITH = 9;
   // A binary logical and operator.
-  AND = 8;
+  AND = 10;
   // A binary logical or operator.
-  OR = 9;
+  OR = 11;
   // A unary logical not operator.
-  NOT = 10;
+  NOT = 12;
 }
 
 enum Arithmetic {

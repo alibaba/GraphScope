@@ -62,6 +62,8 @@ impl TryFrom<Token> for pb::ExprOpr {
             Token::Not => Ok(pb::Logical::Not.into()),
             Token::Within => Ok(pb::Logical::Within.into()),
             Token::Without => Ok(pb::Logical::Without.into()),
+            Token::StartsWith => Ok(pb::Logical::Startswith.into()),
+            Token::EndsWith => Ok(pb::Logical::Endswith.into()),
             Token::Boolean(b) => Ok(pb::Value::from(b).into()),
             Token::Int(i) => Ok(pb::Value::from(i).into()),
             Token::Float(f) => Ok(pb::Value::from(f).into()),
@@ -144,7 +146,9 @@ impl ExprToken for pb::ExprOpr {
                         | pb::Logical::Gt
                         | pb::Logical::Ge
                         | pb::Logical::Within
-                        | pb::Logical::Without => 80,
+                        | pb::Logical::Without
+                        | pb::Logical::Startswith
+                        | pb::Logical::Endswith => 80,
                         pb::Logical::And => 75,
                         pb::Logical::Or => 70,
                         pb::Logical::Not => 110,

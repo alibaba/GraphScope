@@ -173,6 +173,14 @@ pub(crate) fn apply_logical<'a>(
                 .into()),
                 Within => Ok(b.contains(&a).into()),
                 Without => Ok((!b.contains(&a)).into()),
+                Startswith => Ok(a
+                    .as_str()?
+                    .starts_with(b.as_str()?.as_ref())
+                    .into()),
+                Endswith => Ok(a
+                    .as_str()?
+                    .ends_with(b.as_str()?.as_ref())
+                    .into()),
                 Not => unreachable!(),
             }
         } else {

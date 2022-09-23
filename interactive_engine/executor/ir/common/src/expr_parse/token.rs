@@ -39,6 +39,8 @@ pub enum Token {
     Not,     // !
     Within,  // Within
     Without, // Without
+    StartsWith, // String StartsWith
+    EndsWith,  // String EndsWith
 
     // Precedence
     LBrace, // (
@@ -86,7 +88,7 @@ impl ExprToken for Token {
             Star | Slash | Percent => 100,
             Hat => 120,
 
-            Eq | Ne | Gt | Lt | Ge | Le | Within | Without => 80,
+            Eq | Ne | Gt | Lt | Ge | Le | Within | Without | StartsWith | EndsWith => 80,
             And => 75,
             Or => 70,
             Not => 110,
@@ -346,6 +348,10 @@ fn partial_tokens_to_tokens(mut tokens: &[PartialToken]) -> ExprResult<Vec<Token
                     Some(Token::Within)
                 } else if literal.to_lowercase().as_str() == "without" {
                     Some(Token::Without)
+                } else if literal.to_lowercase().as_str() == "startswith" {
+                    Some(Token::StartsWith)
+                } else if literal.to_lowercase().as_str() == "endswith" {
+                    Some(Token::EndsWith)
                 } else {
                     // To parse the float of the form `<coefficient>e{+,-}<exponent>`,
                     // for example [Literal("10e"), Minus, Literal("3")] => "1e-3".parse().
@@ -593,6 +599,17 @@ mod tests {
 
         let case9 = tokenize("[]");
         assert_eq!(case9.unwrap(), vec![Token::IdentArray(vec![])]);
+
+        let case10 = tokenize("\"John\" StartsWith \"Jo\"");
+        let expected_case10 =
+            vec![Token::String("John".to_string()), Token::StartsWith, Token::String("Jo".to_string())];
+        assert_eq!(case10.unwrap(), expected_case10);
+
+
+        let case11 = tokenize("\"John\" EndsWith \"hn\"");
+        let expected_case11 =
+            vec![Token::String("John".to_string()), Token::EndsWith, Token::String("hn".to_string())];
+        assert_eq!(case11.unwrap(), expected_case11);
     }
 
     #[test]
