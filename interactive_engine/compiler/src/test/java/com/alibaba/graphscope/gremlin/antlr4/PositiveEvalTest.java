@@ -1101,4 +1101,19 @@ public class PositiveEvalTest {
                         "g.V().out(\"1..2\", \"knows\", \"created\").with(\"PATH_OPT\","
                                 + " \"ARBITRARY\").with(\"RESULT_OPT\", \"ALL_V\")"));
     }
+
+    @Test
+    public void g_V_id() {
+        Assert.assertEquals(g.V().id(), eval("g.V().id()"));
+    }
+
+    @Test
+    public void g_V_label() {
+        Assert.assertEquals(g.V().label(), eval("g.V().label()"));
+    }
+
+    @Test
+    public void g_V_constant() {
+        Assert.assertEquals(g.V().constant("marko"), eval("g.V().constant(\"marko\")"));
+    }
 }
