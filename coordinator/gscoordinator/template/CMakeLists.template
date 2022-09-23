@@ -185,10 +185,12 @@ set(ANALYTICAL_ENGINE_FRAME_DIR "${ANALYTICAL_ENGINE_HOME}/include/graphscope/fr
 set(FRAME_NAME $_frame_name)
 
 # include jni------------------------------------------------------------------
-if(ENABLE_JAVA_SDK)
-    find_package(JNI REQUIRED)
-    include_directories(SYSTEM ${JAVA_INCLUDE_PATH})
-    include_directories(SYSTEM ${JAVA_INCLUDE_PATH2})
+if(PROPERTY_GRAPH_FRAME OR JAVA_PIE_APP)
+    if (ENABLE_JAVA_SDK)
+        find_package(JNI REQUIRED)
+        include_directories(SYSTEM ${JAVA_INCLUDE_PATH})
+        include_directories(SYSTEM ${JAVA_INCLUDE_PATH2})
+    endif()
 endif()
 
 # set javasdk.cc--------------------------------------------------------------
