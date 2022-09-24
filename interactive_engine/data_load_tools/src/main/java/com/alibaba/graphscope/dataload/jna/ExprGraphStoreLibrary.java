@@ -63,7 +63,7 @@ public interface ExprGraphStoreLibrary extends Library {
 
     boolean writeEdge(Pointer buffer, FfiEdgeData.ByValue data);
 
-    int finalizeWriteEdge(Pointer graphLoader, Pointer buffer);
+    int finalizeWriteEdge(Pointer graphLoader, Pointer buffer, long curPartition, long partitions);
 
     ResultCode finalizeGraphLoading(Pointer graphLoader);
 

@@ -43,9 +43,11 @@ public class IrWriteGraphReducer extends ReducerBase {
     private String ossObjectPrefix;
     private IrVertexData vertexData;
     private IrEdgeData edgeData;
+    private int partitions;
 
     @Override
     public void setup(TaskContext context) throws IOException {
+        this.partitions = Integer.valueOf(context.getJobConf().get(IrDataBuild.GRAPH_REDUCER_NUM));
         this.taskId = context.getTaskID().getInstId();
         this.graphLoader = LIB.initGraphLoader(this.localRootDir, taskId);
 
@@ -103,7 +105,8 @@ public class IrWriteGraphReducer extends ReducerBase {
                             throw new RuntimeException("write one edge fail");
                         }
                     });
-            int resCnt = LIB.finalizeWriteEdge(this.graphLoader, buffer);
+            int resCnt =
+                    LIB.finalizeWriteEdge(this.graphLoader, buffer, this.taskId, this.partitions);
             if (resCnt != records.size()) {
                 throw new RuntimeException(
                         "write edges "

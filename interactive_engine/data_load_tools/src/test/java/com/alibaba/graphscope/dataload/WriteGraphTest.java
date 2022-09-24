@@ -70,7 +70,7 @@ public class WriteGraphTest {
             FfiEdgeData.ByValue data = createNewFromBytes(edgeData, original);
             Assert.assertTrue(LIB.writeEdge(buffer, data));
         }
-        Assert.assertEquals(contents.size(), LIB.finalizeWriteEdge(graphLoader, buffer));
+        Assert.assertEquals(contents.size(), LIB.finalizeWriteEdge(graphLoader, buffer, 0, 1));
     }
 
     public FfiEdgeData.ByValue createNewFromBytes(IrEdgeData edgeData, FfiEdgeData.ByValue data) {
