@@ -51,6 +51,10 @@ impl TryFrom<Token> for pb::ExprOpr {
             Token::Slash => Ok(pb::Arithmetic::Div.into()),
             Token::Percent => Ok(pb::Arithmetic::Mod.into()),
             Token::Hat => Ok(pb::Arithmetic::Exp.into()),
+            Token::BitAnd => Ok(pb::Arithmetic::Bitand.into()),
+            Token::BitOr => Ok(pb::Arithmetic::Bitor.into()),
+            Token::BitLShift => Ok(pb::Arithmetic::Bitlshift.into()),
+            Token::BitRShift => Ok(pb::Arithmetic::Bitrshift.into()),
             Token::Eq => Ok(pb::Logical::Eq.into()),
             Token::Ne => Ok(pb::Logical::Ne.into()),
             Token::Gt => Ok(pb::Logical::Gt.into()),
@@ -134,6 +138,8 @@ impl ExprToken for pb::ExprOpr {
                         pb::Arithmetic::Add | pb::Arithmetic::Sub => 95,
                         pb::Arithmetic::Mul | pb::Arithmetic::Div | pb::Arithmetic::Mod => 100,
                         pb::Arithmetic::Exp => 120,
+                        pb::Arithmetic::Bitlshift | pb::Arithmetic::Bitrshift => 130,
+                        pb::Arithmetic::Bitand | pb::Arithmetic::Bitor => 140,
                     }
                 }
                 &Logical(l) => {

@@ -18,7 +18,7 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::convert::{TryFrom, TryInto};
 
-use dyn_type::arith::Exp;
+use dyn_type::arith::{BitOperand, Exp};
 use dyn_type::object;
 use dyn_type::{BorrowObject, Object};
 use ir_common::error::{ParsePbError, ParsePbResult};
@@ -146,6 +146,16 @@ fn apply_arith<'a>(
         Div => Object::Primitive(a.as_primitive()? / b.as_primitive()?),
         Mod => Object::Primitive(a.as_primitive()? % b.as_primitive()?),
         Exp => Object::Primitive(a.as_primitive()?.exp(b.as_primitive()?)),
+        Bitand => Object::Primitive(a.as_primitive()?.bit_and(b.as_primitive()?)),
+        Bitor => Object::Primitive(a.as_primitive()?.bit_or(b.as_primitive()?)),
+        Bitlshift => Object::Primitive(
+            a.as_primitive()?
+                .bit_left_shift(b.as_primitive()?),
+        ),
+        Bitrshift => Object::Primitive(
+            a.as_primitive()?
+                .bit_right_shift(b.as_primitive()?),
+        ),
     })
 }
 
@@ -645,6 +655,11 @@ mod tests {
             "2 <= 2",         // true,
             "2 == 2",         // true
             "1.0 > 2.0",      // false
+            "1 & 2",          // 0
+            "1 | 2",          // 3
+            "1 << 2",         // 4
+            "4 >> 2",         // 1
+            "232 & 64 != 0",  // true
         ];
 
         let expected: Vec<Object> = vec![
@@ -674,6 +689,11 @@ mod tests {
             object!(true),
             object!(true),
             object!(false),
+            object!(0),
+            object!(3),
+            object!(4),
+            object!(1),
+            object!(true),
         ];
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {

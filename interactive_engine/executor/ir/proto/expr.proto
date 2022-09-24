@@ -100,6 +100,14 @@ enum Arithmetic {
   MOD = 4;
   // A binary exponentiation operator
   EXP = 5;
+  // A binary bitwise and operator
+  BITAND = 6;
+  // A binary bitwise or operator
+  BITOR = 7;
+  // A binary bitwise left-shift operator
+  BITLSHIFT = 8;
+  // A binary bitwise right-shift operator
+  BITRSHIFT = 9;
 }
 
 message Variable {
