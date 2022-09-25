@@ -135,6 +135,12 @@ public class InterOpCollectionBuilder {
                 opList.add(StepTransformFactory.SUBGRAPH_STEP.apply(step));
             } else if (Utils.equalClass(step, IdentityStep.class)) {
                 opList.add(StepTransformFactory.IDENTITY_STEP.apply(step));
+            } else if (Utils.equalClass(step, IdStep.class)) {
+                opList.add(StepTransformFactory.ID_STEP.apply(step));
+            } else if (Utils.equalClass(step, LabelStep.class)) {
+                opList.add(StepTransformFactory.LABEL_STEP.apply(step));
+            } else if (Utils.equalClass(step, ConstantStep.class)) {
+                opList.add(StepTransformFactory.CONSTANT_STEP.apply(step));
             } else {
                 throw new UnsupportedStepException(step.getClass(), "unimplemented yet");
             }
