@@ -157,15 +157,6 @@ public interface PredicateExprTransform extends Function<Step, String> {
         return predicateValue;
     }
 
-    // @a -> ""
-    // @a.name -> @a.name
-    // @.name -> @.name
-    // @ -> ""
-    default String getExprIfPropertyExist(String expr) {
-        String[] splitExprs = expr.split("\\.");
-        return (splitExprs.length == 2) ? expr : "";
-    }
-
     default String getPredicateExpr(
             String subject, String predicate, Object value, Function<Triple, String> format) {
         return format.apply(Triple.of(subject, predicate, value));
