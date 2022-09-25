@@ -25,9 +25,10 @@ pub enum Token {
     Star,      // *
     Slash,     // /
     Percent,   // %
-    Hat,       // ^
+    Power,     // ^^
     BitAnd,    // &
     BitOr,     // |
+    BitXor,    // ^
     BitLShift, // <<
     BitRShift, // >>
 
@@ -90,7 +91,7 @@ impl ExprToken for Token {
         match self {
             Plus | Minus => 95,
             Star | Slash | Percent => 100,
-            Hat => 120,
+            Power => 120,
 
             Eq | Ne | Gt | Lt | Ge | Le | Within | Without | StartsWith | EndsWith => 80,
             And => 75,
@@ -136,6 +137,8 @@ pub enum PartialToken {
     LCBracket,
     /// To terminate a map, '}'
     RCBracket,
+    /// A '^' character
+    Hat,
 }
 
 #[inline]
@@ -152,11 +155,11 @@ fn char_to_partial_token(c: char) -> PartialToken {
         ']' => PartialToken::RBracket,
         '{' => PartialToken::LCBracket,
         '}' => PartialToken::RCBracket,
+        '^' => PartialToken::Hat,
         '+' => PartialToken::Token(Token::Plus),
         '*' => PartialToken::Token(Token::Star),
         '/' => PartialToken::Token(Token::Slash),
         '%' => PartialToken::Token(Token::Percent),
-        '^' => PartialToken::Token(Token::Hat),
         '(' => PartialToken::Token(Token::LBrace),
         ')' => PartialToken::Token(Token::RBrace),
         c => {
@@ -509,6 +512,13 @@ fn partial_tokens_to_tokens(mut tokens: &[PartialToken]) -> ExprResult<Vec<Token
                     }
                 }
             }
+            PartialToken::Hat => match second {
+                Some(PartialToken::Hat) => Some(Token::Power),
+                _ => {
+                    cutoff = 1;
+                    Some(Token::BitXor)
+                }
+            },
             _ => {
                 return Err(format!("invalid token: {:?}", first)
                     .as_str()
@@ -537,7 +547,7 @@ mod tests {
     #[test]
     fn test_tokenize() {
         // ((1 + 2) * 2) ^ 3 == 6 ^ 3
-        let case1 = tokenize("((1 + 1e-3) * 2) ^ 3 == 6 ^ 3").unwrap();
+        let case1 = tokenize("((1 + 1e-3) * 2) ^^ 3 == 6 ^^ 3").unwrap();
         let expected_case1 = vec![
             Token::LBrace,
             Token::LBrace,
@@ -548,11 +558,11 @@ mod tests {
             Token::Star,
             Token::Int(2),
             Token::RBrace,
-            Token::Hat,
+            Token::Power,
             Token::Int(3),
             Token::Eq,
             Token::Int(6),
-            Token::Hat,
+            Token::Power,
             Token::Int(3),
         ];
 

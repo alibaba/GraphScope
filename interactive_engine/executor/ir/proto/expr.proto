@@ -104,10 +104,12 @@ enum Arithmetic {
   BITAND = 6;
   // A binary bitwise or operator
   BITOR = 7;
+  // A binary bitwise or operator
+  BITXOR = 8;
   // A binary bitwise left-shift operator
-  BITLSHIFT = 8;
+  BITLSHIFT = 9;
   // A binary bitwise right-shift operator
-  BITRSHIFT = 9;
+  BITRSHIFT = 10;
 }
 
 message Variable {

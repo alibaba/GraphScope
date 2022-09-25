@@ -148,6 +148,7 @@ fn apply_arith<'a>(
         Exp => Object::Primitive(a.as_primitive()?.exp(b.as_primitive()?)),
         Bitand => Object::Primitive(a.as_primitive()?.bit_and(b.as_primitive()?)),
         Bitor => Object::Primitive(a.as_primitive()?.bit_or(b.as_primitive()?)),
+        Bitxor => Object::Primitive(a.as_primitive()?.bit_xor(b.as_primitive()?)),
         Bitlshift => Object::Primitive(
             a.as_primitive()?
                 .bit_left_shift(b.as_primitive()?),
@@ -633,8 +634,8 @@ mod tests {
             "7.0 + 3",        // 10.0
             "7 * 3",          // 21
             "7 / 3",          // 2
-            "7 ^ 3",          // 343
-            "7 ^ -3",         // 1 / 343
+            "7 ^^ 3",         // 343
+            "7 ^^ -3",        // 1 / 343
             "7 % 3",          // 1
             "7 -3",           // 4
             "-3 + 7",         // 4
@@ -657,6 +658,7 @@ mod tests {
             "1.0 > 2.0",      // false
             "1 & 2",          // 0
             "1 | 2",          // 3
+            "1 ^ 2",          // 3
             "1 << 2",         // 4
             "4 >> 2",         // 1
             "232 & 64 != 0",  // true
@@ -690,6 +692,7 @@ mod tests {
             object!(true),
             object!(false),
             object!(0),
+            object!(3),
             object!(3),
             object!(4),
             object!(1),
@@ -761,9 +764,9 @@ mod tests {
             "2 * 1e-3",                              // 0.002
             "1 > 2 && 1 < 3",                        // false
             "1 > 2 || 1 < 3",                        // true
-            "2 ^ 10 > 10",                           // true
-            "2 / 5 ^ 2",                             // 0
-            "2.0 / 5 ^ 2",                           // 2.0 / 25
+            "2 ^^ 10 > 10",                          // true
+            "2 / 5 ^^ 2",                            // 0
+            "2.0 / 5 ^^ 2",                          // 2.0 / 25
             "((1 + 2) * 3) / (7 * 8) + 12.5 / 10.1", // 1.2376237623762376
             "((1 + 2) * 3) / 7 * 8 + 12.5 / 10.1",   // 9.237623762376238
             "((1 + 2) * 3) / 7 * 8 + 12.5 / 10.1 \
