@@ -201,10 +201,24 @@ Currently GIE supports the following Gremlin steps:
 
 .. code:: java
 
+    //hasLabel
+    g.V().hasLabel("labelName")
+    g.V().hasLabel("labelName1", "labelName2")
+
     //has
     g.V().has("attrName")
     g.V().has("attrName", attrValue)
+    g.V().has("labelName", "attrName", attrValue)
+    g.V().has("attrName", eq(1))
+    g.V().has("attrName", neq(1))
+    g.V().has("attrName", lt(1))
+    g.V().has("attrName", lte(1))
     g.V().has("attrName", gt(1))
+    g.V().has("attrName", gte(1))
+    g.V().has("attrName", within([1,2,3]))
+    g.V().has("attrName", without([1,2,3]))
+    g.V().has("attrName", inside(10, 20))
+    g.V().has("attrName", outside(10, 20))
     
     //is
     g.V().values("age").is(gt(70))
@@ -218,6 +232,7 @@ Currently GIE supports the following Gremlin steps:
     //dedup
     g.V().out().dedup()
     g.V().out().dedup().by("name")
+    g.V().as("a").out().dedup("a").by("name")
     
     //range
     g.V().out().limit(100)
@@ -229,13 +244,15 @@ Currently GIE supports the following Gremlin steps:
     //and/or
     
     //Text.*
-    g.V().has("name", Text.match(".*j.*"))
-    g.V().values("name").filter(Text.match(".*j.*"))
-    g.V().has("name", Text.startsWith("To"))
-    g.V().values("name").filter(Text.startsWith("To"))
+    g.V().has("attrName", TextP.containing("substr"))
+    g.V().has("attrName", TextP.notContaining("substr"))
+    g.V().has("attrName", TextP.startingWith("substr"))
+    g.V().has("attrName", TextP.notStartingWith("substr"))
+    g.V().has("attrName", TextP.endingWith("substr"))
+    g.V().has("attrName", TextP.notEndingWith("substr"))
     
     //P.not
-    g.V().has("name", P.not(Text.startsWith("To")))
+    g.V().has("name", P.not(TextP.startingWith("substr")))
     
     //Lists.contains*
     g.V().has("a", Lists.contains(30))
