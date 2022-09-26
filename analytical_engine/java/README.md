@@ -37,9 +37,6 @@ enables Java programmers to write and run graph algorithms with these benefits.
 
 ### Building from source
 
-First you need **fastFFI** installed, see [alibaba/fastFFI](https://github.com/alibaba/fastFFI) for
-installation guide.
-
 ```bash
 git clone https://github.com/alibaba/GraphScope.git
 cd analytical_engine/java/grape-jdk
