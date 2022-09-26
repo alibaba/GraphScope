@@ -507,6 +507,7 @@ impl MultiVersionGraph for GraphStore {
         &self, si: i64, schema_version: i64, target: &DataLoadTarget, table_id: i64, partition_id: i32,
         unique_path: &str,
     ) -> GraphResult<bool> {
+        info!("committing data load from path {}", unique_path);
         let _guard = res_unwrap!(self.lock.lock(), prepare_data_load)?;
         self.check_si_guard(si)?;
         if let Err(_) = self.meta.check_version(schema_version) {
