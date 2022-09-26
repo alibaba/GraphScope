@@ -44,13 +44,13 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.json</groupId>
-      <artifactId>json</artifactId>
-      <version>20200518</version>
+      <groupId>org.apache.tinkerpop</groupId>
+      <artifactId>gremlin-test</artifactId>
+      <version>${tinkerpop.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.tinkerpop</groupId>
-      <artifactId>gremlin-test</artifactId>
+      <artifactId>gremlin-core</artifactId>
       <version>${tinkerpop.version}</version>
     </dependency>
     <dependency>
