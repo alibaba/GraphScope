@@ -56,6 +56,16 @@
     </dependency>
     <dependency>
       <groupId>org.apache.curator</groupId>
+      <artifactId>curator-x-discovery</artifactId>
+      <version>${curator.new.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.curator</groupId>
+      <artifactId>curator-recipes</artifactId>
+      <version>${curator.new.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.curator</groupId>
       <artifactId>curator-framework</artifactId>
       <version>${curator.new.version}</version>
     </dependency>
