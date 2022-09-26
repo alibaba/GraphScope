@@ -129,15 +129,19 @@ jobs:
         docker_username: ${{ secrets.DOCKER_USER }}
       run: |
         echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.DOCKER_URL }} --password-stdin
+        # docker tag: 0.15.0 -> 0.15.0a20220808
+        time=$(date "+%Y%m%d")
+        version=$(cat ${GITHUB_WORKSPACE}/VERSION)
+        tag="${version}a${time}"
         # graphscope image
-        sudo docker tag graphscope/graphscope:${SHORT_SHA} ${{ env.GS_IMAGE }}:nightly
-        sudo docker push ${{ env.GS_IMAGE }}:nightly
+        sudo docker tag graphscope/graphscope:${SHORT_SHA} ${{ env.GS_IMAGE }}:${tag}
+        sudo docker push ${{ env.GS_IMAGE }}:${tag}
         # jupyter image
-        sudo docker tag graphscope/jupyter:${SHORT_SHA} ${{ env.JUPYTER_IMAGE }}:nightly
-        sudo docker push ${{ env.JUPYTER_IMAGE }}:nightly
+        sudo docker tag graphscope/jupyter:${SHORT_SHA} ${{ env.JUPYTER_IMAGE }}:${tag}
+        sudo docker push ${{ env.JUPYTER_IMAGE }}:${tag}
         # dataset image
-        sudo docker tag graphscope/dataset:${SHORT_SHA} ${{ env.DATASET_IMAGE }}:nightly
-        sudo docker push ${{ env.DATASET_IMAGE }}:nightly
+        sudo docker tag graphscope/dataset:${SHORT_SHA} ${{ env.DATASET_IMAGE }}:${tag}
+        sudo docker push ${{ env.DATASET_IMAGE }}:${tag}
 
     - name: Extract Tag Name
       if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
