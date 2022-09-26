@@ -20,7 +20,7 @@
   <parent>
     <groupId>com.alibaba.graphscope</groupId>
     <artifactId>grape-jdk-parent</artifactId>
-    <version>0.16.0</version>
+    <version>${revision}</version>
   </parent>
 
   <artifactId>giraph-on-grape</artifactId>

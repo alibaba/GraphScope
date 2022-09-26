@@ -121,14 +121,21 @@ if not os.path.isfile(ANALYTICAL_ENGINE_PATH):
 
 # ANALYTICAL_ENGINE_JAVA_HOME
 ANALYTICAL_ENGINE_JAVA_HOME = ANALYTICAL_ENGINE_HOME
-# ANALYTICAL_ENGINE_JAVA_INIT_CLASS_PATH=os.path.join(ANALYTICAL_ENGINE_JAVA_HOME, "lib/*")
-# There should be only grape-runtime.jar we need
-ANALYTICAL_ENGINE_JAVA_INIT_CLASS_PATH = (
-    ANALYTICAL_ENGINE_JAVA_HOME + "/lib/grape-runtime-0.16.0-shaded.jar"
+
+ANALYTICAL_ENGINE_JAVA_RUNTIME_JAR = glob.glob(
+    ANALYTICAL_ENGINE_JAVA_HOME + "/lib/grape-runtime*.jar"
+)[0]
+ANALYTICAL_ENGINE_JAVA_GRAPHX_JAR = glob.glob(
+    ANALYTICAL_ENGINE_JAVA_HOME + "/lib/graphx-on-graphscope*.jar"
+)[0]
+ANALYTICAL_ENGINE_JAVA_INIT_CLASS_PATH = "{}:{}".format(
+    ANALYTICAL_ENGINE_JAVA_RUNTIME_JAR, ANALYTICAL_ENGINE_JAVA_GRAPHX_JAR
 )
+
 ANALYTICAL_ENGINE_JAVA_JVM_OPTS = (
     "-Djava.library.path={}/lib -Djava.class.path={}".format(
-        GRAPHSCOPE_HOME, ANALYTICAL_ENGINE_JAVA_INIT_CLASS_PATH
+        GRAPHSCOPE_HOME,
+        ANALYTICAL_ENGINE_JAVA_INIT_CLASS_PATH,
     )
 )
 
@@ -157,9 +164,8 @@ LLVM4JNI_HOME = os.environ.get("LLVM4JNI_HOME", None)
 LLVM4JNI_USER_OUT_DIR_BASE = "user-llvm4jni-output"
 PROCESSOR_MAIN_CLASS = "com.alibaba.graphscope.annotation.Main"
 JAVA_CODEGNE_OUTPUT_PREFIX = "gs-ffi"
-GRAPE_PROCESSOR_JAR = os.path.join(
-    GRAPHSCOPE_HOME, "lib", "grape-runtime-0.16.0-shaded.jar"
-)
+GRAPE_PROCESSOR_JAR = glob.glob(GRAPHSCOPE_HOME + "/lib/grape-runtime*.jar")[0]
+
 GIRAPH_DIRVER_CLASS = "com.alibaba.graphscope.app.GiraphComputationAdaptor"
 
 

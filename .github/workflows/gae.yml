@@ -91,7 +91,8 @@ jobs:
         mvn test -Dmaven.antrun.skip=true --quiet
 
         source ${GRAPHSCOPE_HOME}/conf/grape_jvm_opts
-        export USER_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-demo/target/grape-demo-0.16.0-shaded.jar
+        version=$(cat ${GITHUB_WORKSPACE}/VERSION)
+        export USER_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-demo/target/grape-demo-${version}-shaded.jar
         cd ${GITHUB_WORKSPACE}/analytical_engine/build
         ../test/app_tests.sh --test_dir ${GS_TEST_DIR}
 
@@ -101,7 +102,8 @@ jobs:
         RUN_JAVA_TESTS: ON
         GRAPHSCOPE_HOME: /opt/graphscope
       run: |
-        export USER_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-demo/target/grape-demo-0.16.0-shaded.jar
+        version=$(cat ${GITHUB_WORKSPACE}/VERSION)
+        export USER_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-demo/target/grape-demo-${version}-shaded.jar
         source ${GRAPHSCOPE_HOME}/conf/grape_jvm_opts
 
         cd ${GITHUB_WORKSPACE}/python
