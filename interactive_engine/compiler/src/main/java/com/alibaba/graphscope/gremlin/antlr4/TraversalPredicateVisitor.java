@@ -194,4 +194,28 @@ public class TraversalPredicateVisitor extends GremlinGSBaseVisitor<P> {
             final GremlinGSParser.TraversalPredicate_notContainingContext ctx) {
         return TextP.notContaining(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
     }
+
+    @Override
+    public P visitTraversalPredicate_startingWith(
+            final GremlinGSParser.TraversalPredicate_startingWithContext ctx) {
+        return TextP.startingWith(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+    }
+
+    @Override
+    public P visitTraversalPredicate_notStartingWith(
+            final GremlinGSParser.TraversalPredicate_notStartingWithContext ctx) {
+        return TextP.notStartingWith(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+    }
+
+    @Override
+    public P visitTraversalPredicate_endingWith(
+            final GremlinGSParser.TraversalPredicate_endingWithContext ctx) {
+        return TextP.endingWith(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+    }
+
+    @Override
+    public P visitTraversalPredicate_notEndingWith(
+            final GremlinGSParser.TraversalPredicate_notEndingWithContext ctx) {
+        return TextP.notEndingWith(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+    }
 }
