@@ -25,15 +25,25 @@ import com.alibaba.graphscope.dataload.jna.type.FfiEdgeData;
 import com.alibaba.graphscope.dataload.jna.type.FfiEdgeTypeTuple;
 import com.alibaba.graphscope.dataload.jna.type.FfiVertexData;
 import com.alibaba.graphscope.dataload.jna.type.ResultCode;
+import com.alibaba.maxgraph.dataload.OSSFileObj;
+import com.alibaba.maxgraph.dataload.databuild.OfflineBuildOdps;
 import com.aliyun.odps.data.Record;
 import com.aliyun.odps.mapred.MapperBase;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jna.Pointer;
 
+import org.apache.commons.io.FileUtils;
+
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 public class IrDataEncodeMapper extends MapperBase {
+    private static final ExprGraphStoreLibrary LIB = ExprGraphStoreLibrary.INSTANCE;
     private Record vertexRecord;
     private Record edgeRecord;
     private String vertexOutTable;
@@ -42,10 +52,18 @@ public class IrDataEncodeMapper extends MapperBase {
     private Pointer parser;
     private IrVertexData vertexData;
     private IrEdgeData edgeData;
-    private static final ExprGraphStoreLibrary LIB = ExprGraphStoreLibrary.INSTANCE;
+
+    private String localRootDir = "/tmp";
+
+    private String ossBucketName;
+    private String ossObjectPrefix;
+    private OSSFileObj ossFileObj;
+
+    private int taskId;
 
     @Override
     public void setup(TaskContext context) throws IOException {
+        this.taskId = context.getTaskID().getInstId();
         String mappingJson = context.getJobConf().get(IrDataBuild.COLUMN_MAPPING_META);
         this.parser = LIB.initParserFromJson(mappingJson);
         this.columnMappingMeta =
@@ -64,6 +82,20 @@ public class IrDataEncodeMapper extends MapperBase {
         this.edgeRecord = context.createOutputRecord(this.edgeOutTable);
         this.vertexData = new IrVertexData();
         this.edgeData = new IrEdgeData();
+
+        this.ossBucketName = context.getJobConf().get(OfflineBuildOdps.OSS_BUCKET_NAME);
+        this.ossObjectPrefix = context.getJobConf().get(IrDataBuild.UNIQUE_NAME);
+
+        String ossAccessId = context.getJobConf().get(OfflineBuildOdps.OSS_ACCESS_ID);
+        String ossAccessKey = context.getJobConf().get(OfflineBuildOdps.OSS_ACCESS_KEY);
+        String ossEndPoint = context.getJobConf().get(OfflineBuildOdps.OSS_ENDPOINT);
+
+        Map<String, String> ossInfo = new HashMap();
+        ossInfo.put(OfflineBuildOdps.OSS_ENDPOINT, ossEndPoint);
+        ossInfo.put(OfflineBuildOdps.OSS_ACCESS_ID, ossAccessId);
+        ossInfo.put(OfflineBuildOdps.OSS_ACCESS_KEY, ossAccessKey);
+
+        this.ossFileObj = new OSSFileObj(ossInfo);
     }
 
     @Override
@@ -103,6 +135,19 @@ public class IrDataEncodeMapper extends MapperBase {
     @Override
     public void cleanup(TaskContext context) throws IOException {
         super.cleanup(context);
+        if (this.taskId == 0) {
+            String schemaJson = LIB.getSchemaJsonFromParser(this.parser);
+            String ossObjectName =
+                    Paths.get(this.ossObjectPrefix, "graph_schema", "schema.json").toString();
+            String localPath = Paths.get(localRootDir, "graph_schema", "schema.json").toString();
+            File localFile = new File(localPath);
+            FileUtils.writeStringToFile(localFile, schemaJson, StandardCharsets.UTF_8);
+            this.ossFileObj.uploadFileWithCheckPoint(this.ossBucketName, ossObjectName, localFile);
+
+            if (localFile.exists()) {
+                localFile.delete();
+            }
+        }
         if (this.parser != null) {
             LIB.destroyParser(this.parser);
         }

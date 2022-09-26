@@ -84,6 +84,24 @@ clean_data() {
     rm -rf ${artifacts_dir}
 }
 
+download_data() {
+    osscmd=$1
+    download_path=$2
+
+    graph_name=`sed '/^unique.name=/!d;s/.*=//' ${artifacts_dir}/config.ini`
+    oss_bucket_name=`sed '/^oss.bucket.name=/!d;s/.*=//' ${artifacts_dir}/config.ini`
+    oss_path_prefix=oss://${oss_bucket_name}/${graph_name}
+
+    mkdir -p $download_path/graph_data_bin/partition_0
+    ${osscmd} get ${oss_path_prefix}/graph_data_bin/partition_0/edge_property $download_path/graph_data_bin/partition_0/edge_property
+    ${osscmd} get ${oss_path_prefix}/graph_data_bin/partition_0/graph_struct $download_path/graph_data_bin/partition_0/graph_struct
+    ${osscmd} get ${oss_path_prefix}/graph_data_bin/partition_0/index_data $download_path/graph_data_bin/partition_0/index_data
+    ${osscmd} get ${oss_path_prefix}/graph_data_bin/partition_0/node_property $download_path/graph_data_bin/partition_0/node_property
+
+    mkdir -p $download_path/graph_schema
+    ${osscmd} get ${oss_path_prefix}/graph_schema/schema.json $download_path/graph_schema/schema.json
+}
+
 if [ "$mode" = "prepare_artifacts" ]
 then
     [ "$#" -ne 2 ] && echo "usage: ./load_expr_tool.sh prepare_artifacts <your odpscmd path>" && exit 1
@@ -100,6 +118,10 @@ elif [ "$mode" = "clean_data" ]
 then
     [ "$#" -ne 3 ] && echo "usage: ./load_expr_tool.sh clean_data <your odpscmd path> <your local data path>" && exit 1
     clean_data $2 $3
+elif [ "$mode" = "get_data" ]
+then
+    [ "$#" -ne 3 ] && echo "usage: ./load_expr_tool.sh get_data <your osscmd path> <your local download path>" && exit 1
+    download_data $2 $3
 else
     echo "invalid mode"
 fi

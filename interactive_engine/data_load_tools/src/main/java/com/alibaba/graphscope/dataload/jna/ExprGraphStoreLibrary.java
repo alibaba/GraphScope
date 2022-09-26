@@ -68,4 +68,6 @@ public interface ExprGraphStoreLibrary extends Library {
     ResultCode finalizeGraphLoading(Pointer graphLoader);
 
     long getVertexPartition(long vertexId, long partitions);
+
+    String getSchemaJsonFromParser(Pointer parser);
 }

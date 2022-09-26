@@ -82,6 +82,10 @@ public class IrDataBuild {
             job.set(COLUMN_MAPPING_META, columnMappingJson);
             job.set(ENCODE_OUTPUT_TABLE_NUM, tableNum);
             job.set(UNIQUE_NAME, prefix);
+            job.set(OfflineBuildOdps.OSS_ENDPOINT, endpoint);
+            job.set(OfflineBuildOdps.OSS_ACCESS_ID, accessId);
+            job.set(OfflineBuildOdps.OSS_ACCESS_KEY, accessKey);
+            job.set(OfflineBuildOdps.OSS_BUCKET_NAME, bucketName);
             job.set(SEPARATOR, separator);
             job.setBoolean(SKIP_HEADER, Boolean.valueOf(skipHeader));
             loadEncodeInputTable(job, properties);
