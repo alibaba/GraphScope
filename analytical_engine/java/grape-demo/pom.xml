@@ -26,7 +26,7 @@
 
   <artifactId>grape-demo</artifactId>
   <packaging>jar</packaging>
-  <name>grape-demo</name>
+  <name>Grape Demo</name>
 
   <dependencies>
     <dependency>
@@ -49,6 +49,11 @@
       <classifier>shaded</classifier>
     </dependency>
     <dependency>
+      <groupId>com.alibaba.graphscope</groupId>
+      <artifactId>graphx-on-graphscope</artifactId>
+      <classifier>shaded</classifier>
+    </dependency>
+    <dependency>
       <groupId>com.alibaba.fastffi</groupId>
       <artifactId>annotation-processor</artifactId>
     </dependency>
@@ -64,13 +69,55 @@
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-graphx_2.12</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-sql_2.12</artifactId>
+    </dependency>
   </dependencies>
 
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>default-compile</id>
+            <phase>none</phase>
+          </execution>
+          <execution>
+            <id>default-testCompile</id>
+            <phase>none</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>compile</goal>
+              <goal>testCompile</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test</goal>
+            </goals>
+            <phase>test</phase>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -98,6 +145,7 @@
                 <includes>
                   <include>com.alibaba.graphscope:*</include>
                   <include>com.alibaba.fastffi:*</include>
+                  <include>org.apache.spark:spark-graphx_2.12*</include>
                   <include>it.unimi.dsi:fastutil*</include>
                 </includes>
               </artifactSet>

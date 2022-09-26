@@ -148,9 +148,11 @@ class JavaContextBase : public grape::ContextBase {
       LOG(ERROR) << "no args received";
       return;
     }
-    std::string user_library_name, user_class_path;
+    std::string user_library_name, user_class_path, graphx_context_name,
+        serial_path;  // the later two should only used by graphx
     std::string args_str = parseParamsAndSetupJVMEnv(
-        params, lib_path, user_library_name, user_class_path, local_num);
+        params, lib_path, user_library_name, user_class_path,
+        graphx_context_name, serial_path, local_num);
 
     JavaVM* jvm = GetJavaVM();
     (void) jvm;
@@ -178,13 +180,13 @@ class JavaContextBase : public grape::ContextBase {
       loadJNILibrary(env, user_library_name);
 
       VLOG(1) << "Creating app object: " << app_class_name_;
-      app_object_ =
-          LoadAndCreate(env, url_class_loader_object_, app_class_name_);
+      app_object_ = LoadAndCreate(env, url_class_loader_object_,
+                                  app_class_name_, serial_path.c_str());
       VLOG(1) << "Successfully created app object with class loader:"
               << &url_class_loader_object_
               << ", of type: " << std::string(app_class_name_);
 
-      createContextObj(env);
+      createContextObj(env, graphx_context_name, serial_path);
       jclass context_class = env->GetObjectClass(context_object_);
       CHECK_NOTNULL(context_class);
 
@@ -288,10 +290,14 @@ class JavaContextBase : public grape::ContextBase {
     return std::string(user_class_path);
   }
   // user library name should be absolute
+  // serial path is used in graphx, to specify the path to serializaed class
+  // objects of vd,ed.etc.
   std::string parseParamsAndSetupJVMEnv(const std::string& params,
                                         const std::string lib_path,
                                         std::string& user_library_name,
                                         std::string& user_class_path,
+                                        std::string& graphx_context_class_name,
+                                        std::string& serial_path,
                                         int local_num) {
     boost::property_tree::ptree pt;
     std::stringstream ss;
@@ -322,6 +328,13 @@ class JavaContextBase : public grape::ContextBase {
     memcpy(app_class_name_, ch, strlen(ch));
     app_class_name_[strlen(ch)] = '\0';
     pt.erase("app_class");
+
+    auto iter = pt.find("graphx_context_class");
+    if (iter != pt.not_found()) {
+      graphx_context_class_name = pt.get<std::string>("graphx_context_class");
+    }
+
+    serial_path = pt.get<std::string>("serial_path", "");
 
     boost::filesystem::path lib_path_fs, lib_dir;
     if (!lib_path.empty()) {
@@ -436,19 +449,32 @@ class JavaContextBase : public grape::ContextBase {
     }
   }
 
-  void createContextObj(JNIEnv* env) {
-    std::string _context_class_name_str = getCtxClassNameFromAppObject(env);
-    VLOG(1) << "Context class name: " << _context_class_name_str;
-    context_object_ = LoadAndCreate(env, url_class_loader_object_,
-                                    _context_class_name_str.c_str());
-    VLOG(1) << "Successfully created ctx object with class loader:"
-            << &url_class_loader_object_
-            << ", of type: " << _context_class_name_str;
+  void createContextObj(JNIEnv* env, const std::string& graphx_context_name,
+                        const std::string& serial_path) {
+    if (graphx_context_name.size() != 0 &&
+        (graphx_context_name.find("com.alibaba.graphscope.context."
+                                  "GraphXParallelAdaptorContext") !=
+         std::string::npos)) {
+      context_object_ =
+          LoadAndCreate(env, url_class_loader_object_,
+                        graphx_context_name.c_str(), serial_path.c_str());
+      VLOG(1) << "Succcessfully loaded graphx context: " << context_object_;
+    } else {
+      std::string _context_class_name_str = getCtxClassNameFromAppObject(env);
+      VLOG(1) << "Context class name: " << _context_class_name_str;
+      context_object_ =
+          LoadAndCreate(env, url_class_loader_object_,
+                        _context_class_name_str.c_str(), serial_path.c_str());
+      VLOG(1) << "Successfully created ctx object with class loader:"
+              << &url_class_loader_object_
+              << ", of type: " << _context_class_name_str;
+    }
   }
 
   jobject wrapFragObj(JNIEnv* env, jobject& fragObject) {
     if (graph_type_str_.find("Immutable") != std::string::npos ||
-        graph_type_str_.find("ArrowProjected") != std::string::npos) {
+        graph_type_str_.find("ArrowProjected") != std::string::npos ||
+        graph_type_str_.find("GraphXFragment") != std::string::npos) {
       VLOG(10) << "Creating IFragment";
       // jobject fragment_object_impl_ = env->NewGlobalRef(fragObject);
       // For immutableFragment and ArrowProjectedFragment, we use a wrapper

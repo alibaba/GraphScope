@@ -363,6 +363,10 @@ class AdjList<VID_T, EID_T, grape::EmptyType> {
 
 }  // namespace arrow_projected_fragment_impl
 
+template <typename OID_T, typename VID_T, typename OLD_VDATA_T,
+          typename NEW_VDATA_T, typename OLD_EDATA_T, typename NEW_EDATA_T>
+class ArrowProjectedFragmentMapper;
+
 /**
  * @brief This class represents the fragment projected from ArrowFragment which
  * contains only one vertex label and edge label. The fragment has no label and
@@ -1225,6 +1229,10 @@ class ArrowProjectedFragment
 
   std::vector<vid_t> outer_vertex_offsets_;
   std::vector<std::vector<vertex_t>> mirrors_of_frag_;
+
+  template <typename _OID_T, typename _VID_T, typename _OLD_VDATA_T,
+            typename _NEW_VDATA_T, typename _OLD_EDATA_T, typename _NEW_EDATA_T>
+  friend class ArrowProjectedFragmentMapper;
 };
 
 }  // namespace gs

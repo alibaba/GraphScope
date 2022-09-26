@@ -25,7 +25,7 @@
 
   <artifactId>grape-jdk</artifactId>
   <packaging>jar</packaging>
-  <name>grape-jdk</name>
+  <name>Grape JDK</name>
 
   <properties>
     <jacoco.version>0.8.7</jacoco.version>
@@ -65,6 +65,10 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
     </dependency>
   </dependencies>
 

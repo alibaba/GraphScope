@@ -578,8 +578,7 @@ impl TryFrom<pb::IndexPredicate> for PEvaluator {
 #[cfg(test)]
 mod tests {
     use ahash::HashMap;
-    use dyn_type::{object, Primitives};
-    use global_query::store_api::prelude::{Operand as StoreOperand, Property as StoreProperty};
+    use dyn_type::object;
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::NameOrId;
 

@@ -58,6 +58,7 @@ from graphscope.framework.graph_utils import normalize_parameter_edges
 from graphscope.framework.graph_utils import normalize_parameter_vertices
 from graphscope.framework.loader import Loader
 from graphscope.framework.utils import PipeMerger
+from graphscope.framework.utils import find_java
 from graphscope.framework.utils import get_tempdir
 from graphscope.framework.utils import normalize_data_type_str
 from graphscope.proto import attr_value_pb2
@@ -1382,6 +1383,15 @@ class CoordinatorServiceServicer(
                 raise
         config = json.loads(response_head.head.results[0].result.decode("utf-8"))
         config.update(self._launcher.get_engine_config())
+        # Disable ENABLE_JAVA_SDK when java is not installed on coordinator
+        if config["enable_java_sdk"] == "ON":
+            try:
+                _ = find_java()
+            except RuntimeError:
+                logger.warning(
+                    "Disable java sdk support since java is not installed on coordinator"
+                )
+                config["enable_java_sdk"] = "OFF"
         return config
 
     def _compile_lib_and_distribute(self, compile_func, lib_name, op):

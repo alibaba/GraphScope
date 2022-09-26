@@ -62,6 +62,9 @@ static constexpr const char* OPTION_DIRECTED = "directed";
 static constexpr const char* OPTION_IPC_SOCKET = "ipc_socket";
 static constexpr const char* OPTION_FRAG_IDS = "frag_ids";
 
+static constexpr const char* GRAPHX_PREGEL_TASK = "graphx_pregel";
+static constexpr const char* CONSTRUCT_VERTEX_MAP = "construct_vertex_map";
+
 using ptree = boost::property_tree::ptree;
 void string2ptree(const std::string& params, ptree& pt) {
   std::stringstream ss;
