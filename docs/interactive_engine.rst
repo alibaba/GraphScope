@@ -238,6 +238,7 @@ Currently GIE supports the following Gremlin steps:
     //dedup
     g.V().out().dedup()
     g.V().out().dedup().by("name")
+    g.V().as("a").out().dedup("a")
     g.V().as("a").out().dedup("a").by("name")
 
     //limit
