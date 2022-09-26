@@ -74,12 +74,28 @@ jobs:
           cmake .. && make -j && sudo make install && \
           rm -fr /tmp/cppkafka
 
-    - name: Build GraphScope Store
+    - name: Build GraphScope Store With Column Filter Push Down
       run: |
         source ${HOME}/.bashrc
         export SCCACHE_DIR=~/.cache/sccache
         export RUSTC_WRAPPER=/usr/local/bin/sccache
         sccache --start-server
+        cd ${GITHUB_WORKSPACE}/interactive_engine
+        mvn clean install -P groot,groot-assembly -Drust.compile.mode=debug -DskipTests -Dgroot.compile.feature="maxgraph-ffi/column_filter_push_down" --quiet
+
+        sccache --show-stats
+
+    - name: Gremlin Tests with Column Filter Push Down
+      run: |
+        cd interactive_engine/groot-server
+        mvn test -P gremlin-test
+
+
+    - name: Build GraphScope Store
+      run: |
+        source ${HOME}/.bashrc
+        export SCCACHE_DIR=~/.cache/sccache
+        export RUSTC_WRAPPER=/usr/local/bin/sccache
         cd ${GITHUB_WORKSPACE}/interactive_engine
         mvn clean install -P groot,groot-assembly -Drust.compile.mode=debug -DskipTests --quiet
 

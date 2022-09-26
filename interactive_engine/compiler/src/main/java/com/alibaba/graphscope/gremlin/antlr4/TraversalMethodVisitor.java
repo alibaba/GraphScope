@@ -734,6 +734,23 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
         return graphTraversal.with(optKey, optValue);
     }
 
+    @Override
+    public Traversal visitTraversalMethod_id(GremlinGSParser.TraversalMethod_idContext ctx) {
+        return graphTraversal.id();
+    }
+
+    @Override
+    public Traversal visitTraversalMethod_label(GremlinGSParser.TraversalMethod_labelContext ctx) {
+        return graphTraversal.label();
+    }
+
+    @Override
+    public Traversal visitTraversalMethod_constant(
+            GremlinGSParser.TraversalMethod_constantContext ctx) {
+        return graphTraversal.constant(
+                GenericLiteralVisitor.getInstance().visitGenericLiteral(ctx.genericLiteral()));
+    }
+
     private Traversal visitExpr(
             GremlinGSParser.TraversalMethod_exprContext ctx, ExprStep.Type type) {
         if (ctx.stringLiteral() != null) {

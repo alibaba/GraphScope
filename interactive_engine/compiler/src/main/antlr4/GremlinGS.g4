@@ -83,6 +83,9 @@ traversalMethod
     | traversalMethod_hasNot // hasNot()
     | traversalMethod_coin  // coin()
     | traversalMethod_with  // with()
+    | traversalMethod_id    // id()
+    | traversalMethod_label // label()
+    | traversalMethod_constant  //constant
     ;
 
 traversalSourceSpawnMethod_V
@@ -448,6 +451,18 @@ traversalMethod_subgraph
 
 traversalMethod_bothV
 	: 'bothV' LPAREN RPAREN
+	;
+
+traversalMethod_id
+	: 'id' LPAREN RPAREN
+	;
+
+traversalMethod_label
+	: 'label' LPAREN RPAREN
+	;
+
+traversalMethod_constant
+	: 'constant' LPAREN genericLiteral RPAREN
 	;
 
 // only permit non empty, \'\' or \"\" or \'null\' is meaningless as a parameter

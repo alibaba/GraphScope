@@ -1103,6 +1103,21 @@ public class PositiveEvalTest {
     }
 
     @Test
+    public void g_V_id() {
+        Assert.assertEquals(g.V().id(), eval("g.V().id()"));
+    }
+
+    @Test
+    public void g_V_label() {
+        Assert.assertEquals(g.V().label(), eval("g.V().label()"));
+    }
+
+    @Test
+    public void g_V_constant() {
+        Assert.assertEquals(g.V().constant("marko"), eval("g.V().constant(\"marko\")"));
+    }
+
+    @Test
     public void g_V_has_P_not() {
         Assert.assertEquals(
                 g.V().has("name", P.not(P.eq("marko"))),

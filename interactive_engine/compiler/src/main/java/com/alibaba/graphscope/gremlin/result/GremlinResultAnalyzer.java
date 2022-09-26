@@ -55,7 +55,10 @@ public class GremlinResultAnalyzer {
                     || Utils.equalClass(step, PropertyMapStep.class)
                     || Utils.equalClass(step, TraversalMapStep.class)
                     || Utils.equalClass(step, MatchStep.class)
-                    || Utils.equalClass(step, ExprStep.class)) {
+                    || Utils.equalClass(step, ExprStep.class)
+                    || Utils.equalClass(step, IdStep.class)
+                    || Utils.equalClass(step, LabelStep.class)
+                    || Utils.equalClass(step, ConstantStep.class)) {
                 parserType = GremlinResultParserFactory.PROJECT_VALUE;
             } else if (Utils.equalClass(step, GroupCountStep.class)
                     || Utils.equalClass(step, GroupStep.class)) {
