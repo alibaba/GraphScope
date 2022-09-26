@@ -52,7 +52,7 @@ public class GremlinResultProcessor extends StandardOpProcessor implements Resul
         this.resultParser = resultParser;
         RequestMessage msg = writeResult.getRequestMessage();
         Settings settings = writeResult.getSettings();
-        // init batch size from resultCollectorsBatchSize in conf/gremlin-server.yaml,
+        // init batch size from resultIterationBatchSize in conf/gremlin-server.yaml,
         // or args in RequestMessage which is originate from gremlin client
         this.resultCollectorsBatchSize =
                 (Integer)
