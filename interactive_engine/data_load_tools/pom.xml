@@ -13,7 +13,11 @@
   <artifactId>data_load_tools</artifactId>
 
   <properties>
-      <odps.sdk.public.version>0.36.4-public</odps.sdk.public.version>
+    <odps.sdk.public.version>0.36.4-public</odps.sdk.public.version>
+    <scala.version>2.12.10</scala.version>
+    <scala.binary.version>2.12</scala.binary.version>
+    <spark.version>3.1.1</spark.version>
+    <maven.compiler.release>8</maven.compiler.release>
   </properties>
 
   <dependencies>
@@ -30,12 +34,6 @@
     </dependency>
 
     <dependency>
-        <groupId>com.aliyun.odps</groupId>
-        <artifactId>odps-sdk-core</artifactId>
-        <version>${odps.sdk.public.version}</version>
-    </dependency>
-
-    <dependency>
       <groupId>com.alibaba.maxgraph</groupId>
       <artifactId>sdk</artifactId>
       <exclusions>
@@ -47,16 +45,6 @@
       <version>${project.parent.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-client</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-yarn-client</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
       <groupId>org.rocksdb</groupId>
       <artifactId>rocksdbjni</artifactId>
     </dependency>
@@ -66,40 +54,37 @@
     </dependency>
 
     <dependency>
-      <groupId>com.fasterxml.jackson.module</groupId>
-      <artifactId>jackson-module-scala_2.11</artifactId>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-core_${scala.binary.version}</artifactId>
+      <version>3.1.1</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-sql_${scala.binary.version}</artifactId>
+      <version>3.1.1</version>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
-      <groupId>org.apache.spark</groupId>
-      <artifactId>spark-core_2.11</artifactId>
-      <version>2.3.1</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.spark</groupId>
-      <artifactId>spark-sql_2.11</artifactId>
-      <version>2.3.1</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
-      <version>2.11.12</version>
+      <version>${scala.version}</version>
       <scope>provided</scope>
     </dependency>
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-actors</artifactId>
-      <version>2.11.12</version>
-      <scope>provided</scope>
-    </dependency>
+
     <dependency>
       <groupId>com.aliyun.oss</groupId>
       <artifactId>aliyun-sdk-oss</artifactId>
     </dependency>
-  </dependencies>
 
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.10</version>
+    </dependency>
+
+  </dependencies>
   <build>
     <plugins>
       <plugin>
@@ -109,7 +94,6 @@
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
-          <release>8</release>
         </configuration>
       </plugin>
       <plugin>
@@ -123,11 +107,6 @@
             </goals>
           </execution>
         </executions>
-        <configuration>
-          <args>
-            <arg>-nobootcp</arg>
-          </args>
-        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -140,6 +119,11 @@
               <goal>shade</goal>
             </goals>
             <configuration>
+              <artifactSet>
+                <excludes>
+                  <exclude>org.apache.hadoop:*</exclude>
+                </excludes>
+              </artifactSet>
               <filters>
                 <filter>
                   <artifact>*:*</artifact>
