@@ -68,11 +68,9 @@ public class QueryUtil {
                 String queryName = String.format("BI_QUERY_%d", index);
                 if (index == 1) {
                     queryList.add(new BiQuery1(queryName, queryFilePath, parameterFilePath));
-                }
-                else if (index == 2) {
+                } else if (index == 2) {
                     queryList.add(new BiQuery2(queryName, queryFilePath, parameterFilePath));
-                }
-                else if (index == 8) {
+                } else if (index == 8) {
                     queryList.add(new BiQuery8(queryName, queryFilePath, parameterFilePath));
                 } else if (index == 9) {
                     queryList.add(new BiQuery9(queryName, queryFilePath, parameterFilePath));
@@ -80,8 +78,7 @@ public class QueryUtil {
                     queryList.add(new BiQuery11(queryName, queryFilePath, parameterFilePath));
                 } else if (index == 12) {
                     queryList.add(new BiQuery12(queryName, queryFilePath, parameterFilePath));
-                }
-                else {
+                } else {
                     queryList.add(new CommonQuery(queryName, queryFilePath, parameterFilePath));
                 }
             }
@@ -132,7 +129,7 @@ public class QueryUtil {
 
             if (configuration.getBoolean(enableQuery, false)) {
                 String queryFilePath = String.format("%s/%s", queryDir, queryFileName);
-                String queryName = String.format("CUSTOM_QUERY_%d_WITHOUT_PARAMETER", index);
+                String queryName = String.format("CUSTOM_QUERY_WITHOUT_PARAMETER_%d", index);
 
                 queryList.add(new QueryWithoutParameter(queryName, queryFilePath));
             }

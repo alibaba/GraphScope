@@ -25,8 +25,6 @@ import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class CommonQuery {
@@ -185,7 +183,7 @@ public class CommonQuery {
     }
 
     protected String transformDateTime(String date) {
-        String ddate = date.split("\\.")[0].replace("T"," ");
+        String ddate = date.split("\\.")[0].replace("T", " ");
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         TimeZone gmtTime = TimeZone.getTimeZone("UTC");
         format.setTimeZone(gmtTime);

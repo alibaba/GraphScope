@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 package com.alibaba.graphscope.gaia.common;
-import java.text.SimpleDateFormat;
+
 import java.util.HashMap;
 
 public class BiQuery1 extends CommonQuery {
@@ -24,14 +24,14 @@ public class BiQuery1 extends CommonQuery {
 
     @Override
     String generateGremlinQuery(
-        HashMap<String, String> singleParameter, String gremlinQueryPattern) {
-        singleParameter.put("datetime",  transformDateTime(singleParameter.get("datetime")));
+            HashMap<String, String> singleParameter, String gremlinQueryPattern) {
+        singleParameter.put("datetime", transformDateTime(singleParameter.get("datetime")));
 
         for (String parameter : singleParameter.keySet()) {
             gremlinQueryPattern =
-                gremlinQueryPattern.replace(
-                    getParameterPrefix() + parameter + getParameterPostfix(),
-                    singleParameter.get(parameter));
+                    gremlinQueryPattern.replace(
+                            getParameterPrefix() + parameter + getParameterPostfix(),
+                            singleParameter.get(parameter));
         }
         return gremlinQueryPattern;
     }

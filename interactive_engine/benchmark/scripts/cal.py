@@ -34,7 +34,7 @@ def main(args):
     with open(args.log, "r") as f:
         for line in f.readlines():
             if execute_time_flag in line:
-                query_name_suffix  = line[line.index(query_name_flag) + len(query_name_flag):].split(",")[0]
+                query_name_suffix = line[line.index(query_name_flag) + len(query_name_flag):].split(",")[0]
                 query_name = query_name_suffix[query_name_suffix.index("[") + 1: query_name_suffix.index("]")]
                 exec_time_suffix = line[line.index(execute_time_flag) + len(execute_time_flag):]
                 exec_time = exec_time_suffix[exec_time_suffix.index("[") + 1: exec_time_suffix.index("]")]
