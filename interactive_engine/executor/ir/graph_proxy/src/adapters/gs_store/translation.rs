@@ -72,6 +72,12 @@ impl TryFrom<&Predicate> for StorePredCondition {
             common_pb::Logical::Without => {
                 StorePredCondition::new_predicate(left, StoreOprator::WithOut, right)
             }
+            common_pb::Logical::Startswith => {
+                StorePredCondition::new_predicate(left, StoreOprator::StartWith, right)
+            }
+            common_pb::Logical::Endswith => {
+                StorePredCondition::new_predicate(left, StoreOprator::EndWith, right)
+            }
             _ => {
                 return Err(GraphProxyError::FilterPushDownError(format!(
                     "op {:?} shouldn't appear",
@@ -163,15 +169,17 @@ mod test {
     use super::*;
     use crate::apis::PropKey;
     use crate::utils::expr::eval::Operand;
+
     #[test]
-    fn test_predicates_to_condition() {
-        // test empty Predicates
+    fn test_empty_predicates_to_condition() {
         let pred = &Predicates::Init;
         let cond: Result<Option<Condition>, GraphProxyError> = pred.try_into();
         assert!(cond.is_ok());
         assert_eq!(cond.unwrap(), None);
+    }
 
-        // test SingleItem Predicates
+    #[test]
+    fn test_singleitem_predicates_to_condition() {
         let oprand = Operand::Var { tag: None, prop_key: Some(PropKey::Key(NameOrId::Id(1))) };
         let pred = &Predicates::SingleItem(oprand);
         let target = ConditionBuilder::new()
@@ -181,8 +189,10 @@ mod test {
         assert!(cond.is_ok());
         let cond = cond.unwrap();
         assert_eq!(cond, target);
+    }
 
-        // test Predicates
+    #[test]
+    fn test_single_op_predicates_to_condition() {
         let left = Operand::Var { tag: None, prop_key: Some(PropKey::Key(NameOrId::Id(1))) };
         let right = Operand::Const(Object::Primitive(Primitives::Integer(10)));
         let cmp = common_pb::Logical::Eq;
@@ -201,7 +211,26 @@ mod test {
         let cond = cond.unwrap();
         assert_eq!(cond, target);
 
-        // test not Predicates
+        let left = Operand::Var { tag: None, prop_key: Some(PropKey::Key(NameOrId::Id(1))) };
+        let right = Operand::Const(Object::String("hello world".to_owned()));
+        let cmp = common_pb::Logical::Startswith;
+
+        let pred = &Predicates::Predicate(Predicate { left, cmp, right });
+
+        let target = ConditionBuilder::new()
+            .and(Condition::Pred(StorePredCondition::new_predicate(
+                StoreOperand::PropId(1),
+                StoreOprator::StartWith,
+                StoreOperand::Const(StoreProperty::String("hello world".to_owned())),
+            )))
+            .build();
+        let cond: Result<Option<Condition>, GraphProxyError> = pred.try_into();
+        assert!(cond.is_ok());
+        let cond = cond.unwrap();
+        assert_eq!(cond, target);
+    }
+    #[test]
+    fn test_not_predicates_to_condition() {
         let oprand = Operand::Var { tag: None, prop_key: Some(PropKey::Key(NameOrId::Id(1))) };
         let pred = &Predicates::Not(Box::new(Predicates::SingleItem(oprand)));
         let target = ConditionBuilder::new()
@@ -212,8 +241,10 @@ mod test {
         assert!(cond.is_ok());
         let cond = cond.unwrap();
         assert_eq!(cond, target);
+    }
 
-        // test and Predicates
+    #[test]
+    fn test_and_predicates_to_condition() {
         let left = Operand::Var { tag: None, prop_key: Some(PropKey::Key(NameOrId::Id(1))) };
         let right = Operand::Const(Object::Primitive(Primitives::Integer(10)));
         let cmp = common_pb::Logical::Ge;
@@ -244,8 +275,10 @@ mod test {
         assert!(cond.is_ok());
         let cond = cond.unwrap();
         assert_eq!(cond, target);
+    }
 
-        // test or Predicates
+    #[test]
+    fn test_or_predicates_to_condition() {
         let left = Operand::Var { tag: None, prop_key: Some(PropKey::Key(NameOrId::Id(1))) };
         let right = Operand::Const(Object::Primitive(Primitives::Integer(10)));
         let cmp = common_pb::Logical::Ge;
