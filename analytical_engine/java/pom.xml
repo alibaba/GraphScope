@@ -34,7 +34,7 @@
   </modules>
 
   <properties>
-    <revision>0.16.0</revision>
+    <revision>0.17.0</revision>
     <fastffi.version>0.1.2</fastffi.version>
     <compile-testing.version>0.19</compile-testing.version>
     <cupid.sdk.version>3.3.11</cupid.sdk.version>
