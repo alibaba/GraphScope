@@ -125,7 +125,9 @@ if not os.path.isfile(ANALYTICAL_ENGINE_PATH):
 ANALYTICAL_ENGINE_JAVA_HOME = ANALYTICAL_ENGINE_HOME
 
 ANALYTICAL_ENGINE_JAVA_RUNTIME_JAR = os.path.join(
-    ANALYTICAL_ENGINE_JAVA_HOME, "lib", "grape-runtime-{}.jar".format(__version__)
+    ANALYTICAL_ENGINE_JAVA_HOME,
+    "lib",
+    "grape-runtime-{}-shaded.jar".format(__version__),
 )
 ANALYTICAL_ENGINE_JAVA_INIT_CLASS_PATH = "{}".format(ANALYTICAL_ENGINE_JAVA_RUNTIME_JAR)
 
@@ -161,7 +163,9 @@ LLVM4JNI_HOME = os.environ.get("LLVM4JNI_HOME", None)
 LLVM4JNI_USER_OUT_DIR_BASE = "user-llvm4jni-output"
 PROCESSOR_MAIN_CLASS = "com.alibaba.graphscope.annotation.Main"
 JAVA_CODEGNE_OUTPUT_PREFIX = "gs-ffi"
-GRAPE_PROCESSOR_JAR = glob.glob(GRAPHSCOPE_HOME + "/lib/grape-runtime*.jar")[0]
+GRAPE_PROCESSOR_JAR = os.path.join(
+    GRAPHSCOPE_HOME, "lib", "grape-runtime-{}-shaded.jar".format(__version__)
+)
 
 GIRAPH_DIRVER_CLASS = "com.alibaba.graphscope.app.GiraphComputationAdaptor"
 
