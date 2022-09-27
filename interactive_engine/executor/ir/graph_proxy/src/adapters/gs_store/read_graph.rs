@@ -652,8 +652,7 @@ fn extract_needed_columns(
     filter: Option<&Arc<PEvaluator>>, out_columns: Option<&Vec<PropId>>,
 ) -> GraphProxyResult<Option<Vec<PropId>>> {
     use ahash::HashSet;
-
-    use crate::utils::expr::eval_pred::zip_option_vecs;
+    use super::translation::zip_option_vecs;
 
     // Some(vec[]) means need all props, so can't merge it with props needed in filter
     if let Some(out_columns) = out_columns {

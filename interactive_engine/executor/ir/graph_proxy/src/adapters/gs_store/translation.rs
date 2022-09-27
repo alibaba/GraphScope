@@ -14,6 +14,18 @@ use crate::utils::expr::eval::Operand;
 use crate::utils::expr::eval_pred::{PEvaluator, Predicate, Predicates};
 use crate::{GraphProxyError, GraphProxyResult};
 
+pub(crate) fn zip_option_vecs<T>(left: Option<Vec<T>>, right: Option<Vec<T>>) -> Option<Vec<T>> {
+    match (left, right) {
+        (Some(mut left), Some(mut right)) => {
+            left.append(&mut right);
+            Some(left)
+        }
+        (None, Some(right)) => Some(right),
+        (Some(left), None) => Some(left),
+        (None, None) => None,
+    }
+}
+
 impl Operand {
     /// only get the PropId, else None
     pub(crate) fn get_var_prop_id(&self) -> GraphProxyResult<PropId> {
@@ -40,6 +52,52 @@ impl Operand {
                 prop.map(StoreOperand::Const)
             }
             _ => Err(GraphProxyError::FilterPushDownError(format!("not a var {:?}", self))),
+        }
+    }
+}
+
+impl Predicate {
+    fn extract_prop_ids(&self) -> Option<Vec<PropId>> {
+        let left = self.left.get_var_prop_id();
+        let right = self.right.get_var_prop_id();
+        match (left, right) {
+            (Ok(left), Ok(right)) => Some(vec![left, right]),
+            (Ok(left), _) => Some(vec![left]),
+            (_, Ok(right)) => Some(vec![right]),
+            _ => None,
+        }
+    }
+}
+
+impl Predicates {
+    pub(crate) fn extract_prop_ids(&self) -> Option<Vec<PropId>> {
+        match self {
+            Predicates::Init => None,
+            Predicates::SingleItem(operand) => operand
+                .get_var_prop_id()
+                .map(|id| Some(vec![id]))
+                .unwrap_or(None),
+            Predicates::Predicate(pred) => pred.extract_prop_ids(),
+            Predicates::Not(pred) => pred.extract_prop_ids(),
+            Predicates::And((left, right)) => {
+                let left = left.extract_prop_ids();
+                let right = right.extract_prop_ids();
+                zip_option_vecs(left, right)
+            }
+            Predicates::Or((left, right)) => {
+                let left = left.extract_prop_ids();
+                let right = right.extract_prop_ids();
+                zip_option_vecs(left, right)
+            }
+        }
+    }
+}
+
+impl PEvaluator {
+    pub(crate) fn extract_prop_ids(&self) -> Option<Vec<PropId>> {
+        match self {
+            PEvaluator::Predicates(preds) => preds.extract_prop_ids(),
+            _ => None,
         }
     }
 }
