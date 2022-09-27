@@ -58,6 +58,8 @@ from graphscope.proto import graph_def_pb2
 from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
 
+from gscoordinator.version import __version__
+
 logger = logging.getLogger("graphscope")
 
 RESOURCE_DIR_NAME = "resource"
@@ -122,15 +124,10 @@ if not os.path.isfile(ANALYTICAL_ENGINE_PATH):
 # ANALYTICAL_ENGINE_JAVA_HOME
 ANALYTICAL_ENGINE_JAVA_HOME = ANALYTICAL_ENGINE_HOME
 
-ANALYTICAL_ENGINE_JAVA_RUNTIME_JAR = glob.glob(
-    ANALYTICAL_ENGINE_JAVA_HOME + "/lib/grape-runtime*.jar"
-)[0]
-ANALYTICAL_ENGINE_JAVA_GRAPHX_JAR = glob.glob(
-    ANALYTICAL_ENGINE_JAVA_HOME + "/lib/graphx-on-graphscope*.jar"
-)[0]
-ANALYTICAL_ENGINE_JAVA_INIT_CLASS_PATH = "{}:{}".format(
-    ANALYTICAL_ENGINE_JAVA_RUNTIME_JAR, ANALYTICAL_ENGINE_JAVA_GRAPHX_JAR
+ANALYTICAL_ENGINE_JAVA_RUNTIME_JAR = os.path.join(
+    ANALYTICAL_ENGINE_JAVA_HOME, "lib", "grape-runtime-{}.jar".format(__version__)
 )
+ANALYTICAL_ENGINE_JAVA_INIT_CLASS_PATH = "{}".format(ANALYTICAL_ENGINE_JAVA_RUNTIME_JAR)
 
 ANALYTICAL_ENGINE_JAVA_JVM_OPTS = (
     "-Djava.library.path={}/lib -Djava.class.path={}".format(
