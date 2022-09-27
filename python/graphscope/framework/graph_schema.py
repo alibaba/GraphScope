@@ -387,6 +387,33 @@ class GraphSchema:
             edges.append(entry.to_dict())
         return {"vertices": vertices, "edges": edges}
 
+    def from_dict(self, input: dict):
+        if self._vertex_labels or self._edge_labels:
+            raise RuntimeError("Cannot load schema from dict within a non-empty graph.")
+        try:
+            self.clear()
+            vertices = input["vertices"]
+            edges = input["edges"]
+            for vertex in vertices:
+                label = VertexLabel(vertex["label"])
+                for prop in vertex["properties"]:
+                    label = label.add_property(
+                        prop["name"], prop["type"], prop["is_primary_key"]
+                    )
+                self._vertex_labels_to_add.append(label)
+            for edge in edges:
+                label = EdgeLabel(edge["label"])
+                for prop in edge["properties"]:
+                    label = label.add_property(
+                        prop["name"], prop["type"], prop["is_primary_key"]
+                    )
+                for rel in edge["relations"]:
+                    label = label.source(rel["src_label"]).destination(rel["dst_label"])
+                self._edge_labels_to_add.append(label)
+        except Exception as e:
+            self.clear()
+            raise RuntimeError("Construct schema from dict failed!") from e
+
     @property
     def oid_type(self):
         return self._oid_type

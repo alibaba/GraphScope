@@ -70,7 +70,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <log4j2.version>[2.17.1,)</log4j2.version>
     <hadoop.version>3.2.4</hadoop.version>
-    <grpc.version>1.42.1</grpc.version>
+    <grpc.version>1.34.1</grpc.version>
     <tinkerpop.version>3.5.1</tinkerpop.version>
     <slf4j.version>1.7.21</slf4j.version>
     <groovy.version>2.5.14</groovy.version>
