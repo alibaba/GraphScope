@@ -1116,4 +1116,23 @@ public class PositiveEvalTest {
     public void g_V_constant() {
         Assert.assertEquals(g.V().constant("marko"), eval("g.V().constant(\"marko\")"));
     }
+
+    @Test
+    public void g_V_has_P_not() {
+        Assert.assertEquals(
+                g.V().has("name", P.not(P.eq("marko"))),
+                eval("g.V().has(\"name\", P.not(P.eq(\"marko\")))"));
+    }
+
+    @Test
+    public void g_V_has_P_inside_not() {
+        Assert.assertEquals(
+                g.V().has("age", P.inside(20, 30)), eval("g.V().has(\"age\", P.inside(20, 30))"));
+    }
+
+    @Test
+    public void g_V_has_P_outside_not() {
+        Assert.assertEquals(
+                g.V().has("age", P.outside(20, 30)), eval("g.V().has(\"age\", P.outside(20, 30))"));
+    }
 }
