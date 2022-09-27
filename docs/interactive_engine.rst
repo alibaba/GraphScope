@@ -232,6 +232,19 @@ Currently GIE supports the following Gremlin steps:
     g.V().as('a').out().as('b').where(expr('@a.age <= @b.age'))  //@a.age refers to the "age" property of the "a" entry
     g.V().where(expr('30 within @.a'))  //the "a" property of the head entry has integer array type
 
+    //project with expression (`expr()` syntactic sugar)
+    g.V().select(expr("@.age")) //@.age refers to the "age" property of the head entry
+
+    //bits manipulation in expression
+    g.V().select(expr("1 & 2"))
+    g.V().select(expr("1 | 2"))
+    g.V().select(expr("1 ^ 2"))
+    g.V().select(expr("1 << 2"))
+    g.V().select(expr("1 >> 2"))
+    g.V().where(expr("232 & 64 != 0"))
+    g.V().select(expr("7 ^^ 3")) //exponentiation
+    g.V().select(expr("7 ^^ -3")) //exponentiation
+
     //filter with a sub-query
     g.V().where(out().count().is(gt(4)))
 
