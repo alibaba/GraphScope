@@ -1196,9 +1196,10 @@ import java.util.Map;
         method = "g_EX7X_hasXlabelXknowsX",
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
         reason = "will be supported")
-// @Graph.OptOut(method="g_VX1X_outE_hasXweight_inside_0_06X_inV" ,
-// test="org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest", reason = "will be
-// supported")
+@Graph.OptOut(
+        method = "g_VX1X_outE_hasXweight_inside_0_06X_inV",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+        reason = "will be supported")
 // @Graph.OptOut(method="g_V_valuesXageX_isXgte_29X_isXlt_34X" ,
 // test="org.apache.tinkerpop.gremlin.process.traversal.step.filter.IsTest", reason = "will be
 // supported")

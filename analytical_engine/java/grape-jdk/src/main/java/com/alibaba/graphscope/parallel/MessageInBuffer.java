@@ -56,10 +56,10 @@ public interface MessageInBuffer extends FFIPointer {
             @CXXReference MSG_T msg,
             @FFISkip VDATA_T unused) {
         if (frag.fragmentType().equals(FragmentType.ArrowProjectedFragment)) {
-            getMessageArrowProjected(
+            return getMessageArrowProjected(
                     (ArrowProjectedFragment) frag.getFFIPointer(), vertex, msg, unused);
         } else if (frag.fragmentType().equals(FragmentType.ImmutableEdgecutFragment)) {
-            getMessageImmutable(
+            return getMessageImmutable(
                     (ImmutableEdgecutFragment) frag.getFFIPointer(), vertex, msg, unused);
         }
         return false;

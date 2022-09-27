@@ -353,7 +353,7 @@ GraphScope 支持用户编写Java的PIE app，并且运行在图分析引擎上�
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 我们提供了一些经典图分析算法的示例实现，通过下面展示的例子，你可以尝试在GraphScope的图分析引擎上试着运行他们。首先你需要从下载我们提供的示例app的合集
-`grape-demo.jar <https://github.com/GraphScope/gstest/blob/master/jars/graphscope-demo-0.16.0-shaded.jar>_`，无需任何更改你就可以在
+`grape-demo.jar <https://github.com/GraphScope/gstest/blob/master/jars/grape-demo-0.16.0-shaded.jar>_`，无需任何更改你就可以在
 GraphScope图分析引擎上运行这些示例算法。
 
 然后你需要打开GraphScope的python client，尝试载图并且运行一个简单的bfs的算法。

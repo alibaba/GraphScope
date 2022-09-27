@@ -122,10 +122,10 @@ public class JnaGraphStore implements GraphPartition {
             String chkLocalPath = downloadPath.toString() + "/" + unique_path + "/" + chkName;
 
             storage.downloadData(chkPath, chkLocalPath);
-            File file = new File(chkLocalPath);
-            byte[] chkData = new byte[(int) file.length()];
+            File chkFile = new File(chkLocalPath);
+            byte[] chkData = new byte[(int) chkFile.length()];
             try {
-                FileInputStream fis = new FileInputStream(file);
+                FileInputStream fis = new FileInputStream(chkFile);
                 fis.read(chkData);
                 fis.close();
             } catch (FileNotFoundException e) {
@@ -142,6 +142,9 @@ public class JnaGraphStore implements GraphPartition {
             String sstMD5Value = getFileMD5(sstLocalPath);
             if (!chkMD5Value.equals(sstMD5Value)) {
                 throw new IOException("CheckSum failed for " + sstPath);
+            } else {
+                // The .chk file are now useless
+                chkFile.delete();
             }
         } else if ("hdfs".equals(scheme)) {
             storage.downloadData(sstPath, sstLocalPath);

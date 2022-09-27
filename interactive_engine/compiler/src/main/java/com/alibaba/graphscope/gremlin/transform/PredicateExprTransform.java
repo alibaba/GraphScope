@@ -17,7 +17,7 @@
 package com.alibaba.graphscope.gremlin.transform;
 
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
-import com.alibaba.graphscope.gremlin.antlr4.AnyValue;
+import com.alibaba.graphscope.gremlin.plugin.type.AnyValue;
 
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.tinkerpop.gremlin.process.traversal.*;
@@ -171,15 +171,6 @@ public interface PredicateExprTransform extends Function<Step, String> {
             predicateValue = value.toString();
         }
         return predicateValue;
-    }
-
-    // @a -> ""
-    // @a.name -> @a.name
-    // @.name -> @.name
-    // @ -> ""
-    default String getExprIfPropertyExist(String expr) {
-        String[] splitExprs = expr.split("\\.");
-        return (splitExprs.length == 2) ? expr : "";
     }
 
     default String getPredicateExpr(
