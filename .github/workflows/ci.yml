@@ -203,7 +203,7 @@ jobs:
           ${{ runner.os }}-pip-
 
     - name: Install latest libgrape-lite and vineyard
-      if: false
+      if: true
       run: |
         source ~/.bashrc
 
