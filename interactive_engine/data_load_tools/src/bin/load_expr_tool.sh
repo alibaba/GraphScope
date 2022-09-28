@@ -85,7 +85,7 @@ clean_data() {
 }
 
 download_data() {
-    osscmd=$1
+    ossutil=$1
     download_path=$2
 
     graph_name=`sed '/^unique.name=/!d;s/.*=//' ${artifacts_dir}/config.ini`
@@ -93,22 +93,22 @@ download_data() {
     oss_path_prefix=oss://${oss_bucket_name}/${graph_name}
 
     mkdir -p $download_path/graph_data_bin/partition_0
-    ${osscmd} get ${oss_path_prefix}/graph_data_bin/partition_0/edge_property $download_path/graph_data_bin/partition_0/edge_property
-    ${osscmd} get ${oss_path_prefix}/graph_data_bin/partition_0/graph_struct $download_path/graph_data_bin/partition_0/graph_struct
-    ${osscmd} get ${oss_path_prefix}/graph_data_bin/partition_0/index_data $download_path/graph_data_bin/partition_0/index_data
-    ${osscmd} get ${oss_path_prefix}/graph_data_bin/partition_0/node_property $download_path/graph_data_bin/partition_0/node_property
+    ${ossutil} cp ${oss_path_prefix}/graph_data_bin/partition_0/edge_property $download_path/graph_data_bin/partition_0/edge_property
+    ${ossutil} cp ${oss_path_prefix}/graph_data_bin/partition_0/graph_struct $download_path/graph_data_bin/partition_0/graph_struct
+    ${ossutil} cp ${oss_path_prefix}/graph_data_bin/partition_0/index_data $download_path/graph_data_bin/partition_0/index_data
+    ${ossutil} cp ${oss_path_prefix}/graph_data_bin/partition_0/node_property $download_path/graph_data_bin/partition_0/node_property
 
     mkdir -p $download_path/graph_schema
-    ${osscmd} get ${oss_path_prefix}/graph_schema/schema.json $download_path/graph_schema/schema.json
+    ${ossutil} cp ${oss_path_prefix}/graph_schema/schema.json $download_path/graph_schema/schema.json
 }
 
 if [ "$mode" = "prepare_artifacts" ]
 then
     [ "$#" -ne 2 ] && echo "usage: ./load_expr_tool.sh prepare_artifacts <your odpscmd path>" && exit 1
     prepare_artifacts $2
-elif [ "$mode" = "prepare_table" ]
+elif [ "$mode" = "prepare_tables" ]
 then
-    [ "$#" -ne 3 ] && echo "usage: ./load_expr_tool.sh prepare_table <your odpscmd path> <your local data path>" && exit 1
+    [ "$#" -ne 3 ] && echo "usage: ./load_expr_tool.sh prepare_tables <your odpscmd path> <your csv data path>" && exit 1
     prepare_odps_table $2 $3
 elif [ "$mode" = "build_data" ]
 then
@@ -120,7 +120,7 @@ then
     clean_data $2 $3
 elif [ "$mode" = "get_data" ]
 then
-    [ "$#" -ne 3 ] && echo "usage: ./load_expr_tool.sh get_data <your osscmd path> <your local download path>" && exit 1
+    [ "$#" -ne 3 ] && echo "usage: ./load_expr_tool.sh get_data <your ossutil path> <your local download path>" && exit 1
     download_data $2 $3
 else
     echo "invalid mode"

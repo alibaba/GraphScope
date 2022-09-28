@@ -74,7 +74,7 @@ public class IrWriteGraphReducer extends ReducerBase {
         int type = key.getBigint(1).intValue();
         List<Record> records = new ArrayList<>();
         while (values.hasNext()) {
-            records.add(values.next());
+            records.add(values.next().clone());
         }
         if (type == 0) { // write vertex
             Pointer buffer = LIB.initWriteVertex(records.size());
