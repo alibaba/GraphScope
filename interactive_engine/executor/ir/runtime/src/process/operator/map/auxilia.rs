@@ -88,7 +88,7 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                 }
             }
 
-            for remove_tag in self.remove_tags.iter() {
+            for remove_tag in &self.remove_tags {
                 input.take(Some(remove_tag));
             }
 
