@@ -70,7 +70,7 @@ public class IrDataEncodeMapper extends MapperBase {
                 (new ObjectMapper())
                         .readValue(mappingJson, new TypeReference<ColumnMappingMeta>() {})
                         .init();
-        String outputPrefix = context.getJobConf().get(IrDataBuild.UNIQUE_NAME);
+        String outputPrefix = context.getJobConf().get(IrDataBuild.ENCODE_OUTPUT_TABLE_PREFIX);
         int partitions =
                 Integer.valueOf(context.getJobConf().get(IrDataBuild.ENCODE_OUTPUT_TABLE_NUM));
         int taskId = context.getTaskID().getInstId();
@@ -84,7 +84,7 @@ public class IrDataEncodeMapper extends MapperBase {
         this.edgeData = new IrEdgeData();
 
         this.ossBucketName = context.getJobConf().get(OfflineBuildOdps.OSS_BUCKET_NAME);
-        this.ossObjectPrefix = context.getJobConf().get(IrDataBuild.UNIQUE_NAME);
+        this.ossObjectPrefix = context.getJobConf().get(IrDataBuild.GRAPH_OSS_PATH);
 
         String ossAccessId = context.getJobConf().get(OfflineBuildOdps.OSS_ACCESS_ID);
         String ossAccessKey = context.getJobConf().get(OfflineBuildOdps.OSS_ACCESS_KEY);

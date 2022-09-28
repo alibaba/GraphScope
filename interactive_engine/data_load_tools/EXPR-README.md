@@ -74,8 +74,10 @@ data.build.mode=ENCODE
 encode.output.table.num=1
 # 最后生成的graph数据的partition数量
 write.graph.reducer.num=1
-# 用于标识最后生成的graph数据，format为graph_sf_partitions，i.e bi_sf1_1代表bi数据在sf1大小、分区数量为1下生成的graph数据
-unique.name=bi_sf1_1
+# 作为encode input/output表名的前缀，format为graph_sf，i.e. bi_sf1代表bi数据在sf1大小下生成的encode tables表名前缀
+encode.output.table.prefix=bi_sf1
+# 用于标识最后生成的graph数据，format为graph_sf_partitions，i.e. bi_sf1_1代表bi数据在sf1大小、分区数量为1下生成的graph数据
+write.graph.oss.path=bi_sf1_1
 # 数据的schema文件 (默认配置为ldbc schema)
 column.mapping.meta={...}
 # oss相关配置
