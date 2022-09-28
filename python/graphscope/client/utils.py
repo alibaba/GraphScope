@@ -136,8 +136,9 @@ class GRPCUtils(object):
         return response_head.head
 
 
-def handle_grpc_error(fn):
-    """Decorator to handle grpc error.
+def handle_grpc_error_with_retry(fn, retry=True):
+    """Decorator to handle grpc error. If retry is True, the function will
+    be retried for certain errors, e.g., network unavailable.
 
     This function will retry max times with specific GRPC status.
     See detail in `GRPC_MAX_RETRIES_BY_CODE`.
@@ -156,7 +157,7 @@ def handle_grpc_error(fn):
             except grpc.RpcError as exc:
                 code = exc.code()
                 max_retries = GRPC_MAX_RETRIES_BY_CODE.get(code)
-                if max_retries is None:
+                if not retry or max_retries is None:
                     raise GRPCError(
                         "rpc %s failed: status %s" % (str(fn.__name__), exc)
                     )
@@ -175,6 +176,35 @@ def handle_grpc_error(fn):
                 time.sleep(backoff)
 
     return with_grpc_catch
+
+
+def handle_grpc_error(fn_or_retry):
+    """Decorator to handle grpc error, and accepts an optional arugment to control
+    whether the function should be retried for certain errors.
+
+    This decorator can be used as
+
+    .. code-block:: python
+
+        @handle_grpc_error
+        def fn(..)
+            ...
+
+    or
+
+    .. code-block:: python
+
+        @handle_grpc_error(retry=True)
+        def fn(..)
+            ...
+
+    The argument 'retry' by default is True, to keep consistent with the previous
+    behavior.
+    """
+    if isinstance(fn_or_retry, bool):
+        return functools.partial(handle_grpc_error_with_retry, retry=fn_or_retry)
+    else:
+        return handle_grpc_error_with_retry(fn_or_retry)
 
 
 def suppress_grpc_error(fn):
