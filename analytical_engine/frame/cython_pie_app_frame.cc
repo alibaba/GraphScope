@@ -191,6 +191,7 @@ void* CreateWorker(const std::shared_ptr<void>& fragment,
   void* worker_handler = nullptr;
   __FRAME_CATCH_AND_LOG_GS_ERROR(
       worker_handler, detail::CreateWorker(fragment, comm_spec, spec));
+  return worker_handler;
 }
 
 void DeleteWorker(void* worker_handler) {
