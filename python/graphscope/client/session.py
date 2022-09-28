@@ -354,6 +354,9 @@ class Session(object):
         k8s_mars_worker_mem=gs_config.mars_worker_mem,
         k8s_mars_scheduler_cpu=gs_config.mars_scheduler_cpu,
         k8s_mars_scheduler_mem=gs_config.mars_scheduler_mem,
+        k8s_coordinator_pod_node_selector=gs_config.k8s_coordinator_pod_node_selector,
+        k8s_etcd_pod_node_selector=gs_config.k8s_etcd_pod_node_selector,
+        k8s_engine_pod_node_selector=gs_config.k8s_engine_pod_node_selector,
         k8s_volumes=gs_config.k8s_volumes,
         k8s_waiting_for_delete=gs_config.k8s_waiting_for_delete,
         timeout_seconds=gs_config.timeout_seconds,
@@ -449,6 +452,18 @@ class Session(object):
 
             k8s_mars_scheduler_mem (str, optional):
                 Minimum number of memory request for mars scheduler container. Defaults to '2Gi'.
+
+            k8s_coordinator_pod_node_selector (dict, optional):
+                Node selector to the coordinator pod on k8s. Default is None.
+                See also: https://tinyurl.com/3nx6k7ph
+
+            k8s_etcd_pod_node_selector (dict, optional):
+                Node selector to the etcd pod on k8s. Default is None.
+                See also: https://tinyurl.com/3nx6k7ph
+
+            k8s_engine_pod_node_selector = None
+                Node selector to the engine pod on k8s. Default is None.
+                See also: https://tinyurl.com/3nx6k7ph
 
             with_mars (bool, optional):
                 Launch graphscope with mars. Defaults to False.
@@ -590,6 +605,9 @@ class Session(object):
             "k8s_mars_worker_mem",
             "k8s_mars_scheduler_cpu",
             "k8s_mars_scheduler_mem",
+            "k8s_coordinator_pod_node_selector",
+            "k8s_etcd_pod_node_selector",
+            "k8s_engine_pod_node_selector",
             "with_mars",
             "reconnect",
             "k8s_volumes",
@@ -713,6 +731,7 @@ class Session(object):
         )
         self._heartbeat_sending_thread.daemon = True
         self._heartbeat_sending_thread.start()
+        self._heartbeat_maximum_failures = 3
 
         # networkx module
         self._nx = None
@@ -794,14 +813,26 @@ class Session(object):
         return self._config_params["mode"] == "eager"
 
     def _send_heartbeat(self):
+        # >1: failure, 0: reset when success
+        heartbeat_failure_count = 0
         while not self._closed:
             if self._grpc_client:
                 try:
                     self._grpc_client.send_heartbeat()
                 except Exception as exc:
-                    logger.warning(exc)
+                    if heartbeat_failure_count == 0:
+                        logger.warning(exc)
+                    heartbeat_failure_count = heartbeat_failure_count + 1
+                    if heartbeat_failure_count > self._heartbeat_maximum_failures:
+                        logger.error(
+                            "The connection between coordinator has lost after %d times "
+                            "of heartbeat failure, closing the session ...",
+                            heartbeat_failure_count,
+                        )
+                        self.close()
                     self._disconnected = True
                 else:
+                    heartbeat_failure_count = 0
                     self._disconnected = False
             time.sleep(self._heartbeat_interval_seconds)
 
@@ -826,7 +857,7 @@ class Session(object):
         else:
             self._close()
 
-    def _close(self):
+    def _close(self):  # noqa: C901
         if self._closed:
             return
         self._closed = True
@@ -835,9 +866,12 @@ class Session(object):
         self._deregister_default()
 
         if self._heartbeat_sending_thread:
-            self._heartbeat_sending_thread.join(
-                timeout=self._heartbeat_interval_seconds
-            )
+            try:
+                self._heartbeat_sending_thread.join(
+                    timeout=self._heartbeat_interval_seconds
+                )
+            except RuntimeError:  # ignore the "cannot join current thread" error
+                pass
             self._heartbeat_sending_thread = None
 
         self._disconnected = True
