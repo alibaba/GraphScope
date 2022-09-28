@@ -16,6 +16,8 @@
 #ifndef ANALYTICAL_ENGINE_CORE_ERROR_H_
 #define ANALYTICAL_ENGINE_CORE_ERROR_H_
 
+#include <string>
+
 #include "vineyard/graph/utils/error.h"  // IWYU pragma: export
 
 #include "graphscope/proto/error_codes.pb.h"  // IWYU pragma: export
@@ -36,6 +38,93 @@ inline rpc::Code ErrorCodeToProto(vineyard::ErrorCode ec) {
     return rpc::Code::ANALYTICAL_ENGINE_INTERNAL_ERROR;
   }
 }
+
+#ifndef __FRAME_MAKE_GS_ERROR
+#define __FRAME_MAKE_GS_ERROR(var, code, msg)                               \
+  do {                                                                      \
+    std::stringstream TOKENPASTE2(_ss, __LINE__);                           \
+    vineyard::backtrace_info::backtrace(TOKENPASTE2(_ss, __LINE__), true);  \
+    LOG(ERROR) << "graphscope error in frame: code = "                      \
+               << static_cast<int>(code) << " at "                          \
+               << (std::string(__FILE__) + ":" + std::to_string(__LINE__) + \
+                   ": " + std::string(__FUNCTION__))                        \
+               << " -> " << (msg)                                           \
+               << ", backtrace: " << TOKENPASTE2(_ss, __LINE__).str();      \
+    var = ::boost::leaf::new_error(vineyard::GSError(                       \
+        (code),                                                             \
+        std::string(__FILE__) + ":" + std::to_string(__LINE__) + ": " +     \
+            std::string(__FUNCTION__) + " -> " + (msg),                     \
+        TOKENPASTE2(_ss, __LINE__).str()));                                 \
+  } while (0)
+#endif
+
+#ifndef __FRAME_LOG_GS_ERROR
+#define __FRAME_LOG_GS_ERROR(code, msg)                                     \
+  do {                                                                      \
+    std::stringstream TOKENPASTE2(_ss, __LINE__);                           \
+    vineyard::backtrace_info::backtrace(TOKENPASTE2(_ss, __LINE__), true);  \
+    LOG(ERROR) << "graphscope error in frame: code = "                      \
+               << static_cast<int>(code) << " at "                          \
+               << (std::string(__FILE__) + ":" + std::to_string(__LINE__) + \
+                   ": " + std::string(__FUNCTION__))                        \
+               << " -> " << (msg)                                           \
+               << ", backtrace: " << TOKENPASTE2(_ss, __LINE__).str();      \
+  } while (0)
+#endif
+
+#ifndef __FRAME_CATCH_AND_ASSIGN_GS_ERROR
+#if defined(NDEBUG)
+#define __FRAME_CATCH_AND_ASSIGN_GS_ERROR(var, expr)                           \
+  do {                                                                         \
+    try {                                                                      \
+      var = expr;                                                              \
+    } catch (std::exception & ex) {                                            \
+      __FRAME_MAKE_GS_ERROR(var, vineyard::ErrorCode::kIllegalStateError,      \
+                            ex.what());                                        \
+    } catch (std::string & ex) {                                               \
+      __FRAME_MAKE_GS_ERROR(var, vineyard::ErrorCode::kIllegalStateError, ex); \
+    } catch (...) {                                                            \
+      std::exception_ptr p = std::current_exception();                         \
+      __FRAME_MAKE_GS_ERROR(                                                   \
+          var, vineyard::ErrorCode::kIllegalStateError,                        \
+          std::string("Unknown error occurred: ") +                            \
+              (p ? p.__cxa_exception_type()->name() : "null"));                \
+    }                                                                          \
+  } while (0)
+#else
+#define __FRAME_CATCH_AND_ASSIGN_GS_ERROR(var, expr) \
+  do {                                               \
+    var = expr;                                      \
+  } while (0)
+#endif
+#endif
+
+#ifndef __FRAME_CATCH_AND_LOG_GS_ERROR
+#if defined(NDEBUG)
+#define __FRAME_CATCH_AND_LOG_GS_ERROR(var, expr)                        \
+  do {                                                                   \
+    try {                                                                \
+      var = expr;                                                        \
+    } catch (std::exception & ex) {                                      \
+      __FRAME_LOG_GS_ERROR(vineyard::ErrorCode::kIllegalStateError,      \
+                           ex.what());                                   \
+    } catch (std::string & ex) {                                         \
+      __FRAME_LOG_GS_ERROR(vineyard::ErrorCode::kIllegalStateError, ex); \
+    } catch (...) {                                                      \
+      std::exception_ptr p = std::current_exception();                   \
+      __FRAME_LOG_GS_ERROR(                                              \
+          vineyard::ErrorCode::kIllegalStateError,                       \
+          std::string("Unknown error occurred: ") +                      \
+              (p ? p.__cxa_exception_type()->name() : "null"));          \
+    }                                                                    \
+  } while (0)
+#else
+#define __FRAME_CATCH_AND_LOG_GS_ERROR(var, expr) \
+  do {                                            \
+    var = expr;                                   \
+  } while (0)
+#endif
+#endif
 
 }  // namespace gs
 
