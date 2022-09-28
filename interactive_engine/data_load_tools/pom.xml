@@ -191,20 +191,6 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>${maven.surefire.version}</version>
-        <configuration>
-          <argLine>
-            -Djna.library.path=${project.basedir}/../executor/store/target/release
-          </argLine>
-          <excludes>
-            <exclude>**/IrGremlinTest.java</exclude>
-            <exclude>**/IrLdbcTest.java</exclude>
-          </excludes>
-        </configuration>
-      </plugin>
     </plugins>
   </build>
 </project>
