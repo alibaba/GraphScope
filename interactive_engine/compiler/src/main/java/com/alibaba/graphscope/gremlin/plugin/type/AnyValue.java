@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.gremlin.antlr4;
+package com.alibaba.graphscope.gremlin.plugin.type;
 
 public class AnyValue {
     public static AnyValue INSTANCE = new AnyValue();

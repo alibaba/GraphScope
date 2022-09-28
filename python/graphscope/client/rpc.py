@@ -95,10 +95,7 @@ class GRPCClient(object):
         return str(self)
 
     def run(self, dag_def):
-        runstep_requests = self._grpc_utils.generate_runstep_requests(
-            self._session_id, dag_def
-        )
-        return self._run_step_impl(runstep_requests)
+        return self._run_step_impl(dag_def)
 
     def fetch_logs(self):
         if self._logs_fetching_thread is None:
@@ -178,8 +175,13 @@ class GRPCClient(object):
         response = self._stub.CloseSession(request)
         return response
 
-    @handle_grpc_error
-    def _run_step_impl(self, runstep_requests):
+    @handle_grpc_error(False)  # don't retry the "RunStep" request.
+    def _run_step_impl(self, dag_def):
+        # note that the "_impl" may be retried, thus the argument cannot be a
+        # generator or an iterator.
+        runstep_requests = self._grpc_utils.generate_runstep_requests(
+            self._session_id, dag_def
+        )
         response = self._grpc_utils.parse_runstep_responses(
             self._stub.RunStep(runstep_requests)
         )

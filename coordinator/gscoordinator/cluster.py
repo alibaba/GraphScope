@@ -184,6 +184,8 @@ class KubernetesClusterLauncher(Launcher):
         mars_worker_mem=None,
         mars_scheduler_cpu=None,
         mars_scheduler_mem=None,
+        etcd_pod_node_selector=None,
+        engine_pod_node_selector=None,
         with_mars=False,
         image_pull_policy=None,
         image_pull_secrets=None,
@@ -236,7 +238,18 @@ class KubernetesClusterLauncher(Launcher):
         else:
             self._image_pull_secrets = []
 
-        self._volumes = json.loads(volumes)
+        if volumes:
+            self._volumes = json.loads(volumes)
+        else:
+            self._volumes = dict()
+        if etcd_pod_node_selector:
+            self._etcd_pod_node_selector = json.loads(etcd_pod_node_selector)
+        else:
+            self._etcd_pod_node_selector = dict()
+        if engine_pod_node_selector:
+            self._engine_pod_node_selector = json.loads(engine_pod_node_selector)
+        else:
+            self._engine_pod_node_selector = dict()
 
         self._host0 = None
         self._pod_name_list = None
@@ -546,6 +559,8 @@ class KubernetesClusterLauncher(Launcher):
             num_workers=self._num_workers,
             image_pull_policy=self._saved_locals["image_pull_policy"],
         )
+        if self._engine_pod_node_selector:
+            engine_builder.add_engine_pod_node_selector(self._engine_pod_node_selector)
         # volume1 is for vineyard ipc socket
         # MaxGraph: /home/maxgraph/data/vineyard
         if self._exists_vineyard_daemonset(self._saved_locals["vineyard_daemonset"]):
