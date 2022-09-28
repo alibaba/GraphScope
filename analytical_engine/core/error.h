@@ -16,6 +16,10 @@
 #ifndef ANALYTICAL_ENGINE_CORE_ERROR_H_
 #define ANALYTICAL_ENGINE_CORE_ERROR_H_
 
+#if !(defined(__GLIBCXX__) || defined(__GLIBCPP__))
+#include <cxxabi.h>
+#endif
+
 #include <string>
 
 #include "vineyard/graph/utils/error.h"  // IWYU pragma: export
@@ -72,6 +76,23 @@ inline rpc::Code ErrorCodeToProto(vineyard::ErrorCode ec) {
   } while (0)
 #endif
 
+#ifndef __FRAME_CURRENT_EXCEPTION_TYPENAME
+#if defined(__GLIBCXX__) || defined(__GLIBCPP__)
+#define __FRAME_CURRENT_EXCEPTION_TYPENAME(var)                 \
+  do {                                                          \
+    std::exception_ptr __p = std::current_exception();          \
+    var = p ? p.__cxa_exception_type()->name() : "unknow type"; \
+  } while (0)
+#else
+#define __FRAME_CURRENT_EXCEPTION_TYPENAME(var)                               \
+  do {                                                                        \
+    int __status = 0;                                                         \
+    var = abi::__cxa_demangle(abi::__cxa_current_exception_type()->name(), 0, \
+                              0, &__status);                                  \
+  } while (0)
+#endif
+#endif
+
 #ifndef __FRAME_CATCH_AND_ASSIGN_GS_ERROR
 #if defined(NDEBUG)
 #define __FRAME_CATCH_AND_ASSIGN_GS_ERROR(var, expr)                           \
@@ -84,11 +105,11 @@ inline rpc::Code ErrorCodeToProto(vineyard::ErrorCode ec) {
     } catch (std::string & ex) {                                               \
       __FRAME_MAKE_GS_ERROR(var, vineyard::ErrorCode::kIllegalStateError, ex); \
     } catch (...) {                                                            \
-      std::exception_ptr p = std::current_exception();                         \
+      std::string __exception_type;                                            \
+      __FRAME_CURRENT_EXCEPTION_TYPENAME(__exception_type);                    \
       __FRAME_MAKE_GS_ERROR(                                                   \
           var, vineyard::ErrorCode::kIllegalStateError,                        \
-          std::string("Unknown error occurred: ") +                            \
-              (p ? p.__cxa_exception_type()->name() : "null"));                \
+          std::string("Unknown error occurred: ") + __exception_type);         \
     }                                                                          \
   } while (0)
 #else
@@ -111,11 +132,11 @@ inline rpc::Code ErrorCodeToProto(vineyard::ErrorCode ec) {
     } catch (std::string & ex) {                                         \
       __FRAME_LOG_GS_ERROR(vineyard::ErrorCode::kIllegalStateError, ex); \
     } catch (...) {                                                      \
-      std::exception_ptr p = std::current_exception();                   \
+      std::string __exception_type;                                      \
+      __FRAME_CURRENT_EXCEPTION_TYPENAME(__exception_type);              \
       __FRAME_LOG_GS_ERROR(                                              \
           vineyard::ErrorCode::kIllegalStateError,                       \
-          std::string("Unknown error occurred: ") +                      \
-              (p ? p.__cxa_exception_type()->name() : "null"));          \
+          std::string("Unknown error occurred: ") + __exception_type);   \
     }                                                                    \
   } while (0)
 #else
