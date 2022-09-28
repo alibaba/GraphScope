@@ -654,7 +654,7 @@ class CoordinatorServiceServicer(
                 responses[0].head.results.extend(head.head.results)
                 responses.extend(bodies)
             except grpc.RpcError as exc:
-                # Not raised by graphscope, maybe socket closed, etc
+                # Not raised by graphscope, maybe socket closed, etc.
                 context.set_code(exc.code())
                 context.set_details(exc.details())
                 for response in responses:
