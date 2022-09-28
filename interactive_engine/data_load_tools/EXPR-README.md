@@ -3,6 +3,7 @@
 ## Prerequisite
 ### csv数据
 - 本地数据目录：
+```
 ./ldbc_bi_sf1_raw
 ├── comment_0_0.csv
 ├── comment_hascreator_person_0_0.csv
@@ -35,6 +36,7 @@
 ├── tag_hastype_tagclass_0_0.csv
 ├── tagclass_0_0.csv
 └── tagclass_issubclassof_tagclass_0_0.csv
+```
 
 - 每个csv的文件格式为标准的ldbc格式
 
@@ -44,7 +46,11 @@
 
 ## Getting Started
 ### 准备artifacts
-该过程会基于当前代码分支准备执行数据编译所需的artifacts: data_load.jar, graph_store.so, config.ini; 默认本地存放路径为/tmp/artifacts
+该过程会基于当前代码分支准备执行数据编译所需的artifacts（默认本地存放路径为/tmp/artifacts）： 
+- data_load.jar
+- graph_store.so
+- config.ini
+
 ```bash
 cd GraphScope/interactive_engine/data_load_tools/src/bin
 ./load_expr_tool.sh prepare_artifacts <your odpscmd path>
