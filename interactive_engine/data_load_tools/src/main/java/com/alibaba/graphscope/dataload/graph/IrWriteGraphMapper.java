@@ -41,19 +41,19 @@ public class IrWriteGraphMapper extends MapperBase {
             IrVertexData vertexData = new IrVertexData();
             vertexData.readRecord(record);
             this.key.setBigint(0, vertexData.id);
-            this.key.setBigint(1, 0l); // 0 -> vertex type
+            this.key.setBigint(1, 0L); // 0 -> vertex type
             context.write(this.key, record);
         } else { // edge
             IrEdgeData edgeData = new IrEdgeData();
             edgeData.readRecord(record);
             // write edges according to src vertex
             this.key.setBigint(0, edgeData.srcVertexId);
-            this.key.setBigint(1, 1l); // 1 -> edge type
+            this.key.setBigint(1, 1L); // 1 -> edge type
             context.write(this.key, record);
             if (!isSrcDstSamePartition(edgeData)) {
                 // write edges according to dst vertex
                 this.key.setBigint(0, edgeData.dstVertexId);
-                this.key.setBigint(1, 1l); // 1 -> edge type
+                this.key.setBigint(1, 1L); // 1 -> edge type
                 context.write(this.key, record);
             }
         }

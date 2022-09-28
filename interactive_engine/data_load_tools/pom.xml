@@ -89,6 +89,11 @@
       <artifactId>jna</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
+
   </dependencies>
   <build>
     <plugins>

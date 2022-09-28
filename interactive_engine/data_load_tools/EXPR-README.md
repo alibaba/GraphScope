@@ -78,6 +78,7 @@ write.graph.reducer.num=1
 unique.name=bi_sf1_1
 # 数据的schema文件 (默认配置为ldbc schema)
 column.mapping.meta={...}
+# oss相关配置
 ```
 ### 创建odps tables并load数据
 该过程会创建odps编译所需的input tables，并将本地csv数据上传并导入到input tables中，作为ENCODE过程的输入数据；此外也会创建output tables，用于存放ENCODE输出的vertex/edge的结构数据；

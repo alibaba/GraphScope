@@ -1,7 +1,7 @@
 #!/bin/bash
 
 mode=$1
-cur_dir=$(cd `dirname $0`; pwd)
+cur_dir=$(cd $(dirname $0); pwd)
 artifacts_dir=/tmp/artifacts
 build_lib_image=registry.cn-hongkong.aliyuncs.com/graphscope/lib-graph-store
 
@@ -13,7 +13,7 @@ prepare_artifacts() {
     cd ${cur_dir}/../../.. && mvn clean package -DskipTests -Pjava-release
     # run in docker to generate .so which can match with the odps runtime env
     echo "start to compile graph_store library ..............."
-    docker run -v `cd ${cur_dir}/../../../.. && pwd`:/home/GraphScope -it ${build_lib_image}:latest sh -c "source ~/.bashrc && cd /home/GraphScope/interactive_engine/executor/store/exp_store && cargo build --release"
+    docker run -v $(cd ${cur_dir}/../../../.. && pwd):/home/GraphScope -it ${build_lib_image}:latest sh -c "source ~/.bashrc && cd /home/GraphScope/interactive_engine/executor/store/exp_store && cargo build --release"
     cp ${cur_dir}/../../target/data_load_tools-0.0.1-SNAPSHOT.jar ${artifacts_dir}/
     cp ${cur_dir}/../../../executor/store/target/release/libgraph_store.so ${artifacts_dir}/
     cp ${cur_dir}/../conf/config.ini ${artifacts_dir}/
@@ -26,8 +26,8 @@ prepare_artifacts() {
 prepare_odps_table() {
     odps=$1
     local_path=$2
-    graph_name=`sed '/^unique.name=/!d;s/.*=//' ${artifacts_dir}/config.ini`
-    skip_header=`sed '/^skip.header=/!d;s/.*=//' ${artifacts_dir}/config.ini`
+    graph_name=$(sed '/^unique.name=/!d;s/.*=//' ${artifacts_dir}/config.ini)
+    skip_header=$(sed '/^skip.header=/!d;s/.*=//' ${artifacts_dir}/config.ini)
 
     echo "start to load data into odps tables ..............."
     for file in ${local_path}/*
@@ -40,8 +40,8 @@ prepare_odps_table() {
     done
 
     echo "start to create output tables for data encoding ..............."
-    num=`sed '/^encode.output.table.num=/!d;s/.*=//' ${artifacts_dir}/config.ini`
-    for i in `seq 0 $((num-1))`
+    num=$(sed '/^encode.output.table.num=/!d;s/.*=//' ${artifacts_dir}/config.ini)
+    for i in $(seq 0 $((num-1)))
     do
         vertex_table=${graph_name}_encode_vertex_$i
         edge_table=${graph_name}_encode_edge_$i
@@ -60,7 +60,7 @@ build_data() {
 clean_data() {
     odps=$1
     local_path=$2
-    graph_name=`sed '/^unique.name=/!d;s/.*=//' ${artifacts_dir}/config.ini`
+    graph_name=$(sed '/^unique.name=/!d;s/.*=//' ${artifacts_dir}/config.ini)
 
     echo "start to clean odps tables ..............."
     for file in ${local_path}/*
@@ -72,8 +72,8 @@ clean_data() {
     done
 
     echo "start to clean encoding output tables ..............."
-    num=`sed '/^encode.output.table.num=/!d;s/.*=//' ${artifacts_dir}/config.ini`
-    for i in `seq 0 $((num-1))`
+    num=$(sed '/^encode.output.table.num=/!d;s/.*=//' ${artifacts_dir}/config.ini)
+    for i in $(seq 0 $((num-1)))
     do
         vertex_table=${graph_name}_encode_vertex_$i
         edge_table=${graph_name}_encode_edge_$i
@@ -88,8 +88,8 @@ download_data() {
     ossutil=$1
     download_path=$2
 
-    graph_name=`sed '/^unique.name=/!d;s/.*=//' ${artifacts_dir}/config.ini`
-    oss_bucket_name=`sed '/^oss.bucket.name=/!d;s/.*=//' ${artifacts_dir}/config.ini`
+    graph_name=$(sed '/^unique.name=/!d;s/.*=//' ${artifacts_dir}/config.ini)
+    oss_bucket_name=$(sed '/^oss.bucket.name=/!d;s/.*=//' ${artifacts_dir}/config.ini)
     oss_path_prefix=oss://${oss_bucket_name}/${graph_name}
 
     mkdir -p $download_path/graph_data_bin/partition_0
