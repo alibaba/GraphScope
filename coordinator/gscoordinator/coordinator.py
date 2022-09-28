@@ -356,6 +356,10 @@ class CoordinatorServiceServicer(
 
         # analytical engine
         request = message_pb2.HeartBeatRequest()
+        if self._analytical_engine_stub is None:
+            raise RuntimeError(
+                "Analytical engine is not launched or has already been terminated."
+            )
         return self._analytical_engine_stub.HeartBeat(request)
 
     HeartBeatWrapped = catch_unknown_errors(message_pb2.HeartBeatResponse())(_HeartBeat)
