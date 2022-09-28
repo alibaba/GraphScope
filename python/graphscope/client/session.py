@@ -354,6 +354,9 @@ class Session(object):
         k8s_mars_worker_mem=gs_config.mars_worker_mem,
         k8s_mars_scheduler_cpu=gs_config.mars_scheduler_cpu,
         k8s_mars_scheduler_mem=gs_config.mars_scheduler_mem,
+        k8s_coordinator_pod_node_selector=gs_config.k8s_coordinator_pod_node_selector,
+        k8s_etcd_pod_node_selector=gs_config.k8s_etcd_pod_node_selector,
+        k8s_engine_pod_node_selector=gs_config.k8s_engine_pod_node_selector,
         k8s_volumes=gs_config.k8s_volumes,
         k8s_waiting_for_delete=gs_config.k8s_waiting_for_delete,
         timeout_seconds=gs_config.timeout_seconds,
@@ -449,6 +452,18 @@ class Session(object):
 
             k8s_mars_scheduler_mem (str, optional):
                 Minimum number of memory request for mars scheduler container. Defaults to '2Gi'.
+
+            k8s_coordinator_pod_node_selector (dict, optional):
+                Node selector to the coordinator pod on k8s. Default is None.
+                See also: https://tinyurl.com/3nx6k7ph
+
+            k8s_etcd_pod_node_selector (dict, optional):
+                Node selector to the etcd pod on k8s. Default is None.
+                See also: https://tinyurl.com/3nx6k7ph
+
+            k8s_engine_pod_node_selector = None
+                Node selector to the engine pod on k8s. Default is None.
+                See also: https://tinyurl.com/3nx6k7ph
 
             with_mars (bool, optional):
                 Launch graphscope with mars. Defaults to False.
@@ -590,6 +605,9 @@ class Session(object):
             "k8s_mars_worker_mem",
             "k8s_mars_scheduler_cpu",
             "k8s_mars_scheduler_mem",
+            "k8s_coordinator_pod_node_selector",
+            "k8s_etcd_pod_node_selector",
+            "k8s_engine_pod_node_selector",
             "with_mars",
             "reconnect",
             "k8s_volumes",
