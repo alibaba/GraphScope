@@ -731,6 +731,7 @@ class Session(object):
         )
         self._heartbeat_sending_thread.daemon = True
         self._heartbeat_sending_thread.start()
+        self._heartbeat_maximum_failures = 3
 
         # networkx module
         self._nx = None
@@ -812,14 +813,26 @@ class Session(object):
         return self._config_params["mode"] == "eager"
 
     def _send_heartbeat(self):
+        # >1: failure, 0: reset when success
+        heartbeat_failure_count = 0
         while not self._closed:
             if self._grpc_client:
                 try:
                     self._grpc_client.send_heartbeat()
                 except Exception as exc:
-                    logger.warning(exc)
+                    if heartbeat_failure_count == 0:
+                        logger.warning(exc)
+                    heartbeat_failure_count = heartbeat_failure_count + 1
+                    if heartbeat_failure_count > self._heartbeat_maximum_failures:
+                        logger.error(
+                            "The connection between coordinator has lost after %d times "
+                            "of heartbeat failure, closing the session ...",
+                            heartbeat_failure_count,
+                        )
+                        self.close()
                     self._disconnected = True
                 else:
+                    heartbeat_failure_count = 0
                     self._disconnected = False
             time.sleep(self._heartbeat_interval_seconds)
 
@@ -844,7 +857,7 @@ class Session(object):
         else:
             self._close()
 
-    def _close(self):
+    def _close(self):  # noqa: C901
         if self._closed:
             return
         self._closed = True
@@ -853,9 +866,12 @@ class Session(object):
         self._deregister_default()
 
         if self._heartbeat_sending_thread:
-            self._heartbeat_sending_thread.join(
-                timeout=self._heartbeat_interval_seconds
-            )
+            try:
+                self._heartbeat_sending_thread.join(
+                    timeout=self._heartbeat_interval_seconds
+                )
+            except RuntimeError:  # ignore the "cannot join current thread" error
+                pass
             self._heartbeat_sending_thread = None
 
         self._disconnected = True
