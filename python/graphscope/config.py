@@ -75,6 +75,11 @@ class GSConfig(object):
     mars_scheduler_cpu = 0.2
     mars_scheduler_mem = "2Mi"
 
+    # the node selector can be a dict, see also: https://tinyurl.com/3nx6k7ph
+    k8s_coordinator_pod_node_selector = None
+    k8s_etcd_pod_node_selector = None
+    k8s_engine_pod_node_selector = None
+
     # launch graphscope with mars
     with_mars = False
 
