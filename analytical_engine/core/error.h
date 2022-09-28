@@ -78,10 +78,10 @@ inline rpc::Code ErrorCodeToProto(vineyard::ErrorCode ec) {
 
 #ifndef __FRAME_CURRENT_EXCEPTION_TYPENAME
 #if defined(__GLIBCXX__) || defined(__GLIBCPP__)
-#define __FRAME_CURRENT_EXCEPTION_TYPENAME(var)                 \
-  do {                                                          \
-    std::exception_ptr __p = std::current_exception();          \
-    var = p ? p.__cxa_exception_type()->name() : "unknow type"; \
+#define __FRAME_CURRENT_EXCEPTION_TYPENAME(var)                     \
+  do {                                                              \
+    std::exception_ptr __p = std::current_exception();              \
+    var = __p ? __p.__cxa_exception_type()->name() : "unknow type"; \
   } while (0)
 #else
 #define __FRAME_CURRENT_EXCEPTION_TYPENAME(var)                               \
