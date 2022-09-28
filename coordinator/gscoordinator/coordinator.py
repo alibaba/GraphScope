@@ -1622,6 +1622,18 @@ def parse_sys_args():
         help="Memory of Mars scheduler container, default: 2Gi",
     )
     parser.add_argument(
+        "--k8s_etcd_pod_node_selector",
+        type=str,
+        default="",
+        help="Node selector for etcd pods, default is None",
+    )
+    parser.add_argument(
+        "--k8s_engine_pod_node_selector",
+        type=str,
+        default="",
+        help="Node selector for engine pods, default is None",
+    )
+    parser.add_argument(
         "--k8s_volumes",
         type=str,
         default="{}",
@@ -1713,6 +1725,8 @@ def launch_graphscope():
             mars_worker_mem=args.k8s_mars_worker_mem,
             mars_scheduler_cpu=args.k8s_mars_scheduler_cpu,
             mars_scheduler_mem=args.k8s_mars_scheduler_mem,
+            etcd_pod_node_selector=args.k8s_etcd_pod_node_selector,
+            engine_pod_node_selector=args.k8s_engine_pod_node_selector,
             with_mars=args.k8s_with_mars,
             image_pull_policy=args.k8s_image_pull_policy,
             image_pull_secrets=args.k8s_image_pull_secrets,
