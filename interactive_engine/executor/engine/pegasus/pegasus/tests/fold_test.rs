@@ -225,3 +225,30 @@ fn fold_partition_test() {
     assert_eq!(count, 2);
     assert_eq!(partition_result, vec![10, 16])
 }
+
+#[test]
+fn order_count_test() {
+    let mut conf = JobConf::new("order_count_test");
+    conf.set_workers(2);
+    let num = 10;
+    let mut result = pegasus::run(conf, || {
+        let index = pegasus::get_current_worker().index;
+        move |input, output| {
+            if index == 0 { input.input_from(0..num) } else { input.input_from(0..0) }?
+                .sort_by(move |a, b| a.cmp(b))?
+                .count()?
+                .sink_into(output)
+        }
+    })
+    .expect("submit job failure:");
+
+    let mut result_num = 0;
+    let mut count = 0;
+    while let Some(Ok(d)) = result.next() {
+        count += d;
+        result_num += 1;
+    }
+
+    assert_eq!(10, count);
+    assert_eq!(1, result_num);
+}

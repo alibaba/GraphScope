@@ -362,6 +362,7 @@ public class StoreService implements MetricsAgent {
         String dataRoot = StoreConfig.STORE_DATA_PATH.get(configs);
         Path downloadPath = Paths.get(dataRoot, "download");
         try {
+            logger.info("Clearing directory {}", downloadPath);
             FileUtils.forceDelete(downloadPath.toFile());
         } catch (FileNotFoundException fnfe) {
             // Ignore
@@ -372,16 +373,17 @@ public class StoreService implements MetricsAgent {
 
     public void garbageCollect(long snapshotId, CompletionCallback<Void> callback) {
         if (!enableGc) {
-            callback.onError(new MaxGraphException("store gc not enabled"));
+            callback.onError(new MaxGraphException("store gc is not enabled"));
             return;
         }
         this.garbageCollectExecutor.execute(
                 () -> {
                     try {
+                        logger.info("Garbage collecting, snapshot [{}]", snapshotId);
                         garbageCollectInternal(snapshotId);
                         callback.onCompleted(null);
                     } catch (Exception e) {
-                        logger.error("garbage collect failed. snapshot [" + snapshotId + "]", e);
+                        logger.error("garbage collect failed. snapshot [{}]", snapshotId, e);
                         callback.onError(e);
                     }
                 });

@@ -80,7 +80,6 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
 
             op.setScanOpt(new OpArg<>(scanFusionStep, SCAN_OPT));
 
-            // set global ids
             if (scanFusionStep.getIds() != null && scanFusionStep.getIds().length > 0) {
                 op.setIds(new OpArg(scanFusionStep, CONST_IDS_FROM_STEP));
             }
@@ -239,6 +238,8 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             PathExpandStep pathStep = (PathExpandStep) step;
             op.setLower(new OpArg(Integer.valueOf(pathStep.getLower())));
             op.setUpper(new OpArg(Integer.valueOf(pathStep.getUpper())));
+            op.setPathOpt(pathStep.getPathOpt());
+            op.setResultOpt(pathStep.getResultOpt());
             return op;
         }
     },
@@ -599,6 +600,40 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         @Override
         public InterOpBase apply(Step step) {
             return new AsNoneOp();
+        }
+    },
+
+    ID_STEP {
+        @Override
+        public InterOpBase apply(Step step) {
+            ProjectOp projectOp = new ProjectOp();
+            String expr = "@." + ArgUtils.ID;
+            projectOp.setExprWithAlias(
+                    new OpArg(Collections.singletonList(Pair.with(expr, ArgUtils.asNoneAlias()))));
+            return projectOp;
+        }
+    },
+
+    LABEL_STEP {
+        @Override
+        public InterOpBase apply(Step step) {
+            ProjectOp projectOp = new ProjectOp();
+            String expr = "@." + ArgUtils.LABEL;
+            projectOp.setExprWithAlias(
+                    new OpArg(Collections.singletonList(Pair.with(expr, ArgUtils.asNoneAlias()))));
+            return projectOp;
+        }
+    },
+
+    CONSTANT_STEP {
+        @Override
+        public InterOpBase apply(Step step) {
+            Object value = ((ConstantStep) step).getConstant();
+            String expr = PredicateExprTransformFactory.IS_STEP.getPredicateValue(value);
+            ProjectOp projectOp = new ProjectOp();
+            projectOp.setExprWithAlias(
+                    new OpArg(Collections.singletonList(Pair.with(expr, ArgUtils.asNoneAlias()))));
+            return projectOp;
         }
     };
 

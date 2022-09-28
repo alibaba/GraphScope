@@ -24,10 +24,12 @@ import io.grpc.Status;
 import io.netty.channel.ChannelHandlerContext;
 
 import org.apache.tinkerpop.gremlin.driver.MessageSerializer;
+import org.apache.tinkerpop.gremlin.driver.Tokens;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
 import org.apache.tinkerpop.gremlin.server.Context;
+import org.apache.tinkerpop.gremlin.server.Settings;
 import org.apache.tinkerpop.gremlin.server.handler.Frame;
 import org.apache.tinkerpop.gremlin.server.handler.StateKey;
 import org.apache.tinkerpop.gremlin.server.op.standard.StandardOpProcessor;
@@ -40,13 +42,23 @@ import java.util.concurrent.TimeUnit;
 public class GremlinResultProcessor extends StandardOpProcessor implements ResultProcessor {
     private static Logger logger = LoggerFactory.getLogger(GremlinResultProcessor.class);
     protected Context writeResult;
-    protected List<Object> resultCollectors = new ArrayList<>();
+    protected List<Object> resultCollectors;
+    protected int resultCollectorsBatchSize;
     protected boolean locked = false;
     protected ResultParser resultParser;
 
     public GremlinResultProcessor(Context writeResult, ResultParser resultParser) {
         this.writeResult = writeResult;
         this.resultParser = resultParser;
+        RequestMessage msg = writeResult.getRequestMessage();
+        Settings settings = writeResult.getSettings();
+        // init batch size from resultIterationBatchSize in conf/gremlin-server.yaml,
+        // or args in RequestMessage which is originate from gremlin client
+        this.resultCollectorsBatchSize =
+                (Integer)
+                        msg.optionalArgs(Tokens.ARGS_BATCH_SIZE)
+                                .orElse(settings.resultIterationBatchSize);
+        this.resultCollectors = new ArrayList<>(this.resultCollectorsBatchSize);
     }
 
     @Override
@@ -54,6 +66,14 @@ public class GremlinResultProcessor extends StandardOpProcessor implements Resul
         synchronized (this) {
             try {
                 if (!locked) {
+                    // send back a page of results if batch size is met and then reset the
+                    // resultCollectors
+                    if (this.resultCollectors.size() >= this.resultCollectorsBatchSize) {
+                        formatResultIfNeed();
+                        writeResultList(
+                                writeResult, resultCollectors, ResponseStatusCode.PARTIAL_CONTENT);
+                        this.resultCollectors = new ArrayList<>(this.resultCollectorsBatchSize);
+                    }
                     resultCollectors.addAll(resultParser.parseFrom(response));
                 }
             } catch (Exception e) {

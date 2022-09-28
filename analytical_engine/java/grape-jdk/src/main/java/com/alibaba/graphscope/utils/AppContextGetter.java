@@ -114,6 +114,9 @@ public class AppContextGetter {
      * @return the base class name.
      */
     public static String getParallelContextName(Class<? extends ParallelAppBase> appClass) {
+        if (appClass.getName().equals("com.alibaba.graphscope.app.GraphXParallelAdaptor")) {
+            return "com.alibaba.graphscope.context.GraphXParallAdaptorContext";
+        }
         Class<? extends ParallelContextBase> clz =
                 (Class<? extends ParallelContextBase>) getInterfaceTemplateType(appClass, 4);
         return clz.getName();

@@ -55,7 +55,10 @@ public class GremlinResultAnalyzer {
                     || Utils.equalClass(step, PropertyMapStep.class)
                     || Utils.equalClass(step, TraversalMapStep.class)
                     || Utils.equalClass(step, MatchStep.class)
-                    || Utils.equalClass(step, ExprStep.class)) {
+                    || Utils.equalClass(step, ExprStep.class)
+                    || Utils.equalClass(step, IdStep.class)
+                    || Utils.equalClass(step, LabelStep.class)
+                    || Utils.equalClass(step, ConstantStep.class)) {
                 parserType = GremlinResultParserFactory.PROJECT_VALUE;
             } else if (Utils.equalClass(step, GroupCountStep.class)
                     || Utils.equalClass(step, GroupStep.class)) {
@@ -74,9 +77,6 @@ public class GremlinResultAnalyzer {
                     || Utils.equalClass(step, WhereTraversalStep.class)
                     || Utils.equalClass(step, NotStep.class)) {
                 // do nothing;
-            } else if (Utils.equalClass(step, CoinStep.class)) {
-                throw new UnsupportedStepException(
-                        step.getClass(), "coin() should follow V() or E()");
             } else {
                 throw new UnsupportedStepException(step.getClass(), "unimplemented yet");
             }

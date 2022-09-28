@@ -16,9 +16,9 @@
 package com.alibaba.graphscope.graph.impl;
 
 import com.alibaba.graphscope.context.GiraphComputationAdaptorContext;
-import com.alibaba.graphscope.graph.EdgeManager;
+import com.alibaba.graphscope.graph.GiraphEdgeManager;
+import com.alibaba.graphscope.graph.GiraphVertexIdManager;
 import com.alibaba.graphscope.graph.VertexDataManager;
-import com.alibaba.graphscope.graph.VertexIdManager;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.giraph.conf.DefaultImmutableClassesGiraphConfigurable;
@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class VertexImpl<
+                VID_T,
                 OID_T extends WritableComparable,
                 VDATA_T extends Writable,
                 EDATA_T extends Writable>
@@ -46,11 +47,11 @@ public class VertexImpl<
     private GiraphComputationAdaptorContext giraphComputationContext;
 
     private VertexDataManager<VDATA_T> vertexDataManager;
-    private VertexIdManager<?, OID_T> vertexIdManager;
+    private GiraphVertexIdManager<VID_T, OID_T> vertexIdManager;
     /**
      * EdgeManager manages all vertex's edges.
      */
-    private EdgeManager<OID_T, EDATA_T> edgeManager;
+    private GiraphEdgeManager<OID_T, EDATA_T> edgeManager;
 
     // data set in initialization.
     private OID_T initializeOid;
@@ -77,19 +78,19 @@ public class VertexImpl<
         this.vertexDataManager = vertexDataManager;
     }
 
-    public VertexIdManager getVertexIdManager() {
+    public GiraphVertexIdManager getVertexIdManager() {
         return this.vertexIdManager;
     }
 
-    public void setVertexIdManager(VertexIdManager vertexIdManager) {
+    public void setVertexIdManager(GiraphVertexIdManager vertexIdManager) {
         this.vertexIdManager = vertexIdManager;
     }
 
-    public EdgeManager<OID_T, EDATA_T> getEdgeManager() {
+    public GiraphEdgeManager<OID_T, EDATA_T> getEdgeManager() {
         return this.edgeManager;
     }
 
-    public void setEdgeManager(EdgeManager<OID_T, EDATA_T> edgeManager) {
+    public void setEdgeManager(GiraphEdgeManager<OID_T, EDATA_T> edgeManager) {
         this.edgeManager = edgeManager;
     }
 
@@ -129,7 +130,7 @@ public class VertexImpl<
      */
     @Override
     public OID_T getId() {
-        return vertexIdManager.getId(lid);
+        return vertexIdManager.lid2Oid((VID_T) (Long) lid);
     }
 
     /**

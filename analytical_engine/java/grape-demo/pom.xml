@@ -14,91 +14,148 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xmlns="http://maven.apache.org/POM/4.0.0"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.alibaba.graphscope</groupId>
+    <artifactId>grape-jdk-parent</artifactId>
+    <version>${revision}</version>
+  </parent>
+
   <artifactId>grape-demo</artifactId>
+  <packaging>jar</packaging>
+  <name>Grape Demo</name>
+
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.alibaba</groupId>
+      <artifactId>fastjson</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.alibaba.graphscope</groupId>
+      <artifactId>grape-jdk</artifactId>
+      <classifier>shaded</classifier>
+    </dependency>
+    <dependency>
+      <groupId>com.alibaba.graphscope</groupId>
+      <artifactId>giraph-on-grape</artifactId>
+      <classifier>shaded</classifier>
+    </dependency>
+    <dependency>
+      <groupId>com.alibaba.graphscope</groupId>
+      <artifactId>graphx-on-graphscope</artifactId>
+      <classifier>shaded</classifier>
+    </dependency>
+    <dependency>
+      <groupId>com.alibaba.fastffi</groupId>
+      <artifactId>annotation-processor</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-graphx_2.12</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-sql_2.12</artifactId>
+    </dependency>
+  </dependencies>
 
   <build>
     <plugins>
       <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>default-compile</id>
+            <phase>none</phase>
+          </execution>
+          <execution>
+            <id>default-testCompile</id>
+            <phase>none</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>compile</goal>
+              <goal>testCompile</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test</goal>
+            </goals>
+            <phase>test</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test</goal>
+            </goals>
+            <phase>test</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
         <executions>
           <execution>
-            <configuration>
-              <artifactSet>
-                <excludes>
-                  <exclude>org.slf4j:slf4j-log4j12:jar:</exclude>
-                </excludes>
-              </artifactSet>
-            </configuration>
             <goals>
               <goal>shade</goal>
             </goals>
             <phase>package</phase>
+            <configuration>
+              <artifactSet>
+                <includes>
+                  <include>com.alibaba.graphscope:*</include>
+                  <include>com.alibaba.fastffi:*</include>
+                  <include>org.apache.spark:spark-graphx_2.12*</include>
+                  <include>it.unimi.dsi:fastutil*</include>
+                </includes>
+              </artifactSet>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+              <finalName>${uberjar.name}</finalName>
+            </configuration>
           </execution>
         </executions>
-        <groupId>org.apache.maven.plugins</groupId>
-      </plugin>
-      <plugin>
-        <artifactId>spotless-maven-plugin</artifactId>
-        <groupId>com.diffplug.spotless</groupId>
-      </plugin>
-      <plugin>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <skipTests>true</skipTests>
-        </configuration>
-        <groupId>org.apache.maven.plugins</groupId>
       </plugin>
     </plugins>
   </build>
-  <dependencies>
-    <dependency>
-      <artifactId>junit</artifactId>
-      <groupId>junit</groupId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <artifactId>fastjson</artifactId>
-      <groupId>com.alibaba</groupId>
-    </dependency>
-    <dependency>
-      <artifactId>grape-jdk</artifactId>
-      <classifier>shaded</classifier>
-      <groupId>com.alibaba.graphscope</groupId>
-      <version>0.1</version>
-    </dependency>
-    <dependency>
-      <artifactId>giraph-on-grape</artifactId>
-      <classifier>shaded</classifier>
-      <groupId>com.alibaba.graphscope</groupId>
-      <version>0.1</version>
-    </dependency>
-    <dependency>
-      <artifactId>annotation-processor</artifactId>
-      <groupId>com.alibaba.fastffi</groupId>
-    </dependency>
-    <dependency>
-      <artifactId>slf4j-api</artifactId>
-      <groupId>org.slf4j</groupId>
-    </dependency>
-    <dependency>
-      <artifactId>logback-classic</artifactId>
-      <groupId>ch.qos.logback</groupId>
-    </dependency>
-  </dependencies>
-
-  <modelVersion>4.0.0</modelVersion>
-
-  <name>grape-demo</name>
-  <packaging>jar</packaging>
-
-  <parent>
-    <artifactId>grape-jdk-parent</artifactId>
-    <groupId>com.alibaba.graphscope</groupId>
-    <version>0.1</version>
-  </parent>
-
-  <version>0.1</version>
 </project>

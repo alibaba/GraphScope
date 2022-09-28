@@ -25,8 +25,8 @@ import com.alibaba.graphscope.ds.adaptor.Nbr;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.parallel.ParallelEngine;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
-import com.alibaba.graphscope.parallel.message.DoubleMsg;
-import com.alibaba.graphscope.utils.AtomicDoubleArrayWrapper;
+import com.alibaba.graphscope.parallel.message.LongMsg;
+import com.alibaba.graphscope.utils.AtomicLongArrayWrapper;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
 
 import org.slf4j.Logger;
@@ -35,15 +35,14 @@ import org.slf4j.LoggerFactory;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
-public class SSSP
-        implements ParallelAppBase<Long, Long, Long, Double, SSSPContext>, ParallelEngine {
+public class SSSP implements ParallelAppBase<Long, Long, Long, Long, SSSPContext>, ParallelEngine {
 
     private static Logger logger = LoggerFactory.getLogger(SSSP.class);
 
     @Override
     public void PEval(
-            IFragment<Long, Long, Long, Double> fragment,
-            ParallelContextBase<Long, Long, Long, Double> contextBase,
+            IFragment<Long, Long, Long, Long> fragment,
+            ParallelContextBase<Long, Long, Long, Long> contextBase,
             ParallelMessageManager mm) {
         SSSPContext context = (SSSPContext) contextBase;
         mm.initChannels(context.thread_num());
@@ -60,19 +59,19 @@ public class SSSP
                         + ", lid: "
                         + source.GetValue());
 
-        AtomicDoubleArrayWrapper partialResults = context.partialResults;
+        AtomicLongArrayWrapper partialResults = context.partialResults;
         VertexSet curModified = context.curModified;
         VertexSet nextModified = context.nextModified;
-        DoubleMsg msg = FFITypeFactoryhelper.newDoubleMsg();
+        LongMsg msg = FFITypeFactoryhelper.newLongMsg();
         if (sourceInThisFrag) {
-            partialResults.set(source, 0.0);
-            AdjList<Long, Double> adjList = fragment.getOutgoingAdjList(source);
-            for (Nbr<Long, Double> nbr : adjList.iterable()) {
+            partialResults.set(source, 0);
+            AdjList<Long, Long> adjList = fragment.getOutgoingAdjList(source);
+            for (Nbr<Long, Long> nbr : adjList.iterable()) {
                 Vertex<Long> vertex = nbr.neighbor();
                 partialResults.set(vertex, Math.min(nbr.data(), partialResults.get(vertex)));
                 if (fragment.isOuterVertex(vertex)) {
                     msg.setData(partialResults.get(vertex));
-                    mm.syncStateOnOuterVertex(fragment, vertex, msg, 0, 2.0);
+                    mm.syncStateOnOuterVertex(fragment, vertex, msg, 0, 2L);
                 } else {
                     nextModified.set(vertex);
                 }
@@ -84,8 +83,8 @@ public class SSSP
 
     @Override
     public void IncEval(
-            IFragment<Long, Long, Long, Double> fragment,
-            ParallelContextBase<Long, Long, Long, Double> contextBase,
+            IFragment<Long, Long, Long, Long> fragment,
+            ParallelContextBase<Long, Long, Long, Long> contextBase,
             ParallelMessageManager messageManager) {
         SSSPContext context = (SSSPContext) contextBase;
         context.nextModified.clear();
@@ -112,13 +111,13 @@ public class SSSP
 
     private void receiveMessage(
             SSSPContext context,
-            IFragment<Long, Long, Long, Double> frag,
+            IFragment<Long, Long, Long, Long> frag,
             ParallelMessageManager messageManager) {
 
-        Supplier<DoubleMsg> msgSupplier = () -> DoubleMsg.factory.create();
-        BiConsumer<Vertex<Long>, DoubleMsg> messageConsumer =
+        Supplier<LongMsg> msgSupplier = () -> LongMsg.factory.create();
+        BiConsumer<Vertex<Long>, LongMsg> messageConsumer =
                 (vertex, msg) -> {
-                    double preValue = context.partialResults.get(vertex);
+                    long preValue = context.partialResults.get(vertex);
                     if (preValue > msg.getData()) {
                         context.partialResults.compareAndSetMin(vertex, msg.getData());
                         context.curModified.set(vertex);
@@ -128,16 +127,16 @@ public class SSSP
                 frag, context.threadNum, context.executor, msgSupplier, messageConsumer, 2L);
     }
 
-    private void execute(SSSPContext context, IFragment<Long, Long, Long, Double> frag) {
+    private void execute(SSSPContext context, IFragment<Long, Long, Long, Long> frag) {
         int innerVerticesNum = (int) frag.getInnerVerticesNum();
 
         BiConsumer<Vertex<Long>, Integer> consumer =
                 (vertex, finalTid) -> {
-                    double curDist = context.partialResults.get(vertex);
-                    AdjList<Long, Double> nbrs = frag.getOutgoingAdjList(vertex);
-                    for (Nbr<Long, Double> nbr : nbrs.iterable()) {
+                    long curDist = context.partialResults.get(vertex);
+                    AdjList<Long, Long> nbrs = frag.getOutgoingAdjList(vertex);
+                    for (Nbr<Long, Long> nbr : nbrs.iterable()) {
                         long curLid = nbr.neighbor().GetValue();
-                        double nextDist = curDist + nbr.data();
+                        long nextDist = curDist + nbr.data();
                         if (nextDist < context.partialResults.get(curLid)) {
                             context.partialResults.compareAndSetMin(curLid, nextDist);
                             context.nextModified.set(curLid);
@@ -154,14 +153,14 @@ public class SSSP
 
     private void sendMessage(
             SSSPContext context,
-            IFragment<Long, Long, Long, Double> frag,
+            IFragment<Long, Long, Long, Long> frag,
             ParallelMessageManager messageManager) {
         // for outer vertices sync data
         BiConsumer<Vertex<Long>, Integer> msgSender =
                 (vertex, finalTid) -> {
-                    DoubleMsg msg =
-                            FFITypeFactoryhelper.newDoubleMsg(context.partialResults.get(vertex));
-                    messageManager.syncStateOnOuterVertex(frag, vertex, msg, finalTid, 2.0);
+                    LongMsg msg =
+                            FFITypeFactoryhelper.newLongMsg(context.partialResults.get(vertex));
+                    messageManager.syncStateOnOuterVertex(frag, vertex, msg, finalTid, 2L);
                 };
         forEachVertex(
                 frag.outerVertices(),

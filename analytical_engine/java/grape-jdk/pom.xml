@@ -20,16 +20,14 @@
   <parent>
     <groupId>com.alibaba.graphscope</groupId>
     <artifactId>grape-jdk-parent</artifactId>
-    <version>0.1</version>
+    <version>${revision}</version>
   </parent>
 
   <artifactId>grape-jdk</artifactId>
-  <version>0.1</version>
   <packaging>jar</packaging>
-  <name>grape-jdk</name>
+  <name>Grape JDK</name>
 
   <properties>
-    <alibaba-grape-sdk.version>0.1</alibaba-grape-sdk.version>
     <jacoco.version>0.8.7</jacoco.version>
     <jni.library.name>grape-jni</jni.library.name>
     <jni.library.path>${project.basedir}/target/native/</jni.library.path>
@@ -57,6 +55,7 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
+      <scope>provided</scope>
     </dependency>
     <!--    not used in code but needed at runtime,-->
     <dependency>
@@ -66,6 +65,10 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
     </dependency>
   </dependencies>
 
@@ -81,10 +84,6 @@
           <failOnError>false</failOnError>
           <locale>en_US</locale>
         </configuration>
-      </plugin>
-      <plugin>
-        <groupId>com.diffplug.spotless</groupId>
-        <artifactId>spotless-maven-plugin</artifactId>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

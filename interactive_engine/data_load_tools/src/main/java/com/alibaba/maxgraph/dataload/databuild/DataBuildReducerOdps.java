@@ -18,10 +18,8 @@ package com.alibaba.maxgraph.dataload.databuild;
 import com.alibaba.maxgraph.dataload.OSSFileObj;
 import com.aliyun.odps.data.Record;
 import com.aliyun.odps.mapred.ReducerBase;
-import com.aliyun.odps.mapred.TaskContext;
 
 import org.apache.commons.codec.binary.Hex;
-import org.rocksdb.*;
 
 import java.io.File;
 import java.io.FileInputStream;

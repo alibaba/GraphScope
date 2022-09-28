@@ -268,7 +268,8 @@ impl EndOfScope {
     }
 
     pub(crate) fn contains_source(&self, src: u32) -> bool {
-        self.peers.value() > 0 && self.peers.contains_source(src)
+        (self.tag.is_root() && src == 0)
+            || (!self.tag.is_root() && self.peers.value() > 0 && self.peers.contains_source(src))
     }
 }
 

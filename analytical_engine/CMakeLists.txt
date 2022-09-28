@@ -13,6 +13,7 @@ set(PROJECT_VERSION ${GRAPHSCOPE_ANALYTICAL_VERSION})
 option(NETWORKX "networkx on?" ON)
 option(BUILD_TESTS "Build unit test" ON)
 option(ENABLE_JAVA_SDK "Build with support for java sdk" ON)
+option(LET_IT_CRASH_ON_EXCEPTION "Disable boost leaf's error handling and let it crash when exception occurs to help debugging" OFF)
 
 # Get system processor
 execute_process(COMMAND uname -m OUTPUT_VARIABLE SYSTEM_PROCESSOR)
@@ -65,6 +66,10 @@ include(CheckCXXCompilerFlag)
 include(CheckLibraryExists)
 include(CheckCXXSourceRuns)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# include /usr/local/lib as cmake installed dependencies will be placed there by default
+include_directories(SYSTEM /usr/local/include)
+
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/proto)
 
@@ -185,7 +190,7 @@ endif ()
 find_package(libgrapelite REQUIRED)
 include_directories(${LIBGRAPELITE_INCLUDE_DIRS})
 
-find_package(vineyard 0.6.0 REQUIRED)
+find_package(vineyard 0.8.6 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 add_compile_options(-DENABLE_SELECTOR)
 
@@ -261,11 +266,27 @@ else()
         ${VINEYARD_LIBRARIES}
         )
 endif()
+if (LET_IT_CRASH_ON_EXCEPTION)
+    target_compile_definitions(grape_engine PRIVATE LET_IT_CRASH_ON_EXCEPTION)
+endif ()
 target_link_libraries(grape_engine PRIVATE OpenMP::OpenMP_CXX)
 
 if (${LIBUNWIND_FOUND})
     target_link_libraries(grape_engine PRIVATE ${LIBUNWIND_LIBRARIES})
 endif ()
+
+# An executable to work around for graphx pregel.
+if (ENABLE_JAVA_SDK)
+    add_executable(graphx_runner core/java/graphx_runner.cc core/java/javasdk.cc)
+    target_include_directories(graphx_runner PRIVATE core utils apps)
+    target_compile_definitions(graphx_runner PUBLIC ENABLE_JAVA_SDK)
+    target_link_libraries(graphx_runner PRIVATE ${CMAKE_DL_LIBS} gs_proto ${VINEYARD_LIBRARIES} ${Boost_LIBRARIES} ${GFLAGS_LIBRARIES} ${JNI_LIBRARIES})
+
+    if (${LIBUNWIND_FOUND})
+        target_link_libraries(graphx_runner PRIVATE ${LIBUNWIND_LIBRARIES})
+    endif()
+endif()
+
 
 # Test targets
 if (BUILD_TESTS)
@@ -279,9 +300,9 @@ if (BUILD_TESTS)
         target_include_directories(run_java_app PRIVATE core utils apps)
         target_compile_definitions(run_java_app PUBLIC ENABLE_JAVA_SDK)
         target_link_libraries(run_java_app gs_proto ${GFLAGS_LIBRARIES} ${MPI_CXX_LIBRARIES} ${JNI_LIBRARIES} ${Boost_LIBRARIES}
-                                       ${CMAKE_DL_LIBS} ${VINEYARD_LIBRARIES})
+                                       ${CMAKE_DL_LIBS} ${GLOG_LIBRARIES} ${VINEYARD_LIBRARIES})
 
-        #java app benchmark
+        # java app benchmark
         add_executable(property_graph_java_app_benchmarks benchmarks/property_graph_java_app_benchmarks.cc core/java/javasdk.cc core/object/dynamic.cc)
         target_include_directories(property_graph_java_app_benchmarks PRIVATE core utils apps)
         target_compile_definitions(property_graph_java_app_benchmarks PUBLIC ENABLE_JAVA_SDK)
@@ -293,10 +314,22 @@ if (BUILD_TESTS)
         target_compile_definitions(giraph_runner PUBLIC ENABLE_JAVA_SDK)
         target_link_libraries(giraph_runner ${CMAKE_DL_LIBS} gs_proto ${VINEYARD_LIBRARIES} ${Boost_LIBRARIES} ${GFLAGS_LIBRARIES}  ${JNI_LIBRARIES})
 
+        # graphx related test
+        add_executable(graphx_test test/graphx_test.cc)
+        target_include_directories(graphx_test PRIVATE core utils apps)
+        target_compile_definitions(graphx_test PUBLIC ENABLE_JAVA_SDK)
+        target_link_libraries(graphx_test ${CMAKE_DL_LIBS} ${VINEYARD_LIBRARIES} ${Boost_LIBRARIES} ${GLOG_LIBRARIES})
+
+        add_executable(projected_fragment_mapper_test test/projected_fragment_mapper_test.cc)
+        target_include_directories(projected_fragment_mapper_test PRIVATE core utils apps)
+        target_link_libraries(projected_fragment_mapper_test ${CMAKE_DL_LIBS} ${VINEYARD_LIBRARIES} ${Boost_LIBRARIES} ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES})
+
         if (${LIBUNWIND_FOUND})
             target_link_libraries(run_java_app ${LIBUNWIND_LIBRARIES})
             target_link_libraries(property_graph_java_app_benchmarks ${LIBUNWIND_LIBRARIES})
             target_link_libraries(giraph_runner ${LIBUNWIND_LIBRARIES})
+            target_link_libraries(graphx_test ${LIBUNWIND_LIBRARIES})
+            target_link_libraries(projected_fragment_mapper_test ${LIBUNWIND_LIBRARIES})
         endif ()
     endif()
 
@@ -374,6 +407,35 @@ add_custom_target(gsa_clformat
     COMMENT "Running clang-format, using clang-format-8 from https://github.com/muttleyxd/clang-tools-static-binaries/releases"
     VERBATIM)
 
+# Install GAE Java SDK
+if(ENABLE_JAVA_SDK)
+    set(GAE_JAVA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/java/")
+    set(GAE_JAVA_RUNTIME_DIR "${GAE_JAVA_DIR}/grape-runtime/")
+    set(GRAPHSCOPE_ANALYTICAL_JAR_VERSION ${GRAPHSCOPE_ANALYTICAL_VERSION})
+    string(REGEX REPLACE "([0-9]+)\\.([0-9]+)\\.([0-9]+).*" "\\1.\\2.\\3"
+        GRAPHSCOPE_ANALYTICAL_JAR_VERSION
+        "${GRAPHSCOPE_ANALYTICAL_VERSION}"
+    )
+    set(GAE_JAVA_RUNTIME_JAR "${GAE_JAVA_RUNTIME_DIR}/target/grape-runtime-${GRAPHSCOPE_ANALYTICAL_JAR_VERSION}-shaded.jar")
+    set(GAE_JAVA_GRAPHX_JAR "${GAE_JAVA_DIR}/graphx-on-graphscope/target/graphx-on-graphscope-${GRAPHSCOPE_ANALYTICAL_JAR_VERSION}-shaded.jar")
+    add_custom_command(
+        OUTPUT "${GAE_JAVA_RUNTIME_DIR}/target/native/libgrape-jni.so"
+        COMMAND mvn clean install -DskipTests --quiet
+        DEPENDS gs_proto
+        WORKING_DIRECTORY ${GAE_JAVA_DIR}
+        COMMENT "Building GAE-java..."
+        VERBATIM
+    )
+    add_custom_target(grape_jni ALL
+        DEPENDS "${GAE_JAVA_RUNTIME_DIR}/target/native/libgrape-jni.so"
+    )
+    install(FILES DESTINATION lib)
+    install(FILES "${GAE_JAVA_RUNTIME_DIR}/target/native/libgrape-jni.so" DESTINATION lib)
+    install(FILES "${GAE_JAVA_RUNTIME_JAR}" DESTINATION lib)
+    install(FILES "${GAE_JAVA_GRAPHX_JAR}" DESTINATION lib)
+    install(FILES "${GAE_JAVA_DIR}/grape_jvm_opts" DESTINATION conf)
+endif()
+
 # Install binaries
 macro(install_gsa_binary target)
     install(TARGETS ${target}
@@ -421,6 +483,9 @@ endmacro()
 install_gsa_binary(grape_engine)
 install_gsa_binary(gs_proto)
 install_gsa_binary(gs_util)
+if(ENABLE_JAVA_SDK)
+    install_gsa_binary(graphx_runner)
+endif()
 
 install_gsa_headers("${PROJECT_SOURCE_DIR}/apps")
 install_gsa_headers("${PROJECT_SOURCE_DIR}/benchmarks")

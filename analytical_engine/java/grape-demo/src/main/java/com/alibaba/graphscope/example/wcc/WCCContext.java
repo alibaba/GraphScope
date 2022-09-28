@@ -60,7 +60,7 @@ public class WCCContext extends VertexDataContext<IFragment<Long, Long, Long, Do
             threadNum = jsonObject.getInteger("threadNum");
         }
         logger.info("thread num " + threadNum);
-        comp_id = new AtomicLongArrayWrapper(frag.vertices(), Long.MAX_VALUE);
+        comp_id = new AtomicLongArrayWrapper(frag.getVerticesNum().intValue(), Long.MAX_VALUE);
         currModified = new VertexSet(frag.vertices());
         nextModified = new VertexSet(frag.vertices());
         executor = Executors.newFixedThreadPool(threadNum);

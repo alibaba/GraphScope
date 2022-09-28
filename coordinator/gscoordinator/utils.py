@@ -58,6 +58,8 @@ from graphscope.proto import graph_def_pb2
 from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
 
+from gscoordinator.version import __version__
+
 logger = logging.getLogger("graphscope")
 
 RESOURCE_DIR_NAME = "resource"
@@ -121,14 +123,18 @@ if not os.path.isfile(ANALYTICAL_ENGINE_PATH):
 
 # ANALYTICAL_ENGINE_JAVA_HOME
 ANALYTICAL_ENGINE_JAVA_HOME = ANALYTICAL_ENGINE_HOME
-# ANALYTICAL_ENGINE_JAVA_INIT_CLASS_PATH=os.path.join(ANALYTICAL_ENGINE_JAVA_HOME, "lib/*")
-# There should be only grape-runtime.jar we need
-ANALYTICAL_ENGINE_JAVA_INIT_CLASS_PATH = (
-    ANALYTICAL_ENGINE_JAVA_HOME + "/lib/grape-runtime-0.1-shaded.jar"
+
+ANALYTICAL_ENGINE_JAVA_RUNTIME_JAR = os.path.join(
+    ANALYTICAL_ENGINE_JAVA_HOME,
+    "lib",
+    "grape-runtime-{}-shaded.jar".format(__version__),
 )
+ANALYTICAL_ENGINE_JAVA_INIT_CLASS_PATH = "{}".format(ANALYTICAL_ENGINE_JAVA_RUNTIME_JAR)
+
 ANALYTICAL_ENGINE_JAVA_JVM_OPTS = (
     "-Djava.library.path={}/lib -Djava.class.path={}".format(
-        GRAPHSCOPE_HOME, ANALYTICAL_ENGINE_JAVA_INIT_CLASS_PATH
+        GRAPHSCOPE_HOME,
+        ANALYTICAL_ENGINE_JAVA_INIT_CLASS_PATH,
     )
 )
 
@@ -158,8 +164,9 @@ LLVM4JNI_USER_OUT_DIR_BASE = "user-llvm4jni-output"
 PROCESSOR_MAIN_CLASS = "com.alibaba.graphscope.annotation.Main"
 JAVA_CODEGNE_OUTPUT_PREFIX = "gs-ffi"
 GRAPE_PROCESSOR_JAR = os.path.join(
-    GRAPHSCOPE_HOME, "lib", "grape-runtime-0.1-shaded.jar"
+    GRAPHSCOPE_HOME, "lib", "grape-runtime-{}-shaded.jar".format(__version__)
 )
+
 GIRAPH_DIRVER_CLASS = "com.alibaba.graphscope.app.GiraphComputationAdaptor"
 
 
@@ -1367,8 +1374,8 @@ def _parse_giraph_app_type(java_class_path, real_algo):
         bufsize=1,
     )
     out, err = parse_user_app_process.communicate()
-    logger.error(err)
-    for line in out.split("\n"):
+    lines = out.split("\n") + err.split("\n")
+    for line in lines:
         logger.info(line)
         if len(line) == 0:
             continue

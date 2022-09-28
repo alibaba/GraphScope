@@ -1,14 +1,48 @@
 use std::convert::{TryFrom, TryInto};
 
+use global_query::store_api::condition::Operand as StoreOperand;
 use global_query::store_api::{
     condition::predicate::CmpOperator as StoreOprator,
     condition::predicate::PredCondition as StorePredCondition,
 };
-use global_query::store_api::{Condition, ConditionBuilder};
+use global_query::store_api::{prelude::Property, Condition, ConditionBuilder, PropId};
 use ir_common::generated::common as common_pb;
+use ir_common::NameOrId;
 
+use crate::apis::PropKey;
+use crate::utils::expr::eval::Operand;
 use crate::utils::expr::eval_pred::{PEvaluator, Predicate, Predicates};
 use crate::{GraphProxyError, GraphProxyResult};
+
+impl Operand {
+    /// only get the PropId, else None
+    pub(crate) fn get_var_prop_id(&self) -> GraphProxyResult<PropId> {
+        match self {
+            Operand::Var { tag: None, prop_key: Some(prop_key) } => match prop_key {
+                PropKey::Key(NameOrId::Id(id)) => Ok(*id as PropId),
+                _ => Err(GraphProxyError::UnSupported(format!("var error {:?}", self))),
+            },
+            _ => Err(GraphProxyError::FilterPushDownError(format!("not a var {:?}", self))),
+        }
+    }
+
+    pub(crate) fn to_store_oprand(&self) -> GraphProxyResult<StoreOperand> {
+        match self {
+            Operand::Var { tag: None, prop_key: Some(prop_key) } => match prop_key {
+                PropKey::Key(NameOrId::Id(id)) => Ok(StoreOperand::PropId(*id as PropId)),
+                PropKey::Label => Ok(StoreOperand::Label),
+                PropKey::Id => Ok(StoreOperand::Id),
+                _ => Err(GraphProxyError::FilterPushDownError(format!("var error {:?}", self))),
+            },
+            Operand::Const(obj) => {
+                let prop = Property::from_borrow_object(obj.as_borrow())
+                    .map_err(|e| GraphProxyError::FilterPushDownError(format!("{:?}", e)));
+                prop.map(StoreOperand::Const)
+            }
+            _ => Err(GraphProxyError::FilterPushDownError(format!("not a var {:?}", self))),
+        }
+    }
+}
 
 impl TryFrom<&Predicate> for StorePredCondition {
     type Error = GraphProxyError;

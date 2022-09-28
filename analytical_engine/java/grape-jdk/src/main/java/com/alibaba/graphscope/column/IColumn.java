@@ -18,7 +18,6 @@ package com.alibaba.graphscope.column;
 
 import static com.alibaba.graphscope.utils.CppClassName.I_COLUMN;
 import static com.alibaba.graphscope.utils.CppHeaderName.CORE_JAVA_TYPE_ALIAS_H;
-import static com.alibaba.graphscope.utils.JNILibraryName.JNI_LIBRARY_NAME;
 
 import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.CXXReference;
@@ -28,8 +27,9 @@ import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
+import com.alibaba.graphscope.utils.JNILibraryName;
 
-@FFIGen(library = JNI_LIBRARY_NAME)
+@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
 @CXXHead(CORE_JAVA_TYPE_ALIAS_H)
 @FFITypeAlias(I_COLUMN)
 public interface IColumn extends FFIPointer {

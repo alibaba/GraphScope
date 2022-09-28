@@ -255,7 +255,7 @@ RUN cd /tmp && export KUBE_VER=v1.19.2 && \
 
 # install python3.9 deps for all
 RUN /opt/python/cp39-cp39/bin/pip3 install -U pip && \
-    /opt/python/cp39-cp39/bin/pip3 --no-cache-dir install auditwheel==5.0.0 daemons etcd-distro grpcio-tools gremlinpython \
+    /opt/python/cp39-cp39/bin/pip3 --no-cache-dir install auditwheel==5.0.0 daemons etcd-distro gremlinpython \
         hdfs3 fsspec oss2 s3fs ipython kubernetes libclang networkx==2.4 numpy pandas parsec pycryptodome \
         pyorc pytest scipy scikit_learn wheel && \
     /opt/python/cp39-cp39/bin/pip3 --no-cache-dir install Cython --pre -U

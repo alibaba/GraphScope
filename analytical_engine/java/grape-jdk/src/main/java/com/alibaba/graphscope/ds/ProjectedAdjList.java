@@ -19,7 +19,6 @@ package com.alibaba.graphscope.ds;
 import static com.alibaba.graphscope.utils.CppClassName.PROJECTED_ADJ_LIST;
 import static com.alibaba.graphscope.utils.CppHeaderName.ARROW_PROJECTED_FRAGMENT_H;
 import static com.alibaba.graphscope.utils.CppHeaderName.CORE_JAVA_TYPE_ALIAS_H;
-import static com.alibaba.graphscope.utils.JNILibraryName.JNI_LIBRARY_NAME;
 
 import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.CXXValue;
@@ -27,6 +26,7 @@ import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
+import com.alibaba.graphscope.utils.JNILibraryName;
 
 import java.util.Iterator;
 
@@ -38,7 +38,7 @@ import java.util.Iterator;
  * @param <VID_T> vertex id type.
  * @param <EDATA_T> edge data type.
  */
-@FFIGen(library = JNI_LIBRARY_NAME)
+@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
 @CXXHead(ARROW_PROJECTED_FRAGMENT_H)
 @CXXHead(CORE_JAVA_TYPE_ALIAS_H)
 @FFITypeAlias(PROJECTED_ADJ_LIST)

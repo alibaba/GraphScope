@@ -82,6 +82,10 @@ traversalMethod
     | traversalMethod_aggregate_func
     | traversalMethod_hasNot // hasNot()
     | traversalMethod_coin  // coin()
+    | traversalMethod_with  // with()
+    | traversalMethod_id    // id()
+    | traversalMethod_label // label()
+    | traversalMethod_constant  //constant
     ;
 
 traversalSourceSpawnMethod_V
@@ -155,6 +159,13 @@ traversalMethod_inE
 traversalMethod_bothE
 	: 'bothE' LPAREN stringLiteralList RPAREN (DOT traversalMethod_otherV)?
 	;
+
+// case-insensitive
+// with('PATH_OPT', 'SIMPLE' | 'ARBITRARY')
+// with('RESULT_OPT', 'ALL_V' | 'END_V')
+traversalMethod_with
+    : 'with' LPAREN stringLiteral COMMA stringLiteral RPAREN
+    ;
 
 // outV()
 traversalMethod_outV
@@ -442,6 +453,18 @@ traversalMethod_bothV
 	: 'bothV' LPAREN RPAREN
 	;
 
+traversalMethod_id
+	: 'id' LPAREN RPAREN
+	;
+
+traversalMethod_label
+	: 'label' LPAREN RPAREN
+	;
+
+traversalMethod_constant
+	: 'constant' LPAREN genericLiteral RPAREN
+	;
+
 // only permit non empty, \'\' or \"\" or \'null\' is meaningless as a parameter
 stringLiteral
     : NonEmptyStringLiteral
@@ -511,6 +534,9 @@ traversalPredicate
     | traversalPredicate DOT 'or' LPAREN traversalPredicate RPAREN
     | traversalPredicate_containing // TextP.containing
     | traversalPredicate_notContaining //  TextP.notContaining
+    | traversalPredicate_not
+    | traversalPredicate_inside
+    | traversalPredicate_outside
     ;
 
 nestedTraversal
@@ -556,6 +582,18 @@ traversalPredicate_containing
 
 traversalPredicate_notContaining
     : ('TextP.notContaining' | 'notContaining') LPAREN stringLiteral RPAREN
+    ;
+
+traversalPredicate_not
+    : ('P.not' | 'not') LPAREN traversalPredicate RPAREN
+    ;
+
+traversalPredicate_inside
+    : ('P.inside' | 'inside') LPAREN genericLiteral COMMA genericLiteral RPAREN
+    ;
+
+traversalPredicate_outside
+    : ('P.outside' | 'outside') LPAREN genericLiteral COMMA genericLiteral RPAREN
     ;
 
 // incr and decr is unsupported in 3.5.1

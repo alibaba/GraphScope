@@ -554,13 +554,25 @@ def kshell_result():
 
 
 @pytest.fixture(scope="module")
-def pagerank_result():
+def pagerank_auto_result():
     ret = {}
     ret["directed"] = np.loadtxt(
         "{}/ldbc/p2p-31-PR-directed".format(property_dir), dtype=float
     )
     ret["undirected"] = np.loadtxt(
         "{}/ldbc/p2p-31-PR".format(property_dir), dtype=float
+    )
+    yield ret
+
+
+@pytest.fixture(scope="module")
+def pagerank_local_result():
+    ret = {}
+    ret["directed"] = np.loadtxt(
+        "{}/ldbc/p2p-31-PR-LOCAL-directed".format(property_dir), dtype=float
+    )
+    ret["undirected"] = np.loadtxt(
+        "{}/ldbc/p2p-31-PR-LOCAL".format(property_dir), dtype=float
     )
     yield ret
 
@@ -721,3 +733,14 @@ def modern_bytecode():
         )
 
     return func
+
+
+def pytest_collection_modifyitems(items):
+    for item in items:
+        timeout_marker = None
+        if hasattr(item, "get_closest_marker"):
+            timeout_marker = item.get_closest_marker("timeout")
+        elif hasattr(item, "get_marker"):
+            timeout_marker = item.get_marker("timeout")
+        if timeout_marker is None:
+            item.add_marker(pytest.mark.timeout(600))
