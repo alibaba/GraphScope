@@ -45,8 +45,8 @@ prepare_odps_table() {
     do
         vertex_table=${graph_name}_encode_vertex_$i
         edge_table=${graph_name}_encode_edge_$i
-        ${odps} -e "create table IF NOT EXISTS ${vertex_table}(id1:bigint,id2:bigint,id3:bigint,id4:bigint,id5:bigint,bytes:string,len:bigint,code:bigint);";
-        ${odps} -e "create table IF NOT EXISTS ${edge_table}(id1:bigint,id2:bigint,id3:bigint,id4:bigint,id5:bigint,bytes:string,len:bigint,code:bigint);";
+        ${odps} -e "create table IF NOT EXISTS ${vertex_table}(id1 bigint,id2 bigint,id3 bigint,id4 bigint,id5 bigint,bytes string,len bigint,code bigint);";
+        ${odps} -e "create table IF NOT EXISTS ${edge_table}(id1 bigint,id2 bigint,id3 bigint,id4 bigint,id5 bigint,bytes string,len bigint,code bigint);";
     done
 }
 

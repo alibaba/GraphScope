@@ -69,7 +69,7 @@ encode.output.table.num=1
 # 最后生成的graph数据的partition数量
 write.graph.reducer.num=1
 # 用于标识最后生成的graph数据，format为graph_sf_partitions，i.e bi_sf1_1代表bi数据在sf1大小、分区数量为1下生成的graph数据
-unique.name=bi_sf1
+unique.name=bi_sf1_1
 # 数据的schema文件 (默认配置为ldbc schema)
 column.mapping.meta={...}
 ```
@@ -82,6 +82,7 @@ column.mapping.meta={...}
 ### 构建数据
 该过程首先从config.ini中解析出当前的执行阶段(ENCODE or WRITE_GRAPH)，并执行不同阶段的编译过程；ENCODE接受input tables作为输入，并将编译好的vertex/edge数据分别存放在不同的output tables中，作为后续WRITE_GRAPH的输入数据；WRITE_GRAPH将最后finalize的graph数据结构输出到oss path上，可供后续下载；
 ```bash
+# 确认java版本为1.8
 ./load_expr_tool.sh build_data <your odpscmd path>
 ```
 
