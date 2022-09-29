@@ -55,7 +55,7 @@ public class IrWriteGraphReducer extends ReducerBase {
         this.edgeData = new IrEdgeData();
 
         this.ossBucketName = context.getJobConf().get(OfflineBuildOdps.OSS_BUCKET_NAME);
-        this.ossObjectPrefix = context.getJobConf().get(IrDataBuild.GRAPH_OSS_PATH);
+        this.ossObjectPrefix = context.getJobConf().get(IrDataBuild.UNIQUE_NAME);
 
         String ossAccessId = context.getJobConf().get(OfflineBuildOdps.OSS_ACCESS_ID);
         String ossAccessKey = context.getJobConf().get(OfflineBuildOdps.OSS_ACCESS_KEY);

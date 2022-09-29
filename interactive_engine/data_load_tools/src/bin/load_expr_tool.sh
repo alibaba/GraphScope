@@ -26,7 +26,7 @@ prepare_artifacts() {
 prepare_odps_table() {
     odps=$1
     local_path=$2
-    graph_name=$(sed '/^encode.output.table.prefix=/!d;s/.*=//' ${artifacts_dir}/config.ini)
+    graph_name=$(sed '/^unique.name=/!d;s/.*=//' ${artifacts_dir}/config.ini)
     skip_header=$(sed '/^skip.header=/!d;s/.*=//' ${artifacts_dir}/config.ini)
 
     echo "start to load data into odps tables ..............."
@@ -60,7 +60,7 @@ build_data() {
 clean_data() {
     odps=$1
     local_path=$2
-    graph_name=$(sed '/^encode.output.table.prefix=/!d;s/.*=//' ${artifacts_dir}/config.ini)
+    graph_name=$(sed '/^unique.name=/!d;s/.*=//' ${artifacts_dir}/config.ini)
 
     echo "start to clean odps tables ..............."
     for file in ${local_path}/*
@@ -88,7 +88,7 @@ download_data() {
     ossutil=$1
     download_path=$2
 
-    graph_name=$(sed '/^write.graph.oss.path=/!d;s/.*=//' ${artifacts_dir}/config.ini)
+    graph_name=$(sed '/^unique.name=/!d;s/.*=//' ${artifacts_dir}/config.ini)
     oss_bucket_name=$(sed '/^oss.bucket.name=/!d;s/.*=//' ${artifacts_dir}/config.ini)
     oss_path_prefix=oss://${oss_bucket_name}/${graph_name}
 

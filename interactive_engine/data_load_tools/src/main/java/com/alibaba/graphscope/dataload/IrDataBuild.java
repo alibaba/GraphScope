@@ -41,15 +41,14 @@ public class IrDataBuild {
     public static final String COLUMN_MAPPING_META = "column.mapping.meta";
     public static final String SPLIT_SIZE = "split.size";
     public static final String SEPARATOR = "separator";
+    public static final String UNIQUE_NAME = "unique.name";
 
     // ENCODE/WRITE_GRAPH
     public static final String DATA_BUILD_MODE = "data.build.mode";
     public static final String ENCODE_OUTPUT_TABLE_NUM = "encode.output.table.num";
-    public static final String ENCODE_OUTPUT_TABLE_PREFIX = "encode.output.table.prefix";
     public static final String SKIP_HEADER = "skip.header";
 
     public static final String GRAPH_REDUCER_NUM = "write.graph.reducer.num";
-    public static final String GRAPH_OSS_PATH = "write.graph.oss.path";
 
     public static final String ENCODE_VERTEX_MAGIC = "_encode_vertex_";
     public static final String ENCODE_EDGE_MAGIC = "_encode_edge_";
@@ -63,10 +62,7 @@ public class IrDataBuild {
         String mode = properties.getProperty(DATA_BUILD_MODE, "ENCODE");
         int splitSize = Integer.valueOf(properties.getProperty(SPLIT_SIZE, "256"));
         String columnMappingJson = properties.getProperty(COLUMN_MAPPING_META, "");
-
-        String encodePrefix = properties.getProperty(ENCODE_OUTPUT_TABLE_PREFIX, "default");
-        String graphOssPath = properties.getProperty(GRAPH_OSS_PATH, "default");
-
+        String prefix = properties.getProperty(UNIQUE_NAME, "default");
         String tableNum = properties.getProperty(ENCODE_OUTPUT_TABLE_NUM, "1");
         String separator = properties.getProperty(SEPARATOR, "|");
         int reducerNum = Integer.valueOf(properties.getProperty(GRAPH_REDUCER_NUM, "1"));
@@ -85,8 +81,7 @@ public class IrDataBuild {
             job.setNumReduceTasks(0);
             job.set(COLUMN_MAPPING_META, columnMappingJson);
             job.set(ENCODE_OUTPUT_TABLE_NUM, tableNum);
-            job.set(ENCODE_OUTPUT_TABLE_PREFIX, encodePrefix);
-            job.set(GRAPH_OSS_PATH, graphOssPath);
+            job.set(UNIQUE_NAME, prefix);
             job.set(OfflineBuildOdps.OSS_ENDPOINT, endpoint);
             job.set(OfflineBuildOdps.OSS_ACCESS_ID, accessId);
             job.set(OfflineBuildOdps.OSS_ACCESS_KEY, accessKey);
@@ -102,7 +97,7 @@ public class IrDataBuild {
             job.setReducerClass(IrWriteGraphReducer.class);
             job.setPartitionerClass(IrWriteGraphPartitioner.class);
             job.set(GRAPH_REDUCER_NUM, String.valueOf(reducerNum));
-            job.set(GRAPH_OSS_PATH, graphOssPath);
+            job.set(UNIQUE_NAME, prefix);
             job.set(OfflineBuildOdps.OSS_ENDPOINT, endpoint);
             job.set(OfflineBuildOdps.OSS_ACCESS_ID, accessId);
             job.set(OfflineBuildOdps.OSS_ACCESS_KEY, accessKey);
@@ -153,7 +148,7 @@ public class IrDataBuild {
 
     private static List<String> makeEncodeOutputTableNames(Properties properties) {
         int partitions = Integer.valueOf(properties.getProperty(ENCODE_OUTPUT_TABLE_NUM, "1"));
-        String prefix = properties.getProperty(ENCODE_OUTPUT_TABLE_PREFIX);
+        String prefix = properties.getProperty(UNIQUE_NAME);
         List<String> tableNames = new ArrayList<>();
         for (int i = 0; i < partitions; ++i) {
             tableNames.add(prefix + ENCODE_VERTEX_MAGIC + i);
