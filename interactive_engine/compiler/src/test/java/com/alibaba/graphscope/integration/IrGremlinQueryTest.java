@@ -23,6 +23,7 @@ import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 
 import org.apache.tinkerpop.gremlin.process.AbstractGremlinProcessTest;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
+import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.apache.tinkerpop.gremlin.structure.Column;
@@ -39,6 +40,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     public abstract Traversal<Vertex, Map<Object, List>> get_g_V_group_by_outE_count_order_by_key();
 
     public abstract Traversal<Vertex, Object> get_g_VX4X_bothE_as_otherV();
+
+    public abstract Traversal<Vertex, Map<Object, Long>> get_g_V_group_where_order();
 
     @Test
     public void g_V_group_by_by_dedup_count_test() {
@@ -95,6 +98,16 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         Assert.assertEquals(expected.size(), counter);
     }
 
+    @Test
+    public void g_V_group_where() {
+        Traversal<Vertex, Map<Object, Long>> traversal = this.get_g_V_group_where_order();
+        this.printTraversalForm(traversal);
+        Map<Object, Long> result = traversal.next();
+        String expected = "{v[1]=1, v[2]=1, v[4]=1, v[6]=1}";
+        Assert.assertEquals(expected, result.toString());
+        Assert.assertFalse(traversal.hasNext());
+    }
+
     public static class Traversals extends IrGremlinQueryTest {
 
         @Override
@@ -116,6 +129,21 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         @Override
         public Traversal<Vertex, Object> get_g_VX4X_bothE_as_otherV() {
             return g.V().has("id", 4).bothE().as("a").otherV().values("id");
+        }
+
+        @Override
+        public Traversal<Vertex, Map<Object, Long>> get_g_V_group_where_order() {
+            return (IrCustomizedTraversal)
+                    g.V().hasLabel("person")
+                            .as("a")
+                            .group()
+                            .by(__.select("a").as("key"))
+                            .by(__.count().as("value"))
+                            .where("value", P.lt("key"))
+                            .by()
+                            .by("age")
+                            .order()
+                            .by(__.select("key"));
         }
     }
 }

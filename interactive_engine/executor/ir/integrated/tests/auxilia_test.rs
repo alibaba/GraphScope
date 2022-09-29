@@ -623,4 +623,117 @@ mod test {
         }
         assert_eq!(result_count, 6)
     }
+    // g.V().as("a").out("knows").as("b").where(expr("@a.age<@b.age")) with filter by auxilia
+    #[test]
+    fn auxilia_pre_eval_test() {
+        let query_param = query_params(vec![KNOWS_LABEL.into()], vec![], None);
+        let expand_opr_pb = pb::EdgeExpand {
+            v_tag: None,
+            direction: 0,
+            params: Some(query_param),
+            expand_opt: 0,
+            alias: None,
+        };
+        let as_auxilia_opr = pb::Auxilia {
+            tag: None,
+            params: Some(query_params(vec![], vec!["age".into()], None)),
+            alias: Some(TAG_B.into()),
+            remove_tags: vec![],
+        };
+        // specifically, we can eval a.age via lazyDetails (scan outputs vertices with LazyDetails),
+        // and can eval b.age by precache in as_auxilia_opr;
+        // thus, this auxilia can be done in pre_eval
+        let predicate = str_to_expr_pb("@0.age<@1.age".to_string()).unwrap();
+        let auxilia_opr = pb::Auxilia {
+            tag: None,
+            params: Some(query_params(vec![], vec![], Some(predicate))),
+            alias: None,
+            remove_tags: vec![],
+        };
+
+        let conf = JobConf::new("auxilia_pre_eval_test");
+        let mut result = pegasus::run(conf, || {
+            let expand = expand_opr_pb.clone();
+            let as_auxilia = as_auxilia_opr.clone();
+            let auxilia = auxilia_opr.clone();
+            |input, output| {
+                let mut stream = input.input_from(source_gen(Some(TAG_A.into())))?;
+                let flatmap_func = expand.gen_flat_map().unwrap();
+                stream = stream.flat_map(move |input| flatmap_func.exec(input))?;
+                let filter_map_func = as_auxilia.gen_filter_map().unwrap();
+                stream = stream.filter_map(move |input| filter_map_func.exec(input))?;
+                let filter_map_func = auxilia.gen_filter_map().unwrap();
+                stream = stream.filter_map(move |input| filter_map_func.exec(input))?;
+                stream.sink_into(output)
+            }
+        })
+        .expect("build job failure");
+
+        let expected_id = vec![4];
+
+        let mut results = vec![];
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+                results.push(element.id());
+            }
+        }
+        assert_eq!(expected_id, results)
+    }
+
+    // g.V().as("a").out("knows").as("b").where(expr("@a.age<@b.age")) with filter by auxilia
+    #[test]
+    fn auxilia_eval_test() {
+        let query_param = query_params(vec![KNOWS_LABEL.into()], vec![], None);
+        let expand_opr_pb = pb::EdgeExpand {
+            v_tag: None,
+            direction: 0,
+            params: Some(query_param),
+            expand_opt: 0,
+            alias: None,
+        };
+        let as_auxilia_opr = pb::Auxilia {
+            tag: None,
+            params: Some(query_params(vec![], vec![], None)),
+            alias: Some(TAG_B.into()),
+            remove_tags: vec![],
+        };
+        // specifically, we can eval a.age via lazyDetails (scan outputs vertices with LazyDetails),
+        // but cannot eval b.age since the output of as_auxilia_opr are vertices of EmptyDetails.
+        // thus, this auxilia would be done by query the storage.
+        let predicate = str_to_expr_pb("@0.age<@1.age".to_string()).unwrap();
+        let auxilia_opr = pb::Auxilia {
+            tag: None,
+            params: Some(query_params(vec![], vec![], Some(predicate))),
+            alias: None,
+            remove_tags: vec![],
+        };
+
+        let conf = JobConf::new("auxilia_eval_test");
+        let mut result = pegasus::run(conf, || {
+            let expand = expand_opr_pb.clone();
+            let as_auxilia = as_auxilia_opr.clone();
+            let auxilia = auxilia_opr.clone();
+            |input, output| {
+                let mut stream = input.input_from(source_gen(Some(TAG_A.into())))?;
+                let flatmap_func = expand.gen_flat_map().unwrap();
+                stream = stream.flat_map(move |input| flatmap_func.exec(input))?;
+                let filter_map_func = as_auxilia.gen_filter_map().unwrap();
+                stream = stream.filter_map(move |input| filter_map_func.exec(input))?;
+                let filter_map_func = auxilia.gen_filter_map().unwrap();
+                stream = stream.filter_map(move |input| filter_map_func.exec(input))?;
+                stream.sink_into(output)
+            }
+        })
+        .expect("build job failure");
+
+        let expected_id = vec![4];
+
+        let mut results = vec![];
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+                results.push(element.id());
+            }
+        }
+        assert_eq!(expected_id, results)
+    }
 }
