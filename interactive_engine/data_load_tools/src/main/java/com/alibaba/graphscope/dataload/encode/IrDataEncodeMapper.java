@@ -84,7 +84,7 @@ public class IrDataEncodeMapper extends MapperBase {
         this.edgeData = new IrEdgeData();
 
         this.ossBucketName = context.getJobConf().get(OfflineBuildOdps.OSS_BUCKET_NAME);
-        this.ossObjectPrefix = context.getJobConf().get(IrDataBuild.WRITE_GRAPH_OSS_PATH);
+        this.ossObjectPrefix = encodePrefix;
 
         String ossAccessId = context.getJobConf().get(OfflineBuildOdps.OSS_ACCESS_ID);
         String ossAccessKey = context.getJobConf().get(OfflineBuildOdps.OSS_ACCESS_KEY);

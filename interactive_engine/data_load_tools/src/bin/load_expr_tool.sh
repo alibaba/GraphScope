@@ -90,17 +90,21 @@ download_data() {
 
     graph_name=$(sed '/^unique.name=/!d;s/.*=//' ${artifacts_dir}/config.ini)
     partition_num=$(sed '/^write.graph.reducer.num=/!d;s/.*=//' ${artifacts_dir}/config.ini)
-    graph_name=${graph_name}_${partition_num}
+    partition_name=${graph_name}_${partition_num}
 
     oss_bucket_name=$(sed '/^oss.bucket.name=/!d;s/.*=//' ${artifacts_dir}/config.ini)
+    oss_path_prefix=oss://${oss_bucket_name}/${partition_name}
+
+    for i in $(seq 0 $((partition_num-1)))
+    do
+        mkdir -p $download_path/graph_data_bin/partition_$i
+        ${ossutil} cp ${oss_path_prefix}/graph_data_bin/partition_$i/edge_property $download_path/graph_data_bin/partition_$i/edge_property
+        ${ossutil} cp ${oss_path_prefix}/graph_data_bin/partition_$i/graph_struct $download_path/graph_data_bin/partition_$i/graph_struct
+        ${ossutil} cp ${oss_path_prefix}/graph_data_bin/partition_$i/index_data $download_path/graph_data_bin/partition_$i/index_data
+        ${ossutil} cp ${oss_path_prefix}/graph_data_bin/partition_$i/node_property $download_path/graph_data_bin/partition_$i/node_property
+    done
+
     oss_path_prefix=oss://${oss_bucket_name}/${graph_name}
-
-    mkdir -p $download_path/graph_data_bin/partition_0
-    ${ossutil} cp ${oss_path_prefix}/graph_data_bin/partition_0/edge_property $download_path/graph_data_bin/partition_0/edge_property
-    ${ossutil} cp ${oss_path_prefix}/graph_data_bin/partition_0/graph_struct $download_path/graph_data_bin/partition_0/graph_struct
-    ${ossutil} cp ${oss_path_prefix}/graph_data_bin/partition_0/index_data $download_path/graph_data_bin/partition_0/index_data
-    ${ossutil} cp ${oss_path_prefix}/graph_data_bin/partition_0/node_property $download_path/graph_data_bin/partition_0/node_property
-
     mkdir -p $download_path/graph_schema
     ${ossutil} cp ${oss_path_prefix}/graph_schema/schema.json $download_path/graph_schema/schema.json
 }
