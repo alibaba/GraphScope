@@ -45,12 +45,21 @@ WORKSPACE = Path(os.path.join("/", tempfile.gettempprefix(), "gs", "builtin"))
 def cmake_and_make(cmake_commands):
     try:
         cmake_process = subprocess.run(
-            cmake_commands, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True
+            cmake_commands,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            encoding="utf-8",
+            errors="replace",
+            universal_newlines=True,
+            check=True
         )
         make_process = subprocess.run(
             [shutil.which("make"), "-j4"],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            encoding="utf-8",
+            errors="replace",
+            universal_newlines=True,
             check=True,
         )
         shutil.rmtree("CMakeFiles")
