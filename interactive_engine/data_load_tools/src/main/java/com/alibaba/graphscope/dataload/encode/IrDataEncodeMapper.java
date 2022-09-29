@@ -70,13 +70,13 @@ public class IrDataEncodeMapper extends MapperBase {
                 (new ObjectMapper())
                         .readValue(mappingJson, new TypeReference<ColumnMappingMeta>() {})
                         .init();
-        String outputPrefix = context.getJobConf().get(IrDataBuild.UNIQUE_NAME);
+        String encodePrefix = context.getJobConf().get(IrDataBuild.ENCODE_OUTPUT_TABLE_PREFIX);
         int partitions =
                 Integer.valueOf(context.getJobConf().get(IrDataBuild.ENCODE_OUTPUT_TABLE_NUM));
         int taskId = context.getTaskID().getInstId();
         this.vertexOutTable =
-                outputPrefix + IrDataBuild.ENCODE_VERTEX_MAGIC + (taskId % partitions);
-        this.edgeOutTable = outputPrefix + IrDataBuild.ENCODE_EDGE_MAGIC + (taskId % partitions);
+                encodePrefix + IrDataBuild.ENCODE_VERTEX_MAGIC + (taskId % partitions);
+        this.edgeOutTable = encodePrefix + IrDataBuild.ENCODE_EDGE_MAGIC + (taskId % partitions);
         // table name as label
         this.vertexRecord = context.createOutputRecord(this.vertexOutTable);
         this.edgeRecord = context.createOutputRecord(this.edgeOutTable);
@@ -84,7 +84,7 @@ public class IrDataEncodeMapper extends MapperBase {
         this.edgeData = new IrEdgeData();
 
         this.ossBucketName = context.getJobConf().get(OfflineBuildOdps.OSS_BUCKET_NAME);
-        this.ossObjectPrefix = context.getJobConf().get(IrDataBuild.UNIQUE_NAME);
+        this.ossObjectPrefix = context.getJobConf().get(IrDataBuild.WRITE_GRAPH_OSS_PATH);
 
         String ossAccessId = context.getJobConf().get(OfflineBuildOdps.OSS_ACCESS_ID);
         String ossAccessKey = context.getJobConf().get(OfflineBuildOdps.OSS_ACCESS_KEY);

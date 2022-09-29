@@ -89,6 +89,9 @@ download_data() {
     download_path=$2
 
     graph_name=$(sed '/^unique.name=/!d;s/.*=//' ${artifacts_dir}/config.ini)
+    partition_num=$(sed '/^write.graph.reducer.num=/!d;s/.*=//' ${artifacts_dir}/config.ini)
+    graph_name=${graph_name}_${partition_num}
+
     oss_bucket_name=$(sed '/^oss.bucket.name=/!d;s/.*=//' ${artifacts_dir}/config.ini)
     oss_path_prefix=oss://${oss_bucket_name}/${graph_name}
 

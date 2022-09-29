@@ -41,7 +41,10 @@ public class IrDataBuild {
     public static final String COLUMN_MAPPING_META = "column.mapping.meta";
     public static final String SPLIT_SIZE = "split.size";
     public static final String SEPARATOR = "separator";
+
     public static final String UNIQUE_NAME = "unique.name";
+    public static final String ENCODE_OUTPUT_TABLE_PREFIX = "encode.output.table.prefix";
+    public static final String WRITE_GRAPH_OSS_PATH = "write.graph.oss.path";
 
     // ENCODE/WRITE_GRAPH
     public static final String DATA_BUILD_MODE = "data.build.mode";
@@ -62,11 +65,13 @@ public class IrDataBuild {
         String mode = properties.getProperty(DATA_BUILD_MODE, "ENCODE");
         int splitSize = Integer.valueOf(properties.getProperty(SPLIT_SIZE, "256"));
         String columnMappingJson = properties.getProperty(COLUMN_MAPPING_META, "");
-        String prefix = properties.getProperty(UNIQUE_NAME, "default");
+        String encodePrefix = properties.getProperty(UNIQUE_NAME, "default");
+
         String tableNum = properties.getProperty(ENCODE_OUTPUT_TABLE_NUM, "1");
         String separator = properties.getProperty(SEPARATOR, "|");
         int reducerNum = Integer.valueOf(properties.getProperty(GRAPH_REDUCER_NUM, "1"));
         String skipHeader = properties.getProperty(SKIP_HEADER, "true");
+        String graphOssPath = encodePrefix + "_" + reducerNum;
 
         // oss config
         String endpoint = properties.getProperty(OfflineBuildOdps.OSS_ENDPOINT);
@@ -81,7 +86,8 @@ public class IrDataBuild {
             job.setNumReduceTasks(0);
             job.set(COLUMN_MAPPING_META, columnMappingJson);
             job.set(ENCODE_OUTPUT_TABLE_NUM, tableNum);
-            job.set(UNIQUE_NAME, prefix);
+            job.set(ENCODE_OUTPUT_TABLE_PREFIX, encodePrefix);
+            job.set(WRITE_GRAPH_OSS_PATH, graphOssPath);
             job.set(OfflineBuildOdps.OSS_ENDPOINT, endpoint);
             job.set(OfflineBuildOdps.OSS_ACCESS_ID, accessId);
             job.set(OfflineBuildOdps.OSS_ACCESS_KEY, accessKey);
@@ -97,7 +103,7 @@ public class IrDataBuild {
             job.setReducerClass(IrWriteGraphReducer.class);
             job.setPartitionerClass(IrWriteGraphPartitioner.class);
             job.set(GRAPH_REDUCER_NUM, String.valueOf(reducerNum));
-            job.set(UNIQUE_NAME, prefix);
+            job.set(WRITE_GRAPH_OSS_PATH, graphOssPath);
             job.set(OfflineBuildOdps.OSS_ENDPOINT, endpoint);
             job.set(OfflineBuildOdps.OSS_ACCESS_ID, accessId);
             job.set(OfflineBuildOdps.OSS_ACCESS_KEY, accessKey);
