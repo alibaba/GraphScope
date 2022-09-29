@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+//import "google/protobuf/empty.proto";
+
+option java_multiple_files = true;
+option java_package = "RDDReaderTransfer";
+option java_outer_classname = "RDDReaderTransferProto";
+option objc_class_prefix = "HLW";
+
+//For cpp namespace
+package RDDReaderTransfer;
+
+service GetArray{
+    rpc GetPartitionInfo(PartInfoRequest) returns (PartitionInfo) {}
+    rpc GetPartitionItem(ItemRequest) returns (stream PartitionItem) {}
+}
+
+message PartInfoRequest {
+    bool req = 1;
+}
+
+message ItemRequest {
+    bool req = 1;
+}
+
+//没有scala中的char，short，Byte
+message essential_type {
+    oneof essential {
+        int32 int_data = 1;
+        int64 long_data = 2;
+        float float_data = 3;
+        double double_data = 4;
+        bool bool_data = 5;
+        string string_data = 6;
+    }
+}
+
+message array_type {
+    repeated essential_type item = 1;
+}
+
+message basic_type {
+    oneof basic {
+        essential_type essen = 1;
+        array_type array = 2;
+    }
+}
+
+message PartitionInfo {
+    int32 partitionId = 1;
+    string dataType = 2;
+}
+
+message PartitionItem {
+    repeated basic_type basic_data = 1;
+}
+
