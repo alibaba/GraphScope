@@ -35,13 +35,33 @@ pub trait Evaluate {
     fn eval<E: Element, C: Context<E>>(&self, context: Option<&C>) -> ExprEvalResult<Object>;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Evaluator {
     /// A suffix-tree-based expression for evaluating
     suffix_tree: Vec<InnerOpr>,
     /// A stack for evaluating the suffix-tree-based expression
     /// Wrap it in a `RefCell` to avoid conflict mutable reference
     stack: RefCell<Vec<Object>>,
+}
+
+impl Evaluator {
+    pub fn update_var_value<E: Element, C: Context<E>>(
+        &mut self, context: Option<&C>,
+    ) -> ExprEvalResult<bool> {
+        let mut update_all_sucess = true;
+        for opr in self.suffix_tree.iter_mut() {
+            match opr {
+                InnerOpr::Operand(ref mut opr) => {
+                    let update_sucess = opr.update_var_value(context)?;
+                    if !update_sucess {
+                        update_all_sucess = false;
+                    }
+                }
+                _ => {}
+            }
+        }
+        Ok(update_all_sucess)
+    }
 }
 
 unsafe impl Sync for Evaluator {}
@@ -52,6 +72,32 @@ pub enum Operand {
     Var { tag: Option<NameOrId>, prop_key: Option<PropKey> },
     Vars(Vec<Operand>),
     VarMap(Vec<Operand>),
+}
+
+impl Operand {
+    pub fn update_var_value<E: Element, C: Context<E>>(
+        &mut self, context: Option<&C>,
+    ) -> ExprEvalResult<bool> {
+        match self {
+            Operand::Var { tag: _, prop_key: _ } => {
+                let obj_result = self.eval(context);
+                match obj_result {
+                    Ok(obj) => {
+                        // successfully update var as const
+                        *self = Operand::Const(obj);
+                        Ok(true)
+                    }
+                    Err(err) => match err {
+                        // fail in updating var since context is not filled yet
+                        ExprEvalError::GetNoneFromContext => Ok(false),
+                        // fail due to other errors, throw this error;
+                        _ => Err(err),
+                    },
+                }
+            }
+            _ => Ok(true),
+        }
+    }
 }
 
 /// An inner representation of `common_pb::ExprOpr` for one-shot translation of `common_pb::ExprOpr`.

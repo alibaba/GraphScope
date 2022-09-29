@@ -64,15 +64,15 @@ impl From<algebra_pb::edge_expand::Direction> for Direction {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct QueryParams {
-    pub labels: Vec<LabelId>,
+    pub labels: Arc<Vec<LabelId>>,
     pub limit: Option<usize>,
     pub columns: Option<Vec<NameOrId>>,
-    pub partitions: Option<Vec<u64>>,
+    pub partitions: Option<Arc<Vec<u64>>>,
     pub filter: Option<Arc<PEvaluator>>,
     pub sample_ratio: Option<f64>,
-    pub extra_params: Option<HashMap<String, String>>,
+    pub extra_params: Option<Arc<HashMap<String, String>>>,
 }
 
 impl TryFrom<Option<algebra_pb::QueryParams>> for QueryParams {
@@ -97,10 +97,11 @@ impl TryFrom<Option<algebra_pb::QueryParams>> for QueryParams {
 
 impl QueryParams {
     fn with_labels(mut self, labels_pb: Vec<common_pb::NameOrId>) -> Result<Self, ParsePbError> {
-        self.labels = labels_pb
+        let labels = labels_pb
             .into_iter()
             .map(|label| label.try_into())
             .collect::<Result<Vec<_>, _>>()?;
+        self.labels = Arc::new(labels);
         Ok(self)
     }
 
@@ -162,7 +163,7 @@ impl QueryParams {
     // Extra query params for different storages
     fn with_extra_params(mut self, extra_params_pb: HashMap<String, String>) -> Result<Self, ParsePbError> {
         if !extra_params_pb.is_empty() {
-            self.extra_params = Some(extra_params_pb);
+            self.extra_params = Some(Arc::new(extra_params_pb));
         }
         Ok(self)
     }

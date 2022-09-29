@@ -402,8 +402,8 @@ impl Encode for Record {
                 entry.write_to(writer)?;
             }
         }
-        writer.write_u64(self.columns.len() as u64)?;
-        for (k, v) in self.columns.iter() {
+        writer.write_u32(self.columns.len() as u32)?;
+        for (k, v) in &self.columns {
             (k as KeyId).write_to(writer)?;
             v.write_to(writer)?;
         }
@@ -415,7 +415,7 @@ impl Decode for Record {
     fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
         let opt = reader.read_u8()?;
         let curr = if opt == 0 { None } else { Some(Arc::new(<Entry>::read_from(reader)?)) };
-        let size = <u64>::read_from(reader)? as usize;
+        let size = <u32>::read_from(reader)? as usize;
         let mut columns = VecMap::with_capacity(size);
         for _i in 0..size {
             let k = <KeyId>::read_from(reader)? as usize;
@@ -429,8 +429,8 @@ impl Decode for Record {
 impl Encode for RecordKey {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
         writer.write_u32(self.key_fields.len() as u32)?;
-        for key in self.key_fields.iter() {
-            (&**key).write_to(writer)?
+        for key in &self.key_fields {
+            key.write_to(writer)?
         }
         Ok(())
     }

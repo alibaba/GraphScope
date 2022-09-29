@@ -52,6 +52,14 @@ impl Predicate {
     }
 }
 
+impl Predicate {
+    pub fn update_var_value<E: Element, C: Context<E>>(
+        &mut self, context: Option<&C>,
+    ) -> ExprEvalResult<bool> {
+        Ok(self.left.update_var_value(context)? && self.right.update_var_value(context)?)
+    }
+}
+
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 enum Partial {
@@ -160,6 +168,25 @@ pub enum Predicates {
     Not(Box<Predicates>),
     And((Box<Predicates>, Box<Predicates>)),
     Or((Box<Predicates>, Box<Predicates>)),
+}
+
+impl Predicates {
+    pub fn update_var_value<E: Element, C: Context<E>>(
+        &mut self, context: Option<&C>,
+    ) -> ExprEvalResult<bool> {
+        match self {
+            Predicates::Init => Ok(true),
+            Predicates::SingleItem(opr) => opr.update_var_value(context),
+            Predicates::Predicate(p) => p.update_var_value(context),
+            Predicates::Not(predicates) => predicates.update_var_value(context),
+            Predicates::And((left, right)) => {
+                Ok(left.update_var_value(context)? && right.update_var_value(context)?)
+            }
+            Predicates::Or((left, right)) => {
+                Ok(left.update_var_value(context)? && right.update_var_value(context)?)
+            }
+        }
+    }
 }
 
 pub(crate) fn zip_option_vecs<T>(left: Option<Vec<T>>, right: Option<Vec<T>>) -> Option<Vec<T>> {
@@ -525,10 +552,22 @@ fn process_predicates(
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum PEvaluator {
     Predicates(Predicates),
     General(Evaluator),
+}
+
+impl PEvaluator {
+    /// Try to update variables by filling values in expression, and return true if all variables are filled.
+    pub fn update_var_value<E: Element, C: Context<E>>(
+        &mut self, context: Option<&C>,
+    ) -> ExprEvalResult<bool> {
+        match self {
+            PEvaluator::Predicates(pred) => pred.update_var_value(context),
+            PEvaluator::General(eval) => eval.update_var_value(context),
+        }
+    }
 }
 
 impl PEvaluator {
