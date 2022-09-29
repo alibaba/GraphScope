@@ -148,7 +148,6 @@ public class RDDReadServer {
         private <ArrayType> array_type buildArray(ArrayType array_data, String array_info) {
             array_type.Builder arr = array_type.newBuilder();
             String[] array_type = array_info.split(",");
-            //TODO:不能只添加一个int，还需要支持其他类型
             int[] arr_item = (int[])(array_data);
             for(Integer i = 0;i < arr_item.length;i++){
                 essential_type essen_data = buildEssen(arr_item[i], array_type[1]);
@@ -176,7 +175,6 @@ public class RDDReadServer {
                 new_item.addBasicData(basic_data);
             }else { // tuple
                 int idx = 1;
-                //TODO：这里是不是可以支持序列化成二进制，之后再到client解码出来？
                 String[] tuple_type = data_type_.split(":");
                 Tuple2 tup2 = (Tuple2) partitionIter_.next();
 
