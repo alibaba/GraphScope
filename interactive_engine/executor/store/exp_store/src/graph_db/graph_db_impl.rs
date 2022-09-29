@@ -304,7 +304,13 @@ where
             let iter = self
                 .topology
                 .get_node_indices()
-                .filter_map(move |internal_id| self.index_to_local_vertex(internal_id, true));
+                .filter_map(move |internal_id| {
+                    if self._is_vertex_local(internal_id) {
+                        self.index_to_local_vertex(internal_id, true)
+                    } else {
+                        None
+                    }
+                });
 
             Iter::from_iter(iter)
         }
@@ -403,16 +409,16 @@ where
         println!(
             "Vertex property size: {:?},\n \
             Edge property size: {:?},\n \
-            Size of global_id_to_index (i.e. number of local vertices): {:?},\n \
-            Number of vertices (local + corner): {:?},\n \
-            Number of edges (start node is local): {:?} \n \
+            Number of local vertices: {:?},\n \
+            Number of (local + corner) vertices: {:?},\n \
+            Number of local (start node is local) edges: {:?} \n \
             Number of edges: {:?},
             ",
             self.vertex_prop_table.len(),
             self.edge_prop_table.len(),
-            self.index_data.global_id_to_index.len(),
+            self.get_all_vertices(None).count(),
             self.topology.nodes_count(),
-            self.count_all_edges(None),
+            self.get_all_edges(None).count(),
             self.topology.edges_count(),
         );
     }
