@@ -197,6 +197,38 @@ public class HasStepTest {
     }
 
     @Test
+    public void g_V_has_startingWith_str_test() {
+        Traversal traversal = g.V().has("name", TextP.startingWith("marko"));
+        Step hasStep = traversal.asAdmin().getEndStep();
+        SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
+        Assert.assertEquals("@.name StartsWith \"marko\"", op.getPredicate().get().applyArg());
+    }
+
+    @Test
+    public void g_V_has_notStartingWith_str_test() {
+        Traversal traversal = g.V().has("name", TextP.notStartingWith("marko"));
+        Step hasStep = traversal.asAdmin().getEndStep();
+        SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
+        Assert.assertEquals("!(@.name StartsWith \"marko\")", op.getPredicate().get().applyArg());
+    }
+
+    @Test
+    public void g_V_has_endingWith_str_test() {
+        Traversal traversal = g.V().has("name", TextP.endingWith("marko"));
+        Step hasStep = traversal.asAdmin().getEndStep();
+        SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
+        Assert.assertEquals("@.name EndsWith \"marko\"", op.getPredicate().get().applyArg());
+    }
+
+    @Test
+    public void g_V_has_notEndingWith_str_test() {
+        Traversal traversal = g.V().has("name", TextP.notEndingWith("marko"));
+        Step hasStep = traversal.asAdmin().getEndStep();
+        SelectOp op = (SelectOp) StepTransformFactory.HAS_STEP.apply(hasStep);
+        Assert.assertEquals("!(@.name EndsWith \"marko\")", op.getPredicate().get().applyArg());
+    }
+
+    @Test
     public void g_V_has_P_not_test() {
         Traversal traversal = g.V().has("name", P.not(P.eq("marko")));
         Step hasStep = traversal.asAdmin().getEndStep();

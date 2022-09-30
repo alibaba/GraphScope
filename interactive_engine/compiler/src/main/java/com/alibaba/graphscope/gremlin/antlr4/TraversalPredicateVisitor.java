@@ -227,6 +227,30 @@ public class TraversalPredicateVisitor extends GremlinGSBaseVisitor<P> {
         return TextP.notContaining(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
     }
 
+    @Override
+    public P visitTraversalPredicate_startingWith(
+            final GremlinGSParser.TraversalPredicate_startingWithContext ctx) {
+        return TextP.startingWith(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+    }
+
+    @Override
+    public P visitTraversalPredicate_notStartingWith(
+            final GremlinGSParser.TraversalPredicate_notStartingWithContext ctx) {
+        return TextP.notStartingWith(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+    }
+
+    @Override
+    public P visitTraversalPredicate_endingWith(
+            final GremlinGSParser.TraversalPredicate_endingWithContext ctx) {
+        return TextP.endingWith(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+    }
+
+    @Override
+    public P visitTraversalPredicate_notEndingWith(
+            final GremlinGSParser.TraversalPredicate_notEndingWithContext ctx) {
+        return TextP.notEndingWith(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+    }
+
     /**
      * get 2 generic literal arguments from the antlr parse tree context,
      * where the arguments has the child index of 2 and 4

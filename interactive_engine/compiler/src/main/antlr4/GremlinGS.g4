@@ -532,11 +532,15 @@ traversalPredicate
     | traversalPredicate_without
     | traversalPredicate DOT 'and' LPAREN traversalPredicate RPAREN
     | traversalPredicate DOT 'or' LPAREN traversalPredicate RPAREN
-    | traversalPredicate_containing // TextP.containing
-    | traversalPredicate_notContaining //  TextP.notContaining
-    | traversalPredicate_not
-    | traversalPredicate_inside
-    | traversalPredicate_outside
+    | traversalPredicate_containing         // TextP.containing
+    | traversalPredicate_notContaining      // TextP.notContaining
+    | traversalPredicate_startingWith       // TextP.startingWith
+    | traversalPredicate_notStartingWith    // TextP.notStartingWith
+    | traversalPredicate_endingWith         // TextP.endingWith
+    | traversalPredicate_notEndingWith      // TextP.notEndingWith
+    | traversalPredicate_not                // P.not
+    | traversalPredicate_inside             // P.inside
+    | traversalPredicate_outside            // P.outside
     ;
 
 nestedTraversal
@@ -594,6 +598,22 @@ traversalPredicate_inside
 
 traversalPredicate_outside
     : ('P.outside' | 'outside') LPAREN genericLiteral COMMA genericLiteral RPAREN
+    ;
+
+traversalPredicate_startingWith
+    : ('TextP.startingWith' | 'startingWith') LPAREN stringLiteral RPAREN
+    ;
+
+traversalPredicate_notStartingWith
+    : ('TextP.notStartingWith' | 'notStartingWith') LPAREN stringLiteral RPAREN
+    ;
+
+traversalPredicate_endingWith
+    : ('TextP.endingWith' | 'endingWith') LPAREN stringLiteral RPAREN
+    ;
+
+traversalPredicate_notEndingWith
+    : ('TextP.notEndingWith' | 'notEndingWith') LPAREN stringLiteral RPAREN
     ;
 
 // incr and decr is unsupported in 3.5.1

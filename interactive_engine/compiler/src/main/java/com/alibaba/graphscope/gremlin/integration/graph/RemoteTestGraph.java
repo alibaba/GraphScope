@@ -56,14 +56,14 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 //        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
 //        method = "g_V_hasXname_containingXarkXX",
 //        reason = "unsupported")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
-        method = "g_V_hasXname_endingWithXasXX",
-        reason = "unsupported")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
-        method = "g_V_hasXname_startingWithXmarXX",
-        reason = "unsupported")
+// @Graph.OptOut(
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+//        method = "g_V_hasXname_endingWithXasXX",
+//        reason = "unsupported")
+// @Graph.OptOut(
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+//        method = "g_V_hasXname_startingWithXmarXX",
+//        reason = "unsupported")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
         method = "g_V_hasXlocationX",
@@ -84,10 +84,10 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 //        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
 //        method = "g_V_hasXperson_name_containingXoX_andXltXmXXX",
 //        reason = "unsupported")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
-        method = "g_V_hasXname_not_startingWithXmarXX",
-        reason = "unsupported")
+// @Graph.OptOut(
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+//        method = "g_V_hasXname_not_startingWithXmarXX",
+//        reason = "unsupported")
 // @Graph.OptOut(
 //        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
 //        method = "g_V_hasXname_not_containingXarkXX",
@@ -104,10 +104,10 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
         method = "g_V_hasLabelXperson_software_blahX",
         reason = "unsupported")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
-        method = "g_V_hasXname_not_endingWithXasXX",
-        reason = "unsupported")
+// @Graph.OptOut(
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+//        method = "g_V_hasXname_not_endingWithXasXX",
+//        reason = "unsupported")
 // @Graph.OptOut(
 //        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
 //        method = "g_V_hasXname_gtXmX_andXcontainingXoXXX",

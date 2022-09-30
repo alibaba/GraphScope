@@ -267,3 +267,133 @@ impl Exp for Primitives {
         }
     }
 }
+
+/// Bit operations
+pub trait BitOperand {
+    type Output;
+
+    fn bit_and(self, other: Self) -> Self::Output;
+    fn bit_or(self, other: Self) -> Self::Output;
+    fn bit_xor(self, other: Self) -> Self::Output;
+    fn bit_left_shift(self, other: Self) -> Self::Output;
+    fn bit_right_shift(self, other: Self) -> Self::Output;
+}
+
+impl BitOperand for Primitives {
+    type Output = Primitives;
+
+    fn bit_and(self, other: Self) -> Self::Output {
+        use super::Primitives::*;
+        match (self, other) {
+            (Byte(a), Byte(b)) => Byte(a & b),
+            (Byte(a), Integer(b)) => Integer((a as i32) & b),
+            (Byte(a), Long(b)) => Long((a as i64) & b),
+            (Byte(a), ULLong(b)) => ULLong((a as u128) & b),
+            (Integer(a), Byte(b)) => Integer(a & (b as i32)),
+            (Integer(a), Integer(b)) => Integer(a & b),
+            (Integer(a), Long(b)) => Long((a as i64) & b),
+            (Integer(a), ULLong(b)) => ULLong((a as u128) & b),
+            (Long(a), Byte(b)) => Long(a & (b as i64)),
+            (Long(a), Integer(b)) => Long(a & (b as i64)),
+            (Long(a), Long(b)) => Long(a & b),
+            (Long(a), ULLong(b)) => ULLong((a as u128) & b),
+            (ULLong(a), Byte(b)) => ULLong(a & (b as u128)),
+            (ULLong(a), Integer(b)) => ULLong(a & (b as u128)),
+            (ULLong(a), Long(b)) => ULLong(a & (b as u128)),
+            (ULLong(a), ULLong(b)) => ULLong(a & b),
+            (_, _) => panic!("cannot apply bit operations on `Float` type"),
+        }
+    }
+
+    fn bit_or(self, other: Self) -> Self::Output {
+        use super::Primitives::*;
+        match (self, other) {
+            (Byte(a), Byte(b)) => Byte(a | b),
+            (Byte(a), Integer(b)) => Integer((a as i32) | b),
+            (Byte(a), Long(b)) => Long((a as i64) | b),
+            (Byte(a), ULLong(b)) => ULLong((a as u128) | b),
+            (Integer(a), Byte(b)) => Integer(a | (b as i32)),
+            (Integer(a), Integer(b)) => Integer(a | b),
+            (Integer(a), Long(b)) => Long((a as i64) | b),
+            (Integer(a), ULLong(b)) => ULLong((a as u128) | b),
+            (Long(a), Byte(b)) => Long(a | (b as i64)),
+            (Long(a), Integer(b)) => Long(a | (b as i64)),
+            (Long(a), Long(b)) => Long(a | b),
+            (Long(a), ULLong(b)) => ULLong((a as u128) | b),
+            (ULLong(a), Byte(b)) => ULLong(a | (b as u128)),
+            (ULLong(a), Integer(b)) => ULLong(a | (b as u128)),
+            (ULLong(a), Long(b)) => ULLong(a | (b as u128)),
+            (ULLong(a), ULLong(b)) => ULLong(a | b),
+            (_, _) => panic!("cannot apply bit operations on `Float` type"),
+        }
+    }
+
+    fn bit_xor(self, other: Self) -> Self::Output {
+        use super::Primitives::*;
+        match (self, other) {
+            (Byte(a), Byte(b)) => Byte(a ^ b),
+            (Byte(a), Integer(b)) => Integer((a as i32) ^ b),
+            (Byte(a), Long(b)) => Long((a as i64) ^ b),
+            (Byte(a), ULLong(b)) => ULLong((a as u128) ^ b),
+            (Integer(a), Byte(b)) => Integer(a ^ (b as i32)),
+            (Integer(a), Integer(b)) => Integer(a ^ b),
+            (Integer(a), Long(b)) => Long((a as i64) ^ b),
+            (Integer(a), ULLong(b)) => ULLong((a as u128) ^ b),
+            (Long(a), Byte(b)) => Long(a ^ (b as i64)),
+            (Long(a), Integer(b)) => Long(a ^ (b as i64)),
+            (Long(a), Long(b)) => Long(a ^ b),
+            (Long(a), ULLong(b)) => ULLong((a as u128) ^ b),
+            (ULLong(a), Byte(b)) => ULLong(a ^ (b as u128)),
+            (ULLong(a), Integer(b)) => ULLong(a ^ (b as u128)),
+            (ULLong(a), Long(b)) => ULLong(a ^ (b as u128)),
+            (ULLong(a), ULLong(b)) => ULLong(a ^ b),
+            (_, _) => panic!("cannot apply bit operations on `Float` type"),
+        }
+    }
+
+    fn bit_left_shift(self, other: Self) -> Self::Output {
+        use super::Primitives::*;
+        match (self, other) {
+            (Byte(a), Byte(b)) => Byte(a << b),
+            (Byte(a), Integer(b)) => Integer((a as i32) << b),
+            (Byte(a), Long(b)) => Long((a as i64) << b),
+            (Byte(a), ULLong(b)) => ULLong((a as u128) << b),
+            (Integer(a), Byte(b)) => Integer(a << (b as i32)),
+            (Integer(a), Integer(b)) => Integer(a << b),
+            (Integer(a), Long(b)) => Long((a as i64) << b),
+            (Integer(a), ULLong(b)) => ULLong((a as u128) << b),
+            (Long(a), Byte(b)) => Long(a << (b as i64)),
+            (Long(a), Integer(b)) => Long(a << (b as i64)),
+            (Long(a), Long(b)) => Long(a << b),
+            (Long(a), ULLong(b)) => ULLong((a as u128) << b),
+            (ULLong(a), Byte(b)) => ULLong(a << (b as u128)),
+            (ULLong(a), Integer(b)) => ULLong(a << (b as u128)),
+            (ULLong(a), Long(b)) => ULLong(a << (b as u128)),
+            (ULLong(a), ULLong(b)) => ULLong(a << b),
+            (_, _) => panic!("cannot apply bit operations on `Float` type"),
+        }
+    }
+
+    fn bit_right_shift(self, other: Self) -> Self::Output {
+        use super::Primitives::*;
+        match (self, other) {
+            (Byte(a), Byte(b)) => Byte(a >> b),
+            (Byte(a), Integer(b)) => Integer((a as i32) >> b),
+            (Byte(a), Long(b)) => Long((a as i64) >> b),
+            (Byte(a), ULLong(b)) => ULLong((a as u128) >> b),
+            (Integer(a), Byte(b)) => Integer(a >> (b as i32)),
+            (Integer(a), Integer(b)) => Integer(a >> b),
+            (Integer(a), Long(b)) => Long((a as i64) >> b),
+            (Integer(a), ULLong(b)) => ULLong((a as u128) >> b),
+            (Long(a), Byte(b)) => Long(a >> (b as i64)),
+            (Long(a), Integer(b)) => Long(a >> (b as i64)),
+            (Long(a), Long(b)) => Long(a >> b),
+            (Long(a), ULLong(b)) => ULLong((a as u128) >> b),
+            (ULLong(a), Byte(b)) => ULLong(a >> (b as u128)),
+            (ULLong(a), Integer(b)) => ULLong(a >> (b as u128)),
+            (ULLong(a), Long(b)) => ULLong(a >> (b as u128)),
+            (ULLong(a), ULLong(b)) => ULLong(a >> b),
+            (_, _) => panic!("cannot apply bit operations on `Float` type"),
+        }
+    }
+}

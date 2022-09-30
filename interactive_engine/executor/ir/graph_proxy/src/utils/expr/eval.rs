@@ -18,7 +18,7 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::convert::{TryFrom, TryInto};
 
-use dyn_type::arith::Exp;
+use dyn_type::arith::{BitOperand, Exp};
 use dyn_type::object;
 use dyn_type::{BorrowObject, Object};
 use ir_common::error::{ParsePbError, ParsePbResult};
@@ -146,6 +146,17 @@ fn apply_arith<'a>(
         Div => Object::Primitive(a.as_primitive()? / b.as_primitive()?),
         Mod => Object::Primitive(a.as_primitive()? % b.as_primitive()?),
         Exp => Object::Primitive(a.as_primitive()?.exp(b.as_primitive()?)),
+        Bitand => Object::Primitive(a.as_primitive()?.bit_and(b.as_primitive()?)),
+        Bitor => Object::Primitive(a.as_primitive()?.bit_or(b.as_primitive()?)),
+        Bitxor => Object::Primitive(a.as_primitive()?.bit_xor(b.as_primitive()?)),
+        Bitlshift => Object::Primitive(
+            a.as_primitive()?
+                .bit_left_shift(b.as_primitive()?),
+        ),
+        Bitrshift => Object::Primitive(
+            a.as_primitive()?
+                .bit_right_shift(b.as_primitive()?),
+        ),
     })
 }
 
@@ -173,6 +184,14 @@ pub(crate) fn apply_logical<'a>(
                 .into()),
                 Within => Ok(b.contains(&a).into()),
                 Without => Ok((!b.contains(&a)).into()),
+                Startswith => Ok(a
+                    .as_str()?
+                    .starts_with(b.as_str()?.as_ref())
+                    .into()),
+                Endswith => Ok(a
+                    .as_str()?
+                    .ends_with(b.as_str()?.as_ref())
+                    .into()),
                 Not => unreachable!(),
             }
         } else {
@@ -615,8 +634,8 @@ mod tests {
             "7.0 + 3",        // 10.0
             "7 * 3",          // 21
             "7 / 3",          // 2
-            "7 ^ 3",          // 343
-            "7 ^ -3",         // 1 / 343
+            "7 ^^ 3",         // 343
+            "7 ^^ -3",        // 1 / 343
             "7 % 3",          // 1
             "7 -3",           // 4
             "-3 + 7",         // 4
@@ -637,6 +656,12 @@ mod tests {
             "2 <= 2",         // true,
             "2 == 2",         // true
             "1.0 > 2.0",      // false
+            "1 & 2",          // 0
+            "1 | 2",          // 3
+            "1 ^ 2",          // 3
+            "1 << 2",         // 4
+            "4 >> 2",         // 1
+            "232 & 64 != 0",  // true
         ];
 
         let expected: Vec<Object> = vec![
@@ -666,6 +691,12 @@ mod tests {
             object!(true),
             object!(true),
             object!(false),
+            object!(0),
+            object!(3),
+            object!(3),
+            object!(4),
+            object!(1),
+            object!(true),
         ];
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
@@ -733,9 +764,9 @@ mod tests {
             "2 * 1e-3",                              // 0.002
             "1 > 2 && 1 < 3",                        // false
             "1 > 2 || 1 < 3",                        // true
-            "2 ^ 10 > 10",                           // true
-            "2 / 5 ^ 2",                             // 0
-            "2.0 / 5 ^ 2",                           // 2.0 / 25
+            "2 ^^ 10 > 10",                          // true
+            "2 / 5 ^^ 2",                            // 0
+            "2.0 / 5 ^^ 2",                          // 2.0 / 25
             "((1 + 2) * 3) / (7 * 8) + 12.5 / 10.1", // 1.2376237623762376
             "((1 + 2) * 3) / 7 * 8 + 12.5 / 10.1",   // 9.237623762376238
             "((1 + 2) * 3) / 7 * 8 + 12.5 / 10.1 \
