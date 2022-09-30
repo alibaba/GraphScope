@@ -55,46 +55,51 @@ spec:
           image: {{ include "graphscope-store.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
           command:
-          - /bin/bash
-          - -c
-          - |
-            object_id=0
-            GRAPHSCOPE_RUNTIME=/tmp/gs/${object_id}
-            mkdir -p $GRAPHSCOPE_RUNTIME
+          {{- if (eq "Vineyard" .Values.storageType) }}
+            - /bin/bash
+            - -c
+            - |
+              object_id=0
+              GRAPHSCOPE_RUNTIME=/tmp/gs/${object_id}
+              mkdir -p $GRAPHSCOPE_RUNTIME
 
-            runtime_hosts=""
-            i=0
-            while [ $i -ne $STORE_COUNT ]
-            do
-            pod=`echo $DNS_NAME_PREFIX_STORE | sed -e "s/{}/$i/g"`
-            runtime_hosts="${runtime_hosts},${pod}:${GAIA_RPC_PORT}"
-            i=$(($i+1))
-            done
-            runtime_hosts=${runtime_hosts:1}
+              runtime_hosts=""
+              i=0
+              while [ $i -ne $STORE_COUNT ]
+              do
+              pod=`echo $DNS_NAME_PREFIX_STORE | sed -e "s/{}/$i/g"`
+              runtime_hosts="${runtime_hosts},${pod}:${GAIA_RPC_PORT}"
+              i=$(($i+1))
+              done
+              runtime_hosts=${runtime_hosts:1}
 
-            config_path=/etc/graphscope-store/config
+              config_path=/etc/graphscope-store/config
 
-            $GRAPHSCOPE_HOME/bin/giectl start_frontend ${GRAPHSCOPE_RUNTIME} ${object_id} \
-              $config_path/$SCHEMA_CONFIG $runtime_hosts $GREMLIN_SERVER_PORT $EXTRA_CONFIG
+              $GRAPHSCOPE_HOME/bin/giectl start_frontend ${GRAPHSCOPE_RUNTIME} ${object_id} \
+                $config_path/$SCHEMA_CONFIG $runtime_hosts $GREMLIN_SERVER_PORT $EXTRA_CONFIG
 
-            exit_code=$?
-            while [ $exit_code -eq 0 ]
-            do
-            sleep 10
-            done
+              exit_code=$?
+              while [ $exit_code -eq 0 ]
+              do
+              sleep 10
+              done
+            {{- end }}
+            {{- if (eq "Experimental" .Values.storageType) }}
+            ## todo
+            {{- end }}
           env:
             - name: GAIA_RPC_PORT
               value: {{ .Values.store.service.gaiaRpc | quote }}
-            - name: SCHEMA_CONFIG
-              value: {{ .Values.schemaConfig | quote }}
             - name: GREMLIN_SERVER_PORT
               value: {{ .Values.frontend.service.gremlinPort | quote }}
-            - name: EXTRA_CONFIG
-              value: {{ .Values.extraConfig | quote }}
             - name: DNS_NAME_PREFIX_STORE
               value: {{ $storeFullname }}-{}.{{ $storeFullname }}-headless.{{ $releaseNamespace }}.svc.{{ $clusterDomain }}
             - name: STORE_COUNT
               value: {{ .Values.store.replicaCount | quote }}
+            - name: SCHEMA_CONFIG
+              value: {{ .Values.schemaConfig | quote }}
+            - name: EXTRA_CONFIG
+              value: {{ .Values.extraConfig | quote }}
           ports:
             - name: gremlin
               containerPort: {{ .Values.frontend.service.gremlinPort }}

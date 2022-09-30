@@ -39,19 +39,22 @@ commonLabels: {}
 ##
 javaOpts: ""
 
+## Vineyard or Experimental Storage
+storageType: Vineyard
+
 ## Store Config
 storeDataPath: "/var/lib/graphscope-store"
-
-htapLoaderConfig: "modern_loader.json"
-
-## need by vineyard in distributed env
-etcdEndpoint: "etcd-for-vineyard.default.svc.cluster.local:2379"
 
 ## Frontend Config
 schemaConfig: "modern_schema.json"
 
-## pegasus related config
+## Pegasus Config
 extraConfig: ""
+
+## the following configurations are necessary when using vineyard store
+htapLoaderConfig: "modern_loader.json"
+## need by vineyard in distributed env
+etcdEndpoint: "etcd-for-vineyard.default.svc.cluster.local:2379"
 
 ## Role Based Access
 ## ref: https://kubernetes.io/docs/admin/authorization/rbac/

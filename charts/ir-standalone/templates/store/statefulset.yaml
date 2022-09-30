@@ -55,87 +55,92 @@ spec:
           image: {{ include "graphscope-store.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
           command:
-          - /bin/bash
-          - -c
-          - |
-            sleep 5s
+          {{- if (eq "Vineyard" .Values.storageType) }}
+            - /bin/bash
+            - -c
+            - |
+              sleep 5s
 
-            chmod +x $GRAPHSCOPE_HOME/bin/kube_ssh
-            sudo cp $GRAPHSCOPE_HOME/bin/kube_ssh /usr/bin/kube_ssh
+              chmod +x $GRAPHSCOPE_HOME/bin/kube_ssh
+              sudo cp $GRAPHSCOPE_HOME/bin/kube_ssh /usr/bin/kube_ssh
 
-            hosts=/tmp/hosts_of_nodes
-            rm -rf $hosts && touch $hosts
-            pod_ips=`kubectl get pod -lapp.kubernetes.io/component=store -o jsonpath='{.items[*].status.podIP}'`
-            pod_names=""
-            for ip in `echo $pod_ips`
-            do
-              pod_name=`kubectl get pods -o custom-columns=:metadata.name --no-headers=true --field-selector status.podIP=$ip`
-              echo $ip $pod_name >> $hosts
-              pod_names="${pod_names},${pod_name}"
-            done
-            pod_names=${pod_names:1}
+              hosts=/tmp/hosts_of_nodes
+              rm -rf $hosts && touch $hosts
+              pod_ips=`kubectl get pod -lapp.kubernetes.io/component=store -o jsonpath='{.items[*].status.podIP}'`
+              pod_names=""
+              for ip in `echo $pod_ips`
+              do
+                pod_name=`kubectl get pods -o custom-columns=:metadata.name --no-headers=true --field-selector status.podIP=$ip`
+                echo $ip $pod_name >> $hosts
+                pod_names="${pod_names},${pod_name}"
+              done
+              pod_names=${pod_names:1}
 
-            # start vineyard service
-            export VINEYARD_IPC_SOCKET=/tmp/vineyard.sock
-            if [ $STORE_COUNT -eq 1 ]
-            then
-              $GRAPHSCOPE_HOME/../vineyard/vineyardd --socket=${VINEYARD_IPC_SOCKET} --meta=local &
-            else
-              $GRAPHSCOPE_HOME/../vineyard/vineyardd --socket=${VINEYARD_IPC_SOCKET} --etcd_endpoint=$ETCD_ENDPOINT &
-            fi
-
-            # load vineyard graph
-            export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(python3 -c "import os; import vineyard; print(os.path.dirname(vineyard.__file__))")
-            export OPAL_PREFIX=$(python3 -c "import os; import graphscope; print(os.path.abspath(os.path.dirname(graphscope.__file__) + '/../graphscope.runtime/openmpi'))")
-
-            config_path=/etc/graphscope-store/config
-
-            [[ `hostname` =~ -([0-9]+)$ ]] || exit 1
-            server_id=${BASH_REMATCH[1]}
-
-            if [ $server_id -eq 0 ]
-            then
-              mpirun --host $pod_names \
-                -x LD_LIBRARY_PATH=$LD_LIBRARY_PATH \
-                -x OPAL_PREFIX=$OPAL_PREFIX \
-                -x VINEYARD_IPC_SOCKET=$VINEYARD_IPC_SOCKET \
-                -x config_path=$config_path \
-                  $GRAPHSCOPE_HOME/bin/vineyard_htap_loader --config $config_path/$HTAP_LOADER_CONFIG
-              if [ $? -ne 0 ]
+              # start vineyard service
+              export VINEYARD_IPC_SOCKET=/tmp/vineyard.sock
+              if [ $STORE_COUNT -eq 1 ]
               then
-                echo "load vineyard graph fail"
-                exit 1
+                $GRAPHSCOPE_HOME/../vineyard/vineyardd --socket=${VINEYARD_IPC_SOCKET} --meta=local &
+              else
+                $GRAPHSCOPE_HOME/../vineyard/vineyardd --socket=${VINEYARD_IPC_SOCKET} --etcd_endpoint=$ETCD_ENDPOINT &
               fi
-            fi
 
-            json_file=`ls /tmp/*.json`
-            while [ $? -ne 0 ]
-            do
-              sleep 1s
+              # load vineyard graph
+              export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(python3 -c "import os; import vineyard; print(os.path.dirname(vineyard.__file__))")
+              export OPAL_PREFIX=$(python3 -c "import os; import graphscope; print(os.path.abspath(os.path.dirname(graphscope.__file__) + '/../graphscope.runtime/openmpi'))")
+
+              config_path=/etc/graphscope-store/config
+
+              [[ `hostname` =~ -([0-9]+)$ ]] || exit 1
+              server_id=${BASH_REMATCH[1]}
+
+              if [ $server_id -eq 0 ]
+              then
+                mpirun --host $pod_names \
+                  -x LD_LIBRARY_PATH=$LD_LIBRARY_PATH \
+                  -x OPAL_PREFIX=$OPAL_PREFIX \
+                  -x VINEYARD_IPC_SOCKET=$VINEYARD_IPC_SOCKET \
+                  -x config_path=$config_path \
+                    $GRAPHSCOPE_HOME/bin/vineyard_htap_loader --config $config_path/$HTAP_LOADER_CONFIG
+                if [ $? -ne 0 ]
+                then
+                  echo "load vineyard graph fail"
+                  exit 1
+                fi
+              fi
+
               json_file=`ls /tmp/*.json`
-            done
-            object_id=${json_file//[^0-9]/}
+              while [ $? -ne 0 ]
+              do
+                sleep 1s
+                json_file=`ls /tmp/*.json`
+              done
+              object_id=${json_file//[^0-9]/}
 
-            # start engine service
-            pegasus_hosts=""
-            i=0
-            while [ $i -ne $STORE_COUNT ]
-            do
-            pod=`echo $DNS_NAME_PREFIX_STORE | sed -e "s/{}/$i/g"`
-            pegasus_hosts="${pegasus_hosts},${pod}:${GAIA_ENGINE_PORT}"
-              i=$(($i+1))
-            done
-            pegasus_hosts=${pegasus_hosts:1}
+              # start engine service
+              pegasus_hosts=""
+              i=0
+              while [ $i -ne $STORE_COUNT ]
+              do
+              pod=`echo $DNS_NAME_PREFIX_STORE | sed -e "s/{}/$i/g"`
+              pegasus_hosts="${pegasus_hosts},${pod}:${GAIA_ENGINE_PORT}"
+                i=$(($i+1))
+              done
+              pegasus_hosts=${pegasus_hosts:1}
 
-            GRAPHSCOPE_RUNTIME=/tmp/gs/${object_id}
-            GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} ${GRAPHSCOPE_HOME}/bin/giectl start_executor ${GRAPHSCOPE_RUNTIME} \
-              ${object_id} ${server_id} ${STORE_COUNT} ${GAIA_RPC_PORT} ${pegasus_hosts}
+              GRAPHSCOPE_RUNTIME=/tmp/gs/${object_id}
+              GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} ${GRAPHSCOPE_HOME}/bin/giectl start_executor ${GRAPHSCOPE_RUNTIME} \
+                ${object_id} ${server_id} ${STORE_COUNT} ${GAIA_RPC_PORT} ${pegasus_hosts}
 
-            exit_code=$?
-            while [ $exit_code -eq 0 ]
-            do
-              sleep 10
-            done
+              exit_code=$?
+              while [ $exit_code -eq 0 ]
+              do
+                sleep 10
+              done
+            {{- end }}
+            {{- if (eq "Experimental" .Values.storageType) }}
+            ## todo
+            {{- end }}
           env:
             - name: GAIA_RPC_PORT
               value: {{ .Values.store.service.gaiaRpc | quote }}
@@ -143,14 +148,16 @@ spec:
               value: {{ .Values.store.service.gaiaEngine | quote }}
             - name: STORE_DATA_PATH
               value: {{ .Values.storeDataPath | quote }}
-            - name: HTAP_LOADER_CONFIG
-              value: {{ .Values.htapLoaderConfig | quote }}
             - name: DNS_NAME_PREFIX_STORE
               value: {{ $storeFullname }}-{}.{{ $storeFullname }}-headless.{{ $releaseNamespace }}.svc.{{ $clusterDomain }}
             - name: STORE_COUNT
               value: {{ .Values.store.replicaCount | quote }}
+            {{- if (eq "Vineyard" .Values.storageType) }}
             - name: ETCD_ENDPOINT
               value: {{ .Values.etcdEndpoint | quote }}
+            - name: HTAP_LOADER_CONFIG
+              value: {{ .Values.htapLoaderConfig | quote }}
+            {{- end }}
           ports:
             - name: gaia-rpc
               containerPort: {{ .Values.store.service.gaiaRpc }}
