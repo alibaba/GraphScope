@@ -1,0 +1,45 @@
+<configuration>
+    <property name="log_dir" value="${log.dir:-/var/log/graphscope/store}"/>
+    <property name="log_name" value="${log.name:-maxgraph}"/>
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${log_dir}/${log_name}.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${log_dir}/${log_name}.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>60</maxHistory>
+            <totalSizeCap>10GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>[%d{ISO8601}][%p][%t][%c:%L] %m%n</pattern>
+        </encoder>
+    </appender>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>[%d{ISO8601}][%p][%t][%c:%L] %m%n</pattern>
+        </encoder>
+    </appender>
+    <appender name="Metric" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${log_dir}/metric.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${log_dir}/metric.log.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>60</maxHistory>
+            <totalSizeCap>10GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%m%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="org.apache.zookeeper" level="ERROR" />
+    <logger name="org.apache.kafka" level="ERROR" />
+    <logger name="kafka" level="ERROR" />
+    <Logger name="MetricLog" level="INFO" additivity="false">
+        <appender-ref ref="Metric"/>
+    </Logger>
+
+    <root level="info">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE" />
+    </root>
+</configuration>

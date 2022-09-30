@@ -6,18 +6,18 @@ on:
     branches:
       - main
     paths:
-      - 'research/**'
       - 'interactive_engine/**'
       - '.github/workflows/gaia.yml'
-      - '!research/**.md'
   pull_request:
     branches:
       - main
     paths:
-      - 'research/**'
       - 'interactive_engine/**'
       - '.github/workflows/gaia.yml'
-      - '!research/**.md'
+
+concurrency:
+  group: ${{ github.repository }}-${{ github.event.number || github.head_ref || github.sha }}-${{ github.workflow }}
+  cancel-in-progress: true
 
 jobs:
   gaia-test:
@@ -44,6 +44,11 @@ jobs:
           ~/.cache/sccache
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
+    - name: Rust Format Check
+      run: |
+        source ${HOME}/.bashrc
+        cd ${GITHUB_WORKSPACE}/interactive_engine/executor && ./check_format.sh
+
     - name: Install Dependencies
       run: |
         # install rdkafka
@@ -64,31 +69,32 @@ jobs:
     - name: Build Ir on Experimental Store
       run: |
         source ${HOME}/.bashrc
-        cd ${GITHUB_WORKSPACE}/research/query_service/ir/compiler
+        cd ${GITHUB_WORKSPACE}/interactive_engine/compiler
         make build
-
-    - name: Build Ir on Vineyard Store
-      run: |
-        source ${HOME}/.bashrc
-        cd ${GITHUB_WORKSPACE} && make install
-        cd ${GITHUB_WORKSPACE}/interactive_engine/executor
-        cargo fmt -- --check
-
-    - name: Build Ir on Groot Store
-      run: |
-        source ${HOME}/.bashrc
-        cd ${GITHUB_WORKSPACE}/interactive_engine
-        mvn clean install -DskipTests -Pv2 -Drust.compile.mode=debug --quiet
 
     - name: Ir Unit Test
       run: |
         source ${HOME}/.bashrc
-        cd ${GITHUB_WORKSPACE}/research/query_service/ir/compiler && make test
+        cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && make test
+
+    - name: CommonType Unit Test
+      run: |
+        source ${HOME}/.bashrc
+        cd ${GITHUB_WORKSPACE}/interactive_engine/executor/common/dyn_type && cargo test
+
+    - name: Store Unit Test
+      run: |
+        source ${HOME}/.bashrc
+        cd ${GITHUB_WORKSPACE}/interactive_engine/executor/store/exp_store && cargo test
+        # TODO: fix ut in groot
+        # cd ${GITHUB_WORKSPACE}/interactive_engine/executor/store/groot && cargo test
+        # TODO: add ut in global_query
+        # cd ${GITHUB_WORKSPACE}/interactive_engine/executor/store/global_query && cargo test
 
     - name: Ir Integration Test on Experimental Store
       run: |
         source ${HOME}/.bashrc
-        cd ${GITHUB_WORKSPACE}/research/query_service/ir/compiler && ./ir_exprimental_ci.sh
+        cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && ./ir_exprimental_ci.sh
 
     - name: Upload GIE log
       if: always()

@@ -44,7 +44,7 @@ class GraphDAGNode(DAGNode):
         >>> import graphscope as gs
         >>> sess = gs.session(mode="lazy")
         >>> g = sess.g() # <graphscope.framework.graph.GraphDAGNode object>
-        >>> lg = sess.learning(g)
+        >>> lg = sess.graphlearn(g)
         >>> print(lg) # <graphscope.learning.graph.GraphDAGNode object>
         >>> lg_graph = sess.run(lg)
         >>> print(lg) # <graphscope.learning.grapg.Graph object>

@@ -19,12 +19,12 @@ import com.alibaba.graphscope.app.GiraphComputationAdaptor;
 import com.alibaba.graphscope.context.GiraphComputationAdaptorContext;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.fragment.adaptor.ImmutableEdgecutFragmentAdaptor;
-import com.alibaba.graphscope.graph.EdgeManager;
+import com.alibaba.graphscope.graph.GiraphEdgeManager;
+import com.alibaba.graphscope.graph.GiraphVertexIdManager;
 import com.alibaba.graphscope.graph.VertexDataManager;
-import com.alibaba.graphscope.graph.VertexIdManager;
 import com.alibaba.graphscope.graph.impl.DefaultImmutableEdgeManager;
+import com.alibaba.graphscope.graph.impl.GiraphVertexIdManagerImpl;
 import com.alibaba.graphscope.graph.impl.VertexDataManagerImpl;
-import com.alibaba.graphscope.graph.impl.VertexIdManagerImpl;
 
 import org.apache.giraph.conf.ImmutableClassesGiraphConfiguration;
 import org.apache.hadoop.io.Writable;
@@ -123,7 +123,7 @@ public class GiraphComputationFactory {
                     GRAPE_VID_T,
                     GRAPE_VDATA_T,
                     GRAPE_EDATA_T>
-            VertexIdManager<GRAPE_VID_T, OID_T> createDefaultVertexIdManager(
+            GiraphVertexIdManager<GRAPE_VID_T, OID_T> createDefaultVertexIdManager(
                     ImmutableClassesGiraphConfiguration conf,
                     IFragment<GRAPE_OID_T, GRAPE_VID_T, GRAPE_VDATA_T, GRAPE_EDATA_T> frag,
                     long fragVerticesNum) {
@@ -144,7 +144,7 @@ public class GiraphComputationFactory {
                     GRAPE_VID_T,
                     GRAPE_VDATA_T,
                     GRAPE_EDATA_T>
-            VertexIdManager<GRAPE_VID_T, OID_T> createDefaultVertexIdManager(
+            GiraphVertexIdManager<GRAPE_VID_T, OID_T> createDefaultVertexIdManager(
                     Class<? extends OID_T> oidClass,
                     Class<? extends GRAPE_OID_T> grapeOidClass,
                     Class<? extends GRAPE_VID_T> grapeVidClass,
@@ -153,7 +153,7 @@ public class GiraphComputationFactory {
                     IFragment fragment,
                     long vertexNum,
                     ImmutableClassesGiraphConfiguration conf) {
-        return new VertexIdManagerImpl<
+        return new GiraphVertexIdManagerImpl<
                 OID_T, GRAPE_OID_T, GRAPE_VID_T, GRAPE_VDATA_T, GRAPE_EDATA_T>(
                 fragment, vertexNum, conf);
     }
@@ -165,10 +165,10 @@ public class GiraphComputationFactory {
                     GRAPE_VID_T,
                     GRAPE_VDATA_T,
                     GRAPE_EDATA_T>
-            EdgeManager<OID_T, EDATA_T> createImmutableEdgeManager(
+            GiraphEdgeManager<OID_T, EDATA_T> createImmutableEdgeManager(
                     ImmutableClassesGiraphConfiguration conf,
                     IFragment<GRAPE_OID_T, GRAPE_VID_T, GRAPE_VDATA_T, GRAPE_EDATA_T> fragment,
-                    VertexIdManager<GRAPE_VID_T, OID_T> vertexIdManager) {
+                    GiraphVertexIdManager<GRAPE_VID_T, OID_T> vertexIdManager) {
         return createImmutableEdgeManagerImpl(
                 conf.getVertexIdClass(),
                 conf.getEdgeValueClass(),
@@ -188,7 +188,7 @@ public class GiraphComputationFactory {
                     GRAPE_VID_T,
                     GRAPE_VDATA_T,
                     GRAPE_EDATA_T>
-            EdgeManager<OID_T, EDATA_T> createImmutableEdgeManagerImpl(
+            GiraphEdgeManager<OID_T, EDATA_T> createImmutableEdgeManagerImpl(
                     Class<? extends OID_T> oidClass,
                     Class<? extends EDATA_T> edataClass,
                     Class<? extends GRAPE_OID_T> grapeOidClass,
@@ -196,7 +196,7 @@ public class GiraphComputationFactory {
                     Class<? extends GRAPE_VDATA_T> grapeVdataClass,
                     Class<? extends GRAPE_EDATA_T> grapeEdataClass,
                     IFragment<GRAPE_OID_T, GRAPE_VID_T, GRAPE_VDATA_T, GRAPE_EDATA_T> fragment,
-                    VertexIdManager<GRAPE_VID_T, OID_T> idManager,
+                    GiraphVertexIdManager<GRAPE_VID_T, OID_T> idManager,
                     ImmutableClassesGiraphConfiguration<OID_T, ?, EDATA_T> conf) {
         if (conf.getEdgeManager().equals("default")) {
             logger.info("Using [Default] edge manger");

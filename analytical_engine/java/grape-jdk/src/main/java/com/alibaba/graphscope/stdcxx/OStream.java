@@ -16,16 +16,15 @@
 
 package com.alibaba.graphscope.stdcxx;
 
-import static com.alibaba.graphscope.utils.JNILibraryName.JNI_LIBRARY_NAME;
-
 import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
+import com.alibaba.graphscope.utils.JNILibraryName;
 
 import java.io.OutputStream;
 
-@FFIGen(library = JNI_LIBRARY_NAME)
+@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
 @CXXHead(
         value = {},
         system = {"ostream"})

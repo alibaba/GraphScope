@@ -16,9 +16,14 @@ limitations under the License.
 #ifndef ANALYTICAL_ENGINE_APPS_VOTERANK_VOTERANK_H_
 #define ANALYTICAL_ENGINE_APPS_VOTERANK_VOTERANK_H_
 
-#include <grape/grape.h>
+#include <algorithm>
+#include <tuple>
+#include <vector>
+
+#include "grape/grape.h"
 
 #include "voterank/voterank_context.h"
+
 namespace gs {
 
 /**

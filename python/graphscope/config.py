@@ -19,6 +19,7 @@
 """ GraphScope default configuration.
 """
 
+from graphscope.version import __is_prerelease__
 from graphscope.version import __version__
 
 
@@ -50,6 +51,8 @@ class GSConfig(object):
 
     # etcd resource configuration
     etcd_addrs = None
+    etcd_listening_client_port = 2379
+    etcd_listening_peer_port = 2380
     k8s_etcd_num_pods = 1
     k8s_etcd_cpu = 1.0
     k8s_etcd_mem = "512Mi"
@@ -69,6 +72,11 @@ class GSConfig(object):
     mars_worker_mem = "4Mi"
     mars_scheduler_cpu = 0.2
     mars_scheduler_mem = "2Mi"
+
+    # the node selector can be a dict, see also: https://tinyurl.com/3nx6k7ph
+    k8s_coordinator_pod_node_selector = None
+    k8s_etcd_pod_node_selector = None
+    k8s_engine_pod_node_selector = None
 
     # launch graphscope with mars
     with_mars = False

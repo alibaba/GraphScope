@@ -21,6 +21,7 @@ import com.alibaba.maxgraph.sdkcommon.schema.PropertyValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -92,7 +93,7 @@ public class Codec {
 
         int varOffsetsPos = this.offsets.get(this.offsets.size() - 1);
         int dataOffset = varOffsetsPos + 3 * (this.propertyDefs.size() - this.fixedPropertiesCount);
-        scratch.position(dataOffset);
+        ((Buffer) scratch).position(dataOffset);
         int varEndOffset = 0;
         for (int i = this.fixedPropertiesCount; i < this.propertyDefs.size(); i++) {
             GraphProperty propertyDef = this.propertyDefs.get(i);

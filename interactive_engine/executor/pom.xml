@@ -11,7 +11,7 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>maxgraph-executor</artifactId>
+  <artifactId>executor</artifactId>
   <name>executor</name>
 
   <profiles>
@@ -39,6 +39,7 @@
                     <argument>build.sh</argument>
                     <argument>${rust.compile.mode}</argument>
                     <argument>${rust.compile.skip}</argument>
+                    <argument>${groot.compile.feature}</argument>
                   </arguments>
                 </configuration>
               </execution>

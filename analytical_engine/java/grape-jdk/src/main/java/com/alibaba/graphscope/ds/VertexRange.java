@@ -18,7 +18,6 @@ package com.alibaba.graphscope.ds;
 
 import static com.alibaba.graphscope.utils.CppClassName.GRAPE_VERTEX_RANGE;
 import static com.alibaba.graphscope.utils.CppHeaderName.GRAPE_VERTEX_ARRAY_H;
-import static com.alibaba.graphscope.utils.JNILibraryName.JNI_LIBRARY_NAME;
 
 import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.CXXPointer;
@@ -29,6 +28,7 @@ import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
+import com.alibaba.graphscope.utils.JNILibraryName;
 
 import java.util.Iterator;
 
@@ -38,7 +38,7 @@ import java.util.Iterator;
  *
  * @param <VID_T> vertex id type.
  */
-@FFIGen(library = JNI_LIBRARY_NAME)
+@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
 @CXXHead(GRAPE_VERTEX_ARRAY_H)
 @FFITypeAlias(GRAPE_VERTEX_RANGE)
 public interface VertexRange<VID_T> extends FFIPointer, CXXPointer {

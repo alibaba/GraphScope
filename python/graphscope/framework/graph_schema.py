@@ -28,15 +28,18 @@ from graphscope.proto import graph_def_pb2
 
 
 class Property:
-    def __init__(self, name, data_type, is_primary_key=False, property_id=0):
+    def __init__(
+        self, name, data_type, is_primary_key=False, property_id=0, comment=""
+    ):
         self.name: str = name
         self.data_type: int = data_type
         self.is_primary_key: bool = is_primary_key
 
         self.id: int = property_id
+        self.comment = comment
+
         self.inner_id: int = 0
         self.default_value = None
-        self.comment = ""
 
     def as_property_def(self):
         pb = graph_def_pb2.PropertyDefPb()
@@ -51,11 +54,9 @@ class Property:
 
     @classmethod
     def from_property_def(cls, pb):
-        prop = cls(pb.name, pb.data_type, pb.pk)
-        prop.id = pb.id
+        prop = cls(pb.name, pb.data_type, pb.pk, pb.id, pb.comment)
         prop.inner_id = pb.inner_id
         prop.default_value = pb.default_value
-        prop.comment = pb.comment
         return prop
 
     def __repr__(self) -> str:
@@ -69,6 +70,7 @@ class Property:
             "name": self.name,
             "id": self.id,
             "type": graph_def_pb2.DataTypePb.Name(self.data_type),
+            "is_primary_key": self.is_primary_key,
         }
 
 
@@ -94,11 +96,11 @@ class Label:
         self._valid_props: list[int] = []
         self._prop_index: dict[str, int] = {}
 
-    def add_property(self, name, data_type, primary_key=False):
+    def add_property(self, name, data_type, is_primary_key=False):
         self._prop_index[name] = len(self._props)
         if isinstance(data_type, str):
             data_type = unify_type(data_type)
-        self._props.append(Property(name, data_type, primary_key, len(self._props)))
+        self._props.append(Property(name, data_type, is_primary_key, len(self._props)))
         self._valid_props.append(1)
         return self
 
@@ -188,13 +190,15 @@ class EdgeLabel(Label):
         return self
 
     def destination(self, label):
-        assert self._relations, "Empty relation"
-        assert not self._relations[-1].destination
+        assert (
+            self._relations
+        ), "Found empty relation, maybe you should use `source` first."
+        assert not self._relations[-1].destination, "An destination is already exists."
         self._relations[-1] = self._relations[-1]._replace(destination=label)
         return self
 
     @property
-    def relations(self) -> List:
+    def relations(self) -> List[Relation]:
         return self._relations
 
     def __repr__(self) -> str:
@@ -266,8 +270,7 @@ class GraphSchema:
         Raises:
             ValueError: If the schema is not valid.
         """
-        self._vertex_labels.clear()
-        self._edge_labels.clear()
+        self.clear()
         id_to_label = {}
         for type_def_pb in graph_def.type_defs:
             id_to_label[type_def_pb.label_id.id] = type_def_pb.label
@@ -278,23 +281,27 @@ class GraphSchema:
                 edge_kinds[edge_label] = []
             edge_kinds[edge_label].append(
                 (
-                    id_to_label[kind.src_vertex_label_id.id],
-                    id_to_label[kind.dst_vertex_label_id.id],
+                    kind.src_vertex_label,
+                    kind.dst_vertex_label,
                 )
             )
         for type_def_pb in graph_def.type_defs:
             if type_def_pb.type_enum == graph_def_pb2.VERTEX:
+                self._v_label_index[type_def_pb.label] = len(self._vertex_labels)
                 self._vertex_labels.append(VertexLabel.from_type_def(type_def_pb))
                 self._valid_vertices.append(1)
             else:
                 label = EdgeLabel.from_type_def(type_def_pb)
-                for src, dst in edge_kinds[label.label]:
-                    label.source(src).destination(dst)
+                if label.label in edge_kinds:
+                    for src, dst in edge_kinds[label.label]:
+                        label.source(src).destination(dst)
+                self._e_label_index[type_def_pb.label] = len(self._edge_labels)
                 self._edge_labels.append(label)
                 self._valid_edges.append(1)
         return self
 
     def _from_vineyard(self, graph_def):
+        self.clear()
         vy_info = graph_def_pb2.VineyardInfoPb()
         graph_def.extension.Unpack(vy_info)
         self._oid_type = vy_info.oid_type
@@ -379,6 +386,33 @@ class GraphSchema:
         for entry in self._valid_edge_labels():
             edges.append(entry.to_dict())
         return {"vertices": vertices, "edges": edges}
+
+    def from_dict(self, input: dict):
+        if self._vertex_labels or self._edge_labels:
+            raise RuntimeError("Cannot load schema from dict within a non-empty graph.")
+        try:
+            self.clear()
+            vertices = input["vertices"]
+            edges = input["edges"]
+            for vertex in vertices:
+                label = VertexLabel(vertex["label"])
+                for prop in vertex["properties"]:
+                    label = label.add_property(
+                        prop["name"], prop["type"], prop["is_primary_key"]
+                    )
+                self._vertex_labels_to_add.append(label)
+            for edge in edges:
+                label = EdgeLabel(edge["label"])
+                for prop in edge["properties"]:
+                    label = label.add_property(
+                        prop["name"], prop["type"], prop["is_primary_key"]
+                    )
+                for rel in edge["relations"]:
+                    label = label.source(rel["src_label"]).destination(rel["dst_label"])
+                self._edge_labels_to_add.append(label)
+        except Exception as e:
+            self.clear()
+            raise RuntimeError("Construct schema from dict failed!") from e
 
     @property
     def oid_type(self):
@@ -519,11 +553,11 @@ class GraphSchema:
         return self._edge_labels_to_add[-1]
 
     def drop(self, label, src_label=None, dst_label=None):
-        for item in itertools.chain(self.vertex_labels, self._vertex_labels_to_add):
+        for item in self._vertex_labels:
             if label == item.label:
                 self._vertex_labels_to_drop.append(VertexLabel(label))
                 return
-        for item in itertools.chain(self.edge_labels, self._edge_labels_to_add):
+        for item in self._edge_labels:
             if label == item.label:
                 label_to_drop = EdgeLabel(label)
                 if src_label and dst_label:
@@ -531,6 +565,18 @@ class GraphSchema:
                 self._edge_labels_to_drop.append(label_to_drop)
                 return
         raise ValueError(f"Label {label} not found.")
+
+    def drop_all(self):
+        for item in self._edge_labels:
+            for rel in item.relations:
+                self._edge_labels_to_drop.append(
+                    EdgeLabel(item.label)
+                    .source(rel.source)
+                    .destination(rel.destination)
+                )
+            self._edge_labels_to_drop.append(EdgeLabel(item.label))
+        for item in self._vertex_labels:
+            self._vertex_labels_to_drop.append(VertexLabel(item.label))
 
     def _prepare_batch_rpc(self):
         requests = ddl_service_pb2.BatchSubmitRequest()
@@ -541,14 +587,12 @@ class GraphSchema:
             type_pb = item.as_type_def()
             requests.value.add().create_edge_type_request.type_def.CopyFrom(type_pb)
             for rel in item.relations:
-                assert rel.source and rel.destination, "Invalid relation "
+                assert rel.source and rel.destination, "Invalid relation"
                 request = ddl_service_pb2.AddEdgeKindRequest()
                 request.edge_label = item.label
                 request.src_vertex_label = rel.source
                 request.dst_vertex_label = rel.destination
                 requests.value.add().add_edge_kind_request.CopyFrom(request)
-        for item in self._vertex_labels_to_drop:
-            requests.value.add().drop_vertex_type_request.label = item.label
         for item in self._edge_labels_to_drop:
             if item.relations:
                 request = ddl_service_pb2.RemoveEdgeKindRequest()
@@ -558,6 +602,8 @@ class GraphSchema:
                 requests.value.add().remove_edge_kind_request.CopyFrom(request)
             else:
                 requests.value.add().drop_edge_type_request.label = item.label
+        for item in self._vertex_labels_to_drop:
+            requests.value.add().drop_vertex_type_request.label = item.label
         return requests
 
     def update(self):

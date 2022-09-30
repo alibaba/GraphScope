@@ -91,9 +91,8 @@ def _parse_user_app(java_app_class: str, java_jar_full_path: str):
         bufsize=1,
     )
     out, err = parse_user_app_process.communicate()
-    logger.info(err)
-    for line in out.split("\n"):
-        logger.info(line)
+    lines = out.split("\n") + err.split("\n")
+    for line in lines:
         if len(line) == 0:
             continue
         if line.find("DefaultPropertyApp") != -1:

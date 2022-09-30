@@ -28,7 +28,6 @@ from graphscope import Graph
 from graphscope import lpa_u2i
 from graphscope import sssp
 from graphscope.dataset import load_ldbc
-from graphscope.dataset import load_modern_graph
 from graphscope.dataset import load_ogbn_mag
 from graphscope.dataset import load_p2p_network
 from graphscope.framework.errors import AnalyticalEngineInternalError
@@ -53,8 +52,13 @@ def test_graph_schema_todict(p2p_property_graph):
             {
                 "label": "person",
                 "properties": [
-                    {"name": "weight", "id": 0, "type": "LONG"},
-                    {"name": "id", "id": 1, "type": "LONG"},
+                    {
+                        "name": "weight",
+                        "id": 0,
+                        "type": "LONG",
+                        "is_primary_key": False,
+                    },
+                    {"name": "id", "id": 1, "type": "LONG", "is_primary_key": False},
                 ],
             }
         ],
@@ -62,9 +66,19 @@ def test_graph_schema_todict(p2p_property_graph):
             {
                 "label": "knows",
                 "properties": [
-                    {"name": "src_label_id", "id": 0, "type": "LONG"},
-                    {"name": "dst_label_id", "id": 1, "type": "LONG"},
-                    {"name": "dist", "id": 2, "type": "LONG"},
+                    {
+                        "name": "src_label_id",
+                        "id": 0,
+                        "type": "LONG",
+                        "is_primary_key": False,
+                    },
+                    {
+                        "name": "dst_label_id",
+                        "id": 1,
+                        "type": "LONG",
+                        "is_primary_key": False,
+                    },
+                    {"name": "dist", "id": 2, "type": "LONG", "is_primary_key": False},
                 ],
                 "relations": [{"src_label": "person", "dst_label": "person"}],
             }
@@ -564,7 +578,7 @@ def test_add_column_string_oid(
 
 
 def test_graph_lifecycle(graphscope_session):
-    graph = load_modern_graph(graphscope_session)
+    graph = load_p2p_network(graphscope_session)
     c = graphscope.wcc(graph)
     del graph
     assert c.to_numpy("v.id") is not None

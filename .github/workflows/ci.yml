@@ -30,7 +30,6 @@ on:
       - 'learning_engine/**'
       - 'proto/**'
       - 'python/**'
-      - 'research/**'
       - '!**.md'
       - '!**.rst'
 
@@ -294,7 +293,7 @@ jobs:
           popd
 
           # install tensorflow
-          python3 -m pip install pytest "tensorflow<=2.5.2" --user
+          python3 -m pip install pytest "tensorflow<=2.5.2" "pandas<1.5.0" --user
           # install java
           sudo apt update -y && sudo apt install openjdk-11-jdk -y
 
@@ -358,6 +357,10 @@ jobs:
 
         # install pytest
         python3 -m pip install pytest pytest-cov
+
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      if: false
 
     - name: Run Python Test
       if: ${{ needs.changes.outputs.gae-python == 'true' }}
@@ -613,7 +616,7 @@ jobs:
           minikube image load graphscope/graphscope:${SHORT_SHA}
 
           export PYTHONPATH=${GITHUB_WORKSPACE}/python:${PYTHONPATH}
-          cd ${GITHUB_WORKSPACE}/interactive_engine && mvn clean install --quiet -DskipTests -Pjava-release
+          cd ${GITHUB_WORKSPACE}/interactive_engine && mvn clean install --quiet -DskipTests -Drust.compile.skip=true -P graphscope,graphscope-assembly
           cd ${GITHUB_WORKSPACE}/interactive_engine/tests
           # ./function_test.sh 8111 1 graphscope/graphscope:${SHORT_SHA}
           ./function_test.sh 8112 2 graphscope/graphscope:${SHORT_SHA}

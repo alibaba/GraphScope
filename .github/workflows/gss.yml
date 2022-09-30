@@ -24,7 +24,6 @@ on:
       - 'interactive_engine/**'
       - 'python/graphscope/client/**'
       - 'charts/graphscope-store/**'
-      - 'research/**'
       - '.github/workflows/gss.yml'
       - '!interactive_engine/**.md'
       - '!charts/graphscope-store/**.md'
@@ -75,27 +74,43 @@ jobs:
           cmake .. && make -j && sudo make install && \
           rm -fr /tmp/cppkafka
 
-    - name: Build GraphScope Store
+    - name: Build GraphScope Store With Column Filter Push Down
       run: |
         source ${HOME}/.bashrc
         export SCCACHE_DIR=~/.cache/sccache
         export RUSTC_WRAPPER=/usr/local/bin/sccache
         sccache --start-server
         cd ${GITHUB_WORKSPACE}/interactive_engine
-        mvn clean install -Pv2 -Drust.compile.mode=debug -DskipTests --quiet
+        mvn clean install -P groot,groot-assembly -Drust.compile.mode=debug -DskipTests -Dgroot.compile.feature="maxgraph-ffi/column_filter_push_down" --quiet
+
+        sccache --show-stats
+
+    - name: Gremlin Tests with Column Filter Push Down
+      run: |
+        cd interactive_engine/groot-server
+        mvn test -P gremlin-test
+
+
+    - name: Build GraphScope Store
+      run: |
+        source ${HOME}/.bashrc
+        export SCCACHE_DIR=~/.cache/sccache
+        export RUSTC_WRAPPER=/usr/local/bin/sccache
+        cd ${GITHUB_WORKSPACE}/interactive_engine
+        mvn clean install -P groot,groot-assembly -Drust.compile.mode=debug -DskipTests --quiet
 
         sccache --show-stats
 
     - name: Gremlin Test
       run: |
         cd interactive_engine/groot-server
-        mvn test -Pgremlin-test
+        mvn test -P gremlin-test
 
     - name: Upload tools for helm test to Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: maxgraph.tar.gz
-        path: interactive_engine/distribution/target/maxgraph.tar.gz
+        name: groot.tar.gz
+        path: interactive_engine/assembly/target/groot.tar.gz
         retention-days: 5
 
   helm-test:
@@ -118,7 +133,7 @@ jobs:
 
     - uses: actions/download-artifact@v2
       with:
-        name: maxgraph.tar.gz
+        name: groot.tar.gz
         path: artifacts
 
     - name: Set GITHUB_ENV
@@ -136,10 +151,10 @@ jobs:
         JAVA_HOME: /usr/lib/jvm/default-java
         GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
-        # maxgraph.tar.gz is needed for offline_load.sh
+        # groot.tar.gz is needed for offline_load.sh
         # see .github/workflows/hadoop_scripts/offline_load.sh.template
         pushd artifacts
-        tar -zxf ./maxgraph.tar.gz
+        tar -zxf ./groot.tar.gz
         # download gstest
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
         # retag image for helm test
@@ -161,8 +176,8 @@ jobs:
         wget -q https://mirror.cogentco.com/pub/apache/hadoop/common/hadoop-2.10.1/hadoop-2.10.1.tar.gz
         tar -zxf hadoop-2.10.1.tar.gz
         cd ${GITHUB_WORKSPACE}/.github/workflows/hadoop_scripts
-        REPLACE_STR=${GITHUB_WORKSPACE}/artifacts/maxgraph
-        sed s/MAXGRAPH_HOME/${REPLACE_STR//\//\\/}/ offline_load.sh.template > offline_load.sh
+        REPLACE_STR=${GITHUB_WORKSPACE}/artifacts/groot
+        sed s/GROOT_HOME/${REPLACE_STR//\//\\/}/ offline_load.sh.template > offline_load.sh
         chmod +x offline_load.sh
         export LOAD_DATA_SCRIPT=${GITHUB_WORKSPACE}/.github/workflows/hadoop_scripts/offline_load.sh
         sed s/GRAPH_ENDPOINT/$NODE_IP:$GRPC_PORT/ databuild.config.template > databuild.config
@@ -190,6 +205,7 @@ jobs:
         helm test ci --timeout 5m0s
         cd ${GITHUB_WORKSPACE}/python
         python3 -m pytest -s -vvv graphscope/tests/kubernetes/test_store_service.py -k test_demo_after_restart
+
     - name: Clean
       if: always()
       run: |

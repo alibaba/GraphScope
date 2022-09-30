@@ -30,7 +30,7 @@
     </dependency>
     <dependency>
       <groupId>com.alibaba.maxgraph</groupId>
-      <artifactId>groot</artifactId>
+      <artifactId>groot-module</artifactId>
       <version>${project.parent.version}</version>
       <exclusions>
         <exclusion>
@@ -40,7 +40,7 @@
       </exclusions>
     </dependency>
     <dependency>
-      <artifactId>ir-compiler</artifactId>
+      <artifactId>compiler</artifactId>
       <groupId>com.alibaba.graphscope</groupId>
       <version>1.0-SNAPSHOT</version>
     </dependency>
@@ -206,7 +206,7 @@
                 <include>**/GremlinStandardTest.java</include>
               </includes>
               <argLine>
-                -Djna.library.path=${project.parent.basedir}/executor/target:/usr/local/lib:${project.parent.basedir}/lgraph/build:${project.parent.basedir}/../research/query_service/ir/target/release
+                -Djna.library.path=${project.parent.basedir}/executor/assembly/target:/usr/local/lib:${project.parent.basedir}/lgraph/build:${project.parent.basedir}/executor/ir/target/release
               </argLine>
               <environmentVariables>
                 <RUST_BACKTRACE>1</RUST_BACKTRACE>
@@ -235,7 +235,7 @@
             <exclude>**/FfiTest.java</exclude>
           </excludes>
           <argLine>
-            -Djna.library.path=${project.parent.basedir}/executor/target:/usr/local/lib:${project.parent.basedir}/lgraph/build:${project.parent.basedir}/../research/query_service/ir/target/release
+            -Djna.library.path=${project.parent.basedir}/executor/assembly/target:/usr/local/lib:${project.parent.basedir}/lgraph/build:${project.parent.basedir}/executor/ir/target/release
           </argLine>
           <environmentVariables>
             <RUST_BACKTRACE>1</RUST_BACKTRACE>

@@ -58,6 +58,7 @@ from graphscope.framework.graph_utils import normalize_parameter_edges
 from graphscope.framework.graph_utils import normalize_parameter_vertices
 from graphscope.framework.loader import Loader
 from graphscope.framework.utils import PipeMerger
+from graphscope.framework.utils import find_java
 from graphscope.framework.utils import get_tempdir
 from graphscope.framework.utils import normalize_data_type_str
 from graphscope.proto import attr_value_pb2
@@ -74,6 +75,7 @@ from gscoordinator.dag_manager import DAGManager
 from gscoordinator.dag_manager import GSEngine
 from gscoordinator.dag_manager import split_op_result
 from gscoordinator.launcher import LocalLauncher
+from gscoordinator.monitor import Monitor
 from gscoordinator.object_manager import GraphMeta
 from gscoordinator.object_manager import GremlinResultSet
 from gscoordinator.object_manager import InteractiveQueryManager
@@ -260,6 +262,7 @@ class CoordinatorServiceServicer(
         for result in self.ConnectSessionWrapped(request, context):
             return result
 
+    @Monitor.connectSession
     def _ConnectSession(self, request, context):
         # A session is already connected.
         if self._request:
@@ -353,10 +356,15 @@ class CoordinatorServiceServicer(
 
         # analytical engine
         request = message_pb2.HeartBeatRequest()
+        if self._analytical_engine_stub is None:
+            raise RuntimeError(
+                "Analytical engine is not launched or has already been terminated."
+            )
         return self._analytical_engine_stub.HeartBeat(request)
 
     HeartBeatWrapped = catch_unknown_errors(message_pb2.HeartBeatResponse())(_HeartBeat)
 
+    @Monitor.runOnAnalyticalEngine
     def run_on_analytical_engine(  # noqa: C901
         self,
         dag_def: op_def_pb2.DagDef,
@@ -460,6 +468,8 @@ class CoordinatorServiceServicer(
             if op.op in (
                 types_pb2.CREATE_GRAPH,
                 types_pb2.PROJECT_GRAPH,
+                types_pb2.PROJECT_TO_SIMPLE,
+                types_pb2.TRANSFORM_GRAPH,
                 types_pb2.ADD_LABELS,
                 types_pb2.ADD_COLUMN,
             ):
@@ -498,6 +508,7 @@ class CoordinatorServiceServicer(
                 self._object_manager.pop(op.attr[types_pb2.APP_NAME].s.decode())
         return response_head, response_bodies
 
+    @Monitor.runOnInteractiveEngine
     def run_on_interactive_engine(self, dag_def: op_def_pb2.DagDef):
         response_head = message_pb2.RunStepResponse(
             head=message_pb2.RunStepResponseHead()
@@ -616,6 +627,7 @@ class CoordinatorServiceServicer(
             error_code = error_codes_pb2.COORDINATOR_INTERNAL_ERROR
             head = None
             bodies = None
+
             try:
                 # run on analytical engine
                 if run_dag_on == GSEngine.analytical_engine:
@@ -642,7 +654,7 @@ class CoordinatorServiceServicer(
                 responses[0].head.results.extend(head.head.results)
                 responses.extend(bodies)
             except grpc.RpcError as exc:
-                # Not raised by graphscope, maybe socket closed, etc
+                # Not raised by graphscope, maybe socket closed, etc.
                 context.set_code(exc.code())
                 context.set_details(exc.details())
                 for response in responses:
@@ -804,6 +816,7 @@ class CoordinatorServiceServicer(
         for result in self.CloseSessionWrapped(request, context):
             return result
 
+    @Monitor.closeSession
     def _CloseSession(self, request, context):
         """
         Disconnect session, note that it doesn't clean up any resources.
@@ -1271,6 +1284,7 @@ class CoordinatorServiceServicer(
             key=op.key,
         )
 
+    @Monitor.cleanup
     def _cleanup(self, cleanup_instance=True, is_dangling=False):
         # clean up session resources.
         for key in self._object_manager.keys():
@@ -1373,6 +1387,15 @@ class CoordinatorServiceServicer(
                 raise
         config = json.loads(response_head.head.results[0].result.decode("utf-8"))
         config.update(self._launcher.get_engine_config())
+        # Disable ENABLE_JAVA_SDK when java is not installed on coordinator
+        if config["enable_java_sdk"] == "ON":
+            try:
+                _ = find_java()
+            except RuntimeError:
+                logger.warning(
+                    "Disable java sdk support since java is not installed on coordinator"
+                )
+                config["enable_java_sdk"] = "OFF"
         return config
 
     def _compile_lib_and_distribute(self, compile_func, lib_name, op):
@@ -1541,6 +1564,18 @@ def parse_sys_args():
         help="The addr of external etcd cluster, with formats like 'etcd01:port,etcd02:port,etcd03:port' ",
     )
     parser.add_argument(
+        "--etcd_listening_client_port",
+        type=int,
+        default=2379,
+        help="The port that etcd server will beind to for accepting client connections. Defaults to 2379.",
+    )
+    parser.add_argument(
+        "--etcd_listening_peer_port",
+        type=int,
+        default=2380,
+        help="The port that etcd server will beind to for accepting peer connections. Defaults to 2380.",
+    )
+    parser.add_argument(
         "--k8s_etcd_num_pods",
         type=int,
         default=3,
@@ -1591,6 +1626,18 @@ def parse_sys_args():
         help="Memory of Mars scheduler container, default: 2Gi",
     )
     parser.add_argument(
+        "--k8s_etcd_pod_node_selector",
+        type=str,
+        default="",
+        help="Node selector for etcd pods, default is None",
+    )
+    parser.add_argument(
+        "--k8s_engine_pod_node_selector",
+        type=str,
+        default="",
+        help="Node selector for engine pods, default is None",
+    )
+    parser.add_argument(
         "--k8s_volumes",
         type=str,
         default="{}",
@@ -1636,6 +1683,20 @@ def parse_sys_args():
         default="registry.cn-hongkong.aliyuncs.com/graphscope/dataset:{__version__}",
         help="Docker image to mount the dataset bucket",
     )
+    parser.add_argument(
+        "--monitor",
+        type=str2bool,
+        nargs="?",
+        const=False,
+        default=False,
+        help="Enable or disable prometheus exporter.",
+    )
+    parser.add_argument(
+        "--monitor_port",
+        type=int,
+        default=9968,
+        help="Coordinator prometheus exporter service port.",
+    )
     return parser.parse_args()
 
 
@@ -1653,6 +1714,8 @@ def launch_graphscope():
             coordinator_name=args.k8s_coordinator_name,
             coordinator_service_name=args.k8s_coordinator_service_name,
             etcd_addrs=args.etcd_addrs,
+            etcd_listening_client_port=args.etcd_listening_client_port,
+            etcd_listening_peer_port=args.etcd_listening_peer_port,
             etcd_num_pods=args.k8s_etcd_num_pods,
             etcd_cpu=args.k8s_etcd_cpu,
             etcd_mem=args.k8s_etcd_mem,
@@ -1666,6 +1729,8 @@ def launch_graphscope():
             mars_worker_mem=args.k8s_mars_worker_mem,
             mars_scheduler_cpu=args.k8s_mars_scheduler_cpu,
             mars_scheduler_mem=args.k8s_mars_scheduler_mem,
+            etcd_pod_node_selector=args.k8s_etcd_pod_node_selector,
+            engine_pod_node_selector=args.k8s_engine_pod_node_selector,
             with_mars=args.k8s_with_mars,
             image_pull_policy=args.k8s_image_pull_policy,
             image_pull_secrets=args.k8s_image_pull_secrets,
@@ -1684,6 +1749,8 @@ def launch_graphscope():
             num_workers=args.num_workers,
             hosts=args.hosts,
             etcd_addrs=args.etcd_addrs,
+            etcd_listening_client_port=args.etcd_listening_client_port,
+            etcd_listening_peer_port=args.etcd_listening_peer_port,
             vineyard_socket=args.vineyard_socket,
             shared_mem=args.vineyard_shared_mem,
             log_level=args.log_level,
@@ -1715,6 +1782,19 @@ def launch_graphscope():
     logger.info("Coordinator server listen at 0.0.0.0:%d", args.port)
 
     server.start()
+
+    if args.monitor:
+        try:
+            Monitor.startServer(args.monitor_port, "0.0.0.0")
+            logger.info(
+                "Coordinator monitor server listen at 0.0.0.0:%d", args.monitor_port
+            )
+        except Exception as e:
+            logger.error(
+                "Failed to start monitor server 0.0.0.0:{0} : {1}".format(
+                    args.monitor_port, e
+                )
+            )
 
     # handle SIGTERM signal
     def terminate(signum, frame):

@@ -17,9 +17,11 @@
 package com.alibaba.graphscope.stdcxx;
 
 import com.alibaba.fastffi.CXXHead;
+import com.alibaba.fastffi.CXXTemplate;
 import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
+import com.alibaba.graphscope.utils.CppClassName;
 import com.alibaba.graphscope.utils.CppHeaderName;
 import com.alibaba.graphscope.utils.JNILibraryName;
 
@@ -28,6 +30,13 @@ import com.alibaba.graphscope.utils.JNILibraryName;
 @CXXHead(CppHeaderName.ARROW_FRAGMENT_H)
 @CXXHead(CppHeaderName.CORE_JAVA_TYPE_ALIAS_H)
 @FFITypeAlias("std::shared_ptr")
+// @CXXTemplate(cxx = "gs::VertexData<uint64_t,std::string>", java =
+// "com.alibaba.graphscope.graphx.StringVertexData")
+// @CXXTemplate(cxx = "gs::EdgeData<uint64_t,std::string>", java =
+// "com.alibaba.graphscope.graphx.StringEdgeData")
+@CXXTemplate(
+        cxx = CppClassName.ARROW_FRAGMENT_GROUP,
+        java = "com.alibaba.graphscope.fragment.ArrowFragmentGroup")
 public interface StdSharedPtr<T extends FFIPointer> extends FFIPointer {
     // & will return the pointer of T.
     // shall be cxxvalue?

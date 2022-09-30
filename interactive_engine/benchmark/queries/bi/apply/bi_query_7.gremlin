@@ -1,0 +1,1 @@
+g.V().has("TAG", "name", "$tag").as("tag").in("HASTAG").in("REPLYOF").as("reply").not(out("HASTAG").where(eq("tag"))).out("HASTAG").as("related").select("reply").select(expr("@related.name")).as("tagName").groupCount().by(select("tagName")).order().by(select(values), desc).by(select(keys), asc).limit(100)

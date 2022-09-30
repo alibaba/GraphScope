@@ -23,6 +23,7 @@
 #include "vineyard/graph/fragment/property_graph_types.h"
 #include "vineyard/graph/utils/grape_utils.h"
 
+#include "core/error.h"
 #include "core/fragment/arrow_projected_fragment.h"
 #include "core/fragment/dynamic_fragment.h"
 #include "core/fragment/dynamic_projected_fragment.h"
@@ -59,9 +60,11 @@ class ProjectSimpleFrame<
       gs::ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>;
 
  public:
-  static bl::result<std::shared_ptr<IFragmentWrapper>> Project(
-      std::shared_ptr<IFragmentWrapper>& input_wrapper,
-      const std::string& projected_graph_name, const rpc::GSParams& params) {
+  __attribute__((visibility(
+      "hidden"))) static bl::result<std::shared_ptr<IFragmentWrapper>>
+  Project(std::shared_ptr<IFragmentWrapper>& input_wrapper,
+          const std::string& projected_graph_name,
+          const rpc::GSParams& params) {
     auto graph_type = input_wrapper->graph_def().graph_type();
     if (graph_type != rpc::graph::ARROW_PROPERTY) {
       RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
@@ -81,6 +84,12 @@ class ProjectSimpleFrame<
     rpc::graph::GraphDefPb graph_def;
     graph_def.set_key(projected_graph_name);
     graph_def.set_graph_type(rpc::graph::ARROW_PROJECTED);
+    gs::rpc::graph::VineyardInfoPb vy_info;
+    if (graph_def.has_extension()) {
+      graph_def.extension().UnpackTo(&vy_info);
+    }
+    vy_info.set_vineyard_id(projected_frag->id());
+    graph_def.mutable_extension()->PackFrom(vy_info);
 
     setGraphDef(projected_frag, v_label_id, e_label_id, v_prop_id, e_prop_id,
                 graph_def);
@@ -148,9 +157,11 @@ class ProjectSimpleFrame<
       gs::ArrowFlattenedFragment<OID_T, VID_T, VDATA_T, EDATA_T>;
 
  public:
-  static bl::result<std::shared_ptr<IFragmentWrapper>> Project(
-      std::shared_ptr<IFragmentWrapper>& input_wrapper,
-      const std::string& projected_graph_name, const rpc::GSParams& params) {
+  __attribute__((visibility(
+      "hidden"))) static bl::result<std::shared_ptr<IFragmentWrapper>>
+  Project(std::shared_ptr<IFragmentWrapper>& input_wrapper,
+          const std::string& projected_graph_name,
+          const rpc::GSParams& params) {
     auto graph_type = input_wrapper->graph_def().graph_type();
     if (graph_type != rpc::graph::ARROW_PROPERTY) {
       RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
@@ -195,9 +206,11 @@ class ProjectSimpleFrame<gs::DynamicProjectedFragment<VDATA_T, EDATA_T>> {
   using projected_fragment_t = gs::DynamicProjectedFragment<VDATA_T, EDATA_T>;
 
  public:
-  static bl::result<std::shared_ptr<IFragmentWrapper>> Project(
-      std::shared_ptr<IFragmentWrapper>& input_wrapper,
-      const std::string& projected_graph_name, const rpc::GSParams& params) {
+  __attribute__((visibility(
+      "hidden"))) static bl::result<std::shared_ptr<IFragmentWrapper>>
+  Project(std::shared_ptr<IFragmentWrapper>& input_wrapper,
+          const std::string& projected_graph_name,
+          const rpc::GSParams& params) {
     auto graph_type = input_wrapper->graph_def().graph_type();
     if (graph_type != rpc::graph::DYNAMIC_PROPERTY) {
       RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
@@ -237,9 +250,10 @@ void Project(std::shared_ptr<gs::IFragmentWrapper>& wrapper_in,
              const std::string& projected_graph_name,
              const gs::rpc::GSParams& params,
              bl::result<std::shared_ptr<gs::IFragmentWrapper>>& wrapper_out) {
-  wrapper_out = gs::ProjectSimpleFrame<_PROJECTED_GRAPH_TYPE>::Project(
-      wrapper_in, projected_graph_name, params);
+  __FRAME_CATCH_AND_ASSIGN_GS_ERROR(
+      wrapper_out, gs::ProjectSimpleFrame<_PROJECTED_GRAPH_TYPE>::Project(
+                       wrapper_in, projected_graph_name, params));
 }
 
 template class _PROJECTED_GRAPH_TYPE;
-}
+}  // extern "C"

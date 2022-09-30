@@ -13,6 +13,7 @@
  */
 package com.alibaba.maxgraph.sdkcommon.util;
 
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.List;
 
@@ -31,13 +32,13 @@ public final class PkHashUtils {
 
     public static long hash(int labelId, List<byte[]> pks) {
         ByteBuffer buffer = THREAD_BUFFER.get();
-        buffer.clear();
+        clear(buffer);
         buffer.putInt(labelId);
         for (byte[] pk : pks) {
             buffer.putInt(pk.length);
             buffer.put(pk);
         }
-        buffer.flip();
+        flip(buffer);
         return hash64(buffer.array(), buffer.limit());
     }
 
@@ -110,5 +111,13 @@ public final class PkHashUtils {
      */
     private static long hash64(final byte[] data, int length) {
         return hash64(data, length, 0xc70f6907);
+    }
+
+    public static void clear(Buffer buffer) {
+        buffer.clear();
+    }
+
+    public static void flip(Buffer buffer) {
+        buffer.flip();
     }
 }

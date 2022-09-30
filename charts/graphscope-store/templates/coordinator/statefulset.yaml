@@ -52,6 +52,9 @@ spec:
       {{- if .Values.coordinator.affinity }}
       affinity: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.coordinator.affinity "context" $) | nindent 8 }}
       {{- end }}
+      {{- if .Values.tolerations }}
+      tolerations: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.tolerations "context" $) | nindent 8 }}
+      {{- end }}
       initContainers:
         {{- if .Values.frontend.initContainers }}
         {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.frontend.initContainers "context" $) | nindent 8 }}
@@ -75,11 +78,11 @@ spec:
                      -e "s/INGESTOR/$(DNS_NAME_PREFIX_INGESTOR)/g" \
                      -e "s/COORDINATOR/$(DNS_NAME_PREFIX_COORDINATOR)/g" \
                      -e "s/STORE/$(DNS_NAME_PREFIX_STORE)/g" \
-                     -e "s@LOG4RS_CONFIG@${GRAPHSCOPE_HOME}/maxgraph/conf/log4rs.yml@g" \
+                     -e "s@LOG4RS_CONFIG@${GRAPHSCOPE_HOME}/groot/conf/log4rs.yml@g" \
             /etc/graphscope-store/my.cnf.tpl | sudo tee /etc/graphscope-store/my.cnf
 
             LOG_NAME=graphscope-store MAXGRAPH_CONF_FILE=/etc/graphscope-store/my.cnf \
-              ${GRAPHSCOPE_HOME}/maxgraph/bin/store_ctl.sh maxgraph coordinator
+              ${GRAPHSCOPE_HOME}/groot/bin/store_ctl.sh maxgraph coordinator
           env:
             - name: DEBUG
               value: "false"
@@ -164,7 +167,7 @@ spec:
         resources:
           requests:
             storage: {{ .Values.coordinator.persistence.size | quote }}
-        {{ include "graphscope-store.storage.class" .Values.coordinator.persistence }}
+        {{ include "graphscope-store.storageClass" . | nindent 8 }}
         {{- if .Values.coordinator.persistence.selector }}
         selector: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.coordinator.persistence.selector "context" $) | nindent 10 }}
         {{- end -}}

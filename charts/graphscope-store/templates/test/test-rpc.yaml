@@ -5,6 +5,9 @@ metadata:
   annotations:
     "helm.sh/hook": test
 spec:
+  {{- if .Values.tolerations }}
+  tolerations: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.tolerations "context" $) | nindent 4 }}
+  {{- end }}
   containers:
     - name: python
       image: python:3.9.9-alpine3.14
@@ -28,6 +31,9 @@ metadata:
   annotations:
     "helm.sh/hook": test
 spec:
+  {{- if .Values.tolerations }}
+  tolerations: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.tolerations "context" $) | nindent 4 }}
+  {{- end }}
   containers:
     - name: python
       image: python:3.9.9-alpine3.14

@@ -31,7 +31,7 @@ jobs:
         if [ -z "${r}" ];then export hn=$(hostname); sudo -E bash -c 'echo "127.0.0.1 ${hn}" >> /etc/hosts'; fi
         cat /etc/hosts
 
-        /bin/bash ${GITHUB_WORKSPACE}/scripts/install_deps.sh --dev --verbose
+        /bin/bash ${GITHUB_WORKSPACE}/scripts/install_deps.sh --dev --grape-jdk --verbose
 
     - name: Build GraphScope
       run: |
@@ -55,19 +55,3 @@ jobs:
       with:
         file: ./python/coverage.xml
         fail_ci_if_error: true
-
-  build-gss-image:
-    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
-    runs-on: ubuntu-20.04
-    steps:
-    - uses: actions/checkout@v2.3.2
-
-    - name: Add envs to GITHUB_ENV
-      run: |
-        short_sha=$(git rev-parse --short HEAD)
-        echo "SHORT_SHA=${short_sha}" >> $GITHUB_ENV
-
-    - name: Build GraphScope Store Image
-      run: |
-        cd ${GITHUB_WORKSPACE}
-        sudo make graphscope-store-image

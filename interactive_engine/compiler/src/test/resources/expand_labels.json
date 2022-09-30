@@ -1,0 +1,35 @@
+{
+  "nodes": [
+    {
+      "opr": {
+        "opr": {
+          "Edge": {
+            "v_tag": null,
+            "direction": 0,
+            "params": {
+              "tables": [
+                {
+                  "item": {
+                    "Name": "knows"
+                  }
+                }
+              ],
+              "columns": [],
+              "is_all_columns": false,
+              "limit": null,
+              "predicate": null,
+              "sample_ratio": 1.0,
+              "extra": {}
+            },
+            "alias": null,
+            "expand_opt": 1
+          }
+        }
+      },
+      "children": []
+    }
+  ],
+  "roots": [
+    0
+  ]
+}

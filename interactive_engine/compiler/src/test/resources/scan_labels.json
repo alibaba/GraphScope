@@ -1,0 +1,34 @@
+{
+  "nodes": [
+    {
+      "opr": {
+        "opr": {
+          "Scan": {
+            "scan_opt": 0,
+            "alias": null,
+            "params": {
+              "tables": [
+                {
+                  "item": {
+                    "Name": "person"
+                  }
+                }
+              ],
+              "columns": [],
+              "is_all_columns": false,
+              "limit": null,
+              "predicate": null,
+              "sample_ratio": 1.0,
+              "extra": {}
+            },
+            "idx_predicate": null
+          }
+        }
+      },
+      "children": []
+    }
+  ],
+  "roots": [
+    0
+  ]
+}

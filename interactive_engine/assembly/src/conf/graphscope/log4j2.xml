@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+
+    <Appenders>
+        <Console name="STDOUT" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS}|%-5level|%c - %msg%n"/>
+        </Console>
+
+        <RollingFile name="RollingFile" fileName="${sys:logfilename}" filePattern="${sys:logfilename}.%i">
+            <PatternLayout pattern="%d{DEFAULT} %p [%X{traceId}] [%t] [%c{1}] - %m%n"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="200 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="4"/>
+        </RollingFile>
+        <RollingFile name="Metric" fileName="${sys:logbasedir}/metric.log" filePattern="metric.log.%d{yyyy-MM-dd}.%i.log">
+            <PatternLayout pattern="%m%n"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="32 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="1"/>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <!-- package loggers -->
+        <Logger name="org.testcontainers" level="INFO" additivity="true"/>
+        <Logger name="io.grpc" level="INFO" additivity="true"/>
+        <Logger name="io.netty" level="INFO" additivity="true"/>
+        <Logger name="com.github.dockerjava" level="INFO" additivity="true"/>
+        <Logger name="MetricLog" level="INFO" additivity="false">
+            <AppenderRef ref="Metric"/>
+        </Logger>
+
+        <!-- main logger -->
+        <Root level="INFO">
+            <AppenderRef ref="RollingFile"/>
+        </Root>
+
+    </Loggers>
+
+</Configuration>
+

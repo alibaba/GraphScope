@@ -21,17 +21,18 @@ import com.alibaba.maxgraph.sdkcommon.schema.GraphSchemaMapper;
 import com.alibaba.maxgraph.sdkcommon.schema.PropertyValue;
 import com.aliyun.odps.data.Record;
 import com.aliyun.odps.mapred.MapperBase;
-import com.aliyun.odps.mapred.TaskContext;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class DataBuildMapperOdps extends MapperBase {
-
+    private static final Logger logger = LoggerFactory.getLogger(DataBuildMapperOdps.class);
     public static final SimpleDateFormat SRC_FMT =
             new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
     public static final SimpleDateFormat DST_FMT = new SimpleDateFormat("yyyyMMddHHmmssSSS");
@@ -39,13 +40,9 @@ public class DataBuildMapperOdps extends MapperBase {
 
     private GraphSchema graphSchema;
     private DataEncoder dataEncoder;
-    private String separator;
     private Map<String, ColumnMappingInfo> fileToColumnMappingInfo;
 
     private ObjectMapper objectMapper;
-    private boolean ldbcCustomize;
-    private boolean skipHeader;
-
     private Record outKey;
     private Record outVal;
 
@@ -55,7 +52,6 @@ public class DataBuildMapperOdps extends MapperBase {
         this.outVal = context.createMapOutputValueRecord();
 
         this.objectMapper = new ObjectMapper();
-        this.separator = context.getJobConf().get(OfflineBuildOdps.SEPARATOR);
         String schemaJson = context.getJobConf().get(OfflineBuildOdps.SCHEMA_JSON);
         this.graphSchema = GraphSchemaMapper.parseFromJson(schemaJson).toGraphSchema();
         this.dataEncoder = new DataEncoder(this.graphSchema);
@@ -63,19 +59,15 @@ public class DataBuildMapperOdps extends MapperBase {
         this.fileToColumnMappingInfo =
                 this.objectMapper.readValue(
                         columnMappingsJson, new TypeReference<Map<String, ColumnMappingInfo>>() {});
-        this.ldbcCustomize =
-                context.getJobConf().getBoolean(OfflineBuildOdps.LDBC_CUSTOMIZE, false);
-        this.skipHeader = context.getJobConf().getBoolean(OfflineBuildOdps.SKIP_HEADER, true);
         DST_FMT.setTimeZone(TimeZone.getTimeZone("GMT+00:00"));
     }
 
     @Override
     public void map(long recordNum, Record record, TaskContext context) throws IOException {
-
         String tableName = context.getInputTableInfo().getTableName();
         ColumnMappingInfo columnMappingInfo = this.fileToColumnMappingInfo.get(tableName);
         if (columnMappingInfo == null) {
-            System.out.println("ignore [" + tableName + "]");
+            logger.warn("Mapper: ignore [{}]", tableName);
             return;
         }
 
@@ -171,37 +163,9 @@ public class DataBuildMapperOdps extends MapperBase {
                     DataType dataType = propertyDef.getDataType();
 
                     String val = items[colIdx];
-                    if (ldbcCustomize) {
-                        String name = propertyDef.getName();
-                        switch (name) {
-                            case "creationDate":
-                            case "joinDate":
-                                val = converteDate(val);
-                                break;
-                            case "birthday":
-                                val = val.replace("-", "");
-                                break;
-                            default:
-                                break;
-                        }
-                    }
                     PropertyValue propertyValue = new PropertyValue(dataType, val);
                     operationProperties.put(propertyId, propertyValue);
                 });
         return operationProperties;
-    }
-
-    public static String converteDate(String input) {
-        try {
-            return DST_FMT.format(SRC_FMT.parse(input));
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static void checkBytes(byte[] a, byte[] b) throws IOException {
-        if (!Arrays.equals(a, b)) {
-            throw new IOException("The data of two byte arrays are not the same.");
-        }
     }
 }

@@ -66,7 +66,7 @@ client: gle
 	pip3 install --user --editable $(WORKING_DIR)/python
 
 .PHONY: coordinator
-coordinator:
+coordinator: client
 	cd $(WORKING_DIR)/coordinator && \
 	pip3 install -r requirements.txt -r requirements-dev.txt --user && \
 	python3 setup.py build_builtin
@@ -98,37 +98,15 @@ ifneq ($(INSTALL_PREFIX), /usr/local)
 		sudo ln -sfn ${INSTALL_PREFIX}/lib/cmake/graphscope-analytical /usr/local/lib/cmake/graphscope-analytical; \
 	fi
 endif
-ifeq (${ENABLE_JAVA_SDK}, ON)
-	cd $(WORKING_DIR)/analytical_engine/java && \
-	mvn clean install -DskipTests --quiet && \
-	sudo cp ${WORKING_DIR}/analytical_engine/java/grape-runtime/target/native/libgrape-jni.* ${INSTALL_PREFIX}/lib/ && \
-	sudo cp ${WORKING_DIR}/analytical_engine/java/grape-runtime/target/grape-runtime-0.1-shaded.jar ${INSTALL_PREFIX}/lib/ && \
-	sudo mkdir -p ${INSTALL_PREFIX}/conf/ && \
-	sudo cp ${WORKING_DIR}/analytical_engine/java/grape_jvm_opts ${INSTALL_PREFIX}/conf/
-endif
 
 .PHONY: gie
 gie:
 	# frontend/executor
 	cd $(WORKING_DIR)/interactive_engine && \
-	mvn clean package -DskipTests -Pjava-release --quiet
-	# executor
-	cd $(WORKING_DIR)/interactive_engine/executor && \
-	rustup component add rustfmt && \
-	if [ x"release" = x"${BUILD_TYPE}" ]; then \
-		cargo build --workspace --release; \
-	else \
-		cargo build --workspace; \
-	fi
-	# htap_loader
-	cd $(WORKING_DIR)/research/query_service/ir/v6d_ffi/src/native && \
-	cmake . && \
-	make vineyard_htap_loader
+	mvn clean package -DskipTests -Drust.compile.mode=$(BUILD_TYPE) -P graphscope,graphscope-assembly --quiet
 	# install
 	mkdir -p $(WORKING_DIR)/.install_prefix && \
-	tar -xf $(WORKING_DIR)/interactive_engine/assembly/target/maxgraph-assembly-0.0.1-SNAPSHOT.tar.gz --strip-components 1 -C $(WORKING_DIR)/.install_prefix && \
-	cp $(WORKING_DIR)/interactive_engine/executor/target/$(BUILD_TYPE)/gaia_executor $(WORKING_DIR)/.install_prefix/bin/gaia_executor && \
-	cp $(WORKING_DIR)/research/query_service/ir/v6d_ffi/src/native/vineyard_htap_loader $(WORKING_DIR)/.install_prefix/bin/vineyard_htap_loader && \
+	tar -xf $(WORKING_DIR)/interactive_engine/assembly/target/graphscope.tar.gz --strip-components 1 -C $(WORKING_DIR)/.install_prefix && \
 	sudo cp -r $(WORKING_DIR)/.install_prefix/* $(INSTALL_PREFIX) && \
 	rm -fr $(WORKING_DIR)/.install_prefix
 
@@ -178,13 +156,13 @@ unittest:
 .PHONY: minitest
 minitest:
 	cd $(WORKING_DIR)/python && \
-	pip3 install tensorflow==2.5.2 && \
+	pip3 install tensorflow==2.5.2 "pandas<1.5.0" && \
 	python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml --cov-report=term -s -v ./graphscope/tests/minitest
 
 .PHONY: k8stest
 k8stest:
 	cd $(WORKING_DIR)/python && \
-	pip3 install tensorflow==2.5.2 && \
+	pip3 install tensorflow==2.5.2 "pandas<1.5.0" && \
 	python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml --cov-report=term -s -v ./graphscope/tests/kubernetes
 
 .PHONY: clean

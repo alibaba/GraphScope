@@ -16,8 +16,6 @@
 
 package com.alibaba.graphscope.stdcxx;
 
-import static com.alibaba.graphscope.utils.JNILibraryName.JNI_LIBRARY_NAME;
-
 import com.alibaba.fastffi.CXXOperator;
 import com.alibaba.fastffi.CXXPointer;
 import com.alibaba.fastffi.FFIFactory;
@@ -25,8 +23,9 @@ import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.fastffi.FFITypeFactory;
+import com.alibaba.graphscope.utils.JNILibraryName;
 
-@FFIGen(library = JNI_LIBRARY_NAME)
+@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
 @FFITypeAlias("double")
 public interface DoublePointer extends FFIPointer, CXXPointer {
     Factory factory = FFITypeFactory.getFactory(Factory.class, DoublePointer.class);

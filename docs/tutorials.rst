@@ -15,13 +15,14 @@ All tutorials are listed as follows:
    :maxdepth: 2
    :caption: Contents
 
-   Node Classification on citation network <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/1_node_classification_on_citation.ipynb>
-   Graph Manipulations with NetowrkX Compatible APIs <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/2_graph_manipulations_with_networkx_compatible_apis.ipynb>
-   Loading Graphs <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/3_loading_graphs.ipynb>
-   Built-in Analytical Algorithms <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/4_builtin_analytical_algorithms.ipynb>
-   Writing Your Own Algorithms <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/5_writing_your_own_algorithms.ipynb>
-   Interactive Query with Gremlin <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/6_interactive_query_with_gremlin.ipynb>
-   Unsupervised Learning with GraphSage <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/7_unsupervised_learning_with_graphsage.ipynb>
-   Supervised Learning with GCN <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/8_supervised_learning_with_gcn.ipynb>
-   Unsupervised Learning with Bipartite GraphSage <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/9_unsupervised_learning_with_bipartite_graphsage.ipynb>
+   Node Classification on citation network <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/01_node_classification_on_citation.ipynb>
+   Graph Manipulations with NetowrkX Compatible APIs <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/02_graph_manipulations_with_networkx_compatible_apis.ipynb>
+   Run GraphScope like NetworkX <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/03_run_graphscope_like_networkx.ipynb>
+   Loading Graphs <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/04_loading_graphs.ipynb>
+   Built-in Analytical Algorithms <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/05_builtin_analytical_algorithms.ipynb>
+   Writing Your Own Algorithms <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/06_writing_your_own_algorithms.ipynb>
+   Interactive Query with Gremlin <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/07_interactive_query_with_gremlin.ipynb>
+   Unsupervised Learning with GraphSage <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/08_unsupervised_learning_with_graphsage.ipynb>
+   Supervised Learning with GCN <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/09_supervised_learning_with_gcn.ipynb>
    Revisit Classification on Citation Network on K8s <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/10_revisit_classification_on_citation_network_on_k8s.ipynb>
+   Unsupervised Learning with Bipartite GraphSage <https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/11_unsupervised_learning_with_bipartite_graphsage.ipynb>

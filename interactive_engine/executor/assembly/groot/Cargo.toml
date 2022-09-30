@@ -1,0 +1,22 @@
+[package]
+name = "maxgraph-ffi"
+version = "0.1.0"
+authors = ["graphscope@alibaba-inc.com"]
+edition = "2018"
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+
+[dependencies]
+global_query = { path = "../../store/global_query" }
+maxgraph-store = { path = "../../store/groot" }
+gaia_pegasus = { path = "../../engine/pegasus/pegasus", package = "pegasus" }
+pegasus_network = { path = "../../engine/pegasus/network" }
+pegasus_server = { path = "../../engine/pegasus/server" }
+runtime_integration =  { path = "../../ir/integrated" }
+log = "0.3"
+log4rs = "0.8.0"
+tokio = { version = "1.0", features = ["macros", "sync"] }
+
+[features]
+column_filter_push_down = ["runtime_integration/column_filter_push_down"]

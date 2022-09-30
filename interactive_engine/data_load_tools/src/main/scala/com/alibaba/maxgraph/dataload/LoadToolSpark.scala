@@ -21,21 +21,24 @@ object LoadToolSpark {
 
     val spark = SparkSession
       .builder()
-      .appName("LoadTool_Spark")
+      .appName("LoadToolSpark")
       .getOrCreate()
 
     val sc = spark.sparkContext
 
     try {
       val command = args(0)
-      val path = args(1)
+      val configPath = args(1)
       val uniquePath = args(2)
       if ("ingest".equalsIgnoreCase(command)) {
-        LoadTool.ingest(path, true, uniquePath);
+        LoadTool.ingest(configPath, true, uniquePath);
       } else if ("commit".equalsIgnoreCase(command)) {
-        LoadTool.commit(path, true, uniquePath);
+        LoadTool.commit(configPath, true, uniquePath);
+      } else if ("ingestAndCommit".equalsIgnoreCase(command)) {
+        LoadTool.ingest(configPath, true, uniquePath);
+        LoadTool.commit(configPath, true, uniquePath);
       } else {
-        throw new Exception("supported COMMAND: ingest / commit");
+        throw new Exception("supported COMMAND: ingest / commit / ingestAndCommit");
       }
     } catch {
       case e: Throwable => throw e

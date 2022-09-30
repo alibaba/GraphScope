@@ -266,7 +266,7 @@ def download_file(  # noqa: C901
                 except urllib.error.URLError as e:
                     # `URLError` has been made a subclass of OSError since version 3.3
                     # https://docs.python.org/3/library/urllib.error.html
-                    error_msg = error_msg.format(origin, e.errno, e.reason)
+                    error_msg = error_msg_tpl.format(origin, e.errno, e.reason)
                     logger.warning("{0}, retry {1} times...".format(error_msg, retry))
                     if retry >= max_retries - 1:
                         raise Exception(error_msg)

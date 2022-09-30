@@ -47,7 +47,7 @@ Visit our website at [graphscope.io](https://graphscope.io) to learn more.
 
 We provide a [Playground](https://try.graphscope.app) with a managed JupyterLab. [Try GraphScope](https://try.graphscope.app) straight away in your browser!
 
-GraphScope supports run in standalone mode or on clusters managed by [Kubernetes](https://kubernetes.io/) within containers. For quickly getting started, 
+GraphScope supports run in standalone mode or on clusters managed by [Kubernetes](https://kubernetes.io/) within containers. For quickly getting started,
 let's begin with the standalone mode.
 
 
@@ -230,7 +230,7 @@ config = {
 train(config, lg)
 ```
 
-A python script with the entire process is availabe [here](https://colab.research.google.com/github/alibaba/GraphScope/blob/main/tutorials/1_node_classification_on_citation.ipynb), you may try it out by yourself. 
+A python script with the entire process is availabe [here](https://colab.research.google.com/github/alibaba/GraphScope/blob/main/tutorials/1_node_classification_on_citation.ipynb), you may try it out by yourself.
 
 
 ## Processing Large Graph on Kubernetes Cluster
@@ -250,11 +250,11 @@ Alternatively, you can set up a local k8s cluster for testing with [Kind](https:
 
 If you did not install the `graphscope` package in the above step, you can install a subset of the whole package with client functions only.
 
-```bash 
+```bash
 pip3 install graphscope-client
 ```
 
-Next, let's revisit the example by running on a cluster instead. 
+Next, let's revisit the example by running on a cluster instead.
 
 <div align="center">
     <img src="https://graphscope.io/docs/_images/how-it-works.png" width="600" alt="how-it-works" />
@@ -326,13 +326,13 @@ Please note that we have not hardened this release for production use and it lac
 
 ### Building on local
 
-To build graphscope Python package and the engine bineries, you need to install some dependencies and build tools.
+To build graphscope Python package and the engine binaries, you need to install some dependencies and build tools.
 
 ```bash
 ./scripts/install_deps.sh --dev
 
 # With argument --cn to speed up the download if you are in China.
-./scripts/install_deps.sh --dev --cn 
+./scripts/install_deps.sh --dev --cn
 ```
 
 Then you can build GraphScope with pre-configured `make` commands.

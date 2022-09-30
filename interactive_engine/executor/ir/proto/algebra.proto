@@ -1,0 +1,482 @@
+/**
+ * Copyright 2020 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+syntax = "proto3";
+package algebra;
+option java_package = "com.alibaba.graphscope.gaia.proto";
+option java_outer_classname = "GraphAlgebra";
+
+import "common.proto";
+import "expr.proto";
+import "schema.proto";
+
+// To project a relation on certain attributes or further their properties
+message Project {
+  message ExprAlias {
+    // The expression to be aliased
+    common.Expression expr = 1;
+    // The alias that is either given by the query or by the system
+    common.NameOrId alias = 2;
+  }
+  // A list of [expression -> alias] to be projected from the graph relation.
+  // e.g., project_{a.birthday / 100 % 100 as birth_month }
+  repeated ExprAlias mappings = 1;
+  // An indicator to tell the runtime whether the projected value is appending to or replacing
+  // existing relation.
+  bool is_append = 2;
+}
+
+// To filter a relation based on a given predicate
+message Select {
+  // A predicate formulated as an expression tree
+  common.Expression predicate = 1;
+}
+
+// Join two relations based on certain predicate.
+message Join {
+  enum JoinKind {
+    // Inner join
+    INNER = 0;
+    // Left outer join
+    LEFT_OUTER = 1;
+    // Right outer join
+    RIGHT_OUTER = 2;
+    // Full outer join
+    FULL_OUTER = 3;
+    // Left semi-join, right alternative can be naturally adapted
+    SEMI = 4;
+    // Left anti-join, right alternative can be naturally adapted
+    ANTI = 5;
+    // aka. Cartesian product
+    TIMES = 6;
+  }
+  // TODO(longbin) An expression-ish predicate here is a more general form:
+  // We currently only support the predicate of the equality of the given keys of both relations are equal.
+  // In general, a join operator can join on any arbitrary predicate regarding certain attributes of left and right
+  // participants.
+  repeated common.Variable left_keys = 1;
+  repeated common.Variable right_keys = 2;
+  JoinKind kind = 3;
+}
+
+// Union two relations
+message Union {
+  repeated int32 parents = 3;
+}
+
+message GroupBy {
+  // To define the function to be applied on each group after performing grouping. For example,
+  // GROUPBY({a, b}, COUNT_DISTINCT(c, d) as e), one shall count distinct present of the pairs
+  // (c, d), and alias the count as e.
+  message AggFunc {
+    enum Aggregate {
+      SUM = 0;
+      MIN = 1;
+      MAX = 2;
+      COUNT = 3;
+      COUNT_DISTINCT = 4;
+      TO_LIST = 5;
+      TO_SET = 6;
+      AVG = 7;
+    }
+
+    // The variables to apply this aggregation
+    // TODO(longbin) An expression here is a more general form
+    repeated common.Variable vars = 1;
+    // The aggregate function
+    Aggregate aggregate = 2;
+    // The alias for the aggregated value
+    common.NameOrId alias = 3;
+  }
+  message KeyAlias {
+    // The key to perform grouping
+    // TODO(longbin) An expression here is a more general form
+    common.Variable key = 1;
+    // The alias for the key
+    common.NameOrId alias = 2;
+  }
+  // A collection of key-alias mappings
+  repeated KeyAlias mappings = 1;
+  // The grouping functions
+  repeated AggFunc functions = 2;
+}
+
+message OrderBy {
+  message OrderingPair {
+    enum Order {
+      // random
+      SHUFFLE = 0;
+      // ascending
+      ASC = 1;
+      // descending
+      DESC = 2;
+    }
+    // TODO(longbin) An expression here is a more general form
+    common.Variable key = 1;
+    Order order = 2;
+  }
+  repeated OrderingPair pairs = 2;
+  // A size limit. `OrderBy.Limit` is equivalent to the `Topk` operation
+  Range limit = 3;
+}
+
+message Dedup {
+  // TODO(longbin) An expression here is a more general form
+  repeated common.Variable keys = 1;
+}
+
+message Unfold {
+  // The tag of a graph relation that **must** refer to a data of collection type
+  common.NameOrId tag = 1;
+  // The alias tag for the elements that are unfolded from the collection
+  common.NameOrId alias = 2;
+}
+
+message Range {
+  // The lower bound of the range, included
+  int32 lower = 1;
+  // The upper bound of the range, **excluded**
+  int32 upper = 2;
+}
+
+message Limit {
+  // The limit range
+  Range range = 1;
+}
+
+// To define a predicate of {{k1, cmp, v1} and {k2, cmp, v2}} or ...,
+// where the values referred by k1, k2, ... are indexed and hence the
+// predicate can be efficiently verified by leveraging the index.
+message IndexPredicate {
+  // A triplet defines that a key must be **equal** to a given constant value.
+  message Triplet {
+    common.Property key = 1;
+    common.Value value = 2;
+    // TODO(longbin) More comparators (gt, ge, lt, le, ne) other than equivalence (eq) may be required
+    common.None cmp = 3;
+  }
+  // A collection of `Triplet` that forms a logical **AND** of all `Predicate`s.
+  message AndPredicate {
+    repeated Triplet predicates = 1;
+  }
+  // A collection of `AndPredicate` that forms a logical **OR** of all `AndPredicate`s
+  repeated AndPredicate or_predicates = 1;
+}
+
+message QueryParams {
+  // The tables to fetch data from. While this may sound arbitrary, but in graph db, we often use
+  // label instead of table to refer to an entity (vertex/edge). They are semantically the same.
+  repeated common.NameOrId tables = 1;
+  // The required columns of the table.
+  repeated common.NameOrId columns = 2;
+  // Can specify to get all columns of the table
+  bool is_all_columns = 3;
+  // The size limit
+  Range limit = 4;
+  // The optional predicate for the data tuple, which may be pushed down to the storage service
+  common.Expression predicate = 5;
+  // Define the sampling ratio, while querying vertex/edge.
+  // 1.0 by default for deterministic case.
+  double sample_ratio = 6;
+  // Extra parameters for general-purpose usage
+  map<string, string> extra = 7;
+}
+
+// Scan is an operator that transforms the source data format (defined by the database)
+// into internal data format (defined/used by runtime)
+message Scan {
+  enum ScanOpt {
+    // Scanning the vertices
+    VERTEX = 0;
+    // Scanning the edges
+    EDGE = 1;
+    // Scanning a relational table
+    TABLE = 2;
+  }
+  ScanOpt scan_opt = 1;
+  // The alias of the item if it is a vertex or edge
+  common.NameOrId alias = 2;
+  // The required parameters for the scan
+  QueryParams params = 3;
+  // The optional filtering predicate for the field that have been indexed
+  IndexPredicate idx_predicate = 4;
+}
+
+// It is typical to use the operator together with EdgeExpand or PathExpand, with the functionality of
+// obtaining some properties of the end vertex after the expansion.
+message GetV {
+  enum VOpt {
+    // Getting the start vertex of the edge
+    Start = 0;
+    // Getting the end vertex of the edge/path
+    End = 1;
+    // Getting the other vertex of the edge. We are calibrating to Gremlin's bothE.otherV semantics
+    Other = 2;
+    // Getting both vertices of the edge
+    Both = 3;
+  }
+  // The tag that refers to the edge/path where the end vertex will be retrieved
+  common.NameOrId tag = 1;
+  // Determine what vertex to get from the tagged object
+  VOpt opt = 2;
+  // The query parameters of getting vertices
+  QueryParams params = 3;
+  // The alias of this vertex
+  common.NameOrId alias = 4;
+}
+
+// To tag the current data with an alias
+message As {
+  // The alias to give if any, this is especially helpful when the entity now refers to the head of the record
+  common.NameOrId alias = 1;
+}
+
+// An operator that provides **auxiliary** functionalities for certain entity (as tagged). Functionalities include:
+// * To get certain properties/columns from the entity
+// * To filter out the entity based on the data
+// * To re-name the entity with other alias
+//
+// Note this operator is invisible the logical plan, and will only be used by the translator/optimizer
+// when processing the logical plan into the physical plan.
+message Auxilia {
+  // The tag refers to the entity upon which this operator is applied
+  common.NameOrId tag = 1;
+  // The details (columns/properties) to be retrieved
+  QueryParams params = 2;
+  // The alias to give if any, which is especially helpful when the entity now refers to the head of the record
+  common.NameOrId alias = 3;
+}
+
+message EdgeExpand {
+  enum Direction {
+    OUT = 0;
+    IN = 1;
+    BOTH = 2;
+  }
+  enum ExpandOpt {
+    Vertex = 0;
+    Edge = 1;
+    Degree = 2;
+  }
+  // The tag that refers to the starting vertex
+  common.NameOrId v_tag = 1;
+  // The direction of the expanded edge
+  Direction direction = 2;
+  // The query parameters define the condition that the edge/end vertex must satisfy.
+  // Note that whether the query parameters apply to the edge or end vertex depends on
+  // the `is_edge` indicator, with one exception that the `tables` parameter in `EdgeExpand`
+  // **always** applies to the edge for now (may be fixed later) .
+  QueryParams params = 3;
+  // An optional alias for the object of the expansion
+  common.NameOrId alias = 4;
+  // Expand option, i.e., expand vertices/edges/degree.
+  ExpandOpt expand_opt = 5;
+}
+
+message PathStart {
+  // The tag that refers to the starting vertex
+  common.NameOrId start_tag = 1;
+  // Path option, including to expand an arbitrary path or a simple path
+  PathExpand.PathOpt path_opt = 2;
+  // Result option, including to take end vertex (EndV), or whole path (AllV), for this expansion
+  PathExpand.ResultOpt result_opt = 3;
+}
+
+message PathEnd {
+  // An optional alias for the object of the path expansion
+  common.NameOrId alias = 1;
+}
+
+message PathExpand {
+  enum PathOpt {
+    // an arbitrary path, in which both vertex/edge may duplicate
+    Arbitrary = 0;
+    // a path without vertex duplications
+    Simple = 1;
+  }
+   // Define what result is required for this path. We currently support `EndV` and `AllV`, while an option to
+   // include all edges and vertices may be needed in the future.
+   enum ResultOpt {
+     // only end vertex is required for this expansion
+     EndV = 0;
+     // all vertices of this path are required for this expansion.
+     AllV = 1;
+  }
+  // A path expansion has a base of edge expansion
+  EdgeExpand base = 1;
+  // The tag that refers to the starting vertex
+  common.NameOrId start_tag = 2;
+  // An optional alias for the object of the expansion
+  common.NameOrId alias = 3;
+  // The range that defines the minimum and maximum number of hops of the path expansion.
+  // This is optional, if not set, the minimum number is 1, and the maximum is INT_MAX
+  Range hop_range = 4;
+  // Path option, including to expand an arbitrary path or a simple path
+  PathOpt path_opt = 5;
+  // Result option, including to take end vertex (EndV), or whole path (AllV), for this expansion
+  ResultOpt result_opt = 6;
+}
+
+/*
+message ShortestPathExpand {
+  message WeightCal {
+    enum Aggregate {
+      SUM = 0;
+      MAX = 1;
+      MIN = 2;
+      AVG = 3;
+      MUL = 4;
+    }
+    // This optional expression defines how to calculate the weight on each edge. In the expression,
+    // one can directly write start, end to indicate the start/edge vertices of the edge.
+    // e.g. the expression: "start.value + end.value * weight" defines that the weight of each edge
+    // is calculated by multiplying the edge vertex's value with the edge's weight and then summing
+    // it with the start vertex's value.
+    common.Expression weight_each = 1;
+    // Define how to aggregate the calculated weight of each edge as the path weight
+    Aggregate aggregate = 2;
+  }
+  // A shortest path expansion has a base of path expansion
+  PathExpand path_expand = 1;
+  // An optional weight calculation function for shortest path. If not specified, the weight is
+  // by default the length of the path.
+  WeightCal weight_cal = 2;
+}
+ */
+
+// Apply is a relational operation where it first performs a inner correlated subtask for each tuple
+// of input relations, and then the result of the subtask will be joined back to each input tuple.
+message Apply {
+  // Define how to join the result of the subtask back to the original relation
+  Join.JoinKind join_kind = 1;
+  // To project on certain tags of the input relation to execute the subtask
+  repeated common.NameOrId tags = 2;
+  // The subtask will be perform on certain tags as keys of the input relation
+  int32 subtask = 3;
+  // Define the alias of output from `Apply`
+  common.NameOrId alias = 4;
+}
+
+message SegmentApply {
+  // The keys to perform grouping, or segmenting. For simplicity, we only allows grouping by the
+  // existed tags of the graph relation, which is unlike GroupBy that we further allows digging
+  // into the properties of a vertex/edge that the tag refers to.
+  repeated common.NameOrId keys = 1;
+  // A base of apply operation that is conducted on each group of the relations instead of tuple
+  Apply apply_subtask = 2;
+}
+
+message Pattern {
+  message Binder {
+    oneof item {
+      EdgeExpand edge = 1;
+      PathExpand path = 2;
+      GetV vertex = 3;
+      Select select = 4;
+    }
+  }
+  // A sentence defines a match
+  message Sentence {
+    common.NameOrId start = 1;
+    repeated Binder binders = 2;
+    common.NameOrId end = 3;
+    /// Define how to attach this sentence to the other one
+    Join.JoinKind join_kind = 4;
+  }
+  repeated Sentence sentences = 1;
+}
+
+message Sink {
+  message SinkTarget {
+    oneof inner {
+      SinkDefault sink_default = 1;
+      SinkVineyard sink_vineyard = 2;
+    }
+  }
+  // Define the tags of columns to sink
+  repeated common.NameOrIdKey tags = 1;
+  // Define the target of sink, e.g., to Client as default, to Graph such as Vineyard etc.
+  SinkTarget sink_target = 2;
+}
+
+message SinkDefault {
+  enum MetaType {
+    ENTITY = 0;
+    RELATION = 1;
+    COLUMN = 2;
+    TAG = 3;
+  }
+  message IdNameMapping {
+    int32 id = 1;
+    string name = 2;
+    MetaType meta_type = 3;
+  }
+  // The mapping of id to name given certain `MetaType`
+  repeated IdNameMapping id_name_mappings = 1;
+}
+
+message SinkVineyard {
+  string graph_name = 1;
+  schema.Schema graph_schema = 2;
+}
+
+// Fusing multiple operators as one single operator if possible.
+// Noticed that we only fused for map or filter related operators.
+message FusedOperator {
+  repeated LogicalPlan.Operator oprs = 1;
+}
+
+// A logical plan of graph relation algebra forms a DAG, where each node is an operator and the
+// edge indicates the execution flow.
+message LogicalPlan {
+  message Operator {
+    oneof opr {
+      Project project =  1;
+      Select select = 2;
+      Join join = 3 ;
+      Union union = 4;
+      GroupBy group_by = 5;
+      OrderBy order_by = 6;
+      Dedup dedup = 7;
+      Unfold unfold = 8;
+      Apply apply = 9;
+      SegmentApply seg_apply = 10;
+      Scan scan = 11;
+      Limit limit = 12;
+      Auxilia auxilia = 13;
+      As as = 14;
+      Sink sink = 15;
+      FusedOperator fused = 16;
+      // Saving the room for relational operators
+      GetV vertex = 30;
+      EdgeExpand edge = 31;
+      PathExpand path = 32;
+      PathStart path_start = 33;
+      PathEnd path_end = 34;
+      Pattern pattern = 35;
+    }
+  }
+  message Node {
+    // The node's operator
+    Operator opr = 1;
+    // The children operators' identifiers, where the id refers to its array index in the plan
+    repeated int32 children = 2;
+  }
+  // A array of nodes
+  repeated Node nodes = 1;
+  /// The root nodes' array indices
+  repeated int32 roots = 2;
+}

@@ -1,0 +1,23 @@
+[package]
+name = "graph_proxy"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+log = "0.4"
+lazy_static = "1.3.0"
+graph_store = {path = "../../store/exp_store"}
+global_query = {path = "../../store/global_query"}
+dyn_type = { path = "../../common/dyn_type" }
+ir_common = {path = "../common"}
+pegasus = { path = "../../engine/pegasus/pegasus" }
+pegasus_common = { path = "../../engine/pegasus/common" }
+ahash = "0.8"
+rand = "0.8.5"
+
+[features]
+default = []
+proto_inplace = ["ir_common/proto_inplace"]
+with_v6d = ["global_query/with_v6d"]

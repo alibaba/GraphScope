@@ -35,6 +35,7 @@
 #include "vineyard/common/util/status.h"
 #include "vineyard/common/util/uuid.h"
 #include "vineyard/graph/fragment/arrow_fragment_group.h"
+#include "vineyard/graph/loader/fragment_loader_utils.h"
 #include "vineyard/graph/utils/error.h"
 #include "vineyard/io/io/io_factory.h"
 
@@ -180,17 +181,21 @@ bl::result<void> GrapeInstance::unloadGraph(const rpc::GSParams& params) {
     bool exists = false;
     VY_OK_OR_RAISE(client_->Exists(frag_group_id, exists));
     if (exists) {
-      auto fg = std::dynamic_pointer_cast<vineyard::ArrowFragmentGroup>(
-          client_->GetObject(frag_group_id));
+      std::shared_ptr<vineyard::ArrowFragmentGroup> fg;
+      VY_OK_OR_RAISE(client_->GetObject(frag_group_id, fg));
       auto fid = comm_spec_.WorkerToFrag(comm_spec_.worker_id());
       auto frag_id = fg->Fragments().at(fid);
-      VY_OK_OR_RAISE(client_->DelData(frag_id, false, true));
-    }
-    MPI_Barrier(comm_spec_.comm());
-    if (exists) {
+
+      // ensure all workers obtain the expected information
+      MPI_Barrier(comm_spec_.comm());
+
+      // delete the fragment group first
       if (comm_spec_.worker_id() == 0) {
         VINEYARD_SUPPRESS(client_->DelData(frag_group_id, false, true));
       }
+      // ensure all fragments get deleted
+      MPI_Barrier(comm_spec_.comm());
+      VINEYARD_SUPPRESS(client_->DelData(frag_id, false, true));
     }
   }
   VLOG(1) << "Unloading Graph " << graph_name;
@@ -198,7 +203,8 @@ bl::result<void> GrapeInstance::unloadGraph(const rpc::GSParams& params) {
 }
 
 bl::result<std::string> GrapeInstance::loadApp(const rpc::GSParams& params) {
-  std::string app_name = "app_" + generateId();
+  BOOST_LEAF_AUTO(algo_name, params.Get<std::string>(rpc::APP_ALGO));
+  std::string app_name = "app_" + algo_name + "_" + generateId();
 
   BOOST_LEAF_AUTO(lib_path, params.Get<std::string>(rpc::APP_LIBRARY_PATH));
 
@@ -254,7 +260,26 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::projectToSimple(
                   projector->Project(wrapper, projected_graph_name, params));
   BOOST_LEAF_CHECK(object_manager_.PutObject(projected_wrapper));
 
-  return projected_wrapper->graph_def();
+  auto graph_def = projected_wrapper->graph_def();
+  if (!graph_def.has_extension()) {
+    return graph_def;
+  }
+  gs::rpc::graph::VineyardInfoPb vy_info;
+  // gather fragment id
+  graph_def.extension().UnpackTo(&vy_info);
+  if (vy_info.vineyard_id() == 0) {
+    return graph_def;
+  }
+  VY_OK_OR_RAISE(client_->Persist(vy_info.vineyard_id()));
+  // contruct fragment group
+  BOOST_LEAF_AUTO(frag_group_id,
+                  vineyard::ConstructFragmentGroup(
+                      *client_, vy_info.vineyard_id(), comm_spec_));
+  // return graph def with vineyard id attached
+  gs::rpc::graph::VineyardInfoPb new_vy_info = vy_info;
+  new_vy_info.set_vineyard_id(frag_group_id);
+  graph_def.mutable_extension()->PackFrom(new_vy_info);
+  return graph_def;
 }
 
 bl::result<std::string> GrapeInstance::query(const rpc::GSParams& params,
@@ -264,6 +289,9 @@ bl::result<std::string> GrapeInstance::query(const rpc::GSParams& params,
   BOOST_LEAF_AUTO(app, object_manager_.GetObject<AppEntry>(app_name));
   BOOST_LEAF_AUTO(wrapper,
                   object_manager_.GetObject<IFragmentWrapper>(graph_name));
+
+  VLOG(1) << "Query app, application name: " << app_name
+          << ", graph name: " << graph_name;
 
   auto fragment = wrapper->fragment();
   auto spec = grape::DefaultParallelEngineSpec();

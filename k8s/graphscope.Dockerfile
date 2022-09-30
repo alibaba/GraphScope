@@ -66,16 +66,11 @@ RUN cd /home/graphscope/gs && \
         python3 -m pip install --no-cache-dir ./*.whl; \
         popd; \
     else \
-        python3 -m pip install --no-cache-dir graphscope ipython; \
+        python3 -m pip install --no-cache-dir graphscope; \
     fi && \
     sudo rm -fr /home/graphscope/gs && cd ${HOME} && \
-    python3 -m pip install --no-cache-dir pymars==0.8.0
+    python3 -m pip install --no-cache-dir ipython pymars==0.8.0
 
 # init log directory
 RUN sudo mkdir /var/log/graphscope \
   && sudo chown -R $(id -u):$(id -g) /var/log/graphscope
-
-ENV GRAPHSCOPE_HOME=/home/graphscope/.local/lib/python3.8/site-packages/graphscope.runtime
-ENV OPAL_PREFIX=${GRAPHSCOPE_HOME}/openmpi
-ENV OMPI_MCA_plm_rsh_agent=/usr/bin/kube_ssh
-ENV PATH=${PATH}:${GRAPHSCOPE_HOME}/bin/:${GRAPHSCOPE_HOME}/openmpi/bin/

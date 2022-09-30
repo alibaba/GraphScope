@@ -153,8 +153,6 @@ class KubernetesClusterLauncher(Launcher):
     _mars_service_name_prefix = "mars-"
 
     _random_analytical_engine_rpc_port = random.randint(56001, 57000)
-    _random_etcd_listen_peer_service_port = random.randint(57001, 58000)
-    _random_etcd_listen_client_service_port = random.randint(58001, 59000)
 
     _vineyard_service_port = 9600  # fixed
     _mars_scheduler_port = 7103  # fixed
@@ -171,6 +169,8 @@ class KubernetesClusterLauncher(Launcher):
         coordinator_name=None,
         coordinator_service_name=None,
         etcd_addrs=None,
+        etcd_listening_client_port=None,
+        etcd_listening_peer_port=None,
         etcd_num_pods=None,
         etcd_cpu=None,
         etcd_mem=None,
@@ -184,6 +184,8 @@ class KubernetesClusterLauncher(Launcher):
         mars_worker_mem=None,
         mars_scheduler_cpu=None,
         mars_scheduler_mem=None,
+        etcd_pod_node_selector=None,
+        engine_pod_node_selector=None,
         with_mars=False,
         image_pull_policy=None,
         image_pull_secrets=None,
@@ -211,6 +213,8 @@ class KubernetesClusterLauncher(Launcher):
         # random for multiple k8s cluster in the same namespace
         self._engine_name = self._engine_name_prefix + self._saved_locals["instance_id"]
         self._etcd_addrs = etcd_addrs
+        self._etcd_listening_client_port = etcd_listening_client_port
+        self._etcd_listening_peer_port = etcd_listening_peer_port
         self._etcd_name = self._etcd_name_prefix + self._saved_locals["instance_id"]
         self._etcd_service_name = (
             self._etcd_service_name_prefix + self._saved_locals["instance_id"]
@@ -234,7 +238,18 @@ class KubernetesClusterLauncher(Launcher):
         else:
             self._image_pull_secrets = []
 
-        self._volumes = json.loads(volumes)
+        if volumes:
+            self._volumes = json.loads(volumes)
+        else:
+            self._volumes = dict()
+        if etcd_pod_node_selector:
+            self._etcd_pod_node_selector = json.loads(etcd_pod_node_selector)
+        else:
+            self._etcd_pod_node_selector = dict()
+        if engine_pod_node_selector:
+            self._engine_pod_node_selector = json.loads(engine_pod_node_selector)
+        else:
+            self._engine_pod_node_selector = dict()
 
         self._host0 = None
         self._pod_name_list = None
@@ -544,6 +559,8 @@ class KubernetesClusterLauncher(Launcher):
             num_workers=self._num_workers,
             image_pull_policy=self._saved_locals["image_pull_policy"],
         )
+        if self._engine_pod_node_selector:
+            engine_builder.add_engine_pod_node_selector(self._engine_pod_node_selector)
         # volume1 is for vineyard ipc socket
         # MaxGraph: /home/maxgraph/data/vineyard
         if self._exists_vineyard_daemonset(self._saved_locals["vineyard_daemonset"]):
@@ -702,7 +719,7 @@ class KubernetesClusterLauncher(Launcher):
         service_builder = ServiceBuilder(
             self._etcd_service_name,
             service_type="ClusterIP",
-            port=self._random_etcd_listen_client_service_port,
+            port=self._etcd_listening_client_port,
             selector=labels,
         )
         self._resource_object.append(
@@ -727,8 +744,8 @@ class KubernetesClusterLauncher(Launcher):
             num_pods=self._etcd_num_pods,
             restart_policy="Always",
             image_pull_secrets=self._image_pull_secrets,
-            listen_peer_service_port=self._random_etcd_listen_peer_service_port,
-            listen_client_service_port=self._random_etcd_listen_client_service_port,
+            listen_peer_service_port=self._etcd_listening_peer_port,
+            listen_client_service_port=self._etcd_listening_client_port,
         )
 
         pods, services = etcd_builder.build()
@@ -862,7 +879,7 @@ class KubernetesClusterLauncher(Launcher):
     def _get_etcd_endpoints(self):
         etcd_addrs = []
         if self._etcd_addrs is None:
-            port = self._random_etcd_listen_client_service_port
+            port = self._etcd_listening_client_port
             etcd_addrs.append("%s:%s" % (self._etcd_service_name, port))
             for i in range(self._etcd_num_pods):
                 etcd_addrs.append("%s-%d:%s" % (self._etcd_name, i, port))

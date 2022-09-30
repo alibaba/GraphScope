@@ -1,0 +1,97 @@
+{
+  "nodes": [
+    {
+      "opr": {
+        "opr": {
+          "Scan": {
+            "scan_opt": 0,
+            "alias": {
+              "item": {
+                "Id": 0
+              }
+            },
+            "params": {
+              "tables": [],
+              "columns": [],
+              "is_all_columns": false,
+              "limit": null,
+              "predicate": null,
+              "sample_ratio": 1.0,
+              "extra": {}
+            },
+            "idx_predicate": null
+          }
+        }
+      },
+      "children": [
+        1
+      ]
+    },
+    {
+      "opr": {
+        "opr": {
+          "Project": {
+            "mappings": [
+              {
+                "expr": {
+                  "operators": [
+                    {
+                      "item": {
+                        "VarMap": {
+                          "keys": [
+                            {
+                              "tag": {
+                                "item": {
+                                  "Id": 0
+                                }
+                              },
+                              "property": {
+                                "item": {
+                                  "Key": {
+                                    "item": {
+                                      "Name": "name"
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "tag": {
+                                "item": {
+                                  "Id": 0
+                                }
+                              },
+                              "property": {
+                                "item": {
+                                  "Key": {
+                                    "item": {
+                                      "Name": "id"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                },
+                "alias": {
+                  "item": {
+                    "Id": 1
+                  }
+                }
+              }
+            ],
+            "is_append": true
+          }
+        }
+      },
+      "children": []
+    }
+  ],
+  "roots": [
+    0
+  ]
+}
