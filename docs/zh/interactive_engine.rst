@@ -233,15 +233,25 @@ GIE支持Apache TinkerPop定义的属性图模型和Gremlin遍历查询，且实
     g.V().where(expr('30 within @.a'))  //head节点的a属性是整数数组类型
     //project with expression (`expr()` 语法糖)
     g.V().select(expr("@.age")) //@.age 代表head节点的age属性
-    //bits manipulation in expression
-    g.V().select(expr("1 & 2"))
-    g.V().select(expr("1 | 2"))
-    g.V().select(expr("1 ^ 2"))
-    g.V().select(expr("1 << 2"))
-    g.V().select(expr("1 >> 2"))
-    g.V().where(expr("232 & 64 != 0"))
-    g.V().select(expr("7 ^^ 3")) //指数运算
-    g.V().select(expr("7 ^^ -3")) //指数运算
+
+    //通过expression实现位运算
+    g.V().select(expr("@.number & 2")) //head节点的number属性是整型
+    g.V().select(expr("@.number | 2"))
+    g.V().select(expr("@.number ^ 2"))
+    g.V().select(expr("@.number << 2"))
+    g.V().select(expr("@.number >> 2"))
+    g.V().where(expr("@.number & 64 != 0"))
+
+    //通过expression实现算数运算
+    g.V().select(expr("@.number + 2"))
+    g.V().select(expr("@.number - 2"))
+    g.V().select(expr("@.number * 2"))
+    g.V().select(expr("@.number / 2"))
+    g.V().select(expr("(@.number + 2) / 4 + (@.age * 10)")) //head节点的number和age属性都是整型
+
+    //通过expression实现指数运算
+    g.V().select(expr("@.number ^^ 3"))
+    g.V().select(expr("@.number ^^ -3"))
     
     //where
     g.V().where(out().count().is(gt(4)))
