@@ -142,18 +142,19 @@ Gremlin语言丰富灵活的表达能力主要来自于它对 *嵌套遍历* 的
 .. code:: java
 
     g.V('account').has('id','2').as('s')
-     .repeat(out('transfer').simplePath())
-     .times(k-1)
+     .out('k-1..k', 'transfer')
+     .with('PATH_OPT', 'SIMPLE')
+     .endV()
      .where(out('transfer').eq('s'))
      .path().limit(1)
 
-首先，输入图操作 ``V`` （包含一个 ``has`` 表达的简单过滤）返回图中满足条件的 ``account`` 点（即唯一标识为 ``2`` 的点）。紧随其后的 ``as`` 操作是一个 *修饰符* ，它不改变输入遍历器集合，但对其中每一个遍历器的当前位置，打上一个有名标签（这个例子中的 ``s`` ），从而今后可以引用。接下来，查询沿着 ``transfer`` 类型的出边循环游走 ``k-1`` 次，且每一次都过滤或跳过路径中的重复点（利用 ``simplePath`` 操作实现）。最后， ``where`` 操作检查此时遍历路径的下一跳是否可以回到起点（用 ``s`` 指代），从而形成一个长度为 ``k`` 的环。对于检测到的环，查询还通过 ``path`` 操作展示每个遍历器的完成路径信息。 ``limit`` 操作类似SQL中的top K，它表达了查询结果仅需要包含一个这样的路径（如果有的话）。
+首先，输入图操作 ``V`` （包含一个 ``has`` 表达的简单过滤）返回图中满足条件的 ``account`` 点（即唯一标识为 ``2`` 的点）。紧随其后的 ``as`` 操作是一个 *修饰符* ，它不改变输入遍历器集合，但对其中每一个遍历器的当前位置，打上一个有名标签（这个例子中的 ``s`` ），从而今后可以引用。接下来，查询沿着 ``transfer`` 类型的出边循环游走 ``k-1`` 次（输出hops在[k-1, k)范围内的邻点），且每一次都过滤或跳过路径中的重复点（通过在 ``with`` 内配置 ``SIMPLE`` 选项实现）。最后， ``where`` 操作检查此时遍历路径的下一跳是否可以回到起点（用 ``s`` 指代），从而形成一个长度为 ``k`` 的环。对于检测到的环，查询还通过 ``path`` 操作展示每个遍历器的完成路径信息。 ``limit`` 操作类似SQL中的top K，它表达了查询结果仅需要包含一个这样的路径（如果有的话）。
 
 
 Gremlin兼容性（对比TinkerPop）
 ----------------------------
 
-GIE支持Apache TinkerPop定义的属性图模型和Gremlin遍历查询，且实现了一个与TinkerPop 3.3和3.4版本兼容的 *Websockets* 服务接口。下面我们列出当前实现和Apache TinkerPop规范的主要差一点（其中一些差异会有机会消除、另一些是目前GraphScope定位的场景差异造成的不同设计选择）。
+GIE支持Apache TinkerPop定义的属性图模型和Gremlin遍历查询，且实现了一个与TinkerPop 3.3和3.4版本兼容的 *Websockets* 服务接口。除此之外，我们扩展了一些语法糖来进一步引入一些简洁明了的expression表示。下面我们列出当前实现和Apache TinkerPop规范的主要差一点（其中一些差异会有机会消除、另一些是目前GraphScope定位的场景差异造成的不同设计选择）。
 
 属性图模型约束
 ~~~~~~~~~~~~~
@@ -201,16 +202,56 @@ GIE支持Apache TinkerPop定义的属性图模型和Gremlin遍历查询，且实
 
 .. code:: java
 
+    //hasLabel
+    g.V().hasLabel("labelName")
+    g.V().hasLabel("labelName1", "labelName2")
+
     //has
     g.V().has("attrName")
     g.V().has("attrName", attrValue)
+    g.V().has("labelName", "attrName", attrValue)
+    g.V().has("attrName", eq(1))
+    g.V().has("attrName", neq(1))
+    g.V().has("attrName", lt(1))
+    g.V().has("attrName", lte(1))
     g.V().has("attrName", gt(1))
+    g.V().has("attrName", gte(1))
+    g.V().has("attrName", within([1,2,3]))
+    g.V().has("attrName", without([1,2,3]))
+    g.V().has("attrName", inside(10, 20))
+    g.V().has("attrName", outside(10, 20))
+
+    // P.not
+    g.V().has("attrName", P.not(eq(10)))
     
     //is
     g.V().values("age").is(gt(70))
-    
-    //filter
-    g.V().filter(values("age").is(gt(20)))
+
+    //通过expression实现过滤 (`expr()` 语法糖)
+    g.V().where(expr('@.age > 20')) //@.age 代表head节点的age属性
+    g.V().as('a').out().as('b').where(expr('@a.age <= @b.age'))  //@a.age 代表 "a" 节点的age属性
+    g.V().where(expr('30 within @.a'))  //head节点的a属性是整数数组类型
+    //project with expression (`expr()` 语法糖)
+    g.V().select(expr("@.age")) //@.age 代表head节点的age属性
+
+    //通过expression实现位运算
+    g.V().select(expr("@.number & 2")) //head节点的number属性是整型
+    g.V().select(expr("@.number | 2"))
+    g.V().select(expr("@.number ^ 2"))
+    g.V().select(expr("@.number << 2"))
+    g.V().select(expr("@.number >> 2"))
+    g.V().where(expr("@.number & 64 != 0"))
+
+    //通过expression实现算数运算
+    g.V().select(expr("@.number + 2"))
+    g.V().select(expr("@.number - 2"))
+    g.V().select(expr("@.number * 2"))
+    g.V().select(expr("@.number / 2"))
+    g.V().select(expr("(@.number + 2) / 4 + (@.age * 10)")) //head节点的number和age属性都是整型
+
+    //通过expression实现指数运算
+    g.V().select(expr("@.number ^^ 3"))
+    g.V().select(expr("@.number ^^ -3"))
     
     //where
     g.V().where(out().count().is(gt(4)))
@@ -218,29 +259,20 @@ GIE支持Apache TinkerPop定义的属性图模型和Gremlin遍历查询，且实
     //dedup
     g.V().out().dedup()
     g.V().out().dedup().by("name")
+    g.V().as("a").out().dedup("a")
+    g.V().as("a").out().dedup("a").by("name")
     
     //range
     g.V().out().limit(100)
     g.V().out().range(10, 20)
     
-    //simplePath
-    g.V().repeat(out().simplePath()).times(3).valeus("name")
-    
-    //and/or
-    
-    //Text.*
-    g.V().has("name", Text.match(".*j.*"))
-    g.V().values("name").filter(Text.match(".*j.*"))
-    g.V().has("name", Text.startsWith("To"))
-    g.V().values("name").filter(Text.startsWith("To"))
-    
-    //P.not
-    g.V().has("name", P.not(Text.startsWith("To")))
-    
-    //Lists.contains*
-    g.V().has("a", Lists.contains(30))
-    g.V().values("a").filter(Lists.containsAny(Lists.of(10, 20, 30))
-    g.V().has("a", P.not(Lists.contains(30)))
+    //TextP.*
+    g.V().has("attrName", TextP.containing("substr"))
+    g.V().has("attrName", TextP.notContaining("substr"))
+    g.V().has("attrName", TextP.startingWith("substr"))
+    g.V().has("attrName", TextP.notStartingWith("substr"))
+    g.V().has("attrName", TextP.endingWith("substr"))
+    g.V().has("attrName", TextP.notEndingWith("substr"))
 
 - Map（映射），如：
 
@@ -250,40 +282,18 @@ GIE支持Apache TinkerPop定义的属性图模型和Gremlin遍历查询，且实
     g.V().out().contant(1)
     g.V().out().constant("aaa")
     
-    //local count
-    g.V().out().values("age").fold().count(local)
-    
-    //local dedup
-    g.V().out().fold().dedup(local).by("name")
-    
-    //otherV
-    g.V().bothE().otherV()
-    
     //id
     g.V().id()
     
     //label
     g.V().label()
-    
-    //local order
-    g.V().out().fold().order().by("name")
-    
-    //property key
-    g.V().properties("name").key()
-    
-    //property value
-    g.V().properties("name").value()
-    
-    //local range
-    g.V().out().fold().order(local).by("name").range(local, 2, 4)
+
+    //otherV
+    g.V().bothE().otherV()
     
     //as...select
     g.V().as("a").out().out().select("a")
-    g.V().as("a").as("b").out("c").out().select("a", "b", "c")
-    
-    //path
-    g.V().out().in().path()
-    g.V().outE().inV().path().bay("name").by("weight").by("name")
+    g.V().as("a").out().as("b").out().as('c').select("a", "b", "c")
 
 - FlatMap（多重映射），如：
 
@@ -291,23 +301,23 @@ GIE支持Apache TinkerPop定义的属性图模型和Gremlin遍历查询，且实
 
     //out/in/both
     g.V().out()
-    g.V().in('person_knows_person')
+    g.V().in('knows')
     
     //outE/inE/inV/outV
-    g.V().outE('person_knows_person').inV()
+    g.V().outE('knows').inV()
     g.V().inE().bothV()
+
+    //path expansion (语法糖)
+    //找到所有从 `V()` 开始通过 `knows` 边类型向外扩展[2, 4)跳的所有简单路径（点不重复），并且只保存path的最末端点
+    g.V().out('2..4', 'knows').with('PATH_OPT', 'SIMPLE').with('RESULT_OPT', 'END_V').endV()
+    //找到所有从 `V()` 开始通过 `knows` 边类型向外扩展[2, 4)跳的所有任意路径（点可重复），并且只保存path的最末端点
+    g.V().out('2..4', 'knows').with('PATH_OPT', 'ARBITRARY').with('RESULT_OPT', 'ALL_V')
     
     //properties
-    g.V().values()
-    g.V().values("name", "age")
-    g.V().valueMap()
-    
-    //branch with option
-    g.V().branch(values("name")).option("tom", out()).option("lop", in()).option(none, valueMap())
-    g.V().branch(out.count()).option(0L, valueMap()).option(1L, out()).option(any, in())
-    
-    //unfold
-    g.V().group().by().by(values("name")).select(values).unfold()
+    g.V().values("name")
+    g.V().valueMap() // 输出所有属性
+    g.V().valueMap("name")
+    g.V().valueMap("name", "age")
     
 - Aggregate（聚合），如：
 
@@ -329,6 +339,11 @@ GIE支持Apache TinkerPop定义的属性图模型和Gremlin遍历查询，且实
     g.V().out().group()
     g.V().out().group().by("name")
     g.V().out().group().by().by("name")
+
+    //groupBy多个keys，并且为每个key设置别名
+    g.V().group().by(values("name").as("name"), values("age").as("age"))
+    //groupBy多个values，并且为每个value设置别名
+    g.V().group().by().by(min().as("min"), max().as("max"))
     
     //global max/min
     g.V().values("age").max()
@@ -341,15 +356,10 @@ GIE支持Apache TinkerPop定义的属性图模型和Gremlin遍历查询，且实
 
 .. code:: java
 
-    //repeat...times
-    g.V().repeat(out()).times(4).valueMap()
-    
-    //repeat...until
-    g.V().repeat(out()).until(out().count().is(eq(0))).valueMap()
-    g.V().repeat(out()).until(out().count().is(eq(0)).or().loops().is(gt(3))).where(out().count().is(eq(0)))
-    
-    //emit
-    g.V().emit().repeat(out()).times(4).valueMap()
+    g.V().match(
+        __.as('a').out().as('b'),
+        __.as('b').out().as('c')
+    ).select('a', 'c')
     
 - Limit（top K，即取前k个结果）。
 
@@ -358,13 +368,14 @@ GIE支持Apache TinkerPop定义的属性图模型和Gremlin遍历查询，且实
 
 GraphScope暂时不支持下列Gremlin操作（会逐步支持）：
 
-- Match（子图模式匹配）
+- Repeat (可以通过path expansion语法糖实现)
+- path()/simplePath() (可以通过path expansion语法糖实现)
+- Local (基于集合的local计算，i.e. count(local), dedup(local), ...)
+- Branch
 - Explain（查询计划解释）
 - Profile（查询执行性能分析）
 - Sack（自定义状态计算）
 - Subgraph（计算子图，目前实现了一个简化版本，支持抽取子图写入Vineyard存储）
 - Cap（访问自定义状态）
 - ``GraphComputer`` 接口（例如PageRank和ShortestPath）；这部分功能GraphScope通过图分析引擎和NetworkX兼容接口提供。
-
-此外，目前支持的Repeat（循环）操作不支持嵌套，也就是在循环体内不可以出现另一个Repeat操作。
 

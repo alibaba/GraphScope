@@ -18,11 +18,9 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::convert::{TryFrom, TryInto};
 
-use dyn_type::arith::Exp;
+use dyn_type::arith::{BitOperand, Exp};
 use dyn_type::object;
 use dyn_type::{BorrowObject, Object};
-use global_query::store_api::condition::Operand as StoreOperand;
-use global_query::store_api::{prelude::Property, PropId};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::expr_parse::to_suffix_expr;
 use ir_common::generated::common as common_pb;
@@ -31,7 +29,6 @@ use ir_common::{NameOrId, ALL_KEY, ID_KEY, LABEL_KEY, LENGTH_KEY};
 use crate::apis::{Details, Element, PropKey};
 use crate::utils::expr::eval_pred::EvalPred;
 use crate::utils::expr::{ExprEvalError, ExprEvalResult};
-use crate::{GraphProxyError, GraphProxyResult};
 
 /// The trait to define evaluating an expression
 pub trait Evaluate {
@@ -55,36 +52,6 @@ pub enum Operand {
     Var { tag: Option<NameOrId>, prop_key: Option<PropKey> },
     Vars(Vec<Operand>),
     VarMap(Vec<Operand>),
-}
-
-impl Operand {
-    /// only get the PropId, else None
-    pub(crate) fn get_var_prop_id(&self) -> GraphProxyResult<PropId> {
-        match self {
-            Operand::Var { tag: None, prop_key: Some(prop_key) } => match prop_key {
-                PropKey::Key(NameOrId::Id(id)) => Ok(*id as PropId),
-                _ => Err(GraphProxyError::UnSupported(format!("var error {:?}", self))),
-            },
-            _ => Err(GraphProxyError::FilterPushDownError(format!("not a var {:?}", self))),
-        }
-    }
-
-    pub(crate) fn to_store_oprand(&self) -> GraphProxyResult<StoreOperand> {
-        match self {
-            Operand::Var { tag: None, prop_key: Some(prop_key) } => match prop_key {
-                PropKey::Key(NameOrId::Id(id)) => Ok(StoreOperand::PropId(*id as PropId)),
-                PropKey::Label => Ok(StoreOperand::Label),
-                PropKey::Id => Ok(StoreOperand::Id),
-                _ => Err(GraphProxyError::FilterPushDownError(format!("var error {:?}", self))),
-            },
-            Operand::Const(obj) => {
-                let prop = Property::from_borrow_object(obj.as_borrow())
-                    .map_err(|e| GraphProxyError::FilterPushDownError(format!("{:?}", e)));
-                prop.map(StoreOperand::Const)
-            }
-            _ => Err(GraphProxyError::FilterPushDownError(format!("not a var {:?}", self))),
-        }
-    }
 }
 
 /// An inner representation of `common_pb::ExprOpr` for one-shot translation of `common_pb::ExprOpr`.
@@ -179,6 +146,17 @@ fn apply_arith<'a>(
         Div => Object::Primitive(a.as_primitive()? / b.as_primitive()?),
         Mod => Object::Primitive(a.as_primitive()? % b.as_primitive()?),
         Exp => Object::Primitive(a.as_primitive()?.exp(b.as_primitive()?)),
+        Bitand => Object::Primitive(a.as_primitive()?.bit_and(b.as_primitive()?)),
+        Bitor => Object::Primitive(a.as_primitive()?.bit_or(b.as_primitive()?)),
+        Bitxor => Object::Primitive(a.as_primitive()?.bit_xor(b.as_primitive()?)),
+        Bitlshift => Object::Primitive(
+            a.as_primitive()?
+                .bit_left_shift(b.as_primitive()?),
+        ),
+        Bitrshift => Object::Primitive(
+            a.as_primitive()?
+                .bit_right_shift(b.as_primitive()?),
+        ),
     })
 }
 
@@ -206,6 +184,14 @@ pub(crate) fn apply_logical<'a>(
                 .into()),
                 Within => Ok(b.contains(&a).into()),
                 Without => Ok((!b.contains(&a)).into()),
+                Startswith => Ok(a
+                    .as_str()?
+                    .starts_with(b.as_str()?.as_ref())
+                    .into()),
+                Endswith => Ok(a
+                    .as_str()?
+                    .ends_with(b.as_str()?.as_ref())
+                    .into()),
                 Not => unreachable!(),
             }
         } else {
@@ -648,8 +634,8 @@ mod tests {
             "7.0 + 3",        // 10.0
             "7 * 3",          // 21
             "7 / 3",          // 2
-            "7 ^ 3",          // 343
-            "7 ^ -3",         // 1 / 343
+            "7 ^^ 3",         // 343
+            "7 ^^ -3",        // 1 / 343
             "7 % 3",          // 1
             "7 -3",           // 4
             "-3 + 7",         // 4
@@ -670,6 +656,12 @@ mod tests {
             "2 <= 2",         // true,
             "2 == 2",         // true
             "1.0 > 2.0",      // false
+            "1 & 2",          // 0
+            "1 | 2",          // 3
+            "1 ^ 2",          // 3
+            "1 << 2",         // 4
+            "4 >> 2",         // 1
+            "232 & 64 != 0",  // true
         ];
 
         let expected: Vec<Object> = vec![
@@ -699,6 +691,12 @@ mod tests {
             object!(true),
             object!(true),
             object!(false),
+            object!(0),
+            object!(3),
+            object!(3),
+            object!(4),
+            object!(1),
+            object!(true),
         ];
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
@@ -766,9 +764,9 @@ mod tests {
             "2 * 1e-3",                              // 0.002
             "1 > 2 && 1 < 3",                        // false
             "1 > 2 || 1 < 3",                        // true
-            "2 ^ 10 > 10",                           // true
-            "2 / 5 ^ 2",                             // 0
-            "2.0 / 5 ^ 2",                           // 2.0 / 25
+            "2 ^^ 10 > 10",                          // true
+            "2 / 5 ^^ 2",                            // 0
+            "2.0 / 5 ^^ 2",                          // 2.0 / 25
             "((1 + 2) * 3) / (7 * 8) + 12.5 / 10.1", // 1.2376237623762376
             "((1 + 2) * 3) / 7 * 8 + 12.5 / 10.1",   // 9.237623762376238
             "((1 + 2) * 3) / 7 * 8 + 12.5 / 10.1 \

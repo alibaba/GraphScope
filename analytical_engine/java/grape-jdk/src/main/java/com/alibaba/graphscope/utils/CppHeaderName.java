@@ -20,11 +20,13 @@ public class CppHeaderName {
     public static final String ARROW_FRAGMENT_H = "vineyard/graph/fragment/arrow_fragment.h";
     public static final String ARROW_FRAGMENT_GROUP_H =
             "vineyard/graph/fragment/arrow_fragment_group.h";
+    public static final String ARROW_FRAGMENT_LOADER_H = "core/loader/arrow_fragment_loader.h";
     public static final String PROPERTY_MESSAGE_MANAGER_H =
             "core/parallel/property_message_manager.h";
     public static final String PROPERTY_GRAPH_UTILS_H =
             "vineyard/graph/fragment/property_graph_utils.h";
     public static final String CORE_JAVA_TYPE_ALIAS_H = "core/java/type_alias.h";
+    public static final String ARROW_STATUS_H = "arrow/status.h";
     public static final String LABELED_VERTEX_PROPERTY_CONTEXT_H =
             "core/context/labeled_vertex_property_context.h";
     public static final String VERTEX_PROPERTY_CONTEXT_H = "core/context/vertex_property_context.h";
@@ -47,6 +49,8 @@ public class CppHeaderName {
             "grape/parallel/default_message_manager.h";
     public static final String GRAPE_PARALLEL_PARALLEL_MESSAGE_MANAGER_H =
             "grape/parallel/parallel_message_manager.h";
+    public static final String GRAPE_PARALLEL_THREAD_LOCAL_MESSAGE_BUFFER_H =
+            "grape/parallel/thread_local_message_buffer.h";
     public static final String CORE_PARALLEL_PARALLEL_PROPERTY_MESSAGE_MANAGER_H =
             "core/parallel/parallel_property_message_manager.h";
     // public static final String GRAPE_MESSAGE_IN_BUFFER_H =
@@ -59,9 +63,32 @@ public class CppHeaderName {
     public static final String GRAPE_COMMUNICATOR_H = "grape/communication/communicator.h";
     public static final String ARROW_PROJECTED_FRAGMENT_H =
             "core/fragment/arrow_projected_fragment.h";
+    public static final String ARROW_PROJECTED_FRAGMENT_MAPPER_H =
+            "core/fragment/arrow_projected_fragment_mapper.h";
     // public static final String CORE_JAVA_TYPE_ALIAS_H = "core/java/type_alias.h";
     public static final String GRAPE_WORKER_COMM_SPEC_H = "grape/worker/comm_spec.h";
     public static final String GRAPE_SERIALIZATION_IN_ARCHIVE = "grape/serialization/in_archive.h";
     public static final String GRAPE_SERIALIZATION_OUT_ARCHIVE =
             "grpae/serialization/out_archive.h";
+
+    public static final String JAVA_LOADER_INVOKER_H = "core/java/java_loader_invoker.h";
+
+    public static final String GS_MEMORY_MAPPED_BUFFER_H = "core/java/memory_mapped_buffer.h";
+    public static final String CORE_JAVA_GRAPHX_EDGE_PARTITION_H =
+            "core/java/graphx/edge_partition.h";
+    public static final String CORE_JAVA_GRAPHX_GRAPHX_CSR_H = "core/java/graphx/graphx_csr.h";
+    public static final String CORE_JAVA_GRAPHX_LOCAL_VERTEX_MAP_H =
+            "core/java/graphx/local_vertex_map.h";
+    public static final String CORE_JAVA_GRAPHX_GRAPHX_VERTEX_MAP_H =
+            "core/java/graphx/graphx_vertex_map.h";
+    public static final String CORE_JAVA_GRAPHX_VERTEX_DATA_H = "core/java/graphx/vertex_data.h";
+    public static final String CORE_JAVA_GRAPHX_EDGE_DATA_H = "core/java/graphx/edge_data.h";
+    public static final String CORE_JAVA_GRAPHX_GRAPHX_FRAGMENT_H =
+            "core/java/graphx/graphx_fragment.h";
+    public static final String CORE_JAVA_FRAGMENT_GETTER_H = "core/java/graphx/fragment_getter.h";
+
+    public static final String VINEYARD_CLIENT_H = "vineyard/client/client.h";
+    public static final String VINEYARD_STATUS_H = "vineyard/common/util/status.h";
+    public static final String VINEYARD_ARRAY_BUILDER_H = "vineyard/basic/ds/array.h";
+    public static final String VINEYARD_JSON_H = "vineyard/common/util/json.h";
 }

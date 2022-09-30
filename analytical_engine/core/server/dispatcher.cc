@@ -91,6 +91,23 @@ void Dispatcher::SetCommand(std::shared_ptr<CommandDetail> cmd) {
 std::shared_ptr<DispatchResult> Dispatcher::processCmd(
     std::shared_ptr<CommandDetail> cmd) {
   // handle all errors and get error message
+#if !defined(NDEBUG) && defined(LET_IT_CRASH_ON_EXCEPTION)
+  // Let it crash if non-leaf exception occurs.
+  //
+  // note that the error id returned to python side is not the expected error id
+  // inside a vineyard::GSError
+  auto err = subscriber_->OnReceive(cmd);
+  if (!err) {
+    auto r = std::make_shared<DispatchResult>(comm_spec_.worker_id());
+    r->set_error(
+        ErrorCodeToProto(static_cast<vineyard::ErrorCode>(
+            bl::error_id(err.error()).value())),
+        "boost::leaf error: cannot unpack the error type and message, "
+        "please rebuild with '-DLET_IT_CRASH_ON_EXCEPTION=OFF' and rerun");
+    return r;
+  }
+  auto r = err.value();
+#else
   auto r = bl::try_handle_all(
       [&, this]() -> bl::result<std::shared_ptr<DispatchResult>> {
         try {
@@ -117,6 +134,7 @@ std::shared_ptr<DispatchResult> Dispatcher::processCmd(
                      error.str());
         return r;
       });
+#endif
 
   if (!r->message().empty()) {
     LOG(ERROR) << "Worker " + std::to_string(r->worker_id()) + ": " +

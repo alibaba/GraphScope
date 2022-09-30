@@ -21,13 +21,12 @@
   <parent>
     <groupId>com.alibaba.graphscope</groupId>
     <artifactId>grape-jdk-parent</artifactId>
-    <version>0.16.0</version>
+    <version>${revision}</version>
   </parent>
-  <artifactId>grape-runtime</artifactId>
 
-  <version>0.16.0</version>
+  <artifactId>grape-runtime</artifactId>
   <packaging>jar</packaging>
-  <name>grape-runtime</name>
+  <name>Grape Runtime</name>
 
   <properties>
     <maven.compiler.source>8</maven.compiler.source>
@@ -55,14 +54,11 @@
     <dependency>
       <groupId>com.alibaba.graphscope</groupId>
       <artifactId>grape-jdk</artifactId>
+      <classifier>shaded</classifier>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
     </dependency>
   </dependencies>
   <build>

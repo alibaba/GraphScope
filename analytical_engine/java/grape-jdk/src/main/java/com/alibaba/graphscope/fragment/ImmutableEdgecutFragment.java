@@ -18,7 +18,6 @@ package com.alibaba.graphscope.fragment;
 
 import static com.alibaba.graphscope.utils.CppClassName.GRAPE_IMMUTABLE_FRAGMENT;
 import static com.alibaba.graphscope.utils.CppHeaderName.GRAPE_FRAGMENT_IMMUTABLE_EDGECUT_FRAGMENT_H;
-import static com.alibaba.graphscope.utils.JNILibraryName.JNI_LIBRARY_NAME;
 
 import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.CXXReference;
@@ -28,6 +27,7 @@ import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.graphscope.ds.GrapeAdjList;
 import com.alibaba.graphscope.ds.Vertex;
+import com.alibaba.graphscope.utils.JNILibraryName;
 
 /**
  * Java wrapper for grape ImmutableEdgecutFragment.
@@ -71,7 +71,7 @@ import com.alibaba.graphscope.ds.Vertex;
  * @see com.alibaba.graphscope.fragment.EdgecutFragment
  * @see com.alibaba.graphscope.fragment.FragmentBase
  */
-@FFIGen(library = JNI_LIBRARY_NAME)
+@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
 @CXXHead(GRAPE_FRAGMENT_IMMUTABLE_EDGECUT_FRAGMENT_H)
 @FFITypeAlias(GRAPE_IMMUTABLE_FRAGMENT)
 public interface ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T>
@@ -87,4 +87,8 @@ public interface ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T>
 
     @FFINameAlias("SetData")
     void setData(@CXXReference Vertex<VID_T> vertex, @CXXReference VDATA_T val);
+
+    @FFINameAlias("GetData")
+    @CXXReference
+    VDATA_T getData(@CXXReference Vertex<VID_T> vertex);
 }

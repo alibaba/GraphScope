@@ -36,10 +36,10 @@ processors:
   - { className: org.apache.tinkerpop.gremlin.server.op.session.SessionOpProcessor, config: { sessionTimeout: 28800000 }}
   - { className: org.apache.tinkerpop.gremlin.server.op.traversal.TraversalOpProcessor, config: { cacheExpirationTime: 600000, cacheMaxSize: 1000 }}
 metrics: {
-  consoleReporter: {enabled: true, interval: 180000},
-  csvReporter: {enabled: true, interval: 180000, fileName: /tmp/gremlin-server-metrics.csv},
+  consoleReporter: {enabled: true, interval: 1800000},
+  csvReporter: {enabled: true, interval: 1800000, fileName: /tmp/gremlin-server-metrics.csv},
   jmxReporter: {enabled: true},
-  slf4jReporter: {enabled: true, interval: 180000}}
+  slf4jReporter: {enabled: true, interval: 1800000}}
 strictTransactionManagement: false
 idleConnectionTimeout: 0
 keepAliveInterval: 0

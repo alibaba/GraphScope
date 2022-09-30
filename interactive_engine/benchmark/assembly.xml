@@ -20,8 +20,8 @@
             </includes>
         </fileSet>
         <fileSet>
-            <directory>shell/</directory>
-            <outputDirectory>/shell</outputDirectory>
+            <directory>scripts/</directory>
+            <outputDirectory>/scripts</outputDirectory>
             <includes>
                 <include>*</include>
             </includes>
@@ -34,15 +34,43 @@
             </includes>
         </fileSet>
         <fileSet>
-            <directory>queries/ir_ldbc</directory>
-            <outputDirectory>/queries/ir_ldbc</outputDirectory>
+            <directory>queries/ic</directory>
+            <outputDirectory>/queries/ic</outputDirectory>
             <includes>
                 <include>*</include>
             </includes>
         </fileSet>
         <fileSet>
-            <directory>queries/gaiax_ldbc</directory>
-            <outputDirectory>/queries/gaiax_ldbc</outputDirectory>
+            <directory>queries/ic/exp</directory>
+            <outputDirectory>/queries/ic/exp</outputDirectory>
+            <includes>
+                <include>*</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>queries/ic/groot</directory>
+            <outputDirectory>/queries/ic/groot</outputDirectory>
+            <includes>
+                <include>*</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>queries/bi</directory>
+            <outputDirectory>/queries/bi</outputDirectory>
+            <includes>
+                <include>*</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>queries/bi/apply</directory>
+            <outputDirectory>/queries/bi/apply</outputDirectory>
+            <includes>
+                <include>*</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>queries/bi/group</directory>
+            <outputDirectory>/queries/bi/group</outputDirectory>
             <includes>
                 <include>*</include>
             </includes>

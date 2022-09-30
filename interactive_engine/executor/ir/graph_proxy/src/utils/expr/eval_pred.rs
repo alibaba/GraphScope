@@ -362,7 +362,9 @@ impl EvalPred for Predicate {
             | Logical::Gt
             | Logical::Ge
             | Logical::Within
-            | Logical::Without => Ok(apply_logical(
+            | Logical::Without
+            | Logical::Startswith
+            | Logical::Endswith => Ok(apply_logical(
                 &self.cmp,
                 self.left.eval(context)?.as_borrow_object(),
                 Some(self.right.eval(context)?.as_borrow_object()),
@@ -462,7 +464,9 @@ fn process_predicates(
                             | Logical::Gt
                             | Logical::Ge
                             | Logical::Within
-                            | Logical::Without => partial.cmp(logical)?,
+                            | Logical::Without
+                            | Logical::Startswith
+                            | Logical::Endswith => partial.cmp(logical)?,
                             Logical::Not => is_not = true,
                             Logical::And | Logical::Or => {
                                 predicates = predicates.merge_partial(curr_cmp, partial, is_not)?;
@@ -578,8 +582,7 @@ impl TryFrom<pb::IndexPredicate> for PEvaluator {
 #[cfg(test)]
 mod tests {
     use ahash::HashMap;
-    use dyn_type::{object, Primitives};
-    use global_query::store_api::prelude::{Operand as StoreOperand, Property as StoreProperty};
+    use dyn_type::object;
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::NameOrId;
 
@@ -890,6 +893,24 @@ mod tests {
         let expr = str_to_expr_pb("@0.name == \"Tom\" || @1.age > 27".to_string()).unwrap();
         let p_eval = PEvaluator::try_from(expr).unwrap();
         assert!(!p_eval
+            .eval_bool::<_, Vertices>(Some(&context))
+            .unwrap());
+
+        let expr = str_to_expr_pb("@0.name StartsWith \"Jo\"".to_string()).unwrap();
+        let p_eval = PEvaluator::try_from(expr).unwrap();
+        assert!(p_eval
+            .eval_bool::<_, Vertices>(Some(&context))
+            .unwrap());
+
+        let expr = str_to_expr_pb("@0.name EndsWith \"hn\"".to_string()).unwrap();
+        let p_eval = PEvaluator::try_from(expr).unwrap();
+        assert!(p_eval
+            .eval_bool::<_, Vertices>(Some(&context))
+            .unwrap());
+
+        let expr = str_to_expr_pb("\"John\" EndsWith \"hn\"".to_string()).unwrap();
+        let p_eval = PEvaluator::try_from(expr).unwrap();
+        assert!(p_eval
             .eval_bool::<_, Vertices>(Some(&context))
             .unwrap());
 

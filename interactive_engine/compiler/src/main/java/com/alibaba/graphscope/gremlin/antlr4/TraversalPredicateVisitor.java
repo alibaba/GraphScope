@@ -142,6 +142,38 @@ public class TraversalPredicateVisitor extends GremlinGSBaseVisitor<P> {
      * {@inheritDoc}
      */
     @Override
+    public P visitTraversalPredicate_not(final GremlinGSParser.TraversalPredicate_notContext ctx) {
+        final int childIndexOfParameter = 2;
+        return P.not(
+                visitTraversalPredicate(
+                        (GremlinGSParser.TraversalPredicateContext)
+                                ctx.getChild(childIndexOfParameter)));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public P visitTraversalPredicate_inside(
+            final GremlinGSParser.TraversalPredicate_insideContext ctx) {
+        final Object[] arguments = getDoubleGenericLiteralArgument(ctx);
+        return P.inside(arguments[0], arguments[1]);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public P visitTraversalPredicate_outside(
+            final GremlinGSParser.TraversalPredicate_outsideContext ctx) {
+        final Object[] arguments = getDoubleGenericLiteralArgument(ctx);
+        return P.outside(arguments[0], arguments[1]);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public P visitTraversalPredicate_within(GremlinGSParser.TraversalPredicate_withinContext ctx) {
         if (ctx.genericLiteralList() != null) {
             Object args = GenericLiteralVisitor.getGenericLiteralList(ctx.genericLiteralList());
@@ -193,5 +225,51 @@ public class TraversalPredicateVisitor extends GremlinGSBaseVisitor<P> {
     public P visitTraversalPredicate_notContaining(
             final GremlinGSParser.TraversalPredicate_notContainingContext ctx) {
         return TextP.notContaining(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+    }
+
+    @Override
+    public P visitTraversalPredicate_startingWith(
+            final GremlinGSParser.TraversalPredicate_startingWithContext ctx) {
+        return TextP.startingWith(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+    }
+
+    @Override
+    public P visitTraversalPredicate_notStartingWith(
+            final GremlinGSParser.TraversalPredicate_notStartingWithContext ctx) {
+        return TextP.notStartingWith(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+    }
+
+    @Override
+    public P visitTraversalPredicate_endingWith(
+            final GremlinGSParser.TraversalPredicate_endingWithContext ctx) {
+        return TextP.endingWith(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+    }
+
+    @Override
+    public P visitTraversalPredicate_notEndingWith(
+            final GremlinGSParser.TraversalPredicate_notEndingWithContext ctx) {
+        return TextP.notEndingWith(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+    }
+
+    /**
+     * get 2 generic literal arguments from the antlr parse tree context,
+     * where the arguments has the child index of 2 and 4
+     */
+    private Object[] getDoubleGenericLiteralArgument(ParseTree ctx) {
+        final int childIndexOfParameterFirst = 2;
+        final int childIndexOfParameterSecond = 4;
+
+        final Object first =
+                GenericLiteralVisitor.getInstance()
+                        .visitGenericLiteral(
+                                (GremlinGSParser.GenericLiteralContext)
+                                        ctx.getChild(childIndexOfParameterFirst));
+        final Object second =
+                GenericLiteralVisitor.getInstance()
+                        .visitGenericLiteral(
+                                (GremlinGSParser.GenericLiteralContext)
+                                        ctx.getChild(childIndexOfParameterSecond));
+
+        return new Object[] {first, second};
     }
 }

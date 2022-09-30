@@ -1,4 +1,4 @@
-# Copyright 2020 Alibaba Group Holding Limited.
+# Copyright 2022 Alibaba Group Holding Limited.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,20 +12,38 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 if [[ "$GRAPHSCOPE_HOME"x == x ]];
 then
-    echo "No GRAPHSCOPE_HOME found, using default /opt/graphscope/"
-    export GRAPHSCOPE_HOME=/opt/graphscope
+    echo "No GRAPHSCOPE_HOME found, infer from python package"
+    site_path=`python3 -m site --user-site`
+    export GRAPHSCOPE_HOME=${site_path}/graphscope.runtime/
+    echo "Infered GRAPHSCOPE_HOME "${gs_runtime}
 fi
 
+if [[ "$SPARK_HOME"x == x ]];
+then
+    echo "[warn] No SPARK_HOME found!"
+fi
+
+GRAPHX_GRAPE_SDK=`ls ${GRAPHSCOPE_HOME}/lib/graphx-on-graphscope-*.jar`
+GRAPE_RUNTIME_JAR=`ls ${GRAPHSCOPE_HOME}/lib/grape-runtime-*.jar`
 # This env point to the directory where the output for llvm4jni run.sh on Grape-runtime.jar resides
 if [[ "${RUNTIME_LLVM4JNI_OUTPUT}"x != x ]];
 then
     echo "find env RUNTIME_LLVM4JNI_OUTPUT, append to init java class path"
-    class_path=${RUNTIME_LLVM4JNI_OUTPUT}:${GRAPHSCOPE_HOME}/lib/grape-runtime-0.16.0-shaded.jar
+    class_path=${RUNTIME_LLVM4JNI_OUTPUT}:${GRAPE_RUNTIME_JAR}:${GRAPHX_GRAPE_SDK}
 else 
-    class_path=${GRAPHSCOPE_HOME}/lib/grape-runtime-0.16.0-shaded.jar:
+    class_path=${GRAPE_RUNTIME_JAR}:${GRAPHX_GRAPE_SDK}
+fi
+
+#include jars in spark/jars
+if [ ! -z "${SPARK_HOME}" ]; then
+   jars=`ls ${SPARK_HOME}/jars`
+   for jar in ${jars}; do
+       class_path=${class_path}:${SPARK_HOME}/jars/${jar}
+   done
 fi
 
 jvm_version=$(${JAVA_HOME}/bin/javac -version 2>&1 | awk -F ' ' '{print $2}' | awk -F '.' '{print $1}')
@@ -38,12 +56,8 @@ else
 fi
 
 export GRAPE_JVM_OPTS="-Dcom.alibaba.fastffi.rvBuffer=2147483648 -XX:+StartAttachListener -XX:+PreserveFramePointer \
--XX:+UseParallelGC -XX:+UseParallelOldGC \
--XX:+UnlockDiagnosticVMOptions -XX:LoopUnrollLimit=1 \
--XX:CompileCommandFile=${GRAPHSCOPE_HOME}/conf/compile-commands.txt \
+-XX:+UseG1GC -XX:G1HeapRegionSize=32M \
+-XX:+PrintGCDetails -XX:+PrintGCDateStamps \
+-XX:+UnlockDiagnosticVMOptions -XX:LoopUnrollLimit=1 -XX:-TieredCompilation \
 -Djava.library.path=${GRAPHSCOPE_HOME}/lib \
--Djava.class.path=${class_path} \
-${_JVM_OPTS}"
-
-#-XX:+TraceClassLoading \
-#-XX:+PrintInlining \
+-Djava.class.path=${class_path}"

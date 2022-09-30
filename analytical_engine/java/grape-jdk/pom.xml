@@ -20,13 +20,12 @@
   <parent>
     <groupId>com.alibaba.graphscope</groupId>
     <artifactId>grape-jdk-parent</artifactId>
-    <version>0.16.0</version>
+    <version>${revision}</version>
   </parent>
 
   <artifactId>grape-jdk</artifactId>
-  <version>0.16.0</version>
   <packaging>jar</packaging>
-  <name>grape-jdk</name>
+  <name>Grape JDK</name>
 
   <properties>
     <jacoco.version>0.8.7</jacoco.version>
@@ -56,6 +55,7 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
+      <scope>provided</scope>
     </dependency>
     <!--    not used in code but needed at runtime,-->
     <dependency>
@@ -65,6 +65,10 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
     </dependency>
   </dependencies>
 

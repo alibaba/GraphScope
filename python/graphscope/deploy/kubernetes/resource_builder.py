@@ -468,6 +468,7 @@ class DeploymentBuilder(object):
         self._envs = dict()
         self._image_pull_secrets = []
         self._host_network = False
+        self._node_selector = dict()
 
         self.add_field_envs(BASE_MACHINE_ENVS)
 
@@ -507,6 +508,11 @@ class DeploymentBuilder(object):
     def add_image_pull_secret(self, name):
         self._image_pull_secrets.append(LocalObjectRefBuilder(name))
 
+    def add_pod_node_selector(self, node_selector):
+        if node_selector:
+            for k, v in node_selector.items():
+                self._node_selector[k] = v
+
     def build_template_spec(self):
         result = {
             "hostNetwork": self._host_network,
@@ -514,6 +520,7 @@ class DeploymentBuilder(object):
             "volumes": [vol.build() for vol in self._volumes] or None,
             "imagePullSecrets": [ips.build() for ips in self._image_pull_secrets]
             or None,
+            "nodeSelector": self._node_selector or None,
         }
         return dict((k, v) for k, v in result.items() if v)
 
@@ -555,6 +562,7 @@ class ReplicaSetBuilder(object):
         self._annotations = dict()
         self._image_pull_secrets = []
         self._host_network = False
+        self._node_selector = dict()
 
         self.add_field_envs(BASE_MACHINE_ENVS)
 
@@ -597,6 +605,11 @@ class ReplicaSetBuilder(object):
     def add_image_pull_secret(self, name):
         self._image_pull_secrets.append(LocalObjectRefBuilder(name))
 
+    def add_pod_node_selector(self, node_selector):
+        if node_selector:
+            for k, v in node_selector.items():
+                self._node_selector[k] = v
+
     def build_pod_spec(self):
         result = {
             "hostNetwork": self._host_network,
@@ -604,6 +617,7 @@ class ReplicaSetBuilder(object):
             "volumes": [vol.build() for vol in self._volumes] or None,
             "imagePullSecrets": [ips.build() for ips in self._image_pull_secrets]
             or None,
+            "nodeSelector": self._node_selector or None,
         }
         return dict((k, v) for k, v in result.items() if v)
 
@@ -944,12 +958,22 @@ class GSEngineBuilder(ReplicaSetBuilder):
 
         super().add_annotation("kubectl.kubernetes.io/default-container", name)
 
+    def add_engine_pod_node_selector(self, node_selector):
+        if node_selector:
+            super().add_pod_node_selector(node_selector)
+
 
 class PodBuilder(object):
     """Base builder for k8s pod."""
 
     def __init__(
-        self, name, labels, hostname=None, subdomain=None, restart_policy="Never"
+        self,
+        name,
+        labels,
+        hostname=None,
+        subdomain=None,
+        restart_policy="Never",
+        node_selector=None,
     ):
         self._name = name
         self._labels = labels
@@ -960,6 +984,10 @@ class PodBuilder(object):
         self._containers = []
         self._image_pull_secrets = []
         self._volumes = []
+        if node_selector:
+            self._node_selector = node_selector
+        else:
+            self._node_selector = dict()
 
     def add_volume(self, vol):
         if isinstance(vol, list):
@@ -983,6 +1011,7 @@ class PodBuilder(object):
                 "imagePullSecrets": [ips.build() for ips in self._image_pull_secrets]
                 or None,
                 "restartPolicy": self._restart_policy,
+                "nodeSelector": self._node_selector or None,
             }
         )
 
@@ -1033,6 +1062,7 @@ class GSEtcdBuilder(object):
         self._restart_policy = restart_policy
         self._image_pull_secrets = image_pull_secrets
         self._max_txn_ops = 1024000
+        self._node_selector = dict()
 
         self._envs = dict()
         self._volumes = []
@@ -1076,6 +1106,7 @@ class GSEtcdBuilder(object):
                 hostname=name,
                 subdomain=self._service_name,
                 restart_policy=self._restart_policy,
+                node_selector=self._node_selector,
             )
 
             # volumes
@@ -1165,6 +1196,11 @@ class GSEtcdBuilder(object):
         return TcpProbeBuilder(
             self._listen_peer_service_port, timeout=15, period=10, failure_thresh=8
         )
+
+    def add_etcd_pod_node_selector(self, node_selector):
+        if node_selector:
+            for k, v in node_selector.items():
+                self._node_selector[k] = v
 
 
 class GSGraphManagerBuilder(DeploymentBuilder):
@@ -1308,6 +1344,10 @@ class GSCoordinatorBuilder(DeploymentBuilder):
                 }
             )
         )
+
+    def add_coordinator_pod_node_selector(self, node_selector):
+        if node_selector:
+            super().add_pod_node_selector(node_selector)
 
     def build_readiness_probe(self, port):
         return TcpProbeBuilder(port=port, timeout=15, period=10, failure_thresh=8)

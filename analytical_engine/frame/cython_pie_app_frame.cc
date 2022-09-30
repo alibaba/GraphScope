@@ -32,6 +32,7 @@
 #include "grape/util.h"
 
 #include "vineyard/graph/fragment/arrow_fragment.h"
+
 #if defined __has_include
 #if __has_include("vineyard/graph/fragment/arrow_fragment_modifier.h")
 #include "vineyard/graph/fragment/arrow_fragment_modifier.h"
@@ -137,10 +138,10 @@ typedef struct worker_handler {
   std::shared_ptr<typename _APP_TYPE::worker_t> worker;
 } worker_handler_t;
 
-extern "C" {
-void* CreateWorker(const std::shared_ptr<void>& fragment,
-                   const grape::CommSpec& comm_spec,
-                   const grape::ParallelEngineSpec& spec) {
+namespace detail {
+__attribute__((visibility("hidden"))) void* CreateWorker(
+    const std::shared_ptr<void>& fragment, const grape::CommSpec& comm_spec,
+    const grape::ParallelEngineSpec& spec) {
   auto app = python_grape::CreateApp();
   auto* worker_handler = static_cast<worker_handler_t*>(new worker_handler_t);
   worker_handler->worker = _APP_TYPE::CreateWorker(
@@ -149,24 +150,28 @@ void* CreateWorker(const std::shared_ptr<void>& fragment,
   return worker_handler;
 }
 
-void DeleteWorker(void* worker_handler) {
+__attribute__((visibility("hidden"))) std::nullptr_t DeleteWorker(
+    void* worker_handler) {
   auto* handler = static_cast<worker_handler_t*>(worker_handler);
 
   handler->worker->Finalize();
   handler->worker.reset();
   delete handler;
+
+  return nullptr;
 }
 
-void Query(void* worker_handler, const gs::rpc::QueryArgs& query_args,
-           const std::string& context_key,
-           std::shared_ptr<gs::IFragmentWrapper> frag_wrapper,
-           std::shared_ptr<gs::IContextWrapper>& ctx_wrapper,
-           bl::result<nullptr_t>& wrapper_error) {
+__attribute__((visibility("hidden"))) std::nullptr_t Query(
+    void* worker_handler, const gs::rpc::QueryArgs& query_args,
+    const std::string& context_key,
+    std::shared_ptr<gs::IFragmentWrapper> frag_wrapper,
+    std::shared_ptr<gs::IContextWrapper>& ctx_wrapper,
+    bl::result<nullptr_t>& wrapper_error) {
   auto worker = static_cast<worker_handler_t*>(worker_handler)->worker;
   auto result = gs::AppInvoker<_APP_TYPE>::Query(worker, query_args);
   if (!result) {
     wrapper_error = std::move(result);
-    return;
+    return nullptr;
   }
 
   if (!context_key.empty()) {
@@ -174,5 +179,34 @@ void Query(void* worker_handler, const gs::rpc::QueryArgs& query_args,
     ctx_wrapper = gs::CtxWrapperBuilder<typename _APP_TYPE::context_t>::build(
         context_key, frag_wrapper, ctx);
   }
+  return nullptr;
 }
+
+}  // namespace detail
+
+extern "C" {
+void* CreateWorker(const std::shared_ptr<void>& fragment,
+                   const grape::CommSpec& comm_spec,
+                   const grape::ParallelEngineSpec& spec) {
+  void* worker_handler = nullptr;
+  __FRAME_CATCH_AND_LOG_GS_ERROR(
+      worker_handler, detail::CreateWorker(fragment, comm_spec, spec));
+  return worker_handler;
 }
+
+void DeleteWorker(void* worker_handler) {
+  std::nullptr_t result = nullptr;
+  __FRAME_CATCH_AND_LOG_GS_ERROR(result, detail::DeleteWorker(worker_handler));
+}
+
+void Query(void* worker_handler, const gs::rpc::QueryArgs& query_args,
+           const std::string& context_key,
+           std::shared_ptr<gs::IFragmentWrapper> frag_wrapper,
+           std::shared_ptr<gs::IContextWrapper>& ctx_wrapper,
+           bl::result<nullptr_t>& wrapper_error) {
+  __FRAME_CATCH_AND_ASSIGN_GS_ERROR(
+      wrapper_error, detail::Query(worker_handler, query_args, context_key,
+                                   frag_wrapper, ctx_wrapper, wrapper_error));
+}
+
+}  // extern "C"

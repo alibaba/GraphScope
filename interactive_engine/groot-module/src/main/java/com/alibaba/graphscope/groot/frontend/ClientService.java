@@ -112,6 +112,7 @@ public class ClientService extends ClientGrpc.ClientImplBase {
     public void commitDataLoad(
             CommitDataLoadRequest request,
             StreamObserver<CommitDataLoadResponse> responseObserver) {
+        logger.info("Committing data load");
         DdlRequestBatch.Builder builder = DdlRequestBatch.newBuilder();
         Map<Long, DataLoadTargetPb> tableToTarget = request.getTableToTargetMap();
         String path = request.getPath();
