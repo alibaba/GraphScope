@@ -261,7 +261,7 @@ Currently GIE supports the following Gremlin steps:
 
     //and/or
 
-    //Text.*
+    //TextP.*
     g.V().has("attrName", TextP.containing("substr"))
     g.V().has("attrName", TextP.notContaining("substr"))
     g.V().has("attrName", TextP.startingWith("substr"))
