@@ -41,9 +41,10 @@
 namespace bl = boost::leaf;
 namespace detail {
 
-static bl::result<std::shared_ptr<gs::IFragmentWrapper>> LoadGraph(
-    const grape::CommSpec& comm_spec, vineyard::Client& client,
-    const std::string& graph_name, const gs::rpc::GSParams& params) {
+__attribute__((visibility(
+    "hidden"))) static bl::result<std::shared_ptr<gs::IFragmentWrapper>>
+LoadGraph(const grape::CommSpec& comm_spec, vineyard::Client& client,
+          const std::string& graph_name, const gs::rpc::GSParams& params) {
   using oid_t = typename _GRAPH_TYPE::oid_t;
   using vid_t = typename _GRAPH_TYPE::vid_t;
 
@@ -138,10 +139,11 @@ static bl::result<std::shared_ptr<gs::IFragmentWrapper>> LoadGraph(
   }
 }
 
-static bl::result<std::shared_ptr<gs::IFragmentWrapper>> ToArrowFragment(
-    vineyard::Client& client, const grape::CommSpec& comm_spec,
-    std::shared_ptr<gs::IFragmentWrapper>& wrapper_in,
-    const std::string& dst_graph_name) {
+__attribute__((visibility(
+    "hidden"))) static bl::result<std::shared_ptr<gs::IFragmentWrapper>>
+ToArrowFragment(vineyard::Client& client, const grape::CommSpec& comm_spec,
+                std::shared_ptr<gs::IFragmentWrapper>& wrapper_in,
+                const std::string& dst_graph_name) {
 #ifdef NETWORKX
   using oid_t = typename _GRAPH_TYPE::oid_t;
   using vid_t = typename _GRAPH_TYPE::vid_t;
@@ -206,10 +208,11 @@ static bl::result<std::shared_ptr<gs::IFragmentWrapper>> ToArrowFragment(
 #endif
 }
 
-static bl::result<std::shared_ptr<gs::IFragmentWrapper>> ToDynamicFragment(
-    const grape::CommSpec& comm_spec,
-    std::shared_ptr<gs::IFragmentWrapper>& wrapper_in,
-    const std::string& dst_graph_name, int default_label_id) {
+__attribute__((visibility(
+    "hidden"))) static bl::result<std::shared_ptr<gs::IFragmentWrapper>>
+ToDynamicFragment(const grape::CommSpec& comm_spec,
+                  std::shared_ptr<gs::IFragmentWrapper>& wrapper_in,
+                  const std::string& dst_graph_name, int default_label_id) {
 #ifdef NETWORKX
   if (wrapper_in->graph_def().graph_type() != gs::rpc::graph::ARROW_PROPERTY) {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
@@ -245,10 +248,12 @@ static bl::result<std::shared_ptr<gs::IFragmentWrapper>> ToDynamicFragment(
 #endif
 }
 
-static bl::result<std::shared_ptr<gs::IFragmentWrapper>> AddLabelsToGraph(
-    vineyard::ObjectID origin_frag_id, const grape::CommSpec& comm_spec,
-    vineyard::Client& client, const std::string& graph_name,
-    const gs::rpc::GSParams& params) {
+__attribute__((visibility(
+    "hidden"))) static bl::result<std::shared_ptr<gs::IFragmentWrapper>>
+AddLabelsToGraph(vineyard::ObjectID origin_frag_id,
+                 const grape::CommSpec& comm_spec, vineyard::Client& client,
+                 const std::string& graph_name,
+                 const gs::rpc::GSParams& params) {
   using oid_t = typename _GRAPH_TYPE::oid_t;
   using vid_t = typename _GRAPH_TYPE::vid_t;
 
@@ -299,7 +304,9 @@ void LoadGraph(
     const grape::CommSpec& comm_spec, vineyard::Client& client,
     const std::string& graph_name, const gs::rpc::GSParams& params,
     bl::result<std::shared_ptr<gs::IFragmentWrapper>>& fragment_wrapper) {
-  fragment_wrapper = detail::LoadGraph(comm_spec, client, graph_name, params);
+  __FRAME_CATCH_AND_ASSIGN_GS_ERROR(
+      fragment_wrapper,
+      detail::LoadGraph(comm_spec, client, graph_name, params));
 }
 
 void ToArrowFragment(
@@ -307,8 +314,9 @@ void ToArrowFragment(
     std::shared_ptr<gs::IFragmentWrapper>& wrapper_in,
     const std::string& dst_graph_name,
     bl::result<std::shared_ptr<gs::IFragmentWrapper>>& wrapper_out) {
-  wrapper_out =
-      detail::ToArrowFragment(client, comm_spec, wrapper_in, dst_graph_name);
+  __FRAME_CATCH_AND_ASSIGN_GS_ERROR(
+      wrapper_out,
+      detail::ToArrowFragment(client, comm_spec, wrapper_in, dst_graph_name));
 }
 
 void ToDynamicFragment(
@@ -316,8 +324,9 @@ void ToDynamicFragment(
     std::shared_ptr<gs::IFragmentWrapper>& wrapper_in,
     const std::string& dst_graph_name, int default_label_id,
     bl::result<std::shared_ptr<gs::IFragmentWrapper>>& wrapper_out) {
-  wrapper_out = detail::ToDynamicFragment(comm_spec, wrapper_in, dst_graph_name,
-                                          default_label_id);
+  __FRAME_CATCH_AND_ASSIGN_GS_ERROR(
+      wrapper_out, detail::ToDynamicFragment(comm_spec, wrapper_in,
+                                             dst_graph_name, default_label_id));
 }
 
 void AddLabelsToGraph(
@@ -325,8 +334,9 @@ void AddLabelsToGraph(
     vineyard::Client& client, const std::string& graph_name,
     const gs::rpc::GSParams& params,
     bl::result<std::shared_ptr<gs::IFragmentWrapper>>& fragment_wrapper) {
-  fragment_wrapper =
-      detail::AddLabelsToGraph(frag_id, comm_spec, client, graph_name, params);
+  __FRAME_CATCH_AND_ASSIGN_GS_ERROR(
+      fragment_wrapper,
+      detail::AddLabelsToGraph(frag_id, comm_spec, client, graph_name, params));
 }
 
 template class vineyard::BasicArrowVertexMapBuilder<

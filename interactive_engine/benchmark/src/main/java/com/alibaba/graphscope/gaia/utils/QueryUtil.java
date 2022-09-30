@@ -57,6 +57,33 @@ public class QueryUtil {
             }
         }
 
+        // for ldbc bi queries
+        for (int index = 1; index <= 100; index++) {
+            String enableQuery = String.format("bi_query_%d.enable", index);
+            String queryFileName = String.format("bi_query_%d.gremlin", index);
+            String parameterFileName = String.format("bi_query_%d.param", index);
+            if (configuration.getBoolean(enableQuery, false)) {
+                String queryFilePath = String.format("%s/%s", queryDir, queryFileName);
+                String parameterFilePath = String.format("%s/%s", parameterDir, parameterFileName);
+                String queryName = String.format("BI_QUERY_%d", index);
+                if (index == 1) {
+                    queryList.add(new BiQuery1(queryName, queryFilePath, parameterFilePath));
+                } else if (index == 2) {
+                    queryList.add(new BiQuery2(queryName, queryFilePath, parameterFilePath));
+                } else if (index == 8) {
+                    queryList.add(new BiQuery8(queryName, queryFilePath, parameterFilePath));
+                } else if (index == 9) {
+                    queryList.add(new BiQuery9(queryName, queryFilePath, parameterFilePath));
+                } else if (index == 11) {
+                    queryList.add(new BiQuery11(queryName, queryFilePath, parameterFilePath));
+                } else if (index == 12) {
+                    queryList.add(new BiQuery12(queryName, queryFilePath, parameterFilePath));
+                } else {
+                    queryList.add(new CommonQuery(queryName, queryFilePath, parameterFilePath));
+                }
+            }
+        }
+
         // for k hop
         for (int index = 1; index < 5; index++) {
             String enableQuery = String.format("%d_hop_query.enable", index);
@@ -102,7 +129,7 @@ public class QueryUtil {
 
             if (configuration.getBoolean(enableQuery, false)) {
                 String queryFilePath = String.format("%s/%s", queryDir, queryFileName);
-                String queryName = String.format("CUSTOM_QUERY_%d_WITHOUT_PARAMETER", index);
+                String queryName = String.format("CUSTOM_QUERY_WITHOUT_PARAMETER_%d", index);
 
                 queryList.add(new QueryWithoutParameter(queryName, queryFilePath));
             }
