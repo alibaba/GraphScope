@@ -49,4 +49,6 @@ def wcc(graph):
         >>> c = graphscope.wcc(pg)
         >>> sess.close()
     """
+    if graph.oid_type == "std::string":
+        raise RuntimeError("Wcc algorithm cannot run on the graph with 'string' type")
     return AppAssets(algo="wcc", context="vertex_data")(graph)
