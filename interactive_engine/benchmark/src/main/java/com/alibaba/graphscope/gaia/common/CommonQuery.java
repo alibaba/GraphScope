@@ -168,4 +168,41 @@ public class CommonQuery {
             return format.format(new Date(Long.parseLong(date)));
         }
     }
+
+    protected String transformSimpleDate(String date) {
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        TimeZone gmtTime = TimeZone.getTimeZone("UTC");
+        format.setTimeZone(gmtTime);
+        try {
+            Date ori = format.parse(date);
+            format.applyPattern("yyyyMMddHHmmssSSS");
+            return format.format(ori);
+        } catch (Exception e) {
+            return format.format(new Date(Long.parseLong(date)));
+        }
+    }
+
+    protected String transformDateTime(String date) {
+        String ddate = date.split("\\.")[0].replace("T", " ");
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        TimeZone gmtTime = TimeZone.getTimeZone("UTC");
+        format.setTimeZone(gmtTime);
+        try {
+            Date ori = format.parse(ddate);
+            format.applyPattern("yyyyMMddHHmmssSSS");
+            return format.format(ori);
+        } catch (Exception e) {
+            return format.format(new Date(Long.parseLong(date)));
+        }
+    }
+
+    protected List<String> transformList(String list) {
+        String[] transformList = list.split(";");
+        List<String> transformArrayList = new ArrayList();
+        for (String s : transformList) {
+            String str = "\"" + s + "\"";
+            transformArrayList.add(str);
+        }
+        return transformArrayList;
+    }
 }

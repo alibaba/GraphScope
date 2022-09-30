@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.8.6
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.9.0
       options:
         --shm-size 4096m
     steps:
