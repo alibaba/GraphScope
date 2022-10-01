@@ -27,7 +27,7 @@ use crate::schema::*;
 use crate::table::Row;
 
 /// The supported data type of this graph database
-#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize)]
 pub enum DataType {
     NULL,
     String,
@@ -97,6 +97,23 @@ pub struct EdgeMeta<G> {
     pub label_id: LabelId,
 }
 
+/// To record the metadata of a column
+#[derive(Serialize, Deserialize, Clone)]
+pub struct ColumnMeta {
+    /// the name of the column
+    pub name: String,
+    /// the formatted data type
+    pub data_type: DataType,
+    /// whether this column is a primary key
+    pub is_primary_key: bool,
+}
+
+impl From<(String, DataType, bool)> for ColumnMeta {
+    fn from(tuple: (String, DataType, bool)) -> Self {
+        Self { name: tuple.0, data_type: tuple.1, is_primary_key: tuple.2 }
+    }
+}
+
 /// Typical symbols that split a string-format of a time data.
 fn is_time_splitter(c: char) -> bool {
     c == '-' || c == ':' || c == ' ' || c == 'T' || c == 'Z' || c == '.'
@@ -140,7 +157,7 @@ fn parse_datetime(val: &str) -> GDBResult<u64> {
 }
 
 pub fn parse_properties<'a, Iter: Iterator<Item = &'a str>>(
-    mut record_iter: Iter, _header: Option<&[(String, DataType)]>,
+    mut record_iter: Iter, _header: Option<&[ColumnMeta]>,
 ) -> GDBResult<Row> {
     let mut properties = Row::default();
     if _header.is_none() {
@@ -152,31 +169,23 @@ pub fn parse_properties<'a, Iter: Iterator<Item = &'a str>>(
 
     while let Some(val) = record_iter.next() {
         // unwrap the property and type
-        if let Some((field, ty)) = header_iter.next() {
-            if ty == &DataType::String {
-                properties.push(object!(val.to_string()));
-            } else if ty == &DataType::Integer {
-                properties.push(object!(val.parse::<i32>()?));
-            } else if ty == &DataType::Long {
-                properties.push(object!(val.parse::<i64>()?));
-            } else if ty == &DataType::Double {
-                properties.push(object!(val.parse::<f64>()?));
-            } else if ty == &DataType::Date {
-                properties.push(object!(parse_datetime(val)?));
-            } else if ty == &DataType::ID {
-                // do not record the starting (ldbc) id and end id of an edge
-                if field != START_ID_FIELD && field != END_ID_FIELD {
-                    properties.push(object!(val.parse::<DefaultId>()?));
+        if let Some(ColumnMeta { name, data_type, is_primary_key: _ }) = header_iter.next() {
+            match data_type {
+                &DataType::String => properties.push(object!(val.to_string())),
+                &DataType::Integer => properties.push(object!(val.parse::<i32>()?)),
+                &DataType::Long => properties.push(object!(val.parse::<i64>()?)),
+                &DataType::Double => properties.push(object!(val.parse::<f64>()?)),
+                &DataType::Date => properties.push(object!(parse_datetime(val)?)),
+                &DataType::ID => {
+                    if name != START_ID_FIELD && name != END_ID_FIELD {
+                        properties.push(object!(val.parse::<DefaultId>()?));
+                    }
                 }
-            } else if ty == &DataType::LABEL {
-                // do not further record the label of a vertex
-                continue;
-            } else {
-                return GDBResult::Err(GDBError::ParseError);
+                &DataType::LABEL => {}
+                _ => return GDBResult::Err(GDBError::ParseError),
             }
         }
     }
-
     debug!("Parse properties successfully: {:?}", properties);
 
     Ok(properties)
@@ -199,6 +208,8 @@ pub trait ParserTrait<G: FromStr + PartialEq> {
     fn parse_edge_meta<'a, Iter: Iterator<Item = &'a str>>(
         &self, record_iter: Iter,
     ) -> GDBResult<EdgeMeta<G>>;
+
+    fn parse_properties<'a, Iter: Iterator<Item = &'a str>>(&self, record_iter: Iter) -> GDBResult<Row>;
 }
 
 #[cfg(test)]

@@ -98,7 +98,7 @@ pub const PARTITION_PREFIX: &'static str = "partition_";
 ///
 /// let graph: LargeGraphDB<DefaultId, InternalId> = GraphDBConfig::default()
 ///     .root_dir(root_dir)
-///     .schema_file("data/schema.json")
+///     .schema_file("data/ldbc_schema.json")
 ///     .partition(0)
 ///     .open()
 ///     .expect("Open graph error");
@@ -180,9 +180,7 @@ impl GraphDBConfig {
     {
         info!("Partition {:?} reading binary file...", self.partition);
         let timer = Instant::now();
-        let mut graph_schema = LDBCGraphSchema::from_json_file(&self.schema_file)?;
-        // trim useless fields include vertex's label, edges' start_id and end_id
-        graph_schema.trim();
+        let graph_schema = LDBCGraphSchema::from_json_file(&self.schema_file)?;
 
         let root_dir = self.root_dir.join(DIR_BINARY_DATA);
         let mut entries = std::fs::read_dir(&root_dir)?;

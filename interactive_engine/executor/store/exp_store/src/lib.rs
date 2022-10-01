@@ -16,6 +16,7 @@
 pub mod common;
 pub mod config;
 pub mod error;
+pub mod ffi;
 pub mod graph_db;
 pub mod io;
 pub mod ldbc;
