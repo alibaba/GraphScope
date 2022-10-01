@@ -66,10 +66,10 @@ RUN cd /home/graphscope/gs && \
         python3 -m pip install --no-cache-dir ./*.whl; \
         popd; \
     else \
-        python3 -m pip install --no-cache-dir graphscope ipython; \
+        python3 -m pip install --no-cache-dir graphscope; \
     fi && \
     sudo rm -fr /home/graphscope/gs && cd ${HOME} && \
-    python3 -m pip install --no-cache-dir pymars==0.8.0
+    python3 -m pip install --no-cache-dir ipython pymars==0.8.0
 
 # init log directory
 RUN sudo mkdir /var/log/graphscope \

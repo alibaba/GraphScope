@@ -1,0 +1,1 @@
+g.V().hasLabel("POST", "COMMENT").has("creationDate", P.lt($datetime)).count()

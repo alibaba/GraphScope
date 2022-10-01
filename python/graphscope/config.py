@@ -38,9 +38,7 @@ class GSConfig(object):
     # image
     k8s_etcd_image = "quay.io/coreos/etcd:v3.4.13"
     k8s_gs_image = (
-        "registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:nightly"
-        if __is_prerelease__
-        else f"registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:{__version__}"
+        f"registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:{__version__}"
     )
 
     # image pull configuration
@@ -75,6 +73,11 @@ class GSConfig(object):
     mars_scheduler_cpu = 0.2
     mars_scheduler_mem = "2Mi"
 
+    # the node selector can be a dict, see also: https://tinyurl.com/3nx6k7ph
+    k8s_coordinator_pod_node_selector = None
+    k8s_etcd_pod_node_selector = None
+    k8s_engine_pod_node_selector = None
+
     # launch graphscope with mars
     with_mars = False
 
@@ -107,9 +110,7 @@ class GSConfig(object):
     # Demo dataset related
     mount_dataset = None
     k8s_dataset_image = (
-        "registry.cn-hongkong.aliyuncs.com/graphscope/dataset:nightly"
-        if __is_prerelease__
-        else f"registry.cn-hongkong.aliyuncs.com/graphscope/dataset:{__version__}"
+        f"registry.cn-hongkong.aliyuncs.com/graphscope/dataset:{__version__}"
     )
 
     # download_retries

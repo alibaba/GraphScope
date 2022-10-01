@@ -288,7 +288,7 @@ def parsed_packages():
     name = os.environ.get("package_name", "gs-coordinator")
     if name == "gs-coordinator":
         return find_packages(".")
-    return ["foo"]
+    return ["graphscope_runtime"]
 
 
 def parsed_package_data():

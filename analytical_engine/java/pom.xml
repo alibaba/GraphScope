@@ -19,7 +19,7 @@
   <groupId>com.alibaba.graphscope</groupId>
   <artifactId>grape-jdk-parent</artifactId>
 
-  <version>0.16.0</version>
+  <version>${revision}</version>
 
   <packaging>pom</packaging>
 
@@ -34,7 +34,7 @@
   </modules>
 
   <properties>
-    <gae.java.version>0.16.0</gae.java.version>
+    <revision>0.18.0</revision>
     <fastffi.version>0.1.2</fastffi.version>
     <compile-testing.version>0.19</compile-testing.version>
     <cupid.sdk.version>3.3.11</cupid.sdk.version>
@@ -53,8 +53,8 @@
     <maven-surefire-plugin.version>3.0.0-M4</maven-surefire-plugin.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <slf4j.version>1.7.30</slf4j.version>
-    <log4j.version>1.2.17</log4j.version>
-    <dep.netty.version>4.1.36.Final</dep.netty.version>
+    <log4j.version>2.19.0</log4j.version>
+    <dep.netty.version>4.1.44.Final</dep.netty.version>
     <dep.fastutil.version>6.5.4</dep.fastutil.version>
     <dep.kryo.version>4.0.0</dep.kryo.version>
     <dep.json.version>20160810</dep.json.version>
@@ -67,19 +67,19 @@
         <groupId>com.alibaba.graphscope</groupId>
         <artifactId>grape-jdk</artifactId>
         <classifier>shaded</classifier>
-        <version>0.16.0</version>
+        <version>${revision}</version>
       </dependency>
       <dependency>
         <groupId>com.alibaba.graphscope</groupId>
         <artifactId>giraph-on-grape</artifactId>
         <classifier>shaded</classifier>
-        <version>0.16.0</version>
+        <version>${revision}</version>
       </dependency>
       <dependency>
         <groupId>com.alibaba.graphscope</groupId>
         <artifactId>graphx-on-graphscope</artifactId>
         <classifier>shaded</classifier>
-        <version>0.16.0</version>
+        <version>${revision}</version>
       </dependency>
       <dependency>
         <groupId>junit</groupId>
@@ -117,13 +117,13 @@
         <version>${slf4j.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-log4j12</artifactId>
-        <version>${slf4j.version}</version>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-api</artifactId>
+        <version>${log4j.version}</version>
       </dependency>
       <dependency>
-        <groupId>log4j</groupId>
-        <artifactId>log4j</artifactId>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-core</artifactId>
         <version>${log4j.version}</version>
       </dependency>
       <dependency>

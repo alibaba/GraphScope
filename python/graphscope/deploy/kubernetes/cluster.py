@@ -97,6 +97,9 @@ class KubernetesClusterLauncher(Launcher):
         k8s_mars_worker_mem=None,
         k8s_mars_scheduler_cpu=None,
         k8s_mars_scheduler_mem=None,
+        k8s_coordinator_pod_node_selector=None,
+        k8s_etcd_pod_node_selector=None,
+        k8s_engine_pod_node_selector=None,
         with_mars=None,
         k8s_volumes=None,
         timeout_seconds=None,
@@ -370,6 +373,10 @@ class KubernetesClusterLauncher(Launcher):
             ports=ports,
             module_name=self._coordinator_module_name,
         )
+        if self._saved_locals["k8s_coordinator_pod_node_selector"] is not None:
+            coordinator_builder.add_coordinator_pod_node_selector(
+                self._saved_locals["k8s_coordinator_pod_node_selector"]
+            )
 
         targets.append(
             self._app_api.create_namespaced_deployment(
@@ -477,6 +484,24 @@ class KubernetesClusterLauncher(Launcher):
                 [
                     "--etcd_listening_peer_port",
                     str(self._saved_locals["etcd_listening_peer_port"]),
+                ]
+            )
+        if self._saved_locals["k8s_etcd_pod_node_selector"] is not None:
+            cmd.extend(
+                [
+                    "--k8s_etcd_pod_node_selector",
+                    "'{0}'".format(
+                        json.dumps(self._saved_locals["k8s_etcd_pod_node_selector"])
+                    ),
+                ]
+            )
+        if self._saved_locals["k8s_engine_pod_node_selector"] is not None:
+            cmd.extend(
+                [
+                    "--k8s_engine_pod_node_selector",
+                    "'{0}'".format(
+                        json.dumps(self._saved_locals["k8s_engine_pod_node_selector"])
+                    ),
                 ]
             )
         return ["-c", " ".join(cmd)]

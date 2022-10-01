@@ -99,9 +99,11 @@ std::shared_ptr<DispatchResult> Dispatcher::processCmd(
   auto err = subscriber_->OnReceive(cmd);
   if (!err) {
     auto r = std::make_shared<DispatchResult>(comm_spec_.worker_id());
-    r->set_error(ErrorCodeToProto(static_cast<vineyard::ErrorCode>(
-                     bl::error_id(err.error()).value())),
-                 "boost::leaf error");
+    r->set_error(
+        ErrorCodeToProto(static_cast<vineyard::ErrorCode>(
+            bl::error_id(err.error()).value())),
+        "boost::leaf error: cannot unpack the error type and message, "
+        "please rebuild with '-DLET_IT_CRASH_ON_EXCEPTION=OFF' and rerun");
     return r;
   }
   auto r = err.value();

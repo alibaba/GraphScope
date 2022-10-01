@@ -1,0 +1,1 @@
+g.V().hasLabel('person').has('id',$personId).in('hasCreator').as('message').inE('likes').as('like').values('creationDate').as('likedate').select('like').outV().as('liker').order().by(select('likedate'), desc).by('id', asc).limit(20).select('message', 'likedate', 'liker').by(valueMap('id', 'content', 'imageFile')).by().by(valueMap('id', 'firstName', 'lastName'))

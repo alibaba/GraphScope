@@ -236,14 +236,23 @@ Currently GIE supports the following Gremlin steps:
     g.V().select(expr("@.age")) //@.age refers to the "age" property of the head entry
 
     //bits manipulation in expression
-    g.V().select(expr("1 & 2"))
-    g.V().select(expr("1 | 2"))
-    g.V().select(expr("1 ^ 2"))
-    g.V().select(expr("1 << 2"))
-    g.V().select(expr("1 >> 2"))
-    g.V().where(expr("232 & 64 != 0"))
-    g.V().select(expr("7 ^^ 3")) //exponentiation
-    g.V().select(expr("7 ^^ -3")) //exponentiation
+    g.V().select(expr("@.number & 2")) //the "number" property of the head entry is integer type
+    g.V().select(expr("@.number | 2"))
+    g.V().select(expr("@.number ^ 2"))
+    g.V().select(expr("@.number << 2"))
+    g.V().select(expr("@.number >> 2"))
+    g.V().where(expr("@.number & 64 != 0"))
+
+    //arithmetic operations in expression
+    g.V().select(expr("@.number + 2"))
+    g.V().select(expr("@.number - 2"))
+    g.V().select(expr("@.number * 2"))
+    g.V().select(expr("@.number / 2"))
+    g.V().select(expr("(@.number + 2) / 4 + (@.age * 10)")) //the "number" and "age" properties of the head entry are integer type
+
+    //exponentiation in expression
+    g.V().select(expr("@.number ^^ 3"))
+    g.V().select(expr("@.number ^^ -3"))
 
     //filter with a sub-query
     g.V().where(out().count().is(gt(4)))
@@ -261,7 +270,7 @@ Currently GIE supports the following Gremlin steps:
 
     //and/or
 
-    //Text.*
+    //TextP.*
     g.V().has("attrName", TextP.containing("substr"))
     g.V().has("attrName", TextP.notContaining("substr"))
     g.V().has("attrName", TextP.startingWith("substr"))
