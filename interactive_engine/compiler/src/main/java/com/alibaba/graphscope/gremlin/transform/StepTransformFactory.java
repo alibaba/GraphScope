@@ -601,6 +601,40 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         public InterOpBase apply(Step step) {
             return new AsNoneOp();
         }
+    },
+
+    ID_STEP {
+        @Override
+        public InterOpBase apply(Step step) {
+            ProjectOp projectOp = new ProjectOp();
+            String expr = "@." + ArgUtils.ID;
+            projectOp.setExprWithAlias(
+                    new OpArg(Collections.singletonList(Pair.with(expr, ArgUtils.asNoneAlias()))));
+            return projectOp;
+        }
+    },
+
+    LABEL_STEP {
+        @Override
+        public InterOpBase apply(Step step) {
+            ProjectOp projectOp = new ProjectOp();
+            String expr = "@." + ArgUtils.LABEL;
+            projectOp.setExprWithAlias(
+                    new OpArg(Collections.singletonList(Pair.with(expr, ArgUtils.asNoneAlias()))));
+            return projectOp;
+        }
+    },
+
+    CONSTANT_STEP {
+        @Override
+        public InterOpBase apply(Step step) {
+            Object value = ((ConstantStep) step).getConstant();
+            String expr = PredicateExprTransformFactory.IS_STEP.getPredicateValue(value);
+            ProjectOp projectOp = new ProjectOp();
+            projectOp.setExprWithAlias(
+                    new OpArg(Collections.singletonList(Pair.with(expr, ArgUtils.asNoneAlias()))));
+            return projectOp;
+        }
     };
 
     protected Function<GraphStep, FfiScanOpt> SCAN_OPT =

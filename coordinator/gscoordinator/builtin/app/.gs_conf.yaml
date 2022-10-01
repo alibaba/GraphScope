@@ -1,8 +1,8 @@
 app:
   - algo: pagerank
     type: cpp_pie
-    class_name: grape::PageRankAuto
-    src: pagerank/pagerank_auto.h
+    class_name: grape::PageRankLocal
+    src: pagerank/pagerank_local.h
     compatible_graph:
       - grape::ImmutableEdgecutFragment
       - gs::ArrowProjectedFragment
@@ -17,16 +17,16 @@ app:
       - gs::DynamicProjectedFragment
   - algo: bfs
     type: cpp_pie
-    class_name: grape::BFSAuto
-    src: bfs/bfs_auto.h
+    class_name: grape::BFS
+    src: bfs/bfs.h
     compatible_graph:
       - grape::ImmutableEdgecutFragment
       - gs::ArrowProjectedFragment
       - gs::DynamicProjectedFragment
   - algo: wcc
     type: cpp_pie
-    class_name: grape::WCCAuto
-    src: wcc/wcc_auto.h
+    class_name: grape::WCC
+    src: wcc/wcc.h
     compatible_graph:
       - grape::ImmutableEdgecutFragment
       - gs::ArrowProjectedFragment

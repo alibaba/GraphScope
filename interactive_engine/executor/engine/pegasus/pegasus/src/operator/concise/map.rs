@@ -25,7 +25,7 @@ fn _get_name(base: &str, extra: &str) -> String {
     if extra.is_empty() {
         base.to_string()
     } else {
-        format!("{:?} [{:?}]", base, extra)
+        format!("{}_{}", base, extra)
     }
 }
 

@@ -8,7 +8,7 @@
 #  GRAPHSCOPE_ANALYTICAL_ENGINE_EXECUTABLE         - the grape-engine executable
 
 set(GRAPHSCOPE_ANALYTICAL_HOME "${CMAKE_CURRENT_LIST_DIR}/../../..")
-include("${CMAKE_CURRENT_LIST_DIR}/graphscope-analytical-targets.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/graphscope-analytical-targets.cmake" OPTIONAL)
 
 set(GRAPHSCOPE_ANALYTICAL_LIBRARIES gs_proto gs_util)
 set(GRAPHSCOPE_ANALYTICAL_INCLUDE_DIR "${GRAPHSCOPE_ANALYTICAL_HOME}/include"

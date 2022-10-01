@@ -14,8 +14,6 @@
 //! limitations under the License.
 
 use std::convert::TryInto;
-use std::fmt;
-use std::sync::atomic::{AtomicPtr, Ordering};
 use std::sync::Arc;
 
 use ahash::{HashMap, HashMapExt};
@@ -30,16 +28,15 @@ use global_query::{
 };
 use graph_store::utils::IterList;
 use ir_common::{KeyId, LabelId, NameOrId, OneOrMany};
-use pegasus_common::downcast::*;
 use rand::prelude::StdRng;
 use rand::{Rng, SeedableRng};
 
+use super::details::{HybridEdgeDetails, HybridVertexDetails, LazyEdgeDetails, LazyVertexDetails};
 use crate::apis::graph::PKV;
 use crate::apis::{
-    from_fn, register_graph, Details, Direction, DynDetails, Edge, PropertyValue, QueryParams, ReadGraph,
-    Statement, Vertex, ID,
+    from_fn, register_graph, Direction, DynDetails, Edge, QueryParams, ReadGraph, Statement, Vertex, ID,
 };
-use crate::utils::expr::eval_pred::{EvalPred, PEvaluator};
+use crate::utils::expr::eval_pred::PEvaluator;
 use crate::{filter_limit, filter_sample_limit, limit_n, sample_limit};
 use crate::{GraphProxyError, GraphProxyResult};
 
@@ -110,8 +107,9 @@ where
 
             // props that will be used in futher compute
             let cache_prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
+            let column_filter_pushdown = self.column_filter_pushdown;
             // props that will be returned by storage layer
-            let prop_ids = if self.column_filter_pushdown {
+            let prop_ids = if column_filter_pushdown {
                 if row_filter_exists_but_not_pushdown {
                     // need to call filter_limit!, so get columns in row_filter and params.columns
                     extract_needed_columns(row_filter.as_ref(), cache_prop_ids.as_ref())?
@@ -144,7 +142,13 @@ where
                     // Each worker will scan the partitions pre-allocated in source operator. Same as follows.
                     partitions.as_ref(),
                 )
-                .map(move |v| to_runtime_vertex(v, cache_prop_ids.clone()));
+                .map(move |v| {
+                    if column_filter_pushdown {
+                        to_hybrid_runtime_vertex(v)
+                    } else {
+                        to_runtime_vertex(v, cache_prop_ids.clone())
+                    }
+                });
 
             if row_filter_exists_but_not_pushdown {
                 // fall back to call filter_limit! to do row filter
@@ -206,7 +210,8 @@ where
                 encode_storage_row_filter_condition(row_filter.as_ref(), self.row_filter_pushdown);
 
             let cache_prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
-            let prop_ids = if self.column_filter_pushdown {
+            let column_filter_pushdown = self.column_filter_pushdown;
+            let prop_ids = if column_filter_pushdown {
                 if row_filter_exists_but_not_pushdown {
                     extract_needed_columns(row_filter.as_ref(), cache_prop_ids.as_ref())?
                 } else {
@@ -220,7 +225,7 @@ where
                 .iter()
                 .map(|pid| *pid as PartitionId)
                 .collect();
-            let res_iter = store.get_all_edges(
+            let result = store.get_all_edges(
                 si,
                 label_ids.as_ref(),
                 condition.as_ref(),
@@ -229,12 +234,12 @@ where
                 0,
                 partitions.as_ref(),
             );
-            let result = RuntimeEdgeIter::new(res_iter, true);
+            let iter = RuntimeEdgeIter::new(result, true, column_filter_pushdown, cache_prop_ids.clone());
 
             if row_filter_exists_but_not_pushdown {
-                Ok(filter_sample_limit!(result, row_filter, params.sample_ratio, params.limit))
+                Ok(filter_sample_limit!(iter, row_filter, params.sample_ratio, params.limit))
             } else {
-                Ok(sample_limit!(result, params.sample_ratio, params.limit))
+                Ok(sample_limit!(iter, params.sample_ratio, params.limit))
             }
         } else {
             Ok(Box::new(std::iter::empty()))
@@ -255,8 +260,9 @@ where
 
         // props that will be used in futher compute
         let cache_prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
+        let column_filter_pushdown = self.column_filter_pushdown;
         // also need props in filter, because `filter_limit!`
-        let prop_ids = if self.column_filter_pushdown {
+        let prop_ids = if column_filter_pushdown {
             extract_needed_columns(params.filter.as_ref(), cache_prop_ids.as_ref())?
         } else {
             // column filter not pushdown, ir assume that it can get all props locally
@@ -269,7 +275,13 @@ where
 
         let result = store
             .get_vertex_properties(si, partition_label_vertex_ids.clone(), prop_ids.as_ref())
-            .map(move |v| to_runtime_vertex(v, cache_prop_ids.clone()));
+            .map(move |v| {
+                if column_filter_pushdown {
+                    to_hybrid_runtime_vertex(v)
+                } else {
+                    to_runtime_vertex(v, cache_prop_ids.clone())
+                }
+            });
 
         Ok(filter_limit!(result, filter, None))
     }
@@ -375,7 +387,8 @@ where
             encode_storage_row_filter_condition(row_filter.as_ref(), self.row_filter_pushdown);
 
         let cache_prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
-        let prop_ids = if self.column_filter_pushdown {
+        let column_filter_pushdown = self.column_filter_pushdown;
+        let prop_ids = if column_filter_pushdown {
             if row_filter_exists_but_not_pushdown {
                 extract_needed_columns(row_filter.as_ref(), cache_prop_ids.as_ref())?
             } else {
@@ -387,8 +400,6 @@ where
 
         let limit = params.limit.clone();
         let edge_label_ids = encode_storage_labels(params.labels.as_ref())?;
-
-        let columns = params.columns.clone();
 
         let stmt = from_fn(move |v: ID| {
             let src_id = get_partition_vertex_id(v, partition_manager.clone());
@@ -404,7 +415,8 @@ where
                         limit.unwrap_or(0),
                     );
                     if let Some(ei) = res_iter.next().map(|(_src, ei)| ei) {
-                        let iter = RuntimeEdgeIter::new(ei, true);
+                        let iter =
+                            RuntimeEdgeIter::new(ei, true, column_filter_pushdown, cache_prop_ids.clone());
                         IterList::new(vec![iter])
                     } else {
                         IterList::new(vec![])
@@ -421,7 +433,8 @@ where
                         limit.unwrap_or(0),
                     );
                     if let Some(ei) = res_iter.next().map(|(_dst, ei)| ei) {
-                        let iter = RuntimeEdgeIter::new(ei, false);
+                        let iter =
+                            RuntimeEdgeIter::new(ei, false, column_filter_pushdown, cache_prop_ids.clone());
                         IterList::new(vec![iter])
                     } else {
                         IterList::new(vec![])
@@ -448,23 +461,20 @@ where
                     );
                     let mut iters = vec![];
                     if let Some(ei) = res_out_iter.next().map(|(_src, ei)| ei) {
-                        let iter = RuntimeEdgeIter::new(ei, true);
+                        let iter =
+                            RuntimeEdgeIter::new(ei, true, column_filter_pushdown, cache_prop_ids.clone());
                         iters.push(iter);
                     }
                     if let Some(ei) = res_in_iter.next().map(|(_dst, ei)| ei) {
-                        let iter = RuntimeEdgeIter::new(ei, false);
+                        let iter =
+                            RuntimeEdgeIter::new(ei, false, column_filter_pushdown, cache_prop_ids.clone());
                         iters.push(iter);
                     }
                     IterList::new(iters)
                 }
             };
             if row_filter_exists_but_not_pushdown {
-                let filter = row_filter.clone().unwrap();
-                let columns = columns.clone();
-                let filter_result = iter_list
-                    .filter(move |e| filter.eval_bool(Some(e)).unwrap_or(false))
-                    .map(move |e| edge_trim(e, columns.as_ref()));
-                Ok(Box::new(filter_result))
+                Ok(filter_limit!(iter_list, row_filter, None))
             } else {
                 Ok(Box::new(iter_list))
             }
@@ -492,6 +502,17 @@ where
 }
 
 #[inline]
+fn to_hybrid_runtime_vertex<V>(v: V) -> Vertex
+where
+    V: 'static + StoreVertex,
+{
+    let id = v.get_id() as ID;
+    let label = encode_runtime_v_label(&v);
+    let details = HybridVertexDetails::new(v);
+    Vertex::new(id, Some(label), DynDetails::lazy(details))
+}
+
+#[inline]
 fn to_empty_vertex<V: StoreVertex>(v: &V) -> Vertex {
     let id = v.get_id() as ID;
     let label = encode_runtime_v_label(v);
@@ -505,6 +526,8 @@ where
 {
     iter: EI,
     from_src: bool,
+    column_filter_pushdown: bool,
+    prop_keys: Option<Vec<PropId>>,
 }
 
 impl<E, EI> RuntimeEdgeIter<E, EI>
@@ -512,8 +535,10 @@ where
     E: StoreEdge + 'static,
     EI: Iterator<Item = E> + 'static,
 {
-    pub fn new(iter: EI, from_src: bool) -> Self {
-        RuntimeEdgeIter { iter, from_src }
+    pub fn new(
+        iter: EI, from_src: bool, column_filter_pushdown: bool, prop_keys: Option<Vec<PropId>>,
+    ) -> Self {
+        RuntimeEdgeIter { iter, from_src, column_filter_pushdown, prop_keys }
     }
 }
 
@@ -526,7 +551,11 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(next) = self.iter.next() {
-            Some(to_runtime_edge(&next, self.from_src))
+            if self.column_filter_pushdown {
+                Some(to_hybrid_runtime_edge(next, self.from_src))
+            } else {
+                Some(to_runtime_edge(next, self.prop_keys.clone(), self.from_src))
+            }
         } else {
             None
         }
@@ -534,190 +563,43 @@ where
 }
 
 #[inline]
-fn to_runtime_edge<E: StoreEdge>(e: &E, from_src: bool) -> Edge {
-    // TODO: LazyEdgeDetails
+fn to_runtime_edge<E>(e: E, prop_keys: Option<Vec<PropId>>, from_src: bool) -> Edge
+where
+    E: 'static + StoreEdge,
+{
     let id = e.get_edge_id() as ID;
-    let label = encode_runtime_e_label(e);
-    let properties = e
-        .get_properties()
-        .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val))
-        .collect();
-    let mut edge = Edge::with_from_src(
-        id,
-        Some(label),
-        e.get_src_id() as ID,
-        e.get_dst_id() as ID,
-        from_src,
-        DynDetails::new(properties),
-    );
-    edge.set_src_label(e.get_src_label_id() as LabelId);
-    edge.set_dst_label(e.get_dst_label_id() as LabelId);
+    let label = encode_runtime_e_label(&e);
+    let src_id = e.get_src_id() as ID;
+    let dst_id = e.get_dst_id() as ID;
+    let src_label_id = e.get_src_label_id() as LabelId;
+    let dst_label_id = e.get_dst_label_id() as LabelId;
+    let details = LazyEdgeDetails::new(e, prop_keys);
+
+    let mut edge =
+        Edge::with_from_src(id, Some(label), src_id, dst_id, from_src, DynDetails::lazy(details));
+    edge.set_src_label(src_label_id);
+    edge.set_dst_label(dst_label_id);
     edge
 }
 
 #[inline]
-fn edge_trim(mut edge: Edge, columns: Option<&Vec<NameOrId>>) -> Edge {
-    if let Some(columns) = columns {
-        if columns.is_empty() {
-            // vec![] means all properties are needed, and do nothing
-        } else {
-            let details = edge.get_details_mut();
-            let mut trimmed_details = HashMap::new();
-            for column in columns {
-                trimmed_details.insert(
-                    column.clone(),
-                    details
-                        .get_property(column)
-                        .map(|p| p.try_to_owned())
-                        .unwrap_or(None)
-                        .unwrap_or(Object::None),
-                );
-            }
-            *details = DynDetails::new(trimmed_details);
-        }
-    } else {
-        // None means no properties are needed
-        let details = edge.get_details_mut();
-        *details = DynDetails::default();
-    }
+fn to_hybrid_runtime_edge<E>(e: E, from_src: bool) -> Edge
+where
+    E: 'static + StoreEdge,
+{
+    let id = e.get_edge_id() as ID;
+    let label = encode_runtime_e_label(&e);
+    let src_id = e.get_src_id() as ID;
+    let dst_id = e.get_dst_id() as ID;
+    let src_label_id = e.get_src_label_id() as LabelId;
+    let dst_label_id = e.get_dst_label_id() as LabelId;
+    let details = HybridEdgeDetails::new(e);
+
+    let mut edge =
+        Edge::with_from_src(id, Some(label), src_id, dst_id, from_src, DynDetails::lazy(details));
+    edge.set_src_label(src_label_id);
+    edge.set_dst_label(dst_label_id);
     edge
-}
-
-/// LazyVertexDetails is used for local property fetching optimization.
-/// That is, the required properties will not be materialized until LazyVertexDetails need to be shuffled.
-#[allow(dead_code)]
-pub struct LazyVertexDetails<V>
-where
-    V: StoreVertex + 'static,
-{
-    // prop_keys specify the properties we would save for later queries after shuffle,
-    // excluding the ones used only when local property fetching.
-    // Specifically, in graphscope store, None means we need all properties,
-    // and Some(vec![]) means we do not need any property
-    prop_keys: Option<Vec<PropId>>,
-    inner: AtomicPtr<V>,
-}
-
-impl<V> LazyVertexDetails<V>
-where
-    V: StoreVertex + 'static,
-{
-    pub fn new(v: V, prop_keys: Option<Vec<PropId>>) -> Self {
-        let ptr = Box::into_raw(Box::new(v));
-        LazyVertexDetails { prop_keys, inner: AtomicPtr::new(ptr) }
-    }
-
-    fn get_vertex_ptr(&self) -> Option<*mut V> {
-        let ptr = self.inner.load(Ordering::SeqCst);
-        if ptr.is_null() {
-            None
-        } else {
-            Some(ptr)
-        }
-    }
-}
-
-impl<V> fmt::Debug for LazyVertexDetails<V>
-where
-    V: StoreVertex + 'static,
-{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("gs_store LazyVertexDetails")
-            .field("properties", &self.prop_keys)
-            .field("inner", &self.inner)
-            .finish()
-    }
-}
-
-impl<V> Details for LazyVertexDetails<V>
-where
-    V: StoreVertex + 'static,
-{
-    // TODO: consider the situation when push `props` down to groot
-    fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
-        if let NameOrId::Id(key) = key {
-            if let Some(ptr) = self.get_vertex_ptr() {
-                unsafe {
-                    (*ptr)
-                        .get_property(*key as PropId)
-                        .map(|prop| PropertyValue::Owned(encode_runtime_prop_val(prop)))
-                }
-            } else {
-                None
-            }
-        } else {
-            info!("Have not support getting property by prop_name in gs_store yet");
-            None
-        }
-    }
-
-    fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
-        let mut all_props = HashMap::new();
-        if let Some(prop_keys) = self.prop_keys.as_ref() {
-            if prop_keys.is_empty() {
-                // the case of get_all_properties from vertex;
-                if let Some(ptr) = self.get_vertex_ptr() {
-                    unsafe {
-                        all_props = (*ptr)
-                            .get_properties()
-                            .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val))
-                            .collect();
-                    }
-                } else {
-                    return None;
-                }
-            } else {
-                let prop_keys = self.prop_keys.as_ref().unwrap();
-                // the case of get_all_properties with prop_keys pre-specified
-                for key in prop_keys.iter() {
-                    let key = NameOrId::Id(*key as KeyId);
-                    if let Some(prop) = self.get_property(&key) {
-                        all_props.insert(key.clone(), prop.try_to_owned().unwrap());
-                    } else {
-                        all_props.insert(key.clone(), Object::None);
-                    }
-                }
-            }
-        }
-        Some(all_props)
-    }
-
-    fn insert_property(&mut self, key: NameOrId, _value: Object) {
-        if let NameOrId::Id(key) = key {
-            if let Some(prop_keys) = self.prop_keys.as_mut() {
-                prop_keys.push(key as PropId);
-            }
-        } else {
-            info!("Have not support insert property by prop_name in gs_store yet");
-        }
-    }
-}
-
-impl<V> AsAny for LazyVertexDetails<V>
-where
-    V: StoreVertex + 'static,
-{
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
-    }
-
-    fn as_any_ref(&self) -> &dyn Any {
-        self
-    }
-}
-
-impl<V> Drop for LazyVertexDetails<V>
-where
-    V: StoreVertex + 'static,
-{
-    fn drop(&mut self) {
-        let ptr = self.inner.load(Ordering::SeqCst);
-        if !ptr.is_null() {
-            unsafe {
-                std::ptr::drop_in_place(ptr);
-            }
-        }
-    }
 }
 
 /// In ir, None means we do not need any properties,
@@ -749,6 +631,10 @@ fn encode_storage_row_filter_condition(
 ) -> (Option<Condition>, bool) {
     if row_filter_pushdown {
         let condition = if let Some(filter) = row_filter { filter.as_ref().try_into() } else { Ok(None) };
+        // gremlin test in ci will compile use debug mode
+        // panic so that developer will know convert failed
+        // TODO: support Text.StartsWith etc. and reopen debug_assert
+        // debug_assert!(condition.is_ok());
         match condition {
             Ok(cond) => (cond, false),
             Err(e) => {
@@ -815,35 +701,6 @@ fn encode_runtime_v_label<V: StoreVertex>(v: &V) -> LabelId {
 #[inline]
 fn encode_runtime_e_label<E: StoreEdge>(e: &E) -> LabelId {
     e.get_label_id() as LabelId
-}
-
-#[inline]
-fn encode_runtime_property(prop_id: PropId, prop_val: Property) -> (NameOrId, Object) {
-    let prop_key = NameOrId::Id(prop_id as KeyId);
-    let prop_val = encode_runtime_prop_val(prop_val);
-    (prop_key, prop_val)
-}
-
-#[inline]
-fn encode_runtime_prop_val(prop_val: Property) -> Object {
-    match prop_val {
-        Property::Bool(b) => b.into(),
-        Property::Char(c) => {
-            if c <= (i8::MAX as u8) {
-                Object::Primitive(Primitives::Byte(c as i8))
-            } else {
-                Object::Primitive(Primitives::Integer(c as i32))
-            }
-        }
-        Property::Short(s) => Object::Primitive(Primitives::Integer(s as i32)),
-        Property::Int(i) => Object::Primitive(Primitives::Integer(i)),
-        Property::Long(l) => Object::Primitive(Primitives::Long(l)),
-        Property::Float(f) => Object::Primitive(Primitives::Float(f as f64)),
-        Property::Double(d) => Object::Primitive(Primitives::Float(d)),
-        Property::Bytes(v) => Object::Blob(v.into_boxed_slice()),
-        Property::String(s) => Object::String(s),
-        _ => unimplemented!(),
-    }
 }
 
 #[inline]

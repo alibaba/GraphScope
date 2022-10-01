@@ -20,7 +20,6 @@ import com.alibaba.graphscope.common.client.ResultParser;
 import com.alibaba.graphscope.gremlin.result.GremlinResultProcessor;
 import com.google.common.collect.ImmutableMap;
 
-import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
 import org.apache.tinkerpop.gremlin.process.remote.traversal.DefaultRemoteTraverser;
 import org.apache.tinkerpop.gremlin.server.Context;
 import org.apache.tinkerpop.gremlin.structure.Edge;
@@ -46,18 +45,6 @@ public class GremlinTestResultProcessor extends GremlinResultProcessor {
             Context writeResult, ResultParser resultParser, GraphProperties testGraph) {
         super(writeResult, resultParser);
         this.cachedProperties = testGraph.getProperties();
-    }
-
-    @Override
-    public void finish() {
-        synchronized (this) {
-            if (!locked) {
-                logger.debug("process finish");
-                formatResultIfNeed();
-                writeResultList(writeResult, resultCollectors, ResponseStatusCode.SUCCESS);
-                locked = true;
-            }
-        }
     }
 
     @Override

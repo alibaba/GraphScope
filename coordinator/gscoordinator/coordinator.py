@@ -58,6 +58,7 @@ from graphscope.framework.graph_utils import normalize_parameter_edges
 from graphscope.framework.graph_utils import normalize_parameter_vertices
 from graphscope.framework.loader import Loader
 from graphscope.framework.utils import PipeMerger
+from graphscope.framework.utils import find_java
 from graphscope.framework.utils import get_tempdir
 from graphscope.framework.utils import normalize_data_type_str
 from graphscope.proto import attr_value_pb2
@@ -355,6 +356,10 @@ class CoordinatorServiceServicer(
 
         # analytical engine
         request = message_pb2.HeartBeatRequest()
+        if self._analytical_engine_stub is None:
+            raise RuntimeError(
+                "Analytical engine is not launched or has already been terminated."
+            )
         return self._analytical_engine_stub.HeartBeat(request)
 
     HeartBeatWrapped = catch_unknown_errors(message_pb2.HeartBeatResponse())(_HeartBeat)
@@ -649,7 +654,7 @@ class CoordinatorServiceServicer(
                 responses[0].head.results.extend(head.head.results)
                 responses.extend(bodies)
             except grpc.RpcError as exc:
-                # Not raised by graphscope, maybe socket closed, etc
+                # Not raised by graphscope, maybe socket closed, etc.
                 context.set_code(exc.code())
                 context.set_details(exc.details())
                 for response in responses:
@@ -1382,6 +1387,15 @@ class CoordinatorServiceServicer(
                 raise
         config = json.loads(response_head.head.results[0].result.decode("utf-8"))
         config.update(self._launcher.get_engine_config())
+        # Disable ENABLE_JAVA_SDK when java is not installed on coordinator
+        if config["enable_java_sdk"] == "ON":
+            try:
+                _ = find_java()
+            except RuntimeError:
+                logger.warning(
+                    "Disable java sdk support since java is not installed on coordinator"
+                )
+                config["enable_java_sdk"] = "OFF"
         return config
 
     def _compile_lib_and_distribute(self, compile_func, lib_name, op):
@@ -1612,6 +1626,18 @@ def parse_sys_args():
         help="Memory of Mars scheduler container, default: 2Gi",
     )
     parser.add_argument(
+        "--k8s_etcd_pod_node_selector",
+        type=str,
+        default="",
+        help="Node selector for etcd pods, default is None",
+    )
+    parser.add_argument(
+        "--k8s_engine_pod_node_selector",
+        type=str,
+        default="",
+        help="Node selector for engine pods, default is None",
+    )
+    parser.add_argument(
         "--k8s_volumes",
         type=str,
         default="{}",
@@ -1703,6 +1729,8 @@ def launch_graphscope():
             mars_worker_mem=args.k8s_mars_worker_mem,
             mars_scheduler_cpu=args.k8s_mars_scheduler_cpu,
             mars_scheduler_mem=args.k8s_mars_scheduler_mem,
+            etcd_pod_node_selector=args.k8s_etcd_pod_node_selector,
+            engine_pod_node_selector=args.k8s_engine_pod_node_selector,
             with_mars=args.k8s_with_mars,
             image_pull_policy=args.k8s_image_pull_policy,
             image_pull_secrets=args.k8s_image_pull_secrets,

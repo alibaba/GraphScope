@@ -899,6 +899,34 @@ public class PositiveEvalTest {
                 eval("g.V().has(\"name\", TextP.notContaining(\"marko\"))"));
     }
 
+    @Test
+    public void g_V_has_startingWith_test() {
+        Assert.assertEquals(
+                g.V().has("name", TextP.startingWith("marko")),
+                eval("g.V().has(\"name\", TextP.startingWith(\"marko\"))"));
+    }
+
+    @Test
+    public void g_V_has_notStartingWith_test() {
+        Assert.assertEquals(
+                g.V().has("name", TextP.notStartingWith("marko")),
+                eval("g.V().has(\"name\", TextP.notStartingWith(\"marko\"))"));
+    }
+
+    @Test
+    public void g_V_has_endingWith_test() {
+        Assert.assertEquals(
+                g.V().has("name", TextP.endingWith("marko")),
+                eval("g.V().has(\"name\", TextP.endingWith(\"marko\"))"));
+    }
+
+    @Test
+    public void g_V_has_notEndingWith_test() {
+        Assert.assertEquals(
+                g.V().has("name", TextP.notEndingWith("marko")),
+                eval("g.V().has(\"name\", TextP.notEndingWith(\"marko\"))"));
+    }
+
     // g.V().as("a").select("a").by(out("1..2").with("Result_Opt", AllV).count())
     @Test
     public void g_V_as_select_a_by_out_1_2_endV_count_test() {
@@ -1100,5 +1128,39 @@ public class PositiveEvalTest {
                 eval(
                         "g.V().out(\"1..2\", \"knows\", \"created\").with(\"PATH_OPT\","
                                 + " \"ARBITRARY\").with(\"RESULT_OPT\", \"ALL_V\")"));
+    }
+
+    @Test
+    public void g_V_id() {
+        Assert.assertEquals(g.V().id(), eval("g.V().id()"));
+    }
+
+    @Test
+    public void g_V_label() {
+        Assert.assertEquals(g.V().label(), eval("g.V().label()"));
+    }
+
+    @Test
+    public void g_V_constant() {
+        Assert.assertEquals(g.V().constant("marko"), eval("g.V().constant(\"marko\")"));
+    }
+
+    @Test
+    public void g_V_has_P_not() {
+        Assert.assertEquals(
+                g.V().has("name", P.not(P.eq("marko"))),
+                eval("g.V().has(\"name\", P.not(P.eq(\"marko\")))"));
+    }
+
+    @Test
+    public void g_V_has_P_inside_not() {
+        Assert.assertEquals(
+                g.V().has("age", P.inside(20, 30)), eval("g.V().has(\"age\", P.inside(20, 30))"));
+    }
+
+    @Test
+    public void g_V_has_P_outside_not() {
+        Assert.assertEquals(
+                g.V().has("age", P.outside(20, 30)), eval("g.V().has(\"age\", P.outside(20, 30))"));
     }
 }

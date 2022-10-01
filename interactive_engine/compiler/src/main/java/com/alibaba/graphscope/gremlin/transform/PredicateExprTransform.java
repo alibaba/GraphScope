@@ -17,7 +17,7 @@
 package com.alibaba.graphscope.gremlin.transform;
 
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
-import com.alibaba.graphscope.gremlin.antlr4.AnyValue;
+import com.alibaba.graphscope.gremlin.plugin.type.AnyValue;
 
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.tinkerpop.gremlin.process.traversal.*;
@@ -121,6 +121,22 @@ public interface PredicateExprTransform extends Function<Step, String> {
                                                     getPredicateValue(t.getRight()),
                                                     t.getMiddle(),
                                                     t.getLeft()));
+                } else if (biPredicate == Text.startingWith) {
+                    expr += getPredicateExpr(subject, "StartsWith", predicateValue, defaultFormat);
+                } else if (biPredicate == Text.notStartingWith) {
+                    expr +=
+                            String.format(
+                                    "!(%s)",
+                                    getPredicateExpr(
+                                            subject, "StartsWith", predicateValue, defaultFormat));
+                } else if (biPredicate == Text.endingWith) {
+                    expr += getPredicateExpr(subject, "EndsWith", predicateValue, defaultFormat);
+                } else if (biPredicate == Text.notEndingWith) {
+                    expr +=
+                            String.format(
+                                    "!(%s)",
+                                    getPredicateExpr(
+                                            subject, "EndsWith", predicateValue, defaultFormat));
                 } else {
                     throw new OpArgIllegalException(
                             OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
@@ -155,15 +171,6 @@ public interface PredicateExprTransform extends Function<Step, String> {
             predicateValue = value.toString();
         }
         return predicateValue;
-    }
-
-    // @a -> ""
-    // @a.name -> @a.name
-    // @.name -> @.name
-    // @ -> ""
-    default String getExprIfPropertyExist(String expr) {
-        String[] splitExprs = expr.split("\\.");
-        return (splitExprs.length == 2) ? expr : "";
     }
 
     default String getPredicateExpr(

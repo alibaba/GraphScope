@@ -21,6 +21,7 @@ import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
 import com.alibaba.graphscope.gremlin.plugin.step.ExprStep;
 import com.alibaba.graphscope.gremlin.plugin.step.PathExpandStep;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
+import com.alibaba.graphscope.gremlin.plugin.type.AnyValue;
 
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSBaseVisitor;
 import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
@@ -731,6 +732,23 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
         String optKey = GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral(0));
         String optValue = GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral(1));
         return graphTraversal.with(optKey, optValue);
+    }
+
+    @Override
+    public Traversal visitTraversalMethod_id(GremlinGSParser.TraversalMethod_idContext ctx) {
+        return graphTraversal.id();
+    }
+
+    @Override
+    public Traversal visitTraversalMethod_label(GremlinGSParser.TraversalMethod_labelContext ctx) {
+        return graphTraversal.label();
+    }
+
+    @Override
+    public Traversal visitTraversalMethod_constant(
+            GremlinGSParser.TraversalMethod_constantContext ctx) {
+        return graphTraversal.constant(
+                GenericLiteralVisitor.getInstance().visitGenericLiteral(ctx.genericLiteral()));
     }
 
     private Traversal visitExpr(

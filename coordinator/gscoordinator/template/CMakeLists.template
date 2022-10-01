@@ -20,31 +20,27 @@ if (SYSTEM_PROCESSOR MATCHES "arm64")
     set(CMAKE_OSX_ARCHITECTURES "arm64")
 endif()
 
-if (ENABLE_JAVA_SDK)
-    #check whether we are using clang.
-    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        message(STATUS "Using Clang compiler: ${CMAKE_CXX_COMPILER}")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fforce-emit-vtables")    
-        if (NOT APPLE)
-            message(STATUS "Try to find ld.lld under same directory..")
-            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
-            get_filename_component(COMPILER_DIR ${CMAKE_CXX_COMPILER} DIRECTORY)
-            message(STATUS "Obtain directory: ${COMPILER_DIR}")
-            set(CMAKE_JNI_LINKER_FLAGS "-fuse-ld=${COMPILER_DIR}/ld.lld -Xlinker -mllvm=-lto-embed-bitcode")
-        endif()
-    else()
-         message(WARNING "Compiling with ENABLE_JAVA_SDK ON expects a minimum Clang-11 compiler, "
-                         "current compiler is ${CMAKE_CXX_COMPILER}. The build process will continue, "
-                         "BUT llvm4jni-based accerleration will be unavailable for generated libs.")
-    endif()
-endif()
-
 set(DEFAULT_BUILD_TYPE "RelWithDebInfo")
 if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     message(STATUS "Setting build type to '${DEFAULT_BUILD_TYPE}' as none was specified.")
     set(CMAKE_BUILD_TYPE "${DEFAULT_BUILD_TYPE}" CACHE STRING "Choose the type of build." FORCE)
     set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif ()
+
+if(NOT (CMAKE_CXX_COMPILER_LAUNCHER MATCHES "ccache") AND NOT (CMAKE_C_COMPILER_LAUNCHER MATCHES "ccache"))
+    find_program(ccache_EXECUTABLE ccache)
+    if(ccache_EXECUTABLE)
+        set(CMAKE_C_COMPILER_LAUNCHER ${ccache_EXECUTABLE})
+        set(CMAKE_CXX_COMPILER_LAUNCHER ${ccache_EXECUTABLE})
+        add_custom_target(ccache-stats
+            COMMAND ${ccache_EXECUTABLE} --show-stats
+        )
+    else()
+        add_custom_target(ccache-stats
+            COMMAND echo "ccache not found."
+        )
+    endif(ccache_EXECUTABLE)
+endif()
 
 if (NETWORKX)
     add_definitions(-DNETWORKX)
@@ -134,11 +130,6 @@ set(ANALYTICAL_ENGINE_HOME $_analytical_engine_home)
 
 # force load the config make if it exists
 include("${ANALYTICAL_ENGINE_HOME}/${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical/graphscope-analytical-config.cmake" OPTIONAL)
-if("${GRAPHSCOPE_GCC_ABI_BACKWARDS_COMPATIBLE}" STREQUAL "0")
-    add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
-elseif("${GRAPHSCOPE_GCC_ABI_BACKWARDS_COMPATIBLE}" STREQUAL "1")
-    add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
-endif()
 
 # try to find headers from package first----------------------------------------
 include_directories(${CMAKE_SOURCE_DIR})
@@ -181,13 +172,6 @@ if (vineyard_FOUND)
 endif()
 add_compile_options(-DENABLE_SELECTOR)
 
-# include jni------------------------------------------------------------------
-if(ENABLE_JAVA_SDK)
-    find_package(JNI REQUIRED)
-    include_directories(SYSTEM ${JAVA_INCLUDE_PATH})
-    include_directories(SYSTEM ${JAVA_INCLUDE_PATH2})
-endif()
-
 # force load the config make if it exists
 include("${ANALYTICAL_ENGINE_HOME}/${CMAKE_INSTALL_LIBDIR}/cmake/graphscope-analytical/graphscope-analytical-config.cmake" OPTIONAL)
 if("${GRAPHSCOPE_GCC_ABI_BACKWARDS_COMPATIBLE}" STREQUAL "0")
@@ -209,6 +193,15 @@ find_package(OpenMP QUIET)
 # set frame dir--------------------------------------------------------------
 set(ANALYTICAL_ENGINE_FRAME_DIR "${ANALYTICAL_ENGINE_HOME}/include/graphscope/frame")
 set(FRAME_NAME $_frame_name)
+
+# include jni------------------------------------------------------------------
+if(PROPERTY_GRAPH_FRAME OR JAVA_PIE_APP)
+    if (ENABLE_JAVA_SDK)
+        find_package(JNI REQUIRED)
+        include_directories(SYSTEM ${JAVA_INCLUDE_PATH})
+        include_directories(SYSTEM ${JAVA_INCLUDE_PATH2})
+    endif()
+endif()
 
 # set javasdk.cc--------------------------------------------------------------
 if(EXISTS "${ANALYTICAL_ENGINE_HOME}/core/java/javasdk.cc")
@@ -264,13 +257,6 @@ else()
     include_directories("${ANALYTICAL_ENGINE_HOME}/proto")
 endif()
 
-# include jni------------------------------------------------------------------
-if(ENABLE_JAVA_SDK)
-    find_package(JNI REQUIRED)
-    include_directories(SYSTEM ${JAVA_INCLUDE_PATH})
-    include_directories(SYSTEM ${JAVA_INCLUDE_PATH2})
-endif()
-
 if(GRAPHSCOPE_ANALYTICAL_HOME)
     find_library(PROTO NAMES gs_proto HINTS "${GRAPHSCOPE_ANALYTICAL_HOME}/lib")
 else()
@@ -314,6 +300,25 @@ elseif (CYTHON_PIE_APP)
     target_link_libraries(${FRAME_NAME} ${Python_LIBRARIES})
     set_target_properties(${FRAME_NAME} PROPERTIES COMPILE_FLAGS "-fPIC")
 elseif (JAVA_PIE_APP)
+    if (ENABLE_JAVA_SDK)
+        #check whether we are using clang.
+        if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+            message(STATUS "Using Clang compiler: ${CMAKE_CXX_COMPILER}")
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fforce-emit-vtables")    
+            if (NOT APPLE)
+                message(STATUS "Try to find ld.lld under same directory..")
+                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
+                get_filename_component(COMPILER_DIR ${CMAKE_CXX_COMPILER} DIRECTORY)
+                message(STATUS "Obtain directory: ${COMPILER_DIR}")
+                set(CMAKE_JNI_LINKER_FLAGS "-fuse-ld=${COMPILER_DIR}/ld.lld -Xlinker -mllvm=-lto-embed-bitcode")
+            endif()
+        else()
+            message(WARNING "Compiling with ENABLE_JAVA_SDK ON expects a minimum Clang-11 compiler, "
+                            "current compiler is ${CMAKE_CXX_COMPILER}. The build process will continue, "
+                            "BUT llvm4jni-based accerleration will be unavailable for generated libs.")
+        endif()
+    endif()
+
     # 0. codegen
     execute_process(COMMAND java -cp ${PRE_CP} ${PROCESSOR_MAIN_CLASS} ${JAR_PATH} ${OUTPUT_DIR} $_graph_type
                     RESULT_VARIABLE ret)
@@ -384,3 +389,13 @@ if (OpenMP_FOUND)
     target_link_libraries(${FRAME_NAME} OpenMP::OpenMP_CXX)
 endif ()
 
+# include the inplace cmake config at the end, to avoid affecting the CMake search path
+include("${ANALYTICAL_ENGINE_HOME}/build/graphscope-analytical-config.cmake" OPTIONAL)
+
+# setup the CXX ABI options after fully loaded the environment
+message("GCC ABI backwards compatible: ${GRAPHSCOPE_GCC_ABI_BACKWARDS_COMPATIBLE}")
+if("${GRAPHSCOPE_GCC_ABI_BACKWARDS_COMPATIBLE}" STREQUAL "0")
+    add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
+elseif("${GRAPHSCOPE_GCC_ABI_BACKWARDS_COMPATIBLE}" STREQUAL "1")
+    add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
+endif()
