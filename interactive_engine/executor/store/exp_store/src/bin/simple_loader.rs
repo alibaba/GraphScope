@@ -4,7 +4,6 @@ use clap::{App, Arg};
 use graph_store::config::{JsonConf, DIR_GRAPH_SCHEMA, FILE_SCHEMA};
 use graph_store::ldbc::GraphLoader;
 use graph_store::prelude::{DefaultId, GraphDBConfig, InternalId, LargeGraphDB, NAME, VERSION};
-use graph_store::schema::LDBCGraphSchema;
 
 fn main() {
     env_logger::init();
@@ -24,9 +23,9 @@ fn main() {
                 .required(true)
                 .takes_value(true)
                 .index(2),
-            Arg::with_name("schema_file")
-                .short("s")
-                .long_help("The schema file")
+            Arg::with_name("meta")
+                .short("m")
+                .long_help("The metadata file")
                 .required(true)
                 .takes_value(true)
                 .index(3),
@@ -51,10 +50,7 @@ fn main() {
         .value_of("graph_data_dir")
         .unwrap()
         .to_string();
-    let schema_file = matches
-        .value_of("schema_file")
-        .unwrap()
-        .to_string();
+    let meta_file = matches.value_of("meta").unwrap().to_string();
     let partition_num = matches
         .value_of("partition")
         .unwrap_or("1")
@@ -75,27 +71,31 @@ fn main() {
     };
 
     // Copy graph schema to graph_data_dir/graph_schema/schema.json if no there
-    let out_dir = PathBuf::from(format!("{}/{}", graph_data_dir, DIR_GRAPH_SCHEMA));
-    if !out_dir.exists() {
-        std::fs::create_dir_all(&out_dir).expect("Create graph schema directory error");
+    let out_data_dir = PathBuf::from(format!("{}/{}", graph_data_dir, DIR_GRAPH_SCHEMA));
+    if !out_data_dir.exists() {
+        std::fs::create_dir_all(&out_data_dir).expect("Create graph schema directory error");
     }
-    let schema = LDBCGraphSchema::from_json_file(&schema_file).expect("Read graph schema error!");
-    schema
-        .to_json_file(&out_dir.join(FILE_SCHEMA))
-        .expect("Write graph schema error!");
 
     let mut handles = Vec::with_capacity(partition_num);
     for i in 0..partition_num {
         let raw_dir = raw_data_dir.clone();
         let graph_dir = graph_data_dir.clone();
-        let schema_f = schema_file.clone();
+        let out_dir = out_data_dir.clone();
+        let meta_f = meta_file.clone();
 
         let handle = std::thread::spawn(move || {
-            let mut loader: GraphLoader =
-                GraphLoader::new(raw_dir, graph_dir, schema_f, 20, i, partition_num);
+            let mut loader: GraphLoader = GraphLoader::new(raw_dir, graph_dir, meta_f, i, partition_num);
             loader = loader.with_delimiter(delimiter);
+            if i == 0 {
+                // the first thread
+                let schema = loader.get_ldbc_parser().get_graph_schema();
+                schema
+                    .to_json_file(&out_dir.join(FILE_SCHEMA))
+                    .expect("Write graph schema error!");
+            }
 
             loader.load().expect("Load error");
+
             let graph = loader.into_mutable_graph();
             graph.export().expect("Export error!");
         });

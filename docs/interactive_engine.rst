@@ -142,18 +142,19 @@ Below shows a Gremlin query for cycle detection, which tries to find cyclic path
 .. code:: java
 
     g.V('account').has('id','2').as('s')
-     .repeat(out('transfer').simplePath())
-     .times(k-1)
+     .out('k-1..k', 'transfer')
+     .with('PATH_OPT', 'SIMPLE')
+     .endV()
      .where(out('transfer').eq('s'))
      .path().limit(1)
 
-First, the source operator ``V`` (with the ``has`` filter) returns all the ``account`` vertices with an identifier of ``2``. The ``as`` operator is a *modulator* that does not change the input collection of traversers but introduces a name (``s`` in this case) for later references. Second, it traverses the outgoing ``transfer`` edges for exact ``k-1`` times, skipping any repeated vertices (by the ``simplePath`` operator). Third, the ``where`` operator checks if the starting vertex ``s`` can be reached by one more step, that is, whether a cycle of length ``k`` is formed. Finally, for qualifying traversers, the ``path`` operator returns the full path information. The ``limit`` operator at the end indicates only one such result is needed.
+First, the source operator ``V`` (with the ``has`` filter) returns all the ``account`` vertices with an identifier of ``2``. The ``as`` operator is a *modulator* that does not change the input collection of traversers but introduces a name (``s`` in this case) for later references. Second, it traverses the outgoing ``transfer`` edges for exact ``k-1`` times ( ``out()`` with a range of lower bound ``k-1`` (included) and upper bound ``k`` (excluded)), skipping any repeated vertices (``with()`` the ``SIMPLE`` path option). Third, the ``where`` operator checks if the starting vertex ``s`` can be reached by one more step, that is, whether a cycle of length ``k`` is formed. Finally, for qualifying traversers, the ``path`` operator returns the full path information. The ``limit`` operator at the end indicates only one such result is needed.
 
 
 Compatibility with TinkerPop
 ----------------------------
 
-GIE supports the property graph model and Gremlin traversal language defined by Apache TinkerPop, and provides a Gremlin *Websockets* server that supports TinkerPop version 3.3 and 3.4.  In this section, we provide an overview of the key differences between our implementation of Gremlin and the Apache TinkerPop specification.
+GIE supports the property graph model and Gremlin traversal language defined by Apache TinkerPop, and provides a Gremlin *Websockets* server that supports TinkerPop version 3.3 and 3.4. In addition to the original Gremlin queries, we further introduce some syntactic sugars to allow more succinct expression. In this section, we provide an overview of the key differences between our implementation of Gremlin and the Apache TinkerPop specification.
 
 Property graph constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -169,7 +170,7 @@ The current release (MaxGraph) leverages `Vineyard <https://github.com/v6d-io/v6
 Unsupported features
 ~~~~~~~~~~~~~~~~~~~~
 
-Because of the distributed nature of the system, the following features are not supported in this release:
+Because of the distributed nature of the system, the following features are not supported in the current release:
 
 - Graph mutations.
 
@@ -193,7 +194,7 @@ Currently GIE supports the following Gremlin steps:
     //V
     g.V()
     g.V(id1, id2)
-    
+
     //E
     g.E()
 
@@ -201,46 +202,81 @@ Currently GIE supports the following Gremlin steps:
 
 .. code:: java
 
+    //hasLabel
+    g.V().hasLabel("labelName")
+    g.V().hasLabel("labelName1", "labelName2")
+
     //has
     g.V().has("attrName")
     g.V().has("attrName", attrValue)
+    g.V().has("labelName", "attrName", attrValue)
+    g.V().has("attrName", eq(1))
+    g.V().has("attrName", neq(1))
+    g.V().has("attrName", lt(1))
+    g.V().has("attrName", lte(1))
     g.V().has("attrName", gt(1))
-    
+    g.V().has("attrName", gte(1))
+    g.V().has("attrName", within([1,2,3]))
+    g.V().has("attrName", without([1,2,3]))
+    g.V().has("attrName", inside(10, 20))
+    g.V().has("attrName", outside(10, 20))
+
+    // P.not
+    g.V().has("attrName", P.not(eq(10)))
+
     //is
     g.V().values("age").is(gt(70))
-    
-    //filter
-    g.V().filter(values("age").is(gt(20)))
-    
-    //where
+
+    //filter with expression (`expr()` syntactic sugar)
+    g.V().where(expr('@.age > 20')) //@.age refers to the "age" property of the head entry
+    g.V().as('a').out().as('b').where(expr('@a.age <= @b.age'))  //@a.age refers to the "age" property of the "a" entry
+    g.V().where(expr('30 within @.a'))  //the "a" property of the head entry has integer array type
+
+    //project with expression (`expr()` syntactic sugar)
+    g.V().select(expr("@.age")) //@.age refers to the "age" property of the head entry
+
+    //bits manipulation in expression
+    g.V().select(expr("@.number & 2")) //the "number" property of the head entry is integer type
+    g.V().select(expr("@.number | 2"))
+    g.V().select(expr("@.number ^ 2"))
+    g.V().select(expr("@.number << 2"))
+    g.V().select(expr("@.number >> 2"))
+    g.V().where(expr("@.number & 64 != 0"))
+
+    //arithmetic operations in expression
+    g.V().select(expr("@.number + 2"))
+    g.V().select(expr("@.number - 2"))
+    g.V().select(expr("@.number * 2"))
+    g.V().select(expr("@.number / 2"))
+    g.V().select(expr("(@.number + 2) / 4 + (@.age * 10)")) //the "number" and "age" properties of the head entry are integer type
+
+    //exponentiation in expression
+    g.V().select(expr("@.number ^^ 3"))
+    g.V().select(expr("@.number ^^ -3"))
+
+    //filter with a sub-query
     g.V().where(out().count().is(gt(4)))
-    
+
     //dedup
     g.V().out().dedup()
     g.V().out().dedup().by("name")
-    
-    //range
+    g.V().as("a").out().dedup("a")
+    g.V().as("a").out().dedup("a").by("name")
+
+    //limit
     g.V().out().limit(100)
+    // to supported
     g.V().out().range(10, 20)
-    
-    //simplePath
-    g.V().repeat(out().simplePath()).times(3).valeus("name")
-    
+
     //and/or
-    
-    //Text.*
-    g.V().has("name", Text.match(".*j.*"))
-    g.V().values("name").filter(Text.match(".*j.*"))
-    g.V().has("name", Text.startsWith("To"))
-    g.V().values("name").filter(Text.startsWith("To"))
-    
-    //P.not
-    g.V().has("name", P.not(Text.startsWith("To")))
-    
-    //Lists.contains*
-    g.V().has("a", Lists.contains(30))
-    g.V().values("a").filter(Lists.containsAny(Lists.of(10, 20, 30))
-    g.V().has("a", P.not(Lists.contains(30)))
+
+    //TextP.*
+    g.V().has("attrName", TextP.containing("substr"))
+    g.V().has("attrName", TextP.notContaining("substr"))
+    g.V().has("attrName", TextP.startingWith("substr"))
+    g.V().has("attrName", TextP.notStartingWith("substr"))
+    g.V().has("attrName", TextP.endingWith("substr"))
+    g.V().has("attrName", TextP.notEndingWith("substr"))
 
 - Map steps, e.g.,
 
@@ -249,41 +285,19 @@ Currently GIE supports the following Gremlin steps:
     //constant
     g.V().out().contant(1)
     g.V().out().constant("aaa")
-    
-    //local count
-    g.V().out().values("age").fold().count(local)
-    
-    //local dedup
-    g.V().out().fold().dedup(local).by("name")
-    
-    //otherV
-    g.V().bothE().otherV()
-    
+
     //id
     g.V().id()
-    
+
     //label
     g.V().label()
-    
-    //local order
-    g.V().out().fold().order().by("name")
-    
-    //property key
-    g.V().properties("name").key()
-    
-    //property value
-    g.V().properties("name").value()
-    
-    //local range
-    g.V().out().fold().order(local).by("name").range(local, 2, 4)
-    
+
+    //otherV
+    g.V().bothE().otherV()
+
     //as...select
     g.V().as("a").out().out().select("a")
-    g.V().as("a").as("b").out("c").out().select("a", "b", "c")
-    
-    //path
-    g.V().out().in().path()
-    g.V().outE().inV().path().bay("name").by("weight").by("name")
+    g.V().as("a").out().as("b").out().as('c').select("a", "b", "c")
 
 - FlatMap steps, e.g.,
 
@@ -291,24 +305,28 @@ Currently GIE supports the following Gremlin steps:
 
     //out/in/both
     g.V().out()
-    g.V().in('person_knows_person')
-    
+    g.V().in('knows')
+
     //outE/inE/inV/outV
-    g.V().outE('person_knows_person').inV()
+    g.V().outE('knows').inV()
     g.V().inE().bothV()
-    
+
+    //path expansion (syntactic sugar)
+    //all simple path (vertex cannot duplicate) from `V()` via `knows` edge
+    //with at least 2 hops (included) and at most 4 hops (excluded)
+    //keep only the end vertex of the path
+    g.V().out('2..4', 'knows').with('PATH_OPT', 'SIMPLE').with('RESULT_OPT', 'END_V').endV()
+    //all arbitrary path (vertex can duplicate) from `V()` via `knows` edge
+    //with at least 2 hops (included) and at most 4 hops (excluded)
+    //keep all vertices of the path
+    g.V().out('2..4', 'knows').with('PATH_OPT', 'ARBITRARY').with('RESULT_OPT', 'ALL_V')
+
     //properties
-    g.V().values()
-    g.V().values("name", "age")
-    g.V().valueMap()
-    
-    //branch with option
-    g.V().branch(values("name")).option("tom", out()).option("lop", in()).option(none, valueMap())
-    g.V().branch(out.count()).option(0L, valueMap()).option(1L, out()).option(any, in())
-    
-    //unfold
-    g.V().group().by().by(values("name")).select(values).unfold()
-    
+    g.V().values("name")
+    g.V().valueMap() // print all properties
+    g.V().valueMap("name")
+    g.V().valueMap("name", "age")
+
 - Aggregate steps, e.g.,
 
 .. code:: java
@@ -316,54 +334,52 @@ Currently GIE supports the following Gremlin steps:
     //global count
     g.V().out().count()
     g.V().where(out().in().count().is(0))
-    
+
     //fold
     g.V().fold()
     g.V().values("name").fold()
-    
+
     //groupCount
     g.V().out().groupCount()
     g.V().values("name").groupCount()
-    
+
     //groupBy
     g.V().out().group()
     g.V().out().group().by("name")
     g.V().out().group().by().by("name")
-    
+
+    //groupBy multiple keys and set aliases
+    g.V().group().by(values("name").as("name"), values("age").as("age"))
+
+    //groupBy multiple aggFuncs and set aliases
+    g.V().group().by().by(min().as("min"), max().as("max"))
+
     //global max/min
     g.V().values("age").max()
     g.V().values("age").min()
-    
+
     //global sum
     g.V().values("age").sum()
 
-- Loop steps, e.g.,
-
+- Match step, e.g.,
 .. code:: java
-
-    //repeat...times
-    g.V().repeat(out()).times(4).valueMap()
-    
-    //repeat...until
-    g.V().repeat(out()).until(out().count().is(eq(0))).valueMap()
-    g.V().repeat(out()).until(out().count().is(eq(0)).or().loops().is(gt(3))).where(out().count().is(eq(0)))
-    
-    //emit
-    g.V().emit().repeat(out()).times(4).valueMap()
-    
-- Limit step.
+    g.V().match(
+        __.as('a').out().as('b'),
+        __.as('b').out().as('c')
+    ).select('a', 'c')
 
 Known limitations
-~~~~~~~~~~~~~~~~~
 
-The following steps are not currently available.
+The following steps/functionalities are not currently available.
 
-- Match
+- Repeat (as most repeat cases can be fulfilled via path expansion syntactic sugar)
+- path()/simplePath() (as most cases can be fulfilled via path expansion syntactic sugar )
+- Local (some local operations such as count(local), dedup(local), etc.)
+- Branch
 - Explain
 - Profile
 - Sack
-- Subgraph (a simplified version to extract subgraphs into Vineyard is supported) 
+- Subgraph (a simplified version to extract subgraphs into Vineyard is supported)
 - Cap
 - ``GraphComputer`` API (such as PageRank and ShortestPath) -- please use the GraphScope Analytics Engine for the same purpose instead.
 
-In addition, the Repeat step is supported, unless it is nested within another Repeat step.

@@ -121,6 +121,22 @@ public interface PredicateExprTransform extends Function<Step, String> {
                                                     getPredicateValue(t.getRight()),
                                                     t.getMiddle(),
                                                     t.getLeft()));
+                } else if (biPredicate == Text.startingWith) {
+                    expr += getPredicateExpr(subject, "StartsWith", predicateValue, defaultFormat);
+                } else if (biPredicate == Text.notStartingWith) {
+                    expr +=
+                            String.format(
+                                    "!(%s)",
+                                    getPredicateExpr(
+                                            subject, "StartsWith", predicateValue, defaultFormat));
+                } else if (biPredicate == Text.endingWith) {
+                    expr += getPredicateExpr(subject, "EndsWith", predicateValue, defaultFormat);
+                } else if (biPredicate == Text.notEndingWith) {
+                    expr +=
+                            String.format(
+                                    "!(%s)",
+                                    getPredicateExpr(
+                                            subject, "EndsWith", predicateValue, defaultFormat));
                 } else {
                     throw new OpArgIllegalException(
                             OpArgIllegalException.Cause.UNSUPPORTED_TYPE,

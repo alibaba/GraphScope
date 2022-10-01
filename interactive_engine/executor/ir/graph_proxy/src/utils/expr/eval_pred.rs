@@ -362,7 +362,9 @@ impl EvalPred for Predicate {
             | Logical::Gt
             | Logical::Ge
             | Logical::Within
-            | Logical::Without => Ok(apply_logical(
+            | Logical::Without
+            | Logical::Startswith
+            | Logical::Endswith => Ok(apply_logical(
                 &self.cmp,
                 self.left.eval(context)?.as_borrow_object(),
                 Some(self.right.eval(context)?.as_borrow_object()),
@@ -462,7 +464,9 @@ fn process_predicates(
                             | Logical::Gt
                             | Logical::Ge
                             | Logical::Within
-                            | Logical::Without => partial.cmp(logical)?,
+                            | Logical::Without
+                            | Logical::Startswith
+                            | Logical::Endswith => partial.cmp(logical)?,
                             Logical::Not => is_not = true,
                             Logical::And | Logical::Or => {
                                 predicates = predicates.merge_partial(curr_cmp, partial, is_not)?;
@@ -889,6 +893,24 @@ mod tests {
         let expr = str_to_expr_pb("@0.name == \"Tom\" || @1.age > 27".to_string()).unwrap();
         let p_eval = PEvaluator::try_from(expr).unwrap();
         assert!(!p_eval
+            .eval_bool::<_, Vertices>(Some(&context))
+            .unwrap());
+
+        let expr = str_to_expr_pb("@0.name StartsWith \"Jo\"".to_string()).unwrap();
+        let p_eval = PEvaluator::try_from(expr).unwrap();
+        assert!(p_eval
+            .eval_bool::<_, Vertices>(Some(&context))
+            .unwrap());
+
+        let expr = str_to_expr_pb("@0.name EndsWith \"hn\"".to_string()).unwrap();
+        let p_eval = PEvaluator::try_from(expr).unwrap();
+        assert!(p_eval
+            .eval_bool::<_, Vertices>(Some(&context))
+            .unwrap());
+
+        let expr = str_to_expr_pb("\"John\" EndsWith \"hn\"".to_string()).unwrap();
+        let p_eval = PEvaluator::try_from(expr).unwrap();
+        assert!(p_eval
             .eval_bool::<_, Vertices>(Some(&context))
             .unwrap());
 

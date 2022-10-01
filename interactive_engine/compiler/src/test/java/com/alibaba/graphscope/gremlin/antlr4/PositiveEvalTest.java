@@ -899,6 +899,34 @@ public class PositiveEvalTest {
                 eval("g.V().has(\"name\", TextP.notContaining(\"marko\"))"));
     }
 
+    @Test
+    public void g_V_has_startingWith_test() {
+        Assert.assertEquals(
+                g.V().has("name", TextP.startingWith("marko")),
+                eval("g.V().has(\"name\", TextP.startingWith(\"marko\"))"));
+    }
+
+    @Test
+    public void g_V_has_notStartingWith_test() {
+        Assert.assertEquals(
+                g.V().has("name", TextP.notStartingWith("marko")),
+                eval("g.V().has(\"name\", TextP.notStartingWith(\"marko\"))"));
+    }
+
+    @Test
+    public void g_V_has_endingWith_test() {
+        Assert.assertEquals(
+                g.V().has("name", TextP.endingWith("marko")),
+                eval("g.V().has(\"name\", TextP.endingWith(\"marko\"))"));
+    }
+
+    @Test
+    public void g_V_has_notEndingWith_test() {
+        Assert.assertEquals(
+                g.V().has("name", TextP.notEndingWith("marko")),
+                eval("g.V().has(\"name\", TextP.notEndingWith(\"marko\"))"));
+    }
+
     // g.V().as("a").select("a").by(out("1..2").with("Result_Opt", AllV).count())
     @Test
     public void g_V_as_select_a_by_out_1_2_endV_count_test() {

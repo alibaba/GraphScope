@@ -15,6 +15,7 @@
 
 // Contains some dummy codes for LDBC dataset
 
+use std::collections::{BTreeMap, HashMap};
 use std::fmt::Debug;
 use std::fmt::Formatter;
 use std::fmt::Result as FmtResult;
@@ -35,8 +36,9 @@ use crate::common::{DefaultId, InternalId, LabelId, INVALID_LABEL_ID};
 use crate::config::{GraphDBConfig, JsonConf};
 use crate::error::{GDBError, GDBResult};
 use crate::graph_db::graph_db_impl::{LargeGraphDB, MutableGraphDB};
-use crate::parser::{parse_properties, EdgeMeta, ParserTrait, VertexMeta};
-use crate::schema::{LDBCGraphSchema, Schema, ID_FIELD, LABEL_FIELD};
+use crate::parser::{parse_properties, ColumnMeta, DataType, EdgeMeta, ParserTrait, VertexMeta};
+use crate::schema::{LDBCGraphSchema, END_ID_FIELD, ID_FIELD, LABEL_FIELD, START_ID_FIELD};
+use crate::table::Row;
 
 /// A ldbc raw file ends with "_0_0.csv"
 pub static LDBC_SUFFIX: &'static str = "_0_0.csv";
@@ -64,67 +66,274 @@ pub fn is_hidden_file(fname: &str) -> bool {
     fname.starts_with('.')
 }
 
-/// Verify if a given folder stores vertex or edge
-pub fn is_vertex_file(fname: &str) -> bool {
-    fname.find('_').is_none()
+#[derive(Serialize, Deserialize, Clone, Default)]
+struct Columns {
+    /// To record each column' name and data type sequentially in a row
+    columns: Vec<ColumnMeta>,
+    /// To record mapping from columns' name to its position in a row
+    column_indices: BTreeMap<String, usize>,
+}
+
+impl Columns {
+    fn get_columns(&self) -> &[ColumnMeta] {
+        self.columns.as_slice()
+    }
+
+    fn get_column_index(&self, col_name: &str) -> Option<usize> {
+        self.column_indices.get(col_name).cloned()
+    }
+}
+
+#[derive(Clone, Default)]
+pub struct LDBCMetaData {
+    /// To map from a vertex type to the vertex metadata
+    vertex_map: BTreeMap<String, Arc<Columns>>,
+    /// To map from an edge type to the edge metadata,
+    edge_map: BTreeMap<String, Arc<Columns>>,
+}
+
+impl LDBCMetaData {
+    pub fn get_vertex_header(&self, vertex_type: &str) -> Option<&[ColumnMeta]> {
+        self.vertex_map
+            .get(vertex_type)
+            .map(|meta| meta.get_columns())
+    }
+
+    pub fn get_edge_header(&self, edge_type: &str) -> Option<&[ColumnMeta]> {
+        self.edge_map
+            .get(edge_type)
+            .map(|meta| meta.get_columns())
+    }
+}
+
+/// An edge's type is a 3-tuple: (edge_type, src_vertex_type, dst_vertex_type).
+/// For example, a 'KNOWS' edge connects two 'PERSON' vertices, then its type is
+/// '(KNOWS, PERSON, PERSON)'
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct EdgeTypeTuple {
+    etype: String,
+    src_vertex_type: String,
+    dst_vertex_type: String,
+}
+
+impl EdgeTypeTuple {
+    pub fn new(etype: String, src_vertex_type: String, dst_vertex_type: String) -> Self {
+        Self { etype, src_vertex_type, dst_vertex_type }
+    }
+
+    /// Get edge's type
+    pub fn get(&self) -> &str {
+        &self.etype
+    }
+
+    /// Get source vertex's type
+    pub fn get_src(&self) -> &str {
+        &self.src_vertex_type
+    }
+
+    /// Get destination vertex's type
+    pub fn get_dst(&self) -> &str {
+        &self.dst_vertex_type
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct LDBCParserJsonSer {
+    vertex_table_to_type: BTreeMap<String, String>,
+    edge_table_to_type: BTreeMap<String, EdgeTypeTuple>,
+    vertex_type_to_id: BTreeMap<String, LabelId>,
+    edge_type_to_id: BTreeMap<String, LabelId>,
+    vertex_type_hierarchy: BTreeMap<String, Vec<String>>,
+    column_name_to_id: BTreeMap<String, LabelId>,
+    vertex_columns: BTreeMap<String, Vec<(String, DataType, bool)>>,
+    edge_columns: BTreeMap<String, Vec<(String, DataType, bool)>>,
+}
+
+impl JsonConf for LDBCParserJsonSer {}
+
+impl From<LDBCParserJsonSer> for LDBCParser {
+    fn from(json: LDBCParserJsonSer) -> Self {
+        let mut meta_data = LDBCMetaData::default();
+        for (ty, columns) in &json.vertex_columns {
+            let mut vertex_meta = Columns::default();
+            for (index, col_tuple) in columns.iter().enumerate() {
+                vertex_meta
+                    .columns
+                    .push(col_tuple.clone().into());
+                vertex_meta
+                    .column_indices
+                    .insert(col_tuple.0.clone(), index);
+            }
+            meta_data
+                .vertex_map
+                .insert(ty.clone(), Arc::new(vertex_meta));
+        }
+        for (ty, columns) in &json.edge_columns {
+            let mut edge_meta = Columns::default();
+            for (index, col_tuple) in columns.iter().enumerate() {
+                edge_meta.columns.push(col_tuple.clone().into());
+                edge_meta
+                    .column_indices
+                    .insert(col_tuple.0.clone(), index);
+            }
+            meta_data
+                .edge_map
+                .insert(ty.clone(), Arc::new(edge_meta));
+        }
+        LDBCParser {
+            vertex_table_to_type: json.vertex_table_to_type.into_iter().collect(),
+            edge_table_to_type: json.edge_table_to_type.into_iter().collect(),
+            vertex_type_to_id: Arc::new(json.vertex_type_to_id.into_iter().collect()),
+            edge_type_to_id: json.edge_type_to_id.into_iter().collect(),
+            vertex_type_hierarchy: json.vertex_type_hierarchy.into_iter().collect(),
+            meta_data,
+        }
+    }
 }
 
 /// `LDBCParser` defines parsing from the original LDBC-generated raw files.
-pub enum LDBCParser<G = DefaultId> {
-    Vertex(LDBCVertexParser<G>),
-    Edge(LDBCEdgeParser<G>),
+#[derive(Clone)]
+pub struct LDBCParser {
+    vertex_table_to_type: HashMap<String, String>,
+    edge_table_to_type: HashMap<String, EdgeTypeTuple>,
+    vertex_type_to_id: Arc<HashMap<String, LabelId>>,
+    edge_type_to_id: HashMap<String, LabelId>,
+    /// Some vertex type many contain sub-types, such as:
+    /// PLACE: COUNTRY, CITY, CONTINENT
+    vertex_type_hierarchy: HashMap<String, Vec<String>>,
+    /// The LDBC metadata
+    meta_data: LDBCMetaData,
 }
 
-impl<G> LDBCParser<G> {
-    pub fn vertex_parser(vertex_type_id: LabelId, schema: Arc<dyn Schema>) -> GDBResult<Self> {
-        let header = schema
-            .get_vertex_schema(vertex_type_id)
-            .ok_or(GDBError::InvalidTypeError)?;
-        let id_field = header
-            .get(ID_FIELD)
-            .ok_or(GDBError::FieldNotExistError)?;
-        let label_field = header.get(LABEL_FIELD);
-
-        Ok(LDBCParser::Vertex(LDBCVertexParser {
-            vertex_type: vertex_type_id,
-            id_index: id_field.1,
-            label_index: label_field.map(|x| x.1),
-            schema,
-            ph: PhantomData,
-        }))
+impl LDBCParser {
+    pub fn get_vertex_type(&self, vertex_table: &str) -> Option<&String> {
+        self.vertex_table_to_type.get(vertex_table)
     }
 
-    pub fn edge_parser(
-        src_vertex_type_id: LabelId, dst_vertex_type_id: LabelId, edge_type_id: LabelId,
-        _schema: Arc<dyn Schema>,
-    ) -> GDBResult<Self> {
-        Ok(LDBCParser::Edge(LDBCEdgeParser {
+    pub fn get_edge_type(&self, edge_table: &str) -> Option<&EdgeTypeTuple> {
+        self.edge_table_to_type.get(edge_table)
+    }
+
+    /// Get the parser for the specific vertex file
+    pub fn get_vertex_parser<G>(&self, vertex_type: &str) -> GDBResult<LDBCVertexParser<G>> {
+        let vertex_meta = self
+            .meta_data
+            .vertex_map
+            .get(vertex_type)
+            .ok_or(GDBError::InvalidTypeError(vertex_type.to_string()))?;
+        let id_index = vertex_meta
+            .get_column_index(ID_FIELD)
+            .ok_or(GDBError::FieldNotExistError)?;
+        let label_index = vertex_meta.get_column_index(LABEL_FIELD);
+        let vertex_type_id = *self
+            .vertex_type_to_id
+            .get(vertex_type)
+            .ok_or(GDBError::InvalidTypeError(vertex_type.to_string()))?;
+
+        Ok(LDBCVertexParser {
+            vertex_type: vertex_type_id,
+            id_index,
+            label_index,
+            vertex_type_to_id: self.vertex_type_to_id.clone(),
+            columns: vertex_meta.clone(),
+            ph: PhantomData,
+        })
+    }
+
+    pub fn get_edge_parser<G>(&self, edge_type: &EdgeTypeTuple) -> GDBResult<LDBCEdgeParser<G>> {
+        let edge_meta = self
+            .meta_data
+            .edge_map
+            .get(edge_type.get())
+            .ok_or(GDBError::InvalidTypeError(edge_type.get().to_string()))?;
+        let src_id_index = edge_meta
+            .get_column_index(START_ID_FIELD)
+            .ok_or(GDBError::ParseError)?;
+        let dst_id_index = edge_meta
+            .get_column_index(END_ID_FIELD)
+            .ok_or(GDBError::ParseError)?;
+        let edge_type_id = *self
+            .edge_type_to_id
+            .get(edge_type.get())
+            .ok_or(GDBError::InvalidTypeError(edge_type.get().to_string()))?;
+        let src_vertex_type_id = *self
+            .vertex_type_to_id
+            .get(edge_type.get_src())
+            .ok_or(GDBError::InvalidTypeError(edge_type.get_src().to_string()))?;
+        let dst_vertex_type_id = *self
+            .vertex_type_to_id
+            .get(edge_type.get_dst())
+            .ok_or(GDBError::InvalidTypeError(edge_type.get_dst().to_string()))?;
+
+        Ok(LDBCEdgeParser {
+            src_id_index,
+            dst_id_index,
             src_vertex_type: src_vertex_type_id,
             dst_vertex_type: dst_vertex_type_id,
             edge_type: edge_type_id,
-            // schema,
+            columns: edge_meta.clone(),
             ph: PhantomData,
-        }))
-    }
-}
-
-impl<G: FromStr + PartialEq + Default + IndexType> ParserTrait<G> for LDBCParser<G> {
-    fn parse_vertex_meta<'a, Iter: Iterator<Item = &'a str>>(
-        &self, record_iter: Iter,
-    ) -> GDBResult<VertexMeta<G>> {
-        match &self {
-            LDBCParser::Vertex(parser) => parser.parse_vertex_meta(record_iter),
-            LDBCParser::Edge(parser) => parser.parse_vertex_meta(record_iter),
-        }
+        })
     }
 
-    fn parse_edge_meta<'a, Iter: Iterator<Item = &'a str>>(
-        &self, record_iter: Iter,
-    ) -> GDBResult<EdgeMeta<G>> {
-        match &self {
-            LDBCParser::Vertex(parser) => parser.parse_edge_meta(record_iter),
-            LDBCParser::Edge(parser) => parser.parse_edge_meta(record_iter),
+    pub fn get_graph_schema(&self) -> LDBCGraphSchema {
+        let mut vertex_prop_meta: HashMap<_, HashMap<String, (DataType, usize)>> = HashMap::new();
+        let mut vertex_prop_vec: HashMap<_, Vec<(String, DataType)>> = HashMap::new();
+        let mut edge_prop_meta: HashMap<_, HashMap<String, (DataType, usize)>> = HashMap::new();
+        let mut edge_prop_vec: HashMap<_, Vec<(String, DataType)>> = HashMap::new();
+        for (ty, meta) in &self.meta_data.vertex_map {
+            if let Some(&v_type_id) = self.vertex_type_to_id.get(ty) {
+                let vertex_map = vertex_prop_meta.entry(v_type_id).or_default();
+                let vertex_vec = vertex_prop_vec.entry(v_type_id).or_default();
+                let mut index: usize = 0;
+                for column_meta in meta.get_columns() {
+                    let col_name = column_meta.name.as_str();
+                    let dt = column_meta.data_type;
+                    if col_name != LABEL_FIELD {
+                        vertex_map.insert(col_name.to_string(), (dt, index));
+                        vertex_vec.push((col_name.to_string(), dt));
+                        index += 1;
+                    }
+                }
+
+                // There is extra type for this vertex
+                if let Some(subtypes) = self.vertex_type_hierarchy.get(ty) {
+                    let clone_vertex_map = vertex_map.clone();
+                    let clone_vertex_vec = vertex_vec.clone();
+                    for subtype in subtypes {
+                        if let Some(&v_type_id) = self.vertex_type_to_id.get(subtype) {
+                            vertex_prop_meta.insert(v_type_id, clone_vertex_map.clone());
+                            vertex_prop_vec.insert(v_type_id, clone_vertex_vec.clone());
+                        }
+                    }
+                }
+            }
         }
+        for (ty, meta) in &self.meta_data.edge_map {
+            if let Some(&e_type_id) = self.edge_type_to_id.get(ty) {
+                let edge_map = edge_prop_meta.entry(e_type_id).or_default();
+                let edge_vec = edge_prop_vec.entry(e_type_id).or_default();
+                let mut index: usize = 0;
+                for column_meta in meta.get_columns() {
+                    let col_name = column_meta.name.as_str();
+                    let dt = column_meta.data_type;
+                    if col_name != START_ID_FIELD && col_name != END_ID_FIELD {
+                        edge_map.insert(col_name.to_string(), (dt, index));
+                        edge_vec.push((col_name.to_string(), dt));
+                        index += 1;
+                    }
+                }
+            }
+        }
+
+        LDBCGraphSchema::new(
+            self.vertex_type_to_id.as_ref().clone(),
+            self.edge_type_to_id.clone(),
+            vertex_prop_meta,
+            vertex_prop_vec,
+            edge_prop_meta,
+            edge_prop_vec,
+        )
     }
 }
 
@@ -134,7 +343,8 @@ pub struct LDBCVertexParser<G = DefaultId> {
     vertex_type: LabelId,
     id_index: usize,
     label_index: Option<usize>,
-    schema: Arc<dyn Schema>,
+    vertex_type_to_id: Arc<HashMap<String, LabelId>>,
+    columns: Arc<Columns>,
     ph: PhantomData<G>,
 }
 
@@ -161,16 +371,18 @@ impl<G: FromStr + PartialEq + Default + IndexType> ParserTrait<G> for LDBCVertex
                 if index == self.id_index {
                     id = record.parse::<usize>()?;
                 } else if index == label_index {
-                    extra_label_id = self
-                        .schema
-                        .get_vertex_label_id(&record.to_uppercase())
+                    extra_label_id = *self
+                        .vertex_type_to_id
+                        .get(&record.to_uppercase())
                         .ok_or(GDBError::FieldNotExistError)?;
                     // can break here because id always presents before label
                     break;
                 }
             } else {
-                id = record.parse::<usize>()?;
-                break;
+                if index == self.id_index {
+                    id = record.parse::<usize>()?;
+                    break;
+                }
             }
         }
 
@@ -189,14 +401,20 @@ impl<G: FromStr + PartialEq + Default + IndexType> ParserTrait<G> for LDBCVertex
         // return error as a VertexParser should not parse an edge
         Err(GDBError::InvalidFunctionCallError)
     }
+
+    fn parse_properties<'a, Iter: Iterator<Item = &'a str>>(&self, record_iter: Iter) -> GDBResult<Row> {
+        parse_properties(record_iter, Some(self.columns.get_columns()))
+    }
 }
 
 /// Define parsing a LDBC edge
 pub struct LDBCEdgeParser<G = DefaultId> {
+    src_id_index: usize,
+    dst_id_index: usize,
     src_vertex_type: LabelId,
     dst_vertex_type: LabelId,
     edge_type: LabelId,
-    // schema: Arc<dyn Schema>,
+    columns: Arc<Columns>,
     ph: PhantomData<G>,
 }
 
@@ -211,20 +429,22 @@ impl<G: FromStr + PartialEq + Default + IndexType> ParserTrait<G> for LDBCEdgePa
     fn parse_edge_meta<'a, Iter: Iterator<Item = &'a str>>(
         &self, record_iter: Iter,
     ) -> GDBResult<EdgeMeta<G>> {
-        let mut src_ldbc_id = 0_usize;
-        let mut dst_ldbc_id = 0_usize;
+        let mut src_ldbc_id: i64 = -1;
+        let mut dst_ldbc_id: i64 = -1;
 
         for (index, record) in record_iter.enumerate() {
-            if index == 0 {
-                src_ldbc_id = record.parse::<usize>()?;
-            } else if index == 1 {
-                dst_ldbc_id = record.parse::<usize>()?;
+            if index == self.src_id_index {
+                src_ldbc_id = record.parse::<i64>()?;
+            } else if index == self.dst_id_index {
+                dst_ldbc_id = record.parse::<i64>()?;
+            }
+            if src_ldbc_id != -1 && dst_ldbc_id != -1 {
                 break;
             }
         }
 
-        let src_global_id = LDBCVertexParser::to_global_id(src_ldbc_id, self.src_vertex_type);
-        let dst_global_id = LDBCVertexParser::to_global_id(dst_ldbc_id, self.dst_vertex_type);
+        let src_global_id = LDBCVertexParser::to_global_id(src_ldbc_id as usize, self.src_vertex_type);
+        let dst_global_id = LDBCVertexParser::to_global_id(dst_ldbc_id as usize, self.dst_vertex_type);
 
         let edge_meta = EdgeMeta {
             src_global_id,
@@ -238,6 +458,10 @@ impl<G: FromStr + PartialEq + Default + IndexType> ParserTrait<G> for LDBCEdgePa
 
         Ok(edge_meta)
     }
+
+    fn parse_properties<'a, Iter: Iterator<Item = &'a str>>(&self, record_iter: Iter) -> GDBResult<Row> {
+        parse_properties(record_iter, Some(self.columns.get_columns()))
+    }
 }
 
 /// Load the Graph's raw data into `LargeGraphDB`
@@ -250,8 +474,7 @@ pub struct GraphLoader<
     /// The graph loading toolkits
     graph_builder: MutableGraphDB<G, I>,
     /// The schema for loading graph data
-    graph_schema: Arc<LDBCGraphSchema>,
-
+    ldbc_parser: LDBCParser,
     /// A delimiter for splitting the fields in the raw data
     delim: u8,
     /// A timer to measure the time of loading
@@ -274,11 +497,17 @@ fn keep_vertex<G: IndexType>(vid: G, peers: usize, work_id: usize) -> bool {
 impl<G: IndexType + Eq + FromStr + Send + Sync, I: IndexType + Send + Sync> GraphLoader<G, I> {
     /// Load vertices recorded in the file of `vertex_type` into the database.
     /// Return the number of vertices that are successfully loaded.
-    fn load_vertices_to_db<R: Read>(&mut self, vertex_type: LabelId, mut rdr: Reader<R>) -> usize {
+    fn load_vertices_to_db<R: Read>(&mut self, vertex_table: &str, mut rdr: Reader<R>) -> usize {
         let mut num_vertices = 0_usize;
         let graph_db = &mut self.graph_builder;
-        let schema = self.graph_schema.clone();
-        let parser = LDBCParser::<G>::vertex_parser(vertex_type, schema).expect("Get vertex parser error!");
+        let vertex_type = self
+            .ldbc_parser
+            .get_vertex_type(vertex_table)
+            .expect("the vertex file is not recorded");
+        let parser = self
+            .ldbc_parser
+            .get_vertex_parser(vertex_type)
+            .expect("Get vertex parser error!");
         let timer = Instant::now();
         let mut start;
         let mut end;
@@ -290,10 +519,7 @@ impl<G: IndexType + Eq + FromStr + Send + Sync, I: IndexType + Send + Sync> Grap
                 let mut parse_error = true;
                 if let Ok(vertex_meta) = parser.parse_vertex_meta(record_iter) {
                     if keep_vertex(vertex_meta.global_id, self.peers, self.work_id) {
-                        if let Ok(properties) = parse_properties(
-                            record_iter_cloned,
-                            self.graph_schema.get_vertex_header(vertex_type),
-                        ) {
+                        if let Ok(properties) = parser.parse_properties(record_iter_cloned) {
                             end = timer.elapsed().as_secs_f64();
                             self.perf_metrics.vertex_parse_time_s += end - start;
                             start = end;
@@ -345,14 +571,16 @@ impl<G: IndexType + Eq + FromStr + Send + Sync, I: IndexType + Send + Sync> Grap
 
     /// Load edges recorded in the file of `edge_type` into the database.
     /// Return the number of edges that are successfully loaded.
-    fn load_edges_to_db<R: Read>(
-        &mut self, src_vertex_type: LabelId, dst_vertex_type: LabelId, edge_type: LabelId,
-        mut rdr: Reader<R>,
-    ) -> usize {
+    fn load_edges_to_db<R: Read>(&mut self, edge_table: &str, mut rdr: Reader<R>) -> usize {
         let mut num_edges = 0_usize;
         let graph_db = &mut self.graph_builder;
-        let schema = self.graph_schema.clone();
-        let parser = LDBCParser::<G>::edge_parser(src_vertex_type, dst_vertex_type, edge_type, schema)
+        let edge_type = self
+            .ldbc_parser
+            .get_edge_type(edge_table)
+            .expect("the give edge file is not recorded");
+        let parser = self
+            .ldbc_parser
+            .get_edge_parser(edge_type)
             .expect("Get edge parser error!");
         let timer = Instant::now();
         let mut start;
@@ -365,9 +593,7 @@ impl<G: IndexType + Eq + FromStr + Send + Sync, I: IndexType + Send + Sync> Grap
                 let record_iter_cloned = record_iter.clone();
 
                 if let Ok(edge_meta) = parser.parse_edge_meta(record_iter) {
-                    if let Ok(properties) =
-                        parse_properties(record_iter_cloned, self.graph_schema.get_edge_header(edge_type))
-                    {
+                    if let Ok(properties) = parser.parse_properties(record_iter_cloned) {
                         end = timer.elapsed().as_secs_f64();
                         self.perf_metrics.edge_parse_time_s += end - start;
                         start = end;
@@ -431,76 +657,71 @@ impl<G: IndexType + Eq + FromStr + Send + Sync, I: IndexType + Send + Sync> Grap
 
     /// Load from raw data to a graph database.
     pub fn load(&mut self) -> GDBResult<()> {
-        let (vertex_files, edge_files) =
-            split_vertex_edge_files(self.raw_data_dir.clone(), self.work_id, self.peers)?;
+        let files = get_graph_files(self.raw_data_dir.clone(), self.work_id, self.peers)?;
 
-        for (vertex_type, vertex_file) in vertex_files {
-            let rdr = ReaderBuilder::new()
-                .delimiter(self.delim)
-                .buffer_capacity(4096)
-                .comment(Some(b'#'))
-                .flexible(true)
-                .has_headers(false)
-                .from_reader(BufReader::new(File::open(&vertex_file).unwrap()));
-
-            if let Some(vertex_type_id) = self
-                .graph_schema
-                .get_vertex_label_id(&vertex_type)
+        for (filename, path) in files.iter() {
+            if self
+                .ldbc_parser
+                .get_vertex_type(filename)
+                .is_some()
             {
-                info!("Process vertex type & file {:?} {:?}", vertex_type, vertex_file);
-                self.load_vertices_to_db(vertex_type_id, rdr);
-            } else {
-                debug!("Invalid vertex type: {}", vertex_type);
-            }
-        }
-
-        for (edge_type, edge_file) in edge_files {
-            if let Some(label_tuple) = self
-                .graph_schema
-                .get_edge_label_tuple(&edge_type)
-            {
-                info!("Process edge type & file {} {:?}", edge_type, edge_file);
                 let rdr = ReaderBuilder::new()
                     .delimiter(self.delim)
                     .buffer_capacity(4096)
                     .comment(Some(b'#'))
                     .flexible(true)
                     .has_headers(false)
-                    .from_reader(BufReader::new(File::open(&edge_file)?));
+                    .from_reader(BufReader::new(File::open(path).unwrap()));
 
-                self.load_edges_to_db(
-                    label_tuple.src_vertex_label,
-                    label_tuple.dst_vertex_label,
-                    label_tuple.edge_label,
-                    rdr,
-                );
-            } else {
-                debug!("Invalid edge type: {}", edge_type);
+                self.load_vertices_to_db(filename, rdr);
             }
         }
+
+        for (filename, path) in files.iter() {
+            if self
+                .ldbc_parser
+                .get_edge_type(filename)
+                .is_some()
+            {
+                let rdr = ReaderBuilder::new()
+                    .delimiter(self.delim)
+                    .buffer_capacity(4096)
+                    .comment(Some(b'#'))
+                    .flexible(true)
+                    .has_headers(false)
+                    .from_reader(BufReader::new(File::open(path).unwrap()));
+
+                self.load_edges_to_db(filename, rdr);
+            }
+        }
+
         info!("Total time: {:?}", self.timer.elapsed().as_secs_f64());
         info!("Time in details: {:?}", self.perf_metrics);
 
         Ok(())
     }
+
+    pub fn get_ldbc_parser(&self) -> &LDBCParser {
+        &self.ldbc_parser
+    }
 }
 
 impl<G: FromStr + Send + Sync + IndexType, I: Send + Sync + IndexType> GraphLoader<G, I> {
     pub fn new<D: AsRef<Path>>(
-        raw_data_dir: D, graph_data_dir: D, schema_file: D, number_vertex_labels: usize, work_id: usize,
-        peers: usize,
+        raw_data_dir: D, graph_data_dir: D, ldbc_meta_file: D, work_id: usize, peers: usize,
     ) -> GraphLoader<G, I> {
         let config = GraphDBConfig::default()
             .root_dir(graph_data_dir)
-            .number_vertex_labels(number_vertex_labels)
             .partition(work_id);
 
-        let schema = LDBCGraphSchema::from_json_file(schema_file).expect("Read graph schema error!");
+        let parser_json =
+            LDBCParserJsonSer::from_json_file(ldbc_meta_file).expect("Read ldbc metadata error!");
+        let ldbc_parser = parser_json.into();
 
         Self {
             raw_data_dir: raw_data_dir.as_ref().to_path_buf(),
             graph_builder: config.new(),
-            graph_schema: Arc::new(schema),
+            ldbc_parser,
             delim: b'|',
             timer: Instant::now(),
             work_id,
@@ -522,8 +743,7 @@ impl<G: FromStr + Send + Sync + IndexType, I: Send + Sync + IndexType> GraphLoad
     }
 
     pub fn into_graph(self) -> LargeGraphDB<G, I> {
-        let mut schema = self.graph_schema.as_ref().clone();
-        schema.trim();
+        let schema = self.ldbc_parser.get_graph_schema();
         self.graph_builder.into_graph(schema)
     }
 }
@@ -540,52 +760,35 @@ fn get_fname_from_path(path: &PathBuf) -> GDBResult<&str> {
 
 /// Recursively visit the directory in order to locate the input raw files.
 fn visit_dirs(
-    vertex_files: &mut Vec<(String, PathBuf)>, edge_files: &mut Vec<(String, PathBuf)>,
-    raw_data_dir: PathBuf, work_id: usize, peers: usize,
+    files: &mut BTreeMap<String, PathBuf>, raw_data_dir: PathBuf, work_id: usize, peers: usize,
 ) -> GDBResult<()> {
     if raw_data_dir.is_dir() {
         for _entry in read_dir(&raw_data_dir)? {
             let entry = _entry?;
             let path = entry.path();
             if path.is_dir() {
-                visit_dirs(vertex_files, edge_files, path, work_id, peers)?
+                visit_dirs(files, path, work_id, peers)?
             } else {
                 let fname = get_fname_from_path(&path)?;
                 if is_hidden_file(fname) {
                     continue;
                 }
-                let dname = if let Some(index) = fname.find(LDBC_SUFFIX) {
-                    let (dname, _) = fname.split_at(index);
-                    dname
-                } else if let Some(index) = fname.find(".") {
-                    let (dname, _) = fname.split_at(index);
-                    dname
-                } else {
-                    fname
-                };
-
-                if is_vertex_file(dname) {
-                    vertex_files.push((dname.to_uppercase(), path));
-                } else {
-                    edge_files.push((dname.to_uppercase(), path));
-                }
+                files.insert(fname.to_string(), path);
             }
         }
     }
     Ok(())
 }
 
-fn split_vertex_edge_files(
+/// To recursively visit the directory from `raw_data_dir` to obtain all files
+/// that record vertex/edge data.
+fn get_graph_files(
     raw_data_dir: PathBuf, work_id: usize, peers: usize,
-) -> GDBResult<(Vec<(String, PathBuf)>, Vec<(String, PathBuf)>)> {
-    let mut vertex_files = Vec::new();
-    let mut edge_files = Vec::new();
-    visit_dirs(&mut vertex_files, &mut edge_files, raw_data_dir, work_id, peers)?;
+) -> GDBResult<BTreeMap<String, PathBuf>> {
+    let mut files = BTreeMap::new();
+    visit_dirs(&mut files, raw_data_dir, work_id, peers)?;
 
-    vertex_files.sort_by(|x, y| x.0.cmp(&y.0));
-    edge_files.sort_by(|x, y| x.0.cmp(&y.0));
-
-    Ok((vertex_files, edge_files))
+    Ok(files)
 }
 
 /// Record the performance metrics
@@ -668,13 +871,15 @@ mod test {
         let company_id: LabelId = 11;
         let place_id: LabelId = 0;
         let country_id: LabelId = 8;
-        let org_in_place_id: LabelId = 2;
+        let org_in_place_id: LabelId = 11;
 
-        let ldbc_schema_file = "data/schema.json";
-        let schema = Arc::new(LDBCGraphSchema::from_json_file(ldbc_schema_file).unwrap());
+        let ldbc_parser: LDBCParser = LDBCParserJsonSer::from_json_file("data/ldbc_metadata.json")
+            .unwrap()
+            .into();
 
         // Test parsing an organisation record from LDBC
-        let parser = LDBCParser::<DefaultId>::vertex_parser(org_id, schema.clone())
+        let parser = ldbc_parser
+            .get_vertex_parser("ORGANISATION")
             .expect("Get vertex parser error");
         let record = "0|Company|Kam_Air|http://dbpedia.org/resource/Kam_Air";
         let mut record_iter = record.split('|');
@@ -689,7 +894,12 @@ mod test {
         );
 
         let record_iter = record.split('|');
-        let properties = parse_properties(record_iter, schema.get_vertex_header(org_id));
+        let properties = parse_properties(
+            record_iter,
+            ldbc_parser
+                .meta_data
+                .get_vertex_header("ORGANISATION"),
+        );
         assert!(properties.is_ok());
         assert_eq!(
             properties.unwrap(),
@@ -697,7 +907,8 @@ mod test {
         );
 
         // Test parsing a place record from LDBC
-        let parser = LDBCParser::<DefaultId>::vertex_parser(place_id, schema.clone())
+        let parser = ldbc_parser
+            .get_vertex_parser("PLACE")
             .expect("Get vertex parser error");
 
         let record = "0|India|http://dbpedia.org/resource/India|Country";
@@ -713,7 +924,7 @@ mod test {
         );
 
         let record_iter = record.split('|');
-        let properties = parse_properties(record_iter, schema.get_vertex_header(place_id));
+        let properties = parse_properties(record_iter, ldbc_parser.meta_data.get_vertex_header("PLACE"));
         assert!(properties.is_ok());
         // Not label field will be skipped in the properties
         assert_eq!(
@@ -722,9 +933,13 @@ mod test {
         );
 
         // Test edge parser
-        let parser =
-            LDBCParser::<DefaultId>::edge_parser(org_id, place_id, org_in_place_id, schema.clone())
-                .expect("Get edge parser error");
+        let parser = ldbc_parser
+            .get_edge_parser(&EdgeTypeTuple {
+                etype: "ISLOCATEDIN".to_string(),
+                src_vertex_type: "ORGANISATION".to_string(),
+                dst_vertex_type: "PLACE".to_string(),
+            })
+            .expect("Get edge parser error");
 
         let record = "0|59";
         let record_iter = record.split('|');
@@ -742,7 +957,12 @@ mod test {
         );
 
         let record_iter = record.split('|');
-        let properties = parse_properties(record_iter, schema.get_edge_header(org_in_place_id));
+        let properties = parse_properties(
+            record_iter,
+            ldbc_parser
+                .meta_data
+                .get_edge_header("ISLOCATEDIN"),
+        );
 
         assert!(properties.is_ok());
         assert!(properties.unwrap().is_empty());
@@ -753,9 +973,8 @@ mod test {
         // with hierarchical vertex labels
         let data_dir = "data/small_data";
         let root_dir = "data/small_data";
-        let schema_file = "data/schema.json";
-        let mut loader =
-            GraphLoader::<DefaultId, InternalId>::new(data_dir, root_dir, schema_file, 20, 0, 1);
+        let schema_file = "data/ldbc_metadata.json";
+        let mut loader = GraphLoader::<DefaultId, InternalId>::new(data_dir, root_dir, schema_file, 0, 1);
         // load whole graph
         loader.load().expect("Load ldbc data error!");
         let graphdb = loader.into_graph();
@@ -964,7 +1183,7 @@ mod test {
         // with hierarchical vertex labels
         let data_dir = "data/small_data";
         let root_dir = "data/small_data";
-        let schema_file = "data/schema.json";
+        let schema_file = "data/ldbc_metadata.json";
         let mut loader1 =
             GraphLoader::<DefaultId, InternalId>::new(data_dir, root_dir, schema_file, 20, 0, 2);
         let mut loader2 =
