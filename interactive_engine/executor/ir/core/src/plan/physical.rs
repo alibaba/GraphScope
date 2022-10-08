@@ -746,14 +746,15 @@ impl AsPhysical for LogicalPlan {
     }
 }
 
-// Given a->b, now we only support intersecting neighbors (one-hop each with no filters) that "TRULY" need to,
-// e.g., Intersect{{a->c, b->c}, key=c}
-// TODO: consider more cases:
-// 1. Intersect{{a->d->c, b->c}, key=c}
+// Given a->b, we support intersecting their neighbors, e.g., Intersect{{a->c, b->c}, key=c}
+// more cases as follows:
+// 1. To intersect a->d->c and b->c with key=c,
 // if so, translate into two operators, i.e., EdgeExpand{a->d} and Intersect{{d->c, b->c}, key=c}
-// 2. Intersect{{a->c->d, b->c}, key=c}
+// 2. To intersect a->c->d and b->c with key=c,
 // if so, translate into two operators, i.e., Intersect{{a->c, b->c}, key=c} and Expand{c->d}
-// 3. extend with filters
+// 3. To intersect a->c, b->c with key=c, with filters
+// we support expanding vertices with filters on edges (i.e., filters on a->c, b->c), e.g., Intersect{{a-filter->c, b-filter->c}, key=c};
+// if expanding vertices with filters on vertices (i.e., filters on c), translate into Intersect{{a->c, b->c}, key=c} + Select {filter on c}.
 fn add_intersect_job_builder(
     builder: &mut JobBuilder, plan_meta: &mut PlanMeta, intersect_opr: &pb::Intersect,
     subplans: &Vec<LogicalPlan>,
@@ -816,7 +817,6 @@ fn add_intersect_job_builder(
         });
         auxilia.add_job_builder(builder, plan_meta)?;
     }
-    //  TODO: process edgexpd follwed by filter ops
     Ok(())
 }
 

@@ -473,6 +473,18 @@ impl From<pb::Scan> for pb::logical_plan::Operator {
     }
 }
 
+impl From<pb::logical_plan::Operator> for Option<pb::Scan> {
+    fn from(opr: pb::logical_plan::Operator) -> Self {
+        if let Some(opr) = opr.opr {
+            match opr {
+                Opr::Scan(scan) => return Some(scan),
+                _ => (),
+            }
+        }
+        None
+    }
+}
+
 impl From<pb::Limit> for pb::logical_plan::Operator {
     fn from(opr: pb::Limit) -> Self {
         pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Limit(opr)) }
@@ -611,6 +623,15 @@ impl pb::logical_plan::operator::Opr {
             Opr::Intersect(_) => "Intersect",
         };
         name.to_string()
+    }
+}
+
+impl pb::QueryParams {
+    pub fn is_queryable(&self) -> bool {
+        !(self.tables.is_empty()
+            && self.predicate.is_none()
+            && self.limit.is_none()
+            && self.sample_ratio == 1.0)
     }
 }
 

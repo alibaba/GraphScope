@@ -22,19 +22,21 @@ use ir_common::generated::algebra as pb;
 use serde::{Deserialize, Serialize};
 
 use crate::catalogue::pattern::Pattern;
-use crate::catalogue::{query_params, DynIter, PatternDirection, PatternId, PatternLabelId, PatternRankId};
+use crate::catalogue::{query_params, DynIter, PatternDirection, PatternId, PatternLabelId};
 use crate::error::{IrError, IrResult};
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ExtendEdge {
-    src_vertex_rank: PatternRankId,
+    src_vertex_rank: PatternId,
     edge_label: PatternLabelId,
     dir: PatternDirection,
 }
 
 /// Initializer of ExtendEdge
 impl ExtendEdge {
-    pub fn new(src_vertex_rank: usize, edge_label: PatternLabelId, dir: PatternDirection) -> ExtendEdge {
+    pub fn new(
+        src_vertex_rank: PatternId, edge_label: PatternLabelId, dir: PatternDirection,
+    ) -> ExtendEdge {
         ExtendEdge { src_vertex_rank, edge_label, dir }
     }
 }
@@ -42,7 +44,7 @@ impl ExtendEdge {
 /// Methods for access fields of VagueExtendEdge
 impl ExtendEdge {
     #[inline]
-    pub fn get_src_vertex_rank(&self) -> PatternRankId {
+    pub fn get_src_vertex_rank(&self) -> PatternId {
         self.src_vertex_rank
     }
 

@@ -402,17 +402,28 @@ impl LogicalPlan {
         let new_curr_node_rst = match opr.opr.as_ref().unwrap() {
             Opr::Pattern(pattern) => {
                 if parent_ids.len() == 1 {
-                    let parent_id = parent_ids[0];
-                    let mut extend_strategy: Option<ExtendStrategy> = None;
-                    // Notice that, currently there are some limitations of ExtendStrategy, including:
+                    // We try to match via ExtendStrategy. If not success, match via NaiveStrategy.
+                    // Notice that there are some limitations of ExtendStrategy, including:
                     // 1. the input of match should be a whole graph, i.e., `g.V().match(...)`
                     // 2. the pattern to be matched must be identical (no fuzzy pattern).
-                    // TODO: we may fuse g.V().hasLabel().has(xx) as a single source op, which is not supported in ExtendStrategy.
+                    let mut extend_strategy: Option<ExtendStrategy> = None;
+                    // confirm if the parent opr is `g.V()`
+                    let parent_id = parent_ids[0];
                     if parent_id == 0 {
-                        if let Ok(store_meta) = STORE_META.read() {
-                            if let Some(pattern_meta) = store_meta.pattern_meta.as_ref() {
-                                extend_strategy =
-                                    ExtendStrategy::init(&pattern, pattern_meta, &mut self.meta).ok();
+                        let source_opr = self.nodes.get(0).unwrap().borrow().opr.clone();
+                        if let Some(source) = <Option<pb::Scan>>::from(source_opr) {
+                            // confirm no index scan or filters fused into source op
+                            if source.idx_predicate.is_none()
+                                && (source.params.is_none()
+                                    || (source.params.is_some() && !source.params.unwrap().is_queryable()))
+                            {
+                                if let Ok(store_meta) = STORE_META.read() {
+                                    if let Some(pattern_meta) = store_meta.pattern_meta.as_ref() {
+                                        extend_strategy =
+                                            ExtendStrategy::init(&pattern, pattern_meta, &mut self.meta)
+                                                .ok();
+                                    }
+                                }
                             }
                         }
                     }
