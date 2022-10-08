@@ -30,7 +30,7 @@ impl JoinFunctionGen for algebra_pb::logical_plan::operator::Opr {
     fn gen_join(self) -> FnGenResult<Box<dyn JoinKeyGen<Record, RecordKey, Record>>> {
         match self {
             algebra_pb::logical_plan::operator::Opr::Join(join) => Ok(Box::new(join)),
-            _ => Err(ParsePbError::from("algebra_pb op is not a keyed op"))?,
+            _ => Err(ParsePbError::from(format!("the operator: {:?} is not a `Join`", self)))?,
         }
     }
 }

@@ -78,7 +78,7 @@ impl FilterMapFuncGen for algebra_pb::GetV {
             .transpose()?;
         let opt: VOpt = unsafe { ::std::mem::transmute(self.opt) };
         if let VOpt::Both = opt {
-            Err(ParsePbError::ParseError("GetV with VOpt::Both is not a map op".to_string()))?
+            Err(ParsePbError::from("GetV with VOpt::Both is not a map op"))?
         }
         let alias = self
             .alias

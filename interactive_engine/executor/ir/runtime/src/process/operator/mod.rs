@@ -73,8 +73,8 @@ impl TagKey {
         }
     }
 
-    fn get_key(&self, element: &Arc<Entry>, prop_key: &PropKey) -> FnExecResult<Entry> {
-        if let Some(element) = element.as_graph_element() {
+    fn get_key(&self, entry: &Arc<Entry>, prop_key: &PropKey) -> FnExecResult<Entry> {
+        if let Some(element) = entry.as_graph_element() {
             let prop_obj = match prop_key {
                 PropKey::Id => element.id().into(),
                 PropKey::Label => element
@@ -85,9 +85,10 @@ impl TagKey {
                 PropKey::All => {
                     let details = element
                         .details()
-                        .ok_or(FnExecError::unexpected_data_error(
-                            "Get key failed since get details from a graph element failed",
-                        ))?;
+                        .ok_or(FnExecError::unexpected_data_error(&format!(
+                            "Get `PropKey::All` on {:?}",
+                            entry,
+                        )))?;
 
                     if let Some(properties) = details.get_all_properties() {
                         properties
@@ -108,9 +109,10 @@ impl TagKey {
                 PropKey::Key(key) => {
                     let details = element
                         .details()
-                        .ok_or(FnExecError::unexpected_data_error(
-                            "Get key failed since get details from a graph element failed",
-                        ))?;
+                        .ok_or(FnExecError::unexpected_data_error(&format!(
+                            "Get `PropKey::Key` of {:?} on {:?}",
+                            key, entry,
+                        )))?;
                     if let Some(properties) = details.get_property(key) {
                         properties
                             .try_to_owned()
@@ -126,7 +128,7 @@ impl TagKey {
             Err(FnExecError::unexpected_data_error(&format!(
                 "
                 Get key failed since get details from a none-graph element {:?} ",
-                element
+                entry
             )))
         }
     }

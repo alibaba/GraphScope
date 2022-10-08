@@ -41,7 +41,10 @@ impl Accumulator<Record, Record> for GraphSinkEncoder {
         for sink_key in &self.sink_keys {
             let entry = next
                 .take(sink_key.as_ref())
-                .ok_or(FnExecError::get_tag_error(&format!("tag {:?} in GraphWriter", sink_key)))?;
+                .ok_or(FnExecError::get_tag_error(&format!(
+                    "tag {:?} in GraphWriter on {:?}",
+                    sink_key, next
+                )))?;
             if let Some(v) = entry.as_graph_vertex() {
                 let vertex_pk = graph
                     .get_primary_key(&v.id())?

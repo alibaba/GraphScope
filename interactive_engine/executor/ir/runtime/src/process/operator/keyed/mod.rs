@@ -35,7 +35,7 @@ impl KeyFunctionGen for algebra_pb::logical_plan::operator::Opr {
             algebra_pb::logical_plan::operator::Opr::SegApply(_seg_apply) => {
                 Err(FnGenError::unsupported_error("SegApply is not supported yet"))?
             }
-            _ => Err(ParsePbError::from("algebra_pb op is not a keyed op"))?,
+            _ => Err(ParsePbError::from(format!("the operator: {:?} is not a keyed operator", self)))?,
         }
     }
 }

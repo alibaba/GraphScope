@@ -35,7 +35,7 @@ impl GroupFunctionGen for algebra_pb::logical_plan::operator::Opr {
     fn gen_group(self) -> FnGenResult<Box<dyn GroupGen<Record, RecordKey, Record>>> {
         match self {
             algebra_pb::logical_plan::operator::Opr::GroupBy(group) => Ok(Box::new(group)),
-            _ => Err(ParsePbError::from("algebra_pb op is not a group op").into()),
+            _ => Err(ParsePbError::from(format!("the operator: {:?} is not a `Group`", self)))?,
         }
     }
 }
@@ -44,7 +44,7 @@ impl FoldFactoryGen for algebra_pb::logical_plan::operator::Opr {
     fn gen_fold(self) -> FnGenResult<Box<dyn FoldGen<u64, Record>>> {
         match self {
             algebra_pb::logical_plan::operator::Opr::GroupBy(non_key_group) => Ok(Box::new(non_key_group)),
-            _ => Err(ParsePbError::from("algebra_pb op is not a fold op").into()),
+            _ => Err(ParsePbError::from(format!("the operator: {:?} is not a `Fold`", self)))?,
         }
     }
 }

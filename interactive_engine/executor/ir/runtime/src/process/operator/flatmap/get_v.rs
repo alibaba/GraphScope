@@ -48,9 +48,10 @@ impl FlatMapFunction<Record, Record> for GetBothVOperator {
                     Box::new(vec![src_vertex, dst_vertex].into_iter()),
                 )))
             } else {
-                Err(FnExecError::unexpected_data_error(
-                    "Can only apply `GetV` with BothV opt (`Auxilia` instead) on an edge entry",
-                ))?
+                Err(FnExecError::unexpected_data_error(&format!(
+                    "Can't apply `GetV` with BothV opt (`Auxilia` instead) on an non-edge entry {:?}",
+                    entry
+                )))?
             }
         } else {
             Ok(Box::new(vec![].into_iter()))
@@ -69,7 +70,7 @@ impl FlatMapFuncGen for algebra_pb::GetV {
         let opt: VOpt = unsafe { ::std::mem::transmute(self.opt) };
         match opt {
             VOpt::Start | VOpt::End | VOpt::Other => {
-                Err(ParsePbError::ParseError(format!("GetV with VOpt {:?} is not a flatmap op", opt)))?
+                Err(ParsePbError::from(format!("GetV with VOpt {:?} is not a flatmap op", opt)))?
             }
             VOpt::Both => {}
         }

@@ -43,7 +43,10 @@ impl BinaryFunction<Record, Vec<Record>, Option<Record>> for ApplyOperator {
                     // We assume the result of sub_entry is always saved on head of Record for now.
                     let sub_entry = sub_result
                         .get(None)
-                        .ok_or(FnExecError::get_tag_error("get entry of subtask result failed"))?;
+                        .ok_or(FnExecError::get_tag_error(&format!(
+                            "tag None in `ApplyOperator` on Record {:?}",
+                            sub_result
+                        )))?;
                     if let Some(alias) = self.alias.as_ref() {
                         // append sub_entry without moving head
                         let columns = parent.get_columns_mut();
@@ -69,7 +72,10 @@ impl BinaryFunction<Record, Vec<Record>, Option<Record>> for ApplyOperator {
                     // We assume the result of sub_entry is always saved on head of Record for now.
                     let sub_entry = sub_result
                         .get(None)
-                        .ok_or(FnExecError::get_tag_error("get entry of subtask result failed"))?;
+                        .ok_or(FnExecError::get_tag_error(&format!(
+                            "tag None in `ApplyOperator` on Record {:?}",
+                            sub_result
+                        )))?;
                     if let Some(alias) = self.alias.as_ref() {
                         let columns = parent.get_columns_mut();
                         columns.insert(*alias as usize, sub_entry.clone());

@@ -39,7 +39,7 @@ impl FlatMapFuncGen for algebra_pb::logical_plan::operator::Opr {
                 Err(FnGenError::unsupported_error("unfold is not supported yet"))
             }
             algebra_pb::logical_plan::operator::Opr::Fused(fused) => fused.gen_flat_map(),
-            _ => Err(ParsePbError::ParseError(format!("the operator: {:?} is not a `FlatMap`", self)))?,
+            _ => Err(ParsePbError::from(format!("the operator: {:?} is not a `FlatMap`", self)))?,
         }
     }
 }
