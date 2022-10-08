@@ -111,6 +111,12 @@ impl PartialOrd for Vertex {
     }
 }
 
+impl From<ID> for Vertex {
+    fn from(id: u64) -> Self {
+        Vertex::new(id, None, DynDetails::default())
+    }
+}
+
 impl TryFrom<result_pb::Vertex> for Vertex {
     type Error = ParsePbError;
     fn try_from(v: result_pb::Vertex) -> Result<Self, Self::Error> {

@@ -13,26 +13,14 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::io;
+#[cfg(test)]
+#[allow(dead_code)]
+pub mod pattern_cases;
 
-pub use crate::plan::ffi::*;
+#[cfg(test)]
+#[allow(dead_code)]
+pub mod pattern_meta_cases;
 
-pub mod catalogue;
-pub mod error;
-pub mod plan;
-
-#[macro_use]
-extern crate lazy_static;
-
-#[macro_use]
-extern crate log;
-
-pub trait JsonIO {
-    /// Write the logical plan to a json via the given `writer`.
-    fn into_json<W: io::Write>(self, writer: W) -> io::Result<()>;
-
-    /// Read the logical plan from a json via the given `reader`
-    fn from_json<R: io::Read>(reader: R) -> io::Result<Self>
-    where
-        Self: Sized;
-}
+#[cfg(test)]
+#[allow(dead_code)]
+pub mod extend_step_cases;

@@ -13,11 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 mod auxilia;
+mod expand_intersect;
 mod get_v;
 mod path_end;
 mod path_start;
 mod project;
 
+pub use expand_intersect::Intersection;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use pegasus::api::function::{FilterMapFunction, MapFunction};
@@ -49,6 +51,7 @@ impl FilterMapFuncGen for algebra_pb::logical_plan::operator::Opr {
             algebra_pb::logical_plan::operator::Opr::PathStart(path_start) => path_start.gen_filter_map(),
             algebra_pb::logical_plan::operator::Opr::Project(project) => project.gen_filter_map(),
             algebra_pb::logical_plan::operator::Opr::Auxilia(auxilia) => auxilia.gen_filter_map(),
+            algebra_pb::logical_plan::operator::Opr::Edge(edge_expand) => edge_expand.gen_filter_map(),
             _ => Err(ParsePbError::from(format!("the operator is not a `FilterMap`, it is {:?}", self)))?,
         }
     }

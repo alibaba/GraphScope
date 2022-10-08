@@ -40,6 +40,9 @@ pub enum IrError {
 
     // Common Errors
     Unsupported(String),
+
+    // Catalog Errors
+    InvalidCode(String),
 }
 
 pub type IrResult<T> = Result<T, IrError>;
@@ -66,6 +69,7 @@ impl fmt::Display for IrError {
                 write!(f, "invalid range ({:?}, {:?})", lo, up)
             }
             IrError::Unsupported(s) => write!(f, "{:?}: is not supported", s),
+            IrError::InvalidCode(s) => write!(f, "the code for {:?} is invalid", s),
         }
     }
 }

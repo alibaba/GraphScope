@@ -16,6 +16,7 @@
 //! The `Serialize` and `Deserialize` traits is paired contract which defines how objects of various
 //! structures be encoded into network, and decoded from network;
 
+use std::collections::BTreeMap;
 use std::io;
 use std::mem;
 
@@ -252,6 +253,30 @@ impl<T: Decode> Decode for Vec<T> {
             vec.push(T::read_from(reader)?);
         }
         Ok(vec)
+    }
+}
+
+impl<K: Encode + Ord, V: Encode> Encode for BTreeMap<K, V> {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
+        writer.write_u32(self.len() as u32)?;
+        for (key, value) in self.iter() {
+            key.write_to(writer)?;
+            value.write_to(writer)?;
+        }
+        Ok(())
+    }
+}
+
+impl<K: Decode + Ord, V: Decode> Decode for BTreeMap<K, V> {
+    fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
+        let len = reader.read_u32()? as usize;
+        let mut btree_map = BTreeMap::new();
+        for _i in 0..len {
+            let key = K::read_from(reader)?;
+            let value = V::read_from(reader)?;
+            btree_map.insert(key, value);
+        }
+        Ok(btree_map)
     }
 }
 

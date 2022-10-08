@@ -64,7 +64,7 @@ use prost::Message;
 
 use crate::error::IrError;
 use crate::plan::logical::{LogicalPlan, NodeId};
-use crate::plan::meta::{set_schema_from_json, KeyType};
+use crate::plan::meta::{set_meta_from_json, KeyType};
 use crate::plan::physical::AsPhysical;
 
 #[repr(i32)]
@@ -160,6 +160,7 @@ impl From<IrError> for FfiResult {
                 format!("the range ({:?}, {:?}) is invalid", l, u),
             ),
             IrError::Unsupported(err) => FfiResult::new(ResultCode::UnSupported, err.to_string()),
+            IrError::InvalidCode(err) => FfiResult::new(ResultCode::Others, err.to_string()),
         }
     }
 }
@@ -501,7 +502,7 @@ pub extern "C" fn set_schema(cstr_json: *const c_char) -> FfiResult {
     let result = cstr_to_string(cstr_json);
     match result {
         Ok(json) => {
-            set_schema_from_json(json.as_bytes());
+            set_meta_from_json(json.as_bytes());
 
             FfiResult::success()
         }

@@ -53,6 +53,18 @@ impl RecordSinkEncoder {
                     collection: collection_pb,
                 }))
             }
+            Entry::Intersection(intersection) => {
+                let mut collection_pb = Vec::with_capacity(intersection.len());
+                for v in intersection.iter() {
+                    let vertex_pb = self.vertex_to_pb(v);
+                    let element_pb =
+                        result_pb::Element { inner: Some(result_pb::element::Inner::Vertex(vertex_pb)) };
+                    collection_pb.push(element_pb);
+                }
+                Some(result_pb::entry::Inner::Collection(result_pb::Collection {
+                    collection: collection_pb,
+                }))
+            }
             _ => {
                 let element_pb = self.element_to_pb(e);
                 Some(result_pb::entry::Inner::Element(element_pb))
@@ -80,6 +92,9 @@ impl RecordSinkEncoder {
                 Some(result_pb::element::Inner::Object(obj_pb))
             }
             Entry::Collection(_) => {
+                unreachable!()
+            }
+            Entry::Intersection(_) => {
                 unreachable!()
             }
         };

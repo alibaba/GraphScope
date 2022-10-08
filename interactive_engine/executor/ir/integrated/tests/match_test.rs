@@ -19,11 +19,14 @@ mod common;
 
 #[cfg(test)]
 mod test {
+    use std::fs::File;
+
     use graph_proxy::apis::GraphElement;
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
     use ir_core::plan::logical::LogicalPlan;
+    use ir_core::plan::meta::set_meta_from_json;
     use ir_core::plan::physical::AsPhysical;
     use pegasus_client::builder::JobBuilder;
     use pegasus_server::JobRequest;
@@ -33,11 +36,19 @@ mod test {
         KNOWS_LABEL, PERSON_LABEL, TAG_A, TAG_B, TAG_C, TAG_D,
     };
 
+    pub fn init_schema_pattern_meta() {
+        let ldbc_schema_file = File::open("../core/resource/modern_schema.json").unwrap();
+        set_meta_from_json(ldbc_schema_file);
+    }
+
     // g.V().hasLabel("person").match(
     //    __.as('a').has(age, gt(25)).out("created").as('b'),
     //    __.as('a').out('knows').as('c'),
     // )
-    fn init_match_case1_request() -> JobRequest {
+    fn init_match_case1_request(with_pattern_meta: bool) -> JobRequest {
+        if with_pattern_meta {
+            init_schema_pattern_meta();
+        }
         let source = pb::Scan {
             scan_opt: 0,
             alias: None,
@@ -125,7 +136,10 @@ mod test {
     //    __.as('a').out('knows').as('c'),
     //    __.as('a').out('created').as('d')
     // )
-    fn init_match_case2_request() -> JobRequest {
+    fn init_match_case2_request(with_pattern_meta: bool) -> JobRequest {
+        if with_pattern_meta {
+            init_schema_pattern_meta();
+        }
         let source = pb::Scan {
             scan_opt: 0,
             alias: None,
@@ -205,10 +219,9 @@ mod test {
         job_builder.build().unwrap()
     }
 
-    #[test]
-    fn match_case1() {
+    fn match_case1(with_pattern_meta: bool) {
         initialize();
-        let request = init_match_case1_request();
+        let request = init_match_case1_request(with_pattern_meta);
         let mut results = submit_query(request, 2);
         let mut result_collection = vec![];
         let expected_result_ids = vec![(1, 4, 1 << 56 | 3)];
@@ -241,9 +254,18 @@ mod test {
     }
 
     #[test]
-    fn match_case2() {
+    fn naive_match_case1() {
+        match_case1(false)
+    }
+
+    #[test]
+    fn extend_match_case1() {
+        match_case1(true)
+    }
+
+    fn match_case2(with_pattern_meta: bool) {
         initialize();
-        let request = init_match_case2_request();
+        let request = init_match_case2_request(with_pattern_meta);
         let mut results = submit_query(request, 2);
         let mut result_collection = vec![];
         let expected_result_ids = vec![
@@ -287,5 +309,15 @@ mod test {
         }
         result_collection.sort();
         assert_eq!(result_collection, expected_result_ids);
+    }
+
+    #[test]
+    fn naive_match_case2() {
+        match_case2(false)
+    }
+
+    #[test]
+    fn extend_match_case2() {
+        match_case2(true)
     }
 }

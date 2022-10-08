@@ -28,8 +28,7 @@ use vec_map::VecMap;
 
 use crate::error::{IrError, IrResult};
 use crate::plan::meta::{ColumnsOpt, PlanMeta, Schema, StoreMeta, TagId, INVALID_META_ID, STORE_META};
-use crate::plan::patmat::{MatchingStrategy, NaiveStrategy};
-
+use crate::plan::patmat::{ExtendStrategy, MatchingStrategy, NaiveStrategy};
 // Note that protobuf only support signed integer, while we actually requires the nodes'
 // id being non-negative
 pub type NodeId = u32;
@@ -75,7 +74,7 @@ pub struct LogicalPlan {
     pub(crate) nodes: VecMap<NodeType>,
     /// To record the nodes' maximum id in the logical plan. Note that the nodes
     /// **include the removed ones**
-    pub(crate) max_node_id: NodeId,
+    pub max_node_id: NodeId,
     /// The metadata of the logical plan
     pub(crate) meta: PlanMeta,
 }
@@ -403,8 +402,36 @@ impl LogicalPlan {
         let new_curr_node_rst = match opr.opr.as_ref().unwrap() {
             Opr::Pattern(pattern) => {
                 if parent_ids.len() == 1 {
-                    let strategy = NaiveStrategy::try_from(pattern.clone())?;
-                    let plan = strategy.build_logical_plan()?;
+                    let parent_id = parent_ids[0];
+                    let mut extend_strategy: Option<ExtendStrategy> = None;
+                    // Notice that, currently there are some limitations of ExtendStrategy, including:
+                    // 1. the input of match should be a whole graph, i.e., `g.V().match(...)`
+                    // 2. the pattern to be matched must be identical (no fuzzy pattern).
+                    // TODO: we may fuse g.V().hasLabel().has(xx) as a single source op, which is not supported in ExtendStrategy.
+                    if parent_id == 0 {
+                        if let Ok(store_meta) = STORE_META.read() {
+                            if let Some(pattern_meta) = store_meta.pattern_meta.as_ref() {
+                                extend_strategy =
+                                    ExtendStrategy::init(&pattern, pattern_meta, &mut self.meta).ok();
+                            }
+                        }
+                    }
+
+                    let plan = if let Some(extend_strategy) = extend_strategy {
+                        if let Ok(plan) = extend_strategy.build_logical_plan() {
+                            debug!("pattern matching by ExtendStrategy");
+                            plan
+                        } else {
+                            debug!("pattern matching by NaiveStrategy");
+                            let naive_strategy = NaiveStrategy::try_from(pattern.clone())?;
+                            naive_strategy.build_logical_plan()?
+                        }
+                    } else {
+                        debug!("pattern matching by NaiveStrategy");
+                        let naive_strategy = NaiveStrategy::try_from(pattern.clone())?;
+                        naive_strategy.build_logical_plan()?
+                    };
+
                     self.append_plan(plan, parent_ids.clone())
                 } else {
                     Err(IrError::Unsupported(
@@ -1589,6 +1616,7 @@ mod test {
                 vec![("knows".to_string(), 0), ("creates".to_string(), 1)],
                 vec![("id".to_string(), 0), ("name".to_string(), 1), ("age".to_string(), 2)],
             )),
+            pattern_meta: None,
         };
 
         let mut expression = str_to_expr_pb("@.~label == \"person\"".to_string()).unwrap();
@@ -1744,6 +1772,8 @@ mod test {
                 vec![("knows".to_string(), 0), ("creates".to_string(), 1)],
                 vec![("id".to_string(), 0), ("name".to_string(), 1), ("age".to_string(), 2)],
             )),
+
+            pattern_meta: None,
         };
 
         let mut scan = pb::Scan {
@@ -1825,6 +1855,7 @@ mod test {
             schema: Some(
                 Schema::from_json(std::fs::File::open("resource/modern_schema_pk.json").unwrap()).unwrap(),
             ),
+            pattern_meta: None,
         };
         let mut scan = pb::Scan {
             scan_opt: 0,
