@@ -633,8 +633,7 @@ fn encode_storage_row_filter_condition(
         let condition = if let Some(filter) = row_filter { filter.as_ref().try_into() } else { Ok(None) };
         // gremlin test in ci will compile use debug mode
         // panic so that developer will know convert failed
-        // TODO: support Text.StartsWith etc. and reopen debug_assert
-        // debug_assert!(condition.is_ok());
+        debug_assert!(condition.is_ok());
         match condition {
             Ok(cond) => (cond, false),
             Err(e) => {
@@ -653,8 +652,7 @@ fn extract_needed_columns(
     filter: Option<&Arc<PEvaluator>>, out_columns: Option<&Vec<PropId>>,
 ) -> GraphProxyResult<Option<Vec<PropId>>> {
     use ahash::HashSet;
-
-    use crate::utils::expr::eval_pred::zip_option_vecs;
+    use super::translation::zip_option_vecs;
 
     // Some(vec[]) means need all props, so can't merge it with props needed in filter
     if let Some(out_columns) = out_columns {

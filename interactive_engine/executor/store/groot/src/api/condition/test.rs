@@ -350,6 +350,55 @@ fn test_condition_without_operation() {
 }
 
 #[test]
+fn test_condition_start_end_with_operation() {
+    let entites = prepare_entites().collect::<Vec<LocalEntity>>();
+    let predicate = PredCondition::new_predicate(
+        Operand::PropId(2),
+        CmpOperator::StartWith,
+        Operand::Const(Property::String("Astr".to_owned())),
+    );
+    let e1 = entites
+        .clone()
+        .into_iter()
+        .filter(|v| predicate.filter_vertex(v).unwrap_or(false))
+        .collect::<Vec<LocalEntity>>();
+    assert_eq!(1, e1.len());
+    assert_eq!(e1[0].get_id(), 1);
+
+    let e1 = entites
+        .clone()
+        .into_iter()
+        .filter(|v| predicate.filter_edge(v).unwrap_or(false))
+        .collect::<Vec<LocalEntity>>();
+    assert_eq!(1, e1.len());
+    assert_eq!(e1[0].get_id(), 1);
+
+    let predicate = PredCondition::new_predicate(
+        Operand::PropId(2),
+        CmpOperator::EndWith,
+        Operand::Const(Property::String("engine".to_owned())),
+    );
+    assert_eq!(
+        2,
+        entites
+            .clone()
+            .into_iter()
+            .filter(|v| predicate.filter_vertex(v).unwrap_or(false))
+            .collect::<Vec<LocalEntity>>()
+            .len()
+    );
+    assert_eq!(
+        2,
+        entites
+            .clone()
+            .into_iter()
+            .filter(|v| predicate.filter_edge(v).unwrap_or(false))
+            .collect::<Vec<LocalEntity>>()
+            .len()
+    );
+}
+
+#[test]
 fn test_condition_cmp_operation() {
     let entites = prepare_entites().collect::<Vec<LocalEntity>>();
     let predicate = PredCondition::new_predicate(
