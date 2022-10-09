@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -26,7 +24,7 @@
         <exec.maven.version>3.0.0</exec.maven.version>
         <junit.version>4.13.2</junit.version>
         <maven.surefire.version>2.22.2</maven.surefire.version>
-        <tinkerpop.version>3.5.1</tinkerpop.version>
+        <tinkerpop.version>3.5.2</tinkerpop.version>
         <common.io.version>2.6</common.io.version>
         <antlr4.version>4.9.1</antlr4.version>
     </properties>
