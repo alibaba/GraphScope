@@ -295,6 +295,10 @@ class GraphDAGNode(DAGNode, GraphInterface):
         """
         return self._graph_type
 
+    @property
+    def oid_type(self):
+        return utils.normalize_data_type_str(self._oid_type)
+
     def _project_to_simple(self, v_prop=None, e_prop=None):
         check_argument(self.graph_type == graph_def_pb2.ARROW_PROPERTY)
         op = dag_utils.project_to_simple(self, str(v_prop), str(e_prop))
@@ -791,6 +795,10 @@ class Graph(GraphInterface):
     @property
     def op(self):
         return self._graph_node.op
+
+    @property
+    def oid_type(self):
+        return self._graph_node.oid_type
 
     @property
     def template_str(self):

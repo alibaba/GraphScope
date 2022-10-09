@@ -111,7 +111,12 @@ impl AsPhysical for pb::Select {
                     extra: Default::default(),
                 };
                 params.predicate = self.predicate.clone();
-                let auxilia = pb::Auxilia { tag: tag_pb.clone(), params: Some(params), alias: tag_pb };
+                let auxilia = pb::Auxilia {
+                    tag: tag_pb.clone(),
+                    params: Some(params),
+                    alias: tag_pb,
+                    remove_tags: vec![],
+                };
                 pb::logical_plan::Operator::from(auxilia).add_job_builder(builder, plan_meta)
             } else {
                 Err(IrError::MissingData(format!(
@@ -167,7 +172,7 @@ impl AsPhysical for pb::EdgeExpand {
 
     fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut is_adding_auxilia = false;
-        let mut auxilia = pb::Auxilia { tag: None, params: None, alias: None };
+        let mut auxilia = pb::Auxilia { tag: None, params: None, alias: None, remove_tags: vec![] };
         if let Some(params) = self.params.as_mut() {
             if let Some(node_meta) = plan_meta.get_curr_node_meta() {
                 let columns = node_meta.get_columns();
@@ -291,7 +296,7 @@ impl AsPhysical for pb::GetV {
 
     fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut is_adding_auxilia = false;
-        let mut auxilia = pb::Auxilia { tag: None, params: None, alias: None };
+        let mut auxilia = pb::Auxilia { tag: None, params: None, alias: None, remove_tags: vec![] };
         if let Some(params) = self.params.as_mut() {
             if let Some(node_meta) = plan_meta.get_curr_node_meta() {
                 let columns = node_meta.get_columns();
@@ -359,7 +364,8 @@ impl AsPhysical for pb::GetV {
 impl AsPhysical for pb::As {
     fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         // Transform to `Auxilia` internally.
-        let auxilia = pb::Auxilia { tag: None, params: None, alias: self.alias.clone() };
+        let auxilia =
+            pb::Auxilia { tag: None, params: None, alias: self.alias.clone(), remove_tags: vec![] };
         auxilia.add_job_builder(builder, plan_meta)
     }
 }
@@ -604,6 +610,7 @@ impl AsPhysical for LogicalPlan {
                                 alias: Some(common_pb::NameOrId {
                                     item: Some(common_pb::name_or_id::Item::Id(new_tag)),
                                 }),
+                                remove_tags: vec![],
                             }
                             .into(),
                         );
@@ -788,6 +795,7 @@ mod test {
                 extra: Default::default(),
             }),
             alias: None,
+            remove_tags: vec![],
         }
     }
 
@@ -944,6 +952,7 @@ mod test {
                 tag: None,
                 params: Some(query_params(vec![], vec!["age".into()])),
                 alias: Some(0.into()),
+                remove_tags: vec![],
             })
             .encode_to_vec(),
         );
@@ -954,6 +963,7 @@ mod test {
                 tag: None,
                 params: Some(query_params(vec![], vec!["age".into()])),
                 alias: Some(1.into()),
+                remove_tags: vec![],
             })
             .encode_to_vec(),
         );
@@ -980,6 +990,7 @@ mod test {
                 tag: None,
                 params: Some(query_params(vec![], vec!["age".into()])),
                 alias: Some(0.into()),
+                remove_tags: vec![],
             })
             .encode_to_vec(),
         );
@@ -992,6 +1003,7 @@ mod test {
                 tag: None,
                 params: Some(query_params(vec![], vec!["age".into()])),
                 alias: Some(1.into()),
+                remove_tags: vec![],
             })
             .encode_to_vec(),
         );
@@ -1026,6 +1038,7 @@ mod test {
                 tag: None,
                 params: Some(query_params(vec![], vec!["age".into(), "id".into(), "name".into()])),
                 alias: Some(0.into()),
+                remove_tags: vec![],
             })
             .encode_to_vec(),
         );
@@ -1053,6 +1066,7 @@ mod test {
                 tag: None,
                 params: Some(query_params(vec![], vec!["age".into(), "id".into(), "name".into()])),
                 alias: Some(0.into()),
+                remove_tags: vec![],
             })
             .encode_to_vec(),
         );
@@ -1158,6 +1172,7 @@ mod test {
                 tag: None,
                 params: Some(query_params(vec![], vec!["age".into(), "id".into(), "name".into()])),
                 alias: Some(0.into()),
+                remove_tags: vec![],
             })
             .encode_to_vec(),
         );
@@ -1186,6 +1201,7 @@ mod test {
                 tag: None,
                 params: Some(query_params(vec![], vec!["age".into(), "id".into(), "name".into()])),
                 alias: Some(0.into()),
+                remove_tags: vec![],
             })
             .encode_to_vec(),
         );
@@ -1248,6 +1264,7 @@ mod test {
                     extra: Default::default(),
                 }),
                 alias: None,
+                remove_tags: vec![],
             })
             .encode_to_vec(),
         );
@@ -1660,6 +1677,7 @@ mod test {
                 extra: Default::default(),
             }),
             alias: None,
+            remove_tags: vec![],
         };
 
         expected_builder.apply_join(
@@ -1724,6 +1742,7 @@ mod test {
                 tag: None,
                 params: None,
                 alias: Some(common_pb::NameOrId { item: Some(common_pb::name_or_id::Item::Id(2)) }),
+                remove_tags: vec![],
             }
             .into(),
         );
@@ -1802,6 +1821,7 @@ mod test {
                 tag: None,
                 params: None,
                 alias: Some(common_pb::NameOrId { item: Some(common_pb::name_or_id::Item::Id(2)) }),
+                remove_tags: vec![],
             }
             .into(),
         );

@@ -68,6 +68,8 @@ pub enum CmpOperator {
     GreaterEqual,
     WithIn,
     WithOut,
+    StartWith,
+    EndWith,
 }
 
 impl CmpOperator {
@@ -81,6 +83,8 @@ impl CmpOperator {
             CmpOperator::GreaterEqual => Ok(left >= right),
             CmpOperator::WithIn => right.contains(left),
             CmpOperator::WithOut => right.contains(left).map(|ret| !ret),
+            CmpOperator::StartWith => left.start_with(right),
+            CmpOperator::EndWith => left.end_with(right),
         }
     }
 }

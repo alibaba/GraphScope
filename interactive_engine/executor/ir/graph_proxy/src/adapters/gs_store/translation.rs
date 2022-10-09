@@ -14,6 +14,18 @@ use crate::utils::expr::eval::Operand;
 use crate::utils::expr::eval_pred::{PEvaluator, Predicate, Predicates};
 use crate::{GraphProxyError, GraphProxyResult};
 
+pub(crate) fn zip_option_vecs<T>(left: Option<Vec<T>>, right: Option<Vec<T>>) -> Option<Vec<T>> {
+    match (left, right) {
+        (Some(mut left), Some(mut right)) => {
+            left.append(&mut right);
+            Some(left)
+        }
+        (None, Some(right)) => Some(right),
+        (Some(left), None) => Some(left),
+        (None, None) => None,
+    }
+}
+
 impl Operand {
     /// only get the PropId, else None
     pub(crate) fn get_var_prop_id(&self) -> GraphProxyResult<PropId> {
@@ -40,6 +52,52 @@ impl Operand {
                 prop.map(StoreOperand::Const)
             }
             _ => Err(GraphProxyError::FilterPushDownError(format!("not a var {:?}", self))),
+        }
+    }
+}
+
+impl Predicate {
+    fn extract_prop_ids(&self) -> Option<Vec<PropId>> {
+        let left = self.left.get_var_prop_id();
+        let right = self.right.get_var_prop_id();
+        match (left, right) {
+            (Ok(left), Ok(right)) => Some(vec![left, right]),
+            (Ok(left), _) => Some(vec![left]),
+            (_, Ok(right)) => Some(vec![right]),
+            _ => None,
+        }
+    }
+}
+
+impl Predicates {
+    pub(crate) fn extract_prop_ids(&self) -> Option<Vec<PropId>> {
+        match self {
+            Predicates::Init => None,
+            Predicates::SingleItem(operand) => operand
+                .get_var_prop_id()
+                .map(|id| Some(vec![id]))
+                .unwrap_or(None),
+            Predicates::Predicate(pred) => pred.extract_prop_ids(),
+            Predicates::Not(pred) => pred.extract_prop_ids(),
+            Predicates::And((left, right)) => {
+                let left = left.extract_prop_ids();
+                let right = right.extract_prop_ids();
+                zip_option_vecs(left, right)
+            }
+            Predicates::Or((left, right)) => {
+                let left = left.extract_prop_ids();
+                let right = right.extract_prop_ids();
+                zip_option_vecs(left, right)
+            }
+        }
+    }
+}
+
+impl PEvaluator {
+    pub(crate) fn extract_prop_ids(&self) -> Option<Vec<PropId>> {
+        match self {
+            PEvaluator::Predicates(preds) => preds.extract_prop_ids(),
+            _ => None,
         }
     }
 }
@@ -71,6 +129,12 @@ impl TryFrom<&Predicate> for StorePredCondition {
             }
             common_pb::Logical::Without => {
                 StorePredCondition::new_predicate(left, StoreOprator::WithOut, right)
+            }
+            common_pb::Logical::Startswith => {
+                StorePredCondition::new_predicate(left, StoreOprator::StartWith, right)
+            }
+            common_pb::Logical::Endswith => {
+                StorePredCondition::new_predicate(left, StoreOprator::EndWith, right)
             }
             _ => {
                 return Err(GraphProxyError::FilterPushDownError(format!(
@@ -163,15 +227,17 @@ mod test {
     use super::*;
     use crate::apis::PropKey;
     use crate::utils::expr::eval::Operand;
+
     #[test]
-    fn test_predicates_to_condition() {
-        // test empty Predicates
+    fn test_empty_predicates_to_condition() {
         let pred = &Predicates::Init;
         let cond: Result<Option<Condition>, GraphProxyError> = pred.try_into();
         assert!(cond.is_ok());
         assert_eq!(cond.unwrap(), None);
+    }
 
-        // test SingleItem Predicates
+    #[test]
+    fn test_singleitem_predicates_to_condition() {
         let oprand = Operand::Var { tag: None, prop_key: Some(PropKey::Key(NameOrId::Id(1))) };
         let pred = &Predicates::SingleItem(oprand);
         let target = ConditionBuilder::new()
@@ -181,8 +247,10 @@ mod test {
         assert!(cond.is_ok());
         let cond = cond.unwrap();
         assert_eq!(cond, target);
+    }
 
-        // test Predicates
+    #[test]
+    fn test_single_op_predicates_to_condition() {
         let left = Operand::Var { tag: None, prop_key: Some(PropKey::Key(NameOrId::Id(1))) };
         let right = Operand::Const(Object::Primitive(Primitives::Integer(10)));
         let cmp = common_pb::Logical::Eq;
@@ -201,7 +269,26 @@ mod test {
         let cond = cond.unwrap();
         assert_eq!(cond, target);
 
-        // test not Predicates
+        let left = Operand::Var { tag: None, prop_key: Some(PropKey::Key(NameOrId::Id(1))) };
+        let right = Operand::Const(Object::String("hello world".to_owned()));
+        let cmp = common_pb::Logical::Startswith;
+
+        let pred = &Predicates::Predicate(Predicate { left, cmp, right });
+
+        let target = ConditionBuilder::new()
+            .and(Condition::Pred(StorePredCondition::new_predicate(
+                StoreOperand::PropId(1),
+                StoreOprator::StartWith,
+                StoreOperand::Const(StoreProperty::String("hello world".to_owned())),
+            )))
+            .build();
+        let cond: Result<Option<Condition>, GraphProxyError> = pred.try_into();
+        assert!(cond.is_ok());
+        let cond = cond.unwrap();
+        assert_eq!(cond, target);
+    }
+    #[test]
+    fn test_not_predicates_to_condition() {
         let oprand = Operand::Var { tag: None, prop_key: Some(PropKey::Key(NameOrId::Id(1))) };
         let pred = &Predicates::Not(Box::new(Predicates::SingleItem(oprand)));
         let target = ConditionBuilder::new()
@@ -212,8 +299,10 @@ mod test {
         assert!(cond.is_ok());
         let cond = cond.unwrap();
         assert_eq!(cond, target);
+    }
 
-        // test and Predicates
+    #[test]
+    fn test_and_predicates_to_condition() {
         let left = Operand::Var { tag: None, prop_key: Some(PropKey::Key(NameOrId::Id(1))) };
         let right = Operand::Const(Object::Primitive(Primitives::Integer(10)));
         let cmp = common_pb::Logical::Ge;
@@ -244,8 +333,10 @@ mod test {
         assert!(cond.is_ok());
         let cond = cond.unwrap();
         assert_eq!(cond, target);
+    }
 
-        // test or Predicates
+    #[test]
+    fn test_or_predicates_to_condition() {
         let left = Operand::Var { tag: None, prop_key: Some(PropKey::Key(NameOrId::Id(1))) };
         let right = Operand::Const(Object::Primitive(Primitives::Integer(10)));
         let cmp = common_pb::Logical::Ge;

@@ -17,7 +17,6 @@
 use std::convert::{TryFrom, TryInto};
 
 use dyn_type::{BorrowObject, Object};
-use global_query::store_api::PropId;
 use ir_common::error::ParsePbError;
 use ir_common::expr_parse::error::{ExprError, ExprResult};
 use ir_common::generated::algebra as pb;
@@ -37,19 +36,6 @@ pub struct Predicate {
     pub(crate) left: Operand,
     pub(crate) cmp: common_pb::Logical,
     pub(crate) right: Operand,
-}
-
-impl Predicate {
-    pub(crate) fn extract_prop_ids(&self) -> Option<Vec<PropId>> {
-        let left = self.left.get_var_prop_id();
-        let right = self.right.get_var_prop_id();
-        match (left, right) {
-            (Ok(left), Ok(right)) => Some(vec![left, right]),
-            (Ok(left), _) => Some(vec![left]),
-            (_, Ok(right)) => Some(vec![right]),
-            _ => None,
-        }
-    }
 }
 
 #[allow(dead_code)]
@@ -160,42 +146,6 @@ pub enum Predicates {
     Not(Box<Predicates>),
     And((Box<Predicates>, Box<Predicates>)),
     Or((Box<Predicates>, Box<Predicates>)),
-}
-
-pub(crate) fn zip_option_vecs<T>(left: Option<Vec<T>>, right: Option<Vec<T>>) -> Option<Vec<T>> {
-    match (left, right) {
-        (Some(mut left), Some(mut right)) => {
-            left.append(&mut right);
-            Some(left)
-        }
-        (None, Some(right)) => Some(right),
-        (Some(left), None) => Some(left),
-        (None, None) => None,
-    }
-}
-
-impl Predicates {
-    pub fn extract_prop_ids(&self) -> Option<Vec<PropId>> {
-        match self {
-            Predicates::Init => None,
-            Predicates::SingleItem(operand) => operand
-                .get_var_prop_id()
-                .map(|id| Some(vec![id]))
-                .unwrap_or(None),
-            Predicates::Predicate(pred) => pred.extract_prop_ids(),
-            Predicates::Not(pred) => pred.extract_prop_ids(),
-            Predicates::And((left, right)) => {
-                let left = left.extract_prop_ids();
-                let right = right.extract_prop_ids();
-                zip_option_vecs(left, right)
-            }
-            Predicates::Or((left, right)) => {
-                let left = left.extract_prop_ids();
-                let right = right.extract_prop_ids();
-                zip_option_vecs(left, right)
-            }
-        }
-    }
 }
 
 impl Default for Predicates {
@@ -362,7 +312,9 @@ impl EvalPred for Predicate {
             | Logical::Gt
             | Logical::Ge
             | Logical::Within
-            | Logical::Without => Ok(apply_logical(
+            | Logical::Without
+            | Logical::Startswith
+            | Logical::Endswith => Ok(apply_logical(
                 &self.cmp,
                 self.left.eval(context)?.as_borrow_object(),
                 Some(self.right.eval(context)?.as_borrow_object()),
@@ -462,7 +414,9 @@ fn process_predicates(
                             | Logical::Gt
                             | Logical::Ge
                             | Logical::Within
-                            | Logical::Without => partial.cmp(logical)?,
+                            | Logical::Without
+                            | Logical::Startswith
+                            | Logical::Endswith => partial.cmp(logical)?,
                             Logical::Not => is_not = true,
                             Logical::And | Logical::Or => {
                                 predicates = predicates.merge_partial(curr_cmp, partial, is_not)?;
@@ -525,15 +479,6 @@ fn process_predicates(
 pub enum PEvaluator {
     Predicates(Predicates),
     General(Evaluator),
-}
-
-impl PEvaluator {
-    pub fn extract_prop_ids(&self) -> Option<Vec<PropId>> {
-        match self {
-            PEvaluator::Predicates(preds) => preds.extract_prop_ids(),
-            _ => None,
-        }
-    }
 }
 
 impl EvalPred for PEvaluator {
@@ -889,6 +834,24 @@ mod tests {
         let expr = str_to_expr_pb("@0.name == \"Tom\" || @1.age > 27".to_string()).unwrap();
         let p_eval = PEvaluator::try_from(expr).unwrap();
         assert!(!p_eval
+            .eval_bool::<_, Vertices>(Some(&context))
+            .unwrap());
+
+        let expr = str_to_expr_pb("@0.name StartsWith \"Jo\"".to_string()).unwrap();
+        let p_eval = PEvaluator::try_from(expr).unwrap();
+        assert!(p_eval
+            .eval_bool::<_, Vertices>(Some(&context))
+            .unwrap());
+
+        let expr = str_to_expr_pb("@0.name EndsWith \"hn\"".to_string()).unwrap();
+        let p_eval = PEvaluator::try_from(expr).unwrap();
+        assert!(p_eval
+            .eval_bool::<_, Vertices>(Some(&context))
+            .unwrap());
+
+        let expr = str_to_expr_pb("\"John\" EndsWith \"hn\"".to_string()).unwrap();
+        let p_eval = PEvaluator::try_from(expr).unwrap();
+        assert!(p_eval
             .eval_bool::<_, Vertices>(Some(&context))
             .unwrap());
 
