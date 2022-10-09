@@ -758,7 +758,7 @@ mod test {
             if let Entry::Intersection(intersection) = record.get(Some(TAG_C)).unwrap().borrow() {
                 let mut result_collection: Vec<usize> = intersection
                     .clone()
-                    .into_iter()
+                    .iter()
                     .map(|r| r.id() as usize)
                     .collect();
                 result_collection.sort();
@@ -831,7 +831,7 @@ mod test {
             if let Entry::Intersection(intersection) = record.get(Some(TAG_C)).unwrap().borrow() {
                 let mut result_collection: Vec<DefaultId> = intersection
                     .clone()
-                    .into_iter()
+                    .iter()
                     .map(|r| r.id() as DefaultId)
                     .collect();
                 result_collection.sort();

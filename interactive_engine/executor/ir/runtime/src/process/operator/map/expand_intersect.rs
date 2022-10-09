@@ -22,7 +22,7 @@ use graph_proxy::apis::{Direction, DynDetails, QueryParams, Statement, Vertex, I
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::KeyId;
-use pegasus::api::function::{DynIter, FilterMapFunction, FnResult};
+use pegasus::api::function::{FilterMapFunction, FnResult};
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::error::{FnExecError, FnGenError, FnGenResult};
@@ -41,79 +41,84 @@ struct ExpandOrIntersect<E: Into<Entry>> {
 
 #[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]
 pub struct Intersection {
-    id_record_count_map: BTreeMap<ID, (Vertex, u64)>,
+    vertex_vec: Vec<Vertex>,
+    count_vec: Vec<u32>,
 }
 
 impl Intersection {
     pub fn from_iter<I: Iterator<Item = Vertex>>(iter: I) -> Intersection {
-        let mut id_record_count_map = BTreeMap::new();
+        let mut vertex_count_map = BTreeMap::new();
         for vertex in iter {
-            let vertex_id = vertex.id();
-            id_record_count_map
-                .entry(vertex_id)
-                .or_insert((vertex, 0))
-                .1 += 1;
+            let cnt = vertex_count_map.entry(vertex).or_insert(0);
+            *cnt += 1;
         }
-        Intersection { id_record_count_map }
+        let mut vertex_vec = Vec::with_capacity(vertex_count_map.len());
+        let mut count_vec = Vec::with_capacity(vertex_count_map.len());
+        for (vertex, cnt) in vertex_count_map.into_iter() {
+            vertex_vec.push(vertex);
+            count_vec.push(cnt);
+        }
+        Intersection { vertex_vec, count_vec }
     }
 
-    pub fn intersect(&mut self, seeker: &BTreeMap<ID, u64>) {
-        let mut records_to_remove = Vec::with_capacity(self.id_record_count_map.len());
-        for (record_id, (_, count)) in self.id_record_count_map.iter_mut() {
-            if let Some(seeker_count) = seeker.get(record_id) {
-                *count *= *seeker_count;
-            } else {
-                records_to_remove.push(*record_id);
+    fn intersect<Iter: Iterator<Item = Vertex>>(&mut self, seeker: Iter) {
+        let len = self.vertex_vec.len();
+        let mut s = vec![0; len];
+        for item in seeker {
+            let vid = item.id();
+            if let Ok(idx) = self
+                .vertex_vec
+                .binary_search_by(|e| e.id().cmp(&vid))
+            {
+                s[idx] += 1;
             }
         }
-        for record_to_remove in records_to_remove {
-            self.id_record_count_map
-                .remove(&record_to_remove);
+        let mut idx = 0;
+        for (i, cnt) in s.into_iter().enumerate() {
+            if cnt != 0 {
+                self.vertex_vec.swap(idx, i);
+                self.count_vec.swap(idx, i);
+                self.count_vec[idx] *= cnt;
+                idx += 1;
+            }
         }
+        self.vertex_vec.drain(idx..);
+        self.count_vec.drain(idx..);
     }
 
     pub fn is_empty(&self) -> bool {
-        self.id_record_count_map.is_empty()
+        self.vertex_vec.is_empty()
     }
 
     pub fn len(&self) -> usize {
         let mut len = 0;
-        for (_, &(_, count)) in self.id_record_count_map.iter() {
-            len += count;
+        for count in self.count_vec.iter() {
+            len += *count;
         }
         len as usize
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &Vertex> {
-        self.id_record_count_map
+        self.vertex_vec
             .iter()
-            .flat_map(move |(_, (record, count))| std::iter::repeat(record).take(*count as usize))
-    }
-}
-
-impl IntoIterator for Intersection {
-    type Item = Vertex;
-    type IntoIter = DynIter<Self::Item>;
-    fn into_iter(self) -> Self::IntoIter {
-        Box::new(
-            self.id_record_count_map
-                .into_iter()
-                .flat_map(move |(_, (record, count))| std::iter::repeat(record).take(count as usize)),
-        )
+            .zip(&self.count_vec)
+            .flat_map(move |(vertex, count)| std::iter::repeat(vertex).take(*count as usize))
     }
 }
 
 impl Encode for Intersection {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
-        self.id_record_count_map.write_to(writer)?;
+        self.vertex_vec.write_to(writer)?;
+        self.count_vec.write_to(writer)?;
         Ok(())
     }
 }
 
 impl Decode for Intersection {
     fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
-        let id_record_count_map = <BTreeMap<ID, (Vertex, u64)>>::read_from(reader)?;
-        Ok(Intersection { id_record_count_map })
+        let vertex_vec = <Vec<Vertex>>::read_from(reader)?;
+        let count_vec = <Vec<u32>>::read_from(reader)?;
+        Ok(Intersection { vertex_vec, count_vec })
     }
 }
 
@@ -140,11 +145,7 @@ impl<E: Into<Entry> + 'static> FilterMapFunction<Record, Record> for ExpandOrInt
                 // the case of expansion and intersection
                 match pre_entry {
                     Entry::Intersection(pre_intersection) => {
-                        let mut seeker = BTreeMap::new();
-                        for v in iter {
-                            *seeker.entry(v.id()).or_default() += 1;
-                        }
-                        pre_intersection.intersect(&seeker);
+                        pre_intersection.intersect(iter);
                         if pre_intersection.is_empty() {
                             Ok(None)
                         } else {
@@ -218,32 +219,24 @@ impl FilterMapFuncGen for algebra_pb::EdgeExpand {
 
 #[cfg(test)]
 mod tests {
-    use std::iter::FromIterator;
 
-    use graph_proxy::apis::graph::element::Element;
-    use graph_proxy::apis::ID;
+    use graph_proxy::apis::{GraphElement, Vertex, ID};
 
-    use super::{BTreeMap, Intersection};
+    use super::Intersection;
+
+    fn to_vertex_iter(id_vec: Vec<ID>) -> impl Iterator<Item = Vertex> {
+        id_vec.into_iter().map(|id| id.into())
+    }
 
     #[test]
     fn intersect_test_01() {
-        let mut intersection = Intersection {
-            id_record_count_map: BTreeMap::from_iter(
-                vec![1, 2, 3]
-                    .into_iter()
-                    .map(|id| (id, (id.into(), 1))),
-            ),
-        };
-        let seeker = BTreeMap::from_iter(
-            vec![1, 2, 3, 4, 5]
-                .into_iter()
-                .map(|id| (id, 1)),
-        );
-        intersection.intersect(&seeker);
+        let mut intersection = Intersection::from_iter(to_vertex_iter(vec![1, 2, 3]));
+        let seeker = to_vertex_iter(vec![1, 2, 3, 4, 5]);
+        intersection.intersect(seeker);
         assert_eq!(
             intersection
                 .iter()
-                .map(|record| record.as_graph_element().unwrap().id())
+                .map(|vertex| vertex.id())
                 .collect::<Vec<ID>>(),
             vec![1, 2, 3]
         )
@@ -251,19 +244,13 @@ mod tests {
 
     #[test]
     fn intersect_test_02() {
-        let mut intersection = Intersection {
-            id_record_count_map: BTreeMap::from_iter(
-                vec![1, 2, 3, 4, 5]
-                    .into_iter()
-                    .map(|id| (id, (id.into(), 1))),
-            ),
-        };
-        let seeker = BTreeMap::from_iter(vec![3, 2, 1].into_iter().map(|id| (id, 1)));
-        intersection.intersect(&seeker);
+        let mut intersection = Intersection::from_iter(to_vertex_iter(vec![1, 2, 3, 4, 5]));
+        let seeker = to_vertex_iter(vec![3, 2, 1]);
+        intersection.intersect(seeker);
         assert_eq!(
             intersection
                 .iter()
-                .map(|record| record.as_graph_element().unwrap().id())
+                .map(|vertex| vertex.id())
                 .collect::<Vec<ID>>(),
             vec![1, 2, 3]
         )
@@ -271,23 +258,13 @@ mod tests {
 
     #[test]
     fn intersect_test_03() {
-        let mut intersection = Intersection {
-            id_record_count_map: BTreeMap::from_iter(
-                vec![1, 2, 3, 4, 5]
-                    .into_iter()
-                    .map(|id| (id, (id.into(), 1))),
-            ),
-        };
-        let seeker = BTreeMap::from_iter(
-            vec![9, 7, 5, 3, 1]
-                .into_iter()
-                .map(|id| (id, 1)),
-        );
-        intersection.intersect(&seeker);
+        let mut intersection = Intersection::from_iter(to_vertex_iter(vec![1, 2, 3, 4, 5]));
+        let seeker = to_vertex_iter(vec![9, 7, 5, 3, 1]);
+        intersection.intersect(seeker);
         assert_eq!(
             intersection
                 .iter()
-                .map(|record| record.as_graph_element().unwrap().id())
+                .map(|vertex| vertex.id())
                 .collect::<Vec<ID>>(),
             vec![1, 3, 5]
         )
@@ -295,19 +272,13 @@ mod tests {
 
     #[test]
     fn intersect_test_04() {
-        let mut intersection = Intersection {
-            id_record_count_map: BTreeMap::from_iter(
-                vec![1, 2, 3, 4, 5]
-                    .into_iter()
-                    .map(|id| (id, (id.into(), 1))),
-            ),
-        };
-        let seeker = BTreeMap::from_iter(vec![9, 8, 7, 6].into_iter().map(|id| (id, 1)));
-        intersection.intersect(&seeker);
+        let mut intersection = Intersection::from_iter(to_vertex_iter(vec![1, 2, 3, 4, 5]));
+        let seeker = to_vertex_iter(vec![9, 8, 7, 6]);
+        intersection.intersect(seeker);
         assert_eq!(
             intersection
                 .iter()
-                .map(|record| record.as_graph_element().unwrap().id())
+                .map(|vertex| vertex.id())
                 .collect::<Vec<ID>>(),
             Vec::<ID>::new()
         )
@@ -315,17 +286,13 @@ mod tests {
 
     #[test]
     fn intersect_test_05() {
-        let mut intersection = Intersection {
-            id_record_count_map: BTreeMap::from_iter(
-                [(1, 2), (2, 1), (3, 1), (4, 1), (5, 1)].map(|(id, count)| (id, (id.into(), count))),
-            ),
-        };
-        let seeker = BTreeMap::from_iter(vec![1, 2, 3].into_iter().map(|id| (id, 1)));
-        intersection.intersect(&seeker);
+        let mut intersection = Intersection::from_iter(to_vertex_iter(vec![1, 2, 3, 4, 5, 1]));
+        let seeker = to_vertex_iter(vec![1, 2, 3]);
+        intersection.intersect(seeker);
         assert_eq!(
             intersection
                 .iter()
-                .map(|record| record.as_graph_element().unwrap().id())
+                .map(|vertex| vertex.id())
                 .collect::<Vec<ID>>(),
             vec![1, 1, 2, 3]
         )
@@ -333,19 +300,13 @@ mod tests {
 
     #[test]
     fn intersect_test_06() {
-        let mut intersection = Intersection {
-            id_record_count_map: BTreeMap::from_iter(
-                vec![1, 2, 3]
-                    .into_iter()
-                    .map(|id| (id, (id.into(), 1))),
-            ),
-        };
-        let seeker = BTreeMap::from_iter([(1, 2), (2, 1), (3, 1), (4, 1), (5, 1)]);
-        intersection.intersect(&seeker);
+        let mut intersection = Intersection::from_iter(to_vertex_iter(vec![1, 2, 3]));
+        let seeker = to_vertex_iter(vec![1, 2, 3, 4, 5, 1]);
+        intersection.intersect(seeker);
         assert_eq!(
             intersection
                 .iter()
-                .map(|record| record.as_graph_element().unwrap().id())
+                .map(|vertex| vertex.id())
                 .collect::<Vec<ID>>(),
             vec![1, 1, 2, 3]
         )
@@ -353,17 +314,13 @@ mod tests {
 
     #[test]
     fn intersect_test_07() {
-        let mut intersection = Intersection {
-            id_record_count_map: BTreeMap::from_iter(
-                [(1, 2), (2, 2), (3, 2), (4, 1), (5, 1)].map(|(id, count)| (id, (id.into(), count))),
-            ),
-        };
-        let seeker = BTreeMap::from_iter(vec![1, 2, 3].into_iter().map(|id| (id, 1)));
-        intersection.intersect(&seeker);
+        let mut intersection = Intersection::from_iter(to_vertex_iter(vec![1, 1, 2, 2, 3, 3, 4, 5]));
+        let seeker = to_vertex_iter(vec![1, 2, 3]);
+        intersection.intersect(seeker);
         assert_eq!(
             intersection
                 .iter()
-                .map(|record| record.as_graph_element().unwrap().id())
+                .map(|vertex| vertex.id())
                 .collect::<Vec<ID>>(),
             vec![1, 1, 2, 2, 3, 3]
         )
@@ -371,19 +328,13 @@ mod tests {
 
     #[test]
     fn intersect_test_08() {
-        let mut intersection = Intersection {
-            id_record_count_map: BTreeMap::from_iter(
-                vec![1, 2, 3]
-                    .into_iter()
-                    .map(|id| (id, (id.into(), 1))),
-            ),
-        };
-        let seeker = BTreeMap::from_iter([(1, 2), (2, 2), (3, 2), (4, 1), (5, 1)]);
-        intersection.intersect(&seeker);
+        let mut intersection = Intersection::from_iter(to_vertex_iter(vec![1, 2, 3]));
+        let seeker = to_vertex_iter(vec![1, 1, 2, 2, 3, 3, 4, 5]);
+        intersection.intersect(seeker);
         assert_eq!(
             intersection
                 .iter()
-                .map(|record| record.as_graph_element().unwrap().id())
+                .map(|vertex| vertex.id())
                 .collect::<Vec<ID>>(),
             vec![1, 1, 2, 2, 3, 3]
         )
@@ -391,17 +342,13 @@ mod tests {
 
     #[test]
     fn intersect_test_09() {
-        let mut intersection = Intersection {
-            id_record_count_map: BTreeMap::from_iter(
-                [(1, 2), (2, 2), (3, 2)].map(|(id, count)| (id, (id.into(), count))),
-            ),
-        };
-        let seeker = BTreeMap::from_iter([(1, 2), (2, 2), (3, 2), (4, 1), (5, 1)]);
-        intersection.intersect(&seeker);
+        let mut intersection = Intersection::from_iter(to_vertex_iter(vec![1, 1, 2, 2, 3, 3]));
+        let seeker = to_vertex_iter(vec![1, 1, 2, 2, 3, 3, 4, 5]);
+        intersection.intersect(seeker);
         assert_eq!(
             intersection
                 .iter()
-                .map(|record| record.as_graph_element().unwrap().id())
+                .map(|vertex| vertex.id())
                 .collect::<Vec<ID>>(),
             vec![1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3]
         )

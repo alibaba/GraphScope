@@ -100,14 +100,22 @@ impl Hash for Vertex {
 
 impl PartialEq for Vertex {
     fn eq(&self, other: &Self) -> bool {
-        self.id() == other.id()
+        self.id == other.id
     }
 }
 
 impl PartialOrd for Vertex {
     // TODO: not sure if it is reasonable. Vertex may be not comparable.
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.id().partial_cmp(&other.id())
+        self.id.partial_cmp(&other.id)
+    }
+}
+
+impl Eq for Vertex {}
+
+impl Ord for Vertex {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.id.cmp(&other.id)
     }
 }
 
