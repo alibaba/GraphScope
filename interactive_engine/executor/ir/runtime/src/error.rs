@@ -50,7 +50,7 @@ impl std::fmt::Display for FnGenError {
             FnGenError::ParseError(e) => write!(f, "Parse pb error in fn gen {}", e),
             FnGenError::NullGraphError => write!(f, "Null graph store error in fn gen",),
             FnGenError::StoreError(e) => write!(f, "Query store error in fn gen {}", e),
-            FnGenError::UnSupported(e) => write!(f, "Op not supported error in fn gen  {}", e),
+            FnGenError::UnSupported(e) => write!(f, "Unsupported error in fn gen  {}", e),
         }
     }
 }

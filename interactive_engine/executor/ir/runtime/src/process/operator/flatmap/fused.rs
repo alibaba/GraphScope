@@ -87,8 +87,8 @@ impl FlatMapFuncGen for algebra_pb::FusedOperator {
             } else if let Ok(flat_map) = inner_op.gen_flat_map() {
                 funcs.push(FusedFunc::FlatMap(flat_map));
             } else {
-                return Err(FnGenError::UnSupported(format!(
-                    "the operator: {:?} cannot be fused as it is neither `FilterMap` or `FlatMap`",
+                return Err(FnGenError::unsupported_error(&format!(
+                    "neither `FilterMap` or `FlatMap` operator to fuse, the operator is {:?}",
                     op
                 )));
             }

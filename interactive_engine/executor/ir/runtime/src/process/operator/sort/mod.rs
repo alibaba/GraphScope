@@ -29,7 +29,7 @@ impl CompareFunctionGen for algebra_pb::logical_plan::operator::Opr {
     fn gen_cmp(self) -> FnGenResult<Box<dyn CompareFunction<Record>>> {
         match self {
             algebra_pb::logical_plan::operator::Opr::OrderBy(order) => order.gen_cmp(),
-            _ => Err(ParsePbError::from(format!("the operator: {:?} is not an `Order`", self)))?,
+            _ => Err(ParsePbError::from(format!("the operator is not an `Order`, it is {:?}", self)))?,
         }
     }
 }

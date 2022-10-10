@@ -49,7 +49,7 @@ impl FoldGen<u64, Record> for algebra_pb::GroupBy {
                 .transpose()?;
             Ok(Box::new(CountAlias { alias: count_alias }))
         } else {
-            Err(FnGenError::unsupported_error(&format!("Do not support fold_map of {:?}", self)))
+            Err(FnGenError::unsupported_error(&format!("fold_map in `Accum` {:?}", self)))
         }
     }
 

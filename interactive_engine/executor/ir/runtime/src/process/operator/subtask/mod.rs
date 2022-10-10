@@ -30,9 +30,9 @@ impl RecordLeftJoinGen for algebra_pb::logical_plan::operator::Opr {
         match self {
             algebra_pb::logical_plan::operator::Opr::Apply(apply) => Ok(Box::new(apply)),
             algebra_pb::logical_plan::operator::Opr::SegApply(_seg_apply) => {
-                Err(FnGenError::unsupported_error("SegApply is not supported yet"))?
+                Err(FnGenError::unsupported_error("`SegApply` opr"))?
             }
-            _ => Err(ParsePbError::from(format!("the operator: {:?} is not a `SubTask`", self)))?,
+            _ => Err(ParsePbError::from(format!("the operator is not a `SubTask`, it is {:?}", self)))?,
         }
     }
 }

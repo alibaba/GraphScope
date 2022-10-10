@@ -140,7 +140,10 @@ impl SourceOperator {
                     }
                 } else if let Some(ref indexed_values) = self.primary_key_values {
                     if self.query_params.labels.len() != 1 {
-                        Err(FnGenError::unsupported_error("indexed_scan with empty/multiple labels"))?
+                        Err(FnGenError::unsupported_error(&format!(
+                            "Empty/Multiple labels in `IndexScan`, labels are {:?}",
+                            self.query_params.labels
+                        )))?
                     }
                     if let Some(v) = graph.index_scan_vertex(
                         self.query_params.labels[0],
@@ -169,7 +172,7 @@ impl SourceOperator {
                 }
                 Ok(Box::new(e_source.map(move |e| Record::new(e, self.alias.clone()))))
             }
-            SourceType::Table => Err(FnGenError::unsupported_error("data source of `Table` type"))?,
+            SourceType::Table => Err(FnGenError::unsupported_error("`Table` type in `Source` opr"))?,
         }
     }
 }

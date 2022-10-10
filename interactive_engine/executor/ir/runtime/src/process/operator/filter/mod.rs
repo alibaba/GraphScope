@@ -29,7 +29,7 @@ impl FilterFuncGen for algebra_pb::logical_plan::operator::Opr {
     fn gen_filter(self) -> FnGenResult<Box<dyn FilterFunction<Record>>> {
         match self {
             algebra_pb::logical_plan::operator::Opr::Select(select) => select.gen_filter(),
-            _ => Err(ParsePbError::from(format!("the operator: {:?} is not a `Filter`", self)))?,
+            _ => Err(ParsePbError::from(format!("the operator is not a `Filter`, it is {:?}", self)))?,
         }
     }
 }

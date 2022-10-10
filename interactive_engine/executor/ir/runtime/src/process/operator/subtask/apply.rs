@@ -109,12 +109,9 @@ impl ApplyGen<Record, Vec<Record>, Option<Record>> for algebra_pb::Apply {
             .transpose()?;
         match join_kind {
             JoinKind::Inner | JoinKind::LeftOuter | JoinKind::Semi | JoinKind::Anti => {}
-            JoinKind::RightOuter | JoinKind::FullOuter | JoinKind::Times => {
-                Err(FnGenError::unsupported_error(&format!(
-                    "Do not support join_kind {:?} in Apply",
-                    join_kind
-                )))?
-            }
+            JoinKind::RightOuter | JoinKind::FullOuter | JoinKind::Times => Err(
+                FnGenError::unsupported_error(&format!("join_kind in `Apply`, kind is {:?}", join_kind)),
+            )?,
         }
         let apply_operator = ApplyOperator { join_kind, alias };
         debug!("Runtime apply operator {:?}", apply_operator);
