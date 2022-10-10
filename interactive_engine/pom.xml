@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.alibaba.maxgraph</groupId>
@@ -92,7 +90,7 @@
     <rocksdb.version>5.15.10</rocksdb.version>
     <maven.clean.plugin.version>3.1.0</maven.clean.plugin.version>
     <protobuf.maven.plugin.version>0.6.1</protobuf.maven.plugin.version>
-    <commons.codec.version>1.11</commons.codec.version>
+    <commons.codec.version>1.13</commons.codec.version>
     <metrics.core.version>3.2.5</metrics.core.version>
     <aliyun.oss.version>3.14.1</aliyun.oss.version>
     <skip.tests>true</skip.tests>
