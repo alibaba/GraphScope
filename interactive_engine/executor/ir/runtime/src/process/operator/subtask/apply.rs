@@ -44,7 +44,7 @@ impl BinaryFunction<Record, Vec<Record>, Option<Record>> for ApplyOperator {
                     let sub_entry = sub_result
                         .get(None)
                         .ok_or(FnExecError::get_tag_error(&format!(
-                            "tag None in `ApplyOperator` on Record {:?}",
+                            "get None tag from the sub record in `Apply` operator, the record is {:?}",
                             sub_result
                         )))?;
                     if let Some(alias) = self.alias.as_ref() {
@@ -73,7 +73,7 @@ impl BinaryFunction<Record, Vec<Record>, Option<Record>> for ApplyOperator {
                     let sub_entry = sub_result
                         .get(None)
                         .ok_or(FnExecError::get_tag_error(&format!(
-                            "tag None in `ApplyOperator` on Record {:?}",
+                            "get None tag from the sub record in `Apply` operator, the record is {:?}",
                             sub_result
                         )))?;
                     if let Some(alias) = self.alias.as_ref() {
@@ -85,8 +85,8 @@ impl BinaryFunction<Record, Vec<Record>, Option<Record>> for ApplyOperator {
                     Ok(Some(parent))
                 }
             }
-            _ => Err(FnExecError::UnSupported(format!(
-                "Do not support the join type {:?} in Apply",
+            _ => Err(FnExecError::unsupported_error(&format!(
+                "Apply::JoinKind, which is {:?}, join_kind",
                 self.join_kind
             )))?,
         }
@@ -109,9 +109,12 @@ impl ApplyGen<Record, Vec<Record>, Option<Record>> for algebra_pb::Apply {
             .transpose()?;
         match join_kind {
             JoinKind::Inner | JoinKind::LeftOuter | JoinKind::Semi | JoinKind::Anti => {}
-            JoinKind::RightOuter | JoinKind::FullOuter | JoinKind::Times => Err(
-                FnGenError::unsupported_error(&format!("join_kind in `Apply`, kind is {:?}", join_kind)),
-            )?,
+            JoinKind::RightOuter | JoinKind::FullOuter | JoinKind::Times => {
+                Err(FnGenError::unsupported_error(&format!(
+                    "Apply::JoinKind, which is {:?}, join_kind",
+                    join_kind
+                )))?
+            }
         }
         let apply_operator = ApplyOperator { join_kind, alias };
         debug!("Runtime apply operator {:?}", apply_operator);

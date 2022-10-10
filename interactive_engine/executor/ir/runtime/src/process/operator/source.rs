@@ -172,7 +172,9 @@ impl SourceOperator {
                 }
                 Ok(Box::new(e_source.map(move |e| Record::new(e, self.alias.clone()))))
             }
-            SourceType::Table => Err(FnGenError::unsupported_error("`Table` type in `Source` opr"))?,
+            SourceType::Table => Err(FnGenError::unsupported_error(
+                "neither `Edge` nor `Vertex` but `Table` type `Source` opr",
+            ))?,
         }
     }
 }

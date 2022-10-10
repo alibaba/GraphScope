@@ -76,7 +76,7 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                     })
                 } else {
                     Err(FnExecError::unexpected_data_error(&format!(
-                        "Entry should be vertex or edge in AuxiliaOperator: {:?}",
+                        "neither Vertex nor Edge entry is accessed in `Auxilia` operator, the entry is {:?}",
                         entry
                     )))?
                 };

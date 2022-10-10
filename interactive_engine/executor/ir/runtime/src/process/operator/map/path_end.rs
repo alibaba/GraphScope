@@ -33,7 +33,7 @@ impl MapFunction<Record, Record> for PathEndOperator {
         let entry = input
             .get(None)
             .ok_or(FnExecError::get_tag_error(&format!(
-                "tag None in `PathEndOperator` on Record: {:?}",
+                "get None tag from the current record in `PathEnd` operator, the record is {:?}",
                 input
             )))?
             .clone();
