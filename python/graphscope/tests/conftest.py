@@ -34,14 +34,12 @@ from graphscope.framework.loader import Loader
 @pytest.fixture(scope="module")
 def graphscope_session():
     graphscope.set_option(show_log=True)
-    graphscope.set_option(initializing_interactive_engine=False)
     if os.environ.get("DEPLOYMENT", None) == "standalone":
         sess = graphscope.session(cluster_type="hosts", num_workers=1)
     else:
         sess = graphscope.session(cluster_type="hosts")
     yield sess
     sess.close()
-
 
 test_repo_dir = os.path.expandvars("${GS_TEST_DIR}")
 new_property_dir = os.path.join(test_repo_dir, "new_property", "v2_e2")

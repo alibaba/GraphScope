@@ -19,7 +19,6 @@
 import hashlib
 import json
 import logging
-import threading
 import warnings
 from abc import ABCMeta
 from abc import abstractmethod
@@ -33,7 +32,6 @@ try:
 except ImportError:
     vineyard = None
 
-from graphscope.config import GSConfig as gs_config
 from graphscope.framework import dag_utils
 from graphscope.framework import utils
 from graphscope.framework.dag import DAGNode
@@ -312,10 +310,6 @@ class GraphDAGNode(DAGNode, GraphInterface):
         return graph_dag_node
 
     def _resolve_op(self, incoming_data):
-        # Don't import the :code:`NXGraph` in top-level statements to improve the
-        # performance of :code:`import graphscope`.
-        from graphscope import nx
-
         if incoming_data is None:
             # create dag node of empty graph
             self._op = self._construct_op_of_empty_graph()
@@ -323,8 +317,6 @@ class GraphDAGNode(DAGNode, GraphInterface):
             self._op = incoming_data
             if self._op.type == types_pb2.PROJECT_TO_SIMPLE:
                 self._graph_type = graph_def_pb2.ARROW_PROJECTED
-        elif isinstance(incoming_data, nx.classes.graph._GraphBase):
-            self._op = self._from_nx_graph(incoming_data)
         elif isinstance(incoming_data, Graph):
             self._op = dag_utils.copy_graph(incoming_data)
             self._graph_type = incoming_data.graph_type
@@ -337,7 +329,13 @@ class GraphDAGNode(DAGNode, GraphInterface):
         ):
             self._op = self._from_vineyard(incoming_data)
         else:
-            raise RuntimeError("Not supported incoming data.")
+            # Don't import the :code:`NXGraph` in top-level statements to improve the
+            # performance of :code:`import graphscope`.
+            from graphscope import nx
+            if isinstance(incoming_data, nx.classes.graph._GraphBase):
+                self._op = self._from_nx_graph(incoming_data)
+            else:
+                raise RuntimeError("Not supported incoming data.")
 
     def to_numpy(self, selector, vertex_range=None):
         """Select some elements of the graph and output to numpy.
@@ -711,30 +709,6 @@ class Graph(GraphInterface):
         self._schema = GraphSchema()
         self._detached = False
 
-        self._interactive_instance_launching_thread = None
-        self._interactive_instance_list = []
-        self._learning_instance_list = []
-
-    def _close_interactive_instances(self):
-        # Close related interactive instances when graph unloaded.
-        # Since the graph is gone, quering via interactive client is meaningless.
-        for instance in self._interactive_instance_list:
-            instance.close()
-        self._interactive_instance_list.clear()
-
-    def _close_learning_instances(self):
-        for instance in self._learning_instance_list:
-            instance.close()
-        self._learning_instance_list.clear()
-
-    def _launch_interactive_instance_impl(self):
-        try:
-            self._session.gremlin(self)
-        except:  # noqa: E722
-            # Record error msg in `InteractiveQuery` when launching failed.
-            # Unexpect and suppress all exceptions here.
-            pass
-
     def update_from_graph_def(self, graph_def):
         if graph_def.graph_type == graph_def_pb2.ARROW_FLATTENED:
             self._graph_node._graph_type = graph_def_pb2.ARROW_FLATTENED
@@ -760,12 +734,6 @@ class Graph(GraphInterface):
         self._e_relationships = self._schema.edge_relationships
         # init saved_signature (must be after init schema)
         self._saved_signature = self.signature
-        # create gremlin server pod asynchronously
-        if self._session.eager() and gs_config.initializing_interactive_engine:
-            self._interactive_instance_launching_thread = threading.Thread(
-                target=self._launch_interactive_instance_impl, args=()
-            )
-            self._interactive_instance_launching_thread.start()
 
     def __getattr__(self, name):
         if hasattr(self._graph_node, name):
@@ -878,28 +846,6 @@ class Graph(GraphInterface):
         """Unload this graph from graphscope engine."""
         if self._session.info["status"] != "active" or self._key is None:
             return
-
-        # close interactive instances first
-        try:
-            if (
-                self._interactive_instance_launching_thread is not None
-                and self._interactive_instance_launching_thread.is_alive()
-            ):
-                # join raises a RuntimeError if an attempt is made to join the current thread.
-                # this exception occurs when a object collected by gc mechanism contains a running thread.
-                if (
-                    threading.current_thread()
-                    != self._interactive_instance_launching_thread
-                ):
-                    self._interactive_instance_launching_thread.join()
-            self._close_interactive_instances()
-        except Exception as e:
-            logger.error("Failed to close interactive instances: %s" % e)
-        try:
-            self._close_learning_instances()
-        except Exception as e:
-            logger.error("Failed to close learning instances: %s" % e)
-        rlt = None
         if not self._detached:
             rlt = self._session._wrapper(self._graph_node._unload())
         self._key = None
@@ -983,22 +929,6 @@ class Graph(GraphInterface):
         check_argument(
             self.signature == self._saved_signature, "Graph has been modified!"
         )
-
-    def _attach_interactive_instance(self, instance):
-        """Store the instance when a new interactive instance is started.
-
-        Args:
-            instance: interactive instance
-        """
-        self._interactive_instance_list.append(instance)
-
-    def _attach_learning_instance(self, instance):
-        """Store the instance when a new learning instance is created.
-
-        Args:
-            instance: learning instance
-        """
-        self._learning_instance_list.append(instance)
 
     def save_to(self, path, **kwargs):
         """Serialize graph to a location.

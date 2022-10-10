@@ -57,10 +57,9 @@ from graphscope.deploy.kubernetes.utils import get_service_endpoints
 from graphscope.deploy.kubernetes.utils import resolve_api_client
 from graphscope.framework.utils import PipeWatcher
 from graphscope.framework.utils import get_tempdir
-from graphscope.framework.utils import is_free_port
 from graphscope.proto import types_pb2
 
-from gscoordinator.launcher import Launcher
+from gscoordinator.launcher import AbstractLauncher
 from gscoordinator.utils import ANALYTICAL_ENGINE_PATH
 from gscoordinator.utils import GRAPHSCOPE_HOME
 from gscoordinator.utils import INTERACTIVE_ENGINE_SCRIPT
@@ -132,7 +131,7 @@ class ResourceManager(object):
             json.dump(rlt, f)
 
 
-class KubernetesClusterLauncher(Launcher):
+class KubernetesClusterLauncher(AbstractLauncher):
     _gs_etcd_builder_cls = GSEtcdBuilder
     _gs_engine_builder_cls = GSEngineBuilder
     _gs_mars_scheduler_builder_cls = GSEngineBuilder
@@ -198,7 +197,7 @@ class KubernetesClusterLauncher(Launcher):
         timeout_seconds=None,
         waiting_for_delete=None,
         delete_namespace=None,
-        **kwargs
+        **kwargs,
     ):
 
         super().__init__()
@@ -277,24 +276,21 @@ class KubernetesClusterLauncher(Launcher):
         self._learning_instance_processes = {}
 
         # workspace
-        self._instance_workspace = os.path.join(
-            WORKSPACE, self._saved_locals["instance_id"]
-        )
+        instance_id = self._saved_locals["instance_id"]
+        self._instance_workspace = os.path.join(WORKSPACE, instance_id)
         os.makedirs(self._instance_workspace, exist_ok=True)
         self._session_workspace = None
 
         # component service name
         if self._exists_vineyard_daemonset(self._saved_locals["vineyard_daemonset"]):
             self._vineyard_service_name = (
-                self._saved_locals["vineyard_daemonset"] + "-rpc"
+                f"{self._saved_locals['vineyard_daemonset']}-rpc"
             )
         else:
             self._vineyard_service_name = (
-                self._vineyard_service_name_prefix + self._saved_locals["instance_id"]
+                f"{self._vineyard_service_name_prefix}{instance_id}"
             )
-        self._mars_service_name = (
-            self._mars_service_name_prefix + self._saved_locals["instance_id"]
-        )
+        self._mars_service_name = f"{self._mars_service_name_prefix}{instance_id}"
 
     def __del__(self):
         self.stop()
@@ -310,9 +306,6 @@ class KubernetesClusterLauncher(Launcher):
 
     def get_mars_scheduler_endpoint(self):
         return self._mars_service_endpoint
-
-    def get_pods_list(self):
-        return self._pod_name_list
 
     def waiting_for_delete(self):
         return self._saved_locals["waiting_for_delete"]
@@ -367,15 +360,28 @@ class KubernetesClusterLauncher(Launcher):
                 ]
             )
 
-    def create_interactive_instance(self, config: dict):
+    def close_analytical_instance(self):
+        pass
+
+    def launch_vineyard(self):
+        """Launch vineyardd in k8s cluster."""
+        # TODO: vineyard is launched by engine by now. 
+        pass
+
+    def close_etcd(self):
+        # TODO: Delete etcd pods and service.
+        pass
+
+    def close_vineyard(self):
+        pass
+
+    def create_interactive_instance(self, object_id: int, schema_path: str):
         """
         Args:
             config (dict): dict of op_def_pb2.OpDef.attr
         """
-        object_id = config[types_pb2.VINEYARD_ID].i
-        schema_path = config[types_pb2.SCHEMA_PATH].s.decode()
         env = os.environ.copy()
-        env.update({"GRAPHSCOPE_HOME": GRAPHSCOPE_HOME})
+        env["GRAPHSCOPE_HOME"] = GRAPHSCOPE_HOME
         cmd = [
             INTERACTIVE_ENGINE_SCRIPT,
             "create_gremlin_instance_on_k8s",
@@ -390,7 +396,7 @@ class KubernetesClusterLauncher(Launcher):
             self._coordinator_name,
         ]
         self._interactive_port += 3
-        logger.info("Create GIE instance with command: {0}".format(" ".join(cmd)))
+        logger.info("Create GIE instance with command: %s", " ".join(cmd))
         process = subprocess.Popen(
             cmd,
             start_new_session=True,
@@ -408,7 +414,7 @@ class KubernetesClusterLauncher(Launcher):
 
     def close_interactive_instance(self, object_id):
         env = os.environ.copy()
-        env.update({"GRAPHSCOPE_HOME": GRAPHSCOPE_HOME})
+        env["GRAPHSCOPE_HOME"] = GRAPHSCOPE_HOME
         cmd = [
             INTERACTIVE_ENGINE_SCRIPT,
             "close_gremlin_instance_on_k8s",
@@ -417,7 +423,7 @@ class KubernetesClusterLauncher(Launcher):
             self.hosts,
             self._engine_container_name,
         ]
-        logger.info("Close GIE instance with command: {0}".format(" ".join(cmd)))
+        logger.info("Close GIE instance with command: %s", " ".join(cmd))
         process = subprocess.Popen(
             cmd,
             start_new_session=True,
@@ -705,7 +711,7 @@ class KubernetesClusterLauncher(Launcher):
             )
         )
 
-    def _create_etcd(self):
+    def launch_etcd(self):
         logger.info("Launching etcd ...")
 
         labels = {
@@ -785,13 +791,14 @@ class KubernetesClusterLauncher(Launcher):
         )
 
     def _get_vineyard_service_endpoint(self):
-        # Always len(endpoints) >= 1
+        # len(endpoints) >= 1
         endpoints = get_service_endpoints(
             api_client=self._api_client,
             namespace=self._saved_locals["namespace"],
             name=self._vineyard_service_name,
             service_type=self._saved_locals["service_type"],
         )
+        assert len(endpoints) >= 1
         return endpoints[0]
 
     def _get_mars_scheduler_service_endpoint(self):
@@ -865,17 +872,15 @@ class KubernetesClusterLauncher(Launcher):
         }
         return config
 
-    def _create_interactive_engine_service(self):
-        pass
-
-    def _config_etcd_endpoint(self):
+    def configure_etcd_endpoint(self):
         if self._etcd_addrs is None:
-            self._create_etcd()
+            self.launch_etcd()
             self._etcd_endpoint = self._get_etcd_service_endpoint()
-            logger.info("Etcd created, endpoint is %s", self._etcd_endpoint)
+            logger.info("etcd cluster created")
         else:
             self._etcd_endpoint = self._etcd_addrs
-            logger.info("External Etcd endpoint is %s", self._etcd_endpoint)
+            logger.info("Using external etcd cluster")
+        logger.info("etcd endpoint is %s", self._etcd_endpoint)
 
     def _get_etcd_endpoints(self):
         etcd_addrs = []
@@ -890,11 +895,7 @@ class KubernetesClusterLauncher(Launcher):
         return etcd_endpoints
 
     def _create_services(self):
-        self._config_etcd_endpoint()
-
-        # create interactive engine service
-        logger.info("Creating interactive engine service...")
-        self._create_interactive_engine_service()
+        self.configure_etcd_endpoint()
 
         if self._saved_locals["with_mars"]:
             # scheduler used by mars
@@ -931,8 +932,8 @@ class KubernetesClusterLauncher(Launcher):
                     # check container status
                     selector = ""
                     for k, v in rs.spec.selector.match_labels.items():
-                        selector += k + "=" + v + ","
-                    selector = selector[:-1]
+                        selector += f"{k}={v},"
+                    selector = selector[:-1]  # remove last comma
                     engine_pod_selector = selector
 
                     pods = self._core_api.list_namespaced_pod(
@@ -950,7 +951,7 @@ class KubernetesClusterLauncher(Launcher):
                             timeout_seconds=1,
                         )
                         for event in stream:
-                            msg = "[{}]: {}".format(pod_name, event["object"].message)
+                            msg = f"[{pod_name}]: {event['object'].message}"
                             if msg not in event_messages:
                                 event_messages.append(msg)
                                 logger.info(msg)
@@ -985,13 +986,17 @@ class KubernetesClusterLauncher(Launcher):
 
         # get vineyard service endpoint
         self._vineyard_service_endpoint = self._get_vineyard_service_endpoint()
-        logger.debug("vineyard rpc runs on %s", self._vineyard_service_endpoint)
         if self._saved_locals["with_mars"]:
             self._mars_service_endpoint = (
                 "http://" + self._get_mars_scheduler_service_endpoint()
             )
-            logger.debug("mars scheduler runs on %s", self._mars_service_endpoint)
         logger.info("GraphScope engines pod is ready.")
+        logger.info("Engines pod name list: %s", self._pod_name_list)
+        logger.info("Engines pod ip list: %s", self._pod_ip_list)
+        logger.info("Engines pod host ip list: %s", self._pod_host_ip_list)
+        logger.info("Vineyard service endpoint: %s", self._vineyard_service_endpoint)
+        if self._saved_locals["with_mars"]:
+            logger.info("Mars service endpoint: %s", self._mars_service_endpoint)
 
     def _dump_resource_object(self):
         resource = {}
@@ -1014,7 +1019,7 @@ class KubernetesClusterLauncher(Launcher):
         )
         return endpoints[0]
 
-    def _launch_analytical_engine_locally(self):
+    def create_analytical_instance(self):
         logger.info(
             "Starting GAE rpc service on {} ...".format(
                 str(self._analytical_engine_endpoint)
@@ -1130,25 +1135,13 @@ class KubernetesClusterLauncher(Launcher):
             )
         except K8SApiException:
             return False
-        else:
-            return True
+        return True
 
     def start(self):
         try:
             self._create_services()
             self._waiting_for_services_ready()
             self._dump_resource_object()
-            logger.info("Engines pod name list: {}".format(self._pod_name_list))
-            logger.info("Engines pod ip list: {}".format(self._pod_ip_list))
-            logger.info("Engines pod host ip list: {}".format(self._pod_host_ip_list))
-            logger.info(
-                "Vineyard service endpoint: {}".format(self._vineyard_service_endpoint)
-            )
-            if self._saved_locals["with_mars"]:
-                logger.info(
-                    "Mars service endpoint: {}".format(self._mars_service_endpoint)
-                )
-            self._launch_analytical_engine_locally()
         except Exception as e:
             time.sleep(1)
             logger.error(
@@ -1206,11 +1199,6 @@ class KubernetesClusterLauncher(Launcher):
                     # delete coordinator deployment and service
                     self._delete_dangling_coordinator()
             self._closed = True
-
-    def poll(self):
-        if self._analytical_engine_process:
-            return self._analytical_engine_process.poll()
-        return -1
 
     def create_learning_instance(self, object_id, handle, config):
         # allocate service for ports

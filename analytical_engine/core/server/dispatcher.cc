@@ -136,7 +136,7 @@ std::shared_ptr<DispatchResult> Dispatcher::processCmd(
       });
 #endif
 
-  if (!r->message().empty()) {
+  if (!r->message().empty() && comm_spec_.worker_id() == grape::kCoordinatorRank) {
     LOG(ERROR) << "Worker " + std::to_string(r->worker_id()) + ": " +
                       r->message();
   }

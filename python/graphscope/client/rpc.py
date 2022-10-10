@@ -114,7 +114,7 @@ class GRPCClient(object):
         if self._session_id:
             self._close_session_impl()
             self._session_id = None
-        if self._logs_fetching_thread:
+        if self._logs_fetching_thread is not None:
             self._logs_fetching_thread.join(timeout=5)
 
     @handle_grpc_error
@@ -151,8 +151,7 @@ class GRPCClient(object):
         return (
             response.session_id,
             response.cluster_type,
-            json.loads(response.engine_config),
-            response.pod_name_list,
+            response.host_names,
             response.num_workers,
             response.namespace,
         )
@@ -161,11 +160,10 @@ class GRPCClient(object):
     def _fetch_logs_impl(self):
         request = message_pb2.FetchLogsRequest(session_id=self._session_id)
         responses = self._stub.FetchLogs(request)
-        for resp in responses:
-            info = resp.info_message.rstrip()
+        for res in responses:
+            info, error = res.info_message.rstrip(), res.error_message.rstrip()
             if info:
                 logger.info(info, extra={"simple": True})
-            error = resp.error_message.rstrip()
             if error:
                 logger.error(error, extra={"simple": True})
 
@@ -194,3 +192,44 @@ class GRPCClient(object):
             if response.full_exception:
                 raise pickle.loads(response.full_exception)
         return response
+
+    def create_analytical_instance(self):
+        request = message_pb2.CreateAnalyticalInstanceRequest(
+            session_id=self._session_id
+        )
+        response = self._stub.CreateAnalyticalInstance(request)
+        return json.loads(response.engine_config)
+
+    def create_interactive_instance(self, object_id, schema_path):
+        request = message_pb2.CreateInteractiveInstanceRequest(
+            session_id=self._session_id, object_id=object_id, schema_path=schema_path
+        )
+        response = self._stub.CreateInteractiveInstance(request)
+        return response.gremlin_endpoint
+
+
+    def create_learning_instance(self, object_id, handle, config):
+        request = message_pb2.CreateLearningInstanceRequest(session_id=self._session_id)
+        request.object_id = object_id
+        request.handle = handle
+        request.config = config
+        response = self._stub.CreateLearningInstance(request)
+        return response.handle, response.config, response.endpoints
+
+    def close_analytical_instance(self):
+        request = message_pb2.CloseAnalyticalInstanceRequest(
+            session_id=self._session_id
+        )
+        response = self._stub.CloseAnalyticalInstance(request)
+
+    def close_interactive_instance(self, object_id):
+        request = message_pb2.CloseInteractiveInstanceRequest(
+            session_id=self._session_id, object_id=object_id
+        )
+        response = self._stub.CloseInteractiveInstance(request)
+
+    def close_learning_instance(self, object_id):
+        request = message_pb2.CloseLearningInstanceRequest(
+            session_id=self._session_id, object_id=object_id
+        )
+        response = self._stub.CloseLearningInstance(request)

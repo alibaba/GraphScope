@@ -50,8 +50,7 @@ message ConnectSessionResponse {
   // session handle to close the session.
   string session_id = 2;
   ClusterType cluster_type = 3;
-  string engine_config = 4;
-  repeated string pod_name_list = 5;
+  repeated string host_names = 5;
   int32 num_workers = 6;
   string namespace = 7;
 }
@@ -63,6 +62,7 @@ message ConnectSessionResponse {
 ////////////////////////////////////////////////////////////////////////////////
 
 message HeartBeatRequest {
+  string session_id = 1;
 }
 
 message HeartBeatResponse {
@@ -167,3 +167,70 @@ message AddLibRequest{
 
 message AddLibResponse{
 }
+
+message CreateAnalyticalInstanceRequest {
+  string session_id = 1;
+};
+
+message CreateAnalyticalInstanceResponse {
+  string instance_id = 1;
+  string engine_config = 2;
+};
+
+message CreateInteractiveInstanceRequest {
+  string session_id = 1;
+  int64 object_id = 2;
+  string schema_path = 3;
+};
+
+message CreateInteractiveInstanceResponse {
+  string gremlin_endpoint = 1;
+  int64 object_id = 2;
+};
+
+message CreateLearningInstanceRequest {
+  string session_id = 1;
+  int64 object_id = 2;
+  string handle = 3;
+  string config = 4;
+};
+
+message CreateLearningInstanceResponse {
+  int64 object_id = 1;
+  string handle = 2;
+  string config = 3;
+  repeated string endpoints = 4;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Close Instance request/response protos.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+message CloseAnalyticalInstanceRequest {
+  string session_id = 1;
+  string instance_id = 2;
+};
+
+message CloseAnalyticalInstanceResponse {
+
+};
+
+message CloseInteractiveInstanceRequest {
+  string session_id = 1;
+  int64 object_id = 2;
+};
+
+message CloseInteractiveInstanceResponse {
+
+};
+
+message CloseLearningInstanceRequest {
+  string session_id = 1;
+  int64 object_id = 2;
+};
+
+message CloseLearningInstanceResponse {
+
+};

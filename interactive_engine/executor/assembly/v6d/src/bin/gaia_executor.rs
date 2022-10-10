@@ -18,7 +18,7 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 
 use gaia_runtime::error::{StartServerError, StartServerResult};
-use global_query::FFIGraphStore;
+use global_query::{FFIGraphStore, GraphPartitionManager};
 use log::info;
 use pegasus::api::{Fold, Sink};
 use pegasus::{wait_servers_ready, Configuration, JobConf, ServerConf};

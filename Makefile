@@ -102,8 +102,8 @@ endif
 .PHONY: gie
 gie:
 	# frontend/executor
-	cd $(WORKING_DIR)/interactive_engine && \
-	mvn clean package -DskipTests -Drust.compile.mode=$(BUILD_TYPE) -P graphscope,graphscope-assembly --quiet
+	 cd $(WORKING_DIR)/interactive_engine && \
+	 mvn clean package -DskipTests -Drust.compile.mode=$(BUILD_TYPE) -P graphscope,graphscope-assembly --quiet
 	# install
 	mkdir -p $(WORKING_DIR)/.install_prefix && \
 	tar -xf $(WORKING_DIR)/interactive_engine/assembly/target/graphscope.tar.gz --strip-components 1 -C $(WORKING_DIR)/.install_prefix && \
@@ -172,7 +172,9 @@ clean:
 	rm -fr $(WORKING_DIR)/learning_engine/graph-learn/cmake-build/ || true && \
 	rm -fr $(WORKING_DIR)/learning_engine/graph-learn/proto/*.h || true && \
 	rm -fr $(WORKING_DIR)/learning_engine/graph-learn/proto/*.cc || true && \
-	rm -fr $(WORKING_DIR)/interactive_engine/executor/target || true && \
 	rm -fr $(WORKING_DIR)/interactive_engine/assembly/target || true && \
+	rm -fr $(WORKING_DIR)/interactive_engine/executor/ir/target || true && \
 	cd $(WORKING_DIR)/python && python3 setup.py clean --all && \
 	cd $(WORKING_DIR)/coordinator && python3 setup.py clean --all
+	cd $(WORKING_DIR)/analytical_engine/java && mvn clean
+	cd $(WORKING_DIR)/interactive_engine && mvn clean

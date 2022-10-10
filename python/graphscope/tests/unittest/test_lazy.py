@@ -16,13 +16,7 @@
 # limitations under the License.
 #
 
-import importlib
-import logging
 import os
-import random
-import string
-import sys
-import time
 
 import numpy as np
 import pytest
@@ -32,10 +26,6 @@ import graphscope
 graphscope.set_option(show_log=True)
 
 from graphscope.dataset import load_p2p_network
-from graphscope.framework.app import AppAssets
-from graphscope.framework.app import AppDAGNode
-from graphscope.framework.errors import AnalyticalEngineInternalError
-from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.loader import Loader
 
 test_repo_dir = os.path.expandvars("${GS_TEST_DIR}")
@@ -229,3 +219,11 @@ def test_simulate_eager(sess):
         c, {"id_col": "v.id", "data_col": "v.data", "result_col": "r"}
     )
     g2 = sess.run(g2_node)
+
+
+def test_across_engine(sess):
+    g_node = load_p2p_network(sess)
+    interactive = sess.gremlin(g_node)
+    res = interactive.execute("g.V().count()").all()
+    res = sess.run(res)
+    assert res[0] == 62586

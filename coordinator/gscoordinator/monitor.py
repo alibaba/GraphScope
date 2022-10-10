@@ -54,13 +54,9 @@ op_name_dict = {
     21: "VIEW_GRAPH",
     22: "INDUCE_SUBGRAPH",
     23: "UNLOAD_CONTEXT",
-    31: "CREATE_INTERACTIVE_QUERY",
     32: "SUBGRAPH",
     33: "GREMLIN_QUERY",
     34: "FETCH_GREMLIN_RESULT",
-    35: "CLOSE_INTERACTIVE_QUERY",
-    41: "CREATE_LEARNING_INSTANCE",
-    42: "CLOSE_LEARNING_INSTANCE",
     46: "DATA_SOURCE",
     47: "DATA_SINK",
     50: "CONTEXT_TO_NUMPY",
@@ -84,8 +80,8 @@ prometheus_client.REGISTRY.unregister(prometheus_client.PLATFORM_COLLECTOR)
 prometheus_client.REGISTRY.unregister(prometheus_client.GC_COLLECTOR)
 
 
-class TemGuage(object):
-    """A temporary Gague.
+class TemGauge(object):
+    """A temporary Gauge.
     It will clear the old metrics once they are collected.
     """
 
@@ -124,31 +120,32 @@ class Monitor:
     data_pat = re.compile(r"^.+Finished\s+(.+val.*),\s+time:\s+(.+)\s+.+$")
 
     sessionState = Gauge(
-        "session_state", "The session's state: 1 contected or 0 closed"
+        "session_state",
+        "The session's state: 1 stands for connected or 0 stands for closed",
     )
 
     analyticalRequestCounter = Counter(
         "analytical_request", "Count requests of analytical requests"
     )
     # analyticalRequestGauge = Gauge("analytical_request_time", "The analytical opration task time", ["op_name"])
-    analyticalRequestGauge = TemGuage(
-        "analytical_request_time", "The analytical opration task time", ["op_name"]
+    analyticalRequestGauge = TemGauge(
+        "analytical_request_time", "The analytical operation task time", ["op_name"]
     )
 
     interactiveRequestCounter = Counter(
         "interactive_request", "Count requests of interactive requests"
     )
     interactiveRequestGauge = Gauge(
-        "interactive_request_time", "The interactive opration task time", ["op_name"]
+        "interactive_request_time", "The interactive operation task time", ["op_name"]
     )
 
-    analyticalPerformace = TemGuage(
+    analyticalPerformance = TemGauge(
         "analytical_performance",
-        "The analytical opration task time of each round",
+        "The analytical operation task time of each round",
         ["app", "graph", "round"],
     )
 
-    prometheus_client.REGISTRY.register(analyticalPerformace)
+    prometheus_client.REGISTRY.register(analyticalPerformance)
     prometheus_client.REGISTRY.register(analyticalRequestGauge)
 
     @classmethod

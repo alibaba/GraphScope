@@ -39,8 +39,8 @@
                     <argument>build.sh</argument>
                     <argument>${rust.compile.mode}</argument>
                     <argument>${rust.compile.skip}</argument>
-                    <argument>${groot.compile.feature}</argument>
                     <argument>${rust.compile.target}</argument>
+                    <argument>${groot.compile.feature}</argument>
                   </arguments>
                 </configuration>
               </execution>

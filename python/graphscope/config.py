@@ -24,10 +24,10 @@ from graphscope.version import __version__
 
 
 class GSConfig(object):
-    # the endpoint of a pre-launched GraphScope instance.
+    # the coordinator endpoint of a pre-launched GraphScope instance.
     addr = None
 
-    # "lazy" or "eager", defaults to "eager"
+    # "eager" or "lazy", defaults to "eager"
     mode = "eager"
 
     # "k8s" or "hosts"
@@ -40,6 +40,7 @@ class GSConfig(object):
     k8s_gs_image = (
         f"registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:{__version__}"
     )
+
 
     # image pull configuration
     k8s_image_pull_policy = "IfNotPresent"
@@ -92,14 +93,6 @@ class GSConfig(object):
     num_workers = 2
     show_log = False
     log_level = "INFO"
-
-    # GIE engine params
-    engine_params = None
-
-    # GIE instance will be created automatically when a property graph loaded.
-    # Otherwise, you should create a GIE instance manually by `sess.gremlin` if
-    # `initializing_interactive_engine` is False
-    initializing_interactive_engine = False
 
     timeout_seconds = 600
 

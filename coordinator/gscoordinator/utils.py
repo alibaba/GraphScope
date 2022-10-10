@@ -17,7 +17,6 @@
 #
 
 
-import base64
 import copy
 import datetime
 import glob
@@ -25,21 +24,15 @@ import hashlib
 import inspect
 import json
 import logging
-import numbers
 import os
-import pickle
 import shutil
-import socket
 import subprocess
 import sys
-import threading
 import time
 import uuid
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
-from pathlib import Path
-from queue import Empty as EmptyQueue
 from queue import Queue
 from string import Template
 
@@ -90,6 +83,7 @@ BUILTIN_APP_RESOURCE_PATH = os.path.join(
 # default config file in gar resource
 DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
 DEFAULT_GRAPHSCOPE_HOME = "/opt/graphscope"
+#DEFAULT_GRAPHSCOPE_HOME = "/usr/local"
 
 # GRAPHSCOPE_HOME
 #   1) get from environment variable `GRAPHSCOPE_HOME`, if not exist,
@@ -115,11 +109,12 @@ if GRAPHSCOPE_HOME is None:
 ANALYTICAL_ENGINE_HOME = os.path.join(GRAPHSCOPE_HOME)
 ANALYTICAL_ENGINE_PATH = os.path.join(ANALYTICAL_ENGINE_HOME, "bin", "grape_engine")
 if not os.path.isfile(ANALYTICAL_ENGINE_PATH):
-    # try get analytical engine from build dir
+    # try to get analytical engine from build dir
     ANALYTICAL_ENGINE_HOME = os.path.join(GRAPHSCOPE_HOME, "analytical_engine")
     ANALYTICAL_ENGINE_PATH = os.path.join(
         ANALYTICAL_ENGINE_HOME, "build", "grape_engine"
     )
+ANALYTICAL_BUILTIN_SPACE = os.path.join(GRAPHSCOPE_HOME, "precompiled", "builtin")
 
 # ANALYTICAL_ENGINE_JAVA_HOME
 ANALYTICAL_ENGINE_JAVA_HOME = ANALYTICAL_ENGINE_HOME
@@ -140,7 +135,7 @@ ANALYTICAL_ENGINE_JAVA_JVM_OPTS = (
 
 
 # INTERACTIVE_ENGINE_SCRIPT
-INTERAVTIVE_INSTANCE_TIMEOUT_SECONDS = 600  # 10 mins
+INTERACTIVE_INSTANCE_TIMEOUT_SECONDS = 120  # 2 mins
 INTERACTIVE_ENGINE_SCRIPT = os.path.join(GRAPHSCOPE_HOME, "bin", "giectl")
 if not os.path.isfile(INTERACTIVE_ENGINE_SCRIPT):
     INTERACTIVE_ENGINE_SCRIPT = os.path.join(
@@ -150,10 +145,6 @@ if not os.path.isfile(INTERACTIVE_ENGINE_SCRIPT):
     INTERACTIVE_ENGINE_SCRIPT = os.path.join(
         GRAPHSCOPE_HOME, "interactive_engine", "bin", "giectl"
     )
-if not os.path.isfile(INTERACTIVE_ENGINE_SCRIPT):
-    INTERACTIVE_ENGINE_SCRIPT = os.path.join(
-        GRAPHSCOPE_HOME, "interactive_engine", "assembly", "bin", "giectl"
-    )
 
 # default threads per worker configuration for GIE/GAIA
 INTERACTIVE_ENGINE_THREADS_PER_WORKER = 2
@@ -162,45 +153,44 @@ INTERACTIVE_ENGINE_THREADS_PER_WORKER = 2
 LLVM4JNI_HOME = os.environ.get("LLVM4JNI_HOME", None)
 LLVM4JNI_USER_OUT_DIR_BASE = "user-llvm4jni-output"
 PROCESSOR_MAIN_CLASS = "com.alibaba.graphscope.annotation.Main"
-JAVA_CODEGNE_OUTPUT_PREFIX = "gs-ffi"
+JAVA_CODEGEN_OUTPUT_PREFIX = "gs-ffi"
 GRAPE_PROCESSOR_JAR = os.path.join(
     GRAPHSCOPE_HOME, "lib", "grape-runtime-{}-shaded.jar".format(__version__)
 )
 
-GIRAPH_DIRVER_CLASS = "com.alibaba.graphscope.app.GiraphComputationAdaptor"
+GIRAPH_DRIVER_CLASS = "com.alibaba.graphscope.app.GiraphComputationAdaptor"
+
+# 2 GB
+GS_GRPC_MAX_MESSAGE_LENGTH = 2 * 1024 * 1024 * 1024 - 1
 
 
-def get_timestamp():
-    now = datetime.datetime.now()
-    return datetime.datetime.timestamp(now)
+def get_timestamp() -> float:
+    return datetime.datetime.timestamp(datetime.datetime.now())
 
 
-def get_lib_path(app_dir, app_name):
-    lib_path = ""
+def get_lib_path(app_dir: str, app_name: str) -> str:
     if sys.platform == "linux" or sys.platform == "linux2":
-        lib_path = os.path.join(app_dir, "lib%s.so" % app_name)
+        return os.path.join(app_dir, "lib%s.so" % app_name)
     elif sys.platform == "darwin":
-        lib_path = os.path.join(app_dir, "lib%s.dylib" % app_name)
+        return os.path.join(app_dir, "lib%s.dylib" % app_name)
     else:
         raise RuntimeError(f"Unsupported platform {sys.platform}")
-    return lib_path
 
 
 def get_app_sha256(attr, java_class_path: str):
     (
         app_type,
-        app_header,
+        _,
         app_class,
-        vd_type,
-        md_type,
-        pregel_combine,
+        _,
+        _,
+        _,
         java_jar_path,
         java_app_class,
     ) = _codegen_app_info(attr, DEFAULT_GS_CONFIG_FILE, java_class_path)
     graph_header, graph_type, _ = _codegen_graph_info(attr)
     logger.info("Codegened graph type: %s, Graph header: %s", graph_type, graph_header)
 
-    app_sha256 = ""
     if app_type == "cpp_pie":
         app_sha256 = hashlib.sha256(
             f"{app_type}.{app_class}.{graph_type}".encode("utf-8")
@@ -351,7 +341,7 @@ def compile_app(
         # if the fragment & vd type is same.
 
         java_codegen_out_dir = os.path.join(
-            workspace, "{}-{}".format(JAVA_CODEGNE_OUTPUT_PREFIX, library_name)
+            workspace, "{}-{}".format(JAVA_CODEGEN_OUTPUT_PREFIX, library_name)
         )
         if os.path.isdir(java_codegen_out_dir):
             logger.info(
@@ -463,6 +453,7 @@ def compile_app(
         raise CompilationError(
             f"Failed to compile app {app_class} on platform {get_platform_info()}"
         )
+    # TODO(siyuan): Append cmake/make logs to error message when failed.
     return lib_path, java_jar_path, java_codegen_out_dir, app_type
 
 
@@ -567,6 +558,7 @@ def compile_graph_frame(
         raise CompilationError(
             f"Failed to compile graph {graph_class} on platform {get_platform_info()}"
         )
+    # TODO(siyuan): Append cmake/make logs to error message when failed.
     return lib_path, None, None, None
 
 
@@ -587,8 +579,6 @@ def _type_param_consistent(graph_actucal_type_param, java_app_type_param):
 
 
 def op_pre_process(op, op_result_pool, key_to_op, **kwargs):  # noqa: C901
-    if op.op == types_pb2.REPORT_GRAPH:
-        return
     if op.op == types_pb2.CREATE_GRAPH:
         _pre_process_for_create_graph_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op == types_pb2.ADD_LABELS:
@@ -619,28 +609,6 @@ def op_pre_process(op, op_result_pool, key_to_op, **kwargs):  # noqa: C901
         _pre_process_for_unload_app_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op == types_pb2.UNLOAD_CONTEXT:
         _pre_process_for_unload_context_op(op, op_result_pool, key_to_op, **kwargs)
-    if op.op == types_pb2.CREATE_INTERACTIVE_QUERY:
-        _pre_process_for_create_interactive_query_op(
-            op, op_result_pool, key_to_op, **kwargs
-        )
-    if op.op == types_pb2.GREMLIN_QUERY:
-        _pre_process_for_gremlin_query_op(op, op_result_pool, key_to_op, **kwargs)
-    if op.op == types_pb2.FETCH_GREMLIN_RESULT:
-        _pre_process_for_fetch_gremlin_result(op, op_result_pool, key_to_op, **kwargs)
-    if op.op == types_pb2.CLOSE_INTERACTIVE_QUERY:
-        _pre_process_for_close_interactive_query_op(
-            op, op_result_pool, key_to_op, **kwargs
-        )
-    if op.op == types_pb2.SUBGRAPH:
-        _pre_process_for_gremlin_to_subgraph_op(op, op_result_pool, key_to_op, **kwargs)
-    if op.op == types_pb2.CREATE_LEARNING_INSTANCE:
-        _pre_process_for_create_learning_graph_op(
-            op, op_result_pool, key_to_op, **kwargs
-        )
-    if op.op == types_pb2.CLOSE_LEARNING_INSTANCE:
-        _pre_process_for_close_learning_instance_op(
-            op, op_result_pool, key_to_op, **kwargs
-        )
     if op.op == types_pb2.DATA_SINK:
         _pre_process_for_data_sink_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op in (types_pb2.TO_DIRECTED, types_pb2.TO_UNDIRECTED):
@@ -682,81 +650,12 @@ def _pre_process_for_add_labels_op(op, op_result_pool, key_to_op, **kwargs):
 def _pre_process_for_transform_op(op, op_result_pool, key_to_op, **kwargs):
     assert len(op.parents) == 1
     result = op_result_pool[op.parents[0]]
-    # To compatible with eager evaluation cases where it will has the key.
+    # To compatible with eager evaluation cases where it has the key.
     if types_pb2.GRAPH_NAME not in op.attr:
         op.attr[types_pb2.GRAPH_NAME].CopyFrom(utils.s_to_attr(result.graph_def.key))
 
 
-def _pre_process_for_close_interactive_query_op(
-    op, op_result_pool, key_to_op, **kwargs
-):
-    assert len(op.parents) == 1
-    assert op.parents[0] in op_result_pool
-
-
-def _pre_process_for_gremlin_to_subgraph_op(op, op_result_pool, key_to_op, **kwargs):
-    assert len(op.parents) == 1
-    assert op.parents[0] in op_result_pool
-
-
-def _pre_process_for_gremlin_query_op(op, op_result_pool, key_to_op, **kwargs):
-    assert len(op.parents) == 1
-    assert op.parents[0] in op_result_pool
-
-
-def _pre_process_for_fetch_gremlin_result(op, op_result_pool, key_to_op, **kwargs):
-    assert len(op.parents) == 1
-    assert op.parents[0] in op_result_pool
-
-
-def _pre_process_for_create_interactive_query_op(
-    op, op_result_pool, key_to_op, **kwargs
-):
-    assert len(op.parents) == 1
-    key_of_parent_op = op.parents[0]
-    result = op_result_pool[key_of_parent_op]
-    assert result.graph_def.extension.Is(graph_def_pb2.VineyardInfoPb.DESCRIPTOR)
-    vy_info = graph_def_pb2.VineyardInfoPb()
-    result.graph_def.extension.Unpack(vy_info)
-    op.attr[types_pb2.VINEYARD_ID].CopyFrom(utils.i_to_attr(vy_info.vineyard_id))
-    op.attr[types_pb2.SCHEMA_PATH].CopyFrom(utils.s_to_attr(vy_info.schema_path))
-
-
-def _pre_process_for_close_learning_instance_op(
-    op, op_result_pool, key_to_op, **kwargs
-):
-    assert len(op.parents) == 1
-    assert op.parents[0] in op_result_pool
-
-
-def _pre_process_for_create_learning_graph_op(op, op_result_pool, key_to_op, **kwargs):
-    from graphscope.learning.graph import Graph as LearningGraph
-
-    nodes = pickle.loads(op.attr[types_pb2.NODES].s)
-    edges = pickle.loads(op.attr[types_pb2.EDGES].s)
-    gen_labels = pickle.loads(op.attr[types_pb2.GLE_GEN_LABELS].s)
-    # get graph schema
-    key_of_parent_op = op.parents[0]
-    result = op_result_pool[key_of_parent_op]
-    assert result.graph_def.extension.Is(graph_def_pb2.VineyardInfoPb.DESCRIPTOR)
-    schema = GraphSchema()
-    schema.from_graph_def(result.graph_def)
-    # get graph vineyard id
-    vy_info = graph_def_pb2.VineyardInfoPb()
-    result.graph_def.extension.Unpack(vy_info)
-    vineyard_id = vy_info.vineyard_id
-    # gle handle
-    engine_hosts = kwargs.pop("engine_hosts")
-    engine_config = kwargs.pop("engine_config")
-    handle = get_gl_handle(schema, vineyard_id, engine_hosts, engine_config)
-    config = LearningGraph.preprocess_args(handle, nodes, edges, gen_labels)
-    config = base64.b64encode(json.dumps(config).encode("utf-8")).decode("utf-8")
-    op.attr[types_pb2.VINEYARD_ID].CopyFrom(utils.i_to_attr(vineyard_id))
-    op.attr[types_pb2.GLE_HANDLE].CopyFrom(utils.s_to_attr(handle))
-    op.attr[types_pb2.GLE_CONFIG].CopyFrom(utils.s_to_attr(config))
-
-
-# get `bind_app` runtime informarion in lazy mode
+# get `bind_app` runtime information in lazy mode
 def _pre_process_for_bind_app_op(op, op_result_pool, key_to_op, **kwargs):
     for key_of_parent_op in op.parents:
         parent_op = key_to_op[key_of_parent_op]
@@ -813,7 +712,7 @@ def _pre_process_for_bind_app_op(op, op_result_pool, key_to_op, **kwargs):
                 )
 
 
-# get `run_app` runtime informarion in lazy mode
+# get `run_app` runtime information in lazy mode
 def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
     # run_app op has only one parent
     assert len(op.parents) == 1
@@ -930,7 +829,7 @@ def _pre_process_for_add_column_op(op, op_result_pool, key_to_op, **kwargs):
             parent_op_result = json.loads(r.result.decode("utf-8"))
             context_key = parent_op_result["context_key"]
             context_type = parent_op_result["context_type"]
-            selector = _tranform_dataframe_selector(context_type, schema, selector)
+            selector = _transform_dataframe_selector(context_type, schema, selector)
     op.attr[types_pb2.GRAPH_NAME].CopyFrom(utils.s_to_attr(graph_name))
     op.attr[types_pb2.GRAPH_TYPE].CopyFrom(utils.graph_type_to_attr(graph_type))
     op.attr[types_pb2.CONTEXT_KEY].CopyFrom(utils.s_to_attr(context_key))
@@ -982,10 +881,10 @@ def _pre_process_for_context_op(op, op_result_pool, key_to_op, **kwargs):
         types_pb2.TO_VINEYARD_DATAFRAME,
         types_pb2.OUTPUT,
     ):
-        selector = _tranform_dataframe_selector(context_type, schema, selector)
+        selector = _transform_dataframe_selector(context_type, schema, selector)
     else:
         # to numpy
-        selector = _tranform_numpy_selector(context_type, schema, selector)
+        selector = _transform_numpy_selector(context_type, schema, selector)
     if selector is not None:
         op.attr[types_pb2.SELECTOR].CopyFrom(
             attr_value_pb2.AttrValue(s=selector.encode("utf-8"))
@@ -1015,12 +914,14 @@ def _pre_process_for_output_graph_op(op, op_result_pool, key_to_op, **kwargs):
     graph_name = r.graph_def.key
     selector = op.attr[types_pb2.SELECTOR].s.decode("utf-8")
     if op.op == types_pb2.GRAPH_TO_DATAFRAME:
-        selector = _tranform_dataframe_selector(
+        selector = _transform_dataframe_selector(
             "labeled_vertex_property", schema, selector
         )
     else:
         # to numpy
-        selector = _tranform_numpy_selector("labeled_vertex_property", schema, selector)
+        selector = _transform_numpy_selector(
+            "labeled_vertex_property", schema, selector
+        )
     if selector is not None:
         op.attr[types_pb2.SELECTOR].CopyFrom(
             attr_value_pb2.AttrValue(s=selector.encode("utf-8"))
@@ -1411,11 +1312,11 @@ _transform_selector_func_map = {
 }
 
 
-def _tranform_numpy_selector(context_type, schema, selector):
+def _transform_numpy_selector(context_type, schema, selector):
     return _transform_selector_func_map[context_type](schema, selector)
 
 
-def _tranform_dataframe_selector(context_type, schema, selector):
+def _transform_dataframe_selector(context_type, schema, selector):
     selector = json.loads(selector)
     transform_func = _transform_selector_func_map[context_type]
     selector = {key: transform_func(schema, value) for key, value in selector.items()}
@@ -1529,7 +1430,7 @@ def _probe_for_java_app(attr, java_class_path, real_algo):
 
 
 def _codegen_app_info(attr, meta_file: str, java_class_path: str):
-    """Codegen application by instanize the template specialization.
+    """Codegen application by instantiate the template specialization.
 
     Args:
         workspace (str): Working directory
@@ -1600,7 +1501,7 @@ def _codegen_app_info(attr, meta_file: str, java_class_path: str):
     raise KeyError("Algorithm does not exist in the gar resource.")
 
 
-# a mapping for classname to header file.
+# a mapping for class name to header file.
 GRAPH_HEADER_MAP = {
     graph_def_pb2.IMMUTABLE_EDGECUT: (
         "grape::ImmutableEdgecutFragment",
@@ -1691,8 +1592,12 @@ def dump_as_json(schema, path):
     items = []
     idx = 0
     for i, vertex_label in enumerate(schema.vertex_labels):
-        vertex = {"id": idx, "label": vertex_label, "type": "VERTEX"}
-        vertex["propertyDefList"] = []
+        vertex = {
+            "id": idx,
+            "label": vertex_label,
+            "type": "VERTEX",
+            "propertyDefList": [],
+        }
         for j, value in enumerate(schema.vertex_property_names[i].s):
             names = schema.vertex_property_names[i]
             types = schema.vertex_property_types[i]
@@ -1705,8 +1610,7 @@ def dump_as_json(schema, path):
         idx += 1
 
     for i, edge_label in enumerate(schema.edge_labels):
-        edge = {"id": idx, "label": edge_label, "type": "EDGE"}
-        edge["propertyDefList"] = []
+        edge = {"id": idx, "label": edge_label, "type": "EDGE", "propertyDefList": []}
         for j, value in enumerate(schema.edge_property_names[i].s):
             names = schema.edge_property_names[i]
             types = schema.edge_property_types[i]
@@ -1773,7 +1677,7 @@ class ResolveMPICmdPrefix(object):
 
         >>> # openmpi found
         >>> rmcp = ResolveMPICmdPrefix()
-        >>> (cmd, env) = rmcp.resolve(4, 'h1, h2, h3')
+        >>> (cmd, env) = rmcp.resolve(4, 'h1,h2,h3')
         >>> cmd
         ['mpirun', '--allow-run-as-root',
          '-n', '4', '-host', 'h1:2,h2:1,h3:1']
@@ -1785,7 +1689,7 @@ class ResolveMPICmdPrefix(object):
 
         >>> # if openmpi not found, change to mpich
         >>> rmcp = ResolveMPICmdPrefix()
-        >>> (cmd, env) = rmcp.resolve(4, 'h1, h2, h3')
+        >>> (cmd, env) = rmcp.resolve(4, 'h1,h2,h3')
         >>> cmd
         ['mpirun', '-n', '4', '-host', 'h1:2,h2:1,h3:1']
         >>> env
@@ -1848,16 +1752,16 @@ class ResolveMPICmdPrefix(object):
 
     @staticmethod
     def find_mpi():
-        mpi = ""
+        mpi = None
         if ResolveMPICmdPrefix.openmpi():
             if "OPAL_PREFIX" in os.environ:
                 mpi = os.path.expandvars("$OPAL_PREFIX/bin/mpirun")
-            if not mpi:
+            if mpi is None:
                 if "OPAL_BINDIR" in os.environ:
                     mpi = os.path.expandvars("$OPAL_BINDIR/mpirun")
-        if not mpi:
+        if mpi is None:
             mpi = shutil.which("mpirun")
-        if not mpi:
+        if mpi is None:
             raise RuntimeError("mpirun command not found.")
         return mpi
 
@@ -1899,123 +1803,6 @@ class ResolveMPICmdPrefix(object):
         logger.debug("Resolve mpi cmd prefix: %s", " ".join(cmd))
         logger.debug("Resolve mpi env: %s", json.dumps(env))
         return cmd, env
-
-
-def get_gl_handle(schema, vineyard_id, engine_hosts, engine_config):
-    """Dump a handler for GraphLearn for interaction.
-
-    Fields in :code:`schema` are:
-
-    + the name of node type or edge type
-    + whether the graph is weighted graph
-    + whether the graph is labeled graph
-    + the number of int attributes
-    + the number of float attributes
-    + the number of string attributes
-
-    An example of the graph handle:
-
-    .. code:: python
-
-        {
-            "server": "127.0.0.1:8888,127.0.0.1:8889",
-            "client_count": 1,
-            "vineyard_socket": "/var/run/vineyard.sock",
-            "vineyard_id": 13278328736,
-            "node_schema": [
-                "user:false:false:10:0:0",
-                "item:true:false:0:0:5"
-            ],
-            "edge_schema": [
-                "user:click:item:true:false:0:0:0",
-                "user:buy:item:true:true:0:0:0",
-                "item:similar:item:false:false:10:0:0"
-            ],
-            "node_attribute_types": {
-                "person": {
-                    "age": "i",
-                    "name": "s",
-                },
-            },
-            "edge_attribute_types": {
-                "knows": {
-                    "weight": "f",
-                },
-            },
-        }
-
-    The handle can be decoded using:
-
-    .. code:: python
-
-       base64.b64decode(handle.encode('ascii')).decode('ascii')
-
-    Note that the ports are selected from a range :code:`(8000, 9000)`.
-
-    Args:
-        schema: The graph schema.
-        vineyard_id: The object id of graph stored in vineyard.
-        engine_hosts: A list of hosts for GraphScope engine workers.
-        engine_config: dict of config for GAE engine.
-
-    Returns:
-        str: Base64 encoded handle
-
-    """
-
-    def group_property_types(props):
-        weighted, labeled, i, f, s, attr_types = "false", "false", 0, 0, 0, {}
-        for prop in props:
-            if prop.type in [graph_def_pb2.STRING]:
-                s += 1
-                attr_types[prop.name] = "s"
-            elif prop.type in (graph_def_pb2.FLOAT, graph_def_pb2.DOUBLE):
-                f += 1
-                attr_types[prop.name] = "f"
-            else:
-                i += 1
-                attr_types[prop.name] = "i"
-            if prop.name == "weight":
-                weighted = "true"
-            elif prop.name == "label":
-                labeled = "true"
-        return weighted, labeled, i, f, s, attr_types
-
-    node_schema, node_attribute_types = [], dict()
-    for label in schema.vertex_labels:
-        weighted, labeled, i, f, s, attr_types = group_property_types(
-            schema.get_vertex_properties(label)
-        )
-        node_schema.append(
-            "{}:{}:{}:{}:{}:{}".format(label, weighted, labeled, i, f, s)
-        )
-        node_attribute_types[label] = attr_types
-
-    edge_schema, edge_attribute_types = [], dict()
-    for label in schema.edge_labels:
-        weighted, labeled, i, f, s, attr_types = group_property_types(
-            schema.get_edge_properties(label)
-        )
-        for rel in schema.get_relationships(label):
-            edge_schema.append(
-                "{}:{}:{}:{}:{}:{}:{}:{}".format(
-                    rel[0], label, rel[1], weighted, labeled, i, f, s
-                )
-            )
-        edge_attribute_types[label] = attr_types
-
-    handle = {
-        "hosts": engine_hosts,
-        "client_count": 1,
-        "vineyard_id": vineyard_id,
-        "vineyard_socket": engine_config["vineyard_socket"],
-        "node_schema": node_schema,
-        "edge_schema": edge_schema,
-        "node_attribute_types": node_attribute_types,
-        "edge_attribute_types": edge_attribute_types,
-    }
-    handle_json_string = json.dumps(handle)
-    return base64.b64encode(handle_json_string.encode("utf-8")).decode("utf-8")
 
 
 # In Analytical engine, assume label ids of vertex entries are continuous
@@ -2065,40 +1852,35 @@ def check_gremlin_server_ready(endpoint):
         if "MY_POD_NAME" in os.environ:
             # inner kubernetes env
             if endpoint == "localhost" or endpoint == "127.0.0.1":
-                # now, used in mac os with docker-desktop kubernetes cluster,
+                # now, used in macOS with docker-desktop kubernetes cluster,
                 # which external ip is 'localhost' when service type is 'LoadBalancer'
                 return True
 
         try:
             client = Client(f"ws://{endpoint}/gremlin", "g")
+            # May throw
             client.submit("g.V().limit(1)").all().result()
+        finally:
             try:
                 client.close()
             except:  # noqa: E722
                 pass
-        except Exception as e:
-            try:
-                client.close()
-            except:  # noqa: E722
-                pass
-            raise RuntimeError(str(e))
-
         return True
 
     executor = ThreadPoolExecutor(max_workers=20)
 
     begin_time = time.time()
-    error_message = ""
     while True:
         t = executor.submit(_check_task, endpoint)
         try:
-            rlt = t.result(timeout=30)
+            _ = t.result(timeout=30)
         except Exception as e:
             t.cancel()
             error_message = str(e)
         else:
-            return rlt
+            executor.shutdown(wait=False)
+            return True
         time.sleep(3)
-        if time.time() - begin_time > INTERAVTIVE_INSTANCE_TIMEOUT_SECONDS:
+        if time.time() - begin_time > INTERACTIVE_INSTANCE_TIMEOUT_SECONDS:
             executor.shutdown(wait=False)
             raise TimeoutError(f"Gremlin check query failed: {error_message}")

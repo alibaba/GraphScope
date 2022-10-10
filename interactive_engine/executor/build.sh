@@ -3,8 +3,8 @@ set -x
 
 MODE=$1
 SKIP=$2
-FEATURE=$3
-TARGET=$4
+TARGET=$3
+FEATURE=$4
 
 if [ "$SKIP" = "true" ]; then
     exit 0
