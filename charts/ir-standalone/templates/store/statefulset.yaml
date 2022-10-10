@@ -78,7 +78,7 @@ spec:
 
               # start vineyard service
               export VINEYARD_IPC_SOCKET=/tmp/vineyard.sock
-              if [ $STORE_COUNT -eq 1 ]
+              if [ $SERVERSSIZE -eq 1 ]
               then
                 $GRAPHSCOPE_HOME/../vineyard/vineyardd --socket=${VINEYARD_IPC_SOCKET} --meta=local &
               else
@@ -120,7 +120,7 @@ spec:
               # start engine service
               pegasus_hosts=""
               i=0
-              while [ $i -ne $STORE_COUNT ]
+              while [ $i -ne $SERVERSSIZE ]
               do
               pod=`echo $DNS_NAME_PREFIX_STORE | sed -e "s/{}/$i/g"`
               pegasus_hosts="${pegasus_hosts},${pod}:${GAIA_ENGINE_PORT}"
@@ -130,17 +130,20 @@ spec:
 
               GRAPHSCOPE_RUNTIME=/tmp/gs/${object_id}
               GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} ${GRAPHSCOPE_HOME}/bin/giectl start_executor ${GRAPHSCOPE_RUNTIME} \
-                ${object_id} ${server_id} ${STORE_COUNT} ${GAIA_RPC_PORT} ${pegasus_hosts}
+                ${object_id} ${server_id} ${SERVERSSIZE} ${GAIA_RPC_PORT} ${pegasus_hosts}
 
               exit_code=$?
               while [ $exit_code -eq 0 ]
               do
                 sleep 10
               done
-            {{- end }}
-            {{- if (eq "Experimental" .Values.storageType) }}
-            ## todo
-            {{- end }}
+          {{- end }}
+          {{- if (eq "Experimental" .Values.storageType) }}
+            - /bin/bash
+            - -c
+            - |
+              RUST_LOG=info DATA_PATH=${STORE_DATA_PATH} /opt/GraphScope/interactive_engine/executor/ir/target/release/start_rpc_server_k8s
+          {{- end }}
           env:
             - name: GAIA_RPC_PORT
               value: {{ .Values.store.service.gaiaRpc | quote }}
@@ -150,7 +153,7 @@ spec:
               value: {{ .Values.storeDataPath | quote }}
             - name: DNS_NAME_PREFIX_STORE
               value: {{ $storeFullname }}-{}.{{ $storeFullname }}-headless.{{ $releaseNamespace }}.svc.{{ $clusterDomain }}
-            - name: STORE_COUNT
+            - name: SERVERSSIZE
               value: {{ .Values.store.replicaCount | quote }}
             {{- if (eq "Vineyard" .Values.storageType) }}
             - name: ETCD_ENDPOINT

@@ -4,9 +4,9 @@
 
 image:
   registry: registry.cn-hongkong.aliyuncs.com
-  repository: graphscope/graphscope
+  repository: graphscope/gie-exp-runtime
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "ir_standalone"
+  tag: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
   ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -21,6 +21,7 @@ image:
   pullSecrets: []
 
 nameOverride: ""
+
 fullnameOverride: ""
 
 ## Cluster domain
@@ -40,21 +41,30 @@ commonLabels: {}
 javaOpts: ""
 
 ## Vineyard or Experimental Storage
-storageType: Vineyard
+storageType: Experimental
 
 ## Store Config
-storeDataPath: "/var/lib/graphscope-store"
+storeDataPath: "/tmp/data"
 
 ## Frontend Config
-schemaConfig: "modern_schema.json"
+schemaConfig: "expr_modern_schema.json"
 
 ## Pegasus Config
-extraConfig: ""
+pegasusWorkerNum: 2
+
+pegasusTimeout: 240000
+
+pegasusBatchSize: 1024
+
+pegasusOutputCapacity: 16
 
 ## the following configurations are necessary when using vineyard store
-htapLoaderConfig: "modern_loader.json"
+htapLoaderConfig: "v6d_modern_loader.json"
+
 ## need by vineyard in distributed env
 etcdEndpoint: "etcd-for-vineyard.default.svc.cluster.local:2379"
+
+extraConfig: ""
 
 ## Role Based Access
 ## ref: https://kubernetes.io/docs/admin/authorization/rbac/
@@ -81,7 +91,7 @@ serviceAccount:
 ## GraphScope Store parameters
 ##
 store:
-  replicaCount: 1
+  replicaCount: 2
 
   ## updateStrategy for GraphScope Store statefulset
   ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
@@ -186,7 +196,7 @@ store:
     ## Name of existing PVC to hold GraphScope store data
     ## NOTE: When it's set the rest of persistence parameters are ignored
     ##
-    existingClaim: "graphscope-store-pvc"
+    existingClaim: "test-graphscope-store-pvc"
 
     ## Persistent Volume Storage Class
     ## If defined, storageClassName: <storageClass>
@@ -326,14 +336,14 @@ frontend:
   service:
     ## Service type
     ##
-    type: LoadBalancer
+    type: NodePort
     ## Service port
     ##
     servicePort: 55556
 
     ## Gremlin console port
     ##
-    gremlinPort: 12312
+    gremlinPort: 8182
 
     ## Specify the nodePort value for the LoadBalancer and NodePort service types.
     ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport
