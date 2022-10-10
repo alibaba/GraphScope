@@ -300,6 +300,9 @@ impl Pattern {
             if sentence.binders.is_empty() {
                 return Err(IrError::MissingData("pb::Pattern::Sentence::binders".to_string()));
             }
+            if sentence.join_kind != pb::join::JoinKind::Inner as i32 {
+                return Err(IrError::InvalidPattern(format!("Only support join_kind of `Inner` in ExtendStrategy in Pattern Match, while the join_kind is {:?}", sentence.join_kind)));
+            }
             // pb pattern sentence must have start tag
             let start_tag = get_tag_from_name_or_id(
                 sentence
