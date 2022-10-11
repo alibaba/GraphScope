@@ -116,10 +116,10 @@ impl SourceOperator {
             }
             Err(err) => {
                 debug!("get partition list failed in graph_partition_manager in source op {:?}", err);
-                Err(ParsePbError::Unsupported(
-                    format!("get partition list failed in graph_partition_manager in source op {:?}", err)
-                        .to_string(),
-                ))?
+                Err(ParsePbError::Unsupported(format!(
+                    "get partition list failed in graph_partition_manager in source op {:?}",
+                    err
+                )))?
             }
         }
         Ok(())

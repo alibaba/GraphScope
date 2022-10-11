@@ -52,8 +52,10 @@ impl Partitioner for GrootMultiPartition {
         let server_index = self
             .graph_partition_manager
             .get_server_id(partition_id as PartitionId)
-            .ok_or(GraphProxyError::query_store_error("get server id failed in graph_partition_manager"))?
-            as u64;
+            .ok_or(GraphProxyError::query_store_error(&format!(
+                "get server id failed on Groot with vid of {:?}, partition_id of {:?}",
+                vid, partition_id
+            )))? as u64;
         let worker_index = partition_id % worker_num_per_server;
         Ok(server_index * worker_num_per_server + worker_index as u64)
     }
@@ -119,9 +121,10 @@ impl Partitioner for VineyardMultiPartition {
         let server_index = *self
             .partition_server_index_mapping
             .get(&partition_id)
-            .ok_or(GraphProxyError::query_store_error(
-                "get server index by given partition id failed in Vineyard",
-            ))? as u64;
+            .ok_or(GraphProxyError::query_store_error(&format!(
+                "get server id failed on Vineyard with vid of {:?}, partition_id of {:?}",
+                vid, partition_id
+            )))? as u64;
         let worker_index = partition_id as u64 % worker_num_per_server;
         Ok(server_index * worker_num_per_server + worker_index)
     }
