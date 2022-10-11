@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.maxgraph.tests.gremlin;
+package com.alibaba.maxgraph.function.test.gremlin;
 
 import org.apache.tinkerpop.gremlin.process.AbstractGremlinProcessTest;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
