@@ -1,14 +1,9 @@
-# docker ignore the .git directory
-.git
-**/.git
-
 # Python
-__pycache__/
-*.pyc
-.ipynb_checkpoints
-*.egg-info/
-*.eggs
-python/*.eggs
+**//__pycache__/
+**/*.pyc
+**/.ipynb_checkpoints
+**/*.egg-info/
+**/*.eggs
 
 # coordinator
 coordinator/proto
@@ -17,15 +12,15 @@ coordinator/proto
 python/proto
 
 # Gar file
-*.gar
+**/*.gar
 
 # dot file
 *.dot
 
 # Protobuf GRPC
-*.pb.*
-*_pb2.py
-*_pb2_grpc.py
+**/*.pb.*
+**/*_pb2.py
+**/*_pb2_grpc.py
 
 # Visual Studio Code
 .vscode/
@@ -82,3 +77,10 @@ coordinator/graphlearn*
 Chart.lock
 **/Cargo.lock
 package.lock
+
+# docker: ignore learning engine's build artifacts
+learning_engine/graph-learn/cmake-build
+
+# docker: ignore .install_prefix
+.install_prefix
+
