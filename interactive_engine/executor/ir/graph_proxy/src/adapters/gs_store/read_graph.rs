@@ -43,7 +43,7 @@ use crate::{GraphProxyError, GraphProxyResult};
 // Should be identical to the param_name given by compiler
 const SNAPSHOT_ID: &str = "SID";
 // This will refer to the latest graph
-const DEFAULT_SNAPSHOT_ID: SnapshotId = SnapshotId::max_value() - 1;
+const DEFAULT_SNAPSHOT_ID: SnapshotId = SnapshotId::MAX - 1;
 // This represents the primary key of GraphScopeStore
 const GS_STORE_PK: KeyId = 0;
 
@@ -162,12 +162,15 @@ where
     }
 
     fn index_scan_vertex(
-        &self, label_id: LabelId, primary_key: &PKV, _params: &QueryParams,
+        &self, label_id: LabelId, primary_key: &PKV, params: &QueryParams,
     ) -> GraphProxyResult<Option<Vertex>> {
         // get_vertex_id_by_primary_keys() is a global query function, that is,
         // you can query vertices (with only vertex id) by pks on any graph partitions (not matter locally or remotely).
-        // To guarantee the correctness (i.e., avoid duplication results), only worker 0 is assigned for query.
-        if pegasus::get_current_worker().index == 0 {
+        // To guarantee the correctness (i.e., avoid duplication results),
+        // we assign the first worker on current server to get the vid.
+        // Then, we try to get_vertex() for vid, and the server who holds vid should return the vertex.
+        let current_worker = pegasus::get_current_worker();
+        if current_worker.index % current_worker.local_peers == 0 {
             let store_label_id = encode_storage_label(label_id)?;
             let store_indexed_values = match primary_key {
                 OneOrMany::One(pkv) => {
@@ -183,7 +186,8 @@ where
                 .partition_manager
                 .get_vertex_id_by_primary_keys(store_label_id, store_indexed_values.as_ref())
             {
-                Ok(Some(Vertex::new(vid as ID, Some(label_id.clone()), DynDetails::default())))
+                self.get_vertex(&[vid as ID], params)
+                    .map(|mut v_iter| v_iter.next())
             } else {
                 Ok(None)
             }
