@@ -61,7 +61,7 @@ class BaseContextDAGNode(DAGNode):
     """Base class of concrete context DAG node.
 
     In GraphScope, it will return a instance of concrete class `ContextDAGNode`
-    after evaluating an app, that will be automatically executed by :method:`sess.run`
+    after evaluating an app, that will be automatically executed by :meth:`Session.run`
     in eager mode and return a instance of :class:`graphscope.framework.context.Context`
 
     We can further use the handle to retrieve data:

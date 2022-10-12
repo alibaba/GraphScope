@@ -195,7 +195,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
 
     In GraphScope, all operations that generate a new graph will return
     a instance of :class:`GraphDAGNode`, which will be automatically
-    executed by :method:`sess.run` in `eager` mode.
+    executed by :meth:`Session.run` in `eager` mode.
 
     The following example demonstrates its usage:
 
@@ -233,10 +233,12 @@ class GraphDAGNode(DAGNode, GraphInterface):
             session (:class:`Session`): A graphscope session instance.
             incoming_data: Graph can be initialized through various type of sources,
                 which can be one of:
-                    - :class:`graphscope.framework.operation.Operation`
-                    - :class:`graphscope.nx.Graph`
-                    - :class:`graphscope.Graph`
-                    - :class:`vineyard.Object`, :class:`vineyard.ObjectId` or :class:`vineyard.ObjectName`
+
+                - :class:`graphscope.framework.operation.Operation`
+                - :class:`graphscope.nx.Graph`
+                - :class:`graphscope.Graph`
+                - :class:`vineyard.Object`, :class:`vineyard.ObjectId` or :class:`vineyard.ObjectName`
+
             oid_type: (str, optional): Type of vertex original id. Defaults to "int64".
             directed: (bool, optional): Directed graph or not. Defaults to True.
             generate_eid: (bool, optional): Generate id for each edge when setted True. Defaults to True.
@@ -450,13 +452,20 @@ class GraphDAGNode(DAGNode, GraphInterface):
     ):
         """Add edges to the graph, and return a new graph.
         Here the src_label and dst_label must be both specified or both unspecified,
-            i.   src_label and dst_label both unspecified and current graph has no vertex label.
-                 We deduce vertex label from edge table, and set vertex label name to '_'.
-            ii.  src_label and dst_label both unspecified and current graph has one vertex label.
-                 We set src_label and dst label to this single vertex label.
-            ii.  src_label and dst_label both specified and existed in current graph's vertex labels.
-            iii. src_label and dst_label both specified and some are not existed in current graph's vertex labels.
-                 we deduce missing vertex labels from edge tables.
+
+        i. src_label and dst_label both unspecified and current graph has no vertex label.
+
+            We deduce vertex label from edge table, and set vertex label name to '_'.
+
+        ii. src_label and dst_label both unspecified and current graph has one vertex label.
+
+            We set src_label and dst label to this single vertex label.
+
+        ii. src_label and dst_label both specified and existed in current graph's vertex labels.
+
+        iii. src_label and dst_label both specified and some are not existed in current graph's vertex labels.
+
+            We deduce missing vertex labels from edge tables.
 
 
         Args:
