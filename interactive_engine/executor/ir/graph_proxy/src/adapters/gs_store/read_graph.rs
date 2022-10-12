@@ -166,28 +166,33 @@ where
     ) -> GraphProxyResult<Option<Vertex>> {
         // get_vertex_id_by_primary_keys() is a global query function, that is,
         // you can query vertices (with only vertex id) by pks on any graph partitions (not matter locally or remotely).
-        // To guarantee the correctness (i.e., avoid duplication results),
-        // we assign the first worker on current server to get the vid.
-        // Then, we try to get_vertex() for vid, and the server who holds vid should return the vertex.
-        let current_worker = pegasus::get_current_worker();
-        if current_worker.index % current_worker.local_peers == 0 {
-            let store_label_id = encode_storage_label(label_id)?;
-            let store_indexed_values = match primary_key {
-                OneOrMany::One(pkv) => {
-                    vec![encode_store_prop_val(pkv[0].1.clone())]
-                }
-                OneOrMany::Many(pkvs) => pkvs
-                    .iter()
-                    .map(|(_pk, value)| encode_store_prop_val(value.clone()))
-                    .collect(),
-            };
+        // To guarantee the correctness (i.e., avoid duplication results), we pre-assign partitions for workers,
+        // and only the worker responsible for this vertex (i.e., contains the vertex in its partitions) is going to search for it.
 
-            if let Some(vid) = self
-                .partition_manager
-                .get_vertex_id_by_primary_keys(store_label_id, store_indexed_values.as_ref())
-            {
-                self.get_vertex(&[vid as ID], params)
-                    .map(|mut v_iter| v_iter.next())
+        let store_label_id = encode_storage_label(label_id)?;
+        let store_indexed_values = match primary_key {
+            OneOrMany::One(pkv) => {
+                vec![encode_store_prop_val(pkv[0].1.clone())]
+            }
+            OneOrMany::Many(pkvs) => pkvs
+                .iter()
+                .map(|(_pk, value)| encode_store_prop_val(value.clone()))
+                .collect(),
+        };
+
+        if let Some(vid) = self
+            .partition_manager
+            .get_vertex_id_by_primary_keys(store_label_id, store_indexed_values.as_ref())
+        {
+            if let Some(worker_partitions) = params.partitions.as_ref() {
+                // only the one responsible for vid is going to search for the vertex
+                let vertex_partition = self.partition_manager.get_partition_id(vid) as u64;
+                if worker_partitions.contains(&vertex_partition) {
+                    self.get_vertex(&[vid as ID], params)
+                        .map(|mut v_iter| v_iter.next())
+                } else {
+                    Ok(None)
+                }
             } else {
                 Ok(None)
             }
