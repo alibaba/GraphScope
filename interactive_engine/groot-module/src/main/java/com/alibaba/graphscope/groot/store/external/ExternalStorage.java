@@ -5,7 +5,7 @@ import java.net.URI;
 import java.util.Map;
 
 public abstract class ExternalStorage {
-    public static ExternalStorage getStorage(String path, Map<String, String> configs)
+    public static ExternalStorage getStorage(String path, Map<String, String> config)
             throws IOException {
         URI uri = URI.create(path);
         String scheme = uri.getScheme();
@@ -13,7 +13,7 @@ public abstract class ExternalStorage {
             case "hdfs":
                 return new HdfsStorage(path);
             case "oss":
-                return new OssStorage(path, configs);
+                return new OssStorage(path, config);
             default:
                 throw new IllegalArgumentException(
                         "external storage scheme [" + scheme + "] not supported");

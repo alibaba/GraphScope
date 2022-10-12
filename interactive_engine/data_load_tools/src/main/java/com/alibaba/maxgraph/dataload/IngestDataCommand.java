@@ -28,10 +28,10 @@ public class IngestDataCommand extends DataCommand {
             logger.warn("ossAccessID or ossAccessKey is null, using default configuration.");
             client.ingestData(configPath);
         } else {
-            HashMap<String, String> configs = new HashMap<>();
-            configs.put("ossAccessID", ossAccessID);
-            configs.put("ossAccessKey", ossAccessKey);
-            client.ingestData(configPath, configs);
+            HashMap<String, String> config = new HashMap<>();
+            config.put("ossAccessID", ossAccessID);
+            config.put("ossAccessKey", ossAccessKey);
+            client.ingestData(configPath, config);
         }
     }
 }

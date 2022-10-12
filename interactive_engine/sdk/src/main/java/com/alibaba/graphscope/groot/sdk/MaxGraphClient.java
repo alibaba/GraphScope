@@ -202,10 +202,10 @@ public class MaxGraphClient implements Closeable {
         this.stub.ingestData(IngestDataRequest.newBuilder().setDataPath(path).build());
     }
 
-    public void ingestData(String path, Map<String, String> configs) {
+    public void ingestData(String path, Map<String, String> config) {
         IngestDataRequest.Builder builder = IngestDataRequest.newBuilder();
         builder.setDataPath(path);
-        builder.putAllConfig(configs);
+        builder.putAllConfig(config);
         this.stub.ingestData(builder.build());
     }
 

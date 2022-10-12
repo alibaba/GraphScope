@@ -301,7 +301,7 @@ public class StoreService implements MetricsAgent {
     }
 
     public void ingestData(
-            String path, Map<String, String> configs, CompletionCallback<Void> callback) {
+            String path, Map<String, String> config, CompletionCallback<Void> callback) {
         String dataRoot = StoreConfig.STORE_DATA_PATH.get(storeConfigs);
         String downloadPath = Paths.get(dataRoot, "download").toString();
         String[] items = path.split("\\/");
@@ -321,7 +321,7 @@ public class StoreService implements MetricsAgent {
                 () -> {
                     try {
                         logger.info("ingesting data [{}]", path);
-                        ingestDataInternal(path, configs, callback);
+                        ingestDataInternal(path, config, callback);
                     } catch (Exception e) {
                         logger.error("ingest data failed. path [" + path + "]", e);
                         callback.onError(e);
@@ -331,9 +331,9 @@ public class StoreService implements MetricsAgent {
     }
 
     private void ingestDataInternal(
-            String path, Map<String, String> configs, CompletionCallback<Void> callback)
+            String path, Map<String, String> config, CompletionCallback<Void> callback)
             throws IOException {
-        ExternalStorage externalStorage = ExternalStorage.getStorage(path, configs);
+        ExternalStorage externalStorage = ExternalStorage.getStorage(path, config);
         Set<Map.Entry<Integer, GraphPartition>> entries = this.idToPartition.entrySet();
         AtomicInteger counter = new AtomicInteger(entries.size());
         AtomicBoolean finished = new AtomicBoolean(false);

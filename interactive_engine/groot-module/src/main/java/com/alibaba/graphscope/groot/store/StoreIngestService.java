@@ -34,12 +34,10 @@ public class StoreIngestService extends StoreIngestGrpc.StoreIngestImplBase {
     public void storeIngest(
             StoreIngestRequest request, StreamObserver<StoreIngestResponse> responseObserver) {
         String dataPath = request.getDataPath();
-        //        String accessID = request
-        Map<String, String> configs = request.getConfigMap();
-
+        Map<String, String> config = request.getConfigMap();
         this.storeService.ingestData(
                 dataPath,
-                configs,
+                config,
                 new CompletionCallback<Void>() {
                     @Override
                     public void onCompleted(Void res) {

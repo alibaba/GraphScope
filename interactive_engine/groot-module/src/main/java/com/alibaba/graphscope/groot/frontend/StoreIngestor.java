@@ -15,8 +15,14 @@ package com.alibaba.graphscope.groot.frontend;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
 
+import java.util.Map;
+
 public interface StoreIngestor {
-    void ingest(int storeId, String path, CompletionCallback<Void> callback);
+    void ingest(
+            int storeId,
+            String path,
+            Map<String, String> configs,
+            CompletionCallback<Void> callback);
 
     void clearIngest(int storeId, CompletionCallback<Void> callback);
 }

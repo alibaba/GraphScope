@@ -12,11 +12,11 @@ public class OssStorage extends ExternalStorage {
 
     private OSS ossClient;
 
-    public OssStorage(String path, Map<String, String> configs) {
+    public OssStorage(String path, Map<String, String> config) {
         URI uri = URI.create(path);
         String endpoint = uri.getAuthority();
-        String accessID = configs.get("ossAccessID");
-        String accessKey = configs.get("ossAccessKey");
+        String accessID = config.get("ossAccessID");
+        String accessKey = config.get("ossAccessKey");
         this.ossClient = new OSSClientBuilder().build(endpoint, accessID, accessKey);
     }
 
