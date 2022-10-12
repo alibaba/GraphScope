@@ -36,14 +36,15 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
 
 .. autosummary::
 
+- :func:`attribute_assortativity_coefficient`
+- :func:`numeric_assortativity_coefficient`
 - :func:`average_degree_connectivity`
 - :func:`average_shortest_path_length`
-- :func:`attribute_assortativity_coefficient`
 - :func:`bfs`
 - :func:`avg_clustering`
 - :func:`clustering`
-- :func:`degree_centrality`
 - :func:`degree_assortativity_coefficient`
+- :func:`degree_centrality`
 - :func:`eigenvector_centrality`
 - :func:`hits`
 - :func:`is_simple_path`
@@ -51,12 +52,14 @@ GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通
 - :func:`k_shell`
 - :func:`katz_centrality`
 - :func:`louvain`
+- :func:`cdlp`
 - :func:`lpa`
-- :func:`numeric_assortativity_coefficient`
+- :func:`lpa_u2i`
 - :func:`pagerank`
 - :func:`pagerank_nx`
 - :func:`sssp`
 - :func:`triangles`
+- :func:`voterank`
 - :func:`wcc`
 
 算法的支持列表会随着不断增加持续更新中。

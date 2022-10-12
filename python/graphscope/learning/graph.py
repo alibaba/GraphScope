@@ -260,7 +260,7 @@ class Graph(GLGraph):
 
         Args:
         t (string): The type of node which is the entry of query or the type
-            of edge when node is from edge source or dst.
+                    of edge when node is from edge source or dst.
         feed (None| numpy.ndarray | types.GeneratorType | `Nodes`): When `feed`
             is not `None`, the `type` should be a node type, which means query the
             attributes of the specified node ids.

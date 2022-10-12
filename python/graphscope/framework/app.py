@@ -477,15 +477,16 @@ class UnloadedApp(DAGNode):
 
 def load_app(gar=None, algo=None, context=None, **kwargs):
     """Load an app from gar.
-    bytes or the resource of the specified path or bytes.
 
     Args:
         algo: str
           Algo name inside resource. None will extract name from gar resource
           if there is only one app in it.
         gar: bytes or BytesIO or str
-          str represent the path of resource.
-          for java apps, gar can be none to indicate we should find the app in
+          str represent the path of resource, bytes or the resource of the
+          specified path or bytes.
+
+          For java apps, gar can be none to indicate we should find the app in
           previouse added libs.
 
     Returns:
