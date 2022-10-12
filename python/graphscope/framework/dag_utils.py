@@ -37,7 +37,7 @@ def create_app(app_assets):
         config[types_pb2.GAR] = utils.bytes_to_attr(app_assets.gar)
     if app_assets.cmake_extra_options is not None:
         config[types_pb2.CMAKE_EXTRA_OPTIONS] = utils.s_to_attr(
-            app_assets.extra_options
+            app_assets.cmake_extra_options
         )
     op = Operation(
         None, types_pb2.CREATE_APP, config=config, output_types=types_pb2.APP
