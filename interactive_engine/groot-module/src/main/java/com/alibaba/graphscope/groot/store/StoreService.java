@@ -60,7 +60,7 @@ public class StoreService implements MetricsAgent {
 
     private static final String PARTITION_WRITE_PER_SECOND_MS = "partition.write.per.second.ms";
 
-    private Configs configs;
+    private Configs storeConfigs;
     private int storeId;
     private int writeThreadCount;
     private int downloadThreadCount;
@@ -77,11 +77,11 @@ public class StoreService implements MetricsAgent {
     private Map<Integer, AvgMetric> partitionToMetric;
 
     public StoreService(
-            Configs configs, MetaService metaService, MetricsCollector metricsCollector) {
-        this.configs = configs;
-        this.storeId = CommonConfig.NODE_IDX.get(configs);
-        this.enableGc = StoreConfig.STORE_GC_ENABLE.get(configs);
-        this.writeThreadCount = StoreConfig.STORE_WRITE_THREAD_COUNT.get(configs);
+            Configs storeConfigs, MetaService metaService, MetricsCollector metricsCollector) {
+        this.storeConfigs = storeConfigs;
+        this.storeId = CommonConfig.NODE_IDX.get(storeConfigs);
+        this.enableGc = StoreConfig.STORE_GC_ENABLE.get(storeConfigs);
+        this.writeThreadCount = StoreConfig.STORE_WRITE_THREAD_COUNT.get(storeConfigs);
         this.metaService = metaService;
         metricsCollector.register(this, () -> updateMetrics());
     }
@@ -92,7 +92,7 @@ public class StoreService implements MetricsAgent {
         this.idToPartition = new HashMap<>(partitionIds.size());
         for (int partitionId : partitionIds) {
             try {
-                GraphPartition partition = makeGraphPartition(this.configs, partitionId);
+                GraphPartition partition = makeGraphPartition(this.storeConfigs, partitionId);
                 this.idToPartition.put(partitionId, partition);
             } catch (IOException e) {
                 throw new MaxGraphException(e);
@@ -300,8 +300,9 @@ public class StoreService implements MetricsAgent {
         return this.metaService;
     }
 
-    public void ingestData(String path, CompletionCallback<Void> callback) {
-        String dataRoot = StoreConfig.STORE_DATA_PATH.get(configs);
+    public void ingestData(
+            String path, Map<String, String> configs, CompletionCallback<Void> callback) {
+        String dataRoot = StoreConfig.STORE_DATA_PATH.get(storeConfigs);
         String downloadPath = Paths.get(dataRoot, "download").toString();
         String[] items = path.split("\\/");
         // Get the  unique path  (uuid)
@@ -320,7 +321,7 @@ public class StoreService implements MetricsAgent {
                 () -> {
                     try {
                         logger.info("ingesting data [{}]", path);
-                        ingestDataInternal(path, callback);
+                        ingestDataInternal(path, configs, callback);
                     } catch (Exception e) {
                         logger.error("ingest data failed. path [" + path + "]", e);
                         callback.onError(e);
@@ -329,9 +330,10 @@ public class StoreService implements MetricsAgent {
                 });
     }
 
-    private void ingestDataInternal(String path, CompletionCallback<Void> callback)
+    private void ingestDataInternal(
+            String path, Map<String, String> configs, CompletionCallback<Void> callback)
             throws IOException {
-        ExternalStorage externalStorage = ExternalStorage.getStorage(configs, path);
+        ExternalStorage externalStorage = ExternalStorage.getStorage(path, configs);
         Set<Map.Entry<Integer, GraphPartition>> entries = this.idToPartition.entrySet();
         AtomicInteger counter = new AtomicInteger(entries.size());
         AtomicBoolean finished = new AtomicBoolean(false);
@@ -359,7 +361,7 @@ public class StoreService implements MetricsAgent {
     }
 
     public void clearIngest() throws IOException {
-        String dataRoot = StoreConfig.STORE_DATA_PATH.get(configs);
+        String dataRoot = StoreConfig.STORE_DATA_PATH.get(storeConfigs);
         Path downloadPath = Paths.get(dataRoot, "download");
         try {
             logger.info("Clearing directory {}", downloadPath);

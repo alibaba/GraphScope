@@ -22,14 +22,14 @@ public class OSSFileObj {
     protected final String OSS_ACCESS_KEY = "oss.access.key";
 
     protected String ossEndPoint = null;
-    protected String ossAccessId = null;
+    protected String ossAccessID = null;
     protected String ossAccessKey = null;
 
     protected OSS ossClient = null;
 
     public OSSFileObj(Map<String, String> ossInfo) throws IOException {
         this.ossEndPoint = ossInfo.get(OSS_ENDPOINT);
-        this.ossAccessId = ossInfo.get(OSS_ACCESS_ID);
+        this.ossAccessID = ossInfo.get(OSS_ACCESS_ID);
         this.ossAccessKey = ossInfo.get(OSS_ACCESS_KEY);
 
         if (!ossEndPoint.startsWith("http")) {
@@ -37,7 +37,7 @@ public class OSSFileObj {
         }
 
         try {
-            this.ossClient = new OSSClientBuilder().build(ossEndPoint, ossAccessId, ossAccessKey);
+            this.ossClient = new OSSClientBuilder().build(ossEndPoint, ossAccessID, ossAccessKey);
         } catch (OSSException oe) {
             throw new IOException(oe);
         } catch (ClientException ce) {

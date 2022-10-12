@@ -33,7 +33,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 public class DataBuildReducerOdps extends ReducerBase {
-    private String ossAccessId = null;
+    private String ossAccessID = null;
     private String ossAccessKey = null;
     private String ossEndPoint = null;
     private String ossBucketName = null;
@@ -51,7 +51,7 @@ public class DataBuildReducerOdps extends ReducerBase {
 
     @Override
     public void setup(TaskContext context) throws IOException {
-        this.ossAccessId = context.getJobConf().get(OfflineBuildOdps.OSS_ACCESS_ID);
+        this.ossAccessID = context.getJobConf().get(OfflineBuildOdps.OSS_ACCESS_ID);
         this.ossAccessKey = context.getJobConf().get(OfflineBuildOdps.OSS_ACCESS_KEY);
         this.ossEndPoint = context.getJobConf().get(OfflineBuildOdps.OSS_ENDPOINT);
         this.ossBucketName = context.getJobConf().get(OfflineBuildOdps.OSS_BUCKET_NAME);
@@ -70,7 +70,7 @@ public class DataBuildReducerOdps extends ReducerBase {
 
         Map<String, String> ossInfo = new HashMap<String, String>();
         ossInfo.put(OfflineBuildOdps.OSS_ENDPOINT, ossEndPoint);
-        ossInfo.put(OfflineBuildOdps.OSS_ACCESS_ID, ossAccessId);
+        ossInfo.put(OfflineBuildOdps.OSS_ACCESS_ID, ossAccessID);
         ossInfo.put(OfflineBuildOdps.OSS_ACCESS_KEY, ossAccessKey);
 
         this.ossFileObj = new OSSFileObj(ossInfo);

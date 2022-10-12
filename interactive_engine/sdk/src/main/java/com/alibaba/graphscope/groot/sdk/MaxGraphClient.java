@@ -74,10 +74,7 @@ import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class MaxGraphClient implements Closeable {
@@ -203,6 +200,13 @@ public class MaxGraphClient implements Closeable {
 
     public void ingestData(String path) {
         this.stub.ingestData(IngestDataRequest.newBuilder().setDataPath(path).build());
+    }
+
+    public void ingestData(String path, Map<String, String> configs) {
+        IngestDataRequest.Builder builder = IngestDataRequest.newBuilder();
+        builder.setDataPath(path);
+        builder.putAllConfig(configs);
+        this.stub.ingestData(builder.build());
     }
 
     public String loadJsonSchema(Path jsonFile) throws IOException {

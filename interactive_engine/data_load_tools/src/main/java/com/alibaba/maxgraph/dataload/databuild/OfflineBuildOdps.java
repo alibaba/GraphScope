@@ -18,6 +18,7 @@ import com.alibaba.maxgraph.compiler.api.schema.*;
 import com.alibaba.maxgraph.compiler.api.schema.GraphEdge;
 import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
 import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
+import com.alibaba.maxgraph.dataload.util.HttpClient;
 import com.alibaba.maxgraph.sdkcommon.common.DataLoadTarget;
 import com.alibaba.maxgraph.sdkcommon.schema.GraphSchemaMapper;
 import com.alibaba.maxgraph.sdkcommon.util.UuidUtils;
@@ -36,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.nio.file.Paths;
 import java.util.*;
 
@@ -57,13 +59,32 @@ public class OfflineBuildOdps {
     public static final String OSS_ENDPOINT = "oss.endpoint";
     public static final String OSS_BUCKET_NAME = "oss.bucket.name";
     public static final String OSS_OBJECT_NAME = "oss.object.name";
+    public static final String OSS_INFO_URL = "oss.info.url";
+
     public static final String META_INFO = "meta.info";
     public static final String USER_NAME = "auth.username";
     public static final String PASS_WORD = "auth.password";
     public static final String UNIQUE_PATH = "unique.path";
 
-    public static void main(String[] args)
-            throws IOException, ClassNotFoundException, InterruptedException {
+    private static HashMap<String, Object> getOSSInfoFromURL(String URL) throws IOException {
+        HttpClient client = new HttpClient();
+        HttpURLConnection conn = null;
+        try {
+            conn = client.createConnection(URL);
+            conn.setConnectTimeout(5000);
+            conn.setReadTimeout(5000);
+            ObjectMapper mapper = new ObjectMapper();
+            TypeReference<HashMap<String, Object>> typeRef =
+                    new TypeReference<HashMap<String, Object>>() {};
+            return mapper.readValue(conn.getInputStream(), typeRef);
+        } finally {
+            if (conn != null) {
+                conn.disconnect();
+            }
+        }
+    }
+
+    public static void main(String[] args) throws IOException {
         String propertiesFile = args[0];
         String uniquePath = UuidUtils.getBase64UUIDString();
         // User can assign a unique path manually.
@@ -77,11 +98,21 @@ public class OfflineBuildOdps {
         }
 
         String outputTable = properties.getProperty(OUTPUT_TABLE);
-        String ossAccessId = properties.getProperty(OSS_ACCESS_ID);
+        String ossAccessID = properties.getProperty(OSS_ACCESS_ID);
         String ossAccessKey = properties.getProperty(OSS_ACCESS_KEY);
         String ossEndPoint = properties.getProperty(OSS_ENDPOINT);
         String ossBucketName = properties.getProperty(OSS_BUCKET_NAME);
         String ossObjectName = properties.getProperty(OSS_OBJECT_NAME);
+
+        if (ossAccessID == null) {
+            String URL = properties.getProperty(OSS_INFO_URL);
+            HashMap<String, Object> o = getOSSInfoFromURL(URL);
+            ossAccessID = (String) o.get("ossAccessID");
+            ossAccessKey = (String) o.get("ossAccessKey");
+            ossEndPoint = (String) o.get("ossEndpoint");
+            ossBucketName = (String) o.get("ossBucketName");
+            ossObjectName = (String) o.get("ossObjectName");
+        }
 
         // The table format is `project.table` or `table`;
         // For partitioned table, the format is `project.table|p1=1/p2=2` or `table|p1=1/p2=2`
@@ -137,7 +168,7 @@ public class OfflineBuildOdps {
         job.setBoolean(SKIP_HEADER, skipHeader);
         job.set(GRAPH_ENDPOINT, graphEndpoint);
 
-        job.set(OSS_ACCESS_ID, ossAccessId);
+        job.set(OSS_ACCESS_ID, ossAccessID);
         job.set(OSS_ACCESS_KEY, ossAccessKey);
         job.set(OSS_ENDPOINT, ossEndPoint);
         job.set(OSS_BUCKET_NAME, ossBucketName);
