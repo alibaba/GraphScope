@@ -21,7 +21,6 @@
 
 import atexit
 import base64
-import concurrent.futures
 import contextlib
 import json
 import logging

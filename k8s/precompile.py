@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import glob
+import sys
 import hashlib
 import multiprocessing
 import os
@@ -65,9 +65,18 @@ def cmake_and_make(cmake_commands):
         shutil.rmtree("CMakeFiles")
     except subprocess.CalledProcessError as e:
         print(e.stderr)
+        raise
 
+def get_lib_path(app_dir, app_name):
+    if sys.platform == "linux" or sys.platform == "linux2":
+        return app_dir / f"lib{app_name}.so"
+    elif sys.platform == "darwin":
+        return app_dir / f"lib{app_name}.dylib"
+    else:
+        raise RuntimeError(f"Unsupported platform {sys.platform}")
 
 def cmake_graph(graph_class):
+    print("Start to compile", graph_class)
     library_name = compute_sig(graph_class)
     library_dir = WORKSPACE / library_name
     library_dir.mkdir(exist_ok=True)
@@ -89,11 +98,15 @@ def cmake_graph(graph_class):
         cmake_commands.append("-DPROJECT_FRAME=True")
 
     cmake_and_make(cmake_commands)
-    print("Finished compiling", graph_class)
+    print("-- Finished compiling", graph_class)
 
 
 def cmake_app(app):
-    algo, graph_class = app
+    if len(app) == 3:
+        algo, graph_class, extra_option = app
+    else:
+        algo, graph_class = app
+        extra_option = []
     if "ArrowFragment" in graph_class:
         graph_header = "vineyard/graph/fragment/arrow_fragment.h"
     elif "ArrowProjectedFragment" in graph_class:
@@ -106,12 +119,16 @@ def cmake_app(app):
         raise ValueError("Not supported graph class %s" % graph_class)
 
     app_type, app_header, app_class = get_app_info(algo)
+    print("Start to compile", app_class, graph_class)
     assert app_type == "cpp_pie", "Only support cpp_pie currently."
-
     library_name = compute_sig(f"{app_type}.{app_class}.{graph_class}")
     library_dir = WORKSPACE / library_name
     library_dir.mkdir(exist_ok=True)
     os.chdir(library_dir)
+    # library = get_lib_path(library_dir, library_name)
+    # if library.exists():
+    #     print("-- Application already exists, skipped.")
+    #     return
     cmakelists_file = library_dir / "CMakeLists.txt"
     with open(CMAKELISTS_TEMPLATE, mode="r") as template:
         content = template.read()
@@ -126,9 +143,10 @@ def cmake_app(app):
         with open(cmakelists_file, mode="w") as f:
             f.write(content)
     cmake_commands = ["cmake", ".", "-DNETWORKX=" + NETWORKX]
+    cmake_commands.extend(extra_option)
 
     cmake_and_make(cmake_commands)
-    print("Finished compiling", app_class, graph_class)
+    print("-- Finished compiling", app_class, graph_class)
 
 
 def get_app_info(algo: str):
@@ -219,7 +237,7 @@ def compile_cpp_pie_app():
             ("pagerank", psuee),
             ("pagerank", pluee),
             ("pagerank", plull),
-            ("wcc", psuee),
+            ("wcc", psuee, ["-DWCC_USE_GID=ON"]),
             ("wcc", pluee),
             ("wcc", plull),
             ("sssp", psuel),
@@ -285,8 +303,8 @@ def compile_cpp_pie_app():
     flued = flatten_template.format("int64_t", "uint64_t", "grape::EmptyType", "double")
     targets.extend(
         [
-            ("pagerank", fsuee),
-            ("pagerank", fluee),
+            # ("pagerank", fsuee), pagerank cannot run on flatten fragment
+            # ("pagerank", fluee),
             ("sssp", fsuel),
             ("sssp", fsued),
             ("sssp", fluel),
@@ -380,5 +398,5 @@ def compile_cpp_pie_app():
 
 if __name__ == "__main__":
     os.makedirs(WORKSPACE, exist_ok=True)
-    compile_graph()
+    # compile_graph()
     compile_cpp_pie_app()

@@ -163,7 +163,7 @@ class AppAssets(DAGNode):
         "labeled_vertex_property",
     ]
 
-    def __init__(self, algo, context=None, gar=None):
+    def __init__(self, algo, context=None, gar=None, cmake_extra_options=None):
         """Init assets of the algorithm.
 
         Args:
@@ -182,12 +182,14 @@ class AppAssets(DAGNode):
         self._meta = {}
 
         # used for gar resource
-        if gar and isinstance(gar, (BytesIO, bytes)):
+        if gar is not None and isinstance(gar, (BytesIO, bytes)):
             self._gar = gar if isinstance(gar, bytes) else gar.getvalue()
             self._extract_meta_info()
         else:
             # built_in apps has no gar resource.
             self._gar = None
+
+        self._cmake_extra_options = cmake_extra_options
 
         if self._context_type not in self._support_context_type:
             raise InvalidArgumentError(
@@ -268,6 +270,10 @@ class AppAssets(DAGNode):
     @classmethod
     def bytes(cls):
         return cls._gar
+
+    @property
+    def cmake_extra_options(self):
+        return self._cmake_extra_options
 
     @property
     def signature(self):
