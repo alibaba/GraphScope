@@ -278,6 +278,10 @@ def compile_app(
 
     os.chdir(app_dir)
 
+    extra_options = []
+    if types_pb2.CMAKE_EXTRA_OPTIONS in attr:
+        extra_options = attr[types_pb2.CMAKE_EXTRA_OPTIONS].s.decode("utf-8").split(" ")
+
     module_name = ""
     # Output directory for java codegen
     java_codegen_out_dir = ""
@@ -289,6 +293,7 @@ def compile_app(
         f"-DNETWORKX={engine_config['networkx']}",
         f"-DCMAKE_PREFIX_PATH='{GRAPHSCOPE_HOME};{OPAL_PREFIX}'",
     ]
+    cmake_commands.extend(extra_options)
     if os.environ.get("GRAPHSCOPE_ANALYTICAL_DEBUG", "") == "1":
         cmake_commands.append("-DCMAKE_BUILD_TYPE=Debug")
     if app_type == "java_pie":
