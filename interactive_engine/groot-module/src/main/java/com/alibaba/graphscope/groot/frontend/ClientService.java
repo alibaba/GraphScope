@@ -331,7 +331,7 @@ public class ClientService extends ClientGrpc.ClientImplBase {
     public void ingestData(
             IngestDataRequest request, StreamObserver<IngestDataResponse> responseObserver) {
         String dataPath = request.getDataPath();
-        Map<String, String> configs = request.getConfigMap();
+        Map<String, String> config = request.getConfigMap();
         logger.info("ingestData. path [" + dataPath + "]");
         int storeCount = this.metaService.getStoreCount();
         AtomicInteger counter = new AtomicInteger(storeCount);
@@ -340,7 +340,7 @@ public class ClientService extends ClientGrpc.ClientImplBase {
             this.storeIngestor.ingest(
                     i,
                     dataPath,
-                    configs,
+                    config,
                     new CompletionCallback<Void>() {
                         @Override
                         public void onCompleted(Void res) {

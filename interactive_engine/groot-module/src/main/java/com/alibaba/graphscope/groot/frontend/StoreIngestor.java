@@ -18,10 +18,12 @@ import com.alibaba.graphscope.groot.CompletionCallback;
 import java.util.Map;
 
 public interface StoreIngestor {
+    void ingest(int storeId, String path, CompletionCallback<Void> callback);
+
     void ingest(
             int storeId,
             String path,
-            Map<String, String> configs,
+            Map<String, String> config,
             CompletionCallback<Void> callback);
 
     void clearIngest(int storeId, CompletionCallback<Void> callback);
