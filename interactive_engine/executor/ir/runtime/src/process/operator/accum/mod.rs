@@ -15,27 +15,10 @@
 
 mod accum;
 pub mod accumulator;
-
 pub use accum::RecordAccumulator;
-use ir_common::error::ParsePbError;
-use ir_common::generated::algebra as algebra_pb;
 
 use crate::error::FnGenResult;
 
 pub trait AccumFactoryGen {
     fn gen_accum(self) -> FnGenResult<RecordAccumulator>;
-}
-
-impl AccumFactoryGen for algebra_pb::logical_plan::Operator {
-    fn gen_accum(self) -> FnGenResult<RecordAccumulator> {
-        if let Some(opr) = self.opr {
-            match opr {
-                // TODO: it should be different for group and fold; For fold, we should further consider fold_partition and fold;
-                algebra_pb::logical_plan::operator::Opr::GroupBy(group) => group.gen_accum(),
-                _ => Err(ParsePbError::from("algebra_pb op is not a accum op").into()),
-            }
-        } else {
-            Err(ParsePbError::from("algebra op is empty").into())
-        }
-    }
 }

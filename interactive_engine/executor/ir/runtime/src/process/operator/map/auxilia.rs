@@ -75,7 +75,10 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                         edge.into()
                     })
                 } else {
-                    Err(FnExecError::unexpected_data_error("should be vertex or edge in AuxiliaOperator"))?
+                    Err(FnExecError::unexpected_data_error(&format!(
+                        "neither Vertex nor Edge entry is accessed in `Auxilia` operator, the entry is {:?}",
+                        entry
+                    )))?
                 };
                 if new_entry.is_some() {
                     input.append(new_entry.unwrap(), self.alias.clone());

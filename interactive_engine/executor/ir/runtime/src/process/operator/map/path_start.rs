@@ -38,9 +38,10 @@ impl FilterMapFunction<Record, Record> for PathStartOperator {
         if let Some(entry) = input.get(self.start_tag) {
             let v = entry
                 .as_graph_vertex()
-                .ok_or(FnExecError::unexpected_data_error(
-                    "tag does not refer to a graph vertex element",
-                ))?;
+                .ok_or(FnExecError::unexpected_data_error(&format!(
+                    "tag {:?} does not refer to a graph vertex element in record {:?}",
+                    self.start_tag, input
+                )))?;
             let graph_path = GraphPath::new(v.clone(), self.path_opt, self.result_opt);
             input.append(graph_path, None);
             Ok(Some(input))
