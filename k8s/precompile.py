@@ -398,5 +398,5 @@ def compile_cpp_pie_app():
 
 if __name__ == "__main__":
     os.makedirs(WORKSPACE, exist_ok=True)
-    # compile_graph()
+    compile_graph()
     compile_cpp_pie_app()
