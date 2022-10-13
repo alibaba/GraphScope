@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.alibaba.maxgraph</groupId>
@@ -84,7 +82,7 @@
     <protobuf.version>3.19.6</protobuf.version>
     <logback.version>1.2.3</logback.version>
     <zookeeper.version>3.6.3</zookeeper.version>
-    <kafka.version>2.5.0</kafka.version>
+    <kafka.version>2.7.2</kafka.version>
     <kafka.junit.version>3.2.1</kafka.junit.version>
     <jna.version>5.5.0</jna.version>
     <junit.jupiter.version>5.6.3</junit.jupiter.version>
