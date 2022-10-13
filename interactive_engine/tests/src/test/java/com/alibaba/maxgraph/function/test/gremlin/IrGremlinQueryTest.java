@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package com.alibaba.maxgraph.tests.gremlin;
+package com.alibaba.maxgraph.function.test.gremlin;
 
+import org.apache.tinkerpop.gremlin.LoadGraphWith;
 import org.apache.tinkerpop.gremlin.process.AbstractGremlinProcessTest;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
@@ -32,6 +33,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     public abstract Traversal<Vertex, Object> get_g_V_hasLabel_hasId_values();
 
     @Test
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     public void g_VX4X_bothE_as_otherV() {
         Traversal<Vertex, Object> traversal = this.get_g_VX4X_bothE_as_otherV();
         this.printTraversalForm(traversal);
@@ -49,6 +51,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     }
 
     @Test
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     public void g_V_hasLabel_hasId_values() {
         Traversal<Vertex, Object> traversal = this.get_g_V_hasLabel_hasId_values();
         this.printTraversalForm(traversal);

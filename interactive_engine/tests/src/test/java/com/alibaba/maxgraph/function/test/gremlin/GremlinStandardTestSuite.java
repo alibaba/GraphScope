@@ -70,6 +70,9 @@ public class GremlinStandardTestSuite extends AbstractGremlinSuite {
 
                 // match
                 MatchTest.CountMatchTraversals.class,
+
+                // others
+                IrGremlinQueryTest.Traversals.class,
             };
 
     /**
@@ -106,6 +109,9 @@ public class GremlinStandardTestSuite extends AbstractGremlinSuite {
 
                 // match
                 MatchTest.CountMatchTraversals.class,
+
+                // others
+                IrGremlinQueryTest.Traversals.class,
             };
 
     /**

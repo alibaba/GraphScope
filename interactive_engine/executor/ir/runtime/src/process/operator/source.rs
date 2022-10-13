@@ -67,6 +67,7 @@ impl SourceOperator {
                         // query by indexed_scan
                         let primary_key_values = <Vec<(NameOrId, Object)>>::try_from(ip2)?;
                         source_op.primary_key_values = Some(PKV::from(primary_key_values));
+                        source_op.set_partitions(job_workers, worker_index, partitioner)?;
                         debug!("Runtime source op of indexed scan {:?}", source_op);
                     }
                     Ok(source_op)
