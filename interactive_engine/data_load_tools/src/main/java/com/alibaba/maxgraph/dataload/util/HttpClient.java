@@ -1,13 +1,13 @@
 package com.alibaba.maxgraph.dataload.util;
 
+import org.apache.commons.codec.binary.Base64;
+
 import java.io.IOException;
 import java.net.Authenticator;
 import java.net.HttpURLConnection;
 import java.net.PasswordAuthentication;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-
-import org.apache.commons.codec.binary.Base64;
 
 /**
  * Simple HTTPClient which refer from <a href="https://github.com/eugenp/tutorials/blob/master/core-java-modules/core-java-networking-2/src/main/java/com/baeldung/url/auth/HttpClient.java">...</a>
@@ -20,6 +20,7 @@ public class HttpClient {
     public HttpClient() {
         this("", "");
     }
+
     public HttpClient(String user, String password) {
         this.user = user;
         this.password = password;
