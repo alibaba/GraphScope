@@ -3,4 +3,15 @@ requires = ["setuptools_scm", "grpcio<=1.43.0,>=1.40.0", "grpcio-tools<=1.43.0,>
 
 [tool.black]
 line-length = 88
-exclude = '.*\/(forward|node_modules|\.eggs|build|_pb2\.py)\/.*'
+exclude = '''
+(
+  .*forward.*
+  | .*node_modules.*
+  | .*\.eggs.*
+  | .*build.*
+  | ^/dist.*
+  | .*_pb2\.py
+  | .*_pb2_grpc\.py
+)
+'''
+

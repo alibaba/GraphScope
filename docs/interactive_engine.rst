@@ -362,7 +362,9 @@ Currently GIE supports the following Gremlin steps:
     g.V().values("age").sum()
 
 - Match step, e.g.,
+
 .. code:: java
+
     g.V().match(
         __.as('a').out().as('b'),
         __.as('b').out().as('c')
