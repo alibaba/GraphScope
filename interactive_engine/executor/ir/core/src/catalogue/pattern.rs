@@ -18,6 +18,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::convert::{TryFrom, TryInto};
 use std::iter::FromIterator;
 
+use ir_common::expr_parse::str_to_expr_pb;
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
 use serde::de::Visitor;
@@ -29,7 +30,7 @@ use crate::catalogue::extend_step::{
     get_subsets, limit_repeated_element_num, DefiniteExtendStep, ExtendEdge, ExtendStep,
 };
 use crate::catalogue::pattern_meta::PatternMeta;
-use crate::catalogue::{DynIter, PatternDirection, PatternId, PatternLabelId};
+use crate::catalogue::{query_params, DynIter, PatternDirection, PatternId, PatternLabelId};
 use crate::error::{IrError, IrResult};
 use crate::plan::meta::{PlanMeta, TagId};
 
@@ -301,7 +302,7 @@ impl Pattern {
                 return Err(IrError::MissingData("pb::Pattern::Sentence::binders".to_string()));
             }
             if sentence.join_kind != pb::join::JoinKind::Inner as i32 {
-                return Err(IrError::InvalidPattern(format!("Only support join_kind of `Inner` in ExtendStrategy in Pattern Match, while the join_kind is {:?}", sentence.join_kind)));
+                return Err(IrError::InvalidPattern(format!("Only support join_kind of `InnerJoin` in ExtendStrategy in Pattern Match, while the join_kind is {:?}", sentence.join_kind)));
             }
             // pb pattern sentence must have start tag
             let start_tag = get_tag_from_name_or_id(
@@ -496,18 +497,21 @@ fn build_logical_plan(
         }
     };
     let source_vertex_id = source_extend.get_target_vertex_id();
-    let source_as = pb::As { alias: Some((source_vertex_id as i32).into()) };
-    let mut pre_node =
-        if let Some(source_filter) = source_extend.generate_vertex_filter_operator(origin_pattern) {
-            let source_filter_id = child_offset;
-            child_offset += 1;
-            let source_as_node =
-                pb::logical_plan::Node { opr: Some(source_as.into()), children: vec![source_filter_id] };
-            match_plan.nodes.push(source_as_node);
-            pb::logical_plan::Node { opr: Some(source_filter.into()), children: vec![] }
-        } else {
-            pb::logical_plan::Node { opr: Some(source_as.into()), children: vec![] }
-        };
+    let source_vertex_label = source_extend.get_target_vertex_label();
+    let source_vertex_filter = origin_pattern
+        .get_vertex_predicate(source_vertex_id)
+        .cloned();
+    // TODO: here, we fuse `source_vertex_label` into source, for efficiently scan. However,
+    // TODO: we may still have `hasLabel(xx)` in predicate of source_vertex_filter, which is not necessary.
+    // TODO: btw, index scan case (e.g., `hasLabel(xx).has('id',xx)`), if exists, should be in the first priority.
+    let query_params = query_params(vec![source_vertex_label.into()], vec![], source_vertex_filter);
+    let source_opr = pb::Scan {
+        scan_opt: 0,
+        alias: Some((source_vertex_id as i32).into()),
+        params: Some(query_params),
+        idx_predicate: None,
+    };
+    let mut pre_node = pb::logical_plan::Node { opr: Some(source_opr.into()), children: vec![] };
     for definite_extend_step in definite_extend_steps.into_iter().rev() {
         let edge_expands = definite_extend_step.generate_expand_operators(origin_pattern);
         let edge_expands_num = edge_expands.len();
@@ -547,6 +551,18 @@ fn build_logical_plan(
             child_offset += 1;
         }
     }
+    pre_node.children.push(child_offset);
+    match_plan.nodes.push(pre_node);
+    child_offset += 1;
+    // finally, we project those pattern vertices whose aliases are user-given, i.e., those that may be referred later.
+    let mut mappings = Vec::with_capacity(origin_pattern.tag_vertex_map.len());
+    for (tag_id, _) in &origin_pattern.tag_vertex_map {
+        let expr = str_to_expr_pb(format!("@{}", tag_id)).ok();
+        let mapping = pb::project::ExprAlias { expr, alias: Some((*tag_id as i32).into()) };
+        mappings.push(mapping);
+    }
+    let project = pb::Project { mappings, is_append: false };
+    pre_node = pb::logical_plan::Node { opr: Some(project.into()), children: vec![] };
     pre_node.children.push(child_offset);
     match_plan.nodes.push(pre_node);
     Ok(match_plan)

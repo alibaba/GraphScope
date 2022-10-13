@@ -406,43 +406,39 @@ impl LogicalPlan {
                     // Notice that there are some limitations of ExtendStrategy, including:
                     // 1. the input of match should be a whole graph, i.e., `g.V().match(...)`
                     // 2. the pattern to be matched must be identical (no fuzzy pattern).
-                    let mut extend_strategy: Option<ExtendStrategy> = None;
-                    // confirm if the parent opr is `g.V()`
+                    // 3. the match sentences are connected by join_kind of `InnerJoin`
                     let parent_id = parent_ids[0];
+                    // confirm if the parent opr is `g.V()`
                     if parent_id == 0 {
                         let source_opr = self.nodes.get(0).unwrap().borrow().opr.clone();
                         if let Some(source) = <Option<pb::Scan>>::from(source_opr) {
                             // confirm no index scan or filters fused into source op
-                            if source.idx_predicate.is_none()
-                                && (source.params.is_none()
-                                    || (source.params.is_some() && !source.params.unwrap().is_queryable()))
-                            {
+                            if !source.is_queryable() {
                                 if let Ok(store_meta) = STORE_META.read() {
                                     if let Some(pattern_meta) = store_meta.pattern_meta.as_ref() {
-                                        extend_strategy =
+                                        if let Ok(extend_strategy) =
                                             ExtendStrategy::init(&pattern, pattern_meta, &mut self.meta)
-                                                .ok();
+                                        {
+                                            if let Ok(plan) = extend_strategy.build_logical_plan() {
+                                                debug!("pattern matching by ExtendStrategy");
+                                                if let Ok(new_plan) = LogicalPlan::try_from(plan) {
+                                                    // As ExtendStrategy only applied on the whole graph, i.e., `g.V().match(...)`,
+                                                    // simply replace current plan by the matching plan.
+                                                    (*self).nodes = new_plan.nodes;
+                                                    (*self).max_node_id = new_plan.max_node_id;
+                                                    return Ok(self.max_node_id - 1);
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
                         }
                     }
 
-                    let plan = if let Some(extend_strategy) = extend_strategy {
-                        if let Ok(plan) = extend_strategy.build_logical_plan() {
-                            debug!("pattern matching by ExtendStrategy");
-                            plan
-                        } else {
-                            debug!("pattern matching by NaiveStrategy");
-                            let naive_strategy = NaiveStrategy::try_from(pattern.clone())?;
-                            naive_strategy.build_logical_plan()?
-                        }
-                    } else {
-                        debug!("pattern matching by NaiveStrategy");
-                        let naive_strategy = NaiveStrategy::try_from(pattern.clone())?;
-                        naive_strategy.build_logical_plan()?
-                    };
-
+                    debug!("pattern matching by NaiveStrategy");
+                    let naive_strategy = NaiveStrategy::try_from(pattern.clone())?;
+                    let plan = naive_strategy.build_logical_plan()?;
                     self.append_plan(plan, parent_ids.clone())
                 } else {
                     Err(IrError::Unsupported(

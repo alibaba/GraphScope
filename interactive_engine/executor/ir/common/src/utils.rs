@@ -626,8 +626,16 @@ impl pb::logical_plan::operator::Opr {
     }
 }
 
-impl pb::QueryParams {
+impl pb::Scan {
     pub fn is_queryable(&self) -> bool {
+        !(self.idx_predicate.is_none()
+            && (self.params.is_none()
+                || (self.params.is_some() && !self.params.as_ref().unwrap().is_queryable())))
+    }
+}
+
+impl pb::QueryParams {
+    fn is_queryable(&self) -> bool {
         !(self.tables.is_empty()
             && self.predicate.is_none()
             && self.limit.is_none()
