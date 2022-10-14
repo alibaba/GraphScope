@@ -21,23 +21,23 @@ public class OSSFileObj {
     protected final String OSS_ACCESS_ID = "oss.access.id";
     protected final String OSS_ACCESS_KEY = "oss.access.key";
 
-    protected String ossEndPoint = null;
+    protected String ossEndpoint = null;
     protected String ossAccessID = null;
     protected String ossAccessKey = null;
 
     protected OSS ossClient = null;
 
     public OSSFileObj(Map<String, String> ossInfo) throws IOException {
-        this.ossEndPoint = ossInfo.get(OSS_ENDPOINT);
+        this.ossEndpoint = ossInfo.get(OSS_ENDPOINT);
         this.ossAccessID = ossInfo.get(OSS_ACCESS_ID);
         this.ossAccessKey = ossInfo.get(OSS_ACCESS_KEY);
 
-        if (!ossEndPoint.startsWith("http")) {
-            ossEndPoint = "https://" + ossEndPoint;
+        if (!ossEndpoint.startsWith("http")) {
+            ossEndpoint = "https://" + ossEndpoint;
         }
 
         try {
-            this.ossClient = new OSSClientBuilder().build(ossEndPoint, ossAccessID, ossAccessKey);
+            this.ossClient = new OSSClientBuilder().build(ossEndpoint, ossAccessID, ossAccessKey);
         } catch (OSSException oe) {
             throw new IOException(oe);
         } catch (ClientException ce) {

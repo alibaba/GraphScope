@@ -49,7 +49,7 @@ public abstract class DataCommand {
         initialize(isFromOSS);
     }
 
-    private HashMap<String, Object> getOSSInfoFromURL(String URL) throws IOException {
+    private HashMap<String, String> getOSSInfoFromURL(String URL) throws IOException {
         HttpClient client = new HttpClient();
         HttpURLConnection conn = null;
         try {
@@ -57,8 +57,8 @@ public abstract class DataCommand {
             conn.setConnectTimeout(5000);
             conn.setReadTimeout(5000);
             ObjectMapper mapper = new ObjectMapper();
-            TypeReference<HashMap<String, Object>> typeRef =
-                    new TypeReference<HashMap<String, Object>>() {};
+            TypeReference<HashMap<String, String>> typeRef =
+                    new TypeReference<HashMap<String, String>>() {};
             return mapper.readValue(conn.getInputStream(), typeRef);
         } finally {
             if (conn != null) {
@@ -77,17 +77,17 @@ public abstract class DataCommand {
             }
             this.ossAccessID = properties.getProperty(OSS_ACCESS_ID);
             this.ossAccessKey = properties.getProperty(OSS_ACCESS_KEY);
-            String ossEndPoint = properties.getProperty(OSS_ENDPOINT);
+            String ossEndpoint = properties.getProperty(OSS_ENDPOINT);
             String ossBucketName = properties.getProperty(OSS_BUCKET_NAME);
             String ossObjectName = properties.getProperty(OSS_OBJECT_NAME);
             if (this.ossAccessID == null || this.ossAccessID.isEmpty()) {
                 String URL = properties.getProperty(OSS_INFO_URL);
-                HashMap<String, Object> o = getOSSInfoFromURL(URL);
-                this.ossAccessID = (String) o.get("ossAccessID");
-                this.ossAccessKey = (String) o.get("ossAccessKey");
-                ossEndPoint = (String) o.get("ossEndpoint");
-                ossBucketName = (String) o.get("ossBucketName");
-                ossObjectName = (String) o.get("ossObjectName");
+                HashMap<String, String> o = getOSSInfoFromURL(URL);
+                this.ossAccessID = o.get("ossAccessID");
+                this.ossAccessKey = o.get("ossAccessKey");
+                ossEndpoint = o.get("ossEndpoint");
+                ossBucketName = o.get("ossBucketName");
+                ossObjectName = o.get("ossObjectName");
             }
 
             username = properties.getProperty(USER_NAME);
@@ -96,11 +96,11 @@ public abstract class DataCommand {
             configPath =
                     "oss://"
                             + Paths.get(
-                                    Paths.get(ossEndPoint, ossBucketName).toString(),
+                                    Paths.get(ossEndpoint, ossBucketName).toString(),
                                     ossObjectName);
 
             Map<String, String> ossInfo = new HashMap<>();
-            ossInfo.put(OSS_ENDPOINT, ossEndPoint);
+            ossInfo.put(OSS_ENDPOINT, ossEndpoint);
             ossInfo.put(OSS_ACCESS_ID, ossAccessID);
             ossInfo.put(OSS_ACCESS_KEY, ossAccessKey);
             OSSFileObj ossFileObj = new OSSFileObj(ossInfo);

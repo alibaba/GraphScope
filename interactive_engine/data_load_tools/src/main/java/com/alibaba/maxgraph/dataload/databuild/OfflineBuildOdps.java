@@ -66,7 +66,7 @@ public class OfflineBuildOdps {
     public static final String PASS_WORD = "auth.password";
     public static final String UNIQUE_PATH = "unique.path";
 
-    private static HashMap<String, Object> getOSSInfoFromURL(String URL) throws IOException {
+    private static HashMap<String, String> getOSSInfoFromURL(String URL) throws IOException {
         HttpClient client = new HttpClient();
         HttpURLConnection conn = null;
         try {
@@ -74,8 +74,8 @@ public class OfflineBuildOdps {
             conn.setConnectTimeout(5000);
             conn.setReadTimeout(5000);
             ObjectMapper mapper = new ObjectMapper();
-            TypeReference<HashMap<String, Object>> typeRef =
-                    new TypeReference<HashMap<String, Object>>() {};
+            TypeReference<HashMap<String, String>> typeRef =
+                    new TypeReference<HashMap<String, String>>() {};
             return mapper.readValue(conn.getInputStream(), typeRef);
         } finally {
             if (conn != null) {
@@ -100,26 +100,19 @@ public class OfflineBuildOdps {
         String outputTable = properties.getProperty(OUTPUT_TABLE);
         String ossAccessID = properties.getProperty(OSS_ACCESS_ID);
         String ossAccessKey = properties.getProperty(OSS_ACCESS_KEY);
-        String ossEndPoint = properties.getProperty(OSS_ENDPOINT);
+        String ossEndpoint = properties.getProperty(OSS_ENDPOINT);
         String ossBucketName = properties.getProperty(OSS_BUCKET_NAME);
         String ossObjectName = properties.getProperty(OSS_OBJECT_NAME);
 
         if (ossAccessID == null || ossAccessID.isEmpty()) {
             String URL = properties.getProperty(OSS_INFO_URL);
-            System.out.println(URL);
-            HashMap<String, Object> o = getOSSInfoFromURL(URL);
-            System.out.println(o);
-            ossAccessID = (String) o.get("ossAccessID");
-            ossAccessKey = (String) o.get("ossAccessKey");
-            ossEndPoint = (String) o.get("ossEndpoint");
-            ossBucketName = (String) o.get("ossBucketName");
-            ossObjectName = (String) o.get("ossObjectName");
+            HashMap<String, String> o = getOSSInfoFromURL(URL);
+            ossAccessID = o.get("ossAccessID");
+            ossAccessKey = o.get("ossAccessKey");
+            ossEndpoint = o.get("ossEndpoint");
+            ossBucketName = o.get("ossBucketName");
+            ossObjectName = o.get("ossObjectName");
         }
-        System.out.println(ossAccessID);
-        System.out.println(ossAccessKey);
-        System.out.println(ossEndPoint);
-        System.out.println(ossBucketName);
-        System.out.println(ossObjectName);
 
         // The table format is `project.table` or `table`;
         // For partitioned table, the format is `project.table|p1=1/p2=2` or `table|p1=1/p2=2`
@@ -177,7 +170,7 @@ public class OfflineBuildOdps {
 
         job.set(OSS_ACCESS_ID, ossAccessID);
         job.set(OSS_ACCESS_KEY, ossAccessKey);
-        job.set(OSS_ENDPOINT, ossEndPoint);
+        job.set(OSS_ENDPOINT, ossEndpoint);
         job.set(OSS_BUCKET_NAME, ossBucketName);
         job.set(OSS_OBJECT_NAME, ossObjectName);
 
