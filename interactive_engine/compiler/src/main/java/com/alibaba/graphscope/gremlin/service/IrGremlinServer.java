@@ -56,14 +56,14 @@ public class IrGremlinServer implements AutoCloseable {
         InputStream input =
                 getClass().getClassLoader().getResourceAsStream("conf/gremlin-server.yaml");
         this.settings = Settings.read(input);
+        this.settings.host = "0.0.0.0";
         this.graph = TinkerFactory.createModern();
         this.g = this.graph.traversal(IrCustomizedTraversalSource.class);
     }
 
     public IrGremlinServer(int gremlinPort) {
         this();
-        settings.host = "0.0.0.0";
-        settings.port = (gremlinPort >= 0) ? gremlinPort : settings.port;
+        this.settings.port = (gremlinPort >= 0) ? gremlinPort : settings.port;
     }
 
     public void start(
