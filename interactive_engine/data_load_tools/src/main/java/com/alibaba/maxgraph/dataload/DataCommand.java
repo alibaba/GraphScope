@@ -80,7 +80,7 @@ public abstract class DataCommand {
             String ossEndPoint = properties.getProperty(OSS_ENDPOINT);
             String ossBucketName = properties.getProperty(OSS_BUCKET_NAME);
             String ossObjectName = properties.getProperty(OSS_OBJECT_NAME);
-            if (this.ossAccessID == null) {
+            if (this.ossAccessID == null || this.ossAccessID.isEmpty()) {
                 String URL = properties.getProperty(OSS_INFO_URL);
                 HashMap<String, Object> o = getOSSInfoFromURL(URL);
                 this.ossAccessID = (String) o.get("ossAccessID");

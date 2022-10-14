@@ -104,15 +104,22 @@ public class OfflineBuildOdps {
         String ossBucketName = properties.getProperty(OSS_BUCKET_NAME);
         String ossObjectName = properties.getProperty(OSS_OBJECT_NAME);
 
-        if (ossAccessID == null) {
+        if (ossAccessID == null || ossAccessID.isEmpty()) {
             String URL = properties.getProperty(OSS_INFO_URL);
+            System.out.println(URL);
             HashMap<String, Object> o = getOSSInfoFromURL(URL);
+            System.out.println(o);
             ossAccessID = (String) o.get("ossAccessID");
             ossAccessKey = (String) o.get("ossAccessKey");
             ossEndPoint = (String) o.get("ossEndpoint");
             ossBucketName = (String) o.get("ossBucketName");
             ossObjectName = (String) o.get("ossObjectName");
         }
+        System.out.println(ossAccessID);
+        System.out.println(ossAccessKey);
+        System.out.println(ossEndPoint);
+        System.out.println(ossBucketName);
+        System.out.println(ossObjectName);
 
         // The table format is `project.table` or `table`;
         // For partitioned table, the format is `project.table|p1=1/p2=2` or `table|p1=1/p2=2`
