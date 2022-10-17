@@ -336,7 +336,7 @@ frontend:
   service:
     ## Service type
     ##
-    type: NodePort
+    type: LoadBalancer
     ## Service port
     ##
     servicePort: 55556

@@ -49,7 +49,7 @@ hostPath:
 kubectl apply -f ir-standalone/pvc.yaml
 ```
 ## Getting Started
-- 配置`ir-standalone/values.yaml`
+### 配置`ir-standalone/values.yaml`
 ```
 # 配置启动服务所需的docker镜像
 image:
@@ -82,17 +82,17 @@ existingClaim: "test-graphscope-store-pvc"
 # 如果基于vineyard存储，需额外配置:
 htapLoaderConfig: "v6d_modern_loader.json" # 用于vineyard导入数据的配置文件, json具体内容在ir-standalone/templates/configmap.yaml
 ```
-- 部署GIE
+### start service
 ```
 kubectl get pods # 确认先前服务已停止
 
 helm install <your-release-name> ir-standalone
 ```
-## delete service
+### delete service
 ```
 helm delete <your-release-name>
 ```
-## get gremlin endpoint
+### get service endpoint
 ```
 minikube tunnel # minikube环境中需额外执行
 
