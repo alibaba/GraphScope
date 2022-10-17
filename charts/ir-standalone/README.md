@@ -3,24 +3,21 @@
 ```
 ├── ir-standalone
 │   ├── Chart.yaml
+│   ├── README.md
 │   ├── etcd.yaml
 │   ├── pvc.yaml
-│   ├── README.md
 │   ├── templates
+│   │   ├── _helpers.tpl
 │   │   ├── configmap.yaml
 │   │   ├── frontend
 │   │   │   ├── statefulset.yaml
 │   │   │   └── svc.yaml
-│   │   ├── _helpers.tpl
 │   │   ├── serviceaccount.yaml
-│   │   ├── store
-│   │   │   ├── statefulset.yaml
-│   │   │   └── svc-headless.yaml
-│   │   └── test
-│   │       └── test-rpc.yaml
+│   │   └── store
+│   │       ├── statefulset.yaml
+│   │       └── svc-headless.yaml
 │   └── values.yaml
 └── role_and_binding.yaml
-
 ```
 ## Prepare Dependencies (只需第一次初始化执行)
 ### rbac authorization
