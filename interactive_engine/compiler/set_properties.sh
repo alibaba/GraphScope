@@ -17,7 +17,7 @@ do
     host=",$DNS_NAME_PREFIX_STORE:$GAIA_RPC_PORT"
     host="${host/"{}"/$count}";
     hosts+=$host
-    let "count++"
+    (( count++ ))
 done
 
 server_num="pegasus.server.num: $SERVERSSIZE"
