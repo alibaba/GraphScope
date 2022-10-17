@@ -749,7 +749,6 @@ class KubernetesClusterLauncher(Launcher):
         )
         if self._etcd_pod_node_selector:
             etcd_builder.add_etcd_pod_node_selector(self._etcd_pod_node_selector)
-            
         pods, services = etcd_builder.build()
         for svc in services:
             self._resource_object.append(
