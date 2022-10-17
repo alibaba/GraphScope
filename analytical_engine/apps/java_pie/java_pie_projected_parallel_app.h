@@ -45,12 +45,11 @@ class JavaPIEProjectedParallelApp
       public grape::Communicator {
  public:
   // specialize the templated worker.
-  INSTALL_PARALLEL_WORKER(JavaPIEProjectedParallelApp<FRAG_T,_message_strategy>,
+  INSTALL_JAVA_PARALLEL_WORKER(JavaPIEProjectedParallelApp<FRAG_T>,
                                JavaPIEProjectedParallelContext<FRAG_T>, FRAG_T)
   static constexpr grape::LoadStrategy load_strategy =
       grape::LoadStrategy::kBothOutIn;
-  static constexpr grape::MessageStrategy message_strategy =
-      _message_strategy;
+  static constexpr grape::MessageStrategy message_strategy = _message_strategy;
   static constexpr bool need_split_edges = true;
 
  public:
