@@ -36,18 +36,20 @@ namespace gs {
  *
  * @tparam FRAG_T Should be vineyard::ArrowFragment<...>
  */
-template <typename FRAG_T>
+template <typename FRAG_T,
+          grape::MessageStrategy _message_strategy =
+              grape::MessageStrategy::kAlongOutgoingEdgeToOuterVertex>
 class JavaPIEPropertyDefaultApp
     : public PropertyAppBase<FRAG_T, JavaPIEPropertyDefaultContext<FRAG_T>>,
       public grape::Communicator {
  public:
   // specialize the templated worker.
-  INSTALL_DEFAULT_PROPERTY_WORKER(JavaPIEPropertyDefaultApp<FRAG_T>,
-                                  JavaPIEPropertyDefaultContext<FRAG_T>, FRAG_T)
+  INSTALL_DEFAULT_PROPERTY_WORKER(
+      JavaPIEPropertyDefaultApp<FRAG_T, _message_strategy>,
+      JavaPIEPropertyDefaultContext<FRAG_T>, FRAG_T)
   static constexpr grape::LoadStrategy load_strategy =
       grape::LoadStrategy::kBothOutIn;
-  static constexpr grape::MessageStrategy message_strategy =
-      grape::MessageStrategy::kAlongOutgoingEdgeToOuterVertex;
+  static constexpr grape::MessageStrategy message_strategy = _message_strategy;
   static constexpr bool need_split_edges = true;
 
  public:

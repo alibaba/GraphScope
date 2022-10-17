@@ -36,18 +36,19 @@ namespace gs {
  *
  * @tparam FRAG_T Should be gs::ArrowProjectedFragment<...>
  */
-template <typename FRAG_T>
+template <typename FRAG_T,grape::MessageStrategy _message_strategy =
+              grape::MessageStrategy::kAlongOutgoingEdgeToOuterVertex>
 class JavaPIEProjectedDefaultApp
     : public AppBase<FRAG_T, JavaPIEProjectedDefaultContext<FRAG_T>>,
       public grape::Communicator {
  public:
   // specialize the templated worker.
-  INSTALL_DEFAULT_WORKER(JavaPIEProjectedDefaultApp<FRAG_T>,
+  INSTALL_DEFAULT_WORKER(JavaPIEProjectedDefaultApp<FRAG_T,_message_strategy>,
                          JavaPIEProjectedDefaultContext<FRAG_T>, FRAG_T)
   static constexpr grape::LoadStrategy load_strategy =
       grape::LoadStrategy::kBothOutIn;
   static constexpr grape::MessageStrategy message_strategy =
-      grape::MessageStrategy::kAlongOutgoingEdgeToOuterVertex;
+      _message_strategy;
   static constexpr bool need_split_edges = true;
 
  public:

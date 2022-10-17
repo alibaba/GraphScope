@@ -233,45 +233,42 @@ target_link_libraries(gs_proto
 
 add_library(gs_util SHARED "core/flags.cc" "core/launcher.cc")
 target_link_libraries(gs_util PRIVATE
-        ${LIBGRAPELITE_LIBRARIES}
-        ${GFLAGS_LIBRARIES}
-        ${VINEYARD_LIBRARIES}
-        ${Boost_LIBRARIES}
+    ${LIBGRAPELITE_LIBRARIES}
+    ${GFLAGS_LIBRARIES}
+    ${VINEYARD_LIBRARIES}
+    ${Boost_LIBRARIES}
+)
+
+if (ENABLE_JAVA_SDK)
+    target_sources(gs_util PRIVATE "core/java/javasdk.cc")
+    target_compile_definitions(gs_util PUBLIC ENABLE_JAVA_SDK)
+    target_link_libraries(gs_util PRIVATE
+        ${JAVA_JVM_LIBRARY}
+        ${JNI_LIBRARIES}
     )
+endif()
 
 add_executable(grape_engine
         "core/grape_engine.cc"
         "core/grape_instance.cc"
-        "core/java/javasdk.cc"
         "core/object/dynamic.cc"
         ${CORE_RPC_SRC_FILES}
     )
 target_include_directories(grape_engine PRIVATE proto utils)
+target_link_libraries(grape_engine PRIVATE
+        gs_proto
+        gs_util
+        ${LIBGRAPELITE_LIBRARIES}
+        ${GFLAGS_LIBRARIES}
+        ${CMAKE_DL_LIBS}
+        ${Boost_LIBRARIES}
+        ${VINEYARD_LIBRARIES}
+    )
 
 if (ENABLE_JAVA_SDK)
     target_compile_definitions(grape_engine PUBLIC ENABLE_JAVA_SDK)
-    target_link_libraries(grape_engine PRIVATE
-        gs_proto
-        gs_util
-        ${LIBGRAPELITE_LIBRARIES}
-        ${GFLAGS_LIBRARIES}
-        ${CMAKE_DL_LIBS}
-        ${Boost_LIBRARIES}
-        ${VINEYARD_LIBRARIES}
-        ${JAVA_JVM_LIBRARY}
-        ${JNI_LIBRARIES}
-        )
-else()
-    target_link_libraries(grape_engine PRIVATE
-        gs_proto
-        gs_util
-        ${LIBGRAPELITE_LIBRARIES}
-        ${GFLAGS_LIBRARIES}
-        ${CMAKE_DL_LIBS}
-        ${Boost_LIBRARIES}
-        ${VINEYARD_LIBRARIES}
-        )
 endif()
+
 if (LET_IT_CRASH_ON_EXCEPTION)
     target_compile_definitions(grape_engine PRIVATE LET_IT_CRASH_ON_EXCEPTION)
 endif ()
