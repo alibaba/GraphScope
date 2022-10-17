@@ -133,13 +133,7 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /etc/graphscope-store/config
-            - name: data
-              mountPath: {{ .Values.storeDataPath }}
       volumes:
         - name: config
           configMap:
             name: {{ include "graphscope-store.configmapName" . }}
-        - name: data
-          persistentVolumeClaim:
-            claimName: {{ tpl .Values.store.persistence.existingClaim . }}
-

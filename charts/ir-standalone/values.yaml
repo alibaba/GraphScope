@@ -91,7 +91,7 @@ serviceAccount:
 ## GraphScope Store parameters
 ##
 store:
-  replicaCount: 2
+  replicaCount: 1
 
   ## updateStrategy for GraphScope Store statefulset
   ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
