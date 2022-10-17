@@ -33,9 +33,9 @@ import java.util.Iterator;
 import java.util.Map;
 
 public class DataBuildReducerOdps extends ReducerBase {
-    private String ossAccessId = null;
+    private String ossAccessID = null;
     private String ossAccessKey = null;
-    private String ossEndPoint = null;
+    private String ossEndpoint = null;
     private String ossBucketName = null;
     private String ossObjectName = null;
 
@@ -51,16 +51,16 @@ public class DataBuildReducerOdps extends ReducerBase {
 
     @Override
     public void setup(TaskContext context) throws IOException {
-        this.ossAccessId = context.getJobConf().get(OfflineBuildOdps.OSS_ACCESS_ID);
+        this.ossAccessID = context.getJobConf().get(OfflineBuildOdps.OSS_ACCESS_ID);
         this.ossAccessKey = context.getJobConf().get(OfflineBuildOdps.OSS_ACCESS_KEY);
-        this.ossEndPoint = context.getJobConf().get(OfflineBuildOdps.OSS_ENDPOINT);
+        this.ossEndpoint = context.getJobConf().get(OfflineBuildOdps.OSS_ENDPOINT);
         this.ossBucketName = context.getJobConf().get(OfflineBuildOdps.OSS_BUCKET_NAME);
         this.ossObjectName = context.getJobConf().get(OfflineBuildOdps.OSS_OBJECT_NAME);
         this.metaData = context.getJobConf().get(OfflineBuildOdps.META_INFO);
         this.uniquePath = context.getJobConf().get(OfflineBuildOdps.UNIQUE_PATH);
 
-        if (!ossEndPoint.startsWith("http")) {
-            ossEndPoint = "https://" + ossEndPoint;
+        if (!ossEndpoint.startsWith("http")) {
+            ossEndpoint = "https://" + ossEndpoint;
         }
 
         this.taskId = context.getTaskID().toString();
@@ -69,8 +69,8 @@ public class DataBuildReducerOdps extends ReducerBase {
         chkFileName = "part-r-" + taskId + ".chk";
 
         Map<String, String> ossInfo = new HashMap<String, String>();
-        ossInfo.put(OfflineBuildOdps.OSS_ENDPOINT, ossEndPoint);
-        ossInfo.put(OfflineBuildOdps.OSS_ACCESS_ID, ossAccessId);
+        ossInfo.put(OfflineBuildOdps.OSS_ENDPOINT, ossEndpoint);
+        ossInfo.put(OfflineBuildOdps.OSS_ACCESS_ID, ossAccessID);
         ossInfo.put(OfflineBuildOdps.OSS_ACCESS_KEY, ossAccessKey);
 
         this.ossFileObj = new OSSFileObj(ossInfo);

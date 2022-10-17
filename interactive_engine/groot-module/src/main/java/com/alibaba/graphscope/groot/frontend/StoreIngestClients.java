@@ -20,6 +20,8 @@ import com.alibaba.maxgraph.common.RoleType;
 
 import io.grpc.ManagedChannel;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
 public class StoreIngestClients extends RoleClients<StoreIngestClient> implements StoreIngestor {
@@ -33,7 +35,16 @@ public class StoreIngestClients extends RoleClients<StoreIngestClient> implement
 
     @Override
     public void ingest(int storeId, String path, CompletionCallback<Void> callback) {
-        this.getClient(storeId).storeIngest(path, callback);
+        this.ingest(storeId, path, new HashMap<String, String>(), callback);
+    }
+
+    @Override
+    public void ingest(
+            int storeId,
+            String path,
+            Map<String, String> config,
+            CompletionCallback<Void> callback) {
+        this.getClient(storeId).storeIngest(path, config, callback);
     }
 
     @Override

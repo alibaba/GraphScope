@@ -24,6 +24,8 @@ import com.alibaba.maxgraph.proto.groot.StoreIngestResponse;
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
 
+import java.util.Map;
+
 public class StoreIngestClient extends RpcClient {
 
     private StoreIngestGrpc.StoreIngestStub stub;
@@ -33,10 +35,13 @@ public class StoreIngestClient extends RpcClient {
         this.stub = StoreIngestGrpc.newStub(channel);
     }
 
-    public void storeIngest(String dataPath, CompletionCallback<Void> callback) {
-        StoreIngestRequest req = StoreIngestRequest.newBuilder().setDataPath(dataPath).build();
+    public void storeIngest(
+            String dataPath, Map<String, String> config, CompletionCallback<Void> callback) {
+        StoreIngestRequest.Builder builder = StoreIngestRequest.newBuilder();
+        builder.setDataPath(dataPath);
+        builder.putAllConfig(config);
         this.stub.storeIngest(
-                req,
+                builder.build(),
                 new StreamObserver<StoreIngestResponse>() {
                     @Override
                     public void onNext(StoreIngestResponse value) {
