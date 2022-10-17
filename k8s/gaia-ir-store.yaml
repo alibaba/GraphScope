@@ -1,0 +1,13 @@
+# Persistent Volume to store graph
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: graph-store
+spec:
+  capacity: 
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /home/gsbot/yufan/g_benchmark_graph
