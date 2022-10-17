@@ -59,7 +59,9 @@ image: # k8s会在部署角色所在的机器上自动下载
 store:
     replicaCount: 1 # 配置engine节点的个数
   
-htapLoaderConfig: "modern_loader.json" # ir-standalone/templates/configmap.yaml中准备了modern_loader.json的相关内容
+htapLoaderConfig: "v6d_modern_loader.json" # 用于vineyard导入数据，ir-standalone/templates/configmap.yaml中准备了v6d_modern_loader.json的相关内容
+
+schemaConfig: "v6d_modern_schema.json" # 用于compiler查询schema，ir-standalone/templates/configmap.yaml中准备了v6d_modern_schema.json的相关内容
 
 gremlinPort: 12312 # 配置gremlin server port
 ```
