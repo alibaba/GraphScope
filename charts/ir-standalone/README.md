@@ -32,7 +32,7 @@ kubectl apply -f role_and_binding.yaml
 cd GraphScope/charts
 kubectl apply -f ir-standalone/etcd.yaml
 ```
-## prepare graph data
+### prepare graph data
 - 在本地机器上准备图数据
 ```
 # for vineyard store (resources目录下存储了modern/crew等小图的csv文件，直接拷贝到本地机器的相应目录)
