@@ -27,7 +27,7 @@
 #include "boost/property_tree/ptree.hpp"
 
 namespace gs {
-#define INSTALL_JAVA_PARALLEL_WORKER(APP_T, CONTEXT_T, FRAG_T)         \
+#define INSTALL_JAVA_PARALLEL_WORKER(APP_T, CONTEXT_T, FRAG_T)    \
  public:                                                          \
   using fragment_t = FRAG_T;                                      \
   using context_t = CONTEXT_T;                                    \
@@ -38,15 +38,15 @@ namespace gs {
     return std::shared_ptr<worker_t>(new worker_t(app, frag));    \
   }
 #define INSTALL_JAVA_PARALLEL_PROPERTY_WORKER(APP_T, CONTEXT_T, FRAG_T) \
-public:                                                           \
-using fragment_t = FRAG_T;                                       \
-using context_t = CONTEXT_T;                                     \
-using message_manager_t = ParallelPropertyMessageManager;        \
-using worker_t = ParallelPropertyWorker<APP_T>;                  \
-static std::shared_ptr<worker_t> CreateWorker(                   \
-    std::shared_ptr<APP_T> app, std::shared_ptr<FRAG_T> frag) {  \
-  return std::shared_ptr<worker_t>(new worker_t(app, frag));     \
-}
+ public:                                                                \
+  using fragment_t = FRAG_T;                                            \
+  using context_t = CONTEXT_T;                                          \
+  using message_manager_t = ParallelPropertyMessageManager;             \
+  using worker_t = ParallelPropertyWorker<APP_T>;                       \
+  static std::shared_ptr<worker_t> CreateWorker(                        \
+      std::shared_ptr<APP_T> app, std::shared_ptr<FRAG_T> frag) {       \
+    return std::shared_ptr<worker_t>(new worker_t(app, frag));          \
+  }
 // data vector contains all bytes, can be used to hold oid and vdata, edata.
 using byte_vector = std::vector<char>;
 // offset vector contains offsets to deserialize data vector.
