@@ -18,9 +18,9 @@ public interface Unused {
             }
             return (Unused) method.invoke(null, a, b, c);
         } catch (ClassNotFoundException
-            | NoSuchMethodException
-            | InvocationTargetException
-            | IllegalAccessException e) {
+                | NoSuchMethodException
+                | InvocationTargetException
+                | IllegalAccessException e) {
             e.printStackTrace();
         }
         return null;

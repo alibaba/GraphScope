@@ -34,7 +34,7 @@ public class GrapeSkipAnnotationProcessor extends AbstractProcessor {
     public Messager messager;
 
     private final Set<String> LEGAL_TYPES =
-        new HashSet<String>(Arrays.asList("Long", "Integer", "Double", "String", "Empty"));
+            new HashSet<String>(Arrays.asList("Long", "Integer", "Double", "String", "Empty"));
 
     /**
      * {@inheritDoc}
@@ -61,12 +61,12 @@ public class GrapeSkipAnnotationProcessor extends AbstractProcessor {
 
     void processAnnotation(TypeElement typeElement, TypeElement annotation) {
         messager.printMessage(
-            Kind.NOTE,
-            "visiting element "
-                + typeElement.getSimpleName()
-                + ", annotation "
-                + annotation.getSimpleName(),
-            typeElement);
+                Kind.NOTE,
+                "visiting element "
+                        + typeElement.getSimpleName()
+                        + ", annotation "
+                        + annotation.getSimpleName(),
+                typeElement);
         if (isSameType(annotation.asType(), GrapeSkip.class)) {
             GrapeSkip[] grapeSkips = typeElement.getAnnotationsByType(GrapeSkip.class);
             if (grapeSkips.length != 1) {
@@ -80,15 +80,15 @@ public class GrapeSkipAnnotationProcessor extends AbstractProcessor {
     public String checkAndGenerate(TypeElement typeElement, GrapeSkip grapeSkip) {
         String dstClassName = "UnusedImpl";
         messager.printMessage(
-            Kind.NOTE, "Processing element " + typeElement.getSimpleName(), typeElement);
+                Kind.NOTE, "Processing element " + typeElement.getSimpleName(), typeElement);
         PackageElement packageElement = AnnotationProcessorUtils.getPackageElement(typeElement);
         String packageName = packageElement.getQualifiedName().toString();
         messager.printMessage(Kind.NOTE, "package name" + packageName, typeElement);
 
         TypeSpec.Builder classBuilder =
-            TypeSpec.classBuilder(dstClassName)
-                .addModifiers(Modifier.PUBLIC)
-                .addSuperinterface(Unused.class);
+                TypeSpec.classBuilder(dstClassName)
+                        .addModifiers(Modifier.PUBLIC)
+                        .addSuperinterface(Unused.class);
         // collect vd,ed,msg types
         String[] vdTypes = grapeSkip.vertexDataTypes();
         String[] edTypes = grapeSkip.edgeDataTypes();
@@ -116,11 +116,11 @@ public class GrapeSkipAnnotationProcessor extends AbstractProcessor {
     }
 
     public void generateClassNames(
-        int numClasses,
-        String[] classNames,
-        String[] vdTypes,
-        String[] edTypes,
-        String[] msgTypes) {
+            int numClasses,
+            String[] classNames,
+            String[] vdTypes,
+            String[] edTypes,
+            String[] msgTypes) {
         int ind = 0;
         for (String vdType : vdTypes) {
             for (String edType : edTypes) {
@@ -136,48 +136,48 @@ public class GrapeSkipAnnotationProcessor extends AbstractProcessor {
     public void fillInSkipClasses(TypeSpec.Builder builder, String[] classNames) {
         for (String className : classNames) {
             TypeSpec.Builder innerBuilder =
-                TypeSpec.classBuilder(className)
-                    .addModifiers(Modifier.STATIC, Modifier.PUBLIC)
-                    .addSuperinterface(Unused.class);
+                    TypeSpec.classBuilder(className)
+                            .addModifiers(Modifier.STATIC, Modifier.PUBLIC)
+                            .addSuperinterface(Unused.class);
             builder.addType(innerBuilder.build());
         }
     }
 
     public void addMethod(
-        TypeSpec.Builder builder, String[] className, int edMultiplyMsg, int msgNum) {
+            TypeSpec.Builder builder, String[] className, int edMultiplyMsg, int msgNum) {
         builder.addField(Unused[].class, "skips", Modifier.STATIC, Modifier.PRIVATE);
         CodeBlock.Builder staticCodeBuilder = CodeBlock.builder();
         staticCodeBuilder.addStatement(
-            "skips = new com.alibaba.graphscope.utils.Unused[$L]", className.length);
+                "skips = new com.alibaba.graphscope.utils.Unused[$L]", className.length);
         for (int i = 0; i < className.length; ++i) {
             staticCodeBuilder.addStatement("skips[$L] = new $L()", i, className[i]);
         }
         builder.addStaticBlock(staticCodeBuilder.build());
 
         MethodSpec.Builder getUnused =
-            MethodSpec.methodBuilder("getUnused")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .addParameter(ParameterSpec.builder(Class.class, "vd").build())
-                .addParameter(ParameterSpec.builder(Class.class, "ed").build())
-                .addParameter(ParameterSpec.builder(Class.class, "msg").build())
-                .addCode(
-                    CodeBlock.builder()
-                        .addStatement(
-                            "int a ="
-                                + " com.alibaba.graphscope.utils.Unused.class2Int(vd)")
-                        .addStatement(
-                            "int b ="
-                                + " com.alibaba.graphscope.utils.Unused.class2Int(ed)")
-                        .addStatement(
-                            "int c ="
-                                + " com.alibaba.graphscope.utils.Unused.class2Int(msg)")
-                        .addStatement(
-                            "int ind = a * $L + b * $L + c",
-                            edMultiplyMsg,
-                            msgNum)
-                        .addStatement("return skips[ind]")
-                        .build())
-                .returns(Unused.class);
+                MethodSpec.methodBuilder("getUnused")
+                        .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                        .addParameter(ParameterSpec.builder(Class.class, "vd").build())
+                        .addParameter(ParameterSpec.builder(Class.class, "ed").build())
+                        .addParameter(ParameterSpec.builder(Class.class, "msg").build())
+                        .addCode(
+                                CodeBlock.builder()
+                                        .addStatement(
+                                                "int a ="
+                                                    + " com.alibaba.graphscope.utils.Unused.class2Int(vd)")
+                                        .addStatement(
+                                                "int b ="
+                                                    + " com.alibaba.graphscope.utils.Unused.class2Int(ed)")
+                                        .addStatement(
+                                                "int c ="
+                                                    + " com.alibaba.graphscope.utils.Unused.class2Int(msg)")
+                                        .addStatement(
+                                                "int ind = a * $L + b * $L + c",
+                                                edMultiplyMsg,
+                                                msgNum)
+                                        .addStatement("return skips[ind]")
+                                        .build())
+                        .returns(Unused.class);
         builder.addMethod(getUnused.build());
     }
 
@@ -200,10 +200,10 @@ public class GrapeSkipAnnotationProcessor extends AbstractProcessor {
             javaFile.writeTo(filter);
         } catch (IOException e) {
             throw new IllegalStateException(
-                "Cannot write Java file "
-                    + javaFile.typeSpec.name
-                    + ". Please clean the build first.",
-                e);
+                    "Cannot write Java file "
+                            + javaFile.typeSpec.name
+                            + ". Please clean the build first.",
+                    e);
         }
     }
 
