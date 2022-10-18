@@ -43,4 +43,6 @@ public @interface GraphType {
     String cppVdataType() default "";
 
     String fragType() default "";
+
+    String vertexDataType() default  "";
 }

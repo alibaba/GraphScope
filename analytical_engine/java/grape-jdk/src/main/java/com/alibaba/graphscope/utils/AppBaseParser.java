@@ -51,7 +51,7 @@ public class AppBaseParser {
             // we don't giraphAppBaseClass is defined in giraph-sdk, and we don't want to introduce
             // circular dependency.
             Class<?> giraphDefaultAppBase = Class.forName(GIRAPH_APP_BASIC_NAME);
-            logger.info("loaded giraph defaul app base: " + giraphDefaultAppBase.getName());
+            logger.info("loaded giraph default app base: " + giraphDefaultAppBase.getName());
             Class<?> clz = Class.forName(className);
             Type[] typeParams;
             // Input class name can be a giraph app, But we can use isAssignableFrom, since it
@@ -79,6 +79,7 @@ public class AppBaseParser {
                 logger.info("TypeParams: " + typeParams[0].getTypeName());
                 Class<?> ctxType = (Class<?>) typeParams[1];
                 logger.info("ContextType:" + javaContextToCppContextName(ctxType));
+                logger.info("VertexData: " + getVertexDataType(ctxType));
             } else {
                 String typeParamNames[] = new String[4];
                 for (int i = 0; i < 4; ++i) {
@@ -87,11 +88,17 @@ public class AppBaseParser {
                 logger.info("TypeParams: " + String.join(",", typeParamNames));
                 Class<?> ctxType = (Class<?>) typeParams[4];
                 logger.info("ContextType:" + javaContextToCppContextName(ctxType));
+                logger.info("VertexData: " + getVertexDataType(ctxType));
             }
         } catch (Exception e) {
             logger.info("Exception occurred");
             e.printStackTrace();
         }
+    }
+
+    private static String getVertexDataType(Class<?> ctxClass){
+        Type[] types = getExtendTypeParams(ctxClass,2);
+        return types[1].getTypeName();
     }
 
     private static boolean tryGiraphClass(Class<?> claz) {
@@ -105,11 +112,11 @@ public class AppBaseParser {
         }
         Type[] types;
         if (father.getName().equals(GIRAPH_APP_ABSTRACT_NAME)) {
-            logger.info("Giraph");
-            types = getTypeParams(father, 5);
+            logger.info("Extend abstract computation");
+            types = getExtendTypeParams(claz, 5);
         } else if (father.getName().equals(GIRAPH_APP_BASIC_NAME)) {
-            logger.info("Giraph");
-            types = getExtendTypeParams(father, 5);
+            logger.info("Extend basic computation");
+            types = getExtendTypeParams(claz, 4);
         } else {
             return false;
         }
@@ -119,6 +126,7 @@ public class AppBaseParser {
         }
         logger.info("TypeParams: " + String.join(",", typeParamNames));
         logger.info("ContextType:vertex_data");
+        logger.info("VertexData: " + writableToCpp(typeParamNames[1]));
         return true;
     }
 
@@ -166,6 +174,19 @@ public class AppBaseParser {
             throw new IllegalStateException("Type params size not match");
         }
         return typeParams;
+    }
+
+    private static String writableToCpp(String typeName){
+        if (typeName.contains("DoubleWritable")){
+            return "double";
+        }
+        else if (typeName.contains("IntWritable")){
+            return "int32_t";
+        }
+        else if (typeName.contains("LongWritable")){
+            return "int64_t";
+        }
+        else throw new IllegalStateException("Not recognized writable " + typeName);
     }
 
     private static Method getMethod(Class<?> clz) {

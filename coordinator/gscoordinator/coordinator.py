@@ -685,8 +685,10 @@ class CoordinatorServiceServicer(
         app_lib_path = get_lib_path(os.path.join(space, app_sig), app_sig)
         if not os.path.isfile(app_lib_path):
             space = self._builtin_workspace
-            if (types_pb2.GAR in op.attr) or (
-                op.attr[types_pb2.APP_ALGO].s.decode("utf-8").startswith("giraph:")
+            if (
+                (types_pb2.GAR in op.attr)
+                or (op.attr[types_pb2.APP_ALGO].s.decode("utf-8").startswith("giraph:"))
+                or op.attr[types_pb2.APP_ALGO].s.decode("utf-8").startswith("java_pie:")
             ):
                 space = self._udf_app_workspace
             # try to get compiled file from workspace
@@ -1400,8 +1402,10 @@ class CoordinatorServiceServicer(
 
     def _compile_lib_and_distribute(self, compile_func, lib_name, op):
         space = self._builtin_workspace
-        if (types_pb2.GAR in op.attr) or (
-            op.attr[types_pb2.APP_ALGO].s.decode("utf-8").startswith("giraph:")
+        if (
+            (types_pb2.GAR in op.attr)
+            or (op.attr[types_pb2.APP_ALGO].s.decode("utf-8").startswith("giraph:"))
+            or (op.attr[types_pb2.APP_ALGO].s.decode("utf-8").startswith("java_pie:"))
         ):
             space = self._udf_app_workspace
         app_lib_path, java_jar_path, java_ffi_path, app_type = compile_func(

@@ -205,14 +205,11 @@ def get_app_sha256(attr, java_class_path: str):
         app_sha256 = hashlib.sha256(
             f"{app_type}.{app_class}.{graph_type}".encode("utf-8")
         ).hexdigest()
-    elif app_type == "java_pie":
+    elif app_type == "java_pie" or app_type == "giraph":
         s = hashlib.sha256()
-        # CAUTION!!!!!
-        # We believe jar_path.java_app_class can uniquely define one java app
-        s.update(f"{app_type}.{java_jar_path}.{java_app_class}".encode("utf-8"))
-        if types_pb2.GAR in attr:
-            s.update(attr[types_pb2.GAR].s)
+        s.update(f"{graph_type}.{vd_type}".encode("utf-8"))
         app_sha256 = s.hexdigest()
+        logger.info("app sha256 for app {} with graph {}:{}, is {}".format(app_type, java_app_class, app_sha256))
     else:
         s = hashlib.sha256()
         s.update(f"{app_type}.{app_class}.{graph_type}".encode("utf-8"))
@@ -226,6 +223,37 @@ def get_graph_sha256(attr):
     _, graph_class, _ = _codegen_graph_info(attr)
     return hashlib.sha256(graph_class.encode("utf-8")).hexdigest()
 
+def check_java_app_graph_consistency(self, app_class, graph_type):
+    splited = graph_type.split("<")
+    java_app_type_params = self.frag_param_str.split(",")
+    num_type_params = 0
+    if len(splited) != 2:
+        raise Exception(
+            "Unrecoginizable graph template str: {}".format(graph.template_str)
+        )
+    if splited[0] == "vineyard::ArrowFragment":
+        if app_class.find("Property") == -1:
+            logger.error("Expected property app")
+            return False
+        if len(java_app_type_params) != 1:
+            logger.error("Expected one type params.")
+            return False
+        num_type_params = 1
+    if splited[1] == "gs::ArrowProjectedFragment":
+        if app_class.find("Projected") == -1:
+            logger.error("Expected simple app")
+            return False
+        if len(java_app_type_params) != 4:
+            logger.error("Expected 4 type params")
+            return False
+        num_type_params = 4
+    graph_actual_type_params = splited[1][:-1].split(",")
+    for i in range(0, num_type_params):
+        graph_actual_type_param = graph_actual_type_params[i]
+        java_app_type_param = java_app_type_params[i]
+        if not _type_param_consistent(graph_actual_type_param, java_app_type_param):
+            return False
+    return True
 
 def compile_app(
     workspace: str, library_name, attr, engine_config: dict, java_class_path: str
@@ -275,6 +303,12 @@ def compile_app(
 
     graph_header, graph_type, graph_oid_type = _codegen_graph_info(attr)
     logger.info("Codegened graph type: %s, Graph header: %s", graph_type, graph_header)
+    if (app == "java_pie"):
+        logger.info("Check consistent between java app {} and graph {}".format(java_app_class, graph_type))
+        if (not check_java_app_graph_consistency(app_class, graph_type)):
+            raise RuntimeError(
+                "Inconsistent app and graph {}, {}".format(java_app_class,graph_type)
+            )
 
     os.chdir(app_dir)
 
@@ -299,10 +333,17 @@ def compile_app(
     if app_type == "java_pie":
         if not os.path.isfile(GRAPE_PROCESSOR_JAR):
             raise RuntimeError("Grape runtime jar not found")
-        # for java need to run preprocess
+        # for java need to run preprocess, and the generated files can be reused,
+        # if the fragment & vd type is same.
+
         java_codegen_out_dir = os.path.join(
             workspace, "{}-{}".format(JAVA_CODEGNE_OUTPUT_PREFIX, library_name)
         )
+        if (isdir(java_codegen_out_dir)):
+            logger.info("Desired java codegen directory: {} exists, skip...".format(java_codegen_out_dir))
+            cmake_commands += ["-DJAVA_APP_CODEGEN=OFF"]
+        else:
+            cmake_commands += ["-DJAVA_APP_CODEGEN=ON"]
         cmake_commands += [
             "-DENABLE_JAVA_SDK=ON",
             "-DJAVA_PIE_APP=ON",
@@ -1390,34 +1431,57 @@ def _parse_giraph_app_type(java_class_path, real_algo):
             continue
         elif line.find("Giraph") != -1:
             _java_app_type = "giraph"
+        elif line.find("DefaultPropertyApp") != -1:
+            _java_app_type = "default_property"
+        elif line.find("ParallelPropertyApp") != -1:
+            _java_app_type = "parallel_property"
+        elif line.find("DefaultAppBase") != -1:
+            _java_app_type = "default_simple"
+        elif line.find("ParallelAppBase") != -1:
+            _java_app_type = "parallel_simple"
         elif line.find("Error") != -1:
             raise Exception("Error occured in verifying user app")
         elif line.find("TypeParams") != -1:
             _frag_param_str = line.split(":")[-1].strip()
         elif line.find("ContextType") != -1:
             _java_inner_context_type = line.split(":")[-1].strip()
+        elif line.find("VertexData") != -1:
+            _vd_type = line.split(":")[-1].strip()
     # for giraph app, we manually set java inner ctx type
     logger.info(
-        "Java app type: {}, frag type str: {}, ctx type: {}".format(
-            _java_app_type, _frag_param_str, _java_inner_context_type
+        "Java app type: {}, frag type str: {}, ctx type: {}, vd type {}".format(
+            _java_app_type, _frag_param_str, _java_inner_context_type, _vd_type
         )
     )
-    if not _java_app_type or not _frag_param_str or not _java_inner_context_type:
-        raise RuntimeError("Parsed giraph app error")
+    if not _java_app_type or not _frag_param_str or not _java_inner_context_type or not _vd_type:
+        raise RuntimeError("Parsed java app error")
 
     parse_user_app_process.wait()
-    return _java_app_type, _frag_param_str, _java_inner_context_type
+    return _java_app_type, _frag_param_str, _java_inner_context_type, _vd_type
 
 
-def _probe_for_giraph_app(attr, java_class_path, real_algo):
-    _java_app_type, _frag_param_str, _java_inner_context_type = _parse_giraph_app_type(
+def _probe_for_java_app(attr, java_class_path, real_algo):
+    _java_app_type, _frag_param_str, _java_inner_context_type, _vd_type = _parse_java_app_type(
         java_class_path, real_algo
     )
     if _java_app_type == "giraph":
         driver_header = "apps/java_pie/java_pie_projected_default_app.h"
         class_name = "gs::JavaPIEProjectedDefaultApp"
-        return driver_header, class_name
-    raise RuntimeError("Not a supported java_app_type: {}".format(_java_app_type))
+    elif _java_app_type == "default_property":
+        driver_header = "apps/java_pie/java_pie_property_default_app.h"
+        class_name = "gs::JavaPIEPropertyDefaultApp"
+    elif _java_app_type == "parallel_property":
+        driver_header = "apps/java_pie/java_pie_property_parallel_app.h"
+        class_name = "gs::JavaPIEPropertyParallelApp"
+    elif _java_app_type == "default_simple":
+        driver_header = "apps/java_pie/java_pie_projected_default_app.h"
+        class_name = "gs::JavaPIEProjectedDefaultApp"
+    elif _java_app_type == "parallel_simple":
+        driver_header = "apps/java_pie/java_pie_projected_parallel_app.h"
+        class_name = "gs::JavaPIEProjectedParallelApp"
+    else:
+        raise RuntimeError("Not a supported java_app_type: {}".format(_java_app_type))
+    return driver_header, class_name, _vd_type
 
 
 def _codegen_app_info(attr, meta_file: str, java_class_path: str):
@@ -1445,15 +1509,15 @@ def _codegen_app_info(attr, meta_file: str, java_class_path: str):
 
     algo = attr[types_pb2.APP_ALGO].s.decode("utf-8")
     # for algo start with giraph:, we don't find info in meta
-    if algo.startswith("giraph:"):
-        real_algo = algo[7:]
-        logger.info("codegen app info for giraph app : {}".format(real_algo))
-        src_header, app_class = _probe_for_giraph_app(attr, java_class_path, real_algo)
+    if algo.startswith("giraph:") or algo.startswith("java_pie:"):
+        real_algo = algo.split(":")[1]
+        logger.info("codegen app info for java app : {}".format(real_algo))
+        src_header, app_class, vd_type = _probe_for_java_app(attr, java_class_path, real_algo)
         return (
             "java_pie",
             src_header,
             "{}<_GRAPH_TYPE>".format(app_class),
-            None,
+            vd_type,
             None,
             None,
             java_class_path,
@@ -1486,16 +1550,6 @@ def _codegen_app_info(attr, meta_file: str, java_class_path: str):
                     None,
                     None,
                 )
-            if app_type == "java_pie":
-                return (
-                    app_type,
-                    app["driver_header"],  # cxx header
-                    "{}<_GRAPH_TYPE>".format(app["class_name"]),  # cxx class name
-                    None,  # vd_type,
-                    None,  # md_type
-                    None,  # pregel combine
-                    app["java_jar_path"],
-                    app["java_app_class"],  # the running java app class
                 )
 
     raise KeyError("Algorithm does not exist in the gar resource.")

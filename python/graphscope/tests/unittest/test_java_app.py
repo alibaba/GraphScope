@@ -134,8 +134,11 @@ def test_sssp_property_vertex_data(
     p2p_project_directed_graph,
     projected_graph_sssp_class,
 ):
-    sssp = JavaApp(full_jar_path=demo_jar, java_app_class=projected_graph_sssp_class)
+    graphscope_session.add_lib(demo_jar)
+    sssp = load_app(algo="java_pie:{}".format(projected_graph_sssp_class))
     sssp(p2p_project_directed_graph, src=6, threadNum=1)
+    # sssp = JavaApp(full_jar_path=demo_jar, java_app_class=projected_graph_sssp_class)
+    # sssp(p2p_project_directed_graph, src=6, threadNum=1)
 
 
 def projected_p2p_graph_loaded_by_giraph(

@@ -102,13 +102,18 @@ public class GrapeSkipAnnotationProcessor extends AbstractProcessor {
         String[] classNames = new String[numClasses];
         generateClassNames(numClasses, classNames, vdTypes, edTypes, msgTypes);
         messager.printMessage(Kind.NOTE, "generating " + numClasses + " skipClasses", typeElement);
+        // vd+ed skip classes.
+        String[] vedClassesNames = new String[vdTypes.length * edTypes.length];
+        generateClassNames(vdTypes.length * edTypes.length, vedClassesNames, vdTypes, edTypes);
 
         // filling class first;
         fillInSkipClasses(classBuilder, classNames);
+        fillInSkipClasses(classBuilder, vedClassesNames);
         messager.printMessage(Kind.NOTE, "Finish filling skip classes", typeElement);
         //
         // add factory impl
         addMethod(classBuilder, classNames, edTypes.length * msgTypes.length, msgTypes.length);
+        addVEMethod(classBuilder, vedClassesNames, edTypes.length);
         messager.printMessage(Kind.NOTE, "Finish add factory class", typeElement);
 
         writeTypeSpec(packageName, classBuilder.build(), typeElement);
@@ -129,6 +134,18 @@ public class GrapeSkipAnnotationProcessor extends AbstractProcessor {
                     classNames[ind] = cur;
                     ind += 1;
                 }
+            }
+        }
+    }
+
+    public void generateClassNames(
+            int numClasses, String[] classNames, String[] vdTypes, String[] edTypes) {
+        int ind = 0;
+        for (String vdType : vdTypes) {
+            for (String edType : edTypes) {
+                String cur = vdType + edType;
+                classNames[ind] = cur;
+                ind += 1;
             }
         }
     }
@@ -176,6 +193,37 @@ public class GrapeSkipAnnotationProcessor extends AbstractProcessor {
                                                 edMultiplyMsg,
                                                 msgNum)
                                         .addStatement("return skips[ind]")
+                                        .build())
+                        .returns(Unused.class);
+        builder.addMethod(getUnused.build());
+    }
+
+    /** method for getUnused with only vd + ed */
+    public void addVEMethod(TypeSpec.Builder builder, String[] className, int edNum) {
+        builder.addField(Unused[].class, "veSkips", Modifier.STATIC, Modifier.PRIVATE);
+        CodeBlock.Builder staticCodeBuilder = CodeBlock.builder();
+        staticCodeBuilder.addStatement(
+                "veSkips = new com.alibaba.graphscope.utils.Unused[$L]", className.length);
+        for (int i = 0; i < className.length; ++i) {
+            staticCodeBuilder.addStatement("veSkips[$L] = new $L()", i, className[i]);
+        }
+        builder.addStaticBlock(staticCodeBuilder.build());
+
+        MethodSpec.Builder getUnused =
+                MethodSpec.methodBuilder("getUnused")
+                        .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                        .addParameter(ParameterSpec.builder(Class.class, "vd").build())
+                        .addParameter(ParameterSpec.builder(Class.class, "ed").build())
+                        .addCode(
+                                CodeBlock.builder()
+                                        .addStatement(
+                                                "int a ="
+                                                    + " com.alibaba.graphscope.utils.Unused.class2Int(vd)")
+                                        .addStatement(
+                                                "int b ="
+                                                    + " com.alibaba.graphscope.utils.Unused.class2Int(ed)")
+                                        .addStatement("int ind = a * $L + b", edNum)
+                                        .addStatement("return veSkips[ind]")
                                         .build())
                         .returns(Unused.class);
         builder.addMethod(getUnused.build());
