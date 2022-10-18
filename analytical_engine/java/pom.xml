@@ -26,6 +26,7 @@
   <name>Grape Java SDK</name>
 
   <modules>
+    <module>grape-annotation</module>
     <module>grape-jdk</module>
     <module>grape-demo</module>
     <module>grape-runtime</module>
@@ -63,6 +64,11 @@
   </properties>
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>com.alibaba.graphscope</groupId>
+        <artifactId>grape-annotation</artifactId>
+        <version>${revision}</version>
+      </dependency>
       <dependency>
         <groupId>com.alibaba.graphscope</groupId>
         <artifactId>grape-jdk</artifactId>
