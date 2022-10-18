@@ -1,4 +1,5 @@
-#
+#!/bin/bash
+
 # Copyright 2020 Alibaba Group Holding Limited.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#!/bin/bash
 worker_num="pegasus.worker.num: $WORKER_NUM";
 
 timeout="pegasus.timeout: $TIMEOUT"
