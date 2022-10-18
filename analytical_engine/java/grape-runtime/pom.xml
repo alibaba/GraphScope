@@ -57,6 +57,10 @@
       <classifier>shaded</classifier>
     </dependency>
     <dependency>
+      <groupId>com.alibaba.graphscope</groupId>
+      <artifactId>grape-annotation</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
