@@ -53,7 +53,7 @@
 
 ```bash
 cd GraphScope/interactive_engine/data_load_tools/src/bin
-./load_expr_tool.sh prepare_artifacts <your odpscmd path>
+PATH=$PATH:<your odpscmd path> ./load_expr_tool.sh prepare_artifacts
 ```
 也可以直接从oss下载
 ```bash
@@ -84,18 +84,18 @@ column.mapping.meta={...}
 ### 创建odps tables并load数据
 该过程会创建odps编译所需的input tables，并将本地csv数据上传并导入到input tables中，作为ENCODE过程的输入数据；此外也会创建output tables，用于存放ENCODE输出的vertex/edge的结构数据；
 ```bash
-./load_expr_tool.sh prepare_tables <your odpscmd path> <your csv data path>
+PATH=$PATH:<your odpscmd path> ./load_expr_tool.sh prepare_tables <your csv data path>
 ```
 
 ### 构建数据
 该过程首先从config.ini中解析出当前的执行阶段(ENCODE or WRITE_GRAPH)，并执行不同阶段的编译过程；ENCODE接受input tables作为输入，并将编译好的vertex/edge数据分别存放在不同的output tables中，作为后续WRITE_GRAPH的输入数据；WRITE_GRAPH将最后finalize的graph数据结构输出到oss path上，可供后续下载；
 ```bash
-# 确认java版本为1.8
-./load_expr_tool.sh build_data <your odpscmd path>
+# java版本需要为1.8
+PATH=$PATH:<your odpscmd path> ./load_expr_tool.sh build_data
 ```
 
 ### 下载数据
 该过程从oss path上下载graph数据到本地；
 ```bash
-./load_expr_tool.sh get_data <your ossutil path> <your local download path>
+PATH=$PATH:<your ossutil path> ./load_expr_tool.sh get_data <your ossutil binary name> <your local download path>
 ```

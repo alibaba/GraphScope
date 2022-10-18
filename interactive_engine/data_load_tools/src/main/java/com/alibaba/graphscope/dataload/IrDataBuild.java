@@ -71,7 +71,7 @@ public class IrDataBuild {
         String separator = properties.getProperty(SEPARATOR, "|");
         int reducerNum = Integer.valueOf(properties.getProperty(GRAPH_REDUCER_NUM, "1"));
         String skipHeader = properties.getProperty(SKIP_HEADER, "true");
-        String graphOssPath = encodePrefix + "_" + reducerNum;
+        String graphOssPath = encodePrefix + "/" + reducerNum;
 
         // oss config
         String endpoint = properties.getProperty(OfflineBuildOdps.OSS_ENDPOINT);
