@@ -21,7 +21,7 @@
   <parent>
     <groupId>com.alibaba.graphscope</groupId>
     <artifactId>grape-jdk-parent</artifactId>
-    <version>${revision}</version>
+    <version>0.18.0</version>
   </parent>
 
   <artifactId>grape-demo</artifactId>
@@ -41,7 +41,6 @@
     <dependency>
       <groupId>com.alibaba.graphscope</groupId>
       <artifactId>grape-jdk</artifactId>
-      <classifier>shaded</classifier>
     </dependency>
     <dependency>
       <groupId>com.alibaba.graphscope</groupId>

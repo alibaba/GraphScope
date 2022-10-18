@@ -18,8 +18,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.alibaba.graphscope</groupId>
   <artifactId>grape-jdk-parent</artifactId>
-
-  <version>${revision}</version>
+  <version>0.18.0</version>
 
   <packaging>pom</packaging>
 
@@ -72,18 +71,17 @@
       <dependency>
         <groupId>com.alibaba.graphscope</groupId>
         <artifactId>grape-jdk</artifactId>
+        <version>${revision}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.alibaba.graphscope</groupId>
+        <artifactId>graphx-on-graphscope</artifactId>
         <classifier>shaded</classifier>
         <version>${revision}</version>
       </dependency>
       <dependency>
         <groupId>com.alibaba.graphscope</groupId>
         <artifactId>giraph-on-grape</artifactId>
-        <classifier>shaded</classifier>
-        <version>${revision}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.alibaba.graphscope</groupId>
-        <artifactId>graphx-on-graphscope</artifactId>
         <classifier>shaded</classifier>
         <version>${revision}</version>
       </dependency>
