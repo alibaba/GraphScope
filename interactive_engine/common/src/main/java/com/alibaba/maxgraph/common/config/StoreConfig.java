@@ -40,9 +40,4 @@ public class StoreConfig {
 
     public static final Config<Integer> EXECUTOR_ENGINE_PORT =
             Config.intConfig("executor.engine.port", 0);
-
-    public static final Config<String> OSS_ACCESS_ID = Config.stringConfig("oss.access.id", "");
-
-    public static final Config<String> OSS_ACCESS_SECRET =
-            Config.stringConfig("oss.access.secret", "");
 }

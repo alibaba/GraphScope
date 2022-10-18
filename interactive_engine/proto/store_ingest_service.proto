@@ -25,6 +25,7 @@ service StoreIngest {
 
 message StoreIngestRequest {
   string dataPath = 1;
+  map<string, string> config = 2;
 }
 
 message StoreIngestResponse {

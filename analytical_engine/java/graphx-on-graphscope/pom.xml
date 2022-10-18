@@ -24,6 +24,7 @@
 
   <artifactId>graphx-on-graphscope</artifactId>
   <packaging>jar</packaging>
+  <name>GraphX on GraphScope</name>
 
   <properties>
     <maven.compiler.source>8</maven.compiler.source>

@@ -26,6 +26,7 @@ limitations under the License.
 
 #include "core/context/java_pie_projected_context.h"
 #include "core/error.h"
+#include "core/java/utils.h"
 
 namespace gs {
 
@@ -35,19 +36,20 @@ namespace gs {
  *
  * @tparam FRAG_T Should be gs::ArrowProjectedFragment<...>
  */
-template <typename FRAG_T>
+template <typename FRAG_T,
+          grape::MessageStrategy _message_strategy =
+              grape::MessageStrategy::kAlongOutgoingEdgeToOuterVertex>
 class JavaPIEProjectedParallelApp
     : public grape::ParallelAppBase<FRAG_T,
                                     JavaPIEProjectedParallelContext<FRAG_T>>,
       public grape::Communicator {
  public:
   // specialize the templated worker.
-  INSTALL_PARALLEL_WORKER(JavaPIEProjectedParallelApp<FRAG_T>,
-                          JavaPIEProjectedParallelContext<FRAG_T>, FRAG_T)
+  INSTALL_JAVA_PARALLEL_WORKER(JavaPIEProjectedParallelApp<FRAG_T>,
+                               JavaPIEProjectedParallelContext<FRAG_T>, FRAG_T)
   static constexpr grape::LoadStrategy load_strategy =
       grape::LoadStrategy::kBothOutIn;
-  static constexpr grape::MessageStrategy message_strategy =
-      grape::MessageStrategy::kAlongOutgoingEdgeToOuterVertex;
+  static constexpr grape::MessageStrategy message_strategy = _message_strategy;
   static constexpr bool need_split_edges = true;
 
  public:

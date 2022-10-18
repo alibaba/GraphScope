@@ -20,6 +20,7 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
+import java.util.Map;
 
 public class StoreIngestService extends StoreIngestGrpc.StoreIngestImplBase {
 
@@ -33,8 +34,10 @@ public class StoreIngestService extends StoreIngestGrpc.StoreIngestImplBase {
     public void storeIngest(
             StoreIngestRequest request, StreamObserver<StoreIngestResponse> responseObserver) {
         String dataPath = request.getDataPath();
+        Map<String, String> config = request.getConfigMap();
         this.storeService.ingestData(
                 dataPath,
+                config,
                 new CompletionCallback<Void>() {
                     @Override
                     public void onCompleted(Void res) {
