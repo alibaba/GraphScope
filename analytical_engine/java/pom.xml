@@ -75,13 +75,13 @@
       </dependency>
       <dependency>
         <groupId>com.alibaba.graphscope</groupId>
-        <artifactId>graphx-on-graphscope</artifactId>
+        <artifactId>giraph-on-grape</artifactId>
         <classifier>shaded</classifier>
         <version>${revision}</version>
       </dependency>
       <dependency>
         <groupId>com.alibaba.graphscope</groupId>
-        <artifactId>giraph-on-grape</artifactId>
+        <artifactId>graphx-on-graphscope</artifactId>
         <classifier>shaded</classifier>
         <version>${revision}</version>
       </dependency>
