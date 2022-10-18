@@ -233,19 +233,19 @@ target_link_libraries(gs_proto
 
 add_library(gs_util SHARED "core/flags.cc" "core/launcher.cc")
 target_link_libraries(gs_util PRIVATE
-    ${LIBGRAPELITE_LIBRARIES}
-    ${GFLAGS_LIBRARIES}
-    ${VINEYARD_LIBRARIES}
-    ${Boost_LIBRARIES}
-)
+        ${LIBGRAPELITE_LIBRARIES}
+        ${GFLAGS_LIBRARIES}
+        ${VINEYARD_LIBRARIES}
+        ${Boost_LIBRARIES}
+    )
 
 if (ENABLE_JAVA_SDK)
     target_sources(gs_util PRIVATE "core/java/javasdk.cc")
     target_compile_definitions(gs_util PUBLIC ENABLE_JAVA_SDK)
     target_link_libraries(gs_util PRIVATE
-        ${JAVA_JVM_LIBRARY}
-        ${JNI_LIBRARIES}
-    )
+            ${JAVA_JVM_LIBRARY}
+            ${JNI_LIBRARIES}
+        )
 endif()
 
 add_executable(grape_engine
