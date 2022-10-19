@@ -421,13 +421,12 @@ impl LogicalPlan {
                                         {
                                             if let Ok(plan) = extend_strategy.build_logical_plan() {
                                                 debug!("pattern matching by ExtendStrategy");
-                                                if let Ok(new_plan) = LogicalPlan::try_from(plan) {
-                                                    // As ExtendStrategy only applied on the whole graph, i.e., `g.V().match(...)`,
-                                                    // simply replace current plan by the matching plan.
-                                                    (*self).nodes = new_plan.nodes;
-                                                    (*self).max_node_id = new_plan.max_node_id;
-                                                    return Ok(self.max_node_id - 1);
-                                                }
+                                                let new_node_id =
+                                                    self.append_plan(plan, parent_ids.clone())?;
+                                                // As we have added a new source op to scan with label efficiently in extend_strategy,
+                                                // we remove the old source op.
+                                                self.nodes.remove(0);
+                                                return Ok(new_node_id);
                                             }
                                         }
                                     }
