@@ -20,6 +20,7 @@
     <groupId>com.alibaba.graphscope</groupId>
     <artifactId>grape-jdk-parent</artifactId>
     <version>0.18.0</version>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>graphx-on-graphscope</artifactId>
