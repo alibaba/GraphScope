@@ -21,6 +21,7 @@
     <groupId>com.alibaba.graphscope</groupId>
     <artifactId>grape-jdk-parent</artifactId>
     <version>${revision}</version>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>giraph-on-grape</artifactId>
@@ -58,7 +59,6 @@
     <dependency>
       <groupId>com.alibaba.graphscope</groupId>
       <artifactId>grape-jdk</artifactId>
-      <classifier>shaded</classifier>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
