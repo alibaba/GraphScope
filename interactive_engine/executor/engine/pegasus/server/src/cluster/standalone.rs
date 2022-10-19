@@ -41,7 +41,7 @@ where
     P: JobAssembly<I>,
 {
     let detect = if let Some(net_conf) = server_config.network_config() {
-        net_conf.get_servers()?.unwrap_or(vec![])
+        net_conf.get_server_addrs()?
     } else {
         vec![]
     };

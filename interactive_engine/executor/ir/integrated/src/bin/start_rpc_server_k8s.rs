@@ -36,7 +36,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let job_assembly = query_exp_graph.initialize_job_assembly();
     info!("try to start rpc server;");
 
-    pegasus_server::cluster::k8s::start(rpc_config, server_config, job_assembly).await?;
+    pegasus_server::cluster::standalone::start(rpc_config, server_config, job_assembly).await?;
 
     Ok(())
 }
