@@ -675,16 +675,21 @@ fn build_logical_plan(
             append_opr(&mut match_plan, &mut pre_node, filter, &mut child_offset);
         }
     }
-    // finally, we project those pattern vertices whose aliases are user-given, i.e., those that may be referred later.
-    let mut mappings = Vec::with_capacity(origin_pattern.tag_vertex_map.len());
-    for (tag_id, _) in &origin_pattern.tag_vertex_map {
-        let expr = str_to_expr_pb(format!("@{}", tag_id)).ok();
-        let mapping = pb::project::ExprAlias { expr, alias: Some((*tag_id as i32).into()) };
-        mappings.push(mapping);
+    // Finally, if the results contain any pattern vertices with system-given aliases,
+    // we additional project the user-given aliases, i.e., those may be referred later.
+    // Here, origin_pattern.vertices.len() indicates total number of pattern vertices;
+    // and origin_pattern.tag_vertex_map.len() indicates the number of pattern vertices with user-given aliases
+    if origin_pattern.vertices.len() > origin_pattern.tag_vertex_map.len() {
+        let mut mappings = Vec::with_capacity(origin_pattern.tag_vertex_map.len());
+        for (tag_id, _) in &origin_pattern.tag_vertex_map {
+            let expr = str_to_expr_pb(format!("@{}", tag_id)).ok();
+            let mapping = pb::project::ExprAlias { expr, alias: Some((*tag_id as i32).into()) };
+            mappings.push(mapping);
+        }
+        let project = pb::Project { mappings, is_append: false }.into();
+        append_opr(&mut match_plan, &mut pre_node, project, &mut child_offset);
     }
-    let project = pb::Project { mappings, is_append: false }.into();
-    append_opr(&mut match_plan, &mut pre_node, project, &mut child_offset);
-    // and append the final project op
+    // and append the final op
     pre_node.children.push(child_offset);
     match_plan.nodes.push(pre_node);
     Ok(match_plan)
