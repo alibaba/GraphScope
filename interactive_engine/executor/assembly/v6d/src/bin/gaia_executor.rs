@@ -53,8 +53,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .ok_or(StartServerError::empty_config_error("server.size"))?
         .parse()?;
     let hosts: Vec<&str> = config_map
-        .get("pegasus.hosts")
-        .ok_or(StartServerError::empty_config_error("pegasus.hosts"))?
+        .get("network.servers")
+        .ok_or(StartServerError::empty_config_error("network.servers"))?
         .split(",")
         .collect();
     let worker_thread_num: i32 = config_map

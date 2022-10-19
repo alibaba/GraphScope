@@ -131,7 +131,7 @@ start_frontend() {
 #   server_id: global id of executor server
 #   server_size
 #   rpc_port
-#   pegasus_hosts
+#   network_servers
 ##########################
 start_executor() {
   declare -r GRAPHSCOPE_RUNTIME=$1
@@ -139,7 +139,7 @@ start_executor() {
   declare -r server_id=$3
   declare -r server_size=$4
   declare -r rpc_port=$5
-  declare -r pegasus_hosts=$6
+  declare -r network_servers=$6
   declare -r threads_per_worker=${THREADS_PER_WORKER:-2}
 
   declare -r log_dir=${GS_LOG}/${object_id}
@@ -157,7 +157,7 @@ start_executor() {
       -e "s@RPC_PORT@${rpc_port}@g" \
       -e "s@SERVER_ID@${server_id}@g" \
       -e "s@SERVER_SIZE@${server_size}@g" \
-      -e "s@PEGASUS_HOSTS@${pegasus_hosts}@g" \
+      -e "s@NETWORK_SERVERS@${network_servers}@g" \
       -e "s@THREADS_PER_WORKER@${threads_per_worker}@g" \
       ${GRAPHSCOPE_HOME}/conf/executor.vineyard.properties > ${config_dir}/executor.vineyard.properties
 
@@ -221,9 +221,9 @@ create_gremlin_instance_on_local() {
 
   log "FRONTEND_ENDPOINT:127.0.0.1:${frontend_port}"
   # executor use executor inner port
-  pegasus_hosts="127.0.0.1:${executor_port}"
+  network_servers="127.0.0.1:${executor_port}"
   start_executor ${GRAPHSCOPE_RUNTIME} ${object_id} ${server_id} ${server_size} ${executor_rpc_port} \
-                 ${pegasus_hosts}
+                 ${network_servers}
 }
 
 ##########################
@@ -269,16 +269,16 @@ create_gremlin_instance_on_k8s() {
   start_frontend ${GRAPHSCOPE_RUNTIME} ${object_id} ${schema_path} ${pegasus_hosts} \
                  ${frontend_port}
 
-  pegasus_hosts=""
+  network_servers=""
   for pod in ${pod_ips}; do
-    pegasus_hosts="${pegasus_hosts},${pod}:${executor_port}"
+    network_servers="${network_servers},${pod}:${executor_port}"
   done
-  pegasus_hosts=${pegasus_hosts:1}
+  network_servers=${network_servers:1}
   log "Launch interactive engine(executor) in per engine pod."
   _server_id=0
   for pod in $(echo ${pod_hosts})
   do
-    launch_executor_cmd="GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} ${GRAPHSCOPE_HOME}/bin/giectl start_executor ${GRAPHSCOPE_RUNTIME} ${object_id} ${_server_id} ${server_size} ${executor_rpc_port} ${pegasus_hosts}"
+    launch_executor_cmd="GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} ${GRAPHSCOPE_HOME}/bin/giectl start_executor ${GRAPHSCOPE_RUNTIME} ${object_id} ${_server_id} ${server_size} ${executor_rpc_port} ${network_servers}"
     kubectl --namespace=${KUBE_NAMESPACE} exec ${pod} -c ${engine_container} -- /bin/bash -c "${launch_executor_cmd}"
     (( _server_id+=1 ))
   done
