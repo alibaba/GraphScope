@@ -31,10 +31,9 @@ use crate::process::record::{Entry, Record};
 
 /// An ExpandOrIntersect operator to expand neighbors
 /// and intersect with the ones of the same tag found previously (if exists).
-/// Notice that start_v_tag (from which tag to expand from)
-/// and edge_or_end_v_tag (the alias of expanded neighbors) must be specified.
+/// Notice that edge_or_end_v_tag (the alias of expanded neighbors) must be specified.
 struct ExpandOrIntersect<E: Into<Entry>> {
-    start_v_tag: KeyId,
+    start_v_tag: Option<KeyId>,
     edge_or_end_v_tag: KeyId,
     stmt: Box<dyn Statement<ID, E>>,
 }
@@ -125,10 +124,10 @@ impl Decode for Intersection {
 impl<E: Into<Entry> + 'static> FilterMapFunction<Record, Record> for ExpandOrIntersect<E> {
     fn exec(&self, mut input: Record) -> FnResult<Option<Record>> {
         let entry = input
-            .get(Some(self.start_v_tag))
+            .get(self.start_v_tag)
             .ok_or(FnExecError::get_tag_error(&format!(
-                "start_v_tag {:?} in ExpandOrIntersect",
-                self.start_v_tag
+                "get start_v_tag {:?} from record in `ExpandOrIntersect` operator, the record is {:?}",
+                self.start_v_tag, input
             )))?;
         if let Some(v) = entry.as_graph_vertex() {
             let id = v.id();
@@ -184,8 +183,8 @@ impl FilterMapFuncGen for algebra_pb::EdgeExpand {
         let graph = graph_proxy::apis::get_graph().ok_or(FnGenError::NullGraphError)?;
         let start_v_tag = self
             .v_tag
-            .ok_or(ParsePbError::from("`EdgeExpand::v_tag` cannot be empty for intersection"))?
-            .try_into()?;
+            .map(|tag| tag.try_into())
+            .transpose()?;
         let edge_or_end_v_tag = self
             .alias
             .ok_or(ParsePbError::from("`EdgeExpand::alias` cannot be empty for intersection"))?

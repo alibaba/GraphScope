@@ -265,10 +265,6 @@ impl LogicalPlan {
         Self { nodes, max_node_id: node_id + 1, meta }
     }
 
-    pub fn num_nodes(&self) -> usize {
-        self.nodes.len()
-    }
-
     /// Get a node reference from the logical plan
     pub fn get_node(&self, id: NodeId) -> Option<NodeType> {
         self.nodes.get(id as usize).cloned()
@@ -282,13 +278,21 @@ impl LogicalPlan {
             .map(|tuple| tuple.1.clone())
     }
 
-    /// Get first node in the logical plan
+    /// Get last node in the logical plan
     pub fn get_last_node(&self) -> Option<NodeType> {
         self.nodes
             .iter()
             .rev()
             .next()
             .map(|tuple| tuple.1.clone())
+    }
+
+    pub fn len(&self) -> usize {
+        self.nodes.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.nodes.is_empty()
     }
 
     pub fn get_meta(&self) -> &PlanMeta {
@@ -484,21 +488,6 @@ impl LogicalPlan {
             }
         }
         node
-    }
-
-    pub fn len(&self) -> usize {
-        self.nodes.len()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.nodes.is_empty()
-    }
-
-    pub fn root(&self) -> Option<NodeType> {
-        self.nodes
-            .iter()
-            .next()
-            .map(|(_, node)| node.clone())
     }
 
     /// Append branch plans to a certain node which has **no** children in this logical plan.

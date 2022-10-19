@@ -41,7 +41,10 @@ impl FlatMapFunction<Record, Record> for UnfoldOperator {
         // e.g., in EdgeExpandIntersection case, we only set alias of the collection to give the hint of intersection.
         let mut entry = input
             .take(self.tag.as_ref())
-            .ok_or(FnExecError::get_tag_error(&format!("tag {:?} in UnfoldOperator", self.tag)))?;
+            .ok_or(FnExecError::get_tag_error(&format!(
+                "get tag {:?} from record in `Unfold` operator, the record is {:?}",
+                self.tag, input
+            )))?;
         // take head in case that head entry is an arc clone of `self.tag`;
         // besides, head will be replaced by the items in collections anyway.
         input.take(None);

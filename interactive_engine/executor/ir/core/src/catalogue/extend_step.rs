@@ -14,7 +14,6 @@
 //! limitations under the License.
 
 use std::cmp::Ordering;
-use std::collections::{HashMap, VecDeque};
 use std::convert::TryFrom;
 use std::iter::Iterator;
 
@@ -117,20 +116,6 @@ impl DefiniteExtendEdge {
     ) -> DefiniteExtendEdge {
         DefiniteExtendEdge { src_vertex_id, edge_id, edge_label, dir }
     }
-
-    pub fn from_extend_edge(extend_edge: &ExtendEdge, pattern: &Pattern) -> Option<DefiniteExtendEdge> {
-        if let Some(src_vertex_id) = pattern
-            .get_vertex_from_rank(extend_edge.get_src_vertex_rank())
-            .map(|src_vertex| src_vertex.get_id())
-        {
-            let edge_id = pattern.get_max_edge_id() + 1;
-            let edge_label = extend_edge.get_edge_label();
-            let dir = extend_edge.get_direction();
-            Some(DefiniteExtendEdge { src_vertex_id, edge_id, edge_label, dir })
-        } else {
-            None
-        }
-    }
 }
 
 impl DefiniteExtendEdge {
@@ -213,54 +198,6 @@ impl DefiniteExtendStep {
             None
         }
     }
-
-    pub fn from_src_pattern(
-        src_pattern: &Pattern, extend_step: &ExtendStep, target_vertex_id: PatternId,
-        edge_id_map: HashMap<(PatternId, PatternLabelId, PatternDirection), PatternId>,
-    ) -> Option<Self> {
-        let mut definite_extend_edges = Vec::with_capacity(extend_step.get_extend_edges_num());
-        let vertex_id_to_assign = target_vertex_id;
-        for extend_edge in extend_step.iter() {
-            if let Some(vertex) = src_pattern.get_vertex_from_rank(extend_edge.get_src_vertex_rank()) {
-                let src_vertex_label = vertex.get_label();
-                let src_vertex_group = src_pattern
-                    .get_vertex_group(vertex.get_id())
-                    .unwrap();
-                let src_vertex_candidates =
-                    src_pattern.get_equivalent_vertices(src_vertex_label, src_vertex_group);
-                let mut found_src_vertex = false;
-                for src_vertex_candidate in src_vertex_candidates {
-                    if let Some(edge_id_to_assign) = edge_id_map
-                        .get(&(
-                            src_vertex_candidate.get_id(),
-                            extend_edge.get_edge_label(),
-                            extend_edge.get_direction(),
-                        ))
-                        .cloned()
-                    {
-                        definite_extend_edges.push(DefiniteExtendEdge::new(
-                            src_vertex_candidate.get_id(),
-                            edge_id_to_assign,
-                            extend_edge.get_edge_label(),
-                            extend_edge.get_direction(),
-                        ));
-                        found_src_vertex = true;
-                        break;
-                    }
-                }
-                if !found_src_vertex {
-                    return None;
-                }
-            } else {
-                return None;
-            }
-        }
-        Some(DefiniteExtendStep {
-            target_vertex_id: vertex_id_to_assign,
-            target_vertex_label: extend_step.get_target_vertex_label(),
-            extend_edges: definite_extend_edges,
-        })
-    }
 }
 
 /// Methods of accessing some fields of DefiniteExtendStep
@@ -278,96 +215,101 @@ impl DefiniteExtendStep {
     pub fn iter(&self) -> DynIter<&DefiniteExtendEdge> {
         Box::new(self.extend_edges.iter())
     }
+
+    pub fn len(&self) -> usize {
+        self.extend_edges.len()
+    }
 }
 
 impl DefiniteExtendStep {
-    /// Use the DefiniteExtendStep to generate corresponding edge expand operator
-    pub fn generate_expand_operators(&self, origin_pattern: &Pattern) -> Vec<pb::EdgeExpand> {
+    /// Use the DefiniteExtendStep to generate corresponding edge_expand operator
+    pub fn generate_edge_expand(
+        &self, extend_edge: &DefiniteExtendEdge, mut edge_opr: pb::EdgeExpand,
+    ) -> IrResult<pb::logical_plan::Operator> {
+        // use start vertex id as tag
+        edge_opr.v_tag = Some((extend_edge.src_vertex_id as i32).into());
+        // use target vertex id as alias
+        edge_opr.alias = Some((self.target_vertex_id as i32).into());
+        edge_opr.direction = extend_edge.dir as i32;
+
+        Ok(edge_opr.into())
+    }
+
+    /// Use the DefiniteExtendStep to generate corresponding path_expand related operators
+    /// Specifically, path_expand will be translated to:
+    /// If path_expand is the one to be intersected, translate path_expand(l,h) to path_expand(l-1, h-1) + endV() + edge_expand
+    /// Otherwise, treat path_expand as the same as edge_expand (except add endV() back for path_expand)
+    pub fn generate_path_expand(
+        &self, extend_edge: &DefiniteExtendEdge, mut path_opr: pb::PathExpand, is_intersect: bool,
+    ) -> IrResult<Vec<pb::logical_plan::Operator>> {
         let mut expand_operators = vec![];
-        let target_v_id = self.get_target_vertex_id();
-        for extend_edge in self.extend_edges.iter() {
-            // pick edge's property and predicate from origin pattern
-            let edge_id = extend_edge.edge_id;
-            let edge_predicate = origin_pattern
-                .get_edge_predicate(edge_id)
-                .cloned();
+        let start_tag = Some((extend_edge.src_vertex_id as i32).into());
+        let direction = extend_edge.dir as i32;
+        let alias = Some((self.target_vertex_id as i32).into());
 
-            let edge_expand = pb::EdgeExpand {
-                // use start vertex id as tag
-                v_tag: Some((extend_edge.src_vertex_id as i32).into()),
-                direction: extend_edge.dir as i32,
-                params: Some(query_params(vec![extend_edge.edge_label.into()], vec![], edge_predicate)),
-                // expand vertex
-                expand_opt: pb::edge_expand::ExpandOpt::Vertex as i32,
-                // use target vertex id as alias
-                alias: Some((target_v_id as i32).into()),
-            };
-            expand_operators.push(edge_expand);
+        path_opr.start_tag = start_tag.clone();
+        path_opr.alias = None;
+        let mut base_edge_expand = path_opr.base.as_mut().unwrap();
+        (*base_edge_expand).direction = direction;
+        let mut end_v = pb::GetV {
+            tag: None,
+            opt: pb::get_v::VOpt::End as i32,
+            params: Some(query_params(vec![], vec![], None)),
+            alias: alias.clone(),
+        };
+        if !is_intersect {
+            // if not intersect, build as path_expand + endV()
+            expand_operators.push(path_opr.into());
+            expand_operators.push(end_v.into())
+        } else {
+            let mut last_edge_expand = base_edge_expand.clone();
+            let hop_range = path_opr
+                .hop_range
+                .as_mut()
+                .ok_or(IrError::MissingData("pb::PathExpand::hop_range".to_string()))?;
+            // out(1..2) = out()
+            if hop_range.lower == 1 && hop_range.upper == 2 {
+                last_edge_expand.v_tag = start_tag;
+                last_edge_expand.alias = alias;
+                expand_operators.push(last_edge_expand.into());
+            } else {
+                // out(low..high) = out(low-1..high-1) + endV() + out()
+                if hop_range.lower < 1 {
+                    // The path with range from 0 cannot be translated to oprs that can be intersected.
+                    Err(IrError::InvalidRange(hop_range.lower, hop_range.upper))?
+                }
+                hop_range.lower -= 1;
+                hop_range.upper -= 1;
+                end_v.alias = None;
+                last_edge_expand.alias = alias;
+                expand_operators.push(path_opr.into());
+                expand_operators.push(end_v.into());
+                expand_operators.push(last_edge_expand.into());
+            }
         }
-        expand_operators
+
+        Ok(expand_operators)
     }
 
-    /// Generate the intersect operator for DefiniteExtendStep;s target vertex
+    /// Generate the intersect operator for DefiniteExtendStep's target vertex
     /// It needs its parent EdgeExpand Operator's node ids
-    pub fn generate_intersect_operator(&self, parents: Vec<i32>) -> pb::Intersect {
-        pb::Intersect { parents, key: Some((self.target_vertex_id as i32).into()) }
+    pub fn generate_intersect_operator(&self, parents: Vec<i32>) -> IrResult<pb::logical_plan::Operator> {
+        Ok((pb::Intersect { parents, key: Some((self.target_vertex_id as i32).into()) }).into())
     }
 
-    /// Generate the filter operator for DefiniteExtendStep's target vertex
-    pub fn generate_vertex_filter_operator(&self, origin_pattern: &Pattern) -> Option<pb::Select> {
+    /// Generate the filter operator for DefiniteExtendStep's target vertex if it has filters
+    pub fn generate_vertex_filter_operator(
+        &self, origin_pattern: &Pattern,
+    ) -> IrResult<Option<pb::logical_plan::Operator>> {
         // pick target vertex's property and predicate info from origin pattern
         let target_v_id = self.target_vertex_id;
-        if let Some(target_v_predicate) = origin_pattern.get_vertex_predicate(target_v_id) {
-            Some(pb::Select { predicate: Some(target_v_predicate.clone()) })
-        } else {
-            None
-        }
-    }
-}
-/// Get all the subsets of given Vec<T>
-/// The algorithm is BFS
-pub fn get_subsets<T, F>(origin_vec: Vec<T>, filter: F) -> Vec<Vec<T>>
-where
-    T: Clone,
-    F: Fn(&T, &Vec<T>) -> bool,
-{
-    let n = origin_vec.len();
-    let mut set_collections = Vec::with_capacity((2 as usize).pow(n as u32));
-    let mut queue = VecDeque::new();
-    for (i, element) in origin_vec.iter().enumerate() {
-        queue.push_back((vec![element.clone()], i + 1));
-    }
-    while let Some((subset, max_index)) = queue.pop_front() {
-        set_collections.push(subset.clone());
-        for i in max_index..n {
-            let mut new_subset = subset.clone();
-            if filter(&origin_vec[i], &subset) {
-                continue;
-            }
-            new_subset.push(origin_vec[i].clone());
-            queue.push_back((new_subset, i + 1));
-        }
-    }
-    set_collections
-}
-
-pub(crate) fn limit_repeated_element_num<'a, T, U>(
-    add_element: &'a U, subset_to_be_added: T, limit_num: usize,
-) -> bool
-where
-    T: Iterator<Item = &'a U>,
-    U: Eq,
-{
-    let mut repeaded_num = 0;
-    for element in subset_to_be_added {
-        if *add_element == *element {
-            repeaded_num += 1;
-            if repeaded_num >= limit_num {
-                return true;
+        if let Some(vertex_data) = origin_pattern.get_vertex_data(target_v_id) {
+            if vertex_data.predicate.is_some() {
+                return Ok(Some(vertex_data.clone().into()));
             }
         }
+        Ok(None)
     }
-    false
 }
 
 #[cfg(test)]

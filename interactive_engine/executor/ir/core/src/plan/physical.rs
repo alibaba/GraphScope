@@ -579,7 +579,7 @@ impl AsPhysical for LogicalPlan {
         use pb::join::JoinKind;
         use pb::logical_plan::operator::Opr::*;
         let mut _prev_node_opt: Option<NodeType> = None;
-        let mut curr_node_opt = self.root();
+        let mut curr_node_opt = self.get_first_node();
         debug!("plan: {:#?}", self);
         debug!("is_partition: {:?}", self.meta.is_partition());
         while curr_node_opt.is_some() {
@@ -589,8 +589,8 @@ impl AsPhysical for LogicalPlan {
                 let mut sub_bldr = JobBuilder::default();
                 if let Some(subplan) = self.extract_subplan(curr_node.clone()) {
                     let mut expand_degree_opt = None;
-                    if subplan.num_nodes() <= 2 {
-                        if subplan.num_nodes() == 1 {
+                    if subplan.len() <= 2 {
+                        if subplan.len() == 1 {
                             expand_degree_opt = subplan
                                 .get_first_node()
                                 .and_then(|node| extract_expand_degree(node));
@@ -721,11 +721,16 @@ impl AsPhysical for LogicalPlan {
 
                             builder.join(pegasus_join_kind, left_plan, right_plan, join_bytes);
                         }
-                        None => return Err(IrError::MissingData("Union/Join::merge_node".to_string())),
-                        _ => {
-                            return Err(IrError::Unsupported(
-                                "operators other than `Union` and `Join`".to_string(),
+                        None => {
+                            return Err(IrError::MissingData(
+                                "Union/Intersect/Join::merge_node".to_string(),
                             ))
+                        }
+                        _ => {
+                            return Err(IrError::Unsupported(format!(
+                            "Operators other than `Union` , `Intersect`, or `Join`. The operator is {:?}",
+                            merge_node
+                        )))
                         }
                     }
                 }
@@ -765,37 +770,41 @@ fn add_intersect_job_builder(
     let mut is_adding_auxilia = false;
     let mut auxilia_param = pb::QueryParams::default();
     for subplan in subplans {
-        if subplan.len() > 1 {
-            Err(IrError::Unsupported(
-                "multiple EdgeExpand ops in each branch for intersection".to_string(),
-            ))?
-        }
-        if let Some(sub_root) = subplan.root() {
-            if let Some(Edge(edgexpd)) = sub_root.borrow().opr.opr.as_ref() {
-                let mut edgexpd = edgexpd.clone();
-                if edgexpd.v_tag.is_none() {
-                    Err(IrError::MissingData("EdgeExpand::v_tag".to_string()))?
-                }
-                if plan_meta.is_partition() {
-                    let key_pb = common_pb::NameOrIdKey { key: edgexpd.v_tag.clone() };
-                    builder.repartition(key_pb.encode_to_vec());
-                }
-                if !edgexpd.alias.eq(&intersect_tag.cloned()) {
-                    Err(IrError::InvalidPattern("Cannot intersect on different tags".to_string()))?
-                }
-                if let Some(params) = edgexpd.params.as_mut() {
-                    // TODO: be very carefully that this only works when it is not followed by any filters
-                    // move columns fetch into auxilia
-                    if params.is_all_columns || !params.columns.is_empty() {
-                        is_adding_auxilia = true;
-                        merge_query_params(&mut auxilia_param, params);
+        // subplan would be like: 1. vec![EdgeExpand] for edge expand to intersect; 2. vec![PathExpand, GetV, EdgeExpand] for path expand to intersect
+        let len = subplan.len();
+        for (idx, (_, opr)) in subplan.nodes.iter().enumerate() {
+            if idx != len - 1 {
+                opr.add_job_builder(builder, plan_meta)?;
+            } else {
+                // the last node in subplan should be the one to intersect.
+                if let Some(Edge(edgexpd)) = opr.borrow().opr.opr.as_ref() {
+                    let mut edgexpd = edgexpd.clone();
+                    if plan_meta.is_partition() {
+                        let key_pb = common_pb::NameOrIdKey { key: edgexpd.v_tag.clone() };
+                        builder.repartition(key_pb.encode_to_vec());
                     }
+                    if !edgexpd.alias.eq(&intersect_tag.cloned()) {
+                        Err(IrError::InvalidPattern("Cannot intersect on different tags".to_string()))?
+                    }
+                    if let Some(params) = edgexpd.params.as_mut() {
+                        // TODO: be very carefully that this only works when it is not followed by any filters
+                        // move columns fetch into auxilia
+                        if params.is_all_columns || !params.columns.is_empty() {
+                            is_adding_auxilia = true;
+                            merge_query_params(&mut auxilia_param, params);
+                        }
+                    }
+                    simple_add_job_builder(
+                        builder,
+                        &pb::logical_plan::Operator::from(edgexpd.clone()),
+                        SimpleOpr::FilterMap,
+                    )?;
+                } else {
+                    Err(IrError::Unsupported(format!(
+                        "Should be `EdgeExpand` opr for intersection, but the opr is {:?}",
+                        opr
+                    )))?
                 }
-                simple_add_job_builder(
-                    builder,
-                    &pb::logical_plan::Operator::from(edgexpd.clone()),
-                    SimpleOpr::FilterMap,
-                )?;
             }
         }
     }
