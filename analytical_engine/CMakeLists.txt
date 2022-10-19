@@ -239,39 +239,36 @@ target_link_libraries(gs_util PRIVATE
         ${Boost_LIBRARIES}
     )
 
+if (ENABLE_JAVA_SDK)
+    target_sources(gs_util PRIVATE "core/java/javasdk.cc")
+    target_compile_definitions(gs_util PUBLIC ENABLE_JAVA_SDK)
+    target_link_libraries(gs_util PRIVATE
+            ${JAVA_JVM_LIBRARY}
+            ${JNI_LIBRARIES}
+        )
+endif()
+
 add_executable(grape_engine
         "core/grape_engine.cc"
         "core/grape_instance.cc"
-        "core/java/javasdk.cc"
         "core/object/dynamic.cc"
         ${CORE_RPC_SRC_FILES}
     )
 target_include_directories(grape_engine PRIVATE proto utils)
+target_link_libraries(grape_engine PRIVATE
+        gs_proto
+        gs_util
+        ${LIBGRAPELITE_LIBRARIES}
+        ${GFLAGS_LIBRARIES}
+        ${CMAKE_DL_LIBS}
+        ${Boost_LIBRARIES}
+        ${VINEYARD_LIBRARIES}
+    )
 
 if (ENABLE_JAVA_SDK)
     target_compile_definitions(grape_engine PUBLIC ENABLE_JAVA_SDK)
-    target_link_libraries(grape_engine PRIVATE
-        gs_proto
-        gs_util
-        ${LIBGRAPELITE_LIBRARIES}
-        ${GFLAGS_LIBRARIES}
-        ${CMAKE_DL_LIBS}
-        ${Boost_LIBRARIES}
-        ${VINEYARD_LIBRARIES}
-        ${JAVA_JVM_LIBRARY}
-        ${JNI_LIBRARIES}
-        )
-else()
-    target_link_libraries(grape_engine PRIVATE
-        gs_proto
-        gs_util
-        ${LIBGRAPELITE_LIBRARIES}
-        ${GFLAGS_LIBRARIES}
-        ${CMAKE_DL_LIBS}
-        ${Boost_LIBRARIES}
-        ${VINEYARD_LIBRARIES}
-        )
 endif()
+
 if (LET_IT_CRASH_ON_EXCEPTION)
     target_compile_definitions(grape_engine PRIVATE LET_IT_CRASH_ON_EXCEPTION)
 endif ()
@@ -426,7 +423,7 @@ if(ENABLE_JAVA_SDK)
     set(GAE_JAVA_GRAPHX_JAR "${GAE_JAVA_DIR}/graphx-on-graphscope/target/graphx-on-graphscope-${GRAPHSCOPE_ANALYTICAL_JAR_VERSION}-shaded.jar")
     add_custom_command(
         OUTPUT "${GAE_JAVA_RUNTIME_DIR}/target/native/libgrape-jni.so"
-        COMMAND mvn clean install -DskipTests --quiet
+        COMMAND mvn -Drevision=${GRAPHSCOPE_ANALYTICAL_JAR_VERSION} clean install -DskipTests --quiet
         DEPENDS gs_proto
         WORKING_DIRECTORY ${GAE_JAVA_DIR}
         COMMENT "Building GAE-java..."

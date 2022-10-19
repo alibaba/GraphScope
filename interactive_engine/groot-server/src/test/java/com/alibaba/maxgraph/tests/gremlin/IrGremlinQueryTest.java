@@ -29,6 +29,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
     public abstract Traversal<Vertex, Object> get_g_VX4X_bothE_as_otherV();
 
+    public abstract Traversal<Vertex, Object> get_g_V_hasLabel_hasId_values();
+
     @Test
     public void g_VX4X_bothE_as_otherV() {
         Traversal<Vertex, Object> traversal = this.get_g_VX4X_bothE_as_otherV();
@@ -46,11 +48,33 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         Assert.assertEquals(expected.size(), counter);
     }
 
+    @Test
+    public void g_V_hasLabel_hasId_values() {
+        Traversal<Vertex, Object> traversal = this.get_g_V_hasLabel_hasId_values();
+        this.printTraversalForm(traversal);
+        int counter = 0;
+
+        String expected = "marko";
+
+        while (traversal.hasNext()) {
+            Object result = traversal.next();
+            Assert.assertTrue(expected.contains(result.toString()));
+            ++counter;
+        }
+
+        Assert.assertEquals(1, counter);
+    }
+
     public static class Traversals extends IrGremlinQueryTest {
 
         @Override
         public Traversal<Vertex, Object> get_g_VX4X_bothE_as_otherV() {
             return g.V().has("id", 4).bothE().as("a").otherV().values("id");
+        }
+
+        @Override
+        public Traversal<Vertex, Object> get_g_V_hasLabel_hasId_values() {
+            return g.V().hasLabel("person").has("id", 1).values("name");
         }
     }
 }

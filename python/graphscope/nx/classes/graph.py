@@ -1046,7 +1046,7 @@ class Graph(_GraphBase):
         -----
             the method is called when to set_items in AdjEdgeAttr
 
-        Examples:
+        Examples
         --------
         >>> G = nx.Graph()  # or DiGraph
         >>> G.add_edge(1, 2)
@@ -1082,7 +1082,7 @@ class Graph(_GraphBase):
         -----
             the method is called when to set_items in NodeAttr
 
-        Examples:
+        Examples
         --------
         >>> G = nx.Graph()  # or DiGraph
         >>> G.add_node(1)

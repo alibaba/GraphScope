@@ -17,7 +17,6 @@ Operation object
    Operation.key
    Operation.signature
    Operation.eval
-   Operation.set_output
    Operation.evaluated
 
 BuiltIn operations
@@ -28,21 +27,43 @@ BuiltIn operations
    :toctree: generated/
 
    create_app
+   bind_app
+   run_app
    create_graph
+   create_loader
+   add_labels_to_graph
    dynamic_to_arrow
    arrow_to_dynamic
    modify_edges
    modify_vertices
-   run_app
    report_graph
    project_arrow_property_graph
-   project_arrow_property_graph_to_simple
-   project_dynamic_property_graph
+   project_to_simple
+   copy_graph
+   to_directed
+   to_undirected
+   create_graph_view
+   clear_graph
+   clear_edges
+   create_subgraph
+   create_unload_op
    unload_app
    unload_graph
+   unload_context
    context_to_numpy
    context_to_dataframe
    to_vineyard_tensor
+   to_vineyard_dataframe
+   to_data_sink
+   output
+   get_context_data
    add_column
    graph_to_numpy
    graph_to_dataframe
+   create_interactive_query
+   create_learning_instance
+   close_interactive_query
+   close_learning_instance
+   gremlin_query
+   gremlin_to_subgraph
+   fetch_gremlin_result

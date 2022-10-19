@@ -43,7 +43,10 @@ impl BinaryFunction<Record, Vec<Record>, Option<Record>> for ApplyOperator {
                     // We assume the result of sub_entry is always saved on head of Record for now.
                     let sub_entry = sub_result
                         .get(None)
-                        .ok_or(FnExecError::get_tag_error("get entry of subtask result failed"))?;
+                        .ok_or(FnExecError::get_tag_error(&format!(
+                            "get None tag from the sub record in `Apply` operator, the record is {:?}",
+                            sub_result
+                        )))?;
                     if let Some(alias) = self.alias.as_ref() {
                         // append sub_entry without moving head
                         let columns = parent.get_columns_mut();
@@ -69,7 +72,10 @@ impl BinaryFunction<Record, Vec<Record>, Option<Record>> for ApplyOperator {
                     // We assume the result of sub_entry is always saved on head of Record for now.
                     let sub_entry = sub_result
                         .get(None)
-                        .ok_or(FnExecError::get_tag_error("get entry of subtask result failed"))?;
+                        .ok_or(FnExecError::get_tag_error(&format!(
+                            "get None tag from the sub record in `Apply` operator, the record is {:?}",
+                            sub_result
+                        )))?;
                     if let Some(alias) = self.alias.as_ref() {
                         let columns = parent.get_columns_mut();
                         columns.insert(*alias as usize, sub_entry.clone());
@@ -79,8 +85,8 @@ impl BinaryFunction<Record, Vec<Record>, Option<Record>> for ApplyOperator {
                     Ok(Some(parent))
                 }
             }
-            _ => Err(FnExecError::UnSupported(format!(
-                "Do not support the join type {:?} in Apply",
+            _ => Err(FnExecError::unsupported_error(&format!(
+                "Apply::JoinKind, which is {:?}, join_kind",
                 self.join_kind
             )))?,
         }
@@ -105,7 +111,7 @@ impl ApplyGen<Record, Vec<Record>, Option<Record>> for algebra_pb::Apply {
             JoinKind::Inner | JoinKind::LeftOuter | JoinKind::Semi | JoinKind::Anti => {}
             JoinKind::RightOuter | JoinKind::FullOuter | JoinKind::Times => {
                 Err(FnGenError::unsupported_error(&format!(
-                    "Do not support join_kind {:?} in Apply",
+                    "Apply::JoinKind, which is {:?}, join_kind",
                     join_kind
                 )))?
             }

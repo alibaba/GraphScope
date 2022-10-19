@@ -250,7 +250,7 @@ impl ReadGraph for ExpStore {
     fn index_scan_vertex(
         &self, _label: LabelId, _primary_key: &PKV, _params: &QueryParams,
     ) -> GraphProxyResult<Option<Vertex>> {
-        Err(GraphProxyError::query_store_error(
+        Err(GraphProxyError::unsupported_error(
             "Experiment storage does not support index_scan_vertex for now",
         ))?
     }

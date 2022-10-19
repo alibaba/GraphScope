@@ -21,7 +21,7 @@ use gaia_runtime::error::{StartServerError, StartServerResult};
 use global_query::{FFIGraphStore, GraphPartitionManager};
 use log::info;
 use pegasus::api::{Fold, Sink};
-use pegasus::{Configuration, JobConf, ServerConf};
+use pegasus::{wait_servers_ready, Configuration, JobConf, ServerConf};
 use pegasus_network::config::NetworkConfig;
 use pegasus_network::config::ServerAddr;
 use pegasus_server::rpc::{start_rpc_server, RPCServerConfig, ServiceStartListener};
@@ -53,8 +53,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .ok_or(StartServerError::empty_config_error("server.size"))?
         .parse()?;
     let hosts: Vec<&str> = config_map
-        .get("pegasus.hosts")
-        .ok_or(StartServerError::empty_config_error("pegasus.hosts"))?
+        .get("network.servers")
+        .ok_or(StartServerError::empty_config_error("network.servers"))?
         .split(",")
         .collect();
     let worker_thread_num: i32 = config_map
@@ -92,7 +92,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("process_partition_list: {:?}", process_partition_list);
 
     pegasus::startup(server_config)?;
-    std::thread::sleep(std::time::Duration::from_secs(3));
+    wait_servers_ready(&ServerConf::All);
     let partition_server_index_map = get_global_partition_server_mapping(process_partition_list)?;
 
     let query_vineyard = QueryVineyard::new(

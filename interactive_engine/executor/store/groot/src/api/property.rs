@@ -185,6 +185,20 @@ impl Property {
             _ => Ok(false),
         }
     }
+
+    // only work for string property
+    pub(crate) fn start_with(&self, rhs: &Self) -> GraphResult<bool> {
+        let left = self.get_string()?;
+        let right = rhs.get_string()?;
+        Ok(left.starts_with(right))
+    }
+
+    // only work for string property
+    pub(crate) fn end_with(&self, rhs: &Self) -> GraphResult<bool> {
+        let left = self.get_string()?;
+        let right = rhs.get_string()?;
+        Ok(left.ends_with(right))
+    }
 }
 
 fn objects_to_list_property(v: &[Object]) -> GraphResult<Property> {

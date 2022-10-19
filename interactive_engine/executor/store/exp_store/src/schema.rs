@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap};
 use std::fmt::Debug;
 use std::fs::File;
 use std::hash::Hash;
@@ -78,48 +78,25 @@ pub struct LDBCGraphSchema {
 }
 
 impl LDBCGraphSchema {
-    /// While loading graphs, we will have properties such as LABELs and edge's
-    /// ids data recorded in the schema. While these data for now does not actually
-    /// maintain in the database, we will trim them in the schema.
-    pub(crate) fn trim(&mut self) {
-        for (key, value) in &mut self.vertex_prop_meta {
-            if let Some((_, index)) = value.remove(LABEL_FIELD) {
-                if let Some(vec) = self.vertex_prop_vec.get_mut(key) {
-                    vec.remove(index);
-                    for (index, (name, dt)) in vec.iter().enumerate() {
-                        *value.get_mut(name).unwrap() = (dt.clone(), index);
-                    }
-                }
-            }
-        }
-        for (key, value) in &mut self.edge_prop_meta {
-            let mut indices_to_trim = HashSet::new();
-            if let Some((_, index)) = value.remove(START_ID_FIELD) {
-                indices_to_trim.insert(index);
-            }
-            if let Some((_, index)) = value.remove(END_ID_FIELD) {
-                indices_to_trim.insert(index);
-            }
-            let mut vec_trimmed = Vec::<(String, DataType)>::new();
-            if let Some(old_vec) = self.edge_prop_vec.get(key) {
-                for (index, item) in old_vec.iter().enumerate() {
-                    if !indices_to_trim.contains(&index) {
-                        vec_trimmed.push(item.clone());
-                    }
-                }
-            }
-            for (index, (name, dt)) in vec_trimmed.iter().enumerate() {
-                *value.get_mut(name).unwrap() = (dt.clone(), index);
-            }
-            *self
-                .edge_prop_vec
-                .entry(*key)
-                .or_insert_with(Vec::new) = vec_trimmed;
+    pub fn new(
+        vertex_type_to_id: HashMap<String, LabelId>, edge_type_to_id: HashMap<String, LabelId>,
+        vertex_prop_meta: HashMap<LabelId, HashMap<String, (DataType, usize)>>,
+        vertex_prop_vec: HashMap<LabelId, Vec<(String, DataType)>>,
+        edge_prop_meta: HashMap<LabelId, HashMap<String, (DataType, usize)>>,
+        edge_prop_vec: HashMap<LabelId, Vec<(String, DataType)>>,
+    ) -> Self {
+        Self {
+            vertex_type_to_id,
+            edge_type_to_id,
+            vertex_prop_meta,
+            vertex_prop_vec,
+            edge_prop_meta,
+            edge_prop_vec,
         }
     }
 
     /// Get a certain edge type's id, together with its start- and edge- vertices's type
-    /// while giving the `full_edge_type` that is "<src_vertex_label>_<edge_label>_<dst_vertex_label>"
+    /// while giving the `full_edge_type` that is "<src_vertex_label>\_<edge_label>\_<dst_vertex_label>"
     pub fn get_edge_label_tuple(&self, full_edge_type: &str) -> Option<EdgeLabelTuple> {
         let mut parts = full_edge_type.split("_");
         let src_label_id =
@@ -198,16 +175,20 @@ impl PartialEq for LDBCGraphSchema {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 struct LDBCGraphSchemaJson {
-    vertex_type_map: HashMap<String, LabelId>,
-    edge_type_map: HashMap<String, LabelId>,
-    vertex_prop: HashMap<String, Vec<(String, DataType)>>,
-    edge_prop: HashMap<String, Vec<(String, DataType)>>,
+    vertex_type_map: BTreeMap<String, LabelId>,
+    edge_type_map: BTreeMap<String, LabelId>,
+    vertex_prop: BTreeMap<String, Vec<(String, DataType)>>,
+    edge_prop: BTreeMap<String, Vec<(String, DataType)>>,
 }
 
 impl<'a> From<&'a LDBCGraphSchema> for LDBCGraphSchemaJson {
     fn from(schema: &'a LDBCGraphSchema) -> Self {
-        let vertex_type_map = schema.vertex_type_to_id.clone();
-        let edge_type_map: HashMap<String, LabelId> = schema
+        let vertex_type_map: BTreeMap<String, LabelId> = schema
+            .vertex_type_to_id
+            .iter()
+            .map(|(name, id)| (name.clone(), *id))
+            .collect();
+        let edge_type_map: BTreeMap<String, LabelId> = schema
             .edge_type_to_id
             .iter()
             .map(|(name, id)| (name.clone(), *id))
@@ -222,10 +203,8 @@ impl<'a> From<&'a LDBCGraphSchema> for LDBCGraphSchemaJson {
             .map(|(name, id)| (*id, name.clone()))
             .collect();
 
-        let mut vertex_prop =
-            HashMap::<String, Vec<(String, DataType)>>::with_capacity(schema.vertex_prop_vec.len());
-        let mut edge_prop =
-            HashMap::<String, Vec<(String, DataType)>>::with_capacity(schema.edge_prop_vec.len());
+        let mut vertex_prop = BTreeMap::<String, Vec<(String, DataType)>>::new();
+        let mut edge_prop = BTreeMap::<String, Vec<(String, DataType)>>::new();
 
         for (key, value) in &schema.vertex_prop_vec {
             vertex_prop.insert(vertex_type_map_rev[key].clone(), value.clone());
@@ -241,7 +220,11 @@ impl<'a> From<&'a LDBCGraphSchema> for LDBCGraphSchemaJson {
 
 impl<'a> From<&'a LDBCGraphSchemaJson> for LDBCGraphSchema {
     fn from(schema_json: &'a LDBCGraphSchemaJson) -> Self {
-        let vertex_type_to_id = schema_json.vertex_type_map.clone();
+        let vertex_type_to_id: HashMap<String, LabelId> = schema_json
+            .vertex_type_map
+            .iter()
+            .map(|(name, id)| (name.clone(), *id))
+            .collect();
         let edge_type_to_id: HashMap<String, LabelId> = schema_json
             .edge_type_map
             .iter()
@@ -351,109 +334,5 @@ impl JsonConf<LDBCGraphSchema> for LDBCGraphSchema {
     fn to_json(&self) -> std::io::Result<String> {
         let schema_json = LDBCGraphSchemaJson::from(self);
         serde_json::to_string_pretty(&schema_json).map_err(std::io::Error::from)
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn test_trim_schema() {
-        let mut schema = LDBCGraphSchema::from_json_file("data/schema.json").expect("Get schema error");
-
-        let vertex_label = schema
-            .get_vertex_label_id("ORGANISATION")
-            .unwrap();
-        let org_header = schema.get_vertex_header(vertex_label).unwrap();
-        assert_eq!(
-            org_header,
-            &[
-                (("id".to_string(), DataType::ID)),
-                (("~LABEL".to_string(), DataType::LABEL)),
-                (("name".to_string(), DataType::String)),
-                (("url".to_string(), DataType::String))
-            ]
-        );
-        let org_schema = schema.get_vertex_schema(vertex_label).unwrap();
-        let expected_org_schema: HashMap<String, (DataType, usize)> = vec![
-            ("id".to_string(), (DataType::ID, 0)),
-            ("~LABEL".to_string(), (DataType::LABEL, 1)),
-            ("name".to_string(), (DataType::String, 2)),
-            ("url".to_string(), (DataType::String, 3)),
-        ]
-        .into_iter()
-        .collect();
-
-        assert!(is_map_eq(org_schema, &expected_org_schema));
-
-        let label_tuple = schema
-            .get_edge_label_tuple("PERSON_KNOWS_PERSON")
-            .unwrap();
-        let knows_header = schema
-            .get_edge_header(label_tuple.edge_label)
-            .unwrap();
-        assert_eq!(
-            knows_header,
-            &[
-                ("start_id".to_string(), DataType::ID),
-                ("end_id".to_string(), DataType::ID),
-                ("creationDate".to_string(), DataType::Date),
-            ]
-        );
-        let knows_schema = schema
-            .get_edge_schema(label_tuple.edge_label)
-            .unwrap();
-        let expected_knows_schema: HashMap<String, (DataType, usize)> = vec![
-            ("start_id".to_string(), (DataType::ID, 0)),
-            ("end_id".to_string(), (DataType::ID, 1)),
-            ("creationDate".to_string(), (DataType::Date, 2)),
-        ]
-        .into_iter()
-        .collect();
-        assert!(is_map_eq(knows_schema, &expected_knows_schema));
-
-        // after trimming the schema
-        schema.trim();
-
-        let vertex_label = schema
-            .get_vertex_label_id("ORGANISATION")
-            .unwrap();
-        let org_header = schema.get_vertex_header(vertex_label).unwrap();
-        assert_eq!(
-            org_header,
-            &[
-                ("id".to_string(), DataType::ID),
-                ("name".to_string(), DataType::String),
-                ("url".to_string(), DataType::String)
-            ]
-        );
-        let org_schema = schema.get_vertex_schema(vertex_label).unwrap();
-        let expected_org_schema: HashMap<String, (DataType, usize)> = vec![
-            ("id".to_string(), (DataType::ID, 0)),
-            ("name".to_string(), (DataType::String, 1)),
-            ("url".to_string(), (DataType::String, 2)),
-        ]
-        .into_iter()
-        .collect();
-
-        assert!(is_map_eq(org_schema, &expected_org_schema));
-
-        let label_tuple = schema
-            .get_edge_label_tuple("PERSON_KNOWS_PERSON")
-            .unwrap();
-        let knows_header = schema
-            .get_edge_header(label_tuple.edge_label)
-            .unwrap();
-        assert_eq!(knows_header, &[("creationDate".to_string(), DataType::Date),]);
-        let knows_schema = schema
-            .get_edge_schema(label_tuple.edge_label)
-            .unwrap();
-        let expected_knows_schema: HashMap<String, (DataType, usize)> =
-            vec![("creationDate".to_string(), (DataType::Date, 0))]
-                .into_iter()
-                .collect();
-
-        assert!(is_map_eq(knows_schema, &expected_knows_schema));
     }
 }

@@ -45,7 +45,8 @@ impl GroupGen<Record, RecordKey, Record> for algebra_pb::GroupBy {
                     .ok_or(ParsePbError::from("key alias is missing in group"))?
                     .try_into()?,
             );
-            let alias = alias.ok_or(ParsePbError::from("key alias cannot be None in group"))?;
+            let alias = alias
+                .ok_or(ParsePbError::from(format!("key alias cannot be None in group opr {:?}", self)))?;
             key_aliases.push(alias);
         }
         let group_map = GroupMap { key_aliases };
@@ -64,9 +65,10 @@ impl MapFunction<(RecordKey, Record), Record> for GroupMap {
     fn exec(&self, (group_key, mut group_value): (RecordKey, Record)) -> FnResult<Record> {
         let group_key_entries = group_key.take();
         if group_key_entries.len() != self.key_aliases.len() {
-            Err(FnExecError::unexpected_data_error(
-                "the number of group_keys and group_key_aliases should be equal",
-            ))?
+            Err(FnExecError::unexpected_data_error(&format!(
+                "the number of group_keys and group_key_aliases should be equal: {:?}, {:?}",
+                group_key_entries, self.key_aliases
+            )))?
         }
         for (entry, alias) in group_key_entries
             .iter()

@@ -115,12 +115,12 @@ First, you need to ``git clone`` the latest version of code from our `repo <http
 and run the command:
 
 .. code:: bash
+
     cd GraphScope
     ./scripts/install_deps.sh --dev
 
     # With argument --cn to speed up the download if you are in China.
     ./scripts/install_deps.sh --dev --cn
-
 
 The `install_deps.sh` does not install the grape-jdk dependency `fastFFI` by default.
 If you don't care about `grape jdk <https://github.com/alibaba/GraphScope/blob/main/analytical_engine/java/README.md>`,

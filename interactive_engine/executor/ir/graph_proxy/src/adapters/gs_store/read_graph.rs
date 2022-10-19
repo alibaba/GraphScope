@@ -43,7 +43,7 @@ use crate::{GraphProxyError, GraphProxyResult};
 // Should be identical to the param_name given by compiler
 const SNAPSHOT_ID: &str = "SID";
 // This will refer to the latest graph
-const DEFAULT_SNAPSHOT_ID: SnapshotId = SnapshotId::max_value() - 1;
+const DEFAULT_SNAPSHOT_ID: SnapshotId = SnapshotId::MAX - 1;
 // This represents the primary key of GraphScopeStore
 const GS_STORE_PK: KeyId = 0;
 
@@ -162,28 +162,37 @@ where
     }
 
     fn index_scan_vertex(
-        &self, label_id: LabelId, primary_key: &PKV, _params: &QueryParams,
+        &self, label_id: LabelId, primary_key: &PKV, params: &QueryParams,
     ) -> GraphProxyResult<Option<Vertex>> {
         // get_vertex_id_by_primary_keys() is a global query function, that is,
         // you can query vertices (with only vertex id) by pks on any graph partitions (not matter locally or remotely).
-        // To guarantee the correctness (i.e., avoid duplication results), only worker 0 is assigned for query.
-        if pegasus::get_current_worker().index == 0 {
-            let store_label_id = encode_storage_label(label_id)?;
-            let store_indexed_values = match primary_key {
-                OneOrMany::One(pkv) => {
-                    vec![encode_store_prop_val(pkv[0].1.clone())]
-                }
-                OneOrMany::Many(pkvs) => pkvs
-                    .iter()
-                    .map(|(_pk, value)| encode_store_prop_val(value.clone()))
-                    .collect(),
-            };
+        // To guarantee the correctness (i.e., avoid duplication results), we pre-assign partitions for workers,
+        // and only the worker responsible for this vertex (i.e., contains the vertex in its partitions) is going to search for it.
 
-            if let Some(vid) = self
-                .partition_manager
-                .get_vertex_id_by_primary_keys(store_label_id, store_indexed_values.as_ref())
-            {
-                Ok(Some(Vertex::new(vid as ID, Some(label_id.clone()), DynDetails::default())))
+        let store_label_id = encode_storage_label(label_id)?;
+        let store_indexed_values = match primary_key {
+            OneOrMany::One(pkv) => {
+                vec![encode_store_prop_val(pkv[0].1.clone())]
+            }
+            OneOrMany::Many(pkvs) => pkvs
+                .iter()
+                .map(|(_pk, value)| encode_store_prop_val(value.clone()))
+                .collect(),
+        };
+
+        if let Some(vid) = self
+            .partition_manager
+            .get_vertex_id_by_primary_keys(store_label_id, store_indexed_values.as_ref())
+        {
+            if let Some(worker_partitions) = params.partitions.as_ref() {
+                // only the one responsible for vid is going to search for the vertex
+                let vertex_partition = self.partition_manager.get_partition_id(vid) as u64;
+                if worker_partitions.contains(&vertex_partition) {
+                    self.get_vertex(&[vid as ID], params)
+                        .map(|mut v_iter| v_iter.next())
+                } else {
+                    Ok(None)
+                }
             } else {
                 Ok(None)
             }
@@ -653,7 +662,7 @@ fn extract_needed_columns(
 ) -> GraphProxyResult<Option<Vec<PropId>>> {
     use ahash::HashSet;
 
-    use crate::utils::expr::eval_pred::zip_option_vecs;
+    use super::translation::zip_option_vecs;
 
     // Some(vec[]) means need all props, so can't merge it with props needed in filter
     if let Some(out_columns) = out_columns {

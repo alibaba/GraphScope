@@ -399,7 +399,7 @@ impl<D: Data> OutputHandle<D> {
                 }
                 Ok(None) => {
                     // all data in iter should be send;
-                    assert!(iter.next().is_none());
+                    debug_assert!(iter.next().is_none());
                     break;
                 }
                 Err(e) => return if let Some(item) = e.0 { Ok(Some(item)) } else { would_block!("") },

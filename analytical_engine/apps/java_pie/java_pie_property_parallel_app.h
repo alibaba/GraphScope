@@ -27,7 +27,9 @@ limitations under the License.
 #include "core/app/parallel_property_app_base.h"
 #include "core/context/java_pie_property_context.h"
 #include "core/error.h"
+#include "core/java/utils.h"
 #include "core/worker/parallel_property_worker.h"
+
 namespace gs {
 
 /**
@@ -36,20 +38,21 @@ namespace gs {
  *
  * @tparam FRAG_T Should be vineyard::ArrowFragment<...>
  */
-template <typename FRAG_T>
+template <typename FRAG_T,
+          grape::MessageStrategy _message_strategy =
+              grape::MessageStrategy::kAlongOutgoingEdgeToOuterVertex>
 class JavaPIEPropertyParallelApp
     : public ParallelPropertyAppBase<FRAG_T,
                                      JavaPIEPropertyParallelContext<FRAG_T>>,
       public grape::Communicator {
  public:
   // specialize the templated worker.
-  INSTALL_PARALLEL_PROPERTY_WORKER(JavaPIEPropertyParallelApp<FRAG_T>,
-                                   JavaPIEPropertyParallelContext<FRAG_T>,
-                                   FRAG_T)
+  INSTALL_JAVA_PARALLEL_PROPERTY_WORKER(JavaPIEPropertyParallelApp<FRAG_T>,
+                                        JavaPIEPropertyParallelContext<FRAG_T>,
+                                        FRAG_T);
   static constexpr grape::LoadStrategy load_strategy =
       grape::LoadStrategy::kBothOutIn;
-  static constexpr grape::MessageStrategy message_strategy =
-      grape::MessageStrategy::kAlongOutgoingEdgeToOuterVertex;
+  static constexpr grape::MessageStrategy message_strategy = _message_strategy;
   static constexpr bool need_split_edges = true;
 
  public:

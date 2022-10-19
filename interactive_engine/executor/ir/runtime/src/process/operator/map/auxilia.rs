@@ -32,6 +32,7 @@ struct AuxiliaOperator {
     tag: Option<KeyId>,
     query_params: QueryParams,
     alias: Option<KeyId>,
+    remove_tags: Vec<KeyId>,
 }
 
 impl FilterMapFunction<Record, Record> for AuxiliaOperator {
@@ -74,7 +75,10 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                         edge.into()
                     })
                 } else {
-                    Err(FnExecError::unexpected_data_error("should be vertex or edge in AuxiliaOperator"))?
+                    Err(FnExecError::unexpected_data_error(&format!(
+                        "neither Vertex nor Edge entry is accessed in `Auxilia` operator, the entry is {:?}",
+                        entry
+                    )))?
                 };
                 if new_entry.is_some() {
                     input.append(new_entry.unwrap(), self.alias.clone());
@@ -85,6 +89,10 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                 if self.alias.is_some() {
                     input.append_arc_entry(entry, self.alias.clone());
                 }
+            }
+
+            for remove_tag in &self.remove_tags {
+                input.take(Some(remove_tag));
             }
 
             Ok(Some(input))
@@ -105,7 +113,12 @@ impl FilterMapFuncGen for algebra_pb::Auxilia {
             .alias
             .map(|alias| alias.try_into())
             .transpose()?;
-        let auxilia_operator = AuxiliaOperator { tag, query_params, alias };
+        let remove_tags = self
+            .remove_tags
+            .into_iter()
+            .map(|alias| alias.try_into())
+            .collect::<Result<_, _>>()?;
+        let auxilia_operator = AuxiliaOperator { tag, query_params, alias, remove_tags };
         debug!("Runtime AuxiliaOperator: {:?}", auxilia_operator);
         Ok(Box::new(auxilia_operator))
     }

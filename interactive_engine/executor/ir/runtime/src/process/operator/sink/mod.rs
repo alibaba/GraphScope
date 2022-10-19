@@ -71,7 +71,7 @@ impl SinkGen for algebra_pb::logical_plan::operator::Opr {
                     Err(ParsePbError::EmptyFieldError("sink_target is missing".to_string()))?
                 }
             }
-            _ => Err(ParsePbError::from("algebra_pb op is not a sink op"))?,
+            _ => Err(ParsePbError::from(format!("the operator is not a `Sink`, it is {:?}", self)))?,
         }
     }
 }

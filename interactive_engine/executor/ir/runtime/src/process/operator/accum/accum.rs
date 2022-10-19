@@ -165,7 +165,10 @@ impl AccumFactoryGen for algebra_pb::GroupBy {
             if agg_func.vars.len() > 1 {
                 // e.g., count_distinct((a,b));
                 // TODO: to support this, we may need to define MultiTagKey (could define TagKey Trait, and impl for SingleTagKey and MultiTagKey)
-                Err(FnGenError::unsupported_error("Do not support to aggregate multiple fields yet"))?
+                Err(FnGenError::unsupported_error(&format!(
+                    "aggregate multiple fields in `Accum`, fields are {:?}",
+                    agg_func.vars
+                )))?
             }
             let tag_key = agg_func
                 .vars

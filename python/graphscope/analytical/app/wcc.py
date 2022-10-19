@@ -16,12 +16,15 @@
 # limitations under the License.
 #
 
+import logging
 
 from graphscope.framework.app import AppAssets
 from graphscope.framework.app import not_compatible_for
 from graphscope.framework.app import project_to_simple
 
 __all__ = ["wcc"]
+
+logger = logging.getLogger("graphscope")
 
 
 @project_to_simple
@@ -49,4 +52,12 @@ def wcc(graph):
         >>> c = graphscope.wcc(pg)
         >>> sess.close()
     """
-    return AppAssets(algo="wcc", context="vertex_data")(graph)
+    cmake_extra_options = None
+    if graph.oid_type == "std::string":
+        logger.warning(
+            "WCC algorithm will output int value as component ID on graphs that has 'string' type as ID"
+        )
+        cmake_extra_options = "-DWCC_USE_GID=ON"
+    return AppAssets(
+        algo="wcc", context="vertex_data", cmake_extra_options=cmake_extra_options
+    )(graph)

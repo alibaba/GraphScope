@@ -163,7 +163,7 @@ class AppAssets(DAGNode):
         "labeled_vertex_property",
     ]
 
-    def __init__(self, algo, context=None, gar=None):
+    def __init__(self, algo, context=None, gar=None, cmake_extra_options=None):
         """Init assets of the algorithm.
 
         Args:
@@ -182,12 +182,14 @@ class AppAssets(DAGNode):
         self._meta = {}
 
         # used for gar resource
-        if gar and isinstance(gar, (BytesIO, bytes)):
+        if gar is not None and isinstance(gar, (BytesIO, bytes)):
             self._gar = gar if isinstance(gar, bytes) else gar.getvalue()
             self._extract_meta_info()
         else:
             # built_in apps has no gar resource.
             self._gar = None
+
+        self._cmake_extra_options = cmake_extra_options
 
         if self._context_type not in self._support_context_type:
             raise InvalidArgumentError(
@@ -268,6 +270,10 @@ class AppAssets(DAGNode):
     @classmethod
     def bytes(cls):
         return cls._gar
+
+    @property
+    def cmake_extra_options(self):
+        return self._cmake_extra_options
 
     @property
     def signature(self):
@@ -471,15 +477,16 @@ class UnloadedApp(DAGNode):
 
 def load_app(gar=None, algo=None, context=None, **kwargs):
     """Load an app from gar.
-    bytes or the resource of the specified path or bytes.
 
     Args:
         algo: str
           Algo name inside resource. None will extract name from gar resource
           if there is only one app in it.
         gar: bytes or BytesIO or str
-          str represent the path of resource.
-          for java apps, gar can be none to indicate we should find the app in
+          str represent the path of resource, bytes or the resource of the
+          specified path or bytes.
+
+          For java apps, gar can be none to indicate we should find the app in
           previouse added libs.
 
     Returns:

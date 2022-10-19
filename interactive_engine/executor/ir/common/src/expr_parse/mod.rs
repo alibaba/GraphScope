@@ -50,7 +50,12 @@ impl TryFrom<Token> for pb::ExprOpr {
             Token::Star => Ok(pb::Arithmetic::Mul.into()),
             Token::Slash => Ok(pb::Arithmetic::Div.into()),
             Token::Percent => Ok(pb::Arithmetic::Mod.into()),
-            Token::Hat => Ok(pb::Arithmetic::Exp.into()),
+            Token::Power => Ok(pb::Arithmetic::Exp.into()),
+            Token::BitAnd => Ok(pb::Arithmetic::Bitand.into()),
+            Token::BitOr => Ok(pb::Arithmetic::Bitor.into()),
+            Token::BitXor => Ok(pb::Arithmetic::Bitxor.into()),
+            Token::BitLShift => Ok(pb::Arithmetic::Bitlshift.into()),
+            Token::BitRShift => Ok(pb::Arithmetic::Bitrshift.into()),
             Token::Eq => Ok(pb::Logical::Eq.into()),
             Token::Ne => Ok(pb::Logical::Ne.into()),
             Token::Gt => Ok(pb::Logical::Gt.into()),
@@ -62,6 +67,8 @@ impl TryFrom<Token> for pb::ExprOpr {
             Token::Not => Ok(pb::Logical::Not.into()),
             Token::Within => Ok(pb::Logical::Within.into()),
             Token::Without => Ok(pb::Logical::Without.into()),
+            Token::StartsWith => Ok(pb::Logical::Startswith.into()),
+            Token::EndsWith => Ok(pb::Logical::Endswith.into()),
             Token::Boolean(b) => Ok(pb::Value::from(b).into()),
             Token::Int(i) => Ok(pb::Value::from(i).into()),
             Token::Float(f) => Ok(pb::Value::from(f).into()),
@@ -132,6 +139,8 @@ impl ExprToken for pb::ExprOpr {
                         pb::Arithmetic::Add | pb::Arithmetic::Sub => 95,
                         pb::Arithmetic::Mul | pb::Arithmetic::Div | pb::Arithmetic::Mod => 100,
                         pb::Arithmetic::Exp => 120,
+                        pb::Arithmetic::Bitlshift | pb::Arithmetic::Bitrshift => 130,
+                        pb::Arithmetic::Bitand | pb::Arithmetic::Bitor | pb::Arithmetic::Bitxor => 140,
                     }
                 }
                 &Logical(l) => {
@@ -144,7 +153,9 @@ impl ExprToken for pb::ExprOpr {
                         | pb::Logical::Gt
                         | pb::Logical::Ge
                         | pb::Logical::Within
-                        | pb::Logical::Without => 80,
+                        | pb::Logical::Without
+                        | pb::Logical::Startswith
+                        | pb::Logical::Endswith => 80,
                         pb::Logical::And => 75,
                         pb::Logical::Or => 70,
                         pb::Logical::Not => 110,
@@ -240,12 +251,12 @@ mod tests {
         assert_eq!(to_suffix_expr(case4).unwrap(), expected_case4);
 
         // 1 + 2 ^ 3 > 6
-        let case5 = tokenize(" 1 + 2 ^ 3 > 6").unwrap();
+        let case5 = tokenize(" 1 + 2 ^^ 3 > 6").unwrap();
         let expected_case5 = vec![
             Token::Int(1),
             Token::Int(2),
             Token::Int(3),
-            Token::Hat,
+            Token::Power,
             Token::Plus,
             Token::Int(6),
             Token::Gt,
@@ -253,20 +264,20 @@ mod tests {
         assert_eq!(to_suffix_expr(case5).unwrap(), expected_case5);
 
         // (1 + 2) ^ 3 > 6
-        let case6 = tokenize("(1 + 2) ^ 3 > 6").unwrap();
+        let case6 = tokenize("(1 + 2) ^^ 3 > 6").unwrap();
         let expected_case6 = vec![
             Token::Int(1),
             Token::Int(2),
             Token::Plus,
             Token::Int(3),
-            Token::Hat,
+            Token::Power,
             Token::Int(6),
             Token::Gt,
         ];
         assert_eq!(to_suffix_expr(case6).unwrap(), expected_case6);
 
         // ((1 + 2) * 2) ^ 3 == 6 ^ 3
-        let case7 = tokenize("((1 + 1e-3) * 2) ^ 3 == 6 ^ 3").unwrap();
+        let case7 = tokenize("((1 + 1e-3) * 2) ^^ 3 == 6 ^^ 3").unwrap();
         let expected_case7 = vec![
             Token::Int(1),
             Token::Float(0.001),
@@ -274,10 +285,10 @@ mod tests {
             Token::Int(2),
             Token::Star,
             Token::Int(3),
-            Token::Hat,
+            Token::Power,
             Token::Int(6),
             Token::Int(3),
-            Token::Hat,
+            Token::Power,
             Token::Eq,
         ];
         assert_eq!(to_suffix_expr(case7).unwrap(), expected_case7);

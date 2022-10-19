@@ -1,0 +1,312 @@
+{
+  "vertex_type_map": {
+    "CITY": 9,
+    "COMMENT": 2,
+    "COMPANY": 11,
+    "CONTINENT": 10,
+    "COUNTRY": 8,
+    "FORUM": 4,
+    "ORGANISATION": 5,
+    "PERSON": 1,
+    "PLACE": 0,
+    "POST": 3,
+    "TAG": 7,
+    "TAGCLASS": 6,
+    "UNIVERSITY": 12
+  },
+  "edge_type_map": {
+    "CONTAINEROF": 5,
+    "HASCREATOR": 0,
+    "HASINTEREST": 10,
+    "HASMEMBER": 6,
+    "HASMODERATOR": 7,
+    "HASTAG": 1,
+    "HASTYPE": 21,
+    "ISLOCATEDIN": 11,
+    "ISPARTOF": 17,
+    "ISSUBCLASSOF": 22,
+    "KNOWS": 12,
+    "LIKES": 13,
+    "REPLYOF": 3,
+    "STUDYAT": 15,
+    "WORKAT": 16
+  },
+  "vertex_prop": {
+    "CITY": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "name",
+        "String"
+      ],
+      [
+        "url",
+        "String"
+      ]
+    ],
+    "COMMENT": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "creationDate",
+        "Date"
+      ],
+      [
+        "locationIP",
+        "String"
+      ],
+      [
+        "browserUsed",
+        "String"
+      ],
+      [
+        "content",
+        "String"
+      ],
+      [
+        "length",
+        "Integer"
+      ]
+    ],
+    "COMPANY": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "name",
+        "String"
+      ],
+      [
+        "url",
+        "String"
+      ]
+    ],
+    "CONTINENT": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "name",
+        "String"
+      ],
+      [
+        "url",
+        "String"
+      ]
+    ],
+    "COUNTRY": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "name",
+        "String"
+      ],
+      [
+        "url",
+        "String"
+      ]
+    ],
+    "FORUM": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "title",
+        "String"
+      ],
+      [
+        "creationDate",
+        "Date"
+      ]
+    ],
+    "ORGANISATION": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "name",
+        "String"
+      ],
+      [
+        "url",
+        "String"
+      ]
+    ],
+    "PERSON": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "firstName",
+        "String"
+      ],
+      [
+        "lastName",
+        "String"
+      ],
+      [
+        "gender",
+        "String"
+      ],
+      [
+        "birthday",
+        "Date"
+      ],
+      [
+        "creationDate",
+        "Date"
+      ],
+      [
+        "locationIP",
+        "String"
+      ],
+      [
+        "browserUsed",
+        "String"
+      ]
+    ],
+    "PLACE": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "name",
+        "String"
+      ],
+      [
+        "url",
+        "String"
+      ]
+    ],
+    "POST": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "imageFile",
+        "String"
+      ],
+      [
+        "creationDate",
+        "Date"
+      ],
+      [
+        "locationIP",
+        "String"
+      ],
+      [
+        "browserUsed",
+        "String"
+      ],
+      [
+        "language",
+        "String"
+      ],
+      [
+        "content",
+        "String"
+      ],
+      [
+        "length",
+        "Integer"
+      ]
+    ],
+    "TAG": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "name",
+        "String"
+      ],
+      [
+        "url",
+        "String"
+      ]
+    ],
+    "TAGCLASS": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "name",
+        "String"
+      ],
+      [
+        "url",
+        "String"
+      ]
+    ],
+    "UNIVERSITY": [
+      [
+        "id",
+        "ID"
+      ],
+      [
+        "name",
+        "String"
+      ],
+      [
+        "url",
+        "String"
+      ]
+    ]
+  },
+  "edge_prop": {
+    "CONTAINEROF": [],
+    "HASCREATOR": [],
+    "HASINTEREST": [],
+    "HASMEMBER": [
+      [
+        "joinDate",
+        "Date"
+      ]
+    ],
+    "HASMODERATOR": [],
+    "HASTAG": [],
+    "HASTYPE": [],
+    "ISLOCATEDIN": [],
+    "ISPARTOF": [],
+    "ISSUBCLASSOF": [],
+    "KNOWS": [
+      [
+        "creationDate",
+        "Date"
+      ]
+    ],
+    "LIKES": [
+      [
+        "creationDate",
+        "Date"
+      ]
+    ],
+    "REPLYOF": [],
+    "STUDYAT": [
+      [
+        "classYear",
+        "Integer"
+      ]
+    ],
+    "WORKAT": [
+      [
+        "workFrom",
+        "Integer"
+      ]
+    ]
+  }
+}

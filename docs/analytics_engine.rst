@@ -46,14 +46,15 @@ property graph or not is described in its docstring.
 
 .. autosummary::
 
+- :func:`attribute_assortativity_coefficient`
+- :func:`numeric_assortativity_coefficient`
 - :func:`average_degree_connectivity`
 - :func:`average_shortest_path_length`
-- :func:`attribute_assortativity_coefficient`
 - :func:`bfs`
 - :func:`avg_clustering`
 - :func:`clustering`
-- :func:`degree_centrality`
 - :func:`degree_assortativity_coefficient`
+- :func:`degree_centrality`
 - :func:`eigenvector_centrality`
 - :func:`hits`
 - :func:`is_simple_path`
@@ -61,12 +62,14 @@ property graph or not is described in its docstring.
 - :func:`k_shell`
 - :func:`katz_centrality`
 - :func:`louvain`
+- :func:`cdlp`
 - :func:`lpa`
-- :func:`numeric_assortativity_coefficient`
+- :func:`lpa_u2i`
 - :func:`pagerank`
 - :func:`pagerank_nx`
 - :func:`sssp`
 - :func:`triangles`
+- :func:`voterank`
 - :func:`wcc`
 
 The list is continuously growing.

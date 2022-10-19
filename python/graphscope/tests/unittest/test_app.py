@@ -398,6 +398,8 @@ def test_run_app_on_string_oid_graph(p2p_project_directed_graph_string):
     ctx = sssp(p2p_project_directed_graph_string, src="6")
     r1 = ctx.to_dataframe({"node": "v.id", "r": "r"})
     assert r1[r1["node"] == "6"].r.values[0] == 0.0
+    ctx = wcc(p2p_project_directed_graph_string)
+    r1 = ctx.to_dataframe({"node": "v.id", "r": "r"})
 
 
 @pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")

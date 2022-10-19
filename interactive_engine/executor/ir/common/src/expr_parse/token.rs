@@ -20,25 +20,32 @@ use crate::expr_parse::ExprToken;
 #[derive(Debug, PartialEq, Clone)]
 pub enum Token {
     // Arithmetic
-    Plus,    // +
-    Minus,   // -
-    Star,    // *
-    Slash,   // /
-    Percent, // %
-    Hat,     // ^
+    Plus,      // +
+    Minus,     // -
+    Star,      // *
+    Slash,     // /
+    Percent,   // %
+    Power,     // ^^
+    BitAnd,    // &
+    BitOr,     // |
+    BitXor,    // ^
+    BitLShift, // <<
+    BitRShift, // >>
 
     // Logical
-    Eq,      // ==
-    Ne,      // !=
-    Gt,      // >
-    Lt,      // <
-    Ge,      // >=
-    Le,      // <=
-    And,     // &&
-    Or,      // ||
-    Not,     // !
-    Within,  // Within
-    Without, // Without
+    Eq,         // ==
+    Ne,         // !=
+    Gt,         // >
+    Lt,         // <
+    Ge,         // >=
+    Le,         // <=
+    And,        // &&
+    Or,         // ||
+    Not,        // !
+    Within,     // Within
+    Without,    // Without
+    StartsWith, // String StartsWith
+    EndsWith,   // String EndsWith
 
     // Precedence
     LBrace, // (
@@ -84,12 +91,14 @@ impl ExprToken for Token {
         match self {
             Plus | Minus => 95,
             Star | Slash | Percent => 100,
-            Hat => 120,
+            Power => 120,
 
-            Eq | Ne | Gt | Lt | Ge | Le | Within | Without => 80,
+            Eq | Ne | Gt | Lt | Ge | Le | Within | Without | StartsWith | EndsWith => 80,
             And => 75,
             Or => 70,
             Not => 110,
+            BitLShift | BitRShift => 130,
+            BitAnd | BitOr => 140,
 
             LBrace | RBrace => 0,
             _ => 200,
@@ -128,6 +137,8 @@ pub enum PartialToken {
     LCBracket,
     /// To terminate a map, '}'
     RCBracket,
+    /// A '^' character
+    Hat,
 }
 
 #[inline]
@@ -144,11 +155,11 @@ fn char_to_partial_token(c: char) -> PartialToken {
         ']' => PartialToken::RBracket,
         '{' => PartialToken::LCBracket,
         '}' => PartialToken::RCBracket,
+        '^' => PartialToken::Hat,
         '+' => PartialToken::Token(Token::Plus),
         '*' => PartialToken::Token(Token::Star),
         '/' => PartialToken::Token(Token::Slash),
         '%' => PartialToken::Token(Token::Percent),
-        '^' => PartialToken::Token(Token::Hat),
         '(' => PartialToken::Token(Token::LBrace),
         ')' => PartialToken::Token(Token::RBrace),
         c => {
@@ -346,6 +357,10 @@ fn partial_tokens_to_tokens(mut tokens: &[PartialToken]) -> ExprResult<Vec<Token
                     Some(Token::Within)
                 } else if literal.to_lowercase().as_str() == "without" {
                     Some(Token::Without)
+                } else if literal.to_lowercase().as_str() == "startswith" {
+                    Some(Token::StartsWith)
+                } else if literal.to_lowercase().as_str() == "endswith" {
+                    Some(Token::EndsWith)
                 } else {
                     // To parse the float of the form `<coefficient>e{+,-}<exponent>`,
                     // for example [Literal("10e"), Minus, Literal("3")] => "1e-3".parse().
@@ -424,6 +439,7 @@ fn partial_tokens_to_tokens(mut tokens: &[PartialToken]) -> ExprResult<Vec<Token
             },
             PartialToken::Gt => match second {
                 Some(PartialToken::Eq) => Some(Token::Ge),
+                Some(PartialToken::Gt) => Some(Token::BitRShift), // >>
                 _ => {
                     cutoff = 1;
                     Some(Token::Gt)
@@ -431,6 +447,7 @@ fn partial_tokens_to_tokens(mut tokens: &[PartialToken]) -> ExprResult<Vec<Token
             },
             PartialToken::Lt => match second {
                 Some(PartialToken::Eq) => Some(Token::Le),
+                Some(PartialToken::Lt) => Some(Token::BitLShift), // <<
                 _ => {
                     cutoff = 1;
                     Some(Token::Lt)
@@ -438,11 +455,19 @@ fn partial_tokens_to_tokens(mut tokens: &[PartialToken]) -> ExprResult<Vec<Token
             },
             PartialToken::Ampersand => match second {
                 Some(PartialToken::Ampersand) => Some(Token::And),
-                _ => return Err(ExprError::unmatched_partial_token(first, second)),
+                // _ => return Err(ExprError::unmatched_partial_token(first, second)),
+                _ => {
+                    cutoff = 1;
+                    Some(Token::BitAnd)
+                }
             },
             PartialToken::VerticalBar => match second {
                 Some(PartialToken::VerticalBar) => Some(Token::Or),
-                _ => return Err(ExprError::unmatched_partial_token(first, second)),
+                // _ => return Err(ExprError::unmatched_partial_token(first, second)),
+                _ => {
+                    cutoff = 1;
+                    Some(Token::BitOr)
+                }
             },
             PartialToken::LBracket | PartialToken::LCBracket => {
                 let is_bracket = first == PartialToken::LBracket;
@@ -487,6 +512,13 @@ fn partial_tokens_to_tokens(mut tokens: &[PartialToken]) -> ExprResult<Vec<Token
                     }
                 }
             }
+            PartialToken::Hat => match second {
+                Some(PartialToken::Hat) => Some(Token::Power),
+                _ => {
+                    cutoff = 1;
+                    Some(Token::BitXor)
+                }
+            },
             _ => {
                 return Err(format!("invalid token: {:?}", first)
                     .as_str()
@@ -515,7 +547,7 @@ mod tests {
     #[test]
     fn test_tokenize() {
         // ((1 + 2) * 2) ^ 3 == 6 ^ 3
-        let case1 = tokenize("((1 + 1e-3) * 2) ^ 3 == 6 ^ 3").unwrap();
+        let case1 = tokenize("((1 + 1e-3) * 2) ^^ 3 == 6 ^^ 3").unwrap();
         let expected_case1 = vec![
             Token::LBrace,
             Token::LBrace,
@@ -526,11 +558,11 @@ mod tests {
             Token::Star,
             Token::Int(2),
             Token::RBrace,
-            Token::Hat,
+            Token::Power,
             Token::Int(3),
             Token::Eq,
             Token::Int(6),
-            Token::Hat,
+            Token::Power,
             Token::Int(3),
         ];
 
@@ -593,6 +625,32 @@ mod tests {
 
         let case9 = tokenize("[]");
         assert_eq!(case9.unwrap(), vec![Token::IdentArray(vec![])]);
+
+        let case10 = tokenize("\"John\" StartsWith \"Jo\"");
+        let expected_case10 =
+            vec![Token::String("John".to_string()), Token::StartsWith, Token::String("Jo".to_string())];
+        assert_eq!(case10.unwrap(), expected_case10);
+
+        let case11 = tokenize("\"John\" EndsWith \"hn\"");
+        let expected_case11 =
+            vec![Token::String("John".to_string()), Token::EndsWith, Token::String("hn".to_string())];
+        assert_eq!(case11.unwrap(), expected_case11);
+
+        let case12 = tokenize("15 & 32");
+        let expected_case12 = vec![Token::Int(15), Token::BitAnd, Token::Int(32)];
+        assert_eq!(case12.unwrap(), expected_case12);
+
+        let case13 = tokenize("15 | 32");
+        let expected_case13 = vec![Token::Int(15), Token::BitOr, Token::Int(32)];
+        assert_eq!(case13.unwrap(), expected_case13);
+
+        let case14 = tokenize("15 << 2");
+        let expected_case14 = vec![Token::Int(15), Token::BitLShift, Token::Int(2)];
+        assert_eq!(case14.unwrap(), expected_case14);
+
+        let case15 = tokenize("15 >> 2");
+        let expected_case15 = vec![Token::Int(15), Token::BitRShift, Token::Int(2)];
+        assert_eq!(case15.unwrap(), expected_case15);
     }
 
     #[test]
@@ -604,6 +662,7 @@ mod tests {
             ExprError::unmatched_partial_token(PartialToken::Eq, Some(PartialToken::Whitespace))
         );
 
+        /*
         let case2 = tokenize("1 & 2");
         assert_eq!(
             case2.err().unwrap(),
@@ -615,6 +674,7 @@ mod tests {
             case3.err().unwrap(),
             ExprError::unmatched_partial_token(PartialToken::VerticalBar, Some(PartialToken::Whitespace))
         );
+         */
 
         let case4 = tokenize("-a");
         assert_eq!(

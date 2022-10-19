@@ -87,6 +87,7 @@ message GetSchemaResponse {
 
 message IngestDataRequest {
   string dataPath = 1;
+  map<string, string> config = 2;
 }
 
 message IngestDataResponse {

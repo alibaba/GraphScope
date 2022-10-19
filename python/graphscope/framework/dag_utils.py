@@ -54,11 +54,17 @@ def bind_app(graph, app_assets):
         analytical engine how to build the app.
     """
     inputs = [graph.op, app_assets.op]
+    config = {}
+    config[types_pb2.APP_ALGO] = utils.s_to_attr(app_assets.algo)
+    if app_assets.cmake_extra_options is not None:
+        config[types_pb2.CMAKE_EXTRA_OPTIONS] = utils.s_to_attr(
+            app_assets.cmake_extra_options
+        )
     op = Operation(
         graph.session_id,
         types_pb2.BIND_APP,
         inputs=inputs,
-        config={types_pb2.APP_ALGO: utils.s_to_attr(app_assets.algo)},
+        config=config,
         output_types=types_pb2.BOUND_APP,
     )
     return op
