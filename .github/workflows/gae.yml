@@ -6,16 +6,11 @@ on:
   push:
     branches:
       - main
-    paths-ignore:
-      - 'CONTRIBUTORS'
-      - 'LICENSE'
-      - 'NOTICE.txt'
-      - '**.md'
-      - '**.rst'
-      - 'docs/**'
-      - 'demo/**'
-      - 'scripts/**'
-      - 'tutorials/**'
+    paths:
+      - 'analytical_engine/**'
+      - '.github/workflows/gae.yml'
+      - 'coordinator/gscoordinator/template/CMakeLists.template' # to verify whether java app can be successfully built when CMakeLists.template changes.
+      - '!analytical_engine/**.md'
   pull_request:
     branches:
       - main
