@@ -68,6 +68,7 @@ def non_exist_java_class():
     os.environ.get("RUN_JAVA_TESTS") != "ON",
     reason="Java SDK is disabled, skip this test.",
 )
+@pytest.mark.timeout(3600)
 def test_load_non_existing_jar(
     not_exist_jar, projected_graph_sssp_class, non_exist_java_class
 ):
@@ -81,6 +82,7 @@ def test_load_non_existing_jar(
     os.environ.get("RUN_JAVA_TESTS") != "ON",
     reason="Java SDK is disabled, skip this test.",
 )
+@pytest.mark.timeout(3600)
 def test_load_not_a_jar(not_jar_file, projected_graph_sssp_class, non_exist_java_class):
     with pytest.raises(KeyError):
         sssp = JavaApp(not_jar_file, projected_graph_sssp_class)
@@ -92,6 +94,7 @@ def test_load_not_a_jar(not_jar_file, projected_graph_sssp_class, non_exist_java
     os.environ.get("RUN_JAVA_TESTS") != "ON",
     reason="Java SDK is disabled, skip this test.",
 )
+@pytest.mark.timeout(3600)
 def test_load_gar_file(a_gar_file, projected_graph_sssp_class, non_exist_java_class):
     with pytest.raises(KeyError):
         sssp = JavaApp(a_gar_file, projected_graph_sssp_class)
@@ -103,6 +106,7 @@ def test_load_gar_file(a_gar_file, projected_graph_sssp_class, non_exist_java_cl
     os.environ.get("RUN_JAVA_TESTS") != "ON",
     reason="Java SDK is disabled, skip this test.",
 )
+@pytest.mark.timeout(3600)
 def test_load_empty_jar(empty_jar, projected_graph_sssp_class, non_exist_java_class):
     with pytest.raises(KeyError):
         sssp = JavaApp(empty_jar, projected_graph_sssp_class)
@@ -114,6 +118,7 @@ def test_load_empty_jar(empty_jar, projected_graph_sssp_class, non_exist_java_cl
     os.environ.get("RUN_JAVA_TESTS") != "ON",
     reason="Java SDK is disabled, skip this test.",
 )
+@pytest.mark.timeout(3600)
 def test_load_correct_jar(projected_graph_sssp_class, demo_jar):
     sssp = JavaApp(demo_jar, projected_graph_sssp_class)
 
@@ -122,6 +127,7 @@ def test_load_correct_jar(projected_graph_sssp_class, demo_jar):
     os.environ.get("RUN_JAVA_TESTS") != "ON",
     reason="Java SDK is disabled, skip this test.",
 )
+@pytest.mark.timeout(3600)
 def test_sssp_property_vertex_data(
     demo_jar,
     graphscope_session,
@@ -151,6 +157,7 @@ def projected_p2p_graph_loaded_by_giraph(
     os.environ.get("RUN_JAVA_TESTS") != "ON",
     reason="Java SDK is disabled, skip this test.",
 )
+@pytest.mark.timeout(3600)
 def test_giraph_app(
     demo_jar,
     graphscope_session,
