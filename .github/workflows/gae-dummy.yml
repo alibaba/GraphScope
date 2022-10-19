@@ -8,6 +8,7 @@ on:
       - '**'
       - '!analytical_engine/**'
       - '!.github/workflows/gae.yml'
+      - '!coordinator/gscoordinator/template/CMakeLists.template' # to verify whether java app can be successfully built when CMakeLists.template changes.
       - 'analytical_engine/**.md'
 
 concurrency:

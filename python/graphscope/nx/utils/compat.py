@@ -24,12 +24,16 @@ to make the graph algorithms runs on grape-engine.
 
 import copy
 import functools
-import imp
 import inspect
+import warnings
 from enum import Enum
 from types import FunctionType
 from types import LambdaType
 from types import ModuleType
+
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    import imp
 
 __all__ = [
     "internal_name",

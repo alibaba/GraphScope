@@ -423,7 +423,7 @@ if(ENABLE_JAVA_SDK)
     set(GAE_JAVA_GRAPHX_JAR "${GAE_JAVA_DIR}/graphx-on-graphscope/target/graphx-on-graphscope-${GRAPHSCOPE_ANALYTICAL_JAR_VERSION}-shaded.jar")
     add_custom_command(
         OUTPUT "${GAE_JAVA_RUNTIME_DIR}/target/native/libgrape-jni.so"
-        COMMAND mvn clean install -DskipTests --quiet
+        COMMAND mvn -Drevision=${GRAPHSCOPE_ANALYTICAL_JAR_VERSION} clean install -DskipTests --quiet
         DEPENDS gs_proto
         WORKING_DIRECTORY ${GAE_JAVA_DIR}
         COMMENT "Building GAE-java..."
