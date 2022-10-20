@@ -44,5 +44,5 @@ public @interface GraphType {
 
     String fragType() default "";
 
-    String vertexDataType() default  "";
+    String vertexDataType() default "";
 }

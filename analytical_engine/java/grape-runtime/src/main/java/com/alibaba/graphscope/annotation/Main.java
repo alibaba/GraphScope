@@ -28,7 +28,7 @@ public class Main {
     public static final boolean verbose = false;
     private static Logger logger = LoggerFactory.getLogger(Main.class.getName());
 
-    //classpath, output dir, graph template, vertexDataType, javaFragName
+    // classpath, output dir, graph template, vertexDataType, javaFragName
     public static void main(String[] args) {
         if (args.length < 4 || args.length > 5) {
             logger.error("Expected 4 or 5 params.");
@@ -36,11 +36,13 @@ public class Main {
         }
         String res;
         if (args.length == 4) {
-            res = GraphScopeAppScanner.scanAppAndGenerate(args[0], args[1], args[2], args[3], false);
+            res =
+                    GraphScopeAppScanner.scanAppAndGenerate(
+                            args[0], args[1], args[2], args[3], false);
         } else {
             res =
                     GraphScopeAppScanner.scanAppAndGenerate(
-                            args[0], args[1], args[2],args[3], Boolean.valueOf(args[4]));
+                            args[0], args[1], args[2], args[3], Boolean.valueOf(args[4]));
         }
         logger.info("Files are generated in " + res);
     }

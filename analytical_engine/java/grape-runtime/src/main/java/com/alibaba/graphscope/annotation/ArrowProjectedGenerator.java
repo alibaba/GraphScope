@@ -1,10 +1,7 @@
 package com.alibaba.graphscope.annotation;
 
 import static com.alibaba.graphscope.annotation.Utils.addCXXTemplate;
-import static com.alibaba.graphscope.annotation.Utils.addColumn;
-import static com.alibaba.graphscope.annotation.Utils.addSharedPtr;
 import static com.alibaba.graphscope.annotation.Utils.getMessageTypes;
-import static com.alibaba.graphscope.annotation.Utils.vertexDataContextAddTemplate;
 import static com.alibaba.graphscope.utils.CppClassName.ARROW_PROJECTED_FRAGMENT;
 
 import com.alibaba.fastffi.CXXTemplate;
@@ -106,7 +103,10 @@ public class ArrowProjectedGenerator {
     }
 
     public void generate() {
-        addTemplate(TypedArray.class.getName(), new String[] {cppEdata,cppVdata}, new String[] {javaEdata,javaVdata});
+        addTemplate(
+                TypedArray.class.getName(),
+                new String[] {cppEdata, cppVdata},
+                new String[] {javaEdata, javaVdata});
         addTemplate(PropertyNbrUnit.class.getName(), new String[] {cppVid}, new String[] {javaVid});
         addTemplate(ProjectedNbr.class.getName(), cppVid, cppEdata, javaVid, javaEdata);
         addTemplate(ProjectedAdjList.class.getName(), cppVid, cppEdata, javaVid, javaEdata);
@@ -149,14 +149,14 @@ public class ArrowProjectedGenerator {
         AnnotationSpec.Builder ffiGenVertexDataContext = AnnotationSpec.builder(FFIGen.class);
         ffiGenVertexDataContext.addMember("type", "$S", FFIVertexDataContext.class.getName());
         ffiGenVertexDataContext.addMember(
-            "templates",
-            "$L",
-            AnnotationSpec.builder(CXXTemplate.class)
-                .addMember("cxx", "$S", foreignFragName)
-                .addMember("cxx", "$S", vertexDataType)
-                .addMember("java", "$S", javaFragName)
-                .addMember("java", "$S", javaVertexDataType)
-                .build());
+                "templates",
+                "$L",
+                AnnotationSpec.builder(CXXTemplate.class)
+                        .addMember("cxx", "$S", foreignFragName)
+                        .addMember("cxx", "$S", vertexDataType)
+                        .addMember("java", "$S", javaFragName)
+                        .addMember("java", "$S", javaVertexDataType)
+                        .build());
         ffiGenBatchBuilder.addMember("value", "$L", ffiGenVertexDataContext.build());
     }
 

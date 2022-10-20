@@ -22,7 +22,6 @@ import static com.alibaba.graphscope.annotation.Utils.addLongCXXTemplate;
 import static com.alibaba.graphscope.annotation.Utils.addSharedPtr;
 import static com.alibaba.graphscope.annotation.Utils.addSignedIntCXXTemplate;
 import static com.alibaba.graphscope.annotation.Utils.addSignedLongCXXTemplate;
-import static com.alibaba.graphscope.annotation.Utils.cpp2Java;
 import static com.alibaba.graphscope.annotation.Utils.getMessageTypes;
 import static com.alibaba.graphscope.annotation.Utils.java2Cpp;
 import static com.alibaba.graphscope.annotation.Utils.makeParameterizedType;
