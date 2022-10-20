@@ -242,7 +242,7 @@ public class GrapeSkipAnnotationProcessor extends AbstractProcessor {
 
     private void writeTypeSpec(String packageName, TypeSpec typeSpec, TypeElement typeElement) {
         JavaFile javaFile = JavaFile.builder(packageName, typeSpec).build();
-        messager.printMessage(Kind.NOTE, javaFile.toString(), typeElement);
+//        messager.printMessage(Kind.NOTE, javaFile.toString(), typeElement);
         try {
             Filer filter = processingEnv.getFiler();
             javaFile.writeTo(filter);

@@ -834,10 +834,8 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
 
     app_type = parent_op.attr[types_pb2.APP_ALGO].s.decode("utf-8")
 
-    # for giraph app, we need to add args into orginal query_args, which is a json string
-    # first one should be user params, second should be lib_path
-    if app_type.startswith("giraph:"):
-        logger.debug("len {}".format(len(op.query_args.args)))
+    if app_type.startswith("java_pie:") or app_type.startswith("giraph:"):
+        logger.debug("args len: {}".format(len(op.query_args.args)))
         if len(op.query_args.args) == 1:
             original_json_param = data_types_pb2.StringValue()
             op.query_args.args[0].Unpack(original_json_param)
@@ -850,8 +848,7 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
             raise RuntimeError(
                 "Unexpected num of params{}".format(len(op.query_args.args))
             )
-
-        user_params["app_class"] = GIRAPH_DIRVER_CLASS
+        # we need extra param in first arg.
         user_params["jar_name"] = engine_java_class_path
         user_params["frag_name"] = "gs::ArrowProjectedFragment<{},{},{},{}>".format(
             parent_op.attr[types_pb2.OID_TYPE].s.decode("utf-8"),
@@ -859,20 +856,25 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
             parent_op.attr[types_pb2.V_DATA_TYPE].s.decode("utf-8"),
             parent_op.attr[types_pb2.E_DATA_TYPE].s.decode("utf-8"),
         )
-        user_params["user_app_class"] = app_type[7:]
+
+        # for giraph app, we need to add args into orginal query_args, which is a json string
+        # first one should be user params, second should be lib_path
+        if app_type.startswith("giraph:"):
+            user_params["app_class"] = GIRAPH_DIRVER_CLASS
+            user_params["user_app_class"] = app_type[7:]
+        else:
+            user_params["app_class"] = app_type.split(":")[-1]
         logger.debug("user params {}".format(json.dumps(user_params)))
-        param = Any()
-        param.Pack(data_types_pb2.StringValue(value=json.dumps(user_params)))
-        op.query_args.args.extend([param])
+        new_user_param = Any()
+        new_user_param.Pack(data_types_pb2.StringValue(value=json.dumps(user_params)))
+        op.query_args.args.extend([new_user_param])
 
-    if app_type == "java_pie" or app_type.startswith("giraph:"):
         # For java app, we need lib path as an explicit arg.
-        param = Any()
+        lib_param = Any()
         lib_path = parent_op.attr[types_pb2.APP_LIBRARY_PATH].s.decode("utf-8")
-        param.Pack(data_types_pb2.StringValue(value=lib_path))
-        op.query_args.args.extend([param])
-
         logger.info("Java app: Lib path {}".format(lib_path))
+        lib_param.Pack(data_types_pb2.StringValue(value=lib_path))
+        op.query_args.args.extend([lib_param])
 
 
 def _pre_process_for_unload_graph_op(op, op_result_pool, key_to_op, **kwargs):
