@@ -228,31 +228,43 @@ def get_graph_sha256(attr):
     return hashlib.sha256(graph_class.encode("utf-8")).hexdigest()
 
 
-def check_java_app_graph_consistency(self, app_class, graph_type):
-    splited = graph_type.split("<")
-    java_app_type_params = self.frag_param_str.split(",")
+def check_java_app_graph_consistency(
+    app_class, cpp_graph_type, java_class_template_str
+):
+    splited = cpp_graph_type.split("<")
+    java_app_type_params = java_class_template_str[:-1].split("<")[-1].split(",")
     if len(splited) != 2:
-        raise Exception("Unrecoginizable graph template str: {}".format(graph_type))
+        raise Exception("Unrecoginizable graph template str: {}".format(cpp_graph_type))
     if splited[0] == "vineyard::ArrowFragment":
         if app_class.find("Property") == -1:
             raise RuntimeError(
-                "Expected property app, inconsistent app and graph {}, {}".format(java_app_class, graph_type)
+                "Expected property app, inconsistent app and graph {}, {}".format(
+                    app_class, cpp_graph_type
+                )
             )
         if len(java_app_type_params) != 1:
             raise RuntimeError("Expected 4 type params in java app")
-    if splited[1] == "gs::ArrowProjectedFragment":
+
+    if splited[0] == "gs::ArrowProjectedFragment":
         if app_class.find("Projected") == -1:
             raise RuntimeError(
-                "Expected Projected app, inconsistent app and graph {}, {}".format(java_app_class, graph_type)
+                "Expected Projected app, inconsistent app and graph {}, {}".format(
+                    app_class, cpp_graph_type
+                )
             )
         if len(java_app_type_params) != 4:
             raise RuntimeError("Expected 4 type params in java app")
+
     graph_actual_type_params = splited[1][:-1].split(",")
     for i in range(0, len(java_app_type_params)):
         graph_actual_type_param = graph_actual_type_params[i]
         java_app_type_param = java_app_type_params[i]
         if not _type_param_consistent(graph_actual_type_param, java_app_type_param):
-            return False
+            raise RuntimeError(
+                "Error in check app and graph consistency, type params index {}, cpp: {}, java: {}".format(
+                    i, graph_actual_type_param, java_app_type_param
+                )
+            )
     return True
 
 
@@ -310,8 +322,7 @@ def compile_app(
                 java_app_class, graph_type
             )
         )
-        check_java_app_graph_consistency(app_class, graph_type):
-
+        check_java_app_graph_consistency(app_class, graph_type, java_app_class)
 
     os.chdir(app_dir)
 
