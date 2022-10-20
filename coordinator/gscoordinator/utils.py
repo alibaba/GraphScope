@@ -231,27 +231,24 @@ def get_graph_sha256(attr):
 def check_java_app_graph_consistency(self, app_class, graph_type):
     splited = graph_type.split("<")
     java_app_type_params = self.frag_param_str.split(",")
-    num_type_params = 0
     if len(splited) != 2:
         raise Exception("Unrecoginizable graph template str: {}".format(graph_type))
     if splited[0] == "vineyard::ArrowFragment":
         if app_class.find("Property") == -1:
-            logger.error("Expected property app")
-            return False
+            raise RuntimeError(
+                "Expected property app, inconsistent app and graph {}, {}".format(java_app_class, graph_type)
+            )
         if len(java_app_type_params) != 1:
-            logger.error("Expected one type params.")
-            return False
-        num_type_params = 1
+            raise RuntimeError("Expected 4 type params in java app")
     if splited[1] == "gs::ArrowProjectedFragment":
         if app_class.find("Projected") == -1:
-            logger.error("Expected simple app")
-            return False
+            raise RuntimeError(
+                "Expected Projected app, inconsistent app and graph {}, {}".format(java_app_class, graph_type)
+            )
         if len(java_app_type_params) != 4:
-            logger.error("Expected 4 type params")
-            return False
-        num_type_params = 4
+            raise RuntimeError("Expected 4 type params in java app")
     graph_actual_type_params = splited[1][:-1].split(",")
-    for i in range(0, num_type_params):
+    for i in range(0, len(java_app_type_params)):
         graph_actual_type_param = graph_actual_type_params[i]
         java_app_type_param = java_app_type_params[i]
         if not _type_param_consistent(graph_actual_type_param, java_app_type_param):
@@ -313,10 +310,8 @@ def compile_app(
                 java_app_class, graph_type
             )
         )
-        if not check_java_app_graph_consistency(app_class, graph_type):
-            raise RuntimeError(
-                "Inconsistent app and graph {}, {}".format(java_app_class, graph_type)
-            )
+        check_java_app_graph_consistency(app_class, graph_type):
+
 
     os.chdir(app_dir)
 
