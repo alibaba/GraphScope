@@ -566,11 +566,11 @@ fn build_logical_plan(
     // Fuse `source_vertex_label` into source, for efficiently scan
     // TODO: However, we may still have `hasLabel(xx)` in predicate of source_vertex_filter, which is not necessary.
     // TODO: btw, index scan case (e.g., `hasLabel(xx).has('id',xx)`), if exists, should be in the first priority.
-    let query_params = query_params(vec![source_vertex_label.into()], vec![], source_vertex_filter);
+    let query_param = query_params(vec![source_vertex_label.into()], vec![], source_vertex_filter);
     let source_opr = pb::Scan {
         scan_opt: 0,
         alias: Some((source_vertex_id as i32).into()),
-        params: Some(query_params),
+        params: Some(query_param),
         idx_predicate: None,
     };
     let mut pre_node = pb::logical_plan::Node { opr: Some(source_opr.into()), children: vec![] };
@@ -680,14 +680,31 @@ fn build_logical_plan(
     // Here, origin_pattern.vertices.len() indicates total number of pattern vertices;
     // and origin_pattern.tag_vertex_map.len() indicates the number of pattern vertices with user-given aliases
     if origin_pattern.vertices.len() > origin_pattern.tag_vertex_map.len() {
-        let mut mappings = Vec::with_capacity(origin_pattern.tag_vertex_map.len());
-        for (tag_id, _) in &origin_pattern.tag_vertex_map {
-            let expr = str_to_expr_pb(format!("@{}", tag_id)).ok();
-            let mapping = pb::project::ExprAlias { expr, alias: Some((*tag_id as i32).into()) };
-            mappings.push(mapping);
+        // TODO: Project occurs bug when get properties of the projected tags later.
+        // let mut mappings = Vec::with_capacity(origin_pattern.tag_vertex_map.len());
+        // for (tag_id, _) in &origin_pattern.tag_vertex_map {
+        //     let expr = str_to_expr_pb(format!("@{}", tag_id)).ok();
+        //     let mapping = pb::project::ExprAlias { expr, alias: Some((*tag_id as i32).into()) };
+        //     mappings.push(mapping);
+        // }
+        // let project = pb::Project { mappings, is_append: false }.into();
+        // append_opr(&mut match_plan, &mut pre_node, project, &mut child_offset);
+        let mut remove_tags = vec![];
+        for (_, vertex) in origin_pattern.vertices.iter() {
+            if !origin_pattern
+                .tag_vertex_map
+                .contains_key(&(vertex.id as TagId))
+            {
+                remove_tags.push((vertex.id as i32).into());
+            }
         }
-        let project = pb::Project { mappings, is_append: false }.into();
-        append_opr(&mut match_plan, &mut pre_node, project, &mut child_offset);
+        let auxilia = pb::Auxilia {
+            tag: None,
+            params: Some(query_params(vec![], vec![], None)),
+            alias: None,
+            remove_tags,
+        };
+        append_opr(&mut match_plan, &mut pre_node, auxilia.into(), &mut child_offset);
     }
     // and append the final op
     pre_node.children.push(child_offset);
