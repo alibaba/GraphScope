@@ -133,7 +133,12 @@ public class GraphScopeAppScanner {
             String vertexDataType,
             boolean javaFragName) {
         return new GraphScopeAppScanner(
-                        classpath, "empty", outputDirectory, graphTemplateString,vertexDataType, javaFragName)
+                        classpath,
+                        "empty",
+                        outputDirectory,
+                        graphTemplateString,
+                        vertexDataType,
+                        javaFragName)
                 .scanAppAndGenerateImpl();
     }
 
@@ -220,13 +225,11 @@ public class GraphScopeAppScanner {
                             "",
                             "",
                             "",
-                        vertexDataType);
+                            vertexDataType);
         }
 
         return generate();
     }
-
-
 
     // gs::ArrowProjectedFragment
     // can also be ArrowProjectedFragment<java.lang.Long,....>

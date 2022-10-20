@@ -96,8 +96,8 @@ public class AppBaseParser {
         }
     }
 
-    private static String getVertexDataType(Class<?> ctxClass){
-        Type[] types = getExtendTypeParams(ctxClass,2);
+    private static String getVertexDataType(Class<?> ctxClass) {
+        Type[] types = getExtendTypeParams(ctxClass, 2);
         return types[1].getTypeName();
     }
 
@@ -176,17 +176,14 @@ public class AppBaseParser {
         return typeParams;
     }
 
-    private static String writableToJava(String typeName){
-        if (typeName.contains("DoubleWritable")){
+    private static String writableToJava(String typeName) {
+        if (typeName.contains("DoubleWritable")) {
             return "java.lang.Double";
-        }
-        else if (typeName.contains("IntWritable")){
+        } else if (typeName.contains("IntWritable")) {
             return "java.lang.Integer";
-        }
-        else if (typeName.contains("LongWritable")){
+        } else if (typeName.contains("LongWritable")) {
             return "java.lang.Long";
-        }
-        else throw new IllegalStateException("Not recognized writable " + typeName);
+        } else throw new IllegalStateException("Not recognized writable " + typeName);
     }
 
     private static Method getMethod(Class<?> clz) {
