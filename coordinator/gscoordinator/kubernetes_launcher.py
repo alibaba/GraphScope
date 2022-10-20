@@ -251,7 +251,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
             self._engine_pod_node_selector = dict()
 
         self._host0 = None
-        self._pod_name_list = None
+        self._pod_name_list = []
         self._pod_ip_list = None
         self._pod_host_ip_list = None
 
@@ -365,7 +365,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
 
     def launch_vineyard(self):
         """Launch vineyardd in k8s cluster."""
-        # TODO: vineyard is launched by engine by now. 
+        # TODO: vineyard is launched by engine by now.
         pass
 
     def close_etcd(self):

@@ -41,6 +41,7 @@ def graphscope_session():
     yield sess
     sess.close()
 
+
 test_repo_dir = os.path.expandvars("${GS_TEST_DIR}")
 new_property_dir = os.path.join(test_repo_dir, "new_property", "v2_e2")
 property_dir = os.path.join(test_repo_dir, "property")

@@ -22,6 +22,8 @@
 from graphscope.version import __is_prerelease__
 from graphscope.version import __version__
 
+registry = "registry.cn-hongkong.aliyuncs.com"
+
 
 class GSConfig(object):
     # the coordinator endpoint of a pre-launched GraphScope instance.
@@ -35,12 +37,29 @@ class GSConfig(object):
 
     k8s_namespace = None
 
-    # image
+    # etcd image
     k8s_etcd_image = "quay.io/coreos/etcd:v3.4.13"
-    k8s_gs_image = (
-        f"registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:{__version__}"
-    )
 
+    # All in one image
+    k8s_gs_image = f"{registry}/graphscope/graphscope:{__version__}"
+
+    # Coordinator image
+    # Also could be used as a client image
+    k8s_coordinator_image = f"{registry}/graphscope/coordinator:{__version__}"
+
+    # GAE images
+    k8s_gae_image = f"{registry}/graphscope/gae:{__version__}"
+    k8s_gae_java_image = f"{registry}/graphscope/gae-java:{__version__}"
+
+    # GIE images
+    k8s_gie_frontend_image = f"{registry}/graphscope/gie-frontend:{__version__}"
+    k8s_gie_executor_image = f"{registry}/graphscope/gie-executor:{__version__}"
+
+    # GLE image
+    k8s_gle_image = f"{registry}/graphscope/gle:{__version__}"
+
+    # Dataset image
+    k8s_dataset_image = f"{registry}/graphscope/dataset:{__version__}"
 
     # image pull configuration
     k8s_image_pull_policy = "IfNotPresent"
@@ -102,9 +121,6 @@ class GSConfig(object):
 
     # Demo dataset related
     mount_dataset = None
-    k8s_dataset_image = (
-        f"registry.cn-hongkong.aliyuncs.com/graphscope/dataset:{__version__}"
-    )
 
     # download_retries
     dataset_download_retries = 3

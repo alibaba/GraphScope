@@ -50,7 +50,6 @@ message ConnectSessionResponse {
   // session handle to close the session.
   string session_id = 2;
   ClusterType cluster_type = 3;
-  repeated string host_names = 5;
   int32 num_workers = 6;
   string namespace = 7;
 }
@@ -175,6 +174,7 @@ message CreateAnalyticalInstanceRequest {
 message CreateAnalyticalInstanceResponse {
   string instance_id = 1;
   string engine_config = 2;
+  repeated string host_names = 5;
 };
 
 message CreateInteractiveInstanceRequest {

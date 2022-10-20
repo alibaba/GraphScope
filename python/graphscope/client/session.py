@@ -129,6 +129,7 @@ class _FetchHandler(object):
 
     def _rebuild_context(self, seq, op_result: op_def_pb2.OpResult):
         from graphscope.framework.context import Context
+
         # get context dag node as base
         context_dag_node = self._fetches[seq]
         ret = json.loads(op_result.result.decode("utf-8"))
@@ -136,12 +137,11 @@ class _FetchHandler(object):
         if context_type == "dynamic_vertex_data":
             # for nx
             from graphscope.framework.context import DynamicVertexDataContext
+
             return DynamicVertexDataContext(context_dag_node, ret["context_key"])
         return Context(context_dag_node, ret["context_key"], ret["context_schema"])
 
-    def _rebuild_gremlin_results(
-        self, seq, op_result: op_def_pb2.OpResult
-    ):
+    def _rebuild_gremlin_results(self, seq, op_result: op_def_pb2.OpResult):
         from graphscope.interactive.query import ResultSet
 
         # get result set node as base
@@ -1035,7 +1035,6 @@ class Session(object):
             (
                 self._session_id,
                 self._cluster_type,
-                self._pod_name_list,
                 self._config_params["num_workers"],
                 self._config_params["k8s_namespace"],
             ) = self._grpc_client.connect(
@@ -1044,14 +1043,17 @@ class Session(object):
                     "dangling_timeout_seconds"
                 ],
             )
-            self._pod_name_list = list(self._pod_name_list)
             # fetch logs
             if self._config_params["addr"] or self._cluster_type == types_pb2.K8S:
                 self._grpc_client.fetch_logs()
             _session_dict[self._session_id] = self
             # Launch analytical engine right after session connected.
             # This may be changed to on demand launching in the future.
-            self._engine_config = self._grpc_client.create_analytical_instance()
+            (
+                self._engine_config,
+                pod_name_list,
+            ) = self._grpc_client.create_analytical_instance()
+            self._pod_name_list = list(pod_name_list)
         except Exception:
             self.close()
             raise
@@ -1239,9 +1241,7 @@ class Session(object):
         """
         logger.info("client: adding lib %s", resource_name)
         if not os.path.isfile(resource_name):
-            raise RuntimeError(
-                "Resource {} can not be found".format(resource_name)
-            )
+            raise RuntimeError("Resource {} can not be found".format(resource_name))
         # pack into a gar file
         garfile = InMemoryZip()
         resource_reader = open(resource_name, "rb")

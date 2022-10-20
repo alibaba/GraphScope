@@ -48,25 +48,26 @@ sys.stdout = StdStreamWrapper(sys.stdout)
 sys.stderr = StdStreamWrapper(sys.stderr)
 
 from graphscope.framework.utils import PipeMerger
-from graphscope.framework.utils import s_to_attr, i_to_attr
+from graphscope.framework.utils import i_to_attr
+from graphscope.framework.utils import s_to_attr
 from graphscope.proto import coordinator_service_pb2_grpc
 from graphscope.proto import error_codes_pb2
 from graphscope.proto import message_pb2
 from graphscope.proto import types_pb2
 
-from gscoordinator.kubernetes_launcher import KubernetesClusterLauncher
 from gscoordinator.dag_manager import DAGManager
 from gscoordinator.dag_manager import GSEngine
+from gscoordinator.kubernetes_launcher import KubernetesClusterLauncher
 from gscoordinator.monitor import Monitor
 from gscoordinator.object_manager import InteractiveQueryManager
 from gscoordinator.object_manager import LearningInstanceManager
 from gscoordinator.object_manager import ObjectManager
+from gscoordinator.op_executor import OperationExecutor
+from gscoordinator.utils import GS_GRPC_MAX_MESSAGE_LENGTH
 from gscoordinator.utils import check_gremlin_server_ready
 from gscoordinator.utils import create_single_op_dag
 from gscoordinator.utils import str2bool
-from gscoordinator.utils import GS_GRPC_MAX_MESSAGE_LENGTH
 from gscoordinator.version import __version__
-from gscoordinator.op_executor import OperationExecutor
 
 
 def catch_unknown_errors(response_on_error=None, using_yield=False):
@@ -184,7 +185,6 @@ class CoordinatorServiceServicer(
                     session_id=self._session_id,
                     cluster_type=self._launcher.type(),
                     num_workers=self._launcher.num_workers,
-                    host_names=self._launcher.hosts.split(","),
                     namespace=self._launcher.get_namespace(),
                 )
             else:
@@ -225,7 +225,6 @@ class CoordinatorServiceServicer(
             session_id=self._session_id,
             cluster_type=self._launcher.type(),
             num_workers=self._launcher.num_workers,
-            host_names=self._launcher.hosts.split(","),
             namespace=self._launcher.get_namespace(),
         )
 
@@ -251,8 +250,8 @@ class CoordinatorServiceServicer(
     def HeartBeat(self, request, context):
         self._reset_dangling_timer(self._connected, self._cleanup_instance)
         # analytical engine
-        if self._operation_executor is not None:
-            return self._operation_executor.heart_beat(request)
+        # if self._operation_executor is not None:
+        # return self._operation_executor.heart_beat(request)
         return message_pb2.HeartBeatResponse()
 
     def RunStep(self, request_iterator, context):
@@ -311,9 +310,7 @@ class CoordinatorServiceServicer(
             except Exception as exc:
                 response_head = responses[0]
                 response_head.head.code = error_code
-                response_head.head.error_msg = (
-                    f"Error occurred during RunStep, The traceback is: {traceback.format_exc()}"
-                )
+                response_head.head.error_msg = f"Error occurred during RunStep, The traceback is: {traceback.format_exc()}"
                 response_head.head.full_exception = pickle.dumps(exc)
                 for response in responses:
                     yield response
@@ -361,7 +358,8 @@ class CoordinatorServiceServicer(
             context.abort(grpc.StatusCode.ABORTED, str(e))
             return message_pb2.CreateAnalyticalInstanceResponse()
         return message_pb2.CreateAnalyticalInstanceResponse(
-            engine_config=json.dumps(engine_config)
+            engine_config=json.dumps(engine_config),
+            host_names=self._launcher.hosts.split(","),
         )
 
     def CreateInteractiveInstance(self, request, context):
@@ -823,7 +821,11 @@ def parse_sys_args():
 def launch_graphscope():
     args = parse_sys_args()
     logger.info("Launching with args %s", args)
+    launcher = get_launcher(args)
+    start_server(launcher, args)
 
+
+def get_launcher(args):
     if args.cluster_type == "k8s":
         launcher = KubernetesClusterLauncher(
             namespace=args.k8s_namespace,
@@ -879,7 +881,10 @@ def launch_graphscope():
         )
     else:
         raise RuntimeError("Expect hosts or k8s of cluster_type parameter")
+    return launcher
 
+
+def start_server(launcher, args):
     coordinator_service_servicer = CoordinatorServiceServicer(
         launcher=launcher,
         dangling_timeout_seconds=args.dangling_timeout_seconds,
@@ -911,9 +916,7 @@ def launch_graphscope():
             )
         except Exception as e:
             logger.error(
-                "Failed to start monitor server 0.0.0.0:{0} : {1}".format(
-                    args.monitor_port, e
-                )
+                "Failed to start monitor server 0.0.0.0:%d : %s", args.monitor_port, e
             )
 
     # handle SIGTERM signal
@@ -923,7 +926,7 @@ def launch_graphscope():
     signal.signal(signal.SIGTERM, terminate)
 
     try:
-        # Grpc has handled SIGINT
+        # GRPC has handled SIGINT
         server.wait_for_termination()
     except KeyboardInterrupt:
         coordinator_service_servicer.cleanup()

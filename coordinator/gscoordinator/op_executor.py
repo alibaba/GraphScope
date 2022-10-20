@@ -1,15 +1,14 @@
 import datetime
-import grpc
 import json
-import os
 import logging
+import os
 import pickle
 import random
 import zipfile
 from concurrent import futures
 from io import BytesIO
 
-from gscoordinator.utils import ANALYTICAL_BUILTIN_SPACE
+import grpc
 from graphscope.framework import utils
 from graphscope.framework.dag_utils import create_graph
 from graphscope.framework.dag_utils import create_loader
@@ -32,8 +31,10 @@ from gscoordinator.monitor import Monitor
 from gscoordinator.object_manager import GraphMeta
 from gscoordinator.object_manager import GremlinResultSet
 from gscoordinator.object_manager import LibMeta
+from gscoordinator.utils import ANALYTICAL_BUILTIN_SPACE
 from gscoordinator.utils import ANALYTICAL_ENGINE_JAVA_INIT_CLASS_PATH
 from gscoordinator.utils import ANALYTICAL_ENGINE_JAVA_JVM_OPTS
+from gscoordinator.utils import GS_GRPC_MAX_MESSAGE_LENGTH
 from gscoordinator.utils import INTERACTIVE_ENGINE_THREADS_PER_WORKER
 from gscoordinator.utils import RESOURCE_DIR_NAME
 from gscoordinator.utils import WORKSPACE
@@ -46,8 +47,6 @@ from gscoordinator.utils import get_graph_sha256
 from gscoordinator.utils import get_lib_path
 from gscoordinator.utils import op_pre_process
 from gscoordinator.utils import to_maxgraph_schema
-from gscoordinator.utils import GS_GRPC_MAX_MESSAGE_LENGTH
-
 
 logger = logging.getLogger("graphscope")
 
@@ -94,6 +93,7 @@ class OperationExecutor:
             runstep_requests.extend(dag_bodies)
             for item in runstep_requests:
                 yield item
+
         requests = _generate_runstep_request(self._session_id, dag_def, dag_bodies)
         # response
         response_head, response_bodies = None, []
@@ -166,7 +166,9 @@ class OperationExecutor:
         dag_def, dag_bodies = self.pre_process(dag_def, dag_bodies, loader_op_bodies)
         # generate runstep requests, and run on analytical engine
         response_head, response_bodies = self.run_step(dag_def, dag_bodies)
-        response_head, response_bodies = self.post_process(response_head, response_bodies)
+        response_head, response_bodies = self.post_process(
+            response_head, response_bodies
+        )
         return response_head, response_bodies
 
     def post_process(self, response_head, response_bodies):

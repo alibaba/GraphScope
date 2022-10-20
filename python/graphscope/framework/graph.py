@@ -332,6 +332,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
             # Don't import the :code:`NXGraph` in top-level statements to improve the
             # performance of :code:`import graphscope`.
             from graphscope import nx
+
             if isinstance(incoming_data, nx.classes.graph._GraphBase):
                 self._op = self._from_nx_graph(incoming_data)
             else:

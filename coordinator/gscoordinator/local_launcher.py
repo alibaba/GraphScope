@@ -1,14 +1,12 @@
 import base64
 import json
-import os
-import subprocess
-import shutil
-import sys
 import logging
+import os
+import shutil
 import socket
+import subprocess
+import sys
 import time
-
-from gscoordinator.launcher import AbstractLauncher
 
 from graphscope.framework.utils import PipeWatcher
 from graphscope.framework.utils import get_free_port
@@ -17,6 +15,7 @@ from graphscope.framework.utils import get_tempdir
 from graphscope.framework.utils import is_free_port
 from graphscope.proto import types_pb2
 
+from gscoordinator.launcher import AbstractLauncher
 from gscoordinator.utils import ANALYTICAL_ENGINE_PATH
 from gscoordinator.utils import GRAPHSCOPE_HOME
 from gscoordinator.utils import INTERACTIVE_ENGINE_SCRIPT
@@ -330,7 +329,7 @@ class LocalLauncher(AbstractLauncher):
                 socket.gethostbyname(
                     local_hostname
                 )  # make sure the hostname is dns-resolvable
-            except:
+            except:  # noqa: E722
                 local_hostname = "127.0.0.1"  # fallback to a must-correct hostname
 
         self._etcd_endpoint = f"http://{local_hostname}:{self._etcd_client_port}"
@@ -510,7 +509,6 @@ class LocalLauncher(AbstractLauncher):
             self._etcd_endpoint = f"http://{self._external_etcd_addr}"
             logger.info("Using etcd cluster")
         logger.info("etcd endpoint is %s", self._etcd_endpoint)
-
 
     def start(self):
         # create etcd

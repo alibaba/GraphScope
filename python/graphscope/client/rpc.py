@@ -151,7 +151,6 @@ class GRPCClient(object):
         return (
             response.session_id,
             response.cluster_type,
-            response.host_names,
             response.num_workers,
             response.namespace,
         )
@@ -198,7 +197,7 @@ class GRPCClient(object):
             session_id=self._session_id
         )
         response = self._stub.CreateAnalyticalInstance(request)
-        return json.loads(response.engine_config)
+        return json.loads(response.engine_config), response.host_names
 
     def create_interactive_instance(self, object_id, schema_path):
         request = message_pb2.CreateInteractiveInstanceRequest(
@@ -206,7 +205,6 @@ class GRPCClient(object):
         )
         response = self._stub.CreateInteractiveInstance(request)
         return response.gremlin_endpoint
-
 
     def create_learning_instance(self, object_id, handle, config):
         request = message_pb2.CreateLearningInstanceRequest(session_id=self._session_id)
@@ -220,16 +218,16 @@ class GRPCClient(object):
         request = message_pb2.CloseAnalyticalInstanceRequest(
             session_id=self._session_id
         )
-        response = self._stub.CloseAnalyticalInstance(request)
+        self._stub.CloseAnalyticalInstance(request)
 
     def close_interactive_instance(self, object_id):
         request = message_pb2.CloseInteractiveInstanceRequest(
             session_id=self._session_id, object_id=object_id
         )
-        response = self._stub.CloseInteractiveInstance(request)
+        self._stub.CloseInteractiveInstance(request)
 
     def close_learning_instance(self, object_id):
         request = message_pb2.CloseLearningInstanceRequest(
             session_id=self._session_id, object_id=object_id
         )
-        response = self._stub.CloseLearningInstance(request)
+        self._stub.CloseLearningInstance(request)

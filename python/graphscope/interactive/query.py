@@ -106,7 +106,6 @@ class InteractiveQuery(object):
 
     def __init__(self, graph, frontend_endpoint):
         """Construct a :class:`InteractiveQuery` object."""
-        self._graph_url = None
         self._conn = None
         # graph object id stored in vineyard
         self._graph = graph
@@ -148,7 +147,7 @@ class InteractiveQuery(object):
         """
         op = gremlin_query(self, query, request_options)
         return self._session._wrapper(ResultSetDAGNode(self, op))
-    
+
     def submit(self, query, request_options=None):
         return self.execute(query, request_options)
 
@@ -212,7 +211,7 @@ class InteractiveQuery(object):
         if self._conn is not None:
             try:
                 self._conn.close()
-            except:
+            except:  # noqa: E722
                 pass
         self._session._close_interactive_instance(self)
         self.closed = True
