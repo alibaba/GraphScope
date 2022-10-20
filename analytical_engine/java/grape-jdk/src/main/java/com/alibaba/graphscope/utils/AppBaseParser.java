@@ -122,11 +122,11 @@ public class AppBaseParser {
         }
         String typeParamNames[] = new String[types.length];
         for (int i = 0; i < types.length; ++i) {
-            typeParamNames[i] = types[i].getTypeName();
+            typeParamNames[i] = writableToJava(types[i].getTypeName());
         }
         logger.info("TypeParams: " + String.join(",", typeParamNames));
         logger.info("ContextType:vertex_data");
-        logger.info("VertexData: " + writableToCpp(typeParamNames[1]));
+        logger.info("VertexData: " + typeParamNames[1]);
         return true;
     }
 
@@ -176,15 +176,15 @@ public class AppBaseParser {
         return typeParams;
     }
 
-    private static String writableToCpp(String typeName){
+    private static String writableToJava(String typeName){
         if (typeName.contains("DoubleWritable")){
-            return "double";
+            return "java.lang.Double";
         }
         else if (typeName.contains("IntWritable")){
-            return "int32_t";
+            return "java.lang.Integer";
         }
         else if (typeName.contains("LongWritable")){
-            return "int64_t";
+            return "java.lang.Long";
         }
         else throw new IllegalStateException("Not recognized writable " + typeName);
     }
