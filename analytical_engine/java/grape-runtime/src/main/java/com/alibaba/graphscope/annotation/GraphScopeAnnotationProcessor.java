@@ -24,6 +24,7 @@ import static com.alibaba.graphscope.annotation.Utils.addSignedIntCXXTemplate;
 import static com.alibaba.graphscope.annotation.Utils.addSignedLongCXXTemplate;
 import static com.alibaba.graphscope.annotation.Utils.cpp2Java;
 import static com.alibaba.graphscope.annotation.Utils.getMessageTypes;
+import static com.alibaba.graphscope.annotation.Utils.java2Cpp;
 import static com.alibaba.graphscope.annotation.Utils.makeParameterizedType;
 import static com.alibaba.graphscope.annotation.Utils.vertexDataContextAddTemplate;
 import static com.alibaba.graphscope.utils.CppClassName.ARROW_FRAGMENT;
@@ -285,8 +286,8 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
         String javaOidType = getTypeName(oidType);
         DeclaredType vdataType = getVdataType();
         String javaVdataType = getTypeName(vdataType);
-        String vertexDataType = getGraphTypeMemberForeign("vertexDataType");
-        String javaVertexDataType = cpp2Java(vertexDataType);
+        String javaVertexDataType = getGraphTypeMemberForeign("vertexDataType");
+        String vertexDataType = java2Cpp(javaVertexDataType, true);
         String foreignVidType = getGraphTypeMemberForeign("cppVidType");
         String foreignOidType = getGraphTypeMemberForeign("cppOidType");
         String foreignVdataType = getGraphTypeMemberForeign("cppVdataType");
