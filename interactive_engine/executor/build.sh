@@ -36,6 +36,6 @@ else
 fi
 
 if [ "$TARGET" = "groot" ]; then
-  strip ${STRIP_OPTION} $(pwd)/target/${MODE}/libmaxgraph_ffi.${SUFFIX}
-  ln -sf $(pwd)/target/${MODE}/libmaxgraph_ffi.${SUFFIX} ./target/libmaxgraph_ffi.${SUFFIX}
+  strip ${STRIP_OPTION} $(pwd)/../target/${MODE}/libmaxgraph_ffi.${SUFFIX}
+  ln -sf $(pwd)/../target/${MODE}/libmaxgraph_ffi.${SUFFIX} $(pwd)/../target/libmaxgraph_ffi.${SUFFIX}
 fi
