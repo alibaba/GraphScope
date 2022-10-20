@@ -1525,7 +1525,7 @@ def _probe_for_java_app(attr, java_class_path, real_algo):
         class_name = "gs::JavaPIEProjectedParallelApp"
     else:
         raise RuntimeError("Not a supported java_app_type: {}".format(_java_app_type))
-    return driver_header, class_name, _vd_type
+    return driver_header, class_name, _vd_type, _frag_param_str
 
 
 def _codegen_app_info(attr, meta_file: str, java_class_path: str):
@@ -1556,7 +1556,7 @@ def _codegen_app_info(attr, meta_file: str, java_class_path: str):
     if algo.startswith("giraph:") or algo.startswith("java_pie:"):
         real_algo = algo.split(":")[1]
         logger.info("codegen app info for java app : {}".format(real_algo))
-        src_header, app_class, vd_type = _probe_for_java_app(
+        src_header, app_class, vd_type, java_app_template_str = _probe_for_java_app(
             attr, java_class_path, real_algo
         )
         return (
@@ -1567,7 +1567,7 @@ def _codegen_app_info(attr, meta_file: str, java_class_path: str):
             None,
             None,
             java_class_path,
-            real_algo,
+            "{}<{}>".format(real_algo, java_app_template_str),
         )
 
     for app in config_yaml["app"]:
