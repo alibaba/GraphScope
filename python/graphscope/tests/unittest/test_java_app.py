@@ -136,7 +136,7 @@ def test_sssp_property_vertex_data(
 ):
     graphscope_session.add_lib(demo_jar)
     sssp = load_app(algo="java_pie:{}".format(projected_graph_sssp_class))
-    sssp(p2p_project_directed_graph, src=6, threadNum=1)
+    sssp(p2p_project_directed_graph._project_to_simple(), src=6, threadNum=1)
 
 
 def projected_p2p_graph_loaded_by_giraph(
