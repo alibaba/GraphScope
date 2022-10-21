@@ -112,10 +112,10 @@ public class AppBaseParser {
         }
         Type[] types;
         if (father.getName().equals(GIRAPH_APP_ABSTRACT_NAME)) {
-            logger.info("Extend abstract computation");
+            logger.info("Giraph Extend abstract computation");
             types = getExtendTypeParams(claz, 5);
         } else if (father.getName().equals(GIRAPH_APP_BASIC_NAME)) {
-            logger.info("Extend basic computation");
+            logger.info("Giraph Extend basic computation");
             types = getExtendTypeParams(claz, 4);
         } else {
             return false;
