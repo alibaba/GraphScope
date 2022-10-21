@@ -39,7 +39,7 @@
             </includes>
         </fileSet>
         <fileSet>
-            <directory>${project.parent.basedir}/executor/assembly/target/debug</directory>
+            <directory>${project.parent.basedir}/executor/assembly/v6d/target/debug</directory>
             <includes>
                 <include>gaia_executor</include>
             </includes>
@@ -47,7 +47,7 @@
             <outputDirectory>bin</outputDirectory>
         </fileSet>
         <fileSet>
-            <directory>${project.parent.basedir}/executor/assembly/target/release</directory>
+            <directory>${project.parent.basedir}/executor/assembly/v6d/target/release</directory>
             <includes>
                 <include>gaia_executor</include>
             </includes>
