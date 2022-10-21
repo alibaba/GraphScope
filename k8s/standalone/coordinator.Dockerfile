@@ -50,9 +50,10 @@ RUN rm -rf /opt/graphscope/dist
 COPY ./k8s/standalone/entrypoint.sh /usr/bin/entrypoint.sh
 RUN chmod +x /usr/bin/entrypoint.sh
 
+COPY ./k8s/kube_ssh /usr/local/bin/kube_ssh
+
 # kubectl v1.19.2
 RUN curl -L -o /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.19.2/bin/linux/amd64/kubectl
-# TODO: kubessh
 
 # shanghai zoneinfo
 ENV TZ=Asia/Shanghai

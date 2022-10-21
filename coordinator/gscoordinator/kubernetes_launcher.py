@@ -225,7 +225,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         self._coordinator_name = coordinator_name
         self._coordinator_service_name = coordinator_service_name
 
-        self._resource_object = ResourceManager(self._api_client)
+        self._resource_object: ResourceManager = ResourceManager(self._api_client)
 
         # etcd pod info
         self._etcd_num_pods = max(1, self._saved_locals["etcd_num_pods"])
@@ -1090,6 +1090,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         )
         setattr(self._analytical_engine_process, "stdout_watcher", stdout_watcher)
         setattr(self._analytical_engine_process, "stderr_watcher", stderr_watcher)
+        time.sleep(2)  # TODO: monitor engine process instead of sleep
 
     def _delete_dangling_coordinator(self):
         # delete service
