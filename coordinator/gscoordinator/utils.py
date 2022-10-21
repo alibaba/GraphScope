@@ -182,7 +182,7 @@ def get_app_sha256(attr, java_class_path: str):
         app_type,
         _,
         app_class,
-        _,
+        vd_type,
         _,
         _,
         java_jar_path,
@@ -765,7 +765,7 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
         # for giraph app, we need to add args into orginal query_args, which is a json string
         # first one should be user params, second should be lib_path
         if app_type.startswith("giraph:"):
-            user_params["app_class"] = GIRAPH_DIRVER_CLASS
+            user_params["app_class"] = GIRAPH_DRIVER_CLASS
             user_params["user_app_class"] = app_type[7:]
         else:
             user_params["app_class"] = app_type.split(":")[-1]

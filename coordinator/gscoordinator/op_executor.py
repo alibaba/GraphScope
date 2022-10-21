@@ -237,7 +237,11 @@ class OperationExecutor:
         )
         if not os.path.isfile(app_lib_path):
             algo_name = op.attr[types_pb2.APP_ALGO].s.decode("utf-8")
-            if types_pb2.GAR in op.attr or algo_name.startswith("giraph:") or algo_name.startwith("java_pie:"):
+            if (
+                types_pb2.GAR in op.attr
+                or algo_name.startswith("giraph:")
+                or algo_name.startwith("java_pie:")
+            ):
                 space = self._udf_app_workspace
             else:
                 space = self._builtin_workspace
@@ -352,7 +356,11 @@ class OperationExecutor:
 
     def _compile_lib_and_distribute(self, compile_func, lib_name, op):
         algo_name = op.attr[types_pb2.APP_ALGO].s.decode("utf-8")
-        if types_pb2.GAR in op.attr or algo_name.startswith("giraph:") or algo_name.startswith("java_pie:"):
+        if (
+            types_pb2.GAR in op.attr
+            or algo_name.startswith("giraph:")
+            or algo_name.startswith("java_pie:")
+        ):
             space = self._udf_app_workspace
         else:
             space = self._builtin_workspace
