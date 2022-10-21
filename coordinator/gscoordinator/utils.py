@@ -207,12 +207,13 @@ def get_app_sha256(attr, java_class_path: str):
         ).hexdigest()
     elif app_type == "java_pie":
         s = hashlib.sha256()
-        # CAUTION!!!!!
-        # We believe jar_path.java_app_class can uniquely define one java app
-        s.update(f"{app_type}.{java_jar_path}.{java_app_class}".encode("utf-8"))
-        if types_pb2.GAR in attr:
-            s.update(attr[types_pb2.GAR].s)
+        s.update(f"{graph_type}.{vd_type}".encode("utf-8"))
         app_sha256 = s.hexdigest()
+        logger.info(
+            "app sha256 for app {} with graph {}:{}, is {}".format(
+                java_app_class, app_type, java_app_class, app_sha256
+            )
+        )
     else:
         s = hashlib.sha256()
         s.update(f"{app_type}.{app_class}.{graph_type}".encode("utf-8"))
@@ -225,6 +226,46 @@ def get_app_sha256(attr, java_class_path: str):
 def get_graph_sha256(attr):
     _, graph_class, _ = _codegen_graph_info(attr)
     return hashlib.sha256(graph_class.encode("utf-8")).hexdigest()
+
+
+def check_java_app_graph_consistency(
+    app_class, cpp_graph_type, java_class_template_str
+):
+    splited = cpp_graph_type.split("<")
+    java_app_type_params = java_class_template_str[:-1].split("<")[-1].split(",")
+    if len(splited) != 2:
+        raise Exception("Unrecoginizable graph template str: {}".format(cpp_graph_type))
+    if splited[0] == "vineyard::ArrowFragment":
+        if app_class.find("Property") == -1:
+            raise RuntimeError(
+                "Expected property app, inconsistent app and graph {}, {}".format(
+                    app_class, cpp_graph_type
+                )
+            )
+        if len(java_app_type_params) != 1:
+            raise RuntimeError("Expected 4 type params in java app")
+
+    if splited[0] == "gs::ArrowProjectedFragment":
+        if app_class.find("Projected") == -1:
+            raise RuntimeError(
+                "Expected Projected app, inconsistent app and graph {}, {}".format(
+                    app_class, cpp_graph_type
+                )
+            )
+        if len(java_app_type_params) != 4:
+            raise RuntimeError("Expected 4 type params in java app")
+
+    graph_actual_type_params = splited[1][:-1].split(",")
+    for i in range(0, len(java_app_type_params)):
+        graph_actual_type_param = graph_actual_type_params[i]
+        java_app_type_param = java_app_type_params[i]
+        if not _type_param_consistent(graph_actual_type_param, java_app_type_param):
+            raise RuntimeError(
+                "Error in check app and graph consistency, type params index {}, cpp: {}, java: {}".format(
+                    i, graph_actual_type_param, java_app_type_param
+                )
+            )
+    return True
 
 
 def compile_app(
@@ -275,6 +316,13 @@ def compile_app(
 
     graph_header, graph_type, graph_oid_type = _codegen_graph_info(attr)
     logger.info("Codegened graph type: %s, Graph header: %s", graph_type, graph_header)
+    if app_type == "java_pie":
+        logger.info(
+            "Check consistent between java app {} and graph {}".format(
+                java_app_class, graph_type
+            )
+        )
+        check_java_app_graph_consistency(app_class, graph_type, java_app_class)
 
     os.chdir(app_dir)
 
@@ -299,10 +347,21 @@ def compile_app(
     if app_type == "java_pie":
         if not os.path.isfile(GRAPE_PROCESSOR_JAR):
             raise RuntimeError("Grape runtime jar not found")
-        # for java need to run preprocess
+        # for java need to run preprocess, and the generated files can be reused,
+        # if the fragment & vd type is same.
+
         java_codegen_out_dir = os.path.join(
             workspace, "{}-{}".format(JAVA_CODEGNE_OUTPUT_PREFIX, library_name)
         )
+        if os.path.isdir(java_codegen_out_dir):
+            logger.info(
+                "Desired java codegen directory: {} exists, skip...".format(
+                    java_codegen_out_dir
+                )
+            )
+            cmake_commands += ["-DJAVA_APP_CODEGEN=OFF"]
+        else:
+            cmake_commands += ["-DJAVA_APP_CODEGEN=ON"]
         cmake_commands += [
             "-DENABLE_JAVA_SDK=ON",
             "-DJAVA_PIE_APP=ON",
@@ -509,6 +568,22 @@ def compile_graph_frame(
             f"Failed to compile graph {graph_class} on platform {get_platform_info()}"
         )
     return lib_path, None, None, None
+
+
+def _type_param_consistent(graph_actucal_type_param, java_app_type_param):
+    if java_app_type_param == "java.lang.Long":
+        if graph_actucal_type_param in {"uint64_t", "int64_t"}:
+            return True
+        return False
+    if java_app_type_param == "java.lang.Double":
+        if graph_actucal_type_param in {"double"}:
+            return True
+        return False
+    if java_app_type_param == "java.lang.Integer":
+        if graph_actucal_type_param in {"int32_t", "uint32_t"}:
+            return True
+        return False
+    return False
 
 
 def op_pre_process(op, op_result_pool, key_to_op, **kwargs):  # noqa: C901
@@ -765,10 +840,8 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
 
     app_type = parent_op.attr[types_pb2.APP_ALGO].s.decode("utf-8")
 
-    # for giraph app, we need to add args into orginal query_args, which is a json string
-    # first one should be user params, second should be lib_path
-    if app_type.startswith("giraph:"):
-        logger.debug("len {}".format(len(op.query_args.args)))
+    if app_type.startswith("java_pie:") or app_type.startswith("giraph:"):
+        logger.debug("args len: {}".format(len(op.query_args.args)))
         if len(op.query_args.args) == 1:
             original_json_param = data_types_pb2.StringValue()
             op.query_args.args[0].Unpack(original_json_param)
@@ -781,8 +854,7 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
             raise RuntimeError(
                 "Unexpected num of params{}".format(len(op.query_args.args))
             )
-
-        user_params["app_class"] = GIRAPH_DIRVER_CLASS
+        # we need extra param in first arg.
         user_params["jar_name"] = engine_java_class_path
         user_params["frag_name"] = "gs::ArrowProjectedFragment<{},{},{},{}>".format(
             parent_op.attr[types_pb2.OID_TYPE].s.decode("utf-8"),
@@ -790,20 +862,25 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
             parent_op.attr[types_pb2.V_DATA_TYPE].s.decode("utf-8"),
             parent_op.attr[types_pb2.E_DATA_TYPE].s.decode("utf-8"),
         )
-        user_params["user_app_class"] = app_type[7:]
+
+        # for giraph app, we need to add args into orginal query_args, which is a json string
+        # first one should be user params, second should be lib_path
+        if app_type.startswith("giraph:"):
+            user_params["app_class"] = GIRAPH_DIRVER_CLASS
+            user_params["user_app_class"] = app_type[7:]
+        else:
+            user_params["app_class"] = app_type.split(":")[-1]
         logger.debug("user params {}".format(json.dumps(user_params)))
-        param = Any()
-        param.Pack(data_types_pb2.StringValue(value=json.dumps(user_params)))
-        op.query_args.args.extend([param])
+        new_user_param = Any()
+        new_user_param.Pack(data_types_pb2.StringValue(value=json.dumps(user_params)))
+        op.query_args.args.extend([new_user_param])
 
-    if app_type == "java_app" or app_type.startswith("giraph:"):
         # For java app, we need lib path as an explicit arg.
-        param = Any()
+        lib_param = Any()
         lib_path = parent_op.attr[types_pb2.APP_LIBRARY_PATH].s.decode("utf-8")
-        param.Pack(data_types_pb2.StringValue(value=lib_path))
-        op.query_args.args.extend([param])
-
         logger.info("Java app: Lib path {}".format(lib_path))
+        lib_param.Pack(data_types_pb2.StringValue(value=lib_path))
+        op.query_args.args.extend([lib_param])
 
 
 def _pre_process_for_unload_graph_op(op, op_result_pool, key_to_op, **kwargs):
@@ -1359,7 +1436,7 @@ def _extract_gar(app_dir: str, attr):
         zip_ref.extractall(app_dir)
 
 
-def _parse_giraph_app_type(java_class_path, real_algo):
+def _parse_java_app_type(java_class_path, real_algo):
     _java_app_type = ""
     _frag_param_str = ""
     _java_inner_context_type = ""
@@ -1390,34 +1467,65 @@ def _parse_giraph_app_type(java_class_path, real_algo):
             continue
         elif line.find("Giraph") != -1:
             _java_app_type = "giraph"
+        elif line.find("DefaultPropertyApp") != -1:
+            _java_app_type = "default_property"
+        elif line.find("ParallelPropertyApp") != -1:
+            _java_app_type = "parallel_property"
+        elif line.find("DefaultAppBase") != -1:
+            _java_app_type = "default_simple"
+        elif line.find("ParallelAppBase") != -1:
+            _java_app_type = "parallel_simple"
         elif line.find("Error") != -1:
             raise Exception("Error occured in verifying user app")
         elif line.find("TypeParams") != -1:
             _frag_param_str = line.split(":")[-1].strip()
         elif line.find("ContextType") != -1:
             _java_inner_context_type = line.split(":")[-1].strip()
+        elif line.find("VertexData") != -1:
+            _vd_type = line.split(":")[-1].strip()
     # for giraph app, we manually set java inner ctx type
     logger.info(
-        "Java app type: {}, frag type str: {}, ctx type: {}".format(
-            _java_app_type, _frag_param_str, _java_inner_context_type
+        "Java app type: {}, frag type str: {}, ctx type: {}, vd type {}".format(
+            _java_app_type, _frag_param_str, _java_inner_context_type, _vd_type
         )
     )
-    if not _java_app_type or not _frag_param_str or not _java_inner_context_type:
-        raise RuntimeError("Parsed giraph app error")
+    if (
+        not _java_app_type
+        or not _frag_param_str
+        or not _java_inner_context_type
+        or not _vd_type
+    ):
+        raise RuntimeError("Parsed java app error")
 
     parse_user_app_process.wait()
-    return _java_app_type, _frag_param_str, _java_inner_context_type
+    return _java_app_type, _frag_param_str, _java_inner_context_type, _vd_type
 
 
-def _probe_for_giraph_app(attr, java_class_path, real_algo):
-    _java_app_type, _frag_param_str, _java_inner_context_type = _parse_giraph_app_type(
-        java_class_path, real_algo
-    )
+def _probe_for_java_app(attr, java_class_path, real_algo):
+    (
+        _java_app_type,
+        _frag_param_str,
+        _java_inner_context_type,
+        _vd_type,
+    ) = _parse_java_app_type(java_class_path, real_algo)
     if _java_app_type == "giraph":
         driver_header = "apps/java_pie/java_pie_projected_default_app.h"
         class_name = "gs::JavaPIEProjectedDefaultApp"
-        return driver_header, class_name
-    raise RuntimeError("Not a supported java_app_type: {}".format(_java_app_type))
+    elif _java_app_type == "default_property":
+        driver_header = "apps/java_pie/java_pie_property_default_app.h"
+        class_name = "gs::JavaPIEPropertyDefaultApp"
+    elif _java_app_type == "parallel_property":
+        driver_header = "apps/java_pie/java_pie_property_parallel_app.h"
+        class_name = "gs::JavaPIEPropertyParallelApp"
+    elif _java_app_type == "default_simple":
+        driver_header = "apps/java_pie/java_pie_projected_default_app.h"
+        class_name = "gs::JavaPIEProjectedDefaultApp"
+    elif _java_app_type == "parallel_simple":
+        driver_header = "apps/java_pie/java_pie_projected_parallel_app.h"
+        class_name = "gs::JavaPIEProjectedParallelApp"
+    else:
+        raise RuntimeError("Not a supported java_app_type: {}".format(_java_app_type))
+    return driver_header, class_name, _vd_type, _frag_param_str
 
 
 def _codegen_app_info(attr, meta_file: str, java_class_path: str):
@@ -1445,19 +1553,21 @@ def _codegen_app_info(attr, meta_file: str, java_class_path: str):
 
     algo = attr[types_pb2.APP_ALGO].s.decode("utf-8")
     # for algo start with giraph:, we don't find info in meta
-    if algo.startswith("giraph:"):
-        real_algo = algo[7:]
-        logger.info("codegen app info for giraph app : {}".format(real_algo))
-        src_header, app_class = _probe_for_giraph_app(attr, java_class_path, real_algo)
+    if algo.startswith("giraph:") or algo.startswith("java_pie:"):
+        real_algo = algo.split(":")[1]
+        logger.info("codegen app info for java app : {}".format(real_algo))
+        src_header, app_class, vd_type, java_app_template_str = _probe_for_java_app(
+            attr, java_class_path, real_algo
+        )
         return (
             "java_pie",
             src_header,
             "{}<_GRAPH_TYPE>".format(app_class),
-            None,
+            vd_type,
             None,
             None,
             java_class_path,
-            real_algo,
+            "{}<{}>".format(real_algo, java_app_template_str),
         )
 
     for app in config_yaml["app"]:
@@ -1485,17 +1595,6 @@ def _codegen_app_info(attr, meta_file: str, java_class_path: str):
                     app["pregel_combine"],
                     None,
                     None,
-                )
-            if app_type == "java_pie":
-                return (
-                    app_type,
-                    app["driver_header"],  # cxx header
-                    "{}<_GRAPH_TYPE>".format(app["class_name"]),  # cxx class name
-                    None,  # vd_type,
-                    None,  # md_type
-                    None,  # pregel combine
-                    app["java_jar_path"],
-                    app["java_app_class"],  # the running java app class
                 )
 
     raise KeyError("Algorithm does not exist in the gar resource.")

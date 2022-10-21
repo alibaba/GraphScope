@@ -175,7 +175,9 @@ class AppAssets(DAGNode):
         """
         self._algo = algo
         self._context_type = context
-        if isinstance(self._algo, str) and "giraph:" in self._algo:
+        if isinstance(self._algo, str) and (
+            "giraph:" in self._algo or "java_pie:" in self._algo
+        ):
             self._type = "java_pie"
         else:
             self._type = "cpp_pie"  # default is builtin app with `built_in` type
@@ -519,9 +521,11 @@ def load_app(gar=None, algo=None, context=None, **kwargs):
         if not zipfile.is_zipfile(gar):
             raise InvalidArgumentError("{} is not a zip file.".format(gar))
         return AppAssets(algo, context, content, **kwargs)
-    elif isinstance(algo, str) and algo.startswith("giraph:"):
+    elif isinstance(algo, str) and (
+        algo.startswith("giraph:") or algo.startswith("java_pie:")
+    ):
         if gar is not None:
-            raise InvalidArgumentError("Running giraph app expect no gar resource")
+            raise InvalidArgumentError("Running java app expect no gar resource")
         return AppAssets(algo, "vertex_data", None, **kwargs)
     else:
         raise InvalidArgumentError("Wrong type with {}".format(gar))
