@@ -350,6 +350,7 @@ class CoordinatorServiceServicer(
             # create GAE rpc service
             self._launcher.create_analytical_instance()
             engine_config = self._operation_executor.get_analytical_engine_config()
+            engine_config.update(self._launcher.get_engine_config())
         except grpc.RpcError as e:
             context.set_code(e.code())
             context.set_details("Get engine config failed: " + e.details())

@@ -240,7 +240,7 @@ class OperationExecutor:
             if (
                 types_pb2.GAR in op.attr
                 or algo_name.startswith("giraph:")
-                or algo_name.startwith("java_pie:")
+                or algo_name.startswith("java_pie:")
             ):
                 space = self._udf_app_workspace
             else:
