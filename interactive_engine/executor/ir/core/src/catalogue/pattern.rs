@@ -138,22 +138,20 @@ impl From<pb::PathExpand> for EdgeData {
 }
 
 impl EdgeData {
-    fn has_filters(&self) -> bool {
-        match self {
-            EdgeData::Edge(e) => e.params.is_some() && e.params.as_ref().unwrap().predicate.is_some(),
-            EdgeData::Path(p) => {
-                let expand_base = p.base.as_ref();
-                expand_base
-                    .map(|e| e.params.is_some() && e.params.as_ref().unwrap().predicate.is_some())
-                    .unwrap_or(false)
-            }
-        }
+    fn get_predicates(&self) -> Option<&common_pb::Expression> {
+        let edge_expand = match self {
+            EdgeData::Edge(e) => Some(e),
+            EdgeData::Path(p) => p.base.as_ref(),
+        };
+        edge_expand
+            .and_then(|e| e.params.as_ref())
+            .and_then(|params| params.predicate.as_ref())
     }
 
-    fn is_path(&self) -> bool {
+    fn get_path(&self) -> Option<&pb::PathExpand> {
         match self {
-            EdgeData::Edge(_) => false,
-            EdgeData::Path(_) => true,
+            EdgeData::Edge(_) => None,
+            EdgeData::Path(p) => Some(p),
         }
     }
 }
@@ -473,60 +471,9 @@ impl Pattern {
                 .vertices_iter()
                 .map(|v| v.get_id())
                 .collect();
-            // Sort the vertices by:
-            // 1. vertex has predicates will be extended first;
-            // 2. vertex adjacent to more number of edges with predicates should be extended first; TODO: consider path with filters;
-            // 3. vertex adjacent to more number of edges with data of path_expand should be extended later;
-            // 4. vertex with larger degree will be extended later
-            all_vertex_ids.sort_by(|&v1_id, &v2_id| {
-                let v1_has_predicate = trace_pattern.has_vertex_filter(v1_id);
-                let v2_has_predicate = trace_pattern.has_vertex_filter(v2_id);
-                if v1_has_predicate && !v2_has_predicate {
-                    Ordering::Greater
-                } else if !v1_has_predicate && v2_has_predicate {
-                    Ordering::Less
-                } else {
-                    // TODO: further consider path_expand with filters
-                    let v1_edges_predicate_num = trace_pattern
-                        .adjacencies_iter(v1_id)
-                        .filter(|adj| trace_pattern.has_edge_filters(adj.get_edge_id()))
-                        .count();
-                    let v2_edges_predicate_num = trace_pattern
-                        .adjacencies_iter(v2_id)
-                        .filter(|adj| trace_pattern.has_edge_filters(adj.get_edge_id()))
-                        .count();
-                    if v1_edges_predicate_num > v2_edges_predicate_num {
-                        Ordering::Greater
-                    } else if v1_edges_predicate_num < v2_edges_predicate_num {
-                        Ordering::Less
-                    } else {
-                        let v1_path_data_num = trace_pattern
-                            .adjacencies_iter(v1_id)
-                            .filter(|adj| trace_pattern.is_pathxpd_data(adj.get_edge_id()))
-                            .count();
-                        let v2_path_data_num = trace_pattern
-                            .adjacencies_iter(v2_id)
-                            .filter(|adj| trace_pattern.is_pathxpd_data(adj.get_edge_id()))
-                            .count();
-                        if v1_path_data_num > v2_path_data_num {
-                            Ordering::Less
-                        } else if v1_path_data_num < v2_path_data_num {
-                            Ordering::Greater
-                        } else {
-                            let degree_order = trace_pattern
-                                .get_vertex_degree(v1_id)
-                                .cmp(&trace_pattern.get_vertex_degree(v2_id));
-                            if let Ordering::Equal = degree_order {
-                                trace_pattern
-                                    .get_vertex_out_degree(v1_id)
-                                    .cmp(&trace_pattern.get_vertex_out_degree(v2_id))
-                            } else {
-                                degree_order
-                            }
-                        }
-                    }
-                }
-            });
+            // Sort the vertices in a heuristic way, e.g., vertices with filters should be expanded first.
+            all_vertex_ids.sort_by(|&v1_id, &v2_id| compare_vertices(v1_id, v2_id, &trace_pattern));
+            // TODO: BUG: ensure that the selected vertex won't break the pattern.
             let select_vertex_id = *all_vertex_ids.first().unwrap();
             let definite_extend_step =
                 DefiniteExtendStep::from_target_pattern(&trace_pattern, select_vertex_id).unwrap();
@@ -722,6 +669,117 @@ fn append_opr(
     (*match_plan).nodes.push(pre_node.clone());
     *pre_node = pb::logical_plan::Node { opr: Some(new_opr), children: vec![] };
     *child_offset += 1;
+}
+
+/// Compare two vertices in a heuristic way:
+///  1. vertex has predicates will be extended first; Specifically, predicates of eq compare is in high priority.
+///  2. vertex adjacent to more edges with predicates should be extended first; Specifically, predicates of eq compare is in high priority.
+///  3. vertex adjacent to more path_expand should be extended later;
+///  4. vertex with larger degree will be extended later
+fn compare_vertices(v1_id: PatternId, v2_id: PatternId, trace_pattern: &Pattern) -> Ordering {
+    let v1_weight = estimate_vertex_weight(v1_id, trace_pattern);
+    let v2_weight = estimate_vertex_weight(v2_id, trace_pattern);
+    if v1_weight > v2_weight {
+        Ordering::Greater
+    } else if v1_weight < v2_weight {
+        Ordering::Less
+    } else {
+        compare_adjacencies(v1_id, v2_id, trace_pattern)
+    }
+}
+
+fn compare_adjacencies(v1_id: PatternId, v2_id: PatternId, trace_pattern: &Pattern) -> Ordering {
+    let v1_adjacencies_weight = estimate_adjacencies_weight(v1_id, trace_pattern);
+    let v2_adjacencies_weight = estimate_adjacencies_weight(v2_id, trace_pattern);
+    if v1_adjacencies_weight > v2_adjacencies_weight {
+        Ordering::Greater
+    } else if v1_adjacencies_weight < v2_adjacencies_weight {
+        Ordering::Less
+    } else {
+        let v1_path_data_num = trace_pattern
+            .adjacencies_iter(v1_id)
+            .filter(|adj| trace_pattern.is_pathxpd_data(adj.get_edge_id()))
+            .count();
+        let v2_path_data_num = trace_pattern
+            .adjacencies_iter(v2_id)
+            .filter(|adj| trace_pattern.is_pathxpd_data(adj.get_edge_id()))
+            .count();
+        if v1_path_data_num > v2_path_data_num {
+            Ordering::Less
+        } else if v1_path_data_num < v2_path_data_num {
+            Ordering::Greater
+        } else {
+            let degree_order = trace_pattern
+                .get_vertex_degree(v1_id)
+                .cmp(&trace_pattern.get_vertex_degree(v2_id));
+            if let Ordering::Equal = degree_order {
+                trace_pattern
+                    .get_vertex_out_degree(v1_id)
+                    .cmp(&trace_pattern.get_vertex_out_degree(v2_id))
+            } else {
+                degree_order
+            }
+        }
+    }
+}
+
+fn has_expr_eq(expr: &common_pb::Expression) -> bool {
+    let equal_opr = common_pb::ExprOpr {
+        item: Some(common_pb::expr_opr::Item::Logical(0)) // eq
+    };
+    expr.operators.contains(&equal_opr)
+}
+
+fn estimate_vertex_weight(vid: PatternId, trace_pattern: &Pattern) -> f64 {
+    // VERTEX_EQ_WEIGHT has the first priority
+    const PREDICATE_EQ_WEIGHT: f64 = 10.0;
+    const VERTEX_PREDICATE_WEIGHT: f64 = 1.0;
+    let mut vertex_weight = 0.0;
+    if let Some(vertex_data) = trace_pattern.get_vertex_data(vid) {
+        if let Some(predicate) = &vertex_data.predicate {
+            if has_expr_eq(predicate) {
+                vertex_weight = PREDICATE_EQ_WEIGHT;
+            } else {
+                vertex_weight = VERTEX_PREDICATE_WEIGHT;
+            }
+        }
+    }
+    vertex_weight
+}
+
+fn estimate_adjacencies_weight(vid: PatternId, trace_pattern: &Pattern) -> f64 {
+    // PREDICATE_EQ_WEIGHT has the first priority
+    // Besides, EdgeExpand with predicates is in prior to PathExpand with predicates,
+    // since PathExpand is assumed to expand more intermediate results.
+    const PREDICATE_EQ_WEIGHT: f64 = 10.0;
+    const EDGE_PREDICATE_WEIGHT: f64 = 1.0;
+    const PATH_PREDICATE_WEIGHT: f64 = 0.9;
+    trace_pattern
+        .adjacencies_iter(vid)
+        .map(|adj| {
+            let edge_data = trace_pattern.get_edge_data(adj.get_edge_id());
+            let mut edge_weight = 0.0;
+            if let Some(edge_data) = edge_data {
+                let hop_num = if let Some(path) = edge_data.get_path() {
+                    path.hop_range.as_ref().unwrap().lower as u32
+                } else {
+                    1
+                };
+                if let Some(edge_predicate) = edge_data.get_predicates() {
+                    edge_weight = if has_expr_eq(edge_predicate) {
+                        PREDICATE_EQ_WEIGHT
+                    } else {
+                        if hop_num == 1 {
+                            EDGE_PREDICATE_WEIGHT
+                        } else {
+                            PATH_PREDICATE_WEIGHT.powf(hop_num as f64)
+                        }
+                    };
+                }
+            }
+            edge_weight
+        })
+        .sum()
 }
 
 /// Get the tag info from the given name_or_id
@@ -1010,21 +1068,12 @@ impl Pattern {
             .map(|edge_data| &edge_data.data)
     }
 
-    /// test if the data is a path
+    /// test if the edge data is a path
     #[inline]
     pub fn is_pathxpd_data(&self, edge_id: PatternId) -> bool {
         self.edges_data
             .get(edge_id)
-            .map(|edge_data| (&edge_data.data).is_path())
-            .unwrap_or(false)
-    }
-
-    /// test if PatternEdge has filters
-    #[inline]
-    pub fn has_edge_filters(&self, edge_id: PatternId) -> bool {
-        self.edges_data
-            .get(edge_id)
-            .map(|edge_data| (&edge_data.data).has_filters())
+            .map(|edge_data| (&edge_data.data).get_path().is_some())
             .unwrap_or(false)
     }
 
@@ -1121,14 +1170,6 @@ impl Pattern {
         self.vertices_data
             .get(vertex_id)
             .map(|vertex_data| &vertex_data.data)
-    }
-
-    // Test if PatternVertex has filters
-    #[inline]
-    pub fn has_vertex_filter(&self, vertex_id: PatternId) -> bool {
-        self.get_vertex_data(vertex_id)
-            .map(|select| select.predicate.is_some())
-            .unwrap_or(false)
     }
 
     /// Count how many outgoing edges connect to this vertex
