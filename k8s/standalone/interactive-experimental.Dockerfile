@@ -7,9 +7,10 @@ ARG profile=release
 ENV profile=$profile
 ADD . /home/graphscope/GraphScope
 
+ENV PATH="/home/graphscope/.cargo/bin:$PATH"
+
 RUN sudo chown -R graphscope:graphscope /home/graphscope/GraphScope
-RUN source $HOME/.bashrc \
-    && cd /home/graphscope/GraphScope/interactive_engine/compiler \
+RUN cd /home/graphscope/GraphScope/interactive_engine/compiler \
     && make build rpc.target=start_rpc_server_k8s
 
 ############### RUNTIME: frontend && executor #######################

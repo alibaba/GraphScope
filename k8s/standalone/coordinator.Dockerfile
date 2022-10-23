@@ -6,8 +6,7 @@ FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:$BASE_VERS
 ADD . /home/graphscope/GraphScope
 
 RUN sudo chown -R graphscope:graphscope /home/graphscope/GraphScope
-RUN source $HOME/.bashrc \
-    && cd /home/graphscope/GraphScope \
+RUN cd /home/graphscope/GraphScope \
     && git submodule update --init \
     && cd learning_engine/graph-learn \
     && git submodule update --init third_party/pybind11 \

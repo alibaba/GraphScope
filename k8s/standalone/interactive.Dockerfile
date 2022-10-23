@@ -7,9 +7,10 @@ ARG profile=release
 ENV profile=$profile
 ADD . /home/graphscope/GraphScope
 
+ENV PATH="/home/graphscope/.cargo/bin:$PATH"
+
 RUN sudo chown -R graphscope:graphscope /home/graphscope/GraphScope
-RUN source $HOME/.bashrc \
-    && cd /home/graphscope/GraphScope/ \
+RUN cd /home/graphscope/GraphScope/ \
     && mkdir /home/graphscope/install \
     && make gie BUILD_TYPE="$profile" INSTALL_PREFIX=/home/graphscope/install
 

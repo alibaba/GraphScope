@@ -1,9 +1,15 @@
 
 MKFILE_PATH 			:= $(abspath $(lastword $(MAKEFILE_LIST)))
 WORKING_DIR 			:= $(dir $(MKFILE_PATH))
+GAE_DIR                 := $(WORKING_DIR)/analytical_engine
+GIE_DIR					:= $(WORKING_DIR)/interactive_engine
+GLE_DIR					:= $(WORKING_DIR)/learning_engine/graph-learn
+GAE_BUILD_DIR			:= $(GAE_DIR)/build
+GLE_BUILD_DIR			:= $(GLE_DIR)/build
+CLIENT_DIR              := $(WORKING_DIR)/python
+COORDINATOR_DIR         := $(WORKING_DIR)/coordinator
 
-VERSION                     ?= 0.1.0
-INSTALL_PREFIX              ?= /opt/graphscope
+VERSION                     ?= 0.18.0
 
 BUILD_TYPE                  ?= release
 
@@ -16,165 +22,135 @@ BUILD_TEST                  ?= OFF
 # build java sdk option
 ENABLE_JAVA_SDK             ?= ON
 
-.PHONY: all
+# PREFIX is environment variable, but if it is not set, then set default value
+ifeq ($(INSTALL_PREFIX),)
+    INSTALL_PREFIX := /opt/graphscope
+endif
+
+## Common
+.PHONY: all, graphscope, install, clean
+
 all: graphscope
 
-.PHONY: graphscope
-graphscope: install
+graphscope: gle client gae gie coordinator
 
-.PHONY: gsruntime-image
-gsruntime-image:
-	$(MAKE) -C $(WORKING_DIR)/k8s/ gsruntime-image VERSION=$(VERSION)
+install: graphscope
+	# client
+	pip3 install --user --editable $(CLIENT_DIR)
+	
+	# gae
+	$(MAKE) -C $(GAE_BUILD_DIR) install
 
-.PHONY: gsvineyard-image
-gsvineyard-image:
-	$(MAKE) -C $(WORKING_DIR)/k8s/ gsvineyard-image VERSION=$(VERSION)
+	# gie
+	tar -xf $(GIE_DIR)/assembly/target/graphscope.tar.gz --strip-components 1 -C $(INSTALL_PREFIX)
 
-.PHONY: graphscope-image
-graphscope-image:
-	$(MAKE) -C $(WORKING_DIR)/k8s/ graphscope-image VERSION=$(VERSION)
+	# gle
+	$(MAKE) -C $(GLE_BUILD_DIR) install
 
-.PHONY: jupyter-image
-jupyter-image:
-	$(MAKE) -C $(WORKING_DIR)/k8s/ jupyter-image VERSION=$(VERSION)
+	echo "Run the following command to correctly set environment variable"
+	echo "export GRAPHSCOPE_HOME=$(INSTALL_PREFIX)"
 
-.PHONY: dataset-image
-dataset-image:
-	$(MAKE) -C $(WORKING_DIR)/k8s/ dataset-image VERSION=$(VERSION)
+clean:
+	rm -rf $(GAE_BUILD_DIR) $(GAE_DIR)/proto
+	cd $(GAE_DIR)/java && mvn clean
 
-# bulld graphscope image from source code without wheel package
-.PHONY: graphscope-dev-image
-graphscope-dev-image:
-	$(MAKE) -C $(WORKING_DIR)/k8s/ graphscope-dev-image VERSION=$(VERSION)
+	cd $(GIE_DIR) && mvn clean
+	# TODO: use maven clean to clean ir target
+	rm -rf $(GIE_DIR)/executor/ir/target
 
-.PHONY: graphscope-store-image
-graphscope-store-image:
-	$(MAKE) -C $(WORKING_DIR)/k8s/ graphscope-store-image VERSION=$(VERSION)
+	rm -rf $(GLE_BUILD_DIR) $(GLE_DIR)/proto/*.h $(GLE_DIR)/proto/*.cc
 
-.PHONY: push
-push:
-	$(MAKE) -C $(WORKING_DIR)/k8s/ push
+	cd $(CLIENT_DIR) && python3 setup.py clean --all
 
-.PHONY: install
-install: gle client gae gie coordinator
+	cd $(COORDINATOR_DIR) && python3 setup.py clean --all
 
-.PHONY: client
+## Modules
+.PHONY: client, coordinator, gae, gie, gle
+
 client: gle
-	cd $(WORKING_DIR)/python && \
-	pip3 install -r requirements.txt -r requirements-dev.txt --user && \
+	cd $(CLIENT_DIR)
+	pip3 install -r requirements.txt -r requirements-dev.txt --user
 	python3 setup.py build_ext --inplace --user
-	pip3 install --user --editable $(WORKING_DIR)/python
 
-.PHONY: coordinator
 coordinator: client
-	cd $(WORKING_DIR)/coordinator && \
-	pip3 install -r requirements.txt -r requirements-dev.txt --user && \
+	cd $(COORDINATOR_DIR)
+	pip3 install -r requirements.txt -r requirements-dev.txt --user
 	python3 setup.py build_builtin
-	if [ ! -d "/var/log/graphscope" ]; then \
-		sudo mkdir /var/log/graphscope; \
-	fi
-	sudo chown -R `id -u`:`id -g` /var/log/graphscope
 
-.PHONY: gae
 gae:
-	mkdir -p $(WORKING_DIR)/analytical_engine/build
-	cd $(WORKING_DIR)/analytical_engine/build && \
-	cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_PREFIX) -DNETWORKX=$(NETWORKX) -DBUILD_TESTS=${BUILD_TEST} -DENABLE_JAVA_SDK=${ENABLE_JAVA_SDK} .. && \
-	make -j1 && \
-	sudo make install && \
-	sudo cp -r $(WORKING_DIR)/k8s/kube_ssh $(INSTALL_PREFIX)/bin/
-ifneq ($(INSTALL_PREFIX), /usr/local)
-	sudo rm -fr /usr/local/include/graphscope && \
-	sudo ln -sf $(INSTALL_PREFIX)/bin/* /usr/local/bin/ && \
-	sudo ln -sfn $(INSTALL_PREFIX)/include/graphscope /usr/local/include/graphscope && \
-	sudo ln -sf ${INSTALL_PREFIX}/lib/*so* /usr/local/lib && \
-	sudo ln -sf ${INSTALL_PREFIX}/lib/*dylib* /usr/local/lib && \
-	if [ -d "${INSTALL_PREFIX}/lib64/cmake/graphscope-analytical" ]; then \
-		sudo rm -fr /usr/local/lib64/cmake/graphscope-analytical; \
-		sudo ln -sfn ${INSTALL_PREFIX}/lib64/cmake/graphscope-analytical /usr/local/lib64/cmake/graphscope-analytical; \
-		sudo mkdir -p ${INSTALL_PREFIX}/lib/cmake; \
-		sudo cp -r ${INSTALL_PREFIX}/lib64/cmake/* ${INSTALL_PREFIX}/lib/cmake/; \
-	else \
-		sudo ln -sfn ${INSTALL_PREFIX}/lib/cmake/graphscope-analytical /usr/local/lib/cmake/graphscope-analytical; \
-	fi
-endif
+	mkdir -p $(GAE_BUILD_DIR)
+	cd $(GAE_BUILD_DIR)
+	cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_PREFIX) -DNETWORKX=$(NETWORKX) -DBUILD_TESTS=${BUILD_TEST} -DENABLE_JAVA_SDK=${ENABLE_JAVA_SDK} ..
+	$(MAKE) -j1
 
-.PHONY: gie
 gie:
 	# frontend/executor
-	cd $(WORKING_DIR)/interactive_engine && \
-	mvn clean package -DskipTests -Drust.compile.mode=$(BUILD_TYPE) -P graphscope,graphscope-assembly --quiet
-	# install
-	mkdir -p $(WORKING_DIR)/.install_prefix && \
-	tar -xf $(WORKING_DIR)/interactive_engine/assembly/target/graphscope.tar.gz --strip-components 1 -C $(WORKING_DIR)/.install_prefix && \
-	sudo cp -r $(WORKING_DIR)/.install_prefix/* $(INSTALL_PREFIX) && \
-	rm -fr $(WORKING_DIR)/.install_prefix
+	cd $(GIE_DIR)
+	mvn package -DskipTests -Drust.compile.mode=$(BUILD_TYPE) -P graphscope,graphscope-assembly --quiet
 
-.PHONY: gle
 gle:
-	cd ${WORKING_DIR} && \
-	git submodule update --init && \
-	cd $(WORKING_DIR)/learning_engine/graph-learn && \
-	git submodule update --init third_party/pybind11 && \
-	mkdir -p cmake-build && cd cmake-build && \
-	cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_PREFIX) -DWITH_VINEYARD=ON -DTESTING=${BUILD_TEST} .. && \
-	make -j`nproc` && \
-	sudo make install
-ifneq ($(INSTALL_PREFIX), /usr/local)
-	sudo ln -sf ${INSTALL_PREFIX}/lib/*so* /usr/local/lib && \
-	sudo ln -sf ${INSTALL_PREFIX}/lib/*dylib* /usr/local/lib
-endif
+	cd $(WORKING_DIR)
+	git submodule update --init
+	cd $(GLE_DIR)
+	git submodule update --init third_party/pybind11
+	mkdir -p $(GLE_BUILD_DIR)
+	cd $(GLE_BUILD_DIR)
+	cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_PREFIX) -DWITH_VINEYARD=ON -DTESTING=${BUILD_TEST} ..
+	$(MAKE) -j`nproc`
 
-# wheels
-.PHONY: graphscope-py3-package
+## wheels
+.PHONY: graphscope-py3-package, graphscope-client-py3-package, prepare-client, graphscope-docs
+
 graphscope-py3-package:
 	$(MAKE) -C $(WORKING_DIR)/k8s/ graphscope-py3-package
 
-.PHONY: graphscope-client-py3-package
 graphscope-client-py3-package:
 	 $(MAKE) -C $(WORKING_DIR)/k8s/ graphscope-client-py3-package
 
-.PHONY: prepare-client
 prepare-client:
-	cd $(WORKING_DIR)/python && \
-	pip3 install -r requirements.txt --user && \
-	pip3 install -r requirements-dev.txt --user && \
+	cd $(CLIENT_DIR)
+	pip3 install -r requirements.txt --user
+	pip3 install -r requirements-dev.txt --user
 	python3 setup.py build_proto
 
-.PHONY: graphscope-docs
 graphscope-docs: prepare-client
 	$(MAKE) -C $(WORKING_DIR)/docs/ html
 
-.PHONY: test
+
+## Images
+.PHONY: graphscope-image, jupyter-image, dataset-image, graphscope-store-image, push
+
+graphscope-image:
+	$(MAKE) -C $(WORKING_DIR)/k8s/ graphscope-image VERSION=$(VERSION)
+
+jupyter-image:
+	$(MAKE) -C $(WORKING_DIR)/k8s/ jupyter-image VERSION=$(VERSION)
+
+dataset-image:
+	$(MAKE) -C $(WORKING_DIR)/k8s/ dataset-image VERSION=$(VERSION)
+
+graphscope-store-image:
+	$(MAKE) -C $(WORKING_DIR)/k8s/ graphscope-store-image VERSION=$(VERSION)
+
+push:
+	$(MAKE) -C $(WORKING_DIR)/k8s/ push
+
+
+## Tests
+.PHONY: test, unittest, minitest, k8stest
+
 test: unittest minitest k8stest
 
-.PHONY: unittest
 unittest:
-	cd $(WORKING_DIR)/python && \
+	cd $(CLIENT_DIR)
 	python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml --cov-report=term -s -v ./graphscope/tests/unittest
 
-.PHONY: minitest
 minitest:
-	cd $(WORKING_DIR)/python && \
-	pip3 install tensorflow==2.5.2 "pandas<1.5.0" && \
+	cd $(CLIENT_DIR)
+	pip3 install tensorflow==2.5.2 "pandas<1.5.0"
 	python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml --cov-report=term -s -v ./graphscope/tests/minitest
 
-.PHONY: k8stest
 k8stest:
-	cd $(WORKING_DIR)/python && \
-	pip3 install tensorflow==2.5.2 "pandas<1.5.0" && \
+	cd $(CLIENT_DIR)
+	pip3 install tensorflow==2.5.2 "pandas<1.5.0"
 	python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml --cov-report=term -s -v ./graphscope/tests/kubernetes
-
-.PHONY: clean
-clean:
-	rm -fr $(WORKING_DIR)/analytical_engine/build/ || true && \
-	rm -fr $(WORKING_DIR)/analytical_engine/proto/ || true && \
-	rm -fr $(WORKING_DIR)/learning_engine/graph-learn/cmake-build/ || true && \
-	rm -fr $(WORKING_DIR)/learning_engine/graph-learn/proto/*.h || true && \
-	rm -fr $(WORKING_DIR)/learning_engine/graph-learn/proto/*.cc || true && \
-	rm -fr $(WORKING_DIR)/interactive_engine/assembly/target || true && \
-	rm -fr $(WORKING_DIR)/interactive_engine/executor/ir/target || true && \
-	cd $(WORKING_DIR)/python && python3 setup.py clean --all && \
-	cd $(WORKING_DIR)/coordinator && python3 setup.py clean --all
-	cd $(WORKING_DIR)/analytical_engine/java && mvn clean
-	cd $(WORKING_DIR)/interactive_engine && mvn clean

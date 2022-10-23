@@ -8,8 +8,7 @@ ENV profile=$profile
 ADD . /home/graphscope/GraphScope
 
 RUN sudo chown -R graphscope:graphscope /home/graphscope/GraphScope
-RUN source $HOME/.bashrc \
-    && cd /home/graphscope/GraphScope/ \
+RUN cd /home/graphscope/GraphScope/ \
     && mkdir /home/graphscope/install \
     && make gae ENABLE_JAVA_SDK=OFF INSTALL_PREFIX=/home/graphscope/install \
     && mkdir /home/graphscope/install-with-java \
@@ -35,6 +34,7 @@ RUN yum install -y java-1.8.0-openjdk-devel \
 
 # install clang-11 with gold optimizer plugin, depends on header include/plugin-api.h
 # Installed size: 1.5G
+# TODO: Don't compile from scratch
 RUN cd /tmp && \
     mkdir -p binutils/include && \
     cd binutils/include && \
