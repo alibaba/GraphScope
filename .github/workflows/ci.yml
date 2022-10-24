@@ -78,6 +78,8 @@ jobs:
             - 'interactive_engine/**'
             - 'python/graphscope/interactive/**'
             - '.github/workflows/ci.yml'
+          gie-k8s-failover-test:
+            - 'interactive_engine/**'
 
     - name: Cpp Format and Lint Check
       run: |
@@ -745,3 +747,61 @@ jobs:
           python3 -m pytest -s ./graphscope/tests/kubernetes/test_demo_script.py -k test_demo_on_hdfs
           # Check the result file have successfully written to the given location
           # hdfs dfs -test -e /ldbc_sample/res.csv_0 && hdfs dfs -test -e /ldbc_sample/res.csv_1
+
+  gie-k8s-failover-test:
+    runs-on: [self-hosted, ubuntu2004]
+    if: ${{ needs.changes.outputs.gie-k8s-failover-test == 'true' && github.repository == 'alibaba/GraphScope' }}
+    steps:
+      - uses: actions/checkout@v2.3.2
+
+      - uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - uses: actions/download-artifact@v2
+        with:
+          path: artifacts
+
+      - name: Add envs to GITHUB_ENV
+        run: |
+          short_sha=$(git rev-parse --short HEAD)
+          echo "SHORT_SHA=${short_sha}" >> $GITHUB_ENV
+
+      - name: Prepare Docker Image
+        run: |
+          # build gie-exp-runtime image
+          cd ${GITHUB_WORKSPACE}/k8s/standalone
+          make gie-exp-runtime VERSION=${SHORT_SHA}
+
+      - name: prepare Graph Data
+        env:
+          GS_TEST_DIR: ${{ github.workspace }}/gstest
+        run: |
+          git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
+          mkdir -p /tmp/data
+          cp -r ${GS_TEST_DIR}/modern_graph_exp_bin/* /tmp/data
+
+      - name: Run K8S Failover Test
+        run: |
+          cd ${GITHUB_WORKSPACE}/charts
+          # create local persistent volume which contains graph data for test
+          kubectl apply -f ./ir-standalone/pvc.yaml
+          # create gie instance (compiler & executor & exp storage)
+          helm install test ./ir-standalone \
+              --set image.repository=graphscope/gie-exp-runtime \
+              --set image.tag=${SHORT_SHA} --set storageType=Experimental \
+              --set schemaConfig=expr_modern_schema.json \
+              --set store.replicaCount=2 \
+              --set frontend.service.type=NodePort
+          # run failover test
+          cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && ./ir_k8s_failover_ci.sh default test-graphscope-store 2 1
