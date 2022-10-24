@@ -475,8 +475,18 @@ impl Pattern {
                 .collect();
             // Sort the vertices in a heuristic way, e.g., vertices with filters should be expanded first.
             all_vertex_ids.sort_by(|&v1_id, &v2_id| compare_vertices(v1_id, v2_id, &trace_pattern));
-            // TODO: BUG: ensure that the selected vertex won't break the pattern.
-            let select_vertex_id = *all_vertex_ids.first().unwrap();
+            // Ensure the selected vertex won't break the pattern.
+            let mut select_vertex_id = usize::MAX;
+            for id in all_vertex_ids {
+                let connected = check_connectivity(id, &trace_pattern)?;
+                if connected {
+                    select_vertex_id = id;
+                    break;
+                }
+            }
+            if select_vertex_id == usize::MAX {
+                Err(IrPatternError::InvalidPattern("The pattern is not connected".to_string()))?
+            }
             let definite_extend_step =
                 DefiniteExtendStep::from_target_pattern(&trace_pattern, select_vertex_id)?;
             definite_extend_steps.push(definite_extend_step);
@@ -773,6 +783,47 @@ fn estimate_adjacencies_weight(vid: PatternId, trace_pattern: &Pattern) -> f64 {
             edge_weight
         })
         .sum()
+}
+
+/// check if the pattern is still connected by removing `vertex_to_remove`
+fn check_connectivity(vertex_to_remove: PatternId, pattern: &Pattern) -> IrPatternResult<bool> {
+    let mut visited = vec![false; pattern.get_max_vertex_id().unwrap() + 1];
+    let mut s = vec![];
+    for vertex in pattern.vertices_iter() {
+        let vid = vertex.get_id();
+        if vid != vertex_to_remove {
+            visited[vid] = true;
+            s.push(vid);
+            while !s.is_empty() {
+                let vid = s.pop().unwrap();
+                let vertex_data = pattern
+                    .vertices_data
+                    .get(vid)
+                    .ok_or(IrPatternError::MissingPatternVertex(vid))?;
+                let mut adjacencies = vertex_data
+                    .out_adjacencies
+                    .iter()
+                    .chain(&vertex_data.in_adjacencies);
+                while let Some(adj) = adjacencies.next() {
+                    let adj_id = adj.adj_vertex.get_id();
+                    if adj_id != vertex_to_remove && !visited[adj_id] {
+                        s.push(adj_id);
+                        visited[adj_id] = true;
+                    }
+                }
+            }
+            break;
+        }
+    }
+    let mut all_visited = true;
+    for vertex in pattern.vertices_iter() {
+        let id = vertex.get_id();
+        if id != vertex_to_remove && !visited[id] {
+            all_visited = false;
+        }
+    }
+
+    Ok(all_visited)
 }
 
 /// Get the tag info from the given name_or_id
