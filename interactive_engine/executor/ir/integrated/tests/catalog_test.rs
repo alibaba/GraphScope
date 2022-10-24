@@ -24,6 +24,7 @@ mod test {
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
+    use ir_core::catalogue::error::IrPatternResult;
     use ir_core::catalogue::pattern::Pattern;
     use ir_core::catalogue::pattern_meta::PatternMeta;
     use ir_core::plan::logical::LogicalPlan;
@@ -33,7 +34,6 @@ mod test {
     use pegasus_client::builder::JobBuilder;
 
     use crate::common::test::*;
-    use ir_core::catalogue::error::IrPatternResult;
 
     pub fn get_ldbc_pattern_meta() -> PatternMeta {
         let ldbc_schema_file = File::open("../core/resource/ldbc_schema.json").unwrap();

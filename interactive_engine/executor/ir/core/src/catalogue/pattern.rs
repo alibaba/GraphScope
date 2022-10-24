@@ -18,6 +18,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::convert::{TryFrom, TryInto};
 use std::iter::FromIterator;
 
+use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
 use vec_map::VecMap;
@@ -28,7 +29,6 @@ use crate::catalogue::extend_step::DefiniteExtendStep;
 use crate::catalogue::pattern_meta::PatternMeta;
 use crate::catalogue::{query_params, DynIter, PatternDirection, PatternId, PatternLabelId};
 use crate::plan::meta::{PlanMeta, TagId};
-use ir_common::error::ParsePbError;
 
 #[derive(Debug, Clone, Copy)]
 pub struct PatternVertex {

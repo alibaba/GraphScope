@@ -19,6 +19,7 @@ use std::convert::TryFrom;
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
 use ir_common::KeyId;
+use ir_core::catalogue::error::IrPatternResult;
 use ir_core::catalogue::pattern::*;
 use ir_core::catalogue::{PatternId, PatternLabelId};
 use ir_core::plan::meta::PlanMeta;
@@ -27,7 +28,6 @@ use rand::seq::SliceRandom;
 use rand::SeedableRng;
 
 use crate::common::pattern_meta_cases::*;
-use ir_core::catalogue::error::IrPatternResult;
 
 pub const TAG_A: KeyId = 0;
 pub const TAG_B: KeyId = 1;

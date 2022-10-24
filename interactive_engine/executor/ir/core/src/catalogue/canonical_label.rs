@@ -15,11 +15,11 @@
 
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
+use std::convert::TryFrom;
 
 use crate::catalogue::error::{IrPatternError, IrPatternResult};
 use crate::catalogue::pattern::{Adjacency, Pattern, PatternEdge, PatternVertex};
 use crate::catalogue::{DynIter, PatternId, PatternLabelId};
-use std::convert::TryFrom;
 
 #[derive(Debug, Clone)]
 pub(crate) struct CanonicalLabelManager {

@@ -17,13 +17,13 @@ use std::cmp::Ordering;
 use std::convert::TryFrom;
 use std::iter::Iterator;
 
+use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as pb;
 use serde::{Deserialize, Serialize};
 
 use crate::catalogue::error::{IrPatternError, IrPatternResult};
 use crate::catalogue::pattern::Pattern;
 use crate::catalogue::{query_params, DynIter, PatternDirection, PatternId, PatternLabelId};
-use ir_common::error::ParsePbError;
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ExtendEdge {

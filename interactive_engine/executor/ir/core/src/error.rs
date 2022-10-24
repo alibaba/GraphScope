@@ -16,11 +16,12 @@
 
 use std::fmt;
 
-use crate::catalogue::error::IrPatternError;
 use ir_common::error::ParsePbError;
 use ir_common::expr_parse::error::ExprError;
 use ir_common::NameOrId;
 use prost::EncodeError;
+
+use crate::catalogue::error::IrPatternError;
 
 /// Record any error while transforming ir to a pegasus physical plan
 #[derive(Debug, Clone)]
