@@ -40,7 +40,7 @@ endif
 
 
 ## Common
-.PHONY: all, graphscope, install, clean
+.PHONY: all graphscope install clean
 
 # all: graphscope
 # graphscope: gle client coordinator gae gie
@@ -71,7 +71,7 @@ clean:
 	cd $(COORDINATOR_DIR) && python3 setup.py clean --all
 
 ## Modules
-.PHONY: client, coordinator, gae, gie, gle
+.PHONY: client coordinator gae gie gle
 
 client: gle
 	cd $(CLIENT_DIR) && \
@@ -83,7 +83,7 @@ coordinator: client
 	pip3 install -r requirements.txt -r requirements-dev.txt --user && \
 	python3 setup.py build_builtin
 
-.PHONY: gae-install, gie-install, gle-install
+.PHONY: gae-install gie-install gle-install
 
 gae-install: gae
 	$(MAKE) -C $(GAE_BUILD_DIR) install
@@ -122,7 +122,7 @@ $(GLE_DIR)/built/lib/libgraphlearn_shared.$(SUFFIX):
 	$(MAKE) -j$(NUMPROC)
 
 ## wheels
-.PHONY: graphscope-py3-package, graphscope-client-py3-package, prepare-client, graphscope-docs
+.PHONY: graphscope-py3-package graphscope-client-py3-package prepare-client graphscope-docs
 
 graphscope-py3-package:
 	$(MAKE) -C $(K8S_DIR) graphscope-py3-package
@@ -141,7 +141,7 @@ graphscope-docs: prepare-client
 
 
 ## Images
-.PHONY: graphscope-image, jupyter-image, dataset-image, graphscope-store-image, push
+.PHONY: graphscope-image jupyter-image dataset-image graphscope-store-image push
 
 graphscope-image:
 	$(MAKE) -C $(K8S_DIR) graphscope-image VERSION=$(VERSION)
@@ -160,7 +160,7 @@ push:
 
 
 ## Tests
-.PHONY: test, unittest, minitest, k8stest
+.PHONY: test unittest minitest k8stest
 
 test: unittest minitest k8stest
 
