@@ -89,6 +89,9 @@ coordinator: client
 
 gae-install: gae
 	$(MAKE) -C $(GAE_BUILD_DIR) install
+	cp -r $(K8S_DIR)/kube_ssh $(INSTALL_PREFIX)/bin/
+	cp -r ${INSTALL_PREFIX}/lib64/cmake/* ${INSTALL_PREFIX}/lib/cmake/
+
 gae: $(GAE_BUILD_DIR)/grape_engine
 
 $(GAE_BUILD_DIR)/grape_engine:

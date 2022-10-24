@@ -465,7 +465,6 @@ class CoordinatorServiceServicer(
         # clean up session resources.
         logger.info("Cleaning up resources in coordinator")
         for _, obj in self._object_manager.items():
-            logger.info("cleaning up %s", obj.type)
             op_type, config = None, {}
             if obj.type == "app":
                 op_type = types_pb2.UNLOAD_APP
@@ -477,7 +476,6 @@ class CoordinatorServiceServicer(
                 if obj.object_id != -1:
                     config[types_pb2.VINEYARD_ID] = i_to_attr(obj.object_id)
             elif obj.type == "gie_manager":
-                logger.info("close interactive_instance")
                 self._launcher.close_interactive_instance(obj.object_id)
             elif obj.type == "gle_manager":
                 self._launcher.close_learning_instance(obj.object_id)
