@@ -31,9 +31,11 @@ endif
 UNAME := $(shell uname)
 ifeq ($(UNAME),Linux)
 	NUMPROC := $(shell grep -c ^processor /proc/cpuinfo)
+	SUFFIX := so
 endif
 ifeq ($(UNAME),Darwin)
 	NUMPROC := $(shell sysctl hw.ncpu | awk '{print $2}')
+	SUFFIX := dylib
 endif
 
 
@@ -45,14 +47,11 @@ endif
 all: gle client coordinator gae gie
 graphscope: all
 
-install: gae-install gie-install gle client coordinator 
+install: gae-install gie-install gle-install client coordinator
     # client
 	pip3 install --user --editable $(CLIENT_DIR)
     # coordinator
 	pip3 install --user --editable $(COORDINATOR_DIR)
-
-    # gle
-	$(MAKE) -C $(GLE_BUILD_DIR) install
 
 	echo "Run the following command to correctly set environment variable"
 	echo "export GRAPHSCOPE_HOME=$(INSTALL_PREFIX)"
@@ -84,10 +83,12 @@ coordinator: client
 	pip3 install -r requirements.txt -r requirements-dev.txt --user && \
 	python3 setup.py build_builtin
 
-.PHONY: gae-install
+.PHONY: gae-install, gie-install, gle-install
+
 gae-install: gae
 	$(MAKE) -C $(GAE_BUILD_DIR) install
 gae: $(GAE_BUILD_DIR)/grape_engine
+
 $(GAE_BUILD_DIR)/grape_engine:
 	mkdir -p $(GAE_BUILD_DIR) && \
 	cd $(GAE_BUILD_DIR) && \
@@ -97,16 +98,20 @@ $(GAE_BUILD_DIR)/grape_engine:
 		-DENABLE_JAVA_SDK=${ENABLE_JAVA_SDK} .. && \
 	$(MAKE) -j$(NUMPROC)
 
-.PHONY: gie-install
 gie-install: gie
 	tar -xf $(GIE_DIR)/assembly/target/graphscope.tar.gz --strip-components 1 -C $(INSTALL_PREFIX)
 gie: $(GIE_DIR)/assembly/target/graphscope.tar.gz
+
 $(GIE_DIR)/assembly/target/graphscope.tar.gz:
     # frontend/executor
 	cd $(GIE_DIR) && \
 	mvn package -DskipTests -Drust.compile.mode=$(BUILD_TYPE) -P graphscope,graphscope-assembly --quiet
 
-gle:
+gle-install: gle
+	$(MAKE) -C $(GLE_BUILD_DIR) install
+gle: $(GLE_DIR)/built/lib/libgraphlearn_shared.$(SUFFIX)
+
+$(GLE_DIR)/built/lib/libgraphlearn_shared.$(SUFFIX):
 	git submodule update --init
 	cd $(GLE_DIR) && git submodule update --init third_party/pybind11
 	mkdir -p $(GLE_BUILD_DIR)
