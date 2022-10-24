@@ -10,9 +10,9 @@ ADD . /home/graphscope/GraphScope
 RUN sudo chown -R graphscope:graphscope /home/graphscope/GraphScope
 RUN cd /home/graphscope/GraphScope/ \
     && mkdir /home/graphscope/install \
-    && make gae ENABLE_JAVA_SDK=OFF INSTALL_PREFIX=/home/graphscope/install \
+    && make gae-install ENABLE_JAVA_SDK=OFF INSTALL_PREFIX=/home/graphscope/install \
     && mkdir /home/graphscope/install-with-java \
-    && make gae ENABLE_JAVA_SDK=ON INSTALL_PREFIX=/home/graphscope/install-with-java
+    && make gae-install ENABLE_JAVA_SDK=ON INSTALL_PREFIX=/home/graphscope/install-with-java
 
 ############### RUNTIME: GAE #######################
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/vineyard-runtime:$BASE_VERSION AS analytical

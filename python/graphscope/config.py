@@ -47,17 +47,6 @@ class GSConfig(object):
     # Also could be used as a client image
     k8s_coordinator_image = f"{registry}/graphscope/coordinator:{__version__}"
 
-    # GAE images
-    k8s_gae_image = f"{registry}/graphscope/gae:{__version__}"
-    k8s_gae_java_image = f"{registry}/graphscope/gae-java:{__version__}"
-
-    # GIE images
-    k8s_gie_frontend_image = f"{registry}/graphscope/gie-frontend:{__version__}"
-    k8s_gie_executor_image = f"{registry}/graphscope/gie-executor:{__version__}"
-
-    # GLE image
-    k8s_gle_image = f"{registry}/graphscope/gle:{__version__}"
-
     # Dataset image
     k8s_dataset_image = f"{registry}/graphscope/dataset:{__version__}"
 

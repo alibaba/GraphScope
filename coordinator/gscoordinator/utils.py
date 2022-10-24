@@ -82,8 +82,7 @@ BUILTIN_APP_RESOURCE_PATH = os.path.join(
 )
 # default config file in gar resource
 DEFAULT_GS_CONFIG_FILE = ".gs_conf.yaml"
-DEFAULT_GRAPHSCOPE_HOME = "/opt/graphscope"
-# DEFAULT_GRAPHSCOPE_HOME = "/usr/local"
+DEFAULT_GRAPHSCOPE_HOME = "/usr/local"
 
 # GRAPHSCOPE_HOME
 #   1) get from environment variable `GRAPHSCOPE_HOME`, if not exist,

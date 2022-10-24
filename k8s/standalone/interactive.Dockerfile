@@ -12,7 +12,7 @@ ENV PATH="/home/graphscope/.cargo/bin:$PATH"
 RUN sudo chown -R graphscope:graphscope /home/graphscope/GraphScope
 RUN cd /home/graphscope/GraphScope/ \
     && mkdir /home/graphscope/install \
-    && make gie BUILD_TYPE="$profile" INSTALL_PREFIX=/home/graphscope/install
+    && make gie-install BUILD_TYPE="$profile" INSTALL_PREFIX=/home/graphscope/install
 
 ############### RUNTIME: frontend #######################
 FROM centos:7.9.2009 AS frontend

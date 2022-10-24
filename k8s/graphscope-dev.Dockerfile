@@ -24,7 +24,7 @@ RUN sudo mkdir -p /opt/graphscope && \
     cd ${HOME}/gs && make gle
 
 # build analytical engine
-RUN cd ${HOME}/gs && make gae
+RUN cd ${HOME}/gs && make gae-install
 
 # build python bdist_wheel
 RUN export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib:/opt/graphscope/lib64 && \
