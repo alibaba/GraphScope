@@ -1,28 +1,27 @@
-
-MKFILE_PATH 			:= $(abspath $(lastword $(MAKEFILE_LIST)))
-WORKING_DIR 			:= $(dir $(MKFILE_PATH))
-GAE_DIR                 := $(WORKING_DIR)/analytical_engine
+MKFILE_PATH				:= $(abspath $(lastword $(MAKEFILE_LIST)))
+WORKING_DIR				:= $(dir $(MKFILE_PATH))
+GAE_DIR					:= $(WORKING_DIR)/analytical_engine
 GIE_DIR					:= $(WORKING_DIR)/interactive_engine
 GLE_DIR					:= $(WORKING_DIR)/learning_engine/graph-learn
 GAE_BUILD_DIR			:= $(GAE_DIR)/build
-GLE_BUILD_DIR			:= $(GLE_DIR)/build
-CLIENT_DIR              := $(WORKING_DIR)/python
-COORDINATOR_DIR         := $(WORKING_DIR)/coordinator
-K8S_DIR                 := $(WORKING_DIR)/k8s
-DOCS_DIR                := $(WORKING_DIR)/docs
+GLE_BUILD_DIR			:= $(GLE_DIR)/cmake-build
+CLIENT_DIR				:= $(WORKING_DIR)/python
+COORDINATOR_DIR			:= $(WORKING_DIR)/coordinator
+K8S_DIR					:= $(WORKING_DIR)/k8s
+DOCS_DIR				:= $(WORKING_DIR)/docs
 
-VERSION                     ?= 0.18.0
+VERSION					?= 0.18.0
 
-BUILD_TYPE                  ?= release
+BUILD_TYPE				?= release
 
 # GAE build options
-NETWORKX                    ?= ON
+NETWORKX				?= ON
 
 # testing build option
-BUILD_TEST                  ?= OFF
+BUILD_TEST				?= OFF
 
 # build java sdk option
-ENABLE_JAVA_SDK             ?= ON
+ENABLE_JAVA_SDK			?= ON
 
 # PREFIX is environment variable, but if it is not set, then set default value
 ifeq ($(INSTALL_PREFIX),)
@@ -44,13 +43,15 @@ endif
 # all: graphscope
 # graphscope: gle client coordinator gae gie
 all: gle client coordinator gae gie
-graphscope: install
+graphscope: all
 
-install: gle client coordinator gae-install gie-install
-	# client
+install: gae-install gie-install gle client coordinator 
+    # client
 	pip3 install --user --editable $(CLIENT_DIR)
+    # coordinator
+	pip3 install --user --editable $(COORDINATOR_DIR)
 
-	# gle
+    # gle
 	$(MAKE) -C $(GLE_BUILD_DIR) install
 
 	echo "Run the following command to correctly set environment variable"
@@ -61,7 +62,7 @@ clean:
 	cd $(GAE_DIR)/java && mvn clean
 
 	cd $(GIE_DIR) && mvn clean
-	# TODO: use maven clean to clean ir target
+    # TODO: use maven clean to clean ir target
 	rm -rf $(GIE_DIR)/executor/ir/target
 
 	rm -rf $(GLE_BUILD_DIR) $(GLE_DIR)/proto/*.h $(GLE_DIR)/proto/*.cc
@@ -91,9 +92,9 @@ $(GAE_BUILD_DIR)/grape_engine:
 	mkdir -p $(GAE_BUILD_DIR) && \
 	cd $(GAE_BUILD_DIR) && \
 	cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_PREFIX) \
-		  -DNETWORKX=$(NETWORKX) \
-		  -DBUILD_TESTS=${BUILD_TEST} \
-		  -DENABLE_JAVA_SDK=${ENABLE_JAVA_SDK} .. && \
+		-DNETWORKX=$(NETWORKX) \
+		-DBUILD_TESTS=${BUILD_TEST} \
+		-DENABLE_JAVA_SDK=${ENABLE_JAVA_SDK} .. && \
 	$(MAKE) -j$(NUMPROC)
 
 .PHONY: gie-install
@@ -101,7 +102,7 @@ gie-install: gie
 	tar -xf $(GIE_DIR)/assembly/target/graphscope.tar.gz --strip-components 1 -C $(INSTALL_PREFIX)
 gie: $(GIE_DIR)/assembly/target/graphscope.tar.gz
 $(GIE_DIR)/assembly/target/graphscope.tar.gz:
-	# frontend/executor
+    # frontend/executor
 	cd $(GIE_DIR) && \
 	mvn package -DskipTests -Drust.compile.mode=$(BUILD_TYPE) -P graphscope,graphscope-assembly --quiet
 
@@ -111,8 +112,8 @@ gle:
 	mkdir -p $(GLE_BUILD_DIR)
 	cd $(GLE_BUILD_DIR) && \
 	cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_PREFIX) \
-		  -DWITH_VINEYARD=ON \
-		  -DTESTING=${BUILD_TEST} .. && \
+		-DWITH_VINEYARD=ON \
+		-DTESTING=${BUILD_TEST} .. && \
 	$(MAKE) -j$(NUMPROC)
 
 ## wheels

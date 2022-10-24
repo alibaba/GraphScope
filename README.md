@@ -339,7 +339,7 @@ Then you can build GraphScope with pre-configured `make` commands.
 
 ```bash
 # to make graphscope whole package, including python package + engine binaries.
-make graphscope
+sudo make install
 
 # or make the engine components
 # make gie

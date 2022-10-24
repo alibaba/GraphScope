@@ -128,4 +128,4 @@ Ubuntu 20.04+ or MacOS.
 .. code:: shell
 
     source ~/.graphscope_env
-    make graphscope
+    sudo make install
