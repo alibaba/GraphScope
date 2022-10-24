@@ -148,11 +148,15 @@ public class ClientDdlService extends ClientDdlGrpc.ClientDdlImplBase {
                                 .setEdgeLabelId(
                                         LabelIdPb.newBuilder()
                                                 .setId(edgeKind.getEdgeLabelId().getId()))
-                                .setSrcVertexLabel(graphDef.getTypeDef(edgeKind.getSrcVertexLabelId()).getLabel())
+                                .setSrcVertexLabel(
+                                        graphDef.getTypeDef(edgeKind.getSrcVertexLabelId())
+                                                .getLabel())
                                 .setSrcVertexLabelId(
                                         LabelIdPb.newBuilder()
                                                 .setId(edgeKind.getSrcVertexLabelId().getId()))
-                                .setDstVertexLabel(graphDef.getTypeDef(edgeKind.getDstVertexLabelId()).getLabel())
+                                .setDstVertexLabel(
+                                        graphDef.getTypeDef(edgeKind.getDstVertexLabelId())
+                                                .getLabel())
                                 .setDstVertexLabelId(
                                         LabelIdPb.newBuilder()
                                                 .setId(edgeKind.getDstVertexLabelId().getId()))
