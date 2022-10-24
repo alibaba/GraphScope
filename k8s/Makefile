@@ -107,8 +107,8 @@ graphscope-darwin-py3:
 		mkdir -p build && cd build && \
 		cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local && \
 		sudo make install -j`nproc` && \
-		sudo rm -fr /opt/vineyard/lib
-	sudo rm -fr /tmp/v6d /tmp/libgrape-lite
+		sudo rm -rf /opt/vineyard/lib
+	sudo rm -rf /tmp/v6d /tmp/libgrape-lite
 	# build graphscope
 	cd $(WORKING_DIR)/../ && \
 		python3 -m pip install --upgrade setuptools && \
@@ -118,18 +118,18 @@ graphscope-darwin-py3:
 	# build and delocate wheel
 	cd $(WORKING_DIR)/../coordinator && \
 		export WITH_EXTRA_DATA=ON && \
-		rm -fr build dist/*.whl || true && \
+		rm -rf build dist/*.whl || true && \
 		sudo strip -s $(WORKING_DIR)/../analytical_engine/exported_symbols_osx.lds /opt/graphscope/bin/grape_engine || true && \
 		sudo strip /opt/graphscope/bin/gaia_executor && \
 		export DYLD_LIBRARY_PATH=/usr/local/lib:$$DYLD_LIBRARY_PATH && \
 		package_name=gs-include python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
-		rm -fr build && \
+		rm -rf build && \
 		package_name=gs-apps python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
-		rm -fr build && \
+		rm -rf build && \
 		package_name=gs-engine python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
-		rm -fr build && \
+		rm -rf build && \
 		package_name=gs-coordinator python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
-		rm -fr build && \
+		rm -rf build && \
 		package_name=graphscope python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
 		pip3 install delocate && \
 		for wheel in `ls dist/*.whl`; do \
@@ -144,19 +144,19 @@ graphscope-manylinux2014-py3-nodocker:
 	python3 $(WORKING_DIR)/precompile.py && \
 	export WITH_EXTRA_DATA=ON && \
 	cd $(WORKING_DIR)/../coordinator && \
-	rm -fr build dist/*.whl && \
+	rm -rf build dist/*.whl && \
 	sudo strip /opt/graphscope/bin/grape_engine && \
 	sudo strip /opt/graphscope/bin/gaia_executor && \
 	sudo strip /opt/graphscope/lib/*.so && \
 	strip /tmp/gs/builtin/*/*.so && \
 	package_name=gs-include python3 setup.py bdist_wheel && \
-	rm -fr build && \
+	rm -rf build && \
 	package_name=gs-apps python3 setup.py bdist_wheel && \
-	rm -fr build && \
+	rm -rf build && \
 	package_name=gs-engine python3 setup.py bdist_wheel && \
-	rm -fr build && \
+	rm -rf build && \
 	package_name=gs-coordinator python3 setup.py bdist_wheel && \
-	rm -fr build && \
+	rm -rf build && \
 	package_name=graphscope python3 setup.py bdist_wheel && \
 	cd dist && \
 	for wheel in `ls ./*.whl`; do \
@@ -204,7 +204,7 @@ graphscope-client-darwin-py3:
 		cd $(WORKING_DIR)/../python && \
 		pip3 install -U pip && \
 		pip3 install "numpy==1.18.5" "pandas<1.5.0" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" delocate wheel && \
-		rm -fr build dist/*.whl || true && \
+		rm -rf build dist/*.whl || true && \
 		python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
 		for wheel in `ls dist/*.whl`; do \
 			delocate-wheel -w dist/wheelhouse -v $$wheel && rm $$wheel; \

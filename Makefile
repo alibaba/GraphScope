@@ -50,8 +50,10 @@ graphscope: all
 install: gae-install gie-install gle-install client coordinator
     # client
 	pip3 install --user --editable $(CLIENT_DIR)
+	rm -rf $(CLIENT_DIR)/*.egg-info
     # coordinator
 	pip3 install --user --editable $(COORDINATOR_DIR)
+	rm -rf $(COORDINATOR_DIR)/*.egg-info
 
 	echo "Run the following command to correctly set environment variable"
 	echo "export GRAPHSCOPE_HOME=$(INSTALL_PREFIX)"
