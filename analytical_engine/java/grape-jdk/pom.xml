@@ -32,7 +32,6 @@
     <jacoco.version>0.8.7</jacoco.version>
     <jni.library.name>grape-jni</jni.library.name>
     <jni.library.path>${project.basedir}/target/native/</jni.library.path>
-    <maven.javadoc.version>3.3.1</maven.javadoc.version>
   </properties>
 
   <dependencies>
@@ -44,6 +43,10 @@
     <dependency>
       <groupId>com.alibaba.fastffi</groupId>
       <artifactId>ffi</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.alibaba.graphscope</groupId>
+      <artifactId>grape-annotation</artifactId>
     </dependency>
     <dependency>
       <groupId>com.alibaba.fastffi</groupId>
@@ -75,17 +78,6 @@
 
   <build>
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>${maven.javadoc.version}</version>
-        <configuration>
-          <reportOutputDirectory>${javadoc.output.directory}</reportOutputDirectory>
-          <destDir>${javadoc.output.destDir}</destDir>
-          <failOnError>false</failOnError>
-          <locale>en_US</locale>
-        </configuration>
-      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>

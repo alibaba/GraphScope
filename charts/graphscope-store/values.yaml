@@ -116,6 +116,11 @@ persistence:
     ##
     storageClass: ""
 
+## Tolerations for GraphScope store pods assignment
+## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+##
+tolerations: []
+
 ## Name of existing ConfigMap with GraphScope configuration.
 ## NOTE: When it's set the 'configuration' parameter is ignored
 ##
@@ -153,11 +158,6 @@ store:
   ## Note: podAffinityPreset, podAntiAffinityPreset, and  nodeAffinityPreset will be ignored when it's set
   ##
   affinity: {}
-
-  ## Tolerations for GraphScope store pods assignment
-  ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
-  ##
-  tolerations: []
 
   ## Node labels for GraphScope store pods assignment
   ## ref: https://kubernetes.io/docs/user-guide/node-selection/
@@ -308,11 +308,6 @@ frontend:
   ##
   affinity: {}
 
-  ## Tolerations for GraphScope store pods assignment
-  ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
-  ##
-  tolerations: []
-
   ## Node labels for GraphScope store pods assignment
   ## ref: https://kubernetes.io/docs/user-guide/node-selection/
   ##
@@ -457,11 +452,6 @@ ingestor:
   ##
   affinity: {}
 
-  ## Tolerations for GraphScope store pods assignment
-  ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
-  ##
-  tolerations: []
-
   ## Node labels for GraphScope store pods assignment
   ## ref: https://kubernetes.io/docs/user-guide/node-selection/
   ##
@@ -568,11 +558,6 @@ coordinator:
   ## Note: podAffinityPreset, podAntiAffinityPreset, and  nodeAffinityPreset will be ignored when it's set
   ##
   affinity: {}
-
-  ## Tolerations for GraphScope store pods assignment
-  ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
-  ##
-  tolerations: []
 
   ## Node labels for GraphScope store pods assignment
   ## ref: https://kubernetes.io/docs/user-guide/node-selection/

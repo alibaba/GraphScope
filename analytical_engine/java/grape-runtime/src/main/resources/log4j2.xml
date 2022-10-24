@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+
+  <Appenders>
+    <Console name="STDOUT" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d{HH:mm:ss.SSS}|%-5level|%c - %msg%n"/>
+    </Console>
+  </Appenders>
+
+  <Loggers>
+    <!-- main logger -->
+    <Root level="INFO">
+      <AppenderRef ref="STDOUT"/>
+    </Root>
+
+  </Loggers>
+
+</Configuration>
+

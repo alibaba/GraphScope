@@ -38,9 +38,10 @@ clean:
 
 	@echo "Building Java doc to $(BUILDDIR)/${TAG}/$@/reference/gae_java"
 
-	cd ${WORKING_DIR}/../analytical_engine/java/grape-jdk && \
+	cd ${WORKING_DIR}/../analytical_engine/java && \
 	if [ -d "${M2_REPO}/com/alibaba/fastffi" ]; then \
-		mvn javadoc::javadoc -Djavadoc.output.directory=${WORKING_DIR}/$(BUILDDIR)/${TAG}/$@/reference -Djavadoc.output.destDir=gae_java --quiet; \
+		mvn clean install -Dmaven.antrun.skip=true -DskipTests -pl :grape-jdk -am && \
+		mvn javadoc:aggregate -pl :grape-jdk -am -Djavadoc.output.directory=${WORKING_DIR}/$(BUILDDIR)/${TAG}/$@/reference -Djavadoc.output.destDir=gae_java --quiet; \
 	else \
 		echo "Can not generate javadoc without fastffi"; \
 	fi
