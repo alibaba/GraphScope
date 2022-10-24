@@ -119,6 +119,12 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
     }
 
     fn check_cancel(&self) -> bool {
+        if self.conf.time_limit > 0 {
+            let elapsed = self.start.elapsed().as_millis() as u64;
+            if elapsed >= self.conf.time_limit {
+                return true;
+            }
+        }
         // TODO: check cancel impl;
         false
     }
