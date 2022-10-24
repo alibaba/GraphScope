@@ -15,10 +15,11 @@
 
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
-use std::convert::TryFrom;
 
+use crate::catalogue::error::{IrPatternError, IrPatternResult};
 use crate::catalogue::pattern::{Adjacency, Pattern, PatternEdge, PatternVertex};
 use crate::catalogue::{DynIter, PatternId, PatternLabelId};
+use std::convert::TryFrom;
 
 #[derive(Debug, Clone)]
 pub(crate) struct CanonicalLabelManager {
@@ -142,7 +143,10 @@ impl CanonicalLabelManager {
 
     /// Given vertex ID, return the rank of the given vertex
     pub fn get_vertex_rank(&self, vertex_id: PatternId) -> Option<PatternId> {
-        *self.vertex_rank_map.get(&vertex_id).unwrap()
+        *self
+            .vertex_rank_map
+            .get(&vertex_id)
+            .unwrap_or(&None)
     }
 }
 
@@ -153,14 +157,15 @@ impl CanonicalLabelManager {
     /// The idea of vertex groups is very similar to the ordered partition in canonical labeling.
     ///
     /// Basic Idea: All vertices with the same label are initially in the same group, and iteratively refine the groups with updated grouping information until the grouping is stable.
-    pub fn vertex_grouping(&mut self, pattern: &Pattern) {
+    pub fn vertex_grouping(&mut self, pattern: &Pattern) -> IrPatternResult<()> {
         while !self.has_converged {
-            self.refine_vertex_groups(pattern);
+            self.refine_vertex_groups(pattern)?;
         }
+        Ok(())
     }
 
     /// Refine all the vertex groups with the information about themselves as well as their adjacencies.
-    fn refine_vertex_groups(&mut self, pattern: &Pattern) {
+    fn refine_vertex_groups(&mut self, pattern: &Pattern) -> IrPatternResult<()> {
         // The updated version of vertex group map and vertex groups.
         // The updated data are temporarily stored here and finally moved to the VertexGroupManager.
         let mut updated_vertex_group_map: BTreeMap<PatternId, PatternId> = BTreeMap::new();
@@ -174,7 +179,7 @@ impl CanonicalLabelManager {
             for i in 0..vertex_group.len() {
                 let current_v_id: PatternId = vertex_group[i];
                 for j in (i + 1)..vertex_group.len() {
-                    match self.cmp_vertices(pattern, current_v_id, vertex_group[j]) {
+                    match self.cmp_vertices(pattern, current_v_id, vertex_group[j])? {
                         Ordering::Greater => vertex_group_tmp_vec[i] += 1,
                         Ordering::Less => vertex_group_tmp_vec[j] += 1,
                         Ordering::Equal => (),
@@ -201,13 +206,14 @@ impl CanonicalLabelManager {
 
         // Update the order of vertex adjacencies
         self.update_vertex_adjacencies_order();
+        Ok(())
     }
 }
 
 impl CanonicalLabelManager {
     /// Set unique ranks to each vertex and edge
-    pub fn pattern_ranking(&mut self, pattern: &mut Pattern) {
-        let start_v_id: PatternId = self.get_pattern_ranking_start_vertex(pattern);
+    pub fn pattern_ranking(&mut self, pattern: &mut Pattern) -> IrPatternResult<()> {
+        let start_v_id: PatternId = self.get_pattern_ranking_start_vertex(pattern)?;
         let mut next_free_vertex_rank: PatternId = 0;
         let mut next_free_edge_rank: PatternId = 0;
         self.vertex_rank_map
@@ -216,7 +222,7 @@ impl CanonicalLabelManager {
         let mut visited_edges: BTreeSet<PatternId> = BTreeSet::new();
         // Initialize Stack for adjacencies
         let mut adjacency_stack: VecDeque<Adjacency> =
-            self.init_adjacencies_stack(start_v_id, &self.vertex_adjacencies_map);
+            self.init_adjacencies_stack(start_v_id, &self.vertex_adjacencies_map)?;
         // Perform DFS on adjacencies
         while let Some(adjacency) = adjacency_stack.pop_back() {
             // Insert edge to dfs sequence if it has not been visited
@@ -234,7 +240,7 @@ impl CanonicalLabelManager {
             let is_vertex_visited = self
                 .vertex_rank_map
                 .get(&current_v_id)
-                .unwrap()
+                .unwrap_or(&None)
                 .is_some();
             if !is_vertex_visited {
                 self.vertex_rank_map
@@ -248,20 +254,26 @@ impl CanonicalLabelManager {
             let adjacencies_to_extend = self
                 .vertex_adjacencies_map
                 .get(&current_v_id)
-                .unwrap();
+                .ok_or(IrPatternError::CanonicalLabelError(format!(
+                    "vertex not exist in CanonicalLabelManager, the vertex is {:?}",
+                    current_v_id
+                )))?;
             adjacencies_to_extend
                 .iter()
                 .rev()
                 .filter(|adj| !visited_edges.contains(&adj.get_edge_id()))
                 .for_each(|adj| adjacency_stack.push_back(*adj));
         }
+        Ok(())
     }
 
     /// Return the ID of the starting vertex of pattern ranking.
     ///
     /// In our case, it's the vertex with the smallest label and group ID
-    fn get_pattern_ranking_start_vertex(&self, pattern: &Pattern) -> PatternId {
-        let min_v_label = pattern.get_min_vertex_label().unwrap();
+    fn get_pattern_ranking_start_vertex(&self, pattern: &Pattern) -> IrPatternResult<PatternId> {
+        let min_v_label = pattern
+            .get_min_vertex_label()
+            .ok_or(IrPatternError::InvalidPattern("min_vertex_label not exist in pattern".to_string()))?;
         pattern
             .vertices_iter_by_label(min_v_label)
             .map(|vertex| vertex.get_id())
@@ -270,22 +282,31 @@ impl CanonicalLabelManager {
                 let v2_group = self.get_vertex_group(v2_id).unwrap();
                 v1_group.cmp(&v2_group)
             })
-            .unwrap()
+            .ok_or(IrPatternError::InvalidPattern(format!(
+                "vertices of min_vertex_label not exist in pattern, the label is {:?}",
+                min_v_label
+            )))
     }
 
     /// Pattern Ranking adopts DFS and the stack for DFS stores vertex adjacencies
     fn init_adjacencies_stack(
         &self, start_v_id: PatternId, vertex_adjacencies_map: &BTreeMap<PatternId, Vec<Adjacency>>,
-    ) -> VecDeque<Adjacency> {
+    ) -> IrPatternResult<VecDeque<Adjacency>> {
         let mut adjacency_stack: VecDeque<Adjacency> = VecDeque::new();
-        let adjacencies_of_start_vertex = vertex_adjacencies_map.get(&start_v_id).unwrap();
+        let adjacencies_of_start_vertex =
+            vertex_adjacencies_map
+                .get(&start_v_id)
+                .ok_or(IrPatternError::InvalidPattern(format!(
+                    "Get adjacency's of vertex failed, vertex is {:?}",
+                    start_v_id
+                )))?;
         // Use rev() so that we can pop out adjacencies in normal order
         adjacencies_of_start_vertex
             .iter()
             .rev()
             .for_each(|adjacency| adjacency_stack.push_back(*adjacency));
 
-        adjacency_stack
+        Ok(adjacency_stack)
     }
 }
 
@@ -310,12 +331,17 @@ impl CanonicalLabelManager {
         let adj1_v_id: PatternId = adj1.get_adj_vertex().get_id();
         let adj2_v_id: PatternId = adj2.get_adj_vertex().get_id();
         // Compare vertex groups
-        let adj1_v_group = self.get_vertex_group(adj1_v_id).unwrap();
-        let adj2_v_group = self.get_vertex_group(adj2_v_id).unwrap();
-        match adj1_v_group.cmp(&adj2_v_group) {
-            Ordering::Less => return Ordering::Less,
-            Ordering::Greater => return Ordering::Greater,
-            Ordering::Equal => (),
+        let adj1_v_group = self.get_vertex_group(adj1_v_id);
+        let adj2_v_group = self.get_vertex_group(adj2_v_id);
+        if adj1_v_group.is_some() && adj2_v_group.is_some() {
+            match adj1_v_group
+                .unwrap()
+                .cmp(&adj2_v_group.unwrap())
+            {
+                Ordering::Less => return Ordering::Less,
+                Ordering::Greater => return Ordering::Greater,
+                Ordering::Equal => (),
+            }
         }
 
         // Compare vertex ranks
@@ -339,13 +365,21 @@ impl CanonicalLabelManager {
     /// Consider labels and out/in degrees only
     ///
     /// Called when setting initial ranks
-    fn cmp_vertices(&self, pattern: &Pattern, v1_id: PatternId, v2_id: PatternId) -> Ordering {
+    fn cmp_vertices(
+        &self, pattern: &Pattern, v1_id: PatternId, v2_id: PatternId,
+    ) -> IrPatternResult<Ordering> {
         // Compare Label
-        let v1_label = pattern.get_vertex(v1_id).unwrap().get_label();
-        let v2_label = pattern.get_vertex(v2_id).unwrap().get_label();
+        let v1_label = pattern
+            .get_vertex(v1_id)
+            .ok_or(IrPatternError::MissingPatternVertex(v1_id))?
+            .get_label();
+        let v2_label = pattern
+            .get_vertex(v2_id)
+            .ok_or(IrPatternError::MissingPatternVertex(v2_id))?
+            .get_label();
         match v1_label.cmp(&v2_label) {
-            Ordering::Less => return Ordering::Less,
-            Ordering::Greater => return Ordering::Greater,
+            Ordering::Less => return Ok(Ordering::Less),
+            Ordering::Greater => return Ok(Ordering::Greater),
             Ordering::Equal => (),
         }
 
@@ -353,8 +387,8 @@ impl CanonicalLabelManager {
         let v1_out_degree = pattern.get_vertex_out_degree(v1_id);
         let v2_out_degree = pattern.get_vertex_out_degree(v2_id);
         match v1_out_degree.cmp(&v2_out_degree) {
-            Ordering::Less => return Ordering::Less,
-            Ordering::Greater => return Ordering::Greater,
+            Ordering::Less => return Ok(Ordering::Less),
+            Ordering::Greater => return Ok(Ordering::Greater),
             Ordering::Equal => (),
         }
 
@@ -362,8 +396,8 @@ impl CanonicalLabelManager {
         let v1_in_degree = pattern.get_vertex_in_degree(v1_id);
         let v2_in_degree = pattern.get_vertex_in_degree(v2_id);
         match v1_in_degree.cmp(&v2_in_degree) {
-            Ordering::Less => return Ordering::Less,
-            Ordering::Greater => return Ordering::Greater,
+            Ordering::Less => return Ok(Ordering::Less),
+            Ordering::Greater => return Ok(Ordering::Greater),
             Ordering::Equal => (),
         }
 
@@ -379,14 +413,14 @@ impl CanonicalLabelManager {
 
             // Compare direction and labels
             match self.cmp_adjacencies(v1_adjacency.unwrap(), v2_adjacency.unwrap()) {
-                Ordering::Less => return Ordering::Less,
-                Ordering::Greater => return Ordering::Greater,
+                Ordering::Less => return Ok(Ordering::Less),
+                Ordering::Greater => return Ok(Ordering::Greater),
                 Ordering::Equal => (),
             }
         }
 
         // Return Equal if Still Cannot Distinguish
-        Ordering::Equal
+        Ok(Ordering::Equal)
     }
 
     /// Update the order of each record in vertex adjacency map
@@ -414,12 +448,17 @@ impl CanonicalLabelManager {
                     let adj1_v_id: PatternId = adj1.get_adj_vertex().get_id();
                     let adj2_v_id: PatternId = adj2.get_adj_vertex().get_id();
                     // Compare vertex groups
-                    let adj1_v_group = vertex_group_map.get(&adj1_v_id).unwrap();
-                    let adj2_v_group = vertex_group_map.get(&adj2_v_id).unwrap();
-                    match adj1_v_group.cmp(&adj2_v_group) {
-                        Ordering::Less => return Ordering::Less,
-                        Ordering::Greater => return Ordering::Greater,
-                        Ordering::Equal => (),
+                    let adj1_v_group = vertex_group_map.get(&adj1_v_id);
+                    let adj2_v_group = vertex_group_map.get(&adj2_v_id);
+                    if adj1_v_group.is_some() && adj2_v_group.is_some() {
+                        match adj1_v_group
+                            .unwrap()
+                            .cmp(&adj2_v_group.unwrap())
+                        {
+                            Ordering::Less => return Ordering::Less,
+                            Ordering::Greater => return Ordering::Greater,
+                            Ordering::Equal => (),
+                        }
                     }
 
                     // Compare vertex ranks

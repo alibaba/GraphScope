@@ -34,7 +34,9 @@ use ir_core::catalogue::PatternDirection;
 /// pattern_case1 + extend_step_case1 = pattern_case2
 pub fn build_extend_step_case1(pattern: &Pattern) -> ExtendStep {
     let (src_vertex_label, src_vertex_rank) = (0, 0);
-    let src_vertices = pattern.get_equivalent_vertices(src_vertex_label, src_vertex_rank);
+    let src_vertices = pattern
+        .get_equivalent_vertices(src_vertex_label, src_vertex_rank)
+        .unwrap();
     let src_vertex1_order = pattern
         .get_vertex_rank(src_vertices[0].get_id())
         .unwrap();
@@ -67,13 +69,28 @@ pub fn build_extend_step_case2(pattern: &Pattern) -> ExtendStep {
     let (src_vertex2_label, src_vertex2_rank) = (1, 1);
     let (src_vertex3_label, src_vertex3_rank) = (2, 0);
     let src_vertex1_order = pattern
-        .get_vertex_rank(pattern.get_equivalent_vertices(src_vertex1_label, src_vertex1_rank)[0].get_id())
+        .get_vertex_rank(
+            pattern
+                .get_equivalent_vertices(src_vertex1_label, src_vertex1_rank)
+                .unwrap()[0]
+                .get_id(),
+        )
         .unwrap();
     let src_vertex2_order = pattern
-        .get_vertex_rank(pattern.get_equivalent_vertices(src_vertex2_label, src_vertex2_rank)[0].get_id())
+        .get_vertex_rank(
+            pattern
+                .get_equivalent_vertices(src_vertex2_label, src_vertex2_rank)
+                .unwrap()[0]
+                .get_id(),
+        )
         .unwrap();
     let src_vertex3_order = pattern
-        .get_vertex_rank(pattern.get_equivalent_vertices(src_vertex3_label, src_vertex3_rank)[0].get_id())
+        .get_vertex_rank(
+            pattern
+                .get_equivalent_vertices(src_vertex3_label, src_vertex3_rank)
+                .unwrap()[0]
+                .get_id(),
+        )
         .unwrap();
     let extend_edge_1 = ExtendEdge::new(src_vertex1_order, 1, PatternDirection::Out);
     let extend_edge_2 = ExtendEdge::new(src_vertex2_order, 1, PatternDirection::Out);
@@ -89,7 +106,12 @@ pub fn build_modern_extend_step_case1(pattern: &Pattern) -> ExtendStep {
     let target_v_label = 0;
     let (src_vertex_label, src_vertex_rank) = (0, 0);
     let src_vertex_order = pattern
-        .get_vertex_rank(pattern.get_equivalent_vertices(src_vertex_label, src_vertex_rank)[0].get_id())
+        .get_vertex_rank(
+            pattern
+                .get_equivalent_vertices(src_vertex_label, src_vertex_rank)
+                .unwrap()[0]
+                .get_id(),
+        )
         .unwrap();
     let extend_edge_1 = ExtendEdge::new(src_vertex_order, 0, PatternDirection::Out);
     ExtendStep::new(target_v_label, vec![extend_edge_1])
@@ -103,7 +125,12 @@ pub fn build_modern_extend_step_case2(pattern: &Pattern) -> ExtendStep {
     let target_v_label = 0;
     let (src_vertex_label, src_vertex_rank) = (0, 0);
     let src_vertex_order = pattern
-        .get_vertex_rank(pattern.get_equivalent_vertices(src_vertex_label, src_vertex_rank)[0].get_id())
+        .get_vertex_rank(
+            pattern
+                .get_equivalent_vertices(src_vertex_label, src_vertex_rank)
+                .unwrap()[0]
+                .get_id(),
+        )
         .unwrap();
     let extend_edge_1 = ExtendEdge::new(src_vertex_order, 0, PatternDirection::In);
     ExtendStep::new(target_v_label, vec![extend_edge_1])
@@ -117,7 +144,12 @@ pub fn build_modern_extend_step_case3(pattern: &Pattern) -> ExtendStep {
     let target_v_label = 1;
     let (src_vertex_label, src_vertex_rank) = (0, 0);
     let src_vertex_order = pattern
-        .get_vertex_rank(pattern.get_equivalent_vertices(src_vertex_label, src_vertex_rank)[0].get_id())
+        .get_vertex_rank(
+            pattern
+                .get_equivalent_vertices(src_vertex_label, src_vertex_rank)
+                .unwrap()[0]
+                .get_id(),
+        )
         .unwrap();
     let extend_edge_1 = ExtendEdge::new(src_vertex_order, 1, PatternDirection::Out);
     ExtendStep::new(target_v_label, vec![extend_edge_1])
@@ -131,7 +163,12 @@ pub fn build_modern_extend_step_case4(pattern: &Pattern) -> ExtendStep {
     let target_v_label = 0;
     let (src_vertex_label, src_vertex_rank) = (1, 0);
     let src_vertex_order = pattern
-        .get_vertex_rank(pattern.get_equivalent_vertices(src_vertex_label, src_vertex_rank)[0].get_id())
+        .get_vertex_rank(
+            pattern
+                .get_equivalent_vertices(src_vertex_label, src_vertex_rank)
+                .unwrap()[0]
+                .get_id(),
+        )
         .unwrap();
     let extend_edge_1 = ExtendEdge::new(src_vertex_order, 1, PatternDirection::In);
     ExtendStep::new(target_v_label, vec![extend_edge_1])
@@ -150,10 +187,20 @@ pub fn build_modern_extend_step_case5(pattern: &Pattern) -> ExtendStep {
     let (src_vertex1_label, src_vertex1_rank) = (1, 0);
     let (src_vertex2_label, src_vertex2_rank) = (0, 0);
     let src_vertex1_order = pattern
-        .get_vertex_rank(pattern.get_equivalent_vertices(src_vertex1_label, src_vertex1_rank)[0].get_id())
+        .get_vertex_rank(
+            pattern
+                .get_equivalent_vertices(src_vertex1_label, src_vertex1_rank)
+                .unwrap()[0]
+                .get_id(),
+        )
         .unwrap();
     let src_vertex2_order = pattern
-        .get_vertex_rank(pattern.get_equivalent_vertices(src_vertex2_label, src_vertex2_rank)[0].get_id())
+        .get_vertex_rank(
+            pattern
+                .get_equivalent_vertices(src_vertex2_label, src_vertex2_rank)
+                .unwrap()[0]
+                .get_id(),
+        )
         .unwrap();
     let extend_edge_1 = ExtendEdge::new(src_vertex1_order, 1, PatternDirection::In);
     let extend_edge_2 = ExtendEdge::new(src_vertex2_order, 0, PatternDirection::Out);
@@ -173,10 +220,20 @@ pub fn build_modern_extend_step_case6(pattern: &Pattern) -> ExtendStep {
     let (src_vertex1_label, src_vertex1_rank) = (0, 0);
     let (src_vertex2_label, src_vertex2_rank) = (0, 1);
     let src_vertex1_order = pattern
-        .get_vertex_rank(pattern.get_equivalent_vertices(src_vertex1_label, src_vertex1_rank)[0].get_id())
+        .get_vertex_rank(
+            pattern
+                .get_equivalent_vertices(src_vertex1_label, src_vertex1_rank)
+                .unwrap()[0]
+                .get_id(),
+        )
         .unwrap();
     let src_vertex2_order = pattern
-        .get_vertex_rank(pattern.get_equivalent_vertices(src_vertex2_label, src_vertex2_rank)[0].get_id())
+        .get_vertex_rank(
+            pattern
+                .get_equivalent_vertices(src_vertex2_label, src_vertex2_rank)
+                .unwrap()[0]
+                .get_id(),
+        )
         .unwrap();
     let extend_edge_1 = ExtendEdge::new(src_vertex1_order, 1, PatternDirection::Out);
     let extend_edge_2 = ExtendEdge::new(src_vertex2_order, 1, PatternDirection::Out);

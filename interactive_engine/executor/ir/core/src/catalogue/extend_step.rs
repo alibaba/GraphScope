@@ -20,9 +20,10 @@ use std::iter::Iterator;
 use ir_common::generated::algebra as pb;
 use serde::{Deserialize, Serialize};
 
+use crate::catalogue::error::{IrPatternError, IrPatternResult};
 use crate::catalogue::pattern::Pattern;
 use crate::catalogue::{query_params, DynIter, PatternDirection, PatternId, PatternLabelId};
-use crate::error::{IrError, IrResult};
+use ir_common::error::ParsePbError;
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ExtendEdge {
@@ -147,9 +148,9 @@ pub struct DefiniteExtendStep {
 /// Transform a one-vertex pattern to DefiniteExtendStep
 /// It is usually to use such DefiniteExtendStep to generate Source operator
 impl TryFrom<Pattern> for DefiniteExtendStep {
-    type Error = IrError;
+    type Error = IrPatternError;
 
-    fn try_from(pattern: Pattern) -> IrResult<Self> {
+    fn try_from(pattern: Pattern) -> IrPatternResult<Self> {
         if pattern.get_vertices_num() == 1 {
             let target_vertex = pattern.vertices_iter().last().unwrap();
             let target_v_id = target_vertex.get_id();
@@ -160,7 +161,7 @@ impl TryFrom<Pattern> for DefiniteExtendStep {
                 extend_edges: vec![],
             })
         } else {
-            Err(IrError::Unsupported(
+            Err(IrPatternError::Unsupported(
                 "Can only convert pattern with one vertex to Definite Extend Step".to_string(),
             ))
         }
@@ -169,14 +170,18 @@ impl TryFrom<Pattern> for DefiniteExtendStep {
 
 impl DefiniteExtendStep {
     /// Given a target pattern with a vertex id, pick all its neighboring edges and vertices to generate a definite extend step
-    pub fn from_target_pattern(target_pattern: &Pattern, target_vertex_id: PatternId) -> Option<Self> {
+    pub fn from_target_pattern(
+        target_pattern: &Pattern, target_vertex_id: PatternId,
+    ) -> IrPatternResult<Self> {
         if let Some(target_vertex) = target_pattern.get_vertex(target_vertex_id) {
             let target_vertex_label = target_vertex.get_label();
             let mut extend_edges = vec![];
             for adjacency in target_pattern.adjacencies_iter(target_vertex_id) {
                 let edge_id = adjacency.get_edge_id();
                 let dir = adjacency.get_direction();
-                let edge = target_pattern.get_edge(edge_id).unwrap();
+                let edge = target_pattern
+                    .get_edge(edge_id)
+                    .ok_or(IrPatternError::MissingPatternEdge(edge_id))?;
                 if let PatternDirection::In = dir {
                     extend_edges.push(DefiniteExtendEdge::new(
                         edge.get_start_vertex().get_id(),
@@ -193,9 +198,9 @@ impl DefiniteExtendStep {
                     ));
                 }
             }
-            Some(DefiniteExtendStep { target_vertex_id, target_vertex_label, extend_edges })
+            Ok(DefiniteExtendStep { target_vertex_id, target_vertex_label, extend_edges })
         } else {
-            None
+            Err(IrPatternError::MissingPatternVertex(target_vertex_id))
         }
     }
 }
@@ -225,7 +230,7 @@ impl DefiniteExtendStep {
     /// Use the DefiniteExtendStep to generate corresponding edge_expand operator
     pub fn generate_edge_expand(
         &self, extend_edge: &DefiniteExtendEdge, mut edge_opr: pb::EdgeExpand,
-    ) -> IrResult<pb::logical_plan::Operator> {
+    ) -> IrPatternResult<pb::logical_plan::Operator> {
         // use start vertex id as tag
         edge_opr.v_tag = Some((extend_edge.src_vertex_id as i32).into());
         // use target vertex id as alias
@@ -241,7 +246,7 @@ impl DefiniteExtendStep {
     /// Otherwise, treat path_expand as the same as edge_expand (except add endV() back for path_expand)
     pub fn generate_path_expand(
         &self, extend_edge: &DefiniteExtendEdge, mut path_opr: pb::PathExpand, is_intersect: bool,
-    ) -> IrResult<Vec<pb::logical_plan::Operator>> {
+    ) -> IrPatternResult<Vec<pb::logical_plan::Operator>> {
         let mut expand_operators = vec![];
         let start_tag = Some((extend_edge.src_vertex_id as i32).into());
         let direction = extend_edge.dir as i32;
@@ -249,7 +254,10 @@ impl DefiniteExtendStep {
 
         path_opr.start_tag = start_tag.clone();
         path_opr.alias = None;
-        let mut base_edge_expand = path_opr.base.as_mut().unwrap();
+        let mut base_edge_expand = path_opr
+            .base
+            .as_mut()
+            .ok_or(ParsePbError::EmptyFieldError("PathExpand::base in Pattern".to_string()))?;
         (*base_edge_expand).direction = direction;
         let mut end_v = pb::GetV {
             tag: None,
@@ -266,7 +274,7 @@ impl DefiniteExtendStep {
             let hop_range = path_opr
                 .hop_range
                 .as_mut()
-                .ok_or(IrError::MissingData("pb::PathExpand::hop_range".to_string()))?;
+                .ok_or(ParsePbError::EmptyFieldError("pb::PathExpand::hop_range".to_string()))?;
             // out(1..2) = out()
             if hop_range.lower == 1 && hop_range.upper == 2 {
                 last_edge_expand.v_tag = start_tag;
@@ -276,7 +284,10 @@ impl DefiniteExtendStep {
                 // out(low..high) = out(low-1..high-1) + endV() + out()
                 if hop_range.lower < 1 {
                     // The path with range from 0 cannot be translated to oprs that can be intersected.
-                    Err(IrError::InvalidRange(hop_range.lower, hop_range.upper))?
+                    Err(IrPatternError::Unsupported(format!(
+                        "PathExpand in Pattern with lower range of {:?}",
+                        hop_range.lower
+                    )))?
                 }
                 hop_range.lower -= 1;
                 hop_range.upper -= 1;
@@ -293,14 +304,16 @@ impl DefiniteExtendStep {
 
     /// Generate the intersect operator for DefiniteExtendStep's target vertex
     /// It needs its parent EdgeExpand Operator's node ids
-    pub fn generate_intersect_operator(&self, parents: Vec<i32>) -> IrResult<pb::logical_plan::Operator> {
+    pub fn generate_intersect_operator(
+        &self, parents: Vec<i32>,
+    ) -> IrPatternResult<pb::logical_plan::Operator> {
         Ok((pb::Intersect { parents, key: Some((self.target_vertex_id as i32).into()) }).into())
     }
 
     /// Generate the filter operator for DefiniteExtendStep's target vertex if it has filters
     pub fn generate_vertex_filter_operator(
         &self, origin_pattern: &Pattern,
-    ) -> IrResult<Option<pb::logical_plan::Operator>> {
+    ) -> IrPatternResult<Option<pb::logical_plan::Operator>> {
         // pick target vertex's property and predicate info from origin pattern
         let target_v_id = self.target_vertex_id;
         if let Some(vertex_data) = origin_pattern.get_vertex_data(target_v_id) {

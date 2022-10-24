@@ -21,13 +21,13 @@ use ir_common::generated::common as common_pb;
 use ir_common::KeyId;
 use ir_core::catalogue::pattern::*;
 use ir_core::catalogue::{PatternId, PatternLabelId};
-use ir_core::error::IrError;
 use ir_core::plan::meta::PlanMeta;
 use rand::rngs::StdRng;
 use rand::seq::SliceRandom;
 use rand::SeedableRng;
 
 use crate::common::pattern_meta_cases::*;
+use ir_core::catalogue::error::IrPatternResult;
 
 pub const TAG_A: KeyId = 0;
 pub const TAG_B: KeyId = 1;
@@ -385,7 +385,7 @@ pub fn build_ldbc_pattern_case1() -> Pattern {
 /// knows is the edge label
 ///
 /// Person is the vertex label
-pub fn build_ldbc_pattern_from_pb_case1() -> Result<Pattern, IrError> {
+pub fn build_ldbc_pattern_from_pb_case1() -> IrPatternResult<Pattern> {
     let ldbc_pattern_mata = get_ldbc_pattern_meta();
     // define pb pattern message
     let expand_opr = pb::EdgeExpand {
@@ -432,7 +432,7 @@ pub fn build_ldbc_pattern_from_pb_case1() -> Result<Pattern, IrError> {
 ///     study at/      \study at
 ///        Person  ->   Person
 /// ```
-pub fn build_ldbc_pattern_from_pb_case2() -> Result<Pattern, IrError> {
+pub fn build_ldbc_pattern_from_pb_case2() -> IrPatternResult<Pattern> {
     let ldbc_pattern_mata = get_ldbc_pattern_meta();
     // define pb pattern message
     let expand_opr1 = pb::EdgeExpand {
@@ -489,7 +489,7 @@ pub fn build_ldbc_pattern_from_pb_case2() -> Result<Pattern, IrError> {
 
 /// Pattern from ldbc schema file and build from pb::Pattern message
 /// 4 Persons know each other
-pub fn build_ldbc_pattern_from_pb_case3() -> Result<Pattern, IrError> {
+pub fn build_ldbc_pattern_from_pb_case3() -> IrPatternResult<Pattern> {
     let ldbc_pattern_mata = get_ldbc_pattern_meta();
     // define pb pattern message
     let expand_opr = pb::EdgeExpand {
@@ -562,7 +562,7 @@ pub fn build_ldbc_pattern_from_pb_case3() -> Result<Pattern, IrError> {
 ///     likes \      / has creator
 ///           Comment
 /// ```
-pub fn build_ldbc_pattern_from_pb_case4() -> Result<Pattern, IrError> {
+pub fn build_ldbc_pattern_from_pb_case4() -> IrPatternResult<Pattern> {
     let ldbc_pattern_mata = get_ldbc_pattern_meta();
     // define pb pattern message
     let expand_opr1 = pb::EdgeExpand {
@@ -640,7 +640,7 @@ pub fn build_ldbc_pattern_from_pb_case4() -> Result<Pattern, IrError> {
 ///   Person knows->knows Person
 /// ```
 /// knows->knows represents there are two edges with "knows" label between two people
-pub fn build_ldbc_pattern_from_pb_case5() -> Result<Pattern, IrError> {
+pub fn build_ldbc_pattern_from_pb_case5() -> IrPatternResult<Pattern> {
     let ldbc_pattern_mata = get_ldbc_pattern_meta();
     // define pb pattern message
     let expand_opr0 = pb::EdgeExpand {
@@ -703,7 +703,7 @@ pub fn build_ldbc_pattern_from_pb_case5() -> Result<Pattern, IrError> {
     Pattern::from_pb_pattern(&pattern, &ldbc_pattern_mata, &mut PlanMeta::default())
 }
 
-pub fn build_ldbc_pattern_from_pb_case6() -> Result<Pattern, IrError> {
+pub fn build_ldbc_pattern_from_pb_case6() -> IrPatternResult<Pattern> {
     let ldbc_pattern_mata = get_ldbc_pattern_meta();
     // define pb pattern message
     let expand_opr0 = pb::EdgeExpand {

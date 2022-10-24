@@ -23,11 +23,12 @@ use ir_common::generated::common as common_pb;
 use vec_map::VecMap;
 
 use crate::catalogue::canonical_label::CanonicalLabelManager;
+use crate::catalogue::error::{IrPatternError, IrPatternResult};
 use crate::catalogue::extend_step::DefiniteExtendStep;
 use crate::catalogue::pattern_meta::PatternMeta;
 use crate::catalogue::{query_params, DynIter, PatternDirection, PatternId, PatternLabelId};
-use crate::error::{IrError, IrResult};
 use crate::plan::meta::{PlanMeta, TagId};
+use ir_common::error::ParsePbError;
 
 #[derive(Debug, Clone, Copy)]
 pub struct PatternVertex {
@@ -182,25 +183,16 @@ pub struct Adjacency {
 }
 
 impl Adjacency {
-    fn new(src_vertex: &PatternVertex, edge: &PatternEdge) -> Option<Adjacency> {
-        let start_vertex = edge.get_start_vertex();
-        let end_vertex = edge.get_end_vertex();
-        if (src_vertex.id, src_vertex.label) == (start_vertex.id, start_vertex.label) {
-            Some(Adjacency {
-                edge_id: edge.get_id(),
-                edge_label: edge.get_label(),
-                adj_vertex: edge.get_end_vertex(),
-                direction: PatternDirection::Out,
-            })
-        } else if (src_vertex.id, src_vertex.label) == (end_vertex.id, end_vertex.label) {
-            Some(Adjacency {
-                edge_id: edge.get_id(),
-                edge_label: edge.get_label(),
-                adj_vertex: edge.get_start_vertex(),
-                direction: PatternDirection::In,
-            })
-        } else {
-            None
+    fn new(edge: &PatternEdge, direction: PatternDirection) -> Adjacency {
+        Adjacency {
+            edge_id: edge.get_id(),
+            edge_label: edge.get_label(),
+            adj_vertex: if direction == PatternDirection::Out {
+                edge.get_end_vertex()
+            } else {
+                edge.get_start_vertex()
+            },
+            direction,
         }
     }
 
@@ -269,9 +261,9 @@ impl From<PatternVertex> for Pattern {
 
 /// Initialize a Pattern from a vertor of Pattern Edges
 impl TryFrom<Vec<PatternEdge>> for Pattern {
-    type Error = IrError;
+    type Error = IrPatternError;
 
-    fn try_from(edges: Vec<PatternEdge>) -> IrResult<Pattern> {
+    fn try_from(edges: Vec<PatternEdge>) -> IrPatternResult<Pattern> {
         if !edges.is_empty() {
             let mut new_pattern = Pattern::default();
             for edge in edges {
@@ -293,7 +285,7 @@ impl TryFrom<Vec<PatternEdge>> for Pattern {
                     .entry(start_vertex.get_id())
                     .or_insert(PatternVertexData::default())
                     .out_adjacencies
-                    .push(Adjacency::new(start_vertex, &edge).unwrap());
+                    .push(Adjacency::new(&edge, PatternDirection::Out));
                 // Add or update the end vertex to the new Pattern
                 let end_vertex = new_pattern
                     .vertices
@@ -305,12 +297,12 @@ impl TryFrom<Vec<PatternEdge>> for Pattern {
                     .entry(end_vertex.get_id())
                     .or_insert(PatternVertexData::default())
                     .in_adjacencies
-                    .push(Adjacency::new(end_vertex, &edge).unwrap());
+                    .push(Adjacency::new(&edge, PatternDirection::In));
             }
-            new_pattern.canonical_labeling();
+            new_pattern.canonical_labeling()?;
             Ok(new_pattern)
         } else {
-            Err(IrError::InvalidPattern("Empty pattern".to_string()))
+            Err(IrPatternError::InvalidPattern("Empty pattern".to_string()))
         }
     }
 }
@@ -319,7 +311,7 @@ impl TryFrom<Vec<PatternEdge>> for Pattern {
 impl Pattern {
     pub fn from_pb_pattern(
         pb_pattern: &pb::Pattern, pattern_meta: &PatternMeta, plan_meta: &mut PlanMeta,
-    ) -> IrResult<Pattern> {
+    ) -> IrPatternResult<Pattern> {
         use pb::pattern::binder::Item as BinderItem;
         // next vertex id assign to the vertex picked from the pb pattern
         let mut next_vertex_id = plan_meta.get_max_tag_id() as PatternId;
@@ -337,17 +329,19 @@ impl Pattern {
         let mut edge_data_map: BTreeMap<PatternId, EdgeData> = BTreeMap::new();
         for sentence in &pb_pattern.sentences {
             if sentence.binders.is_empty() {
-                return Err(IrError::MissingData("pb::Pattern::Sentence::binders".to_string()));
+                return Err(
+                    ParsePbError::EmptyFieldError("pb::Pattern::Sentence::binders".to_string()).into()
+                );
             }
             if sentence.join_kind != pb::join::JoinKind::Inner as i32 {
-                return Err(IrError::InvalidPattern(format!("Only support join_kind of `InnerJoin` in ExtendStrategy in Pattern Match, while the join_kind is {:?}", sentence.join_kind)));
+                return Err(IrPatternError::Unsupported(format!("Only support join_kind of `InnerJoin` in ExtendStrategy in Pattern Match, while the join_kind is {:?}", sentence.join_kind)).into());
             }
             // pb pattern sentence must have start tag
             let start_tag = get_tag_from_name_or_id(
                 sentence
                     .start
                     .clone()
-                    .ok_or(IrError::MissingData("pb::Pattern::Sentence::start".to_string()))?,
+                    .ok_or(ParsePbError::EmptyFieldError("pb::Pattern::Sentence::start".to_string()))?,
             )?;
             // just use the start tag id as its pattern vertex id
             let start_tag_v_id = start_tag as PatternId;
@@ -370,7 +364,11 @@ impl Pattern {
             // init as start vertex's label
             let mut pre_dst_vertex_label = start_tag_label;
             // find the first edge expand's index and last edge expand's index;
-            let last_expand_index = get_sentence_last_expand_index(sentence);
+            let last_expand_index =
+                get_sentence_last_expand_index(sentence).ok_or(IrPatternError::Unsupported(format!(
+                    "Sentence contains only Vertex/Select in `ExtendStrategy`, the sentence is  {:?}",
+                    sentence
+                )))?;
             // iterate over the binders
             for (i, binder) in sentence.binders.iter().enumerate() {
                 match binder.item.as_ref() {
@@ -383,7 +381,9 @@ impl Pattern {
                             path_expand
                                 .base
                                 .as_ref()
-                                .ok_or(IrError::MissingData("PathExpand::base in Pattern".to_string()))?
+                                .ok_or(ParsePbError::EmptyFieldError(
+                                    "PathExpand::base in Pattern".to_string(),
+                                ))?
                         } else if let Some(BinderItem::Edge(edge_expand)) = binder.item.as_ref() {
                             edge_data_map.insert(edge_id, EdgeData::from(edge_expand.clone()));
                             edge_expand
@@ -399,7 +399,7 @@ impl Pattern {
                         // assign/pick the source vertex id and destination vertex id of the pattern edge
                         let src_vertex_id = pre_dst_vertex_id;
                         let dst_vertex_id = assign_expand_dst_vertex_id(
-                            i == last_expand_index.unwrap(),
+                            i == last_expand_index,
                             end_tag_v_id,
                             edge_expand,
                             &tag_set,
@@ -410,7 +410,7 @@ impl Pattern {
                         // check which label candidate can connect to the previous determined partial pattern
                         let required_src_vertex_label = pre_dst_vertex_label;
                         let required_dst_vertex_label =
-                            if i == last_expand_index.unwrap() { end_tag_label } else { None };
+                            if i == last_expand_index { end_tag_label } else { None };
                         // check whether we find proper src vertex label and dst vertex label
                         let (src_vertex_label, dst_vertex_label, direction) = assign_src_dst_vertex_labels(
                             pattern_meta,
@@ -439,7 +439,9 @@ impl Pattern {
                         // GetV() when path().endV(); ignore endV() here, and add endV() back when build_logical_plan()
                     }
                     None => {
-                        return Err(IrError::MissingData("pb::pattern::binder::Item".to_string()));
+                        return Err(
+                            ParsePbError::EmptyFieldError("pb::pattern::binder::Item".to_string()).into()
+                        );
                     }
                 }
             }
@@ -463,7 +465,7 @@ impl Pattern {
 /// Methods for Pattern to generate pb Logical plan of pattern matching
 impl Pattern {
     /// Generate a naive extend based pattern match plan
-    pub fn generate_simple_extend_match_plan(&self) -> IrResult<pb::LogicalPlan> {
+    pub fn generate_simple_extend_match_plan(&self) -> IrPatternResult<pb::LogicalPlan> {
         let mut trace_pattern = self.clone();
         let mut definite_extend_steps = vec![];
         while trace_pattern.get_vertices_num() > 1 {
@@ -476,9 +478,9 @@ impl Pattern {
             // TODO: BUG: ensure that the selected vertex won't break the pattern.
             let select_vertex_id = *all_vertex_ids.first().unwrap();
             let definite_extend_step =
-                DefiniteExtendStep::from_target_pattern(&trace_pattern, select_vertex_id).unwrap();
+                DefiniteExtendStep::from_target_pattern(&trace_pattern, select_vertex_id)?;
             definite_extend_steps.push(definite_extend_step);
-            trace_pattern.remove_vertex(select_vertex_id);
+            trace_pattern.remove_vertex(select_vertex_id)?;
         }
         definite_extend_steps.push(trace_pattern.try_into()?);
         build_logical_plan(self, definite_extend_steps)
@@ -492,13 +494,13 @@ impl Pattern {
 ///            intersect
 fn build_logical_plan(
     origin_pattern: &Pattern, mut definite_extend_steps: Vec<DefiniteExtendStep>,
-) -> IrResult<pb::LogicalPlan> {
+) -> IrPatternResult<pb::LogicalPlan> {
     let mut match_plan = pb::LogicalPlan::default();
     let mut child_offset: i32 = 1;
     let source_extend = match definite_extend_steps.pop() {
         Some(src_extend) => src_extend,
         None => {
-            return Err(IrError::InvalidPattern(
+            return Err(IrPatternError::InvalidPattern(
                 "Build logical plan error: from empty extend steps!".to_string(),
             ))
         }
@@ -536,7 +538,7 @@ fn build_logical_plan(
                 let edge_data = origin_pattern
                     .get_edge_data(edge_id)
                     .cloned()
-                    .ok_or(IrError::MissingData("edge_data in Pattern".to_string()))?;
+                    .ok_or(ParsePbError::EmptyFieldError("edge_data in Pattern".to_string()))?;
                 match edge_data {
                     EdgeData::Edge(edge_expand) => {
                         expand_ids.push(expand_child_offset);
@@ -589,12 +591,12 @@ fn build_logical_plan(
             let definite_extend_edge = definite_extend_step
                 .iter()
                 .last()
-                .ok_or(IrError::MissingData("extend_edge in definite_extend_step".to_string()))?;
+                .ok_or(ParsePbError::EmptyFieldError("extend_edge in definite_extend_step".to_string()))?;
             let edge_id = definite_extend_edge.get_edge_id();
             let edge_data = origin_pattern
                 .get_edge_data(edge_id)
                 .cloned()
-                .ok_or(IrError::MissingData("edge_data in Pattern".to_string()))?;
+                .ok_or(ParsePbError::EmptyFieldError("edge_data in Pattern".to_string()))?;
             match edge_data {
                 EdgeData::Edge(edge_expand) => {
                     let edge_expand_opr =
@@ -613,7 +615,7 @@ fn build_logical_plan(
                 }
             }
         } else {
-            return Err(IrError::InvalidPattern(
+            return Err(IrPatternError::InvalidPattern(
                 "Build logical plan error: extend step is not source but has 0 edges".to_string(),
             ));
         }
@@ -626,15 +628,6 @@ fn build_logical_plan(
     // Here, origin_pattern.vertices.len() indicates total number of pattern vertices;
     // and origin_pattern.tag_vertex_map.len() indicates the number of pattern vertices with user-given aliases
     if origin_pattern.vertices.len() > origin_pattern.tag_vertex_map.len() {
-        // TODO: Project occurs bug when get properties of the projected tags later.
-        // let mut mappings = Vec::with_capacity(origin_pattern.tag_vertex_map.len());
-        // for (tag_id, _) in &origin_pattern.tag_vertex_map {
-        //     let expr = str_to_expr_pb(format!("@{}", tag_id)).ok();
-        //     let mapping = pb::project::ExprAlias { expr, alias: Some((*tag_id as i32).into()) };
-        //     mappings.push(mapping);
-        // }
-        // let project = pb::Project { mappings, is_append: false }.into();
-        // append_opr(&mut match_plan, &mut pre_node, project, &mut child_offset);
         let mut remove_tags = vec![];
         for (_, vertex) in origin_pattern.vertices.iter() {
             if !origin_pattern
@@ -784,16 +777,16 @@ fn estimate_adjacencies_weight(vid: PatternId, trace_pattern: &Pattern) -> f64 {
 
 /// Get the tag info from the given name_or_id
 /// - in pb::Pattern transformation, tag is required to be id instead of str
-fn get_tag_from_name_or_id(name_or_id: common_pb::NameOrId) -> IrResult<TagId> {
+fn get_tag_from_name_or_id(name_or_id: common_pb::NameOrId) -> IrPatternResult<TagId> {
     let tag: ir_common::NameOrId = name_or_id.try_into()?;
     match tag {
         ir_common::NameOrId::Id(tag_id) => Ok(tag_id as TagId),
-        _ => Err(IrError::TagNotExist(tag)),
+        _ => Err(ParsePbError::ParseError(format!("tag should be id, while it is {:?}", tag)).into()),
     }
 }
 
 /// Get all the tags from the pb Pattern and store in a set
-fn get_all_tags_from_pb_pattern(pb_pattern: &pb::Pattern) -> IrResult<BTreeSet<TagId>> {
+fn get_all_tags_from_pb_pattern(pb_pattern: &pb::Pattern) -> IrPatternResult<BTreeSet<TagId>> {
     use pb::pattern::binder::Item as BinderItem;
     let mut tag_id_set = BTreeSet::new();
     for sentence in pb_pattern.sentences.iter() {
@@ -843,24 +836,31 @@ fn get_sentence_last_expand_index(sentence: &pb::pattern::Sentence) -> Option<us
 /// Get the edge expand's label
 /// - in current realization, edge_expand only allows to have one label
 /// - if it has no label or more than one label, give Error
-fn get_edge_expand_label(edge_expand: &pb::EdgeExpand) -> IrResult<PatternLabelId> {
+fn get_edge_expand_label(edge_expand: &pb::EdgeExpand) -> IrPatternResult<PatternLabelId> {
     if edge_expand.expand_opt != pb::edge_expand::ExpandOpt::Vertex as i32 {
-        return Err(IrError::Unsupported("Expand edge in pattern".to_string()));
+        return Err(IrPatternError::Unsupported("Expand edge in pattern".to_string()));
     }
     if let Some(params) = edge_expand.params.as_ref() {
         // TODO: Support Fuzzy Pattern
         if params.tables.is_empty() {
-            return Err(IrError::Unsupported("FuzzyPattern: no specific edge expand label".to_string()));
+            return Err(IrPatternError::Unsupported(
+                "FuzzyPattern: no specific edge expand label".to_string(),
+            ));
         } else if params.tables.len() > 1 {
-            return Err(IrError::Unsupported("FuzzyPattern: more than 1 edge expand label".to_string()));
+            return Err(IrPatternError::Unsupported(
+                "FuzzyPattern: more than 1 edge expand label".to_string(),
+            ));
         }
         // get edge label's id
         match params.tables[0].item.as_ref() {
             Some(common_pb::name_or_id::Item::Id(e_label_id)) => Ok(*e_label_id),
-            _ => Err(IrError::InvalidPattern("edge expand doesn't have valid label".to_string())),
+            _ => {
+                Err(IrPatternError::InvalidPattern("edge expand doesn't have valid label".to_string())
+                    .into())
+            }
         }
     } else {
-        Err(IrError::MissingData("pb::EdgeExpand.params".to_string()))
+        Err(ParsePbError::EmptyFieldError("pb::EdgeExpand.params".to_string()).into())
     }
 }
 
@@ -891,7 +891,7 @@ fn assign_id(next_id: &mut PatternId, tag_set_opt: Option<&BTreeSet<TagId>>) -> 
 fn assign_expand_dst_vertex_id(
     is_tail: bool, sentence_end_id: Option<PatternId>, edge_expand: &pb::EdgeExpand,
     tag_set: &BTreeSet<TagId>, next_vertex_id: &mut PatternId,
-) -> IrResult<PatternId> {
+) -> IrPatternResult<PatternId> {
     if is_tail {
         if let Some(v_id) = sentence_end_id {
             Ok(v_id)
@@ -919,7 +919,7 @@ fn assign_expand_dst_vertex_id(
 fn assign_src_dst_vertex_labels(
     pattern_meta: &PatternMeta, edge_label: PatternLabelId, edge_direction: pb::edge_expand::Direction,
     required_src_label: Option<PatternLabelId>, required_dst_label: Option<PatternLabelId>,
-) -> IrResult<(PatternLabelId, PatternLabelId, PatternDirection)> {
+) -> IrPatternResult<(PatternLabelId, PatternLabelId, PatternDirection)> {
     // Based on the pattern meta info, find all possible vertex labels candidates:
     // (src vertex label, dst vertex label) with the given edge label and edge direction
     // - if the edge direction is Outgoing:
@@ -943,7 +943,9 @@ fn assign_src_dst_vertex_labels(
                     .map(|(start_v_label, end_v_label)| (end_v_label, start_v_label, PatternDirection::In)),
             ),
             pb::edge_expand::Direction::Both => {
-                return Err(IrError::Unsupported("Both Direction leads to Fuzzy Pattern".to_string()));
+                return Err(IrPatternError::Unsupported(
+                    "Both Direction leads to Fuzzy Pattern".to_string(),
+                ));
             }
         };
     // For a chosen candidates:
@@ -968,9 +970,9 @@ fn assign_src_dst_vertex_labels(
             vertex_labels_candis_iter.collect()
         };
     if vertex_label_candis.len() == 0 {
-        Err(IrError::InvalidPattern("Cannot find valid label for some vertices".to_string()))
+        Err(IrPatternError::InvalidPattern("Cannot find valid label for some vertices".to_string()).into())
     } else if vertex_label_candis.len() > 1 {
-        Err(IrError::Unsupported(
+        Err(IrPatternError::Unsupported(
             "Some vertices may have more than one valid Label, which leads to Fuzzy Pattern".to_string(),
         ))
     } else {
@@ -1106,21 +1108,19 @@ impl Pattern {
     }
 
     #[inline]
-    pub fn get_min_vertex_id(&self) -> PatternId {
+    pub fn get_min_vertex_id(&self) -> Option<PatternId> {
         self.vertices
             .iter()
             .map(|(vertex_id, _)| vertex_id)
             .next()
-            .unwrap()
     }
 
     #[inline]
-    pub fn get_max_vertex_id(&self) -> PatternId {
+    pub fn get_max_vertex_id(&self) -> Option<PatternId> {
         self.vertices
             .iter()
             .map(|(vertex_id, _)| vertex_id)
             .last()
-            .unwrap()
     }
 
     /// Get the minimum vertex label id of the current pattern
@@ -1215,11 +1215,11 @@ impl Pattern {
     }
 
     /// Iterate over edges that has tag
-    pub fn edges_with_tag_iter(&self) -> DynIter<&PatternEdge> {
+    pub fn edges_with_tag_iter(&self) -> DynIter<Option<&PatternEdge>> {
         Box::new(
             self.tag_edge_map
                 .iter()
-                .map(move |(_, &edge_id)| self.get_edge(edge_id).unwrap()),
+                .map(move |(_, &edge_id)| self.get_edge(edge_id)),
         )
     }
 
@@ -1243,7 +1243,7 @@ impl Pattern {
         Box::new(
             self.tag_vertex_map
                 .iter()
-                .map(move |(_, &vertex_id)| self.get_vertex(vertex_id).unwrap()),
+                .filter_map(move |(_, &vertex_id)| self.get_vertex(vertex_id)),
         )
     }
 
@@ -1291,8 +1291,7 @@ impl Pattern {
         if let Some(&old_edge_id) = self.tag_edge_map.get(&edge_tag) {
             self.edges_data
                 .get_mut(old_edge_id)
-                .unwrap()
-                .tag = None;
+                .map(|e| e.tag = None);
         }
         // Assign the tag to the edge
         if let Some(edge_data) = self.edges_data.get_mut(edge_id) {
@@ -1330,8 +1329,7 @@ impl Pattern {
         if let Some(&old_vertex_id) = self.tag_vertex_map.get(&vertex_tag) {
             self.vertices_data
                 .get_mut(old_vertex_id)
-                .unwrap()
-                .tag = None;
+                .map(|v| v.tag = None);
         }
         // Assign the tag to the vertex
         if let Some(vertex_data) = self.vertices_data.get_mut(vertex_id) {
@@ -1356,12 +1354,12 @@ impl Pattern {
     /// It consists of two parts:
     /// - Vertex Grouping (Partition): vertices in the same group (partition) are equivalent in structure.
     /// - Pattern Ranking: given the vertex groups, rank each vertex and edge with a unique ID.
-    fn canonical_labeling(&mut self) {
+    fn canonical_labeling(&mut self) -> IrPatternResult<()> {
         let mut canonical_label_manager = CanonicalLabelManager::from(&*self);
-        canonical_label_manager.vertex_grouping(self);
-        canonical_label_manager.pattern_ranking(self);
+        canonical_label_manager.vertex_grouping(self)?;
+        canonical_label_manager.pattern_ranking(self)?;
         self.update_vertex_groups(&canonical_label_manager);
-        self.update_pattern_ranks(&canonical_label_manager);
+        self.update_pattern_ranks(&canonical_label_manager)
     }
 
     /// Update vertex groups
@@ -1374,22 +1372,36 @@ impl Pattern {
     }
 
     /// Update ranks for vertices and edges
-    fn update_pattern_ranks(&mut self, canonical_label_manager: &CanonicalLabelManager) {
+    fn update_pattern_ranks(
+        &mut self, canonical_label_manager: &CanonicalLabelManager,
+    ) -> IrPatternResult<()> {
         // update vertex ranks
         self.rank_vertex_map.clear();
-        canonical_label_manager
-            .vertex_ranks_iter()
-            .for_each(|(v_id, v_rank)| {
-                self.set_vertex_rank(v_id, v_rank.unwrap());
-            });
+        for (v_id, v_rank) in canonical_label_manager.vertex_ranks_iter() {
+            if let Some(v_rank) = v_rank {
+                self.set_vertex_rank(v_id, v_rank);
+            } else {
+                return Err(IrPatternError::CanonicalLabelError(format!(
+                    "empty vertex rank in canonical_label_manager of {}",
+                    v_id
+                )));
+            }
+        }
 
         // Update edge ranks
         self.rank_edge_map.clear();
-        canonical_label_manager
-            .edge_ranks_iter()
-            .for_each(|(e_id, e_rank)| {
-                self.set_edge_rank(e_id, e_rank.unwrap());
-            });
+        for (e_id, e_rank) in canonical_label_manager.edge_ranks_iter() {
+            if let Some(e_rank) = e_rank {
+                self.set_edge_rank(e_id, e_rank);
+            } else {
+                return Err(IrPatternError::CanonicalLabelError(format!(
+                    "empty edge rank in canonical_label_manager of {}",
+                    e_id
+                )));
+            }
+        }
+
+        Ok(())
     }
 }
 
@@ -1400,20 +1412,27 @@ impl Pattern {
     /// These vertices are equivalent in the Pattern
     pub fn get_equivalent_vertices(
         &self, v_label: PatternLabelId, v_group: PatternId,
-    ) -> Vec<PatternVertex> {
+    ) -> IrPatternResult<Vec<PatternVertex>> {
         self.vertices_iter()
-            .filter(|vertex| {
-                vertex.get_label() == v_label && self.get_vertex_group(vertex.get_id()).unwrap() == v_group
+            .filter_map(|vertex| {
+                if let Some(group) = self.get_vertex_group(vertex.get_id()) {
+                    if vertex.get_label() == v_label && group == v_group {
+                        Some(Ok(vertex.clone()))
+                    } else {
+                        None
+                    }
+                } else {
+                    Some(Err(IrPatternError::MissingPatternVertex(vertex.get_id())))
+                }
             })
-            .cloned()
             .collect()
     }
 
     /// Edit the pattern by connect some edges to the current pattern
-    fn add_edge(&mut self, edge: &PatternEdge) -> IrResult<()> {
+    fn add_edge(&mut self, edge: &PatternEdge) -> IrPatternResult<()> {
         // Error that the adding edge already exist
         if self.edges.contains_key(edge.get_id()) {
-            return Err(IrError::InvalidCode("The adding edge already existed".to_string()));
+            return Err(IrPatternError::InvalidPattern("The adding edge already existed".to_string()));
         }
         let start_vertex = edge.get_start_vertex();
         let end_vertex = edge.get_end_vertex();
@@ -1421,7 +1440,9 @@ impl Pattern {
         if let (None, None) =
             (self.vertices.get(start_vertex.get_id()), self.vertices.get(end_vertex.get_id()))
         {
-            return Err(IrError::InvalidCode("The adding edge cannot connect to the pattern".to_string()));
+            return Err(IrPatternError::InvalidPattern(
+                "The adding edge cannot connect to the pattern".to_string(),
+            ));
         } else if let None = self.vertices.get(start_vertex.get_id()) {
             // end vertex already exists in the pattern, use it to connect
             // add start vertex
@@ -1444,13 +1465,13 @@ impl Pattern {
         {
             start_vertex_data
                 .out_adjacencies
-                .push(Adjacency::new(&start_vertex, &edge).unwrap());
+                .push(Adjacency::new(&edge, PatternDirection::Out));
         }
         // update end vertex's connection info
         if let Some(end_vertex_data) = self.vertices_data.get_mut(end_vertex.get_id()) {
             end_vertex_data
                 .in_adjacencies
-                .push(Adjacency::new(&end_vertex, &edge).unwrap());
+                .push(Adjacency::new(&edge, PatternDirection::In));
         }
         // add edge to the pattern
         self.edges.insert(edge.get_id(), edge.clone());
@@ -1460,7 +1481,7 @@ impl Pattern {
     }
 
     /// Add a series of edges to the current pattern to get a new pattern
-    pub fn extend_by_edges<'a, T>(&self, edges: T) -> IrResult<Pattern>
+    pub fn extend_by_edges<'a, T>(&self, edges: T) -> IrPatternResult<Pattern>
     where
         T: Iterator<Item = &'a PatternEdge>,
     {
@@ -1468,12 +1489,12 @@ impl Pattern {
         for edge in edges {
             new_pattern.add_edge(edge)?;
         }
-        new_pattern.canonical_labeling();
+        new_pattern.canonical_labeling()?;
         Ok(new_pattern)
     }
 
     /// Remove a vertex with all its adjacent edges in the current pattern
-    pub fn remove_vertex(&mut self, vertex_id: PatternId) {
+    pub fn remove_vertex(&mut self, vertex_id: PatternId) -> IrPatternResult<()> {
         if self.get_vertex(vertex_id).is_some() {
             let adjacencies: Vec<Adjacency> = self
                 .adjacencies_iter(vertex_id)
@@ -1504,19 +1525,21 @@ impl Pattern {
                 if let PatternDirection::Out = adjacency.get_direction() {
                     self.vertices_data
                         .get_mut(adjacent_vertex_id)
-                        .unwrap()
+                        .ok_or(IrPatternError::MissingPatternVertex(adjacent_vertex_id))?
                         .in_adjacencies
                         .retain(|adj| adj.get_edge_id() != adjacent_edge_id)
                 } else {
                     self.vertices_data
                         .get_mut(adjacent_vertex_id)
-                        .unwrap()
+                        .ok_or(IrPatternError::MissingPatternVertex(adjacent_vertex_id))?
                         .out_adjacencies
                         .retain(|adj| adj.get_edge_id() != adjacent_edge_id)
                 }
             }
 
-            self.canonical_labeling();
+            self.canonical_labeling()
+        } else {
+            Err(IrPatternError::MissingPatternVertex(vertex_id))
         }
     }
 }

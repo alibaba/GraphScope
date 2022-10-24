@@ -26,7 +26,6 @@ mod test {
     use ir_common::generated::common as common_pb;
     use ir_core::catalogue::pattern::Pattern;
     use ir_core::catalogue::pattern_meta::PatternMeta;
-    use ir_core::error::IrError;
     use ir_core::plan::logical::LogicalPlan;
     use ir_core::plan::meta::PlanMeta;
     use ir_core::plan::physical::AsPhysical;
@@ -34,6 +33,7 @@ mod test {
     use pegasus_client::builder::JobBuilder;
 
     use crate::common::test::*;
+    use ir_core::catalogue::error::IrPatternResult;
 
     pub fn get_ldbc_pattern_meta() -> PatternMeta {
         let ldbc_schema_file = File::open("../core/resource/ldbc_schema.json").unwrap();
@@ -45,7 +45,7 @@ mod test {
     //           Person
     //     knows/      \knows
     //      Person -> Person
-    pub fn build_ldbc_pattern_from_pb_case1() -> Result<Pattern, IrError> {
+    pub fn build_ldbc_pattern_from_pb_case1() -> IrPatternResult<Pattern> {
         let ldbc_pattern_mata = get_ldbc_pattern_meta();
         // define pb pattern message
         let expand_opr = pb::EdgeExpand {
@@ -105,7 +105,7 @@ mod test {
     //           University
     //     study at/      \study at
     //      Person   ->    Person
-    pub fn build_ldbc_pattern_from_pb_case2() -> Result<Pattern, IrError> {
+    pub fn build_ldbc_pattern_from_pb_case2() -> IrPatternResult<Pattern> {
         let ldbc_pattern_mata = get_ldbc_pattern_meta();
         // define pb pattern message
         let expand_opr1 = pb::EdgeExpand {
@@ -170,7 +170,7 @@ mod test {
 
     // Pattern from ldbc schema file and build from pb::Pattern message
     // 4 Persons know each other
-    pub fn build_ldbc_pattern_from_pb_case3() -> Result<Pattern, IrError> {
+    pub fn build_ldbc_pattern_from_pb_case3() -> IrPatternResult<Pattern> {
         let ldbc_pattern_mata = get_ldbc_pattern_meta();
         // define pb pattern message
         let expand_opr = pb::EdgeExpand {
@@ -241,7 +241,7 @@ mod test {
     //     Person      Person
     //     likes \      / has creator
     //           Comment
-    pub fn build_ldbc_pattern_from_pb_case4() -> Result<Pattern, IrError> {
+    pub fn build_ldbc_pattern_from_pb_case4() -> IrPatternResult<Pattern> {
         let ldbc_pattern_mata = get_ldbc_pattern_meta();
         // define pb pattern message
         let expand_opr1 = pb::EdgeExpand {
@@ -311,7 +311,7 @@ mod test {
         Pattern::from_pb_pattern(&pattern, &ldbc_pattern_mata, &mut PlanMeta::default())
     }
 
-    fn build_ldbc_bi11() -> Result<Pattern, IrError> {
+    fn build_ldbc_bi11() -> IrPatternResult<Pattern> {
         let ldbc_pattern_mata = get_ldbc_pattern_meta();
         // define pb pattern message
         let expand_opr0 = pb::EdgeExpand {

@@ -1171,7 +1171,10 @@ impl ExtendStrategy {
 impl MatchingStrategy for ExtendStrategy {
     fn build_logical_plan(&self) -> IrResult<pb::LogicalPlan> {
         // TODO: generate optimized logical plan based on catalogue
-        self.pattern.generate_simple_extend_match_plan()
+        let logical_plan = self
+            .pattern
+            .generate_simple_extend_match_plan()?;
+        Ok(logical_plan)
     }
 }
 

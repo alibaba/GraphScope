@@ -63,9 +63,7 @@ pub(crate) fn query_params(
 }
 
 pub mod canonical_label;
-
+pub mod error;
 pub mod extend_step;
-
 pub mod pattern;
-
 pub mod pattern_meta;
