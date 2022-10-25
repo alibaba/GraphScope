@@ -80,7 +80,7 @@ jobs:
             - '.github/workflows/ci.yml'
           gie-k8s-failover-test:
             - 'interactive_engine/**'
-            - 'k8s/standalone/**'
+            - 'charts/ir-standalone/**'
 
     - name: Cpp Format and Lint Check
       run: |
