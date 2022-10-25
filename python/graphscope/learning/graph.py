@@ -26,59 +26,16 @@ try:
 except ImportError:
     GLGraph = object
 
-from graphscope.framework.dag import DAGNode
-from graphscope.framework.dag_utils import close_learning_instance
-from graphscope.framework.dag_utils import create_learning_instance
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.errors import check_argument
-
-
-class GraphDAGNode(DAGNode):
-    """A class represents a learning instance in a DAG.
-
-    The following example demonstrates its usage:
-
-    .. code:: python
-
-        >>> # lazy mode
-        >>> import graphscope as gs
-        >>> sess = gs.session(mode="lazy")
-        >>> g = sess.g() # <graphscope.framework.graph.GraphDAGNode object>
-        >>> lg = sess.graphlearn(g)
-        >>> print(lg) # <graphscope.learning.graph.GraphDAGNode object>
-        >>> lg_graph = sess.run(lg)
-        >>> print(lg) # <graphscope.learning.grapg.Graph object>
-    """
-
-    def __init__(self, session, graph, nodes=None, edges=None, gen_labels=None):
-        """
-        See params detail in :meth:`graphscope.Session.graphlearn`
-        """
-        self._session = session
-        self._graph = graph
-        self._op = create_learning_instance(self._graph, nodes, edges, gen_labels)
-        # add op to dag
-        self._session.dag.add_op(self._op)
-
-    def close(self):
-        """Close learning instance and release the resources.
-
-        Returns:
-            :class:`graphscope.learning.graph.ClosedLearningInstance`
-        """
-        op = close_learning_instance(self)
-        return ClosedLearningInstance(self._session, op)
+from graphscope.proto import graph_def_pb2
 
 
 class Graph(GLGraph):
-    def __init__(self, graph_node, handle, config=None, object_id=None):
+    def __init__(self, graph, handle, config=None, object_id=None):
         """Initialize a graph for the learning engine using a handle."""
-        self.graph_node = graph_node
-        self.graphscope_session = self.graph_node.session
-        # copy and set op evaluated
-        self.graph_node.op = deepcopy(self.graph_node.op)
-        self.graph_node.evaluated = True
-        self.graphscope_session.dag.add_op(self.graph_node.op)
+        self.graph = graph
+        self.graphscope_session = self.graph._session
 
         handle = self.decode_arg(handle)
         config = self.decode_arg(config)
@@ -132,9 +89,7 @@ class Graph(GLGraph):
             self.closed = True
             super(Graph, self).close()  # close client first
             # close server instance
-            if self.graphscope_session is not None:
-                self.graphscope_session._wrapper(self.graph_node.close())
-                self.graphscope_session._close_learning_instance(self)
+            self.graphscope_session._close_learning_instance(self)
 
     @staticmethod  # noqa: C901
     def preprocess_args(handle, nodes, edges, gen_labels):  # noqa: C901
@@ -322,11 +277,119 @@ class Graph(GLGraph):
         return super(Graph, self).E(edge_type, feed, reverse)
 
 
-class ClosedLearningInstance(DAGNode):
-    """Closed learning instance node in a DAG."""
+def get_gl_handle(schema, vineyard_id, engine_hosts, engine_config):
+    """Dump a handler for GraphLearn for interaction.
 
-    def __init__(self, session, op):
-        self._session = session
-        self._op = op
-        # add op to dag
-        self._session.dag.add_op(self._op)
+    Fields in :code:`schema` are:
+
+    + the name of node type or edge type
+    + whether the graph is weighted graph
+    + whether the graph is labeled graph
+    + the number of int attributes
+    + the number of float attributes
+    + the number of string attributes
+
+    An example of the graph handle:
+
+    .. code:: python
+
+        {
+            "server": "127.0.0.1:8888,127.0.0.1:8889",
+            "client_count": 1,
+            "vineyard_socket": "/var/run/vineyard.sock",
+            "vineyard_id": 13278328736,
+            "node_schema": [
+                "user:false:false:10:0:0",
+                "item:true:false:0:0:5"
+            ],
+            "edge_schema": [
+                "user:click:item:true:false:0:0:0",
+                "user:buy:item:true:true:0:0:0",
+                "item:similar:item:false:false:10:0:0"
+            ],
+            "node_attribute_types": {
+                "person": {
+                    "age": "i",
+                    "name": "s",
+                },
+            },
+            "edge_attribute_types": {
+                "knows": {
+                    "weight": "f",
+                },
+            },
+        }
+
+    The handle can be decoded using:
+
+    .. code:: python
+
+       base64.b64decode(handle.encode('ascii')).decode('ascii')
+
+    Note that the ports are selected from a range :code:`(8000, 9000)`.
+
+    Args:
+        schema: The graph schema.
+        vineyard_id: The object id of graph stored in vineyard.
+        engine_hosts: A list of hosts for GraphScope engine workers.
+        engine_config: dict of config for GAE engine.
+
+    Returns:
+        str: Base64 encoded handle
+
+    """
+
+    def group_property_types(props):
+        weighted, labeled, i, f, s, attr_types = "false", "false", 0, 0, 0, {}
+        for prop in props:
+            if prop.type in [graph_def_pb2.STRING]:
+                s += 1
+                attr_types[prop.name] = "s"
+            elif prop.type in (graph_def_pb2.FLOAT, graph_def_pb2.DOUBLE):
+                f += 1
+                attr_types[prop.name] = "f"
+            else:
+                i += 1
+                attr_types[prop.name] = "i"
+            if prop.name == "weight":
+                weighted = "true"
+            elif prop.name == "label":
+                labeled = "true"
+        return weighted, labeled, i, f, s, attr_types
+
+    node_schema, node_attribute_types = [], dict()
+    for label in schema.vertex_labels:
+        weighted, labeled, i, f, s, attr_types = group_property_types(
+            schema.get_vertex_properties(label)
+        )
+        node_schema.append(
+            "{}:{}:{}:{}:{}:{}".format(label, weighted, labeled, i, f, s)
+        )
+        node_attribute_types[label] = attr_types
+
+    edge_schema, edge_attribute_types = [], dict()
+    for label in schema.edge_labels:
+        weighted, labeled, i, f, s, attr_types = group_property_types(
+            schema.get_edge_properties(label)
+        )
+        for rel in schema.get_relationships(label):
+            edge_schema.append(
+                "{}:{}:{}:{}:{}:{}:{}:{}".format(
+                    rel[0], label, rel[1], weighted, labeled, i, f, s
+                )
+            )
+        edge_attribute_types[label] = attr_types
+
+    engine_hosts = ",".join(engine_hosts)
+    handle = {
+        "hosts": engine_hosts,
+        "client_count": 1,
+        "vineyard_id": vineyard_id,
+        "vineyard_socket": engine_config["vineyard_socket"],
+        "node_schema": node_schema,
+        "edge_schema": edge_schema,
+        "node_attribute_types": node_attribute_types,
+        "edge_attribute_types": edge_attribute_types,
+    }
+    handle_json_string = json.dumps(handle)
+    return base64.b64encode(handle_json_string.encode("utf-8")).decode("utf-8")

@@ -1,4 +1,4 @@
-# the graphscope-manylinux2010 image is based on manylinux2010, including all necessary
+# the graphscope-manylinux2014 image is based on manylinux2014, including all necessary
 # dependencies for graphscope's wheel package.
 
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/manylinux2014:2022-08-16-53df7cb

@@ -8,7 +8,7 @@
 
     <fileSets>
         <fileSet>
-            <directory>${project.parent.basedir}/executor/assembly/target/debug</directory>
+            <directory>${project.parent.basedir}/executor/assembly/groot/target/debug</directory>
             <includes>
                 <include>libmaxgraph_ffi.so</include>
                 <include>libmaxgraph_ffi.dylib</include>
@@ -16,7 +16,7 @@
             <outputDirectory>native</outputDirectory>
         </fileSet>
         <fileSet>
-            <directory>${project.parent.basedir}/executor/assembly/target/release</directory>
+            <directory>${project.parent.basedir}/executor/assembly/groot/target/release</directory>
             <includes>
                 <include>libmaxgraph_ffi.so</include>
                 <include>libmaxgraph_ffi.dylib</include>

@@ -1205,7 +1205,7 @@ bl::result<void> GrapeInstance::registerGraphType(const rpc::GSParams& params) {
 
   VLOG(1) << "Registering Graph, graph type: "
           << rpc::graph::GraphTypePb_Name(graph_type)
-          << ", Type sigature: " << type_sig << ", lib path: " << lib_path;
+          << ", Type signature: " << type_sig << ", lib path: " << lib_path;
 
   if (object_manager_.HasObject(type_sig)) {
     VLOG(1) << "Graph already registered, signature is: " << type_sig;

@@ -117,4 +117,4 @@ Coordinator 作为 GraphScope 后端服务的入口，通过 grpc 接收来自 P
 .. code:: shell
 
     source ~/.graphscope_env
-    make graphscope
+    sudo make install

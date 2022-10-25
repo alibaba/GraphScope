@@ -26,7 +26,7 @@ jobs:
     - name: Build GAE and coordinator
       run: |
         pushd ${GITHUB_WORKSPACE}
-        make gae ENABLE_JAVA_SDK=OFF BUILD_TEST=OFF
+        make gae ENABLE_JAVA_SDK=OFF BUILD_TEST=OFF NUMPROC=1
         # also make coordinator and client for python test
         make coordinator && make client
         popd

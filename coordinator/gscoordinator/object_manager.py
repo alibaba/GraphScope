@@ -27,33 +27,39 @@ class LibMeta(object):
 
 
 class GraphMeta(object):
-    def __init__(self, key, vineyard_id, graph_def, schema_path=None):
+    def __init__(self, key, object_id, graph_def, schema_path=None):
         self.key = key
         self.type = "graph"
-        self.vineyard_id = vineyard_id
+        self.object_id = object_id
         self.graph_def = graph_def
         self.schema_path = schema_path
 
 
 class InteractiveQueryManager(object):
-    def __init__(self, key, frontend_endpoint, object_id):
-        self.key = key
+    def __init__(self, object_id, endpoint=None):
         self.type = "gie_manager"
         # graph object id in vineyard
         self.object_id = object_id
-        self.graph_url = f"ws://{frontend_endpoint}/gremlin"
-        self.client = Client(self.graph_url, "g")
-        self.closed = False
+        self.endpoint = endpoint
+        self.client = None
+
+    def set_endpoint(self, endpoint):
+        self.endpoint = endpoint
+
+    def __del__(self):
+        if self.client is not None:
+            try:
+                self.client.close()
+            except Exception:
+                # TODO(siyuan): throws no event loop exception with tornado 5.1.1
+                pass
 
     def submit(self, message, bindings=None, request_options=None):
+        if self.client is None:
+            if self.endpoint is None:
+                raise RuntimeError("InteractiveQueryManager's endpoint cannot be None")
+            self.client = Client(f"ws://{self.endpoint}/gremlin", "g")
         return self.client.submit(message, bindings, request_options)
-
-    def close(self):
-        try:
-            self.client.close()
-        except Exception:
-            pass
-        self.closed = True
 
 
 class GremlinResultSet(object):
@@ -64,11 +70,9 @@ class GremlinResultSet(object):
 
 
 class LearningInstanceManager(object):
-    def __init__(self, key, object_id):
-        self.key = key
+    def __init__(self, object_id):
         self.type = "gle_manager"
         self.object_id = object_id
-        self.closed = False
 
 
 class ObjectManager(object):
@@ -88,6 +92,9 @@ class ObjectManager(object):
 
     def keys(self):
         return self._objects.keys()
+
+    def items(self):
+        return self._objects.items()
 
     def clear(self):
         self._objects.clear()

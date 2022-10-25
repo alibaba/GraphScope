@@ -34,7 +34,6 @@ from graphscope.framework.errors import AnalyticalEngineInternalError
 from graphscope.framework.errors import InvalidArgumentError
 from graphscope.framework.loader import Loader
 from graphscope.proto import graph_def_pb2
-from graphscope.proto import types_pb2
 
 logger = logging.getLogger("graphscope")
 prefix = os.path.expandvars("${GS_TEST_DIR}")
