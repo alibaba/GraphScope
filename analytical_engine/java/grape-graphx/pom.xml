@@ -23,7 +23,7 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>graphx-on-grape</artifactId>
+  <artifactId>grape-graphx</artifactId>
   <packaging>jar</packaging>
   <name>GraphX on Grape</name>
 
@@ -157,7 +157,6 @@
                   </excludes>
                 </filter>
               </filters>
-              <finalName>${uberjar.name}</finalName>
             </configuration>
           </execution>
         </executions>

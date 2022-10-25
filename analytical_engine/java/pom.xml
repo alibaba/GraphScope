@@ -29,8 +29,8 @@
     <module>grape-jdk</module>
     <module>grape-demo</module>
     <module>grape-runtime</module>
-    <module>graphx-on-grape</module>
-    <module>giraph-on-grape</module>
+    <module>grape-graphx</module>
+    <module>grape-giraph</module>
   </modules>
 
   <properties>
@@ -76,13 +76,13 @@
       </dependency>
       <dependency>
         <groupId>com.alibaba.graphscope</groupId>
-        <artifactId>giraph-on-grape</artifactId>
+        <artifactId>grape-giraph</artifactId>
         <classifier>shaded</classifier>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>com.alibaba.graphscope</groupId>
-        <artifactId>graphx-on-grape</artifactId>
+        <artifactId>grape-graphx</artifactId>
         <classifier>shaded</classifier>
         <version>${project.version}</version>
       </dependency>
