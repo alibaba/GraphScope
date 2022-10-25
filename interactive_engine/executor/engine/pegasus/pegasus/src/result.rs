@@ -8,6 +8,7 @@ use dyn_clonable::*;
 
 use crate::api::function::FnResult;
 use crate::api::FromStream;
+use crate::errors::{ErrorKind, JobExecError};
 
 #[clonable]
 pub trait FromStreamExt<T>: FromStream<T> + Clone {
@@ -46,6 +47,10 @@ impl<T: 'static> ResultSink<T> {
         &self.cancel
     }
 
+    pub fn set_cancel_hook(&mut self, is_canceled: bool) {
+        self.cancel.store(is_canceled, Ordering::SeqCst);
+    }
+
     pub fn on_error<E: std::error::Error + Send + 'static>(&mut self, error: E) {
         match &mut self.kind {
             ResultSinkKind::Default(tx) => {
@@ -62,7 +67,16 @@ impl<T: Send + Debug + 'static> FromStream<T> for ResultSink<T> {
     fn on_next(&mut self, next: T) -> FnResult<()> {
         match &mut self.kind {
             ResultSinkKind::Default(tx) => tx.on_next(next),
-            ResultSinkKind::Customized(tx) => tx.on_next(next),
+            ResultSinkKind::Customized(tx) => {
+                if self.cancel.load(Ordering::SeqCst) {
+                    let msg = "Job is canceled".to_string();
+                    let err = JobExecError::panic(msg);
+                    tx.on_error(Box::new(err));
+                    Ok(())
+                } else {
+                    tx.on_next(next)
+                }
+            }
         }
     }
 }
@@ -129,6 +143,11 @@ impl<T> ResultStream<T> {
     #[inline]
     pub fn is_poison(&self) -> bool {
         self.is_poison.load(Ordering::SeqCst)
+    }
+
+    #[inline]
+    pub fn is_cancel(&self) -> bool {
+        self.cancel_hook.load(Ordering::SeqCst)
     }
 
     fn pull_next(&mut self) -> Option<Result<T, Box<dyn Error + Send>>> {

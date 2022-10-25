@@ -44,10 +44,10 @@ heartbeat_sec = 5
 # If the cluster is standalone, the size of addresses should be equal to [server_size] set above, and the addresses
 # should be in order, the fisrt address would be server 0.
 [[network.servers]]
-ip = '192.168.1.1'
+hostname = '192.168.1.1'
 port = 8080
 
 [[network.servers]]
-ip = '192.168.1.2'
+hostname = '192.168.1.2'
 port = 8080
 

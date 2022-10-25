@@ -125,8 +125,9 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
                 return true;
             }
         }
-        // TODO: check cancel impl;
-        false
+        self.sink
+            .get_cancel_hook()
+            .load(Ordering::SeqCst)
     }
 
     fn release(&mut self) {
@@ -217,6 +218,7 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
     fn execute(&mut self) -> TaskState {
         let _g = crate::worker_id::guard(self.id);
         if self.check_cancel() {
+            self.sink.set_cancel_hook(true);
             return TaskState::Finished;
         }
 
@@ -245,6 +247,7 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
     fn check_ready(&mut self) -> TaskState {
         let _g = crate::worker_id::guard(self.id);
         if self.check_cancel() {
+            self.sink.set_cancel_hook(true);
             return TaskState::Finished;
         }
 

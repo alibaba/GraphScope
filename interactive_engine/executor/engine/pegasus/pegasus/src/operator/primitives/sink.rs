@@ -46,6 +46,7 @@ where
         let mut input = new_input_session::<D>(&inputs[0]);
         input.for_each_batch(|dataset| {
             for d in dataset.drain() {
+                println!("called by sink");
                 self.collector.on_next(d)?;
             }
             Ok(())
@@ -75,6 +76,7 @@ where
         let mut input = new_input_session::<Single<D>>(&inputs[0]);
         input.for_each_batch(|dataset| {
             for d in dataset.drain() {
+                println!("called by single sink");
                 self.sender.on_next(d.0)?;
             }
             Ok(())
