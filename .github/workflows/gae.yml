@@ -70,7 +70,7 @@ jobs:
       run: |
         # default install to "/opt/graphscope"
         make gae ENABLE_JAVA_SDK=ON BUILD_TEST=ON NUMPROC=1
-        sudo make install
+        sudo make gae-install
         # also make coordinator and client for python test
         make client
         make coordinator
