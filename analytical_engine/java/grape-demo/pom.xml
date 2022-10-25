@@ -50,7 +50,7 @@
     </dependency>
     <dependency>
       <groupId>com.alibaba.graphscope</groupId>
-      <artifactId>graphx-on-graphscope</artifactId>
+      <artifactId>graphx-on-grape</artifactId>
       <classifier>shaded</classifier>
     </dependency>
     <dependency>

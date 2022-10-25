@@ -23,9 +23,9 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>graphx-on-graphscope</artifactId>
+  <artifactId>graphx-on-grape</artifactId>
   <packaging>jar</packaging>
-  <name>GraphX on GraphScope</name>
+  <name>GraphX on Grape</name>
 
   <properties>
     <maven.compiler.source>8</maven.compiler.source>
