@@ -44,11 +44,11 @@ namespace gs {
  * @tparam OID_T oid type.
  */
 template <typename OID_T>
-class FakePartitioner {
+class GraphXPartitioner {
  public:
   using oid_t = OID_T;
 
-  FakePartitioner() {
+  GraphXPartitioner() {
     fnum_ = 1;
     pid2Fid_ = {0};
   }
@@ -63,7 +63,7 @@ class FakePartitioner {
     return pid2Fid_[pid];
   }
 
-  FakePartitioner& operator=(const FakePartitioner& other) {
+  GraphXPartitioner& operator=(const GraphXPartitioner& other) {
     if (this == &other) {
       return *this;
     }
@@ -72,12 +72,12 @@ class FakePartitioner {
     return *this;
   }
 
-  FakePartitioner(const FakePartitioner& other) {
+  GraphXPartitioner(const GraphXPartitioner& other) {
     fnum_ = other.fnum_;
     pid2Fid_ = other.pid2Fid_;
   }
 
-  FakePartitioner& operator=(FakePartitioner&& other) {
+  GraphXPartitioner& operator=(GraphXPartitioner&& other) {
     if (this == &other) {
       return *this;
     }
@@ -94,16 +94,16 @@ class FakePartitioner {
 template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T>
 class GraphXLoader
     : public vineyard::BasicEVFragmentLoader<OID_T, VID_T,
-                                             FakePartitioner<OID_T>> {
+                                             GraphXPartitioner<OID_T>> {
   using raw_data_t = GraphXRawData<OID_T, VID_T, VDATA_T, EDATA_T>;
 
  public:
   explicit GraphXLoader(vineyard::ObjectID objId, vineyard::Client& client,
                         const grape::CommSpec& comm_spec,
-                        const FakePartitioner<OID_T>& partitioner,
+                        const GraphXPartitioner<OID_T>& partitioner,
                         bool directed = true, bool retain_oid = false,
                         bool generate_eid = false)
-      : vineyard::BasicEVFragmentLoader<OID_T, VID_T, FakePartitioner<OID_T>>(
+      : vineyard::BasicEVFragmentLoader<OID_T, VID_T, GraphXPartitioner<OID_T>>(
             client, comm_spec, partitioner, directed, retain_oid,
             generate_eid) {
     this->raw_data =

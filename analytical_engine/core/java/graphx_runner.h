@@ -170,7 +170,7 @@ void LoadFragment(vineyard::Client& client, grape::CommSpec& comm_spec) {
             << "] got raw data id: " << cur_raw_data_id
             << ", graphx pid: " << graphx_pid;
   // Load Fragment.
-  gs::FakePartitioner<OID_T> partitioner;
+  gs::GraphXPartitioner<OID_T> partitioner;
   partitioner.Init(pid2Fid);
   gs::GraphXLoader<OID_T, VID_T, VD_T, ED_T> loader(cur_raw_data_id, client,
                                                     comm_spec, partitioner);

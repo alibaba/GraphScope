@@ -89,7 +89,7 @@ int main(int argc, char** argv) {
   vineyard::ObjectID arrow_frag_id;
   grape::CommSpec comm_spec;
   comm_spec.Init(MPI_COMM_WORLD);
-  gs::FakePartitioner<int64_t> partitioner;
+  gs::GraphXPartitioner<int64_t> partitioner;
   std::vector<int> pid2Fid;
   for (int i = 0; i < comm_spec.fnum(); ++i) {
     pid2Fid.push_back(i);
