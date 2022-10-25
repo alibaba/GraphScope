@@ -49,6 +49,14 @@ impl<T: 'static> ResultSink<T> {
 
     pub fn set_cancel_hook(&mut self, is_canceled: bool) {
         self.cancel.store(is_canceled, Ordering::SeqCst);
+        match &mut self.kind {
+            ResultSinkKind::Default(tx) => (),
+            ResultSinkKind::Customized(tx) => {
+                let msg = "Job is canceled".to_string();
+                let err = JobExecError::from(msg);
+                tx.on_error(Box::new(err));
+            }
+        }
     }
 
     pub fn on_error<E: std::error::Error + Send + 'static>(&mut self, error: E) {
@@ -67,16 +75,7 @@ impl<T: Send + Debug + 'static> FromStream<T> for ResultSink<T> {
     fn on_next(&mut self, next: T) -> FnResult<()> {
         match &mut self.kind {
             ResultSinkKind::Default(tx) => tx.on_next(next),
-            ResultSinkKind::Customized(tx) => {
-                if self.cancel.load(Ordering::SeqCst) {
-                    let msg = "Job is canceled".to_string();
-                    let err = JobExecError::panic(msg);
-                    tx.on_error(Box::new(err));
-                    Ok(())
-                } else {
-                    tx.on_next(next)
-                }
-            }
+            ResultSinkKind::Customized(tx) => tx.on_next(next),
         }
     }
 }
