@@ -31,13 +31,6 @@ fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo:rustc-link-search=/usr/local/lib");
     println!("cargo:rustc-link-search=/usr/local/lib64");
     println!("cargo:rustc-link-search=/opt/homebrew/lib");
-    match std::env::var("VINEYARD_ROOT_DIR") {
-        Ok(val) => {
-            println!("cargo:rustc-link-search={}/lib", val);
-            println!("cargo:rustc-link-search={}/lib64", val);
-        }
-        Err(_) => (),
-    }
     println!("cargo:rustc-link-search={}/build", dst.display());
     println!("cargo:rustc-link-lib=v6d_native_store");
     println!("cargo:rustc-link-lib=vineyard_graph");

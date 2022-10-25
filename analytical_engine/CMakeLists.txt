@@ -486,7 +486,8 @@ endmacro()
 install_gsa_binary(grape_engine)
 install_gsa_binary(gs_proto)
 install_gsa_binary(gs_util)
-if(ENABLE_JAVA_SDK)
+
+if (ENABLE_JAVA_SDK)
     install_gsa_binary(graphx_runner)
 endif()
 

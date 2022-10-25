@@ -957,7 +957,7 @@ install_deps_dev() {
 
   succ_msg="The script has installed all dependencies for builing GraphScope, use commands:\n
   $ source ${OUTPUT_ENV_FILE}
-  $ make graphscope\n
+  $ sudo make install\n
   to build and develop GraphScope."
   if [[ ${GRAPE_JDK} == true ]]; then
     install_fastFFI

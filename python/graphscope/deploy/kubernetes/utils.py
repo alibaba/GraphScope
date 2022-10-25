@@ -34,7 +34,7 @@ logger = logging.getLogger("graphscope")
 
 
 def resolve_api_client(k8s_client_config={}):
-    """The order of resolves are as following.
+    """Get ApiClient from predefined locations.
 
     Args:
         k8s_client_config (dict):
@@ -57,7 +57,7 @@ def resolve_api_client(k8s_client_config={}):
         1. load from kubernetes config file or,
         2. load from incluster configuration or,
         3. set api address from env if `KUBE_API_ADDRESS` exist.
-        4. RuntimeError will be raised if resolve failed.
+    RuntimeError will be raised if resolution failed.
     """
     try:
         # load from kubernetes config file
@@ -83,11 +83,9 @@ def parse_readable_memory(value):
     try:
         float(num)
     except ValueError as e:
-        raise ValueError(
-            "Argument cannot be interpreted as a number: %s" % value
-        ) from e
+        raise ValueError(f"Argument cannot be interpreted as a number: {value}") from e
     if suffix not in ["Ki", "Mi", "Gi"]:
-        raise ValueError("Memory suffix must be one of 'Ki', 'Mi' and 'Gi': %s" % value)
+        raise ValueError(f"Memory suffix must be one of 'Ki', 'Mi' and 'Gi': {value}")
     return value
 
 
@@ -175,13 +173,13 @@ class KubernetesPodWatcher(object):
                 pass
             else:
                 for event in events.items:
-                    msg = "{0}: {1}".format(self._pod_name, event.message)
+                    msg = f"{self._pod_name}: {event.message}"
                     if msg and msg not in event_messages:
                         event_messages.append(msg)
                         self._lines.put(msg)
                         logger.info(msg, extra={"simple": simple})
                         if event.reason == "Failed":
-                            raise K8sError("Kubernetes event error: {}".format(msg))
+                            raise K8sError(f"Kubernetes event error: {msg}")
 
     def _stream_log_impl(self, simple=False):
         log_messages = []

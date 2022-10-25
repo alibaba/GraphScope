@@ -63,7 +63,7 @@ public class SnapshotCache {
      *
      * <p>Discussion:
      *
-     * <p>We need to decide whether should the write framework coupled with the implementation of
+     * <p>We need to decide whether should the writing framework coupled with the implementation of
      * schema synchronization. Options are discussed here:
      * https://yuque.antfin-inc.com/graphscope/project/eibfty#EQGg9 This interface assumes write
      * framework isn't coupled with schema synchronization.

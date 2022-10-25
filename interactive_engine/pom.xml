@@ -12,6 +12,9 @@
     <!-- DO NOT CHANGE THE *ORDER* IN WHICH THESE PROFILES ARE DEFINED! -->
     <profile>
       <id>graphscope</id>
+      <properties>
+        <rust.compile.target>v6d</rust.compile.target>
+      </properties>
       <modules>
         <module>assembly</module>
         <module>common</module>
@@ -24,6 +27,9 @@
     </profile>
     <profile>
       <id>groot</id>
+      <properties>
+        <rust.compile.target>groot</rust.compile.target>
+      </properties>
       <modules>
         <module>assembly</module>
         <module>common</module>
@@ -64,6 +70,7 @@
   <properties>
     <rust.compile.skip>false</rust.compile.skip>
     <rust.compile.mode>debug</rust.compile.mode>
+    <rust.compile.target>v6d</rust.compile.target>
     <rust.compile.skip.clean>true</rust.compile.skip.clean>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <log4j2.version>[2.17.1,)</log4j2.version>
