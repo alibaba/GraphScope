@@ -23,6 +23,11 @@ pub type PatternId = usize;
 pub type PatternLabelId = ir_common::LabelId;
 pub type DynIter<'a, T> = Box<dyn Iterator<Item = T> + 'a>;
 
+pub mod error;
+pub mod extend_step;
+pub mod pattern;
+pub mod pattern_meta;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum PatternDirection {
     Out = 0,
@@ -61,9 +66,3 @@ pub(crate) fn query_params(
         extra: HashMap::new(),
     }
 }
-
-pub mod canonical_label;
-pub mod error;
-pub mod extend_step;
-pub mod pattern;
-pub mod pattern_meta;

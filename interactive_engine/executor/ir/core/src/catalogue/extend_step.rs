@@ -13,93 +13,15 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::cmp::Ordering;
 use std::convert::TryFrom;
 use std::iter::Iterator;
 
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as pb;
-use serde::{Deserialize, Serialize};
 
 use crate::catalogue::error::{IrPatternError, IrPatternResult};
 use crate::catalogue::pattern::Pattern;
 use crate::catalogue::{query_params, DynIter, PatternDirection, PatternId, PatternLabelId};
-
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Serialize, Deserialize)]
-pub struct ExtendEdge {
-    src_vertex_rank: PatternId,
-    edge_label: PatternLabelId,
-    dir: PatternDirection,
-}
-
-/// Initializer of ExtendEdge
-impl ExtendEdge {
-    pub fn new(
-        src_vertex_rank: PatternId, edge_label: PatternLabelId, dir: PatternDirection,
-    ) -> ExtendEdge {
-        ExtendEdge { src_vertex_rank, edge_label, dir }
-    }
-}
-
-/// Methods for access fields of VagueExtendEdge
-impl ExtendEdge {
-    #[inline]
-    pub fn get_src_vertex_rank(&self) -> PatternId {
-        self.src_vertex_rank
-    }
-
-    #[inline]
-    pub fn get_edge_label(&self) -> PatternLabelId {
-        self.edge_label
-    }
-
-    #[inline]
-    pub fn get_direction(&self) -> PatternDirection {
-        self.dir
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ExtendStep {
-    target_vertex_label: PatternLabelId,
-    extend_edges: Vec<ExtendEdge>,
-}
-
-/// Initializer of ExtendStep
-impl ExtendStep {
-    /// Initialization of a ExtendStep needs
-    /// 1. a target vertex label
-    /// 2. all extend edges connect to the target vertex label
-    pub fn new(target_vertex_label: PatternLabelId, extend_edges: Vec<ExtendEdge>) -> ExtendStep {
-        ExtendStep { target_vertex_label, extend_edges }
-    }
-}
-
-/// Methods for access fields or get info from ExtendStep
-impl ExtendStep {
-    /// For the iteration over all the extend edges
-    pub fn iter(&self) -> DynIter<&ExtendEdge> {
-        Box::new(self.extend_edges.iter())
-    }
-
-    #[inline]
-    pub fn get_target_vertex_label(&self) -> PatternLabelId {
-        self.target_vertex_label
-    }
-
-    #[inline]
-    pub fn get_extend_edges_num(&self) -> usize {
-        self.extend_edges.len()
-    }
-
-    #[allow(dead_code)]
-    pub(crate) fn sort_extend_edges<F>(&mut self, compare: F)
-    where
-        F: FnMut(&ExtendEdge, &ExtendEdge) -> Ordering,
-    {
-        self.extend_edges.sort_by(compare)
-    }
-}
 
 /// Given a DefiniteExtendEdge, we can uniquely locate an edge with dir in the pattern
 #[derive(Debug, Clone)]
@@ -322,20 +244,5 @@ impl DefiniteExtendStep {
             }
         }
         Ok(None)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::catalogue::extend_step::*;
-    use crate::catalogue::PatternDirection;
-
-    #[test]
-    fn test_extend_step_case1_structure() {
-        let extend_edge1 = ExtendEdge::new(0, 1, PatternDirection::Out);
-        let extend_edge2 = ExtendEdge::new(1, 1, PatternDirection::Out);
-        let extend_step1 = ExtendStep::new(1, vec![extend_edge1, extend_edge2]);
-        assert_eq!(extend_step1.get_target_vertex_label(), 1);
-        assert_eq!(extend_step1.extend_edges.len(), 2);
     }
 }

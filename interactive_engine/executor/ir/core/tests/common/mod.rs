@@ -20,7 +20,3 @@ pub mod pattern_cases;
 #[cfg(test)]
 #[allow(dead_code)]
 pub mod pattern_meta_cases;
-
-#[cfg(test)]
-#[allow(dead_code)]
-pub mod extend_step_cases;

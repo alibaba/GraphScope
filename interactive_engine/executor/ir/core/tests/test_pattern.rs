@@ -17,9 +17,8 @@ mod common;
 
 #[cfg(test)]
 mod tests {
-    use std::convert::TryFrom;
 
-    use ir_core::catalogue::pattern::{Pattern, PatternEdge, PatternVertex};
+    use ir_core::catalogue::pattern::{PatternEdge, PatternVertex};
     use ir_core::catalogue::{PatternDirection, PatternId};
     use ir_core::plan::meta::TagId;
 
@@ -108,20 +107,6 @@ mod tests {
                     .len(),
                 3
             );
-            // check structure
-            // build identical pattern for comparison
-            let pattern_vertex1 = PatternVertex::new(0, 1);
-            let pattern_vertex2 = PatternVertex::new(1, 1);
-            let pattern_vertex3 = PatternVertex::new(2, 1);
-            let pattern_edge1 = PatternEdge::new(0, 12, pattern_vertex1, pattern_vertex2);
-            let pattern_edge2 = PatternEdge::new(1, 12, pattern_vertex1, pattern_vertex3);
-            let pattern_edge3 = PatternEdge::new(2, 12, pattern_vertex2, pattern_vertex3);
-            let pattern_for_comparison =
-                Pattern::try_from(vec![pattern_edge1, pattern_edge2, pattern_edge3]).unwrap();
-            // check whether the two pattern has the same code
-            let pattern_code = pattern.encode_to();
-            let pattern_for_comparison_code = pattern_for_comparison.encode_to();
-            assert_eq!(pattern_code, pattern_for_comparison_code);
             // check Tag
             assert_eq!(
                 pattern
@@ -187,19 +172,6 @@ mod tests {
                     .len(),
                 2
             );
-            // check structure
-            let pattern_vertex1 = PatternVertex::new(0, 12);
-            let pattern_vertex2 = PatternVertex::new(1, 1);
-            let pattern_vertex3 = PatternVertex::new(2, 1);
-            let pattern_edge1 = PatternEdge::new(0, 15, pattern_vertex2, pattern_vertex1);
-            let pattern_edge2 = PatternEdge::new(1, 15, pattern_vertex3, pattern_vertex1);
-            let pattern_edge3 = PatternEdge::new(2, 12, pattern_vertex2, pattern_vertex3);
-            let pattern_for_comparison =
-                Pattern::try_from(vec![pattern_edge1, pattern_edge2, pattern_edge3]).unwrap();
-            // check whether the two pattern has the same code
-            let pattern_code = pattern.encode_to();
-            let pattern_for_comparison_code = pattern_for_comparison.encode_to();
-            assert_eq!(pattern_code, pattern_for_comparison_code);
             // check Tag
             assert_eq!(
                 pattern
@@ -249,31 +221,6 @@ mod tests {
                     .len(),
                 6
             );
-            // check structure
-            // build identical pattern for comparison
-            let pattern_vertex1 = PatternVertex::new(0, 1);
-            let pattern_vertex2 = PatternVertex::new(1, 1);
-            let pattern_vertex3 = PatternVertex::new(2, 1);
-            let pattern_vertex4 = PatternVertex::new(3, 1);
-            let pattern_edge1 = PatternEdge::new(0, 12, pattern_vertex1, pattern_vertex2);
-            let pattern_edge2 = PatternEdge::new(1, 12, pattern_vertex1, pattern_vertex3);
-            let pattern_edge3 = PatternEdge::new(2, 12, pattern_vertex2, pattern_vertex3);
-            let pattern_edge4 = PatternEdge::new(3, 12, pattern_vertex1, pattern_vertex4);
-            let pattern_edge5 = PatternEdge::new(4, 12, pattern_vertex2, pattern_vertex4);
-            let pattern_edge6 = PatternEdge::new(5, 12, pattern_vertex3, pattern_vertex4);
-            let pattern_for_comparison = Pattern::try_from(vec![
-                pattern_edge1,
-                pattern_edge2,
-                pattern_edge3,
-                pattern_edge4,
-                pattern_edge5,
-                pattern_edge6,
-            ])
-            .unwrap();
-            // check whether the two pattern has the same code
-            let pattern_code = pattern.encode_to();
-            let pattern_for_comparison_code = pattern_for_comparison.encode_to();
-            assert_eq!(pattern_code, pattern_for_comparison_code);
             // check Tag
             assert_eq!(
                 pattern
@@ -364,23 +311,6 @@ mod tests {
                     .len(),
                 2
             );
-            // check structure
-            // build identical pattern for comparison
-            let pattern_vertex1 = PatternVertex::new(0, 1);
-            let pattern_vertex2 = PatternVertex::new(1, 9);
-            let pattern_vertex3 = PatternVertex::new(2, 1);
-            let pattern_vertex4 = PatternVertex::new(3, 2);
-            let pattern_edge1 = PatternEdge::new(0, 11, pattern_vertex1, pattern_vertex2);
-            let pattern_edge2 = PatternEdge::new(1, 11, pattern_vertex3, pattern_vertex2);
-            let pattern_edge3 = PatternEdge::new(2, 13, pattern_vertex1, pattern_vertex4);
-            let pattern_edge4 = PatternEdge::new(3, 0, pattern_vertex4, pattern_vertex3);
-            let pattern_for_comparison =
-                Pattern::try_from(vec![pattern_edge1, pattern_edge2, pattern_edge3, pattern_edge4])
-                    .unwrap();
-            // check whether the two pattern has the same code
-            let pattern_code = pattern.encode_to();
-            let pattern_for_comparison_code = pattern_for_comparison.encode_to();
-            assert_eq!(pattern_code, pattern_for_comparison_code);
             // check Tag
             assert_eq!(
                 pattern
@@ -437,33 +367,6 @@ mod tests {
                     .len(),
                 6
             );
-            // check structure
-            // build identical pattern for comparison
-            let pattern_vertex1 = PatternVertex::new(0, 1);
-            let pattern_vertex2 = PatternVertex::new(1, 1);
-            let pattern_vertex3 = PatternVertex::new(2, 1);
-            let pattern_vertex4 = PatternVertex::new(3, 1);
-            let pattern_vertex5 = PatternVertex::new(4, 1);
-            let pattern_vertex6 = PatternVertex::new(5, 1);
-            let pattern_edge1 = PatternEdge::new(0, 12, pattern_vertex1, pattern_vertex2);
-            let pattern_edge2 = PatternEdge::new(1, 12, pattern_vertex3, pattern_vertex2);
-            let pattern_edge3 = PatternEdge::new(2, 12, pattern_vertex3, pattern_vertex4);
-            let pattern_edge4 = PatternEdge::new(3, 12, pattern_vertex5, pattern_vertex4);
-            let pattern_edge5 = PatternEdge::new(4, 12, pattern_vertex5, pattern_vertex6);
-            let pattern_edge6 = PatternEdge::new(5, 12, pattern_vertex1, pattern_vertex6);
-            let pattern_for_comparison = Pattern::try_from(vec![
-                pattern_edge1,
-                pattern_edge2,
-                pattern_edge3,
-                pattern_edge4,
-                pattern_edge5,
-                pattern_edge6,
-            ])
-            .unwrap();
-            // check whether the two pattern has the same code
-            let pattern_code = pattern.encode_to();
-            let pattern_for_comparison_code = pattern_for_comparison.encode_to();
-            assert_eq!(pattern_code, pattern_for_comparison_code);
             // check Tag
             assert_eq!(
                 pattern
@@ -555,33 +458,6 @@ mod tests {
                     .len(),
                 2
             );
-            // check structure
-            // build identical pattern for comparison
-            let pattern_vertex1 = PatternVertex::new(0, 1);
-            let pattern_vertex2 = PatternVertex::new(1, 9);
-            let pattern_vertex3 = PatternVertex::new(2, 1);
-            let pattern_vertex4 = PatternVertex::new(3, 1);
-            let pattern_vertex5 = PatternVertex::new(4, 1);
-            let pattern_vertex6 = PatternVertex::new(5, 2);
-            let pattern_edge1 = PatternEdge::new(0, 11, pattern_vertex1, pattern_vertex2);
-            let pattern_edge2 = PatternEdge::new(1, 11, pattern_vertex3, pattern_vertex2);
-            let pattern_edge3 = PatternEdge::new(2, 12, pattern_vertex3, pattern_vertex4);
-            let pattern_edge4 = PatternEdge::new(3, 12, pattern_vertex4, pattern_vertex5);
-            let pattern_edge5 = PatternEdge::new(4, 0, pattern_vertex6, pattern_vertex5);
-            let pattern_edge6 = PatternEdge::new(5, 13, pattern_vertex1, pattern_vertex6);
-            let pattern_for_comparison = Pattern::try_from(vec![
-                pattern_edge1,
-                pattern_edge2,
-                pattern_edge3,
-                pattern_edge4,
-                pattern_edge5,
-                pattern_edge6,
-            ])
-            .unwrap();
-            // check whether the two pattern has the same code
-            let pattern_code = pattern.encode_to();
-            let pattern_for_comparison_code = pattern_for_comparison.encode_to();
-            assert_eq!(pattern_code, pattern_for_comparison_code);
             // check Tag
             assert_eq!(
                 pattern
