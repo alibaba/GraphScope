@@ -45,12 +45,12 @@
     </dependency>
     <dependency>
       <groupId>com.alibaba.graphscope</groupId>
-      <artifactId>giraph-on-grape</artifactId>
+      <artifactId>grape-giraph</artifactId>
       <classifier>shaded</classifier>
     </dependency>
     <dependency>
       <groupId>com.alibaba.graphscope</groupId>
-      <artifactId>graphx-on-graphscope</artifactId>
+      <artifactId>grape-graphx</artifactId>
       <classifier>shaded</classifier>
     </dependency>
     <dependency>
@@ -152,7 +152,6 @@
                   </excludes>
                 </filter>
               </filters>
-              <finalName>${uberjar.name}</finalName>
             </configuration>
           </execution>
         </executions>

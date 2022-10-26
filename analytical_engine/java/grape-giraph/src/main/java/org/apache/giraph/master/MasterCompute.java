@@ -156,7 +156,7 @@ public abstract class MasterCompute extends DefaultImmutableClassesGiraphConfigu
      * @return Mapper context
      */
     public final Mapper.Context getContext() {
-        logger.error("No mapper context in giraph-on-grape");
+        logger.error("No mapper context in grape-giraph");
         return null;
     }
 

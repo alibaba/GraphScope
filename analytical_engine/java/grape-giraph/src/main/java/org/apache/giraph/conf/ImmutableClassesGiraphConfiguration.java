@@ -66,7 +66,7 @@ public class ImmutableClassesGiraphConfiguration<
                 I extends WritableComparable, V extends Writable, E extends Writable>
         extends GiraphConfiguration {
 
-    private static String DEFAULT_WORKER_FILE_PREFIX = "giraph-on-grape";
+    private static String DEFAULT_WORKER_FILE_PREFIX = "grape-giraph";
     /**
      * Holder for all the classes
      */

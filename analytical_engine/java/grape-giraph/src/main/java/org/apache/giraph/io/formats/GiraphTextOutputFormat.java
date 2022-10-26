@@ -42,7 +42,7 @@ public abstract class GiraphTextOutputFormat extends TextOutputFormat<Text, Text
      * This function returns a record writer according to provided configuration. Giraph write file
      * to hdfs.
      * <p>
-     * In Giraph-on-grape, we write to local file system.
+     * In Grape-Giraph, we write to local file system.
      *
      * @param job shall be null.
      * @return created record writer

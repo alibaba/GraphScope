@@ -27,7 +27,7 @@ then
     echo "[warn] No SPARK_HOME found!"
 fi
 
-GRAPHX_GRAPE_SDK=`ls ${GRAPHSCOPE_HOME}/lib/graphx-on-graphscope-*.jar`
+GRAPHX_GRAPE_SDK=`ls ${GRAPHSCOPE_HOME}/lib/grape-graphx-*.jar`
 GRAPE_RUNTIME_JAR=`ls ${GRAPHSCOPE_HOME}/lib/grape-runtime-*.jar`
 # This env point to the directory where the output for llvm4jni run.sh on Grape-runtime.jar resides
 if [[ "${RUNTIME_LLVM4JNI_OUTPUT}"x != x ]];

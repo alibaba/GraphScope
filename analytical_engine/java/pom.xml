@@ -29,8 +29,8 @@
     <module>grape-jdk</module>
     <module>grape-demo</module>
     <module>grape-runtime</module>
-    <module>graphx-on-graphscope</module>
-    <module>giraph-on-grape</module>
+    <module>grape-graphx</module>
+    <module>grape-giraph</module>
   </modules>
 
   <properties>
@@ -76,13 +76,13 @@
       </dependency>
       <dependency>
         <groupId>com.alibaba.graphscope</groupId>
-        <artifactId>giraph-on-grape</artifactId>
+        <artifactId>grape-giraph</artifactId>
         <classifier>shaded</classifier>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>com.alibaba.graphscope</groupId>
-        <artifactId>graphx-on-graphscope</artifactId>
+        <artifactId>grape-graphx</artifactId>
         <classifier>shaded</classifier>
         <version>${project.version}</version>
       </dependency>
@@ -206,7 +206,7 @@
           <artifactId>maven-javadoc-plugin</artifactId>
           <version>${maven.javadoc.version}</version>
           <configuration>
-            <excludePackageName>com.alibaba.graphscope.graphx.*</excludePackageName>
+            <excludePackageNames>com.alibaba.graphscope.graphx.*</excludePackageNames>
             <reportOutputDirectory>${javadoc.output.directory}</reportOutputDirectory>
             <destDir>${javadoc.output.destDir}</destDir>
             <failOnError>false</failOnError>
