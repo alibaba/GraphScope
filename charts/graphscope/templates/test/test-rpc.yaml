@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: {{ include "graphscope.fullname" . }}-test-rpc-service
+  name: test-rpc-service-{{ include "graphscope.fullname" . }}
   annotations:
     "helm.sh/hook": test
 spec:
@@ -9,5 +9,5 @@ spec:
     - name: curl
       image: curlimages/curl:7.65.3
       command: ['sh']
-      args: ['-c', 'while ! curl {{ include "graphscope.fullname" . }}-coordinator-service.{{ .Release.Namespace }}:59001 --output -; do sleep 1 && echo -n .; done']
+      args: ['-c', 'while ! curl coordinator-service-{{ include "graphscope.fullname" . }}.{{ .Release.Namespace }}:59001 --output -; do sleep 1 && echo -n .; done']
   restartPolicy: Never
