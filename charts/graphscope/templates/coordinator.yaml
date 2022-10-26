@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "graphscope.fullname" . }}-coordinator
+  name: coordinator-{{ include "graphscope.fullname" . }}
   namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
@@ -87,9 +87,9 @@ spec:
           - {{ include "graphscope.imagePullSecretsStr" . | default (printf "''") | trimAll "\n" | quote }}
           - "--k8s_coordinator_name"
           {{- $fullname := include "graphscope.fullname" . }}
-          - {{ printf "%s-%s" $fullname "coordinator" | quote }}
+          - {{ printf "%s-%s" "coordinator" $fullname | quote }}
           - "--k8s_coordinator_service_name"
-          - {{ printf "%s-%s" $fullname "coordinator-service" | quote }}
+          - {{ printf "%s-%s" "coordinator-service" $fullname | quote }}
           - "--k8s_etcd_cpu"
           - {{ .Values.etcd.resources.requests.cpu | quote }}
           - "--k8s_etcd_mem"

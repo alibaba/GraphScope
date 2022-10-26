@@ -5,13 +5,13 @@ The GraphScope has been deployed.
 {{- if contains "NodePort" .Values.coordinator.service.type }}
 
   export NODE_IP=$(kubectl --namespace {{ .Release.Namespace }}  get pod -l {{ template "graphscope.coordinator.labelSelector" . }} --no-headers=true | awk '/ /{print $1}' | xargs kubectl --namespace {{ .Release.Namespace }} get pod -o jsonpath="{.status.hostIP}")
-  export NODE_PORT=$(kubectl --namespace {{ .Release.Namespace }} get services -o jsonpath="{.spec.ports[0].nodePort}" {{ template "graphscope.fullname" . }}-coordinator-service)
+  export NODE_PORT=$(kubectl --namespace {{ .Release.Namespace }} get services -o jsonpath="{.spec.ports[0].nodePort}" coordinator-service-{{ template "graphscope.fullname" . }})
   echo "GraphScope service listen on ${NODE_IP}:${NODE_PORT}"
 
 {{- else if contains "LoadBalancer" .Values.coordinator.service.type }}
 
   It may take a few minutes for the LoadBalancer IP to be available.
-  You can watch the status by executing 'kubectl --namespace {{ .Release.Namespace }} get services -o wide -w {{ template "graphscope.fullname" . }}-coordinator-service'
+  You can watch the status by executing 'kubectl --namespace {{ .Release.Namespace }} get services -o wide -w coordinator-service-{{ template "graphscope.fullname" . }}'
 
 {{- end }}
 
