@@ -38,9 +38,7 @@ namespace gs {
  *
  * @tparam FRAG_T Should be vineyard::ArrowFragment<...>
  */
-template <typename FRAG_T,
-          grape::MessageStrategy _message_strategy =
-              grape::MessageStrategy::kAlongOutgoingEdgeToOuterVertex>
+template <typename FRAG_T>
 class JavaPIEPropertyParallelApp
     : public ParallelPropertyAppBase<FRAG_T,
                                      JavaPIEPropertyParallelContext<FRAG_T>>,
@@ -52,7 +50,6 @@ class JavaPIEPropertyParallelApp
                                         FRAG_T);
   static constexpr grape::LoadStrategy load_strategy =
       grape::LoadStrategy::kBothOutIn;
-  static constexpr grape::MessageStrategy message_strategy = _message_strategy;
   static constexpr bool need_split_edges = true;
 
  public:
@@ -122,6 +119,35 @@ class JavaPIEPropertyParallelApp
       LOG(ERROR) << "JNI env not available.";
     }
   }
+};
+
+template <typename FRAG_T>
+class JavaPIEPropertyParallelAppOE : public JavaPIEPropertyParallelApp<FRAG_T> {
+ public:
+  static constexpr grape::MessageStrategy message_strategy =
+      grape::MessageStrategy::kAlongOutgoingEdgeToOuterVertex;
+};
+
+template <typename FRAG_T>
+class JavaPIEPropertyParallelAppIE : public JavaPIEPropertyParallelApp<FRAG_T> {
+ public:
+  static constexpr grape::MessageStrategy message_strategy =
+      grape::MessageStrategy::kAlongIncomingEdgeToOuterVertex;
+};
+
+template <typename FRAG_T>
+class JavaPIEPropertyParallelAppE : public JavaPIEPropertyParallelApp<FRAG_T> {
+ public:
+  static constexpr grape::MessageStrategy message_strategy =
+      grape::MessageStrategy::kAlongEdgeToOuterVertex;
+};
+
+template <typename FRAG_T>
+class JavaPIEPropertyParallelAppSync
+    : public JavaPIEPropertyParallelApp<FRAG_T> {
+ public:
+  static constexpr grape::MessageStrategy message_strategy =
+      grape::MessageStrategy::kSyncOnOuterVertex;
 };
 
 }  // namespace gs

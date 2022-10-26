@@ -36,9 +36,7 @@ namespace gs {
  *
  * @tparam FRAG_T Should be gs::ArrowProjectedFragment<...>
  */
-template <typename FRAG_T,
-          grape::MessageStrategy _message_strategy =
-              grape::MessageStrategy::kAlongOutgoingEdgeToOuterVertex>
+template <typename FRAG_T>
 class JavaPIEProjectedParallelApp
     : public grape::ParallelAppBase<FRAG_T,
                                     JavaPIEProjectedParallelContext<FRAG_T>>,
@@ -46,10 +44,9 @@ class JavaPIEProjectedParallelApp
  public:
   // specialize the templated worker.
   INSTALL_JAVA_PARALLEL_WORKER(JavaPIEProjectedParallelApp<FRAG_T>,
-                               JavaPIEProjectedParallelContext<FRAG_T>, FRAG_T)
+                               JavaPIEProjectedParallelContext<FRAG_T>, FRAG_T);
   static constexpr grape::LoadStrategy load_strategy =
       grape::LoadStrategy::kBothOutIn;
-  static constexpr grape::MessageStrategy message_strategy = _message_strategy;
   static constexpr bool need_split_edges = true;
 
  public:
@@ -120,6 +117,38 @@ class JavaPIEProjectedParallelApp
       LOG(ERROR) << "JNI env not available.";
     }
   }
+};
+
+template <typename FRAG_T>
+class JavaPIEProjectedParallelAppOE
+    : public JavaPIEProjectedParallelApp<FRAG_T> {
+ public:
+  static constexpr grape::MessageStrategy message_strategy =
+      grape::MessageStrategy::kAlongOutgoingEdgeToOuterVertex;
+};
+
+template <typename FRAG_T>
+class JavaPIEProjectedParallelAppIE
+    : public JavaPIEProjectedParallelApp<FRAG_T> {
+ public:
+  static constexpr grape::MessageStrategy message_strategy =
+      grape::MessageStrategy::kAlongIncomingEdgeToOuterVertex;
+};
+
+template <typename FRAG_T>
+class JavaPIEProjectedParallelAppE
+    : public JavaPIEProjectedParallelApp<FRAG_T> {
+ public:
+  static constexpr grape::MessageStrategy message_strategy =
+      grape::MessageStrategy::kAlongEdgeToOuterVertex;
+};
+
+template <typename FRAG_T>
+class JavaPIEProjectedParallelAppSync
+    : public JavaPIEProjectedParallelApp<FRAG_T> {
+ public:
+  static constexpr grape::MessageStrategy message_strategy =
+      grape::MessageStrategy::kSyncOnOuterVertex;
 };
 
 }  // namespace gs

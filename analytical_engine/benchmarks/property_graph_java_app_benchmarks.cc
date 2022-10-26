@@ -58,7 +58,7 @@ using FragmentType =
 using ProjectedFragmentType =
     gs::ArrowProjectedFragment<int64_t, uint64_t, double, int64_t>;
 
-using AppType = gs::JavaPIEPropertyParallelApp<FragmentType>;
+using AppType = gs::JavaPIEPropertyParallelAppOE<FragmentType>;
 
 using ProjectedAppType = gs::JavaPIEProjectedDefaultApp<ProjectedFragmentType>;
 

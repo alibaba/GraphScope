@@ -340,18 +340,14 @@ public class ArrowProjectedGenerator {
         for (String type : parameterTypes) {
             methodBuilder.addMember("parameterTypes", "$S", type);
         }
-        if (messageTypePairs != null) {
-            AnnotationSpec.Builder templateBuilder =
-                    AnnotationSpec.builder(CXXTemplate.class)
-                            .addMember("cxx", "$S", cppFragName)
-                            .addMember("cxx", "$S", "whateverThisIs")
-                            .addMember("java", "$S", javaFragName)
-                            // FIXME: make unused accepts two.
-                            .addMember("java", "$S", getUnusedTypeName()); // anything should be ok.
-            methodBuilder.addMember("templates", "$L", templateBuilder.build());
-        } else {
-            logger.info("skip generation for method {} since no msg type available ", methodName);
-        }
+        AnnotationSpec.Builder templateBuilder =
+                AnnotationSpec.builder(CXXTemplate.class)
+                        .addMember("cxx", "$S", cppFragName)
+                        .addMember("cxx", "$S", "whateverThisIs")
+                        .addMember("java", "$S", javaFragName)
+                        // FIXME: make unused accepts two.
+                        .addMember("java", "$S", getUnusedTypeName()); // anything should be ok.
+        methodBuilder.addMember("templates", "$L", templateBuilder.build());
         parallelMessageBuilder.addMember("functionTemplates", "$L", methodBuilder.build());
     }
 

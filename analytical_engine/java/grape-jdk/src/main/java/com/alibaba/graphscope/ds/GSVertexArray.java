@@ -124,6 +124,12 @@ public interface GSVertexArray<T> extends FFIPointer, CXXPointer {
     void swap(@CXXReference GSVertexArray<T> vertexArray);
 
     /**
+     * Inherited from grape::Array
+     */
+    @FFINameAlias("size")
+    long size();
+
+    /**
      * Factory GSVertexArray.
      *
      * @param <T> vertex data type.

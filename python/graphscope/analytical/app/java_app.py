@@ -193,7 +193,7 @@ class JavaApp(AppAssets):
             gs_config["app"][0][
                 "driver_header"
             ] = "apps/java_pie/java_pie_property_parallel_app.h"
-            gs_config["app"][0]["class_name"] = "gs::JavaPIEPropertyParallelApp"
+            gs_config["app"][0]["class_name"] = "gs::JavaPIEPropertyParallelAppOE"
         elif self._java_app_type == "default_simple":
             gs_config["app"][0][
                 "driver_header"
@@ -203,7 +203,7 @@ class JavaApp(AppAssets):
             gs_config["app"][0][
                 "driver_header"
             ] = "apps/java_pie/java_pie_projected_parallel_app.h"
-            gs_config["app"][0]["class_name"] = "gs::JavaPIEProjectedParallelApp"
+            gs_config["app"][0]["class_name"] = "gs::JavaPIEProjectedParallelAppOE"
         else:
             raise Exception(
                 "Unrecognizable java app type: {}".format(self._java_app_type)
