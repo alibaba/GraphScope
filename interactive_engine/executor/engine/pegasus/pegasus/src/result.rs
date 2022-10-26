@@ -49,13 +49,15 @@ impl<T: 'static> ResultSink<T> {
 
     pub fn set_cancel_hook(&mut self, is_canceled: bool) {
         self.cancel.store(is_canceled, Ordering::SeqCst);
-        match &mut self.kind {
-            ResultSinkKind::Customized(tx) => {
-                let msg = "Job is canceled".to_string();
-                let err = JobExecError::from(msg);
-                tx.on_error(Box::new(err));
+        if is_canceled {
+            match &mut self.kind {
+                ResultSinkKind::Customized(tx) => {
+                    let msg = "Job is canceled".to_string();
+                    let err = JobExecError::from(msg);
+                    tx.on_error(Box::new(err));
+                }
+                _ => (),
             }
-            _ => (),
         }
     }
 
