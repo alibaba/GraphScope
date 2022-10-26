@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use pegasus::api::{Binary, IterCondition, Iteration, Map, Sink};
+use pegasus::api::{IterCondition, Iteration, Map, Sink};
 use pegasus::JobConf;
 use std::time::Duration;
 
@@ -28,7 +28,7 @@ fn timeout_test_01() {
                 .input_from(vec![0u32])?
                 .iterate_until(IterCondition::max_iters(20), |iter| {
                     iter.map(|input| {
-                        std::thread::sleep(Duration::from_secs(1));
+                        std::thread::sleep(Duration::from_millis(1000));
                         Ok(input + 1)
                     })
                 })?
@@ -42,55 +42,8 @@ fn timeout_test_01() {
         count += data;
     }
     if result.is_cancel() {
-        println!("the task is canceled");
         assert_eq!(0, count);
     } else {
         assert_eq!(20, count);
     }
-}
-
-/// test binary merge with shuffle between two workers;
-#[test]
-fn timeout_test_02() {
-    let mut conf = JobConf::new("binary_test_02");
-    conf.set_workers(2);
-    let mut result = pegasus::run(conf, || {
-        |input, output| {
-            let stream = input.input_from(0..1000)?;
-            let (left, right) = stream.copied()?;
-            let left = left.map(|item| Ok(item + 1))?;
-            let right = right
-                .map(|item| Ok(item + 2))?
-                .repartition(|item: &u32| Ok(*item as u64));
-            left.binary("merge", right, |_info| {
-                |left, right, output| {
-                    left.for_each_batch(|dataset| {
-                        let mut session = output.new_session(&dataset.tag)?;
-                        for item in dataset.drain() {
-                            session.give(item)?;
-                        }
-                        Ok(())
-                    })?;
-
-                    right.for_each_batch(|dataset| {
-                        let mut session = output.new_session(&dataset.tag)?;
-                        for item in dataset.drain() {
-                            session.give(item)?;
-                        }
-                        Ok(())
-                    })
-                }
-            })?
-            .sink_into(output)
-        }
-    })
-    .expect("submit job failure;");
-
-    let mut count = 0;
-    while let Some(Ok(data)) = result.next() {
-        assert!(data > 0 && data < 1002);
-        count += 1;
-    }
-
-    assert_eq!(4000, count);
 }

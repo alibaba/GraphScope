@@ -8,7 +8,7 @@ use dyn_clonable::*;
 
 use crate::api::function::FnResult;
 use crate::api::FromStream;
-use crate::errors::{ErrorKind, JobExecError};
+use crate::errors::JobExecError;
 
 #[clonable]
 pub trait FromStreamExt<T>: FromStream<T> + Clone {
@@ -50,12 +50,12 @@ impl<T: 'static> ResultSink<T> {
     pub fn set_cancel_hook(&mut self, is_canceled: bool) {
         self.cancel.store(is_canceled, Ordering::SeqCst);
         match &mut self.kind {
-            ResultSinkKind::Default(tx) => (),
             ResultSinkKind::Customized(tx) => {
                 let msg = "Job is canceled".to_string();
                 let err = JobExecError::from(msg);
                 tx.on_error(Box::new(err));
             }
+            _ => (),
         }
     }
 
