@@ -19,7 +19,7 @@
 │   └── values.yaml
 └── role_and_binding.yaml
 ```
-## Prepare Dependencies (只需第一次初始化执行)
+## Prepare Dependencies (just initialize once)
 ### rbac authorization
 ```
 kubectl apply -f role_and_binding.yaml
@@ -27,47 +27,47 @@ kubectl apply -f role_and_binding.yaml
 ### etcd
 ```
 cd GraphScope/charts
-kubectl apply -f ir-standalone/etcd.yaml
+kubectl apply -f ir-standalone/tools/etcd.yaml
 ```
 ### prepare graph data
-- 在本地机器上准备图数据
+- prepare raw data
 ```
-# for vineyard store (resources目录下存储了modern/crew等小图的csv文件，直接拷贝到本地机器的相应目录)
+# for vineyard store (there are some sample data for tests under the `resource` directory, just copy them to the target directory)
 cp -r GraphScope/interactive_engine/tests/src/main/resources/ /tmp/data/
 
-# for experimental store (实验存储默认会创建modern graph, 如加载其他图需在目录graph_schema和graph_data_bin下准备相应数据)
+# for experimental store (experimental storage will create modern graph for tests by default, prepare your own raw data under the directories of graph_schema and graph_data_bin if you need other graph data for benchmark)
 cp -r graph_schema /tmp/data/
 cp -r graph_data_bin /tmp/data
 ```
-- 配置`ir-standalone/pvc.yaml`
+- config `ir-standalone/pvc.yaml`
 ```
 hostPath:
-  path: /tmp/data # 和本地数据所在目录保持一致
+  path: /tmp/data # be consistent with the directory where the graph data is stored
 ```
-- 创建pvc和pv
+- create pvc and pv
 ```
-kubectl apply -f ir-standalone/pvc.yaml
+kubectl apply -f ir-standalone/tools/pvc.yaml
 ```
 ## Getting Started
-### 配置`ir-standalone/values.yaml`
+### config `ir-standalone/values.yaml`
 ```
-# 配置启动服务所需的docker镜像
+# docker artifacts
 image:
   registry: registry.cn-hongkong.aliyuncs.com
   repository: graphscope/gie-exp-runtime
   tag: ""
 
-# 配置engine节点的个数
+# store num
 store:
     replicaCount: 1
 
-# 指定启动的存储类型, Experimental or Vineyard
+# storage type: Experimental or Vineyard
 storageType: Experimental
 
-# 用于compiler查询schema的配置文件, json具体内容在ir-standalone/templates/configmap.yaml
+# need by compiler service to access meta, the concrete content is in ir-standalone/templates/configmap.yaml
 schemaConfig: "exp_modern_schema.json"
 
-# 配置外部访问的gremlin server端口
+# gremlin service port
 gremlinPort: 12312
 
 # Pegasus Config
@@ -76,25 +76,23 @@ pegasusTimeout: 240000
 pegasusBatchSize: 1024
 pegasusOutputCapacity: 16
 
-# 配置pod使用的pvc (默认为上述创建的pvc，可以配置其他)
+# pvc used by pod instance (default is the pvc created above)
 existingClaim: "test-graphscope-store-pvc"
 
-# 如果基于vineyard存储，需额外配置:
-htapLoaderConfig: "v6d_modern_loader.json" # 用于vineyard导入数据的配置文件, json具体内容在ir-standalone/templates/configmap.yaml
+# extra configurations if based on vineyard storage
+htapLoaderConfig: "v6d_modern_loader.json" # need by vineyard instance to load raw data into in-memory graph structure, the concrete content is in ir-standalone/templates/configmap.yaml
 ```
-### start service
+### start ir deployment
 ```
-kubectl get pods # 确认先前服务已停止
-
 helm install <your-release-name> ir-standalone
 ```
-### delete service
+### stop ir deployment
 ```
 helm delete <your-release-name>
 ```
 ### get service endpoint
 ```
-minikube tunnel # minikube环境中需额外执行
+minikube tunnel # execute in advance if in minikube environment
 
 kubectl get svc | grep frontend # EXTERNAL-IP:12312
 ```

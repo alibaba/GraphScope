@@ -751,9 +751,9 @@ jobs:
 
   gie-k8s-failover-test:
     runs-on: [self-hosted, ubuntu2004]
-    if: ${{ needs.changes.outputs.gie-k8s-failover-test == 'true' && github.repository == 'alibaba/GraphScope' }}
+    if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
-      - uses: actions/checkout@v2.3.2
+      - uses: actions/checkout@v3
 
       - uses: actions/cache@v3
         with:
@@ -769,7 +769,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           path: artifacts
 
@@ -782,7 +782,7 @@ jobs:
         run: |
           # build gie-exp-runtime image
           cd ${GITHUB_WORKSPACE}/k8s/standalone
-          make gie-exp-runtime VERSION=${SHORT_SHA}
+          make image-interactive-experimental VERSION=${SHORT_SHA}
 
       - name: prepare Graph Data
         env:
@@ -799,7 +799,7 @@ jobs:
           kubectl apply -f ./ir-standalone/pvc.yaml
           # create gie instance (compiler & executor & exp storage)
           helm install test ./ir-standalone \
-              --set image.repository=graphscope/gie-exp-runtime \
+              --set image.repository=graphscope/image-interactive-experimental \
               --set image.tag=${SHORT_SHA} --set storageType=Experimental \
               --set schemaConfig=expr_modern_schema.json \
               --set store.replicaCount=2 \

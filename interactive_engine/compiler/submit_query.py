@@ -9,8 +9,8 @@ from gremlin_python.process.strategies import *
 from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
 
 graph = Graph()
-hostname = sys.argv[1]
-remoteConn = DriverRemoteConnection('ws://' + hostname + '/gremlin','g')
+gremlin_endpoint = sys.argv[1]
+remoteConn = DriverRemoteConnection('ws://' + gremlin_endpoint + '/gremlin','g')
 g = graph.traversal().withRemote(remoteConn)
 
 res = g.V().limit(2).count().next()
