@@ -45,13 +45,17 @@
     </dependency>
     <dependency>
       <groupId>com.alibaba.graphscope</groupId>
-      <artifactId>giraph-on-grape</artifactId>
+      <artifactId>grape-giraph</artifactId>
       <classifier>shaded</classifier>
     </dependency>
     <dependency>
       <groupId>com.alibaba.graphscope</groupId>
-      <artifactId>graphx-on-graphscope</artifactId>
+      <artifactId>grape-graphx</artifactId>
       <classifier>shaded</classifier>
+    </dependency>
+    <dependency>
+      <groupId>com.alibaba.graphscope</groupId>
+      <artifactId>grape-annotation</artifactId>
     </dependency>
     <dependency>
       <groupId>com.alibaba.fastffi</groupId>
@@ -113,18 +117,6 @@
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <executions>
-          <execution>
-            <goals>
-              <goal>test</goal>
-            </goals>
-            <phase>test</phase>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
         <executions>
           <execution>
@@ -152,11 +144,43 @@
                   </excludes>
                 </filter>
               </filters>
-              <finalName>${uberjar.name}</finalName>
             </configuration>
           </execution>
         </executions>
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>release</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-deploy-plugin</artifactId>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+          </plugin>
+          <plugin>
+            <groupId>org.sonatype.plugins</groupId>
+            <artifactId>nexus-staging-maven-plugin</artifactId>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

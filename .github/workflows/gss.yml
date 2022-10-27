@@ -43,7 +43,7 @@ jobs:
     runs-on: [self-hosted, manylinux2014]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - uses: actions/cache@v3
       with:
         path: ~/.m2/repository
@@ -107,7 +107,7 @@ jobs:
         mvn test -P gremlin-test
 
     - name: Upload tools for helm test to Artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: groot.tar.gz
         path: interactive_engine/assembly/target/groot.tar.gz
@@ -127,11 +127,11 @@ jobs:
         find ./ -name "*.whl" | xargs sudo rm -rf || true
         find ./ -name "*_pb2.py" | xargs sudo rm -rf || true
         find ./ -name "*_pb2_grpc.py" | xargs sudo rm -rf || true
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
 
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: groot.tar.gz
         path: artifacts

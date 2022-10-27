@@ -65,7 +65,7 @@ public interface ProjectedNbr<VID_T, EDATA_T> extends NbrBase<VID_T, EDATA_T> {
      *
      * @return edge data.
      */
-    @Override
+    @CXXReference
     EDATA_T data();
 
     /**

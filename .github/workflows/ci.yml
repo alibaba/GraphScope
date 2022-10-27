@@ -51,7 +51,7 @@ jobs:
       gie-function-test: ${{ steps.filter.outputs.gie-function-test }}
     steps:
     # For push it's necessary to checkout the code
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     # For pull requests it's not necessary to checkout the code
     - uses: dorny/paths-filter@v2
       id: filter
@@ -132,7 +132,7 @@ jobs:
         python3 -m flake8 .
 
     - name: Setup Java11
-      uses: actions/setup-java@v2
+      uses: actions/setup-java@v3
       with:
          distribution: 'zulu'
          java-version: '11'
@@ -177,7 +177,7 @@ jobs:
     needs: [changes]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
 
@@ -258,7 +258,7 @@ jobs:
         tar -zcf graphscope.tar.gz coordinator/dist/
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: wheel-${{ github.sha }}
         path: |
@@ -271,9 +271,9 @@ jobs:
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     needs: [build-wheels]
     steps:
-      - uses: actions/checkout@v2.3.2
+      - uses: actions/checkout@v3
 
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           path: artifacts
 
@@ -314,7 +314,7 @@ jobs:
 
       - name: Upload GIE log
         if: always()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: gie-log
           path: ~/.local/log/graphscope
@@ -331,10 +331,10 @@ jobs:
         deployment: ["standalone", "distributed"]
 
     steps:
-    - uses: actions/checkout@v2.3.2
+    - uses: actions/checkout@v3
       if: ${{ needs.changes.outputs.gae-python == 'true' }}
 
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       if: ${{ needs.changes.outputs.gae-python == 'true' }}
       with:
         path: artifacts
@@ -380,7 +380,7 @@ jobs:
 
     - name: Upload Coverage
       if: ${{ needs.changes.outputs.gae-python == 'true' || github.ref == 'refs/heads/main' }}
-      uses: codecov/codecov-action@v2
+      uses: codecov/codecov-action@v3
       with:
         file: ./coverage.xml
         fail_ci_if_error: false
@@ -396,7 +396,7 @@ jobs:
       matrix:
         deployment: ["standalone", "distributed"]
     steps:
-    - uses: actions/checkout@v2.3.2
+    - uses: actions/checkout@v3
       if: ${{ needs.changes.outputs.networkx == 'true' }}
 
     - uses: dorny/paths-filter@v2
@@ -417,7 +417,7 @@ jobs:
             - 'python/graphscope/nx/convert_matrix.py'
             - 'python/graphscope/nx/tests/convert/**'
 
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       if: ${{ needs.changes.outputs.networkx == 'true' }}
       with:
         path: artifacts
@@ -482,7 +482,7 @@ jobs:
       matrix:
         deployment: ["standalone", "distributed"]
     steps:
-    - uses: actions/checkout@v2.3.2
+    - uses: actions/checkout@v3
       if: ${{ needs.changes.outputs.networkx == 'true' }}
 
     - uses: dorny/paths-filter@v2
@@ -502,7 +502,7 @@ jobs:
           io:
             - 'python/graphscope/nx/readwrite/**'
 
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       if: ${{ needs.changes.outputs.networkx == 'true' }}
       with:
         path: artifacts
@@ -567,7 +567,7 @@ jobs:
     needs: [build-wheels, changes]
     if: ${{ needs.changes.outputs.gie-function-test == 'true' && github.repository == 'alibaba/GraphScope' }}
     steps:
-      - uses: actions/checkout@v2.3.2
+      - uses: actions/checkout@v3
 
       - uses: actions/cache@v3
         with:
@@ -583,7 +583,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           path: artifacts
 
@@ -629,7 +629,7 @@ jobs:
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     needs: [build-wheels]
     steps:
-      - uses: actions/checkout@v2.3.2
+      - uses: actions/checkout@v3
 
       - uses: actions/cache@v3
         with:
@@ -638,7 +638,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           path: artifacts
 
@@ -706,7 +706,7 @@ jobs:
         if: false
 
       - name: Upload Coverage
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         with:
           file: ./python/coverage.xml
           fail_ci_if_error: true

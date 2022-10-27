@@ -33,7 +33,7 @@ jobs:
       options:
         --shm-size 4096m
     steps:
-    - uses: actions/checkout@v2.3.2
+    - uses: actions/checkout@v3
 
     - name: Install latest libgrape-lite and vineyard
       if: false
@@ -109,7 +109,7 @@ jobs:
           --cov-report=term --exitfirst -s -v graphscope/tests/unittest/test_java_app.py
 
     - name: Upload Coverage
-      uses: codecov/codecov-action@v2
+      uses: codecov/codecov-action@v3
       with:
         file: ./python/coverage.xml
         fail_ci_if_error: true

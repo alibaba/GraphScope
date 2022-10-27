@@ -27,7 +27,7 @@ import static com.alibaba.graphscope.annotation.Utils.java2Cpp;
 import static com.alibaba.graphscope.annotation.Utils.makeParameterizedType;
 import static com.alibaba.graphscope.annotation.Utils.vertexDataContextAddTemplate;
 import static com.alibaba.graphscope.utils.CppClassName.ARROW_FRAGMENT;
-import static com.alibaba.graphscope.utils.CppClassName.ARROW_PROJECTED_FRAGMENT;
+import static com.alibaba.graphscope.utils.CppClassName.CPP_ARROW_PROJECTED_FRAGMENT;
 
 import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.CXXReference;
@@ -133,7 +133,7 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
     private String javaArrowFragmentTemplateName = ArrowFragment.class.getName();
     private String foreignArrowFragmentTemplateName = ARROW_FRAGMENT;
     private String JavaArrowProjectedTemplateName = ArrowProjectedFragment.class.getName();
-    private String foreignArrowProjectedTempalteName = ARROW_PROJECTED_FRAGMENT;
+    private String foreignArrowProjectedTempalteName = CPP_ARROW_PROJECTED_FRAGMENT;
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {

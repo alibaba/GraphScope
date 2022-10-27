@@ -73,7 +73,7 @@ public class FFITypeFactoryhelper {
             // signed returned
             return "int64_t";
         } else if (clz.getName() == Integer.class.getName()) {
-            return "uint32_t";
+            return "int32_t";
         } else if (clz.getName() == Double.class.getName()) {
             return "double";
         } else {

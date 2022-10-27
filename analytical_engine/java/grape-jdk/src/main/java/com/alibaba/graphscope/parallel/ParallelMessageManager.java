@@ -37,6 +37,7 @@ import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
 import com.alibaba.graphscope.utils.JNILibraryName;
+import com.alibaba.graphscope.utils.Unused;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -70,6 +71,8 @@ public interface ParallelMessageManager extends MessageManagerBase {
         } else if (frag.fragmentType().equals(FragmentType.ImmutableEdgecutFragment)) {
             syncStateOnOuterVertexImmutable(
                     (ImmutableEdgecutFragment) frag.getFFIPointer(), vertex, msg, channelId, vdata);
+        } else {
+            throw new IllegalStateException("Not supported now");
         }
         return false;
     }
@@ -85,6 +88,8 @@ public interface ParallelMessageManager extends MessageManagerBase {
         } else if (frag.fragmentType().equals(FragmentType.ImmutableEdgecutFragment)) {
             syncStateOnOuterVertexImmutableNoMsg(
                     (ImmutableEdgecutFragment) frag.getFFIPointer(), vertex, channelId, vdata);
+        } else {
+            throw new IllegalStateException("Not supported now");
         }
         return false;
     }
@@ -105,6 +110,8 @@ public interface ParallelMessageManager extends MessageManagerBase {
                     msg,
                     channelId,
                     unused);
+        } else {
+            throw new IllegalStateException("Not supported now");
         }
         return false;
     }
@@ -125,6 +132,8 @@ public interface ParallelMessageManager extends MessageManagerBase {
                     msg,
                     channelId,
                     unused);
+        } else {
+            throw new IllegalStateException("Not supported now");
         }
         return false;
     }
@@ -145,6 +154,8 @@ public interface ParallelMessageManager extends MessageManagerBase {
                     msg,
                     channelId,
                     unused);
+        } else {
+            throw new IllegalStateException("Not supported now");
         }
         return false;
     }
@@ -371,13 +382,13 @@ public interface ParallelMessageManager extends MessageManagerBase {
      * @param msgSupplier a producer function creating a msg instance.
      * @param consumer lambda function.
      */
-    default <FRAG_T extends IFragment, MSG_T, @FFISkip VDATA_T> void parallelProcess(
+    default <FRAG_T extends IFragment, MSG_T> void parallelProcess(
             FRAG_T frag,
             int threadNum,
             ExecutorService executor,
             Supplier<MSG_T> msgSupplier,
             BiConsumer<Vertex<Long>, MSG_T> consumer,
-            @FFISkip VDATA_T unused) {
+            Unused skip) {
         CountDownLatch countDownLatch = new CountDownLatch(threadNum);
         MessageInBuffer.Factory bufferFactory = FFITypeFactoryhelper.newMessageInBuffer();
         int chunkSize = 1024;
@@ -394,7 +405,7 @@ public interface ParallelMessageManager extends MessageManagerBase {
                             while (true) {
                                 result = getMessageInBuffer(messageInBuffer);
                                 if (result) {
-                                    while (messageInBuffer.getMessage(frag, vertex, msg, unused)) {
+                                    while (messageInBuffer.getMessage(frag, vertex, msg, skip)) {
                                         consumer.accept(vertex, msg);
                                     }
                                 } else {

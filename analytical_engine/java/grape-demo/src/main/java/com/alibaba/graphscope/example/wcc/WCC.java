@@ -29,6 +29,7 @@ import com.alibaba.graphscope.parallel.ParallelMessageManager;
 import com.alibaba.graphscope.parallel.message.DoubleMsg;
 import com.alibaba.graphscope.parallel.message.LongMsg;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
+import com.alibaba.graphscope.utils.Unused;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,7 +70,12 @@ public class WCC implements ParallelAppBase<Long, Long, Long, Double, WCCContext
         BiConsumer<Vertex<Long>, Integer> msgSender =
                 (vertex, finalTid) -> {
                     DoubleMsg msg = FFITypeFactoryhelper.newDoubleMsg(ctx.comp_id.get(vertex));
-                    mm.syncStateOnOuterVertex(fragment, vertex, msg, finalTid, 2.0);
+                    mm.syncStateOnOuterVertex(
+                            fragment,
+                            vertex,
+                            msg,
+                            finalTid,
+                            Unused.getUnused(Long.class, Double.class, Long.class));
                 };
         forEachVertex(outerVertices, ctx.threadNum, ctx.executor, ctx.nextModified, msgSender);
         // mm.ParallelSyncStateOnOuterVertex(outerVertices, ctx.nextModified, ctx.threadNum,
@@ -115,7 +121,12 @@ public class WCC implements ParallelAppBase<Long, Long, Long, Double, WCCContext
                         ctx.comp_id.set(vertex, newCid);
                         ctx.nextModified.set(vertex);
                         msg.setData(newCid);
-                        mm.syncStateOnOuterVertex(fragment, vertex, msg, finalTid, 2.0);
+                        mm.syncStateOnOuterVertex(
+                                fragment,
+                                vertex,
+                                msg,
+                                finalTid,
+                                Unused.getUnused(Long.class, Double.class, Long.class));
                     }
                 };
         forEachVertex(innerVertices, ctx.threadNum, ctx.executor, outgoing);
@@ -170,7 +181,12 @@ public class WCC implements ParallelAppBase<Long, Long, Long, Double, WCCContext
                 };
         Supplier<LongMsg> msgSupplier = () -> LongMsg.factory.create();
         messageManager.parallelProcess(
-                frag, ctx.threadNum, ctx.executor, msgSupplier, msgReceiveConsumer, 2f);
+                frag,
+                ctx.threadNum,
+                ctx.executor,
+                msgSupplier,
+                msgReceiveConsumer,
+                Unused.getUnused(Long.class, Double.class, Long.class));
 
         double rate = (double) ctx.currModified.getBitSet().cardinality() / ctx.innerVerticesNum;
         if (rate > 0.1) {

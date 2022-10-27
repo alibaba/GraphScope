@@ -16,4 +16,6 @@
 
 package com.alibaba.graphscope.parallel.message;
 
-public interface MsgBase {}
+import com.alibaba.fastffi.FFIPointer;
+
+public interface MsgBase extends FFIPointer {}
