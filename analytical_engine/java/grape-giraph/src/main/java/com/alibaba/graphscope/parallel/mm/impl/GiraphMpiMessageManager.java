@@ -21,9 +21,9 @@ import static org.apache.giraph.utils.ByteUtils.SIZE_OF_LONG;
 import com.alibaba.fastffi.llvm4jni.runtime.JavaRuntime;
 import com.alibaba.graphscope.communication.FFICommunicator;
 import com.alibaba.graphscope.ds.PropertyNbrUnit;
-import com.alibaba.graphscope.fragment.ArrowProjectedFragment;
+import com.alibaba.graphscope.fragment.BaseArrowProjectedFragment;
 import com.alibaba.graphscope.fragment.IFragment;
-import com.alibaba.graphscope.fragment.adaptor.ArrowProjectedAdaptor;
+import com.alibaba.graphscope.fragment.adaptor.AbstractArrowProjectedAdaptor;
 import com.alibaba.graphscope.graph.GiraphVertexIdManager;
 import com.alibaba.graphscope.graph.impl.VertexImpl;
 import com.alibaba.graphscope.parallel.DefaultMessageManager;
@@ -62,7 +62,7 @@ public class GiraphMpiMessageManager<
     private long offsetEndPtrFirstAddr;
     private long nbrUnitEleSize;
     private long nbrUnitInitAddress;
-    private ArrowProjectedFragment<GS_OID_T, GS_VID_T, ?, ?> projectedFragment;
+    private BaseArrowProjectedFragment<GS_OID_T, GS_VID_T, ?, ?> projectedFragment;
     private GiraphVertexIdManager<GS_VID_T, OID_T> idManager;
 
     public GiraphMpiMessageManager(
@@ -75,8 +75,8 @@ public class GiraphMpiMessageManager<
         this.idManager = idManager;
         THRESHOLD = MAX_OUT_MSG_CACHE_SIZE.get(configuration);
         this.projectedFragment =
-                ((ArrowProjectedAdaptor<GS_OID_T, GS_VID_T, ?, ?>) fragment)
-                        .getArrowProjectedFragment();
+                ((AbstractArrowProjectedAdaptor<GS_OID_T, GS_VID_T, ?, ?>) fragment)
+                        .getBaseArrayProjectedFragment();
 
         this.cacheOut = new FFIByteVectorOutputStream[fragment.fnum()];
         for (int i = 0; i < fragment.fnum(); ++i) {

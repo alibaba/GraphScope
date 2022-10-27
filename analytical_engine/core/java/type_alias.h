@@ -18,6 +18,8 @@
 
 #ifdef ENABLE_JAVA_SDK
 
+#include <string>
+
 #include "grape/utils/vertex_array.h"
 #include "vineyard/graph/fragment/arrow_fragment.h"
 #include "vineyard/graph/fragment/property_graph_types.h"
@@ -27,7 +29,8 @@
 
 #include "core/context/column.h"
 #include "core/fragment/arrow_projected_fragment.h"
-#include "core/java/graphx/graphx_csr.h"
+#include "core/fragment/arrow_projected_fragment_mapper.h"
+#include "core/java/fragment_getter.h"
 
 // Type alias for ease of use of some template types in Java.
 namespace gs {
@@ -38,9 +41,17 @@ template <typename VID_T, typename EDATA_T>
 using NbrDefault =
     Nbr<VID_T, vineyard::property_graph_types::EID_TYPE, EDATA_T>;
 
+template <typename VID_T>
+using NbrStrData =
+    Nbr<VID_T, vineyard::property_graph_types::EID_TYPE, std::string>;
+
 template <typename VID_T, typename EDATA_T>
 using AdjListDefault =
     AdjList<VID_T, vineyard::property_graph_types::EID_TYPE, EDATA_T>;
+
+template <typename VID_T>
+using AdjListStrData =
+    AdjList<VID_T, vineyard::property_graph_types::EID_TYPE, std::string>;
 }  // namespace arrow_projected_fragment_impl
 
 // vineyard property graph utils
@@ -72,6 +83,44 @@ using VertexDataColumnDefault =
 template <typename OID_T>
 using ArrowFragmentDefault = vineyard::ArrowFragment<OID_T, uint64_t>;
 
+template <typename OID_T, typename VID_T, typename VDATA_T>
+using ArrowProjectedStringEDFragment =
+    ArrowProjectedFragment<OID_T, VID_T, VDATA_T, std::string>;
+
+template <typename OID_T, typename VID_T, typename EDATA_T>
+using ArrowProjectedStringVDFragment =
+    ArrowProjectedFragment<OID_T, VID_T, std::string, EDATA_T>;
+
+template <typename OID_T, typename VID_T>
+using ArrowProjectedStringVEDFragment =
+    ArrowProjectedFragment<OID_T, VID_T, std::string, std::string>;
+
+// mapper
+template <typename OID_T, typename VID_T, typename VDATA_T>
+using ArrowProjectedStringEDFragmentMapper =
+    ArrowProjectedFragmentMapper<OID_T, VID_T, VDATA_T, std::string>;
+
+template <typename OID_T, typename VID_T, typename EDATA_T>
+using ArrowProjectedStringVDFragmentMapper =
+    ArrowProjectedFragmentMapper<OID_T, VID_T, std::string, EDATA_T>;
+
+template <typename OID_T, typename VID_T>
+using ArrowProjectedStringVEDFragmentMapper =
+    ArrowProjectedFragmentMapper<OID_T, VID_T, std::string, std::string>;
+
+// Getter
+template <typename OID_T, typename VID_T, typename VDATA_T>
+using ArrowProjectedStringEDFragmentGetter =
+    ArrowProjectedFragmentGetter<OID_T, VID_T, VDATA_T, std::string>;
+
+template <typename OID_T, typename VID_T, typename EDATA_T>
+using ArrowProjectedStringVDFragmentGetter =
+    ArrowProjectedFragmentGetter<OID_T, VID_T, std::string, EDATA_T>;
+
+template <typename OID_T, typename VID_T>
+using ArrowProjectedStringVEDFragmentGetter =
+    ArrowProjectedFragmentGetter<OID_T, VID_T, std::string, std::string>;
+
 template <typename DATA_T>
 using VertexArrayDefault =
     grape::VertexArray<grape::VertexRange<uint64_t>, DATA_T>;
@@ -88,14 +137,15 @@ using LongColumn = Column<FRAG_T, uint64_t>;
 template <typename FRAG_T>
 using IntColumn = Column<FRAG_T, uint32_t>;
 
-template <typename VID_T, typename ED_T>
-using DefaultImmutableCSR = grape::ImmutableCSR<VID_T, grape::Nbr<VID_T, ED_T>>;
-
 template <typename T>
 using ArrowArrayBuilder = typename vineyard::ConvertToArrowType<T>::BuilderType;
 
+using ArrowStringArrayBuilder = typename gs::ArrowArrayBuilder<std::string>;
+
 template <typename T>
 using ArrowArray = typename vineyard::ConvertToArrowType<T>::ArrayType;
+
+using ArrowStringArray = typename gs::ArrowArray<std::string>;
 
 }  // namespace gs
 

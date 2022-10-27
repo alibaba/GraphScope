@@ -22,7 +22,6 @@ import static com.alibaba.graphscope.utils.CppHeaderName.CORE_JAVA_JAVA_MESSAGES
 import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.FFIFactory;
 import com.alibaba.fastffi.FFIGen;
-import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.fastffi.FFITypeFactory;
 import com.alibaba.graphscope.utils.JNILibraryName;
@@ -38,7 +37,7 @@ import com.alibaba.graphscope.utils.JNILibraryName;
 @FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
 @CXXHead(value = CORE_JAVA_JAVA_MESSAGES_H)
 @FFITypeAlias(value = DOUBLE_MSG)
-public interface DoubleMsg extends FFIPointer {
+public interface DoubleMsg extends MsgBase {
     Factory factory = FFITypeFactory.getFactory(Factory.class, DoubleMsg.class);
 
     double getData();

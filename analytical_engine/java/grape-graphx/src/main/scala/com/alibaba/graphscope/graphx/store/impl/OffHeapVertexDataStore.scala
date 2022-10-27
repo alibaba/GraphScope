@@ -16,43 +16,44 @@
 
 package com.alibaba.graphscope.graphx.store.impl
 
-import com.alibaba.graphscope.graphx.{VertexData, VertexDataBuilder, VineyardArrayBuilder, VineyardClient}
-import com.alibaba.graphscope.graphx.utils.{EIDAccessor, GrapeUtils, ScalaFFIFactory}
+import com.alibaba.graphscope.arrow.array.ArrowArrayBuilder
+import com.alibaba.graphscope.graphx.VineyardClient
+import com.alibaba.graphscope.graphx.utils.{GrapeUtils, ScalaFFIFactory}
 import org.apache.spark.internal.Logging
 import org.apache.spark.util.SizeEstimator
 
 import scala.reflect.ClassTag
 
-class OffHeapVertexDataStore[VD: ClassTag](length : Int, localNum : Int, client : VineyardClient, val vdataBuilder : VertexDataBuilder[Long,VD]) extends AbstractVertexDataStore[VD](length, localNum, client) with Logging{
-  def this(length : Int, localNum : Int, client: VineyardClient, defaultVD : VD = null){
-    this(length, localNum, client,ScalaFFIFactory.newVertexDataBuilder[VD](client,length, defaultVD))
-  }
+class OffHeapVertexDataStore[VD: ClassTag](
+    length: Int,
+    localNum: Int,
+    client: VineyardClient,
+    val arrowArrayBuilder: ArrowArrayBuilder[VD]
+) extends AbstractVertexDataStore[VD](length, localNum, client)
+    with Logging {
   require(GrapeUtils.isPrimitive[VD])
 
-  val arrayBuilder: VineyardArrayBuilder[VD] = vdataBuilder.getArrayBuilder
-  override def get(ind: Int): VD = arrayBuilder.get(ind)
+  def this(
+      length: Int,
+      localNum: Int,
+      client: VineyardClient,
+      defaultVD: VD = null
+  ) {
+    this(
+      length,
+      localNum,
+      client,
+      ScalaFFIFactory.newArrowArrayBuilder[VD]
+    )
+  }
 
-  override def set(ind: Int, vd: VD): Unit = arrayBuilder.set(ind, vd)
+  override def get(ind: Int): VD = arrowArrayBuilder.getValue(ind)
+
+  override def set(ind: Int, vd: VD): Unit = arrowArrayBuilder.set(ind, vd)
 
   override def estimatedSize: Long = {
-    val res = SizeEstimator.estimate(client) + SizeEstimator.estimate(vdataBuilder) + 8
+    val res =
+      SizeEstimator.estimate(client) + SizeEstimator.estimate(arrowArrayBuilder) + 8
     res
   }
 }
-
-class ImmutableOffHeapVertexDataStore[VD: ClassTag](length : Int,localNum : Int, client : VineyardClient, val vertexData : VertexData[Long,VD]) extends AbstractVertexDataStore[VD](length, localNum, client) with Logging {
-  require(GrapeUtils.isPrimitive[VD])
-
-  override def get(ind: Int): VD = vertexData.getData(ind)
-
-  override def set(ind: Int, vd: VD): Unit = {
-    throw new IllegalStateException("not implemented")
-  }
-
-  override def estimatedSize: Long = {
-    val res = SizeEstimator.estimate(client)  + SizeEstimator.estimate(vertexData) + 8
-    res
-
-  }
-}
-

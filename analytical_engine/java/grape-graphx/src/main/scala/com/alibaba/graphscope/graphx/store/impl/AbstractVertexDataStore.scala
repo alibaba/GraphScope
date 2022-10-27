@@ -18,16 +18,19 @@ package com.alibaba.graphscope.graphx.store.impl
 
 import com.alibaba.graphscope.graphx.VineyardClient
 import com.alibaba.graphscope.graphx.store.VertexDataStore
-import com.alibaba.graphscope.graphx.utils.{GrapeUtils, ScalaFFIFactory}
 
 import scala.reflect.ClassTag
 
-abstract class AbstractVertexDataStore[T](val length : Int, var localNum : Int, val client : VineyardClient) extends VertexDataStore[T]{
-  override def mapToNew[T2 : ClassTag] : VertexDataStore[T2] = {
-    new InHeapVertexDataStore[T2](length,localNum,client)
+abstract class AbstractVertexDataStore[T](
+    val length: Int,
+    var localNum: Int,
+    val client: VineyardClient
+) extends VertexDataStore[T] {
+  override def mapToNew[T2: ClassTag]: VertexDataStore[T2] = {
+    new InHeapVertexDataStore[T2](length, localNum, client)
   }
 
-  override def size() : Int = length;
+  override def size(): Int = length;
 
   override def getLocalNum: Int = localNum
 

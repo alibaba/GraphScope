@@ -56,10 +56,10 @@
   <modules>
     <module>grape-annotation</module>
     <module>grape-jdk</module>
-    <module>grape-demo</module>
-    <module>grape-runtime</module>
     <module>grape-graphx</module>
     <module>grape-giraph</module>
+    <module>grape-demo</module>
+    <module>grape-runtime</module>
   </modules>
 
   <properties>
@@ -73,7 +73,7 @@
     <google-java-format.version>1.7</google-java-format.version>
     <javapoet.version>1.13.0</javapoet.version>
     <junit.version>4.13.2</junit.version>
-    <scala.library.version>2.12.10</scala.library.version>
+    <scala.library.version>2.12.15</scala.library.version>
     <maven-antrun-plugin.version>3.0.0</maven-antrun-plugin.version>
     <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
     <maven-failsafe-plugin.version>3.0.0-M5</maven-failsafe-plugin.version>

@@ -41,7 +41,7 @@ public class FFIByteVector extends FFIPointerImpl implements StdVector<Byte> {
 
     public static final int SIZE = _elementSize$$$();
     // Actual starting address of data
-    private long objAddress;
+    public long objAddress;
     public static final int HASH_SHIFT;
     // We don't use reserve to allocate memory ,we use resize.
     // It seems reserved memory isn't allowed to be set directly.

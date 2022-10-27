@@ -18,7 +18,7 @@ package com.alibaba.graphscope.context.ffi;
 
 import static com.alibaba.graphscope.utils.CppClassName.VERTEX_DATA_CONTEXT;
 import static com.alibaba.graphscope.utils.CppHeaderName.ARROW_PROJECTED_FRAGMENT_H;
-import static com.alibaba.graphscope.utils.CppHeaderName.CORE_JAVA_GRAPHX_GRAPHX_FRAGMENT_H;
+import static com.alibaba.graphscope.utils.CppHeaderName.CORE_JAVA_TYPE_ALIAS_H;
 
 import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.CXXReference;
@@ -33,7 +33,7 @@ import com.alibaba.graphscope.utils.JNILibraryName;
 @FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
 @CXXHead(CppHeaderName.VERTEX_DATA_CONTEXT_H)
 @CXXHead(ARROW_PROJECTED_FRAGMENT_H)
-@CXXHead(CORE_JAVA_GRAPHX_GRAPHX_FRAGMENT_H)
+@CXXHead(CORE_JAVA_TYPE_ALIAS_H)
 @FFITypeAlias(VERTEX_DATA_CONTEXT)
 public interface FFIVertexDataContext<FRAG_T, DATA_T> extends FFIPointer {
 
@@ -42,6 +42,7 @@ public interface FFIVertexDataContext<FRAG_T, DATA_T> extends FFIPointer {
 
     @FFIFactory
     interface Factory<FRAG_T, DATA_T> {
+
         FFIVertexDataContext<FRAG_T, DATA_T> create(
                 @CXXReference FRAG_T fragment, boolean includeOuter);
     }

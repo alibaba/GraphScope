@@ -68,7 +68,6 @@ public interface GrapeNbr<VID_T, EDATA_T>
      *
      * @return edge data.
      */
-    @Override
     @FFIGetter
     @CXXReference
     EDATA_T data();

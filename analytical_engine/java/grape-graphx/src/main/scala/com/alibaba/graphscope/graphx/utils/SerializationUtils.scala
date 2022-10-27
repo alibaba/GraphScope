@@ -20,28 +20,24 @@ import org.apache.spark.internal.Logging
 
 import java.io._
 
-/**
- * Serialize a function obj to a path;
- * deserialize a function obj from path
- */
-object SerializationUtils extends Logging{
-  def write[A](path : String, objs: Any*): Unit = {
-    log.info("Write obj " + objs.mkString("Array(", ", ", ")") + " to :" +  path)
+/** Serialize a function obj to a path;
+  * deserialize a function obj from path
+  */
+object SerializationUtils extends Logging {
+  def write[A](path: String, objs: Any*): Unit = {
+    log.info("Write obj " + objs.mkString("Array(", ", ", ")") + " to :" + path)
     val bo = new FileOutputStream(new File(path))
     val outputStream = new ObjectOutputStream(bo)
     outputStream.writeInt(objs.length)
     var i = 0
-    while (i < objs.length){
-      if (objs(i).equals(classOf[Long])){
+    while (i < objs.length) {
+      if (objs(i).equals(classOf[Long])) {
         outputStream.writeObject(classOf[java.lang.Long])
-      }
-      else if (objs(i).equals(classOf[Int])){
+      } else if (objs(i).equals(classOf[Int])) {
         outputStream.writeObject(classOf[java.lang.Integer])
-      }
-      else if (objs(i).equals(classOf[Double])){
+      } else if (objs(i).equals(classOf[Double])) {
         outputStream.writeObject(classOf[java.lang.Double])
-      }
-      else {
+      } else {
         outputStream.writeObject(objs(i))
       }
       i += 1
@@ -51,29 +47,30 @@ object SerializationUtils extends Logging{
   }
 
   @throws[ClassNotFoundException]
-  def read(classLoader: ClassLoader,filepath : String): Array[Any] = {
-    log.info("Reading from file path: " + filepath + ", with class loader: " + classLoader)
-    val objectInputStream = new ObjectInputStream(new FileInputStream(new File(filepath))){
+  def read(classLoader: ClassLoader, filepath: String): Array[Any] = {
+    log.info(
+      "Reading from file path: " + filepath + ", with class loader: " + classLoader
+    )
+    val objectInputStream = new ObjectInputStream(
+      new FileInputStream(new File(filepath))
+    ) {
       @throws[IOException]
       @throws[ClassNotFoundException]
       protected override def resolveClass(desc: ObjectStreamClass): Class[_] = {
-        if (desc.getName.equals("long")){
+        if (desc.getName.equals("long")) {
           classOf[java.lang.Long]
-        }
-        else if (desc.getName.equals("double")){
+        } else if (desc.getName.equals("double")) {
           classOf[java.lang.Double]
-        }
-        else if (desc.getName.equals("int")){
+        } else if (desc.getName.equals("int")) {
           classOf[java.lang.Integer]
-        }
-        else {
+        } else {
           Class.forName(desc.getName, false, classLoader)
         }
       }
     }
     val len = objectInputStream.readInt()
     val res = new Array[Any](len)
-    for (i <- 0 until len){
+    for (i <- 0 until len) {
       res(i) = objectInputStream.readObject()
     }
     res

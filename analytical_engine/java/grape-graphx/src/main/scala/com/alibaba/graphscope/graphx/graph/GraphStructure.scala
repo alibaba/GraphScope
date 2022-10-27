@@ -20,57 +20,92 @@ import com.alibaba.graphscope.ds.Vertex
 import com.alibaba.graphscope.graphx.graph.GraphStructureTypes.GraphStructureType
 import com.alibaba.graphscope.graphx.store.{EdgeDataStore, VertexDataStore}
 import com.alibaba.graphscope.graphx.utils.BitSetWithOffset
-import com.alibaba.graphscope.utils.ThreadSafeBitSet
 import org.apache.spark.graphx.{Edge, EdgeTriplet}
 
 import scala.reflect.ClassTag
 
-/**
- * Defines the interface of graph structure, include vm, csr. But doesn't contain vertex attribute
- * and edge attribute(or contained but we don't use)
- */
-object GraphStructureTypes extends Enumeration{
+/** Defines the interface of graph structure, include vm, csr. But doesn't contain vertex attribute and edge
+  * attribute(or contained but we don't use)
+  */
+object GraphStructureTypes extends Enumeration {
   type GraphStructureType = Value
-  val GraphXFragmentStructure,ArrowProjectedStructure = Value
+  val ArrowProjectedStructure: GraphStructureTypes.Value = Value
 }
 
 trait GraphStructure extends Serializable {
 
-  val structureType : GraphStructureType
+  val structureType: GraphStructureType
 
-  def inDegreeArray(startLid : Long, endLid : Long) :Array[Int]
+  def inDegreeArray(startLid: Long, endLid: Long): Array[Int]
 
-  def outDegreeArray(startLid : Long, endLid : Long) : Array[Int]
+  def outDegreeArray(startLid: Long, endLid: Long): Array[Int]
 
-  def inOutDegreeArray(startLid : Long, endLid : Long) : Array[Int]
+  def inOutDegreeArray(startLid: Long, endLid: Long): Array[Int]
 
-  def iterator[ED : ClassTag](startLid : Long, endLid : Long, edatas : EdgeDataStore[ED], activeSet: BitSetWithOffset, reversed : Boolean = false) : Iterator[Edge[ED]]
+  def iterator[ED: ClassTag](
+      startLid: Long,
+      endLid: Long,
+      edatas: EdgeDataStore[ED],
+      activeSet: BitSetWithOffset,
+      reversed: Boolean = false
+  ): Iterator[Edge[ED]]
 
-  def tripletIterator[VD: ClassTag,ED : ClassTag](startLid : Long, endLid : Long, vertexDataStore: VertexDataStore[VD], edatas : EdgeDataStore[ED], activeSet: BitSetWithOffset, edgeReversed : Boolean = false, includeSrc: Boolean = true, includeDst: Boolean = true, reuseTriplet : Boolean = false, includeLid : Boolean = false): Iterator[EdgeTriplet[VD, ED]]
+  def tripletIterator[VD: ClassTag, ED: ClassTag](
+      startLid: Long,
+      endLid: Long,
+      vertexDataStore: VertexDataStore[VD],
+      edatas: EdgeDataStore[ED],
+      activeSet: BitSetWithOffset,
+      edgeReversed: Boolean = false,
+      includeSrc: Boolean = true,
+      includeDst: Boolean = true,
+      reuseTriplet: Boolean = false,
+      includeLid: Boolean = false
+  ): Iterator[EdgeTriplet[VD, ED]]
 
-  def iterateEdges[ED : ClassTag,ED2 : ClassTag](startLid : Long, endLid : Long, f: Edge[ED] => ED2, edatas : EdgeDataStore[ED], activeSet : BitSetWithOffset, edgeReversed : Boolean = false, newArray : EdgeDataStore[ED2]) : Unit
+  def iterateEdges[ED: ClassTag, ED2: ClassTag](
+      startLid: Long,
+      endLid: Long,
+      f: Edge[ED] => ED2,
+      edatas: EdgeDataStore[ED],
+      activeSet: BitSetWithOffset,
+      edgeReversed: Boolean = false,
+      newArray: EdgeDataStore[ED2]
+  ): Unit
 
-  def iterateTriplets[VD : ClassTag, ED : ClassTag,ED2 : ClassTag](startLid : Long, endLid : Long, f : EdgeTriplet[VD,ED] => ED2, activeVertices : BitSetWithOffset, innerVertexDataStore: VertexDataStore[VD], edatas : EdgeDataStore[ED], activeSet : BitSetWithOffset, edgeReversed : Boolean = false, includeSrc : Boolean = true, includeDst : Boolean = true, newArray : EdgeDataStore[ED2]) : Unit
+  def iterateTriplets[VD: ClassTag, ED: ClassTag, ED2: ClassTag](
+      startLid: Long,
+      endLid: Long,
+      f: EdgeTriplet[VD, ED] => ED2,
+      activeVertices: BitSetWithOffset,
+      innerVertexDataStore: VertexDataStore[VD],
+      edatas: EdgeDataStore[ED],
+      activeSet: BitSetWithOffset,
+      edgeReversed: Boolean = false,
+      includeSrc: Boolean = true,
+      includeDst: Boolean = true,
+      newArray: EdgeDataStore[ED2]
+  ): Unit
 
   /** get the oe begin offset */
-  def getOEBeginOffset(vid: Int) : Long
+  def getOEBeginOffset(vid: Int): Long
 
-  def getOEEndOffset(vid: Int) : Long
+  def getOEEndOffset(vid: Int): Long
 
   def getInDegree(vertex: Vertex[Long]): Long
 
   def getOutDegree(vertex: Vertex[Long]): Long
 
   /** get the ie begin offset */
-  def getIEBeginOffset(vid: Int) : Long
+  def getIEBeginOffset(vid: Int): Long
 
-  def getIEEndOffset(vid: Int) : Long
+  def getIEEndOffset(vid: Int): Long
 
-  def getOutNbrIds(vertex: Vertex[Long]) : Array[Long]
+  def getOutNbrIds(vertex: Vertex[Long]): Array[Long]
 
-  def getInNbrIds(vertex: Vertex[Long]) : Array[Long]
+  def getInNbrIds(vertex: Vertex[Long]): Array[Long]
 
-  def getInOutNbrIds(vertex: Vertex[Long]) : Array[Long]
+  def getInOutNbrIds(vertex: Vertex[Long]): Array[Long]
 
   def isInEdgesEmpty(vertex: Vertex[Long]): Boolean
 
@@ -81,7 +116,7 @@ trait GraphStructure extends Serializable {
   def getOutEdgesNum: Long
 
   //all edges in this frag
-  def getTotalEdgesNum : Long
+  def getTotalEdgesNum: Long
 
   def fid(): Int
 
@@ -91,9 +126,9 @@ trait GraphStructure extends Serializable {
 
   def getVertex(oid: Long, vertex: Vertex[Long]): Boolean
 
-  def getOuterVertex(oid : Long, vertex : Vertex[Long]) : Boolean
+  def getOuterVertex(oid: Long, vertex: Vertex[Long]): Boolean
 
-  def getInnerVertex(oid : Long, vertex: Vertex[Long]) : Boolean
+  def getInnerVertex(oid: Long, vertex: Vertex[Long]): Boolean
 
   def getTotalVertexSize: Long
 
@@ -113,5 +148,5 @@ trait GraphStructure extends Serializable {
 
   def outerVertexGid2Vertex(gid: Long, vertex: Vertex[Long]): Boolean
 
-  def getOEOffsetRange(startLid : Long, endLid : Long) : (Long,Long)
+  def getOEOffsetRange(startLid: Long, endLid: Long): (Long, Long)
 }

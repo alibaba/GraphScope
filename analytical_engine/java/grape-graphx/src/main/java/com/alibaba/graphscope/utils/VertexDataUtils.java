@@ -17,17 +17,9 @@
 package com.alibaba.graphscope.utils;
 
 import com.alibaba.fastffi.FFITypeFactory;
-import com.alibaba.fastffi.impl.CXXStdString;
 import com.alibaba.graphscope.arrow.array.ArrowArrayBuilder;
 import com.alibaba.graphscope.ds.StringTypedArray;
-import com.alibaba.graphscope.graphx.StringVertexData;
-import com.alibaba.graphscope.graphx.StringVertexDataBuilder;
-import com.alibaba.graphscope.graphx.VertexData;
-import com.alibaba.graphscope.graphx.VertexDataBuilder;
-import com.alibaba.graphscope.graphx.VineyardArrayBuilder;
-import com.alibaba.graphscope.graphx.VineyardClient;
 import com.alibaba.graphscope.graphx.utils.DoubleDouble;
-import com.alibaba.graphscope.graphx.utils.GrapeUtils;
 import com.alibaba.graphscope.serialization.FFIByteVectorOutputStream;
 import com.alibaba.graphscope.serialization.FakeFFIByteVectorInputStream;
 import com.alibaba.graphscope.stdcxx.FFIByteVector;
@@ -48,56 +40,6 @@ import java.io.ObjectOutputStream;
 public class VertexDataUtils {
 
     private static Logger logger = LoggerFactory.getLogger(VertexDataUtils.class.getName());
-
-    public static <VD> VertexData<Long, VD> persistPrimitiveArrayToVineyard(
-            PrimitiveArray<VD> primitiveArray, VineyardClient client, Class<? extends VD> vdClz) {
-        long size = primitiveArray.size();
-        VertexDataBuilder<Long, VD> vdBuilder = createPrimitiveVDBuilder(client, (int) size, vdClz);
-        VineyardArrayBuilder<VD> vdVineyardArrayBuilder = vdBuilder.getArrayBuilder();
-        if (vdVineyardArrayBuilder.size() != size) {
-            throw new IllegalStateException(
-                    "size neq " + size + ", " + vdVineyardArrayBuilder.size());
-        }
-        for (int i = 0; i < size; ++i) {
-            vdVineyardArrayBuilder.set(i, primitiveArray.get(i));
-        }
-        logger.info("create vd builder success");
-        return vdBuilder.seal(client).get();
-    }
-
-    public static <VD> StringVertexData<Long, CXXStdString> persistComplexArrayToVineyard(
-            PrimitiveArray<VD> primitiveArray, VineyardClient client, Class<? extends VD> vdClz) {
-        long size = primitiveArray.size();
-        StringVertexDataBuilder<Long, CXXStdString> vdBuilder =
-                createComplexVDBuilder(client, (int) size);
-        logger.info("create vd builder success");
-        try {
-            Tuple2<FFIByteVector, FFIIntVector> tuple2 =
-                    fillStringVertexArray(primitiveArray, vdClz);
-            vdBuilder.init(size, tuple2._1(), tuple2._2());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return vdBuilder.seal(client).get();
-    }
-
-    private static <VD> VertexDataBuilder<Long, VD> createPrimitiveVDBuilder(
-            VineyardClient client, int fragVnums, Class<? extends VD> clz) {
-        VertexDataBuilder.Factory<Long, VD> factory =
-                FFITypeFactory.getFactory(
-                        VertexDataBuilder.class,
-                        "gs::VertexDataBuilder<uint64_t," + GrapeUtils.classToStr(clz, true) + ">");
-        return factory.create(client, fragVnums);
-    }
-
-    private static StringVertexDataBuilder<Long, CXXStdString> createComplexVDBuilder(
-            VineyardClient client, int fragVnums) {
-        StringVertexDataBuilder.Factory<Long, CXXStdString> factory =
-                FFITypeFactory.getFactory(
-                        StringVertexDataBuilder.class,
-                        "gs::VertexDataBuilder<uint64_t,std::string>");
-        return factory.create();
-    }
 
     private static <VD> Tuple2<FFIByteVector, FFIIntVector> fillStringVertexArray(
             PrimitiveArray<VD> array, Class<? extends VD> clz) throws IOException {

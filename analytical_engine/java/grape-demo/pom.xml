@@ -54,6 +54,10 @@
       <classifier>shaded</classifier>
     </dependency>
     <dependency>
+      <groupId>com.alibaba.graphscope</groupId>
+      <artifactId>grape-annotation</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.alibaba.fastffi</groupId>
       <artifactId>annotation-processor</artifactId>
     </dependency>

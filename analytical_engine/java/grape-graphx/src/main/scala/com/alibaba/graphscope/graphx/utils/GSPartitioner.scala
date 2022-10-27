@@ -18,11 +18,12 @@ package com.alibaba.graphscope.graphx.utils
 
 import org.apache.spark.Partitioner
 import org.apache.spark.internal.Logging
-import org.apache.spark.util.Utils
 
 import scala.reflect.ClassTag
 
-class GSPartitioner[K : Ordering : ClassTag](val numPartition : Int) extends Partitioner with  Logging{
+class GSPartitioner[K: Ordering: ClassTag](val numPartition: Int)
+    extends Partitioner
+    with Logging {
 
   override def numPartitions: Int = numPartition
 

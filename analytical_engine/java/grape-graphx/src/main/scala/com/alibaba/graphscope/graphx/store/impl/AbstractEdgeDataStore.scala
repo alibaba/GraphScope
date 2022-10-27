@@ -18,25 +18,40 @@ package com.alibaba.graphscope.graphx.store.impl
 
 import com.alibaba.graphscope.graphx.VineyardClient
 import com.alibaba.graphscope.graphx.store.EdgeDataStore
-import com.alibaba.graphscope.graphx.utils.{EIDAccessor, GrapeUtils, ScalaFFIFactory}
+import com.alibaba.graphscope.graphx.utils.{EIDAccessor, GrapeUtils}
 
 import scala.reflect.ClassTag
 
-abstract class AbstractEdgeDataStore[T](val length : Int, var localNum : Int, val client : VineyardClient,val eidAccessor: EIDAccessor) extends EdgeDataStore[T]{
-  def mapToNew[T2 : ClassTag] : EdgeDataStore[T2] = {
-      if (!GrapeUtils.isPrimitive[T2]) {
-        new InHeapEdgeDataStore[T2](length, localNum, client, new Array[T2](length), eidAccessor)
-      }
-      else {
-        new OffHeapEdgeDataStore[T2](length, localNum, client,eidAccessor,ScalaFFIFactory.newEdgeDataBuilder[T2](client,length))
-      }
+abstract class AbstractEdgeDataStore[T](
+    val length: Int,
+    var localNum: Int,
+    val client: VineyardClient,
+    val eidAccessor: EIDAccessor
+) extends EdgeDataStore[T] {
+  def mapToNew[T2: ClassTag]: EdgeDataStore[T2] = {
+    if (!GrapeUtils.isPrimitive[T2]) {
+      new InHeapEdgeDataStore[T2](
+        length,
+        localNum,
+        client,
+        new Array[T2](length),
+        eidAccessor
+      )
+    } else {
+      new OffHeapEdgeDataStore[T2](
+        length,
+        localNum,
+        client,
+        eidAccessor
+      )
+    }
   }
 
-  override def size() : Int = length;
+  override def size(): Int = length;
 
   override def getLocalNum: Int = localNum
 
-  override def setLocalNum(localNum : Int) : Unit = {
+  override def setLocalNum(localNum: Int): Unit = {
     this.localNum = localNum
   }
 }
