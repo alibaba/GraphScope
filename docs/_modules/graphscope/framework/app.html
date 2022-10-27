@@ -286,7 +286,7 @@
         <span class="s2">&quot;labeled_vertex_property&quot;</span><span class="p">,</span>
     <span class="p">]</span>
 
-<div class="viewcode-block" id="AppAssets.__init__"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.AppAssets.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">algo</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gar</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="AppAssets.__init__"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.AppAssets.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">algo</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmake_extra_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Init assets of the algorithm.</span>
 
 <span class="sd">        Args:</span>
@@ -298,19 +298,23 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_algo</span> <span class="o">=</span> <span class="n">algo</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_context_type</span> <span class="o">=</span> <span class="n">context</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_algo</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;giraph:&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_algo</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_algo</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span>
+            <span class="s2">&quot;giraph:&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_algo</span> <span class="ow">or</span> <span class="s2">&quot;java_pie:&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_algo</span>
+        <span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">=</span> <span class="s2">&quot;java_pie&quot;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_type</span> <span class="o">=</span> <span class="s2">&quot;cpp_pie&quot;</span>  <span class="c1"># default is builtin app with `built_in` type</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="c1"># used for gar resource</span>
-        <span class="k">if</span> <span class="n">gar</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gar</span><span class="p">,</span> <span class="p">(</span><span class="n">BytesIO</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">gar</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gar</span><span class="p">,</span> <span class="p">(</span><span class="n">BytesIO</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_gar</span> <span class="o">=</span> <span class="n">gar</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gar</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)</span> <span class="k">else</span> <span class="n">gar</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_extract_meta_info</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># built_in apps has no gar resource.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_gar</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cmake_extra_options</span> <span class="o">=</span> <span class="n">cmake_extra_options</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_support_context_type</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span>
@@ -391,6 +395,10 @@
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">bytes</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_gar</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">cmake_extra_options</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cmake_extra_options</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">signature</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -594,15 +602,16 @@
 
 <div class="viewcode-block" id="load_app"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.app.load_app.html#graphscope.framework.app.load_app">[docs]</a><span class="k">def</span> <span class="nf">load_app</span><span class="p">(</span><span class="n">gar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">algo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Load an app from gar.</span>
-<span class="sd">    bytes or the resource of the specified path or bytes.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        algo: str</span>
 <span class="sd">          Algo name inside resource. None will extract name from gar resource</span>
 <span class="sd">          if there is only one app in it.</span>
 <span class="sd">        gar: bytes or BytesIO or str</span>
-<span class="sd">          str represent the path of resource.</span>
-<span class="sd">          for java apps, gar can be none to indicate we should find the app in</span>
+<span class="sd">          str represent the path of resource, bytes or the resource of the</span>
+<span class="sd">          specified path or bytes.</span>
+
+<span class="sd">          For java apps, gar can be none to indicate we should find the app in</span>
 <span class="sd">          previouse added libs.</span>
 
 <span class="sd">    Returns:</span>
@@ -635,9 +644,11 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">is_zipfile</span><span class="p">(</span><span class="n">gar</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> is not a zip file.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gar</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">AppAssets</span><span class="p">(</span><span class="n">algo</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">content</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">algo</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">algo</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;giraph:&quot;</span><span class="p">):</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">algo</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span>
+        <span class="n">algo</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;giraph:&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">algo</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;java_pie:&quot;</span><span class="p">)</span>
+    <span class="p">):</span>
         <span class="k">if</span> <span class="n">gar</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;Running giraph app expect no gar resource&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;Running java app expect no gar resource&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">AppAssets</span><span class="p">(</span><span class="n">algo</span><span class="p">,</span> <span class="s2">&quot;vertex_data&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;Wrong type with </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gar</span><span class="p">))</span></div>
@@ -695,6 +706,16 @@
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.17.0/index.html">v0.17.0</a></dd>
               
             
 

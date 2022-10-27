@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Frequently Asked Questions &mdash; GraphScope  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Developer Guide" href="developer_guide.html" />
+    <link rel="prev" title="Persistent Graph Store" href="persistent_graph_store.html" />
+
+ 
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4TMYCGJ0X2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-4TMYCGJ0X2');
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> GraphScope
+          </a>
+              <div class="version">
+                v0.17.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div>
+  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+    
+      
+      
+        
+          
+        
+      
+      
+        <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="graph_transformation.html">Graph Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">GraphScope Interactive Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="persistent_graph_store.html">Persistent Graph Store</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference/python_index.html">Python API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
+</ul>
+
+      
+    
+  </div>
+
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GraphScope</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Frequently Asked Questions</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/alibaba/graphscope/edit/main/docs/frequently_asked_questions.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="frequently-asked-questions">
+<h1>Frequently Asked Questions<a class="headerlink" href="#frequently-asked-questions" title="Permalink to this headline"></a></h1>
+<p>If you don’t find an answer to your question here, feel free to file a <a class="reference external" href="https://github.com/alibaba/GraphScope/issues/new/choose">Issues</a> or post it to <a class="reference external" href="https://github.com/alibaba/GraphScope/discussions">Discussions</a>.</p>
+<ol class="arabic">
+<li><p>What are the minimum resources and system requirements required to run GraphScope?</p>
+<blockquote>
+<div><p>To use GraphScope Python interface, <strong>Python &gt;= 3.7</strong> and <strong>pip &gt;= 19.0</strong> is required.
+GraphScope engine can be deployed in standalone mode or distributed mode. For standalone deployment, the mininum requirement is  <strong>4 cores CPU</strong> and <strong>8G memory</strong>.</p>
+<p>GraphScope is tested and supported on the following systems:</p>
+<ul class="simple">
+<li><p>CentOS 7+</p></li>
+<li><p>Ubuntu 18.04+</p></li>
+<li><p>MacOS 10.15+</p></li>
+</ul>
+<p>For distributed depolyment, a cluster managed by Kubernetes is required. GraphScope has been tested on
+Kubernetes <strong>version &gt;= v1.12.0+</strong>.</p>
+</div></blockquote>
+</li>
+<li><p>Is Kubernetes an enssential to use GraphScope?</p>
+<blockquote>
+<div><p>No. GraphScope supports run in standalone mode on a single machine. GraphScope pre-compiled package is distributed as a python package and can be easily installed with <cite>pip</cite>: <cite>pip3 install graphscope</cite>.</p>
+</div></blockquote>
+</li>
+<li><p>How to debug or get detailed information when using GraphScope?</p>
+<blockquote>
+<div><p>By default, GraphScope is usually running in a silent mode following the convention of Python applications.
+To enable verbose logging, turn on it by this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graphscope</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="n">show_log</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If you are running GraphScope in k8s, you can use <a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands">kubectl describe/logs</a> to check the log/status of the cluster. If the disk storage is accessible(on local or via Pods), you may also find logs in <cite>/tmp/gs/runtime/logs</cite>.</p>
+</div></blockquote>
+</li>
+<li><p>Why I find more Pods than expected with command <cite>kubectl get pod</cite>?</p>
+<blockquote>
+<div><p>For the failed Pods, you may need to delete them manually by <cite>kubectl delete pod &lt;pod-names&gt;</cite>
+This case is observed when using GraphScope with helm. If users did not correctly set the <cite>role</cite> and <cite>rolebinding</cite>, the command <cite>helm uninstall &lt;release-name&gt;</cite> may not correctly recycle allocated resources. More details please refer to <a class="reference external" href="https://artifacthub.io/packages/helm/graphscope/graphscope">Helm Support</a>.</p>
+</div></blockquote>
+</li>
+<li><p>Is GraphScope a graph database?</p>
+<blockquote>
+<div><p>GraphScope is not a graph database, however there is a persistent storage component that can serve as database inside GraphScope called <a class="reference external" href="https://graphscope.io/docs/persistent_graph_store.html">graphscope-store</a>.</p>
+</div></blockquote>
+</li>
+<li><p>What’s the compatibility of Gremlin in GraphScope?</p>
+<blockquote>
+<div><p>GraphScope supports most querying operators in Gremlin. You may check the compatibility in this <a class="reference external" href="https://graphscope.io/docs/interactive_engine.html#unsupported-features">link</a>.</p>
+</div></blockquote>
+</li>
+<li><p>The system seems get stuck, what are the possible reasons?</p>
+<blockquote>
+<div><p>If GraphScope seems to get stuck, the possible cause might be:</p>
+<ul class="simple">
+<li><p>In the session launching stage, the most cases are waiting for Pods ready. The time consuming may be caused by a poor network connection during pulling image, or by failing to acquire the requested resources to launch a session.</p></li>
+<li><p>In the graph loading stage, it is time consuming to load and build a large graph.</p></li>
+<li><p>When running a user-defined or built-in analytical algorithm, it may takes time to compile the algorithm over the loaded graph.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Why <cite>No such file or directory</cite> error when loading graph?</p>
+<blockquote>
+<div><p>This mostly occur when you are deploying GraphScope in a Kubernetes cluster, the file must be visible to the <code class="docutils literal notranslate"><span class="pre">engnine</span></code> Pod of GraphScope. You may need to mount a volume to the Pods or use cloud storage providers.</p>
+<p>Specifically, if your cluster is deployed with <a class="reference external" href="https://kind.sigs.k8s.io">kind</a>, you may need to setup <a class="reference external" href="https://kind.sigs.k8s.io/docs/user/configuration/#extra-mounts">extra-mounts</a> to mount your local directory to kind nodes.</p>
+</div></blockquote>
+</li>
+<li><p>What’s the relationship between <code class="docutils literal notranslate"><span class="pre">k8s_vineyard_mem</span></code>, <code class="docutils literal notranslate"><span class="pre">vineyard_shared_mem</span></code> and <code class="docutils literal notranslate"><span class="pre">k8s_engine_mem</span></code>?</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">k8s_vineyard_mem</span></code>: The memory allocated for the vineyard container.  It stores the metadata of blobs managed by vineyard, such as the shape, id, name, and so forth. As the metadata would be much smaller than datasets, the default configuration is sufficient in most cases. It’s equivalent to <code class="docutils literal notranslate"><span class="pre">vineyard.resources.memory.requests</span></code> and <code class="docutils literal notranslate"><span class="pre">vineyard.resources.memory.limits</span></code> in graphscope helm charts.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vineyard_shared_mem</span></code>: The memory where the data would be loaded in. Its value needs to be adjusted according to the size of the datasets. We found that setting the value to 5 times the size of the datasets on disk is usually a reasonable value. It’s equivalent to <code class="docutils literal notranslate"><span class="pre">vineyard.shared_mem</span></code> in graphscope helm charts.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">k8s_engine_mem</span></code>: The memory of the engine pods, can just be set equal to the value of <code class="docutils literal notranslate"><span class="pre">vineyard_shared_mem</span></code>. Equivalent to <code class="docutils literal notranslate"><span class="pre">engines.resources.memory.requests</span></code> and <code class="docutils literal notranslate"><span class="pre">engines.resources.memory.limits</span></code> in graphscope helm charts.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Failed to install GraphScope on Apple M1 with python3.8?</p>
+<ul class="simple">
+<li><p>Compile <code class="docutils literal notranslate"><span class="pre">grpcio</span></code> failed: You can try to use <code class="docutils literal notranslate"><span class="pre">openssl</span></code> from system by <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=True</span></code>. See more details in <a class="reference external" href="https://github.com/grpc/grpc/issues/25082">grpc issue</a>.</p></li>
+<li><p>compile <code class="docutils literal notranslate"><span class="pre">scipy</span></code> failed: You can follow <a class="reference external" href="https://stackoverflow.com/questions/65745683/how-to-install-scipy-on-apple-silicon-arm-m1">this</a> to build scipy from source or try <code class="docutils literal notranslate"><span class="pre">pip3</span> <span class="pre">install</span> <span class="pre">--pre</span> <span class="pre">-i</span> <span class="pre">https://pypi.anaconda.org/scipy-wheels-nightly/simple</span> <span class="pre">scipy</span></code> to workaround this problem.</p></li>
+</ul>
+</li>
+<li><p>How to resolve the <code class="docutils literal notranslate"><span class="pre">Permission</span> <span class="pre">denied</span></code> error when allocating PV on NFS volumes?</p>
+<ul>
+<li><p>ENV: Use helm to install graphscope-store, NFS to supply PV.</p></li>
+<li><p>Appearance: Pod <code class="docutils literal notranslate"><span class="pre">graphscope-store-kafka-0</span></code> , <code class="docutils literal notranslate"><span class="pre">graphscope-store-zookeeper-0</span></code> reports <code class="docutils literal notranslate"><span class="pre">CrashLoopBackOff</span></code> status.</p></li>
+<li><p>Check: First use <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">logs</span> <span class="pre">graphscope-store-zookeeper-0</span></code> to check log. If the log shows <code class="docutils literal notranslate"><span class="pre">mkdir:</span> <span class="pre">cannot</span> <span class="pre">create</span> <span class="pre">directory</span> <span class="pre">'/bitnami/zookeeper/data':</span> <span class="pre">Permission</span> <span class="pre">denied</span></code>.</p></li>
+<li><p>Reason: Normaly, the permission of NFS directories we created is <code class="docutils literal notranslate"><span class="pre">root</span> <span class="pre">755</span></code> (depends on your sepcify environment), but the default user of graphscope-store is <code class="docutils literal notranslate"><span class="pre">graphscope(1001)</span></code>, so these pods have no permission to write on NFS.</p></li>
+<li><p>Solution: There are two slutions to solve this.</p>
+<blockquote>
+<div><p>The brutal one is using <code class="docutils literal notranslate"><span class="pre">chmod</span> <span class="pre">777</span></code> on all related PV directories, this is efficient but not recommended in production environment.</p>
+<p>The elegant one is creating <code class="docutils literal notranslate"><span class="pre">graphscope</span></code> user and user group first, and then grant the access permission on <code class="docutils literal notranslate"><span class="pre">graphscope</span></code> to the related NFS directories.</p>
+</div></blockquote>
+</li>
+</ul>
+</li>
+<li><p>why <code class="docutils literal notranslate"><span class="pre">Timeout</span> <span class="pre">Exception</span></code> raised during launching GraphScope instance on kubernetes cluster?</p>
+<p>It will take a few minutes for pulling image during the first time for launching GraphScope instance. Thus, the <code class="docutils literal notranslate"><span class="pre">Timeout</span> <span class="pre">Exception</span></code> may caused by a poor network connection.
+You can increase the value of <code class="docutils literal notranslate"><span class="pre">timeout_seconds</span></code> parameter as your expectation by <code class="docutils literal notranslate"><span class="pre">graphscope.set_option(timeout_seconds=600))</span></code>.</p>
+</li>
+</ol>
+<p><strong>I do have many other questions…</strong></p>
+<blockquote>
+<div><p>Please feel free to contact us. You may reach us by <a class="reference external" href="https://github.com/alibaba/GraphScope/issues/new/choose">Issues</a>, ask questions in <a class="reference external" href="https://github.com/alibaba/GraphScope/discussions">Discussions</a>, or drop a message in <a class="reference external" href="http://slack.graphscope.io">Slack</a> or <a class="reference external" href="https://h5.dingtalk.com/circle/healthCheckin.html?dtaction=os&amp;corpId=ding82073ee2a22b2f86748126f6422b5d02&amp;109d1=d3892&amp;cbdbhh=qwertyuiop">DingTalk</a>. We are happy to answer your questions responsively.</p>
+</div></blockquote>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="persistent_graph_store.html" class="btn btn-neutral float-left" title="Persistent Graph Store" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="developer_guide.html" class="btn btn-neutral float-right" title="Developer Guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020-2023, DAMO Academy, Alibaba Inc..</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.17.0
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.17.0/index.html">v0.17.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.16.0/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.15.0/index.html">v0.15.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.14.0/index.html">v0.14.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.13.0/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.12.0/index.html">v0.12.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.11.0/index.html">v0.11.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.10.1/index.html">v0.10.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.10.0/index.html">v0.10.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.9.1/index.html">v0.9.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.9.0/index.html">v0.9.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.8.0/index.html">v0.8.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.7.0/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.6.1/index.html">v0.6.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.6.0/index.html">v0.6.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.5.0/index.html">v0.5.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.4.0/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.3.0/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="index.html">en</a></dd>
+        <dd><a href="zh/index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>

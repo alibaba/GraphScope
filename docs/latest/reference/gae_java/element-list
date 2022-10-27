@@ -1,4 +1,9 @@
+com.alibaba.fastffi
+com.alibaba.fastffi.impl
+com.alibaba.graphscope.annotation
 com.alibaba.graphscope.app
+com.alibaba.graphscope.arrow
+com.alibaba.graphscope.arrow.array
 com.alibaba.graphscope.column
 com.alibaba.graphscope.communication
 com.alibaba.graphscope.context
@@ -7,7 +12,14 @@ com.alibaba.graphscope.ds
 com.alibaba.graphscope.ds.adaptor
 com.alibaba.graphscope.fragment
 com.alibaba.graphscope.fragment.adaptor
+com.alibaba.graphscope.fragment.getter
+com.alibaba.graphscope.fragment.mapper
+com.alibaba.graphscope.graph
+com.alibaba.graphscope.graphx
 com.alibaba.graphscope.parallel
 com.alibaba.graphscope.parallel.message
+com.alibaba.graphscope.serialization
 com.alibaba.graphscope.stdcxx
 com.alibaba.graphscope.utils
+com.alibaba.graphscope.utils.array
+com.alibaba.graphscope.utils.array.impl

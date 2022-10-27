@@ -46,14 +46,15 @@ property graph or not is described in its docstring.
 
 .. autosummary::
 
+- :func:`attribute_assortativity_coefficient`
+- :func:`numeric_assortativity_coefficient`
 - :func:`average_degree_connectivity`
 - :func:`average_shortest_path_length`
-- :func:`attribute_assortativity_coefficient`
 - :func:`bfs`
 - :func:`avg_clustering`
 - :func:`clustering`
-- :func:`degree_centrality`
 - :func:`degree_assortativity_coefficient`
+- :func:`degree_centrality`
 - :func:`eigenvector_centrality`
 - :func:`hits`
 - :func:`is_simple_path`
@@ -61,12 +62,14 @@ property graph or not is described in its docstring.
 - :func:`k_shell`
 - :func:`katz_centrality`
 - :func:`louvain`
+- :func:`cdlp`
 - :func:`lpa`
-- :func:`numeric_assortativity_coefficient`
+- :func:`lpa_u2i`
 - :func:`pagerank`
 - :func:`pagerank_nx`
 - :func:`sssp`
 - :func:`triangles`
+- :func:`voterank`
 - :func:`wcc`
 
 The list is continuously growing.
@@ -377,7 +380,7 @@ Run a Demo Java Algorithm
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We provide some sample java app implementation, and you can directly run them on Graphscope Analytical Engine. First you 
-need to download a `grape-demo.jar <https://github.com/GraphScope/gstest/blob/master/jars/graphscope-demo-0.1-shaded.jar>`_。
+need to download a `grape-demo.jar <https://github.com/GraphScope/gstest/blob/master/jars/grape-demo-0.17.0-shaded.jar>`_。
 
 Then open your GraphScope python client, try to load a graph, and run the sample sssp algorithm.
 
@@ -525,7 +528,7 @@ To pass params to your contex, put them in ``params`` like ``src=6,threadNum=1``
 
     cd ${GRAPHSCOPE_REPO}/analytical_engine/java/
     python3 java-app-runner.py --app com.alibaba.graphscope.example.traverse.Traverse 
-                --jar_path /home/graphscope/GraphScope/analytical_engine/java/grape-demo/target/grape-demo-0.16.0-shaded.jar 
+                --jar_path /home/graphscope/GraphScope/analytical_engine/java/grape-demo/target/grape-demo-0.17.0-shaded.jar 
                 --arguments "maxIteration=10"
 
 After verifying your algorithm locally, you may try to run your algorithms on GraphScope analytical engine. 

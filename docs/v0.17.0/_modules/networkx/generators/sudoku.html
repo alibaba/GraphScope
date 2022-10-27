@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>networkx.generators.sudoku &mdash; GraphScope  documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+
+ 
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4TMYCGJ0X2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-4TMYCGJ0X2');
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> GraphScope
+          </a>
+              <div class="version">
+                v0.17.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div>
+  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+    
+      
+      
+        
+          
+        
+      
+      
+        <p class="caption"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../graph_transformation.html">Graph Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine.html">GraphScope Interactive Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../persistent_graph_store.html">Persistent Graph Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../frequently_asked_questions.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer_guide.html">Developer Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/python_index.html">Python API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
+</ul>
+
+      
+    
+  </div>
+
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GraphScope</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>networkx.generators.sudoku</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for networkx.generators.sudoku</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Generator for Sudoku graphs</span>
+
+<span class="sd">This module gives a generator for n-Sudoku graphs. It can be used to develop</span>
+<span class="sd">algorithms for solving or generating Sudoku puzzles.</span>
+
+<span class="sd">A completed Sudoku grid is a 9x9 array of integers between 1 and 9, with no</span>
+<span class="sd">number appearing twice in the same row, column, or 3x3 box.</span>
+
+<span class="sd">+---------+---------+---------+</span>
+<span class="sd">| | 8 6 4 | | 3 7 1 | | 2 5 9 |</span>
+<span class="sd">| | 3 2 5 | | 8 4 9 | | 7 6 1 |</span>
+<span class="sd">| | 9 7 1 | | 2 6 5 | | 8 4 3 |</span>
+<span class="sd">+---------+---------+---------+</span>
+<span class="sd">| | 4 3 6 | | 1 9 2 | | 5 8 7 |</span>
+<span class="sd">| | 1 9 8 | | 6 5 7 | | 4 3 2 |</span>
+<span class="sd">| | 2 5 7 | | 4 8 3 | | 9 1 6 |</span>
+<span class="sd">+---------+---------+---------+</span>
+<span class="sd">| | 6 8 9 | | 7 3 4 | | 1 2 5 |</span>
+<span class="sd">| | 7 1 3 | | 5 2 8 | | 6 9 4 |</span>
+<span class="sd">| | 5 4 2 | | 9 1 6 | | 3 7 8 |</span>
+<span class="sd">+---------+---------+---------+</span>
+
+
+<span class="sd">The Sudoku graph is an undirected graph with 81 vertices, corresponding to</span>
+<span class="sd">the cells of a Sudoku grid. It is a regular graph of degree 20. Two distinct</span>
+<span class="sd">vertices are adjacent if and only if the corresponding cells belong to the</span>
+<span class="sd">same row, column, or box. A completed Sudoku grid corresponds to a vertex</span>
+<span class="sd">coloring of the Sudoku graph with nine colors.</span>
+
+<span class="sd">More generally, the n-Sudoku graph is a graph with n^4 vertices, corresponding</span>
+<span class="sd">to the cells of an n^2 by n^2 grid. Two distinct vertices are adjacent if and</span>
+<span class="sd">only if they belong to the same row, column, or n by n box.</span>
+
+<span class="sd">References</span>
+<span class="sd">----------</span>
+<span class="sd">.. [1] Herzberg, A. M., &amp; Murty, M. R. (2007). Sudoku squares and chromatic</span>
+<span class="sd">    polynomials. Notices of the AMS, 54(6), 708-717.</span>
+<span class="sd">.. [2] Sander, Torsten (2009), &quot;Sudoku graphs are integral&quot;,</span>
+<span class="sd">    Electronic Journal of Combinatorics, 16 (1): Note 25, 7pp, MR 2529816</span>
+<span class="sd">.. [3] Wikipedia contributors. &quot;Glossary of Sudoku.&quot; Wikipedia, The Free</span>
+<span class="sd">    Encyclopedia, 3 Dec. 2019. Web. 22 Dec. 2019.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.exception</span> <span class="kn">import</span> <span class="n">NetworkXError</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;sudoku_graph&quot;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="sudoku_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.sudoku.sudoku_graph.html#graphscope.nx.generators.sudoku.sudoku_graph">[docs]</a><span class="k">def</span> <span class="nf">sudoku_graph</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the n-Sudoku graph. The default value of n is 3.</span>
+
+<span class="sd">    The n-Sudoku graph is a graph with n^4 vertices, corresponding to the</span>
+<span class="sd">    cells of an n^2 by n^2 grid. Two distinct vertices are adjacent if and</span>
+<span class="sd">    only if they belong to the same row, column, or n-by-n box.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n: integer</span>
+<span class="sd">       The order of the Sudoku graph, equal to the square root of the</span>
+<span class="sd">       number of rows. The default is 3.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    NetworkX graph</span>
+<span class="sd">        The n-Sudoku graph Sud(n).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.sudoku_graph()</span>
+<span class="sd">    &gt;&gt;&gt; G.number_of_nodes()</span>
+<span class="sd">    81</span>
+<span class="sd">    &gt;&gt;&gt; G.number_of_edges()</span>
+<span class="sd">    810</span>
+<span class="sd">    &gt;&gt;&gt; sorted(G.neighbors(42))</span>
+<span class="sd">    [6, 15, 24, 33, 34, 35, 36, 37, 38, 39, 40, 41, 43, 44, 51, 52, 53, 60, 69, 78]</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.sudoku_graph(2)</span>
+<span class="sd">    &gt;&gt;&gt; G.number_of_nodes()</span>
+<span class="sd">    16</span>
+<span class="sd">    &gt;&gt;&gt; G.number_of_edges()</span>
+<span class="sd">    56</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Herzberg, A. M., &amp; Murty, M. R. (2007). Sudoku squares and chromatic</span>
+<span class="sd">       polynomials. Notices of the AMS, 54(6), 708-717.</span>
+<span class="sd">    .. [2] Sander, Torsten (2009), &quot;Sudoku graphs are integral&quot;,</span>
+<span class="sd">       Electronic Journal of Combinatorics, 16 (1): Note 25, 7pp, MR 2529816</span>
+<span class="sd">    .. [3] Wikipedia contributors. &quot;Glossary of Sudoku.&quot; Wikipedia, The Free</span>
+<span class="sd">       Encyclopedia, 3 Dec. 2019. Web. 22 Dec. 2019.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;The order must be greater than or equal to zero.&quot;</span><span class="p">)</span>
+
+    <span class="n">n2</span> <span class="o">=</span> <span class="n">n</span> <span class="o">*</span> <span class="n">n</span>
+    <span class="n">n3</span> <span class="o">=</span> <span class="n">n2</span> <span class="o">*</span> <span class="n">n</span>
+    <span class="n">n4</span> <span class="o">=</span> <span class="n">n3</span> <span class="o">*</span> <span class="n">n</span>
+
+    <span class="c1"># Construct an empty graph with n^4 nodes</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">(</span><span class="n">n4</span><span class="p">)</span>
+
+    <span class="c1"># A Sudoku graph of order 0 or 1 has no edges</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">G</span>
+
+    <span class="c1"># Add edges for cells in the same row</span>
+    <span class="k">for</span> <span class="n">row_no</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n2</span><span class="p">):</span>
+        <span class="n">row_start</span> <span class="o">=</span> <span class="n">row_no</span> <span class="o">*</span> <span class="n">n2</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n2</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">j</span><span class="p">):</span>
+                <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">row_start</span> <span class="o">+</span> <span class="n">i</span><span class="p">,</span> <span class="n">row_start</span> <span class="o">+</span> <span class="n">j</span><span class="p">)</span>
+
+    <span class="c1"># Add edges for cells in the same column</span>
+    <span class="k">for</span> <span class="n">col_no</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n2</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">col_no</span><span class="p">,</span> <span class="n">n4</span><span class="p">,</span> <span class="n">n2</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">col_no</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">n2</span><span class="p">):</span>
+                <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+
+    <span class="c1"># Add edges for cells in the same box</span>
+    <span class="k">for</span> <span class="n">band_no</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">stack_no</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">box_start</span> <span class="o">=</span> <span class="n">n3</span> <span class="o">*</span> <span class="n">band_no</span> <span class="o">+</span> <span class="n">n</span> <span class="o">*</span> <span class="n">stack_no</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n2</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">j</span><span class="p">):</span>
+                    <span class="n">u</span> <span class="o">=</span> <span class="n">box_start</span> <span class="o">+</span> <span class="p">(</span><span class="n">i</span> <span class="o">%</span> <span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="n">n2</span> <span class="o">*</span> <span class="p">(</span><span class="n">i</span> <span class="o">//</span> <span class="n">n</span><span class="p">)</span>
+                    <span class="n">v</span> <span class="o">=</span> <span class="n">box_start</span> <span class="o">+</span> <span class="p">(</span><span class="n">j</span> <span class="o">%</span> <span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="n">n2</span> <span class="o">*</span> <span class="p">(</span><span class="n">j</span> <span class="o">//</span> <span class="n">n</span><span class="p">)</span>
+                    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">G</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020-2023, DAMO Academy, Alibaba Inc..</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.17.0
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../../../../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.17.0/index.html">v0.17.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.16.0/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.15.0/index.html">v0.15.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.14.0/index.html">v0.14.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.13.0/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.12.0/index.html">v0.12.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.11.0/index.html">v0.11.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.10.1/index.html">v0.10.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.10.0/index.html">v0.10.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.9.1/index.html">v0.9.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.9.0/index.html">v0.9.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.8.0/index.html">v0.8.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.7.0/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.6.1/index.html">v0.6.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.6.0/index.html">v0.6.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.5.0/index.html">v0.5.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.4.0/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.3.0/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="../../../index.html">en</a></dd>
+        <dd><a href="../../../zh/index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>

@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>graphscope.nx.generators.geometric.waxman_graph &mdash; GraphScope  documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="graphscope.nx.generators.geometric.thresholded_random_geometric_graph" href="graphscope.nx.generators.geometric.thresholded_random_geometric_graph.html" />
+    <link rel="prev" title="graphscope.nx.generators.geometric.geographical_threshold_graph" href="graphscope.nx.generators.geometric.geographical_threshold_graph.html" />
+
+ 
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4TMYCGJ0X2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-4TMYCGJ0X2');
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> GraphScope
+          </a>
+              <div class="version">
+                v0.17.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div>
+  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+    
+      
+      
+        
+          
+        
+      
+      
+        <p class="caption"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../graph_transformation.html">Graph Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine.html">GraphScope Interactive Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../persistent_graph_store.html">Persistent Graph Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../frequently_asked_questions.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer_guide.html">Developer Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../python_index.html">Python API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../session.html">Session</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../graph.html">Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../app.html">Analytical App</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../context.html">Context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../selector.html">Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../operation.html">Operation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../cython_sdk.html">Cython SDK API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../interactive.html">Interactive Query</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../learning.html">Graph Learning</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">NetworkX-style API</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../graphs.html">Graph types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../transformation.html">Graph Transformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../builtin.html">Builtin algorithms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../functions.html">Functions</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../generators.html">Graph generators</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../generators.html#module-graphscope.nx.generators.atlas">Atlas</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../generators.html#module-graphscope.nx.generators.classic">Classic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../generators.html#module-graphscope.nx.generators.expanders">Expanders</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../generators.html#module-graphscope.nx.generators.small">Small</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../generators.html#module-graphscope.nx.generators.duplication">Duplication Divergence</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../generators.html#module-graphscope.nx.generators.degree_seq">Degree Sequence</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../generators.html#module-graphscope.nx.generators.directed">Directed</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="../generators.html#module-graphscope.nx.generators.geometric">Geometric</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../generators.html#module-graphscope.nx.generators.ego">Ego Graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../generators.html#module-networkx.generators.stochastic">Stochastic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../generators.html#module-networkx.generators.internet_as_graphs">AS graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../generators.html#module-graphscope.nx.generators.intersection">Intersection</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../generators.html#module-graphscope.nx.generators.social">Social Networks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../generators.html#module-graphscope.nx.generators.community">Community</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../generators.html#module-graphscope.nx.generators.spectral_graph_forge">Spectral</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../generators.html#module-graphscope.nx.generators.trees">Trees</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../generators.html#module-graphscope.nx.generators.nonisomorphic_trees">Non Isomorphic Trees</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../generators.html#module-graphscope.nx.generators.triads">Triads</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../generators.html#module-graphscope.nx.generators.joint_degree_seq">Joint Degree Sequence</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../generators.html#module-graphscope.nx.generators.mycielski">Mycielski</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../generators.html#module-graphscope.nx.generators.harary_graph">Harary Graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../generators.html#module-graphscope.nx.generators.sudoku">Sudoku</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../io.html">Reading graphs</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../analytical_engine_index.html">Analytical Engine API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../gae_java/index.html">Analytical Engine Java API Reference</a></li>
+</ul>
+
+      
+    
+  </div>
+
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GraphScope</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../python_index.html">Python API Reference</a> &raquo;</li>
+          <li><a href="../index.html">NetworkX-style API</a> &raquo;</li>
+          <li><a href="../generators.html">Graph generators</a> &raquo;</li>
+      <li>graphscope.nx.generators.geometric.waxman_graph</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/alibaba/graphscope/edit/main/docs/reference/networkx/generated/graphscope.nx.generators.geometric.waxman_graph.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="graphscope-nx-generators-geometric-waxman-graph">
+<h1>graphscope.nx.generators.geometric.waxman_graph<a class="headerlink" href="#graphscope-nx-generators-geometric-waxman-graph" title="Permalink to this headline"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="graphscope.nx.generators.geometric.waxman_graph">
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.generators.geometric.</span></span><span class="sig-name descname"><span class="pre">waxman_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">L</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,</span> <span class="pre">0,</span> <span class="pre">1,</span> <span class="pre">1)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/networkx/generators/geometric.html#waxman_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.generators.geometric.waxman_graph" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a Waxman random graph.</p>
+<p>The Waxman random graph model places <cite>n</cite> nodes uniformly at random
+in a rectangular domain. Each pair of nodes at distance <cite>d</cite> is
+joined by an edge with probability</p>
+<div class="math notranslate nohighlight">
+\[p = \beta \exp(-d / \alpha L).\]</div>
+<p>This function implements both Waxman models, using the <cite>L</cite> keyword
+argument.</p>
+<ul class="simple">
+<li><p>Waxman-1: if <cite>L</cite> is not specified, it is set to be the maximum distance
+between any pair of nodes.</p></li>
+<li><p>Waxman-2: if <cite>L</cite> is specified, the distance between a pair of nodes is
+chosen uniformly at random from the interval <cite>[0, L]</cite>.</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<em>int</em><em> or </em><em>iterable</em>) – Number of nodes or iterable of nodes</p></li>
+<li><p><strong>beta</strong> (<em>float</em>) – Model parameter</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – Model parameter</p></li>
+<li><p><strong>L</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum distance between nodes.  If not specified, the actual distance
+is calculated.</p></li>
+<li><p><strong>domain</strong> (<em>four-tuple of numbers</em><em>, </em><em>optional</em>) – Domain size, given as a tuple of the form <cite>(x_min, y_min, x_max,
+y_max)</cite>.</p></li>
+<li><p><strong>metric</strong> (<em>function</em>) – <p>A metric on vectors of numbers (represented as lists or
+tuples). This must be a function that accepts two lists (or
+tuples) as input and yields a number as output. The function
+must also satisfy the four requirements of a <a class="reference external" href="https://en.wikipedia.org/wiki/Metric_%28mathematics%29">metric</a>.
+Specifically, if $d$ is the function and $x$, $y$,
+and $z$ are vectors in the graph, then $d$ must satisfy</p>
+<ol class="arabic simple">
+<li><p>$d(x, y) ge 0$,</p></li>
+<li><p>$d(x, y) = 0$ if and only if $x = y$,</p></li>
+<li><p>$d(x, y) = d(y, x)$,</p></li>
+<li><p>$d(x, z) le d(x, y) + d(y, z)$.</p></li>
+</ol>
+<p>If this argument is not specified, the Euclidean distance metric is
+used.</p>
+</p></li>
+<li><p><strong>seed</strong> (<em>integer</em><em>, </em><em>random_state</em><em>, or </em><em>None</em><em> (</em><em>default</em><em>)</em>) – Indicator of random number generation state.
+See <span class="xref std std-ref">Randomness</span>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A random Waxman graph, undirected and without self-loops. Each
+node has a node attribute <code class="docutils literal notranslate"><span class="pre">'pos'</span></code> that stores the position of
+that node in Euclidean space as generated by this function.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../../graph.html#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph">Graph</a></p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Specify an alternate distance metric using the <code class="docutils literal notranslate"><span class="pre">metric</span></code> keyword
+argument. For example, to use the “<a class="reference external" href="https://en.wikipedia.org/wiki/Taxicab_geometry">taxicab metric</a>” instead of the
+default <a class="reference external" href="https://en.wikipedia.org/wiki/Euclidean_distance">Euclidean metric</a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dist</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">waxman_graph</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">dist</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Notes</p>
+<p>Starting in NetworkX 2.0 the parameters alpha and beta align with their
+usual roles in the probability distribution. In earlier versions their
+positions in the expression were reversed. Their position in the calling
+sequence reversed as well to minimize backward incompatibility.</p>
+<p class="rubric">References</p>
+<dl class="footnote brackets">
+<dt class="label" id="id1"><span class="brackets">1</span></dt>
+<dd><p>B. M. Waxman, <em>Routing of multipoint connections</em>.
+IEEE J. Select. Areas Commun. 6(9),(1988) 1617–1622.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="graphscope.nx.generators.geometric.geographical_threshold_graph.html" class="btn btn-neutral float-left" title="graphscope.nx.generators.geometric.geographical_threshold_graph" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="graphscope.nx.generators.geometric.thresholded_random_geometric_graph.html" class="btn btn-neutral float-right" title="graphscope.nx.generators.geometric.thresholded_random_geometric_graph" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020-2023, DAMO Academy, Alibaba Inc..</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.17.0
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../../../../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.17.0/index.html">v0.17.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.16.0/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.15.0/index.html">v0.15.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.14.0/index.html">v0.14.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.13.0/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.12.0/index.html">v0.12.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.11.0/index.html">v0.11.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.10.1/index.html">v0.10.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.10.0/index.html">v0.10.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.9.1/index.html">v0.9.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.9.0/index.html">v0.9.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.8.0/index.html">v0.8.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.7.0/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.6.1/index.html">v0.6.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.6.0/index.html">v0.6.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.5.0/index.html">v0.5.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.4.0/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.3.0/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="../../../index.html">en</a></dd>
+        <dd><a href="../../../zh/index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>

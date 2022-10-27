@@ -235,18 +235,19 @@
 <h3>一个例子<a class="headerlink" href="#id10" title="Permalink to this headline"></a></h3>
 <p>下面展示了一个完整的Gremlin示例，它尝试从一个给定账户（account）点开始找到长度为 <code class="docutils literal notranslate"><span class="pre">k</span></code> 的有向环路。</p>
 <div class="highlight-java notranslate"><div class="highlight"><pre><span></span>g.V(&#39;account&#39;).has(&#39;id&#39;,&#39;2&#39;).as(&#39;s&#39;)
- .repeat(out(&#39;transfer&#39;).simplePath())
- .times(k-1)
+ .out(&#39;k-1..k&#39;, &#39;transfer&#39;)
+ .with(&#39;PATH_OPT&#39;, &#39;SIMPLE&#39;)
+ .endV()
  .where(out(&#39;transfer&#39;).eq(&#39;s&#39;))
  .path().limit(1)
 </pre></div>
 </div>
-<p>首先，输入图操作 <code class="docutils literal notranslate"><span class="pre">V</span></code> （包含一个 <code class="docutils literal notranslate"><span class="pre">has</span></code> 表达的简单过滤）返回图中满足条件的 <code class="docutils literal notranslate"><span class="pre">account</span></code> 点（即唯一标识为 <code class="docutils literal notranslate"><span class="pre">2</span></code> 的点）。紧随其后的 <code class="docutils literal notranslate"><span class="pre">as</span></code> 操作是一个 <em>修饰符</em> ，它不改变输入遍历器集合，但对其中每一个遍历器的当前位置，打上一个有名标签（这个例子中的 <code class="docutils literal notranslate"><span class="pre">s</span></code> ），从而今后可以引用。接下来，查询沿着 <code class="docutils literal notranslate"><span class="pre">transfer</span></code> 类型的出边循环游走 <code class="docutils literal notranslate"><span class="pre">k-1</span></code> 次，且每一次都过滤或跳过路径中的重复点（利用 <code class="docutils literal notranslate"><span class="pre">simplePath</span></code> 操作实现）。最后， <code class="docutils literal notranslate"><span class="pre">where</span></code> 操作检查此时遍历路径的下一跳是否可以回到起点（用 <code class="docutils literal notranslate"><span class="pre">s</span></code> 指代），从而形成一个长度为 <code class="docutils literal notranslate"><span class="pre">k</span></code> 的环。对于检测到的环，查询还通过 <code class="docutils literal notranslate"><span class="pre">path</span></code> 操作展示每个遍历器的完成路径信息。 <code class="docutils literal notranslate"><span class="pre">limit</span></code> 操作类似SQL中的top K，它表达了查询结果仅需要包含一个这样的路径（如果有的话）。</p>
+<p>首先，输入图操作 <code class="docutils literal notranslate"><span class="pre">V</span></code> （包含一个 <code class="docutils literal notranslate"><span class="pre">has</span></code> 表达的简单过滤）返回图中满足条件的 <code class="docutils literal notranslate"><span class="pre">account</span></code> 点（即唯一标识为 <code class="docutils literal notranslate"><span class="pre">2</span></code> 的点）。紧随其后的 <code class="docutils literal notranslate"><span class="pre">as</span></code> 操作是一个 <em>修饰符</em> ，它不改变输入遍历器集合，但对其中每一个遍历器的当前位置，打上一个有名标签（这个例子中的 <code class="docutils literal notranslate"><span class="pre">s</span></code> ），从而今后可以引用。接下来，查询沿着 <code class="docutils literal notranslate"><span class="pre">transfer</span></code> 类型的出边循环游走 <code class="docutils literal notranslate"><span class="pre">k-1</span></code> 次（输出hops在[k-1, k)范围内的邻点），且每一次都过滤或跳过路径中的重复点（通过在 <code class="docutils literal notranslate"><span class="pre">with</span></code> 内配置 <code class="docutils literal notranslate"><span class="pre">SIMPLE</span></code> 选项实现）。最后， <code class="docutils literal notranslate"><span class="pre">where</span></code> 操作检查此时遍历路径的下一跳是否可以回到起点（用 <code class="docutils literal notranslate"><span class="pre">s</span></code> 指代），从而形成一个长度为 <code class="docutils literal notranslate"><span class="pre">k</span></code> 的环。对于检测到的环，查询还通过 <code class="docutils literal notranslate"><span class="pre">path</span></code> 操作展示每个遍历器的完成路径信息。 <code class="docutils literal notranslate"><span class="pre">limit</span></code> 操作类似SQL中的top K，它表达了查询结果仅需要包含一个这样的路径（如果有的话）。</p>
 </div>
 </div>
 <div class="section" id="gremlin-tinkerpop">
 <h2>Gremlin兼容性（对比TinkerPop）<a class="headerlink" href="#gremlin-tinkerpop" title="Permalink to this headline"></a></h2>
-<p>GIE支持Apache TinkerPop定义的属性图模型和Gremlin遍历查询，且实现了一个与TinkerPop 3.3和3.4版本兼容的 <em>Websockets</em> 服务接口。下面我们列出当前实现和Apache TinkerPop规范的主要差一点（其中一些差异会有机会消除、另一些是目前GraphScope定位的场景差异造成的不同设计选择）。</p>
+<p>GIE支持Apache TinkerPop定义的属性图模型和Gremlin遍历查询，且实现了一个与TinkerPop 3.3和3.4版本兼容的 <em>Websockets</em> 服务接口。除此之外，我们扩展了一些语法糖来进一步引入一些简洁明了的expression表示。下面我们列出当前实现和Apache TinkerPop规范的主要差一点（其中一些差异会有机会消除、另一些是目前GraphScope定位的场景差异造成的不同设计选择）。</p>
 <div class="section" id="id11">
 <h3>属性图模型约束<a class="headerlink" href="#id11" title="Permalink to this headline"></a></h3>
 <p>目前的MaxGraph技术预览版利用了 <a class="reference external" href="https://github.com/v6d-io/v6d">Vineyard</a> 项目提供的分布式内存存储作为输入图，它支持一次载入 <em>不可修改</em> 的图模型数据，和图分片存储在分布式集群。当前设计有下面的一些限制：</p>
@@ -284,46 +285,77 @@
 <ul class="simple">
 <li><p>Filter（过滤），如：</p></li>
 </ul>
-<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="c1">//has</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">has</span><span class="p">(</span><span class="s">&quot;attrName&quot;</span><span class="p">)</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">has</span><span class="p">(</span><span class="s">&quot;attrName&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">attrValue</span><span class="p">)</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">has</span><span class="p">(</span><span class="s">&quot;attrName&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">gt</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="w"></span>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span>//hasLabel
+g.V().hasLabel(&quot;labelName&quot;)
+g.V().hasLabel(&quot;labelName1&quot;, &quot;labelName2&quot;)
 
-<span class="c1">//is</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;age&quot;</span><span class="p">).</span><span class="na">is</span><span class="p">(</span><span class="n">gt</span><span class="p">(</span><span class="mi">70</span><span class="p">))</span><span class="w"></span>
+//has
+g.V().has(&quot;attrName&quot;)
+g.V().has(&quot;attrName&quot;, attrValue)
+g.V().has(&quot;labelName&quot;, &quot;attrName&quot;, attrValue)
+g.V().has(&quot;attrName&quot;, eq(1))
+g.V().has(&quot;attrName&quot;, neq(1))
+g.V().has(&quot;attrName&quot;, lt(1))
+g.V().has(&quot;attrName&quot;, lte(1))
+g.V().has(&quot;attrName&quot;, gt(1))
+g.V().has(&quot;attrName&quot;, gte(1))
+g.V().has(&quot;attrName&quot;, within([1,2,3]))
+g.V().has(&quot;attrName&quot;, without([1,2,3]))
+g.V().has(&quot;attrName&quot;, inside(10, 20))
+g.V().has(&quot;attrName&quot;, outside(10, 20))
 
-<span class="c1">//filter</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">filter</span><span class="p">(</span><span class="n">values</span><span class="p">(</span><span class="s">&quot;age&quot;</span><span class="p">).</span><span class="na">is</span><span class="p">(</span><span class="n">gt</span><span class="p">(</span><span class="mi">20</span><span class="p">)))</span><span class="w"></span>
+// P.not
+g.V().has(&quot;attrName&quot;, P.not(eq(10)))
 
-<span class="c1">//where</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">where</span><span class="p">(</span><span class="n">out</span><span class="p">().</span><span class="na">count</span><span class="p">().</span><span class="na">is</span><span class="p">(</span><span class="n">gt</span><span class="p">(</span><span class="mi">4</span><span class="p">)))</span><span class="w"></span>
+//is
+g.V().values(&quot;age&quot;).is(gt(70))
 
-<span class="c1">//dedup</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">dedup</span><span class="p">()</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">dedup</span><span class="p">().</span><span class="na">by</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">)</span><span class="w"></span>
+//通过expression实现过滤 (`expr()` 语法糖)
+g.V().where(expr(&#39;@.age &gt; 20&#39;)) //@.age 代表head节点的age属性
+g.V().as(&#39;a&#39;).out().as(&#39;b&#39;).where(expr(&#39;@a.age &lt;= @b.age&#39;))  //@a.age 代表 &quot;a&quot; 节点的age属性
+g.V().where(expr(&#39;30 within @.a&#39;))  //head节点的a属性是整数数组类型
+//project with expression (`expr()` 语法糖)
+g.V().select(expr(&quot;@.age&quot;)) //@.age 代表head节点的age属性
 
-<span class="c1">//range</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">limit</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">range</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">)</span><span class="w"></span>
+//通过expression实现位运算
+g.V().select(expr(&quot;@.number &amp; 2&quot;)) //head节点的number属性是整型
+g.V().select(expr(&quot;@.number | 2&quot;))
+g.V().select(expr(&quot;@.number ^ 2&quot;))
+g.V().select(expr(&quot;@.number &lt;&lt; 2&quot;))
+g.V().select(expr(&quot;@.number &gt;&gt; 2&quot;))
+g.V().where(expr(&quot;@.number &amp; 64 != 0&quot;))
 
-<span class="c1">//simplePath</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">repeat</span><span class="p">(</span><span class="n">out</span><span class="p">().</span><span class="na">simplePath</span><span class="p">()).</span><span class="na">times</span><span class="p">(</span><span class="mi">3</span><span class="p">).</span><span class="na">valeus</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">)</span><span class="w"></span>
+//通过expression实现算数运算
+g.V().select(expr(&quot;@.number + 2&quot;))
+g.V().select(expr(&quot;@.number - 2&quot;))
+g.V().select(expr(&quot;@.number * 2&quot;))
+g.V().select(expr(&quot;@.number / 2&quot;))
+g.V().select(expr(&quot;(@.number + 2) / 4 + (@.age * 10)&quot;)) //head节点的number和age属性都是整型
 
-<span class="c1">//and/or</span><span class="w"></span>
+//通过expression实现指数运算
+g.V().select(expr(&quot;@.number ^^ 3&quot;))
+g.V().select(expr(&quot;@.number ^^ -3&quot;))
 
-<span class="c1">//Text.*</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">has</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Text</span><span class="p">.</span><span class="na">match</span><span class="p">(</span><span class="s">&quot;.*j.*&quot;</span><span class="p">))</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="na">filter</span><span class="p">(</span><span class="n">Text</span><span class="p">.</span><span class="na">match</span><span class="p">(</span><span class="s">&quot;.*j.*&quot;</span><span class="p">))</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">has</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Text</span><span class="p">.</span><span class="na">startsWith</span><span class="p">(</span><span class="s">&quot;To&quot;</span><span class="p">))</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="na">filter</span><span class="p">(</span><span class="n">Text</span><span class="p">.</span><span class="na">startsWith</span><span class="p">(</span><span class="s">&quot;To&quot;</span><span class="p">))</span><span class="w"></span>
+//where
+g.V().where(out().count().is(gt(4)))
 
-<span class="c1">//P.not</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">has</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">P</span><span class="p">.</span><span class="na">not</span><span class="p">(</span><span class="n">Text</span><span class="p">.</span><span class="na">startsWith</span><span class="p">(</span><span class="s">&quot;To&quot;</span><span class="p">)))</span><span class="w"></span>
+//dedup
+g.V().out().dedup()
+g.V().out().dedup().by(&quot;name&quot;)
+g.V().as(&quot;a&quot;).out().dedup(&quot;a&quot;)
+g.V().as(&quot;a&quot;).out().dedup(&quot;a&quot;).by(&quot;name&quot;)
 
-<span class="c1">//Lists.contains*</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">has</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Lists</span><span class="p">.</span><span class="na">contains</span><span class="p">(</span><span class="mi">30</span><span class="p">))</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">).</span><span class="na">filter</span><span class="p">(</span><span class="n">Lists</span><span class="p">.</span><span class="na">containsAny</span><span class="p">(</span><span class="n">Lists</span><span class="p">.</span><span class="na">of</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">30</span><span class="p">))</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">has</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">P</span><span class="p">.</span><span class="na">not</span><span class="p">(</span><span class="n">Lists</span><span class="p">.</span><span class="na">contains</span><span class="p">(</span><span class="mi">30</span><span class="p">)))</span><span class="w"></span>
+//range
+g.V().out().limit(100)
+g.V().out().range(10, 20)
+
+//TextP.*
+g.V().has(&quot;attrName&quot;, TextP.containing(&quot;substr&quot;))
+g.V().has(&quot;attrName&quot;, TextP.notContaining(&quot;substr&quot;))
+g.V().has(&quot;attrName&quot;, TextP.startingWith(&quot;substr&quot;))
+g.V().has(&quot;attrName&quot;, TextP.notStartingWith(&quot;substr&quot;))
+g.V().has(&quot;attrName&quot;, TextP.endingWith(&quot;substr&quot;))
+g.V().has(&quot;attrName&quot;, TextP.notEndingWith(&quot;substr&quot;))
 </pre></div>
 </div>
 <ul class="simple">
@@ -333,40 +365,18 @@
 <span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">contant</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"></span>
 <span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">constant</span><span class="p">(</span><span class="s">&quot;aaa&quot;</span><span class="p">)</span><span class="w"></span>
 
-<span class="c1">//local count</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;age&quot;</span><span class="p">).</span><span class="na">fold</span><span class="p">().</span><span class="na">count</span><span class="p">(</span><span class="n">local</span><span class="p">)</span><span class="w"></span>
-
-<span class="c1">//local dedup</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">fold</span><span class="p">().</span><span class="na">dedup</span><span class="p">(</span><span class="n">local</span><span class="p">).</span><span class="na">by</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">)</span><span class="w"></span>
-
-<span class="c1">//otherV</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">bothE</span><span class="p">().</span><span class="na">otherV</span><span class="p">()</span><span class="w"></span>
-
 <span class="c1">//id</span><span class="w"></span>
 <span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">id</span><span class="p">()</span><span class="w"></span>
 
 <span class="c1">//label</span><span class="w"></span>
 <span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">label</span><span class="p">()</span><span class="w"></span>
 
-<span class="c1">//local order</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">fold</span><span class="p">().</span><span class="na">order</span><span class="p">().</span><span class="na">by</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">)</span><span class="w"></span>
-
-<span class="c1">//property key</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">properties</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="na">key</span><span class="p">()</span><span class="w"></span>
-
-<span class="c1">//property value</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">properties</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="na">value</span><span class="p">()</span><span class="w"></span>
-
-<span class="c1">//local range</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">fold</span><span class="p">().</span><span class="na">order</span><span class="p">(</span><span class="n">local</span><span class="p">).</span><span class="na">by</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="na">range</span><span class="p">(</span><span class="n">local</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span><span class="w"></span>
+<span class="c1">//otherV</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">bothE</span><span class="p">().</span><span class="na">otherV</span><span class="p">()</span><span class="w"></span>
 
 <span class="c1">//as...select</span><span class="w"></span>
 <span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">as</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">).</span><span class="na">out</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">select</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">)</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">as</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">).</span><span class="na">as</span><span class="p">(</span><span class="s">&quot;b&quot;</span><span class="p">).</span><span class="na">out</span><span class="p">(</span><span class="s">&quot;c&quot;</span><span class="p">).</span><span class="na">out</span><span class="p">().</span><span class="na">select</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">)</span><span class="w"></span>
-
-<span class="c1">//path</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">in</span><span class="p">().</span><span class="na">path</span><span class="p">()</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">outE</span><span class="p">().</span><span class="na">inV</span><span class="p">().</span><span class="na">path</span><span class="p">().</span><span class="na">bay</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="na">by</span><span class="p">(</span><span class="s">&quot;weight&quot;</span><span class="p">).</span><span class="na">by</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">as</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">).</span><span class="na">out</span><span class="p">().</span><span class="na">as</span><span class="p">(</span><span class="s">&quot;b&quot;</span><span class="p">).</span><span class="na">out</span><span class="p">().</span><span class="na">as</span><span class="p">(</span><span class="sc">&#39;c&#39;</span><span class="p">).</span><span class="na">select</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">)</span><span class="w"></span>
 </pre></div>
 </div>
 <ul class="simple">
@@ -374,23 +384,23 @@
 </ul>
 <div class="highlight-java notranslate"><div class="highlight"><pre><span></span>//out/in/both
 g.V().out()
-g.V().in(&#39;person_knows_person&#39;)
+g.V().in(&#39;knows&#39;)
 
 //outE/inE/inV/outV
-g.V().outE(&#39;person_knows_person&#39;).inV()
+g.V().outE(&#39;knows&#39;).inV()
 g.V().inE().bothV()
 
+//path expansion (语法糖)
+//找到所有从 `V()` 开始通过 `knows` 边类型向外扩展[2, 4)跳的所有简单路径（点不重复），并且只保存path的最末端点
+g.V().out(&#39;2..4&#39;, &#39;knows&#39;).with(&#39;PATH_OPT&#39;, &#39;SIMPLE&#39;).with(&#39;RESULT_OPT&#39;, &#39;END_V&#39;).endV()
+//找到所有从 `V()` 开始通过 `knows` 边类型向外扩展[2, 4)跳的所有任意路径（点可重复），并且只保存path的最末端点
+g.V().out(&#39;2..4&#39;, &#39;knows&#39;).with(&#39;PATH_OPT&#39;, &#39;ARBITRARY&#39;).with(&#39;RESULT_OPT&#39;, &#39;ALL_V&#39;)
+
 //properties
-g.V().values()
-g.V().values(&quot;name&quot;, &quot;age&quot;)
-g.V().valueMap()
-
-//branch with option
-g.V().branch(values(&quot;name&quot;)).option(&quot;tom&quot;, out()).option(&quot;lop&quot;, in()).option(none, valueMap())
-g.V().branch(out.count()).option(0L, valueMap()).option(1L, out()).option(any, in())
-
-//unfold
-g.V().group().by().by(values(&quot;name&quot;)).select(values).unfold()
+g.V().values(&quot;name&quot;)
+g.V().valueMap() // 输出所有属性
+g.V().valueMap(&quot;name&quot;)
+g.V().valueMap(&quot;name&quot;, &quot;age&quot;)
 </pre></div>
 </div>
 <ul class="simple">
@@ -413,6 +423,11 @@ g.V().group().by().by(values(&quot;name&quot;)).select(values).unfold()
 <span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">group</span><span class="p">().</span><span class="na">by</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">)</span><span class="w"></span>
 <span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">group</span><span class="p">().</span><span class="na">by</span><span class="p">().</span><span class="na">by</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">)</span><span class="w"></span>
 
+<span class="c1">//groupBy多个keys，并且为每个key设置别名</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">group</span><span class="p">().</span><span class="na">by</span><span class="p">(</span><span class="n">values</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="na">as</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">values</span><span class="p">(</span><span class="s">&quot;age&quot;</span><span class="p">).</span><span class="na">as</span><span class="p">(</span><span class="s">&quot;age&quot;</span><span class="p">))</span><span class="w"></span>
+<span class="c1">//groupBy多个values，并且为每个value设置别名</span><span class="w"></span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">group</span><span class="p">().</span><span class="na">by</span><span class="p">().</span><span class="na">by</span><span class="p">(</span><span class="n">min</span><span class="p">().</span><span class="na">as</span><span class="p">(</span><span class="s">&quot;min&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">max</span><span class="p">().</span><span class="na">as</span><span class="p">(</span><span class="s">&quot;max&quot;</span><span class="p">))</span><span class="w"></span>
+
 <span class="c1">//global max/min</span><span class="w"></span>
 <span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;age&quot;</span><span class="p">).</span><span class="na">max</span><span class="p">()</span><span class="w"></span>
 <span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;age&quot;</span><span class="p">).</span><span class="na">min</span><span class="p">()</span><span class="w"></span>
@@ -424,15 +439,10 @@ g.V().group().by().by(values(&quot;name&quot;)).select(values).unfold()
 <ul class="simple">
 <li><p>Loop（循环），如：</p></li>
 </ul>
-<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="c1">//repeat...times</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">repeat</span><span class="p">(</span><span class="n">out</span><span class="p">()).</span><span class="na">times</span><span class="p">(</span><span class="mi">4</span><span class="p">).</span><span class="na">valueMap</span><span class="p">()</span><span class="w"></span>
-
-<span class="c1">//repeat...until</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">repeat</span><span class="p">(</span><span class="n">out</span><span class="p">()).</span><span class="na">until</span><span class="p">(</span><span class="n">out</span><span class="p">().</span><span class="na">count</span><span class="p">().</span><span class="na">is</span><span class="p">(</span><span class="n">eq</span><span class="p">(</span><span class="mi">0</span><span class="p">))).</span><span class="na">valueMap</span><span class="p">()</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">repeat</span><span class="p">(</span><span class="n">out</span><span class="p">()).</span><span class="na">until</span><span class="p">(</span><span class="n">out</span><span class="p">().</span><span class="na">count</span><span class="p">().</span><span class="na">is</span><span class="p">(</span><span class="n">eq</span><span class="p">(</span><span class="mi">0</span><span class="p">)).</span><span class="na">or</span><span class="p">().</span><span class="na">loops</span><span class="p">().</span><span class="na">is</span><span class="p">(</span><span class="n">gt</span><span class="p">(</span><span class="mi">3</span><span class="p">))).</span><span class="na">where</span><span class="p">(</span><span class="n">out</span><span class="p">().</span><span class="na">count</span><span class="p">().</span><span class="na">is</span><span class="p">(</span><span class="n">eq</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span><span class="w"></span>
-
-<span class="c1">//emit</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">emit</span><span class="p">().</span><span class="na">repeat</span><span class="p">(</span><span class="n">out</span><span class="p">()).</span><span class="na">times</span><span class="p">(</span><span class="mi">4</span><span class="p">).</span><span class="na">valueMap</span><span class="p">()</span><span class="w"></span>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">match</span><span class="p">(</span><span class="w"></span>
+<span class="w">    </span><span class="n">__</span><span class="p">.</span><span class="na">as</span><span class="p">(</span><span class="sc">&#39;a&#39;</span><span class="p">).</span><span class="na">out</span><span class="p">().</span><span class="na">as</span><span class="p">(</span><span class="sc">&#39;b&#39;</span><span class="p">),</span><span class="w"></span>
+<span class="w">    </span><span class="n">__</span><span class="p">.</span><span class="na">as</span><span class="p">(</span><span class="sc">&#39;b&#39;</span><span class="p">).</span><span class="na">out</span><span class="p">().</span><span class="na">as</span><span class="p">(</span><span class="sc">&#39;c&#39;</span><span class="p">)</span><span class="w"></span>
+<span class="p">).</span><span class="na">select</span><span class="p">(</span><span class="sc">&#39;a&#39;</span><span class="p">,</span><span class="w"> </span><span class="sc">&#39;c&#39;</span><span class="p">)</span><span class="w"></span>
 </pre></div>
 </div>
 <ul class="simple">
@@ -443,7 +453,10 @@ g.V().group().by().by(values(&quot;name&quot;)).select(values).unfold()
 <h3>已知限制<a class="headerlink" href="#id14" title="Permalink to this headline"></a></h3>
 <p>GraphScope暂时不支持下列Gremlin操作（会逐步支持）：</p>
 <ul class="simple">
-<li><p>Match（子图模式匹配）</p></li>
+<li><p>Repeat (可以通过path expansion语法糖实现)</p></li>
+<li><p>path()/simplePath() (可以通过path expansion语法糖实现)</p></li>
+<li><p>Local (基于集合的local计算，i.e. count(local), dedup(local), …)</p></li>
+<li><p>Branch</p></li>
 <li><p>Explain（查询计划解释）</p></li>
 <li><p>Profile（查询执行性能分析）</p></li>
 <li><p>Sack（自定义状态计算）</p></li>
@@ -451,7 +464,6 @@ g.V().group().by().by(values(&quot;name&quot;)).select(values).unfold()
 <li><p>Cap（访问自定义状态）</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">GraphComputer</span></code> 接口（例如PageRank和ShortestPath）；这部分功能GraphScope通过图分析引擎和NetworkX兼容接口提供。</p></li>
 </ul>
-<p>此外，目前支持的Repeat（循环）操作不支持嵌套，也就是在循环体内不可以出现另一个Repeat操作。</p>
 </div>
 </div>
 </div>
@@ -512,6 +524,16 @@ g.V().group().by().by(values(&quot;name&quot;)).select(values).unfold()
             
               
                 <dd><a href="../../zh/index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.17.0/zh/index.html">v0.17.0</a></dd>
               
             
 

@@ -284,8 +284,6 @@ For example, in the heterogeneous graph shown below, start from a ‘user’
 vertex, sample its one-hop neighbors along the ‘u2i’ edge, and then
 sample its two-hop neighbors along the ‘i2i’ edge.
 
-.. container::
-
 .. code:: python
 
    g.V("user").batch(64)                       # (1) randomly get 64 'user' vertices
@@ -297,8 +295,6 @@ general, this kind of sampling is often used for unsupervised learning,
 which uses the edges as positive samples, and then samples the source
 vertices of the edges as negative samples.
 
-.. container::
-
 .. code:: python
 
    g.E("u2i").batch(64)                     # (1) randomly get 64 'u2i' edges
@@ -308,8 +304,6 @@ vertices of the edges as negative samples.
 When the edge is undirected, one can conduct circular sampling by
 ``outV()`` and ``inV()``. The source and destination vertices are
 neighbors of each other.
-
-.. container::
 
 .. code:: python
 
@@ -344,8 +338,6 @@ vertex (user) as negative samples. The user vertex is encoded by its
 one-hop neighbors (aggregating neighborhood information to the central
 node). The item vertex is encoded in a similar way. An example is shown
 below.
-
-.. container::
 
 .. code:: python
 

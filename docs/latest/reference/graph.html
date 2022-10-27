@@ -150,7 +150,7 @@
 <dd><p>A class represents a graph node in a DAG.</p>
 <p>In GraphScope, all operations that generate a new graph will return
 a instance of <a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">GraphDAGNode</span></code></a>, which will be automatically
-executed by <a href="#id2"><span class="problematic" id="id3">:method:`sess.run`</span></a> in <cite>eager</cite> mode.</p>
+executed by <code class="xref py py-meth docutils literal notranslate"><span class="pre">Session.run()</span></code> in <cite>eager</cite> mode.</p>
 <p>The following example demonstrates its usage:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># lazy mode</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span> <span class="k">as</span> <span class="nn">gs</span>
@@ -180,14 +180,12 @@ executed by <a href="#id2"><span class="problematic" id="id3">:method:`sess.run`
 <li><p><strong>session</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Session</span></code>) – A graphscope session instance.</p></li>
 <li><p><strong>incoming_data</strong> – <p>Graph can be initialized through various type of sources,
 which can be one of:</p>
-<blockquote>
-<div><ul>
+<ul>
 <li><p><a class="reference internal" href="operation.html#graphscope.framework.operation.Operation" title="graphscope.framework.operation.Operation"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.operation.Operation</span></code></a></p></li>
 <li><p><a class="reference internal" href="networkx/graphs.html#graphscope.nx.Graph" title="graphscope.nx.Graph"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.nx.Graph</span></code></a></p></li>
 <li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code></p></li>
 <li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">vineyard.Object</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">vineyard.ObjectId</span></code> or <code class="xref py py-class docutils literal notranslate"><span class="pre">vineyard.ObjectName</span></code></p></li>
 </ul>
-</div></blockquote>
 </p></li>
 <li><p><strong>oid_type</strong> – (str, optional): Type of vertex original id. Defaults to “int64”.</p></li>
 <li><p><strong>directed</strong> – (bool, optional): Directed graph or not. Defaults to True.</p></li>
@@ -224,18 +222,22 @@ Format is similar to selectors in <a class="reference internal" href="context.ht
 <span class="sig-name descname"><span class="pre">add_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edges</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'_e'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">properties</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.add_edges"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.add_edges" title="Permalink to this definition"></a></dt>
 <dd><p>Add edges to the graph, and return a new graph.
 Here the src_label and dst_label must be both specified or both unspecified,</p>
+<ol class="lowerroman">
+<li><p>src_label and dst_label both unspecified and current graph has no vertex label.</p>
 <blockquote>
-<div><ol class="lowerroman simple">
-<li><p>src_label and dst_label both unspecified and current graph has no vertex label.
-We deduce vertex label from edge table, and set vertex label name to ‘_’.</p></li>
-<li><p>src_label and dst_label both unspecified and current graph has one vertex label.
-We set src_label and dst label to this single vertex label.</p></li>
+<div><p>We deduce vertex label from edge table, and set vertex label name to ‘_’.</p>
+</div></blockquote>
+</li>
+<li><p>src_label and dst_label both unspecified and current graph has one vertex label.</p>
+<p>We set src_label and dst label to this single vertex label.</p>
+</li>
 </ol>
 <ol class="lowerroman simple" start="2">
 <li><p>src_label and dst_label both specified and existed in current graph’s vertex labels.</p></li>
-<li><p>src_label and dst_label both specified and some are not existed in current graph’s vertex labels.
-we deduce missing vertex labels from edge tables.</p></li>
+<li><p>src_label and dst_label both specified and some are not existed in current graph’s vertex labels.</p></li>
 </ol>
+<blockquote>
+<div><p>We deduce missing vertex labels from edge tables.</p>
 </div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -745,6 +747,16 @@ If you only need to work with analytical engine, set it to False. Defaults to Fa
             
               
                 <dd><a href="../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.17.0/index.html">v0.17.0</a></dd>
               
             
 

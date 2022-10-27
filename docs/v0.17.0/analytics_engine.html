@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GraphScope Analytical Engine &mdash; GraphScope  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="GraphScope Interactive Engine" href="interactive_engine.html" />
+    <link rel="prev" title="Graph Transformations" href="graph_transformation.html" />
+
+ 
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4TMYCGJ0X2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-4TMYCGJ0X2');
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> GraphScope
+          </a>
+              <div class="version">
+                v0.17.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div>
+  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+    
+      
+      
+        
+          
+        
+      
+      
+        <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="graph_transformation.html">Graph Transformations</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">GraphScope Analytical Engine</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#built-in-algorithms">Built-in Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#result-processing">Result Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#writing-your-own-algorithms-in-pie">Writing Your Own Algorithms in PIE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#writing-algorithms-in-pregel">Writing Algorithms in Pregel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#using-math-h-functions-in-algorithms">Using <code class="docutils literal notranslate"><span class="pre">math.h</span></code> Functions in Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#run-your-own-algorithms">Run Your Own Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#run-algorithm-in-java">Run Algorithm in Java</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#run-a-demo-java-algorithm">Run a Demo Java Algorithm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#writing-your-own-algorithms-in-java">Writing Your Own Algorithms in Java</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#glossory">Glossory</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#loadstrategy">LoadStrategy</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#onlyout">OnlyOut</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#onlyin">OnlyIn</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bothinout">BothInOut</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#partitionstrategy">PartitionStrategy</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#edge-cut">Edge Cut</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#vertex-cut">Vertex Cut</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#vertices-on-graphscope-analytical-engine">Vertices on GraphScope analytical engine</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#outervertex">OuterVertex</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#innervertex">InnerVertex</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#innervertexwithoutgoingedge">InnerVertexWithOutgoingEdge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#innervertexwithincomingedge">InnerVertexWithIncomingEdge</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#messagestrategy">MessageStrategy</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#alongoutgoingedgetooutervertex">AlongOutgoingEdgeToOuterVertex</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#alongincomingedgetooutervertex">AlongIncomingEdgeToOuterVertex</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#alongedgetooutervertex">AlongEdgeToOuterVertex</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#synconoutervertexastarget">SyncOnOuterVertexAsTarget</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#synconoutervertexassource">SyncOnOuterVertexAsSource</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#synconoutervertex">SyncOnOuterVertex</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">GraphScope Interactive Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="persistent_graph_store.html">Persistent Graph Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frequently_asked_questions.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference/python_index.html">Python API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
+</ul>
+
+      
+    
+  </div>
+
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GraphScope</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>GraphScope Analytical Engine</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/alibaba/graphscope/edit/main/docs/analytics_engine.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="graphscope-analytical-engine">
+<h1>GraphScope Analytical Engine<a class="headerlink" href="#graphscope-analytical-engine" title="Permalink to this headline"></a></h1>
+<p>The analytical engine in GraphScope derives from
+<a class="reference external" href="https://dl.acm.org/doi/10.1145/3282488">GRAPE</a>,
+a graph processing system proposed on SIGMOD-2017.
+GRAPE differs from prior systems in its ability
+to parallelize sequential graph algorithms as a whole. In GRAPE,
+sequential algorithms can be easily “plugged into”
+with only minor changes and get parallelized to handle large graphs efficiently.
+In addition to the ease of programming, GRAPE is designed to be
+highly efficient and flexible, to cope the scale,
+variety and complexity from real-life graph applications.</p>
+<div class="section" id="built-in-algorithms">
+<h2>Built-in Algorithms<a class="headerlink" href="#built-in-algorithms" title="Permalink to this headline"></a></h2>
+<p>GraphScope analytical engine provides many common used algorithms,
+including connectivity and path analysis, community detection, centrality computations.</p>
+<p>Built-in algorithms can be easily invoked over loaded graphs. For example,</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
+
+<span class="n">graphscope</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="n">show_log</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># load property graph</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">()</span>
+
+<span class="c1"># many algorithms only support evaluate on simple graph</span>
+<span class="c1"># hence we need to generate one by selecting a kind of vertices and edges.</span>
+<span class="n">simple_g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;connect&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;dist&quot;</span><span class="p">]})</span>
+
+<span class="c1"># run builtin applications</span>
+<span class="n">result_lpa</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">lpa</span><span class="p">(</span><span class="n">simple_g</span><span class="p">,</span> <span class="n">max_round</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">result_sssp</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">sssp</span><span class="p">(</span><span class="n">simple_g</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A full-list of builtin algorithms is shown as below. Whether an algorithm supports
+property graph or not is described in its docstring.</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+</tbody>
+</table>
+<ul class="simple">
+<li><p><code class="xref py py-func docutils literal notranslate"><span class="pre">average_degree_connectivity()</span></code></p></li>
+<li><p><code class="xref py py-func docutils literal notranslate"><span class="pre">average_shortest_path_length()</span></code></p></li>
+<li><p><code class="xref py py-func docutils literal notranslate"><span class="pre">attribute_assortativity_coefficient()</span></code></p></li>
+<li><p><a class="reference internal" href="reference/app.html#graphscope.bfs" title="graphscope.bfs"><code class="xref py py-func docutils literal notranslate"><span class="pre">bfs()</span></code></a></p></li>
+<li><p><a class="reference internal" href="reference/app.html#graphscope.avg_clustering" title="graphscope.avg_clustering"><code class="xref py py-func docutils literal notranslate"><span class="pre">avg_clustering()</span></code></a></p></li>
+<li><p><a class="reference internal" href="reference/app.html#graphscope.clustering" title="graphscope.clustering"><code class="xref py py-func docutils literal notranslate"><span class="pre">clustering()</span></code></a></p></li>
+<li><p><a class="reference internal" href="reference/app.html#graphscope.degree_centrality" title="graphscope.degree_centrality"><code class="xref py py-func docutils literal notranslate"><span class="pre">degree_centrality()</span></code></a></p></li>
+<li><p><code class="xref py py-func docutils literal notranslate"><span class="pre">degree_assortativity_coefficient()</span></code></p></li>
+<li><p><a class="reference internal" href="reference/app.html#graphscope.eigenvector_centrality" title="graphscope.eigenvector_centrality"><code class="xref py py-func docutils literal notranslate"><span class="pre">eigenvector_centrality()</span></code></a></p></li>
+<li><p><a class="reference internal" href="reference/app.html#graphscope.hits" title="graphscope.hits"><code class="xref py py-func docutils literal notranslate"><span class="pre">hits()</span></code></a></p></li>
+<li><p><code class="xref py py-func docutils literal notranslate"><span class="pre">is_simple_path()</span></code></p></li>
+<li><p><a class="reference internal" href="reference/app.html#graphscope.k_core" title="graphscope.k_core"><code class="xref py py-func docutils literal notranslate"><span class="pre">k_core()</span></code></a></p></li>
+<li><p><code class="xref py py-func docutils literal notranslate"><span class="pre">k_shell()</span></code></p></li>
+<li><p><a class="reference internal" href="reference/app.html#graphscope.katz_centrality" title="graphscope.katz_centrality"><code class="xref py py-func docutils literal notranslate"><span class="pre">katz_centrality()</span></code></a></p></li>
+<li><p><a class="reference internal" href="reference/app.html#graphscope.louvain" title="graphscope.louvain"><code class="xref py py-func docutils literal notranslate"><span class="pre">louvain()</span></code></a></p></li>
+<li><p><a class="reference internal" href="reference/app.html#graphscope.lpa" title="graphscope.lpa"><code class="xref py py-func docutils literal notranslate"><span class="pre">lpa()</span></code></a></p></li>
+<li><p><code class="xref py py-func docutils literal notranslate"><span class="pre">numeric_assortativity_coefficient()</span></code></p></li>
+<li><p><a class="reference internal" href="reference/app.html#graphscope.pagerank" title="graphscope.pagerank"><code class="xref py py-func docutils literal notranslate"><span class="pre">pagerank()</span></code></a></p></li>
+<li><p><code class="xref py py-func docutils literal notranslate"><span class="pre">pagerank_nx()</span></code></p></li>
+<li><p><a class="reference internal" href="reference/app.html#graphscope.sssp" title="graphscope.sssp"><code class="xref py py-func docutils literal notranslate"><span class="pre">sssp()</span></code></a></p></li>
+<li><p><a class="reference internal" href="reference/app.html#graphscope.triangles" title="graphscope.triangles"><code class="xref py py-func docutils literal notranslate"><span class="pre">triangles()</span></code></a></p></li>
+<li><p><a class="reference internal" href="reference/app.html#graphscope.wcc" title="graphscope.wcc"><code class="xref py py-func docutils literal notranslate"><span class="pre">wcc()</span></code></a></p></li>
+</ul>
+<p>The list is continuously growing.</p>
+</div>
+<div class="section" id="result-processing">
+<h2>Result Processing<a class="headerlink" href="#result-processing" title="Permalink to this headline"></a></h2>
+<p>When finish a computation, the results are wrapped as <a class="reference internal" href="reference/context.html#context"><span class="std std-ref">Context</span></a>
+and preserved on the distributed machines.</p>
+<p>Users may want to fetch the results to the client, or write to cloud storage or distributed file systems.</p>
+<p>There is a list of supported method to retrieve the results.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># fetch to data structures</span>
+<span class="n">result_lpa</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">)</span>
+<span class="n">result_lpa</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">({</span><span class="s2">&quot;node&quot;</span><span class="p">:</span> <span class="s2">&quot;v.id&quot;</span><span class="p">,</span> <span class="s2">&quot;result&quot;</span><span class="p">:</span> <span class="s2">&quot;r&quot;</span><span class="p">})</span>
+
+<span class="c1"># or write to hdfs or oss, or local (local means the path is relative to the pods)</span>
+<span class="n">result_lpa</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;hdfs://output&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;node&quot;</span><span class="p">:</span> <span class="s2">&quot;v.id&quot;</span><span class="p">,</span> <span class="s2">&quot;result&quot;</span><span class="p">:</span> <span class="s2">&quot;r&quot;</span><span class="p">})</span>
+<span class="n">result_lpa</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;oss://id:key@endpoint/bucket/object&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;node&quot;</span><span class="p">:</span> <span class="s2">&quot;v.id&quot;</span><span class="p">,</span> <span class="s2">&quot;result&quot;</span><span class="p">:</span> <span class="s2">&quot;r&quot;</span><span class="p">})</span>
+<span class="n">result_lpa</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;file:///tmp/path&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;node&quot;</span><span class="p">:</span> <span class="s2">&quot;v.id&quot;</span><span class="p">,</span> <span class="s2">&quot;result&quot;</span><span class="p">:</span> <span class="s2">&quot;r&quot;</span><span class="p">})</span>
+
+<span class="c1"># or write to client local</span>
+<span class="n">result_lpa</span><span class="o">.</span><span class="n">output_to_client</span><span class="p">(</span><span class="s2">&quot;/tmp/lpa_result.txt&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;node&quot;</span><span class="p">:</span> <span class="s2">&quot;v.id&quot;</span><span class="p">,</span> <span class="s2">&quot;result&quot;</span><span class="p">:</span> <span class="s2">&quot;r&quot;</span><span class="p">})</span>
+
+<span class="c1"># or seal to vineyard</span>
+<span class="n">result_lpa</span><span class="o">.</span><span class="n">to_vineyard_dataframe</span><span class="p">({</span><span class="s2">&quot;node&quot;</span><span class="p">:</span> <span class="s2">&quot;v.id&quot;</span><span class="p">,</span> <span class="s2">&quot;result&quot;</span><span class="p">:</span> <span class="s2">&quot;r&quot;</span><span class="p">})</span>
+<span class="n">result_lpa</span><span class="o">.</span><span class="n">to_vineyard_tensor</span><span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In addition, as shown in the <a class="reference internal" href="getting_started.html#getting-started"><span class="std std-ref">Getting Started</span></a>, computation results can add back to
+the graph as a new property (column) of the vertices(edges).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># add the results as new columns to the citation graph, the column name is &#39;lpa_result&#39;</span>
+<span class="n">new_graph</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="n">result_lpa</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;lpa_result&quot;</span><span class="p">:</span> <span class="s2">&quot;r&quot;</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>Users may assign a <a class="reference internal" href="reference/selector.html#selector"><span class="std std-ref">Selector</span></a> to define which parts of the results to write. A selector specifies
+which part of the result to preserve. Similarly, the graph data can
+also be a part of the result, e.g., the vertex id. We reserve three keywords for selectors.
+<cite>r</cite> represents the result, <cite>v</cite> and <cite>e</cite> for vertices and edges, respectively.
+Here are some examples for selectors on result processing.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># get the results on the vertex</span>
+<span class="n">result_lpa</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+
+<span class="c1"># to dataframe,</span>
+<span class="c1"># using the `id` of vertices (`v.id`) as a column named df_v</span>
+<span class="c1"># using the `data` of v (`v.data`) as a column named df_vd</span>
+<span class="c1"># and using the result (`r`) as a column named df_result</span>
+<span class="n">result_lpa</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">({</span><span class="s1">&#39;df_v&#39;</span><span class="p">:</span> <span class="s1">&#39;v.id&#39;</span><span class="p">,</span> <span class="s1">&#39;df_vd&#39;</span><span class="p">:</span> <span class="s1">&#39;v.data&#39;</span><span class="p">,</span> <span class="s1">&#39;df_result&#39;</span><span class="p">:</span> <span class="s1">&#39;r&#39;</span><span class="p">})</span>
+
+<span class="c1"># for results on property graph</span>
+<span class="c1"># using `:` as a label selector for v and e</span>
+<span class="c1"># using the id for vertices labeled with label0 (`v:label0.id`) as column `id`</span>
+<span class="c1"># using the property0 written on vertices with label0 as column `result`</span>
+<span class="n">result</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="n">fd</span><span class="o">=</span><span class="s1">&#39;hdfs:///gs_data/output&#39;</span><span class="p">,</span> \
+        <span class="n">selector</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="s1">&#39;v:label0.id&#39;</span><span class="p">,</span> <span class="s1">&#39;result&#39;</span><span class="p">:</span> <span class="s1">&#39;r:label0.property0&#39;</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>See more details in <a class="reference internal" href="reference/context.html#context"><span class="std std-ref">Context</span></a> and <a class="reference internal" href="reference/selector.html#selector"><span class="std std-ref">Selector</span></a>.</p>
+</div>
+<div class="section" id="writing-your-own-algorithms-in-pie">
+<h2>Writing Your Own Algorithms in PIE<a class="headerlink" href="#writing-your-own-algorithms-in-pie" title="Permalink to this headline"></a></h2>
+<p>Users may write their own algorithms if the built-in algorithms
+do not meet their needs. <cite>graphscope</cite> enables users to write
+algorithms in the <a class="reference external" href="https://dl.acm.org/doi/10.1145/3282488">PIE</a>
+programming model in a pure Python mode.</p>
+<a class="reference internal image-reference" href="_images/pie.png"><img alt="Workflow of PIE" class="align-center" src="_images/pie.png" style="width: 600px;" /></a>
+<p>To implement this, a user just need to fulfill this class.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.analytical.udf.decorators</span> <span class="kn">import</span> <span class="n">pie</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">AppAssets</span>
+
+<span class="nd">@pie</span><span class="p">(</span><span class="n">vd_type</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">,</span> <span class="n">md_type</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">YourAlgorithm</span><span class="p">(</span><span class="n">AppAssets</span><span class="p">):</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">Init</span><span class="p">(</span><span class="n">frag</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">PEval</span><span class="p">(</span><span class="n">frag</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">IncEval</span><span class="p">(</span><span class="n">frag</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">pass</span>
+</pre></div>
+</div>
+<p>As shown in the code, users need to implement a class decorated with
+<cite>&#64;pie</cite> and provides three sequential graph functions.
+In the class, the <cite>Init</cite> is a function to set the initial status. <cite>PEval</cite> is
+a sequential method for partial evaluation, and <cite>IncEval</cite> is a sequential function
+for incremental evaluation over the partitioned fragment. The full API of fragment
+can be found in <a class="reference internal" href="reference/cython_sdk.html#cython-sdk-api"><span class="std std-ref">Cython SDK API</span></a>.</p>
+<p>Let’s take SSSP as example, a user defined SSSP in PIE model may be like this.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.analytical.udf.decorators</span> <span class="kn">import</span> <span class="n">pie</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">AppAssets</span>
+
+<span class="nd">@pie</span><span class="p">(</span><span class="n">vd_type</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">,</span> <span class="n">md_type</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">SSSP_PIE</span><span class="p">(</span><span class="n">AppAssets</span><span class="p">):</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">Init</span><span class="p">(</span><span class="n">frag</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">v_label_num</span> <span class="o">=</span> <span class="n">frag</span><span class="o">.</span><span class="n">vertex_label_num</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">v_label_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">v_label_num</span><span class="p">):</span>
+            <span class="n">nodes</span> <span class="o">=</span> <span class="n">frag</span><span class="o">.</span><span class="n">nodes</span><span class="p">(</span><span class="n">v_label_id</span><span class="p">)</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">init_value</span><span class="p">(</span>
+                <span class="n">nodes</span><span class="p">,</span> <span class="n">v_label_id</span><span class="p">,</span> <span class="mf">1000000000.0</span><span class="p">,</span> <span class="n">PIEAggregateType</span><span class="o">.</span><span class="n">kMinAggregate</span>
+            <span class="p">)</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">register_sync_buffer</span><span class="p">(</span><span class="n">v_label_id</span><span class="p">,</span> <span class="n">MessageStrategy</span><span class="o">.</span><span class="n">kSyncOnOuterVertex</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">PEval</span><span class="p">(</span><span class="n">frag</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">src</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">get_config</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;src&quot;</span><span class="p">))</span>
+        <span class="n">graphscope</span><span class="o">.</span><span class="n">declare</span><span class="p">(</span><span class="n">graphscope</span><span class="o">.</span><span class="n">Vertex</span><span class="p">,</span> <span class="n">source</span><span class="p">)</span>
+        <span class="n">native_source</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">v_label_num</span> <span class="o">=</span> <span class="n">frag</span><span class="o">.</span><span class="n">vertex_label_num</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">v_label_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">v_label_num</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">frag</span><span class="o">.</span><span class="n">get_inner_node</span><span class="p">(</span><span class="n">v_label_id</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">source</span><span class="p">):</span>
+                <span class="n">native_source</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">break</span>
+        <span class="k">if</span> <span class="n">native_source</span><span class="p">:</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">set_node_value</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">e_label_num</span> <span class="o">=</span> <span class="n">frag</span><span class="o">.</span><span class="n">edge_label_num</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">e_label_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">e_label_num</span><span class="p">):</span>
+            <span class="n">edges</span> <span class="o">=</span> <span class="n">frag</span><span class="o">.</span><span class="n">get_outgoing_edges</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">e_label_id</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
+                <span class="n">dst</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">neighbor</span><span class="p">()</span>
+                <span class="c1"># use the third column of edge data as the distance between two vertices</span>
+                <span class="n">distv</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">get_int</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">get_node_value</span><span class="p">(</span><span class="n">dst</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">distv</span><span class="p">:</span>
+                    <span class="n">context</span><span class="o">.</span><span class="n">set_node_value</span><span class="p">(</span><span class="n">dst</span><span class="p">,</span> <span class="n">distv</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">IncEval</span><span class="p">(</span><span class="n">frag</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">v_label_num</span> <span class="o">=</span> <span class="n">frag</span><span class="o">.</span><span class="n">vertex_label_num</span><span class="p">()</span>
+        <span class="n">e_label_num</span> <span class="o">=</span> <span class="n">frag</span><span class="o">.</span><span class="n">edge_label_num</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">v_label_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">v_label_num</span><span class="p">):</span>
+            <span class="n">iv</span> <span class="o">=</span> <span class="n">frag</span><span class="o">.</span><span class="n">inner_nodes</span><span class="p">(</span><span class="n">v_label_id</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">iv</span><span class="p">:</span>
+                <span class="n">v_dist</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">get_node_value</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">e_label_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">e_label_num</span><span class="p">):</span>
+                    <span class="n">es</span> <span class="o">=</span> <span class="n">frag</span><span class="o">.</span><span class="n">get_outgoing_edges</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">e_label_id</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">es</span><span class="p">:</span>
+                        <span class="n">u</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">neighbor</span><span class="p">()</span>
+                        <span class="n">u_dist</span> <span class="o">=</span> <span class="n">v_dist</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">get_int</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">get_node_value</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">u_dist</span><span class="p">:</span>
+                            <span class="n">context</span><span class="o">.</span><span class="n">set_node_value</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">u_dist</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>As shown in the code, users only need to design and implement sequential algorithm
+over a fragment, rather than considering the communication and message passing
+in the distributed setting. In this case, the classic dijkstra algorithm and its
+incremental version works for large graphs partitioned on a cluster.</p>
+</div>
+<div class="section" id="writing-algorithms-in-pregel">
+<h2>Writing Algorithms in Pregel<a class="headerlink" href="#writing-algorithms-in-pregel" title="Permalink to this headline"></a></h2>
+<p>In addition to the sub-graph based PIE model, <cite>graphscope</cite> supports vertex-centric
+<cite>Pregel</cite> model as well. You may develop an algorithms in <cite>Pregel</cite> model by implementing this.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.analytical.udf.decorators</span> <span class="kn">import</span> <span class="n">pregel</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">AppAssets</span>
+
+<span class="nd">@pregel</span><span class="p">(</span><span class="n">vd_type</span><span class="o">=</span><span class="s1">&#39;double&#39;</span><span class="p">,</span> <span class="n">md_type</span><span class="o">=</span><span class="s1">&#39;double&#39;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">YourPregelAlgorithm</span><span class="p">(</span><span class="n">AppAssets</span><span class="p">):</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">Init</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">Compute</span><span class="p">(</span><span class="n">messages</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">Combine</span><span class="p">(</span><span class="n">messages</span><span class="p">):</span>
+        <span class="k">pass</span>
+</pre></div>
+</div>
+<p>Differ from the PIE model, the decorator for this class is <code class="docutils literal notranslate"><span class="pre">&#64;pregel</span></code>.
+And the functions to be implemented is defined on vertex, rather than the fragment.
+Take SSSP as example, the algorithm in Pregel model looks like this.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.analytical.udf</span> <span class="kn">import</span> <span class="n">pregel</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">AppAssets</span>
+
+<span class="c1"># decorator, and assign the types for vertex data, message data.</span>
+<span class="nd">@pregel</span><span class="p">(</span><span class="n">vd_type</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">,</span> <span class="n">md_type</span><span class="o">=</span><span class="s2">&quot;double&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">SSSP_Pregel</span><span class="p">(</span><span class="n">AppAssets</span><span class="p">):</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">Init</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">v</span><span class="o">.</span><span class="n">set_value</span><span class="p">(</span><span class="mf">1000000000.0</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">Compute</span><span class="p">(</span><span class="n">messages</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">src_id</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">get_config</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;src&quot;</span><span class="p">)</span>
+        <span class="n">cur_dist</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+        <span class="n">new_dist</span> <span class="o">=</span> <span class="mf">1000000000.0</span>
+        <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">id</span><span class="p">()</span> <span class="o">==</span> <span class="n">src_id</span><span class="p">:</span>
+            <span class="n">new_dist</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">messages</span><span class="p">:</span>
+            <span class="n">new_dist</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">new_dist</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">new_dist</span> <span class="o">&lt;</span> <span class="n">cur_dist</span><span class="p">:</span>
+            <span class="n">v</span><span class="o">.</span><span class="n">set_value</span><span class="p">(</span><span class="n">new_dist</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">e_label_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">edge_label_num</span><span class="p">()):</span>
+                <span class="n">edges</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">outgoing_edges</span><span class="p">(</span><span class="n">e_label_id</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
+                    <span class="n">v</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">vertex</span><span class="p">(),</span> <span class="n">new_dist</span> <span class="o">+</span> <span class="n">e</span><span class="o">.</span><span class="n">get_int</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">v</span><span class="o">.</span><span class="n">vote_to_halt</span><span class="p">()</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">Combine</span><span class="p">(</span><span class="n">messages</span><span class="p">):</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="mf">1000000000.0</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">messages</span><span class="p">:</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ret</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="using-math-h-functions-in-algorithms">
+<h2>Using <code class="docutils literal notranslate"><span class="pre">math.h</span></code> Functions in Algorithms<a class="headerlink" href="#using-math-h-functions-in-algorithms" title="Permalink to this headline"></a></h2>
+<p>GraphScope supports using C functions from <code class="code docutils literal notranslate"><span class="pre">math.h</span></code> in user-defined algorithms,
+via the <code class="code docutils literal notranslate"><span class="pre">context.math</span></code> interface. E.g.,</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@staticmethod</span>
+<span class="k">def</span> <span class="nf">Init</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+    <span class="n">v</span><span class="o">.</span><span class="n">set_value</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mf">1000000000.0</span> <span class="o">*</span> <span class="n">context</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">M_PI</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>will be translated to the following efficient C code</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="p">...</span><span class="w"> </span><span class="n">Init</span><span class="p">(...)</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">v</span><span class="p">.</span><span class="n">set_value</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="mf">1000000000.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">M_PI</span><span class="p">));</span><span class="w"></span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="run-your-own-algorithms">
+<h2>Run Your Own Algorithms<a class="headerlink" href="#run-your-own-algorithms" title="Permalink to this headline"></a></h2>
+<p>To run your own algorithms, you may trigger it in place where you defined it.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
+
+<span class="n">g</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">()</span>
+
+<span class="c1"># load my algorithm</span>
+<span class="n">my_app</span> <span class="o">=</span> <span class="n">SSSP_Pregel</span><span class="p">()</span>
+
+<span class="c1"># run my algorithm over a graph and get the result.</span>
+<span class="c1"># Here the `src` is correspondent to the `context.get_config(b&quot;src&quot;)`</span>
+<span class="n">ret</span> <span class="o">=</span> <span class="n">my_app</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="s2">&quot;6&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>After developing and testing, you may want to save it for the future use.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">SSSP_Pregel</span><span class="o">.</span><span class="n">to_gar</span><span class="p">(</span><span class="s2">&quot;/tmp/my_sssp_pregel.gar&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Later, you can load your own algorithm from the gar package.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">load_app</span>
+
+<span class="c1"># load my algorithm from a gar package</span>
+<span class="n">my_app</span> <span class="o">=</span> <span class="n">load_app</span><span class="p">(</span><span class="s2">&quot;/tmp/my_sssp_pregel.gar&quot;</span><span class="p">)</span>
+
+<span class="c1"># run my algorithm over a graph and get the result.</span>
+<span class="n">ret</span> <span class="o">=</span> <span class="n">my_app</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="s2">&quot;6&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="run-algorithm-in-java">
+<h2>Run Algorithm in Java<a class="headerlink" href="#run-algorithm-in-java" title="Permalink to this headline"></a></h2>
+<p>If you are a <code class="docutils literal notranslate"><span class="pre">Java</span></code> programmer, then you may want to implement your graph algorithm in <code class="docutils literal notranslate"><span class="pre">Java</span></code>, and
+run it on GraphScope analytical engine. We first show you how to run a demo java algorithm(i.e. sssp), and then
+how to implement your own algorithms in java.</p>
+<div class="section" id="run-a-demo-java-algorithm">
+<h3>Run a Demo Java Algorithm<a class="headerlink" href="#run-a-demo-java-algorithm" title="Permalink to this headline"></a></h3>
+<p>We provide some sample java app implementation, and you can directly run them on Graphscope Analytical Engine. First you
+need to download a <a class="reference external" href="https://github.com/GraphScope/gstest/blob/master/jars/grape-demo-0.17.0-shaded.jar">grape-demo.jar</a>。</p>
+<p>Then open your GraphScope python client, try to load a graph, and run the sample sssp algorithm.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="kn">from</span> <span class="nn">graphscope</span> <span class="kn">import</span> <span class="n">JavaApp</span>
+<span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
+
+<span class="sd">&quot;&quot;&quot;Or lauch session in k8s cluster&quot;&quot;&quot;</span>
+<span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s1">&#39;hosts&#39;</span><span class="p">)</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
+
+<span class="sd">&quot;&quot;&quot;This app need to run on simple graph&quot;&quot;&quot;</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;connect&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;dist&quot;</span><span class="p">]})</span>
+
+<span class="n">sssp</span><span class="o">=</span><span class="n">JavaApp</span><span class="p">(</span>
+    <span class="n">full_jar_path</span><span class="o">=</span><span class="s2">&quot;grape-demo.jar&quot;</span><span class="p">,</span> <span class="c1"># The path to the grape-demo.jar</span>
+    <span class="n">java_app_class</span><span class="o">=</span><span class="s2">&quot;com.alibaba.graphscope.example.bfs.BFS&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ctx</span><span class="o">=</span><span class="n">sssp</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span><span class="n">src</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+
+<span class="sd">&quot;&quot;&quot;Fetch the result via context&quot;&quot;&quot;</span>
+<span class="n">ctx</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="s2">&quot;r:label0.dist_0&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="writing-your-own-algorithms-in-java">
+<h3>Writing Your Own Algorithms in Java<a class="headerlink" href="#writing-your-own-algorithms-in-java" title="Permalink to this headline"></a></h3>
+<p>To develop your algorithm in java, first, you will need <code class="docutils literal notranslate"><span class="pre">grape-jdk</span></code> installed on your developing environment.
+Currently you need to build from source. Please follow <a class="reference internal" href="reference/gae_java/about.html#gae-java-sdk-about"><span class="std std-ref">About Grape JDK</span></a> for building grape-jdk from source.</p>
+<p>After installing <code class="docutils literal notranslate"><span class="pre">grape-jdk</span></code>, you can include it as dependency in your maven project. You shall add classifier <em>shaded</em> to use the jar which includes all necessary dependencies.</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;dependency&gt;</span>
+  <span class="nt">&lt;groupId&gt;</span>com.alibaba.graphscope<span class="nt">&lt;/groupId&gt;</span>
+  <span class="nt">&lt;artifactId&gt;</span>grape-jdk<span class="nt">&lt;/artifactId&gt;</span>
+  <span class="nt">&lt;version&gt;</span>0.1<span class="nt">&lt;/version&gt;</span>
+  <span class="nt">&lt;classifier&gt;</span>shaded<span class="nt">&lt;/classifier&gt;</span>
+<span class="nt">&lt;/dependency&gt;</span>
+</pre></div>
+</div>
+<p>To address the jar dependencies issue, we need you to pack your jar with dependencies included. For example, you can
+used maven plugin <cite>maven-shade-pluging</cite>.</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;plugin&gt;</span>
+    <span class="nt">&lt;groupId&gt;</span>org.apache.maven.plugins<span class="nt">&lt;/groupId&gt;</span>
+    <span class="nt">&lt;artifactId&gt;</span>maven-shade-plugin<span class="nt">&lt;/artifactId&gt;</span>
+<span class="nt">&lt;/plugin&gt;</span>
+</pre></div>
+</div>
+<p>For the implementation of your algorithm, You shall follow <a class="reference external" href="https://dl.acm.org/doi/10.1145/3282488">PIE</a>  programming model,
+and your app need to inherit <code class="code docutils literal notranslate"><span class="pre">DefaultPropertyAppBase</span></code> or <code class="code docutils literal notranslate"><span class="pre">ParallelPropertyAppBase</span></code> if it works on a property graph,
+or <code class="code docutils literal notranslate"><span class="pre">DefaultAppBase</span></code> or <code class="code docutils literal notranslate"><span class="pre">ParallelAppBase</span></code> in case it works on a simple graph. Meanwhile, you also need to implement
+the corresponding context for your app, by inheriting <code class="code docutils literal notranslate"><span class="pre">DefaultPropertyContextBase</span></code> , <code class="code docutils literal notranslate"><span class="pre">ParallelPropertyContextBase</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">DefaultContextBase</span></code> or <code class="code docutils literal notranslate"><span class="pre">ParallelContextBase</span></code>. Users can also extends <code class="code docutils literal notranslate"><span class="pre">VertexDataContext</span></code> or <code class="code docutils literal notranslate"><span class="pre">VertexPropertyContext</span></code>
+to make use of features provided by different types of context. The vertex data or columns in these two context will be available after query. You can access
+the data via the returned context object in python client.</p>
+<p>Here we present an app which simply traverse a simple graph.</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">Traverse</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">ParallelAppBase</span><span class="o">&lt;</span><span class="n">Long</span><span class="p">,</span><span class="w"> </span><span class="n">Long</span><span class="p">,</span><span class="w"> </span><span class="n">Double</span><span class="p">,</span><span class="w"> </span><span class="n">Long</span><span class="p">,</span><span class="w"> </span><span class="n">TraverseContext</span><span class="o">&gt;</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">ParallelEngine</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+
+<span class="w">    </span><span class="nd">@Override</span><span class="w"></span>
+<span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">PEval</span><span class="p">(</span><span class="n">IFragment</span><span class="o">&lt;</span><span class="n">Long</span><span class="p">,</span><span class="w"> </span><span class="n">Long</span><span class="p">,</span><span class="w"> </span><span class="n">Double</span><span class="p">,</span><span class="w"> </span><span class="n">Long</span><span class="o">&gt;</span><span class="w"> </span><span class="n">fragment</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="n">ParallelContextBase</span><span class="o">&lt;</span><span class="n">Long</span><span class="p">,</span><span class="w"> </span><span class="n">Long</span><span class="p">,</span><span class="w"> </span><span class="n">Double</span><span class="p">,</span><span class="w"> </span><span class="n">Long</span><span class="o">&gt;</span><span class="w"> </span><span class="n">context</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="n">ParallelMessageManager</span><span class="w"> </span><span class="n">messageManager</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">TraverseContext</span><span class="w"> </span><span class="n">ctx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">TraverseContext</span><span class="p">)</span><span class="w"> </span><span class="n">context</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">Vertex</span><span class="o">&lt;</span><span class="n">Long</span><span class="o">&gt;</span><span class="w"> </span><span class="n">vertex</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">fragment</span><span class="p">.</span><span class="na">innerVertices</span><span class="p">())</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">AdjList</span><span class="o">&lt;</span><span class="n">Long</span><span class="p">,</span><span class="w"> </span><span class="n">Long</span><span class="o">&gt;</span><span class="w"> </span><span class="n">adjList</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fragment</span><span class="p">.</span><span class="na">getOutgoingAdjList</span><span class="p">(</span><span class="n">vertex</span><span class="p">);</span><span class="w"></span>
+<span class="w">            </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">Nbr</span><span class="o">&lt;</span><span class="n">Long</span><span class="p">,</span><span class="w"> </span><span class="n">Long</span><span class="o">&gt;</span><span class="w"> </span><span class="n">nbr</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">adjList</span><span class="p">.</span><span class="na">iterator</span><span class="p">())</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">                </span><span class="n">Vertex</span><span class="o">&lt;</span><span class="n">Long</span><span class="o">&gt;</span><span class="w"> </span><span class="n">dst</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nbr</span><span class="p">.</span><span class="na">neighbor</span><span class="p">();</span><span class="w"></span>
+<span class="w">                </span><span class="c1">//Update largest distance for current vertex</span><span class="w"></span>
+<span class="w">                </span><span class="n">ctx</span><span class="p">.</span><span class="na">vertexArray</span><span class="p">.</span><span class="na">setValue</span><span class="p">(</span><span class="n">vertex</span><span class="p">,</span><span class="w"> </span><span class="n">Math</span><span class="p">.</span><span class="na">max</span><span class="p">(</span><span class="n">nbr</span><span class="p">.</span><span class="na">data</span><span class="p">(),</span><span class="w"> </span><span class="n">ctx</span><span class="p">.</span><span class="na">vertexArray</span><span class="p">.</span><span class="na">get</span><span class="p">(</span><span class="n">vertex</span><span class="p">)));</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="n">messageManager</span><span class="p">.</span><span class="na">ForceContinue</span><span class="p">();</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="nd">@Override</span><span class="w"></span>
+<span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">IncEval</span><span class="p">(</span><span class="n">IFragment</span><span class="o">&lt;</span><span class="n">Long</span><span class="p">,</span><span class="w"> </span><span class="n">Long</span><span class="p">,</span><span class="w"> </span><span class="n">Double</span><span class="p">,</span><span class="w"> </span><span class="n">Long</span><span class="o">&gt;</span><span class="w"> </span><span class="n">fragment</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="n">ParallelContextBase</span><span class="o">&lt;</span><span class="n">Long</span><span class="p">,</span><span class="w"> </span><span class="n">Long</span><span class="p">,</span><span class="w"> </span><span class="n">Double</span><span class="p">,</span><span class="w"> </span><span class="n">Long</span><span class="o">&gt;</span><span class="w"> </span><span class="n">context</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="n">ParallelMessageManager</span><span class="w"> </span><span class="n">messageManager</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">TraverseContext</span><span class="w"> </span><span class="n">ctx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">TraverseContext</span><span class="p">)</span><span class="w"> </span><span class="n">context</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">Vertex</span><span class="o">&lt;</span><span class="n">Long</span><span class="o">&gt;</span><span class="w"> </span><span class="n">vertex</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">fragment</span><span class="p">.</span><span class="na">innerVertices</span><span class="p">())</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">AdjList</span><span class="o">&lt;</span><span class="n">Long</span><span class="p">,</span><span class="w"> </span><span class="n">Long</span><span class="o">&gt;</span><span class="w"> </span><span class="n">adjList</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fragment</span><span class="p">.</span><span class="na">getOutgoingAdjList</span><span class="p">(</span><span class="n">vertex</span><span class="p">);</span><span class="w"></span>
+<span class="w">            </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">Nbr</span><span class="o">&lt;</span><span class="n">Long</span><span class="p">,</span><span class="w"> </span><span class="n">Long</span><span class="o">&gt;</span><span class="w"> </span><span class="n">nbr</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">adjList</span><span class="p">.</span><span class="na">iterator</span><span class="p">())</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">                </span><span class="n">Vertex</span><span class="o">&lt;</span><span class="n">Long</span><span class="o">&gt;</span><span class="w"> </span><span class="n">dst</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nbr</span><span class="p">.</span><span class="na">neighbor</span><span class="p">();</span><span class="w"></span>
+<span class="w">                </span><span class="c1">//Update largest distance for current vertex</span><span class="w"></span>
+<span class="w">                </span><span class="n">ctx</span><span class="p">.</span><span class="na">vertexArray</span><span class="p">.</span><span class="na">setValue</span><span class="p">(</span><span class="n">vertex</span><span class="p">,</span><span class="w"> </span><span class="n">Math</span><span class="p">.</span><span class="na">max</span><span class="p">(</span><span class="n">nbr</span><span class="p">.</span><span class="na">data</span><span class="p">(),</span><span class="w"> </span><span class="n">ctx</span><span class="p">.</span><span class="na">vertexArray</span><span class="p">.</span><span class="na">get</span><span class="p">(</span><span class="n">vertex</span><span class="p">)));</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Corresponding context:</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TraverseContext</span><span class="w"> </span><span class="kd">extends</span><span class="w"></span>
+<span class="w">    </span><span class="n">VertexDataContext</span><span class="o">&lt;</span><span class="n">IFragment</span><span class="o">&lt;</span><span class="n">Long</span><span class="p">,</span><span class="w"> </span><span class="n">Long</span><span class="p">,</span><span class="w"> </span><span class="n">Double</span><span class="p">,</span><span class="w"> </span><span class="n">Long</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">Long</span><span class="o">&gt;</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">ParallelContextBase</span><span class="o">&lt;</span><span class="n">Long</span><span class="p">,</span><span class="n">Long</span><span class="p">,</span><span class="n">Double</span><span class="p">,</span><span class="n">Long</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+
+<span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">GSVertexArray</span><span class="o">&lt;</span><span class="n">Long</span><span class="o">&gt;</span><span class="w"> </span><span class="n">vertexArray</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">maxIteration</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="nd">@Override</span><span class="w"></span>
+<span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">Init</span><span class="p">(</span><span class="n">IFragment</span><span class="o">&lt;</span><span class="n">Long</span><span class="p">,</span><span class="w"> </span><span class="n">Long</span><span class="p">,</span><span class="w"> </span><span class="n">Double</span><span class="p">,</span><span class="w"> </span><span class="n">Long</span><span class="o">&gt;</span><span class="w"> </span><span class="n">frag</span><span class="p">,</span><span class="w"></span>
+<span class="w">        </span><span class="n">ParallelMessageManager</span><span class="w"> </span><span class="n">messageManager</span><span class="p">,</span><span class="w"> </span><span class="n">JSONObject</span><span class="w"> </span><span class="n">jsonObject</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">createFFIContext</span><span class="p">(</span><span class="n">frag</span><span class="p">,</span><span class="w"> </span><span class="n">Long</span><span class="p">.</span><span class="na">class</span><span class="p">,</span><span class="w"> </span><span class="kc">false</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="c1">//This vertex Array is created by our framework. Data stored in this array will be available</span><span class="w"></span>
+<span class="w">        </span><span class="c1">//after execution, you can receive them by invoking method provided in Python Context.</span><span class="w"></span>
+<span class="w">        </span><span class="n">vertexArray</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">();</span><span class="w"></span>
+<span class="w">        </span><span class="n">maxIteration</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">jsonObject</span><span class="p">.</span><span class="na">containsKey</span><span class="p">(</span><span class="s">&quot;maxIteration&quot;</span><span class="p">)){</span><span class="w"></span>
+<span class="w">            </span><span class="n">maxIteration</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">jsonObject</span><span class="p">.</span><span class="na">getInteger</span><span class="p">(</span><span class="s">&quot;maxIteration&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+
+<span class="w">    </span><span class="nd">@Override</span><span class="w"></span>
+<span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">Output</span><span class="p">(</span><span class="n">IFragment</span><span class="o">&lt;</span><span class="n">Long</span><span class="p">,</span><span class="w"> </span><span class="n">Long</span><span class="p">,</span><span class="w"> </span><span class="n">Double</span><span class="p">,</span><span class="w"> </span><span class="n">Long</span><span class="o">&gt;</span><span class="w"> </span><span class="n">frag</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="c1">//You can also write output logic in this function.</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>You may want to verify your implementation locally, before submitting your algorithm to GraphScope analytical engine.
+A simple bash script is provided to address this need. To verfy your algorithm, just run</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3 <span class="si">${</span><span class="nv">GRAPHSCOPE_REPO</span><span class="si">}</span>/analytical_engine/java/java-app-runner.py
+            --app<span class="o">=</span><span class="si">${</span><span class="nv">app_class_name</span><span class="si">}</span> --java_path<span class="o">=</span><span class="si">${</span><span class="nv">path_to_your_jar</span><span class="si">}</span>
+            --param_str<span class="o">=</span><span class="si">${</span><span class="nv">params_str</span><span class="si">}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">app_class_name</span></code> is the fully-specified name for your algorithm class(i.e. com.xxx.Traverse), <code class="docutils literal notranslate"><span class="pre">path_to_your_jar</span></code> should be the place where your packed jar resides.
+To pass params to your contex, put them in <code class="docutils literal notranslate"><span class="pre">params</span></code> like <code class="docutils literal notranslate"><span class="pre">src=6,threadNum=1</span></code>, and these params will be provided in <code class="docutils literal notranslate"><span class="pre">Context::Init</span></code> as a json string. For example,</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> <span class="si">${</span><span class="nv">GRAPHSCOPE_REPO</span><span class="si">}</span>/analytical_engine/java/
+python3 java-app-runner.py --app com.alibaba.graphscope.example.traverse.Traverse
+            --jar_path /home/graphscope/GraphScope/analytical_engine/java/grape-demo/target/grape-demo-0.17.0-shaded.jar
+            --arguments <span class="s2">&quot;maxIteration=10&quot;</span>
+</pre></div>
+</div>
+<p>After verifying your algorithm locally, you may try to run your algorithms on GraphScope analytical engine.
+You will need <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">client</span></code> to run a java app. A simple jar can contains serveral app implementation,
+and you need to specify the app you want in this run.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="kn">from</span> <span class="nn">graphscope</span> <span class="kn">import</span> <span class="n">JavaApp</span>
+<span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
+
+<span class="sd">&quot;&quot;&quot;Or lauch session in k8s cluster&quot;&quot;&quot;</span>
+<span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s1">&#39;hosts&#39;</span><span class="p">)</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;connect&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;dist&quot;</span><span class="p">]})</span>
+
+<span class="n">app</span><span class="o">=</span><span class="n">JavaApp</span><span class="p">(</span>
+    <span class="n">full_jar_path</span><span class="o">=</span><span class="s2">&quot;{full/path/to/your/packed/jar}&quot;</span><span class="p">,</span>
+    <span class="n">java_app_class</span><span class="o">=</span><span class="s2">&quot;{fullly/qualified/class/name/of/your/app}&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ctx</span><span class="o">=</span><span class="n">app</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="s2">&quot;{param string}&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>After computation, you can obtain the results stored in context with the help of <a class="reference internal" href="reference/context.html#context"><span class="std std-ref">Context</span></a>.</p>
+<p><strong>Publications</strong></p>
+<ul class="simple">
+<li><p>Wenfei Fan, Jingbo Xu, Wenyuan Yu, Jingren Zhou, Xiaojian Luo, Ping Lu, Qiang Yin, Yang Cao, and Ruiqi Xu. <a class="reference external" href="https://dl.acm.org/doi/10.1145/3282488">Parallelizing Sequential Graph Computations.</a>, ACM Transactions on Database Systems (TODS) 43(4): 18:1-18:39.</p></li>
+<li><p>Wenfei Fan, Jingbo Xu, Yinghui Wu, Wenyuan Yu, Jiaxin Jiang. <a class="reference external" href="http://www.vldb.org/pvldb/vol10/p1889-fan.pdf">GRAPE: Parallelizing Sequential Graph Computations.</a>, The 43rd International Conference on Very Large Data Bases (VLDB), demo, 2017 (the Best Demo Award).</p></li>
+<li><p>Wenfei Fan, Jingbo Xu, Yinghui Wu, Wenyuan Yu, Jiaxin Jiang, Zeyu Zheng, Bohan Zhang, Yang Cao, and Chao Tian. <a class="reference external" href="https://dl.acm.org/doi/10.1145/3035918.3035942">Parallelizing Sequential Graph Computations.</a>, ACM SIG Conference on Management of Data (SIGMOD), 2017 (the Best Paper Award).</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="glossory">
+<h2>Glossory<a class="headerlink" href="#glossory" title="Permalink to this headline"></a></h2>
+<div class="section" id="loadstrategy">
+<h3>LoadStrategy<a class="headerlink" href="#loadstrategy" title="Permalink to this headline"></a></h3>
+<p>There are three ways to maintain the nodes crossing different fragments in GraphScope analytical engine.</p>
+<div class="section" id="onlyout">
+<h4>OnlyOut<a class="headerlink" href="#onlyout" title="Permalink to this headline"></a></h4>
+<p>Each fragment Fi maintains “local” nodes v and a set of “mirrors” for nodes v’ in other fragments such that there exists an edge (v, v’). For instance, in addition to local nodes {4, 5, 6, 7}, F1 in graph G also stores a “mirror” node 3 and the edge (5, 3) when using OnlyOut strategy, as shown below.</p>
+<img alt="OnlyOut" src="_images/onlyout.png" />
+</div>
+<div class="section" id="onlyin">
+<h4>OnlyIn<a class="headerlink" href="#onlyin" title="Permalink to this headline"></a></h4>
+<p>Under this case, each fragment Fi maintains “local” nodes v and a set of “mirrors” for nodes v’ in other fragments such that there exists an edge (v’, v). In graph G, F1 maintains “mirror” nodes {1, 9, 12} besides its local nodes.</p>
+<img alt="OnlyIn" src="_images/onlyin.png" />
+</div>
+<div class="section" id="bothinout">
+<h4>BothInOut<a class="headerlink" href="#bothinout" title="Permalink to this headline"></a></h4>
+<p>Each fragment Fi maintains “local” nodes v and a set of “mirrors” for nodes v’ in other fragments such that there exists an edge (v, v’) or (v’, v). Hence, in graph G, “mirror” nodes {1, 3, 9, 12} are stored in F1 when BothInOut is applied.</p>
+<img alt="BothInOut" src="_images/inandout.png" />
+</div>
+</div>
+<div class="section" id="partitionstrategy">
+<h3>PartitionStrategy<a class="headerlink" href="#partitionstrategy" title="Permalink to this headline"></a></h3>
+<div class="section" id="edge-cut">
+<h4>Edge Cut<a class="headerlink" href="#edge-cut" title="Permalink to this headline"></a></h4>
+<p>An <em>edge cut</em> partitioning splits vertices of a graph into roughly equal size clusters. The edges are stored in the same cluster as one or both of its endpoints. Edges with endpoints distributed across different clusters are <em>crossing edges</em>.</p>
+<img alt="Edge Cut" src="_images/ecut.png" />
+</div>
+<div class="section" id="vertex-cut">
+<h4>Vertex Cut<a class="headerlink" href="#vertex-cut" title="Permalink to this headline"></a></h4>
+<p>A <em>vertex-cut</em> partitioning divides edges of a graph into roughly equal size fragments. The vertices that hold the endpoints of an edge are also placed in the same fragment as the edge itself. A vertex has to be replicated when its adjacent edges are distributed across different fragments.</p>
+<img alt="Vertex Cut" src="_images/vcut.png" />
+</div>
+</div>
+<div class="section" id="vertices-on-graphscope-analytical-engine">
+<h3>Vertices on GraphScope analytical engine<a class="headerlink" href="#vertices-on-graphscope-analytical-engine" title="Permalink to this headline"></a></h3>
+<p>A node v is referred to as an</p>
+<div class="section" id="outervertex">
+<h4>OuterVertex<a class="headerlink" href="#outervertex" title="Permalink to this headline"></a></h4>
+<p>OuterVertex of fragment Fi if it resides at another fragment Fj and there exists a node v’ in Fi such that (v, v’) or (v’, v) is an edge; e.g., nodes {1, 3, 9, 12} are OuterVertex of fragment F1 in graph G;</p>
+<img alt="OuterVertex" src="_images/outvertex.png" />
+</div>
+<div class="section" id="innervertex">
+<h4>InnerVertex<a class="headerlink" href="#innervertex" title="Permalink to this headline"></a></h4>
+<p>InnerVertex of fragment Fi if it is distributed to Fi; e.g. nodes {4, 5, 6, 7} are InnerVertex of fragment F1 in G;</p>
+<img alt="InnerVertex" src="_images/invertex.png" />
+</div>
+<div class="section" id="innervertexwithoutgoingedge">
+<h4>InnerVertexWithOutgoingEdge<a class="headerlink" href="#innervertexwithoutgoingedge" title="Permalink to this headline"></a></h4>
+<p>InnerVertexWithOutgoingEdge of fragment Fi if it is stored in Fi and has an adjacent edge (v, v’) outcoming to a node v’ in another fragment Fj; e.g., node 5 is an InnerVertexWithOutgoingEdge of F1 in G with the outgoing edge (5, 3);</p>
+<img alt="InnerVertexWithOutgoingEdge" src="_images/invertexout.png" />
+</div>
+<div class="section" id="innervertexwithincomingedge">
+<h4>InnerVertexWithIncomingEdge<a class="headerlink" href="#innervertexwithincomingedge" title="Permalink to this headline"></a></h4>
+<p>InnerVertexWithIncomingEdge of fragment Fi if it is maintained in Fi has an adjacent edge (v’, v) incoming from a node v’ in another fragment Fj; e.g., nodes {4, 5, 7} are InnerVertexWithIncomingEdge of F1 in G, and (1, 4), (9, 5), and (12, 7) are corresponding incoming edges.</p>
+<img alt="InnerVertexWithIncomingEdge" src="_images/invertexin.png" />
+</div>
+</div>
+<div class="section" id="messagestrategy">
+<h3>MessageStrategy<a class="headerlink" href="#messagestrategy" title="Permalink to this headline"></a></h3>
+<p>Below are some message passing and synchronization strategies adopted by GraphScope analytical engine.</p>
+<div class="section" id="alongoutgoingedgetooutervertex">
+<h4>AlongOutgoingEdgeToOuterVertex<a class="headerlink" href="#alongoutgoingedgetooutervertex" title="Permalink to this headline"></a></h4>
+<p>Here the message is passed along crossing edges from InnerVertexWithOutgoingEdge to OuterVertex. For instance, the message is passed from node 5 to 3 in graph G.</p>
+<img alt="AlongOutgoingEdgeToOuterVertex" src="_images/intoout.png" />
+</div>
+<div class="section" id="alongincomingedgetooutervertex">
+<h4>AlongIncomingEdgeToOuterVertex<a class="headerlink" href="#alongincomingedgetooutervertex" title="Permalink to this headline"></a></h4>
+<p>Under this case, the message is passed along crossing edges from InnerVertexWithIncomingEdge to OuterVertex. For example, the message is passed from node 5 to 9 in graph G.</p>
+<img alt="AlongIncomingEdgeToOuterVertex" src="_images/intoout2.png" />
+</div>
+<div class="section" id="alongedgetooutervertex">
+<h4>AlongEdgeToOuterVertex<a class="headerlink" href="#alongedgetooutervertex" title="Permalink to this headline"></a></h4>
+<p>Each message is passed along crossing edges from nodes that are both  InnerVertexWithIncomingEdge and InnerVertexWithOutgoingEdge to OuterVertex, e.g., messages are passed from node 5 to 3 and 9 and vice versa in graph G.</p>
+<img alt="AlongEdgeToOuterVertex" src="_images/intoout3.png" />
+</div>
+<div class="section" id="synconoutervertexastarget">
+<h4>SyncOnOuterVertexAsTarget<a class="headerlink" href="#synconoutervertexastarget" title="Permalink to this headline"></a></h4>
+<p>It is applied in company with the OnlyOut loading strategy. Here each fragment Fi sends the states of its “mirror” node of OuterVertex v to Fj that v resides, if there exists edge (v’, v) and v’ is “local” node of Fi, for synchronizing different states of v. For instance, the state of “mirror” node 3 is sent from F1 to F0 for synchronization at F0.</p>
+<img alt="SyncOnOuterVertexAsTarget" src="_images/sync1.png" />
+</div>
+<div class="section" id="synconoutervertexassource">
+<h4>SyncOnOuterVertexAsSource<a class="headerlink" href="#synconoutervertexassource" title="Permalink to this headline"></a></h4>
+<p>It is applied together with the OnlyIn loading strategy. Similar to <strong>SyncStateOnOuterVertexAsTarget</strong>, each fragment Fi sends the states of its “mirror” nodes v to the corresponding fragments for synchronization. The difference is that for each such “mirror”, there exists outgoing edge (v, v’) to certain “local” node v’ of Fi. For example, the states of “mirror” nodes 1, 9, and 12 are sent from F1 to F0 and F2 for synchronization with other states.</p>
+<img alt="SyncOnOuterVertexAsSource" src="_images/sync2.png" />
+</div>
+<div class="section" id="synconoutervertex">
+<h4>SyncOnOuterVertex<a class="headerlink" href="#synconoutervertex" title="Permalink to this headline"></a></h4>
+<p>This is applied together with the BothInOut loading strategy. Under this case, each fragment Fi sends the states of all its “mirror” nodes v to the corresponding fragments for synchronization, regardless of the directions of edges adjacent to v, e.g., the states of “mirror” nodes 1, 3, 9 and 12 are sent from F1 to F0 and F2 for further synchronization.</p>
+<img alt="SyncOnOuterVertex" src="_images/sync3.png" />
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="graph_transformation.html" class="btn btn-neutral float-left" title="Graph Transformations" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="interactive_engine.html" class="btn btn-neutral float-right" title="GraphScope Interactive Engine" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020-2023, DAMO Academy, Alibaba Inc..</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.17.0
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.17.0/index.html">v0.17.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.16.0/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.15.0/index.html">v0.15.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.14.0/index.html">v0.14.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.13.0/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.12.0/index.html">v0.12.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.11.0/index.html">v0.11.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.10.1/index.html">v0.10.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.10.0/index.html">v0.10.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.9.1/index.html">v0.9.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.9.0/index.html">v0.9.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.8.0/index.html">v0.8.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.7.0/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.6.1/index.html">v0.6.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.6.0/index.html">v0.6.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.5.0/index.html">v0.5.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.4.0/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.3.0/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="index.html">en</a></dd>
+        <dd><a href="zh/index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>

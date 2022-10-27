@@ -139,12 +139,15 @@
 <span class="c1"># limitations under the License.</span>
 <span class="c1">#</span>
 
+<span class="kn">import</span> <span class="nn">logging</span>
 
 <span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">AppAssets</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">not_compatible_for</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">project_to_simple</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;wcc&quot;</span><span class="p">]</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;graphscope&quot;</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="wcc"><a class="viewcode-back" href="../../../../reference/app.html#graphscope.wcc">[docs]</a><span class="nd">@project_to_simple</span>
@@ -172,7 +175,15 @@
 <span class="sd">        &gt;&gt;&gt; c = graphscope.wcc(pg)</span>
 <span class="sd">        &gt;&gt;&gt; sess.close()</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">AppAssets</span><span class="p">(</span><span class="n">algo</span><span class="o">=</span><span class="s2">&quot;wcc&quot;</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s2">&quot;vertex_data&quot;</span><span class="p">)(</span><span class="n">graph</span><span class="p">)</span></div>
+    <span class="n">cmake_extra_options</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">graph</span><span class="o">.</span><span class="n">oid_type</span> <span class="o">==</span> <span class="s2">&quot;std::string&quot;</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;WCC algorithm will output int value as component ID on graphs that has &#39;string&#39; type as ID&quot;</span>
+        <span class="p">)</span>
+        <span class="n">cmake_extra_options</span> <span class="o">=</span> <span class="s2">&quot;-DWCC_USE_GID=ON&quot;</span>
+    <span class="k">return</span> <span class="n">AppAssets</span><span class="p">(</span>
+        <span class="n">algo</span><span class="o">=</span><span class="s2">&quot;wcc&quot;</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s2">&quot;vertex_data&quot;</span><span class="p">,</span> <span class="n">cmake_extra_options</span><span class="o">=</span><span class="n">cmake_extra_options</span>
+    <span class="p">)(</span><span class="n">graph</span><span class="p">)</span></div>
 </pre></div>
 
            </div>
@@ -227,6 +238,16 @@
             
               
                 <dd><a href="../../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.17.0/index.html">v0.17.0</a></dd>
               
             
 

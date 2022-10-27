@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>常见问题 &mdash; GraphScope  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="开发者指南" href="developer_guide.html" />
+    <link rel="prev" title="图学习引擎" href="learning_engine.html" />
+
+ 
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4TMYCGJ0X2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-4TMYCGJ0X2');
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> GraphScope
+          </a>
+              <div class="version">
+                v0.17.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div>
+  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+    
+      
+      
+        
+          
+        
+      
+      
+        <p class="caption"><span class="caption-text">目录</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">安装</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">快速上手</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">部署</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">入门教程</a></li>
+<li class="toctree-l1"><a class="reference internal" href="loading_graph.html">载图</a></li>
+<li class="toctree-l1"><a class="reference internal" href="graph_transformation.html">图的变换操作</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analytics_engine.html">图分析引擎</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">图交互式分析引擎</a></li>
+<li class="toctree-l1"><a class="reference internal" href="learning_engine.html">图学习引擎</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">常见问题</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guide.html">开发者指南</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API 参考</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://graphscope.io/docs/reference/python_index.html">Python API 参考</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://graphscope.io/docs/reference/analytical_engine_index.html">图分析引擎 API 参考</a></li>
+</ul>
+
+      
+    
+  </div>
+
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GraphScope</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="index.html">GraphScope: 一站式图计算系统</a> &raquo;</li>
+      <li>常见问题</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/alibaba/graphscope/edit/main/docs/zh/frequently_asked_questions.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="id1">
+<h1>常见问题<a class="headerlink" href="#id1" title="Permalink to this headline"></a></h1>
+<p>我们收集了用户使用 GraphScope 过程中的常见问题，如果在下面的列表中仍然无法找到您遇到的问题的答案，可通过提交 <a class="reference external" href="https://github.com/alibaba/GraphScope/issues/new/choose">Issues</a> 或者在 <a class="reference external" href="https://github.com/alibaba/GraphScope/discussions">Discussions</a> 与我们联系。</p>
+<ol class="arabic">
+<li><p>运行 GraphScope 系统需要的最小资源是多少？</p>
+<blockquote>
+<div><p>在通过 Python 客户端使用 GraphScope 过程中，需要的最低 Python 版本是3.6+，最低pip版本是 19.0+，GraphScope 系统支持以单机或分布式的方式部署，单机情况下，资源需求 CPU &gt;= 4 核，内存 &gt;= 8 G；
+GraphScope 在支持以下环境中运行</p>
+<ul class="simple">
+<li><p>CentOS 7+</p></li>
+<li><p>Ubuntu 18.04+</p></li>
+<li><p>MacOS 10.15+</p></li>
+</ul>
+<p>对于分布式部署，需要用户拥有一个 Kubernetes 集群，GraphScope 在 <strong>Kubernetes version &gt;= v1.12.0+</strong> 的环境上测试通过。</p>
+</div></blockquote>
+</li>
+<li><p>GraphScope 是否强依赖 Kubernetes?</p>
+<blockquote>
+<div><p>GraphScope 支持在单机模式安装运行。 GraphScope 的预编译包以 Python wheel 的形式分发，可以用 <code class="docutils literal notranslate"><span class="pre">pip</span></code> 快速安装：<cite>pip3 install graphscope</cite>。</p>
+</div></blockquote>
+</li>
+<li><p>如何如查看 GraphScope 的运行时信息？</p>
+<blockquote>
+<div><p>默认情况下，GraphScope 运行不打印日志信息，你可以通过 <code class="docutils literal notranslate"><span class="pre">show_log</span></code> 参数开启日志输出。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graphscope</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="n">show_log</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>如果您的GraphScope运行在k8s集群上，可以使用 <a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands">kubectl describe/logs</a> 来查看系统的当前状态，同时如果你可以访问 Pod 的磁盘，也可在 <cite>/tmp/gs/runtime/logs</cite> 目录下查看运行时日志。</p>
+</div></blockquote>
+</li>
+<li><p>为什么在使用 <cite>kubectl get pod</cite> 命令时，发现了一些多余的 Pod?</p>
+<blockquote>
+<div><p>对于其中一些失败的 Pod，只能通过手动执行命令如 <cite>kubectl delete pod &lt;pod_name&gt;</cite> 进行删除。
+通常情况下，该问题出现在使用 Helm 部署 GraphScope 时，GraphScope 依赖一些权限来删除运行时的资源，如果用户没有正确设置 <code class="docutils literal notranslate"><span class="pre">role</span></code> 和 <code class="docutils literal notranslate"><span class="pre">rolebinding</span></code> 等权限，<cite>helm uninstall &lt;release-name&gt;</cite> 可能不能正确回收分配的资源。详细细节可以查看 <a class="reference external" href="https://artifacthub.io/packages/helm/graphscope/graphscope">Helm Support</a></p>
+</div></blockquote>
+</li>
+<li><p>GraphScope 是图数据库吗？</p>
+<blockquote>
+<div><p>GraphScope 并不是一个图数据库，但其包含一个持久图存储的组件 <a class="reference external" href="https://graphscope.io/docs/persistent_graph_store.html">graphscope-store</a> 可以被用作数据库。</p>
+</div></blockquote>
+</li>
+<li><p>GraphScope 在 Gremlin 上的兼容性如何？</p>
+<blockquote>
+<div><p>目前，GraphScope支持Gremlin语言中的大部分查询算子，可通过 <a class="reference external" href="https://graphscope.io/docs/interactive_engine.html#unsupported-features">该文档</a> 查看详细的支持信息。</p>
+</div></blockquote>
+</li>
+<li><p>GraphScope 看起来在运行过程中卡住了？</p>
+<blockquote>
+<div><p>如果 GraphScope 看起来像卡住，可能的原因有：</p>
+<ul class="simple">
+<li><p>在会话的拉起阶段，如果当前网络下载镜像过慢，或当前集群资源无法满足请求的资源时，会造成卡住的现象。</p></li>
+<li><p>载图阶段，可能会由于数据量过大造成短暂的卡住现象。</p></li>
+<li><p>在执行图算法分析阶段，或者使用用户自定义的算法，编译构建应用的库时会花费一些时间。</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>为什么载图时报找不到文件的错误？</p>
+<blockquote>
+<div><p>这通常发生在以集群方式部署运行 GraphScope 时，数据文件必须要对 <code class="docutils literal notranslate"><span class="pre">engine</span></code> Pod 可见。你也许需要挂载磁盘或者使用云存储提供商的服务。</p>
+<p>如果你的集群是使用 <a class="reference external" href="https://kind.sigs.k8s.io">kind</a> 部署的, 你应该需要设置 <a class="reference external" href="https://kind.sigs.k8s.io/docs/user/configuration/#extra-mounts">extra-mounts</a> 来把本机目录挂载到 Kind 虚拟的 Node 中。</p>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">k8s_vineyard_mem</span></code>, <code class="docutils literal notranslate"><span class="pre">vineyard_shared_mem</span></code> 和 <code class="docutils literal notranslate"><span class="pre">k8s_engine_mem</span></code> 有什么区别，如何设置？</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">k8s_vineyard_mem</span></code>: 为 <code class="docutils literal notranslate"><span class="pre">vineyard</span></code> 容器分配的内存。它存储由 <code class="docutils literal notranslate"><span class="pre">vineyard</span></code> 管理的原始数据的 的元信息，例如形状、ID、名称等。由于元数据比数据集小得多，因此在大多数情况下默认配置就足够了。 它相当于 graphscope 的 helm chart 中的 <code class="docutils literal notranslate"><span class="pre">vineyard.resources.memory.requests</span></code> 和 <code class="docutils literal notranslate"><span class="pre">vineyard.resources.memory.limits</span></code> 。</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vineyard_shared_mem</span></code>: 存储数据集的内存。我们发现将其设置为数据集在磁盘上的大小的 5 倍通常是一个合理的值。 它相当于 graphscope 的 helm chart 中的 <code class="docutils literal notranslate"><span class="pre">vineyard.shared_mem</span></code>。</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">k8s_engine_mem`:</span> <span class="pre">``engine</span></code> 容器的内存大小。一般将其设置为 <code class="docutils literal notranslate"><span class="pre">vineyard_shared_mem</span></code> 的同样大小。它相当于 graphscope 的 helm chart 中的 <code class="docutils literal notranslate"><span class="pre">engines.resources.memory.requests</span></code> 和 <code class="docutils literal notranslate"><span class="pre">engines.resources.memory.requests</span></code>。</p></li>
+</ul>
+</li>
+<li><p>导致在 Apple M1 python3.8 环境下安装 GraphScope 失败的原因可能有哪些？</p>
+<ul class="simple">
+<li><p>编译 <code class="docutils literal notranslate"><span class="pre">grpcio</span></code> 失败: 你可以通过 <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=True</span></code> 来尝试使用系统安装的 <code class="docutils literal notranslate"><span class="pre">openssl</span></code> 编译 grpcio。详情可参考 <a class="reference external" href="https://github.com/grpc/grpc/issues/25082">grpc issue</a></p></li>
+<li><p>编译 <code class="docutils literal notranslate"><span class="pre">scipy</span></code> 失败: 你可以根据 <a class="reference external" href="https://stackoverflow.com/questions/65745683/how-to-install-scipy-on-apple-silicon-arm-m1">此教程</a> 来源码编译，或尝试通过 <code class="docutils literal notranslate"><span class="pre">pip3</span> <span class="pre">install</span> <span class="pre">--pre</span> <span class="pre">-i</span> <span class="pre">https://pypi.anaconda.org/scipy-wheels-nightly/simple</span> <span class="pre">scipy</span></code> 来解决这个问题。</p></li>
+</ul>
+</li>
+<li><p>在 NFS 上分配 PV 时遇到了 <code class="docutils literal notranslate"><span class="pre">Permission</span> <span class="pre">denied</span></code> 问题，如何解决？</p>
+<ul class="simple">
+<li><p>Appearance: 通常当使用 helm 的方式安装 graphscope-store 时，Pod <code class="docutils literal notranslate"><span class="pre">graphscope-store-kafka-0</span></code> , <code class="docutils literal notranslate"><span class="pre">graphscope-store-zookeeper-0</span></code> 会报 <code class="docutils literal notranslate"><span class="pre">CrashLoopBackOff</span></code> 错误</p></li>
+<li><p>Check: 我们通过 <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">logs</span> <span class="pre">graphscope-store-zookeeper-0</span></code> 来查看日志，此时日志显示 <code class="docutils literal notranslate"><span class="pre">mkdir:</span> <span class="pre">cannot</span> <span class="pre">create</span> <span class="pre">directory</span> <span class="pre">'/bitnami/zookeeper/data':</span> <span class="pre">Permission</span> <span class="pre">denied</span></code></p></li>
+<li><p>Solution: 通常有两种解决方式:</p>
+<ol class="arabic simple">
+<li><p>快速的方式是在所有相关的 PV 目录上使用 <code class="docutils literal notranslate"><span class="pre">chmod</span> <span class="pre">777</span></code> ，但不建议在生产环境中使用。</p></li>
+<li><p>优雅的方法是首先创建 <code class="docutils literal notranslate"><span class="pre">graphscope</span></code> 用户和用户组，然后将 <code class="docutils literal notranslate"><span class="pre">graphscope</span></code> 上的访问权限授予相关NFS目录。</p></li>
+</ol>
+</li>
+</ul>
+</li>
+<li><p>为什么在 Kubernetes 集群上拉起 GraphScope 实例时，产生超时异常？</p>
+<p>大多数情况下，超时的原因是因为在 Kubernetes 集群拉起 GraphScope 实例时需要下载对应镜像，这一步通常需要几分钟的时间，你可以通过 <code class="docutils literal notranslate"><span class="pre">graphscope.set_option(timeout_seconds=600)</span></code> 适当的增加超时等待时间来解决该问题。</p>
+</li>
+</ol>
+<p><strong>其他问题</strong></p>
+<blockquote>
+<div><p>您可以提交 <a class="reference external" href="https://github.com/alibaba/GraphScope/issues/new/choose">Issues</a> 或者在 <a class="reference external" href="https://github.com/alibaba/GraphScope/discussions">Discussions</a> 提出你的问题，同时，您也可以使用 <a class="reference external" href="http://slack.graphscope.io">Slack</a> 或 <a class="reference external" href="https://h5.dingtalk.com/circle/healthCheckin.html?dtaction=os&amp;corpId=ding82073ee2a22b2f86748126f6422b5d02&amp;109d1=d3892&amp;cbdbhh=qwertyuiop">DingTalk</a> 与我们联系。</p>
+</div></blockquote>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="learning_engine.html" class="btn btn-neutral float-left" title="图学习引擎" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="developer_guide.html" class="btn btn-neutral float-right" title="开发者指南" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020-2023, DAMO Academy, Alibaba Inc..</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.17.0
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../../latest/zh/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../zh/index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.17.0/zh/index.html">v0.17.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.16.0/zh/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.15.0/zh/index.html">v0.15.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.14.0/zh/index.html">v0.14.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.13.0/zh/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.12.0/zh/index.html">v0.12.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.11.0/zh/index.html">v0.11.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.10.1/zh/index.html">v0.10.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.10.0/zh/index.html">v0.10.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.9.1/zh/index.html">v0.9.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.9.0/zh/index.html">v0.9.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.8.0/zh/index.html">v0.8.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.7.0/zh/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.6.1/zh/index.html">v0.6.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.6.0/zh/index.html">v0.6.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.5.0/zh/index.html">v0.5.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.4.1/zh/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.4.0/zh/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.3.0/zh/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.2.1/zh/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.2.0/zh/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.1.3/zh/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.1.2/zh/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.1.1/zh/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.1.0/zh/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="../index.html">en</a></dd>
+        <dd><a href="index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>

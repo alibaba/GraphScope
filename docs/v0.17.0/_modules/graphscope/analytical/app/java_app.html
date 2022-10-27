@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>graphscope.analytical.app.java_app &mdash; GraphScope  documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+
+ 
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4TMYCGJ0X2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-4TMYCGJ0X2');
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> GraphScope
+          </a>
+              <div class="version">
+                v0.17.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div>
+  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+    
+      
+      
+        
+          
+        
+      
+      
+        <p class="caption"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../graph_transformation.html">Graph Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../interactive_engine.html">GraphScope Interactive Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../persistent_graph_store.html">Persistent Graph Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../frequently_asked_questions.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer_guide.html">Developer Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/python_index.html">Python API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
+</ul>
+
+      
+    
+  </div>
+
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">GraphScope</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      <li>graphscope.analytical.app.java_app</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for graphscope.analytical.app.java_app</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright 2020 Alibaba Group Holding Limited. All Rights Reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">hashlib</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">zipfile</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span> <span class="nn">yaml</span>
+
+<span class="kn">from</span> <span class="nn">graphscope.analytical.udf.utils</span> <span class="kn">import</span> <span class="n">InMemoryZip</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">AppAssets</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">AppDAGNode</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">check_argument</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.context</span> <span class="kn">import</span> <span class="n">create_context_node</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.dag</span> <span class="kn">import</span> <span class="n">DAGNode</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="kn">import</span> <span class="n">bind_app</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="kn">import</span> <span class="n">InvalidArgumentError</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.graph</span> <span class="kn">import</span> <span class="n">Graph</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.utils</span> <span class="kn">import</span> <span class="n">get_tempdir</span>
+<span class="kn">from</span> <span class="nn">graphscope.proto</span> <span class="kn">import</span> <span class="n">graph_def_pb2</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;JavaApp&quot;</span><span class="p">]</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;graphscope&quot;</span><span class="p">)</span>
+
+<span class="c1"># runtime workspace</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">WORKSPACE</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;GRAPHSCOPE_RUNTIME&quot;</span><span class="p">]</span>
+<span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+    <span class="n">WORKSPACE</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">get_tempdir</span><span class="p">(),</span> <span class="s2">&quot;gs&quot;</span><span class="p">)</span>
+<span class="n">DEFAULT_GS_CONFIG_FILE</span> <span class="o">=</span> <span class="s2">&quot;.gs_conf.yaml&quot;</span>
+
+<span class="n">POSSIBLE_APP_TYPES</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;default_property&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;parallel_property&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;default_simple&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;parallel_simple&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">_parse_user_app</span><span class="p">(</span><span class="n">java_app_class</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">java_jar_full_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="n">_java_app_type</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">_frag_param_str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">_java_inner_context_type</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">_java_executable</span> <span class="o">=</span> <span class="s2">&quot;java&quot;</span>
+    <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;java&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;JAVA_HOME&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_java_executable</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;JAVA_HOME&quot;</span><span class="p">),</span> <span class="s2">&quot;bin&quot;</span><span class="p">,</span> <span class="s2">&quot;java&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">_java_executable</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">access</span><span class="p">(</span>
+            <span class="n">_java_executable</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">X_OK</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Java executable not found, you shall install a java runtime.&quot;</span>
+            <span class="p">)</span>
+    <span class="n">parse_user_app_cmd</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">_java_executable</span><span class="p">,</span>
+        <span class="s2">&quot;-cp&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">java_jar_full_path</span><span class="p">),</span>
+        <span class="s2">&quot;com.alibaba.graphscope.utils.AppBaseParser&quot;</span><span class="p">,</span>
+        <span class="n">java_app_class</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parse_user_app_cmd</span><span class="p">))</span>
+    <span class="n">parse_user_app_process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
+        <span class="n">parse_user_app_cmd</span><span class="p">,</span>
+        <span class="n">env</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+        <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span>
+        <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;replace&quot;</span><span class="p">,</span>
+        <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+        <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+        <span class="n">universal_newlines</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">bufsize</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">out</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">parse_user_app_process</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="n">err</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;DefaultPropertyApp&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">_java_app_type</span> <span class="o">=</span> <span class="s2">&quot;default_property&quot;</span>
+        <span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;ParallelPropertyApp&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">_java_app_type</span> <span class="o">=</span> <span class="s2">&quot;parallel_property&quot;</span>
+        <span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;DefaultAppBase&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">_java_app_type</span> <span class="o">=</span> <span class="s2">&quot;default_simple&quot;</span>
+        <span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;ParallelAppBase&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">_java_app_type</span> <span class="o">=</span> <span class="s2">&quot;parallel_simple&quot;</span>
+        <span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;Error&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Error occured in verifying user app&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;TypeParams&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">_frag_param_str</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;ContextType&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">_java_inner_context_type</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="s2">&quot;Java app type: </span><span class="si">{}</span><span class="s2">, frag type str: </span><span class="si">{}</span><span class="s2">, ctx type: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">_java_app_type</span><span class="p">,</span> <span class="n">_frag_param_str</span><span class="p">,</span> <span class="n">_java_inner_context_type</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">parse_user_app_process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">_java_app_type</span><span class="p">,</span> <span class="n">_frag_param_str</span><span class="p">,</span> <span class="n">_java_inner_context_type</span>
+
+
+<span class="k">def</span> <span class="nf">_type_param_consistent</span><span class="p">(</span><span class="n">graph_actucal_type_param</span><span class="p">,</span> <span class="n">java_app_type_param</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">java_app_type_param</span> <span class="o">==</span> <span class="s2">&quot;java.lang.Long&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">graph_actucal_type_param</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;uint64_t&quot;</span><span class="p">,</span> <span class="s2">&quot;int64_t&quot;</span><span class="p">}:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">java_app_type_param</span> <span class="o">==</span> <span class="s2">&quot;java.lang.Double&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">graph_actucal_type_param</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;double&quot;</span><span class="p">}:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">java_app_type_param</span> <span class="o">==</span> <span class="s2">&quot;java.lang.Integer&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">graph_actucal_type_param</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;int32_t&quot;</span><span class="p">,</span> <span class="s2">&quot;uint32_t&quot;</span><span class="p">}:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">False</span>
+
+
+<div class="viewcode-block" id="JavaApp"><a class="viewcode-back" href="../../../../reference/app.html#graphscope.analytical.app.JavaApp">[docs]</a><span class="k">class</span> <span class="nc">JavaApp</span><span class="p">(</span><span class="n">AppAssets</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A class represents a java app assert node in a DAG that holds the jar file.</span>
+
+<span class="sd">    It holds neccessary resouces to run a java app, including java class path, the gar</span>
+<span class="sd">    file which consists jar and configuration yaml, and the specified java class.</span>
+<span class="sd">    On creating a JavaApp, graphscope will try to load the specified java class, and parse</span>
+<span class="sd">    the Base class for your app, and the base class for your Context Class. This operation</span>
+<span class="sd">    requires a java runtime environment installed in your client machine where your graphscope</span>
+<span class="sd">    session is created.</span>
+
+<span class="sd">    To run your app, provide `JavaApp` with a property or projected graph and your querying args.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="JavaApp.__init__"><a class="viewcode-back" href="../../../../reference/app.html#graphscope.analytical.app.JavaApp.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">full_jar_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">java_app_class</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Init JavaApp with the full path of your `jar` file and the fully-qualified name of your</span>
+<span class="sd">        app class.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            full_jar_path (str): The path where the jar file exists.</span>
+<span class="sd">            java_app_class (str): the fully-qualified name of your app class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_java_app_class</span> <span class="o">=</span> <span class="n">java_app_class</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_full_jar_path</span> <span class="o">=</span> <span class="n">full_jar_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_jar_name</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_full_jar_path</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">gar</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pack_jar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_full_jar_path</span><span class="p">)</span>
+        <span class="n">gs_config</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;app&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;algo&quot;</span><span class="p">:</span> <span class="s2">&quot;java_app&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;java_pie&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;java_jar_path&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_full_jar_path</span><span class="p">,</span>
+                    <span class="s2">&quot;java_app_class&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">java_app_class</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">]</span>
+        <span class="p">}</span>
+        <span class="c1"># extract java app type with help of java class.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_java_app_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frag_param_str</span><span class="p">,</span> <span class="n">_java_ctx_type</span> <span class="o">=</span> <span class="n">_parse_user_app</span><span class="p">(</span>
+            <span class="n">java_app_class</span><span class="p">,</span> <span class="n">full_jar_path</span>
+        <span class="p">)</span>
+        <span class="c1"># For four different java type, we use two different driver class</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_java_app_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">POSSIBLE_APP_TYPES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Unexpected app type: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_java_app_type</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_java_app_type</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;property&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">gs_config</span><span class="p">[</span><span class="s2">&quot;app&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;compatible_graph&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;vineyard::ArrowFragment&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">gs_config</span><span class="p">[</span><span class="s2">&quot;app&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;compatible_graph&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;gs::ArrowProjectedFragment&quot;</span><span class="p">]</span>
+
+        <span class="n">gs_config</span><span class="p">[</span><span class="s2">&quot;app&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;context_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_java_ctx_type</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_java_app_type</span> <span class="o">==</span> <span class="s2">&quot;default_property&quot;</span><span class="p">:</span>
+            <span class="n">gs_config</span><span class="p">[</span><span class="s2">&quot;app&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span>
+                <span class="s2">&quot;driver_header&quot;</span>
+            <span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;apps/java_pie/java_pie_property_default_app.h&quot;</span>
+            <span class="n">gs_config</span><span class="p">[</span><span class="s2">&quot;app&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;class_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;gs::JavaPIEPropertyDefaultApp&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_java_app_type</span> <span class="o">==</span> <span class="s2">&quot;parallel_property&quot;</span><span class="p">:</span>
+            <span class="n">gs_config</span><span class="p">[</span><span class="s2">&quot;app&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span>
+                <span class="s2">&quot;driver_header&quot;</span>
+            <span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;apps/java_pie/java_pie_property_parallel_app.h&quot;</span>
+            <span class="n">gs_config</span><span class="p">[</span><span class="s2">&quot;app&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;class_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;gs::JavaPIEPropertyParallelApp&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_java_app_type</span> <span class="o">==</span> <span class="s2">&quot;default_simple&quot;</span><span class="p">:</span>
+            <span class="n">gs_config</span><span class="p">[</span><span class="s2">&quot;app&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span>
+                <span class="s2">&quot;driver_header&quot;</span>
+            <span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;apps/java_pie/java_pie_projected_default_app.h&quot;</span>
+            <span class="n">gs_config</span><span class="p">[</span><span class="s2">&quot;app&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;class_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;gs::JavaPIEProjectedDefaultApp&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_java_app_type</span> <span class="o">==</span> <span class="s2">&quot;parallel_simple&quot;</span><span class="p">:</span>
+            <span class="n">gs_config</span><span class="p">[</span><span class="s2">&quot;app&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span>
+                <span class="s2">&quot;driver_header&quot;</span>
+            <span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;apps/java_pie/java_pie_projected_parallel_app.h&quot;</span>
+            <span class="n">gs_config</span><span class="p">[</span><span class="s2">&quot;app&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;class_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;gs::JavaPIEProjectedParallelApp&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s2">&quot;Unrecognizable java app type: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_java_app_type</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="n">gar</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">DEFAULT_GS_CONFIG_FILE</span><span class="p">,</span> <span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">gs_config</span><span class="p">))</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="s2">&quot;java_app&quot;</span><span class="p">,</span> <span class="n">_java_ctx_type</span><span class="p">,</span> <span class="n">gar</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">())</span></div>
+
+    <span class="c1"># Override is_compatible to make sure type params of graph consists with java app.</span>
+<div class="viewcode-block" id="JavaApp.is_compatible"><a class="viewcode-back" href="../../../../reference/app.html#graphscope.analytical.app.JavaApp.is_compatible">[docs]</a>    <span class="k">def</span> <span class="nf">is_compatible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+        <span class="n">splited</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">template_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&lt;&quot;</span><span class="p">)</span>
+        <span class="n">java_app_type_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frag_param_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+        <span class="n">num_type_params</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">splited</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s2">&quot;Unrecoginizable graph template str: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">template_str</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">splited</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;vineyard::ArrowFragment&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">java_app_type</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;property&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Expected property app&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">java_app_type_params</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Expected one type params.&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="n">num_type_params</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">splited</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;gs::ArrowProjectedFragment&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">java_app_type</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;simple&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Expected simple app&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">java_app_type_params</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Expected 4 type params&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="n">num_type_params</span> <span class="o">=</span> <span class="mi">4</span>
+        <span class="n">graph_actual_type_params</span> <span class="o">=</span> <span class="n">splited</span><span class="p">[</span><span class="mi">1</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_type_params</span><span class="p">):</span>
+            <span class="n">graph_actual_type_param</span> <span class="o">=</span> <span class="n">graph_actual_type_params</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">java_app_type_param</span> <span class="o">=</span> <span class="n">java_app_type_params</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">_type_param_consistent</span><span class="p">(</span><span class="n">graph_actual_type_param</span><span class="p">,</span> <span class="n">java_app_type_param</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+    <span class="k">def</span> <span class="nf">_pack_jar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">full_jar_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">garfile</span> <span class="o">=</span> <span class="n">InMemoryZip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">full_jar_path</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;Jar file not found in </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">full_jar_path</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">full_jar_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.jar&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">is_zipfile</span><span class="p">(</span><span class="n">full_jar_path</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> is not a jar file, please feed your packed jar file to JavaApp.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">full_jar_path</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="n">tmp_jar_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">full_jar_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span>
+        <span class="n">jar_bytes</span> <span class="o">=</span> <span class="n">tmp_jar_file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">jar_bytes</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Expect a non-empty Jar.&quot;</span><span class="p">)</span>
+        <span class="n">garfile</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">full_jar_path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="n">jar_bytes</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">garfile</span>
+
+<div class="viewcode-block" id="JavaApp.signature"><a class="viewcode-back" href="../../../../reference/app.html#graphscope.analytical.app.JavaApp.signature">[docs]</a>    <span class="k">def</span> <span class="nf">signature</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">()</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_full_jar_path</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">java_app_class</span><span class="si">}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gar</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">java_app_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_java_app_class</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">jar_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jar_name</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">java_app_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_java_app_type</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">frag_param_str</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frag_param_str</span>
+
+<div class="viewcode-block" id="JavaApp.__call__"><a class="viewcode-back" href="../../../../reference/app.html#graphscope.analytical.app.JavaApp.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">Graph</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">kwargs_extend</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">app_class</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">java_app_class</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="s2">&quot;graph_type&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;Missing graph_type attribute in graph object.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">java_app_type</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;simple&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="ow">and</span> <span class="n">graph</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span>
+        <span class="p">):</span>
+            <span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">_project_to_simple</span><span class="p">()</span>
+        <span class="n">app_</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="n">JavaAppDagNode</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">app_</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs_extend</span><span class="p">)</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">JavaAppDagNode</span><span class="p">(</span><span class="n">AppDAGNode</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;retrict app assets to javaAppAssets&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">Graph</span><span class="p">,</span> <span class="n">app_assets</span><span class="p">:</span> <span class="n">JavaApp</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="n">graph</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_app_assets</span> <span class="o">=</span> <span class="n">app_assets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">session</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_app_assets</span><span class="o">.</span><span class="n">is_compatible</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s2">&quot;No compactiable app and graph: </span><span class="si">{}</span><span class="s2"> and </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_app_assets</span><span class="o">.</span><span class="n">java_app_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">template_str</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">bind_app</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_app_assets</span><span class="p">)</span>
+        <span class="c1"># add op to dag</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">add_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_app_assets</span><span class="o">.</span><span class="n">op</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">add_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_convert_arrow_frag_for_java</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cpp_frag_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert vineyard::ArrowFragment&lt;OID,VID&gt; to gs::ArrowFragmentDefault&lt;OID&gt;&quot;&quot;&quot;</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">cpp_frag_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;&gt;&quot;</span>
+        <span class="k">return</span> <span class="n">res</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&lt;&quot;</span><span class="p">,</span> <span class="s2">&quot;Default&lt;&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;vineyard&quot;</span><span class="p">,</span> <span class="s2">&quot;gs&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;When called, check arguments based on app type, Then do build and query.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            InvalidArgumentError: If app_type is None,</span>
+<span class="sd">                or positional argument found when app_type not `cpp_pie`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            :class:`Context`: Query context, include running results of the app.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_argument</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_app_assets</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;java_pie&quot;</span><span class="p">,</span> <span class="s2">&quot;expect java_pie app&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="n">DAGNode</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">loaded</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;The graph is not loaded&quot;</span><span class="p">)</span>
+        <span class="n">check_argument</span><span class="p">(</span><span class="ow">not</span> <span class="n">args</span><span class="p">,</span> <span class="s2">&quot;Only support using keyword arguments in cython app.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_app_assets</span><span class="o">.</span><span class="n">java_app_type</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;property&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">frag_name_for_java</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_arrow_frag_for_java</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">template_str</span>
+            <span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;Set frag name to </span><span class="si">{}</span><span class="s2">, </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">template_str</span><span class="p">,</span> <span class="n">frag_name_for_java</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">frag_name_for_java</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">template_str</span>
+        <span class="c1"># get number of worker on each host, so we can determine the java memory settings.</span>
+        <span class="n">kwargs_extend</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">frag_name</span><span class="o">=</span><span class="n">frag_name_for_java</span><span class="p">,</span>
+            <span class="n">jar_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_app_assets</span><span class="o">.</span><span class="n">jar_name</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;dumping to json </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">kwargs_extend</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">create_context_node</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_app_assets</span><span class="o">.</span><span class="n">context_type</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">kwargs_extend</span><span class="p">)</span>
+        <span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020-2023, DAMO Academy, Alibaba Inc..</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.17.0
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../../../../../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.17.0/index.html">v0.17.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.16.0/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.15.0/index.html">v0.15.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.14.0/index.html">v0.14.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.13.0/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.12.0/index.html">v0.12.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.11.0/index.html">v0.11.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.10.1/index.html">v0.10.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.10.0/index.html">v0.10.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.9.1/index.html">v0.9.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.9.0/index.html">v0.9.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.8.0/index.html">v0.8.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.7.0/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.6.1/index.html">v0.6.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.6.0/index.html">v0.6.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.5.0/index.html">v0.5.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.4.0/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.3.0/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="../../../../index.html">en</a></dd>
+        <dd><a href="../../../../zh/index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>

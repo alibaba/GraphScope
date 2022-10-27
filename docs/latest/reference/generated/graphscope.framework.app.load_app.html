@@ -151,18 +151,19 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.framework.app.load_app">
 <span class="sig-prename descclassname"><span class="pre">graphscope.framework.app.</span></span><span class="sig-name descname"><span class="pre">load_app</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">algo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/framework/app.html#load_app"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.load_app" title="Permalink to this definition"></a></dt>
-<dd><p>Load an app from gar.
-bytes or the resource of the specified path or bytes.</p>
+<dd><p>Load an app from gar.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>algo</strong> – str
 Algo name inside resource. None will extract name from gar resource
 if there is only one app in it.</p></li>
-<li><p><strong>gar</strong> – bytes or BytesIO or str
-str represent the path of resource.
-for java apps, gar can be none to indicate we should find the app in
-previouse added libs.</p></li>
+<li><p><strong>gar</strong> – <p>bytes or BytesIO or str
+str represent the path of resource, bytes or the resource of the
+specified path or bytes.</p>
+<p>For java apps, gar can be none to indicate we should find the app in
+previouse added libs.</p>
+</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -261,6 +262,16 @@ compatible_graph:</p>
             
               
                 <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.17.0/index.html">v0.17.0</a></dd>
               
             
 

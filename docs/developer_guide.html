@@ -225,6 +225,13 @@ the script is supported on the following 64-bit systems:</p>
 - fastFFI (for grape-jdk)</p>
 <p>First, you need to <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span></code> the latest version of code from our <a class="reference external" href="https://github.com/alibaba/GraphScope">repo</a>
 and run the command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope
+./scripts/install_deps.sh --dev
+
+<span class="c1"># With argument --cn to speed up the download if you are in China.</span>
+./scripts/install_deps.sh --dev --cn
+</pre></div>
+</div>
 <p>The <cite>install_deps.sh</cite> does not install the grape-jdk dependency <cite>fastFFI</cite> by default.
 If you don’t care about <cite>grape jdk &lt;https://github.com/alibaba/GraphScope/blob/main/analytical_engine/java/README.md&gt;</cite>,
 you can ignore this phase. But if you want to use the grape jdk of GraphScope,
@@ -232,7 +239,7 @@ you need to run the command after install the default dependencies.</p>
 <p>Then you can build GraphScope with pre-configured <cite>make</cite> commands.</p>
 <p><a href="#id3"><span class="problematic" id="id4">``</span></a><a href="#id5"><span class="problematic" id="id6">`</span></a>bash
 # to make graphscope whole package, including python package + engine binaries.
-make graphscope</p>
+make install</p>
 <p># or make the engine components
 # make gie
 # make gae
@@ -356,6 +363,16 @@ for C++ and <a class="reference external" href="https://github.com/psf/black#the
             
               
                 <dd><a href="index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="v0.17.0/index.html">v0.17.0</a></dd>
               
             
 

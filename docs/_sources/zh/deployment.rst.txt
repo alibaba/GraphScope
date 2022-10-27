@@ -54,7 +54,7 @@ Coordinator 作为 GraphScope 后端服务的入口，通过 grpc 接收来自 P
 
 
 使用Helm部署GraphScope
---------------------
+---------------------
 
 获取并添加仓库信息
 
@@ -84,7 +84,8 @@ Coordinator 作为 GraphScope 后端服务的入口，通过 grpc 接收来自 P
 
 
 在AWS/阿里云上部署集群
-------------------------
+-------------------
+
 我们提供了一个可在AWS或阿里云上创建 Kubernetes 集群的交互式脚本。这一脚本可以帮助用户使用已有的集群或创建新的 Kubernetes 集群，然后输出集群的配置文件。
 用法如下。你也可以通过 `./scripts/launch_cluster.py --help` 获得更详细的帮助信息。
 
@@ -102,7 +103,8 @@ Coordinator 作为 GraphScope 后端服务的入口，通过 grpc 接收来自 P
 
 
 本地部署GraphScope
-----------------------
+-----------------
+
 我们提供了一个可在本地安装GraphScope相关依赖的脚本，该脚本可以运行在 Ubuntu 20.04+ 或 MacOS 11.2+ 平台上, 主要的用法如下：
 你可以通过 `./scripts/install_deps.sh -h` 获取更详细的帮助信息。
 
@@ -115,4 +117,4 @@ Coordinator 作为 GraphScope 后端服务的入口，通过 grpc 接收来自 P
 .. code:: shell
 
     source ~/.graphscope_env
-    make graphscope
+    sudo make install

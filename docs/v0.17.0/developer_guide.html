@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Developer Guide &mdash; GraphScope  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Python API Reference" href="reference/python_index.html" />
+    <link rel="prev" title="Frequently Asked Questions" href="frequently_asked_questions.html" />
+
+ 
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4TMYCGJ0X2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-4TMYCGJ0X2');
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> GraphScope
+          </a>
+              <div class="version">
+                v0.17.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div>
+  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+    
+      
+      
+        
+          
+        
+      
+      
+        <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="graph_transformation.html">Graph Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">GraphScope Interactive Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="persistent_graph_store.html">Persistent Graph Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frequently_asked_questions.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Developer Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#building-and-testing-graphscope-locally-with-docker">Building and Testing GraphScope locally with Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#building-and-testing-graphscope-on-kubernetes">Building and Testing GraphScope on Kubernetes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#building-and-testing-graphscope-on-local">Building and Testing GraphScope on local</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#build-python-wheels">Build Python Wheels</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#linux">Linux</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#macos">MacOS</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#code-format">Code Format</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference/python_index.html">Python API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
+</ul>
+
+      
+    
+  </div>
+
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GraphScope</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Developer Guide</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/alibaba/graphscope/edit/main/docs/developer_guide.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="developer-guide">
+<h1>Developer Guide<a class="headerlink" href="#developer-guide" title="Permalink to this headline"></a></h1>
+<p><a class="reference external" href="https://github.com/alibaba/GraphScope">GraphScope</a> has been developed by an active team of
+software engineers and researchers. Any contributions from the open-source community to improve
+this project are greatly appreciated!</p>
+<p>GraphScope is licensed under Apache License 2.0.</p>
+<div class="section" id="building-and-testing-graphscope-locally-with-docker">
+<h2>Building and Testing GraphScope locally with Docker<a class="headerlink" href="#building-and-testing-graphscope-locally-with-docker" title="Permalink to this headline"></a></h2>
+<p>GraphScope has many dependencies. To make life easier, We provide a docker image based on centos7
+with all required dependencies installed.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:latest
+</pre></div>
+</div>
+<p>For developers, they just need to <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span></code> the latest version of code from our <a class="reference external" href="https://github.com/alibaba/GraphScope">repo</a>,
+make their changes to the code and build GraphScope with command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># set docker container shared memory: 10G</span>
+sudo docker run --shm-size 10240m -it registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:latest /bin/bash
+
+git clone https://github.com/alibaba/GraphScope.git
+
+<span class="c1"># download dataset for test</span>
+git clone https://github.com/GraphScope/gstest.git
+
+<span class="c1"># building</span>
+<span class="nb">cd</span> GraphScope <span class="o">&amp;&amp;</span> make install
+
+<span class="c1"># testing</span>
+<span class="nb">cd</span> GraphScope <span class="o">&amp;&amp;</span> make minitest<span class="o">(</span>unittest<span class="o">)</span>
+</pre></div>
+</div>
+<p>If you just change or want to build one of the specific components of graphscope, such as <cite>python client</cite> or <cite>analytical engine</cite>,
+you can run command with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope
+<span class="c1"># make client/gae/gie/gle/coordinator</span>
+make client
+</pre></div>
+</div>
+</div>
+<div class="section" id="building-and-testing-graphscope-on-kubernetes">
+<h2>Building and Testing GraphScope on Kubernetes<a class="headerlink" href="#building-and-testing-graphscope-on-kubernetes" title="Permalink to this headline"></a></h2>
+<p>For developers, they just need to <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span></code> the latest version of code from our <a class="reference external" href="https://github.com/alibaba/GraphScope">repo</a>,
+make their changes to the code and build with command to build graphscope image:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope
+make graphscope-dev-image
+</pre></div>
+</div>
+<p>This command triggers the building process. It will build the current source code in a container with
+image <cite>graphscope-vineyard</cite>, and copy built binaries into a new image based from <cite>graphscope-runtime</cite>.
+The generated releasing image is tagged as <code class="docutils literal notranslate"><span class="pre">graphscope/graphscope:SHORTSHA</span></code></p>
+<p>GraphScope python client is separate with the engines image. If you are developing python client and
+not modifying the proto files, the engines image doesn’t need to rebuild. You may want to reinstall
+the python client on local.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> python
+python3 setup.py install
+</pre></div>
+</div>
+<p>To test the newly built binaries, manually open a session and assigned your image:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
+
+<span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">k8s_gs_image</span><span class="o">=</span><span class="s1">&#39;graphscope/graphscope:SHORTSHA&#39;</span><span class="p">)</span>
+
+<span class="c1"># ...</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="building-and-testing-graphscope-on-local">
+<h2>Building and Testing GraphScope on local<a class="headerlink" href="#building-and-testing-graphscope-on-local" title="Permalink to this headline"></a></h2>
+<p>To build graphscope Python package and the engine binaries, some dependencies and build tools need to be installed.</p>
+<p>To make life easier, we provide a script to install the dependencies and build tools.
+the script is supported on the following 64-bit systems:</p>
+<ul class="simple">
+<li><p>Ubuntu 18.04 or later</p></li>
+<li><p>CentOS 8 or later</p></li>
+<li><p>macOS 11.2.1 (Big Sur) or later, with both Intel chip and Apple M1 chip</p></li>
+</ul>
+<p>The script would install following dependencies or tools which needed by GraphScope building:
+- C++ compiler (gcc or llvm)
+- cmake (&gt;=3.1)
+- java sdk (&gt;=8)
+- maven
+- boost (&gt;=1.66)
+- apache-arrow
+- rust (&gt; 1.52.0)
+- etcd
+- openmpi
+- protobuf
+- grpc
+- libgrape-lite (the core of analytical engine)
+- vineyard
+- fastFFI (for grape-jdk)</p>
+<p>First, you need to <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span></code> the latest version of code from our <a class="reference external" href="https://github.com/alibaba/GraphScope">repo</a>
+and run the command:</p>
+<p>The <cite>install_deps.sh</cite> does not install the grape-jdk dependency <cite>fastFFI</cite> by default.
+If you don’t care about <cite>grape jdk &lt;https://github.com/alibaba/GraphScope/blob/main/analytical_engine/java/README.md&gt;</cite>,
+you can ignore this phase. But if you want to use the grape jdk of GraphScope,
+you need to run the command after install the default dependencies.</p>
+<p>Then you can build GraphScope with pre-configured <cite>make</cite> commands.</p>
+<p><a href="#id3"><span class="problematic" id="id4">``</span></a><a href="#id5"><span class="problematic" id="id6">`</span></a>bash
+# to make graphscope whole package, including python package + engine binaries.
+make graphscope</p>
+<p># or make the engine components
+# make gie
+# make gae
+# make gle
+<a href="#id7"><span class="problematic" id="id8">``</span></a><a href="#id9"><span class="problematic" id="id10">`</span></a></p>
+<p>To test the newly built binaries, manually open a session:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
+
+<span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s2">&quot;hosts&quot;</span><span class="p">)</span>
+
+<span class="c1"># ...</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="build-python-wheels">
+<h2>Build Python Wheels<a class="headerlink" href="#build-python-wheels" title="Permalink to this headline"></a></h2>
+<div class="section" id="linux">
+<h3>Linux<a class="headerlink" href="#linux" title="Permalink to this headline"></a></h3>
+<p>The wheel packages for Linux is built inside the manylinux2014 environment.</p>
+<ul class="simple">
+<li><p>Build GraphScope Server Wheels</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope
+make graphscope-py3-package
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Build GraphScope Client Wheels for python{36,37,38,39}</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope
+make graphscope-client-py3-package
+</pre></div>
+</div>
+</div>
+<div class="section" id="macos">
+<h3>MacOS<a class="headerlink" href="#macos" title="Permalink to this headline"></a></h3>
+<p>The wheel packages for MacOS could be built directly on Mac, thus you need to install the dependent locally first.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope
+./scripts/install_deps.sh --dev --vineyard_prefix /opt/vineyard
+<span class="nb">source</span> ~/.graphscope_env
+</pre></div>
+</div>
+<p>Assuming you are in the root directory of GraphScope repository.</p>
+<ul class="simple">
+<li><p>Build GraphScope Server Wheels</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope
+make graphscope-py3-package
+</pre></div>
+</div>
+<p>Build GraphScope Client Wheels for specified python version.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope
+make graphscope-client-py3-package
+</pre></div>
+</div>
+<p>Note that if you want to build wheel packages for different Python versions, you may need to install multiple
+version of Python using <a class="reference external" href="https://docs.conda.io/en/latest/">conda</a> or <a class="reference external" href="https://github.com/pyenv/pyenv">pyenv</a>.</p>
+</div>
+</div>
+<div class="section" id="code-format">
+<h2>Code Format<a class="headerlink" href="#code-format" title="Permalink to this headline"></a></h2>
+<p>GraphScope follows the <a class="reference external" href="https://google.github.io/styleguide/cppguide.html">Google Style Guide</a>
+for C++ and <a class="reference external" href="https://github.com/psf/black#the-black-code-style">black</a> for python.</p>
+<p>Please reformat your code with <code class="docutils literal notranslate"><span class="pre">clang-format</span></code> and <code class="docutils literal notranslate"><span class="pre">black</span></code> if your Pull Request violates the CI.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="frequently_asked_questions.html" class="btn btn-neutral float-left" title="Frequently Asked Questions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="reference/python_index.html" class="btn btn-neutral float-right" title="Python API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020-2023, DAMO Academy, Alibaba Inc..</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.17.0
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.17.0/index.html">v0.17.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.16.0/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.15.0/index.html">v0.15.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.14.0/index.html">v0.14.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.13.0/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.12.0/index.html">v0.12.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.11.0/index.html">v0.11.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.10.1/index.html">v0.10.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.10.0/index.html">v0.10.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.9.1/index.html">v0.9.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.9.0/index.html">v0.9.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.8.0/index.html">v0.8.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.7.0/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.6.1/index.html">v0.6.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.6.0/index.html">v0.6.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.5.0/index.html">v0.5.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.4.0/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.3.0/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="index.html">en</a></dd>
+        <dd><a href="zh/index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>

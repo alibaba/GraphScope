@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Persistent Graph Store &mdash; GraphScope  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Frequently Asked Questions" href="frequently_asked_questions.html" />
+    <link rel="prev" title="GraphScope Learning Engine" href="learning_engine.html" />
+
+ 
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4TMYCGJ0X2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-4TMYCGJ0X2');
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> GraphScope
+          </a>
+              <div class="version">
+                v0.17.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div>
+  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+    
+      
+      
+        
+          
+        
+      
+      
+        <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="graph_transformation.html">Graph Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">GraphScope Interactive Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Persistent Graph Store</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#known-limitation">Known Limitation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#deploying-store-service">Deploying Store Service</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#installing-the-chart">Installing the Chart</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#get-graphscope-store-endpoint">Get GraphScope Store Endpoint</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#uninstalling-the-chart">Uninstalling the Chart</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#parameters">Parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#common-parameters">Common parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#statefulset-parameters">Statefulset parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#kafka-chart-parameters">Kafka chart parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#configuration">Configuration</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#defining-graph-schema">Defining Graph Schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-gremlin-queries">Running Gremlin Queries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#realtime-write">Realtime Write</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bulk-loading">Bulk Loading</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#prequisities">Prequisities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#get-binary">Get Binary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#data-format">Data Format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#loading-process">Loading Process</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#building-a-partitioned-graph">1. Building a partitioned graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#loading-graph-partitions">2. Loading graph partitions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#commit-to-store-service">3. Commit to store service</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="frequently_asked_questions.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference/python_index.html">Python API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
+</ul>
+
+      
+    
+  </div>
+
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GraphScope</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Persistent Graph Store</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/alibaba/graphscope/edit/main/docs/persistent_graph_store.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="persistent-graph-store">
+<h1>Persistent Graph Store<a class="headerlink" href="#persistent-graph-store" title="Permalink to this headline"></a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline"></a></h2>
+<p>In addition to Vineyard, the in-memory columnar graph store currently supported in GraphScope, we introduced a new disk-based row-oriented multi-versioned persistent graph store, from the version v0.5. While Vineyard focuses on great support for in-memory whole graph analytics workload, the new persistent graph store is geared towards better supporting for running continuous graph data management service that frequently updates the graph and answers traversal queries.</p>
+<p>The store is a distributed graph store built on top of the popular RocksDB key value store. It adopts row-oriented design to support frequent small updates to the graph. Each row is tagged with a snapshot ID as its version. A query reads most recent version of rows relative to the snapshot ID when it starts and hence not blocked by writes. For writes we take a compromise between consistency and higher throughput. In our design writes in the same session can be grouped and executed atomically as a unit and the persistent store assigns a snapshot ID (which is a low-resolution timestamp of current time) to each group and executes groups of writes by the order of their snapshot IDs and by a deterministic (though arbitrary) order for groups of writes that occur in the same snapshot ID. It provides high write throughput while still with some degree of order and isolation though it provides less consistency than strict snapshot isolation common in database. We hope our design choice provides an interesting trade-off for practical usage.</p>
+<div class="section" id="known-limitation">
+<h3>Known Limitation<a class="headerlink" href="#known-limitation" title="Permalink to this headline"></a></h3>
+<ul class="simple">
+<li><p>Initially, the new persistent store is provided as a separate option from Vineyard, and it can accept Gremlin queries for data access. Going foward we hope to evolve them into an integrated hybrid graph store suitable for all kinds of workloads.</p></li>
+<li><p>In the v0.5 release, data can only be loaded into the store in a bulk fashion. APIs for real-time updates (inserts and deletes of individual vertices and egdes) has been added in the v0.7 release.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="deploying-store-service">
+<h2>Deploying Store Service<a class="headerlink" href="#deploying-store-service" title="Permalink to this headline"></a></h2>
+<p>This chart bootstraps a <a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/interactive_engine/groot/src/main/java/com/alibaba/graphscope/groot">GraphScope Store</a> cluster deployment on a <a class="reference external" href="http://kubernetes.io">Kubernetes</a> cluster using the <a class="reference external" href="https://helm.sh">Helm</a> package manager.</p>
+<div class="section" id="prerequisites">
+<h3>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline"></a></h3>
+<ul class="simple">
+<li><p>Kubernetes 1.12+</p></li>
+<li><p>Helm 3.1.0</p></li>
+<li><p>PersistentVolume(PV) provisioner support in the underlying infrastructure</p></li>
+</ul>
+</div>
+<div class="section" id="installing-the-chart">
+<h3>Installing the Chart<a class="headerlink" href="#installing-the-chart" title="Permalink to this headline"></a></h3>
+<p>To install the chart with the release name <cite>my-release</cite>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ helm repo add graphscope https://graphscope.oss-cn-beijing.aliyuncs.com/charts/
+$ helm install my-release graphscope/graphscope-store
+</pre></div>
+</div>
+<p>These commands deploy GraphScope Store on the Kubernetes cluster in the default configuration. The <a class="reference internal" href="#parameters"><span class="std std-ref">Parameters</span></a> section lists the parameters that can be configured during installation.</p>
+<p>Tip: List all releases using <cite>helm list</cite></p>
+</div>
+<div class="section" id="get-graphscope-store-endpoint">
+<h3>Get GraphScope Store Endpoint<a class="headerlink" href="#get-graphscope-store-endpoint" title="Permalink to this headline"></a></h3>
+<p>Note that it may take a few minutes for pulling image at first time, you can watch the status by running <cite>helm test</cite> many times.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># After installation, you can check service availability by:</span>
+$ helm <span class="nb">test</span> my-release
+
+<span class="c1"># Default, with kubernetes `NodePort` service type, you can get service endpoint by:</span>
+$ <span class="nb">export</span> <span class="nv">NODE_IP</span><span class="o">=</span><span class="k">$(</span>kubectl get nodes --namespace default -o <span class="nv">jsonpath</span><span class="o">=</span><span class="s2">&quot;{.items[0].status.addresses[0].address}&quot;</span><span class="k">)</span>
+$ <span class="nb">export</span> <span class="nv">GRPC_PORT</span><span class="o">=</span><span class="k">$(</span>kubectl get --namespace default -o <span class="nv">jsonpath</span><span class="o">=</span><span class="s2">&quot;{.spec.ports[0].nodePort}&quot;</span> services my-release-graphscope-store-frontend<span class="k">)</span>
+$ <span class="nb">export</span> <span class="nv">GREMLIN_PORT</span><span class="o">=</span><span class="k">$(</span>kubectl get --namespace default -o <span class="nv">jsonpath</span><span class="o">=</span><span class="s2">&quot;{.spec.ports[1].nodePort}&quot;</span> services my-release-graphscope-store-frontend<span class="k">)</span>
+$ <span class="nb">echo</span> <span class="s2">&quot;GRPC endpoint is: </span><span class="si">${</span><span class="nv">NODE_IP</span><span class="si">}</span><span class="s2">:</span><span class="si">${</span><span class="nv">GRPC_PORT</span><span class="si">}</span><span class="s2">&quot;</span>
+$ <span class="nb">echo</span> <span class="s2">&quot;GREMLIN endpoint is: </span><span class="si">${</span><span class="nv">NODE_IP</span><span class="si">}</span><span class="s2">:</span><span class="si">${</span><span class="nv">GREMLIN_PORT</span><span class="si">}</span><span class="s2">&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="uninstalling-the-chart">
+<h3>Uninstalling the Chart<a class="headerlink" href="#uninstalling-the-chart" title="Permalink to this headline"></a></h3>
+<p>To uninstall/delete the <cite>my-release</cite> deployment:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ helm delete my-release
+</pre></div>
+</div>
+<p>The command removes all the Kubernetes components associated with the chart and deletes the release.</p>
+<p>Note: The PersistentVolume remains even after the release was uninstalled. To delete the PV manually:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ kubectl delete pvc -l app.kubernetes.io/instance<span class="o">=</span>my-release
+</pre></div>
+</div>
+</div>
+<div class="section" id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Permalink to this headline"></a></h3>
+<p>Here we give a list of most frequently used parameters.</p>
+<div class="section" id="common-parameters">
+<h4>Common parameters<a class="headerlink" href="#common-parameters" title="Permalink to this headline"></a></h4>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 45%" />
+<col style="width: 36%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>image.registry</p></td>
+<td><p>Docker image registry</p></td>
+<td><p>registry.cn-hongkong.aliyuncs.com</p></td>
+</tr>
+<tr class="row-odd"><td><p>image.repository</p></td>
+<td><p>Docker image repository</p></td>
+<td><p>graphscope/graphscope-store</p></td>
+</tr>
+<tr class="row-even"><td><p>image.tag</p></td>
+<td><p>Docker image tag</p></td>
+<td><p>“”</p></td>
+</tr>
+<tr class="row-odd"><td><p>image.pullPolicy</p></td>
+<td><p>Docker image pull policy</p></td>
+<td><p>IfNotPresent</p></td>
+</tr>
+<tr class="row-even"><td><p>image.pullSecrets</p></td>
+<td><p>Docker-registry secrets</p></td>
+<td><p>[]</p></td>
+</tr>
+<tr class="row-odd"><td><p>clusterDomain</p></td>
+<td><p>Default Kubernetes cluster domain</p></td>
+<td><p>cluster.local</p></td>
+</tr>
+<tr class="row-even"><td><p>commonLabels</p></td>
+<td><p>Labels to add to all deployed objects</p></td>
+<td><p>{}</p></td>
+</tr>
+<tr class="row-odd"><td><p>commonAnnotations</p></td>
+<td><p>Annotations to add to all deployed objects</p></td>
+<td><p>{}</p></td>
+</tr>
+<tr class="row-even"><td><p>executor</p></td>
+<td><p>Executor type, “maxgraph” or “gaia”</p></td>
+<td><p>maxgraph</p></td>
+</tr>
+<tr class="row-odd"><td><p>javaOpts</p></td>
+<td><p>Java options</p></td>
+<td><p>“”</p></td>
+</tr>
+<tr class="row-even"><td><p>auth.username</p></td>
+<td><p>Username</p></td>
+<td><p>“”</p></td>
+</tr>
+<tr class="row-odd"><td><p>auth.password</p></td>
+<td><p>Password</p></td>
+<td><p>“”</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="statefulset-parameters">
+<h4>Statefulset parameters<a class="headerlink" href="#statefulset-parameters" title="Permalink to this headline"></a></h4>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 28%" />
+<col style="width: 37%" />
+<col style="width: 34%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>image.registry</p></td>
+<td><p>Docker image registry</p></td>
+<td><p>registry.cn-hongkong.aliyuncs.com</p></td>
+</tr>
+<tr class="row-odd"><td><p>store.replicaCount</p></td>
+<td><p>Number of nodes</p></td>
+<td><p>2</p></td>
+</tr>
+<tr class="row-even"><td><p>store.updateStrategy</p></td>
+<td><p>Update strategy for the store</p></td>
+<td><p>RollingUpdate</p></td>
+</tr>
+<tr class="row-odd"><td><p>frontend.replicaCount</p></td>
+<td><p>Number of nodes</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p>frontend.updateStrategy</p></td>
+<td><p>Update strategy for the frontend</p></td>
+<td><p>RollingUpdate</p></td>
+</tr>
+<tr class="row-odd"><td><p>frontend.service.type</p></td>
+<td><p>Kubernetes service type</p></td>
+<td><p>NodePort</p></td>
+</tr>
+<tr class="row-even"><td><p>ingestor.replicaCount</p></td>
+<td><p>Number of nodes</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p>ingestor.updateStrategy</p></td>
+<td><p>Update strategy for the ingestor</p></td>
+<td><p>RollingUpdate</p></td>
+</tr>
+<tr class="row-even"><td><p>coordinator.replicaCount</p></td>
+<td><p>Number of nodes</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p>coordinator.updateStrategy</p></td>
+<td><p>Update strategy for the coordinator</p></td>
+<td><p>RollingUpdate</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="kafka-chart-parameters">
+<h4>Kafka chart parameters<a class="headerlink" href="#kafka-chart-parameters" title="Permalink to this headline"></a></h4>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 62%" />
+<col style="width: 9%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>kafka.enabled</p></td>
+<td><p>Switch to enable or disable the Kafka helm chart</p></td>
+<td><p>true</p></td>
+</tr>
+<tr class="row-odd"><td><p>kafka.replicaCount</p></td>
+<td><p>Number of Kafka nodes</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p>externalKafka.servers</p></td>
+<td><p>Server or list of external Kafka servers to use</p></td>
+<td><p>[]</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="configuration">
+<h3>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline"></a></h3>
+<p>See <a class="reference external" href="https://helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing">Customizing the Chart Before Installing</a>. To see all configurable options with detailed comments, visit the chart’s <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/charts/graphscope-store/values.yaml">values.yaml</a>, or run these configuration commands:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ helm show values graphscope/graphscope-store
+</pre></div>
+</div>
+<p>Specify each parameter using the <cite>–set key=value[,key=value]</cite> argument to <cite>helm install</cite>. For example,</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ helm install my-release <span class="se">\</span>
+  --set image.tag<span class="o">=</span>latest graphscope/graphscope-store
+</pre></div>
+</div>
+<p>Add multiple extra config to the component which is defined in the configmap by <cite>–set extraConfig=k1=v1;k2=v2</cite>. Note we use <cite>;</cite> to seperate config items. For example,</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ helm install my-release <span class="se">\</span>
+  --set <span class="nv">extraConfig</span><span class="o">=</span><span class="nv">k1</span><span class="o">=</span>v1<span class="p">;</span><span class="nv">k2</span><span class="o">=</span>v2 graphscope/graphscope-store
+</pre></div>
+</div>
+<p>Alternatively, a YAML file that specifies the values for the parameters can be provided while installing the chart. For example,</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ helm install my-release -f values.yaml graphscope/graphscope-store
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="defining-graph-schema">
+<h2>Defining Graph Schema<a class="headerlink" href="#defining-graph-schema" title="Permalink to this headline"></a></h2>
+<p>After we deployed a cluster, there is an empty graph inside, we can then use the Python API to get the graph, and define schema over the graph, then we can load data according to that schema.</p>
+<p>In the previous step we have the IP of the cluster, and the GRPC port and GREMLIN port, we can use these to setup a connection like this</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="n">node_ip</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;NODE_IP&quot;</span><span class="p">]</span>
+<span class="n">grpc_port</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;GRPC_PORT&quot;</span><span class="p">]</span>
+<span class="n">gremlin_port</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;GREMLIN_PORT&quot;</span><span class="p">]</span>
+<span class="n">grpc_endpoint</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node_ip</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">grpc_port</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="n">gremlin_endpoint</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node_ip</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">gremlin_port</span><span class="si">}</span><span class="s2">&quot;</span>
+
+<span class="n">conn</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">conn</span><span class="p">(</span><span class="n">grpc_endpoint</span><span class="p">,</span> <span class="n">gremlin_endpoint</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Then we get the graph and graph schema</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="c1"># Create schema</span>
+<span class="n">schema</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The schema have defined several method</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">schema</span><span class="o">.</span><span class="n">add_vertex_label</span><span class="p">(</span><span class="s1">&#39;v_label_name&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">add_primary_key</span><span class="p">(</span><span class="s1">&#39;primary_key_name&#39;</span><span class="p">,</span> <span class="s1">&#39;property_type&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">property</span><span class="p">(</span><span class="s1">&#39;property_name_1&#39;</span><span class="p">,</span> <span class="s1">&#39;property_type&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">property</span><span class="p">(</span><span class="s1">&#39;property_name_2&#39;</span><span class="p">,</span> <span class="s1">&#39;property_type&#39;</span><span class="p">)</span>
+<span class="n">schema</span><span class="o">.</span><span class="n">add_edge_label</span><span class="p">(</span><span class="s1">&#39;e_label_name&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">source</span><span class="p">(</span><span class="s1">&#39;source_label&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">destination</span><span class="p">(</span><span class="s1">&#39;destination_label&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">property</span><span class="p">(</span><span class="s1">&#39;property_name_3&#39;</span><span class="p">,</span> <span class="s1">&#39;property_type&#39;</span><span class="p">)</span>
+<span class="n">schema</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+<span class="n">schema</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;label&#39;</span><span class="p">)</span>
+<span class="n">schema</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;label&#39;</span><span class="p">,</span> <span class="s1">&#39;src_label&#39;</span><span class="p">,</span> <span class="s1">&#39;dst_label&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here the <cite>label_name</cite>, <cite>primary_key_name</cite>, <cite>property_type</cite> is specified by user, the <cite>property_type</cite> can be one of <cite>int</cite>, <cite>float</cite>, <cite>str</cite>, and one label can have multiple <cite>property</cite> statement.</p>
+<p>For vertices, the <cite>add_primary_key</cite> is to specify the primary key of the label, also be called ID.</p>
+<p>For edges, the <cite>source</cite> and <cite>destination</cite> will specify the source label and destination label of the edge kind, respectively.</p>
+<p>The <cite>update()</cite> method will issue a transaction to the store.</p>
+<p>The <cite>drop()</cite> method can drop a label from the store, Note for edge label you must drop all relations first by using the <cite>src_label</cite> and <cite>dst_label</cite>, then call the <cite>drop(label)</cite> to final drop the entire label.</p>
+<p>Here we give an example to define a simple <cite>person -&gt; knows &lt;- person</cite> schema.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">schema</span><span class="o">.</span><span class="n">add_vertex_label</span><span class="p">(</span><span class="s2">&quot;person&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">add_primary_key</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;long&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">add_property</span><span class="p">(</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;str&quot;</span>
+    <span class="p">)</span>
+<span class="n">schema</span><span class="o">.</span><span class="n">add_edge_label</span><span class="p">(</span><span class="s2">&quot;knows&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">source</span><span class="p">(</span><span class="s2">&quot;person&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">destination</span><span class="p">(</span><span class="s2">&quot;person&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">add_property</span><span class="p">(</span>
+        <span class="s2">&quot;date&quot;</span><span class="p">,</span> <span class="s2">&quot;str&quot;</span>
+    <span class="p">)</span>
+<span class="n">schema</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="running-gremlin-queries">
+<h2>Running Gremlin Queries<a class="headerlink" href="#running-gremlin-queries" title="Permalink to this headline"></a></h2>
+<p>As we have the gremlin endpoint avaiable, we can do gremlin queries over the graph.
+It’s simple just use one line to get the traversal source,</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">gremlin</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">()</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="o">.</span><span class="n">toList</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>The graph is empty for now, so the count should be 0. Let’s write some data.</p>
+</div>
+<div class="section" id="realtime-write">
+<h2>Realtime Write<a class="headerlink" href="#realtime-write" title="Permalink to this headline"></a></h2>
+<p>Once the graph schema is well defined, we can write vertex/edge records straightly from python client.</p>
+<p>We use two utility class called <cite>VertexRecordKey</cite> and <cite>EdgeRecordKey</cite> to denote the key to uniquely identify a record.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">VertexRecordKey</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Unique identifier of a vertex.</span>
+<span class="sd">    The primary key may be a dict, the key is the property name,</span>
+<span class="sd">    and the value is the data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">primary_key</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">label</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">primary_key</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">primary_key</span>
+
+
+<span class="k">class</span> <span class="nc">EdgeRecordKey</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Unique identifier of a edge.</span>
+<span class="sd">    The `eid` is required in Update and Delete, which is a</span>
+<span class="sd">    system generated unsigned integer. User need to get that eid</span>
+<span class="sd">    by other means such as gremlin query.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">src_vertex_key</span><span class="p">,</span> <span class="n">dst_vertex_key</span><span class="p">,</span> <span class="n">eid</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">label</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">src_vertex_key</span><span class="p">:</span> <span class="n">VertexRecordKey</span> <span class="o">=</span> <span class="n">src_vertex_key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dst_vertex_key</span><span class="p">:</span> <span class="n">VertexRecordKey</span> <span class="o">=</span> <span class="n">dst_vertex_key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eid</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">eid</span>  <span class="c1"># Only required in Update and Delete.</span>
+</pre></div>
+</div>
+<p>And the graph have several methods as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Inserts one vertex</span>
+<span class="c1"># Returns snapshot id</span>
+<span class="k">def</span> <span class="nf">insert_vertex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertex</span><span class="p">:</span> <span class="n">VertexRecordKey</span><span class="p">,</span> <span class="n">properties</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span> <span class="k">pass</span>
+
+<span class="c1"># Inserts a list of vertices</span>
+<span class="c1"># Returns snapshot id</span>
+<span class="k">def</span> <span class="nf">insert_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertices</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span> <span class="k">pass</span>
+
+<span class="c1"># Update one vertex to new properties</span>
+<span class="c1"># Returns snapshot id</span>
+<span class="k">def</span> <span class="nf">update_vertex_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertex</span><span class="p">:</span> <span class="n">VertexRecordKey</span><span class="p">,</span> <span class="n">properties</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span> <span class="k">pass</span>
+
+<span class="c1"># Delele one vertex</span>
+<span class="c1"># Returns snapshot id</span>
+<span class="k">def</span> <span class="nf">delete_vertex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertex_pk</span><span class="p">:</span> <span class="n">VertexRecordKey</span><span class="p">):</span> <span class="k">pass</span>
+
+<span class="c1"># Delete a list of vertices</span>
+<span class="c1"># Returns snapshot id</span>
+<span class="k">def</span> <span class="nf">delete_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertex_pks</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span> <span class="k">pass</span>
+
+<span class="c1"># Insert one edge</span>
+<span class="c1"># Returns snapshot id</span>
+<span class="k">def</span> <span class="nf">insert_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge</span><span class="p">:</span> <span class="n">EdgeRecordKey</span><span class="p">,</span> <span class="n">properties</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span> <span class="k">pass</span>
+
+<span class="c1"># Insert a list of edges</span>
+<span class="c1"># Returns snapshot id</span>
+<span class="k">def</span> <span class="nf">insert_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edges</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span> <span class="k">pass</span>
+
+<span class="c1"># Update one edge to new properties</span>
+<span class="c1"># Returns snapshot id</span>
+<span class="k">def</span> <span class="nf">update_edge_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge</span><span class="p">:</span> <span class="n">EdgeRecordKey</span><span class="p">,</span> <span class="n">properties</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span> <span class="k">pass</span>
+
+<span class="c1"># Delete one edge</span>
+<span class="c1"># Returns snapshot id</span>
+<span class="k">def</span> <span class="nf">delete_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge</span><span class="p">:</span> <span class="n">EdgeRecordKey</span><span class="p">):</span> <span class="k">pass</span>
+
+<span class="c1"># Delete a list of edges</span>
+<span class="c1"># Returns snapshot id</span>
+<span class="k">def</span> <span class="nf">delete_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge_pks</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span> <span class="k">pass</span>
+
+<span class="c1"># Make sure the snapshot is avaiable</span>
+<span class="k">def</span> <span class="nf">remote_flush</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">snapshot_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span> <span class="k">pass</span>
+</pre></div>
+</div>
+<p>We give some examples to illustrate the usage, note when deleting edges or updating edges, we need to use gremlin queries to retrieve the eid of edges, then we can uniquely refer to the edge.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Construct several vertices</span>
+<span class="n">v_src</span> <span class="o">=</span> <span class="p">[</span><span class="n">VertexRecordKey</span><span class="p">(</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="mi">99999</span><span class="p">}),</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;ci_person_99999&quot;</span><span class="p">}]</span>
+<span class="n">v_dst</span> <span class="o">=</span> <span class="p">[</span><span class="n">VertexRecordKey</span><span class="p">(</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="mi">199999</span><span class="p">}),</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;ci_person_199999&quot;</span><span class="p">}]</span>
+<span class="n">v_srcs</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">[</span>
+        <span class="n">VertexRecordKey</span><span class="p">(</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="mi">100000</span> <span class="o">+</span> <span class="n">i</span><span class="p">}),</span>
+        <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;ci_person_</span><span class="si">{</span><span class="mi">100000</span> <span class="o">+</span> <span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">},</span>
+    <span class="p">]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="p">]</span>
+<span class="n">v_dsts</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">[</span>
+        <span class="n">VertexRecordKey</span><span class="p">(</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="mi">200000</span> <span class="o">+</span> <span class="n">i</span><span class="p">}),</span>
+        <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;ci_person_</span><span class="si">{</span><span class="mi">200000</span> <span class="o">+</span> <span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">},</span>
+    <span class="p">]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="p">]</span>
+<span class="n">v_update</span> <span class="o">=</span> <span class="p">[</span><span class="n">v_src</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;ci_person_99999_updated&quot;</span><span class="p">}]</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">insert_vertex</span><span class="p">(</span><span class="o">*</span><span class="n">v_src</span><span class="p">)</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">insert_vertex</span><span class="p">(</span><span class="o">*</span><span class="n">v_dst</span><span class="p">)</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">insert_vertices</span><span class="p">(</span><span class="n">v_srcs</span><span class="p">)</span>
+<span class="n">snapshot_id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">insert_vertices</span><span class="p">(</span><span class="n">v_dsts</span><span class="p">)</span>
+
+<span class="k">assert</span> <span class="n">conn</span><span class="o">.</span><span class="n">remote_flush</span><span class="p">(</span><span class="n">snapshot_id</span><span class="p">)</span>
+
+<span class="n">snapshot_id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">update_vertex_properties</span><span class="p">(</span><span class="o">*</span><span class="n">v_update</span><span class="p">)</span>
+
+<span class="k">assert</span> <span class="n">conn</span><span class="o">.</span><span class="n">remote_flush</span><span class="p">(</span><span class="n">snapshot_id</span><span class="p">)</span>
+
+<span class="k">assert</span> <span class="p">(</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">()</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">v_src</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">primary_key</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">toList</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="o">==</span> <span class="s2">&quot;ci_person_99999_updated&quot;</span>
+<span class="p">)</span>
+
+<span class="n">edge</span> <span class="o">=</span> <span class="p">[</span><span class="n">EdgeRecordKey</span><span class="p">(</span><span class="s2">&quot;knows&quot;</span><span class="p">,</span> <span class="n">v_src</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">v_dst</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="p">{</span><span class="s2">&quot;date&quot;</span><span class="p">:</span> <span class="s2">&quot;ci_edge_2000&quot;</span><span class="p">}]</span>
+<span class="n">edges</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">[</span><span class="n">EdgeRecordKey</span><span class="p">(</span><span class="s2">&quot;knows&quot;</span><span class="p">,</span> <span class="n">src</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dst</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="p">{</span><span class="s2">&quot;date&quot;</span><span class="p">:</span> <span class="s2">&quot;ci_edge_3000&quot;</span><span class="p">}]</span>
+    <span class="k">for</span> <span class="n">src</span><span class="p">,</span> <span class="n">dst</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">v_srcs</span><span class="p">,</span> <span class="n">v_dsts</span><span class="p">)</span>
+<span class="p">]</span>
+<span class="n">edge_update</span> <span class="o">=</span> <span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">{</span><span class="s2">&quot;date&quot;</span><span class="p">:</span> <span class="s2">&quot;ci_edge_4000&quot;</span><span class="p">}]</span>
+<span class="n">snapshot_id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">insert_edge</span><span class="p">(</span><span class="o">*</span><span class="n">edge</span><span class="p">)</span>
+
+<span class="k">assert</span> <span class="n">conn</span><span class="o">.</span><span class="n">remote_flush</span><span class="p">(</span><span class="n">snapshot_id</span><span class="p">)</span>
+
+<span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">eid</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">()</span>
+    <span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">src_vertex_key</span><span class="o">.</span><span class="n">primary_key</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">])</span>
+    <span class="o">.</span><span class="n">outE</span><span class="p">()</span>
+    <span class="o">.</span><span class="n">toList</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="o">.</span><span class="n">id</span>
+<span class="p">)</span>
+
+<span class="n">snapshot_id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">insert_edges</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+
+<span class="k">assert</span> <span class="n">conn</span><span class="o">.</span><span class="n">remote_flush</span><span class="p">(</span><span class="n">snapshot_id</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
+    <span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">eid</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">()</span>
+        <span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">src_vertex_key</span><span class="o">.</span><span class="n">primary_key</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">])</span>
+        <span class="o">.</span><span class="n">outE</span><span class="p">()</span>
+        <span class="o">.</span><span class="n">toList</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="o">.</span><span class="n">id</span>
+    <span class="p">)</span>
+<span class="n">snapshot_id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">update_edge_properties</span><span class="p">(</span><span class="o">*</span><span class="n">edge_update</span><span class="p">)</span>
+
+<span class="k">assert</span> <span class="n">conn</span><span class="o">.</span><span class="n">remote_flush</span><span class="p">(</span><span class="n">snapshot_id</span><span class="p">)</span>
+
+<span class="k">assert</span> <span class="p">(</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">()</span>
+    <span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">src_vertex_key</span><span class="o">.</span><span class="n">primary_key</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">])</span>
+    <span class="o">.</span><span class="n">outE</span><span class="p">()</span>
+    <span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="s2">&quot;date&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">toList</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="o">==</span> <span class="s2">&quot;ci_edge_4000&quot;</span>
+<span class="p">)</span>
+
+<span class="n">graph</span><span class="o">.</span><span class="n">delete_edge</span><span class="p">(</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">delete_edges</span><span class="p">([</span><span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">])</span>
+
+<span class="n">graph</span><span class="o">.</span><span class="n">delete_vertex</span><span class="p">(</span><span class="n">v_src</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">delete_vertex</span><span class="p">(</span><span class="n">v_dst</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">graph</span><span class="o">.</span><span class="n">delete_vertices</span><span class="p">([</span><span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">v_srcs</span><span class="p">])</span>
+<span class="n">snapshot_id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">delete_vertices</span><span class="p">([</span><span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">v_dsts</span><span class="p">])</span>
+
+<span class="k">assert</span> <span class="n">conn</span><span class="o">.</span><span class="n">remote_flush</span><span class="p">(</span><span class="n">snapshot_id</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="bulk-loading">
+<h2>Bulk Loading<a class="headerlink" href="#bulk-loading" title="Permalink to this headline"></a></h2>
+<p>Apart from real-time write, we provide a data-loading utility for bulk-loading data from external storage (e.g., HDFS) into the store service. Currently the tool supports a specific format of the raw data as described in “Data Format”, and the originial data must be located in an HDFS. To load the data files into GraphScope storage, users can run the data-loading tool from a terminal on a Client machine, and we assume that Client has access to a Hadoop cluster, which can run MapReduce jobs, have read/write access to the HDFS, and connect to a running GraphScope storage service.</p>
+<div class="section" id="prequisities">
+<h3>Prequisities<a class="headerlink" href="#prequisities" title="Permalink to this headline"></a></h3>
+<ul class="simple">
+<li><p>Java compilation environment (Maven 3.5+ / JDK1.8), if you need to build the tools from source code</p></li>
+<li><p>Hadoop cluster (version 2.x) that can run map-reduce jobs and has HDFS supported</p></li>
+<li><p>Running GIE with persistent storage service (graph schema should be properly defined)</p></li>
+</ul>
+</div>
+<div class="section" id="get-binary">
+<h3>Get Binary<a class="headerlink" href="#get-binary" title="Permalink to this headline"></a></h3>
+<p>You can download the data-loading utility from here: <a class="reference external" href="https://github.com/alibaba/GraphScope/releases/latest/download/graphscope_store_data_load.tar.gz">data_load.tar.gz</a>. Decompress it, and you can find the executable here: <cite>./data_load/bin/load_tool.sh</cite>.</p>
+</div>
+<div class="section" id="data-format">
+<h3>Data Format<a class="headerlink" href="#data-format" title="Permalink to this headline"></a></h3>
+<p>The data loading tools assume the original data files are in the HDFS.</p>
+<p>Each file should represents either a vertex type or a relationship of an edge type. Below are the sample data of a vertex type <cite>person</cite> and a relationShip <cite>person-knows-&gt;person</cite> of edge type <cite>knows</cite>:</p>
+<ul class="simple">
+<li><p>person.csv:</p></li>
+</ul>
+<div class="highlight-plain-text notranslate"><div class="highlight"><pre><span></span>id|name
+1000|Alice
+1001|Bob
+...
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>person_knows_person.csv</p></li>
+</ul>
+<div class="highlight-plain-text notranslate"><div class="highlight"><pre><span></span>person_id|person_id_1|date
+1000|1001|20210611151923
+...
+</pre></div>
+</div>
+<p>The first line of the data file is a header that describes the key of each field. The header is not required. If there is no header in the data file, you need to set <cite>skip.header</cite> to <cite>true</cite> in the data building process (For details, see params description in “Building a partitioned graph”).</p>
+<p>The rest lines are the data records. Each line represents one record. Data fields are seperated by a custom seperator (“|” in the example above). In the vertex data file <cite>person.csv</cite>, <cite>id</cite> field and <cite>name</cite> field are the primary-key and the property of the vertex type <cite>person</cite> respectively. In the edge data file <cite>person_knows_person.csv</cite>, <cite>person_id</cite> field is the primary-key of the source vertex, <cite>person_id_1</cite> field is the primary-key of the destination vertex, <cite>date</cite> is the property of the edge type <cite>knows</cite>.</p>
+<p>All the data fields will be parsed according to the data-type defined in the graph schema. If the input data field cannot be parsed correctly, data building process would be failed with corresponding errors.</p>
+</div>
+<div class="section" id="loading-process">
+<h3>Loading Process<a class="headerlink" href="#loading-process" title="Permalink to this headline"></a></h3>
+<p>The loading process contains three steps:</p>
+<p>Step 1: A partitioned graph is built from the source files and stored in the same HDFS using a MapReduce job</p>
+<p>Step 2: The graph partitions are loaded into the store servers (in parallel)</p>
+<p>Step 3: Commit to the online service so that data is ready for serving queries</p>
+<div class="section" id="building-a-partitioned-graph">
+<h4>1. Building a partitioned graph<a class="headerlink" href="#building-a-partitioned-graph" title="Permalink to this headline"></a></h4>
+<p>Build data by running the hadoop map-reduce job with following command.</p>
+<p>NOTE: You should make sure <cite>hadoop</cite> can be found in the env <cite>$PATH</cite>.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./data_load/bin/load_tool.sh hadoop-build &lt;path/to/config/file&gt;
+</pre></div>
+</div>
+<p>The config file should follow a format that is recognized by Java <cite>java.util.Properties</cite> class. Here is an example:</p>
+<div class="highlight-plain-text notranslate"><div class="highlight"><pre><span></span>split.size=256
+separator=\\|
+input.path=/tmp/ldbc_sample
+output.path=/tmp/data_output
+graph.endpoint=1.2.3.4:55555
+column.mapping.config={&quot;person_0_0.csv&quot;:{&quot;label&quot;:&quot;person&quot;,&quot;propertiesColMap&quot;:{&quot;0&quot;:&quot;id&quot;,&quot;1&quot;:&quot;name&quot;}},&quot;person_knows_person_0_0.csv&quot;:{&quot;label&quot;:&quot;knows&quot;,&quot;srcLabel&quot;:&quot;person&quot;,&quot;dstLabel&quot;:&quot;person&quot;,&quot;srcPkColMap&quot;:{&quot;0&quot;:&quot;id&quot;},&quot;dstPkColMap&quot;:{&quot;1&quot;:&quot;id&quot;},&quot;propertiesColMap&quot;:{&quot;2&quot;:&quot;date&quot;}}}
+skip.header=true
+</pre></div>
+</div>
+<p>Details of the parameters are listed below:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 4%" />
+<col style="width: 2%" />
+<col style="width: 2%" />
+<col style="width: 92%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Config key</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>split.size</p></td>
+<td><p>false</p></td>
+<td><p>256</p></td>
+<td><p>Hadoop map-reduce input data split size in MB</p></td>
+</tr>
+<tr class="row-odd"><td><p>separator</p></td>
+<td><p>false</p></td>
+<td><p>\|</p></td>
+<td><p>Seperator used to parse each field in a line</p></td>
+</tr>
+<tr class="row-even"><td><p>input.path</p></td>
+<td><p>true</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p>Input HDFS dir</p></td>
+</tr>
+<tr class="row-odd"><td><p>output.path</p></td>
+<td><p>true</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p>Output HDFS dir</p></td>
+</tr>
+<tr class="row-even"><td><p>graph.endpoint</p></td>
+<td><p>true</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p>RPC endpoint of the graph storage service. You can get the RPC endpoint following this document: GraphScope Store Service</p></td>
+</tr>
+<tr class="row-odd"><td><p>column.mapping.config</p></td>
+<td><p>true</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+<td><p>Mapping info for each input file in JSON format. Each key in the first level should be a fileName that can be found in the input.path, and the corresponding value defines the mapping info.
+For a vertex type, the mapping info should includes 1) label of the vertex type, 2) propertiesColMap that describes the mapping from input field to graph property in the format of { columnIdx: “propertyName” }.
+For an edge type, the mapping info should includes 1) label of the edge type, 2) srcLabel of the source vertex type, 3) dstLabel of the destination vertex type, 4) srcPkColMap that describes the mapping from input field to graph property of the primary keys in the source vertex type, 5) dstPkColMap that describes the mapping from input field to graph property of the primary keys in the destination vertex type, 6) propertiesColMap that describes the mapping from input field to graph property of the edge type</p></td>
+</tr>
+<tr class="row-even"><td><p>skip.header</p></td>
+<td><p>false</p></td>
+<td><p>true</p></td>
+<td><p>Whether to skip the first line of the input file</p></td>
+</tr>
+</tbody>
+</table>
+<p>After data building completed, you can find the output files in the <cite>output.path</cite> of HDFS. The output files includes a meta file named <cite>META</cite>, an empty file named <cite>_SUCCESS</cite>, and some data files that one for each partition named in the pattern of <cite>part-r-xxxxx.sst</cite>. The layout of the output directory should look like:</p>
+<div class="highlight-plain-text notranslate"><div class="highlight"><pre><span></span>/tmp/data_output
+  |- META
+  |- _SUCCESS
+  |- part-r-00000.sst
+  |- part-r-00001.sst
+  |- part-r-00002.sst
+  ...
+</pre></div>
+</div>
+</div>
+<div class="section" id="loading-graph-partitions">
+<h4>2. Loading graph partitions<a class="headerlink" href="#loading-graph-partitions" title="Permalink to this headline"></a></h4>
+<p>Now ingest the offline built data into the graph storage:</p>
+<p>NOTE: You need to make sure that the HDFS endpoint that can be accessed from the processes of the graph store.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./data_load/bin/load_tool.sh -c ingest -d hdfs://1.2.3.4:9000/tmp/data_output
+</pre></div>
+</div>
+<p>The offline built data can be ingested successfully only once, otherwise errors will occur.</p>
+</div>
+<div class="section" id="commit-to-store-service">
+<h4>3. Commit to store service<a class="headerlink" href="#commit-to-store-service" title="Permalink to this headline"></a></h4>
+<p>After data ingested into graph storage, you need to commit data loading. The data will not be able to read until committed successfully.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./data_load/bin/load_tool.sh -c commit -d hdfs://1.2.3.4:9000/tmp/data_output
+</pre></div>
+</div>
+<p>Notice: The later committed data will overwrite the earlier committed data which have same vertex types or edge relations.</p>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="learning_engine.html" class="btn btn-neutral float-left" title="GraphScope Learning Engine" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="frequently_asked_questions.html" class="btn btn-neutral float-right" title="Frequently Asked Questions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020-2023, DAMO Academy, Alibaba Inc..</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.17.0
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.17.0/index.html">v0.17.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.16.0/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.15.0/index.html">v0.15.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.14.0/index.html">v0.14.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.13.0/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.12.0/index.html">v0.12.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.11.0/index.html">v0.11.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.10.1/index.html">v0.10.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.10.0/index.html">v0.10.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.9.1/index.html">v0.9.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.9.0/index.html">v0.9.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.8.0/index.html">v0.8.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.7.0/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.6.1/index.html">v0.6.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.6.0/index.html">v0.6.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.5.0/index.html">v0.5.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.4.0/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.3.0/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="index.html">en</a></dd>
+        <dd><a href="zh/index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>
