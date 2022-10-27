@@ -17,12 +17,8 @@ import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.schema.request.DdlRequestBatch;
 import com.alibaba.graphscope.proto.ddl.*;
 import com.alibaba.maxgraph.compiler.api.schema.DataType;
-import com.alibaba.maxgraph.sdkcommon.schema.EdgeKind;
+import com.alibaba.maxgraph.sdkcommon.schema.*;
 import com.alibaba.maxgraph.sdkcommon.schema.GraphDef;
-import com.alibaba.maxgraph.sdkcommon.schema.PropertyDef;
-import com.alibaba.maxgraph.sdkcommon.schema.PropertyValue;
-import com.alibaba.maxgraph.sdkcommon.schema.TypeDef;
-import com.alibaba.maxgraph.sdkcommon.schema.TypeEnum;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 
@@ -152,11 +148,15 @@ public class ClientDdlService extends ClientDdlGrpc.ClientDdlImplBase {
                                 .setEdgeLabelId(
                                         LabelIdPb.newBuilder()
                                                 .setId(edgeKind.getEdgeLabelId().getId()))
-                                .setSrcVertexLabel(edgeKind.getSrcVertexLabel())
+                                .setSrcVertexLabel(
+                                        graphDef.getTypeDef(edgeKind.getSrcVertexLabelId())
+                                                .getLabel())
                                 .setSrcVertexLabelId(
                                         LabelIdPb.newBuilder()
                                                 .setId(edgeKind.getSrcVertexLabelId().getId()))
-                                .setDstVertexLabel(edgeKind.getDstVertexLabel())
+                                .setDstVertexLabel(
+                                        graphDef.getTypeDef(edgeKind.getDstVertexLabelId())
+                                                .getLabel())
                                 .setDstVertexLabelId(
                                         LabelIdPb.newBuilder()
                                                 .setId(edgeKind.getDstVertexLabelId().getId()))

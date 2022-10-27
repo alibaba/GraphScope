@@ -12,8 +12,11 @@ enables Java programmers to write and run graph algorithms with these benefits.
   GRAPE-JDK substantially narrows the gap between apps written in Java and in C++. As [experiments](#performance) shows, the overall performance gap 
   between native C++ and GRAPE-JDK are lower than 2x, and in some scenarios like PageRank, GRAPE-JDK runs nearly as fast as native C++ implementation. 
 
-- **Support Giraph app**. We also prvide user with a Giraph SDK, giraph-on-grape. The algorithms user implemented on [Giraph](https://github.com/apache/giraph)
- interface can be run on GRAPE-JDK without any modification.
+- **Support Giraph app**. We also prvide user with a Giraph SDK, grape-giraph. The algorithms user implemented on [Giraph](https://github.com/apache/giraph)
+  interface can be run on GRAPE-JDK without any modification.
+
+- **Support Spark Graphx**. We break down the storage gap between Spark RDD and GraphScope Fragment, enabling `fragment-as-rdd` wrapping 
+  and `rdd-to-fragment` conversion.
 
 <!-- - **Seamless integration with GraphScope**.
 
@@ -24,10 +27,11 @@ enables Java programmers to write and run graph algorithms with these benefits.
   
 ## Organization
 
-- **grape-demo** provides example apps and [FFIMirrors](#user-defined-data-structure).
-- **grape-jdk** provides the PIE SDK with graph computing interfaces.
-- **grape-runtime** contains the essential files for JNI code-gen and the glue code invoked by the analytcial engine (building with `ENABLE_JAVA_SDK`). 
-- **giraph-on-grape** provides the Pregel SDK for Giraph apps.
+- **grape-demo** Provides example apps and [FFIMirrors](#user-defined-data-structure).
+- **grape-jdk** Provides the PIE SDK with graph computing interfaces.
+- **grape-runtime** Contains the essential files for JNI code-gen and the glue code invoked by the analytcial engine (building with `ENABLE_JAVA_SDK`). 
+- **grape-giraph** Integrating grape with Apache Giraph.
+- **grape-graphx** Integrating grape with Spark GraphX.
 
 -----
 (To be revise)

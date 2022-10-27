@@ -62,17 +62,12 @@ class DAGManager(object):
     ]
 
     _interactive_engine_split_op = [
-        types_pb2.CREATE_INTERACTIVE_QUERY,
         types_pb2.SUBGRAPH,
         types_pb2.GREMLIN_QUERY,
         types_pb2.FETCH_GREMLIN_RESULT,
-        types_pb2.CLOSE_INTERACTIVE_QUERY,
     ]
 
-    _learning_engine_split_op = [
-        types_pb2.CREATE_LEARNING_INSTANCE,
-        types_pb2.CLOSE_LEARNING_INSTANCE,
-    ]
+    _learning_engine_split_op = []
 
     _coordinator_split_op = [
         types_pb2.DATA_SOURCE,  # spawn an io stream to read/write data from/to vineyard

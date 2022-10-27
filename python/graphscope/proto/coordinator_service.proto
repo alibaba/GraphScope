@@ -36,4 +36,16 @@ service CoordinatorService {
 
   // Distribute the specified libary to servers
   rpc AddLib(AddLibRequest) returns (AddLibResponse);
+
+  rpc CreateAnalyticalInstance (CreateAnalyticalInstanceRequest) returns (CreateAnalyticalInstanceResponse);
+
+  rpc CreateInteractiveInstance (CreateInteractiveInstanceRequest) returns (CreateInteractiveInstanceResponse);
+
+  rpc CreateLearningInstance (CreateLearningInstanceRequest) returns (CreateLearningInstanceResponse);
+
+  rpc CloseAnalyticalInstance (CloseAnalyticalInstanceRequest) returns (CloseAnalyticalInstanceResponse);
+
+  rpc CloseInteractiveInstance (CloseInteractiveInstanceRequest) returns (CloseInteractiveInstanceResponse);
+
+  rpc CloseLearningInstance (CloseLearningInstanceRequest) returns (CloseLearningInstanceResponse);
 }

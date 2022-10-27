@@ -62,7 +62,7 @@ class HostsClusterLauncher(Launcher):
         vineyard_shared_mem=None,
         **kwargs
     ):
-        self._hosts = hosts
+        self._hosts: [str] = hosts
         self._port = port
         self._etcd_addrs = etcd_addrs
         self._etcd_listening_client_port = etcd_listening_client_port
@@ -194,7 +194,6 @@ class HostsClusterLauncher(Launcher):
         """
         try:
             self._launch_coordinator()
-            self._closed = False
             logger.info(
                 "Coordinator service started successful, connecting to service..."
             )
@@ -207,9 +206,7 @@ class HostsClusterLauncher(Launcher):
     def stop(self):
         """Stop GraphScope instance."""
         # coordinator's GRPCServer.wait_for_termination works for SIGINT (Ctrl-C)
-        if not self._closed:
-            if self._proc is not None:
-                self._proc.send_signal(signal.SIGINT)
-                self._proc.wait(timeout=10)
-                self._proc = None
-            self._closed = True
+        if self._proc is not None:
+            self._proc.send_signal(signal.SIGINT)
+            self._proc.wait(timeout=10)
+            self._proc = None

@@ -1,17 +1,20 @@
-ARG BASE_VERSION=v0.8.5
+# Interactive engine which uses experimental storage
+
+ARG BASE_VERSION=v0.9.0
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:$BASE_VERSION AS builder
 
 ARG profile=release
 ENV profile=$profile
 ADD . /home/graphscope/GraphScope
 
+ENV PATH="/home/graphscope/.cargo/bin:$PATH"
+
 RUN sudo chown -R graphscope:graphscope /home/graphscope/GraphScope
-RUN source $HOME/.bashrc \
-    && cd /home/graphscope/GraphScope/interactive_engine/compiler \
+RUN cd /home/graphscope/GraphScope/interactive_engine/compiler \
     && make build rpc.target=start_rpc_server_k8s
 
 ############### RUNTIME: frontend && executor #######################
-FROM centos:7.9.2009 AS gie-exp
+FROM centos:7.9.2009 AS experimental
 
 COPY --from=builder /home/graphscope/GraphScope/interactive_engine/compiler/target/libs /opt/GraphScope/interactive_engine/compiler/target/libs
 COPY --from=builder /home/graphscope/GraphScope/interactive_engine/compiler/target/compiler-1.0-SNAPSHOT.jar /opt/GraphScope/interactive_engine/compiler/target/compiler-1.0-SNAPSHOT.jar

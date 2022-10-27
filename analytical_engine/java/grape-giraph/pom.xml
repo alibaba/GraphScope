@@ -24,7 +24,7 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>giraph-on-grape</artifactId>
+  <artifactId>grape-giraph</artifactId>
   <packaging>jar</packaging>
   <name>Giraph on Grape</name>
 
@@ -44,7 +44,6 @@
     <hadoop-core.version>1.2.1</hadoop-core.version>
     <jmh.version>1.21</jmh.version>
     <skip.perf.benchmarks>true</skip.perf.benchmarks>
-    <uberjar.name>giraph-on-grape-shaded</uberjar.name>
   </properties>
   <dependencies>
     <dependency>
@@ -114,8 +113,6 @@
                   </excludes>
                 </filter>
               </filters>
-
-              <finalName>${uberjar.name}</finalName>
             </configuration>
           </execution>
         </executions>

@@ -4,11 +4,7 @@ We truncate at 30 chars because some Kubernetes name fields are limited to this 
 If release name contains chart name it will be used as a full name.
 */}}
 {{- define "graphscope.fullname" -}}
-{{- if contains .Chart.Name .Release.Name }}
 {{- .Release.Name | trunc 30 | trimSuffix "-" }}
-{{- else }}
-{{- printf "%s-%s" .Release.Name .Chart.Name  | trunc 30 | trimSuffix "-" }}
-{{- end }}
 {{- end }}
 
 
@@ -47,14 +43,14 @@ Transform the Docker Image Registry Secret Names to string with comma separated.
 Unique Label of GraphScope Coordinator.
 */}}
 {{- define "graphscope.coordinator.uniqueLabel" -}}
-graphscope.coordinator.name: {{ include "graphscope.fullname" . }}-coordinator
+graphscope.coordinator.name: coordinator-{{ include "graphscope.fullname" . }}
 {{- end }}
 
 {{/*
 Label Selector Corresponding to Unique Label of GraphScope Coordinator
 */}}
 {{- define "graphscope.coordinator.labelSelector" -}}
-graphscope.coordinator.name={{ include "graphscope.fullname" . }}-coordinator
+graphscope.coordinator.name=coordinator-{{ include "graphscope.fullname" . }}
 {{- end }}
 
 {{/*

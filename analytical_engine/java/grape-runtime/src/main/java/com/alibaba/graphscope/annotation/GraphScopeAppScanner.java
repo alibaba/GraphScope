@@ -16,6 +16,8 @@
 
 package com.alibaba.graphscope.annotation;
 
+import static com.alibaba.graphscope.annotation.Utils.cpp2Java;
+import static com.alibaba.graphscope.annotation.Utils.java2Cpp;
 import static com.google.testing.compile.Compiler.javac;
 
 import com.alibaba.fastffi.FFIMirror;
@@ -67,10 +69,12 @@ import javax.tools.JavaFileObject;
 public class GraphScopeAppScanner {
 
     private static Logger logger = LoggerFactory.getLogger(GraphScopeAppScanner.class.getName());
+    private boolean javaFragName;
     private String classpath;
     private String configPath;
     private String outputDirectory;
     private String graphTemplateStr;
+    private String vertexDataType;
     private GraphConfig graphConfig;
     private List<File> classPathList;
     private URLClassLoader appClassLoader;
@@ -78,7 +82,12 @@ public class GraphScopeAppScanner {
     private Map<String, String> ffiMirrors = new HashMap<>();
 
     private GraphScopeAppScanner(
-            String classpath, String configPath, String outputDirectory, String graphTemplateStr) {
+            String classpath,
+            String configPath,
+            String outputDirectory,
+            String graphTemplateStr,
+            String vertexDataType,
+            boolean javaFragName) {
         this.classpath = classpath;
         this.configPath = configPath;
         this.outputDirectory = outputDirectory;
@@ -98,6 +107,13 @@ public class GraphScopeAppScanner {
                                 .toArray(URL[]::new),
                         ClassLoader.getSystemClassLoader());
         this.graphTemplateStr = graphTemplateStr;
+        if (this.graphTemplateStr.startsWith("\"") && this.graphTemplateStr.endsWith("\"")) {
+            this.graphTemplateStr =
+                    this.graphTemplateStr.substring(1, this.graphTemplateStr.length() - 1);
+        }
+        logger.info("Graph template string {}", graphTemplateStr);
+        this.vertexDataType = vertexDataType;
+        this.javaFragName = javaFragName;
     }
 
     /**
@@ -111,8 +127,18 @@ public class GraphScopeAppScanner {
      * @return absolute output path
      */
     public static String scanAppAndGenerate(
-            String classpath, String outputDirectory, String graphTemplateString) {
-        return new GraphScopeAppScanner(classpath, "empty", outputDirectory, graphTemplateString)
+            String classpath,
+            String outputDirectory,
+            String graphTemplateString,
+            String vertexDataType,
+            boolean javaFragName) {
+        return new GraphScopeAppScanner(
+                        classpath,
+                        "empty",
+                        outputDirectory,
+                        graphTemplateString,
+                        vertexDataType,
+                        javaFragName)
                 .scanAppAndGenerateImpl();
     }
 
@@ -140,8 +166,8 @@ public class GraphScopeAppScanner {
         }
         // add support for doubleMsg and LongMsg
         //
-        // sb.append("gs::DoubleMsg=com.alibaba.graphscopescope.parallel.message.DoubleMsg,");
-        //        sb.append("gs::LongMsg=com.alibaba.graphscopescope.parallel.message.LongMsg,");
+        sb.append("gs::DoubleMsg=com.alibaba.graphscope.parallel.message.DoubleMsg,");
+        sb.append("gs::LongMsg=com.alibaba.graphscope.parallel.message.LongMsg,");
         String temp = sb.toString();
         String messageTypes = "";
         if (!temp.isEmpty()) {
@@ -156,18 +182,36 @@ public class GraphScopeAppScanner {
             return this.outputDirectory;
         }
         if (Objects.nonNull(parsed) && parsed.length == 5) {
-            graphConfig =
-                    new GraphConfig(
-                            cpp2Java(parsed[1]),
-                            cpp2Java(parsed[2]),
-                            cpp2Java(parsed[3]),
-                            cpp2Java(parsed[4]),
-                            messageTypes,
-                            parsed[0],
-                            parsed[1],
-                            parsed[2],
-                            parsed[3],
-                            parsed[4]);
+            if (javaFragName) {
+                graphConfig =
+                        new GraphConfig(
+                                parsed[1],
+                                parsed[2],
+                                parsed[3],
+                                parsed[4],
+                                messageTypes,
+                                parsed[0],
+                                java2Cpp(parsed[1], true),
+                                java2Cpp(parsed[2], false),
+                                java2Cpp(parsed[3], true),
+                                java2Cpp(parsed[4], true),
+                                vertexDataType);
+            } else {
+                graphConfig =
+                        new GraphConfig(
+                                cpp2Java(parsed[1]),
+                                cpp2Java(parsed[2]),
+                                cpp2Java(parsed[3]),
+                                cpp2Java(parsed[4]),
+                                messageTypes,
+                                parsed[0],
+                                parsed[1],
+                                parsed[2],
+                                parsed[3],
+                                parsed[4],
+                                vertexDataType);
+            }
+
         } else {
             graphConfig =
                     new GraphConfig(
@@ -180,37 +224,29 @@ public class GraphScopeAppScanner {
                             "",
                             "",
                             "",
-                            "");
+                            "",
+                            vertexDataType);
         }
 
         return generate();
     }
 
-    private String cpp2Java(String cppType) {
-        if (cppType.equals("int64_t") || cppType.equals("uint64_t")) {
-            return Long.class.getName();
-        } else if (cppType.equals("int32_t") || cppType.equals("uint32_t")) {
-            return Integer.class.getName();
-        } else if (cppType.equals("double")) {
-            return Double.class.getName();
-        }
-        return null;
-    }
-
     // gs::ArrowProjectedFragment
+    // can also be ArrowProjectedFragment<java.lang.Long,....>
     private String[] parseGraphTemplateStr(String graphTemplateStr) {
         String[] first = graphTemplateStr.split("<");
         if (first.length != 2) {
             logger.error("parse fragment type error" + graphTemplateStr);
             return first;
-        } else if (first[0].equals("gs::ArrowProjectedFragment")) {
+        } else if (first[0].equals("gs::ArrowProjectedFragment")
+                || first[0].equals("ArrowProjectedFragment")) {
             String typeParams = first[1].substring(0, first[1].length() - 1);
             String[] second = typeParams.split(",");
             if (second.length != 4) {
                 logger.error("Inproper num of type params" + typeParams);
             }
             return new String[] {
-                first[0].trim(),
+                "gs::ArrowProjectedFragment",
                 second[0].trim(),
                 second[1].trim(),
                 second[2].trim(),
@@ -285,7 +321,8 @@ public class GraphScopeAppScanner {
                         String.format("  cppVidType = \"%s\",", graphConfig.cppVidType),
                         String.format("  cppVdataType = \"%s\",", graphConfig.cppVdataType),
                         String.format("  cppEdataType = \"%s\",", graphConfig.cppEdataType),
-                        String.format("  fragType = \"%s\"", graphConfig.fragmentType),
+                        String.format("  fragType = \"%s\",", graphConfig.fragmentType),
+                        String.format("  vertexDataType = \"%s\"", graphConfig.vertexDataType),
                         ")",
                         String.format("public class %s {}", classSimpleName));
 

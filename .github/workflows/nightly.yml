@@ -19,7 +19,7 @@ jobs:
       matrix:
         os: [ubuntu-20.04, macos-10.15]
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
 
@@ -50,7 +50,7 @@ jobs:
         make unittest
 
     - name: Upload Coverage
-      uses: codecov/codecov-action@v2
+      uses: codecov/codecov-action@v3
       if: matrix.os == 'ubuntu-20.04'
       with:
         file: ./python/coverage.xml

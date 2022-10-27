@@ -49,7 +49,6 @@ class KubernetesResources(object):
 
 
 if __name__ == "__main__":
-
     path = DEFAULT_PATH
     resources = KubernetesResources()
     resources.load_json_file(path)

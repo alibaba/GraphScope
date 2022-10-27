@@ -36,6 +36,7 @@ public class GraphConfig {
     final String cppVdataType;
     final String cppEdataType;
     String messageTypes;
+    String vertexDataType;
 
     public GraphConfig(
             String oidType,
@@ -47,7 +48,8 @@ public class GraphConfig {
             String cppOidType,
             String cppVidType,
             String cppVdataType,
-            String cppEdataType) {
+            String cppEdataType,
+            String vertexDataType) {
         this.vidType = vidType;
         this.oidType = oidType;
         this.vdataType = vdataType;
@@ -58,6 +60,7 @@ public class GraphConfig {
         this.cppOidType = cppOidType;
         this.cppVdataType = cppVdataType;
         this.cppEdataType = cppEdataType;
+        this.vertexDataType = vertexDataType;
         logger.info(
                 "init graph config with: "
                         + this.oidType
@@ -75,6 +78,7 @@ public class GraphConfig {
                         + this.cppVdataType
                         + " "
                         + this.cppEdataType
-                        + " ");
+                        + " "
+                        + this.vertexDataType);
     }
 }

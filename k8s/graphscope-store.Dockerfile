@@ -29,14 +29,23 @@ RUN sudo chown -R $(id -u):$(id -g) /home/graphscope/gs /home/graphscope/.m2 && 
         && mv /home/graphscope/gs/interactive_engine/assembly/target/groot.tar.gz /home/graphscope/gs/groot.tar.gz; \
     fi
 
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:latest
+FROM centos:7.9.2009
 
-COPY --from=builder /opt/vineyard/ /usr/local/
+COPY --from=builder /home/graphscope/gs/groot.tar.gz /tmp/groot.tar.gz
 
 COPY ./k8s/ready_probe.sh /tmp/ready_probe.sh
-COPY --from=builder /home/graphscope/gs/groot.tar.gz /tmp/groot.tar.gz
-RUN sudo tar -zxf /tmp/groot.tar.gz -C /usr/local
+
+RUN tar -zxf /tmp/groot.tar.gz -C /usr/local
 RUN rm /tmp/groot.tar.gz
+
+RUN yum install -y sudo java-1.8.0-openjdk-devel bind-utils \
+    && yum clean all \
+    && rm -rf /var/cache/yum
+
+RUN useradd -m graphscope -u 1001 \
+    && echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+USER graphscope
+WORKDIR /home/graphscope
 
 # init log directory
 RUN sudo mkdir /var/log/graphscope \

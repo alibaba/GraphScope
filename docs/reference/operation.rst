@@ -60,10 +60,6 @@ BuiltIn operations
    add_column
    graph_to_numpy
    graph_to_dataframe
-   create_interactive_query
-   create_learning_instance
-   close_interactive_query
-   close_learning_instance
    gremlin_query
    gremlin_to_subgraph
    fetch_gremlin_result

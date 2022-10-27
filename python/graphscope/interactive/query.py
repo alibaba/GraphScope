@@ -24,8 +24,6 @@ from gremlin_python.driver.driver_remote_connection import DriverRemoteConnectio
 from gremlin_python.process.anonymous_traversal import traversal
 
 from graphscope.framework.dag import DAGNode
-from graphscope.framework.dag_utils import close_interactive_query
-from graphscope.framework.dag_utils import create_interactive_query
 from graphscope.framework.dag_utils import fetch_gremlin_result
 from graphscope.framework.dag_utils import gremlin_query
 from graphscope.framework.dag_utils import gremlin_to_subgraph
@@ -34,7 +32,7 @@ logger = logging.getLogger("graphscope")
 
 
 class InteractiveQueryStatus(Enum):
-    """A enumeration class of current status of InteractiveQuery"""
+    """Enumeration class of current status of InteractiveQuery"""
 
     Initializing = 0
     Running = 1
@@ -49,8 +47,8 @@ class ResultSetDAGNode(DAGNode):
     and you can get the result by :method:`one()` or :method:`all()`.
     """
 
-    def __init__(self, dag_node, op):
-        self._session = dag_node.session
+    def __init__(self, interactive, op):
+        self._session = interactive.session
         self._op = op
         # add op to dag
         self._session.dag.add_op(self._op)
@@ -91,47 +89,47 @@ class ResultSet(object):
         return self._session._wrapper(self._result_set_node.all())
 
 
-class InteractiveQueryDAGNode(DAGNode):
-    """A class represents an interactive query node in a DAG.
+class InteractiveQuery(object):
+    """`InteractiveQuery` class, is a simple wrapper around
+    `Gremlin-Python <https://pypi.org/project/gremlinpython/>`_,
+    which implements Gremlin within the Python language.
+    It also can expose gremlin endpoint which can be used by
+    any other standard gremlin console, with the method `graph_url()`.
 
-    The following example demonstrates its usage:
+    It also has a method called `subgraph` which can extract some fragments
+    from origin graph, produce a new, smaller but concise graph stored in vineyard,
+    which lifetime is independently of the origin graph.
 
-    .. code:: python
-
-        >>> # lazy node
-        >>> import graphscope as gs
-        >>> sess = gs.session(mode="lazy")
-        >>> g = sess.g() # <graphscope.framework.graph.GraphDAGNode object>
-        >>> ineractive = sess.gremlin(g)
-        >>> print(ineractive) # <graphscope.interactive.query.InteractiveQueryDAGNode object>
-        >>> rs = ineractive.execute("g.V()")
-        >>> print(rs) # <graphscope.ineractive.query.ResultSetDAGNode object>
-        >>> r = rs.one()
-        >>> print(r) # <graphscope.framework.context.ResultDAGNode>
-        >>> print(sess.run(r))
-        [2]
-        >>> subgraph = ineractive.subgraph("xxx")
-        >>> print(subgraph) # <graphscope.framework.graph.GraphDAGNode object>
-        >>> g2 = sess.run(subgraph)
-        >>> print(g2) # <graphscope.framework.graph.Graph object>
+    User can either use `execute()` to submit a script, or use `traversal_source()`
+    to get a `GraphTraversalSource` for further traversal.
     """
 
-    def __init__(self, session, graph, engine_params=None):
-        """
-        Args:
-            session (:class:`Session`): instance of GraphScope session.
-            graph (:class:`graphscope.framework.graph.GraphDAGNode`):
-                A graph instance that the gremlin query on.
-            engine_params (dict, optional):
-                Configuration to startup the interactive engine. See detail in:
-                `interactive_engine/deploy/docker/dockerfile/executor.vineyard.properties`
-        """
-        self._session = session
+    def __init__(self, graph, frontend_endpoint):
+        """Construct a :class:`InteractiveQuery` object."""
+        self._conn = None
+        # graph object id stored in vineyard
         self._graph = graph
-        self._engine_params = engine_params
-        self._op = create_interactive_query(self._graph, self._engine_params)
-        # add op to dag
-        self._session.dag.add_op(self._op)
+        self._session = graph._session
+        frontend_endpoint = frontend_endpoint.split(",")
+        self._graph_url = [f"ws://{endpoint}/gremlin" for endpoint in frontend_endpoint]
+        self.closed = False
+
+    @property
+    def graph_url(self):
+        """The gremlin graph url can be used with any standard gremlin console, e.g., tinkerpop."""
+        return self._graph_url
+
+    @property
+    def object_id(self):
+        return self._graph.vineyard_id
+
+    @property
+    def session(self):
+        return self._session
+
+    @property
+    def session_id(self):
+        return self._session.session_id
 
     def execute(self, query, request_options=None):
         """Execute gremlin querying scripts.
@@ -148,7 +146,10 @@ class InteractiveQueryDAGNode(DAGNode):
                 A result holds the gremlin result, evaluated in eager mode.
         """
         op = gremlin_query(self, query, request_options)
-        return ResultSetDAGNode(self, op)
+        return self._session._wrapper(ResultSetDAGNode(self, op))
+
+    def submit(self, query, request_options=None):
+        return self.execute(query, request_options)
 
     def subgraph(self, gremlin_script, request_options=None):
         """Create a subgraph, which input is the result of the execution of `gremlin_script`.
@@ -175,105 +176,7 @@ class InteractiveQueryDAGNode(DAGNode):
             request_options=request_options,
             oid_type=self._graph._oid_type,
         )
-        return GraphDAGNode(self._session, op)
-
-    def close(self):
-        """Close interactive engine and release the resources.
-
-        Returns:
-            :class:`graphscope.interactive.query.ClosedInteractiveQuery`
-                Evaluated in eager mode.
-        """
-        op = close_interactive_query(self)
-        return ClosedInteractiveQuery(self._session, op)
-
-
-class InteractiveQuery(object):
-    """`InteractiveQuery` class, is a simple wrapper around
-    `Gremlin-Python <https://pypi.org/project/gremlinpython/>`_,
-    which implements Gremlin within the Python language.
-    It also can expose gremlin endpoint which can be used by
-    any other standard gremlin console, with the method `graph_url()`.
-
-    It also has a method called `subgraph` which can extract some fragments
-    from origin graph, produce a new, smaller but concise graph stored in vineyard,
-    which lifetime is independent from the origin graph.
-
-    User can either use `execute()` to submit a script, or use `traversal_source()`
-    to get a `GraphTraversalSource` for further traversal.
-    """
-
-    def __init__(
-        self, interactive_query_node=None, frontend_endpoint=None, object_id=None
-    ):
-        """Construct a :class:`InteractiveQuery` object."""
-
-        self._status = InteractiveQueryStatus.Initializing
-        self._graph_url = None
-        self._conn = None
-        # graph object id stored in vineyard
-        self._object_id = object_id
-        # interactive_query_node is None used for create a interative query
-        # implicitly in eager mode
-        if interactive_query_node is not None:
-            self._interactive_query_node = interactive_query_node
-            self._session = self._interactive_query_node.session
-            # copy and set op evaluated
-            self._interactive_query_node.op = deepcopy(self._interactive_query_node.op)
-            self._interactive_query_node.evaluated = True
-            self._session.dag.add_op(self._interactive_query_node.op)
-        if frontend_endpoint is not None:
-            frontend_endpoint = frontend_endpoint.split(",")
-            self._graph_url = [
-                f"ws://{endpoint}/gremlin" for endpoint in frontend_endpoint
-            ]
-
-    @property
-    def graph_url(self):
-        """The gremlin graph url can be used with any standard gremlin console, e.g., tinkerpop."""
-        return self._graph_url
-
-    @property
-    def status(self):
-        return self._status
-
-    @property
-    def object_id(self):
-        return self._object_id
-
-    @status.setter
-    def status(self, value):
-        self._status = value
-
-    @property
-    def error_msg(self):
-        return self._error_msg
-
-    @error_msg.setter
-    def error_msg(self, error_msg):
-        self._error_msg = error_msg
-
-    def closed(self):
-        """Return if the current instance is closed."""
-        return self._status == InteractiveQueryStatus.Closed
-
-    def subgraph(self, gremlin_script, request_options=None):
-        if self._status != InteractiveQueryStatus.Running:
-            raise RuntimeError(
-                "Interactive query is unavailable with %s status.", str(self._status)
-            )
-        return self._session._wrapper(
-            self._interactive_query_node.subgraph(gremlin_script, request_options)
-        )
-
-    def execute(self, query, request_options=None):
-        if self._status != InteractiveQueryStatus.Running:
-            raise RuntimeError(
-                "Interactive query is unavailable with %s status.", str(self._status)
-            )
-        return self._session._wrapper(
-            self._interactive_query_node.execute(query, request_options)
-        )
+        return self._session._wrapper(GraphDAGNode(self._session, op))
 
     def traversal_source(self):
         """Create a GraphTraversalSource and return.
@@ -297,35 +200,18 @@ class InteractiveQuery(object):
         Returns:
             `GraphTraversalSource`
         """
-        if self._status != InteractiveQueryStatus.Running:
-            raise RuntimeError(
-                "Interactive query is unavailable with %s status.", str(self._status)
-            )
         if self._conn is None:
             self._conn = DriverRemoteConnection(self._graph_url[0], "g")
         return traversal().withRemote(self._conn)
 
     def close(self):
+        if self.closed:
+            return
         """Close interactive instance and release resources"""
-        if not self.closed():
-            if self._conn is not None:
-                try:
-                    self._conn.close()
-                except Exception:
-                    pass  # be silent when closing
-                self._conn = None
-
-            if not self._session.closed:
-                self._session._wrapper(self._interactive_query_node.close())
-                self._session._close_interactive_instance(self)
-                self._status = InteractiveQueryStatus.Closed
-
-
-class ClosedInteractiveQuery(DAGNode):
-    """Closed interactive query node in a DAG."""
-
-    def __init__(self, session, op):
-        self._session = session
-        self._op = op
-        # add op to dag
-        self._session.dag.add_op(self._op)
+        if self._conn is not None:
+            try:
+                self._conn.close()
+            except:  # noqa: E722
+                pass
+        self._session._close_interactive_instance(self)
+        self.closed = True

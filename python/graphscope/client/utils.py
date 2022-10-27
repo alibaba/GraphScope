@@ -265,7 +265,7 @@ class GSLogger(object):
         )
         stdout_handler.setFormatter(formatter)
         if gs_config.show_log:
-            stdout_handler.setLevel(gs_config.log_level)
+            stdout_handler.setLevel(gs_config.log_level.upper())
         else:
             stdout_handler.setLevel(logging.ERROR)
         logger.addHandler(stdout_handler)
@@ -277,7 +277,7 @@ class GSLogger(object):
             log_level = gs_config.log_level
         else:
             log_level = logging.ERROR
-        logger.setLevel(log_level)
+        logger.setLevel(log_level.upper())
         for handler in logger.handlers:
             handler.setLevel(log_level)
 

@@ -22,12 +22,14 @@
 from graphscope.version import __is_prerelease__
 from graphscope.version import __version__
 
+registry = "registry.cn-hongkong.aliyuncs.com"
+
 
 class GSConfig(object):
-    # the endpoint of a pre-launched GraphScope instance.
+    # the coordinator endpoint of a pre-launched GraphScope instance.
     addr = None
 
-    # "lazy" or "eager", defaults to "eager"
+    # "eager" or "lazy", defaults to "eager"
     mode = "eager"
 
     # "k8s" or "hosts"
@@ -35,11 +37,18 @@ class GSConfig(object):
 
     k8s_namespace = None
 
-    # image
+    # etcd image
     k8s_etcd_image = "quay.io/coreos/etcd:v3.4.13"
-    k8s_gs_image = (
-        f"registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:{__version__}"
-    )
+
+    # All in one image
+    k8s_gs_image = f"{registry}/graphscope/graphscope:{__version__}"
+
+    # Coordinator image
+    # Also could be used as a client image
+    k8s_coordinator_image = f"{registry}/graphscope/coordinator:{__version__}"
+
+    # Dataset image
+    k8s_dataset_image = f"{registry}/graphscope/dataset:{__version__}"
 
     # image pull configuration
     k8s_image_pull_policy = "IfNotPresent"
@@ -93,14 +102,6 @@ class GSConfig(object):
     show_log = False
     log_level = "INFO"
 
-    # GIE engine params
-    engine_params = None
-
-    # GIE instance will be created automatically when a property graph loaded.
-    # Otherwise, you should create a GIE instance manually by `sess.gremlin` if
-    # `initializing_interactive_engine` is False
-    initializing_interactive_engine = False
-
     timeout_seconds = 600
 
     # kill GraphScope instance after seconds of client disconnect
@@ -109,9 +110,6 @@ class GSConfig(object):
 
     # Demo dataset related
     mount_dataset = None
-    k8s_dataset_image = (
-        f"registry.cn-hongkong.aliyuncs.com/graphscope/dataset:{__version__}"
-    )
 
     # download_retries
     dataset_download_retries = 3

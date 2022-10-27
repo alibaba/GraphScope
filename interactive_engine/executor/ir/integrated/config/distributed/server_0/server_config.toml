@@ -42,7 +42,7 @@ servers_size = 2
 
 # Set addresses of your servers;
 # If the cluster is standalone, the size of addresses should be equal to [server_size] set above, and the addresses
-# should be in order, the fisrt address would be server 0.
+# should be in order, the first address would be server 0.
 [[network.servers]]
 hostname = '127.0.0.1'
 port = 11234

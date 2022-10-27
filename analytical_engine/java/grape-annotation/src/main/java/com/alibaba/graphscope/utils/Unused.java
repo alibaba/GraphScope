@@ -26,6 +26,24 @@ public interface Unused {
         return null;
     }
 
+    // Get unused variable when no msg is specified
+    static Unused getUnused(Class<?> a, Class<?> b) {
+        try {
+            Class<?> implClass = Class.forName("com.alibaba.graphscope.runtime.UnusedImpl");
+            Method method = implClass.getMethod("getUnused", Class.class, Class.class);
+            if (method == null) {
+                throw new IllegalStateException("fail to get method");
+            }
+            return (Unused) method.invoke(null, a, b);
+        } catch (ClassNotFoundException
+                | NoSuchMethodException
+                | InvocationTargetException
+                | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     static int class2Int(Class clz) {
         if (clz.equals(Long.class)) {
             return 0;
