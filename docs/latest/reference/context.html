@@ -147,7 +147,7 @@
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">graphscope.framework.context.</span></span><span class="sig-name descname"><span class="pre">BaseContextDAGNode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bound_app</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/context.html#BaseContextDAGNode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.context.BaseContextDAGNode" title="Permalink to this definition"></a></dt>
 <dd><p>Base class of concrete context DAG node.</p>
 <p>In GraphScope, it will return a instance of concrete class <cite>ContextDAGNode</cite>
-after evaluating an app, that will be automatically executed by <a href="#id2"><span class="problematic" id="id3">:method:`sess.run`</span></a>
+after evaluating an app, that will be automatically executed by <code class="xref py py-meth docutils literal notranslate"><span class="pre">Session.run()</span></code>
 in eager mode and return a instance of <a class="reference internal" href="#graphscope.framework.context.Context" title="graphscope.framework.context.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.Context</span></code></a></p>
 <dl class="simple">
 <dt>We can further use the handle to retrieve data:</dt><dd><ul class="simple">
@@ -542,6 +542,16 @@ A vertex has a single value as results.</p>
             
               
                 <dd><a href="../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.17.0/index.html">v0.17.0</a></dd>
               
             
 

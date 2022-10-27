@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>networkx.generators.expanders &mdash; GraphScope  documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+
+ 
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4TMYCGJ0X2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-4TMYCGJ0X2');
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> GraphScope
+          </a>
+              <div class="version">
+                v0.17.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div>
+  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+    
+      
+      
+        
+          
+        
+      
+      
+        <p class="caption"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../graph_transformation.html">Graph Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine.html">GraphScope Interactive Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../persistent_graph_store.html">Persistent Graph Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../frequently_asked_questions.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer_guide.html">Developer Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/python_index.html">Python API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
+</ul>
+
+      
+    
+  </div>
+
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GraphScope</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>networkx.generators.expanders</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for networkx.generators.expanders</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Provides explicit constructions of expander graphs.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;margulis_gabber_galil_graph&quot;</span><span class="p">,</span> <span class="s2">&quot;chordal_cycle_graph&quot;</span><span class="p">,</span> <span class="s2">&quot;paley_graph&quot;</span><span class="p">]</span>
+
+
+<span class="c1"># Other discrete torus expanders can be constructed by using the following edge</span>
+<span class="c1"># sets. For more information, see Chapter 4, &quot;Expander Graphs&quot;, in</span>
+<span class="c1"># &quot;Pseudorandomness&quot;, by Salil Vadhan.</span>
+<span class="c1">#</span>
+<span class="c1"># For a directed expander, add edges from (x, y) to:</span>
+<span class="c1">#</span>
+<span class="c1">#     (x, y),</span>
+<span class="c1">#     ((x + 1) % n, y),</span>
+<span class="c1">#     (x, (y + 1) % n),</span>
+<span class="c1">#     (x, (x + y) % n),</span>
+<span class="c1">#     (-y % n, x)</span>
+<span class="c1">#</span>
+<span class="c1"># For an undirected expander, add the reverse edges.</span>
+<span class="c1">#</span>
+<span class="c1"># Also appearing in the paper of Gabber and Galil:</span>
+<span class="c1">#</span>
+<span class="c1">#     (x, y),</span>
+<span class="c1">#     (x, (x + y) % n),</span>
+<span class="c1">#     (x, (x + y + 1) % n),</span>
+<span class="c1">#     ((x + y) % n, y),</span>
+<span class="c1">#     ((x + y + 1) % n, y)</span>
+<span class="c1">#</span>
+<span class="c1"># and:</span>
+<span class="c1">#</span>
+<span class="c1">#     (x, y),</span>
+<span class="c1">#     ((x + 2*y) % n, y),</span>
+<span class="c1">#     ((x + (2*y + 1)) % n, y),</span>
+<span class="c1">#     ((x + (2*y + 2)) % n, y),</span>
+<span class="c1">#     (x, (y + 2*x) % n),</span>
+<span class="c1">#     (x, (y + (2*x + 1)) % n),</span>
+<span class="c1">#     (x, (y + (2*x + 2)) % n),</span>
+<span class="c1">#</span>
+<div class="viewcode-block" id="margulis_gabber_galil_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.expanders.margulis_gabber_galil_graph.html#graphscope.nx.generators.expanders.margulis_gabber_galil_graph">[docs]</a><span class="k">def</span> <span class="nf">margulis_gabber_galil_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns the Margulis-Gabber-Galil undirected MultiGraph on `n^2` nodes.</span>
+
+<span class="sd">    The undirected MultiGraph is regular with degree `8`. Nodes are integer</span>
+<span class="sd">    pairs. The second-largest eigenvalue of the adjacency matrix of the graph</span>
+<span class="sd">    is at most `5 \sqrt{2}`, regardless of `n`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        Determines the number of nodes in the graph: `n^2`.</span>
+<span class="sd">    create_using : NetworkX graph constructor, optional (default MultiGraph)</span>
+<span class="sd">       Graph type to create. If graph instance, then cleared before populated.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">        The constructed undirected multigraph.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        If the graph is directed or not a multigraph.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">create_using</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">MultiGraph</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;`create_using` must be an undirected multigraph.&quot;</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="p">((</span><span class="n">x</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">y</span><span class="p">)</span> <span class="o">%</span> <span class="n">n</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+            <span class="p">((</span><span class="n">x</span> <span class="o">+</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">y</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span> <span class="o">%</span> <span class="n">n</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">y</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span> <span class="o">%</span> <span class="n">n</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">y</span> <span class="o">+</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span> <span class="o">%</span> <span class="n">n</span><span class="p">),</span>
+        <span class="p">):</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;margulis_gabber_galil_graph(</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">)&quot;</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="chordal_cycle_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.expanders.chordal_cycle_graph.html#graphscope.nx.generators.expanders.chordal_cycle_graph">[docs]</a><span class="k">def</span> <span class="nf">chordal_cycle_graph</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the chordal cycle graph on `p` nodes.</span>
+
+<span class="sd">    The returned graph is a cycle graph on `p` nodes with chords joining each</span>
+<span class="sd">    vertex `x` to its inverse modulo `p`. This graph is a (mildly explicit)</span>
+<span class="sd">    3-regular expander [1]_.</span>
+
+<span class="sd">    `p` *must* be a prime number.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    p : a prime number</span>
+
+<span class="sd">        The number of vertices in the graph. This also indicates where the</span>
+<span class="sd">        chordal edges in the cycle will be created.</span>
+
+<span class="sd">    create_using : NetworkX graph constructor, optional (default=nx.Graph)</span>
+<span class="sd">       Graph type to create. If graph instance, then cleared before populated.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">        The constructed undirected multigraph.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+
+<span class="sd">        If `create_using` indicates directed or not a multigraph.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    .. [1] Theorem 4.4.2 in A. Lubotzky. &quot;Discrete groups, expanding graphs and</span>
+<span class="sd">           invariant measures&quot;, volume 125 of Progress in Mathematics.</span>
+<span class="sd">           Birkhäuser Verlag, Basel, 1994.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">create_using</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">MultiGraph</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;`create_using` must be an undirected multigraph.&quot;</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+        <span class="n">left</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="n">p</span>
+        <span class="n">right</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="n">p</span>
+        <span class="c1"># Here we apply Fermat&#39;s Little Theorem to compute the multiplicative</span>
+        <span class="c1"># inverse of x in Z/pZ. By Fermat&#39;s Little Theorem,</span>
+        <span class="c1">#</span>
+        <span class="c1">#     x^p = x (mod p)</span>
+        <span class="c1">#</span>
+        <span class="c1"># Therefore,</span>
+        <span class="c1">#</span>
+        <span class="c1">#     x * x^(p - 2) = 1 (mod p)</span>
+        <span class="c1">#</span>
+        <span class="c1"># The number 0 is a special case: we just let its inverse be itself.</span>
+        <span class="n">chord</span> <span class="o">=</span> <span class="nb">pow</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">p</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">chord</span><span class="p">):</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;chordal_cycle_graph(</span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">)&quot;</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="paley_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.expanders.paley_graph.html#graphscope.nx.generators.expanders.paley_graph">[docs]</a><span class="k">def</span> <span class="nf">paley_graph</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the Paley (p-1)/2-regular graph on p nodes.</span>
+
+<span class="sd">    The returned graph is a graph on Z/pZ with edges between x and y</span>
+<span class="sd">    if and only if x-y is a nonzero square in Z/pZ.</span>
+
+<span class="sd">    If p = 1 mod 4, -1 is a square in Z/pZ and therefore x-y is a square if and</span>
+<span class="sd">    only if y-x is also a square, i.e the edges in the Paley graph are symmetric.</span>
+
+<span class="sd">    If p = 3 mod 4, -1 is not a square in Z/pZ and therefore either x-y or y-x</span>
+<span class="sd">    is a square in Z/pZ but not both.</span>
+
+<span class="sd">    Note that a more general definition of Paley graphs extends this construction</span>
+<span class="sd">    to graphs over q=p^n vertices, by using the finite field F_q instead of Z/pZ.</span>
+<span class="sd">    This construction requires to compute squares in general finite fields and is</span>
+<span class="sd">    not what is implemented here (i.e paley_graph(25) does not return the true</span>
+<span class="sd">    Paley graph associated with 5^2).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    p : int, an odd prime number.</span>
+
+<span class="sd">    create_using : NetworkX graph constructor, optional (default=nx.Graph)</span>
+<span class="sd">       Graph type to create. If graph instance, then cleared before populated.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : graph</span>
+<span class="sd">        The constructed directed graph.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        If the graph is a multigraph.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Chapter 13 in B. Bollobas, Random Graphs. Second edition.</span>
+<span class="sd">    Cambridge Studies in Advanced Mathematics, 73.</span>
+<span class="sd">    Cambridge University Press, Cambridge (2001).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">create_using</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">():</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;`create_using` cannot be a multigraph.&quot;</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="c1"># Compute the squares in Z/pZ.</span>
+    <span class="c1"># Make it a set to uniquify (there are exactly (p-1)/2 squares in Z/pZ</span>
+    <span class="c1"># when is prime).</span>
+    <span class="n">square_set</span> <span class="o">=</span> <span class="p">{(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">%</span> <span class="n">p</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">%</span> <span class="n">p</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">}</span>
+
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">x2</span> <span class="ow">in</span> <span class="n">square_set</span><span class="p">:</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">x2</span><span class="p">)</span> <span class="o">%</span> <span class="n">p</span><span class="p">)</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;paley(</span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">)&quot;</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020-2023, DAMO Academy, Alibaba Inc..</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.17.0
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../../../../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.17.0/index.html">v0.17.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.16.0/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.15.0/index.html">v0.15.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.14.0/index.html">v0.14.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.13.0/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.12.0/index.html">v0.12.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.11.0/index.html">v0.11.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.10.1/index.html">v0.10.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.10.0/index.html">v0.10.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.9.1/index.html">v0.9.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.9.0/index.html">v0.9.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.8.0/index.html">v0.8.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.7.0/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.6.1/index.html">v0.6.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.6.0/index.html">v0.6.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.5.0/index.html">v0.5.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.4.0/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.3.0/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="../../../index.html">en</a></dd>
+        <dd><a href="../../../zh/index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>

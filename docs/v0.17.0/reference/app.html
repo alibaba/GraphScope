@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analytical App &mdash; GraphScope  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="graphscope.framework.app.load_app" href="generated/graphscope.framework.app.load_app.html" />
+    <link rel="prev" title="Graph" href="graph.html" />
+
+ 
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4TMYCGJ0X2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-4TMYCGJ0X2');
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> GraphScope
+          </a>
+              <div class="version">
+                v0.17.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div>
+  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+    
+      
+      
+        
+          
+        
+      
+      
+        <p class="caption"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../graph_transformation.html">Graph Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interactive_engine.html">GraphScope Interactive Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../persistent_graph_store.html">Persistent Graph Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frequently_asked_questions.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_guide.html">Developer Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="python_index.html">Python API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="session.html">Session</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph.html">Graph</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Analytical App</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#appassets">AppAssets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#javaapp">JavaApp</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#app-object">App object</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#functions">Functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/graphscope.framework.app.load_app.html">graphscope.framework.app.load_app</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#builtin-apps">BuiltIn apps</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="context.html">Context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="selector.html">Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="operation.html">Operation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cython_sdk.html">Cython SDK API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive.html">Interactive Query</a></li>
+<li class="toctree-l2"><a class="reference internal" href="learning.html">Graph Learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="networkx/index.html">NetworkX-style API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="analytical_engine_index.html">Analytical Engine API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gae_java/index.html">Analytical Engine Java API Reference</a></li>
+</ul>
+
+      
+    
+  </div>
+
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GraphScope</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="python_index.html">Python API Reference</a> &raquo;</li>
+      <li>Analytical App</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/alibaba/graphscope/edit/main/docs/reference/app.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="analytical-app">
+<span id="app"></span><h1>Analytical App<a class="headerlink" href="#analytical-app" title="Permalink to this headline"></a></h1>
+<div class="section" id="appassets">
+<h2>AppAssets<a class="headerlink" href="#appassets" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="graphscope.framework.app.AppAssets">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">graphscope.framework.app.</span></span><span class="sig-name descname"><span class="pre">AppAssets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">algo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#AppAssets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.AppAssets" title="Permalink to this definition"></a></dt>
+<dd><p>A class represents an app asset node in a DAG that holds the bytes of the gar resource.</p>
+<p>Assets includes an algorithm name, and gar (for user defined algorithm),
+a context type (one of ‘tensor’, ‘vertex_data’, ‘vertex_property’,
+‘labeled_vertex_data’, ‘dynamic_vertex_data’, ‘labeled_vertex_property’),
+and its type (one of <cite>cpp_pie</cite>, <cite>cython_pie</cite>, <cite>cython_pregel</cite>),</p>
+<p>The instance of this class can be passed to init <a class="reference internal" href="#graphscope.framework.app.AppDAGNode" title="graphscope.framework.app.AppDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.app.AppDAGNode</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="graphscope.framework.app.AppAssets.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">algo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#AppAssets.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.AppAssets.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Init assets of the algorithm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>algo</strong> (<em>str</em>) – Represent specific algo inside resource.</p></li>
+<li><p><strong>context</strong> (<em>str</em>) – Type of context that hold the calculation results.</p></li>
+<li><p><strong>will get from gar if param is None. Defaults to None.</strong> (<em>It</em>) – </p></li>
+<li><p><strong>gar</strong> (<em>bytes</em><em> or </em><em>BytesIO</em><em>, </em><em>optional</em>) – The bytes that encodes the application’s source code.
+Defaults to None.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.framework.app.AppAssets.algo">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">algo</span></span><a class="headerlink" href="#graphscope.framework.app.AppAssets.algo" title="Permalink to this definition"></a></dt>
+<dd><p>Algorithm name, e.g. sssp, pagerank.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Algorithm name of this asset.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.framework.app.AppAssets.context_type">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">context_type</span></span><a class="headerlink" href="#graphscope.framework.app.AppAssets.context_type" title="Permalink to this definition"></a></dt>
+<dd><p>Context type, e.g. vertex_property, labeled_vertex_data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Type of the app context.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.framework.app.AppAssets.gar">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">gar</span></span><a class="headerlink" href="#graphscope.framework.app.AppAssets.gar" title="Permalink to this definition"></a></dt>
+<dd><p>Gar resource.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>gar resource of this asset.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bytes</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graphscope.framework.app.AppAssets.is_compatible">
+<span class="sig-name descname"><span class="pre">is_compatible</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#AppAssets.is_compatible"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.AppAssets.is_compatible" title="Permalink to this definition"></a></dt>
+<dd><p>Determine if this algorithm can run on this type of graph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">GraphDAGNode</span></code>) – A graph instance.</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>InvalidArgumentError</strong> – <ul>
+<li><p>App is not compatible with graph</p></li>
+</ul>
+</p></li>
+<li><p><strong>ScannerError</strong> – <ul>
+<li><p>Yaml file format is incorrect.</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.framework.app.AppAssets.signature">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">signature</span></span><a class="headerlink" href="#graphscope.framework.app.AppAssets.signature" title="Permalink to this definition"></a></dt>
+<dd><p>Generate a signature of the app assets by its algo name (and gar resources).</p>
+<p>Used to uniquely identify a app assets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>signature of this assets</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.framework.app.AppAssets.type">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">type</span></span><a class="headerlink" href="#graphscope.framework.app.AppAssets.type" title="Permalink to this definition"></a></dt>
+<dd><p>Algorithm type, one of <cite>cpp_pie</cite>, <cite>cython_pie</cite>, <cite>java_pie</cite> or <cite>cython_pregel</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Algorithm type of this asset.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="javaapp">
+<h2>JavaApp<a class="headerlink" href="#javaapp" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="graphscope.analytical.app.JavaApp">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">graphscope.analytical.app.</span></span><span class="sig-name descname"><span class="pre">JavaApp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">full_jar_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">java_app_class</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/java_app.html#JavaApp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.analytical.app.JavaApp" title="Permalink to this definition"></a></dt>
+<dd><p>A class represents a java app assert node in a DAG that holds the jar file.</p>
+<p>It holds neccessary resouces to run a java app, including java class path, the gar
+file which consists jar and configuration yaml, and the specified java class.
+On creating a JavaApp, graphscope will try to load the specified java class, and parse
+the Base class for your app, and the base class for your Context Class. This operation
+requires a java runtime environment installed in your client machine where your graphscope
+session is created.</p>
+<p>To run your app, provide <cite>JavaApp</cite> with a property or projected graph and your querying args.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="graphscope.analytical.app.JavaApp.__call__">
+<span class="sig-name descname"><span class="pre">__call__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="graph.html#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><span class="pre">graphscope.framework.graph.Graph</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/java_app.html#JavaApp.__call__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.analytical.app.JavaApp.__call__" title="Permalink to this definition"></a></dt>
+<dd><p>Instantiate an App and do queries over it.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graphscope.analytical.app.JavaApp.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">full_jar_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">java_app_class</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/java_app.html#JavaApp.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.analytical.app.JavaApp.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Init JavaApp with the full path of your <cite>jar</cite> file and the fully-qualified name of your
+app class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>full_jar_path</strong> (<em>str</em>) – The path where the jar file exists.</p></li>
+<li><p><strong>java_app_class</strong> (<em>str</em>) – the fully-qualified name of your app class.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graphscope.analytical.app.JavaApp.is_compatible">
+<span class="sig-name descname"><span class="pre">is_compatible</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/java_app.html#JavaApp.is_compatible"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.analytical.app.JavaApp.is_compatible" title="Permalink to this definition"></a></dt>
+<dd><p>Determine if this algorithm can run on this type of graph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">GraphDAGNode</span></code>) – A graph instance.</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>InvalidArgumentError</strong> – <ul>
+<li><p>App is not compatible with graph</p></li>
+</ul>
+</p></li>
+<li><p><strong>ScannerError</strong> – <ul>
+<li><p>Yaml file format is incorrect.</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graphscope.analytical.app.JavaApp.signature">
+<span class="sig-name descname"><span class="pre">signature</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/java_app.html#JavaApp.signature"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.analytical.app.JavaApp.signature" title="Permalink to this definition"></a></dt>
+<dd><p>Generate a signature of the app assets by its algo name (and gar resources).</p>
+<p>Used to uniquely identify a app assets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>signature of this assets</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="app-object">
+<h2>App object<a class="headerlink" href="#app-object" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="graphscope.framework.app.AppDAGNode">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">graphscope.framework.app.</span></span><span class="sig-name descname"><span class="pre">AppDAGNode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_assets</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#graphscope.framework.app.AppAssets" title="graphscope.framework.app.AppAssets"><span class="pre">graphscope.framework.app.AppAssets</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#AppDAGNode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.AppDAGNode" title="Permalink to this definition"></a></dt>
+<dd><p>A class represents a app node in a DAG.</p>
+<p>In GraphScope, an app node binding a concrete graph node that query executed on.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="graphscope.framework.app.App">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">graphscope.framework.app.</span></span><span class="sig-name descname"><span class="pre">App</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app_node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#App"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.App" title="Permalink to this definition"></a></dt>
+<dd><p>An application that can run on graphs and produce results.</p>
+<p>Analytical engine will build the app dynamic library when instantiate a app instance.
+And the dynamic library will be reused if subsequent app’s signature matches one of
+previous ones.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="graphscope.framework.app.App.__del__">
+<span class="sig-name descname"><span class="pre">__del__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#App.__del__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.App.__del__" title="Permalink to this definition"></a></dt>
+<dd><p>Unload app. Both on engine side and python side. Set the key to None.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graphscope.framework.app.App.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app_node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#App.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.App.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.framework.app.App.key">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">key</span></span><a class="headerlink" href="#graphscope.framework.app.App.key" title="Permalink to this definition"></a></dt>
+<dd><p>A unique identifier of App.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.framework.app.App.signature">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">signature</span></span><a class="headerlink" href="#graphscope.framework.app.App.signature" title="Permalink to this definition"></a></dt>
+<dd><p>Signature is computed by all critical components of the App.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline"></a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.framework.app.load_app.html#graphscope.framework.app.load_app" title="graphscope.framework.app.load_app"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graphscope.framework.app.load_app</span></code></a>([gar, …])</p></td>
+<td><p>Load an app from gar.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="builtin-apps">
+<h2>BuiltIn apps<a class="headerlink" href="#builtin-apps" title="Permalink to this headline"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="graphscope.bfs">
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">bfs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/bfs.html#bfs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.bfs" title="Permalink to this definition"></a></dt>
+<dd><p>Breadth first search from the src on projected simple graph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p></li>
+<li><p><strong>src</strong> (<em>optional</em>) – Source vertex of breadth first search. The type should be consistent
+with the id type of the <cite>graph</cite>, that is, it’s <cite>int</cite> or <cite>str</cite> depending
+on the <cite>oid_type</cite> is <cite>int64_t</cite> or <cite>string</cite> of the <cite>graph</cite>. Defaults to 0.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A context with each vertex with a distance from the source, will be evaluated in eager mode.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s2">&quot;hosts&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;eager&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># project to a simple graph (if needed)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;connect&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;dist&quot;</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">bfs</span><span class="p">(</span><span class="n">pg</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graphscope.pagerank">
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">pagerank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.85</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/pagerank.html#pagerank"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.pagerank" title="Permalink to this definition"></a></dt>
+<dd><p>Evalute PageRank on a graph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p></li>
+<li><p><strong>delta</strong> (<em>float</em><em>, </em><em>optional</em>) – Dumping factor. Defaults to 0.85.</p></li>
+<li><p><strong>max_round</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of rounds. Defaults to 10.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A context with each vertex assigned with the pagerank value, evaluated in eager mode.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s2">&quot;hosts&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;eager&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># project to a simple graph (if needed)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;connect&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;dist&quot;</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">pagerank</span><span class="p">(</span><span class="n">pg</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="mf">0.85</span><span class="p">,</span> <span class="n">max_round</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graphscope.sssp">
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">sssp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/sssp.html#sssp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.sssp" title="Permalink to this definition"></a></dt>
+<dd><p>Compute single source shortest path length on the <cite>graph</cite>.</p>
+<p>Note that the <cite>sssp</cite> algorithm requires an numerical property on the edge.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p></li>
+<li><p><strong>src</strong> (<em>optional</em>) – The source vertex. The type should be consistent
+with the id type of the <cite>graph</cite>, that is, it’s <cite>int</cite> or <cite>str</cite> depending
+on the <cite>oid_type</cite> is <cite>int64_t</cite> or <cite>string</cite> of the <cite>graph</cite>. Defaults to 0.</p></li>
+<li><p><strong>weight</strong> (<em>str</em><em>, </em><em>optional</em>) – The edge data key corresponding to the edge weight.
+Note that property under multiple labels should have the consistent index.
+Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A context with each vertex assigned with the shortest distance from the <cite>src</cite>,
+evaluated in eager mode.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s2">&quot;hosts&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;eager&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># project to a simple graph (if needed)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;connect&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;dist&quot;</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">sssp</span><span class="p">(</span><span class="n">pg</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graphscope.wcc">
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">wcc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/wcc.html#wcc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.wcc" title="Permalink to this definition"></a></dt>
+<dd><p>Evaluate weakly connected components on the <cite>graph</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A context with each vertex assigned with the component ID, evaluated in eager mode.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s2">&quot;hosts&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;eager&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># project to a simple graph (if needed)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;connect&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;dist&quot;</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">wcc</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graphscope.avg_clustering">
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">avg_clustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degree_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000000000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/clustering.html#avg_clustering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.avg_clustering" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the average clustering coefficient for the directed graph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p></li>
+<li><p><strong>degree_threshold</strong> (<em>int</em><em>, </em><em>optional</em>) – Filter super vertex which degree is greater than threshold. Default to 1e9.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>float</dt><dd><p>The average clustering coefficient.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>r</p>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s2">&quot;hosts&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;eager&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># project to a simple graph</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;connect&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;dist&quot;</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">avg_clustering</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graphscope.clustering">
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">clustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degree_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000000000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/clustering.html#clustering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.clustering" title="Permalink to this definition"></a></dt>
+<dd><p>Local clustering coefficient of a node in a Graph is the fraction
+of pairs of the node’s neighbors that are adjacent to each other.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p></li>
+<li><p><strong>degree_threshold</strong> (<em>int</em><em>, </em><em>optional</em>) – Filter super vertex which degree is greater than threshold. Default to 1e9.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A context with each vertex assigned the computed clustering value, will be evaluated in eager mode.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s2">&quot;hosts&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;eager&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># project to a simple graph (if needed)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;connect&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;dist&quot;</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">clustering</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graphscope.degree_centrality">
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">degree_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centrality_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'both'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/degree_centrality.html#degree_centrality"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.degree_centrality" title="Permalink to this definition"></a></dt>
+<dd><p>The degree centrality values are normalized by dividing
+by the maximum possible degree in a simple graph n-1 where
+n is the number of nodes in G.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code>) – A simple graph.</p></li>
+<li><p><strong>centrality_type</strong> (<em>str</em><em>, </em><em>optional</em>) – Available options are in/out/both.
+Defaults to “both”.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A context with each vertex assigned with the computed degree centrality, evaluated in eager mode.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s2">&quot;hosts&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;eager&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># project to a simple graph (if needed)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;connect&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;dist&quot;</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">degree_centrality</span><span class="p">(</span><span class="n">pg</span><span class="p">,</span> <span class="n">centrality_type</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graphscope.eigenvector_centrality">
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">eigenvector_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/eigenvector_centrality.html#eigenvector_centrality"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.eigenvector_centrality" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the eigenvector centrality for the <cite>graph</cite>.
+See more about eigenvector centrality here:
+<a class="reference external" href="https://networkx.org/documentation/networkx-1.10/reference/generated/networkx.algorithms.centrality.eigenvector_centrality.html">https://networkx.org/documentation/networkx-1.10/reference/generated/networkx.algorithms.centrality.eigenvector_centrality.html</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p></li>
+<li><p><strong>tolerance</strong> (<em>float</em><em>, </em><em>optional</em>) – Defaults to 1e-06.</p></li>
+<li><p><strong>max_round</strong> (<em>int</em><em>, </em><em>optional</em>) – Defaults to 100.</p></li>
+<li><p><strong>weight</strong> (<em>str</em><em>, </em><em>optional</em>) – The edge data key corresponding to the edge weight.
+Note that property under multiple labels should have the consistent index.
+Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A context with each vertex assigned with a gv-centrality, evaluated in eager mode.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s2">&quot;hosts&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;eager&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># project to a simple graph (if needed)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;connect&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;dist&quot;</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">eigenvector_centrality</span><span class="p">(</span><span class="n">pg</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="mf">1e-06</span><span class="p">,</span> <span class="n">max_round</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graphscope.hits">
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">hits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/hits.html#hits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.hits" title="Permalink to this definition"></a></dt>
+<dd><p>Compute HITS on <cite>graph</cite>.</p>
+<p>Hyperlink-Induced Topic Search (HITS; also known as hubs and authorities)
+is a link analysis algorithm that rates Web pages. See more here:
+<a class="reference external" href="https://en.wikipedia.org/wiki/HITS_algorithm">https://en.wikipedia.org/wiki/HITS_algorithm</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p></li>
+<li><p><strong>tolerance</strong> (<em>float</em><em>, </em><em>optional</em>) – Defaults to 0.01.</p></li>
+<li><p><strong>max_round</strong> (<em>int</em><em>, </em><em>optional</em>) – Defaults to 100.</p></li>
+<li><p><strong>normalized</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to normalize the result to 0-1. Defaults to True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A context with each vertex assigned with the HITS value, evaluated in eager mode.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexPropertyContextDAGNode" title="graphscope.framework.context.VertexPropertyContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexPropertyContextDAGNode</span></code></a></p>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s2">&quot;hosts&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;eager&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># project to a simple graph (if needed)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;connect&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;dist&quot;</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">hits</span><span class="p">(</span><span class="n">pg</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">max_round</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">normalized</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graphscope.k_core">
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">k_core</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/k_core.html#k_core"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.k_core" title="Permalink to this definition"></a></dt>
+<dd><p>K-cores of the graph are connected components that are left after
+all vertices of degree less than <cite>k</cite> have been removed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p></li>
+<li><p><strong>k</strong> (<em>int</em>) – The order of the core.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A context with each vertex assigned with a boolean:</dt><dd><p>1 if the vertex satisfies k-core, otherwise 0.</p>
+</dd>
+</dl>
+<p>Evaluated in eager mode.</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s2">&quot;hosts&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;eager&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># project to a simple graph (if needed)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;connect&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;dist&quot;</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">k_core</span><span class="p">(</span><span class="n">pg</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graphscope.katz_centrality">
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">katz_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degree_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000000000.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/katz_centrality.html#katz_centrality"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.katz_centrality" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the Katz centrality.</p>
+<p>See more details for Katz centrality here:
+<a class="reference external" href="https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.katz_centrality_numpy.html">https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.katz_centrality_numpy.html</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em>) – Auttenuation factor. Defaults to 0.1.</p></li>
+<li><p><strong>beta</strong> (<em>float</em><em>, </em><em>optional</em>) – Weight attributed to the immediate neighborhood. Defaults to 1.0.</p></li>
+<li><p><strong>tolerance</strong> (<em>float</em><em>, </em><em>optional</em>) – Error tolerance. Defaults to 1e-06.</p></li>
+<li><p><strong>max_round</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximun number of rounds. Defaults to 100.</p></li>
+<li><p><strong>normalized</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to normalize result values. Defaults to True.</p></li>
+<li><p><strong>degree_threshold</strong> (<em>int</em><em>, </em><em>optional</em>) – Filter super vertex which degree is greater than threshold. Default to 1e9.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A context with each vertex assigned with the computed katz_centrality, evaluated in eager mode.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s2">&quot;hosts&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;eager&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># project to a simple graph (if needed)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;connect&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;dist&quot;</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">katz_centrality</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graphscope.lpa">
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">lpa</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/lpa.html#lpa"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.lpa" title="Permalink to this definition"></a></dt>
+<dd><p>Evaluate Community Detection with Label Propagation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p></li>
+<li><p><strong>max_round</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum rounds. Defaults to 10.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A context with each vertex assigned with a community ID, will be evaluated in eager mode.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s2">&quot;hosts&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;eager&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># project to a simple graph (if needed)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;connect&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;dist&quot;</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">lpa</span><span class="p">(</span><span class="n">pg</span><span class="p">,</span> <span class="n">max_round</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graphscope.triangles">
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">triangles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/triangles.html#triangles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.triangles" title="Permalink to this definition"></a></dt>
+<dd><p>Evaluate triangle counting of the graph G.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A context with each vertex assigned with the triangle counting result, evaluated in eager mode.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s2">&quot;hosts&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;eager&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># project to a simple graph (if needed)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;connect&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;dist&quot;</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">triangles</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="graphscope.louvain">
+<span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">louvain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_tries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/louvain.html#louvain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.louvain" title="Permalink to this definition"></a></dt>
+<dd><p>Compute best partition on the <cite>graph</cite> by louvain.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple undirected graph.</p></li>
+<li><p><strong>min_progress</strong> – The minimum delta X required to be considered progress, where X is the number of nodes
+that have changed their community on a particular pass.
+Delta X is then the difference in number of nodes that changed communities
+on the current pass compared to the previous pass.</p></li>
+<li><p><strong>progress_tries</strong> – number of times the min_progress setting is not met
+before exiting form the current level and compressing the graph.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A context with each vertex assigned with id of community it belongs to, evaluated in eager mode.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.VertexDataContextDAGNode" title="graphscope.framework.context.VertexDataContextDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.VertexDataContextDAGNode</span></code></a></p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<p>[1] Blondel, V.D. et al. Fast unfolding of communities in large networks. J. Stat. Mech 10008, 1-12(2008).</p>
+<p>[2] <a class="reference external" href="https://github.com/Sotera/distributed-graph-analytics">https://github.com/Sotera/distributed-graph-analytics</a></p>
+<p>[3] <a class="reference external" href="https://sotera.github.io/distributed-graph-analytics/louvain/">https://sotera.github.io/distributed-graph-analytics/louvain/</a></p>
+<p class="rubric">Notes</p>
+<p>louvain now only support undirected graph. If input graph is directed graph, louvain would raise
+an InvalidArgumentError.</p>
+<p>Examples:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s2">&quot;hosts&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;eager&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">(</span><span class="n">sess</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># project to a simple graph (if needed)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;connect&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;dist&quot;</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">louvain</span><span class="p">(</span><span class="n">pg</span><span class="p">,</span> <span class="n">min_progress</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">progress_tries</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sess</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="graph.html" class="btn btn-neutral float-left" title="Graph" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="generated/graphscope.framework.app.load_app.html" class="btn btn-neutral float-right" title="graphscope.framework.app.load_app" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020-2023, DAMO Academy, Alibaba Inc..</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.17.0
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.17.0/index.html">v0.17.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.16.0/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.15.0/index.html">v0.15.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.14.0/index.html">v0.14.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.13.0/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.12.0/index.html">v0.12.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.11.0/index.html">v0.11.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.10.1/index.html">v0.10.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.10.0/index.html">v0.10.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.9.1/index.html">v0.9.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.9.0/index.html">v0.9.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.8.0/index.html">v0.8.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.7.0/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.6.1/index.html">v0.6.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.6.0/index.html">v0.6.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.5.0/index.html">v0.5.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.4.0/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.3.0/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="../index.html">en</a></dd>
+        <dd><a href="../zh/index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>

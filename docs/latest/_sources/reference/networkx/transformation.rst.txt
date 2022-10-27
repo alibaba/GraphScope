@@ -1,7 +1,7 @@
 .. _transformation:
 
 Graph Transformation
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
 
 In GraphScope, :class:`nx.Graph` or :class:`nx.DiGraph` can be created from GraphScope graph object.
 We implement a copy-on-write transformation strategy for creating from GraphScope graph.
@@ -40,5 +40,4 @@ Note: :class:`nx.Graph` and :class:`nx.DiGraph` not support to be created from a
 
 
 .. autofunction:: graphscope.nx.Graph.__init__
-.. autofunction:: graphscope.nx.Graph._init_with_arrow_property_graph
 .. autofunction:: graphscope.nx.Graph._convert_arrow_to_dynamic

@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>安装 &mdash; GraphScope  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="快速上手" href="getting_started.html" />
+    <link rel="prev" title="GraphScope: 一站式图计算系统" href="index.html" />
+
+ 
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4TMYCGJ0X2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-4TMYCGJ0X2');
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> GraphScope
+          </a>
+              <div class="version">
+                v0.17.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div>
+  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+    
+      
+      
+        
+          
+        
+      
+      
+        <p class="caption"><span class="caption-text">目录</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">安装</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">单机环境下安装</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#kubernetes-graphscope">基于 Kubernetes 安装 GraphScope 客户端</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">快速上手</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">部署</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">入门教程</a></li>
+<li class="toctree-l1"><a class="reference internal" href="loading_graph.html">载图</a></li>
+<li class="toctree-l1"><a class="reference internal" href="graph_transformation.html">图的变换操作</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analytics_engine.html">图分析引擎</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">图交互式分析引擎</a></li>
+<li class="toctree-l1"><a class="reference internal" href="learning_engine.html">图学习引擎</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frequently_asked_questions.html">常见问题</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guide.html">开发者指南</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API 参考</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://graphscope.io/docs/reference/python_index.html">Python API 参考</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://graphscope.io/docs/reference/analytical_engine_index.html">图分析引擎 API 参考</a></li>
+</ul>
+
+      
+    
+  </div>
+
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GraphScope</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="index.html">GraphScope: 一站式图计算系统</a> &raquo;</li>
+      <li>安装</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/alibaba/graphscope/edit/main/docs/zh/installation.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="id1">
+<h1>安装<a class="headerlink" href="#id1" title="Permalink to this headline"></a></h1>
+<p>GraphScope 目前支持的平台如下:</p>
+<ul class="simple">
+<li><p>gcc 7.1+</p></li>
+<li><p>Python 3.7 - 3.9</p></li>
+<li><p>Ubuntu 18.04 or later</p></li>
+<li><p>CentOS 7 or later</p></li>
+<li><p>macOS 11.2.1 (Big Sur) or later, with both Intel chip and Apple M1 chip</p></li>
+</ul>
+<div class="section" id="id2">
+<h2>单机环境下安装<a class="headerlink" href="#id2" title="Permalink to this headline"></a></h2>
+<p>GraphScope 以 <a class="reference external" href="https://pypi.org/project/graphscope">Python 程序包</a> 的形式发布, 可直接通过 <a class="reference external" href="https://pip.pypa.io/en/stable/">pip</a> 安装。</p>
+<p><strong>注意: 需要满足 pip 版本 &gt; 19.0 (or &gt; 20.3 for macOS)</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Requires the latest pip</span>
+pip3 install --upgrade pip
+
+<span class="c1"># Current stable release</span>
+pip3 install --upgrade graphscope
+</pre></div>
+</div>
+</div>
+<div class="section" id="kubernetes-graphscope">
+<h2>基于 Kubernetes 安装 GraphScope 客户端<a class="headerlink" href="#kubernetes-graphscope" title="Permalink to this headline"></a></h2>
+<p>我们可以按照本文档的以下步骤部署一个本地 Kubernetes 集群，并加载预编译好的镜像，在 Kubernetes 环境下运行 GraphScope。</p>
+<p>首先需要预先安装以下依赖。</p>
+<ul class="simple">
+<li><p>Python 3.7 - 3.9 (with pip)</p></li>
+<li><p>Local Kubernetes cluster set-up tool (e.g. <a class="reference external" href="https://kind.sigs.k8s.io">Kind</a>)</p></li>
+</ul>
+<p>对于 Windows 和 MacOS 的用户，可通过官方文档来安装上述依赖, 并在 Docker 中开启 Kubernetes 功能。
+对于 Ubuntu/CentOS Linux 发行版用户，我们提供了脚本来准备运行时环境。
+您也可以在 Windows 上安装 <a class="reference external" href="https://docs.microsoft.com/zh-cn/windows/wsl/install-win10">WSL2</a> 以使用脚本。</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># run the environment preparing script.</span>
+./scripts/install_deps.sh --k8s
+</pre></div>
+</div>
+<p>接下来，我们只需要通过 <a class="reference external" href="https://pip.pypa.io/en/stable/">pip</a> 安装 GraphScope 客户端：</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Requires the latest pip</span>
+pip3 install --upgrade pip
+
+<span class="c1"># Current stable release</span>
+pip3 install --upgrade graphscope-client
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="GraphScope: 一站式图计算系统" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="getting_started.html" class="btn btn-neutral float-right" title="快速上手" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020-2023, DAMO Academy, Alibaba Inc..</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.17.0
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../../latest/zh/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../zh/index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.17.0/zh/index.html">v0.17.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.16.0/zh/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.15.0/zh/index.html">v0.15.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.14.0/zh/index.html">v0.14.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.13.0/zh/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.12.0/zh/index.html">v0.12.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.11.0/zh/index.html">v0.11.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.10.1/zh/index.html">v0.10.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.10.0/zh/index.html">v0.10.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.9.1/zh/index.html">v0.9.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.9.0/zh/index.html">v0.9.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.8.0/zh/index.html">v0.8.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.7.0/zh/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.6.1/zh/index.html">v0.6.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.6.0/zh/index.html">v0.6.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.5.0/zh/index.html">v0.5.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.4.1/zh/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.4.0/zh/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.3.0/zh/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.2.1/zh/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.2.0/zh/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.1.3/zh/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.1.2/zh/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.1.1/zh/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.1.0/zh/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="../index.html">en</a></dd>
+        <dd><a href="index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>

@@ -174,8 +174,6 @@ orders** as specified in the above tables.
 2 Data source type
 ==================
 
-.. container::
-
 The system abstracts the data access layer to allow easy connection to
 multiple types of data sources. Currently, it supports LocalFileSystem.
 If it is used on the Alibaba Cloud PAI platform, you can directly read

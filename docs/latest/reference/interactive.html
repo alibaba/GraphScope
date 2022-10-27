@@ -147,7 +147,7 @@
 </table>
 <dl class="py class">
 <dt class="sig sig-object py" id="graphscope.interactive.query.InteractiveQuery">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">graphscope.interactive.query.</span></span><span class="sig-name descname"><span class="pre">InteractiveQuery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interactive_query_node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frontend_endpoint</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">object_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/interactive/query.html#InteractiveQuery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.interactive.query.InteractiveQuery" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">graphscope.interactive.query.</span></span><span class="sig-name descname"><span class="pre">InteractiveQuery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frontend_endpoint</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/interactive/query.html#InteractiveQuery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.interactive.query.InteractiveQuery" title="Permalink to this definition"></a></dt>
 <dd><p><cite>InteractiveQuery</cite> class, is a simple wrapper around
 <a class="reference external" href="https://pypi.org/project/gremlinpython/">Gremlin-Python</a>,
 which implements Gremlin within the Python language.
@@ -155,36 +155,41 @@ It also can expose gremlin endpoint which can be used by
 any other standard gremlin console, with the method <cite>graph_url()</cite>.</p>
 <p>It also has a method called <cite>subgraph</cite> which can extract some fragments
 from origin graph, produce a new, smaller but concise graph stored in vineyard,
-which lifetime is independent from the origin graph.</p>
+which lifetime is independently of the origin graph.</p>
 <p>User can either use <cite>execute()</cite> to submit a script, or use <cite>traversal_source()</cite>
 to get a <cite>GraphTraversalSource</cite> for further traversal.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.interactive.query.InteractiveQuery.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interactive_query_node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frontend_endpoint</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">object_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/interactive/query.html#InteractiveQuery.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.interactive.query.InteractiveQuery.__init__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frontend_endpoint</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/interactive/query.html#InteractiveQuery.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.interactive.query.InteractiveQuery.__init__" title="Permalink to this definition"></a></dt>
 <dd><p>Construct a <a class="reference internal" href="#graphscope.interactive.query.InteractiveQuery" title="graphscope.interactive.query.InteractiveQuery"><code class="xref py py-class docutils literal notranslate"><span class="pre">InteractiveQuery</span></code></a> object.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.interactive.query.InteractiveQuery.close">
 <span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/interactive/query.html#InteractiveQuery.close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.interactive.query.InteractiveQuery.close" title="Permalink to this definition"></a></dt>
-<dd><p>Close interactive instance and release resources</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="graphscope.interactive.query.InteractiveQuery.closed">
-<span class="sig-name descname"><span class="pre">closed</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/interactive/query.html#InteractiveQuery.closed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.interactive.query.InteractiveQuery.closed" title="Permalink to this definition"></a></dt>
-<dd><p>Return if the current instance is closed.</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="graphscope.interactive.query.InteractiveQuery.error_msg">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">error_msg</span></span><a class="headerlink" href="#graphscope.interactive.query.InteractiveQuery.error_msg" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.interactive.query.InteractiveQuery.execute">
 <span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/interactive/query.html#InteractiveQuery.execute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.interactive.query.InteractiveQuery.execute" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Execute gremlin querying scripts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>query</strong> (<em>str</em>) – Scripts that written in gremlin quering language.</p></li>
+<li><p><strong>request_options</strong> (<em>dict</em><em>, </em><em>optional</em>) – Gremlin request options. format:</p></li>
+<li><p><strong>{</strong> – “engine”: “gae”</p></li>
+<li><p><strong>}</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A result holds the gremlin result, evaluated in eager mode.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="context.html#graphscope.framework.context.ResultDAGNode" title="graphscope.framework.context.ResultDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.context.ResultDAGNode</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.interactive.query.InteractiveQuery.graph_url">
@@ -198,13 +203,41 @@ to get a <cite>GraphTraversalSource</cite> for further traversal.</p>
 <dd></dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="graphscope.interactive.query.InteractiveQuery.status">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">status</span></span><a class="headerlink" href="#graphscope.interactive.query.InteractiveQuery.status" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="graphscope.interactive.query.InteractiveQuery.session">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">session</span></span><a class="headerlink" href="#graphscope.interactive.query.InteractiveQuery.session" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="graphscope.interactive.query.InteractiveQuery.session_id">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">session_id</span></span><a class="headerlink" href="#graphscope.interactive.query.InteractiveQuery.session_id" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.interactive.query.InteractiveQuery.subgraph">
 <span class="sig-name descname"><span class="pre">subgraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gremlin_script</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/interactive/query.html#InteractiveQuery.subgraph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.interactive.query.InteractiveQuery.subgraph" title="Permalink to this definition"></a></dt>
+<dd><p>Create a subgraph, which input is the result of the execution of <cite>gremlin_script</cite>.</p>
+<p>Any gremlin script that output a set of edges can be used to contruct a subgraph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gremlin_script</strong> (<em>str</em>) – Gremlin script to be executed.</p></li>
+<li><p><strong>request_options</strong> (<em>dict</em><em>, </em><em>optional</em>) – Gremlin request options. format:</p></li>
+<li><p><strong>{</strong> – “engine”: “gae”</p></li>
+<li><p><strong>}</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A new graph constructed by the gremlin output, that also stored in vineyard.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="graph.html#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.graph.GraphDAGNode</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="graphscope.interactive.query.InteractiveQuery.submit">
+<span class="sig-name descname"><span class="pre">submit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/interactive/query.html#InteractiveQuery.submit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.interactive.query.InteractiveQuery.submit" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -294,6 +327,16 @@ Gremlin traversals to query the remote graph.</p>
             
               
                 <dd><a href="../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../v0.17.0/index.html">v0.17.0</a></dd>
               
             
 

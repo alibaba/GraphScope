@@ -45,18 +45,28 @@ Functions
 BuiltIn apps
 ------------
 
+.. autofunction:: graphscope.attribute_assortativity_coefficient
+.. autofunction:: graphscope.numeric_assortativity_coefficient
+.. autofunction:: graphscope.average_degree_connectivity
+.. autofunction:: graphscope.average_shortest_path_length
 .. autofunction:: graphscope.bfs
-.. autofunction:: graphscope.pagerank
-.. autofunction:: graphscope.sssp
-.. autofunction:: graphscope.wcc
 .. autofunction:: graphscope.avg_clustering
 .. autofunction:: graphscope.clustering
+.. autofunction:: graphscope.degree_assortativity_coefficient
 .. autofunction:: graphscope.degree_centrality
 .. autofunction:: graphscope.eigenvector_centrality
 .. autofunction:: graphscope.hits
+.. autofunction:: graphscope.is_simple_path
 .. autofunction:: graphscope.k_core
+.. autofunction:: graphscope.k_shell
 .. autofunction:: graphscope.katz_centrality
-.. autofunction:: graphscope.lpa
-.. autofunction:: graphscope.triangles
 .. autofunction:: graphscope.louvain
-
+.. autofunction:: graphscope.cdlp
+.. autofunction:: graphscope.lpa
+.. autofunction:: graphscope.lpa_u2i
+.. autofunction:: graphscope.pagerank
+.. autofunction:: graphscope.pagerank_nx
+.. autofunction:: graphscope.sssp
+.. autofunction:: graphscope.triangles
+.. autofunction:: graphscope.voterank
+.. autofunction:: graphscope.wcc

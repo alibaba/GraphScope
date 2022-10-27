@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>graphscope.interactive.query &mdash; GraphScope  documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+
+ 
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4TMYCGJ0X2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-4TMYCGJ0X2');
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> GraphScope
+          </a>
+              <div class="version">
+                v0.17.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div>
+  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+    
+      
+      
+        
+          
+        
+      
+      
+        <p class="caption"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../graph_transformation.html">Graph Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine.html">GraphScope Interactive Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../persistent_graph_store.html">Persistent Graph Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../frequently_asked_questions.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer_guide.html">Developer Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/python_index.html">Python API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
+</ul>
+
+      
+    
+  </div>
+
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GraphScope</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>graphscope.interactive.query</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for graphscope.interactive.query</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright 2020 Alibaba Group Holding Limited. All Rights Reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+
+<span class="kn">from</span> <span class="nn">gremlin_python.driver.driver_remote_connection</span> <span class="kn">import</span> <span class="n">DriverRemoteConnection</span>
+<span class="kn">from</span> <span class="nn">gremlin_python.process.anonymous_traversal</span> <span class="kn">import</span> <span class="n">traversal</span>
+
+<span class="kn">from</span> <span class="nn">graphscope.framework.dag</span> <span class="kn">import</span> <span class="n">DAGNode</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="kn">import</span> <span class="n">close_interactive_query</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="kn">import</span> <span class="n">create_interactive_query</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="kn">import</span> <span class="n">fetch_gremlin_result</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="kn">import</span> <span class="n">gremlin_query</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="kn">import</span> <span class="n">gremlin_to_subgraph</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;graphscope&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">InteractiveQueryStatus</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A enumeration class of current status of InteractiveQuery&quot;&quot;&quot;</span>
+
+    <span class="n">Initializing</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">Running</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">Failed</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">Closed</span> <span class="o">=</span> <span class="mi">3</span>
+
+
+<span class="k">class</span> <span class="nc">ResultSetDAGNode</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A class represents a result set node in a DAG.</span>
+
+<span class="sd">    This is a wrapper for :class:`gremlin_python.driver.resultset.ResultSet`,</span>
+<span class="sd">    and you can get the result by :method:`one()` or :method:`all()`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dag_node</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">dag_node</span><span class="o">.</span><span class="n">session</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">op</span>
+        <span class="c1"># add op to dag</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">add_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">one</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;See details in :method:`gremlin_python.driver.resultset.ResultSet.one`&quot;&quot;&quot;</span>
+        <span class="c1"># avoid circular import</span>
+        <span class="kn">from</span> <span class="nn">graphscope.framework.context</span> <span class="kn">import</span> <span class="n">ResultDAGNode</span>
+
+        <span class="n">op</span> <span class="o">=</span> <span class="n">fetch_gremlin_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;one&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ResultDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;See details in :method:`gremlin_python.driver.resultset.ResultSet.all`</span>
+
+<span class="sd">        Note that this method is equal to `ResultSet.all().result()`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># avoid circular import</span>
+        <span class="kn">from</span> <span class="nn">graphscope.framework.context</span> <span class="kn">import</span> <span class="n">ResultDAGNode</span>
+
+        <span class="n">op</span> <span class="o">=</span> <span class="n">fetch_gremlin_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ResultDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">ResultSet</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_set_node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_result_set_node</span> <span class="o">=</span> <span class="n">result_set_node</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_result_set_node</span><span class="o">.</span><span class="n">session</span>
+        <span class="c1"># copy and set op evaluated</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_result_set_node</span><span class="o">.</span><span class="n">op</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_result_set_node</span><span class="o">.</span><span class="n">op</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_result_set_node</span><span class="o">.</span><span class="n">evaluated</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">add_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_result_set_node</span><span class="o">.</span><span class="n">op</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">one</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_result_set_node</span><span class="o">.</span><span class="n">one</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_result_set_node</span><span class="o">.</span><span class="n">all</span><span class="p">())</span>
+
+
+<span class="k">class</span> <span class="nc">InteractiveQueryDAGNode</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A class represents an interactive query node in a DAG.</span>
+
+<span class="sd">    The following example demonstrates its usage:</span>
+
+<span class="sd">    .. code:: python</span>
+
+<span class="sd">        &gt;&gt;&gt; # lazy node</span>
+<span class="sd">        &gt;&gt;&gt; import graphscope as gs</span>
+<span class="sd">        &gt;&gt;&gt; sess = gs.session(mode=&quot;lazy&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; g = sess.g() # &lt;graphscope.framework.graph.GraphDAGNode object&gt;</span>
+<span class="sd">        &gt;&gt;&gt; ineractive = sess.gremlin(g)</span>
+<span class="sd">        &gt;&gt;&gt; print(ineractive) # &lt;graphscope.interactive.query.InteractiveQueryDAGNode object&gt;</span>
+<span class="sd">        &gt;&gt;&gt; rs = ineractive.execute(&quot;g.V()&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; print(rs) # &lt;graphscope.ineractive.query.ResultSetDAGNode object&gt;</span>
+<span class="sd">        &gt;&gt;&gt; r = rs.one()</span>
+<span class="sd">        &gt;&gt;&gt; print(r) # &lt;graphscope.framework.context.ResultDAGNode&gt;</span>
+<span class="sd">        &gt;&gt;&gt; print(sess.run(r))</span>
+<span class="sd">        [2]</span>
+<span class="sd">        &gt;&gt;&gt; subgraph = ineractive.subgraph(&quot;xxx&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; print(subgraph) # &lt;graphscope.framework.graph.GraphDAGNode object&gt;</span>
+<span class="sd">        &gt;&gt;&gt; g2 = sess.run(subgraph)</span>
+<span class="sd">        &gt;&gt;&gt; print(g2) # &lt;graphscope.framework.graph.Graph object&gt;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">engine_params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            session (:class:`Session`): instance of GraphScope session.</span>
+<span class="sd">            graph (:class:`graphscope.framework.graph.GraphDAGNode`):</span>
+<span class="sd">                A graph instance that the gremlin query on.</span>
+<span class="sd">            engine_params (dict, optional):</span>
+<span class="sd">                Configuration to startup the interactive engine. See detail in:</span>
+<span class="sd">                `interactive_engine/deploy/docker/dockerfile/executor.vineyard.properties`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">session</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="n">graph</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_engine_params</span> <span class="o">=</span> <span class="n">engine_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">create_interactive_query</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine_params</span><span class="p">)</span>
+        <span class="c1"># add op to dag</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">add_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Execute gremlin querying scripts.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            query (str): Scripts that written in gremlin quering language.</span>
+<span class="sd">            request_options (dict, optional): Gremlin request options. format:</span>
+<span class="sd">            {</span>
+<span class="sd">                &quot;engine&quot;: &quot;gae&quot;</span>
+<span class="sd">            }</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            :class:`graphscope.framework.context.ResultDAGNode`:</span>
+<span class="sd">                A result holds the gremlin result, evaluated in eager mode.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">gremlin_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ResultSetDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">subgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gremlin_script</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a subgraph, which input is the result of the execution of `gremlin_script`.</span>
+
+<span class="sd">        Any gremlin script that output a set of edges can be used to contruct a subgraph.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            gremlin_script (str): Gremlin script to be executed.</span>
+<span class="sd">            request_options (dict, optional): Gremlin request options. format:</span>
+<span class="sd">            {</span>
+<span class="sd">                &quot;engine&quot;: &quot;gae&quot;</span>
+<span class="sd">            }</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            :class:`graphscope.framework.graph.GraphDAGNode`:</span>
+<span class="sd">                A new graph constructed by the gremlin output, that also stored in vineyard.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># avoid circular import</span>
+        <span class="kn">from</span> <span class="nn">graphscope.framework.graph</span> <span class="kn">import</span> <span class="n">GraphDAGNode</span>
+
+        <span class="n">op</span> <span class="o">=</span> <span class="n">gremlin_to_subgraph</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">gremlin_script</span><span class="o">=</span><span class="n">gremlin_script</span><span class="p">,</span>
+            <span class="n">request_options</span><span class="o">=</span><span class="n">request_options</span><span class="p">,</span>
+            <span class="n">oid_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">_oid_type</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">GraphDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Close interactive engine and release the resources.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            :class:`graphscope.interactive.query.ClosedInteractiveQuery`</span>
+<span class="sd">                Evaluated in eager mode.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">close_interactive_query</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ClosedInteractiveQuery</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="InteractiveQuery"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery">[docs]</a><span class="k">class</span> <span class="nc">InteractiveQuery</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;`InteractiveQuery` class, is a simple wrapper around</span>
+<span class="sd">    `Gremlin-Python &lt;https://pypi.org/project/gremlinpython/&gt;`_,</span>
+<span class="sd">    which implements Gremlin within the Python language.</span>
+<span class="sd">    It also can expose gremlin endpoint which can be used by</span>
+<span class="sd">    any other standard gremlin console, with the method `graph_url()`.</span>
+
+<span class="sd">    It also has a method called `subgraph` which can extract some fragments</span>
+<span class="sd">    from origin graph, produce a new, smaller but concise graph stored in vineyard,</span>
+<span class="sd">    which lifetime is independent from the origin graph.</span>
+
+<span class="sd">    User can either use `execute()` to submit a script, or use `traversal_source()`</span>
+<span class="sd">    to get a `GraphTraversalSource` for further traversal.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="InteractiveQuery.__init__"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">interactive_query_node</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">frontend_endpoint</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">object_id</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Construct a :class:`InteractiveQuery` object.&quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">=</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Initializing</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># graph object id stored in vineyard</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_object_id</span> <span class="o">=</span> <span class="n">object_id</span>
+        <span class="c1"># interactive_query_node is None used for create a interative query</span>
+        <span class="c1"># implicitly in eager mode</span>
+        <span class="k">if</span> <span class="n">interactive_query_node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_query_node</span> <span class="o">=</span> <span class="n">interactive_query_node</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_query_node</span><span class="o">.</span><span class="n">session</span>
+            <span class="c1"># copy and set op evaluated</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_query_node</span><span class="o">.</span><span class="n">op</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interactive_query_node</span><span class="o">.</span><span class="n">op</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_query_node</span><span class="o">.</span><span class="n">evaluated</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">add_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interactive_query_node</span><span class="o">.</span><span class="n">op</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">frontend_endpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">frontend_endpoint</span> <span class="o">=</span> <span class="n">frontend_endpoint</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="sa">f</span><span class="s2">&quot;ws://</span><span class="si">{</span><span class="n">endpoint</span><span class="si">}</span><span class="s2">/gremlin&quot;</span> <span class="k">for</span> <span class="n">endpoint</span> <span class="ow">in</span> <span class="n">frontend_endpoint</span>
+            <span class="p">]</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">graph_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The gremlin graph url can be used with any standard gremlin console, e.g., tinkerpop.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_status</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">object_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_object_id</span>
+
+    <span class="nd">@status</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">error_msg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_error_msg</span>
+
+    <span class="nd">@error_msg</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">error_msg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">error_msg</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_error_msg</span> <span class="o">=</span> <span class="n">error_msg</span>
+
+<div class="viewcode-block" id="InteractiveQuery.closed"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.closed">[docs]</a>    <span class="k">def</span> <span class="nf">closed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return if the current instance is closed.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">==</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Closed</span></div>
+
+<div class="viewcode-block" id="InteractiveQuery.subgraph"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.subgraph">[docs]</a>    <span class="k">def</span> <span class="nf">subgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gremlin_script</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">!=</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Running</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Interactive query is unavailable with </span><span class="si">%s</span><span class="s2"> status.&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_status</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_query_node</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">gremlin_script</span><span class="p">,</span> <span class="n">request_options</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="InteractiveQuery.execute"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">!=</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Running</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Interactive query is unavailable with </span><span class="si">%s</span><span class="s2"> status.&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_status</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_query_node</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="InteractiveQuery.traversal_source"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.traversal_source">[docs]</a>    <span class="k">def</span> <span class="nf">traversal_source</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a GraphTraversalSource and return.</span>
+<span class="sd">        Once `g` has been created using a connection, we can start to write</span>
+<span class="sd">        Gremlin traversals to query the remote graph.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            RuntimeError: If the interactive script is not running.</span>
+
+<span class="sd">        Examples:</span>
+
+<span class="sd">            .. code:: python</span>
+
+<span class="sd">                sess = graphscope.session()</span>
+<span class="sd">                graph = load_modern_graph(sess, modern_graph_data_dir)</span>
+<span class="sd">                interactive = sess.gremlin(graph)</span>
+<span class="sd">                g = interactive.traversal_source()</span>
+<span class="sd">                print(g.V().both()[1:3].toList())</span>
+<span class="sd">                print(g.V().both().name.toList())</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            `GraphTraversalSource`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">!=</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Running</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Interactive query is unavailable with </span><span class="si">%s</span><span class="s2"> status.&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_status</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="o">=</span> <span class="n">DriverRemoteConnection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;g&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">traversal</span><span class="p">()</span><span class="o">.</span><span class="n">withRemote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="InteractiveQuery.close"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Close interactive instance and release resources&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span><span class="p">():</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="k">pass</span>  <span class="c1"># be silent when closing</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">closed</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interactive_query_node</span><span class="o">.</span><span class="n">close</span><span class="p">())</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_close_interactive_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">=</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Closed</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">ClosedInteractiveQuery</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Closed interactive query node in a DAG.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">session</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">op</span>
+        <span class="c1"># add op to dag</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">add_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020-2023, DAMO Academy, Alibaba Inc..</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.17.0
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../../../../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.17.0/index.html">v0.17.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.16.0/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.15.0/index.html">v0.15.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.14.0/index.html">v0.14.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.13.0/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.12.0/index.html">v0.12.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.11.0/index.html">v0.11.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.10.1/index.html">v0.10.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.10.0/index.html">v0.10.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.9.1/index.html">v0.9.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.9.0/index.html">v0.9.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.8.0/index.html">v0.8.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.7.0/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.6.1/index.html">v0.6.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.6.0/index.html">v0.6.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.5.0/index.html">v0.5.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.4.0/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.3.0/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="../../../index.html">en</a></dd>
+        <dd><a href="../../../zh/index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>

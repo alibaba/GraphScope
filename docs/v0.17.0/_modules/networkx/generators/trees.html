@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>networkx.generators.trees &mdash; GraphScope  documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+
+ 
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4TMYCGJ0X2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-4TMYCGJ0X2');
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> GraphScope
+          </a>
+              <div class="version">
+                v0.17.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div>
+  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+    
+      
+      
+        
+          
+        
+      
+      
+        <p class="caption"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../graph_transformation.html">Graph Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../interactive_engine.html">GraphScope Interactive Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../persistent_graph_store.html">Persistent Graph Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../frequently_asked_questions.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer_guide.html">Developer Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/python_index.html">Python API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
+</ul>
+
+      
+    
+  </div>
+
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GraphScope</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>networkx.generators.trees</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for networkx.generators.trees</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Functions for generating trees.&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="kn">import</span> <span class="n">py_random_state</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;prefix_tree&quot;</span><span class="p">,</span> <span class="s2">&quot;random_tree&quot;</span><span class="p">,</span> <span class="s2">&quot;prefix_tree_recursive&quot;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="prefix_tree"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.trees.prefix_tree.html#graphscope.nx.generators.trees.prefix_tree">[docs]</a><span class="k">def</span> <span class="nf">prefix_tree</span><span class="p">(</span><span class="n">paths</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates a directed prefix tree from a list of paths.</span>
+
+<span class="sd">    Usually the paths are described as strings or lists of integers.</span>
+
+<span class="sd">    A &quot;prefix tree&quot; represents the prefix structure of the strings.</span>
+<span class="sd">    Each node represents a prefix of some string. The root represents</span>
+<span class="sd">    the empty prefix with children for the single letter prefixes which</span>
+<span class="sd">    in turn have children for each double letter prefix starting with</span>
+<span class="sd">    the single letter corresponding to the parent node, and so on.</span>
+
+<span class="sd">    More generally the prefixes do not need to be strings. A prefix refers</span>
+<span class="sd">    to the start of a sequence. The root has children for each one element</span>
+<span class="sd">    prefix and they have children for each two element prefix that starts</span>
+<span class="sd">    with the one element sequence of the parent, and so on.</span>
+
+<span class="sd">    Note that this implementation uses integer nodes with an attribute.</span>
+<span class="sd">    Each node has an attribute &quot;source&quot; whose value is the original element</span>
+<span class="sd">    of the path to which this node corresponds. For example, suppose `paths`</span>
+<span class="sd">    consists of one path: &quot;can&quot;. Then the nodes `[1, 2, 3]` which represent</span>
+<span class="sd">    this path have &quot;source&quot; values &quot;c&quot;, &quot;a&quot; and &quot;n&quot;.</span>
+
+<span class="sd">    All the descendants of a node have a common prefix in the sequence/path</span>
+<span class="sd">    associated with that node. From the returned tree, the prefix for each</span>
+<span class="sd">    node can be constructed by traversing the tree up to the root and</span>
+<span class="sd">    accumulating the &quot;source&quot; values along the way.</span>
+
+<span class="sd">    The root node is always `0` and has &quot;source&quot; attribute `None`.</span>
+<span class="sd">    The root is the only node with in-degree zero.</span>
+<span class="sd">    The nil node is always `-1` and has &quot;source&quot; attribute `&quot;NIL&quot;`.</span>
+<span class="sd">    The nil node is the only node with out-degree zero.</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    paths: iterable of paths</span>
+<span class="sd">        An iterable of paths which are themselves sequences.</span>
+<span class="sd">        Matching prefixes among these sequences are identified with</span>
+<span class="sd">        nodes of the prefix tree. One leaf of the tree is associated</span>
+<span class="sd">        with each path. (Identical paths are associated with the same</span>
+<span class="sd">        leaf of the tree.)</span>
+
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tree: DiGraph</span>
+<span class="sd">        A directed graph representing an arborescence consisting of the</span>
+<span class="sd">        prefix tree generated by `paths`. Nodes are directed &quot;downward&quot;,</span>
+<span class="sd">        from parent to child. A special &quot;synthetic&quot; root node is added</span>
+<span class="sd">        to be the parent of the first node in each path. A special</span>
+<span class="sd">        &quot;synthetic&quot; leaf node, the &quot;nil&quot; node `-1`, is added to be the child</span>
+<span class="sd">        of all nodes representing the last element in a path. (The</span>
+<span class="sd">        addition of this nil node technically makes this not an</span>
+<span class="sd">        arborescence but a directed acyclic graph; removing the nil node</span>
+<span class="sd">        makes it an arborescence.)</span>
+
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The prefix tree is also known as a *trie*.</span>
+
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Create a prefix tree from a list of strings with common prefixes::</span>
+
+<span class="sd">        &gt;&gt;&gt; paths = [&quot;ab&quot;, &quot;abs&quot;, &quot;ad&quot;]</span>
+<span class="sd">        &gt;&gt;&gt; T = nx.prefix_tree(paths)</span>
+<span class="sd">        &gt;&gt;&gt; list(T.edges)</span>
+<span class="sd">        [(0, 1), (1, 2), (1, 4), (2, -1), (2, 3), (3, -1), (4, -1)]</span>
+
+<span class="sd">    The leaf nodes can be obtained as predecessors of the nil node::</span>
+
+<span class="sd">        &gt;&gt;&gt; root, NIL = 0, -1</span>
+<span class="sd">        &gt;&gt;&gt; list(T.predecessors(NIL))</span>
+<span class="sd">        [2, 3, 4]</span>
+
+<span class="sd">    To recover the original paths that generated the prefix tree,</span>
+<span class="sd">    traverse up the tree from the node `-1` to the node `0`::</span>
+
+<span class="sd">        &gt;&gt;&gt; recovered = []</span>
+<span class="sd">        &gt;&gt;&gt; for v in T.predecessors(NIL):</span>
+<span class="sd">        ...     prefix = &quot;&quot;</span>
+<span class="sd">        ...     while v != root:</span>
+<span class="sd">        ...         prefix = str(T.nodes[v][&quot;source&quot;]) + prefix</span>
+<span class="sd">        ...         v = next(T.predecessors(v))  # only one predecessor</span>
+<span class="sd">        ...     recovered.append(prefix)</span>
+<span class="sd">        &gt;&gt;&gt; sorted(recovered)</span>
+<span class="sd">        [&#39;ab&#39;, &#39;abs&#39;, &#39;ad&#39;]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">get_children</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">paths</span><span class="p">):</span>
+        <span class="n">children</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+        <span class="c1"># Populate dictionary with key(s) as the child/children of the root and</span>
+        <span class="c1"># value(s) as the remaining paths of the corresponding child/children</span>
+        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
+            <span class="c1"># If path is empty, we add an edge to the NIL node.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="p">:</span>
+                <span class="n">tree</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">NIL</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="n">child</span><span class="p">,</span> <span class="o">*</span><span class="n">rest</span> <span class="o">=</span> <span class="n">path</span>
+            <span class="c1"># `child` may exist as the head of more than one path in `paths`.</span>
+            <span class="n">children</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rest</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">children</span>
+
+    <span class="c1"># Initialize the prefix tree with a root node and a nil node.</span>
+    <span class="n">tree</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">tree</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">NIL</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">tree</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">NIL</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s2">&quot;NIL&quot;</span><span class="p">)</span>
+    <span class="n">children</span> <span class="o">=</span> <span class="n">get_children</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">paths</span><span class="p">)</span>
+    <span class="n">stack</span> <span class="o">=</span> <span class="p">[(</span><span class="n">root</span><span class="p">,</span> <span class="nb">iter</span><span class="p">(</span><span class="n">children</span><span class="o">.</span><span class="n">items</span><span class="p">()))]</span>
+    <span class="k">while</span> <span class="n">stack</span><span class="p">:</span>
+        <span class="n">parent</span><span class="p">,</span> <span class="n">remaining_children</span> <span class="o">=</span> <span class="n">stack</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">child</span><span class="p">,</span> <span class="n">remaining_paths</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">remaining_children</span><span class="p">)</span>
+        <span class="c1"># Pop item off stack if there are no remaining children</span>
+        <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+            <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="k">continue</span>
+        <span class="c1"># We relabel each child with an unused name.</span>
+        <span class="n">new_name</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="c1"># The &quot;source&quot; node attribute stores the original node name.</span>
+        <span class="n">tree</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">new_name</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">child</span><span class="p">)</span>
+        <span class="n">tree</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">new_name</span><span class="p">)</span>
+        <span class="n">children</span> <span class="o">=</span> <span class="n">get_children</span><span class="p">(</span><span class="n">new_name</span><span class="p">,</span> <span class="n">remaining_paths</span><span class="p">)</span>
+        <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">new_name</span><span class="p">,</span> <span class="nb">iter</span><span class="p">(</span><span class="n">children</span><span class="o">.</span><span class="n">items</span><span class="p">())))</span>
+
+    <span class="k">return</span> <span class="n">tree</span></div>
+
+
+<span class="k">def</span> <span class="nf">prefix_tree_recursive</span><span class="p">(</span><span class="n">paths</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Recursively creates a directed prefix tree from a list of paths.</span>
+
+<span class="sd">    The original recursive version of prefix_tree for comparison. It is</span>
+<span class="sd">    the same algorithm but the recursion is unrolled onto a stack.</span>
+
+<span class="sd">    Usually the paths are described as strings or lists of integers.</span>
+
+<span class="sd">    A &quot;prefix tree&quot; represents the prefix structure of the strings.</span>
+<span class="sd">    Each node represents a prefix of some string. The root represents</span>
+<span class="sd">    the empty prefix with children for the single letter prefixes which</span>
+<span class="sd">    in turn have children for each double letter prefix starting with</span>
+<span class="sd">    the single letter corresponding to the parent node, and so on.</span>
+
+<span class="sd">    More generally the prefixes do not need to be strings. A prefix refers</span>
+<span class="sd">    to the start of a sequence. The root has children for each one element</span>
+<span class="sd">    prefix and they have children for each two element prefix that starts</span>
+<span class="sd">    with the one element sequence of the parent, and so on.</span>
+
+<span class="sd">    Note that this implementation uses integer nodes with an attribute.</span>
+<span class="sd">    Each node has an attribute &quot;source&quot; whose value is the original element</span>
+<span class="sd">    of the path to which this node corresponds. For example, suppose `paths`</span>
+<span class="sd">    consists of one path: &quot;can&quot;. Then the nodes `[1, 2, 3]` which represent</span>
+<span class="sd">    this path have &quot;source&quot; values &quot;c&quot;, &quot;a&quot; and &quot;n&quot;.</span>
+
+<span class="sd">    All the descendants of a node have a common prefix in the sequence/path</span>
+<span class="sd">    associated with that node. From the returned tree, ehe prefix for each</span>
+<span class="sd">    node can be constructed by traversing the tree up to the root and</span>
+<span class="sd">    accumulating the &quot;source&quot; values along the way.</span>
+
+<span class="sd">    The root node is always `0` and has &quot;source&quot; attribute `None`.</span>
+<span class="sd">    The root is the only node with in-degree zero.</span>
+<span class="sd">    The nil node is always `-1` and has &quot;source&quot; attribute `&quot;NIL&quot;`.</span>
+<span class="sd">    The nil node is the only node with out-degree zero.</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    paths: iterable of paths</span>
+<span class="sd">        An iterable of paths which are themselves sequences.</span>
+<span class="sd">        Matching prefixes among these sequences are identified with</span>
+<span class="sd">        nodes of the prefix tree. One leaf of the tree is associated</span>
+<span class="sd">        with each path. (Identical paths are associated with the same</span>
+<span class="sd">        leaf of the tree.)</span>
+
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tree: DiGraph</span>
+<span class="sd">        A directed graph representing an arborescence consisting of the</span>
+<span class="sd">        prefix tree generated by `paths`. Nodes are directed &quot;downward&quot;,</span>
+<span class="sd">        from parent to child. A special &quot;synthetic&quot; root node is added</span>
+<span class="sd">        to be the parent of the first node in each path. A special</span>
+<span class="sd">        &quot;synthetic&quot; leaf node, the &quot;nil&quot; node `-1`, is added to be the child</span>
+<span class="sd">        of all nodes representing the last element in a path. (The</span>
+<span class="sd">        addition of this nil node technically makes this not an</span>
+<span class="sd">        arborescence but a directed acyclic graph; removing the nil node</span>
+<span class="sd">        makes it an arborescence.)</span>
+
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The prefix tree is also known as a *trie*.</span>
+
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Create a prefix tree from a list of strings with common prefixes::</span>
+
+<span class="sd">        &gt;&gt;&gt; paths = [&quot;ab&quot;, &quot;abs&quot;, &quot;ad&quot;]</span>
+<span class="sd">        &gt;&gt;&gt; T = nx.prefix_tree(paths)</span>
+<span class="sd">        &gt;&gt;&gt; list(T.edges)</span>
+<span class="sd">        [(0, 1), (1, 2), (1, 4), (2, -1), (2, 3), (3, -1), (4, -1)]</span>
+
+<span class="sd">    The leaf nodes can be obtained as predecessors of the nil node.</span>
+
+<span class="sd">        &gt;&gt;&gt; root, NIL = 0, -1</span>
+<span class="sd">        &gt;&gt;&gt; list(T.predecessors(NIL))</span>
+<span class="sd">        [2, 3, 4]</span>
+
+<span class="sd">    To recover the original paths that generated the prefix tree,</span>
+<span class="sd">    traverse up the tree from the node `-1` to the node `0`::</span>
+
+<span class="sd">        &gt;&gt;&gt; recovered = []</span>
+<span class="sd">        &gt;&gt;&gt; for v in T.predecessors(NIL):</span>
+<span class="sd">        ...     prefix = &quot;&quot;</span>
+<span class="sd">        ...     while v != root:</span>
+<span class="sd">        ...         prefix = str(T.nodes[v][&quot;source&quot;]) + prefix</span>
+<span class="sd">        ...         v = next(T.predecessors(v))  # only one predecessor</span>
+<span class="sd">        ...     recovered.append(prefix)</span>
+<span class="sd">        &gt;&gt;&gt; sorted(recovered)</span>
+<span class="sd">        [&#39;ab&#39;, &#39;abs&#39;, &#39;ad&#39;]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_helper</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">tree</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Recursively create a trie from the given list of paths.</span>
+
+<span class="sd">        `paths` is a list of paths, each of which is itself a list of</span>
+<span class="sd">        nodes, relative to the given `root` (but not including it). This</span>
+<span class="sd">        list of paths will be interpreted as a tree-like structure, in</span>
+<span class="sd">        which two paths that share a prefix represent two branches of</span>
+<span class="sd">        the tree with the same initial segment.</span>
+
+<span class="sd">        `root` is the parent of the node at index 0 in each path.</span>
+
+<span class="sd">        `tree` is the &quot;accumulator&quot;, the :class:`networkx.DiGraph`</span>
+<span class="sd">        representing the branching to which the new nodes and edges will</span>
+<span class="sd">        be added.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># For each path, remove the first node and make it a child of root.</span>
+        <span class="c1"># Any remaining paths then get processed recursively.</span>
+        <span class="n">children</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
+            <span class="c1"># If path is empty, we add an edge to the NIL node.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="p">:</span>
+                <span class="n">tree</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">NIL</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="n">child</span><span class="p">,</span> <span class="o">*</span><span class="n">rest</span> <span class="o">=</span> <span class="n">path</span>
+            <span class="c1"># `child` may exist as the head of more than one path in `paths`.</span>
+            <span class="n">children</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rest</span><span class="p">)</span>
+        <span class="c1"># Add a node for each child, connect root, recurse to remaining paths</span>
+        <span class="k">for</span> <span class="n">child</span><span class="p">,</span> <span class="n">remaining_paths</span> <span class="ow">in</span> <span class="n">children</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># We relabel each child with an unused name.</span>
+            <span class="n">new_name</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="c1"># The &quot;source&quot; node attribute stores the original node name.</span>
+            <span class="n">tree</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">new_name</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">child</span><span class="p">)</span>
+            <span class="n">tree</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">new_name</span><span class="p">)</span>
+            <span class="n">_helper</span><span class="p">(</span><span class="n">remaining_paths</span><span class="p">,</span> <span class="n">new_name</span><span class="p">,</span> <span class="n">tree</span><span class="p">)</span>
+
+    <span class="c1"># Initialize the prefix tree with a root node and a nil node.</span>
+    <span class="n">tree</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">tree</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">NIL</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">tree</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">NIL</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s2">&quot;NIL&quot;</span><span class="p">)</span>
+    <span class="c1"># Populate the tree.</span>
+    <span class="n">_helper</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">tree</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tree</span>
+
+
+<span class="c1"># From the Wikipedia article on Prüfer sequences:</span>
+<span class="c1">#</span>
+<span class="c1"># &gt; Generating uniformly distributed random Prüfer sequences and</span>
+<span class="c1"># &gt; converting them into the corresponding trees is a straightforward</span>
+<span class="c1"># &gt; method of generating uniformly distributed random labelled trees.</span>
+<span class="c1">#</span>
+<div class="viewcode-block" id="random_tree"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.trees.random_tree.html#graphscope.nx.generators.trees.random_tree">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">random_tree</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a uniformly random tree on `n` nodes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        A positive integer representing the number of nodes in the tree.</span>
+<span class="sd">    seed : integer, random_state, or None (default)</span>
+<span class="sd">        Indicator of random number generation state.</span>
+<span class="sd">        See :ref:`Randomness&lt;randomness&gt;`.</span>
+<span class="sd">    create_using : NetworkX graph constructor, optional (default=nx.Graph)</span>
+<span class="sd">        Graph type to create. If graph instance, then cleared before populated.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    NetworkX graph</span>
+<span class="sd">        A tree, given as an undirected graph, whose nodes are numbers in</span>
+<span class="sd">        the set {0, …, *n* - 1}.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXPointlessConcept</span>
+<span class="sd">        If `n` is zero (because the null graph is not a tree).</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The current implementation of this function generates a uniformly</span>
+<span class="sd">    random Prüfer sequence then converts that to a tree via the</span>
+<span class="sd">    :func:`~networkx.from_prufer_sequence` function. Since there is a</span>
+<span class="sd">    bijection between Prüfer sequences of length *n* - 2 and trees on</span>
+<span class="sd">    *n* nodes, the tree is chosen uniformly at random from the set of</span>
+<span class="sd">    all trees on *n* nodes.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; tree = nx.random_tree(n=10, seed=0)</span>
+<span class="sd">    &gt;&gt;&gt; print(nx.forest_str(tree, sources=[0]))</span>
+<span class="sd">    ╙── 0</span>
+<span class="sd">        ├── 3</span>
+<span class="sd">        └── 4</span>
+<span class="sd">            ├── 6</span>
+<span class="sd">            │   ├── 1</span>
+<span class="sd">            │   ├── 2</span>
+<span class="sd">            │   └── 7</span>
+<span class="sd">            │       └── 8</span>
+<span class="sd">            │           └── 5</span>
+<span class="sd">            └── 9</span>
+
+<span class="sd">    &gt;&gt;&gt; tree = nx.random_tree(n=10, seed=0, create_using=nx.DiGraph)</span>
+<span class="sd">    &gt;&gt;&gt; print(nx.forest_str(tree))</span>
+<span class="sd">    ╙── 0</span>
+<span class="sd">        ├─╼ 3</span>
+<span class="sd">        └─╼ 4</span>
+<span class="sd">            ├─╼ 6</span>
+<span class="sd">            │   ├─╼ 1</span>
+<span class="sd">            │   ├─╼ 2</span>
+<span class="sd">            │   └─╼ 7</span>
+<span class="sd">            │       └─╼ 8</span>
+<span class="sd">            │           └─╼ 5</span>
+<span class="sd">            └─╼ 9</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXPointlessConcept</span><span class="p">(</span><span class="s2">&quot;the null graph is not a tree&quot;</span><span class="p">)</span>
+    <span class="c1"># Cannot create a Prüfer sequence unless `n` is at least two.</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">utree</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">sequence</span> <span class="o">=</span> <span class="p">[</span><span class="n">seed</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)]</span>
+        <span class="n">utree</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">from_prufer_sequence</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">create_using</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">tree</span> <span class="o">=</span> <span class="n">utree</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">tree</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">tree</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+            <span class="c1"># Use a arbitrary root node and dfs to define edge directions</span>
+            <span class="n">edges</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">dfs_edges</span><span class="p">(</span><span class="n">utree</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">edges</span> <span class="o">=</span> <span class="n">utree</span><span class="o">.</span><span class="n">edges</span>
+
+        <span class="c1"># Populate the specified graph type</span>
+        <span class="n">tree</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">utree</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
+        <span class="n">tree</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">tree</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020-2023, DAMO Academy, Alibaba Inc..</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.17.0
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../../../../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.17.0/index.html">v0.17.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.16.0/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.15.0/index.html">v0.15.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.14.0/index.html">v0.14.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.13.0/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.12.0/index.html">v0.12.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.11.0/index.html">v0.11.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.10.1/index.html">v0.10.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.10.0/index.html">v0.10.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.9.1/index.html">v0.9.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.9.0/index.html">v0.9.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.8.0/index.html">v0.8.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.7.0/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.6.1/index.html">v0.6.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.6.0/index.html">v0.6.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.5.0/index.html">v0.5.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.4.0/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.3.0/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="../../../index.html">en</a></dd>
+        <dd><a href="../../../zh/index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>

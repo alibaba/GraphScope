@@ -147,8 +147,6 @@
 <span class="kn">from</span> <span class="nn">gremlin_python.process.anonymous_traversal</span> <span class="kn">import</span> <span class="n">traversal</span>
 
 <span class="kn">from</span> <span class="nn">graphscope.framework.dag</span> <span class="kn">import</span> <span class="n">DAGNode</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="kn">import</span> <span class="n">close_interactive_query</span>
-<span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="kn">import</span> <span class="n">create_interactive_query</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="kn">import</span> <span class="n">fetch_gremlin_result</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="kn">import</span> <span class="n">gremlin_query</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="kn">import</span> <span class="n">gremlin_to_subgraph</span>
@@ -157,7 +155,7 @@
 
 
 <span class="k">class</span> <span class="nc">InteractiveQueryStatus</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A enumeration class of current status of InteractiveQuery&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Enumeration class of current status of InteractiveQuery&quot;&quot;&quot;</span>
 
     <span class="n">Initializing</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">Running</span> <span class="o">=</span> <span class="mi">1</span>
@@ -172,8 +170,8 @@
 <span class="sd">    and you can get the result by :method:`one()` or :method:`all()`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dag_node</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">dag_node</span><span class="o">.</span><span class="n">session</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interactive</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">interactive</span><span class="o">.</span><span class="n">session</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">op</span>
         <span class="c1"># add op to dag</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">add_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="p">)</span>
@@ -214,49 +212,49 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_result_set_node</span><span class="o">.</span><span class="n">all</span><span class="p">())</span>
 
 
-<span class="k">class</span> <span class="nc">InteractiveQueryDAGNode</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A class represents an interactive query node in a DAG.</span>
+<div class="viewcode-block" id="InteractiveQuery"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery">[docs]</a><span class="k">class</span> <span class="nc">InteractiveQuery</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;`InteractiveQuery` class, is a simple wrapper around</span>
+<span class="sd">    `Gremlin-Python &lt;https://pypi.org/project/gremlinpython/&gt;`_,</span>
+<span class="sd">    which implements Gremlin within the Python language.</span>
+<span class="sd">    It also can expose gremlin endpoint which can be used by</span>
+<span class="sd">    any other standard gremlin console, with the method `graph_url()`.</span>
 
-<span class="sd">    The following example demonstrates its usage:</span>
+<span class="sd">    It also has a method called `subgraph` which can extract some fragments</span>
+<span class="sd">    from origin graph, produce a new, smaller but concise graph stored in vineyard,</span>
+<span class="sd">    which lifetime is independently of the origin graph.</span>
 
-<span class="sd">    .. code:: python</span>
-
-<span class="sd">        &gt;&gt;&gt; # lazy node</span>
-<span class="sd">        &gt;&gt;&gt; import graphscope as gs</span>
-<span class="sd">        &gt;&gt;&gt; sess = gs.session(mode=&quot;lazy&quot;)</span>
-<span class="sd">        &gt;&gt;&gt; g = sess.g() # &lt;graphscope.framework.graph.GraphDAGNode object&gt;</span>
-<span class="sd">        &gt;&gt;&gt; ineractive = sess.gremlin(g)</span>
-<span class="sd">        &gt;&gt;&gt; print(ineractive) # &lt;graphscope.interactive.query.InteractiveQueryDAGNode object&gt;</span>
-<span class="sd">        &gt;&gt;&gt; rs = ineractive.execute(&quot;g.V()&quot;)</span>
-<span class="sd">        &gt;&gt;&gt; print(rs) # &lt;graphscope.ineractive.query.ResultSetDAGNode object&gt;</span>
-<span class="sd">        &gt;&gt;&gt; r = rs.one()</span>
-<span class="sd">        &gt;&gt;&gt; print(r) # &lt;graphscope.framework.context.ResultDAGNode&gt;</span>
-<span class="sd">        &gt;&gt;&gt; print(sess.run(r))</span>
-<span class="sd">        [2]</span>
-<span class="sd">        &gt;&gt;&gt; subgraph = ineractive.subgraph(&quot;xxx&quot;)</span>
-<span class="sd">        &gt;&gt;&gt; print(subgraph) # &lt;graphscope.framework.graph.GraphDAGNode object&gt;</span>
-<span class="sd">        &gt;&gt;&gt; g2 = sess.run(subgraph)</span>
-<span class="sd">        &gt;&gt;&gt; print(g2) # &lt;graphscope.framework.graph.Graph object&gt;</span>
+<span class="sd">    User can either use `execute()` to submit a script, or use `traversal_source()`</span>
+<span class="sd">    to get a `GraphTraversalSource` for further traversal.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">engine_params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Args:</span>
-<span class="sd">            session (:class:`Session`): instance of GraphScope session.</span>
-<span class="sd">            graph (:class:`graphscope.framework.graph.GraphDAGNode`):</span>
-<span class="sd">                A graph instance that the gremlin query on.</span>
-<span class="sd">            engine_params (dict, optional):</span>
-<span class="sd">                Configuration to startup the interactive engine. See detail in:</span>
-<span class="sd">                `interactive_engine/deploy/docker/dockerfile/executor.vineyard.properties`</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">session</span>
+<div class="viewcode-block" id="InteractiveQuery.__init__"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">frontend_endpoint</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Construct a :class:`InteractiveQuery` object.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># graph object id stored in vineyard</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="n">graph</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_engine_params</span> <span class="o">=</span> <span class="n">engine_params</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">create_interactive_query</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine_params</span><span class="p">)</span>
-        <span class="c1"># add op to dag</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">add_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">_session</span>
+        <span class="n">frontend_endpoint</span> <span class="o">=</span> <span class="n">frontend_endpoint</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;ws://</span><span class="si">{</span><span class="n">endpoint</span><span class="si">}</span><span class="s2">/gremlin&quot;</span> <span class="k">for</span> <span class="n">endpoint</span> <span class="ow">in</span> <span class="n">frontend_endpoint</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">closed</span> <span class="o">=</span> <span class="kc">False</span></div>
 
-    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">graph_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The gremlin graph url can be used with any standard gremlin console, e.g., tinkerpop.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">object_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">vineyard_id</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">session</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">session_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">session_id</span>
+
+<div class="viewcode-block" id="InteractiveQuery.execute"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Execute gremlin querying scripts.</span>
 
 <span class="sd">        Args:</span>
@@ -271,9 +269,12 @@
 <span class="sd">                A result holds the gremlin result, evaluated in eager mode.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">op</span> <span class="o">=</span> <span class="n">gremlin_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">ResultSetDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="n">ResultSetDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">))</span></div>
 
-    <span class="k">def</span> <span class="nf">subgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gremlin_script</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="InteractiveQuery.submit"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.submit">[docs]</a>    <span class="k">def</span> <span class="nf">submit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="InteractiveQuery.subgraph"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.subgraph">[docs]</a>    <span class="k">def</span> <span class="nf">subgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gremlin_script</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create a subgraph, which input is the result of the execution of `gremlin_script`.</span>
 
 <span class="sd">        Any gremlin script that output a set of edges can be used to contruct a subgraph.</span>
@@ -298,105 +299,7 @@
             <span class="n">request_options</span><span class="o">=</span><span class="n">request_options</span><span class="p">,</span>
             <span class="n">oid_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">_oid_type</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="n">GraphDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Close interactive engine and release the resources.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            :class:`graphscope.interactive.query.ClosedInteractiveQuery`</span>
-<span class="sd">                Evaluated in eager mode.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">op</span> <span class="o">=</span> <span class="n">close_interactive_query</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">ClosedInteractiveQuery</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
-
-
-<div class="viewcode-block" id="InteractiveQuery"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery">[docs]</a><span class="k">class</span> <span class="nc">InteractiveQuery</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;`InteractiveQuery` class, is a simple wrapper around</span>
-<span class="sd">    `Gremlin-Python &lt;https://pypi.org/project/gremlinpython/&gt;`_,</span>
-<span class="sd">    which implements Gremlin within the Python language.</span>
-<span class="sd">    It also can expose gremlin endpoint which can be used by</span>
-<span class="sd">    any other standard gremlin console, with the method `graph_url()`.</span>
-
-<span class="sd">    It also has a method called `subgraph` which can extract some fragments</span>
-<span class="sd">    from origin graph, produce a new, smaller but concise graph stored in vineyard,</span>
-<span class="sd">    which lifetime is independent from the origin graph.</span>
-
-<span class="sd">    User can either use `execute()` to submit a script, or use `traversal_source()`</span>
-<span class="sd">    to get a `GraphTraversalSource` for further traversal.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-<div class="viewcode-block" id="InteractiveQuery.__init__"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">interactive_query_node</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">frontend_endpoint</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">object_id</span><span class="o">=</span><span class="kc">None</span>
-    <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Construct a :class:`InteractiveQuery` object.&quot;&quot;&quot;</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">=</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Initializing</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="c1"># graph object id stored in vineyard</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_object_id</span> <span class="o">=</span> <span class="n">object_id</span>
-        <span class="c1"># interactive_query_node is None used for create a interative query</span>
-        <span class="c1"># implicitly in eager mode</span>
-        <span class="k">if</span> <span class="n">interactive_query_node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_query_node</span> <span class="o">=</span> <span class="n">interactive_query_node</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_query_node</span><span class="o">.</span><span class="n">session</span>
-            <span class="c1"># copy and set op evaluated</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_query_node</span><span class="o">.</span><span class="n">op</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interactive_query_node</span><span class="o">.</span><span class="n">op</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_query_node</span><span class="o">.</span><span class="n">evaluated</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">add_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interactive_query_node</span><span class="o">.</span><span class="n">op</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">frontend_endpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">frontend_endpoint</span> <span class="o">=</span> <span class="n">frontend_endpoint</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="sa">f</span><span class="s2">&quot;ws://</span><span class="si">{</span><span class="n">endpoint</span><span class="si">}</span><span class="s2">/gremlin&quot;</span> <span class="k">for</span> <span class="n">endpoint</span> <span class="ow">in</span> <span class="n">frontend_endpoint</span>
-            <span class="p">]</span></div>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">graph_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The gremlin graph url can be used with any standard gremlin console, e.g., tinkerpop.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_status</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">object_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_object_id</span>
-
-    <span class="nd">@status</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">=</span> <span class="n">value</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">error_msg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_error_msg</span>
-
-    <span class="nd">@error_msg</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">error_msg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">error_msg</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_error_msg</span> <span class="o">=</span> <span class="n">error_msg</span>
-
-<div class="viewcode-block" id="InteractiveQuery.closed"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.closed">[docs]</a>    <span class="k">def</span> <span class="nf">closed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Return if the current instance is closed.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">==</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Closed</span></div>
-
-<div class="viewcode-block" id="InteractiveQuery.subgraph"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.subgraph">[docs]</a>    <span class="k">def</span> <span class="nf">subgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gremlin_script</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">!=</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Running</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;Interactive query is unavailable with </span><span class="si">%s</span><span class="s2"> status.&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_status</span><span class="p">)</span>
-            <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_query_node</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">gremlin_script</span><span class="p">,</span> <span class="n">request_options</span><span class="p">)</span>
-        <span class="p">)</span></div>
-
-<div class="viewcode-block" id="InteractiveQuery.execute"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">!=</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Running</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;Interactive query is unavailable with </span><span class="si">%s</span><span class="s2"> status.&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_status</span><span class="p">)</span>
-            <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_query_node</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="p">)</span>
-        <span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="n">GraphDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="InteractiveQuery.traversal_source"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.traversal_source">[docs]</a>    <span class="k">def</span> <span class="nf">traversal_source</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create a GraphTraversalSource and return.</span>
@@ -420,38 +323,21 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            `GraphTraversalSource`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">!=</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Running</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;Interactive query is unavailable with </span><span class="si">%s</span><span class="s2"> status.&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_status</span><span class="p">)</span>
-            <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="o">=</span> <span class="n">DriverRemoteConnection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph_url</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;g&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">traversal</span><span class="p">()</span><span class="o">.</span><span class="n">withRemote</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="InteractiveQuery.close"><a class="viewcode-back" href="../../../reference/interactive.html#graphscope.interactive.query.InteractiveQuery.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span><span class="p">:</span>
+            <span class="k">return</span>
         <span class="sd">&quot;&quot;&quot;Close interactive instance and release resources&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span><span class="p">():</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-                    <span class="k">pass</span>  <span class="c1"># be silent when closing</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="o">=</span> <span class="kc">None</span>
-
-            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">closed</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interactive_query_node</span><span class="o">.</span><span class="n">close</span><span class="p">())</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_close_interactive_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">=</span> <span class="n">InteractiveQueryStatus</span><span class="o">.</span><span class="n">Closed</span></div></div>
-
-
-<span class="k">class</span> <span class="nc">ClosedInteractiveQuery</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Closed interactive query node in a DAG.&quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">session</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">op</span>
-        <span class="c1"># add op to dag</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">add_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_conn</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">except</span><span class="p">:</span>  <span class="c1"># noqa: E722</span>
+                <span class="k">pass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_close_interactive_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">closed</span> <span class="o">=</span> <span class="kc">True</span></div></div>
 </pre></div>
 
            </div>
@@ -506,6 +392,16 @@
             
               
                 <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.17.0/index.html">v0.17.0</a></dd>
               
             
 

@@ -1,0 +1,4 @@
+com/alibaba/graphscope/annotation/GrapeSkip.class
+com/alibaba/graphscope/utils/Unused.class
+com/alibaba/graphscope/annotation/GrapeSkipAnnotationProcessor.class
+com/alibaba/graphscope/annotation/GraphType.class

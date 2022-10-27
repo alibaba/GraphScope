@@ -164,7 +164,7 @@
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<span class="k">def</span> <span class="nf">bind_app</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">app_assets</span><span class="p">):</span>
+<div class="viewcode-block" id="bind_app"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.bind_app.html#graphscope.framework.dag_utils.bind_app">[docs]</a><span class="k">def</span> <span class="nf">bind_app</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">app_assets</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Wrapper for create an `BIND_APP` Operation with configuration.</span>
 <span class="sd">    Compile and load an application after evaluated.</span>
 
@@ -177,14 +177,20 @@
 <span class="sd">        analytical engine how to build the app.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">inputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">app_assets</span><span class="o">.</span><span class="n">op</span><span class="p">]</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">APP_ALGO</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">app_assets</span><span class="o">.</span><span class="n">algo</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">app_assets</span><span class="o">.</span><span class="n">cmake_extra_options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">CMAKE_EXTRA_OPTIONS</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span>
+            <span class="n">app_assets</span><span class="o">.</span><span class="n">cmake_extra_options</span>
+        <span class="p">)</span>
     <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
         <span class="n">graph</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">BIND_APP</span><span class="p">,</span>
         <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
-        <span class="n">config</span><span class="o">=</span><span class="p">{</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">APP_ALGO</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">app_assets</span><span class="o">.</span><span class="n">algo</span><span class="p">)},</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
         <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">BOUND_APP</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span>
+    <span class="k">return</span> <span class="n">op</span></div>
 
 
 <div class="viewcode-block" id="run_app"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.run_app.html#graphscope.framework.dag_utils.run_app">[docs]</a><span class="k">def</span> <span class="nf">run_app</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -257,7 +263,7 @@
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<span class="k">def</span> <span class="nf">create_loader</span><span class="p">(</span><span class="n">vertex_or_edge_label_list</span><span class="p">):</span>
+<div class="viewcode-block" id="create_loader"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.create_loader.html#graphscope.framework.dag_utils.create_loader">[docs]</a><span class="k">def</span> <span class="nf">create_loader</span><span class="p">(</span><span class="n">vertex_or_edge_label_list</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Create a loader operation.</span>
 <span class="sd">    Args:</span>
 <span class="sd">        vertex_or_edge_label_list: List of</span>
@@ -278,10 +284,10 @@
         <span class="n">large_attr</span><span class="o">=</span><span class="n">large_attr</span><span class="p">,</span>
         <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">NULL_OUTPUT</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span>
+    <span class="k">return</span> <span class="n">op</span></div>
 
 
-<span class="k">def</span> <span class="nf">add_labels_to_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">loader_op</span><span class="p">):</span>
+<div class="viewcode-block" id="add_labels_to_graph"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.add_labels_to_graph.html#graphscope.framework.dag_utils.add_labels_to_graph">[docs]</a><span class="k">def</span> <span class="nf">add_labels_to_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">loader_op</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Add new labels to existed graph.</span>
 
 <span class="sd">    Args:</span>
@@ -327,7 +333,7 @@
         <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
         <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span>
+    <span class="k">return</span> <span class="n">op</span></div>
 
 
 <div class="viewcode-block" id="dynamic_to_arrow"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.dynamic_to_arrow.html#graphscope.framework.dag_utils.dynamic_to_arrow">[docs]</a><span class="k">def</span> <span class="nf">dynamic_to_arrow</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
@@ -560,7 +566,7 @@
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<span class="k">def</span> <span class="nf">project_to_simple</span><span class="p">(</span>
+<div class="viewcode-block" id="project_to_simple"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.project_to_simple.html#graphscope.framework.dag_utils.project_to_simple">[docs]</a><span class="k">def</span> <span class="nf">project_to_simple</span><span class="p">(</span>
     <span class="n">graph</span><span class="p">,</span>
     <span class="n">v_prop</span><span class="p">,</span>
     <span class="n">e_prop</span><span class="p">,</span>
@@ -590,10 +596,10 @@
         <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
         <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span>
+    <span class="k">return</span> <span class="n">op</span></div>
 
 
-<span class="k">def</span> <span class="nf">copy_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">copy_type</span><span class="o">=</span><span class="s2">&quot;identical&quot;</span><span class="p">):</span>
+<div class="viewcode-block" id="copy_graph"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.copy_graph.html#graphscope.framework.dag_utils.copy_graph">[docs]</a><span class="k">def</span> <span class="nf">copy_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">copy_type</span><span class="o">=</span><span class="s2">&quot;identical&quot;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Create copy operation for nx graph.</span>
 
 <span class="sd">    Args:</span>
@@ -620,10 +626,10 @@
         <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
         <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span>
+    <span class="k">return</span> <span class="n">op</span></div>
 
 
-<span class="k">def</span> <span class="nf">to_directed</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+<div class="viewcode-block" id="to_directed"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.to_directed.html#graphscope.framework.dag_utils.to_directed">[docs]</a><span class="k">def</span> <span class="nf">to_directed</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Create to_directed operation graph.</span>
 
 <span class="sd">    Args:</span>
@@ -648,10 +654,10 @@
         <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
         <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span>
+    <span class="k">return</span> <span class="n">op</span></div>
 
 
-<span class="k">def</span> <span class="nf">to_undirected</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+<div class="viewcode-block" id="to_undirected"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.to_undirected.html#graphscope.framework.dag_utils.to_undirected">[docs]</a><span class="k">def</span> <span class="nf">to_undirected</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Create to_undirected operation for graph.</span>
 
 <span class="sd">    Args:</span>
@@ -676,10 +682,10 @@
         <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
         <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span>
+    <span class="k">return</span> <span class="n">op</span></div>
 
 
-<span class="k">def</span> <span class="nf">create_graph_view</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">view_type</span><span class="p">):</span>
+<div class="viewcode-block" id="create_graph_view"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.create_graph_view.html#graphscope.framework.dag_utils.create_graph_view">[docs]</a><span class="k">def</span> <span class="nf">create_graph_view</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">view_type</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Create view of nx graph.</span>
 <span class="sd">    Args:</span>
 <span class="sd">        graph (:class:`nx.Graph`): A nx graph.</span>
@@ -702,10 +708,10 @@
         <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
         <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span>
+    <span class="k">return</span> <span class="n">op</span></div>
 
 
-<span class="k">def</span> <span class="nf">clear_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+<div class="viewcode-block" id="clear_graph"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.clear_graph.html#graphscope.framework.dag_utils.clear_graph">[docs]</a><span class="k">def</span> <span class="nf">clear_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Create clear graph operation for nx graph.</span>
 
 <span class="sd">    Args:</span>
@@ -724,10 +730,10 @@
         <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
         <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span>
+    <span class="k">return</span> <span class="n">op</span></div>
 
 
-<span class="k">def</span> <span class="nf">clear_edges</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+<div class="viewcode-block" id="clear_edges"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.clear_edges.html#graphscope.framework.dag_utils.clear_edges">[docs]</a><span class="k">def</span> <span class="nf">clear_edges</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Create clear edges operation for nx graph.</span>
 
 <span class="sd">    Args:</span>
@@ -746,10 +752,10 @@
         <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
         <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span>
+    <span class="k">return</span> <span class="n">op</span></div>
 
 
-<span class="k">def</span> <span class="nf">create_subgraph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="create_subgraph"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.create_subgraph.html#graphscope.framework.dag_utils.create_subgraph">[docs]</a><span class="k">def</span> <span class="nf">create_subgraph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Create subgraph operation for nx graph.</span>
 
 <span class="sd">    Args:</span>
@@ -775,10 +781,10 @@
         <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
         <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span>
+    <span class="k">return</span> <span class="n">op</span></div>
 
 
-<span class="k">def</span> <span class="nf">create_unload_op</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">op_type</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+<div class="viewcode-block" id="create_unload_op"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.create_unload_op.html#graphscope.framework.dag_utils.create_unload_op">[docs]</a><span class="k">def</span> <span class="nf">create_unload_op</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">op_type</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Uility method to create a unload `Operation` based on op type and op.&quot;&quot;&quot;</span>
     <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
         <span class="n">session_id</span><span class="p">,</span>
@@ -786,7 +792,7 @@
         <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
         <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">NULL_OUTPUT</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span>
+    <span class="k">return</span> <span class="n">op</span></div>
 
 
 <div class="viewcode-block" id="unload_app"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.unload_app.html#graphscope.framework.dag_utils.unload_app">[docs]</a><span class="k">def</span> <span class="nf">unload_app</span><span class="p">(</span><span class="n">app</span><span class="p">):</span>
@@ -813,8 +819,8 @@
     <span class="k">return</span> <span class="n">create_unload_op</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">UNLOAD_GRAPH</span><span class="p">,</span> <span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">op</span><span class="p">])</span></div>
 
 
-<span class="k">def</span> <span class="nf">unload_context</span><span class="p">(</span><span class="n">context</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">create_unload_op</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">UNLOAD_CONTEXT</span><span class="p">,</span> <span class="p">[</span><span class="n">context</span><span class="o">.</span><span class="n">op</span><span class="p">])</span>
+<div class="viewcode-block" id="unload_context"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.unload_context.html#graphscope.framework.dag_utils.unload_context">[docs]</a><span class="k">def</span> <span class="nf">unload_context</span><span class="p">(</span><span class="n">context</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">create_unload_op</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">UNLOAD_CONTEXT</span><span class="p">,</span> <span class="p">[</span><span class="n">context</span><span class="o">.</span><span class="n">op</span><span class="p">])</span></div>
 
 
 <div class="viewcode-block" id="context_to_numpy"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.context_to_numpy.html#graphscope.framework.dag_utils.context_to_numpy">[docs]</a><span class="k">def</span> <span class="nf">context_to_numpy</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
@@ -898,7 +904,7 @@
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<span class="k">def</span> <span class="nf">to_vineyard_dataframe</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="to_vineyard_dataframe"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.to_vineyard_dataframe.html#graphscope.framework.dag_utils.to_vineyard_dataframe">[docs]</a><span class="k">def</span> <span class="nf">to_vineyard_dataframe</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Retrieve results as vineyard dataframe.</span>
 
 <span class="sd">    Parameters:</span>
@@ -920,10 +926,10 @@
         <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">context</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
         <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">VINEYARD_DATAFRAME</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span>
+    <span class="k">return</span> <span class="n">op</span></div>
 
 
-<span class="k">def</span> <span class="nf">to_data_sink</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="to_data_sink"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.to_data_sink.html#graphscope.framework.dag_utils.to_data_sink">[docs]</a><span class="k">def</span> <span class="nf">to_data_sink</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Dump result to `fd` by drivers in vineyard.</span>
 
 <span class="sd">    Parameters:</span>
@@ -946,10 +952,10 @@
         <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">result</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
         <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">NULL_OUTPUT</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span>
+    <span class="k">return</span> <span class="n">op</span></div>
 
 
-<span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="output"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.output.html#graphscope.framework.dag_utils.output">[docs]</a><span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Output result to `fd`, this will be handled by registered vineyard C++ adaptor.</span>
 
 <span class="sd">    Args:</span>
@@ -974,10 +980,10 @@
         <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">context</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
         <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">NULL_OUTPUT</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span>
+    <span class="k">return</span> <span class="n">op</span></div>
 
 
-<span class="k">def</span> <span class="nf">get_context_data</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<div class="viewcode-block" id="get_context_data"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.get_context_data.html#graphscope.framework.dag_utils.get_context_data">[docs]</a><span class="k">def</span> <span class="nf">get_context_data</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
     <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">CONTEXT_KEY</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">key</span><span class="p">),</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">NODE</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">node</span><span class="p">),</span>
@@ -988,7 +994,7 @@
         <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
         <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">RESULTS</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span>
+    <span class="k">return</span> <span class="n">op</span></div>
 
 
 <div class="viewcode-block" id="add_column"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.add_column.html#graphscope.framework.dag_utils.add_column">[docs]</a><span class="k">def</span> <span class="nf">add_column</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
@@ -1066,103 +1072,7 @@
     <span class="k">return</span> <span class="n">op</span></div>
 
 
-<span class="k">def</span> <span class="nf">create_interactive_query</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">engine_params</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Create a interactive engine that query on the :code:`graph`</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        graph (:class:`graphscope.framework.graph.GraphDAGNode`):</span>
-<span class="sd">            Source property graph.</span>
-<span class="sd">        engine_params (dict, optional):</span>
-<span class="sd">            Configuration to startup the interactive engine. See detail in:</span>
-<span class="sd">            `interactive_engine/deploy/docker/dockerfile/executor.vineyard.properties`</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        An op to create a interactive engine based on a graph.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">if</span> <span class="n">engine_params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GIE_GREMLIN_ENGINE_PARAMS</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span>
-            <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">engine_params</span><span class="p">)</span>
-        <span class="p">)</span>
-    <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
-        <span class="n">graph</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">CREATE_INTERACTIVE_QUERY</span><span class="p">,</span>
-        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
-        <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">INTERACTIVE_QUERY</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span>
-
-
-<span class="k">def</span> <span class="nf">create_learning_instance</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gen_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Create an engine for graph learning.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        graph (:class:`graphscope.framework.graph.GraphDAGNode`):</span>
-<span class="sd">            Source property graph.</span>
-<span class="sd">        nodes (list): The node types that will be used for gnn training.</span>
-<span class="sd">        edges (list): The edge types that will be used for gnn training.</span>
-<span class="sd">        gen_labels (list): Extra node and edge labels on original graph for gnn training.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        An op to create a learning engine based on a graph.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="c1"># pickle None is expected</span>
-    <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">NODES</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">bytes_to_attr</span><span class="p">(</span><span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">nodes</span><span class="p">))</span>
-    <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">EDGES</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">bytes_to_attr</span><span class="p">(</span><span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">edges</span><span class="p">))</span>
-    <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GLE_GEN_LABELS</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">bytes_to_attr</span><span class="p">(</span><span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">gen_labels</span><span class="p">))</span>
-    <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
-        <span class="n">graph</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">CREATE_LEARNING_INSTANCE</span><span class="p">,</span>
-        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
-        <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">LEARNING_GRAPH</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span>
-
-
-<span class="k">def</span> <span class="nf">close_interactive_query</span><span class="p">(</span><span class="n">interactive_query</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Close the interactive instance.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        interactive_query (:class:`graphscope.interactive.query.InteractiveQueryDAGNode`):</span>
-<span class="sd">            The GIE instance holds the graph that gremlin query on.</span>
-<span class="sd">    Returns:</span>
-<span class="sd">        An op to close the instance.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
-        <span class="n">interactive_query</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">CLOSE_INTERACTIVE_QUERY</span><span class="p">,</span>
-        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">interactive_query</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
-        <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">NULL_OUTPUT</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span>
-
-
-<span class="k">def</span> <span class="nf">close_learning_instance</span><span class="p">(</span><span class="n">learning_instance</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Close the learning instance.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        learning_instance (:class:`graphscope.learning.graph.GraphDAGNode`):</span>
-<span class="sd">            The learning instance.</span>
-<span class="sd">    Returns:</span>
-<span class="sd">        An op to close the instance.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">op</span> <span class="o">=</span> <span class="n">Operation</span><span class="p">(</span>
-        <span class="n">learning_instance</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
-        <span class="n">types_pb2</span><span class="o">.</span><span class="n">CLOSE_LEARNING_INSTANCE</span><span class="p">,</span>
-        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">learning_instance</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
-        <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">NULL_OUTPUT</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span>
-
-
-<span class="k">def</span> <span class="nf">gremlin_query</span><span class="p">(</span><span class="n">interactive_query</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="gremlin_query"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.gremlin_query.html#graphscope.framework.dag_utils.gremlin_query">[docs]</a><span class="k">def</span> <span class="nf">gremlin_query</span><span class="p">(</span><span class="n">interactive_query</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Execute a gremlin query.</span>
 
 <span class="sd">    Args:</span>
@@ -1180,6 +1090,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GIE_GREMLIN_QUERY_MESSAGE</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+    <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">VINEYARD_ID</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">i_to_attr</span><span class="p">(</span><span class="n">interactive_query</span><span class="o">.</span><span class="n">object_id</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">request_options</span><span class="p">:</span>
         <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GIE_GREMLIN_REQUEST_OPTIONS</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span>
             <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">request_options</span><span class="p">)</span>
@@ -1188,13 +1099,12 @@
         <span class="n">interactive_query</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">GREMLIN_QUERY</span><span class="p">,</span>
         <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">interactive_query</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
         <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GREMLIN_RESULTS</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span>
+    <span class="k">return</span> <span class="n">op</span></div>
 
 
-<span class="k">def</span> <span class="nf">gremlin_to_subgraph</span><span class="p">(</span>
+<div class="viewcode-block" id="gremlin_to_subgraph"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.gremlin_to_subgraph.html#graphscope.framework.dag_utils.gremlin_to_subgraph">[docs]</a><span class="k">def</span> <span class="nf">gremlin_to_subgraph</span><span class="p">(</span>
     <span class="n">interactive_query</span><span class="p">,</span> <span class="n">gremlin_script</span><span class="p">,</span> <span class="n">request_options</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">oid_type</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Create a subgraph from gremlin output.</span>
@@ -1217,6 +1127,7 @@
     <span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GIE_GREMLIN_QUERY_MESSAGE</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">gremlin_script</span><span class="p">)</span>
     <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">OID_TYPE</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">oid_type</span><span class="p">)</span>
+    <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">VINEYARD_ID</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">i_to_attr</span><span class="p">(</span><span class="n">interactive_query</span><span class="o">.</span><span class="n">object_id</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">request_options</span><span class="p">:</span>
         <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GIE_GREMLIN_REQUEST_OPTIONS</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span>
             <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">request_options</span><span class="p">)</span>
@@ -1225,13 +1136,12 @@
         <span class="n">interactive_query</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">SUBGRAPH</span><span class="p">,</span>
         <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">interactive_query</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
         <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">GRAPH</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span>
+    <span class="k">return</span> <span class="n">op</span></div>
 
 
-<span class="k">def</span> <span class="nf">fetch_gremlin_result</span><span class="p">(</span><span class="n">result_set</span><span class="p">,</span> <span class="n">fetch_type</span><span class="o">=</span><span class="s2">&quot;one&quot;</span><span class="p">):</span>
+<div class="viewcode-block" id="fetch_gremlin_result"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.dag_utils.fetch_gremlin_result.html#graphscope.framework.dag_utils.fetch_gremlin_result">[docs]</a><span class="k">def</span> <span class="nf">fetch_gremlin_result</span><span class="p">(</span><span class="n">result_set</span><span class="p">,</span> <span class="n">fetch_type</span><span class="o">=</span><span class="s2">&quot;one&quot;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Fetch the gremlin query result.</span>
 
 <span class="sd">    Args:</span>
@@ -1251,7 +1161,7 @@
         <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">result_set</span><span class="o">.</span><span class="n">op</span><span class="p">],</span>
         <span class="n">output_types</span><span class="o">=</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">RESULTS</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">op</span>
+    <span class="k">return</span> <span class="n">op</span></div>
 </pre></div>
 
            </div>
@@ -1306,6 +1216,16 @@
             
               
                 <dd><a href="../../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.17.0/index.html">v0.17.0</a></dd>
               
             
 

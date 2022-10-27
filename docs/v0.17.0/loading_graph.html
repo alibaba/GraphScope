@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loading Graphs &mdash; GraphScope  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Graph Transformations" href="graph_transformation.html" />
+    <link rel="prev" title="Deployment" href="deployment.html" />
+
+ 
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4TMYCGJ0X2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-4TMYCGJ0X2');
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> GraphScope
+          </a>
+              <div class="version">
+                v0.17.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div>
+  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+    
+      
+      
+        
+          
+        
+      
+      
+        <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Loading Graphs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#load-built-in-datasets">Load Built-in Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#loading-your-own-datasets">Loading Your Own Datasets</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#adding-vertices">Adding Vertices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#adding-edges">Adding Edges</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#advanced-usage">Advanced Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#deduce-vertex-labels-when-not-ambiguous">Deduce vertex labels when not ambiguous</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#deduce-vertex-from-edges">Deduce vertex from edges</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#multiple-relations">Multiple relations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#specify-data-types-of-properties-manually">Specify data types of properties manually</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#other-parameters-of-graph">Other parameters of graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#putting-them-together">Putting them Together</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#loading-from-pandas-or-numpy">Loading From Pandas or Numpy</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#from-pandas">From Pandas</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#from-numpy">From Numpy</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#loader-variants">Loader Variants</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="graph_transformation.html">Graph Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">GraphScope Interactive Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="persistent_graph_store.html">Persistent Graph Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frequently_asked_questions.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference/python_index.html">Python API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
+</ul>
+
+      
+    
+  </div>
+
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GraphScope</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Loading Graphs</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/alibaba/graphscope/edit/main/docs/loading_graph.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="loading-graphs">
+<span id="id1"></span><h1>Loading Graphs<a class="headerlink" href="#loading-graphs" title="Permalink to this headline"></a></h1>
+<p>GraphScope models graph data as
+<a class="reference external" href="https://github.com/tinkerpop/blueprints/wiki/Property-Graph-Model">Property Graph</a>,
+in which the edges/vertices are labeled and each label may have many properties.</p>
+<div class="section" id="load-built-in-datasets">
+<h2>Load Built-in Datasets<a class="headerlink" href="#load-built-in-datasets" title="Permalink to this headline"></a></h2>
+<p>GraphScope comes with a set of popular datasets, and utility functions to load them into memory,
+makes it easy for user to get started.
+Here’s an example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_ogbn_mag</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">load_ogbn_mag</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>In standalone mode, it will automatically download the data to <code class="file docutils literal notranslate"><span class="pre">~/.graphscope/dataset</span></code>, and it will remain in there for future usage.</p>
+<p>However, in kubernetes mode, it’s not trivial to download the data to the pod’s local storage, so we provide an option to mount a OSS bucket, which contains all available datasets. For example, we load the same graph as above, but this time graphscope is running in a Kubernetes cluster:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_ogbn_mag</span>
+<span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s1">&#39;k8s&#39;</span><span class="p">,</span> <span class="n">mount_dataset</span><span class="o">=</span><span class="s1">&#39;/dataset&#39;</span><span class="p">)</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">load_ogbn_mag</span><span class="p">(</span><span class="n">sess</span><span class="p">,</span> <span class="s1">&#39;/dataset/ogbn_mag_small&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here, we first created a <cite>Session</cite> in a Kubernetes cluster, and mount the dataset bucket to <code class="file docutils literal notranslate"><span class="pre">/dataset</span></code>, this path is relative to Pods. Then we pass that session as first parameter, and <code class="file docutils literal notranslate"><span class="pre">/dataset/ogbn_mag_small</span></code> as second parameter. The <code class="file docutils literal notranslate"><span class="pre">/dataset</span></code> is the root path of datasets which we have assigned by <cite>mount_dataset</cite>, the <cite>ogbn_mag_small</cite> is the sub folder name of the dataset.</p>
+<p>You can view all avaiable datasets in <a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/python/graphscope/dataset">here</a> , and get details description and usage in those source files.</p>
+</div>
+<div class="section" id="loading-your-own-datasets">
+<h2>Loading Your Own Datasets<a class="headerlink" href="#loading-your-own-datasets" title="Permalink to this headline"></a></h2>
+<p>However, it’s more common that user need to load there own data and do some analysis.
+To load a property graph to GraphScope, we provide a method <cite>g()</cite> defined in <cite>Session</cite>.</p>
+<p>To build a property graph on GraphScope, we firstly create an empty graph using <code class="docutils literal notranslate"><span class="pre">g()</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">()</span>
+<span class="c1"># Use `sess = graphscope.session(cluster_type=&#39;hosts&#39;)` if you are in standalone mode.</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The class <cite>Graph</cite> has several methods:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">add_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vid_field</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="k">def</span> <span class="nf">add_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;_e&quot;</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">src_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dst_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">src_field</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">dst_field</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p>These methods helps users to construct the schema of the property graph iteratively.</p>
+<p>We will use files in <code class="file docutils literal notranslate"><span class="pre">ldbc_sample</span></code> through this tutorial. You can get the files in <a class="reference external" href="https://github.com/GraphScope/gstest/tree/master/ldbc_sample">here</a>. And you can inspect the graph schema by using <cite>print(graph.schema)</cite>.</p>
+<div class="section" id="adding-vertices">
+<h3>Adding Vertices<a class="headerlink" href="#adding-vertices" title="Permalink to this headline"></a></h3>
+<p>We can add a kind of vertices to graph, the method has the following parameters:</p>
+<p><code class="docutils literal notranslate"><span class="pre">vertices</span></code>: A location for the vertex data source, which can be a file location, or a numpy, etc. See more details in <a class="reference internal" href="reference/graph.html#loader-object"><span class="std std-ref">Loader object</span></a>.</p>
+<p>A simple example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_0_0.csv&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>It will read data from the the location <code class="file docutils literal notranslate"><span class="pre">/home/ldbc_sample/person_0_0.csv</span></code>. Since we didn’t give additional arguments, these vertices will be labeled <code class="docutils literal notranslate"><span class="pre">_</span></code> by default, using the first column in the file as their ID, and other columns as their properties. Both the names and data types of properties will be deduced.</p>
+<p>Another commonly used parameter is label:</p>
+<p><code class="docutils literal notranslate"><span class="pre">label</span></code>: The label name of the vertex, default to <code class="docutils literal notranslate"><span class="pre">_</span></code>.</p>
+<p>Since a property graph allows many kinds of vertices, it is suggested for users to give each kind of vertices a meaningful label name. For example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Then we have a graph with one kind of vertices, its label name is person.</p>
+<p>In addition, each kind of labeled vertices have their own properties. Here is the third parameter:</p>
+<p><code class="docutils literal notranslate"><span class="pre">properties</span></code>: A list of properties, Optional, default to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<p>This parameter selects the corresponding columns from the source data file or pandas DataFrames as properties. Please note that
+the values of this parameter should exist in the file/DataFrame. By default( values <code class="docutils literal notranslate"><span class="pre">None</span></code>), all columns except the <code class="docutils literal notranslate"><span class="pre">vid_field</span></code> column
+will be added as properties. If it equals to a empty list <code class="docutils literal notranslate"><span class="pre">[]</span></code>, then no properties will be added.</p>
+<p>For example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># properties will be firstName,lastName,gender,birthday,creationDate,locationIP,browserUsed</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+<span class="c1"># properties will be firstName, lastName</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;firstName&#39;</span><span class="p">,</span> <span class="s1">&#39;lastName&#39;</span><span class="p">])</span>
+
+<span class="c1"># no properties</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="p">[])</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">vid_field</span></code> determines which column used as vertex ID. (as well as the source ID or destination ID when loading edges.)</p>
+<p>It can be a <code class="docutils literal notranslate"><span class="pre">str</span></code>, the name of columns, or <code class="docutils literal notranslate"><span class="pre">int</span></code>, representing the index of the columns.</p>
+<p>By default, the value is 0, hence the first column will be used as vertex ID.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_0_0.csv&#39;</span><span class="p">,</span> <span class="n">vid_field</span><span class="o">=</span><span class="s1">&#39;firstName&#39;</span><span class="p">)</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_0_0.csv&#39;</span><span class="p">,</span> <span class="n">vid_field</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="adding-edges">
+<h3>Adding Edges<a class="headerlink" href="#adding-edges" title="Permalink to this headline"></a></h3>
+<p>Next, let’s take a look on the parameters for loading edges.</p>
+<p><code class="docutils literal notranslate"><span class="pre">edges</span></code>: The location indicating where to read the data. e.g.,</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">)</span>
+<span class="c1"># Note we already added a vertex label named &#39;person&#39;.</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_knows_person_0_0.csv&#39;</span><span class="p">,</span> <span class="n">src_label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">,</span> <span class="n">dst_label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This will load an edge which label is <code class="docutils literal notranslate"><span class="pre">_e</span></code> (the default value), its source vertex and destination vertex will be <code class="docutils literal notranslate"><span class="pre">person</span></code>, using the <strong>first column</strong> as the source vertex ID, the <strong>second column</strong> as the destination vertex ID, the others as properties.</p>
+<p>Similar to vertices, we can use parameter <cite>label</cite> to assign label name and <cite>properties</cite> to select properties.</p>
+<p><code class="docutils literal notranslate"><span class="pre">label</span></code>: The label name of the edges, default to <code class="docutils literal notranslate"><span class="pre">_e</span></code> . (It’s recommended to use a meaningful label name.)
+<code class="docutils literal notranslate"><span class="pre">properties</span></code>: A list of properties, default to <code class="docutils literal notranslate"><span class="pre">None</span></code> (add all columns as properties).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">)</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_knows_person_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;knows&#39;</span><span class="p">,</span> <span class="n">src_label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">,</span> <span class="n">dst_label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Differ to vertices, edges have some additional parameters.</p>
+<p><code class="docutils literal notranslate"><span class="pre">src_label</span></code>: The label name of the source vertex.
+<code class="docutils literal notranslate"><span class="pre">dst_label</span></code>: The label name of the destination vertex, it can be different to the <code class="docutils literal notranslate"><span class="pre">src_label</span></code>,
+<code class="docutils literal notranslate"><span class="pre">src_field</span></code> and <code class="docutils literal notranslate"><span class="pre">dst_field</span></code>: The columns used for source(destination) vertex id. Default to 0 and 1, respectively.</p>
+<p>e.g.,</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">)</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/comment_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;comment&#39;</span><span class="p">)</span>
+<span class="c1"># Note we already added a vertex label named &#39;person&#39;.</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_likes_comment_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;likes&#39;</span><span class="p">,</span> <span class="n">src_label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">,</span> <span class="n">dst_label</span><span class="o">=</span><span class="s1">&#39;comment&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The value and behavior is similar to <code class="docutils literal notranslate"><span class="pre">vid_field</span></code> in Vertex, except for it takes two columns as edges is constituted by source vertex id and destination vertex id. Here’s an example:</p>
+<p>Examples of <code class="docutils literal notranslate"><span class="pre">src_field</span></code> and <code class="docutils literal notranslate"><span class="pre">dst_field</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Steps to init a graph and add vertices are omitted</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_likes_comment_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;likes&#39;</span><span class="p">,</span> <span class="n">src_label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">,</span> <span class="n">dst_label</span><span class="o">=</span><span class="s1">&#39;comment&#39;</span><span class="p">,</span> <span class="n">src_field</span><span class="o">=</span><span class="s1">&#39;Person.id&#39;</span><span class="p">,</span> <span class="n">dst_field</span><span class="o">=</span><span class="s1">&#39;Comment.id&#39;</span><span class="p">)</span>
+<span class="c1"># Or use the index.</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_likes_comment_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;likes&#39;</span><span class="p">,</span> <span class="n">src_label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">,</span> <span class="n">dst_label</span><span class="o">=</span><span class="s1">&#39;comment&#39;</span><span class="p">,</span> <span class="n">src_field</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">dst_field</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="advanced-usage">
+<h2>Advanced Usage<a class="headerlink" href="#advanced-usage" title="Permalink to this headline"></a></h2>
+<p>Here are some advanced usages to deal with homogeneous graphs or very complex graphs.</p>
+<div class="section" id="deduce-vertex-labels-when-not-ambiguous">
+<h3>Deduce vertex labels when not ambiguous<a class="headerlink" href="#deduce-vertex-labels-when-not-ambiguous" title="Permalink to this headline"></a></h3>
+<p>If there is only one kind of vertices in a graph, the vertex label can be omitted.
+GraphScope will infer the source and destination vertex label to that very label.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">)</span>
+<span class="c1"># GraphScope will assign `src_label` and `dst_label` to `person` automatically.</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_knows_person_0_0.csv&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="deduce-vertex-from-edges">
+<h3>Deduce vertex from edges<a class="headerlink" href="#deduce-vertex-from-edges" title="Permalink to this headline"></a></h3>
+<p>If user add edges with unseen <code class="docutils literal notranslate"><span class="pre">src_label</span></code> or <code class="docutils literal notranslate"><span class="pre">dst_label</span></code>, graphscope will extract an vertex table from the given labels from the edge data.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="c1"># Deduce vertex label `person` from the source and destination endpoints of edges.</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_knows_person_0_0.csv&#39;</span><span class="p">,</span> <span class="n">src_label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">,</span> <span class="n">dst_label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">)</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="c1"># Deduce the vertex label `person` from the source endpoint,</span>
+<span class="c1"># and vertex label `comment` from the destination endpoint of edges.</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_likes_comment_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;likes&#39;</span><span class="p">,</span> <span class="n">src_label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">,</span> <span class="n">dst_label</span><span class="o">=</span><span class="s1">&#39;comment&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="multiple-relations">
+<h3>Multiple relations<a class="headerlink" href="#multiple-relations" title="Permalink to this headline"></a></h3>
+<p>In some cases, an edge label may connect two kinds of vertices. For example, in a
+graph, two kinds of edges are labeled with <cite>likes</cite> but represents two relations.
+i.e., <cite>person</cite> -&gt; <cite>likes</cite> &lt;- <cite>comment</cite> and <cite>person</cite> -&gt; <cite>likes</cite> &lt;- <cite>post</cite>.</p>
+<p>In this case, we can simply add the relation again with the same edge label,
+but with different source and destination labels.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Steps to init a graph and add vertices are omitted</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_likes_comment_0_0.csv&#39;</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="s2">&quot;likes&quot;</span><span class="p">,</span>
+        <span class="n">src_label</span><span class="o">=</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="n">dst_label</span><span class="o">=</span><span class="s2">&quot;comment&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_likes_post_0_0.csv&#39;</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="s2">&quot;likes&quot;</span><span class="p">,</span>
+        <span class="n">src_label</span><span class="o">=</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="n">dst_label</span><span class="o">=</span><span class="s2">&quot;post&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="specify-data-types-of-properties-manually">
+<h3>Specify data types of properties manually<a class="headerlink" href="#specify-data-types-of-properties-manually" title="Permalink to this headline"></a></h3>
+<p>GraphScope will deduce data types from input files, and it works as expected in most cases.
+However, sometimes user may want to determine the data types as well, e.g.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/post_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;post&#39;</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;length&#39;</span><span class="p">,</span> <span class="s1">&#39;int&#39;</span><span class="p">),</span> <span class="p">])</span>
+</pre></div>
+</div>
+<p>It forces the property to be (casted and) loaded as specified data type. The format of this parameter is tuple(s) with the name and the type.
+e.g., in this case, the property <code class="docutils literal notranslate"><span class="pre">length</span></code> will have type <code class="docutils literal notranslate"><span class="pre">int</span></code> rather than the default <code class="docutils literal notranslate"><span class="pre">int64_t</span></code>. The options of the types are <code class="docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">int64</span></code>, <code class="docutils literal notranslate"><span class="pre">float</span></code>, <code class="docutils literal notranslate"><span class="pre">double</span></code>, or <code class="docutils literal notranslate"><span class="pre">str</span></code>.</p>
+</div>
+<div class="section" id="other-parameters-of-graph">
+<h3>Other parameters of graph<a class="headerlink" href="#other-parameters-of-graph" title="Permalink to this headline"></a></h3>
+<p>The class <code class="docutils literal notranslate"><span class="pre">Graph</span></code> has three meta options, which are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">oid_type</span></code>, can be <code class="docutils literal notranslate"><span class="pre">int64_t</span></code> or <code class="docutils literal notranslate"><span class="pre">string</span></code>. Default to <code class="docutils literal notranslate"><span class="pre">int64_t</span></code> in consideration of efficiency. But if the ID column can’t be represented by <code class="docutils literal notranslate"><span class="pre">int64_t</span></code>, then we should use <code class="docutils literal notranslate"><span class="pre">string</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">directed</span></code>, boolean value and default to <code class="docutils literal notranslate"><span class="pre">True</span></code>. Controls to load an directed or undirected graph.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">generate_eid</span></code>, bool, default to <code class="docutils literal notranslate"><span class="pre">True</span></code>, whether to generate an unique id for all edges automatically.</p></li>
+</ul>
+</div>
+<div class="section" id="putting-them-together">
+<h3>Putting them Together<a class="headerlink" href="#putting-them-together" title="Permalink to this headline"></a></h3>
+<p>Let’s make this example complete.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">oid_type</span><span class="o">=</span><span class="s1">&#39;int64_t&#39;</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">generate_eid</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">)</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/comment_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;comment&#39;</span><span class="p">)</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/post_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;post&#39;</span><span class="p">)</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_knows_person_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;knows&#39;</span><span class="p">,</span> <span class="n">src_label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">,</span> <span class="n">dst_label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">)</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_likes_comment_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;likes&#39;</span><span class="p">,</span> <span class="n">src_label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">,</span> <span class="n">dst_label</span><span class="o">=</span><span class="s1">&#39;comment&#39;</span><span class="p">)</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_likes_post_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;likes&#39;</span><span class="p">,</span> <span class="n">src_label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">,</span> <span class="n">dst_label</span><span class="o">=</span><span class="s1">&#39;post&#39;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A more complex example to load LDBC snb graph can be find <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/python/graphscope/dataset/ldbc.py">here</a>.</p>
+</div>
+</div>
+<div class="section" id="loading-from-pandas-or-numpy">
+<h2>Loading From Pandas or Numpy<a class="headerlink" href="#loading-from-pandas-or-numpy" title="Permalink to this headline"></a></h2>
+<p>The data source aforementioned is an object of <span class="xref std std-ref">Loader</span>. A loader wraps a location or the data itself.
+GraphScope supports load a graph from pandas dataframes or numpy ndarrays, making it easy to construct a graph right in the python console.</p>
+<p>Apart from the loader, the other fields like properties, label, etc. are the same as examples above.</p>
+<div class="section" id="from-pandas">
+<h3>From Pandas<a class="headerlink" href="#from-pandas" title="Permalink to this headline"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="n">df_v</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/comment_0_0.csv&#39;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;|&#39;</span><span class="p">)</span>
+<span class="n">df_e</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/comment_replyOf_comment_0_0.csv&#39;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;|&#39;</span><span class="p">)</span>
+
+<span class="c1"># use a dataframe as datasource, properties omitted,</span>
+<span class="c1"># for edges, col_0/col_1 will be used as src/dst by default.</span>
+<span class="c1"># for vertices, col_0 will be used as vertex_id by default.</span>
+<span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="n">df_v</span><span class="p">)</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="n">df_e</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="from-numpy">
+<h3>From Numpy<a class="headerlink" href="#from-numpy" title="Permalink to this headline"></a></h3>
+<p>Note that each array is a column, we pass it like as COO matrix format to the loader.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span>
+
+<span class="n">array_v</span> <span class="o">=</span> <span class="p">[</span><span class="n">df_v</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">values</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df_v</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">values</span><span class="p">]</span>
+<span class="n">array_e</span> <span class="o">=</span> <span class="p">[</span><span class="n">df_e</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">values</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df_e</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">values</span><span class="p">]</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="n">array_v</span><span class="p">)</span><span class="o">.</span><span class="n">add_edges</span><span class="p">(</span><span class="n">array_e</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="loader-variants">
+<h2>Loader Variants<a class="headerlink" href="#loader-variants" title="Permalink to this headline"></a></h2>
+<p>When a loader wraps a location, it may only contains a str.
+The string follows the standard of URI. When receiving a request for loading graph from a location,
+<code class="docutils literal notranslate"><span class="pre">graphscope</span></code> will parse the URI and invoke corresponding loader according to the schema.</p>
+<p>Currently, <code class="docutils literal notranslate"><span class="pre">graphscope</span></code> supports loaders for <code class="docutils literal notranslate"><span class="pre">local</span></code>, <code class="docutils literal notranslate"><span class="pre">s3</span></code>, <code class="docutils literal notranslate"><span class="pre">oss</span></code>, <code class="docutils literal notranslate"><span class="pre">hdfs</span></code>.
+Under the hood, data is loaded distributedly by <a class="reference external" href="https://github.com/v6d-io/v6d">v6d</a>, <code class="docutils literal notranslate"><span class="pre">v6d</span></code> takes advantage
+of <a class="reference external" href="https://github.com/intake/filesystem_spec">fsspec</a> to resolve specific scheme and formats.
+Any additional configurations can be passed in kwargs of <code class="docutils literal notranslate"><span class="pre">Loader</span></code>, which will be parsed
+directly by the specific class. e.g., <code class="docutils literal notranslate"><span class="pre">host</span></code> and <code class="docutils literal notranslate"><span class="pre">port</span></code> to <code class="docutils literal notranslate"><span class="pre">hdfs</span></code>, or <code class="docutils literal notranslate"><span class="pre">access-id</span></code>, <code class="docutils literal notranslate"><span class="pre">secret-access-key</span></code> to <code class="docutils literal notranslate"><span class="pre">oss</span></code> or <code class="docutils literal notranslate"><span class="pre">s3</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphscope.framework.loader</span> <span class="kn">import</span> <span class="n">Loader</span>
+
+<span class="n">ds1</span> <span class="o">=</span> <span class="n">Loader</span><span class="p">(</span><span class="s2">&quot;file:///var/datafiles/group.e&quot;</span><span class="p">)</span>
+<span class="n">ds2</span> <span class="o">=</span> <span class="n">Loader</span><span class="p">(</span><span class="s2">&quot;oss://graphscope_bucket/datafiles/group.e&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;access-id&#39;</span><span class="p">,</span> <span class="n">secret</span><span class="o">=</span><span class="s1">&#39;secret-access-key&#39;</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="s1">&#39;oss-cn-hangzhou.aliyuncs.com&#39;</span><span class="p">)</span>
+<span class="n">ds3</span> <span class="o">=</span> <span class="n">Loader</span><span class="p">(</span><span class="s2">&quot;hdfs:///datafiles/group.e&quot;</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="s1">&#39;9000&#39;</span><span class="p">,</span> <span class="n">extra_conf</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;conf1&#39;</span><span class="p">:</span> <span class="s1">&#39;value1&#39;</span><span class="p">})</span>
+<span class="n">d34</span> <span class="o">=</span> <span class="n">Loader</span><span class="p">(</span><span class="s2">&quot;s3://datafiles/group.e&quot;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;access-id&#39;</span><span class="p">,</span> <span class="n">secret</span><span class="o">=</span><span class="s1">&#39;secret-access-key&#39;</span><span class="p">,</span> <span class="n">client_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;region_name&#39;</span><span class="p">:</span> <span class="s1">&#39;us-east-1&#39;</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>User can implement customized driver to support additional data sources. Take <a class="reference external" href="https://github.com/v6d-io/v6d/blob/main/modules/io/adaptors/ossfs.py">ossfs</a> as an example, User need to subclass <cite>AbstractFileSystem</cite>, which
+is used as resolve to specific protocol scheme, and <cite>AbstractBufferFile</cite> to do read and write.
+The only methods user need to override is <code class="docutils literal notranslate"><span class="pre">_upload_chunk</span></code>,
+<code class="docutils literal notranslate"><span class="pre">_initiate_upload</span></code> and <code class="docutils literal notranslate"><span class="pre">_fetch_range</span></code>. In the end user need to use <code class="docutils literal notranslate"><span class="pre">fsspec.register_implementation('protocol_name',</span> <span class="pre">'protocol_file_system')</span></code> to register corresponding resolver.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="deployment.html" class="btn btn-neutral float-left" title="Deployment" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="graph_transformation.html" class="btn btn-neutral float-right" title="Graph Transformations" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020-2023, DAMO Academy, Alibaba Inc..</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.17.0
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.17.0/index.html">v0.17.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.16.0/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.15.0/index.html">v0.15.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.14.0/index.html">v0.14.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.13.0/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.12.0/index.html">v0.12.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.11.0/index.html">v0.11.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.10.1/index.html">v0.10.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.10.0/index.html">v0.10.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.9.1/index.html">v0.9.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.9.0/index.html">v0.9.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.8.0/index.html">v0.8.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.7.0/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.6.1/index.html">v0.6.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.6.0/index.html">v0.6.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.5.0/index.html">v0.5.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.4.0/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.3.0/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="index.html">en</a></dd>
+        <dd><a href="zh/index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>

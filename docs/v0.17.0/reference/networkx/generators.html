@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Graph generators &mdash; GraphScope  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="graphscope.nx.generators.atlas.graph_atlas" href="generated/graphscope.nx.generators.atlas.graph_atlas.html" />
+    <link rel="prev" title="graphscope.nx.classes.function.is_frozen" href="generated/graphscope.nx.classes.function.is_frozen.html" />
+
+ 
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4TMYCGJ0X2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-4TMYCGJ0X2');
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> GraphScope
+          </a>
+              <div class="version">
+                v0.17.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div>
+  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+    
+      
+      
+        
+          
+        
+      
+      
+        <p class="caption"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../graph_transformation.html">Graph Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../interactive_engine.html">GraphScope Interactive Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../persistent_graph_store.html">Persistent Graph Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../frequently_asked_questions.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../developer_guide.html">Developer Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../python_index.html">Python API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../session.html">Session</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../graph.html">Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../app.html">Analytical App</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../context.html">Context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../selector.html">Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../operation.html">Operation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cython_sdk.html">Cython SDK API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../interactive.html">Interactive Query</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../learning.html">Graph Learning</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">NetworkX-style API</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="graphs.html">Graph types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="transformation.html">Graph Transformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="builtin.html">Builtin algorithms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="functions.html">Functions</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Graph generators</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#module-graphscope.nx.generators.atlas">Atlas</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-graphscope.nx.generators.classic">Classic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-graphscope.nx.generators.expanders">Expanders</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-graphscope.nx.generators.small">Small</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-graphscope.nx.generators.duplication">Duplication Divergence</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-graphscope.nx.generators.degree_seq">Degree Sequence</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-graphscope.nx.generators.directed">Directed</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-graphscope.nx.generators.geometric">Geometric</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-graphscope.nx.generators.ego">Ego Graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-networkx.generators.stochastic">Stochastic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-networkx.generators.internet_as_graphs">AS graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-graphscope.nx.generators.intersection">Intersection</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-graphscope.nx.generators.social">Social Networks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-graphscope.nx.generators.community">Community</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-graphscope.nx.generators.spectral_graph_forge">Spectral</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-graphscope.nx.generators.trees">Trees</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-graphscope.nx.generators.nonisomorphic_trees">Non Isomorphic Trees</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-graphscope.nx.generators.triads">Triads</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-graphscope.nx.generators.joint_degree_seq">Joint Degree Sequence</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-graphscope.nx.generators.mycielski">Mycielski</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-graphscope.nx.generators.harary_graph">Harary Graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-graphscope.nx.generators.sudoku">Sudoku</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="io.html">Reading graphs</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../analytical_engine_index.html">Analytical Engine API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gae_java/index.html">Analytical Engine Java API Reference</a></li>
+</ul>
+
+      
+    
+  </div>
+
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GraphScope</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../python_index.html">Python API Reference</a> &raquo;</li>
+          <li><a href="index.html">NetworkX-style API</a> &raquo;</li>
+      <li>Graph generators</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/alibaba/graphscope/edit/main/docs/reference/networkx/generators.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="graph-generators">
+<span id="generators"></span><h1>Graph generators<a class="headerlink" href="#graph-generators" title="Permalink to this headline"></a></h1>
+<div class="section" id="module-graphscope.nx.generators.atlas">
+<span id="atlas"></span><h2>Atlas<a class="headerlink" href="#module-graphscope.nx.generators.atlas" title="Permalink to this headline"></a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.atlas.graph_atlas.html#graphscope.nx.generators.atlas.graph_atlas" title="graphscope.nx.generators.atlas.graph_atlas"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graph_atlas</span></code></a>(i)</p></td>
+<td><p>Returns graph number <cite>i</cite> from the Graph Atlas.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.atlas.graph_atlas_g.html#graphscope.nx.generators.atlas.graph_atlas_g" title="graphscope.nx.generators.atlas.graph_atlas_g"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graph_atlas_g</span></code></a>()</p></td>
+<td><p>Returns the list of all graphs with up to seven nodes named in the Graph Atlas.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="module-graphscope.nx.generators.classic">
+<span id="classic"></span><h2>Classic<a class="headerlink" href="#module-graphscope.nx.generators.classic" title="Permalink to this headline"></a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.classic.balanced_tree.html#graphscope.nx.generators.classic.balanced_tree" title="graphscope.nx.generators.classic.balanced_tree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">balanced_tree</span></code></a>(r, h[, create_using])</p></td>
+<td><p>Returns the perfectly balanced <cite>r</cite>-ary tree of height <cite>h</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.classic.barbell_graph.html#graphscope.nx.generators.classic.barbell_graph" title="graphscope.nx.generators.classic.barbell_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">barbell_graph</span></code></a>(m1, m2[, create_using])</p></td>
+<td><p>Returns the Barbell Graph: two complete graphs connected by a path.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.classic.binomial_tree.html#graphscope.nx.generators.classic.binomial_tree" title="graphscope.nx.generators.classic.binomial_tree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">binomial_tree</span></code></a>(n[, create_using])</p></td>
+<td><p>Returns the Binomial Tree of order n.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.classic.complete_graph.html#graphscope.nx.generators.classic.complete_graph" title="graphscope.nx.generators.classic.complete_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">complete_graph</span></code></a>(n[, create_using])</p></td>
+<td><p>Return the complete graph <cite>K_n</cite> with n nodes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.classic.complete_multipartite_graph.html#graphscope.nx.generators.classic.complete_multipartite_graph" title="graphscope.nx.generators.classic.complete_multipartite_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">complete_multipartite_graph</span></code></a>(*subset_sizes)</p></td>
+<td><p>Returns the complete multipartite graph with the specified subset sizes.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.classic.circular_ladder_graph.html#graphscope.nx.generators.classic.circular_ladder_graph" title="graphscope.nx.generators.classic.circular_ladder_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">circular_ladder_graph</span></code></a>(n[, create_using])</p></td>
+<td><p>Returns the circular ladder graph $CL_n$ of length n.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.classic.circulant_graph.html#graphscope.nx.generators.classic.circulant_graph" title="graphscope.nx.generators.classic.circulant_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">circulant_graph</span></code></a>(n, offsets[, create_using])</p></td>
+<td><p>Returns the circulant graph $Ci_n(x_1, x_2, …, x_m)$ with $n$ nodes.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.classic.cycle_graph.html#graphscope.nx.generators.classic.cycle_graph" title="graphscope.nx.generators.classic.cycle_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cycle_graph</span></code></a>(n[, create_using])</p></td>
+<td><p>Returns the cycle graph $C_n$ of cyclically connected nodes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.classic.dorogovtsev_goltsev_mendes_graph.html#graphscope.nx.generators.classic.dorogovtsev_goltsev_mendes_graph" title="graphscope.nx.generators.classic.dorogovtsev_goltsev_mendes_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dorogovtsev_goltsev_mendes_graph</span></code></a>(n[, …])</p></td>
+<td><p>Returns the hierarchically constructed Dorogovtsev-Goltsev-Mendes graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.classic.empty_graph.html#graphscope.nx.generators.classic.empty_graph" title="graphscope.nx.generators.classic.empty_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">empty_graph</span></code></a>([n, create_using, default])</p></td>
+<td><p>Returns the empty graph with n nodes and zero edges.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.classic.path_graph.html#graphscope.nx.generators.classic.path_graph" title="graphscope.nx.generators.classic.path_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">path_graph</span></code></a>(n[, create_using])</p></td>
+<td><p>Returns the Path graph <cite>P_n</cite> of linearly connected nodes.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.classic.star_graph.html#graphscope.nx.generators.classic.star_graph" title="graphscope.nx.generators.classic.star_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">star_graph</span></code></a>(n[, create_using])</p></td>
+<td><p>Return the star graph</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.classic.full_rary_tree.html#graphscope.nx.generators.classic.full_rary_tree" title="graphscope.nx.generators.classic.full_rary_tree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">full_rary_tree</span></code></a>(r, n[, create_using])</p></td>
+<td><p>Creates a full r-ary tree of <cite>n</cite> nodes.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.classic.ladder_graph.html#graphscope.nx.generators.classic.ladder_graph" title="graphscope.nx.generators.classic.ladder_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ladder_graph</span></code></a>(n[, create_using])</p></td>
+<td><p>Returns the Ladder graph of length n.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.classic.lollipop_graph.html#graphscope.nx.generators.classic.lollipop_graph" title="graphscope.nx.generators.classic.lollipop_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lollipop_graph</span></code></a>(m, n[, create_using])</p></td>
+<td><p>Returns the Lollipop Graph; <cite>K_m</cite> connected to <cite>P_n</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.classic.null_graph.html#graphscope.nx.generators.classic.null_graph" title="graphscope.nx.generators.classic.null_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">null_graph</span></code></a>([create_using])</p></td>
+<td><p>Returns the Null graph with no nodes or edges.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.classic.trivial_graph.html#graphscope.nx.generators.classic.trivial_graph" title="graphscope.nx.generators.classic.trivial_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trivial_graph</span></code></a>([create_using])</p></td>
+<td><p>Return the Trivial graph with one node (with label 0) and no edges.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.classic.turan_graph.html#graphscope.nx.generators.classic.turan_graph" title="graphscope.nx.generators.classic.turan_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">turan_graph</span></code></a>(n, r)</p></td>
+<td><p>Return the Turan Graph</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.classic.wheel_graph.html#graphscope.nx.generators.classic.wheel_graph" title="graphscope.nx.generators.classic.wheel_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">wheel_graph</span></code></a>(n[, create_using])</p></td>
+<td><p>Return the wheel graph</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="module-graphscope.nx.generators.expanders">
+<span id="expanders"></span><h2>Expanders<a class="headerlink" href="#module-graphscope.nx.generators.expanders" title="Permalink to this headline"></a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.expanders.margulis_gabber_galil_graph.html#graphscope.nx.generators.expanders.margulis_gabber_galil_graph" title="graphscope.nx.generators.expanders.margulis_gabber_galil_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">margulis_gabber_galil_graph</span></code></a>(n[, create_using])</p></td>
+<td><p>Returns the Margulis-Gabber-Galil undirected MultiGraph on <cite>n^2</cite> nodes.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.expanders.chordal_cycle_graph.html#graphscope.nx.generators.expanders.chordal_cycle_graph" title="graphscope.nx.generators.expanders.chordal_cycle_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">chordal_cycle_graph</span></code></a>(p[, create_using])</p></td>
+<td><p>Returns the chordal cycle graph on <cite>p</cite> nodes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.expanders.paley_graph.html#graphscope.nx.generators.expanders.paley_graph" title="graphscope.nx.generators.expanders.paley_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">paley_graph</span></code></a>(p[, create_using])</p></td>
+<td><p>Returns the Paley (p-1)/2-regular graph on p nodes.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="module-graphscope.nx.generators.small">
+<span id="small"></span><h2>Small<a class="headerlink" href="#module-graphscope.nx.generators.small" title="Permalink to this headline"></a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.small.make_small_graph.html#graphscope.nx.generators.small.make_small_graph" title="graphscope.nx.generators.small.make_small_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_small_graph</span></code></a>(graph_description[, …])</p></td>
+<td><p>Return the small graph described by graph_description.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.small.LCF_graph.html#graphscope.nx.generators.small.LCF_graph" title="graphscope.nx.generators.small.LCF_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LCF_graph</span></code></a>(n, shift_list, repeats[, create_using])</p></td>
+<td><p>Return the cubic graph specified in LCF notation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.small.bull_graph.html#graphscope.nx.generators.small.bull_graph" title="graphscope.nx.generators.small.bull_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bull_graph</span></code></a>([create_using])</p></td>
+<td><p>Returns the Bull Graph</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.small.chvatal_graph.html#graphscope.nx.generators.small.chvatal_graph" title="graphscope.nx.generators.small.chvatal_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">chvatal_graph</span></code></a>([create_using])</p></td>
+<td><p>Returns the Chvátal Graph</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.small.cubical_graph.html#graphscope.nx.generators.small.cubical_graph" title="graphscope.nx.generators.small.cubical_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cubical_graph</span></code></a>([create_using])</p></td>
+<td><p>Returns the 3-regular Platonic Cubical Graph</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.small.desargues_graph.html#graphscope.nx.generators.small.desargues_graph" title="graphscope.nx.generators.small.desargues_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">desargues_graph</span></code></a>([create_using])</p></td>
+<td><p>Returns the Desargues Graph</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.small.diamond_graph.html#graphscope.nx.generators.small.diamond_graph" title="graphscope.nx.generators.small.diamond_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">diamond_graph</span></code></a>([create_using])</p></td>
+<td><p>Returns the Diamond graph</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.small.dodecahedral_graph.html#graphscope.nx.generators.small.dodecahedral_graph" title="graphscope.nx.generators.small.dodecahedral_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dodecahedral_graph</span></code></a>([create_using])</p></td>
+<td><p>Returns the Platonic Dodecahedral graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.small.frucht_graph.html#graphscope.nx.generators.small.frucht_graph" title="graphscope.nx.generators.small.frucht_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">frucht_graph</span></code></a>([create_using])</p></td>
+<td><p>Returns the Frucht Graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.small.heawood_graph.html#graphscope.nx.generators.small.heawood_graph" title="graphscope.nx.generators.small.heawood_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">heawood_graph</span></code></a>([create_using])</p></td>
+<td><p>Returns the Heawood Graph, a (3,6) cage.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.small.house_graph.html#graphscope.nx.generators.small.house_graph" title="graphscope.nx.generators.small.house_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">house_graph</span></code></a>([create_using])</p></td>
+<td><p>Returns the House graph (square with triangle on top)</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.small.house_x_graph.html#graphscope.nx.generators.small.house_x_graph" title="graphscope.nx.generators.small.house_x_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">house_x_graph</span></code></a>([create_using])</p></td>
+<td><p>Returns the House graph with a cross inside the house square.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.small.icosahedral_graph.html#graphscope.nx.generators.small.icosahedral_graph" title="graphscope.nx.generators.small.icosahedral_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">icosahedral_graph</span></code></a>([create_using])</p></td>
+<td><p>Returns the Platonic Icosahedral graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.small.krackhardt_kite_graph.html#graphscope.nx.generators.small.krackhardt_kite_graph" title="graphscope.nx.generators.small.krackhardt_kite_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">krackhardt_kite_graph</span></code></a>([create_using])</p></td>
+<td><p>Returns the Krackhardt Kite Social Network.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.small.moebius_kantor_graph.html#graphscope.nx.generators.small.moebius_kantor_graph" title="graphscope.nx.generators.small.moebius_kantor_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">moebius_kantor_graph</span></code></a>([create_using])</p></td>
+<td><p>Returns the Moebius-Kantor graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.small.octahedral_graph.html#graphscope.nx.generators.small.octahedral_graph" title="graphscope.nx.generators.small.octahedral_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">octahedral_graph</span></code></a>([create_using])</p></td>
+<td><p>Returns the Platonic Octahedral graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.small.pappus_graph.html#graphscope.nx.generators.small.pappus_graph" title="graphscope.nx.generators.small.pappus_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pappus_graph</span></code></a>()</p></td>
+<td><p>Returns the Pappus graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.small.petersen_graph.html#graphscope.nx.generators.small.petersen_graph" title="graphscope.nx.generators.small.petersen_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">petersen_graph</span></code></a>([create_using])</p></td>
+<td><p>Returns the Petersen graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.small.sedgewick_maze_graph.html#graphscope.nx.generators.small.sedgewick_maze_graph" title="graphscope.nx.generators.small.sedgewick_maze_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sedgewick_maze_graph</span></code></a>([create_using])</p></td>
+<td><p>Return a small maze with a cycle.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.small.tetrahedral_graph.html#graphscope.nx.generators.small.tetrahedral_graph" title="graphscope.nx.generators.small.tetrahedral_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tetrahedral_graph</span></code></a>([create_using])</p></td>
+<td><p>Returns the 3-regular Platonic Tetrahedral graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.small.truncated_cube_graph.html#graphscope.nx.generators.small.truncated_cube_graph" title="graphscope.nx.generators.small.truncated_cube_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">truncated_cube_graph</span></code></a>([create_using])</p></td>
+<td><p>Returns the skeleton of the truncated cube.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.small.truncated_tetrahedron_graph.html#graphscope.nx.generators.small.truncated_tetrahedron_graph" title="graphscope.nx.generators.small.truncated_tetrahedron_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">truncated_tetrahedron_graph</span></code></a>([create_using])</p></td>
+<td><p>Returns the skeleton of the truncated Platonic tetrahedron.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.small.tutte_graph.html#graphscope.nx.generators.small.tutte_graph" title="graphscope.nx.generators.small.tutte_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tutte_graph</span></code></a>([create_using])</p></td>
+<td><p>Returns the Tutte graph.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="module-graphscope.nx.generators.duplication">
+<span id="duplication-divergence"></span><h2>Duplication Divergence<a class="headerlink" href="#module-graphscope.nx.generators.duplication" title="Permalink to this headline"></a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.duplication.duplication_divergence_graph.html#graphscope.nx.generators.duplication.duplication_divergence_graph" title="graphscope.nx.generators.duplication.duplication_divergence_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">duplication_divergence_graph</span></code></a>(n, p[, seed])</p></td>
+<td><p>Returns an undirected graph using the duplication-divergence model.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.duplication.partial_duplication_graph.html#graphscope.nx.generators.duplication.partial_duplication_graph" title="graphscope.nx.generators.duplication.partial_duplication_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">partial_duplication_graph</span></code></a>(N, n, p, q[, seed])</p></td>
+<td><p>Returns a random graph using the partial duplication model.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="module-graphscope.nx.generators.degree_seq">
+<span id="degree-sequence"></span><h2>Degree Sequence<a class="headerlink" href="#module-graphscope.nx.generators.degree_seq" title="Permalink to this headline"></a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.degree_seq.configuration_model.html#graphscope.nx.generators.degree_seq.configuration_model" title="graphscope.nx.generators.degree_seq.configuration_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">configuration_model</span></code></a>(deg_sequence[, …])</p></td>
+<td><p>Returns a random graph with the given degree sequence.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.degree_seq.directed_configuration_model.html#graphscope.nx.generators.degree_seq.directed_configuration_model" title="graphscope.nx.generators.degree_seq.directed_configuration_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">directed_configuration_model</span></code></a>(…[, …])</p></td>
+<td><p>Returns a directed_random graph with the given degree sequences.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.degree_seq.expected_degree_graph.html#graphscope.nx.generators.degree_seq.expected_degree_graph" title="graphscope.nx.generators.degree_seq.expected_degree_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expected_degree_graph</span></code></a>(w[, seed, selfloops])</p></td>
+<td><p>Returns a random graph with given expected degrees.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.degree_seq.havel_hakimi_graph.html#graphscope.nx.generators.degree_seq.havel_hakimi_graph" title="graphscope.nx.generators.degree_seq.havel_hakimi_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">havel_hakimi_graph</span></code></a>(deg_sequence[, create_using])</p></td>
+<td><p>Returns a simple graph with given degree sequence constructed using the Havel-Hakimi algorithm.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.degree_seq.directed_havel_hakimi_graph.html#graphscope.nx.generators.degree_seq.directed_havel_hakimi_graph" title="graphscope.nx.generators.degree_seq.directed_havel_hakimi_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">directed_havel_hakimi_graph</span></code></a>(in_deg_sequence, …)</p></td>
+<td><p>Returns a directed graph with the given degree sequences.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.degree_seq.degree_sequence_tree.html#graphscope.nx.generators.degree_seq.degree_sequence_tree" title="graphscope.nx.generators.degree_seq.degree_sequence_tree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">degree_sequence_tree</span></code></a>(deg_sequence[, …])</p></td>
+<td><p>Make a tree for the given degree sequence.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.degree_seq.random_degree_sequence_graph.html#graphscope.nx.generators.degree_seq.random_degree_sequence_graph" title="graphscope.nx.generators.degree_seq.random_degree_sequence_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">random_degree_sequence_graph</span></code></a>(sequence[, …])</p></td>
+<td><p>Returns a simple random graph with the given degree sequence.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="module-graphscope.nx.generators.directed">
+<span id="directed"></span><h2>Directed<a class="headerlink" href="#module-graphscope.nx.generators.directed" title="Permalink to this headline"></a></h2>
+<p>Generators for some directed graphs, including growing network (GN) graphs and
+scale-free graphs.</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.directed.gn_graph.html#graphscope.nx.generators.directed.gn_graph" title="graphscope.nx.generators.directed.gn_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gn_graph</span></code></a>(n[, kernel, create_using, seed])</p></td>
+<td><p>Returns the growing network (GN) digraph with <cite>n</cite> nodes.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.directed.gnr_graph.html#graphscope.nx.generators.directed.gnr_graph" title="graphscope.nx.generators.directed.gnr_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gnr_graph</span></code></a>(n, p[, create_using, seed])</p></td>
+<td><p>Returns the growing network with redirection (GNR) digraph with <cite>n</cite> nodes and redirection probability <cite>p</cite>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.directed.gnc_graph.html#graphscope.nx.generators.directed.gnc_graph" title="graphscope.nx.generators.directed.gnc_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gnc_graph</span></code></a>(n[, create_using, seed])</p></td>
+<td><p>Returns the growing network with copying (GNC) digraph with <cite>n</cite> nodes.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.directed.random_k_out_graph.html#graphscope.nx.generators.directed.random_k_out_graph" title="graphscope.nx.generators.directed.random_k_out_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">random_k_out_graph</span></code></a>(n, k, alpha[, …])</p></td>
+<td><p>Returns a random <cite>k</cite>-out graph with preferential attachment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.directed.scale_free_graph.html#graphscope.nx.generators.directed.scale_free_graph" title="graphscope.nx.generators.directed.scale_free_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scale_free_graph</span></code></a>(n[, alpha, beta, gamma, …])</p></td>
+<td><p>Returns a scale-free directed graph.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="module-graphscope.nx.generators.geometric">
+<span id="geometric"></span><h2>Geometric<a class="headerlink" href="#module-graphscope.nx.generators.geometric" title="Permalink to this headline"></a></h2>
+<p>Generators for some directed graphs, including growing network (GN) graphs and
+scale-free graphs.</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.geometric.random_geometric_graph.html#graphscope.nx.generators.geometric.random_geometric_graph" title="graphscope.nx.generators.geometric.random_geometric_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">random_geometric_graph</span></code></a>(n, radius[, dim, …])</p></td>
+<td><p>Returns a random geometric graph in the unit cube of dimensions <cite>dim</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.geometric.soft_random_geometric_graph.html#graphscope.nx.generators.geometric.soft_random_geometric_graph" title="graphscope.nx.generators.geometric.soft_random_geometric_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">soft_random_geometric_graph</span></code></a>(n, radius[, …])</p></td>
+<td><p>Returns a soft random geometric graph in the unit cube.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.geometric.geographical_threshold_graph.html#graphscope.nx.generators.geometric.geographical_threshold_graph" title="graphscope.nx.generators.geometric.geographical_threshold_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">geographical_threshold_graph</span></code></a>(n, theta[, …])</p></td>
+<td><p>Returns a geographical threshold graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.geometric.waxman_graph.html#graphscope.nx.generators.geometric.waxman_graph" title="graphscope.nx.generators.geometric.waxman_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">waxman_graph</span></code></a>(n[, beta, alpha, L, domain, …])</p></td>
+<td><p>Returns a Waxman random graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.geometric.thresholded_random_geometric_graph.html#graphscope.nx.generators.geometric.thresholded_random_geometric_graph" title="graphscope.nx.generators.geometric.thresholded_random_geometric_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">thresholded_random_geometric_graph</span></code></a>(n, …[, …])</p></td>
+<td><p>Returns a thresholded random geometric graph in the unit cube.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="module-graphscope.nx.generators.ego">
+<span id="ego-graph"></span><h2>Ego Graph<a class="headerlink" href="#module-graphscope.nx.generators.ego" title="Permalink to this headline"></a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.ego.ego_graph.html#graphscope.nx.generators.ego.ego_graph" title="graphscope.nx.generators.ego.ego_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ego_graph</span></code></a>(G, n[, radius, center, …])</p></td>
+<td><p>Returns induced subgraph of neighbors centered at node n within a given radius.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="module-networkx.generators.stochastic">
+<span id="stochastic"></span><h2>Stochastic<a class="headerlink" href="#module-networkx.generators.stochastic" title="Permalink to this headline"></a></h2>
+<p>Functions for generating stochastic graphs from a given weighted directed
+graph.</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/networkx.generators.stochastic.stochastic_graph.html#networkx.generators.stochastic.stochastic_graph" title="networkx.generators.stochastic.stochastic_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stochastic_graph</span></code></a>(G[, copy, weight])</p></td>
+<td><p>Returns a right-stochastic representation of directed graph <cite>G</cite>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="module-networkx.generators.internet_as_graphs">
+<span id="as-graph"></span><h2>AS graph<a class="headerlink" href="#module-networkx.generators.internet_as_graphs" title="Permalink to this headline"></a></h2>
+<p>Generates graphs resembling the Internet Autonomous System network</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/networkx.generators.internet_as_graphs.random_internet_as_graph.html#networkx.generators.internet_as_graphs.random_internet_as_graph" title="networkx.generators.internet_as_graphs.random_internet_as_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">random_internet_as_graph</span></code></a>(n[, seed])</p></td>
+<td><p>Generates a random undirected graph resembling the Internet AS network</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="module-graphscope.nx.generators.intersection">
+<span id="intersection"></span><h2>Intersection<a class="headerlink" href="#module-graphscope.nx.generators.intersection" title="Permalink to this headline"></a></h2>
+<p>Generators for random intersection graphs.</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.intersection.uniform_random_intersection_graph.html#graphscope.nx.generators.intersection.uniform_random_intersection_graph" title="graphscope.nx.generators.intersection.uniform_random_intersection_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">uniform_random_intersection_graph</span></code></a>(n, m, p[, …])</p></td>
+<td><p>Returns a uniform random intersection graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.intersection.k_random_intersection_graph.html#graphscope.nx.generators.intersection.k_random_intersection_graph" title="graphscope.nx.generators.intersection.k_random_intersection_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">k_random_intersection_graph</span></code></a>(n, m, k[, seed])</p></td>
+<td><p>Returns a intersection graph with randomly chosen attribute sets for each node that are of equal size (k).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.intersection.general_random_intersection_graph.html#graphscope.nx.generators.intersection.general_random_intersection_graph" title="graphscope.nx.generators.intersection.general_random_intersection_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">general_random_intersection_graph</span></code></a>(n, m, p[, …])</p></td>
+<td><p>Returns a random intersection graph with independent probabilities for connections between node and attribute sets.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="module-graphscope.nx.generators.social">
+<span id="social-networks"></span><h2>Social Networks<a class="headerlink" href="#module-graphscope.nx.generators.social" title="Permalink to this headline"></a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.social.karate_club_graph.html#graphscope.nx.generators.social.karate_club_graph" title="graphscope.nx.generators.social.karate_club_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">karate_club_graph</span></code></a>()</p></td>
+<td><p>Returns Zachary’s Karate Club graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.social.davis_southern_women_graph.html#graphscope.nx.generators.social.davis_southern_women_graph" title="graphscope.nx.generators.social.davis_southern_women_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">davis_southern_women_graph</span></code></a>()</p></td>
+<td><p>Returns Davis Southern women social network.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.social.florentine_families_graph.html#graphscope.nx.generators.social.florentine_families_graph" title="graphscope.nx.generators.social.florentine_families_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">florentine_families_graph</span></code></a>()</p></td>
+<td><p>Returns Florentine families graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.social.les_miserables_graph.html#graphscope.nx.generators.social.les_miserables_graph" title="graphscope.nx.generators.social.les_miserables_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">les_miserables_graph</span></code></a>()</p></td>
+<td><p>Returns coappearance network of characters in the novel Les Miserables.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="module-graphscope.nx.generators.community">
+<span id="community"></span><h2>Community<a class="headerlink" href="#module-graphscope.nx.generators.community" title="Permalink to this headline"></a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.community.caveman_graph.html#graphscope.nx.generators.community.caveman_graph" title="graphscope.nx.generators.community.caveman_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">caveman_graph</span></code></a>(l, k)</p></td>
+<td><p>Returns a caveman graph of <cite>l</cite> cliques of size <cite>k</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.community.connected_caveman_graph.html#graphscope.nx.generators.community.connected_caveman_graph" title="graphscope.nx.generators.community.connected_caveman_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">connected_caveman_graph</span></code></a>(l, k)</p></td>
+<td><p>Returns a connected caveman graph of <cite>l</cite> cliques of size <cite>k</cite>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.community.gaussian_random_partition_graph.html#graphscope.nx.generators.community.gaussian_random_partition_graph" title="graphscope.nx.generators.community.gaussian_random_partition_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gaussian_random_partition_graph</span></code></a>(n, s, v, …)</p></td>
+<td><p>Generate a Gaussian random partition graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.community.LFR_benchmark_graph.html#graphscope.nx.generators.community.LFR_benchmark_graph" title="graphscope.nx.generators.community.LFR_benchmark_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LFR_benchmark_graph</span></code></a>(n, tau1, tau2, mu[, …])</p></td>
+<td><p>Returns the LFR benchmark graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.community.planted_partition_graph.html#graphscope.nx.generators.community.planted_partition_graph" title="graphscope.nx.generators.community.planted_partition_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">planted_partition_graph</span></code></a>(l, k, p_in, p_out[, …])</p></td>
+<td><p>Returns the planted l-partition graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.community.random_partition_graph.html#graphscope.nx.generators.community.random_partition_graph" title="graphscope.nx.generators.community.random_partition_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">random_partition_graph</span></code></a>(sizes, p_in, p_out[, …])</p></td>
+<td><p>Returns the random partition graph with a partition of sizes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.community.relaxed_caveman_graph.html#graphscope.nx.generators.community.relaxed_caveman_graph" title="graphscope.nx.generators.community.relaxed_caveman_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">relaxed_caveman_graph</span></code></a>(l, k, p[, seed])</p></td>
+<td><p>Returns a relaxed caveman graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.community.ring_of_cliques.html#graphscope.nx.generators.community.ring_of_cliques" title="graphscope.nx.generators.community.ring_of_cliques"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ring_of_cliques</span></code></a>(num_cliques, clique_size)</p></td>
+<td><p>Defines a “ring of cliques” graph.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.community.stochastic_block_model.html#graphscope.nx.generators.community.stochastic_block_model" title="graphscope.nx.generators.community.stochastic_block_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stochastic_block_model</span></code></a>(sizes, p[, nodelist, …])</p></td>
+<td><p>Returns a stochastic block model graph.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.community.windmill_graph.html#graphscope.nx.generators.community.windmill_graph" title="graphscope.nx.generators.community.windmill_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">windmill_graph</span></code></a>(n, k)</p></td>
+<td><p>Generate a windmill graph.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="module-graphscope.nx.generators.spectral_graph_forge">
+<span id="spectral"></span><h2>Spectral<a class="headerlink" href="#module-graphscope.nx.generators.spectral_graph_forge" title="Permalink to this headline"></a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.spectral_graph_forge.spectral_graph_forge.html#graphscope.nx.generators.spectral_graph_forge.spectral_graph_forge" title="graphscope.nx.generators.spectral_graph_forge.spectral_graph_forge"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spectral_graph_forge</span></code></a>(G, alpha[, …])</p></td>
+<td><p>Returns a random simple graph with spectrum resembling that of <cite>G</cite></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="module-graphscope.nx.generators.trees">
+<span id="trees"></span><h2>Trees<a class="headerlink" href="#module-graphscope.nx.generators.trees" title="Permalink to this headline"></a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.trees.random_tree.html#graphscope.nx.generators.trees.random_tree" title="graphscope.nx.generators.trees.random_tree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">random_tree</span></code></a>(n[, seed, create_using])</p></td>
+<td><p>Returns a uniformly random tree on <cite>n</cite> nodes.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.trees.prefix_tree.html#graphscope.nx.generators.trees.prefix_tree" title="graphscope.nx.generators.trees.prefix_tree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">prefix_tree</span></code></a>(paths)</p></td>
+<td><p>Creates a directed prefix tree from a list of paths.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="module-graphscope.nx.generators.nonisomorphic_trees">
+<span id="non-isomorphic-trees"></span><h2>Non Isomorphic Trees<a class="headerlink" href="#module-graphscope.nx.generators.nonisomorphic_trees" title="Permalink to this headline"></a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.nonisomorphic_trees.nonisomorphic_trees.html#graphscope.nx.generators.nonisomorphic_trees.nonisomorphic_trees" title="graphscope.nx.generators.nonisomorphic_trees.nonisomorphic_trees"><code class="xref py py-obj docutils literal notranslate"><span class="pre">nonisomorphic_trees</span></code></a>(order[, create])</p></td>
+<td><p>Returns a list of nonisomporphic trees</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.nonisomorphic_trees.number_of_nonisomorphic_trees.html#graphscope.nx.generators.nonisomorphic_trees.number_of_nonisomorphic_trees" title="graphscope.nx.generators.nonisomorphic_trees.number_of_nonisomorphic_trees"><code class="xref py py-obj docutils literal notranslate"><span class="pre">number_of_nonisomorphic_trees</span></code></a>(order)</p></td>
+<td><p>Returns the number of nonisomorphic trees</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="module-graphscope.nx.generators.triads">
+<span id="triads"></span><h2>Triads<a class="headerlink" href="#module-graphscope.nx.generators.triads" title="Permalink to this headline"></a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.triads.triad_graph.html#graphscope.nx.generators.triads.triad_graph" title="graphscope.nx.generators.triads.triad_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">triad_graph</span></code></a>(triad_name)</p></td>
+<td><p>Returns the triad graph with the given name.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="module-graphscope.nx.generators.joint_degree_seq">
+<span id="joint-degree-sequence"></span><h2>Joint Degree Sequence<a class="headerlink" href="#module-graphscope.nx.generators.joint_degree_seq" title="Permalink to this headline"></a></h2>
+<p>Generate graphs with a given joint degree and directed joint degree</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.joint_degree_seq.is_valid_joint_degree.html#graphscope.nx.generators.joint_degree_seq.is_valid_joint_degree" title="graphscope.nx.generators.joint_degree_seq.is_valid_joint_degree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_valid_joint_degree</span></code></a>(joint_degrees)</p></td>
+<td><p>Checks whether the given joint degree dictionary is realizable.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.joint_degree_seq.joint_degree_graph.html#graphscope.nx.generators.joint_degree_seq.joint_degree_graph" title="graphscope.nx.generators.joint_degree_seq.joint_degree_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">joint_degree_graph</span></code></a>(joint_degrees[, seed])</p></td>
+<td><p>Generates a random simple graph with the given joint degree dictionary.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.joint_degree_seq.is_valid_directed_joint_degree.html#graphscope.nx.generators.joint_degree_seq.is_valid_directed_joint_degree" title="graphscope.nx.generators.joint_degree_seq.is_valid_directed_joint_degree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_valid_directed_joint_degree</span></code></a>(in_degrees, …)</p></td>
+<td><p>Checks whether the given directed joint degree input is realizable</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.joint_degree_seq.directed_joint_degree_graph.html#graphscope.nx.generators.joint_degree_seq.directed_joint_degree_graph" title="graphscope.nx.generators.joint_degree_seq.directed_joint_degree_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">directed_joint_degree_graph</span></code></a>(in_degrees, …)</p></td>
+<td><p>Generates a random simple directed graph with the joint degree.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="module-graphscope.nx.generators.mycielski">
+<span id="mycielski"></span><h2>Mycielski<a class="headerlink" href="#module-graphscope.nx.generators.mycielski" title="Permalink to this headline"></a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.mycielski.mycielskian.html#graphscope.nx.generators.mycielski.mycielskian" title="graphscope.nx.generators.mycielski.mycielskian"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mycielskian</span></code></a>(G[, iterations])</p></td>
+<td><p>Returns the Mycielskian of a simple, undirected graph G</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.mycielski.mycielski_graph.html#graphscope.nx.generators.mycielski.mycielski_graph" title="graphscope.nx.generators.mycielski.mycielski_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mycielski_graph</span></code></a>(n)</p></td>
+<td><p>Generator for the n_th Mycielski Graph.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="module-graphscope.nx.generators.harary_graph">
+<span id="harary-graph"></span><h2>Harary Graph<a class="headerlink" href="#module-graphscope.nx.generators.harary_graph" title="Permalink to this headline"></a></h2>
+<p>Generators for Harary graphs</p>
+<p>This module gives two generators for the Harary graph, which was
+introduced by the famous mathematician Frank Harary in his 1962 work <a class="reference internal" href="#h" id="id1"><span>[H]</span></a>.
+The first generator gives the Harary graph that maximizes the node
+connectivity with given number of nodes and given number of edges.
+The second generator gives the Harary graph that minimizes
+the number of edges in the graph with given node connectivity and
+number of nodes.</p>
+<p class="rubric">References</p>
+<dl class="citation">
+<dt class="label" id="h"><span class="brackets"><a class="fn-backref" href="#id1">H</a></span></dt>
+<dd><p>Harary, F. “The Maximum Connectivity of a Graph.”
+Proc. Nat. Acad. Sci. USA 48, 1142-1146, 1962.</p>
+</dd>
+</dl>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.harary_graph.hnm_harary_graph.html#graphscope.nx.generators.harary_graph.hnm_harary_graph" title="graphscope.nx.generators.harary_graph.hnm_harary_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hnm_harary_graph</span></code></a>(n, m[, create_using])</p></td>
+<td><p>Returns the Harary graph with given numbers of nodes and edges.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.harary_graph.hkn_harary_graph.html#graphscope.nx.generators.harary_graph.hkn_harary_graph" title="graphscope.nx.generators.harary_graph.hkn_harary_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hkn_harary_graph</span></code></a>(k, n[, create_using])</p></td>
+<td><p>Returns the Harary graph with given node connectivity and node number.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="module-graphscope.nx.generators.sudoku">
+<span id="sudoku"></span><h2>Sudoku<a class="headerlink" href="#module-graphscope.nx.generators.sudoku" title="Permalink to this headline"></a></h2>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/graphscope.nx.generators.sudoku.sudoku_graph.html#graphscope.nx.generators.sudoku.sudoku_graph" title="graphscope.nx.generators.sudoku.sudoku_graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sudoku_graph</span></code></a>([n])</p></td>
+<td><p>Returns the n-Sudoku graph.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="generated/graphscope.nx.classes.function.is_frozen.html" class="btn btn-neutral float-left" title="graphscope.nx.classes.function.is_frozen" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="generated/graphscope.nx.generators.atlas.graph_atlas.html" class="btn btn-neutral float-right" title="graphscope.nx.generators.atlas.graph_atlas" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020-2023, DAMO Academy, Alibaba Inc..</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.17.0
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../../../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../index.html">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.17.0/index.html">v0.17.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.16.0/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.15.0/index.html">v0.15.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.14.0/index.html">v0.14.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.13.0/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.12.0/index.html">v0.12.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.11.0/index.html">v0.11.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.10.1/index.html">v0.10.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.10.0/index.html">v0.10.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.9.1/index.html">v0.9.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.9.0/index.html">v0.9.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.8.0/index.html">v0.8.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.7.0/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.6.1/index.html">v0.6.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.6.0/index.html">v0.6.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.5.0/index.html">v0.5.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.4.0/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.3.0/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="../../index.html">en</a></dd>
+        <dd><a href="../../zh/index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>
