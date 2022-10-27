@@ -24,7 +24,7 @@ use ir_common::generated::common as common_pb;
 use vec_map::VecMap;
 
 use crate::catalogue::error::{IrPatternError, IrPatternResult};
-use crate::catalogue::extend_step::DefiniteExtendStep;
+use crate::catalogue::extend_step::ExactExtendStep;
 use crate::catalogue::pattern_meta::PatternMeta;
 use crate::catalogue::{query_params, DynIter, PatternDirection, PatternId, PatternLabelId};
 use crate::plan::meta::{PlanMeta, TagId};
@@ -110,34 +110,34 @@ impl PatternEdge {
 }
 
 #[derive(Debug, Clone)]
-pub enum EdgeData {
+pub enum PbEdgeOrPath {
     Edge(pb::EdgeExpand),
     Path(pb::PathExpand),
 }
 
-impl Default for EdgeData {
+impl Default for PbEdgeOrPath {
     fn default() -> Self {
-        EdgeData::Edge(pb::EdgeExpand::default())
+        PbEdgeOrPath::Edge(pb::EdgeExpand::default())
     }
 }
 
-impl From<pb::EdgeExpand> for EdgeData {
+impl From<pb::EdgeExpand> for PbEdgeOrPath {
     fn from(edge: pb::EdgeExpand) -> Self {
-        EdgeData::Edge(edge)
+        PbEdgeOrPath::Edge(edge)
     }
 }
 
-impl From<pb::PathExpand> for EdgeData {
+impl From<pb::PathExpand> for PbEdgeOrPath {
     fn from(path: pb::PathExpand) -> Self {
-        EdgeData::Path(path)
+        PbEdgeOrPath::Path(path)
     }
 }
 
-impl EdgeData {
+impl PbEdgeOrPath {
     fn get_predicates(&self) -> Option<&common_pb::Expression> {
         let edge_expand = match self {
-            EdgeData::Edge(e) => Some(e),
-            EdgeData::Path(p) => p.base.as_ref(),
+            PbEdgeOrPath::Edge(e) => Some(e),
+            PbEdgeOrPath::Path(p) => p.base.as_ref(),
         };
         edge_expand
             .and_then(|e| e.params.as_ref())
@@ -146,8 +146,8 @@ impl EdgeData {
 
     fn get_path(&self) -> Option<&pb::PathExpand> {
         match self {
-            EdgeData::Edge(_) => None,
-            EdgeData::Path(p) => Some(p),
+            PbEdgeOrPath::Edge(_) => None,
+            PbEdgeOrPath::Path(p) => Some(p),
         }
     }
 }
@@ -159,7 +159,7 @@ struct PatternEdgeData {
     /// Tag (alias) assigned to this edge by user
     tag: Option<TagId>,
     /// Predicate(filter or other expressions) this edge has
-    data: EdgeData,
+    data: PbEdgeOrPath,
 }
 
 /// Adjacency records a vertex's neighboring edge and vertex
@@ -310,7 +310,7 @@ impl Pattern {
         // record the vertices from the pb pattern has predicates
         let mut vertex_data_map: BTreeMap<PatternId, pb::Select> = BTreeMap::new();
         // record the edges from the pb pattern has predicates
-        let mut edge_data_map: BTreeMap<PatternId, EdgeData> = BTreeMap::new();
+        let mut edge_data_map: BTreeMap<PatternId, PbEdgeOrPath> = BTreeMap::new();
         for sentence in &pb_pattern.sentences {
             if sentence.binders.is_empty() {
                 return Err(
@@ -361,7 +361,7 @@ impl Pattern {
                         let edge_id = assign_id(&mut next_edge_id, None);
                         let edge_expand = if let Some(BinderItem::Path(path_expand)) = binder.item.as_ref()
                         {
-                            edge_data_map.insert(edge_id, EdgeData::from(path_expand.clone()));
+                            edge_data_map.insert(edge_id, PbEdgeOrPath::from(path_expand.clone()));
                             path_expand
                                 .base
                                 .as_ref()
@@ -369,7 +369,7 @@ impl Pattern {
                                     "PathExpand::base in Pattern".to_string(),
                                 ))?
                         } else if let Some(BinderItem::Edge(edge_expand)) = binder.item.as_ref() {
-                            edge_data_map.insert(edge_id, EdgeData::from(edge_expand.clone()));
+                            edge_data_map.insert(edge_id, PbEdgeOrPath::from(edge_expand.clone()));
                             edge_expand
                         } else {
                             unreachable!()
@@ -451,7 +451,7 @@ impl Pattern {
     /// Generate a naive extend based pattern match plan
     pub fn generate_simple_extend_match_plan(&self) -> IrPatternResult<pb::LogicalPlan> {
         let mut trace_pattern = self.clone();
-        let mut definite_extend_steps = vec![];
+        let mut exact_extend_steps = vec![];
         while trace_pattern.get_vertices_num() > 1 {
             let mut all_vertex_ids: Vec<PatternId> = trace_pattern
                 .vertices_iter()
@@ -471,13 +471,12 @@ impl Pattern {
             if select_vertex_id == usize::MAX {
                 Err(IrPatternError::InvalidPattern("The pattern is not connected".to_string()))?
             }
-            let definite_extend_step =
-                DefiniteExtendStep::from_target_pattern(&trace_pattern, select_vertex_id)?;
-            definite_extend_steps.push(definite_extend_step);
+            let exact_extend_step = ExactExtendStep::from_target_pattern(&trace_pattern, select_vertex_id)?;
+            exact_extend_steps.push(exact_extend_step);
             trace_pattern.remove_vertex(select_vertex_id)?;
         }
-        definite_extend_steps.push(trace_pattern.try_into()?);
-        build_logical_plan(self, definite_extend_steps)
+        exact_extend_steps.push(trace_pattern.try_into()?);
+        build_logical_plan(self, exact_extend_steps)
     }
 }
 
@@ -487,11 +486,11 @@ impl Pattern {
 ///           \   |    /
 ///            intersect
 fn build_logical_plan(
-    origin_pattern: &Pattern, mut definite_extend_steps: Vec<DefiniteExtendStep>,
+    origin_pattern: &Pattern, mut exact_extend_steps: Vec<ExactExtendStep>,
 ) -> IrPatternResult<pb::LogicalPlan> {
     let mut match_plan = pb::LogicalPlan::default();
     let mut child_offset: i32 = 1;
-    let source_extend = match definite_extend_steps.pop() {
+    let source_extend = match exact_extend_steps.pop() {
         Some(src_extend) => src_extend,
         None => {
             return Err(IrPatternError::InvalidPattern(
@@ -516,8 +515,8 @@ fn build_logical_plan(
         idx_predicate: None,
     };
     let mut pre_node = pb::logical_plan::Node { opr: Some(source_opr.into()), children: vec![] };
-    for definite_extend_step in definite_extend_steps.into_iter().rev() {
-        let edge_expands_num = definite_extend_step.len();
+    for exact_extend_step in exact_extend_steps.into_iter().rev() {
+        let edge_expands_num = exact_extend_step.len();
         // the case that needs intersection;
         if edge_expands_num > 1 {
             let mut expand_child_offset = child_offset;
@@ -527,27 +526,24 @@ fn build_logical_plan(
             let mut intersect_ids = vec![];
             // record the oprs to expand. e.g., [[EdgeExpand], [PathExpand, GetV, EdgeExpand]]
             let mut expand_oprs = vec![vec![]];
-            for definite_extend_edge in definite_extend_step.iter() {
-                let edge_id = definite_extend_edge.get_edge_id();
+            for exact_extend_edge in exact_extend_step.iter() {
+                let edge_id = exact_extend_edge.get_edge_id();
                 let edge_data = origin_pattern
                     .get_edge_data(edge_id)
                     .cloned()
                     .ok_or(ParsePbError::EmptyFieldError("edge_data in Pattern".to_string()))?;
                 match edge_data {
-                    EdgeData::Edge(edge_expand) => {
+                    PbEdgeOrPath::Edge(edge_expand) => {
                         expand_ids.push(expand_child_offset);
                         intersect_ids.push(expand_child_offset);
                         let edge_expand_opr =
-                            definite_extend_step.generate_edge_expand(definite_extend_edge, edge_expand)?;
+                            exact_extend_step.generate_edge_expand(exact_extend_edge, edge_expand)?;
                         expand_oprs.push(vec![edge_expand_opr]);
                         expand_child_offset += 1;
                     }
-                    EdgeData::Path(path_expand) => {
-                        let path_expand_oprs = definite_extend_step.generate_path_expand(
-                            definite_extend_edge,
-                            path_expand,
-                            true,
-                        )?;
+                    PbEdgeOrPath::Path(path_expand) => {
+                        let path_expand_oprs =
+                            exact_extend_step.generate_path_expand(exact_extend_edge, path_expand, true)?;
                         let path_expand_oprs_num = path_expand_oprs.len() as i32;
                         // pre_node's child should be the id of the first op in path_expand_oprs
                         expand_ids.push(expand_child_offset);
@@ -578,11 +574,11 @@ fn build_logical_plan(
                     match_plan.nodes.push(node);
                 }
             }
-            let intersect = definite_extend_step.generate_intersect_operator(intersect_ids)?;
+            let intersect = exact_extend_step.generate_intersect_operator(intersect_ids)?;
             pre_node = pb::logical_plan::Node { opr: Some(intersect), children: vec![] };
             child_offset += 1;
         } else if edge_expands_num == 1 {
-            let definite_extend_edge = definite_extend_step
+            let definite_extend_edge = exact_extend_step
                 .iter()
                 .last()
                 .ok_or(ParsePbError::EmptyFieldError("extend_edge in definite_extend_step".to_string()))?;
@@ -592,17 +588,14 @@ fn build_logical_plan(
                 .cloned()
                 .ok_or(ParsePbError::EmptyFieldError("edge_data in Pattern".to_string()))?;
             match edge_data {
-                EdgeData::Edge(edge_expand) => {
+                PbEdgeOrPath::Edge(edge_expand) => {
                     let edge_expand_opr =
-                        definite_extend_step.generate_edge_expand(definite_extend_edge, edge_expand)?;
+                        exact_extend_step.generate_edge_expand(definite_extend_edge, edge_expand)?;
                     append_opr(&mut match_plan, &mut pre_node, edge_expand_opr, &mut child_offset);
                 }
-                EdgeData::Path(path_expand) => {
-                    let path_expand_oprs = definite_extend_step.generate_path_expand(
-                        definite_extend_edge,
-                        path_expand,
-                        false,
-                    )?;
+                PbEdgeOrPath::Path(path_expand) => {
+                    let path_expand_oprs =
+                        exact_extend_step.generate_path_expand(definite_extend_edge, path_expand, false)?;
                     for opr in path_expand_oprs {
                         append_opr(&mut match_plan, &mut pre_node, opr, &mut child_offset);
                     }
@@ -613,7 +606,7 @@ fn build_logical_plan(
                 "Build logical plan error: extend step is not source but has 0 edges".to_string(),
             ));
         }
-        if let Some(filter) = definite_extend_step.generate_vertex_filter_operator(origin_pattern)? {
+        if let Some(filter) = exact_extend_step.generate_vertex_filter_operator(origin_pattern)? {
             append_opr(&mut match_plan, &mut pre_node, filter, &mut child_offset);
         }
     }
@@ -820,7 +813,8 @@ fn get_tag_from_name_or_id(name_or_id: common_pb::NameOrId) -> IrPatternResult<T
     }
 }
 
-/// Get all the tags from the pb Pattern and store in a set
+/// Get all the tags from the pb Pattern and store in a set.
+/// Notice that these tags are user-given tags.
 fn get_all_tags_from_pb_pattern(pb_pattern: &pb::Pattern) -> IrPatternResult<BTreeSet<TagId>> {
     use pb::pattern::binder::Item as BinderItem;
     let mut tag_id_set = BTreeSet::new();
@@ -833,7 +827,6 @@ fn get_all_tags_from_pb_pattern(pb_pattern: &pb::Pattern) -> IrPatternResult<BTr
             let end_tag_id = get_tag_from_name_or_id(end_tag)?;
             tag_id_set.insert(end_tag_id);
         }
-        // TODO: not sure if it is necessary. After pattern matching, seems only the tags of 'start_tag' and 'end_tag' should be preserved?
         for binder in sentence.binders.iter() {
             let alias = match binder.item.as_ref() {
                 Some(BinderItem::Edge(edge_expand)) => edge_expand.alias.clone(),
@@ -1083,7 +1076,7 @@ impl Pattern {
 
     /// Get the data of a PatternEdge
     #[inline]
-    pub fn get_edge_data(&self, edge_id: PatternId) -> Option<&EdgeData> {
+    pub fn get_edge_data(&self, edge_id: PatternId) -> Option<&PbEdgeOrPath> {
         self.edges_data
             .get(edge_id)
             .map(|edge_data| &edge_data.data)
@@ -1287,7 +1280,7 @@ impl Pattern {
     }
 
     /// Set predicate requirement of a PatternEdge
-    pub fn set_edge_data(&mut self, edge_id: PatternId, opr: EdgeData) {
+    pub fn set_edge_data(&mut self, edge_id: PatternId, opr: PbEdgeOrPath) {
         if let Some(edge_data) = self.edges_data.get_mut(edge_id) {
             edge_data.data = opr;
         }

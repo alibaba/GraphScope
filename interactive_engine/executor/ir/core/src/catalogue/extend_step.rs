@@ -23,25 +23,23 @@ use crate::catalogue::error::{IrPatternError, IrPatternResult};
 use crate::catalogue::pattern::Pattern;
 use crate::catalogue::{query_params, DynIter, PatternDirection, PatternId, PatternLabelId};
 
-/// Given a DefiniteExtendEdge, we can uniquely locate an edge with dir in the pattern
+/// An ExactExtendEdge denotes an edge to be extended during the pattern matching.
+/// Given a ExactExtendEdge, we can uniquely locate an edge with dir in the pattern
 #[derive(Debug, Clone)]
-pub struct DefiniteExtendEdge {
+pub struct ExactExtendEdge {
     src_vertex_id: PatternId,
     edge_id: PatternId,
-    edge_label: PatternLabelId,
     dir: PatternDirection,
 }
 
-/// Initializer of DefiniteExtendEdge
-impl DefiniteExtendEdge {
-    pub fn new(
-        src_vertex_id: PatternId, edge_id: PatternId, edge_label: PatternLabelId, dir: PatternDirection,
-    ) -> DefiniteExtendEdge {
-        DefiniteExtendEdge { src_vertex_id, edge_id, edge_label, dir }
+/// Initializer of ExactExtendEdge
+impl ExactExtendEdge {
+    pub fn new(src_vertex_id: PatternId, edge_id: PatternId, dir: PatternDirection) -> ExactExtendEdge {
+        ExactExtendEdge { src_vertex_id, edge_id, dir }
     }
 }
 
-impl DefiniteExtendEdge {
+impl ExactExtendEdge {
     pub fn get_src_vertex_id(&self) -> PatternId {
         self.src_vertex_id
     }
@@ -50,26 +48,24 @@ impl DefiniteExtendEdge {
         self.edge_id
     }
 
-    pub fn get_edge_label(&self) -> PatternLabelId {
-        self.edge_label
-    }
-
     pub fn get_direction(&self) -> PatternDirection {
         self.dir
     }
 }
 
-/// Given a DefiniteExtendStep, we can uniquely find which part of the pattern to extend
+/// An ExactExtendStep contains the vertex to be extended,
+/// together with all its adjacent edges that needs to be extended as well, during the pattern matching.
+/// Given a ExactExtendStep, we can uniquely find which part of the pattern to extend
 #[derive(Debug, Clone)]
-pub struct DefiniteExtendStep {
+pub struct ExactExtendStep {
     target_vertex_id: PatternId,
     target_vertex_label: PatternLabelId,
-    extend_edges: Vec<DefiniteExtendEdge>,
+    extend_edges: Vec<ExactExtendEdge>,
 }
 
-/// Transform a one-vertex pattern to DefiniteExtendStep
-/// It is usually to use such DefiniteExtendStep to generate Source operator
-impl TryFrom<Pattern> for DefiniteExtendStep {
+/// Transform a one-vertex pattern to ExactExtendStep
+/// It is usually to use such ExactExtendStep to generate Source operator
+impl TryFrom<Pattern> for ExactExtendStep {
     type Error = IrPatternError;
 
     fn try_from(pattern: Pattern) -> IrPatternResult<Self> {
@@ -77,7 +73,7 @@ impl TryFrom<Pattern> for DefiniteExtendStep {
             let target_vertex = pattern.vertices_iter().last().unwrap();
             let target_v_id = target_vertex.get_id();
             let target_v_label = target_vertex.get_label();
-            Ok(DefiniteExtendStep {
+            Ok(ExactExtendStep {
                 target_vertex_id: target_v_id,
                 target_vertex_label: target_v_label,
                 extend_edges: vec![],
@@ -90,7 +86,7 @@ impl TryFrom<Pattern> for DefiniteExtendStep {
     }
 }
 
-impl DefiniteExtendStep {
+impl ExactExtendStep {
     /// Given a target pattern with a vertex id, pick all its neighboring edges and vertices to generate a definite extend step
     pub fn from_target_pattern(
         target_pattern: &Pattern, target_vertex_id: PatternId,
@@ -105,30 +101,28 @@ impl DefiniteExtendStep {
                     .get_edge(edge_id)
                     .ok_or(IrPatternError::MissingPatternEdge(edge_id))?;
                 if let PatternDirection::In = dir {
-                    extend_edges.push(DefiniteExtendEdge::new(
+                    extend_edges.push(ExactExtendEdge::new(
                         edge.get_start_vertex().get_id(),
                         edge_id,
-                        edge.get_label(),
                         PatternDirection::Out,
                     ));
                 } else {
-                    extend_edges.push(DefiniteExtendEdge::new(
+                    extend_edges.push(ExactExtendEdge::new(
                         edge.get_end_vertex().get_id(),
                         edge_id,
-                        edge.get_label(),
                         PatternDirection::In,
                     ));
                 }
             }
-            Ok(DefiniteExtendStep { target_vertex_id, target_vertex_label, extend_edges })
+            Ok(ExactExtendStep { target_vertex_id, target_vertex_label, extend_edges })
         } else {
             Err(IrPatternError::MissingPatternVertex(target_vertex_id))
         }
     }
 }
 
-/// Methods of accessing some fields of DefiniteExtendStep
-impl DefiniteExtendStep {
+/// Methods of accessing some fields of ExactExtendStep
+impl ExactExtendStep {
     #[inline]
     pub fn get_target_vertex_id(&self) -> PatternId {
         self.target_vertex_id
@@ -139,7 +133,7 @@ impl DefiniteExtendStep {
         self.target_vertex_label
     }
 
-    pub fn iter(&self) -> DynIter<&DefiniteExtendEdge> {
+    pub fn iter(&self) -> DynIter<&ExactExtendEdge> {
         Box::new(self.extend_edges.iter())
     }
 
@@ -148,10 +142,10 @@ impl DefiniteExtendStep {
     }
 }
 
-impl DefiniteExtendStep {
-    /// Use the DefiniteExtendStep to generate corresponding edge_expand operator
+impl ExactExtendStep {
+    /// Use the ExactExtendStep to generate corresponding edge_expand operator
     pub fn generate_edge_expand(
-        &self, extend_edge: &DefiniteExtendEdge, mut edge_opr: pb::EdgeExpand,
+        &self, extend_edge: &ExactExtendEdge, mut edge_opr: pb::EdgeExpand,
     ) -> IrPatternResult<pb::logical_plan::Operator> {
         // use start vertex id as tag
         edge_opr.v_tag = Some((extend_edge.src_vertex_id as i32).into());
@@ -162,12 +156,12 @@ impl DefiniteExtendStep {
         Ok(edge_opr.into())
     }
 
-    /// Use the DefiniteExtendStep to generate corresponding path_expand related operators
+    /// Use the ExactExtendStep to generate corresponding path_expand related operators
     /// Specifically, path_expand will be translated to:
     /// If path_expand is the one to be intersected, translate path_expand(l,h) to path_expand(l-1, h-1) + endV() + edge_expand
     /// Otherwise, treat path_expand as the same as edge_expand (except add endV() back for path_expand)
     pub fn generate_path_expand(
-        &self, extend_edge: &DefiniteExtendEdge, mut path_opr: pb::PathExpand, is_intersect: bool,
+        &self, extend_edge: &ExactExtendEdge, mut path_opr: pb::PathExpand, is_intersect: bool,
     ) -> IrPatternResult<Vec<pb::logical_plan::Operator>> {
         let mut expand_operators = vec![];
         let start_tag = Some((extend_edge.src_vertex_id as i32).into());
@@ -224,7 +218,7 @@ impl DefiniteExtendStep {
         Ok(expand_operators)
     }
 
-    /// Generate the intersect operator for DefiniteExtendStep's target vertex
+    /// Generate the intersect operator for ExactExtendStep's target vertex
     /// It needs its parent EdgeExpand Operator's node ids
     pub fn generate_intersect_operator(
         &self, parents: Vec<i32>,
@@ -232,7 +226,7 @@ impl DefiniteExtendStep {
         Ok((pb::Intersect { parents, key: Some((self.target_vertex_id as i32).into()) }).into())
     }
 
-    /// Generate the filter operator for DefiniteExtendStep's target vertex if it has filters
+    /// Generate the filter operator for ExactExtendStep's target vertex if it has filters
     pub fn generate_vertex_filter_operator(
         &self, origin_pattern: &Pattern,
     ) -> IrPatternResult<Option<pb::logical_plan::Operator>> {
