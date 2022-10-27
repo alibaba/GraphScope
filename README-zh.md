@@ -306,7 +306,7 @@ sess.close()
 
 ```bash
 # 编译所有组件，包括 Python 包和 引擎可执行文件
-make graphscope
+sudo make install
 
 # 或者只编译指定的引擎
 # make gie

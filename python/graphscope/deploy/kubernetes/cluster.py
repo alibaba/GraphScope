@@ -174,19 +174,15 @@ class KubernetesClusterLauncher(Launcher):
     def _get_free_namespace(self):
         while True:
             namespace = "gs-" + random_string(6)
-            try:
-                self._core_api.read_namespace(namespace)
-            except K8SApiException as e:
-                if e.status != 404:
-                    raise RuntimeError(str(e))
+            if not self._namespace_exist(namespace):
                 return namespace
 
     def _namespace_exist(self, namespace):
         try:
             self._core_api.read_namespace(namespace)
         except K8SApiException as e:
-            if e.status != 404:
-                raise RuntimeError(str(e))
+            if e.status != 404:  # Not found
+                raise
             return False
         return True
 
@@ -195,7 +191,7 @@ class KubernetesClusterLauncher(Launcher):
             self._rbac_api.read_namespaced_role(name=role, namespace=namespace)
         except K8SApiException as e:
             if e.status != 404:
-                raise RuntimeError(str(e))
+                raise
             return False
         return True
 
@@ -204,7 +200,7 @@ class KubernetesClusterLauncher(Launcher):
             self._rbac_api.read_cluster_role(name=cluster_role)
         except K8SApiException as e:
             if e.status != 404:
-                raise RuntimeError(str(e))
+                raise
             return False
         return True
 
@@ -215,7 +211,7 @@ class KubernetesClusterLauncher(Launcher):
             )
         except K8SApiException as e:
             if e.status != 404:
-                raise RuntimeError(str(e))
+                raise
             return False
         return True
 
@@ -224,7 +220,7 @@ class KubernetesClusterLauncher(Launcher):
             self._rbac_api.read_cluster_role_binding(name=cluster_role_binding)
         except K8SApiException as e:
             if e.status != 404:
-                raise RuntimeError(str(e))
+                raise
             return False
         return True
 

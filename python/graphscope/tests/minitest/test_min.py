@@ -41,7 +41,6 @@ from graphscope.framework.app import AppAssets
 logger = logging.getLogger("graphscope")
 
 graphscope.set_option(show_log=True)
-graphscope.set_option(initializing_interactive_engine=False)
 
 
 @pytest.fixture(scope="module")

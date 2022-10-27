@@ -104,14 +104,10 @@ enum OperationType {
   INDUCE_SUBGRAPH = 22;  // induce subgraph
   UNLOAD_CONTEXT = 23;  // unload context
 
-  CREATE_INTERACTIVE_QUERY = 31;  // interactive query
   SUBGRAPH = 32;  // subgraph in interactive query
   GREMLIN_QUERY = 33;  // queries on gremlin engine
   FETCH_GREMLIN_RESULT = 34;
-  CLOSE_INTERACTIVE_QUERY = 35;
 
-  CREATE_LEARNING_INSTANCE = 41;  // learning graph
-  CLOSE_LEARNING_INSTANCE = 42;
 
   DATA_SOURCE = 46;  // loader
   DATA_SINK = 47;
@@ -176,7 +172,6 @@ enum ParamKey {
 
   DISTRIBUTED = 27;
   SCHEMA_PATH = 31;
-  GIE_GREMLIN_ENGINE_PARAMS = 34;
   GIE_GREMLIN_QUERY_MESSAGE = 35;
   GIE_GREMLIN_REQUEST_OPTIONS = 36;
   GIE_GREMLIN_FETCH_RESULT_TYPE = 37;
