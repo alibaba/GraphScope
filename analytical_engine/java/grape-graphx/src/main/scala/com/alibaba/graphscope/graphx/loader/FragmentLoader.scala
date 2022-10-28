@@ -66,7 +66,7 @@ object FragmentLoader extends Logging {
         curCores += executorId2Cores(executorId)
       }
       hostname2Cores(host) = curCores
-      hostname2Cores(host) = hostname2Cores(host) / hostName2ExecutorId(host).size
+      hostname2Cores(host) = hostname2Cores(host) / ( hostName2ExecutorId(host).size * 2) + 1
       log.info(s"for host ${host}, there are executor ids ${hostName2ExecutorId(host)
         .mkString(",")} total cores ${curCores}, per executor parallelsim ${hostname2Cores(host)}")
     }
