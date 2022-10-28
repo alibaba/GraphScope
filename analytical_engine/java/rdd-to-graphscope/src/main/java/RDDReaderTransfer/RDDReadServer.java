@@ -68,6 +68,8 @@ public class RDDReadServer {
 
     private int partitionId_;
 
+    private int partitionCnt_;
+
     private Iterator partitionIter_;
 
 
@@ -75,11 +77,12 @@ public class RDDReadServer {
     private ArrayList<String> essential_names_
             = new ArrayList<>(Arrays.asList("int", "double", "float", "long", "bool", "string"));
 
-    public RDDReadServer(int port_shift, int partition_id, Iterator iter, String data_type) {
+    public RDDReadServer(int port_shift, int partition_id, Iterator iter, String data_type, int part_cnt) {
         listenPort_ = listen_port_base_ + port_shift;
         partitionId_ = partition_id;
         partitionIter_ = iter;
         data_type_ = data_type;
+        partitionCnt_ = part_cnt;
     }
 
 
@@ -138,9 +141,11 @@ public class RDDReadServer {
             } else if(type.startsWith("string")) {
                 String str_val = (String) data_val;
                 essen_data = essential_type.newBuilder().setStringData(str_val).build();
-            } else {  //long
+            } else if(type.startsWith("long")){  //long
                 Long long_val = (Long) data_val;
                 essen_data = essential_type.newBuilder().setLongData(long_val).build();
+            }else{ //空
+                essen_data = null;
             }
             return essen_data;
         }
@@ -148,7 +153,7 @@ public class RDDReadServer {
         private <ArrayType> array_type buildArray(ArrayType array_data, String array_info) {
             array_type.Builder arr = array_type.newBuilder();
             String[] array_type = array_info.split(",");
-            int[] arr_item = (int[])(array_data);
+            String[] arr_item = (String[])(array_data);
             for(Integer i = 0;i < arr_item.length;i++){
                 essential_type essen_data = buildEssen(arr_item[i], array_type[1]);
                 arr.addItem(essen_data);
@@ -176,12 +181,24 @@ public class RDDReadServer {
             }else { // tuple
                 int idx = 1;
                 String[] tuple_type = data_type_.split(":");
-                Tuple2 tup2 = (Tuple2) partitionIter_.next();
+                if(tuple_type.length == 3) {
+                    Tuple2 tup2 = (Tuple2) partitionIter_.next();
 
-                while(idx < tuple_type.length) {
-                    basic_type new_basic = buildBasic(tup2.productElement(idx-1), tuple_type[idx]);
-                    new_item.addBasicData(new_basic);
-                    idx++;
+                    while(idx < tuple_type.length) {
+                        basic_type new_basic = buildBasic(tup2.productElement(idx-1), tuple_type[idx]);
+                        new_item.addBasicData(new_basic);
+                        idx++;
+                    }
+                }else if(tuple_type.length == 4) {
+                    Tuple3 tup3 = (Tuple3) partitionIter_.next();
+
+                    while(idx < tuple_type.length) {
+                        basic_type new_basic = buildBasic(tup3.productElement(idx-1), tuple_type[idx]);
+                        new_item.addBasicData(new_basic);
+                        idx++;
+                    }
+                }else{
+                    System.out.println("type error, currently tuple2 and tuple3 only");
                 }
             }
             return new_item.build();
@@ -190,6 +207,7 @@ public class RDDReadServer {
         public void getPartitionInfo(PartInfoRequest request, StreamObserver<PartitionInfo> responseObserver){
             responseObserver.onNext(PartitionInfo.newBuilder().
                     setPartitionId(partitionId_).
+                    setPartitionCnt(partitionCnt_).
                     setDataType(data_type_).
                     build());
             responseObserver.onCompleted();
@@ -201,6 +219,20 @@ public class RDDReadServer {
                 responseObserver.onNext(rdd_item);
             }
             responseObserver.onCompleted();
+        }
+
+        public void rpcClose(CloseRequest request, StreamObserver<CloseResponse> responseObserver) {
+            responseObserver.onNext(CloseResponse.newBuilder().
+                    setClose(true).
+                    build());
+            responseObserver.onCompleted();
+            try {
+                Thread.sleep(100);
+            } catch(InterruptedException e) {
+                server.shutdown();
+                e.printStackTrace();
+            }
+            server.shutdown();
         }
     }
 }

@@ -33,58 +33,36 @@ object TestScala {
     val conf = new SparkConf().setAppName("RDDTest")
     val sc = new SparkContext(conf)
 
-    val RDDSize = 100
-    val ArrSize = 100
+    val root_dir = "/Users/anwh/git/RDDReaderTransfer/"
+    val nodes = sc.textFile(root_dir + "new_nodes.txt").map(line => line.split(","))
+      .map(parts =>(parts.head.toLong,parts.drop(1)))
 
-    val essential_names = Array[String]("int", "double", "float", "long", "bool", "string")
-    val tuple_name = "tuple"
+    val node_type = "tuple:long:Array,string"
+    println(node_type)
 
-    val RDDData = new Array[(Int,Array[Int])](RDDSize)
-
-    for(i <- 0 until RDDSize) {
-      val list = range(i, ArrSize, 1)
-      val item = (i, list)
-      RDDData(i) = item
-    }
-
-    val rdd = sc.parallelize(RDDData)
-    val data_tmp = rdd.first()
-    var datatype = data_tmp.getClass.getSimpleName.toLowerCase()
-
-    var find_type = false
-    for(essen_name <- essential_names if !find_type) {
-      if(datatype.startsWith(essen_name)){
-        if(datatype.endsWith("[]")) {
-          datatype = "Array," + essen_name.toLowerCase()
-        }else{
-          datatype = essen_name
-        }
-        find_type = true
-      }
-    }
-
-    if(!find_type) {
-      if(datatype.startsWith(tuple_name)) {
-        datatype = "tuple"
-        for(iter <- data_tmp.productIterator) {
-          val part_type = iter.getClass.getSimpleName.toLowerCase()
-          if(part_type.endsWith("[]")) {
-            datatype = datatype + ":Array," + part_type.replaceAll("\\[\\]", "")
-          }else {
-            datatype = datatype + ":" + iter.getClass.getSimpleName.toLowerCase()
-          }
-        }
-      }
-    }
-
-    println(datatype)
-
-    rdd.foreachPartition(iter => {
+    nodes.foreachPartition(iter => {
       val cur_host = RDDReadServer.getLocalHostLANAddress()
       val executor_id = getExecutorId(cur_host)
-      val server = new RDDReadServer(executor_id, TaskContext.get.partitionId, iter.asJava, datatype)
+      val server = new RDDReadServer(executor_id, TaskContext.get.partitionId, iter.asJava, node_type, nodes.getNumPartitions)
       server.start()
       server.blockUntilShutdown()
     })
+    println("node transfer over")
+
+    val edges = sc.textFile(root_dir + "new_edges.txt").map(line => line.split(","))
+      .map(parts => (parts(0).toLong, parts(1).toLong, parts.drop(2)))
+
+    val edge_type = "tuple:long:long:Array,string"
+    println(edge_type)
+
+    edges.foreachPartition(iter => {
+      val cur_host = RDDReadServer.getLocalHostLANAddress()
+      val executor_id = getExecutorId(cur_host)
+      val server = new RDDReadServer(executor_id, TaskContext.get.partitionId, iter.asJava, edge_type, edges.getNumPartitions)
+      server.start()
+      server.blockUntilShutdown()
+    })
+    println("edge transfer over")
+    println("graph transfer all over")
   }
 }
