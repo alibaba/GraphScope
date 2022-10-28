@@ -41,9 +41,35 @@ fn timeout_test_01() {
     while let Some(Ok(data)) = result.next() {
         count += data;
     }
-    if result.is_cancel() {
-        assert_eq!(0, count);
-    } else {
-        assert_eq!(20, count);
+    assert!(result.is_cancel());
+    assert_eq!(0, count);
+}
+
+#[test]
+fn timeout_test_02() {
+    let mut conf = JobConf::new("timeout_test_2");
+    conf.time_limit = 5000;
+    conf.set_workers(2);
+    let mut result = pegasus::run(conf, || {
+        |input, output| {
+            let worker_id = input.get_worker_index();
+            input
+                .input_from(vec![0u32])?
+                .iterate_until(IterCondition::max_iters(20), move |iter| {
+                    iter.map(move |input| {
+                        if worker_id == 0 {
+                            std::thread::sleep(Duration::from_millis(1000));
+                        }
+                        Ok(input + 1)
+                    })
+                })?
+                .sink_into(output)
+        }
+    })
+    .expect("submit job failure;");
+    let mut count = 0;
+    while let Some(Ok(data)) = result.next() {
+        count += data;
     }
+    assert!(result.is_cancel());
 }
