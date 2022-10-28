@@ -20,6 +20,8 @@ import static com.alibaba.graphscope.utils.CppClassName.GS_ARROW_ARRAY_BUILDER;
 import static com.alibaba.graphscope.utils.CppHeaderName.CORE_JAVA_TYPE_ALIAS_H;
 
 import com.alibaba.fastffi.CXXHead;
+import com.alibaba.fastffi.CXXOperator;
+import com.alibaba.fastffi.CXXReference;
 import com.alibaba.fastffi.CXXValue;
 import com.alibaba.fastffi.FFIFactory;
 import com.alibaba.fastffi.FFIGen;
@@ -42,7 +44,11 @@ public interface ArrowArrayBuilder<T> extends FFIPointer {
     void unsafeAppend(T value);
 
     @FFINameAlias("GetValue")
-    long getValue(long index);
+    @CXXReference
+    T getValue(long index);
+
+    @CXXOperator("[]")
+    void set(long index, @CXXReference T value);
 
     @FFIFactory
     interface Factory<T> {

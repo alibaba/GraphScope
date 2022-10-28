@@ -17,14 +17,20 @@
 package com.alibaba.graphscope.stdcxx;
 
 import com.alibaba.fastffi.CXXOperator;
+import com.alibaba.fastffi.CXXPointerRangeElement;
+import com.alibaba.fastffi.FFIFactory;
 import com.alibaba.fastffi.FFIGen;
-import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.graphscope.utils.JNILibraryName;
 
 @FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
 @FFITypeAlias("char")
-public interface CCharPointer extends FFIPointer {
+public interface CCharPointer extends CXXPointerRangeElement<CCharPointer> {
     @CXXOperator("*&")
-    byte toByte();
+    byte get();
+
+    @FFIFactory
+    interface Factory {
+        CCharPointer create();
+    }
 }

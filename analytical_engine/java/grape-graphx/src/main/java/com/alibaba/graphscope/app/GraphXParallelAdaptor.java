@@ -55,7 +55,8 @@ public class GraphXParallelAdaptor<VDATA_T, EDATA_T, MSG>
         GraphXParallelAdaptorContext<VDATA_T, EDATA_T, MSG> ctx =
                 (GraphXParallelAdaptorContext<VDATA_T, EDATA_T, MSG>) context;
         GraphXParallelPIE<VDATA_T, EDATA_T, MSG> proxy = ctx.getGraphXProxy();
-        proxy.ParallelPEval();
+        // In the first round we first update all outer vertex messages.
+        proxy.syncOuterVertexData();
         messageManager.ForceContinue();
     }
 
@@ -67,9 +68,14 @@ public class GraphXParallelAdaptor<VDATA_T, EDATA_T, MSG>
         GraphXParallelAdaptorContext<VDATA_T, EDATA_T, MSG> ctx =
                 (GraphXParallelAdaptorContext<VDATA_T, EDATA_T, MSG>) context;
         GraphXParallelPIE<VDATA_T, EDATA_T, MSG> proxy = ctx.getGraphXProxy();
-        boolean maxIterationReached = proxy.ParallelIncEval();
-        if (!maxIterationReached) {
+        if (proxy.curRound() == 1) {
+            proxy.parallelPEval();
             messageManager.ForceContinue();
+        } else {
+            boolean maxIterationReached = proxy.parallelIncEval();
+            if (!maxIterationReached) {
+                messageManager.ForceContinue();
+            }
         }
     }
 }

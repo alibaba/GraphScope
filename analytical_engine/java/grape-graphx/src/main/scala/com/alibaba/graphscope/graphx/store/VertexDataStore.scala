@@ -16,40 +16,40 @@
 
 package com.alibaba.graphscope.graphx.store
 
-import com.alibaba.graphscope.graphx.store.VertexDataStore.log
 import org.apache.spark.internal.Logging
 import org.apache.spark.util.KnownSizeEstimationPorter
 
 import java.util.concurrent.{ConcurrentHashMap, LinkedBlockingQueue}
 import scala.reflect.ClassTag
 
-trait VertexDataStore[T] extends KnownSizeEstimationPorter{
-  def size() : Int
-  def get(ind : Int) : T
-  def set(ind: Int, vd : T): Unit
-  def mapToNew[T2 : ClassTag] : VertexDataStore[T2]
-  def getLocalNum : Int
-  def setLocalNum(localNum : Int) : Unit
+trait VertexDataStore[T] extends KnownSizeEstimationPorter {
+  //The size of vertex data store is equal to frag vertices num.
+  def size(): Int
+  def get(ind: Int): T
+  def set(ind: Int, vd: T): Unit
+  def mapToNew[T2: ClassTag]: VertexDataStore[T2]
+  def getLocalNum: Int
+  def setLocalNum(localNum: Int): Unit
 }
 
-object VertexDataStore extends Logging{
-  val map = new ConcurrentHashMap[Int,LinkedBlockingQueue[VertexDataStore[_]]]
+object VertexDataStore extends Logging {
+  val map = new ConcurrentHashMap[Int, LinkedBlockingQueue[VertexDataStore[_]]]
 
-  def enqueue(pid : Int, inHeapVertexDataStore: VertexDataStore[_]) : Unit = {
+  def enqueue(pid: Int, inHeapVertexDataStore: VertexDataStore[_]): Unit = {
     createQueue(pid)
     val q = map.get(pid)
     q.offer(inHeapVertexDataStore)
   }
 
-  def dequeue(pid : Int) : VertexDataStore[_] = {
+  def dequeue(pid: Int): VertexDataStore[_] = {
     createQueue(pid)
     require(map.containsKey(pid), s"no queue available for ${pid}")
     val res = map.get(pid).take()
     res
   }
 
-  def createQueue(pid : Int) : Unit = synchronized{
-    if (!map.containsKey(pid)){
+  def createQueue(pid: Int): Unit = synchronized {
+    if (!map.containsKey(pid)) {
       map.put(pid, new LinkedBlockingQueue)
     }
   }

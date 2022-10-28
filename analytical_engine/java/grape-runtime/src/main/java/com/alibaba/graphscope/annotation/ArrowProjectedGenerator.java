@@ -2,7 +2,7 @@ package com.alibaba.graphscope.annotation;
 
 import static com.alibaba.graphscope.annotation.Utils.addCXXTemplate;
 import static com.alibaba.graphscope.annotation.Utils.getMessageTypes;
-import static com.alibaba.graphscope.utils.CppClassName.ARROW_PROJECTED_FRAGMENT;
+import static com.alibaba.graphscope.utils.CppClassName.CPP_ARROW_PROJECTED_FRAGMENT;
 
 import com.alibaba.fastffi.CXXTemplate;
 import com.alibaba.fastffi.FFIFunGen;
@@ -74,7 +74,7 @@ public class ArrowProjectedGenerator {
         cppFragName =
                 String.format(
                         "%s<%s,%s,%s,%s>",
-                        ARROW_PROJECTED_FRAGMENT, cppOid, cppVid, cppVdata, cppEdata);
+                        CPP_ARROW_PROJECTED_FRAGMENT, cppOid, cppVid, cppVdata, cppEdata);
         javaFragName =
                 String.format(
                         "%s<%s,%s,%s,%s>",

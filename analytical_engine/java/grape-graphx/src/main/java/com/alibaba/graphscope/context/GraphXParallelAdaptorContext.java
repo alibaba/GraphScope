@@ -18,18 +18,22 @@ package com.alibaba.graphscope.context;
 
 import com.alibaba.fastffi.FFIByteString;
 import com.alibaba.fastffi.FFITypeFactory;
-import com.alibaba.fastffi.impl.CXXStdString;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.graphscope.arrow.array.ArrowArrayBuilder;
+import com.alibaba.graphscope.arrow.array.ArrowStringArrayBuilder;
+import com.alibaba.graphscope.fragment.BaseArrowProjectedFragment;
 import com.alibaba.graphscope.fragment.IFragment;
+import com.alibaba.graphscope.fragment.mapper.ArrowProjectedFragmentMapper;
+import com.alibaba.graphscope.fragment.mapper.ArrowProjectedStringVDFragmentMapper;
+import com.alibaba.graphscope.fragment.mapper.ArrowProjectedStringVEDFragmentMapper;
 import com.alibaba.graphscope.graphx.GraphXConf;
 import com.alibaba.graphscope.graphx.GraphXParallelPIE;
-import com.alibaba.graphscope.graphx.StringVertexData;
-import com.alibaba.graphscope.graphx.VertexData;
 import com.alibaba.graphscope.graphx.VineyardClient;
+import com.alibaba.graphscope.graphx.utils.GrapeUtils;
 import com.alibaba.graphscope.graphx.utils.ScalaFFIFactory;
 import com.alibaba.graphscope.graphx.utils.SerializationUtils;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
-import com.alibaba.graphscope.utils.VertexDataUtils;
+import com.alibaba.graphscope.utils.CppClassName;
 import com.alibaba.graphscope.utils.array.PrimitiveArray;
 
 import org.apache.spark.graphx.EdgeDirection;
@@ -42,6 +46,7 @@ import scala.Function2;
 import scala.Function3;
 import scala.Tuple2;
 import scala.collection.Iterator;
+import scala.reflect.ClassTag;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -51,6 +56,7 @@ import java.net.URLClassLoader;
 public class GraphXParallelAdaptorContext<VDATA_T, EDATA_T, MSG>
         extends VertexDataContext<IFragment<Long, Long, VDATA_T, EDATA_T>, VDATA_T>
         implements ParallelContextBase<Long, Long, VDATA_T, EDATA_T> {
+
     public static final String pathPrefix = "/tmp/gs_graphx_pie_";
 
     public static <VD, ED, M> GraphXParallelAdaptorContext<VD, ED, M> createImpl(
@@ -174,9 +180,9 @@ public class GraphXParallelAdaptorContext<VDATA_T, EDATA_T, MSG>
             throw new IllegalStateException("initialization error");
         }
         logger.info("create graphx proxy: {}", graphXProxy);
-        // NOTE: Currently we don't use this context provided vdata array, just use long class as
+        // NOTE: Currently we don't use this context provided vdata array, just use int class as
         // default vdata class, and we don't use it.
-        createFFIContext(frag, (Class<? extends VDATA_T>) Long.class, false);
+        createFFIContext(frag, (Class<? extends VDATA_T>) Integer.class, false);
     }
 
     /**
@@ -189,40 +195,101 @@ public class GraphXParallelAdaptorContext<VDATA_T, EDATA_T, MSG>
     @Override
     public void Output(IFragment<Long, Long, VDATA_T, EDATA_T> frag) {
         PrimitiveArray<VDATA_T> vdArray = graphXProxy.getNewVdataArray();
+        BaseArrowProjectedFragment<Long, Long, VDATA_T, EDATA_T> projectedFragment =
+                graphXProxy.getProjectedFragment();
         long time0 = System.nanoTime();
         VineyardClient client = ScalaFFIFactory.newVineyardClient();
         FFIByteString ffiByteString = FFITypeFactory.newByteString();
         ffiByteString.copyFrom(this.vineyardSocket);
         client.connect(ffiByteString);
         String filePath = pathPrefix + frag.fid();
-        long objId = 0;
-        if (conf.isVDPrimitive()) {
-            VertexData<Long, VDATA_T> vd =
-                    VertexDataUtils.persistPrimitiveArrayToVineyard(
-                            vdArray, client, conf.getVdClass());
-            logger.info(
-                    "successfully persist primitive vd of type {} to {}",
-                    conf.getVdClass().getName(),
-                    vd.id());
-            // write to file
-            objId = vd.id();
+        long new_id = 0;
+        // copy vdata to arrow
+        if (GrapeUtils.isPrimitive(conf.getVdClass())) {
+            ArrowArrayBuilder.Factory<VDATA_T> vertexDataBuilderFactory =
+                    FFITypeFactory.getFactory(
+                            ArrowArrayBuilder.class,
+                            "gs::ArrowArrayBuilder<"
+                                    + GrapeUtils.classToStr(conf.getVdClass(), true)
+                                    + ">");
+            ArrowArrayBuilder<VDATA_T> vertexDataBuilder = vertexDataBuilderFactory.create();
+            vertexDataBuilder.reserve(vdArray.size());
+            for (int i = 0; i < projectedFragment.getInnerVerticesNum(); ++i) {
+                vertexDataBuilder.unsafeAppend(vdArray.get(i));
+            }
+            ArrowProjectedFragmentMapper.Factory<Long, Long, VDATA_T, EDATA_T> factory =
+                    FFITypeFactory.getFactory(
+                            ArrowProjectedFragmentMapper.class,
+                            CppClassName.CPP_ARROW_PROJECTED_FRAGMENT_MAPPER
+                                    + "<int64_t,uint64_t,"
+                                    + GrapeUtils.classToStr(conf.getVdClass(), true)
+                                    + ","
+                                    + GrapeUtils.classToStr(conf.getEdClass(), true)
+                                    + ">");
+            ArrowProjectedFragmentMapper<Long, Long, VDATA_T, EDATA_T> mapper = factory.create();
+            new_id =
+                    mapper.map(
+                                    projectedFragment.getArrowFragment(),
+                                    projectedFragment.vertexLabel(),
+                                    projectedFragment.edgePropId(),
+                                    vertexDataBuilder,
+                                    client)
+                            .get()
+                            .id();
         } else {
-            StringVertexData<Long, CXXStdString> vd =
-                    VertexDataUtils.persistComplexArrayToVineyard(
-                            vdArray, client, conf.getVdClass());
-            logger.info(
-                    "successfully persist complex vd of type {} to {}",
-                    conf.getVdClass().getName(),
-                    vd.id());
-            objId = vd.id();
+            ArrowStringArrayBuilder vdBuilder =
+                    GrapeUtils.fillComplexArrowArrayBuilder(
+                            vdArray, ClassTag.apply(conf.getVdClass()));
+
+            if (conf.isEDPrimitive()) {
+                ArrowProjectedStringVDFragmentMapper.Factory<Long, Long, EDATA_T> factory =
+                        FFITypeFactory.getFactory(
+                                ArrowProjectedStringVDFragmentMapper.class,
+                                CppClassName.CPP_ARROW_PROJECTED_STRING_VD_FRAGMENT_MAPPER
+                                        + "<int64_t,uint64_t,"
+                                        + GrapeUtils.classToStr(conf.getEdClass(), true)
+                                        + ">");
+                ArrowProjectedStringVDFragmentMapper<Long, Long, EDATA_T> mapper = factory.create();
+                new_id =
+                        mapper.map(
+                                        projectedFragment.getArrowFragment(),
+                                        projectedFragment.vertexLabel(),
+                                        projectedFragment.edgePropId(),
+                                        vdBuilder,
+                                        client)
+                                .get()
+                                .id();
+            } else {
+                ArrowProjectedStringVEDFragmentMapper.Factory<Long, Long> factory =
+                        FFITypeFactory.getFactory(
+                                ArrowProjectedStringVEDFragmentMapper.class,
+                                CppClassName.CPP_ARROW_PROJECTED_STRING_ED_FRAGMENT_MAPPER
+                                        + "<int64_t,uint64_t>");
+                ArrowProjectedStringVEDFragmentMapper<Long, Long> mapper = factory.create();
+                new_id =
+                        mapper.map(
+                                        projectedFragment.getArrowFragment(),
+                                        projectedFragment.vertexLabel(),
+                                        projectedFragment.edgePropId(),
+                                        vdBuilder,
+                                        client)
+                                .get()
+                                .id();
+            }
         }
+
+        logger.info("Finish adding vertex data");
+
         long time1 = System.nanoTime();
-        logger.info("Finish writing back, cost {} ms", (time1 - time0) / 1000000);
+        logger.info(
+                "Finish writing back, cost {} ms, got new frag id {}",
+                (time1 - time0) / 1000000,
+                new_id);
         FileWriter fileWritter = null;
         try {
             fileWritter = new FileWriter(filePath);
             BufferedWriter bufferedWriter = new BufferedWriter(fileWritter);
-            bufferedWriter.write("" + objId);
+            bufferedWriter.write("" + new_id);
             bufferedWriter.close();
         } catch (IOException e) {
             e.printStackTrace();

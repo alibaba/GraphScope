@@ -23,14 +23,9 @@ import com.alibaba.graphscope.utils.array.impl.LongArray;
 import com.alibaba.graphscope.utils.array.impl.ObjectArray;
 import com.alibaba.graphscope.utils.array.impl.TypedBackendPrimitiveArray;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.Serializable;
 
 public interface PrimitiveArray<T> extends Serializable {
-
-    Logger logger = LoggerFactory.getLogger(PrimitiveArray.class.getName());
 
     T get(int index);
 

@@ -18,8 +18,11 @@
 #ifdef ENABLE_JAVA_SDK
 
 #include <jni.h>
+#include <memory>
 #include <string>
 #include <vector>
+
+#include <boost/asio.hpp>
 #include "boost/algorithm/string.hpp"
 #include "boost/algorithm/string/split.hpp"
 #include "boost/filesystem/path.hpp"
@@ -82,11 +85,13 @@ static constexpr const char* OPTION_DIRECTED = "directed";
 static constexpr const char* OPTION_IPC_SOCKET = "ipc_socket";
 static constexpr const char* OPTION_FRAG_IDS = "frag_ids";
 
-static constexpr const char* GRAPHX_PREGEL_TASK = "graphx_pregel";
-static constexpr const char* CONSTRUCT_VERTEX_MAP = "construct_vertex_map";
+static constexpr const char* GRAPHX_PREGEL_TASK = "run_pregel";
+static constexpr const char* LOAD_FRAGMENT = "load_fragment";
+static constexpr const char* LOAD_FRAGMENT_RES_PREFIX =
+    "ArrowProjectedFragmentID";
 
 using ptree = boost::property_tree::ptree;
-void string2ptree(const std::string& params, ptree& pt) {
+static inline void string2ptree(const std::string& params, ptree& pt) {
   std::stringstream ss;
   {
     ss << params;
@@ -128,6 +133,24 @@ template <>
 struct TypeName<uint64_t> {
   static std::string Get() { return "uint64_t"; }
 };
+
+template <typename T>
+std::shared_ptr<vineyard::Object> buildPrimitiveArray(
+    vineyard::Client& client, std::vector<T>& raw_data) {
+  using arrow_builder_t = typename vineyard::ConvertToArrowType<T>::BuilderType;
+  arrow_builder_t builder;
+  builder.AppendValues(raw_data);
+
+  using arrow_array_t = typename vineyard::ConvertToArrowType<T>::ArrayType;
+  std::shared_ptr<arrow_array_t> arrow_array;
+  builder.Finish(&arrow_array);
+
+  using vineyard_builder_t =
+      typename vineyard::ConvertToArrowType<T>::VineyardBuilderType;
+  vineyard_builder_t v6d_builder(client, arrow_array);
+
+  return v6d_builder.Seal(client);
+}
 
 }  // namespace gs
 #endif

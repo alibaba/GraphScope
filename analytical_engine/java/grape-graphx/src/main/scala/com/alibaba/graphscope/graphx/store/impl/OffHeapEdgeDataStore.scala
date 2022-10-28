@@ -16,46 +16,75 @@
 
 package com.alibaba.graphscope.graphx.store.impl
 
+import com.alibaba.graphscope.arrow.array.ArrowArrayBuilder
 import com.alibaba.graphscope.ds.TypedArray
+import com.alibaba.graphscope.graphx.VineyardClient
 import com.alibaba.graphscope.graphx.store.EdgeDataStore
 import com.alibaba.graphscope.graphx.utils.{EIDAccessor, GrapeUtils, ScalaFFIFactory}
-import com.alibaba.graphscope.graphx.{EdgeDataBuilder, VineyardArrayBuilder, VineyardClient}
 import org.apache.spark.internal.Logging
 import org.apache.spark.util.SizeEstimator
 
 import scala.reflect.ClassTag
 
-class OffHeapEdgeDataStore[ED: ClassTag](length : Int, localNum : Int, client : VineyardClient, eidAccessor: EIDAccessor,val edataBuilder: EdgeDataBuilder[Long, ED]) extends AbstractEdgeDataStore[ED](length,localNum, client,eidAccessor) with EdgeDataStore[ED] with Logging{
-  def this(length : Int,  localNum : Int, client: VineyardClient, eidAccessor : EIDAccessor){
-    this(length, localNum,client,eidAccessor,ScalaFFIFactory.newEdgeDataBuilder[ED](client,length))
-  }
-
+class OffHeapEdgeDataStore[ED: ClassTag](
+    length: Int,
+    localNum: Int,
+    client: VineyardClient,
+    eidAccessor: EIDAccessor,
+    val arrowArrayBuilder: ArrowArrayBuilder[ED]
+) extends AbstractEdgeDataStore[ED](length, localNum, client, eidAccessor)
+    with EdgeDataStore[ED]
+    with Logging {
   require(GrapeUtils.isPrimitive[ED])
-  val arrayBuilder: VineyardArrayBuilder[ED] = edataBuilder.getArrayBuilder
+
+  def this(
+      length: Int,
+      localNum: Int,
+      client: VineyardClient,
+      eidAccessor: EIDAccessor
+  ) {
+    this(
+      length,
+      localNum,
+      client,
+      eidAccessor,
+      ScalaFFIFactory.newArrowArrayBuilder[ED]
+    )
+    arrowArrayBuilder.reserve(length)
+  }
 
   override def size: Int = length
 
   override def getWithOffset(offset: Int): ED = {
     val eid = eidAccessor.getEid(offset).toInt
-    arrayBuilder.get(eid)
+    arrowArrayBuilder.getValue(offset)
   }
 
   override def setWithOffset(offset: Int, ed: ED): Unit = {
     val eid = eidAccessor.getEid(offset).toInt
-    arrayBuilder.set(eid, ed)
+    arrowArrayBuilder.set(eid, ed)
   }
 
-  override def getWithEID(eid: Int): ED = arrayBuilder.get(eid)
+  override def getWithEID(eid: Int): ED = arrowArrayBuilder.getValue(eid)
 
-  override def setWithEID(ind: Int, ed : ED): Unit = arrayBuilder.set(ind, ed)
+  override def setWithEID(ind: Int, ed: ED): Unit = arrowArrayBuilder.set(ind, ed)
 
   override def estimatedSize: Long = {
-    val res = SizeEstimator.estimate(client) + SizeEstimator.estimate(edataBuilder) + 8
+    val res =
+      SizeEstimator.estimate(client) + SizeEstimator.estimate(arrowArrayBuilder) + 8
 //    log.info(s"${this.toString} computing estimated size ${GrapeUtils.bytesToString(res)}")
     res
   }
 }
-class ImmutableOffHeapEdgeStore[ED: ClassTag](length : Int, localNum : Int, client : VineyardClient, eidAccessor: EIDAccessor, typedArray : TypedArray[ED]) extends AbstractEdgeDataStore[ED](length,localNum, client,eidAccessor) with EdgeDataStore[ED] with Logging {
+class ImmutableOffHeapEdgeStore[ED: ClassTag](
+    length: Int,
+    localNum: Int,
+    client: VineyardClient,
+    eidAccessor: EIDAccessor,
+    typedArray: TypedArray[ED]
+) extends AbstractEdgeDataStore[ED](length, localNum, client, eidAccessor)
+    with EdgeDataStore[ED]
+    with Logging {
 
   require(GrapeUtils.isPrimitive[ED])
 
@@ -73,10 +102,12 @@ class ImmutableOffHeapEdgeStore[ED: ClassTag](length : Int, localNum : Int, clie
   override def getWithEID(eid: Int): ED = typedArray.get(eid)
 
   override def setWithEID(ind: Int, ed: ED): Unit = {
-    throw new IllegalStateException("Not modifiable")  }
+    throw new IllegalStateException("Not modifiable")
+  }
 
   override def estimatedSize: Long = {
-    val res = SizeEstimator.estimate(client) + SizeEstimator.estimate(typedArray) + 8
+    val res =
+      SizeEstimator.estimate(client) + SizeEstimator.estimate(typedArray) + 8
     res
   }
 }

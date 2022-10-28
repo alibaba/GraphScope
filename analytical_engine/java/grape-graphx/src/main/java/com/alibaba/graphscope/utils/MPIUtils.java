@@ -35,12 +35,105 @@ public class MPIUtils {
 
     private static Logger logger = LoggerFactory.getLogger(MPIUtils.class.getName());
     private static final String GRAPHSCOPE_HOME, SPARK_HOME;
-    private static final String CONSTRUCT_GRAPHX_VERTEX_MAP_SHELL_SCRIPT,
-            LAUNCH_GRAPHX_SHELL_SCRIPT;
-    private static final String VM_PATTERN = "GlobalVertexMapID:";
+    private static final String LAUNCH_GRAPHX_SHELL_SCRIPT;
+    private static final String Load_FRAGMENT_PATTERN = "ArrowProjectedFragmentID:";
     private static final String FINALIZE_PATTERN = "Workers finalized.";
-    private static final String CONSTRUCT_GLOBAL_VM_TASK = "construct_vertex_map";
-    private static final String GRAPHX_PREGEL_TASK = "graphx_pregel";
+    private static final String LOAD_FRAGMENT_TASK = "load_fragment";
+    private static final String GRAPHX_PREGEL_TASK = "run_pregel";
+
+    public static class CommendBuilder {
+        private List<String> commands;
+
+        public CommendBuilder() {
+            commands = new ArrayList<>();
+            commands.add("/bin/bash");
+            commands.add(LAUNCH_GRAPHX_SHELL_SCRIPT);
+        }
+
+        public String[] build() {
+            String[] res = new String[commands.size()];
+            commands.toArray(res);
+            return res;
+        }
+
+        public CommendBuilder numWorkers(int numWorker) {
+            commands.add("--num-workers");
+            commands.add(String.valueOf(numWorker));
+            return this;
+        }
+
+        public CommendBuilder task(String task) {
+            commands.add("--task");
+            commands.add(task);
+            return this;
+        }
+
+        public CommendBuilder hostSlot(String hostSlot) {
+            commands.add("--host-slot");
+            commands.add(hostSlot);
+            return this;
+        }
+
+        public CommendBuilder vdClass(String vdClass) {
+            commands.add("--vd-class");
+            commands.add(vdClass);
+            return this;
+        }
+
+        public CommendBuilder edClass(String edClass) {
+            commands.add("--ed-class");
+            commands.add(edClass);
+            return this;
+        }
+
+        public CommendBuilder msgClass(String msgClass) {
+            commands.add("--msg-class");
+            commands.add(msgClass);
+            return this;
+        }
+
+        public CommendBuilder serialPath(String serialPath) {
+            commands.add("--serial-path");
+            commands.add(serialPath);
+            return this;
+        }
+
+        public CommendBuilder fragIds(String[] fragIds) {
+            commands.add("--frag-ids");
+            commands.add(String.join(",", fragIds));
+            return this;
+        }
+
+        public CommendBuilder rawDataIds(String[] rawDataIds) {
+            commands.add("--raw-data-ids");
+            commands.add(String.join(",", rawDataIds));
+            return this;
+        }
+
+        public CommendBuilder maxIteration(int maxIteration) {
+            commands.add("--max-iteration");
+            commands.add(String.valueOf(maxIteration));
+            return this;
+        }
+
+        public CommendBuilder numPart(int numPart) {
+            commands.add("--num-part");
+            commands.add(String.valueOf(numPart));
+            return this;
+        }
+
+        public CommendBuilder ipcSocket(String ipcSocket) {
+            commands.add("--ipc-socket");
+            commands.add(ipcSocket);
+            return this;
+        }
+
+        public CommendBuilder userJarPath(String userJarPath) {
+            commands.add("--user-jar-path");
+            commands.add(userJarPath);
+            return this;
+        }
+    }
 
     static {
         SPARK_HOME = System.getenv("SPARK_HOME");
@@ -58,12 +151,6 @@ public class MPIUtils {
             throw new IllegalStateException(
                     "script " + LAUNCH_GRAPHX_SHELL_SCRIPT + "doesn't exist");
         }
-        CONSTRUCT_GRAPHX_VERTEX_MAP_SHELL_SCRIPT =
-                GRAPHSCOPE_HOME + "/bin/construct_graphx_vertex_map.sh";
-        if (!fileExists(CONSTRUCT_GRAPHX_VERTEX_MAP_SHELL_SCRIPT)) {
-            throw new IllegalStateException(
-                    "script " + CONSTRUCT_GRAPHX_VERTEX_MAP_SHELL_SCRIPT + "doesn't exist");
-        }
     }
 
     public static <MSG, VD, ED> List<String> launchGraphX(
@@ -80,22 +167,21 @@ public class MPIUtils {
         String hostNameSlots = generateHostNameAndSlotsFromIDs(fragIds);
         logger.info("running mpi with {} workers", numWorkers);
         List<String> vertexDataIds = new ArrayList<>(numWorkers);
-        String[] commands = {
-            "/bin/bash",
-            LAUNCH_GRAPHX_SHELL_SCRIPT,
-            GRAPHX_PREGEL_TASK,
-            String.valueOf(numWorkers),
-            hostNameSlots,
-            GrapeUtils.classToStr(vdClass, true),
-            GrapeUtils.classToStr(edClass, true),
-            GrapeUtils.classToStr(msgClass, true),
-            serialPath,
-            String.join(",", fragIds),
-            String.valueOf(maxIteration),
-            String.valueOf(numPart),
-            ipcSocket,
-            userJarPath
-        };
+        String[] commands =
+                new CommendBuilder()
+                        .task(GRAPHX_PREGEL_TASK)
+                        .numWorkers(numWorkers)
+                        .hostSlot(hostNameSlots)
+                        .vdClass(GrapeUtils.classToStr(vdClass, true))
+                        .edClass(GrapeUtils.classToStr(edClass, true))
+                        .msgClass(GrapeUtils.classToStr(msgClass, true))
+                        .serialPath(serialPath)
+                        .fragIds(fragIds)
+                        .maxIteration(maxIteration)
+                        .numPart(numPart)
+                        .ipcSocket(ipcSocket)
+                        .userJarPath(userJarPath)
+                        .build();
 
         logger.info("Running with commands: " + String.join(" ", commands));
         long startTime = System.nanoTime();
@@ -178,29 +264,32 @@ public class MPIUtils {
         return sb.toString();
     }
 
-    public static <MSG, VD, ED> List<String> constructGlobalVM(
-            String[] localVMIDs, String ipcSocket, String oidType, String vidType) {
-        check(oidType, vidType);
-        logger.info("Try to construct global vm from: {}", Arrays.toString(localVMIDs));
-        int numWorkers = localVMIDs.length;
+    public static <VD, ED> String[] loadFragment(
+            String[] rawDataIds,
+            String ipcSocket,
+            Class<? extends VD> vdClass,
+            Class<? extends ED> edClass) {
+        logger.info("Try to load fragment from raw datas: {}", Arrays.toString(rawDataIds));
+        int numWorkers = rawDataIds.length;
         logger.info("running mpi with {} workers", numWorkers);
-        String hostNameAndSlots = generateHostNameAndSlotsFromIDs(localVMIDs);
-        String[] commands = {
-            "/bin/bash",
-            CONSTRUCT_GRAPHX_VERTEX_MAP_SHELL_SCRIPT,
-            CONSTRUCT_GLOBAL_VM_TASK,
-            String.valueOf(numWorkers),
-            hostNameAndSlots,
-            String.join(",", localVMIDs),
-            ipcSocket
-        };
+        String hostNameAndSlots = generateHostNameAndSlotsFromIDs(rawDataIds);
+        String[] commands =
+                new CommendBuilder()
+                        .task(LOAD_FRAGMENT_TASK)
+                        .numWorkers(numWorkers)
+                        .hostSlot(hostNameAndSlots)
+                        .rawDataIds(rawDataIds)
+                        .ipcSocket(ipcSocket)
+                        .vdClass(GrapeUtils.classToStr(vdClass, true))
+                        .edClass(GrapeUtils.classToStr(edClass, true))
+                        .build();
         logger.info("Running with commands: " + String.join(" ", commands));
-        List<String> globalVMIDs = new ArrayList<>(numWorkers);
+        String[] fragIds = new String[numWorkers];
         long startTime = System.nanoTime();
         ProcessBuilder processBuilder = new ProcessBuilder();
         processBuilder.command(commands);
-        //        processBuilder.inheritIO();
         Process process = null;
+        int ind = 0;
         try {
             process = processBuilder.start();
             BufferedReader stdInput =
@@ -208,9 +297,21 @@ public class MPIUtils {
             String str;
             while ((str = stdInput.readLine()) != null) {
                 System.out.println(str);
-                if (str.contains(VM_PATTERN)) {
-                    globalVMIDs.add(
-                            (str.substring(str.indexOf(VM_PATTERN) + VM_PATTERN.length()).trim()));
+                if (str.contains(Load_FRAGMENT_PATTERN)) {
+                    if (ind >= numWorkers) {
+                        throw new IllegalStateException(
+                                "Matched "
+                                        + ind
+                                        + " frag, but we only need "
+                                        + numWorkers
+                                        + " frags");
+                    }
+                    fragIds[ind] =
+                            (str.substring(
+                                            str.indexOf(Load_FRAGMENT_PATTERN)
+                                                    + Load_FRAGMENT_PATTERN.length())
+                                    .trim());
+                    ind += 1;
                 }
             }
             int exitCode = process.waitFor();
@@ -227,7 +328,7 @@ public class MPIUtils {
         logger.info(
                 "Total time spend on Loading global vertex Map : {}ms",
                 (endTime - startTime) / 1000000);
-        return globalVMIDs;
+        return fragIds;
     }
 
     private static boolean fileExists(String p) {

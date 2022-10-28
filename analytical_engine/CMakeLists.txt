@@ -318,20 +318,19 @@ if (BUILD_TESTS)
         target_link_libraries(giraph_runner ${CMAKE_DL_LIBS} gs_proto ${VINEYARD_LIBRARIES} ${Boost_LIBRARIES} ${GFLAGS_LIBRARIES}  ${JNI_LIBRARIES})
 
         # graphx related test
-        add_executable(graphx_test test/graphx_test.cc)
-        target_include_directories(graphx_test PRIVATE core utils apps)
-        target_compile_definitions(graphx_test PUBLIC ENABLE_JAVA_SDK)
-        target_link_libraries(graphx_test ${CMAKE_DL_LIBS} ${VINEYARD_LIBRARIES} ${Boost_LIBRARIES} ${GLOG_LIBRARIES})
-
         add_executable(projected_fragment_mapper_test test/projected_fragment_mapper_test.cc)
         target_include_directories(projected_fragment_mapper_test PRIVATE core utils apps)
         target_link_libraries(projected_fragment_mapper_test ${CMAKE_DL_LIBS} ${VINEYARD_LIBRARIES} ${Boost_LIBRARIES} ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES})
+
+        add_executable(graphx_loader_test test/graphx_loader_test.cc)
+        target_include_directories(graphx_loader_test PRIVATE core utils apps)
+        target_compile_definitions(graphx_loader_test PUBLIC ENABLE_JAVA_SDK)
+        target_link_libraries(graphx_loader_test ${CMAKE_DL_LIBS} ${VINEYARD_LIBRARIES} ${Boost_LIBRARIES} ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES})
 
         if (${LIBUNWIND_FOUND})
             target_link_libraries(run_java_app ${LIBUNWIND_LIBRARIES})
             target_link_libraries(property_graph_java_app_benchmarks ${LIBUNWIND_LIBRARIES})
             target_link_libraries(giraph_runner ${LIBUNWIND_LIBRARIES})
-            target_link_libraries(graphx_test ${LIBUNWIND_LIBRARIES})
             target_link_libraries(projected_fragment_mapper_test ${LIBUNWIND_LIBRARIES})
         endif ()
     endif()
@@ -410,7 +409,7 @@ add_custom_target(gsa_clformat
     COMMENT "Running clang-format, using clang-format-8 from https://github.com/muttleyxd/clang-tools-static-binaries/releases"
     VERBATIM)
 
-# Install GAE Java SDK
+#Install GAE Java SDK
 if(ENABLE_JAVA_SDK)
     set(GAE_JAVA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/java/")
     set(GAE_JAVA_RUNTIME_DIR "${GAE_JAVA_DIR}/grape-runtime/")
@@ -437,7 +436,8 @@ if(ENABLE_JAVA_SDK)
     install(FILES "${GAE_JAVA_RUNTIME_JAR}" DESTINATION lib)
     install(FILES "${GAE_JAVA_GRAPHX_JAR}" DESTINATION lib)
     install(FILES "${GAE_JAVA_DIR}/grape_jvm_opts" DESTINATION conf)
-endif()
+    install(FILES "${GAE_JAVA_DIR}/run_graphx.sh" DESTINATION bin)
+ endif()
 
 # Install binaries
 macro(install_gsa_binary target)
