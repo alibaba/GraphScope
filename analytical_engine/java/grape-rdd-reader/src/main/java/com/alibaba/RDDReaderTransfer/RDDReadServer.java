@@ -1,10 +1,27 @@
-package RDDReaderTransfer;
+/*
+* Copyright 2022 Alibaba Group Holding Limited.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*  	http://www.apache.org/licenses/LICENSE-2.0
+*
+*  Unless required by applicable law or agreed to in writing, software
+*  distributed under the License is distributed on an "AS IS" BASIS,
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+*  See the License for the specific language governing permissions and
+*  limitations under the License.
+*/
+
+package com.alibaba.RDDReaderTransfer;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 
-import scala.*;
+import scala.Tuple2;
+import scala.Tuple3;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -15,25 +32,21 @@ import java.util.Enumeration;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+
 public class RDDReadServer {
-    // 静态方法用于获取当前节点的ip
     public static String getLocalHostLANAddress() throws UnknownHostException {
         try {
             InetAddress candidateAddress = null;
-            // 遍历所有的网络接口
             for (Enumeration ifaces = NetworkInterface.getNetworkInterfaces();
                     ifaces.hasMoreElements(); ) {
                 NetworkInterface iface = (NetworkInterface) ifaces.nextElement();
-                // 在所有的接口下再遍历IP
                 for (Enumeration inetAddrs = iface.getInetAddresses();
                         inetAddrs.hasMoreElements(); ) {
                     InetAddress inetAddr = (InetAddress) inetAddrs.nextElement();
-                    if (!inetAddr.isLoopbackAddress()) { // 排除loopback类型地址
+                    if (!inetAddr.isLoopbackAddress()) {
                         if (inetAddr.isSiteLocalAddress()) {
-                            // 如果是site-local地址，就是它了
                             return inetAddr.toString();
                         } else if (candidateAddress == null) {
-                            // site-local类型的地址未被发现，先记录候选地址
                             candidateAddress = inetAddr;
                         }
                     }
@@ -42,7 +55,6 @@ public class RDDReadServer {
             if (candidateAddress != null) {
                 return candidateAddress.toString();
             }
-            // 如果没有发现 non-loopback地址.只能用最次选的方案
             InetAddress jdkSuppliedAddress = InetAddress.getLocalHost();
             if (jdkSuppliedAddress == null) {
                 throw new UnknownHostException(
@@ -69,6 +81,8 @@ public class RDDReadServer {
 
     private Iterator partitionIter_;
 
+    private final int wait_time = 30;
+
     private String data_type_;
     private ArrayList<String> essential_names_ =
             new ArrayList<>(Arrays.asList("int", "double", "float", "long", "bool", "string"));
@@ -93,21 +107,21 @@ public class RDDReadServer {
                             public void run() {
                                 // Use stderr here since the logger may have been reset by its JVM
                                 // shutdown hook.
-                                System.err.println(
+                                logger.info(
                                         "*** shutting down gRPC server since JVM is shutting down");
                                 try {
                                     RDDReadServer.this.stop();
                                 } catch (InterruptedException e) {
-                                    e.printStackTrace(System.err);
+                                    e.printStackTrace();
                                 }
-                                System.err.println("*** server shut down");
+                                logger.info("*** server shut down");
                             }
                         });
     }
 
     private void stop() throws InterruptedException {
         if (server != null) {
-            server.shutdown().awaitTermination(30, TimeUnit.SECONDS);
+            server.shutdown().awaitTermination(wait_time, TimeUnit.SECONDS);
         }
     }
 
@@ -120,7 +134,6 @@ public class RDDReadServer {
         }
     }
 
-    // Service的实现函数
     class RDDService extends GetArrayGrpc.GetArrayImplBase {
         RDDService() {}
 
@@ -141,7 +154,7 @@ public class RDDReadServer {
             } else if (type.startsWith("long")) { // long
                 Long long_val = (Long) data_val;
                 essen_data = essential_type.newBuilder().setLongData(long_val).build();
-            } else { // 空
+            } else { // null
                 essen_data = null;
             }
             return essen_data;
@@ -180,7 +193,6 @@ public class RDDReadServer {
                 String[] tuple_type = data_type_.split(":");
                 if (tuple_type.length == 3) {
                     Tuple2 tup2 = (Tuple2) partitionIter_.next();
-
                     while (idx < tuple_type.length) {
                         basic_type new_basic =
                                 buildBasic(tup2.productElement(idx - 1), tuple_type[idx]);
@@ -189,7 +201,6 @@ public class RDDReadServer {
                     }
                 } else if (tuple_type.length == 4) {
                     Tuple3 tup3 = (Tuple3) partitionIter_.next();
-
                     while (idx < tuple_type.length) {
                         basic_type new_basic =
                                 buildBasic(tup3.productElement(idx - 1), tuple_type[idx]);
@@ -197,7 +208,7 @@ public class RDDReadServer {
                         idx++;
                     }
                 } else {
-                    System.out.println("type error, currently tuple2 and tuple3 only");
+                    logger.info("type error, currently tuple2 and tuple3 only");
                 }
             }
             return new_item.build();
@@ -226,8 +237,9 @@ public class RDDReadServer {
         public void rpcClose(CloseRequest request, StreamObserver<CloseResponse> responseObserver) {
             responseObserver.onNext(CloseResponse.newBuilder().setClose(true).build());
             responseObserver.onCompleted();
+            final int sleep_time = 100;
             try {
-                Thread.sleep(100);
+                Thread.sleep(sleep_time);
             } catch (InterruptedException e) {
                 server.shutdown();
                 e.printStackTrace();

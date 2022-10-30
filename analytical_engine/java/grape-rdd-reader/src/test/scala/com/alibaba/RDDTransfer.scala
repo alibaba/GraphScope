@@ -1,4 +1,20 @@
-package RDDReaderTransfer
+/*
+* Copyright 2022 Alibaba Group Holding Limited.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*  	http://www.apache.org/licenses/LICENSE-2.0
+*
+*  Unless required by applicable law or agreed to in writing, software
+*  distributed under the License is distributed on an "AS IS" BASIS,
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+*  See the License for the specific language governing permissions and
+*  limitations under the License.
+*/
+
+package com.alibaba.RDDReaderTransfer
 
 import org.apache.spark.{SparkConf, SparkContext, TaskContext}
 
@@ -6,18 +22,8 @@ import scala.collection.mutable.{ArrayBuffer, Map}
 import scala.jdk.CollectionConverters._
 import Array._
 
-object TestScala {
-  //这个函数返回的是每个executor对应的worker ip，除了driver
-  /*def getExecutorList(sc : SparkContext) : Array[String] = {
-    val allExecutors = sc.getExecutorMemoryStatus.map(_._1).toList
-    val allHosts = allExecutors.map(_.split(":")(0)).distinct
-    return allHosts
-    //val driverHost: String = sc.getConf.get("spark.driver.host")
-    //return allExecutors.filter(! _.split(":")(0).equals(driverHost)).toList
-  }*/
-
+object RDDReader {
   val node_executors: Map[String, Int] = Map()
-
   def getExecutorId(hostName: String): Int = {
     this.synchronized {
       if (node_executors.contains(hostName)) {
@@ -30,11 +36,13 @@ object TestScala {
   }
 
   def main(args: Array[String]): Unit = {
-    val conf = new SparkConf().setAppName("RDDTest")
+    val conf = new SparkConf().setAppName("RDDReader")
     val sc = new SparkContext(conf)
 
-    val root_dir = "/Users/anwh/git/RDDReaderTransfer/"
-    val nodes = sc.textFile(root_dir + "new_nodes.txt").map(line => line.split(","))
+    val node_file_name = sc.getConf.get("vertex_file")
+    val edge_file_name = sc.getConf.get("edge_file")
+
+    val nodes = sc.textFile(node_file_name).map(line => line.split(","))
       .map(parts =>(parts.head.toLong,parts.drop(1)))
 
     val node_type = "tuple:long:Array,string"
@@ -49,7 +57,7 @@ object TestScala {
     })
     println("node transfer over")
 
-    val edges = sc.textFile(root_dir + "new_edges.txt").map(line => line.split(","))
+    val edges = sc.textFile(edge_file_name).map(line => line.split(","))
       .map(parts => (parts(0).toLong, parts(1).toLong, parts.drop(2)))
 
     val edge_type = "tuple:long:long:Array,string"
