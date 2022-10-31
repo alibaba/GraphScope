@@ -736,6 +736,11 @@ jobs:
           hadoop fs -chmod 777 /ldbc_sample
           hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_0_0.csv /ldbc_sample/person_0_0.csv
           hadoop fs -put ${GS_TEST_DIR}/ldbc_sample/person_knows_person_0_0.csv /ldbc_sample/person_knows_person_0_0.csv
+
+          # validate hadoop
+          hadoop fs -ls /ldbc_sample
+
+          # prepare CI environments
           export HDFS_TEST_DIR=hdfs:///ldbc_sample
           export HDFS_HOST=$(hostname -I | awk '{print $1}')
 
