@@ -113,6 +113,9 @@ def config_logging(log_level):
     logger = logging.getLogger("graphscope")
     logger.setLevel(log_level)
 
+    vineyard_logger = logging.getLogger("vineyard")
+    vineyard_logger.setLevel(log_level)
+
     stdout_handler = logging.StreamHandler(sys.stdout)
     stdout_handler.setLevel(log_level)
     stdout_handler.addFilter(lambda record: record.levelno <= logging.INFO)
@@ -127,6 +130,9 @@ def config_logging(log_level):
 
     logger.addHandler(stdout_handler)
     logger.addHandler(stderr_handler)
+
+    vineyard_logger.addHandler(stdout_handler)
+    vineyard_logger.addHandler(stderr_handler)
 
 
 logger = logging.getLogger("graphscope")
