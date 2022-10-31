@@ -76,13 +76,14 @@ mod tests {
         assert_eq!(pattern_case1.get_vertex_degree(1), 2);
         let mut vertex_1_adjacent_edges_iter = pattern_case1.adjacencies_iter(1);
         let vertex_1_adjacency_0 = vertex_1_adjacent_edges_iter.next().unwrap();
-        assert_eq!(vertex_1_adjacency_0.get_edge_id(), 1);
-        assert_eq!(vertex_1_adjacency_0.get_adj_vertex().get_id(), 0);
-        assert_eq!(vertex_1_adjacency_0.get_direction(), PatternDirection::Out);
         let vertex_1_adjacency_1 = vertex_1_adjacent_edges_iter.next().unwrap();
-        assert_eq!(vertex_1_adjacency_1.get_edge_id(), 0);
+        assert_eq!(vertex_1_adjacency_0.get_edge_id(), 0);
+        assert_eq!(vertex_1_adjacency_0.get_adj_vertex().get_id(), 0);
+        assert_eq!(vertex_1_adjacency_0.get_direction(), PatternDirection::In);
+
+        assert_eq!(vertex_1_adjacency_1.get_edge_id(), 1);
         assert_eq!(vertex_1_adjacency_1.get_adj_vertex().get_id(), 0);
-        assert_eq!(vertex_1_adjacency_1.get_direction(), PatternDirection::In);
+        assert_eq!(vertex_1_adjacency_1.get_direction(), PatternDirection::Out);
     }
 
     #[test]

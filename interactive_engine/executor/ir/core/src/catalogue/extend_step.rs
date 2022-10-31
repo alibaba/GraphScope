@@ -70,13 +70,14 @@ impl ExactExtendStep {
             let edge = target_pattern
                 .get_edge(edge_id)
                 .ok_or(IrPatternError::MissingPatternEdge(edge_id))?;
-            let dir = adjacency.get_direction();
-            let src_vertex_id = if let PatternDirection::In = dir {
+            let edge_dst_vertex_id = edge.get_end_vertex().get_id();
+            let src_vertex_id = if edge_dst_vertex_id == target_vertex_id {
                 edge.get_start_vertex().get_id()
             } else {
-                edge.get_end_vertex().get_id()
+                edge_dst_vertex_id
             };
-            extend_edges.push(ExactExtendEdge::new(src_vertex_id, edge_id, dir.reverse()));
+            let edge_dir = adjacency.get_direction();
+            extend_edges.push(ExactExtendEdge::new(src_vertex_id, edge_id, edge_dir.reverse()));
         }
         Ok(ExactExtendStep { target_vertex_id, extend_edges })
     }
