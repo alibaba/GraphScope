@@ -17,7 +17,6 @@ use std::collections::HashMap;
 
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
-use serde::{Deserialize, Serialize};
 
 pub type PatternId = usize;
 pub type PatternLabelId = ir_common::LabelId;
@@ -28,22 +27,7 @@ pub mod extend_step;
 pub mod pattern;
 pub mod pattern_meta;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-pub enum PatternDirection {
-    Out = 0,
-    In = 1,
-    Both = 2,
-}
-
-impl PatternDirection {
-    pub fn reverse(&self) -> PatternDirection {
-        match self {
-            PatternDirection::Out => PatternDirection::In,
-            PatternDirection::In => PatternDirection::Out,
-            PatternDirection::Both => PatternDirection::Both,
-        }
-    }
-}
+pub type PatternDirection = pb::edge_expand::Direction;
 
 pub(crate) fn query_params(
     tables: Vec<common_pb::NameOrId>, columns: Vec<common_pb::NameOrId>,

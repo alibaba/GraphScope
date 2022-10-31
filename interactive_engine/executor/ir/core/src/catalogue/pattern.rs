@@ -66,15 +66,27 @@ impl PatternVertex {
 /// - These data heavily relies on Pattern and has no meaning without a Pattern
 #[derive(Debug, Clone, Default)]
 struct PatternVertexData {
-    // TODO: fix this
-    /// Outgoing or Both adjacent edges and vertices related to this vertex
+    /// Outgoing adjacent edges and vertices related to this vertex
     out_adjacencies: Vec<Adjacency>,
     /// Incoming adjacent edges and vertices related to this vertex
     in_adjacencies: Vec<Adjacency>,
+    /// Undirected (Both) adjacent edges and vertices related to this vertex
+    both_adjacencies: Vec<Adjacency>,
     /// Tag (alias) assigned to this vertex by user
     tag: Option<TagId>,
     /// Predicate(filter or other expressions) this vertex has
     data: pb::Select,
+}
+
+impl PatternVertexData {
+    pub fn insert_adjacency(&mut self, pattern_edge: &PatternEdge, is_start: bool) {
+        let adjacency = Adjacency::new(&pattern_edge, is_start);
+        match pattern_edge.dir {
+            pb::edge_expand::Direction::Out => self.out_adjacencies.push(adjacency),
+            pb::edge_expand::Direction::In => self.in_adjacencies.push(adjacency),
+            pb::edge_expand::Direction::Both => self.both_adjacencies.push(adjacency),
+        }
+    }
 }
 
 /// A Pattern Edge from start_vertex to end_vertex
@@ -84,22 +96,15 @@ pub struct PatternEdge {
     labels: Vec<PatternLabelId>,
     start_vertex: PatternVertex,
     end_vertex: PatternVertex,
+    dir: PatternDirection,
 }
 
 impl PatternEdge {
     pub fn new(
         id: PatternId, labels: Vec<PatternLabelId>, start_vertex: PatternVertex, end_vertex: PatternVertex,
+        dir: PatternDirection,
     ) -> PatternEdge {
-        PatternEdge { id, labels, start_vertex, end_vertex }
-    }
-
-    /// If the given direction is incoming, reverse the start and end vertex;
-    /// Notice that for `Both` direction, we preserve the order as the same as `Out`;
-    pub fn with_direction(mut self, direction: pb::edge_expand::Direction) -> PatternEdge {
-        if direction == pb::edge_expand::Direction::In {
-            std::mem::swap(&mut self.start_vertex, &mut self.end_vertex);
-        }
-        self
+        PatternEdge { id, labels, start_vertex, end_vertex, dir }
     }
 
     #[inline]
@@ -183,20 +188,20 @@ pub struct Adjacency {
     edge_id: PatternId,
     /// the adjacent vertex
     adj_vertex: PatternVertex,
-    /// the connecting direction: outgoing or incoming
+    /// the connecting direction
     direction: PatternDirection,
 }
 
 impl Adjacency {
-    fn new(edge: &PatternEdge, direction: PatternDirection) -> Adjacency {
+    fn new(edge: &PatternEdge, is_start: bool) -> Adjacency {
         Adjacency {
             edge_id: edge.get_id(),
-            adj_vertex: if direction == PatternDirection::In {
+            adj_vertex: if is_start {
                 edge.get_start_vertex().clone()
             } else {
                 edge.get_end_vertex().clone()
             },
-            direction,
+            direction: edge.dir,
         }
     }
 
@@ -271,25 +276,23 @@ impl TryFrom<Vec<PatternEdge>> for Pattern {
                     .vertices
                     .entry(edge.get_start_vertex().get_id())
                     .or_insert(edge.get_start_vertex().clone());
-                // Update start vertex's outgoing info
+                // Update start vertex's adjacency info
                 new_pattern
                     .vertices_data
                     .entry(start_vertex.get_id())
                     .or_insert(PatternVertexData::default())
-                    .out_adjacencies
-                    .push(Adjacency::new(&edge, PatternDirection::Out));
+                    .insert_adjacency(&edge, false);
                 // Add or update the end vertex to the new Pattern
                 let end_vertex = new_pattern
                     .vertices
                     .entry(edge.get_end_vertex().get_id())
                     .or_insert(edge.get_end_vertex().clone());
-                // Update end vertex's incoming info
+                // Update end vertex's adjacency info
                 new_pattern
                     .vertices_data
                     .entry(end_vertex.get_id())
                     .or_insert(PatternVertexData::default())
-                    .in_adjacencies
-                    .push(Adjacency::new(&edge, PatternDirection::In));
+                    .insert_adjacency(&edge, true);
             }
             Ok(new_pattern)
         } else {
@@ -427,8 +430,9 @@ impl Pattern {
                                 dst_vertex_id,
                                 dst_vertex_label.into_iter().collect(),
                             ),
-                        )
-                        .with_direction(edge_direction);
+                            edge_direction,
+                        );
+
                         pattern_edges.push(new_pattern_edge);
                     }
                     Some(BinderItem::Select(select)) => {
@@ -810,14 +814,7 @@ fn check_connectivity(vertex_to_remove: PatternId, pattern: &Pattern) -> IrPatte
             s.push(vid);
             while !s.is_empty() {
                 let vid = s.pop().unwrap();
-                let vertex_data = pattern
-                    .vertices_data
-                    .get(vid)
-                    .ok_or(IrPatternError::MissingPatternVertex(vid))?;
-                let mut adjacencies = vertex_data
-                    .out_adjacencies
-                    .iter()
-                    .chain(&vertex_data.in_adjacencies);
+                let mut adjacencies = pattern.adjacencies_iter(vid);
                 while let Some(adj) = adjacencies.next() {
                     let adj_id = adj.adj_vertex.get_id();
                     if adj_id != vertex_to_remove && !visited[adj_id] {
@@ -1156,10 +1153,21 @@ impl Pattern {
             .unwrap_or(0)
     }
 
+    /// Count how many undirected (both) edges connect to this vertex
+    #[inline]
+    pub fn get_vertex_both_degree(&self, vertex_id: PatternId) -> usize {
+        self.vertices_data
+            .get(vertex_id)
+            .map(|vertex_data| vertex_data.both_adjacencies.len())
+            .unwrap_or(0)
+    }
+
     /// Count how many edges connect to this vertex
     #[inline]
     pub fn get_vertex_degree(&self, vertex_id: PatternId) -> usize {
-        self.get_vertex_out_degree(vertex_id) + self.get_vertex_in_degree(vertex_id)
+        self.get_vertex_out_degree(vertex_id)
+            + self.get_vertex_in_degree(vertex_id)
+            + self.get_vertex_both_degree(vertex_id)
     }
 }
 
@@ -1231,11 +1239,21 @@ impl Pattern {
         }
     }
 
+    /// Iterate all incoming edges to the given vertex
+    pub fn both_adjacencies_iter(&self, vertex_id: PatternId) -> DynIter<&Adjacency> {
+        if let Some(vertex_data) = self.vertices_data.get(vertex_id) {
+            Box::new(vertex_data.both_adjacencies.iter())
+        } else {
+            Box::new(std::iter::empty())
+        }
+    }
+
     /// Iterate both outgoing and incoming edges of the given vertex
     pub fn adjacencies_iter(&self, vertex_id: PatternId) -> DynIter<&Adjacency> {
         Box::new(
             self.out_adjacencies_iter(vertex_id)
-                .chain(self.in_adjacencies_iter(vertex_id)),
+                .chain(self.in_adjacencies_iter(vertex_id))
+                .chain(self.both_adjacencies_iter(vertex_id)),
         )
     }
 }
@@ -1324,6 +1342,12 @@ impl Pattern {
                         .get_mut(adjacent_vertex_id)
                         .ok_or(IrPatternError::MissingPatternVertex(adjacent_vertex_id))?
                         .in_adjacencies
+                        .retain(|adj| adj.get_edge_id() != adjacent_edge_id)
+                } else if let PatternDirection::Both = adjacency.get_direction() {
+                    self.vertices_data
+                        .get_mut(adjacent_vertex_id)
+                        .ok_or(IrPatternError::MissingPatternVertex(adjacent_vertex_id))?
+                        .both_adjacencies
                         .retain(|adj| adj.get_edge_id() != adjacent_edge_id)
                 } else {
                     self.vertices_data

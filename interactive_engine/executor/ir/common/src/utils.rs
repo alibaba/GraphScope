@@ -643,6 +643,16 @@ impl pb::QueryParams {
     }
 }
 
+impl pb::edge_expand::Direction {
+    pub fn reverse(&self) -> pb::edge_expand::Direction {
+        match self {
+            pb::edge_expand::Direction::Out => pb::edge_expand::Direction::In,
+            pb::edge_expand::Direction::In => pb::edge_expand::Direction::Out,
+            pb::edge_expand::Direction::Both => pb::edge_expand::Direction::Both,
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
