@@ -312,8 +312,8 @@ class CoordinatorServiceServicer(
                 response_head.head.code = error_code
                 response_head.head.error_msg = f"Error occurred during RunStep, The traceback is: {traceback.format_exc()}"
                 response_head.head.full_exception = pickle.dumps(exc)
-                for response in responses:
-                    yield response
+                # stop iteration to propagate the error to client immediately
+                break
 
         for response in responses:
             yield response
