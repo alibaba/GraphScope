@@ -1017,7 +1017,8 @@ class ArrowProjectedFragment
     return vertex_data_array_accessor_;
   }
 
-  std::shared_ptr<vineyard::ArrowFragment<oid_t, vid_t>> get_arrow_fragment() {
+  std::shared_ptr<vineyard::ArrowFragment<oid_t, vid_t, property_vertex_map_t>>
+  get_arrow_fragment() {
     return fragment_;
   }
 

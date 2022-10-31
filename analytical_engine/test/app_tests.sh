@@ -412,7 +412,9 @@ run_vy ${np} ./run_vy_app "${socket_file}" 2 "${test_dir}"/new_property/v2_e2/tw
 run_vy_2 ${np} ./run_vy_app "${socket_file}" 4 "${test_dir}"/projected_property/twitter_property_e "${test_dir}"/projected_property/twitter_property_v 1
 run_lpa ${np} ./run_vy_app "${socket_file}" 1 "${test_dir}"/property/lpa_dataset/lpa_3000_e 2 "${test_dir}"/property/lpa_dataset/lpa_3000_v 0 1 lpa
 run_sampling_path 2 ./run_vy_app "${socket_file}" "${test_dir}"/property/sampling_path 0 1 sampling_path 0-0-1-4-2
-run_local_vertex_map ${np} ./run_vy_app "${socket_file}" 1 "${test_dir}"/property/p2p-31_property_e 1 "${test_dir}"/property/p2p-31_property_v 0 0 lpa path_pattern 1
+
+# local vm
+run_vy_2 ${np} ./run_vy_app_local_vm "${socket_file}" 1 "${test_dir}"/property/p2p-31_property_e "${test_dir}"/property/p2p-31_property_v 1
 
 run_vy ${np} ./run_pregel_app "${socket_file}" 2 "${test_dir}"/new_property/v2_e2/twitter_e 2 "${test_dir}"/new_property/v2_e2/twitter_v
 rm -rf ./test_output/*

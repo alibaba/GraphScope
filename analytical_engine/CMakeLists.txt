@@ -369,6 +369,7 @@ if (BUILD_TESTS)
     endmacro()
 
     add_vineyard_app(run_vy_app SRCS test/run_vy_app.cc)
+    add_vineyard_app(run_vy_app_local_vm SRCS test/run_vy_app_local_vm.cc)
 
     add_vineyard_app(run_load_from_stream SRCS test/run_load_from_stream.cc)
 
