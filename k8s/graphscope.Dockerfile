@@ -35,6 +35,8 @@ ENV HADOOP_CONF_DIR $HADOOP_HOME/etc/hadoop
 ENV HADOOP_COMMON_LIB_NATIVE_DIR $HADOOP_HOME/lib/native
 ENV PATH $PATH:$HADOOP_HOME/bin
 
+RUN bash -l -c 'echo export CLASSPATH="$($HADOOP_HOME/bin/hdfs classpath --glob)" >> /etc/bashrc'
+
 # kubectl v1.19.2
 RUN cd /tmp && export KUBE_VER=v1.19.2 && \
     curl -LO https://storage.googleapis.com/kubernetes-release/release/${KUBE_VER}/bin/linux/amd64/kubectl && \
