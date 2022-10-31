@@ -151,12 +151,16 @@ impl<T> ResultStream<T> {
         self.cancel_hook.load(Ordering::SeqCst)
     }
 
+    fn report_cancel(&self) -> Option<Result<T, Box<dyn Error + Send>>> {
+        let err_msg = "Job is canceled;".to_owned();
+        let err: Box<dyn Error + Send + Sync> = err_msg.into();
+        Some(Err(err))
+    }
+
     fn pull_next(&mut self) -> Option<Result<T, Box<dyn Error + Send>>> {
         if self.is_exhaust.load(Ordering::SeqCst) {
             if self.is_cancel() {
-                let err_msg = "Job is canceled;".to_owned();
-                let err: Box<dyn Error + Send + Sync> = err_msg.into();
-                return Some(Err(err));
+                return self.report_cancel();
             }
             return None;
         }
@@ -164,6 +168,9 @@ impl<T> ResultStream<T> {
         if self.is_poison.load(Ordering::SeqCst) {
             let err_msg = "ResultSteam is poison because error already occurred;".to_owned();
             let err: Box<dyn Error + Send + Sync> = err_msg.into();
+            if self.is_cancel() {
+                return self.report_cancel();
+            }
             return Some(Err(err as Box<dyn Error + Send>));
         }
 
@@ -172,16 +179,19 @@ impl<T> ResultStream<T> {
             Ok(Ok(res)) => Some(Ok(res)),
             Ok(Err(e)) => {
                 self.is_poison.store(true, Ordering::SeqCst);
-                Some(Err(e))
+                if self.is_cancel() {
+                    self.report_cancel()
+                } else {
+                    Some(Err(e))
+                }
             }
             Err(_) => {
                 self.is_exhaust.store(true, Ordering::SeqCst);
                 if self.is_cancel() {
-                    let err_msg = "Job is canceled;".to_owned();
-                    let err: Box<dyn Error + Send + Sync> = err_msg.into();
-                    return Some(Err(err));
+                    self.report_cancel()
+                } else {
+                    None
                 }
-                None
             }
         }
     }

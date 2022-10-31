@@ -57,7 +57,7 @@ fn timeout_test_02() {
                 .input_from(vec![0u32])?
                 .iterate_until(IterCondition::max_iters(20), move |iter| {
                     iter.map(move |input| {
-                        if worker_id == 0 {
+                        if worker_id == 1 {
                             std::thread::sleep(Duration::from_millis(1000));
                         }
                         Ok(input + 1)
@@ -72,6 +72,8 @@ fn timeout_test_02() {
         if let Ok(data) = result {
             count += data;
         } else {
+            let err = result.err().unwrap();
+            assert_eq!(err.to_string(), "Job is canceled;".to_string());
             break;
         }
     }
