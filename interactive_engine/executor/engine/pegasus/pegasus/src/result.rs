@@ -153,6 +153,11 @@ impl<T> ResultStream<T> {
 
     fn pull_next(&mut self) -> Option<Result<T, Box<dyn Error + Send>>> {
         if self.is_exhaust.load(Ordering::SeqCst) {
+            if self.is_cancel() {
+                let err_msg = "Job is canceled;".to_owned();
+                let err: Box<dyn Error + Send + Sync> = err_msg.into();
+                return Some(Err(err));
+            }
             return None;
         }
 
@@ -171,6 +176,11 @@ impl<T> ResultStream<T> {
             }
             Err(_) => {
                 self.is_exhaust.store(true, Ordering::SeqCst);
+                if self.is_cancel() {
+                    let err_msg = "Job is canceled;".to_owned();
+                    let err: Box<dyn Error + Send + Sync> = err_msg.into();
+                    return Some(Err(err));
+                }
                 None
             }
         }

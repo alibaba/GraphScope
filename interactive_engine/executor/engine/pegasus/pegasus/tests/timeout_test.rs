@@ -50,7 +50,7 @@ fn timeout_test_02() {
     let mut conf = JobConf::new("timeout_test_2");
     conf.time_limit = 5000;
     conf.set_workers(2);
-    let mut result = pegasus::run(conf, || {
+    let mut results = pegasus::run(conf, || {
         |input, output| {
             let worker_id = input.get_worker_index();
             input
@@ -68,8 +68,12 @@ fn timeout_test_02() {
     })
     .expect("submit job failure;");
     let mut count = 0;
-    while let Some(Ok(data)) = result.next() {
-        count += data;
+    while let Some(result) = results.next() {
+        if let Ok(data) = result {
+            count += data;
+        } else {
+            break;
+        }
     }
-    assert!(result.is_cancel());
+    assert!(results.is_cancel());
 }
