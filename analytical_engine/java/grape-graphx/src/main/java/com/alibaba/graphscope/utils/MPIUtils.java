@@ -136,7 +136,6 @@ public class MPIUtils {
     }
 
     static {
-
         GRAPHSCOPE_HOME = System.getenv("GRAPHSCOPE_HOME");
         if (GRAPHSCOPE_HOME == null || GRAPHSCOPE_HOME.isEmpty()) {
             throw new IllegalStateException("GRAPHSCOPE_HOME empty");
