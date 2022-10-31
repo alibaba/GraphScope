@@ -168,7 +168,7 @@ public class GraphScopeAppScanner {
         //
         sb.append("gs::DoubleMsg=com.alibaba.graphscope.parallel.message.DoubleMsg,");
         sb.append("gs::LongMsg=com.alibaba.graphscope.parallel.message.LongMsg,");
-        sb.append("gs::LongMsg=com.alibaba.graphscope.parallel.message.EmptyType,");
+        sb.append("grape::EmptyType=com.alibaba.graphscope.parallel.message.EmptyType,");
         String temp = sb.toString();
         String messageTypes = "";
         if (!temp.isEmpty()) {
