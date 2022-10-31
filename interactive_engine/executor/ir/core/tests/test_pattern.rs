@@ -45,21 +45,21 @@ mod tests {
         assert_eq!(vertices_with_label_0.len(), 2);
         let edge_0 = pattern_case1.get_edge(0).unwrap();
         assert_eq!(edge_0.get_id(), 0);
-        assert_eq!(edge_0.get_label(), 0);
+        assert_eq!(edge_0.get_labels()[0], 0);
         assert_eq!(edge_0.get_start_vertex().get_id(), 0);
         assert_eq!(edge_0.get_end_vertex().get_id(), 1);
-        assert_eq!(edge_0.get_start_vertex().get_label(), 0);
-        assert_eq!(edge_0.get_end_vertex().get_label(), 0);
+        assert_eq!(edge_0.get_start_vertex().get_labels()[0], 0);
+        assert_eq!(edge_0.get_end_vertex().get_labels()[0], 0);
         let edge_1 = pattern_case1.get_edge(1).unwrap();
         assert_eq!(edge_1.get_id(), 1);
-        assert_eq!(edge_1.get_label(), 0);
+        assert_eq!(edge_1.get_labels()[0], 0);
         assert_eq!(edge_1.get_start_vertex().get_id(), 1);
         assert_eq!(edge_1.get_end_vertex().get_id(), 0);
-        assert_eq!(edge_1.get_start_vertex().get_label(), 0);
-        assert_eq!(edge_1.get_end_vertex().get_label(), 0);
+        assert_eq!(edge_1.get_start_vertex().get_labels()[0], 0);
+        assert_eq!(edge_1.get_end_vertex().get_labels()[0], 0);
         let vertex_0 = pattern_case1.get_vertex(0).unwrap();
         assert_eq!(vertex_0.get_id(), 0);
-        assert_eq!(vertex_0.get_label(), 0);
+        assert_eq!(vertex_0.get_labels()[0], 0);
         assert_eq!(pattern_case1.get_vertex_degree(0), 2);
         let mut vertex_0_adjacent_edges_iter = pattern_case1.adjacencies_iter(0);
         let vertex_0_adjacency_0 = vertex_0_adjacent_edges_iter.next().unwrap();
@@ -72,7 +72,7 @@ mod tests {
         assert_eq!(vertex_0_adjacency_1.get_direction(), PatternDirection::In);
         let vertex_1 = pattern_case1.get_vertex(1).unwrap();
         assert_eq!(vertex_1.get_id(), 1);
-        assert_eq!(vertex_1.get_label(), 0);
+        assert_eq!(vertex_1.get_labels()[0], 0);
         assert_eq!(pattern_case1.get_vertex_degree(1), 2);
         let mut vertex_1_adjacent_edges_iter = pattern_case1.adjacencies_iter(1);
         let vertex_1_adjacency_0 = vertex_1_adjacent_edges_iter.next().unwrap();
@@ -255,8 +255,7 @@ mod tests {
         }
     }
 
-    // Ignore this case as it is fuzzy pattern, which is not supported yet.
-    #[ignore]
+    // fuzzy pattern test
     #[test]
     fn test_ldbc_pattern_from_pb_case4_structure() {
         let pattern_result = build_ldbc_pattern_from_pb_case4();
@@ -394,8 +393,7 @@ mod tests {
         }
     }
 
-    // Ignore this case as it is fuzzy pattern, which is not supported yet.
-    #[ignore]
+    // fuzzy pattern test
     #[test]
     fn test_ldbc_pattern_from_pb_case6_structure() {
         let pattern_result = build_ldbc_pattern_from_pb_case6();

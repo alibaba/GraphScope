@@ -77,9 +77,9 @@ fn new_pattern_edge(
     id: PatternId, label: PatternLabelId, start_v_id: PatternId, end_v_id: PatternId,
     start_v_label: PatternLabelId, end_v_label: PatternLabelId,
 ) -> PatternEdge {
-    let start_vertex = PatternVertex::new(start_v_id, start_v_label);
-    let end_vertex = PatternVertex::new(end_v_id, end_v_label);
-    PatternEdge::new(id, label, start_vertex, end_vertex)
+    let start_vertex = PatternVertex::with_label(start_v_id, start_v_label);
+    let end_vertex = PatternVertex::with_label(end_v_id, end_v_label);
+    PatternEdge::new(id, vec![label], start_vertex, end_vertex)
 }
 
 /// The pattern looks like:
@@ -96,10 +96,10 @@ fn new_pattern_edge(
 ///
 /// The right A has id 1
 pub fn build_pattern_case1() -> Pattern {
-    let vertex_1 = PatternVertex::new(0, 0);
-    let vertex_2 = PatternVertex::new(1, 0);
-    let edge_1 = PatternEdge::new(0, 0, vertex_1, vertex_2);
-    let edge_2 = PatternEdge::new(1, 0, vertex_2, vertex_1);
+    let vertex_1 = PatternVertex::with_label(0, 0);
+    let vertex_2 = PatternVertex::with_label(1, 0);
+    let edge_1 = PatternEdge::new(0, vec![0], vertex_1.clone(), vertex_2.clone());
+    let edge_2 = PatternEdge::new(1, vec![0], vertex_2, vertex_1);
     let pattern_vec = vec![edge_1, edge_2];
     Pattern::try_from(pattern_vec).unwrap()
 }
@@ -325,12 +325,12 @@ pub fn build_pattern_case9() -> Pattern {
 ///
 /// Person only Pattern
 pub fn build_modern_pattern_case1() -> Pattern {
-    Pattern::from(PatternVertex::new(0, 0))
+    Pattern::from(PatternVertex::with_label(0, 0))
 }
 
 /// Software only Pattern
 pub fn build_modern_pattern_case2() -> Pattern {
-    Pattern::from(PatternVertex::new(0, 1))
+    Pattern::from(PatternVertex::with_label(0, 1))
 }
 
 /// The pattern looks like:

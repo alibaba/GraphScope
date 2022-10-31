@@ -523,8 +523,7 @@ mod test {
         println!("{}", count);
     }
 
-    // Ignore this case as it is fuzzy pattern, which is not supported yet.
-    #[ignore]
+    // fuzzy pattern test
     #[test]
     fn test_generate_simple_matching_plan_for_ldbc_pattern_from_pb_case4() {
         let ldbc_pattern = build_ldbc_pattern_from_pb_case4().unwrap();
@@ -550,8 +549,7 @@ mod test {
         println!("{}", count);
     }
 
-    // Ignore this case as it is fuzzy pattern, which is not supported yet.
-    #[ignore]
+    // fuzzy pattern test
     #[test]
     fn test_generate_simple_matching_plan_for_ldbc_bi11() {
         let ldbc_pattern = build_ldbc_bi11().unwrap();

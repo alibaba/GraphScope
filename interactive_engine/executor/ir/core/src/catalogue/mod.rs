@@ -31,16 +31,8 @@ pub mod pattern_meta;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum PatternDirection {
     Out = 0,
-    In,
-}
-
-impl Into<u8> for PatternDirection {
-    fn into(self) -> u8 {
-        match self {
-            PatternDirection::Out => 0,
-            PatternDirection::In => 1,
-        }
-    }
+    In = 1,
+    Both = 2,
 }
 
 impl PatternDirection {
@@ -48,6 +40,7 @@ impl PatternDirection {
         match self {
             PatternDirection::Out => PatternDirection::In,
             PatternDirection::In => PatternDirection::Out,
+            PatternDirection::Both => PatternDirection::Both,
         }
     }
 }

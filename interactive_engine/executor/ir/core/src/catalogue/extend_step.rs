@@ -13,15 +13,12 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::convert::TryFrom;
-use std::iter::Iterator;
-
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as pb;
 
 use crate::catalogue::error::{IrPatternError, IrPatternResult};
 use crate::catalogue::pattern::Pattern;
-use crate::catalogue::{query_params, DynIter, PatternDirection, PatternId, PatternLabelId};
+use crate::catalogue::{query_params, DynIter, PatternDirection, PatternId};
 
 /// An ExactExtendEdge denotes an edge to be extended during the pattern matching.
 /// Given a ExactExtendEdge, we can uniquely locate an edge with dir in the pattern
@@ -59,65 +56,29 @@ impl ExactExtendEdge {
 #[derive(Debug, Clone)]
 pub struct ExactExtendStep {
     target_vertex_id: PatternId,
-    target_vertex_label: PatternLabelId,
     extend_edges: Vec<ExactExtendEdge>,
 }
 
-/// Transform a one-vertex pattern to ExactExtendStep
-/// It is usually to use such ExactExtendStep to generate Source operator
-impl TryFrom<Pattern> for ExactExtendStep {
-    type Error = IrPatternError;
-
-    fn try_from(pattern: Pattern) -> IrPatternResult<Self> {
-        if pattern.get_vertices_num() == 1 {
-            let target_vertex = pattern.vertices_iter().last().unwrap();
-            let target_v_id = target_vertex.get_id();
-            let target_v_label = target_vertex.get_label();
-            Ok(ExactExtendStep {
-                target_vertex_id: target_v_id,
-                target_vertex_label: target_v_label,
-                extend_edges: vec![],
-            })
-        } else {
-            Err(IrPatternError::Unsupported(
-                "Can only convert pattern with one vertex to Definite Extend Step".to_string(),
-            ))
-        }
-    }
-}
-
 impl ExactExtendStep {
-    /// Given a target pattern with a vertex id, pick all its neighboring edges and vertices to generate a definite extend step
+    /// Given a target pattern with a vertex id, pick all its neighboring edges and vertices to generate a exact extend step
     pub fn from_target_pattern(
         target_pattern: &Pattern, target_vertex_id: PatternId,
     ) -> IrPatternResult<Self> {
-        if let Some(target_vertex) = target_pattern.get_vertex(target_vertex_id) {
-            let target_vertex_label = target_vertex.get_label();
-            let mut extend_edges = vec![];
-            for adjacency in target_pattern.adjacencies_iter(target_vertex_id) {
-                let edge_id = adjacency.get_edge_id();
-                let dir = adjacency.get_direction();
-                let edge = target_pattern
-                    .get_edge(edge_id)
-                    .ok_or(IrPatternError::MissingPatternEdge(edge_id))?;
-                if let PatternDirection::In = dir {
-                    extend_edges.push(ExactExtendEdge::new(
-                        edge.get_start_vertex().get_id(),
-                        edge_id,
-                        PatternDirection::Out,
-                    ));
-                } else {
-                    extend_edges.push(ExactExtendEdge::new(
-                        edge.get_end_vertex().get_id(),
-                        edge_id,
-                        PatternDirection::In,
-                    ));
-                }
-            }
-            Ok(ExactExtendStep { target_vertex_id, target_vertex_label, extend_edges })
-        } else {
-            Err(IrPatternError::MissingPatternVertex(target_vertex_id))
+        let mut extend_edges = vec![];
+        for adjacency in target_pattern.adjacencies_iter(target_vertex_id) {
+            let edge_id = adjacency.get_edge_id();
+            let edge = target_pattern
+                .get_edge(edge_id)
+                .ok_or(IrPatternError::MissingPatternEdge(edge_id))?;
+            let dir = adjacency.get_direction();
+            let src_vertex_id = if let PatternDirection::In = dir {
+                edge.get_start_vertex().get_id()
+            } else {
+                edge.get_end_vertex().get_id()
+            };
+            extend_edges.push(ExactExtendEdge::new(src_vertex_id, edge_id, dir.reverse()));
         }
+        Ok(ExactExtendStep { target_vertex_id, extend_edges })
     }
 }
 
@@ -126,11 +87,6 @@ impl ExactExtendStep {
     #[inline]
     pub fn get_target_vertex_id(&self) -> PatternId {
         self.target_vertex_id
-    }
-
-    #[inline]
-    pub fn get_target_vertex_label(&self) -> PatternLabelId {
-        self.target_vertex_label
     }
 
     pub fn iter(&self) -> DynIter<&ExactExtendEdge> {
