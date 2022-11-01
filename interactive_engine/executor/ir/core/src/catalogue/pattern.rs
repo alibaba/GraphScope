@@ -236,12 +236,8 @@ pub struct Pattern {
     /// Key: vertex id, Value: struct PatternVertexData
     /// - store data attaching to PatternVertex
     vertices_data: VecMap<PatternVertexData>,
-    /// Key: edge's Tag info, Value: edge id
-    /// - use a Tag to locate an Edge
-    tag_edge_map: BTreeMap<TagId, PatternId>,
-    /// Key: vertex's Tag info, Value: vertex id
-    /// - use a Tag to locate a vertex
-    tag_vertex_map: BTreeMap<TagId, PatternId>,
+    /// max_tag_id denotes the max alias given by user
+    max_tag_id: TagId,
 }
 
 /// Initialze a Pattern from just a single Pattern Vertex
@@ -253,8 +249,7 @@ impl From<PatternVertex> for Pattern {
             vertices: VecMap::from_iter([(vid, vertex)]),
             edges_data: VecMap::new(),
             vertices_data: VecMap::from_iter([(vid, PatternVertexData::default())]),
-            tag_edge_map: BTreeMap::new(),
-            tag_vertex_map: BTreeMap::new(),
+            max_tag_id: 0,
         }
     }
 }
@@ -312,9 +307,10 @@ impl Pattern {
         use pb::pattern::binder::Item as BinderItem;
         // record the vertices from the pb pattern having tags
         let tag_set = get_all_tags_from_pb_pattern(pb_pattern)?;
+        let max_tag_id = plan_meta.get_max_tag_id();
         // next vertex id assign to the vertex picked from the pb pattern
         // notice that the next_vertex_id is the max_tag_id after processing all user-given alias in pattern
-        let mut next_vertex_id = plan_meta.get_max_tag_id() as PatternId;
+        let mut next_vertex_id = max_tag_id as PatternId;
         // next edge id assign to the edge picked from the pb pattern
         // TODO: notice that we have not support expanding edges only yet (in Intersection), so we assume no user-given alias for expanding edges.
         // TODO: i.e., g.V().match(__.as("a").outE().as("b")) is not supported.
@@ -457,15 +453,13 @@ impl Pattern {
         }
         plan_meta.set_max_tag_id(next_vertex_id as TagId);
         Pattern::try_from(pattern_edges).and_then(|mut pattern| {
-            for tag in tag_set {
-                pattern.set_vertex_tag(tag as PatternId, tag);
-            }
             for (v_id, vertex_data) in vertex_data_map {
                 pattern.set_vertex_data(v_id, vertex_data);
             }
             for (e_id, edge_data) in edge_data_map {
                 pattern.set_edge_data(e_id, edge_data);
             }
+            pattern.set_max_tag_id(max_tag_id);
             Ok(pattern)
         })
     }
@@ -621,24 +615,28 @@ fn build_logical_plan(
             pre_node = pb::logical_plan::Node { opr: Some(intersect), children: vec![] };
             child_offset += 1;
         } else if edge_expands_num == 1 {
-            let definite_extend_edge = exact_extend_step
-                .iter()
-                .last()
-                .ok_or(ParsePbError::EmptyFieldError("extend_edge in definite_extend_step".to_string()))?;
-            let edge_id = definite_extend_edge.get_edge_id();
+            let exact_extend_edge =
+                exact_extend_step
+                    .iter()
+                    .last()
+                    .ok_or(IrPatternError::InvalidPattern(format!(
+                        "Empty exact_extend_step in exact_extend_step, the exact_extend_step is {:?}",
+                        exact_extend_step
+                    )))?;
+            let edge_id = exact_extend_edge.get_edge_id();
             let edge_data = origin_pattern
                 .get_edge_data(edge_id)
                 .cloned()
-                .ok_or(ParsePbError::EmptyFieldError("edge_data in Pattern".to_string()))?;
+                .ok_or(IrPatternError::MissingPatternEdge(edge_id))?;
             match edge_data {
                 PbEdgeOrPath::Edge(edge_expand) => {
                     let edge_expand_opr =
-                        exact_extend_step.generate_edge_expand(definite_extend_edge, edge_expand)?;
+                        exact_extend_step.generate_edge_expand(exact_extend_edge, edge_expand)?;
                     append_opr(&mut match_plan, &mut pre_node, edge_expand_opr, &mut child_offset);
                 }
                 PbEdgeOrPath::Path(path_expand) => {
                     let path_expand_oprs =
-                        exact_extend_step.generate_path_expand(definite_extend_edge, path_expand, false)?;
+                        exact_extend_step.generate_path_expand(exact_extend_edge, path_expand, false)?;
                     for opr in path_expand_oprs {
                         append_opr(&mut match_plan, &mut pre_node, opr, &mut child_offset);
                     }
@@ -654,19 +652,16 @@ fn build_logical_plan(
         }
     }
     // Finally, if the results contain any pattern vertices with system-given aliases,
-    // we additional project the user-given aliases, i.e., those may be referred later.
-    // Here, origin_pattern.vertices.len() indicates total number of pattern vertices;
-    // and origin_pattern.tag_vertex_map.len() indicates the number of pattern vertices with user-given aliases
-    if origin_pattern.vertices.len() > origin_pattern.tag_vertex_map.len() {
-        let mut remove_tags = vec![];
-        for (_, vertex) in origin_pattern.vertices.iter() {
-            if !origin_pattern
-                .tag_vertex_map
-                .contains_key(&(vertex.id as TagId))
-            {
-                remove_tags.push((vertex.id as i32).into());
-            }
-        }
+    // We additional remove the system-given aliases, i.e., those will not be referred later.
+    let max_tag_id = origin_pattern.get_max_tag_id() as i32;
+    let max_vertex_id = origin_pattern
+        .get_max_vertex_id()
+        .ok_or(IrPatternError::InvalidPattern(format!("Empty pattern {:?}", origin_pattern)))?
+        as i32;
+    if max_vertex_id >= max_tag_id {
+        let remove_tags = (max_tag_id..max_vertex_id + 1)
+            .map(|tag_id| tag_id.into())
+            .collect();
         let auxilia = pb::Auxilia {
             tag: None,
             params: Some(query_params(vec![], vec![], None)),
@@ -1028,14 +1023,6 @@ impl Pattern {
         self.edges.get(edge_id)
     }
 
-    /// Get PatternEdge from Given Tag
-    #[inline]
-    pub fn get_edge_from_tag(&self, edge_tag: TagId) -> Option<&PatternEdge> {
-        self.tag_edge_map
-            .get(&edge_tag)
-            .and_then(|&edge_id| self.get_edge(edge_id))
-    }
-
     /// Get the total number of edges in the pattern
     #[inline]
     pub fn get_edges_num(&self) -> usize {
@@ -1089,14 +1076,6 @@ impl Pattern {
     #[inline]
     pub fn get_vertex(&self, vertex_id: PatternId) -> Option<&PatternVertex> {
         self.vertices.get(vertex_id)
-    }
-
-    /// Get PatternVertex Reference from Given Tag
-    #[inline]
-    pub fn get_vertex_from_tag(&self, vertex_tag: TagId) -> Option<&PatternVertex> {
-        self.tag_vertex_map
-            .get(&vertex_tag)
-            .and_then(|&vertex_id| self.get_vertex(vertex_id))
     }
 
     /// Get the total number of vertices in the pattern
@@ -1156,6 +1135,10 @@ impl Pattern {
             .map(|vertex_data| vertex_data.adjacencies.len())
             .unwrap_or(0)
     }
+
+    pub fn get_max_tag_id(&self) -> TagId {
+        self.max_tag_id
+    }
 }
 
 /// Iterators of fields of Pattern
@@ -1175,15 +1158,6 @@ impl Pattern {
         )
     }
 
-    /// Iterate over edges that has tag
-    pub fn edges_with_tag_iter(&self) -> DynIter<Option<&PatternEdge>> {
-        Box::new(
-            self.tag_edge_map
-                .iter()
-                .map(move |(_, &edge_id)| self.get_edge(edge_id)),
-        )
-    }
-
     /// Iterate Vertices
     pub fn vertices_iter(&self) -> DynIter<&PatternVertex> {
         Box::new(self.vertices.iter().map(|(_, vertex)| vertex))
@@ -1199,15 +1173,6 @@ impl Pattern {
         )
     }
 
-    /// Iterate over vertices that has tag
-    pub fn vertices_with_tag_iter(&self) -> DynIter<&PatternVertex> {
-        Box::new(
-            self.tag_vertex_map
-                .iter()
-                .filter_map(move |(_, &vertex_id)| self.get_vertex(vertex_id)),
-        )
-    }
-
     /// Iterate all adj edges (including out/in/both) of the given vertex
     pub fn adjacencies_iter(&self, vertex_id: PatternId) -> DynIter<&Adjacency> {
         if let Some(vertex_data) = self.vertices_data.get(vertex_id) {
@@ -1220,21 +1185,6 @@ impl Pattern {
 
 /// Setters of fields of Pattern
 impl Pattern {
-    /// Assign a PatternEdge of the Pattern with the Given Tag
-    pub fn set_edge_tag(&mut self, edge_tag: TagId, edge_id: PatternId) {
-        // If the tag is previously assigned to another edge, remove it
-        if let Some(&old_edge_id) = self.tag_edge_map.get(&edge_tag) {
-            self.edges_data
-                .get_mut(old_edge_id)
-                .map(|e| e.tag = None);
-        }
-        // Assign the tag to the edge
-        if let Some(edge_data) = self.edges_data.get_mut(edge_id) {
-            self.tag_edge_map.insert(edge_tag, edge_id);
-            edge_data.tag = Some(edge_tag);
-        }
-    }
-
     /// Set predicate requirement of a PatternEdge
     pub fn set_edge_data(&mut self, edge_id: PatternId, opr: PbEdgeOrPath) {
         if let Some(edge_data) = self.edges_data.get_mut(edge_id) {
@@ -1242,20 +1192,9 @@ impl Pattern {
         }
     }
 
-    /// Assign a PatternVertex with the given tag
-    pub fn set_vertex_tag(&mut self, vertex_id: PatternId, vertex_tag: TagId) {
-        // If the tag is previously assigned to another vertex, remove it
-        if let Some(&old_vertex_id) = self.tag_vertex_map.get(&vertex_tag) {
-            self.vertices_data
-                .get_mut(old_vertex_id)
-                .map(|v| v.tag = None);
-        }
-        // Assign the tag to the vertex
-        if let Some(vertex_data) = self.vertices_data.get_mut(vertex_id) {
-            self.tag_vertex_map
-                .insert(vertex_tag, vertex_id);
-            vertex_data.tag = Some(vertex_tag);
-        }
+    /// Set max_tag_id, which is the max user-given alias
+    pub fn set_max_tag_id(&mut self, max_tag_id: TagId) {
+        self.max_tag_id = max_tag_id;
     }
 
     /// Set predicate requirement of a PatternVertex
@@ -1278,10 +1217,6 @@ impl Pattern {
             // delete target vertex
             // delete in vertices
             self.vertices.remove(vertex_id);
-            // delete in vertex tag map
-            if let Some(tag) = self.get_vertex_tag(vertex_id) {
-                self.tag_vertex_map.remove(&tag);
-            }
             // delete in vertices data
             self.vertices_data.remove(vertex_id);
             for adjacency in adjacencies {
@@ -1290,10 +1225,6 @@ impl Pattern {
                 // delete adjacent edges
                 // delete in edges
                 self.edges.remove(adjacent_edge_id);
-                // delete in edge tag map
-                if let Some(tag) = self.get_edge_tag(adjacent_edge_id) {
-                    self.tag_edge_map.remove(&tag);
-                }
                 // delete in edges data
                 self.edges_data.remove(adjacent_edge_id);
                 // update adjacent vertices' info
