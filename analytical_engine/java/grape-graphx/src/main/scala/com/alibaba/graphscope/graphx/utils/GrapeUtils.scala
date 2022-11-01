@@ -580,10 +580,17 @@ object GrapeUtils extends Logging {
     }
   }
 
+  /** Extract the distribution info, i.e. how many partition on each host.
+    * @param rdd
+    *   input rdd
+    * @param numPartition
+    *   num partitions.
+    * @return
+    */
   def extractHostInfo(
       rdd: RDD[(Int, _)],
       numPartition: Int
-  ): (Array[String], Array[Int]) = {
+  ): (mutable.HashMap[String, ArrayBuffer[Int]], Array[Int]) = {
     val array = rdd
       .mapPartitionsWithIndex((ind, iter) => {
         if (iter.hasNext) {
@@ -624,7 +631,7 @@ object GrapeUtils extends Logging {
       }
       i += 1
     }
-    (tmpMap.keys.toArray, res)
+    (tmpMap, res)
   }
 
   def getHostIdStrFromFragmentGroup(
