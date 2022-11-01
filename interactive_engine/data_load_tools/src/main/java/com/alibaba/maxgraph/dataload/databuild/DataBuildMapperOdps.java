@@ -22,9 +22,7 @@ import com.alibaba.maxgraph.sdkcommon.schema.PropertyValue;
 import com.aliyun.odps.data.Record;
 import com.aliyun.odps.mapred.MapperBase;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,8 +51,7 @@ public class DataBuildMapperOdps extends MapperBase {
         this.outKey = context.createMapOutputKeyRecord();
         this.outVal = context.createMapOutputValueRecord();
 
-        this.objectMapper =
-                JsonMapper.builder().disable(MapperFeature.CAN_OVERRIDE_ACCESS_MODIFIERS).build();
+        this.objectMapper = new ObjectMapper();
         String schemaJson = context.getJobConf().get(OfflineBuildOdps.SCHEMA_JSON);
         this.graphSchema = GraphSchemaMapper.parseFromJson(schemaJson).toGraphSchema();
         this.dataEncoder = new DataEncoder(this.graphSchema);
