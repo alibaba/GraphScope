@@ -160,7 +160,7 @@ jobs:
         minikube start --base-image='registry-vpc.cn-hongkong.aliyuncs.com/graphscope/kicbase:v0.0.30' \
                         --cpus='12' --memory='32000mb' --disk-size='40000mb'
 
-        minikube image load ${{ env.GS_IMAGE }}:${SHORT_SHA}
+        minikube image load ${{ env.GSS_IMAGE }}:${SHORT_SHA}
 
         # update helm dependency
         cd ${GITHUB_WORKSPACE}/charts/graphscope-store
