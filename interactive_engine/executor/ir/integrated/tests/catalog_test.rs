@@ -424,11 +424,12 @@ mod test {
     }
 
     fn get_sink_of_pattern(pattern: &Pattern) -> pb::Sink {
+        let max_tag_id = pattern.get_max_tag_id() as i32;
+        let tags = (0..max_tag_id)
+            .map(|tag_id| common_pb::NameOrIdKey { key: Some((tag_id as i32).into()) })
+            .collect();
         pb::Sink {
-            tags: pattern
-                .vertices_with_tag_iter()
-                .map(|v_tuple| common_pb::NameOrIdKey { key: Some((v_tuple.get_id() as i32).into()) })
-                .collect(),
+            tags,
             sink_target: Some(pb::sink::SinkTarget {
                 inner: Some(pb::sink::sink_target::Inner::SinkDefault(pb::SinkDefault {
                     id_name_mappings: vec![],

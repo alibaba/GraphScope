@@ -19,15 +19,9 @@ mod common;
 mod tests {
 
     use ir_core::catalogue::pattern::{PatternEdge, PatternVertex};
-    use ir_core::catalogue::{PatternDirection, PatternId};
-    use ir_core::plan::meta::TagId;
+    use ir_core::catalogue::PatternDirection;
 
     use crate::common::pattern_cases::*;
-
-    const TAG_A: TagId = 0;
-    const TAG_B: TagId = 1;
-    const TAG_C: TagId = 2;
-    const TAG_D: TagId = 3;
 
     /// Test whether the structure of pattern_case1 is the same as our previous description
     #[test]
@@ -108,28 +102,6 @@ mod tests {
                     .len(),
                 3
             );
-            // check Tag
-            assert_eq!(
-                pattern
-                    .get_vertex_from_tag(TAG_A)
-                    .unwrap()
-                    .get_id(),
-                TAG_A as PatternId
-            );
-            assert_eq!(
-                pattern
-                    .get_vertex_from_tag(TAG_B)
-                    .unwrap()
-                    .get_id(),
-                TAG_B as PatternId
-            );
-            assert_eq!(
-                pattern
-                    .get_vertex_from_tag(TAG_C)
-                    .unwrap()
-                    .get_id(),
-                TAG_C as PatternId
-            );
         } else if let Err(error) = pattern_result {
             panic!("Build pattern from pb message failed: {:?}", error)
         }
@@ -173,28 +145,6 @@ mod tests {
                     .len(),
                 2
             );
-            // check Tag
-            assert_eq!(
-                pattern
-                    .get_vertex_from_tag(TAG_A)
-                    .unwrap()
-                    .get_id(),
-                TAG_A as PatternId
-            );
-            assert_eq!(
-                pattern
-                    .get_vertex_from_tag(TAG_B)
-                    .unwrap()
-                    .get_id(),
-                TAG_B as PatternId
-            );
-            assert_eq!(
-                pattern
-                    .get_vertex_from_tag(TAG_C)
-                    .unwrap()
-                    .get_id(),
-                TAG_C as PatternId
-            );
         } else if let Err(error) = pattern_result {
             panic!("Build pattern from pb message failed: {:?}", error)
         }
@@ -221,35 +171,6 @@ mod tests {
                     .collect::<Vec<&PatternEdge>>()
                     .len(),
                 6
-            );
-            // check Tag
-            assert_eq!(
-                pattern
-                    .get_vertex_from_tag(TAG_A)
-                    .unwrap()
-                    .get_id(),
-                TAG_A as PatternId
-            );
-            assert_eq!(
-                pattern
-                    .get_vertex_from_tag(TAG_B)
-                    .unwrap()
-                    .get_id(),
-                TAG_B as PatternId
-            );
-            assert_eq!(
-                pattern
-                    .get_vertex_from_tag(TAG_C)
-                    .unwrap()
-                    .get_id(),
-                TAG_C as PatternId
-            );
-            assert_eq!(
-                pattern
-                    .get_vertex_from_tag(TAG_D)
-                    .unwrap()
-                    .get_id(),
-                TAG_D as PatternId
             );
         } else if let Err(error) = pattern_result {
             panic!("Build pattern from pb message failed: {:?}", error)
@@ -311,35 +232,6 @@ mod tests {
                     .len(),
                 2
             );
-            // check Tag
-            assert_eq!(
-                pattern
-                    .get_vertex_from_tag(TAG_A)
-                    .unwrap()
-                    .get_id(),
-                TAG_A as PatternId
-            );
-            assert_eq!(
-                pattern
-                    .get_vertex_from_tag(TAG_B)
-                    .unwrap()
-                    .get_id(),
-                TAG_B as PatternId
-            );
-            assert_eq!(
-                pattern
-                    .get_vertex_from_tag(TAG_C)
-                    .unwrap()
-                    .get_id(),
-                TAG_C as PatternId
-            );
-            assert_eq!(
-                pattern
-                    .get_vertex_from_tag(TAG_D)
-                    .unwrap()
-                    .get_id(),
-                TAG_D as PatternId
-            );
         } else if let Err(error) = pattern_result {
             panic!("Build pattern from pb message failed: {:?}", error)
         }
@@ -366,28 +258,6 @@ mod tests {
                     .collect::<Vec<&PatternEdge>>()
                     .len(),
                 6
-            );
-            // check Tag
-            assert_eq!(
-                pattern
-                    .get_vertex_from_tag(TAG_A)
-                    .unwrap()
-                    .get_id(),
-                TAG_A as PatternId
-            );
-            assert_eq!(
-                pattern
-                    .get_vertex_from_tag(TAG_B)
-                    .unwrap()
-                    .get_id(),
-                TAG_B as PatternId
-            );
-            assert_eq!(
-                pattern
-                    .get_vertex_from_tag(TAG_C)
-                    .unwrap()
-                    .get_id(),
-                TAG_C as PatternId
             );
         } else if let Err(error) = pattern_result {
             panic!("Build pattern from pb message failed: {:?}", error)
@@ -456,28 +326,6 @@ mod tests {
                     .collect::<Vec<&PatternEdge>>()
                     .len(),
                 2
-            );
-            // check Tag
-            assert_eq!(
-                pattern
-                    .get_vertex_from_tag(TAG_A)
-                    .unwrap()
-                    .get_id(),
-                TAG_A as PatternId
-            );
-            assert_eq!(
-                pattern
-                    .get_vertex_from_tag(TAG_B)
-                    .unwrap()
-                    .get_id(),
-                TAG_B as PatternId
-            );
-            assert_eq!(
-                pattern
-                    .get_vertex_from_tag(TAG_C)
-                    .unwrap()
-                    .get_id(),
-                TAG_C as PatternId
             );
         } else if let Err(error) = pattern_result {
             panic!("Build pattern from pb message failed: {:?}", error)
