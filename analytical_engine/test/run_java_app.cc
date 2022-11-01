@@ -220,7 +220,7 @@ void QueryProperty(vineyard::Client& client,
                    const std::string& basic_params,
                    const std::string& selector_string,
                    const std::string& selectors_string) {
-  using AppType = gs::JavaPIEPropertyParallelApp<FragmentType>;
+  using AppType = gs::JavaPIEPropertyParallelAppOE<FragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
   auto spec = grape::DefaultParallelEngineSpec();
@@ -339,7 +339,7 @@ void QueryProjected(vineyard::Client& client,
                     const std::string& basic_params,
                     const std::string& selector_string,
                     const std::string& selectors_string) {
-  using AppType = gs::JavaPIEProjectedParallelApp<ProjectedFragmentType>;
+  using AppType = gs::JavaPIEProjectedParallelAppOE<ProjectedFragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
   auto spec = grape::DefaultParallelEngineSpec();
