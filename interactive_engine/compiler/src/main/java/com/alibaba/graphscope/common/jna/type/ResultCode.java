@@ -31,8 +31,9 @@ public enum ResultCode implements IntEnum<ResultCode> {
     ParentNotFoundError,
     ColumnNotExistError,
     TableNotExistError,
+    TagNotExistError,
     UnSupported,
-    Unknown;
+    Others;
 
     @Override
     public int getInt() {

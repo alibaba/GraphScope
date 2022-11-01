@@ -19,8 +19,8 @@ RPC_TARGET ?= start_rpc_server
 ARTIFACTS_DIR ?= .
 
 image-vineyard-runtime:
-	cd $(WORKING_DIR)/../.. && docker build -t ${REGISTRY}/$(DOCKER_ORG)/vineyard-runtime:${VERSION} \
-		-f $(WORKING_DIR)/runtime/vineyard.Dockerfile .
+	cd $(WORKING_DIR) && docker build --squash -t ${REGISTRY}/$(DOCKER_ORG)/vineyard-runtime:${VERSION} \
+		-f $(WORKING_DIR)/vineyard.Dockerfile .
 
 image-coordinator:
 	cd $(WORKING_DIR)/../.. && docker build --target coordinator -t ${REGISTRY}/$(DOCKER_ORG)/coordinator:${VERSION} -f $(WORKING_DIR)/coordinator.Dockerfile .
@@ -63,7 +63,6 @@ image-learning:
 
 
 push:
-	docker push ${REGISTRY}/$(DOCKER_ORG)/vineyard-runtime:${VERSION}
 	docker push ${REGISTRY}/$(DOCKER_ORG)/coordinator:${VERSION}
 	docker push ${REGISTRY}/$(DOCKER_ORG)/analytical:${VERSION}
 	docker push ${REGISTRY}/$(DOCKER_ORG)/analytical-java:${VERSION}

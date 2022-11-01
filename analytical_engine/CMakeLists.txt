@@ -210,8 +210,15 @@ if (ENABLE_JAVA_SDK)
     include_directories(SYSTEM ${JAVA_INCLUDE_PATH2})
 endif()
 
-include("cmake/FindGRPC.cmake")
-include_directories(${GRPC_INCLUDE_DIR})
+find_package(gRPC QUIET)
+if(gRPC_FOUND)
+    set(GRPC_LIBRARIES gRPC::gpr gRPC::grpc gRPC::grpc++)
+    get_target_property(GRPC_CPP_PLUGIN gRPC::grpc_cpp_plugin LOCATION)
+    get_target_property(GRPC_INCLUDE_DIR gRPC::grpc INTERFACE_INCLUDE_DIRECTORIES)
+else()
+    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindGRPC.cmake)
+    set(GRPC_LIBRARIES ${GPR_LIBRARY} ${GRPC_LIBRARY} ${GRPC_GRPC++_LIBRARY})
+endif()
 
 # Generate proto
 execute_process(COMMAND python3 python/graphscope/proto/proto_generator.py "${PROJECT_SOURCE_DIR}" --cpp
@@ -224,11 +231,9 @@ file(GLOB CORE_RPC_SRC_FILES "core/server/*.cc")
 add_library(gs_proto SHARED ${PROTO_CPP_FILES})
 set_source_files_properties(${PROTO_CPP_FILES} PROPERTIES COMPILE_FLAGS -Wno-array-bounds)
 target_include_directories(gs_proto PRIVATE "${PROJECT_SOURCE_DIR}/proto")
-target_link_libraries(gs_proto
+target_link_libraries(gs_proto PUBLIC
         ${Protobuf_LIBRARIES}
-        ${GRPC_LIBRARY}
-        ${GRPC_GRPC++_LIBRARY}
-        ${GRPC_GRPC++_REFLECTION_LIBRARY}
+        ${GRPC_LIBRARIES}
     )
 
 add_library(gs_util SHARED "core/flags.cc" "core/launcher.cc")

@@ -14,7 +14,7 @@
 //! limitations under the License.
 //
 
-use pegasus::api::{Collect, CorrelatedSubTask, Count, Filter, Fold, FoldByKey, KeyBy, Map, Sink};
+use pegasus::api::{Collect, CorrelatedSubTask, Count, Filter, Fold, FoldByKey, KeyBy, Map, Sink, SortBy};
 use pegasus::JobConf;
 
 #[test]
