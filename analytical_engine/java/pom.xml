@@ -305,6 +305,12 @@
           <artifactId>maven-javadoc-plugin</artifactId>
           <version>${maven.javadoc.version}</version>
           <configuration>
+            <groups>
+              <group>
+                <title>GraphScope</title>
+                <packages>com.alibaba.graphscope*</packages>
+              </group>
+            </groups>
             <javadocExecutable>${java.home}/../bin/javadoc</javadocExecutable>
             <sourceFileExcludes>
               <sourceFileExclude>**/*GenGen.java</sourceFileExclude>
