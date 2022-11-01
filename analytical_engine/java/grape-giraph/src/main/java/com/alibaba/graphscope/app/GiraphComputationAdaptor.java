@@ -118,10 +118,10 @@ public class GiraphComputationAdaptor<OID_T, VID_T, VDATA_T, EDATA_T> extends Co
                 break;
             }
             if (ctx.getUserComputation().getConf().getGrapeVidClass().equals(Long.class)) {
-                Long lid = (Long) grapeVertex.GetValue();
+                Long lid = (Long) grapeVertex.getValue();
                 logger.info(
                         "Vertex: "
-                                + grapeVertex.GetValue()
+                                + grapeVertex.getValue()
                                 + ", oid: "
                                 + vertexIdManager.lid2Oid(lid)
                                 + ", vdata: "
@@ -134,10 +134,10 @@ public class GiraphComputationAdaptor<OID_T, VID_T, VDATA_T, EDATA_T> extends Co
                     .getConf()
                     .getGrapeVidClass()
                     .equals(Integer.class)) {
-                Integer lid = (Integer) grapeVertex.GetValue();
+                Integer lid = (Integer) grapeVertex.getValue();
                 logger.info(
                         "Vertex: "
-                                + grapeVertex.GetValue()
+                                + grapeVertex.getValue()
                                 + ", oid: "
                                 + vertexIdManager.lid2Oid(lid)
                                 + ", vdata: "
@@ -176,7 +176,7 @@ public class GiraphComputationAdaptor<OID_T, VID_T, VDATA_T, EDATA_T> extends Co
                 giraphMessageManager.anyMessageReceived(),
                 ctx.allHalted());
         if (giraphMessageManager.anyMessageReceived() || !ctx.allHalted()) {
-            messageManager.ForceContinue();
+            messageManager.forceContinue();
         }
 
         // do aggregation.
@@ -254,7 +254,7 @@ public class GiraphComputationAdaptor<OID_T, VID_T, VDATA_T, EDATA_T> extends Co
                 ctx.allHalted());
 
         if (giraphMessageManager.anyMessageReceived() || !ctx.allHalted()) {
-            messageManager.ForceContinue();
+            messageManager.forceContinue();
         }
     }
 }

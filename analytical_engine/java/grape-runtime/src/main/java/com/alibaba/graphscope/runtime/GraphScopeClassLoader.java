@@ -23,8 +23,6 @@ import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -234,31 +232,6 @@ public class GraphScopeClassLoader {
             ret[i] = res.get(i);
         }
         return ret;
-    }
-
-    /**
-     * Get the actual argument a child class has to implement a generic interface.
-     *
-     * @param baseClass  baseclass
-     * @param childClass child class
-     * @param <T>        type to evaluation
-     * @return
-     */
-    public static <T> Class<?>[] getTypeArgumentFromInterface(
-            Class<T> baseClass, Class<? extends T> childClass) {
-        Type type = childClass.getGenericInterfaces()[0];
-        Class<?>[] classes;
-        if (type instanceof ParameterizedType) {
-            ParameterizedType parameterizedType = (ParameterizedType) type;
-            Type[] typeParams = parameterizedType.getActualTypeArguments();
-            classes = new Class<?>[typeParams.length];
-            for (int i = 0; i < typeParams.length; ++i) {
-                classes[i] = (Class<?>) typeParams[i];
-            }
-            return classes;
-        } else {
-            throw new IllegalStateException("Not a parameterized type");
-        }
     }
 
     private static Class<?> loadFFIClassFromTypeFactory(

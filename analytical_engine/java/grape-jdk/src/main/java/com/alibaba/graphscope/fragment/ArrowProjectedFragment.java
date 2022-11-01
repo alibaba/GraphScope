@@ -26,6 +26,7 @@ import com.alibaba.fastffi.CXXValue;
 import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFITypeAlias;
+import com.alibaba.graphscope.ds.BaseTypedArray;
 import com.alibaba.graphscope.ds.ProjectedAdjList;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.utils.JNILibraryName;
@@ -45,9 +46,7 @@ import com.alibaba.graphscope.utils.JNILibraryName;
 @CXXHead(system = "stdint.h")
 @FFITypeAlias(CPP_ARROW_PROJECTED_FRAGMENT)
 public interface ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>
-        extends BaseArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>,
-                SimpleEdgeData<EDATA_T>,
-                SimpleVertexData<VDATA_T> {
+        extends BaseArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T> {
 
     @FFINameAlias("GetIncomingAdjList")
     @CXXValue
@@ -57,7 +56,11 @@ public interface ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>
     @CXXValue
     ProjectedAdjList<VID_T, EDATA_T> getOutgoingAdjList(@CXXReference Vertex<VID_T> vertex);
 
-    @FFINameAlias("GetData")
+    @FFINameAlias("get_edata_array_accessor")
     @CXXReference
-    VDATA_T getData(@CXXReference Vertex<VID_T> vertex);
+    BaseTypedArray<EDATA_T> getEdataArrayAccessor();
+
+    @FFINameAlias("get_vdata_array_accessor")
+    @CXXReference
+    BaseTypedArray<VDATA_T> getVdataArrayAccessor();
 }

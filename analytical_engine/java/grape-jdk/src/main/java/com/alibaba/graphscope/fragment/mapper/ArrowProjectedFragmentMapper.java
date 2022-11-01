@@ -28,7 +28,7 @@ import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
-import com.alibaba.graphscope.arrow.array.ArrowArrayBuilder;
+import com.alibaba.graphscope.arrow.array.BaseArrowArrayBuilder;
 import com.alibaba.graphscope.fragment.ArrowFragment;
 import com.alibaba.graphscope.fragment.ArrowProjectedFragment;
 import com.alibaba.graphscope.graphx.VineyardClient;
@@ -47,8 +47,8 @@ public interface ArrowProjectedFragmentMapper<OID_T, VID_T, NEW_V_T, NEW_E_T> ex
             @CXXReference StdSharedPtr<ArrowFragment<OID_T>> oldFrag,
             int vLabelId,
             int eLabel,
-            @CXXReference ArrowArrayBuilder<NEW_V_T> vdBuilder,
-            @CXXReference ArrowArrayBuilder<NEW_E_T> edBuilder,
+            @CXXReference BaseArrowArrayBuilder<NEW_V_T> vdBuilder,
+            @CXXReference BaseArrowArrayBuilder<NEW_E_T> edBuilder,
             @CXXReference VineyardClient client);
 
     // only vd
@@ -58,7 +58,7 @@ public interface ArrowProjectedFragmentMapper<OID_T, VID_T, NEW_V_T, NEW_E_T> ex
             @CXXReference StdSharedPtr<ArrowFragment<OID_T>> oldFrag,
             int vLabe,
             int oldEPropId,
-            @CXXReference ArrowArrayBuilder<NEW_V_T> vdBuilder,
+            @CXXReference BaseArrowArrayBuilder<NEW_V_T> vdBuilder,
             @CXXReference VineyardClient client);
 
     @FFIFactory

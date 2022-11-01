@@ -26,19 +26,19 @@ public class VertexTest {
     @Test
     public void test1() {
         Vertex<Long> vertex = FFITypeFactoryhelper.newVertexLong();
-        vertex.SetValue(1L);
-        Assert.assertTrue(vertex.GetValue().equals(1L));
+        vertex.setValue(1L);
+        Assert.assertTrue(vertex.getValue().equals(1L));
         Vertex<Long> other = FFITypeFactoryhelper.newVertexLong();
-        other.SetValue(1L);
+        other.setValue(1L);
         Assert.assertTrue(vertex.eq(other));
     }
 
     @Test
     public void test2() {
         Vertex<Long> vertex = FFITypeFactoryhelper.newVertexLong();
-        vertex.SetValue(0L);
+        vertex.setValue(0L);
         int cnt = 0;
-        while (vertex.GetValue().longValue() != 10) {
+        while (vertex.getValue().longValue() != 10) {
             vertex.inc();
             cnt += 1;
         }

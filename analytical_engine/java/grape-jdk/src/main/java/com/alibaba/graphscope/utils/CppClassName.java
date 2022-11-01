@@ -67,38 +67,16 @@ public class CppClassName {
     public static final String GRAPE_COMMUNICATOR = "grape::Communicator";
 
     public static final String CPP_ARROW_PROJECTED_FRAGMENT = "gs::ArrowProjectedFragment";
-    public static final String CPP_ARROW_PROJECTED_STRING_VD_FRAGMENT =
-            "gs::ArrowProjectedStringVDFragment";
-    public static final String CPP_ARROW_PROJECTED_STRING_ED_FRAGMENT =
-            "gs::ArrowProjectedStringEDFragment";
-    public static final String CPP_ARROW_PROJECTED_STRING_VED_FRAGMENT =
-            "gs::ArrowProjectedStringVEDFragment";
 
     public static final String CPP_ARROW_PROJECTED_FRAGMENT_MAPPER =
             "gs::ArrowProjectedFragmentMapper";
-    public static final String CPP_ARROW_PROJECTED_STRING_VD_FRAGMENT_MAPPER =
-            "gs::ArrowProjectedStringVDFragmentMapper";
-    public static final String CPP_ARROW_PROJECTED_STRING_ED_FRAGMENT_MAPPER =
-            "gs::ArrowProjectedStringEDFragmentMapper";
-    public static final String CPP_ARROW_PROJECTED_STRING_VED_FRAGMENT_MAPPER =
-            "gs::ArrowProjectedStringVEDFragmentMapper";
 
     public static final String CPP_ARROW_PROJECTED_FRAGMENT_GETTER =
             "gs::ArrowProjectedFragmentGetter";
-    public static final String CPP_ARROW_PROJECTED_STRING_VD_FRAGMENT_GETTER =
-            "gs::ArrowProjectedStringVDFragmentGetter";
-    public static final String CPP_ARROW_PROJECTED_STRING_ED_FRAGMENT_GETTER =
-            "gs::ArrowProjectedStringEDFragmentGetter";
-    public static final String CPP_ARROW_PROJECTED_STRING_VED_FRAGMENT_GETTER =
-            "gs::ArrowProjectedStringVEDFragmentGetter";
 
     public static final String PROJECTED_ADJ_LIST =
             "gs::arrow_projected_fragment_impl::AdjListDefault";
-    public static final String PROJECTED_ADJ_LIST_STR_DATA =
-            "gs::arrow_projected_fragment_impl::AdjListStrData";
     public static final String PROJECTED_NBR = "gs::arrow_projected_fragment_impl::NbrDefault";
-    public static final String PROJECTED_NBR_STR_DATA =
-            "gs::arrow_projected_fragment_impl::NbrStrData";
 
     public static final String STD_UNORDERED_MAP = "std::unordered_map";
     public static final String GS_VERTEX_ARRAY = "gs::VertexArrayDefault";

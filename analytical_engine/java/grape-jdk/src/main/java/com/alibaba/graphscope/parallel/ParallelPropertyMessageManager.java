@@ -40,7 +40,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
-/** As PropertyParalleMessager.h has not much difference from ParallelMessageManager. */
+/**
+ * As PropertyParalleMessager.h has not much difference from ParallelMessageManager.
+ */
 @FFITypeAlias(GS_PARALLEL_PROPERTY_MESSAGE_MANAGER)
 @CXXHead({
     CORE_PARALLEL_PARALLEL_PROPERTY_MESSAGE_MANAGER_H,
@@ -65,10 +67,10 @@ public interface ParallelPropertyMessageManager extends MessageManagerBase {
     /**
      * SyncState on outer vertex without message, used in bfs etc.
      *
-     * @param frag fragment.
-     * @param vertex query vertex.
+     * @param frag       fragment.
+     * @param vertex     query vertex.
      * @param channel_id message channel id.
-     * @param <FRAG_T> fragment type.
+     * @param <FRAG_T>   fragment type.
      */
     @FFINameAlias("SyncStateOnOuterVertex")
     <FRAG_T extends ArrowFragment, @FFISkip OID> void syncStateOnOuterVertexNoMsg(
@@ -104,14 +106,13 @@ public interface ParallelPropertyMessageManager extends MessageManagerBase {
     @FFINameAlias("GetMessages")
     boolean getMessageInBuffer(@CXXReference MessageInBuffer buf);
 
-    default <FRAG_T extends IFragment, MSG_T, @FFISkip VDATA_T> void parallelProcess(
+    default <FRAG_T extends IFragment, MSG_T, @FFISkip UNUSED_T> void parallelProcess(
             FRAG_T frag,
             int vertexLabelId,
             int threadNum,
             ExecutorService executor,
             Supplier<MSG_T> msgSupplier,
-            TriConsumer<Vertex<Long>, MSG_T, Integer> consumer,
-            @FFISkip VDATA_T unused) {
+            TriConsumer<Vertex<Long>, MSG_T, Integer> consumer) {
         CountDownLatch countDownLatch = new CountDownLatch(threadNum);
         MessageInBuffer.Factory bufferFactory = FFITypeFactoryhelper.newMessageInBuffer();
         int chunkSize = 1024;
@@ -129,7 +130,7 @@ public interface ParallelPropertyMessageManager extends MessageManagerBase {
                                 result = getMessageInBuffer(messageInBuffer);
 
                                 if (result) {
-                                    while (messageInBuffer.getMessage(frag, vertex, msg, unused)) {
+                                    while (messageInBuffer.getMessage(frag, vertex, msg)) {
                                         consumer.accept(vertex, msg, vertexLabelId);
                                     }
                                 } else {
@@ -151,21 +152,19 @@ public interface ParallelPropertyMessageManager extends MessageManagerBase {
     /**
      * This define the parallel process for default labelid, i.e. 0.
      *
-     * @param <FRAG_T> fragment type, ArrowFragment
-     * @param <MSG_T> message type.
-     * @param frag fragment.
-     * @param threadNum num thread.
-     * @param executor Executor service.
+     * @param <MSG_T>     message type.
+     * @param frag        fragment.
+     * @param threadNum   num thread.
+     * @param executor    Executor service.
      * @param msgSupplier lambda for msg creation.
-     * @param consumer consumer.
+     * @param consumer    consumer.
      */
-    default <FRAG_T extends ArrowFragment, MSG_T, @FFISkip VDATA_T> void parallelProcess(
-            FRAG_T frag,
+    default <OID_T, VID_T, MSG_T> void parallelProcess(
+            ArrowFragment<OID_T> frag,
             int threadNum,
             ExecutorService executor,
             Supplier<MSG_T> msgSupplier,
-            BiConsumer<Vertex<Long>, MSG_T> consumer,
-            @FFISkip VDATA_T unused) {
+            BiConsumer<Vertex<Long>, MSG_T> consumer) {
         CountDownLatch countDownLatch = new CountDownLatch(threadNum);
         MessageInBuffer.Factory bufferFactory = FFITypeFactoryhelper.newMessageInBuffer();
         for (int tid = 0; tid < threadNum; ++tid) {
@@ -183,7 +182,7 @@ public interface ParallelPropertyMessageManager extends MessageManagerBase {
                                 result = getMessageInBuffer(messageInBuffer);
 
                                 if (result) {
-                                    while (messageInBuffer.getMessage(frag, vertex, msg, unused)) {
+                                    while (messageInBuffer.getMessage(frag, vertex, msg, 2L)) {
                                         consumer.accept(vertex, msg);
                                     }
                                 } else {

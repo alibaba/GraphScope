@@ -107,10 +107,10 @@ public class SSSPContext extends VertexDataContext<IFragment<Long, Long, Long, L
 
             Vertex<Long> cur = FFITypeFactoryhelper.newVertexLong();
             for (long index = 0; index < frag.getInnerVerticesNum(); ++index) {
-                cur.SetValue(index);
+                cur.setValue(index);
                 Long oid = frag.getId(cur);
                 bufferedWriter.write(
-                        cur.GetValue() + "\t" + oid + "\t" + partialResults.get(index) + "\n");
+                        cur.getValue() + "\t" + oid + "\t" + partialResults.get(index) + "\n");
             }
             bufferedWriter.close();
         } catch (IOException e) {

@@ -25,6 +25,7 @@ import com.alibaba.fastffi.FFIGen;
 import com.alibaba.graphscope.column.DoubleColumn;
 import com.alibaba.graphscope.column.IntColumn;
 import com.alibaba.graphscope.column.LongColumn;
+import com.alibaba.graphscope.ds.StringView;
 import com.alibaba.graphscope.stdcxx.StdSharedPtr;
 import com.squareup.javapoet.AnnotationSpec;
 
@@ -218,8 +219,10 @@ public class Utils {
             return Integer.class.getName();
         } else if (cppType.equals("double")) {
             return Double.class.getName();
+        } else if (cppType.equals("std::string")) {
+            return StringView.class.getName();
         }
-        return null;
+        throw new IllegalStateException("Not recognized cpp " + cppType);
     }
 
     public static String java2Cpp(String javaType, boolean signed) {
@@ -233,6 +236,8 @@ public class Utils {
             } else return "uint32_t";
         } else if (javaType.equals("java.lang.Double") || javaType.equals("Double")) {
             return "double";
+        } else if (javaType.equals("com.alibaba.graphscope.ds.StringView")) {
+            return "std::string";
         }
         throw new IllegalStateException("Unrecognized type " + javaType + " sign: " + signed);
     }
