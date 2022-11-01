@@ -266,6 +266,46 @@ jobs:
           graphscope.tar.gz
         retention-days: 5
 
+  build-gie-artifacts:
+    # Require the user id of the self-hosted is 1001, which may need to be
+    # configured manually when a new self-hosted runner is added.
+    runs-on: [self-hosted, manylinux2014]
+    if: ${{ github.repository == 'alibaba/GraphScope' }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ~/.cache/sccache
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build GIE Artifacts
+        run: |
+          source ~/.bashrc
+          cd ${GITHUB_WORKSPACE}/k8s/standalone && make artifacts-interactive-experimental RPC_TARGET=start_rpc_server_k8s
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: gie-artifacts-${{ github.sha }}
+          path: |
+            gie-artifacts.tar.gz
+          retention-days: 5
+
   mini-test:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
@@ -750,6 +790,7 @@ jobs:
           # hdfs dfs -test -e /ldbc_sample/res.csv_0 && hdfs dfs -test -e /ldbc_sample/res.csv_1
 
   gie-k8s-failover-test:
+    needs: [build-gie-artifacts]
     runs-on: [self-hosted, ubuntu2004]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
@@ -781,10 +822,9 @@ jobs:
       - name: Prepare Docker Image
         run: |
           # build gie-exp-runtime image
-          cd ${GITHUB_WORKSPACE}/k8s/standalone
-          make image-interactive-experimental VERSION=${SHORT_SHA}
+          cd ${GITHUB_WORKSPACE}/k8s/standalone && make image-interactive-experimental-local-artifacts ARTIFACTS_DIR=artifacts/gie-artifacts-${{ github.sha }} VERSION=${SHORT_SHA}
 
-      - name: prepare Graph Data
+      - name: Prepare Graph Data
         env:
           GS_TEST_DIR: ${{ github.workspace }}/gstest
         run: |
