@@ -836,7 +836,7 @@ jobs:
         run: |
           cd ${GITHUB_WORKSPACE}/charts
           # create local persistent volume which contains graph data for test
-          kubectl apply -f ./ir-standalone/pvc.yaml
+          kubectl apply -f ./ir-standalone/tools/pvc.yaml
           # create gie instance (compiler & executor & exp storage)
           helm install test ./ir-standalone \
               --set image.repository=graphscope/image-interactive-experimental \
