@@ -1090,7 +1090,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         )
         setattr(self._analytical_engine_process, "stdout_watcher", stdout_watcher)
         setattr(self._analytical_engine_process, "stderr_watcher", stderr_watcher)
-        time.sleep(2)  # TODO: monitor engine process instead of sleep
+        time.sleep(4)  # TODO: monitor engine process instead of sleep
 
     def _delete_dangling_coordinator(self):
         # delete service
