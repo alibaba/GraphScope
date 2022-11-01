@@ -294,7 +294,7 @@ impl TryFrom<Vec<PatternEdge>> for Pattern {
             }
             Ok(new_pattern)
         } else {
-            Err(IrPatternError::InvalidPattern("Empty pattern".to_string()))
+            Err(IrPatternError::InvalidExtendPattern("Empty pattern".to_string()))
         }
     }
 }
@@ -470,7 +470,7 @@ impl Pattern {
     /// Generate a naive extend based pattern match plan
     pub fn generate_simple_extend_match_plan(&self) -> IrPatternResult<pb::LogicalPlan> {
         if self.get_vertices_num() == 0 {
-            Err(IrPatternError::InvalidPattern(format!("Empty pattern {:?}", self)))?
+            Err(IrPatternError::InvalidExtendPattern(format!("Empty pattern {:?}", self)))?
         }
         let mut trace_pattern = self.clone();
         let mut exact_extend_steps = vec![];
@@ -499,7 +499,7 @@ impl Pattern {
                     }
                 }
                 if select_vertex_id == usize::MAX {
-                    Err(IrPatternError::InvalidPattern("The pattern is not connected".to_string()))?
+                    Err(IrPatternError::InvalidExtendPattern("The pattern is not connected".to_string()))?
                 }
                 let exact_extend_step =
                     ExactExtendStep::from_target_pattern(&trace_pattern, select_vertex_id)?;
@@ -524,7 +524,7 @@ fn build_logical_plan(
     let source_extend = match exact_extend_steps.pop() {
         Some(src_extend) => src_extend,
         None => {
-            return Err(IrPatternError::InvalidPattern(
+            return Err(IrPatternError::InvalidExtendPattern(
                 "Build logical plan error: from empty extend steps!".to_string(),
             ))
         }
@@ -619,7 +619,7 @@ fn build_logical_plan(
                 exact_extend_step
                     .iter()
                     .last()
-                    .ok_or(IrPatternError::InvalidPattern(format!(
+                    .ok_or(IrPatternError::InvalidExtendPattern(format!(
                         "Empty exact_extend_step in exact_extend_step, the exact_extend_step is {:?}",
                         exact_extend_step
                     )))?;
@@ -643,7 +643,7 @@ fn build_logical_plan(
                 }
             }
         } else {
-            return Err(IrPatternError::InvalidPattern(
+            return Err(IrPatternError::InvalidExtendPattern(
                 "Build logical plan error: extend step is not source but has 0 edges".to_string(),
             ));
         }
@@ -656,7 +656,7 @@ fn build_logical_plan(
     let max_tag_id = origin_pattern.get_max_tag_id() as i32;
     let max_vertex_id = origin_pattern
         .get_max_vertex_id()
-        .ok_or(IrPatternError::InvalidPattern(format!("Empty pattern {:?}", origin_pattern)))?
+        .ok_or(IrPatternError::InvalidExtendPattern(format!("Empty pattern {:?}", origin_pattern)))?
         as i32;
     if max_vertex_id >= max_tag_id {
         let remove_tags = (max_tag_id..max_vertex_id + 1)

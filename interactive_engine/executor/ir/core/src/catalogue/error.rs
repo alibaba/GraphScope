@@ -8,7 +8,7 @@ pub enum IrPatternError {
     MissingPatternVertex(PatternId),
     MissingPatternEdge(PatternId),
     CanonicalLabelError(String),
-    InvalidPattern(String),
+    InvalidExtendPattern(String),
     ParsePbError(ParsePbError),
     Unsupported(String),
 }
@@ -27,7 +27,7 @@ impl std::fmt::Display for IrPatternError {
             IrPatternError::CanonicalLabelError(err) => {
                 write!(f, "error in canonical labelling: {:?}", err)
             }
-            IrPatternError::InvalidPattern(err) => {
+            IrPatternError::InvalidExtendPattern(err) => {
                 write!(f, "invalid pattern with ExtendStrategy: {:?}", err)
             }
             IrPatternError::ParsePbError(err) => {

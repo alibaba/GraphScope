@@ -216,6 +216,7 @@
                     <excludes>
                         <exclude>**/IrGremlinTest.java</exclude>
                         <exclude>**/IrLdbcTest.java</exclude>
+                        <exclude>**/IrPatternTest.java</exclude>
                     </excludes>
                 </configuration>
             </plugin>
