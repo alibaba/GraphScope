@@ -824,23 +824,34 @@ jobs:
           # build gie-exp-runtime image
           cd ${GITHUB_WORKSPACE}/k8s/standalone && make image-interactive-experimental-local-artifacts ARTIFACTS_DIR=artifacts/gie-artifacts-${{ github.sha }} VERSION=${SHORT_SHA}
 
-      - name: Prepare Graph Data
+      - name: Prepare Cluster and Data
         env:
           GS_TEST_DIR: ${{ github.workspace }}/gstest
+          STORE_DATA_PATH: /tmp/data
+          GIE_IMAGE: registry.cn-hongkong.aliyuncs.com/graphscope/interactive-experimental
         run: |
+          # prepare graph data
           git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
-          mkdir -p /tmp/data
-          cp -r ${GS_TEST_DIR}/modern_graph_exp_bin/* /tmp/data
+          mkdir -p ${STORE_DATA_PATH}
+          cp -r ${GS_TEST_DIR}/modern_graph_exp_bin/* ${STORE_DATA_PATH}
+
+          # prepare minikube cluster
+          minikube start --base-image='registry-vpc.cn-hongkong.aliyuncs.com/graphscope/kicbase:v0.0.30' \
+          --cpus='12' --memory='32000mb' --disk-size='40000mb' \
+          --mount=true --mount-string="${STORE_DATA_PATH}:${STORE_DATA_PATH}"
+          minikube image load ${GIE_IMAGE}:${SHORT_SHA}
+
+          # install python gremlin client
+          pip install gremlinpython
 
       - name: Run K8S Failover Test
         run: |
           cd ${GITHUB_WORKSPACE}/charts
-          sleep 100000
           # create local persistent volume which contains graph data for test
           kubectl apply -f ./ir-standalone/tools/pvc.yaml
           # create gie instance (compiler & executor & exp storage)
           helm install test ./ir-standalone \
-              --set image.repository=graphscope/image-interactive-experimental \
+              --set image.repository=graphscope/interactive-experimental \
               --set image.tag=${SHORT_SHA} --set storageType=Experimental \
               --set schemaConfig=expr_modern_schema.json \
               --set store.replicaCount=2 \
