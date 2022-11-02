@@ -835,9 +835,7 @@ jobs:
       - name: Run K8S Failover Test
         run: |
           cd ${GITHUB_WORKSPACE}/charts
-          sleep 60000
           # create local persistent volume which contains graph data for test
-          ll 
           kubectl apply -f ./ir-standalone/tools/pvc.yaml
           # create gie instance (compiler & executor & exp storage)
           helm install test ./ir-standalone \
