@@ -174,6 +174,9 @@ public class OfflineBuildOdps {
         job.set(OSS_BUCKET_NAME, ossBucketName);
         job.set(OSS_OBJECT_NAME, ossObjectName);
 
+        // Avoid java sandbox protection
+        job.set("odps.isolation.session.enable", "true");
+
         for (Map.Entry<String, GraphElement> entry : tableType.entrySet()) {
             if (entry.getValue() instanceof GraphVertex || entry.getValue() instanceof GraphEdge) {
                 String name = entry.getKey();
