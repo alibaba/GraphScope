@@ -24,12 +24,10 @@
 #include "vineyard/client/client.h"
 #include "vineyard/graph/fragment/arrow_fragment.h"
 
-#include "apps/lpa/lpa_u2i.h"
 #include "apps/property/auto_sssp_property.h"
 #include "apps/property/auto_wcc_property.h"
 #include "apps/property/sssp_property.h"
 #include "apps/property/wcc_property.h"
-#include "apps/sampling_path/sampling_path.h"
 #include "bfs/bfs.h"
 #include "cdlp/cdlp.h"
 #include "lcc/lcc.h"
@@ -278,8 +276,7 @@ void RunProjectedPR(std::shared_ptr<ProjectedFragmentType> fragment,
 }
 
 void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
-         vineyard::ObjectID id, bool run_projected, const std::string& app_name,
-         const std::string& path_pattern) {
+         vineyard::ObjectID id, bool run_projected) {
   std::shared_ptr<FragmentType> fragment =
       std::dynamic_pointer_cast<FragmentType>(client.GetObject(id));
 
@@ -307,7 +304,7 @@ int main(int argc, char** argv) {
     printf(
         "usage: ./run_vy_app <ipc_socket> <e_label_num> <efiles...> "
         "<v_label_num> <vfiles...> <run_projected>"
-        "[directed] [app_name]\n");
+        "[directed]\n");
     return 1;
   }
   int index = 1;
@@ -332,9 +329,6 @@ int main(int argc, char** argv) {
   std::string path_pattern = "";
   if (argc > index) {
     directed = atoi(argv[index++]);
-  }
-  if (argc > index) {
-    app_name = argv[index++];
   }
 
   grape::InitMPIComm();
@@ -373,7 +367,7 @@ int main(int argc, char** argv) {
 
     MPI_Barrier(comm_spec.comm());
 
-    Run(client, comm_spec, fragment_id, run_projected, app_name, path_pattern);
+    Run(client, comm_spec, fragment_id, run_projected);
 
     MPI_Barrier(comm_spec.comm());
   }
