@@ -33,6 +33,7 @@ class RawGraphData[VD: ClassTag, ED: ClassTag](
     val partitionNum: Int,
     val vineyardClient: VineyardClient,
     val hostName: String,
+    val parallelism: Int,
     val shuffleHolders: Array[DataShuffleHolder[VD, ED]]
 ) extends Logging {
 
@@ -101,14 +102,14 @@ class RawGraphData[VD: ClassTag, ED: ClassTag](
           castedShuffle(i) = shuffles(i).asInstanceOf[DefaultDataShuffle[VD, ED]]
         }
         processDefaultShufflesToEdges(
-          Runtime.getRuntime.availableProcessors(),
+          parallelism,
           castedShuffle
         )
       }
       case customDataShuffle: CustomDataShuffle[VD, ED] => {
         val customShuffles = shuffles.map(_.asInstanceOf[CustomDataShuffle[VD, ED]])
         processCustomShufflesToEdges(
-          Runtime.getRuntime.availableProcessors(),
+          parallelism,
           customShuffles.filter(_.numEdges > 0)
         )
       }

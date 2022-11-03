@@ -22,12 +22,13 @@ import com.alibaba.graphscope.graphx.utils.GrapeUtils
 import com.alibaba.graphscope.utils.PythonInterpreter
 import org.apache.spark.SparkContext
 import org.apache.spark.graphx.grape.GrapeGraphImpl
-import org.apache.spark.graphx.scheduler.cluster.ExecutorInfoHelper
 import org.apache.spark.internal.Logging
+import org.apache.spark.scheduler.cluster.ExecutorInfoHelper
 import org.apache.spark.sql.GSSparkSession
 
 import java.util.concurrent.atomic.AtomicInteger
 import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 
 /** A wrapper for GraphScope python session. socketPath indicate vineyard already started.
@@ -40,17 +41,22 @@ class GSClientWrapper(
 
   val graph2GraphName: mutable.HashMap[GrapeGraphImpl[_, _], String] =
     new mutable.HashMap[GrapeGraphImpl[_, _], String]()
-  val executorInfo              = ExecutorInfoHelper.getExecutorsHost2Id(sc)
-  val executorNum               = executorInfo.size
-  val gsHostsArr: Array[String] = executorInfo.keys.toArray.distinct.sorted
+  val executorInfo: mutable.HashMap[String, ArrayBuffer[String]] = ExecutorInfoHelper.getExecutorsHost2Id(sc)
+  val executorNum: Int                                           = executorInfo.values.toIterator.map(_.size).sum
+  val hostsNum                                                   = executorInfo.keys.size
+  val gsHostsArr: Array[String]                                  = executorInfo.keys.toArray.distinct.sorted
   log.info(s"Available executors ${executorInfo.toIterator.toArray
     .mkString(",")}, hosts str ${gsHostsArr.map(v => "\'" + v + "\'").mkString(",")}")
   val pythonInterpreter = new PythonInterpreter
   pythonInterpreter.init()
   pythonInterpreter.runCommand("import graphscope")
   pythonInterpreter.runCommand("graphscope.set_option(show_log=True)")
+  //NOTICE: Please notice that graphscope cluster will launch one and only one process in each worker(host),
+  //but in spark, we can have more than one executor on same host. Our solution works around find, since we
+  //don't talk to spark, we talk to the vineyard server. So as long as there are enough shared memory, our
+  //program is ok.
   var initSessionCmd: String =
-    "sess = graphscope.session(cluster_type=\"hosts\", num_workers=" + executorNum +
+    "sess = graphscope.session(cluster_type=\"hosts\", num_workers=" + hostsNum +
       ", hosts=" + arr2PythonArrStr(gsHostsArr)
   //vineyard socket
   if (socketPath != null && socketPath.nonEmpty) {
