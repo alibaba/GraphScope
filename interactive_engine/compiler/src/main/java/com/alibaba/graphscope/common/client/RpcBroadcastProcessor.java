@@ -55,7 +55,7 @@ public class RpcBroadcastProcessor implements AutoCloseable {
             }
             processor.finish();
         } catch (Throwable e) {
-            logger.error("broadcast exception {}", e);
+            logger.error("get result from grpc returns error {}", e);
             processor.error(Status.fromThrowable(e));
         } finally {
             if (iterator != null) {
