@@ -1,0 +1,139 @@
+{{- $frontendFullname := include "graphscope-store.frontend.fullname" . }}
+{{- $storeFullname := include "graphscope-store.store.fullname" . }}
+{{- $releaseNamespace := .Release.Namespace }}
+{{- $clusterDomain := .Values.clusterDomain }}
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "graphscope-store.frontend.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "graphscope-store.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+    {{- if .Values.commonLabels }}
+    {{- include "graphscope-store.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "graphscope-store.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.frontend.replicaCount }}
+  selector:
+    matchLabels: {{ include "graphscope-store.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: frontend
+  serviceName: {{ include "graphscope-store.frontend.fullname" . }}-headless
+  updateStrategy:
+    type: {{ .Values.frontend.updateStrategy }}
+    {{- if (eq "Recreate" .Values.frontend.updateStrategy) }}
+    rollingUpdate: null
+    {{- end }}
+  template:
+    metadata:
+      annotations:
+        {{- if .Values.frontend.podAnnotations }}
+        {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.frontend.podAnnotations "context" $) | nindent 8 }}
+        {{- end }}
+      labels: {{- include "graphscope-store.labels" . | nindent 8 }}
+        app.kubernetes.io/component: frontend
+        {{- if .Values.commonLabels }}
+        {{- include "graphscope-store.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "graphscope-store.serviceAccountName" . }}
+      {{- if .Values.frontend.affinity }}
+      affinity: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.frontend.affinity "context" $) | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- if .Values.frontend.initContainers }}
+        {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.frontend.initContainers "context" $) | nindent 8 }}
+        {{- end }}
+      containers:
+        - name: frontend
+          image: {{ include "graphscope-store.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          command:
+          {{- if (eq "Vineyard" .Values.storageType) }}
+            - /bin/bash
+            - -c
+            - |
+              object_id=0
+              GRAPHSCOPE_RUNTIME=/tmp/gs/${object_id}
+              mkdir -p $GRAPHSCOPE_RUNTIME
+
+              runtime_hosts=""
+              i=0
+              while [ $i -ne $SERVERSSIZE ]
+              do
+                pod=`echo $DNS_NAME_PREFIX_STORE | sed -e "s/{}/$i/g"`
+                runtime_hosts="${runtime_hosts},${pod}:${GAIA_RPC_PORT}"
+                i=$(($i+1))
+              done
+              runtime_hosts=${runtime_hosts:1}
+
+              config_path=/etc/graphscope-store/config
+
+              $GRAPHSCOPE_HOME/bin/giectl start_frontend ${GRAPHSCOPE_RUNTIME} ${object_id} \
+                  $config_path/$GRAPH_SCHEMA $runtime_hosts $GREMLIN_SERVER_PORT $EXTRA_CONFIG
+
+              exit_code=$?
+              while [ $exit_code -eq 0 ]
+              do
+              sleep 10
+              done
+          {{- end }}
+          {{- if (eq "Experimental" .Values.storageType) }}
+            - /bin/bash
+            - -c
+            - |
+              cd /opt/GraphScope/interactive_engine/compiler && ./set_properties.sh
+              java -cp ".:./target/libs/*:./target/compiler-1.0-SNAPSHOT.jar" \
+                -Djna.library.path=../executor/ir/target/release \
+                -Dgraph.schema=/etc/graphscope-store/config/$GRAPH_SCHEMA com.alibaba.graphscope.gremlin.service.GraphServiceMain
+          {{- end }}
+          env:
+            - name: GAIA_RPC_PORT
+              value: {{ .Values.store.service.gaiaRpc | quote }}
+            - name: GREMLIN_SERVER_PORT
+              value: {{ .Values.frontend.service.gremlinPort | quote }}
+            - name: DNS_NAME_PREFIX_STORE
+              value: {{ $storeFullname }}-{}.{{ $storeFullname }}-headless.{{ $releaseNamespace }}.svc.{{ $clusterDomain }}
+            - name: SERVERSSIZE
+              value: {{ .Values.store.replicaCount | quote }}
+            - name: GRAPH_SCHEMA
+              value: {{ .Values.schemaConfig | quote }}
+            - name: EXTRA_CONFIG
+              value: {{ .Values.extraConfig | quote }}
+            - name: WORKER_NUM
+              value: {{ .Values.pegasusWorkerNum | quote }}
+            - name: TIMEOUT
+              value: {{ .Values.pegasusTimeout | quote }}
+            - name: BATCH_SIZE
+              value: {{ .Values.pegasusBatchSize | quote }}
+            - name: OUTPUT_CAPACITY
+              value: {{ .Values.pegasusOutputCapacity | quote }}
+          ports:
+            - name: gremlin
+              containerPort: {{ .Values.frontend.service.gremlinPort }}
+          {{- if .Values.frontend.readinessProbe.enabled }}
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.frontend.service.gremlinPort }}
+            initialDelaySeconds: {{ .Values.frontend.readinessProbe.initialDelaySeconds }}
+            timeoutSeconds: {{ .Values.frontend.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.frontend.readinessProbe.failureThreshold }}
+            periodSeconds: {{ .Values.frontend.readinessProbe.periodSeconds }}
+            successThreshold: {{ .Values.frontend.readinessProbe.successThreshold }}
+          {{- end }}
+          {{- if .Values.frontend.resources }}
+          resources: {{- toYaml .Values.frontend.resources | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/graphscope-store/config
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "graphscope-store.configmapName" . }}

@@ -1,0 +1,84 @@
+/*
+* Copyright 2022 Alibaba Group Holding Limited.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*  	http://www.apache.org/licenses/LICENSE-2.0
+*
+*  Unless required by applicable law or agreed to in writing, software
+*  distributed under the License is distributed on an "AS IS" BASIS,
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+*  See the License for the specific language governing permissions and
+*  limitations under the License.
+*/
+syntax = "proto3";
+
+//import "google/protobuf/empty.proto";
+//import "google/protobuf/struct.proto";
+
+option java_multiple_files = true;
+option java_package = "com.alibaba.RDDReaderTransfer";
+option java_outer_classname = "RDDReaderTransferProto";
+option objc_class_prefix = "HLW";
+
+//For cpp namespace
+package RDDReaderTransfer;
+
+service GetArray{
+    rpc GetPartitionInfo(PartInfoRequest) returns (PartitionInfo) {}
+    rpc GetPartitionItem(ItemRequest) returns (stream PartitionItem) {}
+    rpc RpcClose(CloseRequest) returns (CloseResponse) {}
+}
+
+message PartInfoRequest {
+    bool req = 1;
+}
+
+message ItemRequest {
+    bool req = 1;
+}
+
+message CloseRequest {
+    bool req = 1;
+}
+
+message CloseResponse {
+    bool close = 1;
+}
+
+
+//没有scala中的char，short，Byte
+message essential_type {
+    oneof essential {
+        int32 int_data = 1;
+        int64 long_data = 2;
+        float float_data = 3;
+        double double_data = 4;
+        bool bool_data = 5;
+        string string_data = 6;
+    }
+}
+
+message array_type {
+    repeated essential_type item = 1;
+}
+
+message basic_type {
+    oneof basic {
+        essential_type essen = 1;
+        array_type array = 2;
+    }
+}
+
+message PartitionInfo {
+    int32 partitionId = 1;
+    int32 partitionCnt = 2;
+    string dataType = 3;
+}
+
+message PartitionItem {
+    repeated basic_type basic_data = 1;
+}
+

@@ -174,6 +174,15 @@ public class OfflineBuildOdps {
         job.set(OSS_BUCKET_NAME, ossBucketName);
         job.set(OSS_OBJECT_NAME, ossObjectName);
 
+        // Avoid java sandbox protection
+        job.set("odps.isolation.session.enable", "true");
+        // Don't introduce legacy jar files
+        job.set("odps.sql.udf.java.retain.legacy", "false");
+        // Default priority is 9
+        job.set("odps.instance.priority", "1");
+        job.set("odps.mr.run.mode", "sql");
+        job.set("odps.mr.sql.group.enable", "true");
+
         for (Map.Entry<String, GraphElement> entry : tableType.entrySet()) {
             if (entry.getValue() instanceof GraphVertex || entry.getValue() instanceof GraphEdge) {
                 String name = entry.getKey();

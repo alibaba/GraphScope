@@ -27,11 +27,11 @@ import org.apache.hadoop.io.LongWritable
 import org.apache.spark.annotation.Stable
 import org.apache.spark.graphx.grape.{GrapeEdgeRDD, GrapeGraphImpl, GrapeVertexRDD}
 import org.apache.spark.graphx.impl.GraphImpl
-import org.apache.spark.graphx.scheduler.cluster.ExecutorInfoHelper
 import org.apache.spark.graphx.{Graph, PartitionID, VertexId}
 import org.apache.spark.internal.Logging
 import org.apache.spark.internal.config.{ConfigEntry, EXECUTOR_ALLOW_SPARK_CONTEXT}
 import org.apache.spark.rdd.RDD
+import org.apache.spark.scheduler.cluster.ExecutorInfoHelper
 import org.apache.spark.scheduler.{SparkListener, SparkListenerApplicationEnd}
 import org.apache.spark.sql.internal.StaticSQLConf.CATALOG_IMPLEMENTATION
 import org.apache.spark.sql.internal._
@@ -62,19 +62,25 @@ class GSSparkSession(sparkContext: SparkContext) extends SparkSession(sparkConte
       )
   }
 
-  /** On the creation of GSSpark session, we will start the python interpreter.
+  /** We will start the python interpreter in lazy mode, since computing resources can be added after session
+    * launched..
     */
-  @transient val interpreter =
-    new GSClientWrapper(sparkContext, socketPath, sharedMemSize)
   private val creationSite: CallSite = Utils.getCallSite()
-  var socketPath: String = {
+  val userSocketPath: String = {
     if (sparkContext.getConf.contains("spark.gs.vineyard.sock")) {
       sparkContext.getConf.get("spark.gs.vineyard.sock")
     } else ""
   }
-  if (socketPath.equals("")) {
-    log.info(s"Update socket path from GraphScope: ${socketPath}")
-    socketPath = interpreter.startedSocket
+  @transient lazy val interpreter =
+    new GSClientWrapper(sparkContext, userSocketPath, sharedMemSize)
+
+  def getSocketPath: String = {
+    if (userSocketPath.equals("")) {
+      log.info(s"Update socket path from GraphScope: ${interpreter.startedSocket}")
+      interpreter.startedSocket
+    } else {
+      userSocketPath
+    }
   }
 
   override def stop(): Unit = {
@@ -203,17 +209,16 @@ class GSSparkSession(sparkContext: SparkContext) extends SparkSession(sparkConte
   ): GrapeGraphImpl[VD, ED] = {
     log.info("in fromDataShuffle")
     val executorInfo = ExecutorInfoHelper.getExecutorsHost2Id(sc)
-    val executorNum  = executorInfo.size
+    val executorNum  = executorInfo.values.map(_.size).sum
     //construct
     //gather the host <-> partition id info.
-    val (hostArray, pid2Host) = GrapeUtils.extractHostInfo(
+    val (host2Pids, pid2Host) = GrapeUtils.extractHostInfo(
       dataShuffles.asInstanceOf[RDD[(Int, _)]],
       numPartitions
     )
-    val numWorker = hostArray.length
-    val numFrag   = Math.min(numWorker, executorNum)
+    val numFrag = Math.min(numPartitions, executorNum)
     log.info(
-      s"numFrag ${numFrag}, num worker ${numWorker}, executor Num ${executorNum}"
+      s"numFrag ${numFrag}, num partitions ${numPartitions}, executor Num ${executorNum}"
     )
 
     //gather all received into one
@@ -230,7 +235,6 @@ class GSSparkSession(sparkContext: SparkContext) extends SparkSession(sparkConte
             }
             Iterator(edgeShuffleReceived)
           } else {
-            log.info("In gather encounter empty")
             Iterator.empty
           }
         },
@@ -245,7 +249,7 @@ class GSSparkSession(sparkContext: SparkContext) extends SparkSession(sparkConte
       numPartitions,
       gathered,
       numFrag,
-      hostArray,
+      host2Pids,
       executorInfo,
       vertexStorageLevel,
       edgeStorageLevel

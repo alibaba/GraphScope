@@ -1,0 +1,16 @@
+annotations:
+  category: Database
+apiVersion: v2
+appVersion: latest
+description: Chart to create a GraphScope Store cluster (Ir on Vineyard)
+home: https://graphscope.io
+keywords:
+  - GraphScope
+  - database
+  - cluster
+name: graphscope-store
+sources:
+  - https://github.com/alibaba/GraphScope/tree/main/interactive_engine/
+version: v2
+
+dependencies:

@@ -60,6 +60,7 @@
     <module>grape-giraph</module>
     <module>grape-demo</module>
     <module>grape-runtime</module>
+    <module>grape-rdd-reader</module>
   </modules>
 
   <properties>
@@ -96,6 +97,10 @@
     <maven.javadoc.version>3.3.1</maven.javadoc.version>
     <javadoc.output.directory>grape-jdk-javadoc</javadoc.output.directory>
     <javadoc.output.destDir>grape-jdk-javadoc</javadoc.output.destDir>
+    <grpc.version>1.47.0</grpc.version>
+    <protobuf.version>3.19.2</protobuf.version>
+    <protoc.version>3.19.2</protoc.version>
+    <scala.version>2.12.15</scala.version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -225,6 +230,11 @@
         <version>${spark.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.apache.spark</groupId>
+        <artifactId>spark-yarn_2.12</artifactId>
+        <version>${spark.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-all</artifactId>
         <version>1.10.19</version>
@@ -295,8 +305,7 @@
           <artifactId>maven-javadoc-plugin</artifactId>
           <version>${maven.javadoc.version}</version>
           <configuration>
-            <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
-<!--            <excludePackageNames>com.alibaba.graphscope.graphx.*</excludePackageNames>-->
+            <javadocExecutable>${java.home}/../bin/javadoc</javadocExecutable>
             <sourceFileExcludes>
               <sourceFileExclude>**/*GenGen.java</sourceFileExclude>
               <sourceFileExclude>**/Unused*.java</sourceFileExclude>

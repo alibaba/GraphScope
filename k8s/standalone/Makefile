@@ -15,9 +15,12 @@ endif
 VERSION ?= latest
 PROFILE ?= release
 
+RPC_TARGET ?= start_rpc_server
+ARTIFACTS_DIR ?= .
+
 image-vineyard-runtime:
-	cd $(WORKING_DIR)/../.. && docker build -t ${REGISTRY}/$(DOCKER_ORG)/vineyard-runtime:${VERSION} \
-		-f $(WORKING_DIR)/runtime/vineyard.Dockerfile .
+	cd $(WORKING_DIR) && docker build --squash -t ${REGISTRY}/$(DOCKER_ORG)/vineyard-runtime:${VERSION} \
+		-f $(WORKING_DIR)/vineyard.Dockerfile .
 
 image-coordinator:
 	cd $(WORKING_DIR)/../.. && docker build --target coordinator -t ${REGISTRY}/$(DOCKER_ORG)/coordinator:${VERSION} -f $(WORKING_DIR)/coordinator.Dockerfile .
@@ -38,13 +41,28 @@ image-interactive-executor:
 image-interactive-experimental:
 	cd $(WORKING_DIR)/../.. && docker build --target experimental -t ${REGISTRY}/$(DOCKER_ORG)/interactive-experimental:${VERSION} -f $(WORKING_DIR)/interactive-experimental.Dockerfile .
 
+artifacts-interactive-experimental:
+	cd $(WORKING_DIR)/../../interactive_engine/compiler && make build rpc.target=$(RPC_TARGET)
+	cd $(WORKING_DIR)/../.. \
+		&& tar -cvzf gie-artifacts.tar.gz interactive_engine/compiler/target/libs \
+		interactive_engine/compiler/target/compiler-1.0-SNAPSHOT.jar \
+		interactive_engine/compiler/conf \
+		interactive_engine/compiler/set_properties.sh \
+		interactive_engine/executor/ir/target/release/libir_core.so \
+		interactive_engine/executor/ir/target/release/$(RPC_TARGET)
+
+image-interactive-experimental-local-artifacts:
+	cd $(WORKING_DIR)/../.. && docker build --target experimental \
+		--build-arg ARTIFACTS_DIR=$(ARTIFACTS_DIR) \
+		-t ${REGISTRY}/$(DOCKER_ORG)/interactive-experimental:${VERSION} \
+		-f $(WORKING_DIR)/interactive-experimental-local-artifacts.Dockerfile .
+
 image-learning:
 	cd $(WORKING_DIR)/../.. && docker build --target learning -t ${REGISTRY}/$(DOCKER_ORG)/learning:${VERSION} -f $(WORKING_DIR)/learning.Dockerfile .
 
 
 
 push:
-	docker push ${REGISTRY}/$(DOCKER_ORG)/vineyard-runtime:${VERSION}
 	docker push ${REGISTRY}/$(DOCKER_ORG)/coordinator:${VERSION}
 	docker push ${REGISTRY}/$(DOCKER_ORG)/analytical:${VERSION}
 	docker push ${REGISTRY}/$(DOCKER_ORG)/analytical-java:${VERSION}
