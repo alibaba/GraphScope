@@ -92,9 +92,9 @@ public class CppClassName {
     public static final String GS_GRAPHX_RAW_DATA_BUILDER = "gs::GraphXRawDataBuilder";
     public static final String GS_DEFAULT_IMMUTABLE_CSR = "gs::DefaultImmutableCSR";
     public static final String GS_ARROW_ARRAY_BUILDER = "gs::ArrowArrayBuilder";
-    public static final String GS_ARROW_STRING_ARRAY_BUILDER = "gs::ArrowStringArrayBuilder";
+    public static final String GS_ARROW_STRING_ARRAY_BUILDER = "gs::ArrowArrayBuilder<std::string>";
     public static final String GS_ARROW_ARRAY = "gs::ArrowArray";
-    public static final String GS_ARROW_STRING_ARRAY = "gs::ArrowStringArray";
+    public static final String GS_ARROW_STRING_ARRAY = "gs::ArrowArray<std::string>";
 
     public static final String ARROW_STATUS = "arrow::Status";
     public static final String VINEYARD_STATUS = "vineyard::Status";
