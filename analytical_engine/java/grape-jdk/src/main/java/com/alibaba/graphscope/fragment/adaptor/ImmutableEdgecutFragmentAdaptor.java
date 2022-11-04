@@ -30,13 +30,41 @@ public class ImmutableEdgecutFragmentAdaptor<OID_T, VID_T, VDATA_T, EDATA_T>
         implements IFragment<OID_T, VID_T, VDATA_T, EDATA_T> {
     public static String fragmentType = "ImmutableEdgecutFragment";
     private ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T> fragment;
+    private Class<? extends OID_T> oidClass;
+    private Class<? extends VID_T> vidClass;
+    private Class<? extends VDATA_T> vdataClass;
+    private Class<? extends EDATA_T> edataClass;
 
-    public ImmutableEdgecutFragmentAdaptor(
-            ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T> frag) {
-        fragment = frag;
+    public Class<? extends OID_T> getOidClass() {
+        return oidClass;
     }
 
-    public ImmutableEdgecutFragment getImmutableFragment() {
+    public Class<? extends VID_T> getVidClass() {
+        return vidClass;
+    }
+
+    public Class<? extends VDATA_T> getVdataClass() {
+        return vdataClass;
+    }
+
+    public Class<? extends EDATA_T> getEdataClass() {
+        return edataClass;
+    }
+
+    public ImmutableEdgecutFragmentAdaptor(
+            ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T> frag,
+            Class<? extends OID_T> oidClass,
+            Class<? extends VID_T> vidClass,
+            Class<? extends VDATA_T> vdataClass,
+            Class<? extends EDATA_T> edataClass) {
+        fragment = frag;
+        this.oidClass = oidClass;
+        this.vidClass = vidClass;
+        this.vdataClass = vdataClass;
+        this.edataClass = edataClass;
+    }
+
+    public ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T> getImmutableFragment() {
         return fragment;
     }
 

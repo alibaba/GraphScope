@@ -53,6 +53,7 @@ import com.alibaba.graphscope.context.ffi.FFIVertexPropertyContext;
 import com.alibaba.graphscope.ds.PropertyAdjList;
 import com.alibaba.graphscope.ds.PropertyNbr;
 import com.alibaba.graphscope.ds.PropertyRawAdjList;
+import com.alibaba.graphscope.ds.StringView;
 import com.alibaba.graphscope.fragment.ArrowFragment;
 import com.alibaba.graphscope.fragment.ArrowProjectedFragment;
 import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
@@ -701,9 +702,21 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
         }
 
         addGraphTypeWrapper(classBuilder, "vidType", getVidType());
-        addGraphTypeWrapper(classBuilder, "edataType", getEdataType());
-        addGraphTypeWrapper(classBuilder, "oidType", getOidType());
-        addGraphTypeWrapper(classBuilder, "vdataType", getVdataType());
+        if (isSameType(getEdataType(), StringView.class)) {
+            logger.info("Skip generating vector<> for StringView");
+        } else {
+            addGraphTypeWrapper(classBuilder, "edataType", getEdataType());
+        }
+        if (isSameType(getOidType(), StringView.class)) {
+            logger.info("Skip generating vector<> for StringView");
+        } else {
+            addGraphTypeWrapper(classBuilder, "oidType", getOidType());
+        }
+        if (isSameType(getVdataType(), StringView.class)) {
+            logger.info("Skip generating vector<> for StringView");
+        } else {
+            addGraphTypeWrapper(classBuilder, "vdataType", getVdataType());
+        }
 
         String packageName = packageElement.getQualifiedName().toString();
         writeTypeSpec(packageName, classBuilder.build());
@@ -920,6 +933,7 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
         writer.append("namespace grape {\n");
         writer.format("using OID_T = %s;\n", getForeignTypeName(getOidType()));
         writer.format("using VID_T = %s;\n", getVidForeignTypeName(getVidType()));
+        // std::string <-> StringView
         writer.format("using VDATA_T = %s;\n", getForeignTypeName(getVdataType()));
         writer.format("using EDATA_T = %s;\n", getForeignTypeName(getEdataType()));
         writer.append("\n\n");
@@ -1034,7 +1048,8 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
         if (typeMirror instanceof ArrayType) {
             throw new IllegalStateException("No array is supported: " + typeMirror);
         }
-        if (isSameType(typeMirror, FFIByteString.class)) {
+        if (isSameType(typeMirror, FFIByteString.class)
+                || isSameType(typeMirror, StringView.class)) {
             return name ? "std::string" : "<string>";
         }
         if (!name) {

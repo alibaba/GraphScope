@@ -16,24 +16,27 @@
 
 package com.alibaba.graphscope.parallel;
 
+import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFIPointer;
 
 /** Base interface for all messageManagers. */
 public interface MessageManagerBase extends FFIPointer {
 
-    void Start();
+    @FFINameAlias("Start")
+    void start();
 
-    void StartARound();
+    @FFINameAlias("StartARound")
+    void startARound();
 
-    void FinishARound();
+    @FFINameAlias("FinishARound")
+    void finishARound();
 
-    void Finalize();
+    @FFINameAlias("ToTerminate")
+    boolean toTerminate();
 
-    boolean ToTerminate();
+    @FFINameAlias("GetMsgSize")
+    long getMsgSize();
 
-    long GetMsgSize();
-
-    void ForceContinue();
-    // void sumDouble(double msg_in, @CXXReference @FFITypeAlias("grape::DoubleMsg") DoubleMsg
-    // msg_out);
+    @FFINameAlias("ForceContinue")
+    void forceContinue();
 }

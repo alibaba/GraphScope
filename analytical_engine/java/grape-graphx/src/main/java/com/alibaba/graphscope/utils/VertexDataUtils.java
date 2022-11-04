@@ -17,7 +17,7 @@
 package com.alibaba.graphscope.utils;
 
 import com.alibaba.fastffi.FFITypeFactory;
-import com.alibaba.graphscope.arrow.array.ArrowArrayBuilder;
+import com.alibaba.graphscope.arrow.array.PrimitiveArrowArrayBuilder;
 import com.alibaba.graphscope.ds.StringTypedArray;
 import com.alibaba.graphscope.graphx.utils.DoubleDouble;
 import com.alibaba.graphscope.serialization.FFIByteVectorOutputStream;
@@ -79,28 +79,29 @@ public class VertexDataUtils {
         return new Tuple2<>(ffiByteVectorOutput.getVector(), ffiOffset);
     }
 
-    private static <VD> ArrowArrayBuilder<VD> newArrowArrayBuilder(Class<? extends VD> clz) {
+    private static <VD> PrimitiveArrowArrayBuilder<VD> newArrowArrayBuilder(
+            Class<? extends VD> clz) {
         if (clz.equals(Long.class) || clz.equals(long.class)) {
-            ArrowArrayBuilder.Factory<VD> factory =
+            PrimitiveArrowArrayBuilder.Factory<VD> factory =
                     FFITypeFactory.getFactory(
-                            ArrowArrayBuilder.class, "gs::ArrowArrayBuilder<int64_t>");
+                            PrimitiveArrowArrayBuilder.class, "gs::ArrowArrayBuilder<int64_t>");
             return factory.create();
         } else if (clz.equals(Double.class) || clz.equals(double.class)) {
-            ArrowArrayBuilder.Factory<VD> factory =
+            PrimitiveArrowArrayBuilder.Factory<VD> factory =
                     FFITypeFactory.getFactory(
-                            ArrowArrayBuilder.class, "gs::ArrowArrayBuilder<double>");
+                            PrimitiveArrowArrayBuilder.class, "gs::ArrowArrayBuilder<double>");
             return factory.create();
         } else if (clz.equals(Integer.class) || clz.equals(int.class)) {
-            ArrowArrayBuilder.Factory<VD> factory =
+            PrimitiveArrowArrayBuilder.Factory<VD> factory =
                     FFITypeFactory.getFactory(
-                            ArrowArrayBuilder.class, "gs::ArrowArrayBuilder<int32_t>");
+                            PrimitiveArrowArrayBuilder.class, "gs::ArrowArrayBuilder<int32_t>");
             return factory.create();
         } else {
             throw new IllegalStateException("Not recognized " + clz.getName());
         }
     }
 
-    public static <T> T[] readComplexArray(StringTypedArray oldArray, Class<? extends T> clz)
+    public static <T> T[] readComplexArray(StringTypedArray oldArray, Class<T> clz)
             throws IOException, ClassNotFoundException {
         FakeFFIByteVector vector =
                 new FakeFFIByteVector(oldArray.getRawData(), oldArray.getRawDataLength());

@@ -83,7 +83,7 @@ public class BooleanArrayWrapper {
     }
 
     public boolean get(Vertex<Long> vertex) {
-        return data[vertex.GetValue().intValue()];
+        return data[vertex.getValue().intValue()];
     }
 
     public void set(int ind, boolean newValue) {
@@ -91,7 +91,7 @@ public class BooleanArrayWrapper {
     }
 
     public void set(Vertex<Long> vertex, boolean newvalue) {
-        data[vertex.GetValue().intValue()] = newvalue;
+        data[vertex.getValue().intValue()] = newvalue;
     }
 
     public void set(long ind, boolean newValue) {

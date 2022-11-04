@@ -46,7 +46,7 @@ public class AtomicLongArrayWrapper {
     }
 
     public long get(Vertex<Long> vertex) {
-        return data.get(vertex.GetValue().intValue());
+        return data.get(vertex.getValue().intValue());
     }
 
     public void set(int ind, long newValue) {
@@ -58,7 +58,7 @@ public class AtomicLongArrayWrapper {
     }
 
     public void set(Vertex<Long> vertex, long newValue) {
-        int lid = vertex.GetValue().intValue();
+        int lid = vertex.getValue().intValue();
         data.set(lid, newValue);
     }
 
@@ -86,7 +86,7 @@ public class AtomicLongArrayWrapper {
     }
 
     public void compareAndSetMin(Vertex<Long> vertex, long newValue) {
-        int lid = vertex.GetValue().intValue();
+        int lid = vertex.getValue().intValue();
         long preValue;
         do {
             preValue = data.get(lid);
@@ -107,7 +107,7 @@ public class AtomicLongArrayWrapper {
      * @param newValue new value.
      */
     public void compareAndSetMinUnsigned(Vertex<Long> vertex, long newValue) {
-        int lid = vertex.GetValue().intValue();
+        int lid = vertex.getValue().intValue();
         long preValue;
         do {
             preValue = data.get(lid);

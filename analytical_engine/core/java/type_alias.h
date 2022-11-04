@@ -138,14 +138,25 @@ template <typename FRAG_T>
 using IntColumn = Column<FRAG_T, uint32_t>;
 
 template <typename T>
-using ArrowArrayBuilder = typename vineyard::ConvertToArrowType<T>::BuilderType;
+struct ConvertToArrowType {
+  using BuilderType = typename vineyard::ConvertToArrowType<T>::BuilderType;
+  using ArrayType = typename vineyard::ConvertToArrowType<T>::ArrayType;
+};
 
-using ArrowStringArrayBuilder = typename gs::ArrowArrayBuilder<std::string>;
+/** Add one specialization for string_view, we will need this in Java FFI.*/
+template <>
+struct ConvertToArrowType<arrow::util::string_view> {
+  using BuilderType =
+      typename vineyard::ConvertToArrowType<std::string>::BuilderType;
+  using ArrayType =
+      typename vineyard::ConvertToArrowType<std::string>::ArrayType;
+};
 
 template <typename T>
-using ArrowArray = typename vineyard::ConvertToArrowType<T>::ArrayType;
+using ArrowArrayBuilder = typename ConvertToArrowType<T>::BuilderType;
 
-using ArrowStringArray = typename gs::ArrowArray<std::string>;
+template <typename T>
+using ArrowArray = typename ConvertToArrowType<T>::ArrayType;
 
 }  // namespace gs
 

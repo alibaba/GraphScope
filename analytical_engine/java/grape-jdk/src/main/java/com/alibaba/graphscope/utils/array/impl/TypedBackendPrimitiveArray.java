@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.utils.array.impl;
 
-import com.alibaba.graphscope.ds.TypedArray;
+import com.alibaba.graphscope.ds.PrimitiveTypedArray;
 import com.alibaba.graphscope.utils.array.PrimitiveArray;
 
 /**
@@ -24,9 +24,9 @@ import com.alibaba.graphscope.utils.array.PrimitiveArray;
  */
 public class TypedBackendPrimitiveArray<T> implements PrimitiveArray<T> {
 
-    private TypedArray<T> backend;
+    private PrimitiveTypedArray<T> backend;
 
-    public TypedBackendPrimitiveArray(TypedArray<T> backend) {
+    public TypedBackendPrimitiveArray(PrimitiveTypedArray<T> backend) {
         this.backend = backend;
     }
 

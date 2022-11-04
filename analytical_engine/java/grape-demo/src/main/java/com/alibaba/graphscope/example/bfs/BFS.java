@@ -27,7 +27,6 @@ import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.parallel.ParallelEngine;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
-import com.alibaba.graphscope.utils.Unused;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,15 +55,14 @@ public class BFS implements ParallelAppBase<Long, Long, Double, Long, BFSContext
                 if (ctx.partialResults.get(neighbor) == Integer.MAX_VALUE) {
                     ctx.partialResults.set(neighbor, 1);
                     if (fragment.isOuterVertex(neighbor)) {
-                        messageManager.syncStateOnOuterVertexNoMsg(
-                                fragment, neighbor, 0, Unused.getUnused(Double.class, Long.class));
+                        messageManager.syncStateOnOuterVertexNoMsg(fragment, neighbor, 0);
                     } else {
                         ctx.currentInnerUpdated.set(neighbor);
                     }
                 }
             }
         }
-        messageManager.ForceContinue();
+        messageManager.forceContinue();
     }
 
     @Override
@@ -86,12 +84,7 @@ public class BFS implements ParallelAppBase<Long, Long, Double, Long, BFSContext
                 };
         Supplier<EmptyType> msgSupplier = () -> EmptyType.factory.create();
         messageManager.parallelProcess(
-                fragment,
-                ctx.threadNum,
-                ctx.executor,
-                msgSupplier,
-                receiveMsg,
-                Unused.getUnused(Double.class, Long.class, EmptyType.class));
+                fragment, ctx.threadNum, ctx.executor, msgSupplier, receiveMsg);
 
         BiConsumer<Vertex<Long>, Integer> vertexProcessConsumer =
                 (cur, finalTid) -> {
@@ -102,10 +95,7 @@ public class BFS implements ParallelAppBase<Long, Long, Double, Long, BFSContext
                             ctx.partialResults.set(vertex, nextDepth);
                             if (fragment.isOuterVertex(vertex)) {
                                 messageManager.syncStateOnOuterVertexNoMsg(
-                                        fragment,
-                                        vertex,
-                                        finalTid,
-                                        Unused.getUnused(Double.class, Long.class));
+                                        fragment, vertex, finalTid);
                             } else {
                                 ctx.nextInnerUpdated.insert(vertex);
                             }
@@ -121,7 +111,7 @@ public class BFS implements ParallelAppBase<Long, Long, Double, Long, BFSContext
 
         ctx.currentDepth = nextDepth;
         if (!ctx.nextInnerUpdated.empty()) {
-            messageManager.ForceContinue();
+            messageManager.forceContinue();
         }
         ctx.currentInnerUpdated.assign(ctx.nextInnerUpdated);
     }

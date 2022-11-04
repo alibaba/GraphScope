@@ -30,8 +30,8 @@ public class NbrTest {
     @Test
     public void test1() {
         GrapeNbr<Long, Long> nbr = factory.create(1L);
-        Assert.assertEquals(1, nbr.neighbor().GetValue().longValue());
-        Assert.assertEquals(1, nbr.neighbor().GetValue().longValue());
+        Assert.assertEquals(1, nbr.neighbor().getValue().longValue());
+        Assert.assertEquals(1, nbr.neighbor().getValue().longValue());
     }
 
     @Test
@@ -46,6 +46,6 @@ public class NbrTest {
         GrapeNbr<Long, Long> nbr2 = nbr.copy();
         Assert.assertFalse(nbr.getAddress() == nbr2.getAddress());
         Assert.assertTrue(
-                nbr.neighbor().GetValue().longValue() == nbr.neighbor().GetValue().longValue());
+                nbr.neighbor().getValue().longValue() == nbr.neighbor().getValue().longValue());
     }
 }

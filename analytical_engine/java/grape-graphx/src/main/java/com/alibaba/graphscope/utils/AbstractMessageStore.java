@@ -84,17 +84,12 @@ public abstract class AbstractMessageStore<T> implements MessageStore<T> {
             IFragment<Long, Long, ?, ?> fragment) {
         Class<? extends MSG_T> clz = (Class<? extends MSG_T>) msg.getClass();
         if (clz.equals(Double.class) || clz.equals(Long.class) || clz.equals(Integer.class)) {
-            messageManager.sendMsgThroughIEdges(
-                    fragment,
-                    vertex,
-                    msg,
-                    threadId,
-                    Unused.getUnused(conf.getVdClass(), conf.getEdClass(), conf.getMsgClass()));
+            messageManager.sendMsgThroughIEdges(fragment, vertex, msg, threadId);
         } else {
             if (!fragment.fragmentType().equals(FragmentType.ArrowProjectedFragment)) {
                 throw new IllegalStateException("not supported for non-projected fragment");
             } else {
-                if (vertex.GetValue() % 10000 == 1) {
+                if (vertex.getValue() % 10000 == 1) {
                     logger.info("send complex msg");
                 }
                 ArrowProjectedFragment<Long, Long, ?, ?> baseFrag =
@@ -147,7 +142,7 @@ public abstract class AbstractMessageStore<T> implements MessageStore<T> {
                 if (!fragment.getVertex(oid, vertex)) {
                     throw new IllegalStateException("Error in get vertex for oid " + oid);
                 }
-                lid = Math.toIntExact(vertex.GetValue());
+                lid = Math.toIntExact(vertex.getValue());
             }
             if (nextSet.get(lid)) {
                 mergeAndSet(lid, msg._2());
