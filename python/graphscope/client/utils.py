@@ -264,12 +264,9 @@ class GSLogger(object):
             "%(asctime)s [%(levelname)s][%(module)s:%(lineno)d]: %(message)s"
         )
         stdout_handler.setFormatter(formatter)
-        if gs_config.show_log:
-            stdout_handler.setLevel(gs_config.log_level.upper())
-        else:
-            stdout_handler.setLevel(logging.ERROR)
         logger.addHandler(stdout_handler)
         logger.propagate = False
+        GSLogger.update()
 
     @staticmethod
     def update():
@@ -277,7 +274,9 @@ class GSLogger(object):
             log_level = gs_config.log_level
         else:
             log_level = logging.ERROR
-        logger.setLevel(log_level.upper())
+        if isinstance(log_level, str):
+            log_level = log_level.upper()
+        logger.setLevel(log_level)
         for handler in logger.handlers:
             handler.setLevel(log_level)
 
