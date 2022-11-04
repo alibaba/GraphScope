@@ -55,7 +55,7 @@ kubectl apply -f ir-standalone/tools/pvc.yaml
 image:
   registry: registry.cn-hongkong.aliyuncs.com
   repository: graphscope/gie-exp-runtime
-  tag: ""
+  tag: "latest"
 
 # store num
 store:

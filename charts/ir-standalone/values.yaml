@@ -6,7 +6,7 @@ image:
   registry: registry.cn-hongkong.aliyuncs.com
   repository: graphscope/gie-exp-runtime
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: "latest"
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
   ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images

@@ -32,7 +32,7 @@ coordinator:
   image:
     name: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope
     # Overrides the image tag whose default is the chart appVersion.
-    tag: ""
+    tag: "latest"
   resources:
     requests:
       cpu: 4.0
@@ -59,7 +59,7 @@ engines:
   image:
     name: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope
     # Overrides the image tag whose default is the chart appVersion.
-    tag: ""
+    tag: "latest"
   resources:
     requests:
       cpu: 2.0
@@ -79,7 +79,7 @@ vineyard:
   image:
     name: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope
     # Overrides the image tag whose default is the chart appVersion.
-    tag: ""
+    tag: "latest"
   resources:
     requests:
       cpu: 0.5
@@ -109,7 +109,7 @@ withJupyter: true
 jupyter:
   image:
     name: registry.cn-hongkong.aliyuncs.com/graphscope/jupyter
-    tag: ""
+    tag: "latest"
   resources:
     requests:
       cpu: 1.0
