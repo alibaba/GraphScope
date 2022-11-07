@@ -72,6 +72,7 @@ class ArrowFragmentLoader {
   static constexpr const char* LABEL_TAG = "label";
   static constexpr const char* SRC_LABEL_TAG = "src_label";
   static constexpr const char* DST_LABEL_TAG = "dst_label";
+  static constexpr const char* MARKER = "PROGRESS--GRAPH-LOADING-";
 
   const int id_column = 0;
 
@@ -155,7 +156,7 @@ class ArrowFragmentLoader {
           if (i == 0) {
             labels << "vertex labeled ";  // prefix
           } else {
-            labels << ", ";  // label seperator
+            labels << ", ";  // label separator
           }
           labels << graph_info_->vertices[i]->label;
         }
@@ -167,13 +168,12 @@ class ArrowFragmentLoader {
           if (i == 0) {
             labels << "edge labeled ";  // prefix
           } else {
-            labels << ", ";  // label seperator
+            labels << ", ";  // label separator
           }
           labels << graph_info_->edges[i]->label;
         }
       }
-      LOG_IF(INFO, comm_spec_.worker_id() == 0)
-          << "PROGRESS--GRAPH-LOADING-DESCRIPTION-" << labels.str();
+      LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "DESCRIPTION-" << labels.str();
     }
     BOOST_LEAF_AUTO(v_tables, LoadVertexTables());
     BOOST_LEAF_AUTO(e_tables, LoadEdgeTables());
@@ -181,8 +181,7 @@ class ArrowFragmentLoader {
   }
 
   bl::result<table_vec_t> LoadVertexTables() {
-    LOG_IF(INFO, comm_spec_.worker_id() == 0)
-        << "PROGRESS--GRAPH-LOADING-READ-VERTEX-0";
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "READ-VERTEX-0";
     table_vec_t v_tables;
     if (!vfiles_.empty()) {
       auto load_v_procedure = [&]() {
@@ -204,14 +203,12 @@ class ArrowFragmentLoader {
     for (const auto& table : v_tables) {
       BOOST_LEAF_CHECK(sanityChecks(table));
     }
-    LOG_IF(INFO, comm_spec_.worker_id() == 0)
-        << "PROGRESS--GRAPH-LOADING-READ-VERTEX-100";
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "READ-VERTEX-100";
     return v_tables;
   }
 
   bl::result<std::vector<table_vec_t>> LoadEdgeTables() {
-    LOG_IF(INFO, comm_spec_.worker_id() == 0)
-        << "PROGRESS--GRAPH-LOADING-READ-EDGE-0";
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "READ-EDGE-0";
     std::vector<table_vec_t> e_tables;
     if (!efiles_.empty()) {
       auto load_e_procedure = [&]() {
@@ -235,8 +232,7 @@ class ArrowFragmentLoader {
         BOOST_LEAF_CHECK(sanityChecks(table));
       }
     }
-    LOG_IF(INFO, comm_spec_.worker_id() == 0)
-        << "PROGRESS--GRAPH-LOADING-READ-EDGE-100";
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "READ-EDGE-100";
     return e_tables;
   }
 
@@ -248,7 +244,6 @@ class ArrowFragmentLoader {
     } else {
       return addEdges(frag_id);
     }
-    return vineyard::InvalidObjectID();
   }
 
   bl::result<vineyard::ObjectID> addVerticesAndEdges(
@@ -258,8 +253,7 @@ class ArrowFragmentLoader {
     auto& partial_v_tables = raw_v_e_tables.first;
     auto& partial_e_tables = raw_v_e_tables.second;
 
-    LOG_IF(INFO, comm_spec_.worker_id() == 0)
-        << "PROGRESS--GRAPH-LOADING-CONSTRUCT-VERTEX-0";
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-VERTEX-0";
     auto frag = std::static_pointer_cast<vineyard::ArrowFragment<oid_t, vid_t>>(
         client_.GetObject(frag_id));
     auto schema = frag->schema();
@@ -291,10 +285,8 @@ class ArrowFragmentLoader {
     BOOST_LEAF_CHECK(
         basic_fragment_loader->ConstructVertices(old_vm_ptr->id()));
 
-    LOG_IF(INFO, comm_spec_.worker_id() == 0)
-        << "PROGRESS--GRAPH-LOADING-CONSTRUCT-VERTEX-100";
-    LOG_IF(INFO, comm_spec_.worker_id() == 0)
-        << "PROGRESS--GRAPH-LOADING-CONSTRUCT-EDGE-0";
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-VERTEX-100";
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-EDGE-0";
     partial_v_tables.clear();
     vertex_tables_with_label.clear();
 
@@ -316,10 +308,8 @@ class ArrowFragmentLoader {
 
     BOOST_LEAF_CHECK(basic_fragment_loader->ConstructEdges(
         schema.all_edge_label_num(), schema.all_vertex_label_num()));
-    LOG_IF(INFO, comm_spec_.worker_id() == 0)
-        << "PROGRESS--GRAPH-LOADING-CONSTRUCT-EDGE-100";
-    LOG_IF(INFO, comm_spec_.worker_id() == 0)
-        << "PROGRESS--GRAPH-LOADING-SEAL-0";
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-EDGE-100";
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "SEAL-0";
     return basic_fragment_loader->AddVerticesAndEdgesToFragment(frag);
   }
 
@@ -328,8 +318,7 @@ class ArrowFragmentLoader {
     BOOST_LEAF_AUTO(raw_v_e_tables, LoadVertexEdgeTables());
     auto& partial_v_tables = raw_v_e_tables.first;
 
-    LOG_IF(INFO, comm_spec_.worker_id() == 0)
-        << "PROGRESS--GRAPH-LOADING-CONSTRUCT-VERTEX-0";
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-VERTEX-0";
 
     auto basic_fragment_loader = std::make_shared<
         vineyard::BasicEVFragmentLoader<OID_T, VID_T, partitioner_t>>(
@@ -358,14 +347,10 @@ class ArrowFragmentLoader {
 
     BOOST_LEAF_CHECK(
         basic_fragment_loader->ConstructVertices(frag->GetVertexMap()->id()));
-    LOG_IF(INFO, comm_spec_.worker_id() == 0)
-        << "PROGRESS--GRAPH-LOADING-CONSTRUCT-VERTEX-100";
-    LOG_IF(INFO, comm_spec_.worker_id() == 0)
-        << "PROGRESS--GRAPH-LOADING-CONSTRUCT-EDGE-0";
-    LOG_IF(INFO, comm_spec_.worker_id() == 0)
-        << "PROGRESS--GRAPH-LOADING-CONSTRUCT-EDGE-100";
-    LOG_IF(INFO, comm_spec_.worker_id() == 0)
-        << "PROGRESS--GRAPH-LOADING-SEAL-0";
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-VERTEX-100";
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-EDGE-0";
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-EDGE-100";
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "SEAL-0";
     return basic_fragment_loader->AddVerticesToFragment(frag);
   }
 
@@ -949,18 +934,18 @@ class ArrowFragmentLoader {
     return {};
   }
 
-  // LoadFragment implementation for ArrowVertexMap
+  // LoadFragment implementation for ArrowVertexMap (Global)
   bl::result<vineyard::ObjectID> loadFragmentImpl(std::false_type) {
     BOOST_LEAF_AUTO(partitioner, initPartitioner());
     BOOST_LEAF_AUTO(raw_v_e_tables, LoadVertexEdgeTables());
     auto& partial_v_tables = raw_v_e_tables.first;
     auto& partial_e_tables = raw_v_e_tables.second;
 
-    LOG_IF(INFO, comm_spec_.worker_id() == 0)
-        << "PROGRESS--GRAPH-LOADING-CONSTRUCT-VERTEX-0";
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "PROCESS-INPUTS-0";
 
     BOOST_LEAF_AUTO(v_e_tables, preprocessInputs(partitioner, partial_v_tables,
                                                  partial_e_tables));
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "PROCESS-INPUTS-100";
 
     auto vertex_tables_with_label = v_e_tables.first;
     auto edge_tables_with_label = v_e_tables.second;
@@ -975,11 +960,10 @@ class ArrowFragmentLoader {
       BOOST_LEAF_CHECK(
           basic_fragment_loader->AddVertexTable(pair.first, pair.second));
     }
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-VERTEX-0";
     BOOST_LEAF_CHECK(basic_fragment_loader->ConstructVertices());
-    LOG_IF(INFO, comm_spec_.worker_id() == 0)
-        << "PROGRESS--GRAPH-LOADING-CONSTRUCT-VERTEX-100";
-    LOG_IF(INFO, comm_spec_.worker_id() == 0)
-        << "PROGRESS--GRAPH-LOADING-CONSTRUCT-EDGE-0";
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-VERTEX-100";
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-EDGE-0";
 
     partial_v_tables.clear();
     vertex_tables_with_label.clear();
@@ -992,10 +976,8 @@ class ArrowFragmentLoader {
     edge_tables_with_label.clear();
 
     BOOST_LEAF_CHECK(basic_fragment_loader->ConstructEdges());
-    LOG_IF(INFO, comm_spec_.worker_id() == 0)
-        << "PROGRESS--GRAPH-LOADING-CONSTRUCT-EDGE-100";
-    LOG_IF(INFO, comm_spec_.worker_id() == 0)
-        << "PROGRESS--GRAPH-LOADING-SEAL-0";
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-EDGE-100";
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "SEAL-0";
     return basic_fragment_loader->ConstructFragment();
   }
 
@@ -1007,13 +989,11 @@ class ArrowFragmentLoader {
     auto& partial_v_tables = raw_v_e_tables.first;
     auto& partial_e_tables = raw_v_e_tables.second;
 
-    LOG_IF(INFO, comm_spec_.worker_id() == 0)
-        << "PROGRESS--GRAPH-LOADING-PROCESS-INPUTS-0";
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "PROCESS-INPUTS-0";
     // Process table, maybe construct vertex table from edge tables
     BOOST_LEAF_AUTO(v_e_tables, preprocessInputs(partitioner, partial_v_tables,
                                                  partial_e_tables));
-    LOG_IF(INFO, comm_spec_.worker_id() == 0)
-        << "PROGRESS--GRAPH-LOADING-PROCESS-INPUTS-100";
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "PROCESS-INPUTS-100";
 
     auto vertex_tables_with_label = v_e_tables.first;
     auto edge_tables_with_label = v_e_tables.second;
@@ -1035,12 +1015,10 @@ class ArrowFragmentLoader {
     vertex_tables_with_label.clear();
 
     // Construct the vertices, maybe we need to modify vertex map construction.
-    LOG_IF(INFO, comm_spec_.worker_id() == 0)
-        << "PROGRESS--GRAPH-LOADING-CONSTRUCT-VERTEX-0";
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-VERTEX-0";
     BOOST_LEAF_CHECK(
         basic_fragment_loader->ConstructVertices(vineyard::InvalidObjectID()));
-    LOG_IF(INFO, comm_spec_.worker_id() == 0)
-        << "PROGRESS--GRAPH-LOADING-CONSTRUCT-VERTEX-100";
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-VERTEX-100";
 
     // Add edge table to basic fragment loader
     for (auto& table : edge_tables_with_label) {
@@ -1051,21 +1029,11 @@ class ArrowFragmentLoader {
     edge_tables_with_label.clear();
 
     // Shuffle the edges tables, this would use string oid to shuffle
-    LOG_IF(INFO, comm_spec_.worker_id() == 0)
-        << "PROGRESS--GRAPH-LOADING-SHUFFLE-EDGE-TABLE-0";
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-EDGE-0";
     basic_fragment_loader->ConstructEdges(0, 0);
-    LOG_IF(INFO, comm_spec_.worker_id() == 0)
-        << "PROGRESS--GRAPH-LOADING-SHUFFLE-EDGE-TABLE-100";
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-EDGE-100";
 
-    // Fetch the outer vertices in the edges
-    LOG_IF(INFO, comm_spec_.worker_id() == 0)
-        << "PROGRESS--GRAPH-LOADING-CONSTRUCT-OUTER-VERTEX-0";
-    basic_fragment_loader->ConstructLocalVertexMap();
-    LOG_IF(INFO, comm_spec_.worker_id() == 0)
-        << "PROGRESS--GRAPH-LOADING-CONSTRUCT-OUTER-VERTEX-100";
-
-    LOG_IF(INFO, comm_spec_.worker_id() == 0)
-        << "PROGRESS--GRAPH-LOADING-SEAL-0";
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "SEAL-0";
     return basic_fragment_loader->ConstructFragment();
   }
 

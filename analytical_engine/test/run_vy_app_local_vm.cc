@@ -40,12 +40,11 @@
 
 namespace bl = boost::leaf;
 
+using VertexMapType = vineyard::ArrowLocalVertexMap<int64_t, uint64_t>;
 using FragmentType =
-    vineyard::ArrowFragment<int64_t, uint64_t,
-                            vineyard::ArrowLocalVertexMap<int64_t, uint64_t>>;
+    vineyard::ArrowFragment<int64_t, uint64_t, VertexMapType>;
 using ProjectedFragmentType = gs::ArrowProjectedFragment<
-    int64_t, uint64_t, int64_t, int64_t,
-    vineyard::ArrowLocalVertexMap<int64_t, uint64_t>>;
+    int64_t, uint64_t, int64_t, int64_t, VertexMapType>;
 
 void RunWCC(std::shared_ptr<FragmentType> fragment,
             const grape::CommSpec& comm_spec, const std::string& out_prefix) {
@@ -344,6 +343,7 @@ int main(int argc, char** argv) {
     vineyard::ObjectID fragment_id;
     {
       using oid_t = vineyard::property_graph_types::OID_TYPE;
+      // using oid_t = std::string;
       using vid_t = vineyard::property_graph_types::VID_TYPE;
       using vertex_map_t = vineyard::ArrowLocalVertexMap<
           typename vineyard::InternalType<oid_t>::type, vid_t>;
@@ -363,7 +363,7 @@ int main(int argc, char** argv) {
     }
 
     LOG(INFO) << "[worker-" << comm_spec.worker_id()
-              << "] loaded graph to vineyard ... ";
+              << "] loaded graph to vineyard ... " << fragment_id;
 
     MPI_Barrier(comm_spec.comm());
 
@@ -377,5 +377,4 @@ int main(int argc, char** argv) {
 }
 
 template class gs::ArrowProjectedFragment<
-    int64_t, uint64_t, int64_t, int64_t,
-    vineyard::ArrowLocalVertexMap<int64_t, uint64_t>>;
+    int64_t, uint64_t, int64_t, int64_t, VertexMapType>;
