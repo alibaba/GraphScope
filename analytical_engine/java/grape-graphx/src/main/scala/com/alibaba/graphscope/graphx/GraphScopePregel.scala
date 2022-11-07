@@ -70,7 +70,7 @@ class GraphScopePregel[VD: ClassTag, ED: ClassTag, MSG: ClassTag](
       mergeMsg,
       initialMsg,
       sc.appName,
-      sparkSession.socketPath,
+      sparkSession.getSocketPath,
       activeDirection
     )
 
@@ -94,7 +94,7 @@ class GraphScopePregel[VD: ClassTag, ED: ClassTag, MSG: ClassTag](
       SERIAL_PATH,
       maxIteration,
       numPart,
-      sparkSession.socketPath,
+      sparkSession.getSocketPath,
       sparkSession.userJarPath
     )
     val newVertexRDD =

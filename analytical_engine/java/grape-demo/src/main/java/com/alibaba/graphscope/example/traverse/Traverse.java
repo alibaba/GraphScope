@@ -42,7 +42,7 @@ public class Traverse
                 ctx.vertexArray.setValue(vertex, Math.max(nbr.data(), ctx.vertexArray.get(vertex)));
             }
         }
-        messageManager.ForceContinue();
+        messageManager.forceContinue();
     }
 
     @Override

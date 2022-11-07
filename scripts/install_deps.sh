@@ -604,7 +604,7 @@ install_dependencies() {
         -P /tmp/
       sudo apt install -y -V /tmp/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
       sudo apt update -y
-      sudo apt install -y libarrow-dev libarrow-python-dev
+      sudo apt install -y libarrow-dev
       # remove apache-arrow from packages_to_install
       packages_to_install=("${packages_to_install[@]/apache-arrow}")
     fi

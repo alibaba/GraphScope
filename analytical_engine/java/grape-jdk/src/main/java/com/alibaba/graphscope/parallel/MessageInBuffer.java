@@ -38,6 +38,8 @@ import com.alibaba.graphscope.fragment.ArrowProjectedFragment;
 import com.alibaba.graphscope.fragment.FragmentType;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
+import com.alibaba.graphscope.fragment.adaptor.ArrowProjectedAdaptor;
+import com.alibaba.graphscope.fragment.adaptor.ImmutableEdgecutFragmentAdaptor;
 import com.alibaba.graphscope.utils.JNILibraryName;
 
 @FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
@@ -50,42 +52,58 @@ import com.alibaba.graphscope.utils.JNILibraryName;
     CORE_JAVA_JAVA_MESSAGES_H
 })
 public interface MessageInBuffer extends FFIPointer {
-    default <FRAG_T extends IFragment, MSG_T, @FFISkip VDATA_T> boolean getMessage(
-            @CXXReference FRAG_T frag,
-            @CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex,
-            @CXXReference MSG_T msg,
-            @FFISkip VDATA_T unused) {
+    default <OID_T, VID_T, VDATA_T, EDATA_T, MSG_T, @FFISkip UNUSED_T> boolean getMessage(
+            @CXXReference IFragment<OID_T, VID_T, VDATA_T, EDATA_T> frag,
+            @CXXReference Vertex<VID_T> vertex,
+            @CXXReference MSG_T msg) {
         if (frag.fragmentType().equals(FragmentType.ArrowProjectedFragment)) {
+            ArrowProjectedAdaptor<OID_T, VID_T, VDATA_T, EDATA_T> arrowProjectedAdaptor =
+                    ((ArrowProjectedAdaptor<OID_T, VID_T, VDATA_T, EDATA_T>) frag);
             return getMessageArrowProjected(
-                    (ArrowProjectedFragment) frag.getFFIPointer(), vertex, msg, unused);
+                    arrowProjectedAdaptor.getArrowProjectedFragment(),
+                    vertex,
+                    msg,
+                    MessageUtils.getUnused(arrowProjectedAdaptor, msg.getClass()));
         } else if (frag.fragmentType().equals(FragmentType.ImmutableEdgecutFragment)) {
+            ImmutableEdgecutFragmentAdaptor<OID_T, VID_T, VDATA_T, EDATA_T> immutableAdaptor =
+                    (ImmutableEdgecutFragmentAdaptor<OID_T, VID_T, VDATA_T, EDATA_T>) frag;
             return getMessageImmutable(
-                    (ImmutableEdgecutFragment) frag.getFFIPointer(), vertex, msg, unused);
+                    immutableAdaptor.getImmutableFragment(),
+                    vertex,
+                    msg,
+                    MessageUtils.getUnused(immutableAdaptor, msg.getClass()));
         }
         return false;
     }
 
     @FFINameAlias("GetMessage")
-    <FRAG_T extends ArrowFragment, MSG_T, @FFISkip VDATA_T> boolean getMessage(
+    <FRAG_T extends ArrowFragment, MSG_T, @FFISkip UNUSED> boolean getMessage(
             @CXXReference FRAG_T frag,
             @CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex,
             @CXXReference MSG_T msg,
-            @FFISkip VDATA_T unused);
+            @FFISkip UNUSED unused);
 
     @FFINameAlias("GetMessage")
-    <FRAG_T extends ArrowProjectedFragment, MSG_T, @FFISkip VDATA_T>
+    <
+                    @FFISkip OID_T,
+                    @FFISkip VID_T,
+                    @FFISkip VDATA_T,
+                    @FFISkip EDATA_T,
+                    FRAG_T extends ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>,
+                    MSG_T,
+                    @FFISkip UNUSED_T>
             boolean getMessageArrowProjected(
                     @CXXReference FRAG_T frag,
-                    @CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex,
+                    @CXXReference Vertex<VID_T> vertex,
                     @CXXReference MSG_T msg,
-                    @FFISkip VDATA_T unused);
+                    @FFISkip UNUSED_T unused);
 
     @FFINameAlias("GetMessage")
-    <FRAG_T extends ImmutableEdgecutFragment, MSG_T, @FFISkip VDATA_T> boolean getMessageImmutable(
-            @CXXReference FRAG_T frag,
-            @CXXReference @FFITypeAlias(GRAPE_LONG_VERTEX) Vertex<Long> vertex,
+    <OID_T, VID_T, VDATA_T, EDATA_T, MSG_T, @FFISkip UNUSED_T> boolean getMessageImmutable(
+            @CXXReference ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T> frag,
+            @CXXReference Vertex<VID_T> vertex,
             @CXXReference MSG_T msg,
-            @FFISkip VDATA_T unused);
+            @FFISkip UNUSED_T unused);
 
     /**
      * Get message into target MSG_T.

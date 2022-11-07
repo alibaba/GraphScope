@@ -16,24 +16,16 @@
 
 package com.alibaba.graphscope.graphx;
 
-import static com.alibaba.graphscope.utils.CppClassName.GS_ARROW_PROJECTED_FRAGMENT_IMPL_STRING_TYPED_ARRAY;
-
-import com.alibaba.fastffi.FFITypeFactory;
 import com.alibaba.fastffi.llvm4jni.runtime.JavaRuntime;
+import com.alibaba.graphscope.ds.BaseTypedArray;
+import com.alibaba.graphscope.ds.PrimitiveTypedArray;
 import com.alibaba.graphscope.ds.StringTypedArray;
-import com.alibaba.graphscope.ds.TypedArray;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.fragment.ArrowProjectedFragment;
-import com.alibaba.graphscope.fragment.ArrowProjectedStringEDFragment;
-import com.alibaba.graphscope.fragment.ArrowProjectedStringVDFragment;
-import com.alibaba.graphscope.fragment.ArrowProjectedStringVEDFragment;
 import com.alibaba.graphscope.fragment.BaseArrowProjectedFragment;
 import com.alibaba.graphscope.fragment.FragmentType;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.fragment.adaptor.ArrowProjectedAdaptor;
-import com.alibaba.graphscope.fragment.adaptor.ArrowProjectedStringEDAdaptor;
-import com.alibaba.graphscope.fragment.adaptor.ArrowProjectedStringVDAdaptor;
-import com.alibaba.graphscope.fragment.adaptor.ArrowProjectedStringVEDAdaptor;
 import com.alibaba.graphscope.graphx.graph.GSEdgeTripletImpl;
 import com.alibaba.graphscope.graphx.utils.DoubleDouble;
 import com.alibaba.graphscope.graphx.utils.IdParser;
@@ -72,10 +64,6 @@ public class GraphXParallelPIE<VD, ED, MSG_T> {
 
     private static Logger logger = LoggerFactory.getLogger(GraphXParallelPIE.class.getName());
     private static int BATCH_SIZE = 8192;
-    private static StringTypedArray.Factory stringTypedArrayFactory =
-            FFITypeFactory.getFactory(
-                    StringTypedArray.class, GS_ARROW_PROJECTED_FRAGMENT_IMPL_STRING_TYPED_ARRAY);
-    ;
 
     /**
      * User vertex program: vprog: (VertexId, VD, A) => VD
@@ -115,7 +103,7 @@ public class GraphXParallelPIE<VD, ED, MSG_T> {
     private ThreadSafeBitSet curSet, nextSet;
     private EdgeDirection direction;
     private long[] lid2Oid;
-    private TypedArray<Long> outerLid2Gid;
+    private PrimitiveTypedArray<Long> outerLid2Gid;
     private long oeBeginAddress, ieBeginAddress;
     //    private TypedArray<Long> oeOffsetArray, ieOffsetArray;
     private LongPointerAccessor oeOffsetBeginArray,
@@ -204,13 +192,13 @@ public class GraphXParallelPIE<VD, ED, MSG_T> {
         {
             Vertex<Long> vertex = FFITypeFactoryhelper.newVertexLong();
             for (int i = 0; i < lid2Oid.length; ++i) {
-                vertex.SetValue((long) i);
+                vertex.setValue((long) i);
                 lid2Oid[i] = projectedFragment.getId(vertex);
             }
         }
 
         Vertex<Long> vertex = FFITypeFactoryhelper.newVertexLong();
-        vertex.SetValue(0L);
+        vertex.setValue(0L);
         //        oeOffsetArray = projectedFragment.getCSR().getOEOffsetsArray();
         oeOffsetBeginArray = new LongPointerAccessor(projectedFragment.getOEOffsetsBeginPtr());
         oeOffsetEndArray = new LongPointerAccessor(projectedFragment.getOEOffsetsEndPtr());
@@ -350,7 +338,7 @@ public class GraphXParallelPIE<VD, ED, MSG_T> {
                             throws InterruptedException {
                         Vertex<Long> vertex = FFITypeFactoryhelper.newVertexLong();
                         for (int i = startLid; i < endLid; ++i) {
-                            vertex.SetValue((long) i);
+                            vertex.setValue((long) i);
                             messageStore.sendMsgThroughIEdges(
                                     vertex,
                                     newVdataArray.get(i),
@@ -540,24 +528,15 @@ public class GraphXParallelPIE<VD, ED, MSG_T> {
                     BaseArrowProjectedFragment<Long, Long, VD_T, ED_T> projectedFragment,
                     GraphXConf<VD_T, ED_T, MSG_T_> conf)
                     throws IOException, ClassNotFoundException {
+
         // For vd array
+        BaseTypedArray<VD_T> oldVdataArray =
+                ((ArrowProjectedFragment<Long, Long, VD_T, ED_T>) projectedFragment)
+                        .getVdataArrayAccessor();
 
         PrimitiveArray<VD_T> newVdataArray;
         {
             if (conf.isVDPrimitive()) {
-                TypedArray<VD_T> oldVdataArray;
-                if (projectedFragment instanceof ArrowProjectedFragment) {
-                    oldVdataArray =
-                            ((ArrowProjectedFragment<Long, Long, VD_T, ED_T>) projectedFragment)
-                                    .getVdataArrayAccessor();
-                } else if (projectedFragment instanceof ArrowProjectedStringEDFragment) {
-                    oldVdataArray =
-                            ((ArrowProjectedStringEDFragment<Long, Long, VD_T>) projectedFragment)
-                                    .getVdataArrayAccessor();
-                } else {
-                    throw new IllegalStateException("Not possible");
-                }
-
                 if (oldVdataArray.getLength() != projectedFragment.getInnerVerticesNum()) {
                     throw new IllegalStateException(
                             "not equal"
@@ -565,63 +544,43 @@ public class GraphXParallelPIE<VD, ED, MSG_T> {
                                     + ","
                                     + projectedFragment.getInnerVerticesNum());
                 }
+
+                PrimitiveTypedArray<VD_T> tmp =
+                        FFITypeFactoryhelper.newPrimitiveTypedArray(conf.getVdClass());
+                tmp.setAddress(oldVdataArray.getAddress());
                 newVdataArray =
                         processPrimitiveArray(
-                                oldVdataArray,
+                                tmp,
                                 conf.getVdClass(),
                                 projectedFragment.getVerticesNum().intValue());
             } else {
-                StringTypedArray oldVdataArray;
-                if (projectedFragment instanceof ArrowProjectedStringVDFragment) {
-                    oldVdataArray =
-                            ((ArrowProjectedStringVDFragment<Long, Long, ED_T>) projectedFragment)
-                                    .getVdataArrayAccessor();
-                } else if (projectedFragment instanceof ArrowProjectedStringVEDFragment) {
-                    oldVdataArray =
-                            ((ArrowProjectedStringVEDFragment<Long, Long>) projectedFragment)
-                                    .getVdataArrayAccessor();
-                } else {
-                    throw new IllegalStateException("Not possible");
-                }
+                StringTypedArray tmp = FFITypeFactoryhelper.newStringTypedArray();
+                tmp.setAddress(oldVdataArray.getAddress());
+                // construct typed array to make use.
                 newVdataArray =
                         processComplexArray(
-                                oldVdataArray,
+                                tmp,
                                 conf.getVdClass(),
                                 projectedFragment.getVerticesNum().intValue());
             }
         }
+        BaseTypedArray<ED_T> oldEdataArray =
+                ((ArrowProjectedFragment<Long, Long, VD_T, ED_T>) projectedFragment)
+                        .getEdataArrayAccessor();
         PrimitiveArray<ED_T> newEdataArray;
         {
             if (conf.isEDPrimitive()) {
-                TypedArray<ED_T> oldEdataArray;
-                if (projectedFragment instanceof ArrowProjectedFragment) {
-                    oldEdataArray =
-                            ((ArrowProjectedFragment<Long, Long, VD_T, ED_T>) projectedFragment)
-                                    .getEdataArrayAccessor();
-                } else if (projectedFragment instanceof ArrowProjectedStringVDFragment) {
-                    oldEdataArray =
-                            ((ArrowProjectedStringVDFragment<Long, Long, ED_T>) projectedFragment)
-                                    .getEdataArrayAccessor();
-                } else {
-                    throw new IllegalStateException("Not possible");
-                }
-                newEdataArray = wrapReadOnlyArray(oldEdataArray, conf.getEdClass());
+                PrimitiveTypedArray<ED_T> tmp =
+                        FFITypeFactoryhelper.newPrimitiveTypedArray(conf.getEdClass());
+                tmp.setAddress(oldEdataArray.getAddress());
+                newEdataArray = wrapReadOnlyArray(tmp, conf.getEdClass());
             } else {
-                StringTypedArray oldEdataArray;
-                if (projectedFragment instanceof ArrowProjectedStringEDFragment) {
-                    oldEdataArray =
-                            ((ArrowProjectedStringEDFragment<Long, Long, VD_T>) projectedFragment)
-                                    .getEdataArrayAccessor();
-                } else if (projectedFragment instanceof ArrowProjectedStringVEDFragment) {
-                    oldEdataArray =
-                            ((ArrowProjectedStringVEDFragment<Long, Long>) projectedFragment)
-                                    .getEdataArrayAccessor();
-                } else {
-                    throw new IllegalStateException("Not possible");
-                }
+                StringTypedArray tmp = FFITypeFactoryhelper.newStringTypedArray();
+                tmp.setAddress(oldEdataArray.getAddress());
+                // construct typed array to make use.
                 newEdataArray =
                         processComplexArray(
-                                oldEdataArray, conf.getEdClass(), (int) oldEdataArray.getLength());
+                                tmp, conf.getEdClass(), (int) oldEdataArray.getLength());
             }
         }
         return new Tuple2<>(newVdataArray, newEdataArray);
@@ -660,13 +619,15 @@ public class GraphXParallelPIE<VD, ED, MSG_T> {
     }
 
     private static <T> PrimitiveArray<T> wrapReadOnlyArray(
-            TypedArray<T> oldArray, Class<? extends T> clz) {
+            PrimitiveTypedArray<T> oldArray, Class<? extends T> clz) {
         return PrimitiveArray.createImmutable(oldArray, clz);
     }
 
-    /** For vertex array, we need to reserve outer vertices size*/
+    /**
+     * For vertex array, we need to reserve outer vertices size
+     */
     private static <T> PrimitiveArray<T> processPrimitiveArray(
-            TypedArray<T> oldArray, Class<? extends T> clz, int length) {
+            PrimitiveTypedArray<T> oldArray, Class<? extends T> clz, int length) {
         if (length < oldArray.getLength()) {
             throw new IllegalStateException(
                     "dst array length can not be smaller than off heap array "
@@ -689,21 +650,6 @@ public class GraphXParallelPIE<VD, ED, MSG_T> {
                     ((ArrowProjectedAdaptor<Long, Long, VD, ED>) iFragment)
                             .getArrowProjectedFragment();
             return res;
-        } else if (iFragment.fragmentType().equals(FragmentType.ArrowProjectedStrVDFragment)) {
-            ArrowProjectedStringVDFragment<Long, Long, ED> res =
-                    ((ArrowProjectedStringVDAdaptor<Long, Long, ED>) iFragment)
-                            .getArrowProjectedStrVDFragment();
-            return (BaseArrowProjectedFragment<Long, Long, VD, ED>) res;
-        } else if (iFragment.fragmentType().equals(FragmentType.ArrowProjectedStrEDFragment)) {
-            ArrowProjectedStringEDFragment<Long, Long, VD> res =
-                    ((ArrowProjectedStringEDAdaptor<Long, Long, VD>) iFragment)
-                            .getArrowProjectedStrEDFragment();
-            return (BaseArrowProjectedFragment<Long, Long, VD, ED>) res;
-        } else if (iFragment.fragmentType().equals(FragmentType.ArrowProjectedStrVEDFragment)) {
-            ArrowProjectedStringVEDFragment<Long, Long> res =
-                    ((ArrowProjectedStringVEDAdaptor<Long, Long>) iFragment)
-                            .getArrowProjectedStrVEDFragment();
-            return (BaseArrowProjectedFragment<Long, Long, VD, ED>) res;
         } else {
             throw new IllegalStateException("Not implemented" + iFragment);
         }

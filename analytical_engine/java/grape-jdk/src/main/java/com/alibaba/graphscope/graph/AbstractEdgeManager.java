@@ -17,8 +17,8 @@
 package com.alibaba.graphscope.graph;
 
 import com.alibaba.fastffi.llvm4jni.runtime.JavaRuntime;
+import com.alibaba.graphscope.ds.PrimitiveTypedArray;
 import com.alibaba.graphscope.ds.PropertyNbrUnit;
-import com.alibaba.graphscope.ds.TypedArray;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.fragment.ArrowProjectedFragment;
 import com.alibaba.graphscope.fragment.IFragment;
@@ -26,6 +26,7 @@ import com.alibaba.graphscope.fragment.adaptor.ArrowProjectedAdaptor;
 import com.alibaba.graphscope.serialization.FFIByteVectorInputStream;
 import com.alibaba.graphscope.serialization.FFIByteVectorOutputStream;
 import com.alibaba.graphscope.stdcxx.FFIByteVector;
+import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
 import com.alibaba.graphscope.utils.LongPointerAccessor;
 import com.alibaba.graphscope.utils.array.PrimitiveArray;
 import com.google.common.collect.Lists;
@@ -93,7 +94,10 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
         }
         this.vidClass = vidClass;
         edata_t = grapeEdata2Int();
-        csrHolder = new CSRHolder(this.fragment.getEdataArrayAccessor(), consumer);
+        PrimitiveTypedArray<GRAPE_ED_T> newTypedArray =
+                FFITypeFactoryhelper.newPrimitiveTypedArray(edataClass);
+        newTypedArray.setAddress(this.fragment.getEdataArrayAccessor().getAddress());
+        csrHolder = new CSRHolder(newTypedArray, consumer);
         edgeIterable = new TupleIterable(csrHolder);
         edgeIterables = null;
     }
@@ -195,7 +199,7 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
         private BiConsumer<FFIByteVectorInputStream, PrimitiveArray<BIZ_EDATA_T>> consumer;
 
         public CSRHolder(
-                TypedArray<GRAPE_ED_T> edataArray,
+                PrimitiveTypedArray<GRAPE_ED_T> edataArray,
                 BiConsumer<FFIByteVectorInputStream, PrimitiveArray<BIZ_EDATA_T>> consumer) {
             this.consumer = consumer;
             totalNumOfEdges = getTotalNumOfEdges();
@@ -229,7 +233,7 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
             return largest - smallest;
         }
 
-        private void initArrays(TypedArray<GRAPE_ED_T> edataArray) throws IOException {
+        private void initArrays(PrimitiveTypedArray<GRAPE_ED_T> edataArray) throws IOException {
             int tmpSum = 0;
             long oeBeginOffset, oeEndOffset;
             for (long lid = 0; lid < innerVerticesNum; ++lid) {
@@ -265,7 +269,8 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
             fillInEdataArray(edataArray);
         }
 
-        private void fillInEdataArray(TypedArray<GRAPE_ED_T> edataArray) throws IOException {
+        private void fillInEdataArray(PrimitiveTypedArray<GRAPE_ED_T> edataArray)
+                throws IOException {
             // first try to set directly.
             int index = 0;
             if (bizEdataClass.equals(edataClass)) {
@@ -366,7 +371,7 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
     }
 
     private FFIByteVector generateEdataString(
-            long[] nbrUnitAddrs, long[] numOfEdges, TypedArray<GRAPE_ED_T> edataArray)
+            long[] nbrUnitAddrs, long[] numOfEdges, PrimitiveTypedArray<GRAPE_ED_T> edataArray)
             throws IOException {
         FFIByteVectorOutputStream outputStream = new FFIByteVectorOutputStream();
         switch (edata_t) {

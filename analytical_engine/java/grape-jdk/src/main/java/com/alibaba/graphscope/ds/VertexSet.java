@@ -76,7 +76,7 @@ public class VertexSet {
     }
 
     public boolean get(Vertex<Long> vertex) {
-        return bs.get(vertex.GetValue().intValue() - left);
+        return bs.get(vertex.getValue().intValue() - left);
     }
 
     public boolean get(long vid) {
@@ -96,7 +96,7 @@ public class VertexSet {
      * @param vertex input vertex.
      */
     public void set(Vertex<Long> vertex) {
-        bs.set(vertex.GetValue().intValue() - left);
+        bs.set(vertex.getValue().intValue() - left);
     }
 
     /**
@@ -106,7 +106,7 @@ public class VertexSet {
      * @param newValue value to be bound to querying vertex.
      */
     public void set(Vertex<Long> vertex, boolean newValue) {
-        bs.set(vertex.GetValue().intValue() - left, newValue);
+        bs.set(vertex.getValue().intValue() - left, newValue);
     }
 
     public void set(long vid) {
@@ -118,7 +118,7 @@ public class VertexSet {
     }
 
     public void insert(Vertex<Long> vertex) {
-        bs.set(vertex.GetValue().intValue() - left);
+        bs.set(vertex.getValue().intValue() - left);
     }
 
     public boolean empty() {

@@ -20,10 +20,11 @@ import static com.alibaba.graphscope.utils.CppClassName.GS_ARROW_PROJECTED_FRAGM
 import static com.alibaba.graphscope.utils.CppHeaderName.ARROW_PROJECTED_FRAGMENT_H;
 
 import com.alibaba.fastffi.CXXHead;
+import com.alibaba.fastffi.CXXOperator;
+import com.alibaba.fastffi.CXXValue;
 import com.alibaba.fastffi.FFIFactory;
 import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFINameAlias;
-import com.alibaba.fastffi.FFISettablePointer;
 import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.graphscope.utils.JNILibraryName;
 
@@ -31,7 +32,10 @@ import com.alibaba.graphscope.utils.JNILibraryName;
 @CXXHead(ARROW_PROJECTED_FRAGMENT_H)
 @CXXHead(system = "cstdint")
 @FFITypeAlias(GS_ARROW_PROJECTED_FRAGMENT_IMPL_STRING_TYPED_ARRAY)
-public interface StringTypedArray extends FFISettablePointer {
+public interface StringTypedArray extends BaseTypedArray<StringView> {
+    @CXXOperator("[]")
+    @CXXValue
+    StringView get(long index);
 
     @FFINameAlias("GetRawData")
     long getRawData();

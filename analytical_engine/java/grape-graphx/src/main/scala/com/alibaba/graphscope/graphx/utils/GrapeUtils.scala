@@ -17,7 +17,8 @@
 package com.alibaba.graphscope.graphx.utils
 
 import com.alibaba.fastffi.FFITypeFactory
-import com.alibaba.graphscope.arrow.array.{ArrowArrayBuilder, ArrowStringArrayBuilder}
+import com.alibaba.graphscope.arrow.array.{PrimitiveArrowArrayBuilder, StringArrowArrayBuilder}
+import com.alibaba.graphscope.ds.StringTypedArray
 import com.alibaba.graphscope.graphx._
 import com.alibaba.graphscope.graphx.store.impl.{
   ImmutableOffHeapEdgeStore,
@@ -26,7 +27,7 @@ import com.alibaba.graphscope.graphx.store.impl.{
   OffHeapEdgeDataStore
 }
 import com.alibaba.graphscope.graphx.store.{EdgeDataStore, VertexDataStore}
-import com.alibaba.graphscope.serialization.FFIByteVectorOutputStream
+import com.alibaba.graphscope.serialization.{FFIByteVectorOutputStream, FakeFFIByteVectorInputStream}
 import com.alibaba.graphscope.stdcxx._
 import com.alibaba.graphscope.utils.ThreadSafeBitSet
 import com.alibaba.graphscope.utils.array.PrimitiveArray
@@ -35,7 +36,7 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.rdd.RDD
 import org.apache.spark.util.collection.OpenHashSet
 
-import java.io.ObjectOutputStream
+import java.io.{IOException, ObjectInputStream, ObjectOutputStream}
 import java.lang.reflect.Method
 import java.math.{MathContext, RoundingMode}
 import java.net.{InetAddress, UnknownHostException}
@@ -162,7 +163,7 @@ object GrapeUtils extends Logging {
   def vertexDataStore2ArrowArrayBuilder[T: ClassTag](
       vertexDataStore: VertexDataStore[T],
       ivnum: Int
-  ): ArrowArrayBuilder[T] = {
+  ): PrimitiveArrowArrayBuilder[T] = {
     require(GrapeUtils.isPrimitive[T])
     val array = vertexDataStore.asInstanceOf[InHeapVertexDataStore[T]].array
     fillPrimitiveArrowArrayBuilder(array, ivnum)
@@ -174,7 +175,7 @@ object GrapeUtils extends Logging {
   def vertexDataStore2ArrowStringArrayBuilder[T: ClassTag](
       vertexDataStore: VertexDataStore[T],
       ivnum: Int
-  ): ArrowStringArrayBuilder = {
+  ): StringArrowArrayBuilder = {
     require(!GrapeUtils.isPrimitive[T])
     val array = vertexDataStore.asInstanceOf[InHeapVertexDataStore[T]].array
     fillComplexArrowArrayBuilder(array, ivnum)
@@ -182,7 +183,7 @@ object GrapeUtils extends Logging {
 
   def edgeDataStore2ArrowArrayBuilder[T: ClassTag](
       edgeDataStore: EdgeDataStore[T]
-  ): ArrowArrayBuilder[T] = {
+  ): PrimitiveArrowArrayBuilder[T] = {
     require(GrapeUtils.isPrimitive[T], "need to be primitive")
     edgeDataStore match {
       case inHeapEdgeDataStore: InHeapEdgeDataStore[T] => {
@@ -201,7 +202,7 @@ object GrapeUtils extends Logging {
   }
   def edgeDataStore2ArrowStringArrayBuilder[T: ClassTag](
       edgeDataStore: EdgeDataStore[T]
-  ): ArrowStringArrayBuilder = {
+  ): StringArrowArrayBuilder = {
     require(!GrapeUtils.isPrimitive[T], "need to be complex")
     edgeDataStore match {
       case inHeapEdgeDataStore: InHeapEdgeDataStore[T] => {
@@ -223,11 +224,11 @@ object GrapeUtils extends Logging {
   def fillPrimitiveArrowArrayBuilder[T: ClassTag](
       array: Array[T],
       length: Int
-  ): ArrowArrayBuilder[T] = {
+  ): PrimitiveArrowArrayBuilder[T] = {
     require(length <= array.length, s"specified length ${length} ge array length ${array.length}")
     val size              = length
     var i                 = 0
-    val arrowArrayBuilder = ScalaFFIFactory.newArrowArrayBuilder[T]
+    val arrowArrayBuilder = ScalaFFIFactory.newPrimitiveArrowArrayBuilder[T]
     arrowArrayBuilder.reserve(size)
     while (i < size) {
       arrowArrayBuilder.unsafeAppend(array(i))
@@ -239,7 +240,7 @@ object GrapeUtils extends Logging {
   def fillComplexArrowArrayBuilder[T: ClassTag](
       array: Array[T],
       length: Int
-  ): ArrowStringArrayBuilder = {
+  ): StringArrowArrayBuilder = {
     require(length <= array.length, s"specified length ${length} ge array length ${array.length}")
     val (buffer, offset) = serializeComplexArray(array)
     buffer.touch()
@@ -249,7 +250,7 @@ object GrapeUtils extends Logging {
     log.info(s"Successfully set address ${buffer.data()}")
     val size              = length
     var i                 = 0
-    val arrowArrayBuilder = ScalaFFIFactory.newArrowStringArrayBuilder
+    val arrowArrayBuilder = ScalaFFIFactory.newStringArrowArrayBuilder
     arrowArrayBuilder.reserve(size)
     arrowArrayBuilder.reserveData(buffer.size())
     while (i < size) {
@@ -262,7 +263,7 @@ object GrapeUtils extends Logging {
 
   def fillComplexArrowArrayBuilder[T: ClassTag](
       array: PrimitiveArray[T]
-  ): ArrowStringArrayBuilder = {
+  ): StringArrowArrayBuilder = {
     val (buffer, offset) = serializeComplexArray(array)
     buffer.touch()
     val pointer =
@@ -271,7 +272,7 @@ object GrapeUtils extends Logging {
     log.info("Successfully set address")
     val size              = array.size()
     var i                 = 0
-    val arrowArrayBuilder = ScalaFFIFactory.newArrowStringArrayBuilder
+    val arrowArrayBuilder = ScalaFFIFactory.newStringArrowArrayBuilder
     arrowArrayBuilder.reserve(size)
     arrowArrayBuilder.reserveData(buffer.size())
     while (i < size) {
@@ -514,34 +515,6 @@ object GrapeUtils extends Logging {
     (ffiByteVectorOutput.getVector, ffiOffset)
   }
 
-  def bitSet2longs(
-      bitSetWithOffset: BitSetWithOffset
-  ): ArrowArrayBuilder[Long] = {
-    val longVector = ScalaFFIFactory.newSignedLongArrayBuilder()
-    val words      = bitSetWithOffset.bitset.words
-    longVector.reserve(words.length)
-    var i = 0
-    while (i < words.length) {
-      longVector.unsafeAppend(words(i))
-      i += 1
-    }
-    longVector
-  }
-
-  def bitSet2longs(
-      bitSetWithOffset: ThreadSafeBitSet
-  ): ArrowArrayBuilder[Long] = {
-    val longVector = ScalaFFIFactory.newSignedLongArrayBuilder()
-    val words      = bitSetWithOffset.getWords
-    longVector.reserve(words.length)
-    var i = 0
-    while (i < words.length) {
-      longVector.unsafeAppend(words(i))
-      i += 1
-    }
-    longVector
-  }
-
   /** Convert a quantity in bytes to a human-readable string such as "4.0 MiB".
     */
   def bytesToString(size: Long): String = bytesToString(BigInt(size))
@@ -580,10 +553,17 @@ object GrapeUtils extends Logging {
     }
   }
 
+  /** Extract the distribution info, i.e. how many partition on each host.
+    * @param rdd
+    *   input rdd
+    * @param numPartition
+    *   num partitions.
+    * @return
+    */
   def extractHostInfo(
       rdd: RDD[(Int, _)],
       numPartition: Int
-  ): (Array[String], Array[Int]) = {
+  ): (mutable.HashMap[String, ArrayBuffer[Int]], Array[Int]) = {
     val array = rdd
       .mapPartitionsWithIndex((ind, iter) => {
         if (iter.hasNext) {
@@ -624,7 +604,7 @@ object GrapeUtils extends Logging {
       }
       i += 1
     }
-    (tmpMap.keys.toArray, res)
+    (tmpMap, res)
   }
 
   def getHostIdStrFromFragmentGroup(
@@ -701,5 +681,35 @@ object GrapeUtils extends Logging {
       i += 1
     }
     vector
+  }
+
+  @throws[IOException]
+  @throws[ClassNotFoundException]
+  def readComplexArray[T: ClassTag](oldArray: StringTypedArray): Array[T] = {
+    val vector   = new FakeFFIByteVector(oldArray.getRawData, oldArray.getRawDataLength)
+    val ffiInput = new FakeFFIByteVectorInputStream(vector)
+    val len      = oldArray.getLength
+    log.info(s"reading ${len} objects from array of bytes ${oldArray.getLength}")
+    if (GrapeUtils.getRuntimeClass[T] == classOf[DoubleDouble]) {
+      val newArray = new Array[DoubleDouble](len.toInt)
+      var i        = 0
+      while (i < len) {
+        val a = ffiInput.readDouble
+        val b = ffiInput.readDouble
+        newArray(i) = new DoubleDouble(a, b)
+        i += 1
+      }
+      newArray.asInstanceOf[Array[T]]
+    } else {
+      val newArray          = new Array[T](len.toInt)
+      val objectInputStream = new ObjectInputStream(ffiInput)
+      var i                 = 0
+      while (i < len) {
+        val obj = objectInputStream.readObject.asInstanceOf[T]
+        newArray(i) = obj
+        i += 1
+      }
+      newArray
+    }
   }
 }

@@ -34,7 +34,7 @@ public class DenseVertexSetTest {
 
         denseVertexSet.init(vertices);
         Vertex<Long> vertex = FFITypeFactoryhelper.newVertexLong();
-        vertex.SetValue(1L);
+        vertex.setValue(1L);
         Assert.assertFalse(denseVertexSet.exist(vertex));
         denseVertexSet.insert(vertex);
         Assert.assertTrue(denseVertexSet.exist(vertex));
@@ -43,7 +43,7 @@ public class DenseVertexSetTest {
         Assert.assertFalse(denseVertexSet.exist(vertex));
 
         for (int i = 0; i < 50; ++i) {
-            vertex.SetValue((long) i);
+            vertex.setValue((long) i);
             denseVertexSet.insert(vertex);
         }
         Assert.assertTrue(denseVertexSet.partialCount(0L, 100L) == 50);

@@ -39,7 +39,7 @@ public class AtomicObjectArrayWrapper<T> {
     }
 
     public T get(Vertex<Long> vertex) {
-        return data.get(vertex.GetValue().intValue());
+        return data.get(vertex.getValue().intValue());
     }
 
     public void set(int ind, T newValue) {
@@ -51,7 +51,7 @@ public class AtomicObjectArrayWrapper<T> {
     }
 
     public void set(Vertex<Long> vertex, T newValue) {
-        int lid = vertex.GetValue().intValue();
+        int lid = vertex.getValue().intValue();
         data.set(lid, newValue);
     }
 

@@ -100,7 +100,7 @@ public class ObjectMessageStore<T> extends AbstractMessageStore<T> {
         Vertex<Long> vertex = tmpVertex[0];
 
         for (int i = nextSet.nextSetBit(ivnum); i >= 0; i = nextSet.nextSetBit(i + 1)) {
-            vertex.SetValue((long) i);
+            vertex.setValue((long) i);
             long outerGid = fragment.getOuterVertexGid(vertex);
             int dstFid = idParser.getFragId(outerGid);
             //            long dstLid = idParser.getLocalId(outerGid);
@@ -158,7 +158,7 @@ public class ObjectMessageStore<T> extends AbstractMessageStore<T> {
                 if (!fragment.gid2Vertex(gid, vertex)) {
                     throw new IllegalStateException("Error in gid 2 vertex conversion " + gid);
                 }
-                int lid = Math.toIntExact(vertex.GetValue());
+                int lid = Math.toIntExact(vertex.getValue());
                 T msg = (T) inputStream.readObject();
                 if (curSet.get(lid)) {
                     values.set(lid, mergeMessage.apply(values.get(lid), msg));

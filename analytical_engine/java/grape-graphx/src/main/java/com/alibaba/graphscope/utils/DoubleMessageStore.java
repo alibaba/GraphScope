@@ -94,7 +94,7 @@ public class DoubleMessageStore extends AbstractMessageStore<Double> {
                 ivnum,
                 nextSet.nextSetBit(ivnum));
         for (int i = nextSet.nextSetBit(ivnum); i >= 0; i = nextSet.nextSetBit(i + 1)) {
-            vertex.SetValue((long) i);
+            vertex.setValue((long) i);
             long outerGid = fragment.getOuterVertexGid(vertex);
             int dstFid = idParser.getFragId(outerGid);
             //            long dstLid = idParser.getLocalId(outerGid);
@@ -124,14 +124,14 @@ public class DoubleMessageStore extends AbstractMessageStore<Double> {
                 if (!fragment.gid2Vertex(gid, vertex)) {
                     throw new IllegalStateException("Error in gid 2 vertex conversion " + gid);
                 }
-                if (vertex.GetValue() > fragment.getVerticesNum()) {
+                if (vertex.getValue() > fragment.getVerticesNum()) {
                     throw new IllegalStateException(
                             "received lid "
-                                    + vertex.GetValue()
+                                    + vertex.getValue()
                                     + " , greater than tvnum: "
                                     + fragment.getVerticesNum());
                 }
-                int lid = Math.toIntExact(vertex.GetValue());
+                int lid = Math.toIntExact(vertex.getValue());
                 double msg = inputStream.readDouble();
                 if (curSet.get(lid)) {
                     values.set(lid, mergeMessage.apply(values.get(lid), msg));
@@ -156,22 +156,16 @@ public class DoubleMessageStore extends AbstractMessageStore<Double> {
         DoubleMsg msg = msgWrappers[threadId];
         long msgCnt = 0;
         while (true) {
-            boolean res =
-                    messageInBuffer.getMessage(
-                            fragment,
-                            myVertex,
-                            msg,
-                            Unused.getUnused(
-                                    conf.getVdClass(), conf.getEdClass(), conf.getMsgClass()));
+            boolean res = messageInBuffer.getMessage(fragment, myVertex, msg);
             if (!res) break;
-            if (myVertex.GetValue() > fragment.getVerticesNum()) {
+            if (myVertex.getValue() > fragment.getVerticesNum()) {
                 throw new IllegalStateException(
                         "received lid "
-                                + myVertex.GetValue()
+                                + myVertex.getValue()
                                 + " , greater than tvnum: "
                                 + fragment.getVerticesNum());
             }
-            values.set(myVertex.GetValue().intValue(), msg.getData());
+            values.set(myVertex.getValue().intValue(), msg.getData());
             msgCnt += 1;
         }
         return msgCnt;

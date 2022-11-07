@@ -34,7 +34,7 @@ ifeq ($(UNAME),Linux)
 	SUFFIX := so
 endif
 ifeq ($(UNAME),Darwin)
-	NUMPROC := $(shell sysctl hw.ncpu | awk '{print $2}')
+	NUMPROC := $(shell sysctl -n hw.ncpu)
 	SUFFIX := dylib
 endif
 

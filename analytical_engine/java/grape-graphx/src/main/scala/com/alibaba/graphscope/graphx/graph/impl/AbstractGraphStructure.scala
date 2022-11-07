@@ -42,16 +42,16 @@ abstract class AbstractGraphStructure extends GraphStructure with Logging {
       includeLid: Boolean = false
   ): Iterator[EdgeTriplet[VD, ED]] = {
     new Iterator[EdgeTriplet[VD, ED]] {
-      var curLid = startLid.toInt
+      var curLid    = startLid.toInt
       val myAddress = myNbr.getAddress
       var curOffset = 0L
       var endOffset = 0L
       val vertex = {
         val r = FFITypeFactoryhelper.newVertexLong().asInstanceOf[Vertex[Long]]
-        r.SetValue(curLid)
+        r.setValue(curLid)
         r
       }
-      var srcId = innerVertexLid2Oid(vertex)
+      var srcId   = innerVertexLid2Oid(vertex)
       var srcAttr = vertexDataStore.get(curLid)
       override def hasNext: Boolean = {
         if (curOffset < 0) {
@@ -80,11 +80,11 @@ abstract class AbstractGraphStructure extends GraphStructure with Logging {
 
       override def next(): EdgeTriplet[VD, ED] = {
         val edgeTriplet = new GSEdgeTripletImpl[VD, ED]
-        val curAddress = curOffset * 16 + myAddress
+        val curAddress  = curOffset * 16 + myAddress
         myNbr.setAddress(curAddress)
         val dstLid = myNbr.vid().toInt
-        val eid = myNbr.eid().toInt
-        vertex.SetValue(dstLid)
+        val eid    = myNbr.eid().toInt
+        vertex.setValue(dstLid)
         if (edgeReversed) {
           edgeTriplet.dstId = srcId
           edgeTriplet.dstAttr = srcAttr
@@ -112,17 +112,17 @@ abstract class AbstractGraphStructure extends GraphStructure with Logging {
       edgeReversed: Boolean = false
   ): Iterator[Edge[ED]] = {
     new Iterator[Edge[ED]] {
-      var curLid = startLid.toInt
+      var curLid    = startLid.toInt
       val myAddress = myNbr.getAddress
       var curOffset = 0L
       var endOffset = 0L
       val vertex = {
         val t = FFITypeFactoryhelper.newVertexLong().asInstanceOf[Vertex[Long]]
-        t.SetValue(curLid)
+        t.setValue(curLid)
         t
       }
       var srcId = innerVertexLid2Oid(vertex)
-      val edge = new ReusableEdgeImpl[ED]
+      val edge  = new ReusableEdgeImpl[ED]
 
       override def hasNext: Boolean = {
         if (curOffset < 0) {
@@ -141,7 +141,7 @@ abstract class AbstractGraphStructure extends GraphStructure with Logging {
           }
           if (curLid >= endLid || curOffset < 0) false
           else {
-            vertex.SetValue(curLid)
+            vertex.setValue(curLid)
             srcId = innerVertexLid2Oid(vertex)
             true
           }
@@ -152,8 +152,8 @@ abstract class AbstractGraphStructure extends GraphStructure with Logging {
         val curAddress = curOffset * 16 + myAddress
         myNbr.setAddress(curAddress)
         val dstLid = myNbr.vid().toInt
-        val eid = myNbr.eid().toInt
-        vertex.SetValue(dstLid)
+        val eid    = myNbr.eid().toInt
+        vertex.setValue(dstLid)
         if (edgeReversed) {
           edge.dstId = srcId
           edge.srcId = getId(vertex)

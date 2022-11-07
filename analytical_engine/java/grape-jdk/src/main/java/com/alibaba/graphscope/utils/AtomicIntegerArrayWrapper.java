@@ -47,7 +47,7 @@ public class AtomicIntegerArrayWrapper {
     }
 
     public int get(Vertex<Long> vertex) {
-        return data.get(vertex.GetValue().intValue());
+        return data.get(vertex.getValue().intValue());
     }
 
     public void set(int ind, int newValue) {
@@ -59,7 +59,7 @@ public class AtomicIntegerArrayWrapper {
     }
 
     public void set(Vertex<Long> vertex, int newValue) {
-        int lid = vertex.GetValue().intValue();
+        int lid = vertex.getValue().intValue();
         data.set(lid, newValue);
     }
 
@@ -87,7 +87,7 @@ public class AtomicIntegerArrayWrapper {
     }
 
     public void compareAndSetMin(Vertex<Long> vertex, int newValue) {
-        int lid = vertex.GetValue().intValue();
+        int lid = vertex.getValue().intValue();
         int preValue;
         do {
             preValue = data.get(lid);
