@@ -85,6 +85,12 @@
             <artifactId>guava</artifactId>
             <version>31.0.1-android</version>
         </dependency>
+        <dependency>
+<!--            include this package to resolve error javax.annotation.generated not found java 11-->
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+            <version>${javax.annotation.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
