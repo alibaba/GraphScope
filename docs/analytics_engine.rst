@@ -380,7 +380,7 @@ Run a Demo Java Algorithm
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We provide some sample java app implementation, and you can directly run them on Graphscope Analytical Engine. First you 
-need to download a `grape-demo.jar <https://github.com/GraphScope/gstest/blob/master/jars/grape-demo-0.17.0-shaded.jar>`_。
+need to download a `grape-demo.jar <https://graphscope.oss-cn-beijing.aliyuncs.com/jar/grape-demo-0.18.0-shaded.jar>`_。
 
 Then open your GraphScope python client, try to load a graph, and run the sample sssp algorithm.
 
@@ -411,18 +411,14 @@ Then open your GraphScope python client, try to load a graph, and run the sample
 Writing Your Own Algorithms in Java
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To develop your algorithm in java, first, you will need ``grape-jdk`` installed on your developing environment. 
-Currently you need to build from source. Please follow :ref:`gae_java_sdk_about` for building grape-jdk from source.
-
-After installing ``grape-jdk``, you can include it as dependency in your maven project. You shall add classifier *shaded* to use the jar which includes all necessary dependencies.
+To develop your algorithm in java, you should create your maven project, and include `grape-jdk` as dependency.
 
 .. code:: xml
 
     <dependency>
       <groupId>com.alibaba.graphscope</groupId>
       <artifactId>grape-jdk</artifactId>
-      <version>0.1</version>
-      <classifier>shaded</classifier>
+      <version>0.18.1</version>
     </dependency>
 
 To address the jar dependencies issue, we need you to pack your jar with dependencies included. For example, you can
