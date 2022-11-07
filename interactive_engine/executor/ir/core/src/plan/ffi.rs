@@ -96,7 +96,7 @@ pub enum ResultCode {
     /// A queried tag has not been specified
     TagNotExistError = 12,
     UnSupported = 13,
-    Others = 16,
+    Others = 14,
 }
 
 #[repr(C)]
