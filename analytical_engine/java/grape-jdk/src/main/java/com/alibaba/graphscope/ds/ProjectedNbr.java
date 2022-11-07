@@ -61,14 +61,6 @@ public interface ProjectedNbr<VID_T, EDATA_T> extends NbrBase<VID_T, EDATA_T> {
     long edgeId();
 
     /**
-     * Get the edge data.
-     *
-     * @return edge data.
-     */
-    @CXXReference
-    EDATA_T data();
-
-    /**
      * Self increment.
      *
      * @return increated pointer.

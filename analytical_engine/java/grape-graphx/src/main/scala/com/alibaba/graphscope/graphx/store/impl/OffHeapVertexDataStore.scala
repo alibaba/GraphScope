@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.graphx.store.impl
 
-import com.alibaba.graphscope.arrow.array.ArrowArrayBuilder
+import com.alibaba.graphscope.arrow.array.PrimitiveArrowArrayBuilder
 import com.alibaba.graphscope.graphx.VineyardClient
 import com.alibaba.graphscope.graphx.utils.{GrapeUtils, ScalaFFIFactory}
 import org.apache.spark.internal.Logging
@@ -28,7 +28,7 @@ class OffHeapVertexDataStore[VD: ClassTag](
     length: Int,
     localNum: Int,
     client: VineyardClient,
-    val arrowArrayBuilder: ArrowArrayBuilder[VD]
+    val arrowArrayBuilder: PrimitiveArrowArrayBuilder[VD]
 ) extends AbstractVertexDataStore[VD](length, localNum, client)
     with Logging {
   require(GrapeUtils.isPrimitive[VD])
@@ -43,7 +43,7 @@ class OffHeapVertexDataStore[VD: ClassTag](
       length,
       localNum,
       client,
-      ScalaFFIFactory.newArrowArrayBuilder[VD]
+      ScalaFFIFactory.newPrimitiveArrowArrayBuilder[VD]
     )
   }
 

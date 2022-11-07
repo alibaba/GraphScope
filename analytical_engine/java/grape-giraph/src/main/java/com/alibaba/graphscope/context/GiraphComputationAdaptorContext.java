@@ -194,7 +194,7 @@ public class GiraphComputationAdaptorContext<OID_T, VID_T, VDATA_T, EDATA_T>
         try {
             if (conf.getGrapeVdataClass().equals(Long.class)) {
                 for (long lid = 0; lid < innerVerticesNum; ++lid) {
-                    grapeVertex.SetValue((VID_T) (Long) lid);
+                    grapeVertex.setValue((VID_T) (Long) lid);
                     if (inputStream.longAvailable() <= 0) {
                         throw new IllegalStateException(
                                 "Input stream too short for " + innerVerticesNum + " vertices");
@@ -204,7 +204,7 @@ public class GiraphComputationAdaptorContext<OID_T, VID_T, VDATA_T, EDATA_T>
                 }
             } else if (conf.getGrapeVdataClass().equals(Integer.class)) {
                 for (long lid = 0; lid < innerVerticesNum; ++lid) {
-                    grapeVertex.SetValue((VID_T) (Long) lid);
+                    grapeVertex.setValue((VID_T) (Long) lid);
                     if (inputStream.longAvailable() <= 0) {
                         throw new IllegalStateException(
                                 "Input stream too short for " + innerVerticesNum + " vertices");
@@ -214,7 +214,7 @@ public class GiraphComputationAdaptorContext<OID_T, VID_T, VDATA_T, EDATA_T>
                 }
             } else if (conf.getGrapeVdataClass().equals(Double.class)) {
                 for (long lid = 0; lid < innerVerticesNum; ++lid) {
-                    grapeVertex.SetValue((VID_T) (Long) lid);
+                    grapeVertex.setValue((VID_T) (Long) lid);
                     if (inputStream.longAvailable() <= 0) {
                         throw new IllegalStateException(
                                 "Input stream too short for " + innerVerticesNum + " vertices");
@@ -224,7 +224,7 @@ public class GiraphComputationAdaptorContext<OID_T, VID_T, VDATA_T, EDATA_T>
                 }
             } else if (conf.getGrapeVdataClass().equals(Float.class)) {
                 for (long lid = 0; lid < innerVerticesNum; ++lid) {
-                    grapeVertex.SetValue((VID_T) (Long) lid);
+                    grapeVertex.setValue((VID_T) (Long) lid);
                     if (inputStream.longAvailable() <= 0) {
                         throw new IllegalStateException(
                                 "Input stream too short for " + innerVerticesNum + " vertices");
@@ -235,7 +235,7 @@ public class GiraphComputationAdaptorContext<OID_T, VID_T, VDATA_T, EDATA_T>
             } else if (conf.getGrapeVdataClass().equals(String.class)) {
                 byte[] bytes = new byte[(int) maxOffset];
                 for (long lid = 0; lid < innerVerticesNum; ++lid) {
-                    grapeVertex.SetValue((VID_T) (Long) lid);
+                    grapeVertex.setValue((VID_T) (Long) lid);
                     if (inputStream.longAvailable() <= 0) {
                         throw new IllegalStateException(
                                 "Input stream too short for " + innerVerticesNum + " vertices");

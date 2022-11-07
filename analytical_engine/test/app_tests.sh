@@ -394,6 +394,11 @@ then
   then
     echo "Running Java tests..."
     run_vy_2 ${np} ./run_java_app "${socket_file}" 1 "${test_dir}"/projected_property/twitter_property_e "${test_dir}"/projected_property/twitter_property_v 1 0 1 com.alibaba.graphscope.example.bfs.BFS
+    GLOG_v=10 ./run_java_string_app /tmp/vineyard.sock \
+        1 "${test_dir}/projected_property/twitter_property_e_0#src_label=v&dst_label=v&label=e&include_all_columns=true&column_types=int64_t,int64_t,int32_t,int32_t,std::string" \
+        1 "${test_dir}/projected_property/twitter_property_v_0#label=v&include_all_columns=true&column_types=int64_t,std::string" \
+        com.alibaba.graphscope.example.stringApp.StringApp
+
     echo "Running girpah tests..."
     ./giraph_runner --vertex_input_format_class  giraph:com.alibaba.graphscope.example.giraph.format.P2PVertexInputFormat \
       --edge_input_format_class giraph:com.alibaba.graphscope.example.giraph.format.P2PEdgeInputFormat --vfile "${test_dir}"/p2p-31.v \

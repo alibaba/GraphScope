@@ -128,7 +128,7 @@ public class GiraphMpiMessageManager<
     @Override
     public void sendMessage(OID_T dstOid, OUT_MSG_T message) {
         GS_VID_T lid = idManager.oid2Lid(dstOid);
-        grapeVertex.SetValue(lid);
+        grapeVertex.setValue(lid);
         sendMessage(grapeVertex, message);
     }
 
@@ -172,7 +172,7 @@ public class GiraphMpiMessageManager<
 
         while (curAddress < endAddress) {
             nbrUnit.setAddress(curAddress);
-            grapeVertex.SetValue((GS_VID_T) nbrUnit.vid());
+            grapeVertex.setValue((GS_VID_T) nbrUnit.vid());
             sendMessage(grapeVertex, message);
             curAddress += nbrUnitEleSize;
         }

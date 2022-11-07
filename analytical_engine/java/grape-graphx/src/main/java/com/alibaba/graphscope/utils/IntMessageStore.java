@@ -90,7 +90,7 @@ public class IntMessageStore extends AbstractMessageStore<Integer> {
         //        TypedArray<Long> outerLid2Gids = fragment.getVM().getOuterLid2GidAccessor();
 
         for (int i = nextSet.nextSetBit(ivnum); i >= 0; i = nextSet.nextSetBit(i + 1)) {
-            vertex.SetValue((long) i);
+            vertex.setValue((long) i);
             long outerGid = fragment.getOuterVertexGid(vertex);
             int dstFid = idParser.getFragId(outerGid);
             //            long dstLid = idParser.getLocalId(outerGid);
@@ -120,7 +120,7 @@ public class IntMessageStore extends AbstractMessageStore<Integer> {
                 if (!fragment.gid2Vertex(gid, vertex)) {
                     throw new IllegalStateException("Error in gid 2 vertex conversion " + gid);
                 }
-                int lid = Math.toIntExact(vertex.GetValue());
+                int lid = Math.toIntExact(vertex.getValue());
                 int msg = inputStream.readInt();
                 if (curSet.get(lid)) {
                     values.set(lid, mergeMessage.apply(values.get(lid), msg));
@@ -145,22 +145,16 @@ public class IntMessageStore extends AbstractMessageStore<Integer> {
         IntMsg msg = msgWrappers[threadId];
         long msgCnt = 0;
         while (true) {
-            boolean res =
-                    messageInBuffer.getMessage(
-                            fragment,
-                            myVertex,
-                            msg,
-                            Unused.getUnused(
-                                    conf.getVdClass(), conf.getEdClass(), conf.getMsgClass()));
+            boolean res = messageInBuffer.getMessage(fragment, myVertex, msg);
             if (!res) break;
-            if (myVertex.GetValue() > fragment.getVerticesNum()) {
+            if (myVertex.getValue() > fragment.getVerticesNum()) {
                 throw new IllegalStateException(
                         "received lid "
-                                + myVertex.GetValue()
+                                + myVertex.getValue()
                                 + " , greater than tvnum: "
                                 + fragment.getVerticesNum());
             }
-            values.set(myVertex.GetValue().intValue(), msg.getData());
+            values.set(myVertex.getValue().intValue(), msg.getData());
             msgCnt += 1;
         }
         return msgCnt;

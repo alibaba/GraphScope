@@ -3,16 +3,17 @@ package com.alibaba.graphscope.annotation;
 import static com.alibaba.graphscope.annotation.Utils.addCXXTemplate;
 import static com.alibaba.graphscope.annotation.Utils.getMessageTypes;
 import static com.alibaba.graphscope.utils.CppClassName.CPP_ARROW_PROJECTED_FRAGMENT;
+import static com.alibaba.graphscope.utils.JavaClassName.STRING_VIEW;
 
 import com.alibaba.fastffi.CXXTemplate;
 import com.alibaba.fastffi.FFIFunGen;
 import com.alibaba.fastffi.FFIGen;
 import com.alibaba.graphscope.context.ffi.FFIVertexDataContext;
 import com.alibaba.graphscope.ds.GSVertexArray;
+import com.alibaba.graphscope.ds.PrimitiveTypedArray;
 import com.alibaba.graphscope.ds.ProjectedAdjList;
 import com.alibaba.graphscope.ds.ProjectedNbr;
 import com.alibaba.graphscope.ds.PropertyNbrUnit;
-import com.alibaba.graphscope.ds.TypedArray;
 import com.alibaba.graphscope.ds.VertexArray;
 import com.alibaba.graphscope.ds.VertexRange;
 import com.alibaba.graphscope.fragment.ArrowProjectedFragment;
@@ -23,10 +24,16 @@ import com.squareup.javapoet.AnnotationSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 /**
- * Class which add typespec to ffiGenBatch for arrowProjectedFragment
+ * Class which add typespec to ffiGenBatch for arrowProjectedFragment. In annotation invoker, we
+ * alread generated some classes, try to avoid regeneration.
+ * TODO(zhanglei): generate according to message strategy, if provided.
  */
 public class ArrowProjectedGenerator {
 
@@ -43,6 +50,38 @@ public class ArrowProjectedGenerator {
     private String vertexDataType, javaVertexDataType;
     private String cppFragName, javaFragName;
     private String[][] messageTypePairs;
+
+    private HashSet<String> KNOWN_VDATA =
+            new HashSet<>(
+                    Arrays.asList(
+                            "Integer",
+                            "java.lang.Integer",
+                            "Long",
+                            "java.lang.Long",
+                            "Double",
+                            "java.lang.Double",
+                            STRING_VIEW));
+
+    private HashSet<String> KNOWN_EDATA =
+            new HashSet<>(
+                    Arrays.asList(
+                            "Integer",
+                            "java.lang.Integer",
+                            "Long",
+                            "java.lang.Long",
+                            "Double",
+                            "java.lang.Double",
+                            STRING_VIEW));
+
+    private HashSet<String> KNOWN_VERTEX_DATAT =
+            new HashSet<>(
+                    Arrays.asList(
+                            "Integer",
+                            "java.lang.Integer",
+                            "Long",
+                            "java.lang.Long",
+                            "Double",
+                            "java.lang.Double"));
 
     public ArrowProjectedGenerator(
             AnnotationSpec.Builder ffiGenBatchBuilder,
@@ -103,31 +142,58 @@ public class ArrowProjectedGenerator {
     }
 
     public void generate() {
-        addTemplate(
-                TypedArray.class.getName(),
-                new String[] {cppEdata, cppVdata},
-                new String[] {javaEdata, javaVdata});
-        addTemplate(PropertyNbrUnit.class.getName(), new String[] {cppVid}, new String[] {javaVid});
-        addTemplate(ProjectedNbr.class.getName(), cppVid, cppEdata, javaVid, javaEdata);
-        addTemplate(ProjectedAdjList.class.getName(), cppVid, cppEdata, javaVid, javaEdata);
-        addTemplate(VertexRange.class.getName(), new String[] {cppVid}, new String[] {javaVid});
-        addVertexArray();
-        // only add if edata is not on of primitives ones.
-        addProjectedNbr();
-        // only add if edata is not on of primitives ones.
-        addProjectedAdjList();
-        // generate for ArrowProjectedFragment
-        addArrowProjectedFragment();
+        // vid
+        if (javaVid.equals("Long") || javaVid.equals("java.lang.Long")) {
+            logger.info("Skip generating for vid {}", javaVdata);
+        } else {
+            addTemplate(
+                    PropertyNbrUnit.class.getName(),
+                    Collections.singletonList(cppVid),
+                    Collections.singletonList(javaVid));
+            addTemplate(
+                    VertexRange.class.getName(),
+                    Collections.singletonList(cppVid),
+                    Collections.singletonList(javaVid));
+        }
 
+        // vd and ed
+        List<String> cpps = new ArrayList<>(2);
+        List<String> javas = new ArrayList<>(2);
+        boolean eDataContained = false;
+        if (KNOWN_VDATA.contains(javaVdata)) {
+            logger.info("Skip generating primitive typed array for type {}", javaVdata);
+        } else {
+            cpps.add(cppVdata);
+            javas.add(javaVdata);
+        }
+        if (KNOWN_EDATA.contains(javaEdata)) {
+            logger.info("Skip generating primitive typed array for type {}", javaEdata);
+            eDataContained = true;
+        } else {
+            cpps.add(cppEdata);
+            javas.add(javaEdata);
+        }
+        if (cpps.size() > 0) {
+            addTemplate(PrimitiveTypedArray.class.getName(), cpps, javas);
+            addArrowProjectedFragment();
+            addVertexDataContext(ffiGenBatchBuilder, cppFragName, javaFragName);
+        }
+        if (eDataContained) {
+            logger.info("Skip generating ProjectedNbr for edata {}", javaEdata);
+        } else {
+            addTemplate(ProjectedNbr.class.getName(), cppVid, cppEdata, javaVid, javaEdata);
+            addTemplate(ProjectedAdjList.class.getName(), cppVid, cppEdata, javaVid, javaEdata);
+        }
+
+        if (KNOWN_VERTEX_DATAT.contains(javaVertexDataType)) {
+            logger.info("Skip generating vertex data array for {}", javaVertexDataType);
+        } else {
+            addVertexArray();
+        }
+
+        // always generate for messages.
         addParallelMessageManager();
-
         addMessageInBuffer();
-
-        // add for all columns, long column, int column, double column.
-        // addColumn(ffiGenBatchBuilder, cppFragName, javaFragName);
-        // addSharedPtr(ffiGenBatchBuilder, cppFragName, javaFragName);
-
-        addVertexDataContext(ffiGenBatchBuilder, cppFragName, javaFragName);
     }
 
     private void addVertexArray() {
@@ -138,8 +204,8 @@ public class ArrowProjectedGenerator {
 
         addTemplate(
                 GSVertexArray.class.getName(),
-                new String[] {vertexDataType},
-                new String[] {javaVertexDataType});
+                Collections.singletonList(vertexDataType),
+                Collections.singletonList(javaVertexDataType));
     }
 
     private void addVertexDataContext(
@@ -158,10 +224,6 @@ public class ArrowProjectedGenerator {
                         .addMember("java", "$S", javaVertexDataType)
                         .build());
         ffiGenBatchBuilder.addMember("value", "$L", ffiGenVertexDataContext.build());
-    }
-
-    private void addProjectedNbr() {
-        addTemplate(ProjectedNbr.class.getName(), cppVid, cppEdata, javaVid, javaEdata);
     }
 
     private void addProjectedAdjList() {
@@ -184,7 +246,7 @@ public class ArrowProjectedGenerator {
     private void addParallelMessageManager() {
         AnnotationSpec.Builder ffiGenBuilderParallel = AnnotationSpec.builder(FFIGen.class);
         ffiGenBuilderParallel.addMember("type", "$S", ParallelMessageManager.class.getName());
-        parallelMessageManagerAddMessages(ffiGenBuilderParallel, cppFragName, javaFragName);
+        parallelMessageManagerAddMessages(ffiGenBuilderParallel);
         ffiGenBatchBuilder.addMember("value", "$L", ffiGenBuilderParallel.build());
     }
 
@@ -234,36 +296,35 @@ public class ArrowProjectedGenerator {
         ffiGenBatchBuilder.addMember("value", "$L", curBuilder.build());
     }
 
-    /** add template with multiple cxx template*/
-    private void addTemplate(String typeName, String[] cxxs, String javas[]) {
-        if (cxxs.length != javas.length) {
+    /**
+     * add template with multiple cxx template
+     */
+    private void addTemplate(String typeName, List<String> cxxs, List<String> javas) {
+        if (cxxs.size() != javas.size()) {
             throw new IllegalStateException("Java cxx template length not equal");
         }
-        int num = cxxs.length;
+        int num = cxxs.size();
         AnnotationSpec.Builder curBuilder = AnnotationSpec.builder(FFIGen.class);
         curBuilder.addMember("type", "$S", typeName);
         // build cxx template.
         for (int i = 0; i < num; ++i) {
             AnnotationSpec.Builder cxxTemplateBuilder = AnnotationSpec.builder(CXXTemplate.class);
-            cxxTemplateBuilder.addMember("cxx", "$S", cxxs[i]);
-            cxxTemplateBuilder.addMember("java", "$S", javas[i]);
+            cxxTemplateBuilder.addMember("cxx", "$S", cxxs.get(i));
+            cxxTemplateBuilder.addMember("java", "$S", javas.get(i));
             curBuilder.addMember("templates", "$L", cxxTemplateBuilder.build());
         }
 
         ffiGenBatchBuilder.addMember("value", "$L", curBuilder.build());
     }
 
-    private void parallelMessageManagerAddMessages(
-            AnnotationSpec.Builder parallelMessageBuilder,
-            String cppFragName,
-            String javaFragName) {
+    private void parallelMessageManagerAddMessages(AnnotationSpec.Builder parallelMessageBuilder) {
 
         addFuncGenMethod(
                 parallelMessageBuilder,
                 "sendMsgThroughIEdgesArrowProjected",
                 "void",
                 new String[] {
-                    "FRAG_T", "com.alibaba.graphscope.ds.Vertex", "MSG_T", "int", "VDATA_T"
+                    "FRAG_T", "com.alibaba.graphscope.ds.Vertex", "MSG_T", "int", "UNUSED_T"
                 },
                 messageTypePairs);
         addFuncGenMethod(
@@ -271,7 +332,7 @@ public class ArrowProjectedGenerator {
                 "sendMsgThroughOEdgesArrowProjected",
                 "void",
                 new String[] {
-                    "FRAG_T", "com.alibaba.graphscope.ds.Vertex", "MSG_T", "int", "VDATA_T"
+                    "FRAG_T", "com.alibaba.graphscope.ds.Vertex", "MSG_T", "int", "UNUSED_T"
                 },
                 messageTypePairs);
         addFuncGenMethod(
@@ -279,7 +340,7 @@ public class ArrowProjectedGenerator {
                 "sendMsgThroughEdgesArrowProjected",
                 "void",
                 new String[] {
-                    "FRAG_T", "com.alibaba.graphscope.ds.Vertex", "MSG_T", "int", "VDATA_T"
+                    "FRAG_T", "com.alibaba.graphscope.ds.Vertex", "MSG_T", "int", "UNUSED_T"
                 },
                 messageTypePairs);
         addFuncGenMethod(
@@ -287,14 +348,14 @@ public class ArrowProjectedGenerator {
                 "syncStateOnOuterVertexArrowProjected",
                 "void",
                 new String[] {
-                    "FRAG_T", "com.alibaba.graphscope.ds.Vertex", "MSG_T", "int", "VDATA_T"
+                    "FRAG_T", "com.alibaba.graphscope.ds.Vertex", "MSG_T", "int", "UNUSED_T"
                 },
                 messageTypePairs);
         addFuncGenMethodNoMsg(
                 parallelMessageBuilder,
                 "syncStateOnOuterVertexArrowProjectedNoMsg",
                 "void",
-                new String[] {"FRAG_T", "com.alibaba.graphscope.ds.Vertex", "int", "VDATA_T"});
+                new String[] {"FRAG_T", "com.alibaba.graphscope.ds.Vertex", "int", "UNUSED_T"});
     }
 
     public void addFuncGenMethod(
@@ -314,9 +375,17 @@ public class ArrowProjectedGenerator {
             for (String[] types : messageTypePairs) {
                 AnnotationSpec.Builder templateBuilder =
                         AnnotationSpec.builder(CXXTemplate.class)
+                                .addMember("cxx", "$S", cppOid)
+                                .addMember("cxx", "$S", cppVid)
+                                .addMember("cxx", "$S", cppVdata)
+                                .addMember("cxx", "$S", cppEdata)
                                 .addMember("cxx", "$S", cppFragName)
                                 .addMember("cxx", "$S", types[0])
                                 .addMember("cxx", "$S", "whateverThisIs")
+                                .addMember("java", "$S", javaOid)
+                                .addMember("java", "$S", javaVid)
+                                .addMember("java", "$S", javaVdata)
+                                .addMember("java", "$S", javaEdata)
                                 .addMember("java", "$S", javaFragName)
                                 .addMember("java", "$S", types[1])
                                 .addMember("java", "$S", getUnusedTypeName(types[1]));
@@ -342,8 +411,16 @@ public class ArrowProjectedGenerator {
         }
         AnnotationSpec.Builder templateBuilder =
                 AnnotationSpec.builder(CXXTemplate.class)
+                        .addMember("cxx", "$S", cppOid)
+                        .addMember("cxx", "$S", cppVid)
+                        .addMember("cxx", "$S", cppVdata)
+                        .addMember("cxx", "$S", cppEdata)
                         .addMember("cxx", "$S", cppFragName)
                         .addMember("cxx", "$S", "whateverThisIs")
+                        .addMember("java", "$S", javaOid)
+                        .addMember("java", "$S", javaVid)
+                        .addMember("java", "$S", javaVdata)
+                        .addMember("java", "$S", javaEdata)
                         .addMember("java", "$S", javaFragName)
                         // FIXME: make unused accepts two.
                         .addMember("java", "$S", getUnusedTypeName()); // anything should be ok.
@@ -370,7 +447,9 @@ public class ArrowProjectedGenerator {
             return "Double";
         } else if (fullName.equals("java.lang.Integer")) {
             return "Integer";
-        } else if (fullName.equals("java.lang.String")) {
+        } else if (fullName.equals("java.lang.String")
+                || fullName.equals("com.alibaba.fastffi.FFIByteString")
+                || fullName.equals("com.alibaba.graphscope.ds.StringView")) {
             return "String";
         } else if (fullName.equals("Empty") || fullName.equals(EMPTY_TYPE)) {
             return "Empty";

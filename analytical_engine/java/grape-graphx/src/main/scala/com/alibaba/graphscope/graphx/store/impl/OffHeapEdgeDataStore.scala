@@ -16,8 +16,8 @@
 
 package com.alibaba.graphscope.graphx.store.impl
 
-import com.alibaba.graphscope.arrow.array.ArrowArrayBuilder
-import com.alibaba.graphscope.ds.TypedArray
+import com.alibaba.graphscope.arrow.array.PrimitiveArrowArrayBuilder
+import com.alibaba.graphscope.ds.PrimitiveTypedArray
 import com.alibaba.graphscope.graphx.VineyardClient
 import com.alibaba.graphscope.graphx.store.EdgeDataStore
 import com.alibaba.graphscope.graphx.utils.{EIDAccessor, GrapeUtils, ScalaFFIFactory}
@@ -31,7 +31,7 @@ class OffHeapEdgeDataStore[ED: ClassTag](
     localNum: Int,
     client: VineyardClient,
     eidAccessor: EIDAccessor,
-    val arrowArrayBuilder: ArrowArrayBuilder[ED]
+    val arrowArrayBuilder: PrimitiveArrowArrayBuilder[ED]
 ) extends AbstractEdgeDataStore[ED](length, localNum, client, eidAccessor)
     with EdgeDataStore[ED]
     with Logging {
@@ -48,7 +48,7 @@ class OffHeapEdgeDataStore[ED: ClassTag](
       localNum,
       client,
       eidAccessor,
-      ScalaFFIFactory.newArrowArrayBuilder[ED]
+      ScalaFFIFactory.newPrimitiveArrowArrayBuilder[ED]
     )
     arrowArrayBuilder.reserve(length)
   }
@@ -81,7 +81,7 @@ class ImmutableOffHeapEdgeStore[ED: ClassTag](
     localNum: Int,
     client: VineyardClient,
     eidAccessor: EIDAccessor,
-    typedArray: TypedArray[ED]
+    typedArray: PrimitiveTypedArray[ED]
 ) extends AbstractEdgeDataStore[ED](length, localNum, client, eidAccessor)
     with EdgeDataStore[ED]
     with Logging {

@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.graphx.rdd.impl
 
-import com.alibaba.graphscope.arrow.array.ArrowArrayBuilder
+import com.alibaba.graphscope.arrow.array.PrimitiveArrowArrayBuilder
 import com.alibaba.graphscope.ds.{PropertyNbrUnit, Vertex}
 import com.alibaba.graphscope.graphx._
 import com.alibaba.graphscope.graphx.graph.{GSEdgeTriplet, GraphStructure, ReusableEdge}
@@ -118,7 +118,7 @@ class GrapeEdgePartition[VD: ClassTag, ED: ClassTag](
     )
     val vertex = FFITypeFactoryhelper.newVertexLong().asInstanceOf[Vertex[Long]]
     while (i < end) {
-      vertex.SetValue(i)
+      vertex.setValue(i)
       val gid    = graphStructure.getOuterVertexGid(vertex)
       val lid    = idParser.getLocalId(gid)
       val fid    = idParser.getFragId(gid)
@@ -866,7 +866,7 @@ class GrapeEdgePartitionBuilder[VD: ClassTag, ED: ClassTag](
             val oid   = innerOids(i)
             val vdata = innerVertexAttrs(i)
             require(graphStructure.getInnerVertex(oid, grapeVertex))
-            val lid = grapeVertex.GetValue().toInt
+            val lid = grapeVertex.getValue().toInt
             require(lid < ivnum, s"expect no outer vertex ${lid}, ${ivnum}")
             innerVertexData.set(lid, vdata)
             i += 1

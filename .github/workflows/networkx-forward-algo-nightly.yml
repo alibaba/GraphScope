@@ -26,7 +26,7 @@ jobs:
     - name: Build GAE and coordinator
       run: |
         pushd ${GITHUB_WORKSPACE}
-        make gae ENABLE_JAVA_SDK=OFF BUILD_TEST=OFF NUMPROC=1
+        make gae-install ENABLE_JAVA_SDK=OFF BUILD_TEST=OFF NUMPROC=1
         # also make coordinator and client for python test
         make coordinator && make client
         popd
@@ -36,6 +36,7 @@ jobs:
         DEPLOYMENT: 'standalone'
       run: |
         cd ${GITHUB_WORKSPACE}/python
+        export GRAPHSCOPE_HOME=/opt/graphscope
         python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
           --cov-report=term -s -v -m "not slow" graphscope/nx/algorithms/tests/forward
 

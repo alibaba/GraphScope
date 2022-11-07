@@ -16,17 +16,17 @@
 
 package com.alibaba.graphscope.graphx.rdd.impl
 
-import com.alibaba.graphscope.ds.{StringTypedArray, Vertex}
-import com.alibaba.graphscope.fragment.{ArrowProjectedFragment, ArrowProjectedStringEDFragment}
+import com.alibaba.graphscope.ds.{PrimitiveTypedArray, StringTypedArray, Vertex}
+import com.alibaba.graphscope.fragment.ArrowProjectedFragment
 import com.alibaba.graphscope.graphx.VineyardClient
 import com.alibaba.graphscope.graphx.graph.GraphStructure
 import com.alibaba.graphscope.graphx.rdd.RoutingTable
 import com.alibaba.graphscope.graphx.store.VertexDataStore
-import com.alibaba.graphscope.graphx.store.impl.{AbstractVertexDataStore, InHeapVertexDataStore}
+import com.alibaba.graphscope.graphx.store.impl.AbstractVertexDataStore
 import com.alibaba.graphscope.graphx.utils._
 import com.alibaba.graphscope.serialization.FakeFFIByteVectorInputStream
 import com.alibaba.graphscope.stdcxx.FakeFFIByteVector
-import com.alibaba.graphscope.utils.FFITypeFactoryhelper
+import com.alibaba.graphscope.utils.{FFITypeFactoryhelper, VertexDataUtils}
 import org.apache.spark.Partition
 import org.apache.spark.graphx.{EdgeDirection, PartitionID, VertexId}
 import org.apache.spark.internal.Logging
@@ -77,7 +77,7 @@ class GrapeVertexPartition[VD: ClassTag](
       }
 
       override def next(): (VertexId, VD) = {
-        vertex.SetValue(lid)
+        vertex.setValue(lid)
         val res = (graphStructure.innerVertexLid2Oid(vertex), getData(lid))
         lid = bitSet.nextSetBit(lid + 1)
         res
@@ -93,7 +93,7 @@ class GrapeVertexPartition[VD: ClassTag](
 
     val vertex = FFITypeFactoryhelper.newVertexLong().asInstanceOf[Vertex[Long]]
     while (lid >= 0 && lid < endLid) {
-      vertex.SetValue(lid)
+      vertex.setValue(lid)
       newValues.set(lid, getNbrIds(vertex, edgeDirection))
       lid = bitSet.nextSetBit(lid + 1);
     }
@@ -187,7 +187,7 @@ class GrapeVertexPartition[VD: ClassTag](
             outerDatas(i) != null,
             s"received null msg in ${tuple}, pos ${i}"
           )
-          vertexData.set(tmpVertex.GetValue.toInt, outerDatas(i))
+          vertexData.set(tmpVertex.getValue.toInt, outerDatas(i))
           i += 1
         }
       }
@@ -211,7 +211,7 @@ class GrapeVertexPartition[VD: ClassTag](
     val newValues = createNewValues[VD2]
     var i         = bitSet.nextSetBit(startLid)
     while (i >= 0 && i < endLid) {
-      vertex.SetValue(i)
+      vertex.setValue(i)
       newValues.set(i, f(graphStructure.getId(vertex), getData(i)))
       i = bitSet.nextSetBit(i + 1)
     }
@@ -232,7 +232,7 @@ class GrapeVertexPartition[VD: ClassTag](
     // Iterate over the active bits in the old mask and evaluate the predicate
     var curLid = bitSet.nextSetBit(startLid)
     while (curLid >= 0 && curLid < endLid) {
-      vertex.SetValue(curLid)
+      vertex.setValue(curLid)
       if (pred(graphStructure.getId(vertex), getData(curLid))) {
         newMask.set(curLid)
       }
@@ -268,7 +268,7 @@ class GrapeVertexPartition[VD: ClassTag](
       val oid   = product._1
       val vdata = product._2
       require(graphStructure.getVertex(oid, vertex))
-      val lid = vertex.GetValue().toInt
+      val lid = vertex.getValue().toInt
       if (lid >= 0) {
         if (newMask.get(lid)) {
           newValues.set(lid, reduceFunc(newValues.get(lid), vdata))
@@ -324,7 +324,7 @@ class GrapeVertexPartition[VD: ClassTag](
       val newValues = createNewValues[VD3]
       var i         = this.bitSet.nextSetBit(startLid)
       while (i >= 0 && i < endLid) {
-        vertex.SetValue(i)
+        vertex.setValue(i)
         val otherV: Option[VD2] =
           if (other.bitSet.get(i)) Some(other.getData(i)) else None
         val t = f(this.graphStructure.getId(vertex), this.getData(i), otherV)
@@ -355,7 +355,7 @@ class GrapeVertexPartition[VD: ClassTag](
     iter.foreach { pair =>
       val vertexFound = graphStructure.getVertex(pair._1, vertex)
       if (vertexFound) {
-        val lid = vertex.GetValue().toInt
+        val lid = vertex.getValue().toInt
         newMask.set(lid)
         newValues.set(lid, pair._2)
       }
@@ -375,7 +375,7 @@ class GrapeVertexPartition[VD: ClassTag](
       val newView = createNewValues[VD2]
       var i       = newMask.nextSetBit(startLid)
       while (i >= 0 && i < endLid) {
-        vertex.SetValue(i)
+        vertex.setValue(i)
         newView.set(
           i,
           f(
@@ -410,15 +410,29 @@ class GrapeVertexPartition[VD: ClassTag](
         val newVdatas = vertexData.mapToNew[VD]
         var i         = 0
         require(ivnum == fragment.getInnerVerticesNum, s"ivnum neq ${ivnum}, ${fragment.getInnerVerticesNum}")
-        val vdAccessor = fragment match {
-          case simple: ArrowProjectedFragment[Long, Long, VD, ED]       => simple.getVdataArrayAccessor
-          case stringED: ArrowProjectedStringEDFragment[Long, Long, VD] => stringED.getVdataArrayAccessor
+        fragment match {
+          case simple: ArrowProjectedFragment[Long, Long, VD, ED] => {
+            if (GrapeUtils.isPrimitive[VD]) {
+              val vdAccessor = ScalaFFIFactory.newPrimitiveTypedArray[VD]
+              vdAccessor.setAddress(simple.getVdataArrayAccessor.getAddress)
+              while (i < ivnum) {
+                newVdatas.set(i, vdAccessor.get(i))
+                i += 1
+              }
+            } else {
+              val stringTypedArray: StringTypedArray = ScalaFFIFactory.newStringTypedArray
+              stringTypedArray.setAddress(simple.getVdataArrayAccessor.getAddress)
+              val vdAccessor =
+                VertexDataUtils.readComplexArray[VD](stringTypedArray, GrapeUtils.getRuntimeClass[VD])
+              while (i < ivnum) {
+                newVdatas.set(i, vdAccessor(i))
+                i += 1
+              }
+            }
+          }
           case _ => throw new IllegalStateException("not possible")
         }
-        while (i < ivnum) {
-          newVdatas.set(i, vdAccessor.get(i))
-          i += 1
-        }
+
         log.info(s"pid ${pid} create immutable offHeap vertex data")
         for (dstPid <- siblingPid) {
           VertexDataStore.enqueue(dstPid, newVdatas)

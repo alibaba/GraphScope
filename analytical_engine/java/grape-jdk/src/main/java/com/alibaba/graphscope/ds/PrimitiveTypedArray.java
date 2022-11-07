@@ -14,45 +14,26 @@
  *  limitations under the License.
  */
 
-package com.alibaba.graphscope.arrow.array;
-
-import static com.alibaba.graphscope.utils.CppClassName.GS_ARROW_ARRAY_BUILDER;
-import static com.alibaba.graphscope.utils.CppHeaderName.CORE_JAVA_TYPE_ALIAS_H;
+package com.alibaba.graphscope.ds;
 
 import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.CXXOperator;
-import com.alibaba.fastffi.CXXReference;
-import com.alibaba.fastffi.CXXValue;
 import com.alibaba.fastffi.FFIFactory;
 import com.alibaba.fastffi.FFIGen;
-import com.alibaba.fastffi.FFINameAlias;
-import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
-import com.alibaba.graphscope.arrow.Status;
+import com.alibaba.graphscope.utils.CppClassName;
+import com.alibaba.graphscope.utils.CppHeaderName;
 import com.alibaba.graphscope.utils.JNILibraryName;
 
 @FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
-@CXXHead(CORE_JAVA_TYPE_ALIAS_H)
-@FFITypeAlias(GS_ARROW_ARRAY_BUILDER)
-public interface ArrowArrayBuilder<T> extends FFIPointer {
-
-    @FFINameAlias("Reserve")
-    @CXXValue
-    Status reserve(long additionalCapacity);
-
-    @FFINameAlias("UnsafeAppend")
-    void unsafeAppend(T value);
-
-    @FFINameAlias("GetValue")
-    @CXXReference
-    T getValue(long index);
-
+@CXXHead(CppHeaderName.ARROW_PROJECTED_FRAGMENT_H)
+@FFITypeAlias(CppClassName.GS_ARROW_PROJECTED_FRAGMENT_IMPL_TYPED_ARRAY)
+public interface PrimitiveTypedArray<DATA_T> extends BaseTypedArray<DATA_T> {
     @CXXOperator("[]")
-    void set(long index, @CXXReference T value);
+    DATA_T get(long index);
 
     @FFIFactory
-    interface Factory<T> {
-
-        ArrowArrayBuilder<T> create();
+    interface Factory<DATA_T> {
+        PrimitiveTypedArray<DATA_T> create();
     }
 }

@@ -332,6 +332,11 @@ if (BUILD_TESTS)
         target_compile_definitions(graphx_loader_test PUBLIC ENABLE_JAVA_SDK)
         target_link_libraries(graphx_loader_test ${CMAKE_DL_LIBS} ${VINEYARD_LIBRARIES} ${Boost_LIBRARIES} ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES})
 
+        add_executable(run_java_string_app test/run_java_string_app.cc core/java/javasdk.cc)
+        target_include_directories(run_java_string_app PRIVATE core utils apps)
+        target_compile_definitions(run_java_string_app PUBLIC ENABLE_JAVA_SDK)
+        target_link_libraries(run_java_string_app ${CMAKE_DL_LIBS} ${VINEYARD_LIBRARIES} ${Boost_LIBRARIES} ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES} ${JNI_LIBRARIES})
+
         if (${LIBUNWIND_FOUND})
             target_link_libraries(run_java_app ${LIBUNWIND_LIBRARIES})
             target_link_libraries(property_graph_java_app_benchmarks ${LIBUNWIND_LIBRARIES})

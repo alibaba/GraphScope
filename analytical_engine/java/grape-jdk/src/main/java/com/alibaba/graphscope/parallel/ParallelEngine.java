@@ -72,7 +72,7 @@ public interface ParallelEngine {
                                 }
                                 try {
                                     for (int i = curBegin; i < curEnd; ++i) {
-                                        vertex.SetValue((long) i);
+                                        vertex.setValue((long) i);
                                         consumer.accept(vertex, finalTid);
                                     }
                                 } catch (Exception e) {
@@ -85,7 +85,7 @@ public interface ParallelEngine {
                                                     + " "
                                                     + curEnd
                                                     + " vertex "
-                                                    + vertex.GetValue().intValue()
+                                                    + vertex.getValue().intValue()
                                                     + " thread "
                                                     + finalTid);
                                 }
@@ -141,7 +141,7 @@ public interface ParallelEngine {
                                 }
                                 for (int i = curBegin; i < curEnd; ++i) {
                                     if (vertexSet.get(i)) {
-                                        vertex.SetValue((long) i);
+                                        vertex.setValue((long) i);
                                         consumer.accept(vertex, finalTid, msg);
                                     }
                                 }
@@ -194,7 +194,7 @@ public interface ParallelEngine {
                                 }
                                 for (int i = curBegin; i < curEnd; ++i) {
                                     if (vertexSet.get(i)) {
-                                        vertex.SetValue((long) i);
+                                        vertex.setValue((long) i);
                                         consumer.accept(vertex, finalTid);
                                     }
                                 }
@@ -254,7 +254,7 @@ public interface ParallelEngine {
                                 try {
                                     for (int i = curBegin; i < curEnd; ++i) {
                                         if (vertexSet.get(i)) {
-                                            vertex.SetValue((long) i);
+                                            vertex.setValue((long) i);
                                             consumer.accept(vertex, finalTid, msg);
                                         }
                                     }
@@ -268,7 +268,7 @@ public interface ParallelEngine {
                                                     + " "
                                                     + curEnd
                                                     + " vertex "
-                                                    + vertex.GetValue().intValue()
+                                                    + vertex.getValue().intValue()
                                                     + " thread "
                                                     + finalTid);
                                 }
@@ -324,7 +324,7 @@ public interface ParallelEngine {
                                 }
                                 try {
                                     for (int i = curBegin; i < curEnd; ++i) {
-                                        vertex.SetValue((long) i);
+                                        vertex.setValue((long) i);
                                         consumer.accept(vertex, finalTid, msg);
                                     }
                                 } catch (Exception e) {
@@ -337,7 +337,7 @@ public interface ParallelEngine {
                                                     + " "
                                                     + curEnd
                                                     + " vertex "
-                                                    + vertex.GetValue().intValue()
+                                                    + vertex.getValue().intValue()
                                                     + " thread "
                                                     + finalTid);
                                 }
@@ -394,7 +394,7 @@ public interface ParallelEngine {
                                 }
                                 for (int i = curBegin; i < curEnd; ++i) {
                                     if (vertexSet.get(i)) {
-                                        vertex.SetValue((long) i);
+                                        vertex.setValue((long) i);
                                         consumer.accept(vertex, finalTid, vertexLabelId);
                                     }
                                 }
@@ -449,7 +449,7 @@ public interface ParallelEngine {
                                     break;
                                 }
                                 for (int i = curBegin; i < curEnd; ++i) {
-                                    vertex.SetValue((long) i);
+                                    vertex.setValue((long) i);
                                     consumer.accept(vertex, finalTid, vertexLabelId);
                                 }
                             }

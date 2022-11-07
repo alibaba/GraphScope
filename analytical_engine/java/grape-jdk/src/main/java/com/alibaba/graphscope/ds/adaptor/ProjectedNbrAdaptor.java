@@ -27,14 +27,18 @@ public class ProjectedNbrAdaptor<VID_T, EDATA_T> implements Nbr<VID_T, EDATA_T> 
 
     public static final String TYPE = "ProjectedNbr";
     private ProjectedNbr<VID_T, EDATA_T> nbr;
+    private ProjectedAdjListAdaptor<VID_T, EDATA_T> adjListAdaptor;
 
     @Override
     public String type() {
         return TYPE;
     }
 
-    public ProjectedNbrAdaptor(ProjectedNbr<VID_T, EDATA_T> n) {
+    public ProjectedNbrAdaptor(
+            ProjectedNbr<VID_T, EDATA_T> n,
+            ProjectedAdjListAdaptor<VID_T, EDATA_T> adjListAdaptor) {
         nbr = n;
+        this.adjListAdaptor = adjListAdaptor;
     }
 
     @Override
@@ -42,9 +46,10 @@ public class ProjectedNbrAdaptor<VID_T, EDATA_T> implements Nbr<VID_T, EDATA_T> 
         return nbr.neighbor();
     }
 
+    /** When try to get edata from here, we assume only ed=stringView is possible*/
     @Override
     public EDATA_T data() {
-        return nbr.data();
+        return adjListAdaptor.getEdata(nbr.edgeId());
     }
 
     @Override
