@@ -47,8 +47,17 @@ spec:
           preStop:
             exec:
               command:
-                - python3
-                - /usr/local/bin/pre_stop.py
+                - /bin/bash
+                - -c
+                - |
+                  kubectl patch role/{{ include "graphscope.fullname" . }}-role \
+                  -n {{ .Release.Namespace }} \
+                  --type json \
+                  --patch='[ { "op": "remove", "path": "/metadata/finalizers" } ]' && \
+                  kubectl patch rolebinding/{{ include "graphscope.fullname" . }}-role-binding \
+                  -n {{ .Release.Namespace }} \
+                  --type json \
+                  --patch='[ { "op": "remove", "path": "/metadata/finalizers" } ]'
         command:
           - python3
           - "-m"
