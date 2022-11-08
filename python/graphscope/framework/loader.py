@@ -245,8 +245,22 @@ class Loader(object):
         # doesn't add an additional stream layer.
         # Maybe handled by vineyard in the near future
         if self.protocol == "file":
-            source = "{}#{}".format(self.source, self.options)
-            config[types_pb2.SOURCE] = utils.s_to_attr(source)
+            if (
+                self.source.endswith(".orc")
+                or self.source.endswith(".parquet")
+                or self.source.endswith(".pq")
+            ):
+                # orc and parquet: handled by vineyard
+                config[types_pb2.SOURCE] = utils.s_to_attr(self.source)
+                config[types_pb2.STORAGE_OPTIONS] = utils.s_to_attr(
+                    json.dumps(self.storage_options)
+                )
+                config[types_pb2.READ_OPTIONS] = utils.s_to_attr(
+                    json.dumps(self.options.to_dict())
+                )
+            else:
+                source = "{}#{}".format(self.source, self.options)
+                config[types_pb2.SOURCE] = utils.s_to_attr(source)
         elif self.protocol == "pandas":
             config[types_pb2.VALUES] = self.source
         else:  # Let vineyard handle other data source.

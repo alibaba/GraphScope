@@ -55,9 +55,6 @@ WORKDIR /home/graphscope
 # set the CLASSPATH for hadoop
 RUN bash -l -c 'echo export CLASSPATH="$($HADOOP_HOME/bin/hdfs classpath --glob)" >> /home/graphscope/.profile'
 
-# ensure ~/.profile is sourced, see also: https://stackoverflow.com/a/46239286/5080177
-SHELL ["/bin/bash", "-lc"]
-
 ENV PATH=${PATH}:/home/graphscope/.local/bin
 
 COPY . /home/graphscope/gs
