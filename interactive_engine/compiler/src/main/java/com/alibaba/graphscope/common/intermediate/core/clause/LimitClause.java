@@ -2,7 +2,7 @@ package com.alibaba.graphscope.common.intermediate.core.clause;
 
 import com.alibaba.graphscope.common.intermediate.core.IrNodeList;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 
 public class LimitClause extends AbstractClause {
     // represent range as a two-elements list of IrLiterals

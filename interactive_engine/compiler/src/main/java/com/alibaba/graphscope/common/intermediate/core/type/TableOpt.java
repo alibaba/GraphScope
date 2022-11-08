@@ -1,4 +1,4 @@
-package com.alibaba.graphscope.common.intermediate.core.validate;
+package com.alibaba.graphscope.common.intermediate.core.type;
 
 public enum TableOpt {
     Entity, // Vertex

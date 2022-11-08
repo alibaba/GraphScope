@@ -6,7 +6,7 @@ import com.alibaba.graphscope.common.intermediate.core.type.IrReturnTypeInferenc
 import jline.internal.Nullable;
 
 import org.apache.calcite.rel.type.RelDataType;
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.List;
 
@@ -19,7 +19,7 @@ public class IrOperator {
     @Nullable private IrOperandTypeChecker operandTypeChecker;
     @Nullable private IrReturnTypeInference returnTypeInference;
 
-    protected IrOperator(
+    public IrOperator(
             String name,
             IrOperatorKind kind,
             @Nullable IrOperandTypeChecker operandTypeChecker,

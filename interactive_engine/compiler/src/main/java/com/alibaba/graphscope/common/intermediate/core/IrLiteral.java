@@ -3,7 +3,7 @@ package com.alibaba.graphscope.common.intermediate.core;
 import com.alibaba.graphscope.common.intermediate.core.type.IrTypeName;
 
 import org.apache.calcite.rel.type.RelDataType;
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -14,7 +14,7 @@ public class IrLiteral extends IrNode {
     private IrTypeName typeName;
     @Nullable private Object value;
 
-    protected IrLiteral(@Nullable Object value, IrTypeName typeName) {}
+    public IrLiteral(@Nullable Object value, IrTypeName typeName) {}
 
     @Override
     public RelDataType inferReturnType() {

@@ -4,7 +4,7 @@ import com.alibaba.graphscope.common.intermediate.core.IrNode;
 import com.alibaba.graphscope.common.intermediate.core.IrNodeList;
 import com.alibaba.graphscope.common.intermediate.core.IrOperatorKind;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**

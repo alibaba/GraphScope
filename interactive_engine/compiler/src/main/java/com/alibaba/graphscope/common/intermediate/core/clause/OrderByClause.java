@@ -5,7 +5,7 @@ import com.alibaba.graphscope.common.intermediate.core.IrNodeList;
 import com.alibaba.graphscope.common.intermediate.core.IrOperatorKind;
 import com.alibaba.graphscope.common.intermediate.core.clause.type.OrderOpt;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 
 /**
  * maintain a list of pairs, each pair consists of expression (variable) and opt (DESC or ASC),

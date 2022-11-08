@@ -12,4 +12,6 @@ public interface IrOperandTypeChecker {
      * @return whether check succeeded
      */
     boolean checkOperandTypes(IrCall call);
+
+    boolean checkOperandCount(IrCall call);
 }

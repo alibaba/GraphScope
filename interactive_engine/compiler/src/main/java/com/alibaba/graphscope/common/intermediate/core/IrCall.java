@@ -3,7 +3,7 @@ package com.alibaba.graphscope.common.intermediate.core;
 import com.alibaba.graphscope.common.intermediate.core.clause.AbstractClause;
 
 import org.apache.calcite.rel.type.RelDataType;
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.List;
 
@@ -15,7 +15,7 @@ public class IrCall extends IrNode {
     private List<IrNode> operandList;
     private IrOperator irOperator;
 
-    protected IrCall(
+    public IrCall(
             AbstractClause clause,
             IrOperatorKind irOperatorKind,
             IrOperator operator,
@@ -23,6 +23,10 @@ public class IrCall extends IrNode {
 
     public List<IrNode> getOperandList() {
         return operandList;
+    }
+
+    public IrOperator getIrOperator() {
+        return irOperator;
     }
 
     @Override
