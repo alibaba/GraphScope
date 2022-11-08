@@ -92,6 +92,11 @@
 
     大多数情况下，超时的原因是因为在 Kubernetes 集群拉起 GraphScope 实例时需要下载对应镜像，这一步通常需要几分钟的时间，你可以通过 ``graphscope.set_option(timeout_seconds=600)`` 适当的增加超时等待时间来解决该问题。
     
+13. 启动GraphScope时由于连接v6d，etcd等组件失败而导致GraphScope启动失败?
+
+    这可能是由于你所使用的机器（或容器）所在的企业网络内要求相应的代理设置方可正常使用网络。这些代理设置可能会导致错误的地址解析以及端口占用。为避免类似情况，可在环境变量 ``no_proxy`` 或 ``NO_PROXY`` 中加入GraphScope相关的地址，如  ``hostname -i`` 以及 ``0.0.0.0`` （请注意`no_proxy的前后缀规则 <https://unix.stackexchange.com/questions/23452/set-a-network-range-in-the-no-proxy-environment-variable>`_）
+
+
 
 **其他问题**
 
