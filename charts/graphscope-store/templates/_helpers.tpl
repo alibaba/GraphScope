@@ -75,7 +75,7 @@ Return the proper graphscope-store image name
 
 {{/*
 Return the proper image name
-{{ include "graphscope-store.images.image" ( dict "imageRoot" .Values.path.to.the.image "global" $ "DefaultTag" .Chart.AppVersion ) }}
+{{ include "graphscope-store.images.image" ( dict "imageRoot" .Values.path.to.the.image "global" $ "DefaultTag" .DefaultTag ) }}
 */}}
 {{- define "graphscope-store.images.image" -}}
 {{- $registryName := .imageRoot.registry -}}
@@ -87,8 +87,8 @@ Return the proper image name
     {{- end -}}
 {{- end -}}
 {{- if not $tag }}
-{{- if .imageRoot.DefaultTag }}
-{{- $tag = .imageRoot.DefaultTag -}}
+{{- if .DefaultTag }}
+{{- $tag = .DefaultTag -}}
 {{- else -}}
 {{- $tag = "latest" -}}
 {{- end -}}
