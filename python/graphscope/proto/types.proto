@@ -181,6 +181,8 @@ enum ParamKey {
   IS_FROM_VINEYARD_ID = 42;
   VINEYARD_ID = 43;
   VINEYARD_NAME = 44;
+  VERTEX_MAP_TYPE = 45;
+
 
   // project
   VERTEX_COLLECTIONS = 51;

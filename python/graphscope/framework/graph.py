@@ -224,6 +224,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
         oid_type="int64",
         directed=True,
         generate_eid=True,
+        vertex_map="global",
     ):
         """Construct a :class:`GraphDAGNode` object.
 
@@ -251,6 +252,9 @@ class GraphDAGNode(DAGNode, GraphInterface):
         self._directed = directed
         self._generate_eid = generate_eid
         self._graph_type = graph_def_pb2.ARROW_PROPERTY
+        if vertex_map not in ("global", "local"):
+            raise ValueError("vertex_map can only be `global` or `local`.")
+        self._vertex_map = vertex_map
         # list of pair <parent_op_key, VertexLabel/EdgeLabel>
         self._unsealed_vertices_and_edges = list()
         # check for newly added vertices and edges.
@@ -304,7 +308,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
         op = dag_utils.project_to_simple(self, str(v_prop), str(e_prop))
         # construct dag node
         graph_dag_node = GraphDAGNode(
-            self._session, op, self._oid_type, self._directed, self._generate_eid
+            self._session, op, self._oid_type, self._directed, self._generate_eid, self._vertex_map
         )
         graph_dag_node._base_graph = self
         return graph_dag_node
@@ -430,7 +434,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
         op = dag_utils.add_labels_to_graph(self, loader_op)
         # construct dag node
         graph_dag_node = GraphDAGNode(
-            self._session, op, self._oid_type, self._directed, self._generate_eid
+            self._session, op, self._oid_type, self._directed, self._generate_eid, self._vertex_map
         )
         graph_dag_node._v_labels = v_labels
         graph_dag_node._e_labels = self._e_labels
@@ -579,7 +583,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
         op = dag_utils.add_labels_to_graph(parent, loader_op)
         # construct dag node
         graph_dag_node = GraphDAGNode(
-            self._session, op, self._oid_type, self._directed, self._generate_eid
+            self._session, op, self._oid_type, self._directed, self._generate_eid, self._vertex_map
         )
         graph_dag_node._v_labels = v_labels
         graph_dag_node._e_labels = e_labels
@@ -663,7 +667,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
         )
         # construct dag node
         graph_dag_node = GraphDAGNode(
-            self._session, op, self._oid_type, self._directed, self._generate_eid
+            self._session, op, self._oid_type, self._directed, self._generate_eid, self._vertex_map
         )
         graph_dag_node._base_graph = self
         return graph_dag_node
@@ -727,6 +731,7 @@ class Graph(GraphInterface):
         self._vineyard_id = vy_info.vineyard_id
         self._oid_type = data_type_to_cpp(vy_info.oid_type)
         self._generate_eid = vy_info.generate_eid
+        self._vertex_map = vy_info.vertex_map_type
 
         self._schema_path = vy_info.schema_path
         self._schema.from_graph_def(graph_def)

@@ -33,6 +33,12 @@ enum GraphTypePb {
     ARROW_FLATTENED = 7;
 }
 
+enum VertexMapTypePb {
+    UNKNOWN_VM_TYPE = 0;
+    GLOBAL_VERTEX_MAP = 1;
+    LOCAL_VERTEX_MAP = 2;
+}
+
 // Attributes that only meaningful to and will be set by maxgraph storage
 message MaxGraphInfoPb {
     int32 last_label_id = 1;
@@ -55,6 +61,8 @@ message VineyardInfoPb {
     int64 vineyard_id = 7;
     // For client to reconstrut graph schema
     string property_schema_json = 8;
+    // Global or local vertex map
+    VertexMapTypePb vertex_map_type = 9;
 }
 
 // Attributes that only meaningful to and will be set by dynamic storage
