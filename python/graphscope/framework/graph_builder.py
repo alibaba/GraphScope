@@ -54,6 +54,7 @@ def load_from(
     generate_eid=True,
     vformat=None,
     eformat=None,
+    vertex_map="global",
 ) -> Graph:
     """Load a Arrow property graph using a list of vertex/edge specifications.
 
@@ -151,6 +152,7 @@ def load_from(
         generate_eid (bool, optional): Whether to generate a unique edge id for each edge. Generated eid will be placed
             in third column. This feature is for cooperating with interactive engine.
             If you only need to work with analytical engine, set it to False. Defaults to False.
+        vertex_map (str, optional): Indicate use global vertex map or local vertex map. Can be "global" or "local".
     """
 
     # Don't import the :code:`nx` in top-level statments to improve the
@@ -168,6 +170,7 @@ def load_from(
     # generate and add a loader op to dag
     loader_op = dag_utils.create_loader(v_labels + e_labels)
     sess.dag.add_op(loader_op)
+    vertex_map = utils.vertex_map_type_to_enum(vertex_map)
     # construct create graph op
     config = {
         types_pb2.DIRECTED: utils.b_to_attr(directed),
@@ -175,6 +178,7 @@ def load_from(
         types_pb2.GENERATE_EID: utils.b_to_attr(generate_eid),
         types_pb2.VID_TYPE: utils.s_to_attr("uint64_t"),
         types_pb2.IS_FROM_VINEYARD_ID: utils.b_to_attr(False),
+        types_pb2.VERTEX_MAP_TYPE: utils.i_to_attr(vertex_map),
     }
     op = dag_utils.create_graph(
         sess.session_id, graph_def_pb2.ARROW_PROPERTY, inputs=[loader_op], attrs=config

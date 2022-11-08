@@ -183,6 +183,7 @@ class GraphInterface(metaclass=ABCMeta):
         config[types_pb2.OID_TYPE] = utils.s_to_attr(self._oid_type)
         config[types_pb2.VID_TYPE] = utils.s_to_attr("uint64_t")
         config[types_pb2.IS_FROM_VINEYARD_ID] = utils.b_to_attr(False)
+        config[types_pb2.VERTEX_MAP_TYPE] = utils.i_to_attr(self._vertex_map)
         return dag_utils.create_graph(
             self.session_id, graph_def_pb2.ARROW_PROPERTY, inputs=None, attrs=config
         )
@@ -241,6 +242,9 @@ class GraphDAGNode(DAGNode, GraphInterface):
             oid_type: (str, optional): Type of vertex original id. Defaults to "int64".
             directed: (bool, optional): Directed graph or not. Defaults to True.
             generate_eid: (bool, optional): Generate id for each edge when setted True. Defaults to True.
+            vertex_map (str, optional): Indicate use global vertex map or local vertex map. Can be "global" or "local".
+                Defaults to global.
+
         """
 
         super().__init__()
@@ -252,9 +256,8 @@ class GraphDAGNode(DAGNode, GraphInterface):
         self._directed = directed
         self._generate_eid = generate_eid
         self._graph_type = graph_def_pb2.ARROW_PROPERTY
-        if vertex_map not in ("global", "local"):
-            raise ValueError("vertex_map can only be `global` or `local`.")
-        self._vertex_map = vertex_map
+        self._vertex_map = utils.vertex_map_type_to_enum(vertex_map)
+
         # list of pair <parent_op_key, VertexLabel/EdgeLabel>
         self._unsealed_vertices_and_edges = list()
         # check for newly added vertices and edges.
@@ -308,7 +311,12 @@ class GraphDAGNode(DAGNode, GraphInterface):
         op = dag_utils.project_to_simple(self, str(v_prop), str(e_prop))
         # construct dag node
         graph_dag_node = GraphDAGNode(
-            self._session, op, self._oid_type, self._directed, self._generate_eid, self._vertex_map
+            self._session,
+            op,
+            self._oid_type,
+            self._directed,
+            self._generate_eid,
+            self._vertex_map,
         )
         graph_dag_node._base_graph = self
         return graph_dag_node
@@ -326,7 +334,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
             self._graph_type = incoming_data.graph_type
         elif isinstance(incoming_data, GraphDAGNode):
             if incoming_data.session_id != self.session_id:
-                raise RuntimeError("{0} not in the same session.".formar(incoming_data))
+                raise RuntimeError(f"{incoming_data} not in the same session.")
             raise NotImplementedError
         elif vineyard is not None and isinstance(
             incoming_data, (vineyard.Object, vineyard.ObjectID, vineyard.ObjectName)
@@ -434,7 +442,12 @@ class GraphDAGNode(DAGNode, GraphInterface):
         op = dag_utils.add_labels_to_graph(self, loader_op)
         # construct dag node
         graph_dag_node = GraphDAGNode(
-            self._session, op, self._oid_type, self._directed, self._generate_eid, self._vertex_map
+            self._session,
+            op,
+            self._oid_type,
+            self._directed,
+            self._generate_eid,
+            self._vertex_map,
         )
         graph_dag_node._v_labels = v_labels
         graph_dag_node._e_labels = self._e_labels
@@ -583,7 +596,12 @@ class GraphDAGNode(DAGNode, GraphInterface):
         op = dag_utils.add_labels_to_graph(parent, loader_op)
         # construct dag node
         graph_dag_node = GraphDAGNode(
-            self._session, op, self._oid_type, self._directed, self._generate_eid, self._vertex_map
+            self._session,
+            op,
+            self._oid_type,
+            self._directed,
+            self._generate_eid,
+            self._vertex_map,
         )
         graph_dag_node._v_labels = v_labels
         graph_dag_node._e_labels = e_labels
@@ -667,7 +685,12 @@ class GraphDAGNode(DAGNode, GraphInterface):
         )
         # construct dag node
         graph_dag_node = GraphDAGNode(
-            self._session, op, self._oid_type, self._directed, self._generate_eid, self._vertex_map
+            self._session,
+            op,
+            self._oid_type,
+            self._directed,
+            self._generate_eid,
+            self._vertex_map,
         )
         graph_dag_node._base_graph = self
         return graph_dag_node
@@ -790,10 +813,14 @@ class Graph(GraphInterface):
         vid_type = utils.data_type_to_cpp(self._schema._vid_type)
         vdata_type = utils.data_type_to_cpp(self._schema.vdata_type)
         edata_type = utils.data_type_to_cpp(self._schema.edata_type)
+        vertex_map_type = utils.vertex_map_type_to_cpp(self._vertex_map)
+        vertex_map_type = f"{vertex_map_type}<{oid_type},{vid_type}>"
         if self._graph_type == graph_def_pb2.ARROW_PROPERTY:
-            template = f"vineyard::ArrowFragment<{oid_type},{vid_type}>"
+            template = (
+                f"vineyard::ArrowFragment<{oid_type},{vid_type},{vertex_map_type}>"
+            )
         elif self._graph_type == graph_def_pb2.ARROW_PROJECTED:
-            template = f"gs::ArrowProjectedFragment<{oid_type},{vid_type},{vdata_type},{edata_type}>"
+            template = f"gs::ArrowProjectedFragment<{oid_type},{vid_type},{vdata_type},{edata_type},{vertex_map_type}>"
         elif self._graph_type == graph_def_pb2.ARROW_FLATTENED:
             template = f"ArrowFlattenedFragmen<{oid_type},{vid_type},{vdata_type},{edata_type}>"
         elif self._graph_type == graph_def_pb2.DYNAMIC_PROJECTED:
@@ -850,6 +877,7 @@ class Graph(GraphInterface):
 
     def _unload(self):
         """Unload this graph from graphscope engine."""
+        rlt = None
         if self._session.info["status"] != "active" or self._key is None:
             return
         if not self._detached:

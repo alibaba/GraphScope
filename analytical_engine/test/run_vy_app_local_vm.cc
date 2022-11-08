@@ -41,10 +41,10 @@
 namespace bl = boost::leaf;
 
 using VertexMapType = vineyard::ArrowLocalVertexMap<int64_t, uint64_t>;
-using FragmentType =
-    vineyard::ArrowFragment<int64_t, uint64_t, VertexMapType>;
-using ProjectedFragmentType = gs::ArrowProjectedFragment<
-    int64_t, uint64_t, int64_t, int64_t, VertexMapType>;
+using FragmentType = vineyard::ArrowFragment<int64_t, uint64_t, VertexMapType>;
+using ProjectedFragmentType =
+    gs::ArrowProjectedFragment<int64_t, uint64_t, int64_t, int64_t,
+                               VertexMapType>;
 
 void RunWCC(std::shared_ptr<FragmentType> fragment,
             const grape::CommSpec& comm_spec, const std::string& out_prefix) {
@@ -376,5 +376,5 @@ int main(int argc, char** argv) {
   return 0;
 }
 
-template class gs::ArrowProjectedFragment<
-    int64_t, uint64_t, int64_t, int64_t, VertexMapType>;
+template class gs::ArrowProjectedFragment<int64_t, uint64_t, int64_t, int64_t,
+                                          VertexMapType>;

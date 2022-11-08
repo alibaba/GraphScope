@@ -1533,6 +1533,7 @@ VERETX_MAP_CLASS_MAP = {
     graph_def_pb2.LOCAL_VERTEX_MAP: "vineyard::ArrowLocalVertexMap",
 }
 
+
 def _codegen_graph_info(attr):
     # These getter function get intended for lazy evaluation,
     # cause they are not always avaiable in all types of graphs
@@ -1541,22 +1542,29 @@ def _codegen_graph_info(attr):
             return attr[types_pb2.OID_TYPE].s.decode("utf-8")
         else:  # DynamicProjectedFragment doesn't have oid
             return None
+
     def vid_type():
         return attr[types_pb2.VID_TYPE].s.decode("utf-8")
+
     def vdata_type():
         return attr[types_pb2.V_DATA_TYPE].s.decode("utf-8")
+
     def edata_type():
         return attr[types_pb2.E_DATA_TYPE].s.decode("utf-8")
+
     def vertex_map_type():
-        vm_type_enum = attr[types_pb2.VERTEX_MAP_TYPE].i
+        if types_pb2.VERTEX_MAP_TYPE not in attr:
+            vm_type_enum = graph_def_pb2.GLOBAL_VERTEX_MAP
+        else:
+            vm_type_enum = attr[types_pb2.VERTEX_MAP_TYPE].i
         return f"{VERETX_MAP_CLASS_MAP[vm_type_enum]}<{oid_type()},<{vid_type()}>>"
 
     graph_type = attr[types_pb2.GRAPH_TYPE].i
     graph_class, graph_header = GRAPH_HEADER_MAP[graph_type]
-    
+
     # graph_type is a literal of graph template in c++ side
     if graph_type == graph_def_pb2.ARROW_PROPERTY:
-        # in a format of full qualified name, e.g. 
+        # in a format of full qualified name, e.g.
         # vineyard::ArrowFragment<int64_t, uin64_t, vineyard::ArrowLocalVertexMap<int64_t, uint64_t>>
         graph_fqn = f"{graph_class}<{oid_type()},{vid_type()},{vertex_map_type()}>"
     elif graph_type == graph_def_pb2.ARROW_PROJECTED:
@@ -1564,15 +1572,21 @@ def _codegen_graph_info(attr):
         graph_fqn = f"{graph_class}<{oid_type()},{vid_type()},{vdata_type()},{edata_type()},{vertex_map_type()}>"
     elif graph_type == graph_def_pb2.IMMUTABLE_EDGECUT:
         # grape::ImmutableEdgecutFragment<int64_t, uint32_t, double, double>
-        graph_fqn = f"{graph_class}<{oid_type()},{vid_type()},{vdata_type()},{edata_type()}>"
+        graph_fqn = (
+            f"{graph_class}<{oid_type()},{vid_type()},{vdata_type()},{edata_type()}>"
+        )
     elif graph_type == graph_def_pb2.ARROW_FLATTENED:
         # grape::ArrowFlattenFragment<int64_t, uint32_t, double, double>
-        graph_fqn = f"{graph_class}<{oid_type()},{vid_type()},{vdata_type()},{edata_type()}>"
+        graph_fqn = (
+            f"{graph_class}<{oid_type()},{vid_type()},{vdata_type()},{edata_type()}>"
+        )
     elif graph_type == graph_def_pb2.DYNAMIC_PROJECTED:
         # gs::DynamicProjectedFragment<double, double>
         graph_fqn = f"{graph_class}<{vdata_type()},{edata_type()}>"
     else:
-        raise ValueError(f"Unknown graph type: {graph_def_pb2.GraphTypePb.Name(graph_type)}")
+        raise ValueError(
+            f"Unknown graph type: {graph_def_pb2.GraphTypePb.Name(graph_type)}"
+        )
     return graph_header, graph_fqn, oid_type()
 
 

@@ -173,7 +173,8 @@ class ArrowFragmentLoader {
           labels << graph_info_->edges[i]->label;
         }
       }
-      LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "DESCRIPTION-" << labels.str();
+      LOG_IF(INFO, !comm_spec_.worker_id())
+          << MARKER << "DESCRIPTION-" << labels.str();
     }
     BOOST_LEAF_AUTO(v_tables, LoadVertexTables());
     BOOST_LEAF_AUTO(e_tables, LoadEdgeTables());
