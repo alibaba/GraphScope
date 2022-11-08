@@ -99,6 +99,11 @@ If you don't find an answer to your question here, feel free to file a `Issues`_
 
     It will take a few minutes for pulling image during the first time for launching GraphScope instance. Thus, the ``Timeout Exception`` may caused by a poor network connection.
     You can increase the value of ``timeout_seconds`` parameter as your expectation by ``graphscope.set_option(timeout_seconds=600))``.
+    
+13. Failed to run GraphScope (either in single machine or in docker conrtainer) due to failed connection to building blocks like v6d and etcd?
+
+    It's possible that your machine is in an enterrpise netowrk, which requires proxy configurations to access network properly. This may lead to wrong address resolution and port occupancy. You can try to add addresses like ``hostname -i`` and ``0.0.0.0`` to your environment variable ``no_proxy`` or ``NO_PROXY`` (be aware of `the prefix/suffix policy of no_proxy <https://unix.stackexchange.com/questions/23452/set-a-network-range-in-the-no-proxy-environment-variable>`_)
+
 
 
 **I do have many other questions...**
