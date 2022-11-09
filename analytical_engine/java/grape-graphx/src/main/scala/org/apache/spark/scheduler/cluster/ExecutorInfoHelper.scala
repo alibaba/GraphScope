@@ -70,7 +70,7 @@ object ExecutorInfoHelper extends Logging {
       // For local mode, there will be only one executor, i.e. driver & executor.
       case local: LocalSchedulerBackend => {
         val res = new mutable.HashMap[String, ArrayBuffer[String]]()
-        res.+=((InetAddress.getLocalHost.getHostName, new ArrayBuffer[String].+=("0")))
+        res.+=((InetAddress.getLocalHost.getHostName, new ArrayBuffer[String].+=("driver")))
         res
       }
 
@@ -95,6 +95,13 @@ object ExecutorInfoHelper extends Logging {
         executorDataMap.map(t => (t._1, t._2.freeCores))
       }
 
+      case localSchedulerBackend: LocalSchedulerBackend => {
+        val numCores = getNumCoresFromLocalBackend(localSchedulerBackend)
+        val res      = new mutable.HashMap[String, Int]
+        res.+=(("driver", numCores))
+        res
+      }
+
       case _ => throw new IllegalStateException("Unsupported backend")
     }
   }
@@ -113,6 +120,10 @@ object ExecutorInfoHelper extends Logging {
     val field = backend.getClass.getSuperclass.getDeclaredField(executorMapFieldName)
     require(field != null)
     field
+  }
+
+  def getNumCoresFromLocalBackend(backend: LocalSchedulerBackend): Int = {
+    backend.totalCores
   }
 
   def getExecutorDataMapReflect(
