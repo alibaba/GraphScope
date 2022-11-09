@@ -42,9 +42,10 @@ object ExecutorInfoHelper extends Logging {
         val executorDataMap = getExecutorDataMapReflect(field, coarseGrainedSchedulerBackend)
         executorDatMapToId2Host(executorDataMap)
       }
+      // For local mode, there will be only one executor, i.e. driver & executor.
       case local: LocalSchedulerBackend => {
         val res = new mutable.HashMap[String, String]()
-        res.+=((InetAddress.getLocalHost.getHostName, "0"))
+        res.+=(("0", InetAddress.getLocalHost.getHostName))
         res
       }
     }
@@ -64,6 +65,13 @@ object ExecutorInfoHelper extends Logging {
         val field           = getFieldFromCoarseBackend(coarseGrainedSchedulerBackend)
         val executorDataMap = getExecutorDataMapReflect(field, coarseGrainedSchedulerBackend)
         executorDataMapToHost2Id(executorDataMap)
+      }
+
+      // For local mode, there will be only one executor, i.e. driver & executor.
+      case local: LocalSchedulerBackend => {
+        val res = new mutable.HashMap[String, ArrayBuffer[String]]()
+        res.+=((InetAddress.getLocalHost.getHostName, new ArrayBuffer[String].+=("0")))
+        res
       }
 
       case _ => throw new IllegalStateException("Unsupported backend")
