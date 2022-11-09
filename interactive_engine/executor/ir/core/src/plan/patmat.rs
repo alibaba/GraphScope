@@ -26,8 +26,8 @@ use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
 use ir_common::NameOrId;
 
+use crate::catalogue::error::IrPatternResult;
 use crate::catalogue::pattern::Pattern;
-use crate::catalogue::pattern_meta::PatternMeta;
 use crate::error::{IrError, IrResult};
 use crate::plan::meta::PlanMeta;
 
@@ -1159,10 +1159,8 @@ pub struct ExtendStrategy {
 
 /// Initializer of a ExtendStrategy
 impl ExtendStrategy {
-    pub fn init(
-        pb_pattern: &pb::Pattern, pattern_meta: &PatternMeta, plan_meta: &mut PlanMeta,
-    ) -> IrResult<Self> {
-        let pattern = Pattern::from_pb_pattern(pb_pattern, pattern_meta, plan_meta)?;
+    pub fn init(pb_pattern: &pb::Pattern, plan_meta: &mut PlanMeta) -> IrPatternResult<Self> {
+        let pattern = Pattern::from_pb_pattern(pb_pattern, plan_meta)?;
         Ok(ExtendStrategy { pattern })
     }
 }

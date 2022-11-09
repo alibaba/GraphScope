@@ -626,11 +626,23 @@ impl pb::logical_plan::operator::Opr {
     }
 }
 
-impl pb::Scan {
-    pub fn is_queryable(&self) -> bool {
-        !(self.idx_predicate.is_none()
-            && (self.params.is_none()
-                || (self.params.is_some() && !self.params.as_ref().unwrap().is_queryable())))
+impl pb::logical_plan::Operator {
+    pub fn is_whole_graph(&self) -> bool {
+        if let Some(opr) = &self.opr {
+            match opr {
+                Opr::Scan(scan) => {
+                    scan.idx_predicate.is_none()
+                        && scan
+                            .params
+                            .as_ref()
+                            .map(|params| !params.is_queryable())
+                            .unwrap_or(true)
+                }
+                _ => false,
+            }
+        } else {
+            false
+        }
     }
 }
 

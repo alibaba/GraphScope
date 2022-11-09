@@ -26,9 +26,11 @@ use ir_common::generated::common as common_pb;
 use ir_common::{KeyId, NameOrId};
 use vec_map::VecMap;
 
+use crate::catalogue::error::IrPatternError;
 use crate::error::{IrError, IrResult};
 use crate::plan::meta::{ColumnsOpt, PlanMeta, Schema, StoreMeta, TagId, INVALID_META_ID, STORE_META};
 use crate::plan::patmat::{ExtendStrategy, MatchingStrategy, NaiveStrategy};
+
 // Note that protobuf only support signed integer, while we actually requires the nodes'
 // id being non-negative
 pub type NodeId = u32;
@@ -74,7 +76,7 @@ pub struct LogicalPlan {
     pub(crate) nodes: VecMap<NodeType>,
     /// To record the nodes' maximum id in the logical plan. Note that the nodes
     /// **include the removed ones**
-    pub max_node_id: NodeId,
+    pub(crate) max_node_id: NodeId,
     /// The metadata of the logical plan
     pub(crate) meta: PlanMeta,
 }
@@ -270,6 +272,13 @@ impl LogicalPlan {
         self.nodes.get(id as usize).cloned()
     }
 
+    /// Get a operator reference from the logical plan
+    pub fn get_opr(&self, id: NodeId) -> Option<pb::logical_plan::Operator> {
+        self.nodes
+            .get(id as usize)
+            .map(|node| node.borrow().opr.clone())
+    }
+
     /// Get first node in the logical plan
     pub fn get_first_node(&self) -> Option<NodeType> {
         self.nodes
@@ -297,6 +306,10 @@ impl LogicalPlan {
 
     pub fn get_meta(&self) -> &PlanMeta {
         &self.meta
+    }
+
+    pub fn get_max_node_id(&self) -> NodeId {
+        self.max_node_id
     }
 
     /// Append a new node into the logical plan, with specified `parent_ids`
@@ -406,43 +419,43 @@ impl LogicalPlan {
         let new_curr_node_rst = match opr.opr.as_ref().unwrap() {
             Opr::Pattern(pattern) => {
                 if parent_ids.len() == 1 {
-                    // We try to match via ExtendStrategy. If not success, match via NaiveStrategy.
+                    // We try to match via ExtendStrategy. If not supported, match via NaiveStrategy.
+
                     // Notice that there are some limitations of ExtendStrategy, including:
                     // 1. the input of match should be a whole graph, i.e., `g.V().match(...)`
-                    // 2. the pattern to be matched must be identical (no fuzzy pattern).
-                    // 3. the match sentences are connected by join_kind of `InnerJoin`
-                    let parent_id = parent_ids[0];
-                    // confirm if the parent opr is `g.V()`
-                    if parent_id == 0 {
-                        let source_opr = self.nodes.get(0).unwrap().borrow().opr.clone();
-                        if let Some(source) = <Option<pb::Scan>>::from(source_opr) {
-                            // confirm no index scan or filters fused into source op
-                            if !source.is_queryable() {
-                                if let Ok(store_meta) = STORE_META.read() {
-                                    if let Some(pattern_meta) = store_meta.pattern_meta.as_ref() {
-                                        if let Ok(extend_strategy) =
-                                            ExtendStrategy::init(&pattern, pattern_meta, &mut self.meta)
-                                        {
-                                            if let Ok(plan) = extend_strategy.build_logical_plan() {
-                                                debug!("pattern matching by ExtendStrategy");
-                                                let new_node_id =
-                                                    self.append_plan(plan, parent_ids.clone())?;
-                                                // As we have added a new source op to scan with label efficiently in extend_strategy,
-                                                // we remove the old source op.
-                                                self.nodes.remove(0);
-                                                return Ok(new_node_id);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                    // 2. the match sentences are connected by join_kind of `InnerJoin`
+                    // 3. the match binders should expand vertices if it is EdgeExpand opr
+                    // 4. if match binders of PathExpand exists, it should at least range from 1
+                    let is_pattern_source_whole_graph = self
+                        .get_opr(parent_ids[0])
+                        .map(|pattern_source| pattern_source.is_whole_graph())
+                        .ok_or(IrError::ParentNodeNotExist(parent_ids[0]))?;
+                    let extend_strategy = if is_pattern_source_whole_graph {
+                        ExtendStrategy::init(&pattern, &mut self.meta)
+                    } else {
+                        Err(IrPatternError::Unsupported("pattern source is not whole graph".to_string()))
+                    };
+                    match extend_strategy {
+                        Ok(extend_strategy) => {
+                            debug!("pattern matching by ExtendStrategy");
+                            let plan = extend_strategy.build_logical_plan()?;
+                            let new_node_id = self.append_plan(plan, parent_ids.clone())?;
+                            // As we have added a new source op to scan with label efficiently in extend_strategy,
+                            // we remove the old source op.
+                            self.nodes.remove(0);
+                            Ok(new_node_id)
                         }
+                        Err(err) => match err {
+                            IrPatternError::Unsupported(_) => {
+                                // if is not supported in ExtendStrategy, try NaiveStrategy
+                                debug!("pattern matching by NaiveStrategy");
+                                let naive_strategy = NaiveStrategy::try_from(pattern.clone())?;
+                                let plan = naive_strategy.build_logical_plan()?;
+                                self.append_plan(plan, parent_ids.clone())
+                            }
+                            _ => Err(err.into()),
+                        },
                     }
-
-                    debug!("pattern matching by NaiveStrategy");
-                    let naive_strategy = NaiveStrategy::try_from(pattern.clone())?;
-                    let plan = naive_strategy.build_logical_plan()?;
-                    self.append_plan(plan, parent_ids.clone())
                 } else {
                     Err(IrError::Unsupported(
                         "only one single parent is supported for the `Pattern` operator".to_string(),
@@ -1611,7 +1624,6 @@ mod test {
                 vec![("knows".to_string(), 0), ("creates".to_string(), 1)],
                 vec![("id".to_string(), 0), ("name".to_string(), 1), ("age".to_string(), 2)],
             )),
-            pattern_meta: None,
         };
 
         let mut expression = str_to_expr_pb("@.~label == \"person\"".to_string()).unwrap();
@@ -1767,8 +1779,6 @@ mod test {
                 vec![("knows".to_string(), 0), ("creates".to_string(), 1)],
                 vec![("id".to_string(), 0), ("name".to_string(), 1), ("age".to_string(), 2)],
             )),
-
-            pattern_meta: None,
         };
 
         let mut scan = pb::Scan {
@@ -1850,7 +1860,6 @@ mod test {
             schema: Some(
                 Schema::from_json(std::fs::File::open("resource/modern_schema_pk.json").unwrap()).unwrap(),
             ),
-            pattern_meta: None,
         };
         let mut scan = pb::Scan {
             scan_opt: 0,

@@ -15,7 +15,7 @@
 
 use std::fs::File;
 
-use ir_core::catalogue::pattern_meta::*;
+use ir_core::plan::meta::set_schema;
 use ir_core::{plan::meta::Schema, JsonIO};
 
 pub fn read_modern_graph_schema() -> Schema {
@@ -29,9 +29,9 @@ pub fn read_modern_graph_schema() -> Schema {
     Schema::from_json(modern_schema_file).unwrap()
 }
 
-pub fn get_modern_pattern_meta() -> PatternMeta {
+pub fn set_modern_graph_schema() {
     let modern_schema = read_modern_graph_schema();
-    PatternMeta::from(&modern_schema)
+    set_schema(modern_schema);
 }
 
 pub fn read_ldbc_graph_schema() -> Schema {
@@ -45,7 +45,7 @@ pub fn read_ldbc_graph_schema() -> Schema {
     Schema::from_json(ldbc_schema_file).unwrap()
 }
 
-pub fn get_ldbc_pattern_meta() -> PatternMeta {
+pub fn set_ldbc_graph_schema() {
     let ldbc_schema = read_ldbc_graph_schema();
-    PatternMeta::from(&ldbc_schema)
+    set_schema(ldbc_schema);
 }

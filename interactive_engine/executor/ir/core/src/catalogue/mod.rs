@@ -25,7 +25,6 @@ pub type DynIter<'a, T> = Box<dyn Iterator<Item = T> + 'a>;
 pub mod error;
 pub mod extend_step;
 pub mod pattern;
-pub mod pattern_meta;
 
 pub type PatternDirection = pb::edge_expand::Direction;
 

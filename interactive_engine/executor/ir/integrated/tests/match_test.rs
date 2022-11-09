@@ -26,7 +26,7 @@ mod test {
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
     use ir_core::plan::logical::LogicalPlan;
-    use ir_core::plan::meta::set_meta_from_json;
+    use ir_core::plan::meta::set_schema_from_json;
     use ir_core::plan::physical::AsPhysical;
     use pegasus_client::builder::JobBuilder;
     use pegasus_server::JobRequest;
@@ -36,18 +36,18 @@ mod test {
         KNOWS_LABEL, PERSON_LABEL, TAG_A, TAG_B, TAG_C, TAG_D,
     };
 
-    pub fn init_schema_pattern_meta() {
+    pub fn init_schema() {
         let ldbc_schema_file = File::open("../core/resource/modern_schema.json").unwrap();
-        set_meta_from_json(ldbc_schema_file);
+        set_schema_from_json(ldbc_schema_file);
     }
 
     // g.V().hasLabel("person").match(
     //    __.as('a').has(age, gt(25)).out("created").as('b'),
     //    __.as('a').out('knows').as('c'),
     // )
-    fn init_match_case1_request(with_pattern_meta: bool) -> JobRequest {
-        if with_pattern_meta {
-            init_schema_pattern_meta();
+    fn init_match_case1_request(with_schema: bool) -> JobRequest {
+        if with_schema {
+            init_schema();
         }
         let source = pb::Scan {
             scan_opt: 0,
@@ -136,9 +136,9 @@ mod test {
     //    __.as('a').out('knows').as('c'),
     //    __.as('a').out('created').as('d')
     // )
-    fn init_match_case2_request(with_pattern_meta: bool) -> JobRequest {
-        if with_pattern_meta {
-            init_schema_pattern_meta();
+    fn init_match_case2_request(with_schema: bool) -> JobRequest {
+        if with_schema {
+            init_schema();
         }
         let source = pb::Scan {
             scan_opt: 0,
@@ -219,9 +219,9 @@ mod test {
         job_builder.build().unwrap()
     }
 
-    fn match_case1(with_pattern_meta: bool) {
+    fn match_case1(with_schema: bool) {
         initialize();
-        let request = init_match_case1_request(with_pattern_meta);
+        let request = init_match_case1_request(with_schema);
         let mut results = submit_query(request, 2);
         let mut result_collection = vec![];
         let expected_result_ids = vec![(1, 4, 1 << 56 | 3)];
@@ -263,9 +263,9 @@ mod test {
         match_case1(true)
     }
 
-    fn match_case2(with_pattern_meta: bool) {
+    fn match_case2(with_schema: bool) {
         initialize();
-        let request = init_match_case2_request(with_pattern_meta);
+        let request = init_match_case2_request(with_schema);
         let mut results = submit_query(request, 2);
         let mut result_collection = vec![];
         let expected_result_ids = vec![

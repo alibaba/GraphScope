@@ -386,7 +386,7 @@ pub fn build_ldbc_pattern_case1() -> Pattern {
 ///
 /// Person is the vertex label
 pub fn build_ldbc_pattern_from_pb_case1() -> IrPatternResult<Pattern> {
-    let ldbc_pattern_mata = get_ldbc_pattern_meta();
+    set_ldbc_graph_schema();
     // define pb pattern message
     let expand_opr = pb::EdgeExpand {
         v_tag: None,
@@ -423,7 +423,7 @@ pub fn build_ldbc_pattern_from_pb_case1() -> IrPatternResult<Pattern> {
             },
         ],
     };
-    Pattern::from_pb_pattern(&pattern, &ldbc_pattern_mata, &mut PlanMeta::default())
+    Pattern::from_pb_pattern(&pattern, &mut PlanMeta::default())
 }
 
 /// Pattern from ldbc schema file and build from pb::Pattern message
@@ -433,7 +433,7 @@ pub fn build_ldbc_pattern_from_pb_case1() -> IrPatternResult<Pattern> {
 ///        Person  ->   Person
 /// ```
 pub fn build_ldbc_pattern_from_pb_case2() -> IrPatternResult<Pattern> {
-    let ldbc_pattern_mata = get_ldbc_pattern_meta();
+    set_ldbc_graph_schema();
     // define pb pattern message
     let expand_opr1 = pb::EdgeExpand {
         v_tag: None,
@@ -484,13 +484,13 @@ pub fn build_ldbc_pattern_from_pb_case2() -> IrPatternResult<Pattern> {
             },
         ],
     };
-    Pattern::from_pb_pattern(&pattern, &ldbc_pattern_mata, &mut PlanMeta::default())
+    Pattern::from_pb_pattern(&pattern, &mut PlanMeta::default())
 }
 
 /// Pattern from ldbc schema file and build from pb::Pattern message
 /// 4 Persons know each other
 pub fn build_ldbc_pattern_from_pb_case3() -> IrPatternResult<Pattern> {
-    let ldbc_pattern_mata = get_ldbc_pattern_meta();
+    set_ldbc_graph_schema();
     // define pb pattern message
     let expand_opr = pb::EdgeExpand {
         v_tag: None,
@@ -551,7 +551,7 @@ pub fn build_ldbc_pattern_from_pb_case3() -> IrPatternResult<Pattern> {
             },
         ],
     };
-    Pattern::from_pb_pattern(&pattern, &ldbc_pattern_mata, &mut PlanMeta::default())
+    Pattern::from_pb_pattern(&pattern, &mut PlanMeta::default())
 }
 
 /// Pattern from ldbc schema file and build from pb::Pattern message
@@ -563,7 +563,7 @@ pub fn build_ldbc_pattern_from_pb_case3() -> IrPatternResult<Pattern> {
 ///           Comment
 /// ```
 pub fn build_ldbc_pattern_from_pb_case4() -> IrPatternResult<Pattern> {
-    let ldbc_pattern_mata = get_ldbc_pattern_meta();
+    set_ldbc_graph_schema();
     // define pb pattern message
     let expand_opr1 = pb::EdgeExpand {
         v_tag: None,
@@ -629,7 +629,7 @@ pub fn build_ldbc_pattern_from_pb_case4() -> IrPatternResult<Pattern> {
             },
         ],
     };
-    Pattern::from_pb_pattern(&pattern, &ldbc_pattern_mata, &mut PlanMeta::default())
+    Pattern::from_pb_pattern(&pattern, &mut PlanMeta::default())
 }
 
 /// Pattern from ldbc schema file and build from pb::Pattern message
@@ -641,7 +641,7 @@ pub fn build_ldbc_pattern_from_pb_case4() -> IrPatternResult<Pattern> {
 /// ```
 /// knows->knows represents there are two edges with "knows" label between two people
 pub fn build_ldbc_pattern_from_pb_case5() -> IrPatternResult<Pattern> {
-    let ldbc_pattern_mata = get_ldbc_pattern_meta();
+    set_ldbc_graph_schema();
     // define pb pattern message
     let expand_opr0 = pb::EdgeExpand {
         v_tag: None,
@@ -700,11 +700,11 @@ pub fn build_ldbc_pattern_from_pb_case5() -> IrPatternResult<Pattern> {
             },
         ],
     };
-    Pattern::from_pb_pattern(&pattern, &ldbc_pattern_mata, &mut PlanMeta::default())
+    Pattern::from_pb_pattern(&pattern, &mut PlanMeta::default())
 }
 
 pub fn build_ldbc_pattern_from_pb_case6() -> IrPatternResult<Pattern> {
-    let ldbc_pattern_mata = get_ldbc_pattern_meta();
+    set_ldbc_graph_schema();
     // define pb pattern message
     let expand_opr0 = pb::EdgeExpand {
         v_tag: None,
@@ -782,7 +782,7 @@ pub fn build_ldbc_pattern_from_pb_case6() -> IrPatternResult<Pattern> {
             },
         ],
     };
-    Pattern::from_pb_pattern(&pattern, &ldbc_pattern_mata, &mut PlanMeta::default())
+    Pattern::from_pb_pattern(&pattern, &mut PlanMeta::default())
 }
 
 // Test Cases for Index Ranking

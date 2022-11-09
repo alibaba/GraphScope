@@ -25,9 +25,8 @@ use vec_map::VecMap;
 
 use crate::catalogue::error::{IrPatternError, IrPatternResult};
 use crate::catalogue::extend_step::ExactExtendStep;
-use crate::catalogue::pattern_meta::PatternMeta;
 use crate::catalogue::{query_params, DynIter, PatternDirection, PatternId, PatternLabelId};
-use crate::plan::meta::{PlanMeta, TagId};
+use crate::plan::meta::{PlanMeta, TagId, STORE_META};
 
 #[derive(Debug, Clone)]
 pub struct PatternVertex {
@@ -301,9 +300,7 @@ impl TryFrom<Vec<PatternEdge>> for Pattern {
 
 /// Initialize a Pattern from a protobuf Pattern
 impl Pattern {
-    pub fn from_pb_pattern(
-        pb_pattern: &pb::Pattern, pattern_meta: &PatternMeta, plan_meta: &mut PlanMeta,
-    ) -> IrPatternResult<Pattern> {
+    pub fn from_pb_pattern(pb_pattern: &pb::Pattern, plan_meta: &mut PlanMeta) -> IrPatternResult<Pattern> {
         use pb::pattern::binder::Item as BinderItem;
         // record the vertices from the pb pattern having tags
         let tag_set = get_all_tags_from_pb_pattern(pb_pattern)?;
@@ -369,6 +366,20 @@ impl Pattern {
                         let edge_id = assign_id(&mut next_edge_id, None);
                         let edge_expand = if let Some(BinderItem::Path(path_expand)) = binder.item.as_ref()
                         {
+                            let hop_range =
+                                path_expand
+                                    .hop_range
+                                    .as_ref()
+                                    .ok_or(ParsePbError::EmptyFieldError(
+                                        "pb::PathExpand::hop_range".to_string(),
+                                    ))?;
+                            if hop_range.lower < 1 {
+                                // The path with range from 0 cannot be translated to oprs that can be intersected.
+                                return Err(IrPatternError::Unsupported(format!(
+                                    "PathExpand in Pattern with lower range of {:?}",
+                                    hop_range.lower
+                                )))?;
+                            }
                             edge_data_map.insert(edge_id, PbEdgeOrPath::from(path_expand.clone()));
                             path_expand
                                 .base
@@ -408,7 +419,6 @@ impl Pattern {
                             if i == last_expand_index.unwrap() { end_tag_label.clone() } else { None };
                         //  infer src/dst vertex label with information of required_src_vertex_label, required_dst_vertex_label, edge_labels and pattern_meta
                         let (src_vertex_label, dst_vertex_label) = assign_src_dst_vertex_labels(
-                            pattern_meta,
                             edge_labels.clone(),
                             edge_direction,
                             required_src_vertex_label,
@@ -452,6 +462,7 @@ impl Pattern {
             }
         }
         plan_meta.set_max_tag_id(next_vertex_id as TagId);
+        // TODO: a bug that match only contains a vertex
         Pattern::try_from(pattern_edges).and_then(|mut pattern| {
             for (v_id, vertex_data) in vertex_data_map {
                 pattern.set_vertex_data(v_id, vertex_data);
@@ -469,6 +480,7 @@ impl Pattern {
 impl Pattern {
     /// Generate a naive extend based pattern match plan
     pub fn generate_simple_extend_match_plan(&self) -> IrPatternResult<pb::LogicalPlan> {
+        // TODO: remove this validation
         if self.get_vertices_num() == 0 {
             Err(IrPatternError::InvalidExtendPattern(format!("Empty pattern {:?}", self)))?
         }
@@ -568,7 +580,7 @@ fn build_logical_plan(
                 let edge_data = origin_pattern
                     .get_edge_data(edge_id)
                     .cloned()
-                    .ok_or(ParsePbError::EmptyFieldError("edge_data in Pattern".to_string()))?;
+                    .ok_or(IrPatternError::MissingPatternEdge(edge_id))?;
                 match edge_data {
                     PbEdgeOrPath::Edge(edge_expand) => {
                         expand_ids.push(expand_child_offset);
@@ -643,6 +655,7 @@ fn build_logical_plan(
                 }
             }
         } else {
+            // TODO: check if only one vertex match meets
             return Err(IrPatternError::InvalidExtendPattern(
                 "Build logical plan error: extend step is not source but has 0 edges".to_string(),
             ));
@@ -961,8 +974,8 @@ fn assign_expand_dst_vertex_id(
 /// Based on the vertex labels candidates and required src/dst vertex label,
 /// assign the src and dst vertex with vertex labels meeting the requirement
 fn assign_src_dst_vertex_labels(
-    pattern_meta: &PatternMeta, edge_labels: Vec<PatternLabelId>,
-    edge_direction: pb::edge_expand::Direction, required_src_labels: Option<BTreeSet<PatternLabelId>>,
+    edge_labels: Vec<PatternLabelId>, edge_direction: pb::edge_expand::Direction,
+    required_src_labels: Option<BTreeSet<PatternLabelId>>,
     required_dst_labels: Option<BTreeSet<PatternLabelId>>,
 ) -> IrPatternResult<(BTreeSet<PatternLabelId>, BTreeSet<PatternLabelId>)> {
     // Based on the pattern meta info, find all possible vertex labels candidates:
@@ -975,22 +988,31 @@ fn assign_src_dst_vertex_labels(
     //   we connect the iterators returned by Outgoing and Incoming together as they all can be the candidates
     let mut candi_src_vertex_labels = BTreeSet::new();
     let mut candi_dst_vertex_labels = BTreeSet::new();
-    for edge_label in edge_labels {
-        for (src_label, dst_label) in pattern_meta.associated_vlabels_iter_by_elabel(edge_label) {
-            match edge_direction {
-                pb::edge_expand::Direction::Out => {
-                    candi_src_vertex_labels.insert(src_label);
-                    candi_dst_vertex_labels.insert(dst_label);
-                }
-                pb::edge_expand::Direction::In => {
-                    candi_src_vertex_labels.insert(dst_label);
-                    candi_dst_vertex_labels.insert(src_label);
-                }
-                pb::edge_expand::Direction::Both => {
-                    candi_src_vertex_labels.insert(src_label);
-                    candi_src_vertex_labels.insert(dst_label);
-                    candi_dst_vertex_labels.insert(src_label);
-                    candi_dst_vertex_labels.insert(dst_label);
+
+    if let Ok(store_meta) = STORE_META.read() {
+        if let Some(schema) = store_meta.schema.as_ref() {
+            for edge_label in edge_labels {
+                if let Some(bound_labels) = schema.get_bound_labels(edge_label) {
+                    for (src_label_meta, dst_label_meta) in bound_labels {
+                        let src_label = src_label_meta.get_id();
+                        let dst_label = dst_label_meta.get_id();
+                        match edge_direction {
+                            pb::edge_expand::Direction::Out => {
+                                candi_src_vertex_labels.insert(src_label);
+                                candi_dst_vertex_labels.insert(dst_label);
+                            }
+                            pb::edge_expand::Direction::In => {
+                                candi_src_vertex_labels.insert(dst_label);
+                                candi_dst_vertex_labels.insert(src_label);
+                            }
+                            pb::edge_expand::Direction::Both => {
+                                candi_src_vertex_labels.insert(src_label);
+                                candi_src_vertex_labels.insert(dst_label);
+                                candi_dst_vertex_labels.insert(src_label);
+                                candi_dst_vertex_labels.insert(dst_label);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -1000,16 +1022,24 @@ fn assign_src_dst_vertex_labels(
     // - if the required src label is some, its src vertex label must match the requirement
     // - if the required dst label is some, its dst vertex label must match the requirement
     if required_src_labels.is_some() {
-        candi_src_vertex_labels = candi_src_vertex_labels
-            .intersection(&required_src_labels.unwrap())
-            .map(|l| *l)
-            .collect();
+        candi_src_vertex_labels = if candi_src_vertex_labels.is_empty() {
+            required_src_labels.unwrap()
+        } else {
+            candi_src_vertex_labels
+                .intersection(&required_src_labels.unwrap())
+                .map(|l| *l)
+                .collect()
+        };
     }
     if required_dst_labels.is_some() {
-        candi_dst_vertex_labels = candi_dst_vertex_labels
-            .intersection(&required_dst_labels.unwrap())
-            .map(|l| *l)
-            .collect();
+        candi_dst_vertex_labels = if candi_dst_vertex_labels.is_empty() {
+            required_dst_labels.unwrap()
+        } else {
+            candi_dst_vertex_labels
+                .intersection(&required_dst_labels.unwrap())
+                .map(|l| *l)
+                .collect()
+        };
     }
 
     Ok((candi_src_vertex_labels, candi_dst_vertex_labels))

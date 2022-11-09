@@ -26,19 +26,18 @@ mod test {
     use ir_common::generated::common as common_pb;
     use ir_core::catalogue::error::IrPatternResult;
     use ir_core::catalogue::pattern::Pattern;
-    use ir_core::catalogue::pattern_meta::PatternMeta;
     use ir_core::plan::logical::LogicalPlan;
-    use ir_core::plan::meta::PlanMeta;
+    use ir_core::plan::meta::{set_schema, PlanMeta};
     use ir_core::plan::physical::AsPhysical;
     use ir_core::{plan::meta::Schema, JsonIO};
     use pegasus_client::builder::JobBuilder;
 
     use crate::common::test::*;
 
-    pub fn get_ldbc_pattern_meta() -> PatternMeta {
+    pub fn set_ldbc_graph_schema() {
         let ldbc_schema_file = File::open("../core/resource/ldbc_schema.json").unwrap();
         let ldbc_schema = Schema::from_json(ldbc_schema_file).unwrap();
-        PatternMeta::from(&ldbc_schema)
+        set_schema(ldbc_schema);
     }
 
     // Pattern from ldbc schema file and build from pb::Pattern message
@@ -46,7 +45,7 @@ mod test {
     //     knows/      \knows
     //      Person -> Person
     pub fn build_ldbc_pattern_from_pb_case1() -> IrPatternResult<Pattern> {
-        let ldbc_pattern_mata = get_ldbc_pattern_meta();
+        set_ldbc_graph_schema();
         // define pb pattern message
         let expand_opr = pb::EdgeExpand {
             v_tag: None,
@@ -98,7 +97,7 @@ mod test {
                 },
             ],
         };
-        Pattern::from_pb_pattern(&pattern, &ldbc_pattern_mata, &mut PlanMeta::default())
+        Pattern::from_pb_pattern(&pattern, &mut PlanMeta::default())
     }
 
     // Pattern from ldbc schema file and build from pb::Pattern message
@@ -106,7 +105,7 @@ mod test {
     //     study at/      \study at
     //      Person   ->    Person
     pub fn build_ldbc_pattern_from_pb_case2() -> IrPatternResult<Pattern> {
-        let ldbc_pattern_mata = get_ldbc_pattern_meta();
+        set_ldbc_graph_schema();
         // define pb pattern message
         let expand_opr1 = pb::EdgeExpand {
             v_tag: None,
@@ -165,13 +164,13 @@ mod test {
                 },
             ],
         };
-        Pattern::from_pb_pattern(&pattern, &ldbc_pattern_mata, &mut PlanMeta::default())
+        Pattern::from_pb_pattern(&pattern, &mut PlanMeta::default())
     }
 
     // Pattern from ldbc schema file and build from pb::Pattern message
     // 4 Persons know each other
     pub fn build_ldbc_pattern_from_pb_case3() -> IrPatternResult<Pattern> {
-        let ldbc_pattern_mata = get_ldbc_pattern_meta();
+        set_ldbc_graph_schema();
         // define pb pattern message
         let expand_opr = pb::EdgeExpand {
             v_tag: None,
@@ -232,7 +231,7 @@ mod test {
                 },
             ],
         };
-        Pattern::from_pb_pattern(&pattern, &ldbc_pattern_mata, &mut PlanMeta::default())
+        Pattern::from_pb_pattern(&pattern, &mut PlanMeta::default())
     }
 
     // Pattern from ldbc schema file and build from pb::Pattern message
@@ -242,7 +241,7 @@ mod test {
     //     likes \      / has creator
     //           Comment
     pub fn build_ldbc_pattern_from_pb_case4() -> IrPatternResult<Pattern> {
-        let ldbc_pattern_mata = get_ldbc_pattern_meta();
+        set_ldbc_graph_schema();
         // define pb pattern message
         let expand_opr1 = pb::EdgeExpand {
             v_tag: None,
@@ -308,11 +307,11 @@ mod test {
                 },
             ],
         };
-        Pattern::from_pb_pattern(&pattern, &ldbc_pattern_mata, &mut PlanMeta::default())
+        Pattern::from_pb_pattern(&pattern, &mut PlanMeta::default())
     }
 
     fn build_ldbc_bi11() -> IrPatternResult<Pattern> {
-        let ldbc_pattern_mata = get_ldbc_pattern_meta();
+        set_ldbc_graph_schema();
         // define pb pattern message
         let expand_opr0 = pb::EdgeExpand {
             v_tag: None,
@@ -411,7 +410,7 @@ mod test {
                 },
             ],
         };
-        Pattern::from_pb_pattern(&pattern, &ldbc_pattern_mata, &mut PlanMeta::default())
+        Pattern::from_pb_pattern(&pattern, &mut PlanMeta::default())
     }
 
     fn get_source_of_pattern() -> pb::Scan {
@@ -444,7 +443,7 @@ mod test {
             .unwrap();
         plan.append_plan(pb_plan.into(), vec![0])
             .unwrap();
-        plan.append_operator_as_node(get_sink_of_pattern(pattern).into(), vec![plan.max_node_id - 1])
+        plan.append_operator_as_node(get_sink_of_pattern(pattern).into(), vec![plan.get_max_node_id() - 1])
             .unwrap();
         plan
     }

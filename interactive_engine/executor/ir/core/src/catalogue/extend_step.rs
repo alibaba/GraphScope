@@ -155,13 +155,6 @@ impl ExactExtendStep {
                 expand_operators.push(last_edge_expand.into());
             } else {
                 // out(low..high) = out(low-1..high-1) + endV() + out()
-                if hop_range.lower < 1 {
-                    // The path with range from 0 cannot be translated to oprs that can be intersected.
-                    Err(IrPatternError::Unsupported(format!(
-                        "PathExpand in Pattern with lower range of {:?}",
-                        hop_range.lower
-                    )))?
-                }
                 hop_range.lower -= 1;
                 hop_range.upper -= 1;
                 end_v.alias = None;
