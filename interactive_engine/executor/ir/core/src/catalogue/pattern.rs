@@ -15,7 +15,6 @@
 
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
-use std::convert::TryFrom;
 use std::iter::FromIterator;
 
 use ir_common::error::ParsePbError;
@@ -254,47 +253,41 @@ impl From<PatternVertex> for Pattern {
 }
 
 /// Initialize a Pattern from a vertor of Pattern Edges
-impl TryFrom<Vec<PatternEdge>> for Pattern {
-    type Error = IrPatternError;
-
-    fn try_from(edges: Vec<PatternEdge>) -> IrPatternResult<Pattern> {
-        if !edges.is_empty() {
-            let mut new_pattern = Pattern::default();
-            for edge in edges {
-                // Add the new Pattern Edge to the new Pattern
-                new_pattern
-                    .edges
-                    .insert(edge.get_id(), edge.clone());
-                new_pattern
-                    .edges_data
-                    .insert(edge.get_id(), PatternEdgeData::default());
-                // Add or update the start vertex to the new Pattern
-                let start_vertex = new_pattern
-                    .vertices
-                    .entry(edge.get_start_vertex().get_id())
-                    .or_insert(edge.get_start_vertex().clone());
-                // Update start vertex's adjacency info
-                new_pattern
-                    .vertices_data
-                    .entry(start_vertex.get_id())
-                    .or_insert(PatternVertexData::default())
-                    .insert_adjacency(&edge, false);
-                // Add or update the end vertex to the new Pattern
-                let end_vertex = new_pattern
-                    .vertices
-                    .entry(edge.get_end_vertex().get_id())
-                    .or_insert(edge.get_end_vertex().clone());
-                // Update end vertex's adjacency info
-                new_pattern
-                    .vertices_data
-                    .entry(end_vertex.get_id())
-                    .or_insert(PatternVertexData::default())
-                    .insert_adjacency(&edge, true);
-            }
-            Ok(new_pattern)
-        } else {
-            Err(IrPatternError::InvalidExtendPattern("Empty pattern".to_string()))
+impl From<Vec<PatternEdge>> for Pattern {
+    fn from(edges: Vec<PatternEdge>) -> Pattern {
+        let mut new_pattern = Pattern::default();
+        for edge in edges {
+            // Add the new Pattern Edge to the new Pattern
+            new_pattern
+                .edges
+                .insert(edge.get_id(), edge.clone());
+            new_pattern
+                .edges_data
+                .insert(edge.get_id(), PatternEdgeData::default());
+            // Add or update the start vertex to the new Pattern
+            let start_vertex = new_pattern
+                .vertices
+                .entry(edge.get_start_vertex().get_id())
+                .or_insert(edge.get_start_vertex().clone());
+            // Update start vertex's adjacency info
+            new_pattern
+                .vertices_data
+                .entry(start_vertex.get_id())
+                .or_insert(PatternVertexData::default())
+                .insert_adjacency(&edge, false);
+            // Add or update the end vertex to the new Pattern
+            let end_vertex = new_pattern
+                .vertices
+                .entry(edge.get_end_vertex().get_id())
+                .or_insert(edge.get_end_vertex().clone());
+            // Update end vertex's adjacency info
+            new_pattern
+                .vertices_data
+                .entry(end_vertex.get_id())
+                .or_insert(PatternVertexData::default())
+                .insert_adjacency(&edge, true);
         }
+        new_pattern
     }
 }
 
@@ -462,17 +455,25 @@ impl Pattern {
             }
         }
         plan_meta.set_max_tag_id(next_vertex_id as TagId);
-        // TODO: a bug that match only contains a vertex
-        Pattern::try_from(pattern_edges).and_then(|mut pattern| {
-            for (v_id, vertex_data) in vertex_data_map {
-                pattern.set_vertex_data(v_id, vertex_data);
+        let mut pattern = if !pattern_edges.is_empty() {
+            Pattern::from(pattern_edges)
+        } else {
+            if vertex_data_map.is_empty() {
+                Err(IrPatternError::InvalidExtendPattern("Empty Pattern".to_string()))?
+            } else if vertex_data_map.len() == 1 {
+                Pattern::from(PatternVertex::new(vertex_data_map.iter().next().unwrap().0.clone()))
+            } else {
+                Err(IrPatternError::InvalidExtendPattern("The pattern is not connected".to_string()))?
             }
-            for (e_id, edge_data) in edge_data_map {
-                pattern.set_edge_data(e_id, edge_data);
-            }
-            pattern.set_max_tag_id(max_tag_id);
-            Ok(pattern)
-        })
+        };
+        for (v_id, vertex_data) in vertex_data_map {
+            pattern.set_vertex_data(v_id, vertex_data);
+        }
+        for (e_id, edge_data) in edge_data_map {
+            pattern.set_edge_data(e_id, edge_data);
+        }
+        pattern.set_max_tag_id(max_tag_id);
+        Ok(pattern)
     }
 }
 
@@ -480,7 +481,6 @@ impl Pattern {
 impl Pattern {
     /// Generate a naive extend based pattern match plan
     pub fn generate_simple_extend_match_plan(&self) -> IrPatternResult<pb::LogicalPlan> {
-        // TODO: remove this validation
         if self.get_vertices_num() == 0 {
             Err(IrPatternError::InvalidExtendPattern(format!("Empty pattern {:?}", self)))?
         }
@@ -655,7 +655,6 @@ fn build_logical_plan(
                 }
             }
         } else {
-            // TODO: check if only one vertex match meets
             return Err(IrPatternError::InvalidExtendPattern(
                 "Build logical plan error: extend step is not source but has 0 edges".to_string(),
             ));

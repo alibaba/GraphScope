@@ -25,6 +25,28 @@ mod tests {
 
     /// Test whether the structure of pattern_case1 is the same as our previous description
     #[test]
+    fn test_pattern_case0_structure() {
+        let pattern_case0 = build_pattern_case0();
+        let edges_num = pattern_case0.get_edges_num();
+        assert_eq!(edges_num, 0);
+        let vertices_num = pattern_case0.get_vertices_num();
+        assert_eq!(vertices_num, 1);
+        let edges_with_label_0: Vec<&PatternEdge> = pattern_case0.edges_iter_by_label(0).collect();
+        assert_eq!(edges_with_label_0.len(), 0);
+        let vertices_with_label_0: Vec<&PatternVertex> = pattern_case0
+            .vertices_iter_by_label(0)
+            .collect();
+        assert_eq!(vertices_with_label_0.len(), 1);
+        let vertex_0 = pattern_case0.get_vertex(0).unwrap();
+        assert_eq!(vertex_0.get_id(), 0);
+        assert_eq!(vertex_0.get_labels()[0], 0);
+        assert_eq!(pattern_case0.get_vertex_degree(0), 0);
+        let mut vertex_0_adjacent_edges_iter = pattern_case0.adjacencies_iter(0);
+        assert!(vertex_0_adjacent_edges_iter.next().is_none())
+    }
+
+    /// Test whether the structure of pattern_case1 is the same as our previous description
+    #[test]
     fn test_pattern_case1_structure() {
         let pattern_case1 = build_pattern_case1();
         let edges_num = pattern_case1.get_edges_num();
@@ -78,6 +100,17 @@ mod tests {
         assert_eq!(vertex_1_adjacency_1.get_edge_id(), 1);
         assert_eq!(vertex_1_adjacency_1.get_adj_vertex().get_id(), 0);
         assert_eq!(vertex_1_adjacency_1.get_direction(), PatternDirection::Out);
+    }
+
+    #[test]
+    fn test_ldbc_pattern_from_pb_case0_structure() {
+        let pattern_result = build_ldbc_pattern_from_pb_case0();
+        if let Ok(pattern) = pattern_result {
+            assert_eq!(pattern.get_vertices_num(), 1);
+            assert_eq!(pattern.get_edges_num(), 0);
+        } else if let Err(error) = pattern_result {
+            panic!("Build pattern from pb message failed: {:?}", error)
+        }
     }
 
     #[test]
@@ -329,6 +362,20 @@ mod tests {
             );
         } else if let Err(error) = pattern_result {
             panic!("Build pattern from pb message failed: {:?}", error)
+        }
+    }
+
+    #[test]
+    fn test_generate_simple_plan_for_ldbc_pattern_case0() {
+        let pattern_result = build_ldbc_pattern_from_pb_case0().unwrap();
+        match pattern_result.generate_simple_extend_match_plan() {
+            Ok(simple_plan) => {
+                // simple_plan should contain only a scan opr
+                assert_eq!(simple_plan.nodes.len(), 1);
+            }
+            Err(error) => {
+                panic!("generate simple plan for ldbc pattern case0 faild: {:?}", error)
+            }
         }
     }
 }
