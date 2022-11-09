@@ -1159,7 +1159,7 @@ pub struct ExtendStrategy {
 
 /// Initializer of a ExtendStrategy
 impl ExtendStrategy {
-    pub fn init(pb_pattern: &pb::Pattern, plan_meta: &mut PlanMeta) -> IrPatternResult<Self> {
+    pub fn init(pb_pattern: &pb::Pattern, plan_meta: &PlanMeta) -> IrPatternResult<Self> {
         let pattern = Pattern::from_pb_pattern(pb_pattern, plan_meta)?;
         Ok(ExtendStrategy { pattern })
     }

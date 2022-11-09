@@ -293,17 +293,16 @@ impl From<Vec<PatternEdge>> for Pattern {
 
 /// Initialize a Pattern from a protobuf Pattern
 impl Pattern {
-    pub fn from_pb_pattern(pb_pattern: &pb::Pattern, plan_meta: &mut PlanMeta) -> IrPatternResult<Pattern> {
+    pub fn from_pb_pattern(pb_pattern: &pb::Pattern, plan_meta: &PlanMeta) -> IrPatternResult<Pattern> {
         use pb::pattern::binder::Item as BinderItem;
-        // record the vertices from the pb pattern having tags
-        let tag_set = get_all_tags_from_pb_pattern(pb_pattern)?;
-        let max_tag_id = plan_meta.get_max_tag_id();
-        // next vertex id assign to the vertex picked from the pb pattern
-        // notice that the next_vertex_id is the max_tag_id after processing all user-given alias in pattern
-        let mut next_vertex_id = max_tag_id as PatternId;
-        // next edge id assign to the edge picked from the pb pattern
-        // TODO: notice that we have not support expanding edges only yet (in Intersection), so we assume no user-given alias for expanding edges.
-        // TODO: i.e., g.V().match(__.as("a").outE().as("b")) is not supported.
+        // max_tag_id is the max tag has been seen in pb::Pattern (in preprocess for pattern),
+        // i.e., for any tag_id that < max_tag_id is a user-given tags
+        // next (system-given) vertex id assign to the vertex picked from the pb pattern
+        // notice that the next_vertex_id (system-given) is the max_tag_id after processing all user-given alias in pattern
+        let mut next_vertex_id = plan_meta.get_max_tag_id() as PatternId;
+        // next (system-given) edge id assign to the edge picked from the pb pattern
+        // Notice that we start next_edge_id from 0 because we have not support expanding edges only yet (in Intersection),
+        // so we assume no user-given alias for expanding edges. i.e., g.V().match(__.as("a").outE().as("b")) is not supported.
         let mut next_edge_id = 0;
         // pattern edges picked from the pb pattern
         let mut pattern_edges = vec![];
@@ -356,7 +355,7 @@ impl Pattern {
                 match binder.item.as_ref() {
                     Some(BinderItem::Edge(_)) | Some(BinderItem::Path(_)) => {
                         // assign the new pattern edge with a new id
-                        let edge_id = assign_id(&mut next_edge_id, None);
+                        let edge_id = assign_id(&mut next_edge_id);
                         let edge_expand = if let Some(BinderItem::Path(path_expand)) = binder.item.as_ref()
                         {
                             let hop_range =
@@ -401,7 +400,6 @@ impl Pattern {
                             i == last_expand_index.unwrap(),
                             end_tag_v_id,
                             edge_expand,
-                            &tag_set,
                             &mut next_vertex_id,
                         )?;
                         pre_dst_vertex_id = dst_vertex_id;
@@ -454,7 +452,6 @@ impl Pattern {
                 }
             }
         }
-        plan_meta.set_max_tag_id(next_vertex_id as TagId);
         let mut pattern = if !pattern_edges.is_empty() {
             Pattern::from(pattern_edges)
         } else {
@@ -472,7 +469,7 @@ impl Pattern {
         for (e_id, edge_data) in edge_data_map {
             pattern.set_edge_data(e_id, edge_data);
         }
-        pattern.set_max_tag_id(max_tag_id);
+        pattern.set_max_tag_id(plan_meta.get_max_tag_id());
         Ok(pattern)
     }
 }
@@ -848,43 +845,13 @@ fn check_connectivity(vertex_to_remove: PatternId, pattern: &Pattern) -> IrPatte
 
 /// Get the tag info from the given name_or_id
 /// - in pb::Pattern transformation, tag is required to be id instead of str
-fn pb_name_or_id_to_id(name_or_id: &common_pb::NameOrId) -> IrPatternResult<TagId> {
+pub fn pb_name_or_id_to_id(name_or_id: &common_pb::NameOrId) -> IrPatternResult<TagId> {
     match name_or_id.item {
         Some(common_pb::name_or_id::Item::Id(tag_id)) => Ok(tag_id as TagId),
         _ => {
             Err(ParsePbError::ParseError(format!("tag should be id, while it is {:?}", name_or_id)).into())
         }
     }
-}
-
-/// Get all the tags from the pb Pattern and store in a set.
-/// Notice that these tags are user-given tags.
-fn get_all_tags_from_pb_pattern(pb_pattern: &pb::Pattern) -> IrPatternResult<BTreeSet<TagId>> {
-    use pb::pattern::binder::Item as BinderItem;
-    let mut tag_id_set = BTreeSet::new();
-    for sentence in pb_pattern.sentences.iter() {
-        if let Some(start_tag) = sentence.start.as_ref() {
-            let start_tag_id = pb_name_or_id_to_id(start_tag)?;
-            tag_id_set.insert(start_tag_id);
-        }
-        if let Some(end_tag) = sentence.end.as_ref() {
-            let end_tag_id = pb_name_or_id_to_id(end_tag)?;
-            tag_id_set.insert(end_tag_id);
-        }
-        for binder in sentence.binders.iter() {
-            let alias = match binder.item.as_ref() {
-                Some(BinderItem::Edge(edge_expand)) => edge_expand.alias.as_ref(),
-                Some(BinderItem::Path(path_expand)) => path_expand.alias.as_ref(),
-                Some(BinderItem::Vertex(get_v)) => get_v.alias.as_ref(),
-                _ => None,
-            };
-            if let Some(tag) = alias {
-                let tag_id = pb_name_or_id_to_id(tag)?;
-                tag_id_set.insert(tag_id);
-            }
-        }
-    }
-    Ok(tag_id_set)
 }
 
 /// Get the last edge expand's index of a pb pattern sentence among all of its binders
@@ -921,16 +888,10 @@ fn get_edge_expand_labels(edge_expand: &pb::EdgeExpand) -> IrPatternResult<Vec<P
 }
 
 /// Assign a vertex or edge with the next_id, and add the next_id by one
-/// - For a vertex:
-/// - - if the vertex has tag, just use its tag id as the pattern id
-/// - - the next_id cannot be the same as another vertex's tag id (pattern id)
-/// - - otherwise the assigned pattern id will be repeated
-fn assign_id(next_id: &mut PatternId, tag_set_opt: Option<&BTreeSet<TagId>>) -> PatternId {
-    if let Some(tag_set) = tag_set_opt {
-        while tag_set.contains(&(*next_id as TagId)) {
-            *next_id += 1;
-        }
-    }
+/// - For a vertex or edge:
+/// - - if the vertex or edge has user-given tag, should use its tag id as the pattern id
+/// - - otherwise the assigned pattern id by assign_id() function
+fn assign_id(next_id: &mut PatternId) -> PatternId {
     let id_to_assign = *next_id;
     *next_id += 1;
     id_to_assign
@@ -946,13 +907,13 @@ fn assign_id(next_id: &mut PatternId, tag_set_opt: Option<&BTreeSet<TagId>>) -> 
 ///     - else, assign it with a new id
 fn assign_expand_dst_vertex_id(
     is_tail: bool, sentence_end_id: Option<PatternId>, edge_expand: &pb::EdgeExpand,
-    tag_set: &BTreeSet<TagId>, next_vertex_id: &mut PatternId,
+    next_vertex_id: &mut PatternId,
 ) -> IrPatternResult<PatternId> {
     if is_tail {
         if let Some(v_id) = sentence_end_id {
             Ok(v_id)
         } else {
-            Ok(assign_id(next_vertex_id, Some(tag_set)))
+            Ok(assign_id(next_vertex_id))
         }
     } else {
         let dst_vertex_tag: Option<TagId> = edge_expand
@@ -965,7 +926,7 @@ fn assign_expand_dst_vertex_id(
         if let Some(tag) = dst_vertex_tag {
             Ok(tag as PatternId)
         } else {
-            Ok(assign_id(next_vertex_id, Some(tag_set)))
+            Ok(assign_id(next_vertex_id))
         }
     }
 }

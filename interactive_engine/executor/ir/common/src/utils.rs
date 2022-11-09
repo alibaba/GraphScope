@@ -632,6 +632,7 @@ impl pb::logical_plan::Operator {
             match opr {
                 Opr::Scan(scan) => {
                     scan.idx_predicate.is_none()
+                        && scan.alias.is_none()
                         && scan
                             .params
                             .as_ref()

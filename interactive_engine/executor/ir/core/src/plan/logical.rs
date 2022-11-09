@@ -431,7 +431,7 @@ impl LogicalPlan {
                         .map(|pattern_source| pattern_source.is_whole_graph())
                         .ok_or(IrError::ParentNodeNotExist(parent_ids[0]))?;
                     let extend_strategy = if is_pattern_source_whole_graph {
-                        ExtendStrategy::init(&pattern, &mut self.meta)
+                        ExtendStrategy::init(&pattern, &self.meta)
                     } else {
                         Err(IrPatternError::Unsupported("pattern source is not whole graph".to_string()))
                     };

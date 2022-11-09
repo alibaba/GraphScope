@@ -13,8 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::collections::HashMap;
-use std::convert::TryFrom;
+use std::collections::{BTreeSet, HashMap};
 
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
@@ -22,7 +21,7 @@ use ir_common::KeyId;
 use ir_core::catalogue::error::IrPatternResult;
 use ir_core::catalogue::pattern::*;
 use ir_core::catalogue::{PatternId, PatternLabelId};
-use ir_core::plan::meta::PlanMeta;
+use ir_core::plan::meta::{PlanMeta, TagId};
 use rand::rngs::StdRng;
 use rand::seq::SliceRandom;
 use rand::SeedableRng;
@@ -81,6 +80,40 @@ fn new_pattern_edge(
     let start_vertex = PatternVertex::with_label(start_v_id, start_v_label);
     let end_vertex = PatternVertex::with_label(end_v_id, end_v_label);
     PatternEdge::new(id, vec![label], start_vertex, end_vertex)
+}
+
+fn get_max_tag_id(pattern: &pb::Pattern) -> TagId {
+    use pb::pattern::binder::Item as BinderItem;
+    let mut tag_id_set = BTreeSet::new();
+    for sentence in pattern.sentences.iter() {
+        if let Some(start_tag) = sentence.start.as_ref() {
+            let start_tag_id = pb_name_or_id_to_id(start_tag).unwrap();
+            tag_id_set.insert(start_tag_id);
+        }
+        if let Some(end_tag) = sentence.end.as_ref() {
+            let end_tag_id = pb_name_or_id_to_id(end_tag).unwrap();
+            tag_id_set.insert(end_tag_id);
+        }
+        for binder in sentence.binders.iter() {
+            let alias = match binder.item.as_ref() {
+                Some(BinderItem::Edge(edge_expand)) => edge_expand.alias.as_ref(),
+                Some(BinderItem::Path(path_expand)) => path_expand.alias.as_ref(),
+                Some(BinderItem::Vertex(get_v)) => get_v.alias.as_ref(),
+                _ => None,
+            };
+            if let Some(tag) = alias {
+                let tag_id = pb_name_or_id_to_id(tag).unwrap();
+                tag_id_set.insert(tag_id);
+            }
+        }
+    }
+    tag_id_set.len() as TagId
+}
+
+fn gen_plan_meta(pattern: &pb::Pattern) -> PlanMeta {
+    let mut plan_meta = PlanMeta::default();
+    plan_meta.set_max_tag_id(get_max_tag_id(pattern));
+    plan_meta
 }
 
 /// The pattern looks like:
@@ -289,7 +322,7 @@ pub fn build_pattern_case7() -> Pattern {
     let edge_5 = new_pattern_edge(4, 5, 1, 3, 2, 4);
     let edge_6 = new_pattern_edge(5, 6, 3, 2, 4, 3);
     let pattern_edges = vec![edge_1, edge_2, edge_3, edge_4, edge_5, edge_6];
-    Pattern::try_from(pattern_edges).unwrap()
+    Pattern::from(pattern_edges)
 }
 
 /// The pattern looks like:
@@ -308,7 +341,7 @@ pub fn build_pattern_case8() -> Pattern {
     let edge_1 = new_pattern_edge(0, 0, 0, 1, 1, 1);
     let edge_2 = new_pattern_edge(1, 3, 1, 2, 1, 2);
     let pattern_edges = vec![edge_1, edge_2];
-    Pattern::try_from(pattern_edges).unwrap()
+    Pattern::from(pattern_edges)
 }
 
 /// The pattern looks like:
@@ -332,7 +365,7 @@ pub fn build_pattern_case9() -> Pattern {
     let edge_4 = new_pattern_edge(3, 1, 1, 3, 1, 3);
     let edge_5 = new_pattern_edge(4, 2, 2, 3, 2, 3);
     let pattern_edges = vec![edge_1, edge_2, edge_3, edge_4, edge_5];
-    Pattern::try_from(pattern_edges).unwrap()
+    Pattern::from(pattern_edges)
 }
 
 /// Pattern from modern schema file
@@ -378,7 +411,7 @@ pub fn build_modern_pattern_case5() -> Pattern {
     let pattern_edge1 = new_pattern_edge(0, 0, 0, 1, 0, 0);
     let pattern_edge2 = new_pattern_edge(1, 1, 0, 2, 0, 1);
     let pattern_edge3 = new_pattern_edge(2, 1, 1, 2, 0, 1);
-    Pattern::try_from(vec![pattern_edge1, pattern_edge2, pattern_edge3]).unwrap()
+    Pattern::from(vec![pattern_edge1, pattern_edge2, pattern_edge3])
 }
 
 /// Pattern from ldbc schema file
@@ -410,9 +443,8 @@ pub fn build_ldbc_pattern_from_pb_case0() -> IrPatternResult<Pattern> {
             join_kind: 0,
         }],
     };
-    let mut plan_meta = PlanMeta::default();
-    plan_meta.set_max_tag_id(1);
-    Pattern::from_pb_pattern(&pattern, &mut plan_meta)
+    let plan_meta = gen_plan_meta(&pattern);
+    Pattern::from_pb_pattern(&pattern, &plan_meta)
 }
 
 /// Pattern from ldbc schema file and build from pb::Pattern message
@@ -462,7 +494,8 @@ pub fn build_ldbc_pattern_from_pb_case1() -> IrPatternResult<Pattern> {
             },
         ],
     };
-    Pattern::from_pb_pattern(&pattern, &mut PlanMeta::default())
+    let plan_meta = gen_plan_meta(&pattern);
+    Pattern::from_pb_pattern(&pattern, &plan_meta)
 }
 
 /// Pattern from ldbc schema file and build from pb::Pattern message
@@ -523,7 +556,8 @@ pub fn build_ldbc_pattern_from_pb_case2() -> IrPatternResult<Pattern> {
             },
         ],
     };
-    Pattern::from_pb_pattern(&pattern, &mut PlanMeta::default())
+    let plan_meta = gen_plan_meta(&pattern);
+    Pattern::from_pb_pattern(&pattern, &plan_meta)
 }
 
 /// Pattern from ldbc schema file and build from pb::Pattern message
@@ -590,7 +624,8 @@ pub fn build_ldbc_pattern_from_pb_case3() -> IrPatternResult<Pattern> {
             },
         ],
     };
-    Pattern::from_pb_pattern(&pattern, &mut PlanMeta::default())
+    let plan_meta = gen_plan_meta(&pattern);
+    Pattern::from_pb_pattern(&pattern, &plan_meta)
 }
 
 /// Pattern from ldbc schema file and build from pb::Pattern message
@@ -668,7 +703,8 @@ pub fn build_ldbc_pattern_from_pb_case4() -> IrPatternResult<Pattern> {
             },
         ],
     };
-    Pattern::from_pb_pattern(&pattern, &mut PlanMeta::default())
+    let plan_meta = gen_plan_meta(&pattern);
+    Pattern::from_pb_pattern(&pattern, &plan_meta)
 }
 
 /// Pattern from ldbc schema file and build from pb::Pattern message
@@ -739,7 +775,8 @@ pub fn build_ldbc_pattern_from_pb_case5() -> IrPatternResult<Pattern> {
             },
         ],
     };
-    Pattern::from_pb_pattern(&pattern, &mut PlanMeta::default())
+    let plan_meta = gen_plan_meta(&pattern);
+    Pattern::from_pb_pattern(&pattern, &plan_meta)
 }
 
 pub fn build_ldbc_pattern_from_pb_case6() -> IrPatternResult<Pattern> {
@@ -821,7 +858,8 @@ pub fn build_ldbc_pattern_from_pb_case6() -> IrPatternResult<Pattern> {
             },
         ],
     };
-    Pattern::from_pb_pattern(&pattern, &mut PlanMeta::default())
+    let plan_meta = gen_plan_meta(&pattern);
+    Pattern::from_pb_pattern(&pattern, &plan_meta)
 }
 
 // Test Cases for Index Ranking
