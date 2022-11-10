@@ -181,13 +181,6 @@ if (GLOG_FOUND)
 endif ()
 
 
-include("cmake/FindArrow.cmake")
-if (ARROW_FOUND)
-    include_directories("${ARROW_INCLUDE_DIR}")
-else ()
-    message(FATAL_ERROR "arrow not found")
-endif ()
-
 include("cmake/FindLibUnwind.cmake")
 if (${LIBUNWIND_FOUND})
     add_definitions(-DWITH_LIBUNWIND)
@@ -219,6 +212,15 @@ else()
     include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindGRPC.cmake)
     set(GRPC_LIBRARIES ${GPR_LIBRARY} ${GRPC_LIBRARY} ${GRPC_GRPC++_LIBRARY})
 endif()
+
+# Make sure FindArrow is behind FindGRPC
+# fixes the "c-ares::cares_shared" target already exists.
+include("cmake/FindArrow.cmake")
+if (ARROW_FOUND)
+    include_directories("${ARROW_INCLUDE_DIR}")
+else ()
+    message(FATAL_ERROR "arrow not found")
+endif ()
 
 # Generate proto
 execute_process(COMMAND python3 python/graphscope/proto/proto_generator.py "${PROJECT_SOURCE_DIR}" --cpp

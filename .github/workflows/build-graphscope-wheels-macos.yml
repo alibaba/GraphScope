@@ -1,19 +1,29 @@
 name: Build GraphScope Wheels on MacOS
 
+#on:
+  #workflow_dispatch:
+  #schedule:
+    ## The notifications for scheduled workflows are sent to the user who
+    ## last modified the cron syntax in the workflow file.
+    ## Trigger the workflow at 03:00(CST) every day.
+    #- cron:  '00 19 * * *'
+  #push:
+    #tags:
+      #- "v*"
+
 on:
-  workflow_dispatch:
-  schedule:
-    # The notifications for scheduled workflows are sent to the user who
-    # last modified the cron syntax in the workflow file.
-    # Trigger the workflow at 03:00(CST) every day.
-    - cron:  '00 19 * * *'
+  # Trigger the workflow on push or pull request,
+  # but only for the main branch
   push:
-    tags:
-      - "v*"
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build-wheels:
-    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
+    # if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
     runs-on: macos-10.15
     steps:
     - uses: actions/checkout@v3
@@ -60,7 +70,7 @@ jobs:
         retention-days: 5
 
   build-client-wheels:
-    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
+    # if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
     runs-on: macos-10.15
     strategy:
       matrix:
@@ -159,7 +169,7 @@ jobs:
         packages_dir: upload_pypi/
 
   python-test:
-    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    # if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     runs-on: macos-10.15
     needs: [build-wheels, build-client-wheels]
     strategy:
