@@ -1062,9 +1062,18 @@ class Session(object):
         """Get configuration of the session."""
         return self._config_params
 
-    def g(self, incoming_data=None, oid_type="int64", directed=True, generate_eid=True, vertex_map='global'):
+    def g(
+        self,
+        incoming_data=None,
+        oid_type="int64",
+        directed=True,
+        generate_eid=True,
+        vertex_map="global",
+    ):
         return self._wrapper(
-            GraphDAGNode(self, incoming_data, oid_type, directed, generate_eid, vertex_map)
+            GraphDAGNode(
+                self, incoming_data, oid_type, directed, generate_eid, vertex_map
+            )
         )
 
     def load_from(self, *args, **kwargs):
@@ -1437,7 +1446,13 @@ class _DefaultSessionStack(object):
 _default_session_stack = _DefaultSessionStack()  # pylint: disable=protected-access
 
 
-def g(incoming_data=None, oid_type="int64", directed=True, generate_eid=True, vertex_map='global'):
+def g(
+    incoming_data=None,
+    oid_type="int64",
+    directed=True,
+    generate_eid=True,
+    vertex_map="global",
+):
     """Construct a GraphScope graph object on the default session.
 
     It will launch and set a session to default when there is no default session found.
@@ -1459,7 +1474,9 @@ def g(incoming_data=None, oid_type="int64", directed=True, generate_eid=True, ve
         >>> sess.as_default()
         >>> g = graphscope.g() # creating graph on the session "sess"
     """
-    return get_default_session().g(incoming_data, oid_type, directed, generate_eid, vertex_map)
+    return get_default_session().g(
+        incoming_data, oid_type, directed, generate_eid, vertex_map
+    )
 
 
 def gremlin(graph):
