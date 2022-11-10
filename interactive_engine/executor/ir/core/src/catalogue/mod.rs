@@ -17,6 +17,7 @@ use std::collections::HashMap;
 
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
+use std::cmp::Ordering;
 
 pub type PatternId = usize;
 pub type PatternLabelId = ir_common::LabelId;
@@ -41,4 +42,13 @@ pub(crate) fn query_params(
         sample_ratio: 1.0,
         extra: HashMap::new(),
     }
+}
+
+pub trait PatternOrderTrait<D> {
+    fn compare(&self, left: &D, right: &D) -> Ordering;
+}
+
+pub trait PatternWeightTrait<W: PartialOrd> {
+    fn estimate_vertex_weight(&self, vid: PatternId) -> W;
+    fn estimate_adjacencies_weight(&self, vid: PatternId) -> W;
 }
