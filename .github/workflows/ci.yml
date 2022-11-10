@@ -213,12 +213,15 @@ jobs:
         cd /tmp/v6d
         git submodule update --init
         mkdir -p build && cd build
-        cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local \
+        cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard \
                  -DUSE_EXTERNAL_ETCD_LIBS=OFF \
                  -DBUILD_SHARED_LIBS=ON \
                  -DBUILD_VINEYARD_TESTS=OFF
         make -j$(nproc)
         sudo make install
+
+        # copy to /usr/local, keep the same logic as gsvineyard.Dockerfile
+        sudo cp -r /opt/vineyard/* /usr/local/
 
     - name: Build Wheels
       run: |
