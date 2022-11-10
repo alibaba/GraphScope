@@ -1557,7 +1557,7 @@ def _codegen_graph_info(attr):
             vm_type_enum = graph_def_pb2.GLOBAL_VERTEX_MAP
         else:
             vm_type_enum = attr[types_pb2.VERTEX_MAP_TYPE].i
-        return f"{VERETX_MAP_CLASS_MAP[vm_type_enum]}<{oid_type()},<{vid_type()}>>"
+        return f"{VERETX_MAP_CLASS_MAP[vm_type_enum]}<{oid_type()},{vid_type()}>"
 
     graph_type = attr[types_pb2.GRAPH_TYPE].i
     graph_class, graph_header = GRAPH_HEADER_MAP[graph_type]

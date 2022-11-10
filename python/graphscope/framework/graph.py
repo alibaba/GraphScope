@@ -737,6 +737,8 @@ class Graph(GraphInterface):
         self._schema = GraphSchema()
         self._detached = False
 
+        self._vertex_map = graph_node._vertex_map
+
     def update_from_graph_def(self, graph_def):
         if graph_def.graph_type == graph_def_pb2.ARROW_FLATTENED:
             self._graph_node._graph_type = graph_def_pb2.ARROW_FLATTENED
@@ -754,7 +756,6 @@ class Graph(GraphInterface):
         self._vineyard_id = vy_info.vineyard_id
         self._oid_type = data_type_to_cpp(vy_info.oid_type)
         self._generate_eid = vy_info.generate_eid
-        self._vertex_map = vy_info.vertex_map_type
 
         self._schema_path = vy_info.schema_path
         self._schema.from_graph_def(graph_def)

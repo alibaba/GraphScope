@@ -173,7 +173,7 @@ jobs:
   build-wheels:
     # Require the user id of the self-hosted is 1001, which may need to be
     # configured manually when a new self-hosted runner is added.
-    runs-on: [self-hosted, manylinux2014-ci-test]
+    runs-on: [self-hosted, manylinux2014]
     needs: [changes]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
@@ -206,35 +206,19 @@ jobs:
           ${{ runner.os }}-pip-
 
     - name: Install latest libgrape-lite and vineyard
-      if: false
+      if: true
       run: |
         source ~/.bashrc
-
-        git clone --single-branch --depth=1 https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
-        pushd /tmp/libgrape-lite
-        mkdir -p build && cd build
-        cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard
-        make -j$(nproc)
-        sudo make install
-        popd
-        rm -fr /tmp/libgrape-lite
-
-        git clone --single-branch --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
-        pushd /tmp/v6d
+        git clone -b zsy/802 --single-branch --depth=1 https://github.com/siyuan0322/v6d.git /tmp/v6d
+        cd /tmp/v6d
         git submodule update --init
         mkdir -p build && cd build
-        cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard \
+        cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local \
                  -DUSE_EXTERNAL_ETCD_LIBS=OFF \
                  -DBUILD_SHARED_LIBS=ON \
                  -DBUILD_VINEYARD_TESTS=OFF
         make -j$(nproc)
         sudo make install
-        popd
-
-        rm -fr /tmp/v6d
-
-        # copy to /usr/local, keep the same logic as gsvineyard.Dockerfile
-        sudo cp -r /opt/vineyard/* /usr/local/
 
     - name: Build Wheels
       run: |
