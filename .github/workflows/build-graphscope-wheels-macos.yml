@@ -60,7 +60,9 @@ jobs:
 
         # package
         cd ${GITHUB_WORKSPACE}
-        tar -zcf graphscope.tar.gz coordinator/dist/wheelhouse/*.whl
+        ls coordinator/dist
+        ls coordinator/dist/wheelhouse/
+        tar -zcf graphscope.tar.gz coordinator/dist/
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v3
@@ -147,6 +149,7 @@ jobs:
 
         if [ "$PYTHON" == "3.7" ]; then
           tar -zxf ./wheel-macos-${{ github.sha }}/graphscope.tar.gz
+          mv ${GITHUB_WORKSPACE}/artifacts/coordinator/dist/*.whl ${GITHUB_WORKSPACE}/upload_pypi/
           mv ${GITHUB_WORKSPACE}/artifacts/coordinator/dist/wheelhouse/*.whl ${GITHUB_WORKSPACE}/upload_pypi/
         fi
 
@@ -196,6 +199,9 @@ jobs:
         popd
         # install graphscope
         tar -zxf ./wheel-macos-${{ github.sha }}/graphscope.tar.gz
+        pushd coordinator/dist
+        python3 -m pip install ./*.whl --user
+        popd
         pushd coordinator/dist/wheelhouse
         python3 -m pip install ./*.whl --user
         popd
