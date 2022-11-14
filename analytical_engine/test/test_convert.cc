@@ -82,6 +82,7 @@ int main(int argc, char** argv) {
     using oid_t = OID_TYPE;
     using vid_t = VID_TYPE;
     using FragmentType = vineyard::ArrowFragment<oid_t, vid_t>;
+    using vertex_map_t = FragmentType::vertex_map_t;
 
     gs::ArrowFragmentLoader<oid_t, vid_t> loader(client, comm_spec, efiles,
                                                  vfiles, directed != 0);
@@ -95,7 +96,8 @@ int main(int argc, char** argv) {
 
           BOOST_LEAF_AUTO(dynamic_frag, a2d_converter.Convert(arrow_frag));
           LOG(INFO) << "ArrowFragment->DynamicFragment done.";
-          gs::DynamicToArrowConverter<oid_t> d2a_converter(comm_spec, client);
+          gs::DynamicToArrowConverter<oid_t, vertex_map_t> d2a_converter(
+              comm_spec, client);
           BOOST_LEAF_AUTO(arrow_frag1, d2a_converter.Convert(dynamic_frag));
           LOG(INFO) << "DynamicFragment->ArrowFragment done.";
           using ProjectedFragmentType =
