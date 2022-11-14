@@ -48,8 +48,6 @@ __attribute__((visibility(
     "hidden"))) static bl::result<std::shared_ptr<gs::IFragmentWrapper>>
 LoadGraph(const grape::CommSpec& comm_spec, vineyard::Client& client,
           const std::string& graph_name, const gs::rpc::GSParams& params) {
-
-
   BOOST_LEAF_AUTO(from_vineyard_id,
                   params.Get<bool>(gs::rpc::IS_FROM_VINEYARD_ID));
 
