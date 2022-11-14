@@ -49,6 +49,6 @@ pub trait PatternOrderTrait<D> {
 }
 
 pub trait PatternWeightTrait<W: PartialOrd> {
-    fn estimate_vertex_weight(&self, vid: PatternId) -> W;
-    fn estimate_adjacencies_weight(&self, vid: PatternId) -> W;
+    fn get_vertex_weight(&self, vid: PatternId) -> W;
+    fn get_adjacencies_weight(&self, vid: PatternId) -> W;
 }

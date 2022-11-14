@@ -708,14 +708,14 @@ fn append_opr(
 ///  4. vertex with larger degree will be extended later
 impl PatternOrderTrait<PatternId> for Pattern {
     fn compare(&self, v1: &PatternId, v2: &PatternId) -> Ordering {
-        let v1_weight = self.estimate_vertex_weight(*v1);
-        let v2_weight = self.estimate_vertex_weight(*v2);
+        let v1_weight = self.get_vertex_weight(*v1);
+        let v2_weight = self.get_vertex_weight(*v2);
         let vertex_order = v1_weight
             .partial_cmp(&v2_weight)
             .unwrap_or(Ordering::Equal);
         if Ordering::Equal == vertex_order {
-            let v1_adjacencies_weight = self.estimate_adjacencies_weight(*v1);
-            let v2_adjacencies_weight = self.estimate_adjacencies_weight(*v2);
+            let v1_adjacencies_weight = self.get_adjacencies_weight(*v1);
+            let v2_adjacencies_weight = self.get_adjacencies_weight(*v2);
             let adj_order = v1_adjacencies_weight
                 .partial_cmp(&v2_adjacencies_weight)
                 .unwrap_or(Ordering::Equal);
@@ -753,7 +753,7 @@ impl PatternOrderTrait<PatternId> for Pattern {
 }
 
 impl PatternWeightTrait<f64> for Pattern {
-    fn estimate_vertex_weight(&self, vid: PatternId) -> f64 {
+    fn get_vertex_weight(&self, vid: PatternId) -> f64 {
         // VERTEX_EQ_WEIGHT has the first priority
         const PREDICATE_EQ_WEIGHT: f64 = 10.0;
         const VERTEX_PREDICATE_WEIGHT: f64 = 1.0;
@@ -770,7 +770,7 @@ impl PatternWeightTrait<f64> for Pattern {
         vertex_weight
     }
 
-    fn estimate_adjacencies_weight(&self, vid: PatternId) -> f64 {
+    fn get_adjacencies_weight(&self, vid: PatternId) -> f64 {
         // PREDICATE_EQ_WEIGHT has the first priority
         // Besides, EdgeExpand with predicates is in prior to PathExpand with predicates,
         // since PathExpand is assumed to expand more intermediate results.
