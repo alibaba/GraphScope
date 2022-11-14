@@ -91,8 +91,10 @@ gae-install: gae
 	$(MAKE) -C $(GAE_BUILD_DIR) install
 	install $(K8S_DIR)/kube_ssh $(INSTALL_PREFIX)/bin/
 	install -d $(INSTALL_PREFIX)/lib/cmake/graphscope-analytical/cmake
-	install $(INSTALL_PREFIX)/lib64/cmake/graphscope-analytical/*.cmake $(INSTALL_PREFIX)/lib/cmake/graphscope-analytical
-	install $(INSTALL_PREFIX)/lib64/cmake/graphscope-analytical/cmake/* $(INSTALL_PREFIX)/lib/cmake/graphscope-analytical/cmake
+	if [ -d "${INSTALL_PREFIX}/lib64/cmake/graphscope-analytical" ]; then \
+		install $(INSTALL_PREFIX)/lib64/cmake/graphscope-analytical/*.cmake $(INSTALL_PREFIX)/lib/cmake/graphscope-analytical; \
+		install $(INSTALL_PREFIX)/lib64/cmake/graphscope-analytical/cmake/* $(INSTALL_PREFIX)/lib/cmake/graphscope-analytical/cmake; \
+	fi
 
 gae: $(GAE_BUILD_DIR)/grape_engine
 

@@ -110,8 +110,15 @@ endif ()
 set(CMAKE_THREAD_PREFER_PTHREAD ON)
 
 include(GNUInstallDirs)
+# reference: https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling#always-full-rpath
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_INSTALL_PREFIX}/lib64")
+if(APPLE)
+    # the LC_RPATH on Mac seems doesn't support multiple path (seperated with ':seperated with `:`)
+    # fortunately, we just need to take care `lib` on Mac.
+    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+else()
+    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_INSTALL_PREFIX}/lib64:${CMAKE_INSTALL_PREFIX}/lib/x86_64-linux-gnu")
+endif()
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 find_package(Threads REQUIRED)
@@ -181,13 +188,6 @@ if (GLOG_FOUND)
 endif ()
 
 
-include("cmake/FindArrow.cmake")
-if (ARROW_FOUND)
-    include_directories("${ARROW_INCLUDE_DIR}")
-else ()
-    message(FATAL_ERROR "arrow not found")
-endif ()
-
 include("cmake/FindLibUnwind.cmake")
 if (${LIBUNWIND_FOUND})
     add_definitions(-DWITH_LIBUNWIND)
@@ -219,6 +219,15 @@ else()
     include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindGRPC.cmake)
     set(GRPC_LIBRARIES ${GPR_LIBRARY} ${GRPC_LIBRARY} ${GRPC_GRPC++_LIBRARY})
 endif()
+
+# Make sure FindArrow is behind FindGRPC
+# fixes the "c-ares::cares_shared" target already exists.
+include("cmake/FindArrow.cmake")
+if (ARROW_FOUND)
+    include_directories("${ARROW_INCLUDE_DIR}")
+else ()
+    message(FATAL_ERROR "arrow not found")
+endif ()
 
 # Generate proto
 execute_process(COMMAND python3 python/graphscope/proto/proto_generator.py "${PROJECT_SOURCE_DIR}" --cpp
