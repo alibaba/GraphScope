@@ -35,10 +35,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Install latest libgrape-lite and vineyard
+    - name: Install latest vineyard
       if: true
       run: |
-        source ~/.bashrc
         git clone -b 802 --single-branch --depth=1 https://github.com/siyuan0322/v6d.git /tmp/v6d
         cd /tmp/v6d
         git submodule update --init

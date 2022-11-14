@@ -11,8 +11,8 @@ project(analytical_engine LANGUAGES C CXX)
 set(PROJECT_VERSION ${GRAPHSCOPE_ANALYTICAL_VERSION})
 
 option(NETWORKX "networkx on?" ON)
-option(BUILD_TESTS "Build unit test" ON)
-option(ENABLE_JAVA_SDK "Build with support for java sdk" ON)
+option(BUILD_TESTS "Build unit test" OFF)
+option(ENABLE_JAVA_SDK "Build with support for java sdk" OFF)
 option(LET_IT_CRASH_ON_EXCEPTION "Disable boost leaf's error handling and let it crash when exception occurs to help debugging" OFF)
 
 # Get system processor

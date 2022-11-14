@@ -263,6 +263,7 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T, VERTEX_MAP_T>>
     CHECK_EQ(graph_def_.graph_type(), rpc::graph::ARROW_PROPERTY);
   }
 
+
   std::shared_ptr<void> fragment() const override {
     return std::static_pointer_cast<void>(fragment_);
   }

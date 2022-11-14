@@ -38,6 +38,9 @@
 #error Missing _GRAPH_TYPE
 #endif
 
+using oid_t = typename _GRAPH_TYPE::oid_t;
+using vid_t = typename _GRAPH_TYPE::vid_t;
+
 namespace bl = boost::leaf;
 namespace detail {
 
@@ -45,8 +48,7 @@ __attribute__((visibility(
     "hidden"))) static bl::result<std::shared_ptr<gs::IFragmentWrapper>>
 LoadGraph(const grape::CommSpec& comm_spec, vineyard::Client& client,
           const std::string& graph_name, const gs::rpc::GSParams& params) {
-  using oid_t = typename _GRAPH_TYPE::oid_t;
-  using vid_t = typename _GRAPH_TYPE::vid_t;
+
 
   BOOST_LEAF_AUTO(from_vineyard_id,
                   params.Get<bool>(gs::rpc::IS_FROM_VINEYARD_ID));
@@ -145,8 +147,6 @@ ToArrowFragment(vineyard::Client& client, const grape::CommSpec& comm_spec,
                 std::shared_ptr<gs::IFragmentWrapper>& wrapper_in,
                 const std::string& dst_graph_name) {
 #ifdef NETWORKX
-  using oid_t = typename _GRAPH_TYPE::oid_t;
-  using vid_t = typename _GRAPH_TYPE::vid_t;
   static_assert(std::is_same<vid_t, gs::DynamicFragment::vid_t>::value,
                 "The type of ArrowFragment::vid_t does not match with the "
                 "DynamicFragment::vid_t");
@@ -254,9 +254,6 @@ AddLabelsToGraph(vineyard::ObjectID origin_frag_id,
                  const grape::CommSpec& comm_spec, vineyard::Client& client,
                  const std::string& graph_name,
                  const gs::rpc::GSParams& params) {
-  using oid_t = typename _GRAPH_TYPE::oid_t;
-  using vid_t = typename _GRAPH_TYPE::vid_t;
-
   BOOST_LEAF_AUTO(graph_info, gs::ParseCreatePropertyGraph(params));
   gs::ArrowFragmentLoader<oid_t, vid_t> loader(client, comm_spec, graph_info);
 
@@ -340,16 +337,12 @@ void AddLabelsToGraph(
 }
 
 template class vineyard::BasicArrowVertexMapBuilder<
-    typename vineyard::InternalType<_GRAPH_TYPE::oid_t>::type,
-    _GRAPH_TYPE::vid_t>;
+    typename vineyard::InternalType<oid_t>::type, vid_t>;
 template class vineyard::ArrowVertexMap<
-    typename vineyard::InternalType<_GRAPH_TYPE::oid_t>::type,
-    _GRAPH_TYPE::vid_t>;
+    typename vineyard::InternalType<oid_t>::type, vid_t>;
 template class vineyard::ArrowVertexMapBuilder<
-    typename vineyard::InternalType<_GRAPH_TYPE::oid_t>::type,
-    _GRAPH_TYPE::vid_t>;
+    typename vineyard::InternalType<oid_t>::type, vid_t>;
 template class gs::ArrowProjectedVertexMap<
-    typename vineyard::InternalType<_GRAPH_TYPE::oid_t>::type,
-    _GRAPH_TYPE::vid_t>;
+    typename vineyard::InternalType<oid_t>::type, vid_t>;
 
 }  // extern "C"
