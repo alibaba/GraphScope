@@ -133,7 +133,7 @@ graphscope-darwin-py3:
 		pip3 install delocate && \
 		for wheel in `ls dist/*.whl`; do \
 			delocate-listdeps -a -d $$wheel; \
-			delocate-wheel -w dist/wheelhouse -v $$wheel && rm $$wheel; \
+			delocate-wheel -w dist/wheelhouse -v $$wheel; \
 		done
 
 graphscope-manylinux2014-py3-nodocker:

@@ -64,6 +64,10 @@ jobs:
         ls coordinator/dist/wheelhouse/
         tar -zcf graphscope.tar.gz coordinator/dist/
 
+    - name: Setup tmate session
+      if: always()
+      uses: mxschmitt/action-tmate@v2
+
     - name: Upload Artifact
       uses: actions/upload-artifact@v3
       with:
