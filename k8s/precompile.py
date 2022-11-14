@@ -169,12 +169,13 @@ def internal_type(t):  # The template of vertex map needs special care.
     return t
 
 def compile_graph():
-    vertex_map_template = "vineyard::ArrowVertexMap<{},{}>"
     property_frame_template = "vineyard::ArrowFragment<{},{},{}>"
     projected_frame_template = "gs::ArrowProjectedFragment<{},{},{},{},{}>"
     flattened_frame_template = "gs::ArrowFlattenedFragment<{},{},{},{}>"
     dynamic_projected_frame_template = "gs::DynamicProjectedFragment<{},{}>"
 
+    vertex_map_templates = ["vineyard::ArrowVertexMap<{},{}>", "vineyard::ArrowLocalVertexMap<{},{}>"]
+    
     oid_types = ["int64_t", "std::string"]
     vid_types = ["uint64_t"]
     vdata_types = ["int64_t", "grape::EmptyType"]
@@ -183,13 +184,14 @@ def compile_graph():
 
     for oid in oid_types:
         for vid in vid_types:
-            vertex_map = vertex_map_template.format(internal_type(oid), vid)
-            graph_class = property_frame_template.format(oid, vid, vertex_map)
-            graph_classes.append(graph_class)
+            for vertex_map_template in vertex_map_templates:
+                vertex_map = vertex_map_template.format(internal_type(oid), vid)
+                graph_class = property_frame_template.format(oid, vid, vertex_map)
+                graph_classes.append(graph_class)
 
     for oid in oid_types:
         for vid in vid_types:
-            vertex_map = vertex_map_template.format(internal_type(oid), vid)
+            vertex_map = vertex_map_templates[0].format(internal_type(oid), vid)
             for vdata in vdata_types:
                 for edata in edata_types:
                     graph_class = projected_frame_template.format(
@@ -212,9 +214,10 @@ def compile_graph():
 
 def compile_cpp_pie_app():
     targets = []
-    vertex_map_template = "vineyard::ArrowVertexMap<{},{}>"
-    lv = vertex_map_template.format(internal_type("int64_t"), "uint64_t")
-    sv = vertex_map_template.format(internal_type("std::string"), "uint64_t")
+    vertex_map_templates = ["vineyard::ArrowVertexMap<{},{}>", "vineyard::ArrowLocalVertexMap<{},{}>"]
+
+    lv = vertex_map_templates[0].format(internal_type("int64_t"), "uint64_t")
+    sv = vertex_map_templates[0].format(internal_type("std::string"), "uint64_t")
 
     # 1. arrow fragment
     property_template = "vineyard::ArrowFragment<{},{},{}>"

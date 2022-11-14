@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-#include <map>
 #include <memory>
 
 #include "vineyard/client/client.h"
@@ -40,6 +39,7 @@
 
 using oid_t = typename _GRAPH_TYPE::oid_t;
 using vid_t = typename _GRAPH_TYPE::vid_t;
+using vertex_map_t = typename _GRAPH_TYPE::vertex_map_t;
 
 namespace bl = boost::leaf;
 namespace detail {
@@ -92,7 +92,8 @@ LoadGraph(const grape::CommSpec& comm_spec, vineyard::Client& client,
     return std::dynamic_pointer_cast<gs::IFragmentWrapper>(wrapper);
   } else {
     BOOST_LEAF_AUTO(graph_info, gs::ParseCreatePropertyGraph(params));
-    gs::ArrowFragmentLoader<oid_t, vid_t> loader(client, comm_spec, graph_info);
+    gs::ArrowFragmentLoader<oid_t, vid_t, vertex_map_t> loader(
+        client, comm_spec, graph_info);
 
     MPI_Barrier(comm_spec.comm());
     {
@@ -148,9 +149,7 @@ ToArrowFragment(vineyard::Client& client, const grape::CommSpec& comm_spec,
   static_assert(std::is_same<vid_t, gs::DynamicFragment::vid_t>::value,
                 "The type of ArrowFragment::vid_t does not match with the "
                 "DynamicFragment::vid_t");
-#endif
 
-#ifdef NETWORKX
   if (wrapper_in->graph_def().graph_type() !=
       gs::rpc::graph::DYNAMIC_PROPERTY) {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
@@ -179,7 +178,7 @@ ToArrowFragment(vineyard::Client& client, const grape::CommSpec& comm_spec,
                         std::string(vineyard::type_name<oid_t>()));
   }
 
-  gs::DynamicToArrowConverter<oid_t> converter(comm_spec, client);
+  gs::DynamicToArrowConverter<oid_t, vertex_map_t> converter(comm_spec, client);
   BOOST_LEAF_AUTO(arrow_frag, converter.Convert(dynamic_frag));
   VINEYARD_CHECK_OK(client.Persist(arrow_frag->id()));
   BOOST_LEAF_AUTO(frag_group_id, vineyard::ConstructFragmentGroup(
@@ -253,7 +252,8 @@ AddLabelsToGraph(vineyard::ObjectID origin_frag_id,
                  const std::string& graph_name,
                  const gs::rpc::GSParams& params) {
   BOOST_LEAF_AUTO(graph_info, gs::ParseCreatePropertyGraph(params));
-  gs::ArrowFragmentLoader<oid_t, vid_t> loader(client, comm_spec, graph_info);
+  gs::ArrowFragmentLoader<oid_t, vid_t, vertex_map_t> loader(client, comm_spec,
+                                                             graph_info);
 
   BOOST_LEAF_AUTO(frag_group_id,
                   loader.AddLabelsToGraphAsFragmentGroup(origin_frag_id));

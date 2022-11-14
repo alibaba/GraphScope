@@ -639,7 +639,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
             results._check_selector(value)
         selector = json.dumps(selector)
         op = dag_utils.add_column(self, results, selector)
-        graph_dag_node = GraphDAGNode(self._session, op)
+        graph_dag_node = GraphDAGNode(self._session, op, vertex_map=self._vertex_map)
         graph_dag_node._base_graph = self
         return graph_dag_node
 

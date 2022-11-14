@@ -188,7 +188,6 @@ def get_app_sha256(attr, java_class_path: str):
         java_app_class,
     ) = _codegen_app_info(attr, DEFAULT_GS_CONFIG_FILE, java_class_path)
     graph_header, graph_type, _ = _codegen_graph_info(attr)
-    logger.info("Codegened graph type: %s, Graph header: %s", graph_type, graph_header)
 
     if app_type == "cpp_pie":
         app_sha256 = hashlib.sha256(
@@ -222,7 +221,7 @@ def check_java_app_graph_consistency(
 ):
     splited = cpp_graph_type.split("<")
     java_app_type_params = java_class_template_str[:-1].split("<")[-1].split(",")
-    if len(splited) != 2:
+    if len(splited) != 2 or len(splited) != 3:  # without vertex map type, or with
         raise Exception("Unrecoginizable graph template str: {}".format(cpp_graph_type))
     if splited[0] == "vineyard::ArrowFragment":
         if app_class.find("Property") == -1:
@@ -304,7 +303,6 @@ def compile_app(
     )
 
     graph_header, graph_type, graph_oid_type = _codegen_graph_info(attr)
-    logger.info("Codegened graph type: %s, Graph header: %s", graph_type, graph_header)
     if app_type == "java_pie":
         logger.info(
             "Check consistent between java app {} and graph {}".format(
@@ -478,8 +476,6 @@ def compile_graph_frame(
     """
 
     _, graph_class, _ = _codegen_graph_info(attr)
-
-    logger.info("Codegened graph frame type: %s", graph_class)
 
     library_dir = os.path.join(workspace, library_name)
     os.makedirs(library_dir, exist_ok=True)
@@ -1535,7 +1531,7 @@ VERETX_MAP_CLASS_MAP = {
 
 
 def _codegen_graph_info(attr):
-    # These getter function get intended for lazy evaluation,
+    # These getter functions are intended for lazy evaluation,
     # cause they are not always avaiable in all types of graphs
     def oid_type():
         if types_pb2.OID_TYPE in attr:
@@ -1595,6 +1591,7 @@ def _codegen_graph_info(attr):
         raise ValueError(
             f"Unknown graph type: {graph_def_pb2.GraphTypePb.Name(graph_type)}"
         )
+    logger.info("Codegened graph type: %s, Graph header: %s", graph_fqn, graph_header)
     return graph_header, graph_fqn, oid_type()
 
 

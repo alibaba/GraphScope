@@ -384,7 +384,7 @@ def arrow_property_graph_undirected(graphscope_session):
 
 @pytest.fixture(scope="module")
 def arrow_property_graph_lpa_u2i(graphscope_session):
-    g = graphscope_session.g(generate_eid=False)
+    g = graphscope_session.g(generate_eid=False, directed=True)
     g = g.add_vertices(f"{property_dir}/lpa_dataset/lpa_3000_v_0", "v0")
     g = g.add_vertices(f"{property_dir}/lpa_dataset/lpa_3000_v_1", "v1")
     g = g.add_edges(
@@ -410,7 +410,7 @@ def arrow_project_undirected_graph(arrow_property_graph_undirected):
 
 @pytest.fixture(scope="module")
 def p2p_property_graph(graphscope_session):
-    g = graphscope_session.g(generate_eid=False)
+    g = graphscope_session.g(generate_eid=False, directed=True)
     g = g.add_vertices(f"{property_dir}/p2p-31_property_v_0", "person")
     g = g.add_edges(
         f"{property_dir}/p2p-31_property_e_0",
@@ -428,7 +428,7 @@ def p2p_graph_from_pandas(graphscope_session):
     os.environ["GS_GRPC_CHUNK_SIZE"] = str(1024 - 1)
     df_v = pd.read_csv(f"{property_dir}/p2p-31_property_v_0", sep=",")
     df_e = pd.read_csv(f"{property_dir}/p2p-31_property_e_0", sep=",")
-    g = graphscope_session.g(generate_eid=False)
+    g = graphscope_session.g(generate_eid=False, directed=False)
     g = g.add_vertices(df_v, "person")
     g = g.add_edges(df_e, label="knows", src_label="person", dst_label="person")
     yield g
@@ -437,7 +437,7 @@ def p2p_graph_from_pandas(graphscope_session):
 
 @pytest.fixture(scope="module")
 def p2p_property_graph_string(graphscope_session):
-    g = graphscope_session.g(oid_type="string", generate_eid=False)
+    g = graphscope_session.g(oid_type="string", generate_eid=False, directed=True)
     g = g.add_vertices(f"{property_dir}/p2p-31_property_v_0", "person")
     g = g.add_edges(
         f"{property_dir}/p2p-31_property_e_0",
@@ -453,6 +453,34 @@ def p2p_property_graph_string(graphscope_session):
 def p2p_property_graph_undirected(graphscope_session):
     g = graphscope_session.g(directed=False, generate_eid=False)
     g = g.add_vertices(f"{property_dir}/p2p-31_property_v_0", "person")
+    g = g.add_edges(
+        f"{property_dir}/p2p-31_property_e_0",
+        label="knows",
+        src_label="person",
+        dst_label="person",
+    )
+    yield g
+    del g
+
+
+@pytest.fixture(scope="module")
+def p2p_property_graph_undirected_local_vm(graphscope_session):
+    g = graphscope_session.g(directed=False, generate_eid=False, vertex_map="local")
+    g = g.add_edges(
+        f"{property_dir}/p2p-31_property_e_0",
+        label="knows",
+        src_label="person",
+        dst_label="person",
+    )
+    yield g
+    del g
+
+
+@pytest.fixture(scope="module")
+def p2p_property_graph_undirected_local_vm_str(graphscope_session):
+    g = graphscope_session.g(
+        directed=False, generate_eid=False, vertex_map="local", oid_type="str"
+    )
     g = g.add_edges(
         f"{property_dir}/p2p-31_property_e_0",
         label="knows",

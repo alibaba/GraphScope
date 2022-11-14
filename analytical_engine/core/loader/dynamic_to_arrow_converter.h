@@ -416,14 +416,25 @@ struct COOBuilder<DST_FRAG_T, std::string> {
  * DynamicFragment
  * @tparam OID_T OID type
  */
-template <typename OID_T>
-struct VertexMapConverter {};
+template <typename VERTEX_MAP_T>
+struct VertexMapConverter {
+  explicit VertexMapConverter(const grape::CommSpec& comm_spec,
+                              vineyard::Client& client) {}
+
+  bl::result<vineyard::ObjectID> Convert(
+      const std::shared_ptr<DynamicFragment>& dynamic_frag) {
+    RETURN_GS_ERROR(
+        vineyard::ErrorCode::kUnimplementedMethod,
+        ""
+        "Unimplemented vertex map converter for the vertex map type");
+  }
+};
 
 /**
  * @brief This is a specialized VertexMapConverter for int64_t
  */
 template <>
-class VertexMapConverter<int64_t> {
+class VertexMapConverter<vineyard::ArrowVertexMap<int64_t, uint64_t>> {
   using oid_t = int64_t;
   using origin_oid_t = typename DynamicFragment::oid_t;
   using vid_t = typename DynamicFragment::vid_t;
@@ -475,7 +486,8 @@ class VertexMapConverter<int64_t> {
  * @brief This is a specialized VertexMapConverter for std::string
  */
 template <>
-class VertexMapConverter<std::string> {
+class VertexMapConverter<vineyard::ArrowVertexMap<
+    typename vineyard::InternalType<std::string>::type, uint64_t>> {
   using oid_t = std::string;
   using origin_oid_t = typename DynamicFragment::oid_t;
   using vid_t = typename DynamicFragment::vid_t;
@@ -529,12 +541,13 @@ class VertexMapConverter<std::string> {
  *
  * @tparam OID_T OID type
  */
-template <typename OID_T>
+template <typename OID_T, typename VERTEX_MAP_T>
 class DynamicToArrowConverter {
   using src_fragment_t = DynamicFragment;
   using oid_t = OID_T;
   using vid_t = typename src_fragment_t::vid_t;
-  using dst_fragment_t = vineyard::ArrowFragment<oid_t, vid_t>;
+  using vertex_map_t = VERTEX_MAP_T;
+  using dst_fragment_t = vineyard::ArrowFragment<oid_t, vid_t, vertex_map_t>;
   using oid_array_t = typename vineyard::ConvertToArrowType<oid_t>::ArrayType;
 
  public:
@@ -544,12 +557,11 @@ class DynamicToArrowConverter {
 
   bl::result<std::shared_ptr<dst_fragment_t>> Convert(
       const std::shared_ptr<src_fragment_t>& dynamic_frag) {
-    VertexMapConverter<oid_t> converter(comm_spec_, client_);
+    VertexMapConverter<vertex_map_t> converter(comm_spec_, client_);
 
     BOOST_LEAF_AUTO(vm_id, converter.Convert(dynamic_frag));
-    auto dst_vm = std::dynamic_pointer_cast<vineyard::ArrowVertexMap<
-        typename vineyard::InternalType<oid_t>::type, vid_t>>(
-        client_.GetObject(vm_id));
+    auto dst_vm =
+        std::dynamic_pointer_cast<vertex_map_t>(client_.GetObject(vm_id));
 
     return convertFragment(dynamic_frag, dst_vm);
   }
@@ -557,7 +569,7 @@ class DynamicToArrowConverter {
  private:
   bl::result<std::shared_ptr<dst_fragment_t>> convertFragment(
       const std::shared_ptr<src_fragment_t>& src_frag,
-      const std::shared_ptr<typename dst_fragment_t::vertex_map_t>& dst_vm) {
+      const std::shared_ptr<vertex_map_t>& dst_vm) {
     auto fid = src_frag->fid();
     auto fnum = src_frag->fnum();
     BOOST_LEAF_AUTO(v_table, buildVTable(src_frag));
@@ -620,8 +632,8 @@ class DynamicToArrowConverter {
     }
 
     auto frag_builder = std::make_shared<vineyard::BasicArrowFragmentBuilder<
-        typename dst_fragment_t::oid_t, typename dst_fragment_t::vid_t>>(
-        client_, dst_vm);
+        typename dst_fragment_t::oid_t, typename dst_fragment_t::vid_t,
+        vertex_map_t>>(client_, dst_vm);
     BOOST_LEAF_CHECK(frag_builder->Init(fid, fnum, {v_table}, {e_table},
                                         src_frag->directed()));
     frag_builder->SetPropertyGraphSchema(std::move(schema));
@@ -687,7 +699,7 @@ class DynamicToArrowConverter {
 
   bl::result<std::shared_ptr<arrow::Table>> buildETable(
       const std::shared_ptr<src_fragment_t>& src_frag,
-      const std::shared_ptr<typename dst_fragment_t::vertex_map_t>& dst_vm) {
+      const std::shared_ptr<vertex_map_t>& dst_vm) {
     std::vector<std::shared_ptr<arrow::Field>> schema_vector = {
         std::make_shared<arrow::Field>("src", arrow::uint64()),
         std::make_shared<arrow::Field>("dst", arrow::uint64())};

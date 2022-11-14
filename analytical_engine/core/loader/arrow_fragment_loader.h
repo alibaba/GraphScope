@@ -255,10 +255,13 @@ class ArrowFragmentLoader {
     auto& partial_e_tables = raw_v_e_tables.second;
 
     LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-VERTEX-0";
-    auto frag = std::static_pointer_cast<vineyard::ArrowFragment<oid_t, vid_t>>(
+    auto frag = std::static_pointer_cast<
+        vineyard::ArrowFragment<oid_t, vid_t, vertex_map_t>>(
         client_.GetObject(frag_id));
     auto schema = frag->schema();
-
+    if (vineyard::is_local_vertex_map<vertex_map_t>::value) {
+      return {};
+    }
     std::map<std::string, label_id_t> vertex_label_to_index;
     std::set<std::string> previous_labels;
 
@@ -274,9 +277,10 @@ class ArrowFragmentLoader {
     auto vertex_tables_with_label = v_e_tables.first;
     auto edge_tables_with_label = v_e_tables.second;
 
-    auto basic_fragment_loader = std::make_shared<
-        vineyard::BasicEVFragmentLoader<OID_T, VID_T, partitioner_t>>(
-        client_, comm_spec_, partitioner, directed_, true, generate_eid_);
+    auto basic_fragment_loader =
+        std::make_shared<vineyard::BasicEVFragmentLoader<
+            OID_T, VID_T, partitioner_t, vertex_map_t>>(
+            client_, comm_spec_, partitioner, directed_, true, generate_eid_);
 
     for (auto& pair : vertex_tables_with_label) {
       BOOST_LEAF_CHECK(
@@ -321,10 +325,12 @@ class ArrowFragmentLoader {
 
     LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-VERTEX-0";
 
-    auto basic_fragment_loader = std::make_shared<
-        vineyard::BasicEVFragmentLoader<OID_T, VID_T, partitioner_t>>(
-        client_, comm_spec_, partitioner, directed_, true, generate_eid_);
-    auto frag = std::static_pointer_cast<vineyard::ArrowFragment<oid_t, vid_t>>(
+    auto basic_fragment_loader =
+        std::make_shared<vineyard::BasicEVFragmentLoader<
+            OID_T, VID_T, partitioner_t, vertex_map_t>>(
+            client_, comm_spec_, partitioner, directed_, true, generate_eid_);
+    auto frag = std::static_pointer_cast<
+        vineyard::ArrowFragment<oid_t, vid_t, vertex_map_t>>(
         client_.GetObject(frag_id));
 
     for (auto table : partial_v_tables) {
@@ -360,9 +366,54 @@ class ArrowFragmentLoader {
   }
 
   bl::result<vineyard::ObjectID> LoadFragment() {
-    return loadFragmentImpl(
-        std::integral_constant<
-            bool, vineyard::is_local_vertex_map<vertex_map_t>::value>{});
+    // Read table from source.
+    BOOST_LEAF_AUTO(partitioner, initPartitioner());
+    BOOST_LEAF_AUTO(raw_v_e_tables, LoadVertexEdgeTables());
+    auto& partial_v_tables = raw_v_e_tables.first;
+    auto& partial_e_tables = raw_v_e_tables.second;
+
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "PROCESS-INPUTS-0";
+    // Process table, maybe construct vertex table from edge tables
+    BOOST_LEAF_AUTO(v_e_tables, preprocessInputs(partitioner, partial_v_tables,
+                                                 partial_e_tables));
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "PROCESS-INPUTS-100";
+
+    auto vertex_tables_with_label = v_e_tables.first;
+    auto edge_tables_with_label = v_e_tables.second;
+
+    auto basic_fragment_loader =
+        std::make_shared<vineyard::BasicEVFragmentLoader<
+            OID_T, VID_T, partitioner_t, vertex_map_t>>(
+            client_, comm_spec_, partitioner, directed_, true, generate_eid_);
+
+    // Add vertex table to basic fragment loader
+    for (auto& pair : vertex_tables_with_label) {
+      BOOST_LEAF_CHECK(
+          basic_fragment_loader->AddVertexTable(pair.first, pair.second));
+    }
+    partial_v_tables.clear();
+    vertex_tables_with_label.clear();
+
+    // Construct the vertices, maybe we need to modify vertex map construction.
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-VERTEX-0";
+    BOOST_LEAF_CHECK(basic_fragment_loader->ConstructVertices());
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-VERTEX-100";
+
+    // Add edge table to basic fragment loader
+    for (auto& table : edge_tables_with_label) {
+      BOOST_LEAF_CHECK(basic_fragment_loader->AddEdgeTable(
+          table.src_label, table.dst_label, table.edge_label, table.table));
+    }
+    partial_e_tables.clear();
+    edge_tables_with_label.clear();
+
+    // Shuffle the edges tables, this would use string oid to shuffle
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-EDGE-0";
+    BOOST_LEAF_CHECK(basic_fragment_loader->ConstructEdges());
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-EDGE-100";
+
+    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "SEAL-0";
+    return basic_fragment_loader->ConstructFragment();
   }
 
   bl::result<vineyard::ObjectID> AddLabelsToGraphAsFragmentGroup(
@@ -933,109 +984,6 @@ class ArrowFragmentLoader {
       RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError, msg.str());
     }
     return {};
-  }
-
-  // LoadFragment implementation for ArrowVertexMap (Global)
-  bl::result<vineyard::ObjectID> loadFragmentImpl(std::false_type) {
-    BOOST_LEAF_AUTO(partitioner, initPartitioner());
-    BOOST_LEAF_AUTO(raw_v_e_tables, LoadVertexEdgeTables());
-    auto& partial_v_tables = raw_v_e_tables.first;
-    auto& partial_e_tables = raw_v_e_tables.second;
-
-    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "PROCESS-INPUTS-0";
-
-    BOOST_LEAF_AUTO(v_e_tables, preprocessInputs(partitioner, partial_v_tables,
-                                                 partial_e_tables));
-    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "PROCESS-INPUTS-100";
-
-    auto vertex_tables_with_label = v_e_tables.first;
-    auto edge_tables_with_label = v_e_tables.second;
-
-    std::shared_ptr<
-        vineyard::BasicEVFragmentLoader<OID_T, VID_T, partitioner_t>>
-        basic_fragment_loader = std::make_shared<
-            vineyard::BasicEVFragmentLoader<OID_T, VID_T, partitioner_t>>(
-            client_, comm_spec_, partitioner, directed_, true, generate_eid_);
-
-    for (auto& pair : vertex_tables_with_label) {
-      BOOST_LEAF_CHECK(
-          basic_fragment_loader->AddVertexTable(pair.first, pair.second));
-    }
-    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-VERTEX-0";
-    BOOST_LEAF_CHECK(basic_fragment_loader->ConstructVertices());
-    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-VERTEX-100";
-    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-EDGE-0";
-
-    partial_v_tables.clear();
-    vertex_tables_with_label.clear();
-
-    for (auto& table : edge_tables_with_label) {
-      BOOST_LEAF_CHECK(basic_fragment_loader->AddEdgeTable(
-          table.src_label, table.dst_label, table.edge_label, table.table));
-    }
-    partial_e_tables.clear();
-    edge_tables_with_label.clear();
-
-    BOOST_LEAF_CHECK(basic_fragment_loader->ConstructEdges());
-    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-EDGE-100";
-    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "SEAL-0";
-    return basic_fragment_loader->ConstructFragment();
-  }
-
-  // LoadFragment implementation for ArrowLocalVertexMap
-  bl::result<vineyard::ObjectID> loadFragmentImpl(std::true_type) {
-    // Read table from source.
-    BOOST_LEAF_AUTO(partitioner, initPartitioner());
-    BOOST_LEAF_AUTO(raw_v_e_tables, LoadVertexEdgeTables());
-    auto& partial_v_tables = raw_v_e_tables.first;
-    auto& partial_e_tables = raw_v_e_tables.second;
-
-    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "PROCESS-INPUTS-0";
-    // Process table, maybe construct vertex table from edge tables
-    BOOST_LEAF_AUTO(v_e_tables, preprocessInputs(partitioner, partial_v_tables,
-                                                 partial_e_tables));
-    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "PROCESS-INPUTS-100";
-
-    auto vertex_tables_with_label = v_e_tables.first;
-    auto edge_tables_with_label = v_e_tables.second;
-
-    std::shared_ptr<vineyard::BasicEVFragmentLoader<OID_T, VID_T, partitioner_t,
-                                                    vertex_map_t>>
-        basic_fragment_loader =
-            std::make_shared<vineyard::BasicEVFragmentLoader<
-                OID_T, VID_T, partitioner_t, vertex_map_t>>(
-                client_, comm_spec_, partitioner, directed_, true,
-                generate_eid_);
-
-    // Add vertex table to basic fragment loader
-    for (auto& pair : vertex_tables_with_label) {
-      BOOST_LEAF_CHECK(
-          basic_fragment_loader->AddVertexTable(pair.first, pair.second));
-    }
-    partial_v_tables.clear();
-    vertex_tables_with_label.clear();
-
-    // Construct the vertices, maybe we need to modify vertex map construction.
-    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-VERTEX-0";
-    BOOST_LEAF_CHECK(
-        basic_fragment_loader->ConstructVertices(vineyard::InvalidObjectID()));
-    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-VERTEX-100";
-
-    // Add edge table to basic fragment loader
-    for (auto& table : edge_tables_with_label) {
-      BOOST_LEAF_CHECK(basic_fragment_loader->AddEdgeTable(
-          table.src_label, table.dst_label, table.edge_label, table.table));
-    }
-    partial_e_tables.clear();
-    edge_tables_with_label.clear();
-
-    // Shuffle the edges tables, this would use string oid to shuffle
-    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-EDGE-0";
-    basic_fragment_loader->ConstructEdges(0, 0);
-    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "CONSTRUCT-EDGE-100";
-
-    LOG_IF(INFO, !comm_spec_.worker_id()) << MARKER << "SEAL-0";
-    return basic_fragment_loader->ConstructFragment();
   }
 
   vineyard::Client& client_;
