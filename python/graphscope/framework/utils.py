@@ -584,6 +584,31 @@ def normalize_data_type_str(data_type):
         return data_type
 
 
+def vertex_map_type_to_enum(vertex_map):
+    if isinstance(vertex_map, str):
+        if vertex_map == "global":
+            vertex_map = graph_def_pb2.GLOBAL_VERTEX_MAP
+        elif vertex_map == "local":
+            vertex_map = graph_def_pb2.LOCAL_VERTEX_MAP
+        else:
+            raise ValueError("vertex_map can only be global or local.")
+    elif isinstance(vertex_map, int):
+        assert vertex_map in (
+            graph_def_pb2.GLOBAL_VERTEX_MAP,
+            graph_def_pb2.LOCAL_VERTEX_MAP,
+        )
+    return vertex_map
+
+
+def vertex_map_type_to_cpp(t):
+    if t == graph_def_pb2.GLOBAL_VERTEX_MAP:
+        return "vineyard::GlobalVertexMap"
+    elif t == graph_def_pb2.LOCAL_VERTEX_MAP:
+        return "vineyard::LocalVertexMap"
+    else:
+        raise ValueError("Not support vertex map type {}".format(t))
+
+
 def transform_vertex_range(vertex_range):
     if vertex_range:
         return json.dumps(vertex_range)

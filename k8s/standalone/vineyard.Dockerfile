@@ -176,7 +176,7 @@ RUN cd /tmp && \
 
 # Vineyard
 RUN cd /tmp && \
-    git clone -b v0.9.0 https://github.com/v6d-io/v6d.git --depth=1 && \
+    git clone -b v0.10.2 https://github.com/v6d-io/v6d.git --depth=1 && \
     cd v6d && \
     git submodule update --init && \
     cmake . -DCMAKE_INSTALL_PREFIX=/usr/local \

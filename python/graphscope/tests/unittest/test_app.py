@@ -407,3 +407,26 @@ def test_error_on_run_app(projected_pg_no_edge_data):
     # compile error: wrong type of edge data with sssp
     with pytest.raises(graphscope.CompilationError):
         sssp(projected_pg_no_edge_data, src=4)
+
+
+def test_app_on_local_vm_graph(
+    p2p_property_graph_undirected_local_vm,
+    p2p_property_graph_undirected_local_vm_str,
+    wcc_result,
+):
+    ctx1 = graphscope.wcc(p2p_property_graph_undirected_local_vm)
+    r1 = (
+        ctx1.to_dataframe({"node": "v.id", "r": "r"})
+        .sort_values(by=["node"])
+        .to_numpy(dtype=int)
+    )
+    # Test algorithm correctness
+    assert np.all(r1 == wcc_result)
+    # Test compile
+    ctx2 = graphscope.wcc(p2p_property_graph_undirected_local_vm_str)
+    r2 = (
+        ctx2.to_dataframe({"node": "v.id", "r": "r"})
+        .sort_values(by=["node"])
+        .to_numpy(dtype=int)
+    )
+    assert r2 is not None

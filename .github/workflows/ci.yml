@@ -205,22 +205,12 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-pip-
 
-    - name: Install latest libgrape-lite and vineyard
-      if: false
+    - name: Install latest vineyard
+      if: false 
       run: |
         source ~/.bashrc
-
-        git clone --single-branch --depth=1 https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
-        pushd /tmp/libgrape-lite
-        mkdir -p build && cd build
-        cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard
-        make -j$(nproc)
-        sudo make install
-        popd
-        rm -fr /tmp/libgrape-lite
-
-        git clone --single-branch --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
-        pushd /tmp/v6d
+        git clone -b v0.10.2 --single-branch --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
+        cd /tmp/v6d
         git submodule update --init
         mkdir -p build && cd build
         cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard \
@@ -229,9 +219,6 @@ jobs:
                  -DBUILD_VINEYARD_TESTS=OFF
         make -j$(nproc)
         sudo make install
-        popd
-
-        rm -fr /tmp/v6d
 
         # copy to /usr/local, keep the same logic as gsvineyard.Dockerfile
         sudo cp -r /opt/vineyard/* /usr/local/

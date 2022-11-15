@@ -24,12 +24,10 @@
 #include "vineyard/client/client.h"
 #include "vineyard/graph/fragment/arrow_fragment.h"
 
-#include "apps/lpa/lpa_u2i.h"
 #include "apps/property/auto_sssp_property.h"
 #include "apps/property/auto_wcc_property.h"
 #include "apps/property/sssp_property.h"
 #include "apps/property/wcc_property.h"
-#include "apps/sampling_path/sampling_path.h"
 #include "bfs/bfs.h"
 #include "cdlp/cdlp.h"
 #include "lcc/lcc.h"
@@ -42,15 +40,15 @@
 
 namespace bl = boost::leaf;
 
-using FragmentType =
-    vineyard::ArrowFragment<vineyard::property_graph_types::OID_TYPE,
-                            vineyard::property_graph_types::VID_TYPE>;
-
+using VertexMapType = vineyard::ArrowLocalVertexMap<int64_t, uint64_t>;
+using FragmentType = vineyard::ArrowFragment<int64_t, uint64_t, VertexMapType>;
 using ProjectedFragmentType =
-    gs::ArrowProjectedFragment<int64_t, uint64_t, double, int64_t>;
+    gs::ArrowProjectedFragment<int64_t, uint64_t, int64_t, int64_t,
+                               VertexMapType>;
 
 void RunWCC(std::shared_ptr<FragmentType> fragment,
             const grape::CommSpec& comm_spec, const std::string& out_prefix) {
+  LOG(INFO) << "Run WCC";
   using AppType = gs::WCCProperty<FragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
@@ -72,6 +70,7 @@ void RunWCC(std::shared_ptr<FragmentType> fragment,
 
 void RunSSSP(std::shared_ptr<FragmentType> fragment,
              const grape::CommSpec& comm_spec, const std::string& out_prefix) {
+  LOG(INFO) << "Run SSSP";
   using AppType = gs::SSSPProperty<FragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
@@ -91,67 +90,10 @@ void RunSSSP(std::shared_ptr<FragmentType> fragment,
   worker->Finalize();
 }
 
-void RunLPAU2I(std::shared_ptr<FragmentType> fragment,
-               const grape::CommSpec& comm_spec,
-               const std::string& out_prefix) {
-  using AppType = gs::LPAU2I<FragmentType>;
-  auto app = std::make_shared<AppType>();
-  auto worker = AppType::CreateWorker(app, fragment);
-  auto spec = grape::DefaultParallelEngineSpec();
-  worker->Init(comm_spec, spec);
-
-  worker->Query();
-
-  std::ofstream ostream;
-  std::string output_path =
-      grape::GetResultFilename(out_prefix, fragment->fid());
-
-  ostream.open(output_path);
-  worker->Output(ostream);
-  ostream.close();
-
-  worker->Finalize();
-}
-
-void RunSamplingPath(std::shared_ptr<FragmentType> fragment,
-                     const grape::CommSpec& comm_spec,
-                     const std::string& out_prefix,
-                     const std::string& path_pattern) {
-  using AppType = gs::SamplingPath<FragmentType>;
-  auto app = std::make_shared<AppType>();
-  auto worker = AppType::CreateWorker(app, fragment);
-  auto spec = grape::DefaultParallelEngineSpec();
-
-  std::vector<int> label_id_seq;
-
-  std::string delimiter = "-";
-  auto start = 0U;
-  auto end = path_pattern.find(delimiter);
-  while (end != std::string::npos) {
-    auto label = std::stoul(path_pattern.substr(start, end - start));
-    label_id_seq.push_back(label);
-    start = end + delimiter.length();
-    end = path_pattern.find(delimiter, start);
-  }
-  label_id_seq.push_back(std::stoi(path_pattern.substr(start, end)));
-
-  worker->Init(comm_spec, spec);
-  worker->Query(label_id_seq, 10000000);
-
-  std::ofstream ostream;
-  std::string output_path =
-      grape::GetResultFilename(out_prefix, fragment->fid());
-
-  ostream.open(output_path);
-  worker->Output(ostream);
-  ostream.close();
-
-  worker->Finalize();
-}
-
 void RunAutoWCC(std::shared_ptr<FragmentType> fragment,
                 const grape::CommSpec& comm_spec,
                 const std::string& out_prefix) {
+  LOG(INFO) << "Run Auto WCC";
   using AppType = gs::AutoWCCProperty<FragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
@@ -174,6 +116,7 @@ void RunAutoWCC(std::shared_ptr<FragmentType> fragment,
 void RunAutoSSSP(std::shared_ptr<FragmentType> fragment,
                  const grape::CommSpec& comm_spec,
                  const std::string& out_prefix) {
+  LOG(INFO) << "Run Auto SSSP";
   using AppType = gs::AutoSSSPProperty<FragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
@@ -196,11 +139,7 @@ void RunAutoSSSP(std::shared_ptr<FragmentType> fragment,
 void RunProjectedWCC(std::shared_ptr<ProjectedFragmentType> fragment,
                      const grape::CommSpec& comm_spec,
                      const std::string& out_prefix) {
-  /*
-    using AppType =
-        grape::WCCProjected<ProjectedFragmentType>;
-    using AppType = grape::WCCAuto<ProjectedFragmentType>;
-  */
+  LOG(INFO) << "Run Projected WCC";
   using AppType = grape::WCC<ProjectedFragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
@@ -223,11 +162,7 @@ void RunProjectedWCC(std::shared_ptr<ProjectedFragmentType> fragment,
 void RunProjectedSSSP(std::shared_ptr<ProjectedFragmentType> fragment,
                       const grape::CommSpec& comm_spec,
                       const std::string& out_prefix) {
-  /*
-    using AppType =
-        grape::SSSPProjected<ProjectedFragmentType>;
-    using AppType = grape::SSSPAuto<ProjectedFragmentType>;
-  */
+  LOG(INFO) << "Run Projected SSSP";
   using AppType = grape::SSSP<ProjectedFragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
@@ -250,7 +185,7 @@ void RunProjectedSSSP(std::shared_ptr<ProjectedFragmentType> fragment,
 void RunProjectedCDLP(std::shared_ptr<ProjectedFragmentType> fragment,
                       const grape::CommSpec& comm_spec,
                       const std::string& out_prefix) {
-  // using AppType = grape::CDLPAuto<ProjectedFragmentType>;
+  LOG(INFO) << "Run Projected CDLP";
   using AppType = grape::CDLP<ProjectedFragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
@@ -273,7 +208,7 @@ void RunProjectedCDLP(std::shared_ptr<ProjectedFragmentType> fragment,
 void RunProjectedBFS(std::shared_ptr<ProjectedFragmentType> fragment,
                      const grape::CommSpec& comm_spec,
                      const std::string& out_prefix) {
-  // using AppType = grape::BFSAuto<ProjectedFragmentType>;
+  LOG(INFO) << "Run Projected BFS";
   using AppType = grape::BFS<ProjectedFragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
@@ -296,7 +231,7 @@ void RunProjectedBFS(std::shared_ptr<ProjectedFragmentType> fragment,
 void RunProjectedLCC(std::shared_ptr<ProjectedFragmentType> fragment,
                      const grape::CommSpec& comm_spec,
                      const std::string& out_prefix) {
-  // using AppType = grape::LCCAuto<ProjectedFragmentType>;
+  LOG(INFO) << "Run Projected LCC";
   using AppType = grape::LCC<ProjectedFragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
@@ -319,7 +254,7 @@ void RunProjectedLCC(std::shared_ptr<ProjectedFragmentType> fragment,
 void RunProjectedPR(std::shared_ptr<ProjectedFragmentType> fragment,
                     const grape::CommSpec& comm_spec,
                     const std::string& out_prefix) {
-  // using AppType = grape::PageRankAuto<ProjectedFragmentType>;
+  LOG(INFO) << "Run Projected PR";
   using AppType = grape::PageRank<ProjectedFragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
@@ -340,36 +275,26 @@ void RunProjectedPR(std::shared_ptr<ProjectedFragmentType> fragment,
 }
 
 void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
-         vineyard::ObjectID id, bool run_projected, const std::string& app_name,
-         const std::string& path_pattern) {
+         vineyard::ObjectID id, bool run_projected) {
   std::shared_ptr<FragmentType> fragment =
       std::dynamic_pointer_cast<FragmentType>(client.GetObject(id));
 
-  if (app_name == "lpa") {
-    RunLPAU2I(fragment, comm_spec, "./outputs_lpau2i/");
-  } else if (app_name == "sampling_path") {
-    RunSamplingPath(fragment, comm_spec, "./outputs_sampling_path/",
-                    path_pattern);
+  if (!run_projected) {
+    RunWCC(fragment, comm_spec, "./outputs_wcc/");
+    RunSSSP(fragment, comm_spec, "./outputs_sssp/");
+
+    RunAutoWCC(fragment, comm_spec, "./outputs_auto_wcc/");
+    RunAutoSSSP(fragment, comm_spec, "./outputs_auto_sssp/");
   } else {
-    if (!run_projected) {
-      RunWCC(fragment, comm_spec, "./outputs_wcc/");
-      RunSSSP(fragment, comm_spec, "./outputs_sssp/");
+    std::shared_ptr<ProjectedFragmentType> projected_fragment =
+        ProjectedFragmentType::Project(fragment, 0, 0, 0, 0);
 
-      RunAutoWCC(fragment, comm_spec, "./outputs_auto_wcc/");
-      RunAutoSSSP(fragment, comm_spec, "./outputs_auto_sssp/");
-    } else {
-      std::shared_ptr<ProjectedFragmentType> projected_fragment =
-          ProjectedFragmentType::Project(fragment, 0, 0, 0, 0);
-
-      RunProjectedWCC(projected_fragment, comm_spec, "./output_projected_wcc/");
-      RunProjectedSSSP(projected_fragment, comm_spec,
-                       "./output_projected_sssp/");
-      RunProjectedCDLP(projected_fragment, comm_spec,
-                       "./output_projected_cdlp/");
-      RunProjectedBFS(projected_fragment, comm_spec, "./output_projected_bfs/");
-      RunProjectedLCC(projected_fragment, comm_spec, "./output_projected_lcc/");
-      RunProjectedPR(projected_fragment, comm_spec, "./output_projected_pr/");
-    }
+    RunProjectedWCC(projected_fragment, comm_spec, "./output_projected_wcc/");
+    RunProjectedSSSP(projected_fragment, comm_spec, "./output_projected_sssp/");
+    RunProjectedCDLP(projected_fragment, comm_spec, "./output_projected_cdlp/");
+    RunProjectedBFS(projected_fragment, comm_spec, "./output_projected_bfs/");
+    RunProjectedLCC(projected_fragment, comm_spec, "./output_projected_lcc/");
+    RunProjectedPR(projected_fragment, comm_spec, "./output_projected_pr/");
   }
 }
 
@@ -378,7 +303,7 @@ int main(int argc, char** argv) {
     printf(
         "usage: ./run_vy_app <ipc_socket> <e_label_num> <efiles...> "
         "<v_label_num> <vfiles...> <run_projected>"
-        "[directed] [app_name] [path_pattern]\n");
+        "[directed]\n");
     return 1;
   }
   int index = 1;
@@ -404,12 +329,6 @@ int main(int argc, char** argv) {
   if (argc > index) {
     directed = atoi(argv[index++]);
   }
-  if (argc > index) {
-    app_name = argv[index++];
-  }
-  if (argc > index) {
-    path_pattern = argv[index++];
-  }
 
   grape::InitMPIComm();
   {
@@ -424,10 +343,13 @@ int main(int argc, char** argv) {
     vineyard::ObjectID fragment_id;
     {
       using oid_t = vineyard::property_graph_types::OID_TYPE;
+      // using oid_t = std::string;
       using vid_t = vineyard::property_graph_types::VID_TYPE;
-
-      auto loader = std::make_unique<gs::ArrowFragmentLoader<oid_t, vid_t>>(
-          client, comm_spec, efiles, vfiles, directed != 0);
+      using vertex_map_t = vineyard::ArrowLocalVertexMap<
+          typename vineyard::InternalType<oid_t>::type, vid_t>;
+      auto loader =
+          std::make_unique<gs::ArrowFragmentLoader<oid_t, vid_t, vertex_map_t>>(
+              client, comm_spec, efiles, vfiles, directed != 0);
       fragment_id =
           bl::try_handle_all([&loader]() { return loader->LoadFragment(); },
                              [](const vineyard::GSError& e) {
@@ -441,11 +363,11 @@ int main(int argc, char** argv) {
     }
 
     LOG(INFO) << "[worker-" << comm_spec.worker_id()
-              << "] loaded graph to vineyard ... ";
+              << "] loaded graph to vineyard ... " << fragment_id;
 
     MPI_Barrier(comm_spec.comm());
 
-    Run(client, comm_spec, fragment_id, run_projected, app_name, path_pattern);
+    Run(client, comm_spec, fragment_id, run_projected);
 
     MPI_Barrier(comm_spec.comm());
   }
@@ -454,4 +376,5 @@ int main(int argc, char** argv) {
   return 0;
 }
 
-template class gs::ArrowProjectedFragment<int64_t, uint64_t, double, int64_t>;
+template class gs::ArrowProjectedFragment<int64_t, uint64_t, int64_t, int64_t,
+                                          VertexMapType>;

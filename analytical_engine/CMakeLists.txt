@@ -196,7 +196,7 @@ endif ()
 find_package(libgrapelite REQUIRED)
 include_directories(${LIBGRAPELITE_INCLUDE_DIRS})
 
-find_package(vineyard 0.9.0 REQUIRED)
+find_package(vineyard 0.10.2 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 add_compile_options(-DENABLE_SELECTOR)
 
@@ -324,7 +324,7 @@ if (BUILD_TESTS)
         target_include_directories(property_graph_java_app_benchmarks PRIVATE core utils apps)
         target_compile_definitions(property_graph_java_app_benchmarks PUBLIC ENABLE_JAVA_SDK)
         target_link_libraries(property_graph_java_app_benchmarks gs_proto ${JNI_LIBRARIES} ${Boost_LIBRARIES} ${CMAKE_DL_LIBS}  ${VINEYARD_LIBRARIES})
-        
+
         # giraph runner
         add_executable(giraph_runner test/giraph_runner.cc core/java/javasdk.cc)
         target_include_directories(giraph_runner PRIVATE core utils apps)
@@ -369,6 +369,7 @@ if (BUILD_TESTS)
     endmacro()
 
     add_vineyard_app(run_vy_app SRCS test/run_vy_app.cc)
+    add_vineyard_app(run_vy_app_local_vm SRCS test/run_vy_app_local_vm.cc)
 
     add_vineyard_app(run_load_from_stream SRCS test/run_load_from_stream.cc)
 

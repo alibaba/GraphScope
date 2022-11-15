@@ -95,33 +95,35 @@ class EigenvectorCentrality
     auto& x_last = ctx.x_last;
 
     if (frag.directed()) {
-      ForEach(inner_vertices.begin(), inner_vertices.end(),
-              [&x, &x_last, &frag](int tid, vertex_t v) {
-                auto es = frag.GetIncomingAdjList(v);
-                x[v] = x_last[v];
-                for (auto& e : es) {
-                  double edata = 1.0;
-                  static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
-                      [&](auto& e, auto& data) {
-                        data = static_cast<double>(e.get_data());
-                      })(e, edata);
-                  x[v] += x_last[e.get_neighbor()] * edata;
-                }
-              });
+      ForEach(
+          inner_vertices.begin(), inner_vertices.end(),
+          [&x, &x_last, &frag](int tid, vertex_t v) {
+            auto es = frag.GetIncomingAdjList(v);
+            x[v] = x_last[v];
+            for (auto& e : es) {
+              double edata = 1.0;
+              vineyard::static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
+                  [&](auto& e, auto& data) {
+                    data = static_cast<double>(e.get_data());
+                  })(e, edata);
+              x[v] += x_last[e.get_neighbor()] * edata;
+            }
+          });
     } else {
-      ForEach(inner_vertices.begin(), inner_vertices.end(),
-              [&x, &x_last, &frag](int tid, vertex_t v) {
-                auto es = frag.GetOutgoingAdjList(v);
-                x[v] = x_last[v];
-                for (auto& e : es) {
-                  double edata = 1.0;
-                  static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
-                      [&](auto& e, auto& data) {
-                        data = static_cast<double>(e.get_data());
-                      })(e, edata);
-                  x[v] += x_last[e.get_neighbor()] * edata;
-                }
-              });
+      ForEach(
+          inner_vertices.begin(), inner_vertices.end(),
+          [&x, &x_last, &frag](int tid, vertex_t v) {
+            auto es = frag.GetOutgoingAdjList(v);
+            x[v] = x_last[v];
+            for (auto& e : es) {
+              double edata = 1.0;
+              vineyard::static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
+                  [&](auto& e, auto& data) {
+                    data = static_cast<double>(e.get_data());
+                  })(e, edata);
+              x[v] += x_last[e.get_neighbor()] * edata;
+            }
+          });
     }
   }
 

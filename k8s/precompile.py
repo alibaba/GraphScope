@@ -163,13 +163,19 @@ def get_app_info(algo: str):
 
     raise KeyError("Algorithm %s does not exist in the gar resource." % algo)
 
+def internal_type(t):  # The template of vertex map needs special care.
+    if t == "std::string":
+        return "vineyard::arrow_string_view"
+    return t
 
 def compile_graph():
-    property_frame_template = "vineyard::ArrowFragment<{},{}>"
-    projected_frame_template = "gs::ArrowProjectedFragment<{},{},{},{}>"
+    property_frame_template = "vineyard::ArrowFragment<{},{},{}>"
+    projected_frame_template = "gs::ArrowProjectedFragment<{},{},{},{},{}>"
     flattened_frame_template = "gs::ArrowFlattenedFragment<{},{},{},{}>"
     dynamic_projected_frame_template = "gs::DynamicProjectedFragment<{},{}>"
 
+    vertex_map_templates = ["vineyard::ArrowVertexMap<{},{}>", "vineyard::ArrowLocalVertexMap<{},{}>"]
+    
     oid_types = ["int64_t", "std::string"]
     vid_types = ["uint64_t"]
     vdata_types = ["int64_t", "grape::EmptyType"]
@@ -178,15 +184,18 @@ def compile_graph():
 
     for oid in oid_types:
         for vid in vid_types:
-            graph_class = property_frame_template.format(oid, vid)
-            graph_classes.append(graph_class)
+            for vertex_map_template in vertex_map_templates:
+                vertex_map = vertex_map_template.format(internal_type(oid), vid)
+                graph_class = property_frame_template.format(oid, vid, vertex_map)
+                graph_classes.append(graph_class)
 
     for oid in oid_types:
         for vid in vid_types:
+            vertex_map = vertex_map_templates[0].format(internal_type(oid), vid)
             for vdata in vdata_types:
                 for edata in edata_types:
                     graph_class = projected_frame_template.format(
-                        oid, vid, vdata, edata
+                        oid, vid, vdata, edata, vertex_map
                     )
                     flattend_graph_class = flattened_frame_template.format(
                         oid, vid, vdata, edata
@@ -205,33 +214,39 @@ def compile_graph():
 
 def compile_cpp_pie_app():
     targets = []
+    vertex_map_templates = ["vineyard::ArrowVertexMap<{},{}>", "vineyard::ArrowLocalVertexMap<{},{}>"]
+
+    lv = vertex_map_templates[0].format(internal_type("int64_t"), "uint64_t")
+    sv = vertex_map_templates[0].format(internal_type("std::string"), "uint64_t")
+
     # 1. arrow fragment
-    property_template = "vineyard::ArrowFragment<{},{}>"
-    lu = property_template.format("int64_t", "uint64_t")
-    su = property_template.format("std::string", "uint64_t")
+    property_template = "vineyard::ArrowFragment<{},{},{}>"
+
+    lu = property_template.format("int64_t", "uint64_t", lv)
+    su = property_template.format("std::string", "uint64_t", sv)
     # no builtin app can run on the arrow property graph
 
     # 2. projected arrow fragment
-    project_template = "gs::ArrowProjectedFragment<{},{},{},{}>"
+    project_template = "gs::ArrowProjectedFragment<{},{},{},{},{}>"
     psuee = project_template.format(
-        "std::string", "uint64_t", "grape::EmptyType", "grape::EmptyType"
+        "std::string", "uint64_t", "grape::EmptyType", "grape::EmptyType", sv
     )
     psuel = project_template.format(
-        "std::string", "uint64_t", "grape::EmptyType", "int64_t"
+        "std::string", "uint64_t", "grape::EmptyType", "int64_t", sv
     )
     psued = project_template.format(
-        "std::string", "uint64_t", "grape::EmptyType", "double"
+        "std::string", "uint64_t", "grape::EmptyType", "double", sv
     )
-    psull = project_template.format("std::string", "uint64_t", "int64_t", "int64_t")
+    psull = project_template.format("std::string", "uint64_t", "int64_t", "int64_t", sv)
 
-    plull = project_template.format("int64_t", "uint64_t", "int64_t", "int64_t")
+    plull = project_template.format("int64_t", "uint64_t", "int64_t", "int64_t", lv)
     pluee = project_template.format(
-        "int64_t", "uint64_t", "grape::EmptyType", "grape::EmptyType"
+        "int64_t", "uint64_t", "grape::EmptyType", "grape::EmptyType", lv
     )
     pluel = project_template.format(
-        "int64_t", "uint64_t", "grape::EmptyType", "int64_t"
+        "int64_t", "uint64_t", "grape::EmptyType", "int64_t", lv
     )
-    plued = project_template.format("int64_t", "uint64_t", "grape::EmptyType", "double")
+    plued = project_template.format("int64_t", "uint64_t", "grape::EmptyType", "double", lv)
     targets.extend(
         [
             ("pagerank", psuee),

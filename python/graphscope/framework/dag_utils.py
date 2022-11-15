@@ -56,6 +56,8 @@ def bind_app(graph, app_assets):
     inputs = [graph.op, app_assets.op]
     config = {}
     config[types_pb2.APP_ALGO] = utils.s_to_attr(app_assets.algo)
+    if hasattr(graph, "_vertex_map"):
+        config[types_pb2.VERTEX_MAP_TYPE] = utils.i_to_attr(graph._vertex_map)
     if app_assets.cmake_extra_options is not None:
         config[types_pb2.CMAKE_EXTRA_OPTIONS] = utils.s_to_attr(
             app_assets.cmake_extra_options
@@ -194,6 +196,7 @@ def add_labels_to_graph(graph, loader_op):
         types_pb2.DIRECTED: utils.b_to_attr(graph._directed),
         types_pb2.OID_TYPE: utils.s_to_attr(graph._oid_type),
         types_pb2.GENERATE_EID: utils.b_to_attr(graph._generate_eid),
+        types_pb2.VERTEX_MAP_TYPE: utils.i_to_attr(graph._vertex_map),
         types_pb2.VID_TYPE: utils.s_to_attr("uint64_t"),
         types_pb2.IS_FROM_VINEYARD_ID: utils.b_to_attr(False),
     }
@@ -426,6 +429,7 @@ def project_arrow_property_graph(graph, vertex_collections, edge_collections):
     check_argument(graph.graph_type == graph_def_pb2.ARROW_PROPERTY)
     config = {
         types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph.graph_type),
+        types_pb2.VERTEX_MAP_TYPE: utils.i_to_attr(graph._vertex_map),
     }
     config.update(
         {
@@ -466,6 +470,8 @@ def project_to_simple(
         types_pb2.V_PROP_KEY: utils.s_to_attr(v_prop),
         types_pb2.E_PROP_KEY: utils.s_to_attr(e_prop),
     }
+    if hasattr(graph, "_vertex_map"):
+        config[types_pb2.VERTEX_MAP_TYPE] = utils.i_to_attr(graph._vertex_map)
     op = Operation(
         graph.session_id,
         types_pb2.PROJECT_TO_SIMPLE,

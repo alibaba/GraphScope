@@ -472,10 +472,12 @@ class UnionDestList {
  * @tparam VDATA_T
  * @tparam EDATA_T
  */
-template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T>
+template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T,
+          typename VERTEX_MAP_T = vineyard::ArrowVertexMap<
+              typename vineyard::InternalType<OID_T>::type, VID_T>>
 class ArrowFlattenedFragment {
  public:
-  using fragment_t = vineyard::ArrowFragment<OID_T, VID_T>;
+  using fragment_t = vineyard::ArrowFragment<OID_T, VID_T, VERTEX_MAP_T>;
   using oid_t = OID_T;
   using vid_t = VID_T;
   using eid_t = typename fragment_t::eid_t;
@@ -547,7 +549,8 @@ class ArrowFlattenedFragment {
 
   virtual ~ArrowFlattenedFragment() = default;
 
-  static std::shared_ptr<ArrowFlattenedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
+  static std::shared_ptr<
+      ArrowFlattenedFragment<OID_T, VID_T, VDATA_T, EDATA_T, VERTEX_MAP_T>>
   Project(const std::shared_ptr<fragment_t>& frag, const std::string& v_prop,
           const std::string& e_prop) {
     prop_id_t v_prop_id = boost::lexical_cast<int>(v_prop);

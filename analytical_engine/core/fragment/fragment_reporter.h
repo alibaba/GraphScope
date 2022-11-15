@@ -374,10 +374,10 @@ class ArrowFragmentReporter {};
  * @brief ArrowFragmentReporter is used to query the vertex and edge
  * information of ArrowFragment.
  */
-template <typename OID_T, typename VID_T>
-class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T>>
+template <typename OID_T, typename VID_T, typename VERTEX_MAP_T>
+class ArrowFragmentReporter<vineyard::ArrowFragment<OID_T, VID_T, VERTEX_MAP_T>>
     : public grape::Communicator {
-  using fragment_t = vineyard::ArrowFragment<OID_T, VID_T>;
+  using fragment_t = vineyard::ArrowFragment<OID_T, VID_T, VERTEX_MAP_T>;
   using label_id_t = typename fragment_t::label_id_t;
   using oid_t = OID_T;
   using vid_t = VID_T;

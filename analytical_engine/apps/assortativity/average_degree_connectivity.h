@@ -171,7 +171,7 @@ class AverageDegreeConnectivity
     vertex_t neighbor = e.get_neighbor();
     // edge weight
     double data = 1.0;
-    static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
+    vineyard::static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
         [&](auto& e, auto& edata) {
           edata = static_cast<double>(e.get_data());
         })(e, data);
@@ -224,7 +224,7 @@ class AverageDegreeConnectivity
     double res = 0.0;
     for (auto& e : adjList) {
       double data = 0.0;
-      static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
+      vineyard::static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
           [&](auto& e, auto& edata) {
             edata = static_cast<double>(e.get_data());
           })(e, data);
