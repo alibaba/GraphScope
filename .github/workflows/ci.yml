@@ -206,7 +206,7 @@ jobs:
           ${{ runner.os }}-pip-
 
     - name: Install latest vineyard
-      if: true
+      if: false 
       run: |
         source ~/.bashrc
         git clone -b v0.10.2 --single-branch --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
