@@ -1,6 +1,6 @@
 # Interactive engine which uses experimental storage
 
-ARG BASE_VERSION=v0.9.0
+ARG BASE_VERSION=v0.10.2
 FROM registry-vpc.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:$BASE_VERSION AS builder
 
 ARG profile=release

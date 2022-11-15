@@ -196,7 +196,7 @@ endif ()
 find_package(libgrapelite REQUIRED)
 include_directories(${LIBGRAPELITE_INCLUDE_DIRS})
 
-find_package(vineyard 0.9.0 REQUIRED)
+find_package(vineyard 0.10.2 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 add_compile_options(-DENABLE_SELECTOR)
 
