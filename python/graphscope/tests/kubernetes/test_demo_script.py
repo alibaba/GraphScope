@@ -285,3 +285,24 @@ def test_serialize_roundtrip(gs_session_distributed, p2p_property_dir):
         [[1.0, 260.0], [2.0, 229.0], [3.0, 310.0], [4.0, 256.0], [5.0, 303.0]]
     )
     assert np.all(ret == expect)
+
+
+def test_local_vm_distribute(gs_session_distributed, p2p_property_dir):
+    # Test for compiling of graph and app.
+    graph = gs_session_distributed.g(directed=False, vertex_map="local")
+    graph = graph.add_edges(
+        f"{p2p_property_dir}/p2p-31_property_e_0",
+        label="knows",
+        src_label="person",
+        dst_label="person",
+    )
+    graph = graph.project(vertices={"person": []}, edges={"knows": []})
+    ctx = graphscope.wcc(graph)
+    ret = (
+        ctx.to_dataframe({"node": "v.id", "r": "r"})
+        .sort_values(by=["node"])
+        .to_numpy(dtype=int)
+    )
+    wcc_result = np.loadtxt(f"{os.environ['GS_TEST_DIR']}/p2p-31-wcc_auto", dtype=int)
+    # Test algorithm correctness
+    assert np.all(ret == wcc_result)

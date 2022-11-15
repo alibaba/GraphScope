@@ -161,7 +161,7 @@ class ArrowFragmentLoader {
           labels << graph_info_->vertices[i]->label;
         }
 
-        if (!graph_info_->edges.empty()) {
+        if (!graph_info_->vertices.empty()) {
           labels << " and ";
         }
         for (size_t i = 0; i < graph_info_->edges.size(); ++i) {

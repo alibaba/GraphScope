@@ -38,7 +38,7 @@ jobs:
     - name: Install latest vineyard
       if: true
       run: |
-        git clone -b 802 --single-branch --depth=1 https://github.com/siyuan0322/v6d.git /tmp/v6d
+        git clone -b v0.10.2 --single-branch --depth=1 https://github.com/siyuan0322/v6d.git /tmp/v6d
         cd /tmp/v6d
         git submodule update --init
         mkdir -p build && cd build
