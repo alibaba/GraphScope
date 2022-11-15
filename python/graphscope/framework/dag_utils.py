@@ -468,8 +468,9 @@ def project_to_simple(
     config = {
         types_pb2.V_PROP_KEY: utils.s_to_attr(v_prop),
         types_pb2.E_PROP_KEY: utils.s_to_attr(e_prop),
-        types_pb2.VERTEX_MAP_TYPE: utils.i_to_attr(graph._vertex_map),
     }
+    if hasattr(graph, "_vertex_map"):
+        config[types_pb2.VERTEX_MAP_TYPE] = utils.i_to_attr(graph._vertex_map)
     op = Operation(
         graph.session_id,
         types_pb2.PROJECT_TO_SIMPLE,

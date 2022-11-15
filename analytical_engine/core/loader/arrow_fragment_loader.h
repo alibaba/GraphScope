@@ -259,9 +259,7 @@ class ArrowFragmentLoader {
         vineyard::ArrowFragment<oid_t, vid_t, vertex_map_t>>(
         client_.GetObject(frag_id));
     auto schema = frag->schema();
-    if (vineyard::is_local_vertex_map<vertex_map_t>::value) {
-      return {};
-    }
+
     std::map<std::string, label_id_t> vertex_label_to_index;
     std::set<std::string> previous_labels;
 

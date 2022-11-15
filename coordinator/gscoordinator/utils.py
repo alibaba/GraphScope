@@ -221,8 +221,6 @@ def check_java_app_graph_consistency(
 ):
     splited = cpp_graph_type.split("<")
     java_app_type_params = java_class_template_str[:-1].split("<")[-1].split(",")
-    if len(splited) != 2 or len(splited) != 3:  # without vertex map type, or with
-        raise Exception("Unrecoginizable graph template str: {}".format(cpp_graph_type))
     if splited[0] == "vineyard::ArrowFragment":
         if app_class.find("Property") == -1:
             raise RuntimeError(
