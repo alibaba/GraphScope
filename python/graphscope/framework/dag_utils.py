@@ -56,7 +56,8 @@ def bind_app(graph, app_assets):
     inputs = [graph.op, app_assets.op]
     config = {}
     config[types_pb2.APP_ALGO] = utils.s_to_attr(app_assets.algo)
-    config[types_pb2.VERTEX_MAP_TYPE] = utils.i_to_attr(graph._vertex_map)
+    if hasattr(graph, "_vertex_map"):
+        config[types_pb2.VERTEX_MAP_TYPE] = utils.i_to_attr(graph._vertex_map)
     if app_assets.cmake_extra_options is not None:
         config[types_pb2.CMAKE_EXTRA_OPTIONS] = utils.s_to_attr(
             app_assets.cmake_extra_options
