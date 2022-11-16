@@ -430,3 +430,14 @@ def test_app_on_local_vm_graph(
         .to_numpy(dtype=int)
     )
     assert r2 is not None
+
+
+def test_wcc_on_flatten_graph(arrow_modern_graph):
+    ctx = graphscope.wcc_auto(arrow_modern_graph)
+    df = ctx.to_dataframe({"node": "v.id", "r": "r"})
+    # The component id is all 1
+    assert sum(df.r.values) == 6
+    ctx = graphscope.wcc_projected(arrow_modern_graph)
+    df = ctx.to_dataframe({"node": "v.id", "r": "r"})
+    # The component id is all 0
+    assert sum(df.r.values) == 0
