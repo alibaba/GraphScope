@@ -22,7 +22,7 @@ from graphscope.framework.app import AppAssets
 from graphscope.framework.app import not_compatible_for
 from graphscope.framework.app import project_to_simple
 
-__all__ = ["wcc"]
+__all__ = ["wcc", "wcc_auto", "wcc_projected"]
 
 logger = logging.getLogger("graphscope")
 
@@ -31,6 +31,8 @@ logger = logging.getLogger("graphscope")
 @not_compatible_for("arrow_property", "dynamic_property")
 def wcc(graph):
     """Evaluate weakly connected components on the `graph`.
+    This is an optimized version of WCC.
+    Note this cannot be compiled against a property graph that has multiple labels.
 
     Args:
         graph (:class:`graphscope.Graph`): A simple graph.
@@ -61,3 +63,61 @@ def wcc(graph):
     return AppAssets(
         algo="wcc", context="vertex_data", cmake_extra_options=cmake_extra_options
     )(graph)
+
+
+@project_to_simple
+@not_compatible_for("arrow_property", "dynamic_property")
+def wcc_projected(graph):
+    """Evaluate weakly connected components on the `graph`.
+    This is a naive version of WCC.
+
+    Args:
+        graph (:class:`graphscope.Graph`): A simple graph.
+
+    Returns:
+        :class:`graphscope.framework.context.VertexDataContextDAGNode`:
+            A context with each vertex assigned with the component ID, evaluated in eager mode.
+
+    Examples:
+
+    .. code:: python
+
+        >>> import graphscope
+        >>> from graphscope.dataset import load_p2p_network
+        >>> sess = graphscope.session(cluster_type="hosts", mode="eager")
+        >>> g = load_p2p_network(sess)
+        >>> # project to a simple graph (if needed)
+        >>> pg = g.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
+        >>> c = graphscope.wcc_projected(pg)
+        >>> sess.close()
+    """
+    return AppAssets(algo="wcc_projected", context="vertex_data")(graph)
+
+
+@project_to_simple
+@not_compatible_for("arrow_property", "dynamic_property")
+def wcc_auto(graph):
+    """Evaluate weakly connected components on the `graph`.
+    This is an auto parallel version of WCC.
+
+    Args:
+        graph (:class:`graphscope.Graph`): A simple graph.
+
+    Returns:
+        :class:`graphscope.framework.context.VertexDataContextDAGNode`:
+            A context with each vertex assigned with the component ID, evaluated in eager mode.
+
+    Examples:
+
+    .. code:: python
+
+        >>> import graphscope
+        >>> from graphscope.dataset import load_p2p_network
+        >>> sess = graphscope.session(cluster_type="hosts", mode="eager")
+        >>> g = load_p2p_network(sess)
+        >>> # project to a simple graph (if needed)
+        >>> pg = g.project(vertices={"host": ["id"]}, edges={"connect": ["dist"]})
+        >>> c = graphscope.wcc_auto(pg)
+        >>> sess.close()
+    """
+    return AppAssets(algo="wcc_auto", context="vertex_data")(graph)
