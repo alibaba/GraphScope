@@ -80,7 +80,9 @@ impl FlatMapFuncGen for algebra_pb::GetV {
             .map(|name_or_id| name_or_id.try_into())
             .transpose()?;
         let get_both_v_operator = GetBothVOperator { start_tag, alias };
-        debug!("Runtime get_both_v operator: {:?}", get_both_v_operator);
+        if pegasus::get_current_worker().index == 0 {
+            debug!("Runtime get_both_v operator: {:?}", get_both_v_operator);
+        }
         Ok(Box::new(get_both_v_operator))
     }
 }

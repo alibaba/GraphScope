@@ -107,10 +107,12 @@ impl FlatMapFuncGen for algebra_pb::EdgeExpand {
         let direction = Direction::from(direction_pb);
         let query_params: QueryParams = self.params.try_into()?;
         let expand_opt: ExpandOpt = unsafe { ::std::mem::transmute(self.expand_opt) };
-        debug!(
-            "Runtime expand operator of edge with start_v_tag {:?}, edge_tag {:?}, direction {:?}, query_params {:?}, expand_opt {:?}", 
-            start_v_tag, edge_or_end_v_tag, direction, query_params, expand_opt
-        );
+        if pegasus::get_current_worker().index == 0 {
+            debug!(
+                "Runtime expand operator of edge with start_v_tag {:?}, end_tag {:?}, direction {:?}, query_params {:?}, expand_opt {:?}",
+                start_v_tag, edge_or_end_v_tag, direction, query_params, expand_opt
+            );
+        }
 
         match expand_opt {
             ExpandOpt::Vertex => {

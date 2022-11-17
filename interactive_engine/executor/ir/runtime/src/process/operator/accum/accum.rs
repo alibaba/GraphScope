@@ -199,7 +199,9 @@ impl AccumFactoryGen for algebra_pb::GroupBy {
             };
             accum_ops.push((entry_accumulator, tag_key, alias));
         }
-        debug!("Runtime accumulator operator: {:?}", accum_ops);
+        if pegasus::get_current_worker().index == 0 {
+            debug!("Runtime accumulator operator: {:?}", accum_ops);
+        }
         Ok(RecordAccumulator { accum_ops })
     }
 }

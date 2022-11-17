@@ -43,7 +43,9 @@ impl FilterFuncGen for algebra_pb::Select {
     fn gen_filter(self) -> FnGenResult<Box<dyn FilterFunction<Record>>> {
         if let Some(predicate) = self.predicate {
             let select_operator = SelectOperator { filter: predicate.try_into()? };
-            debug!("Runtime select operator: {:?}", select_operator);
+            if pegasus::get_current_worker().index == 0 {
+                debug!("Runtime select operator: {:?}", select_operator);
+            }
             Ok(Box::new(select_operator))
         } else {
             Err(ParsePbError::EmptyFieldError("empty select pb".to_string()).into())

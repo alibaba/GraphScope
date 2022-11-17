@@ -85,7 +85,9 @@ impl FilterMapFuncGen for algebra_pb::GetV {
             .map(|name_or_id| name_or_id.try_into())
             .transpose()?;
         let get_vertex_operator = GetVertexOperator { start_tag, opt, alias };
-        debug!("Runtime get_vertex operator: {:?}", get_vertex_operator);
+        if pegasus::get_current_worker().index == 0 {
+            debug!("Runtime get_vertex operator: {:?}", get_vertex_operator);
+        }
         Ok(Box::new(get_vertex_operator))
     }
 }

@@ -193,10 +193,12 @@ impl FilterMapFuncGen for algebra_pb::EdgeExpand {
             unsafe { ::std::mem::transmute(self.direction) };
         let direction = Direction::from(direction_pb);
         let query_params: QueryParams = self.params.try_into()?;
-        debug!(
-            "Runtime expand collection operator of edge with start_v_tag {:?}, edge_tag {:?}, direction {:?}, query_params {:?}",
-            start_v_tag, edge_or_end_v_tag, direction, query_params
-        );
+        if pegasus::get_current_worker().index == 0 {
+            debug!(
+                "Runtime expand collection operator of edge with start_v_tag {:?}, end_tag {:?}, direction {:?}, query_params {:?}",
+                start_v_tag, edge_or_end_v_tag, direction, query_params
+            );
+        }
         if self.expand_opt != algebra_pb::edge_expand::ExpandOpt::Vertex as i32 {
             Err(FnGenError::unsupported_error("expand edges in ExpandIntersection"))
         } else {
