@@ -425,6 +425,12 @@ impl From<pb::Union> for pb::logical_plan::Operator {
     }
 }
 
+impl From<pb::Intersect> for pb::logical_plan::Operator {
+    fn from(opr: pb::Intersect) -> Self {
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Intersect(opr)) }
+    }
+}
+
 impl From<pb::GroupBy> for pb::logical_plan::Operator {
     fn from(opr: pb::GroupBy) -> Self {
         pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::GroupBy(opr)) }
@@ -464,6 +470,18 @@ impl From<pb::SegmentApply> for pb::logical_plan::Operator {
 impl From<pb::Scan> for pb::logical_plan::Operator {
     fn from(opr: pb::Scan) -> Self {
         pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Scan(opr)) }
+    }
+}
+
+impl From<pb::logical_plan::Operator> for Option<pb::Scan> {
+    fn from(opr: pb::logical_plan::Operator) -> Self {
+        if let Some(opr) = opr.opr {
+            match opr {
+                Opr::Scan(scan) => return Some(scan),
+                _ => (),
+            }
+        }
+        None
     }
 }
 
@@ -602,8 +620,49 @@ impl pb::logical_plan::operator::Opr {
             Opr::PathEnd(_) => "PathEnd",
             Opr::Pattern(_) => "Pattern",
             Opr::Fused(_) => "Fused",
+            Opr::Intersect(_) => "Intersect",
         };
         name.to_string()
+    }
+}
+
+impl pb::logical_plan::Operator {
+    pub fn is_whole_graph(&self) -> bool {
+        if let Some(opr) = &self.opr {
+            match opr {
+                Opr::Scan(scan) => {
+                    scan.idx_predicate.is_none()
+                        && scan.alias.is_none()
+                        && scan
+                            .params
+                            .as_ref()
+                            .map(|params| !params.is_queryable())
+                            .unwrap_or(true)
+                }
+                _ => false,
+            }
+        } else {
+            false
+        }
+    }
+}
+
+impl pb::QueryParams {
+    fn is_queryable(&self) -> bool {
+        !(self.tables.is_empty()
+            && self.predicate.is_none()
+            && self.limit.is_none()
+            && self.sample_ratio == 1.0)
+    }
+}
+
+impl pb::edge_expand::Direction {
+    pub fn reverse(&self) -> pb::edge_expand::Direction {
+        match self {
+            pb::edge_expand::Direction::Out => pb::edge_expand::Direction::In,
+            pb::edge_expand::Direction::In => pb::edge_expand::Direction::Out,
+            pb::edge_expand::Direction::Both => pb::edge_expand::Direction::Both,
+        }
     }
 }
 

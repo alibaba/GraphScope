@@ -151,6 +151,7 @@ impl From<IrError> for FfiResult {
             IrError::ParsePbError(err) => FfiResult::new(ResultCode::ParsePbError, err.to_string()),
             IrError::ParseExprError(err) => FfiResult::new(ResultCode::ParseExprError, err.to_string()),
             IrError::InvalidPattern(s) => FfiResult::new(ResultCode::Others, s),
+            IrError::InvalidExtendPattern(err) => FfiResult::new(ResultCode::Others, err.to_string()),
             IrError::PbEncodeError(err) => FfiResult::new(ResultCode::Others, err.to_string()),
             IrError::MissingData(d) => {
                 FfiResult::new(ResultCode::MissingDataError, format!("required data {:?} is missing", d))

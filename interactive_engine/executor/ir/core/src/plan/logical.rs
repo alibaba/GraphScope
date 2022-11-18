@@ -26,9 +26,10 @@ use ir_common::generated::common as common_pb;
 use ir_common::{KeyId, NameOrId};
 use vec_map::VecMap;
 
+use crate::catalogue::error::IrPatternError;
 use crate::error::{IrError, IrResult};
 use crate::plan::meta::{ColumnsOpt, PlanMeta, Schema, StoreMeta, TagId, INVALID_META_ID, STORE_META};
-use crate::plan::patmat::{MatchingStrategy, NaiveStrategy};
+use crate::plan::patmat::{ExtendStrategy, MatchingStrategy, NaiveStrategy};
 
 // Note that protobuf only support signed integer, while we actually requires the nodes'
 // id being non-negative
@@ -266,13 +267,16 @@ impl LogicalPlan {
         Self { nodes, max_node_id: node_id + 1, meta }
     }
 
-    pub fn num_nodes(&self) -> usize {
-        self.nodes.len()
-    }
-
     /// Get a node reference from the logical plan
     pub fn get_node(&self, id: NodeId) -> Option<NodeType> {
         self.nodes.get(id as usize).cloned()
+    }
+
+    /// Get a operator reference from the logical plan
+    pub fn get_opr(&self, id: NodeId) -> Option<pb::logical_plan::Operator> {
+        self.nodes
+            .get(id as usize)
+            .map(|node| node.borrow().opr.clone())
     }
 
     /// Get first node in the logical plan
@@ -283,7 +287,7 @@ impl LogicalPlan {
             .map(|tuple| tuple.1.clone())
     }
 
-    /// Get first node in the logical plan
+    /// Get last node in the logical plan
     pub fn get_last_node(&self) -> Option<NodeType> {
         self.nodes
             .iter()
@@ -292,8 +296,20 @@ impl LogicalPlan {
             .map(|tuple| tuple.1.clone())
     }
 
+    pub fn len(&self) -> usize {
+        self.nodes.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.nodes.is_empty()
+    }
+
     pub fn get_meta(&self) -> &PlanMeta {
         &self.meta
+    }
+
+    pub fn get_max_node_id(&self) -> NodeId {
+        self.max_node_id
     }
 
     /// Append a new node into the logical plan, with specified `parent_ids`
@@ -403,9 +419,43 @@ impl LogicalPlan {
         let new_curr_node_rst = match opr.opr.as_ref().unwrap() {
             Opr::Pattern(pattern) => {
                 if parent_ids.len() == 1 {
-                    let strategy = NaiveStrategy::try_from(pattern.clone())?;
-                    let plan = strategy.build_logical_plan()?;
-                    self.append_plan(plan, parent_ids.clone())
+                    // We try to match via ExtendStrategy. If not supported, match via NaiveStrategy.
+
+                    // Notice that there are some limitations of ExtendStrategy, including:
+                    // 1. the input of match should be a whole graph, i.e., `g.V().match(...)`
+                    // 2. the match sentences are connected by join_kind of `InnerJoin`
+                    // 3. the match binders should expand vertices if it is EdgeExpand opr
+                    // 4. if match binders of PathExpand exists, it should at least range from 1
+                    let is_pattern_source_whole_graph = self
+                        .get_opr(parent_ids[0])
+                        .map(|pattern_source| pattern_source.is_whole_graph())
+                        .ok_or(IrError::ParentNodeNotExist(parent_ids[0]))?;
+                    let extend_strategy = if is_pattern_source_whole_graph {
+                        ExtendStrategy::init(&pattern, &self.meta)
+                    } else {
+                        Err(IrPatternError::Unsupported("pattern source is not whole graph".to_string()))
+                    };
+                    match extend_strategy {
+                        Ok(extend_strategy) => {
+                            debug!("pattern matching by ExtendStrategy");
+                            let plan = extend_strategy.build_logical_plan()?;
+                            let new_node_id = self.append_plan(plan, parent_ids.clone())?;
+                            // As we have added a new source op to scan with label efficiently in extend_strategy,
+                            // we remove the old source op.
+                            self.nodes.remove(0);
+                            Ok(new_node_id)
+                        }
+                        Err(err) => match err {
+                            IrPatternError::Unsupported(_) => {
+                                // if is not supported in ExtendStrategy, try NaiveStrategy
+                                debug!("pattern matching by NaiveStrategy");
+                                let naive_strategy = NaiveStrategy::try_from(pattern.clone())?;
+                                let plan = naive_strategy.build_logical_plan()?;
+                                self.append_plan(plan, parent_ids.clone())
+                            }
+                            _ => Err(err.into()),
+                        },
+                    }
                 } else {
                     Err(IrError::Unsupported(
                         "only one single parent is supported for the `Pattern` operator".to_string(),
@@ -451,21 +501,6 @@ impl LogicalPlan {
             }
         }
         node
-    }
-
-    pub fn len(&self) -> usize {
-        self.nodes.len()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.nodes.is_empty()
-    }
-
-    pub fn root(&self) -> Option<NodeType> {
-        self.nodes
-            .iter()
-            .next()
-            .map(|(_, node)| node.clone())
     }
 
     /// Append branch plans to a certain node which has **no** children in this logical plan.

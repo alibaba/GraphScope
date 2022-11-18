@@ -23,8 +23,8 @@ use std::rc::Rc;
 use std::sync::RwLock;
 
 use ir_common::generated::schema as schema_pb;
-use ir_common::NameOrId;
 use ir_common::{KeyId, OneOrMany};
+use ir_common::{LabelId, NameOrId};
 
 use crate::error::{IrError, IrResult};
 use crate::plan::logical::NodeId;
@@ -45,6 +45,12 @@ pub fn set_schema_from_json<R: io::Read>(read: R) {
     }
 }
 
+pub fn set_schema(schema: Schema) {
+    if let Ok(mut meta) = STORE_META.write() {
+        meta.schema = Some(schema);
+    }
+}
+
 pub fn reset_schema() {
     if let Ok(mut meta) = STORE_META.write() {
         meta.schema = None;
@@ -60,6 +66,16 @@ pub struct StoreMeta {
 pub struct LabelMeta {
     name: String,
     id: KeyId,
+}
+
+impl LabelMeta {
+    pub fn get_name(&self) -> String {
+        self.name.clone()
+    }
+
+    pub fn get_id(&self) -> i32 {
+        self.id
+    }
 }
 
 impl Default for LabelMeta {
@@ -103,7 +119,7 @@ impl Default for KeyType {
 pub struct Schema {
     /// A map from table (Entity or Relation) name to its internally encoded id
     /// In the concept of graph database, this is also known as label
-    table_name_to_id: BTreeMap<String, (KeyType, KeyId)>,
+    table_name_to_id: BTreeMap<String, (KeyType, LabelId)>,
     /// A map from column name to its store-encoded id
     /// In the concept of graph database, this is also known as property
     column_name_to_id: BTreeMap<String, KeyId>,
@@ -125,7 +141,7 @@ pub struct Schema {
 
 impl Schema {
     pub fn new(
-        entities: Vec<(String, KeyId)>, relations: Vec<(String, KeyId)>, columns: Vec<(String, KeyId)>,
+        entities: Vec<(String, LabelId)>, relations: Vec<(String, LabelId)>, columns: Vec<(String, KeyId)>,
     ) -> Self {
         let mut schema = Schema::default();
         schema.is_table_id = !entities.is_empty() || !relations.is_empty();
@@ -163,7 +179,7 @@ impl Schema {
         schema
     }
 
-    pub fn get_table_id(&self, name: &str) -> Option<KeyId> {
+    pub fn get_table_id(&self, name: &str) -> Option<LabelId> {
         self.table_name_to_id
             .get(name)
             .map(|(_, id)| *id)
@@ -686,6 +702,10 @@ impl PlanMeta {
                 (false, new_tag_id)
             }
         }
+    }
+
+    pub fn get_max_tag_id(&self) -> TagId {
+        self.max_tag_id
     }
 
     pub fn set_max_tag_id(&mut self, tag_id: TagId) {

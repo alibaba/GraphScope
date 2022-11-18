@@ -30,14 +30,14 @@ struct PathEndOperator {
 
 impl MapFunction<Record, Record> for PathEndOperator {
     fn exec(&self, mut input: Record) -> FnResult<Record> {
-        let entry = input
-            .get(None)
-            .ok_or(FnExecError::get_tag_error(&format!(
-                "get None tag from the current record in `PathEnd` operator, the record is {:?}",
-                input
-            )))?
-            .clone();
         if self.alias.is_some() {
+            let entry = input
+                .get(None)
+                .ok_or(FnExecError::get_tag_error(&format!(
+                    "get None tag from the current record in `PathEnd` operator, the record is {:?}",
+                    input
+                )))?
+                .clone();
             input.append_arc_entry(entry.clone(), self.alias.clone());
         }
         Ok(input)

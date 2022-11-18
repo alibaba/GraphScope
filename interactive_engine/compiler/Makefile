@@ -55,11 +55,18 @@ run:
 	  -cp ".:./target/libs/*:./target/compiler-1.0-SNAPSHOT.jar" \
 	  -Djna.library.path=../executor/ir/target/release \
 	  -Dgraph.schema=${graph.schema} \
+	  -Dpegasus.hosts=${pegasus.hosts} \
+	  -Dpegasus.server.num=${pegasus.server.num} \
 	  com.alibaba.graphscope.gremlin.service.GraphServiceMain
 
 # start rpc server
 # make run graph.schema:=../executor/ir/core/resource/ldbc_schema.json 
 ldbc_test:
 	mvn test -Dtest=com.alibaba.graphscope.integration.ldbc.IrLdbcTest $(OSFLAG)
+
+# start rpc server
+# make run graph.schema:=../executor/ir/core/resource/ldbc_schema.json
+pattern_test:
+	mvn test -Dtest=com.alibaba.graphscope.integration.pattern.IrPatternTest $(OSFLAG)
 
 .PHONY: build run

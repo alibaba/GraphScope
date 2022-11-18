@@ -28,6 +28,7 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 
 @Graph.OptIn("com.alibaba.graphscope.integration.IrGremlinTestSuite")
 @Graph.OptIn("com.alibaba.graphscope.integration.ldbc.IrLdbcTestSuite")
+@Graph.OptIn("com.alibaba.graphscope.integration.pattern.IrPatternTestSuite")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
         method = "g_V_groupCount_selectXvaluesX_unfold_dedup",

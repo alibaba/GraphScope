@@ -29,12 +29,15 @@ use pegasus::api::function::DynIter;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 use vec_map::VecMap;
 
+use crate::process::operator::map::Intersection;
+
 #[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]
 pub enum Entry {
     V(Vertex),
     E(Edge),
     P(GraphPath),
     OffGraph(Object),
+    Intersection(Intersection),
     Collection(Vec<Entry>),
 }
 
@@ -104,15 +107,23 @@ impl Record {
     }
 
     pub fn append_arc_entry(&mut self, entry: Arc<Entry>, alias: Option<KeyId>) {
-        self.curr = Some(entry.clone());
         if let Some(alias) = alias {
-            self.columns.insert(alias as usize, entry);
+            self.columns
+                .insert(alias as usize, entry.clone());
         }
+        self.curr = Some(entry);
     }
 
     /// Set new current entry for the record
     pub fn set_curr_entry(&mut self, entry: Option<Arc<Entry>>) {
         self.curr = entry;
+    }
+
+    pub fn get_column_mut(&mut self, tag: &KeyId) -> Option<&mut Entry> {
+        self.columns
+            .get_mut(*tag as usize)
+            .map(|e| Arc::get_mut(e))
+            .unwrap_or(None)
     }
 
     pub fn get_columns_mut(&mut self) -> &mut VecMap<Arc<Entry>> {
@@ -193,6 +204,12 @@ impl Into<Entry> for Object {
     }
 }
 
+impl Into<Entry> for Intersection {
+    fn into(self) -> Entry {
+        Entry::Intersection(self)
+    }
+}
+
 impl Context<Entry> for Record {
     fn get(&self, tag: Option<&NameOrId>) -> Option<&Entry> {
         let tag = if let Some(tag) = tag {
@@ -207,6 +224,7 @@ impl Context<Entry> for Record {
         self.get(tag)
             .map(|entry| match entry.as_ref() {
                 Entry::Collection(_) => None,
+                Entry::Intersection(_) => None,
                 _ => Some(entry.as_ref()),
             })
             .unwrap_or(None)
@@ -221,6 +239,7 @@ impl Element for Entry {
             Entry::P(p) => p.as_graph_element(),
             Entry::OffGraph(_) => None,
             Entry::Collection(_) => None,
+            Entry::Intersection(_) => None,
         }
     }
 
@@ -231,6 +250,7 @@ impl Element for Entry {
             Entry::P(p) => p.len(),
             Entry::OffGraph(obj) => obj.len(),
             Entry::Collection(c) => c.len(),
+            Entry::Intersection(i) => i.len(),
         }
     }
 
@@ -241,6 +261,7 @@ impl Element for Entry {
             Entry::P(p) => p.as_borrow_object(),
             Entry::OffGraph(obj) => obj.as_borrow(),
             Entry::Collection(_) => unreachable!(),
+            Entry::Intersection(_) => unreachable!(),
         }
     }
 }
@@ -357,6 +378,10 @@ impl Encode for Entry {
                 writer.write_u8(4)?;
                 collection.write_to(writer)?
             }
+            Entry::Intersection(intersection) => {
+                writer.write_u8(5)?;
+                intersection.write_to(writer)?
+            }
         }
         Ok(())
     }
@@ -385,6 +410,10 @@ impl Decode for Entry {
             4 => {
                 let collection = <Vec<Entry>>::read_from(reader)?;
                 Ok(Entry::Collection(collection))
+            }
+            5 => {
+                let intersection = <Intersection>::read_from(reader)?;
+                Ok(Entry::Intersection(intersection))
             }
             _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "unreachable")),
         }

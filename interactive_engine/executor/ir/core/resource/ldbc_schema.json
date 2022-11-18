@@ -846,6 +846,16 @@
       "entity_pairs": [
         {
           "src": {
+            "id": 1,
+            "name": "PERSON"
+          },
+          "dst": {
+            "id": 9,
+            "name": "CITY"
+          }
+        },
+        {
+          "src": {
             "id": 12,
             "name": "UNIVERSITY"
           },
