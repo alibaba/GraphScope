@@ -38,6 +38,13 @@ app:
       - grape::ImmutableEdgecutFragment
       - gs::ArrowProjectedFragment
       - gs::DynamicProjectedFragment
+  - algo: wcc_auto
+    type: cpp_pie
+    class_name: grape::WCCAuto
+    src: wcc/wcc_auto.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
   - algo: cdlp
     type: cpp_pie
     class_name: grape::CDLP

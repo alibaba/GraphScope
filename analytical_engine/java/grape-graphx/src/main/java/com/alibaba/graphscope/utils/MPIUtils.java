@@ -34,7 +34,7 @@ import java.util.List;
 public class MPIUtils {
 
     private static Logger logger = LoggerFactory.getLogger(MPIUtils.class.getName());
-    private static final String GRAPHSCOPE_HOME, SPARK_HOME;
+    private static final String GRAPHSCOPE_HOME;
     private static final String LAUNCH_GRAPHX_SHELL_SCRIPT;
     private static final String Load_FRAGMENT_PATTERN = "ArrowProjectedFragmentID:";
     private static final String FINALIZE_PATTERN = "Workers finalized.";
@@ -136,11 +136,6 @@ public class MPIUtils {
     }
 
     static {
-        SPARK_HOME = System.getenv("SPARK_HOME");
-        if (SPARK_HOME == null || SPARK_HOME.isEmpty()) {
-            throw new IllegalStateException("SPARK_HOME empty");
-        }
-
         GRAPHSCOPE_HOME = System.getenv("GRAPHSCOPE_HOME");
         if (GRAPHSCOPE_HOME == null || GRAPHSCOPE_HOME.isEmpty()) {
             throw new IllegalStateException("GRAPHSCOPE_HOME empty");

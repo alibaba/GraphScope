@@ -20,7 +20,4 @@ public enum FragmentType {
     ImmutableEdgecutFragment,
     ArrowFragment,
     ArrowProjectedFragment,
-    ArrowProjectedStrVDFragment,
-    ArrowProjectedStrEDFragment,
-    ArrowProjectedStrVEDFragment,
 }

@@ -24,6 +24,8 @@ RUN sed -i 's/archive.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list &&
       curl git openjdk-8-jdk python3-pip sudo && \
     apt clean && rm -fr /var/lib/apt/lists/*
 
+ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
+
 # install hadoop
 RUN cd /tmp && \
     curl -LO https://archive.apache.org/dist/hadoop/core/hadoop-2.8.4/hadoop-2.8.4.tar.gz && \
@@ -49,6 +51,9 @@ RUN useradd -m graphscope -u 1001 && \
 # Change to graphscope user
 USER graphscope
 WORKDIR /home/graphscope
+
+# set the CLASSPATH for hadoop
+RUN bash -l -c 'echo export CLASSPATH="$($HADOOP_HOME/bin/hdfs classpath --glob)" >> /home/graphscope/.profile'
 
 ENV PATH=${PATH}:/home/graphscope/.local/bin
 

@@ -248,10 +248,10 @@ class FragmentWrapper {};
  * @tparam OID_T OID type
  * @tparam VID_T VID type
  */
-template <typename OID_T, typename VID_T>
-class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
+template <typename OID_T, typename VID_T, typename VERTEX_MAP_T>
+class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T, VERTEX_MAP_T>>
     : public ILabeledFragmentWrapper {
-  using fragment_t = vineyard::ArrowFragment<OID_T, VID_T>;
+  using fragment_t = vineyard::ArrowFragment<OID_T, VID_T, VERTEX_MAP_T>;
   using label_id_t = typename fragment_t::label_id_t;
 
  public:
@@ -718,10 +718,13 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
  * @tparam OID_T OID type
  * @tparam VID_T VID type
  */
-template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T>
-class FragmentWrapper<ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
+template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T,
+          typename VERTEX_MAP_T>
+class FragmentWrapper<
+    ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T, VERTEX_MAP_T>>
     : public IFragmentWrapper {
-  using fragment_t = ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>;
+  using fragment_t =
+      ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T, VERTEX_MAP_T>;
 
  public:
   FragmentWrapper(const std::string& id, rpc::graph::GraphDefPb graph_def,
@@ -785,10 +788,13 @@ class FragmentWrapper<ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
 /**
  * @brief A specialized FragmentWrapper for ArrowFlattenedFragment.
  */
-template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T>
-class FragmentWrapper<ArrowFlattenedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
+template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T,
+          typename VERTEX_MAP_T>
+class FragmentWrapper<
+    ArrowFlattenedFragment<OID_T, VID_T, VDATA_T, EDATA_T, VERTEX_MAP_T>>
     : public IFragmentWrapper {
-  using fragment_t = ArrowFlattenedFragment<OID_T, VID_T, VDATA_T, EDATA_T>;
+  using fragment_t =
+      ArrowFlattenedFragment<OID_T, VID_T, VDATA_T, EDATA_T, VERTEX_MAP_T>;
 
  public:
   FragmentWrapper(const std::string& id, rpc::graph::GraphDefPb graph_def,

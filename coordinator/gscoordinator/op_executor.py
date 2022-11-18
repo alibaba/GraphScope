@@ -754,8 +754,16 @@ class OperationExecutor:
         def _process_loader_func(loader, vineyard_endpoint, vineyard_ipc_socket):
             # loader is type of attr_value_pb2.Chunk
             protocol = loader.attr[types_pb2.PROTOCOL].s.decode()
-            if protocol in ("hdfs", "hive", "oss", "s3"):
-                source = loader.attr[types_pb2.SOURCE].s.decode()
+            source = loader.attr[types_pb2.SOURCE].s.decode()
+            if (
+                protocol in ("hdfs", "hive", "oss", "s3")
+                or protocol == "file"
+                and (
+                    source.endswith(".orc")
+                    or source.endswith(".parquet")
+                    or source.endswith(".pq")
+                )
+            ):
                 storage_options = json.loads(
                     loader.attr[types_pb2.STORAGE_OPTIONS].s.decode()
                 )
@@ -768,6 +776,9 @@ class OperationExecutor:
                     read_options,
                     vineyard_endpoint,
                     vineyard_ipc_socket,
+                )
+                logger.debug(
+                    "new_protocol = %s, new_source = %s", new_protocol, new_source
                 )
                 loader.attr[types_pb2.PROTOCOL].CopyFrom(utils.s_to_attr(new_protocol))
                 loader.attr[types_pb2.SOURCE].CopyFrom(utils.s_to_attr(new_source))
@@ -785,6 +796,14 @@ class OperationExecutor:
                     if bodies.body.op_key == op.key:
                         op_bodies.append(bodies)
                 loader_op_bodies[op.key] = op_bodies
-                _process_loader_func(loader, vineyard_endpoint, vineyard_ipc_socket)
+                try:
+                    _process_loader_func(loader, vineyard_endpoint, vineyard_ipc_socket)
+                except:  # noqa: E722
+                    logger.exception(
+                        "Failed to process loader function for %s:%s",
+                        loader.attr[types_pb2.PROTOCOL].s.decode(),
+                        loader.attr[types_pb2.SOURCE].s.decode(),
+                    )
+                    raise
 
         return op_def_pb2.OpResult(code=OK, key=op.key)

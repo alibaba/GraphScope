@@ -61,28 +61,19 @@ DECLARE_int32(e_prop_id);
 
 namespace gs {
 
-template <typename FRAG_T>
-class GraphXApp : public JavaPIEProjectedParallelApp<FRAG_T> {
- public:
-  INSTALL_PARALLEL_WORKER(GraphXApp<FRAG_T>,
-                          JavaPIEProjectedParallelContext<FRAG_T>, FRAG_T)
-  static constexpr grape::LoadStrategy load_strategy =
-      grape::LoadStrategy::kBothOutIn;
-  static constexpr grape::MessageStrategy message_strategy =
-      grape::MessageStrategy::kAlongIncomingEdgeToOuterVertex;
-  static constexpr bool need_split_edges = true;
-};
-
 std::string getHostName() { return boost::asio::ip::host_name(); }
+
 void Init() {
   grape::InitMPIComm();
   grape::CommSpec comm_spec;
   comm_spec.Init(MPI_COMM_WORLD);
 }
+
 void Finalize() {
   grape::FinalizeMPIComm();
   VLOG(10) << "Workers finalized.";
 }
+
 std::string build_generic_class(const std::string& base_class,
                                 const std::string& vd_class,
                                 const std::string& ed_class,
@@ -273,7 +264,7 @@ void RunGraphX(vineyard::Client& client, grape::CommSpec& comm_spec,
   for (int i = 0; i < 1; ++i) {
     if (FLAGS_context_class ==
         "com.alibaba.graphscope.context.GraphXParallelAdaptorContext") {
-      using APP_TYPE = GraphXApp<ProjectedFragmentType>;
+      using APP_TYPE = JavaPIEProjectedParallelAppIE<ProjectedFragmentType>;
       LOG(INFO) << "Message strategy: "
                 << (APP_TYPE::message_strategy ==
                     grape::MessageStrategy::kAlongIncomingEdgeToOuterVertex);

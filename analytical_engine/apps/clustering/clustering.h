@@ -69,7 +69,6 @@ class Clustering
   void IncEval(const fragment_t& frag, context_t& ctx,
                message_manager_t& messages) {
     using vid_t = typename context_t::vid_t;
-    auto vertices = frag.Vertices();
     auto inner_vertices = frag.InnerVertices();
     auto outer_vertices = frag.OuterVertices();
 

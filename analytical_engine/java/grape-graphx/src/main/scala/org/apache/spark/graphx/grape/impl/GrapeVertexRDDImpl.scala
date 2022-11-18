@@ -300,20 +300,9 @@ class GrapeVertexRDDImpl[VD] private[graphx] (
       }
       .cache()
 
-    val test = updatedVertexPartition
-      .barrier()
-      .mapPartitions(iter => {
-        if (iter.hasNext) {
-          val part = iter.next()
-          log.info("inside barrier execution")
-          Iterator(1)
-        } else {
-          Iterator.empty
-        }
-      })
-      .collect()
+    val unused = updatedVertexPartition.count();
     val time1 = System.nanoTime()
-    log.info(s"[Perf: ]Sync vertices cost ${(time1 - time0) / 1000000} ms")
+    log.info(s"[Perf: ]Sync vertices cost ${(time1 - time0) / 1000000} ms, size ${unused}")
     updateMessage.unpersist()
     this.withGrapePartitionsRDD(updatedVertexPartition, true)
   }

@@ -52,12 +52,13 @@ namespace gs {
 template <typename FRAG_T>
 class ProjectSimpleFrame {};
 
-template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T>
+template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T,
+          typename VERTEX_MAP_T>
 class ProjectSimpleFrame<
-    gs::ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>> {
-  using fragment_t = vineyard::ArrowFragment<OID_T, VID_T>;
+    gs::ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T, VERTEX_MAP_T>> {
+  using fragment_t = vineyard::ArrowFragment<OID_T, VID_T, VERTEX_MAP_T>;
   using projected_fragment_t =
-      gs::ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>;
+      gs::ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T, VERTEX_MAP_T>;
 
  public:
   __attribute__((visibility(

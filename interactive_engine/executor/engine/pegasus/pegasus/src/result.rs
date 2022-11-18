@@ -8,6 +8,7 @@ use dyn_clonable::*;
 
 use crate::api::function::FnResult;
 use crate::api::FromStream;
+use crate::errors::JobExecError;
 
 #[clonable]
 pub trait FromStreamExt<T>: FromStream<T> + Clone {
@@ -44,6 +45,20 @@ impl<T: 'static> ResultSink<T> {
 
     pub fn get_cancel_hook(&self) -> &Arc<AtomicBool> {
         &self.cancel
+    }
+
+    pub fn set_cancel_hook(&mut self, is_canceled: bool) {
+        self.cancel.store(is_canceled, Ordering::SeqCst);
+        if is_canceled {
+            match &mut self.kind {
+                ResultSinkKind::Customized(tx) => {
+                    let msg = "Job is canceled".to_string();
+                    let err = JobExecError::from(msg);
+                    tx.on_error(Box::new(err));
+                }
+                _ => (),
+            }
+        }
     }
 
     pub fn on_error<E: std::error::Error + Send + 'static>(&mut self, error: E) {
@@ -131,14 +146,31 @@ impl<T> ResultStream<T> {
         self.is_poison.load(Ordering::SeqCst)
     }
 
+    #[inline]
+    pub fn is_cancel(&self) -> bool {
+        self.cancel_hook.load(Ordering::SeqCst)
+    }
+
+    fn report_cancel(&self) -> Option<Result<T, Box<dyn Error + Send>>> {
+        let err_msg = "Job is canceled;".to_owned();
+        let err: Box<dyn Error + Send + Sync> = err_msg.into();
+        Some(Err(err))
+    }
+
     fn pull_next(&mut self) -> Option<Result<T, Box<dyn Error + Send>>> {
         if self.is_exhaust.load(Ordering::SeqCst) {
+            if self.is_cancel() {
+                return self.report_cancel();
+            }
             return None;
         }
 
         if self.is_poison.load(Ordering::SeqCst) {
             let err_msg = "ResultSteam is poison because error already occurred;".to_owned();
             let err: Box<dyn Error + Send + Sync> = err_msg.into();
+            if self.is_cancel() {
+                return self.report_cancel();
+            }
             return Some(Err(err as Box<dyn Error + Send>));
         }
 
@@ -147,11 +179,19 @@ impl<T> ResultStream<T> {
             Ok(Ok(res)) => Some(Ok(res)),
             Ok(Err(e)) => {
                 self.is_poison.store(true, Ordering::SeqCst);
-                Some(Err(e))
+                if self.is_cancel() {
+                    self.report_cancel()
+                } else {
+                    Some(Err(e))
+                }
             }
             Err(_) => {
                 self.is_exhaust.store(true, Ordering::SeqCst);
-                None
+                if self.is_cancel() {
+                    self.report_cancel()
+                } else {
+                    None
+                }
             }
         }
     }

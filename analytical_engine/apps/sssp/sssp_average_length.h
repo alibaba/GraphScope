@@ -198,7 +198,7 @@ class SSSPAverageLength
           auto u = e.get_neighbor();
           if (frag.IsOuterVertex(u)) {
             double v_u = 1.0;
-            static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
+            vineyard::static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
                 [&](auto& e, auto& data) {
                   data = static_cast<double>(e.get_data());
                 })(e, v_u);
@@ -247,7 +247,7 @@ class SSSPAverageLength
       auto u = e.get_neighbor();
       if (frag.IsInnerVertex(u)) {
         double v_u = 1.0;
-        static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
+        vineyard::static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
             [&](auto& e, auto& data) {
               data = static_cast<double>(e.get_data());
             })(e, v_u);

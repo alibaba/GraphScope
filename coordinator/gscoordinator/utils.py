@@ -188,7 +188,6 @@ def get_app_sha256(attr, java_class_path: str):
         java_app_class,
     ) = _codegen_app_info(attr, DEFAULT_GS_CONFIG_FILE, java_class_path)
     graph_header, graph_type, _ = _codegen_graph_info(attr)
-    logger.info("Codegened graph type: %s, Graph header: %s", graph_type, graph_header)
 
     if app_type == "cpp_pie":
         app_sha256 = hashlib.sha256(
@@ -222,8 +221,6 @@ def check_java_app_graph_consistency(
 ):
     splited = cpp_graph_type.split("<")
     java_app_type_params = java_class_template_str[:-1].split("<")[-1].split(",")
-    if len(splited) != 2:
-        raise Exception("Unrecoginizable graph template str: {}".format(cpp_graph_type))
     if splited[0] == "vineyard::ArrowFragment":
         if app_class.find("Property") == -1:
             raise RuntimeError(
@@ -304,7 +301,6 @@ def compile_app(
     )
 
     graph_header, graph_type, graph_oid_type = _codegen_graph_info(attr)
-    logger.info("Codegened graph type: %s, Graph header: %s", graph_type, graph_header)
     if app_type == "java_pie":
         logger.info(
             "Check consistent between java app {} and graph {}".format(
@@ -478,8 +474,6 @@ def compile_graph_frame(
     """
 
     _, graph_class, _ = _codegen_graph_info(attr)
-
-    logger.info("Codegened graph frame type: %s", graph_class)
 
     library_dir = os.path.join(workspace, library_name)
     os.makedirs(library_dir, exist_ok=True)
@@ -1528,51 +1522,75 @@ GRAPH_HEADER_MAP = {
     ),
 }
 
+VERETX_MAP_CLASS_MAP = {
+    graph_def_pb2.GLOBAL_VERTEX_MAP: "vineyard::ArrowVertexMap<{},{}>",
+    graph_def_pb2.LOCAL_VERTEX_MAP: "vineyard::ArrowLocalVertexMap<{},{}>",
+}
+
 
 def _codegen_graph_info(attr):
+    # These getter functions are intended for lazy evaluation,
+    # cause they are not always avaiable in all types of graphs
+    def oid_type():
+        if types_pb2.OID_TYPE in attr:
+            return attr[types_pb2.OID_TYPE].s.decode("utf-8")
+        else:  # DynamicProjectedFragment doesn't have oid
+            return None
+
+    def vid_type():
+        return attr[types_pb2.VID_TYPE].s.decode("utf-8")
+
+    def vdata_type():
+        return attr[types_pb2.V_DATA_TYPE].s.decode("utf-8")
+
+    def edata_type():
+        return attr[types_pb2.E_DATA_TYPE].s.decode("utf-8")
+
+    def vertex_map_type():
+        if types_pb2.VERTEX_MAP_TYPE not in attr:
+            vm_type_enum = graph_def_pb2.GLOBAL_VERTEX_MAP
+        else:
+            vm_type_enum = attr[types_pb2.VERTEX_MAP_TYPE].i
+
+        def internal_type(t):  # The template of vertex map needs special care.
+            if t == "std::string":
+                return "vineyard::arrow_string_view"
+            return t
+
+        return VERETX_MAP_CLASS_MAP[vm_type_enum].format(
+            internal_type(oid_type()), vid_type()
+        )
+
     graph_type = attr[types_pb2.GRAPH_TYPE].i
     graph_class, graph_header = GRAPH_HEADER_MAP[graph_type]
+
     # graph_type is a literal of graph template in c++ side
-    if graph_class == "vineyard::ArrowFragment":
-        graph_oid_type = attr[types_pb2.OID_TYPE].s.decode("utf-8")
-        # in a format of full qualified name, e.g. vineyard::ArrowFragment<double, double>
-        graph_fqn = "{}<{},{}>".format(
-            graph_class,
-            attr[types_pb2.OID_TYPE].s.decode("utf-8"),
-            attr[types_pb2.VID_TYPE].s.decode("utf-8"),
+    if graph_type == graph_def_pb2.ARROW_PROPERTY:
+        # in a format of full qualified name, e.g.
+        # vineyard::ArrowFragment<int64_t, uin64_t, vineyard::ArrowLocalVertexMap<int64_t, uint64_t>>
+        graph_fqn = f"{graph_class}<{oid_type()},{vid_type()},{vertex_map_type()}>"
+    elif graph_type == graph_def_pb2.ARROW_PROJECTED:
+        # gs::ArrowProjectedFragment<int64_t, uint64_t, double, double,vineyard::ArrowLocalVertexMap<int64_t, uint64_t>>
+        graph_fqn = f"{graph_class}<{oid_type()},{vid_type()},{vdata_type()},{edata_type()},{vertex_map_type()}>"
+    elif graph_type == graph_def_pb2.IMMUTABLE_EDGECUT:
+        # grape::ImmutableEdgecutFragment<int64_t, uint32_t, double, double>
+        graph_fqn = (
+            f"{graph_class}<{oid_type()},{vid_type()},{vdata_type()},{edata_type()}>"
         )
-    elif graph_class in (
-        "gs::ArrowProjectedFragment",
-        "grape::ImmutableEdgecutFragment",
-    ):
-        # in a format of gs::ArrowProjectedFragment<int64_t, uint32_t, double, double>
-        # or grape::ImmutableEdgecutFragment<int64_t, uint32_t, double, double>
-        graph_oid_type = attr[types_pb2.OID_TYPE].s.decode("utf-8")
-        graph_fqn = "{}<{},{},{},{}>".format(
-            graph_class,
-            attr[types_pb2.OID_TYPE].s.decode("utf-8"),
-            attr[types_pb2.VID_TYPE].s.decode("utf-8"),
-            attr[types_pb2.V_DATA_TYPE].s.decode("utf-8"),
-            attr[types_pb2.E_DATA_TYPE].s.decode("utf-8"),
+    elif graph_type == graph_def_pb2.ARROW_FLATTENED:
+        # grape::ArrowFlattenFragment<int64_t, uint32_t, double, double>
+        graph_fqn = (
+            f"{graph_class}<{oid_type()},{vid_type()},{vdata_type()},{edata_type()}>"
         )
-    elif graph_class == "gs::ArrowFlattenedFragment":
-        graph_oid_type = attr[types_pb2.OID_TYPE].s.decode("utf-8")
-        graph_fqn = "{}<{},{},{},{}>".format(
-            graph_class,
-            attr[types_pb2.OID_TYPE].s.decode("utf-8"),
-            attr[types_pb2.VID_TYPE].s.decode("utf-8"),
-            attr[types_pb2.V_DATA_TYPE].s.decode("utf-8"),
-            attr[types_pb2.E_DATA_TYPE].s.decode("utf-8"),
-        )
-    else:
+    elif graph_type == graph_def_pb2.DYNAMIC_PROJECTED:
         # gs::DynamicProjectedFragment<double, double>
-        graph_oid_type = None
-        graph_fqn = "{}<{},{}>".format(
-            graph_class,
-            attr[types_pb2.V_DATA_TYPE].s.decode("utf-8"),
-            attr[types_pb2.E_DATA_TYPE].s.decode("utf-8"),
+        graph_fqn = f"{graph_class}<{vdata_type()},{edata_type()}>"
+    else:
+        raise ValueError(
+            f"Unknown graph type: {graph_def_pb2.GraphTypePb.Name(graph_type)}"
         )
-    return graph_header, graph_fqn, graph_oid_type
+    logger.info("Codegened graph type: %s, Graph header: %s", graph_fqn, graph_header)
+    return graph_header, graph_fqn, oid_type()
 
 
 def create_single_op_dag(op_type, config=None):

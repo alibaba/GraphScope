@@ -16,33 +16,53 @@
 
 package com.alibaba.graphscope.ds.adaptor;
 
+import com.alibaba.graphscope.ds.PrimitiveTypedArray;
 import com.alibaba.graphscope.ds.ProjectedAdjList;
+import com.alibaba.graphscope.ds.StringTypedArray;
 
 public class ProjectedAdjListAdaptor<VID_T, EDATA_T> implements AdjList<VID_T, EDATA_T> {
     public static final String TYPE = "ProjectedAdjList";
     private ProjectedAdjList<VID_T, EDATA_T> adjList;
+    private PrimitiveTypedArray<EDATA_T> primitiveTypedArray;
+    private StringTypedArray stringTypedArray;
 
     @Override
     public String type() {
         return TYPE;
     }
 
-    public ProjectedAdjListAdaptor(ProjectedAdjList<VID_T, EDATA_T> adj) {
+    public ProjectedAdjListAdaptor(
+            ProjectedAdjList<VID_T, EDATA_T> adj,
+            PrimitiveTypedArray<EDATA_T> primitiveTypedArray) {
         adjList = adj;
+        this.primitiveTypedArray = primitiveTypedArray;
+    }
+
+    public ProjectedAdjListAdaptor(
+            ProjectedAdjList<VID_T, EDATA_T> adj, StringTypedArray stringTypedArray) {
+        adjList = adj;
+        this.stringTypedArray = stringTypedArray;
     }
 
     public ProjectedAdjList getProjectedAdjList() {
         return adjList;
     }
 
+    public EDATA_T getEdata(long index) {
+        if (primitiveTypedArray != null) {
+            return primitiveTypedArray.get(index);
+        }
+        return (EDATA_T) stringTypedArray.get(index);
+    }
+
     @Override
     public Nbr<VID_T, EDATA_T> begin() {
-        return new ProjectedNbrAdaptor<>(adjList.begin());
+        return new ProjectedNbrAdaptor<>(adjList.begin(), this);
     }
 
     @Override
     public Nbr<VID_T, EDATA_T> end() {
-        return new ProjectedNbrAdaptor<>(adjList.end());
+        return new ProjectedNbrAdaptor<>(adjList.end(), this);
     }
 
     @Override

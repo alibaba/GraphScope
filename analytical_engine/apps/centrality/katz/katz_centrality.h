@@ -86,45 +86,45 @@ class KatzCentrality
                    message_manager_t& messages) {
     auto inner_vertices = frag.InnerVertices();
     if (frag.directed()) {
-      ForEach(inner_vertices.begin(), inner_vertices.end(),
-              [this, &ctx, &frag, &messages](int tid, vertex_t v) {
-                if (!filterByDegree(frag, ctx, v)) {
-                  auto es = frag.GetIncomingAdjList(v);
-                  ctx.x[v] = 0;
-                  for (auto& e : es) {
-                    // do the multiplication y^T = Alpha * x^T A - Beta
-                    double edata = 1.0;
-                    static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
-                        [&](auto& e, auto& data) {
-                          data = static_cast<double>(e.get_data());
-                        })(e, edata);
-                    ctx.x[v] += ctx.x_last[e.get_neighbor()] * edata;
-                  }
-                  ctx.x[v] = ctx.x[v] * ctx.alpha + ctx.beta;
-                  messages.Channels()[tid].SendMsgThroughOEdges(frag, v,
-                                                                ctx.x[v]);
-                }
-              });
+      ForEach(
+          inner_vertices.begin(), inner_vertices.end(),
+          [this, &ctx, &frag, &messages](int tid, vertex_t v) {
+            if (!filterByDegree(frag, ctx, v)) {
+              auto es = frag.GetIncomingAdjList(v);
+              ctx.x[v] = 0;
+              for (auto& e : es) {
+                // do the multiplication y^T = Alpha * x^T A - Beta
+                double edata = 1.0;
+                vineyard::static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
+                    [&](auto& e, auto& data) {
+                      data = static_cast<double>(e.get_data());
+                    })(e, edata);
+                ctx.x[v] += ctx.x_last[e.get_neighbor()] * edata;
+              }
+              ctx.x[v] = ctx.x[v] * ctx.alpha + ctx.beta;
+              messages.Channels()[tid].SendMsgThroughOEdges(frag, v, ctx.x[v]);
+            }
+          });
     } else {
-      ForEach(inner_vertices.begin(), inner_vertices.end(),
-              [this, &ctx, &frag, &messages](int tid, vertex_t v) {
-                if (!filterByDegree(frag, ctx, v)) {
-                  auto es = frag.GetOutgoingAdjList(v);
-                  ctx.x[v] = 0;
-                  for (auto& e : es) {
-                    // do the multiplication y^T = Alpha * x^T A - Beta
-                    double edata = 1.0;
-                    static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
-                        [&](auto& e, auto& data) {
-                          data = static_cast<double>(e.get_data());
-                        })(e, edata);
-                    ctx.x[v] += ctx.x_last[e.get_neighbor()] * edata;
-                  }
-                  ctx.x[v] = ctx.x[v] * ctx.alpha + ctx.beta;
-                  messages.Channels()[tid].SendMsgThroughOEdges(frag, v,
-                                                                ctx.x[v]);
-                }
-              });
+      ForEach(
+          inner_vertices.begin(), inner_vertices.end(),
+          [this, &ctx, &frag, &messages](int tid, vertex_t v) {
+            if (!filterByDegree(frag, ctx, v)) {
+              auto es = frag.GetOutgoingAdjList(v);
+              ctx.x[v] = 0;
+              for (auto& e : es) {
+                // do the multiplication y^T = Alpha * x^T A - Beta
+                double edata = 1.0;
+                vineyard::static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
+                    [&](auto& e, auto& data) {
+                      data = static_cast<double>(e.get_data());
+                    })(e, edata);
+                ctx.x[v] += ctx.x_last[e.get_neighbor()] * edata;
+              }
+              ctx.x[v] = ctx.x[v] * ctx.alpha + ctx.beta;
+              messages.Channels()[tid].SendMsgThroughOEdges(frag, v, ctx.x[v]);
+            }
+          });
     }
   }
 

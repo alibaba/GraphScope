@@ -15,14 +15,6 @@ See [*helm repo*](https://helm.sh/docs/helm/helm_repo/) for command documentatio
 
 ## Install Chart
 
-GraphScope rely on some permissions to delete resources.
-
-```shell
-# example for `default` ServiceAccount with `default` namespace
-$ wget https://raw.githubusercontent.com/alibaba/GraphScope/main/charts/role_and_binding.yaml
-$ kubectl create -f ./role_and_binding.yaml
-```
-
 ```shell
 # Helm 3
 $ helm install [RELEASE_NAME] graphscope/graphscope

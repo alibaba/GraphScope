@@ -17,6 +17,8 @@
 package com.alibaba.graphscope.utils;
 
 import static com.alibaba.graphscope.utils.CppClassName.GRAPE_MESSAGE_IN_BUFFER;
+import static com.alibaba.graphscope.utils.CppClassName.GS_ARROW_PROJECTED_FRAGMENT_IMPL_STRING_TYPED_ARRAY;
+import static com.alibaba.graphscope.utils.CppClassName.GS_ARROW_PROJECTED_FRAGMENT_IMPL_TYPED_ARRAY;
 import static com.alibaba.graphscope.utils.CppClassName.GS_PRIMITIVE_MESSAGE;
 import static com.alibaba.graphscope.utils.CppClassName.GS_VERTEX_ARRAY;
 
@@ -25,10 +27,12 @@ import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeFactory;
 import com.alibaba.fastffi.FFIVector;
 import com.alibaba.fastffi.impl.CXXStdVector;
-import com.alibaba.graphscope.arrow.array.ArrowArrayBuilder;
+import com.alibaba.graphscope.arrow.array.PrimitiveArrowArrayBuilder;
 import com.alibaba.graphscope.ds.DenseVertexSet;
 import com.alibaba.graphscope.ds.EmptyType;
 import com.alibaba.graphscope.ds.GSVertexArray;
+import com.alibaba.graphscope.ds.PrimitiveTypedArray;
+import com.alibaba.graphscope.ds.StringTypedArray;
 import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexArray;
 import com.alibaba.graphscope.ds.VertexRange;
@@ -56,8 +60,8 @@ public class FFITypeFactoryhelper {
     private static volatile EmptyType.Factory emptyTypeFactory;
     private static volatile VertexRange.Factory vertexRangeLongFactory;
     private static volatile DenseVertexSet.Factory denseVertexSetFactory;
-    private static volatile HashMap<String, ArrowArrayBuilder.Factory> arrowArrayBuilderMap =
-            new HashMap<>();
+    private static volatile HashMap<String, PrimitiveArrowArrayBuilder.Factory>
+            arrowArrayBuilderMap = new HashMap<>();
 
     private static volatile HashMap<String, VertexArray.Factory> vertexArrayFactoryMap =
             new HashMap<>();
@@ -80,6 +84,30 @@ public class FFITypeFactoryhelper {
             logger.error("Must be one of long, double, integer");
             return "null";
         }
+    }
+
+    /**
+     * The created typed array should be set address with baseTypedArray. One can not add more data
+     * to this object
+     * @return
+     */
+    public static StringTypedArray newStringTypedArray() {
+        StringTypedArray.Factory stringTypedFactory =
+                FFITypeFactory.getFactory(
+                        StringTypedArray.class,
+                        GS_ARROW_PROJECTED_FRAGMENT_IMPL_STRING_TYPED_ARRAY);
+        return stringTypedFactory.create();
+    }
+
+    public static <T> PrimitiveTypedArray<T> newPrimitiveTypedArray(Class<? extends T> clz) {
+        PrimitiveTypedArray.Factory<T> primitiveTypedFactory =
+                FFITypeFactory.getFactory(
+                        PrimitiveTypedArray.class,
+                        GS_ARROW_PROJECTED_FRAGMENT_IMPL_TYPED_ARRAY
+                                + "<"
+                                + TypeUtils.primitiveClass2CppStr(clz, true)
+                                + ">");
+        return primitiveTypedFactory.create();
     }
 
     public static Factory getStdStringFactory() {
@@ -140,20 +168,22 @@ public class FFITypeFactoryhelper {
         return vertexArrayFactoryMap.get(foreignTypeName);
     }
 
-    public static ArrowArrayBuilder.Factory getArrowArrayBuilderFactory(String foreignTypeName) {
+    public static PrimitiveArrowArrayBuilder.Factory getArrowArrayBuilderFactory(
+            String foreignTypeName) {
         if (!arrowArrayBuilderMap.containsKey(foreignTypeName)) {
             synchronized (arrowArrayBuilderMap) {
                 if (!arrowArrayBuilderMap.containsKey(foreignTypeName)) {
                     arrowArrayBuilderMap.put(
                             foreignTypeName,
-                            FFITypeFactory.getFactory(ArrowArrayBuilder.class, foreignTypeName));
+                            FFITypeFactory.getFactory(
+                                    PrimitiveArrowArrayBuilder.class, foreignTypeName));
                 }
             }
         }
         return arrowArrayBuilderMap.get(foreignTypeName);
     }
 
-    public static <T> ArrowArrayBuilder<T> newArrowArrayBuilder(Class<T> clz) {
+    public static <T> PrimitiveArrowArrayBuilder<T> newArrowArrayBuilder(Class<T> clz) {
         if (clz.equals(Long.class) || clz.equals(long.class)) {
             return getArrowArrayBuilderFactory("gs::ArrowArrayBuilder<int64_t>").create();
         } else if (clz.equals(Double.class) || clz.equals(double.class)) {
@@ -165,7 +195,7 @@ public class FFITypeFactoryhelper {
         }
     }
 
-    public static ArrowArrayBuilder<Long> newUnsignedLongArrayBuilder() {
+    public static PrimitiveArrowArrayBuilder<Long> newUnsignedLongArrayBuilder() {
         return getArrowArrayBuilderFactory("gs::ArrowArrayBuilder<uint64_t>").create();
     }
 

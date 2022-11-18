@@ -35,7 +35,7 @@ class VineyardPartition(
     with Logging {
   lazy val client: VineyardClient = {
     if (hostName.equals(InetAddress.getLocalHost.getHostName)) {
-      val res = ScalaFFIFactory.newVineyardClient()
+      val res                          = ScalaFFIFactory.newVineyardClient()
       val ffiByteString: FFIByteString = FFITypeFactory.newByteString()
       ffiByteString.copyFrom(socketPath)
       res.connect(ffiByteString)
@@ -61,8 +61,7 @@ class VineyardRDD(
     .getOrElse(throw new IllegalStateException("empty session"))
     .asInstanceOf[GSSparkSession]
   for (i <- vineyardParts.indices) {
-    vineyardParts(i) =
-      new VineyardPartition(i, hostNames(i), sparkSession.socketPath)
+    vineyardParts(i) = new VineyardPartition(i, hostNames(i), sparkSession.getSocketPath)
   }
   override def compute(
       split: Partition,

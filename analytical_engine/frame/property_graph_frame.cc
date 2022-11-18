@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-#include <map>
 #include <memory>
 
 #include "vineyard/client/client.h"
@@ -38,6 +37,10 @@
 #error Missing _GRAPH_TYPE
 #endif
 
+using oid_t = typename _GRAPH_TYPE::oid_t;
+using vid_t = typename _GRAPH_TYPE::vid_t;
+using vertex_map_t = typename _GRAPH_TYPE::vertex_map_t;
+
 namespace bl = boost::leaf;
 namespace detail {
 
@@ -45,9 +48,6 @@ __attribute__((visibility(
     "hidden"))) static bl::result<std::shared_ptr<gs::IFragmentWrapper>>
 LoadGraph(const grape::CommSpec& comm_spec, vineyard::Client& client,
           const std::string& graph_name, const gs::rpc::GSParams& params) {
-  using oid_t = typename _GRAPH_TYPE::oid_t;
-  using vid_t = typename _GRAPH_TYPE::vid_t;
-
   BOOST_LEAF_AUTO(from_vineyard_id,
                   params.Get<bool>(gs::rpc::IS_FROM_VINEYARD_ID));
 
@@ -92,7 +92,8 @@ LoadGraph(const grape::CommSpec& comm_spec, vineyard::Client& client,
     return std::dynamic_pointer_cast<gs::IFragmentWrapper>(wrapper);
   } else {
     BOOST_LEAF_AUTO(graph_info, gs::ParseCreatePropertyGraph(params));
-    gs::ArrowFragmentLoader<oid_t, vid_t> loader(client, comm_spec, graph_info);
+    gs::ArrowFragmentLoader<oid_t, vid_t, vertex_map_t> loader(
+        client, comm_spec, graph_info);
 
     MPI_Barrier(comm_spec.comm());
     {
@@ -145,14 +146,10 @@ ToArrowFragment(vineyard::Client& client, const grape::CommSpec& comm_spec,
                 std::shared_ptr<gs::IFragmentWrapper>& wrapper_in,
                 const std::string& dst_graph_name) {
 #ifdef NETWORKX
-  using oid_t = typename _GRAPH_TYPE::oid_t;
-  using vid_t = typename _GRAPH_TYPE::vid_t;
   static_assert(std::is_same<vid_t, gs::DynamicFragment::vid_t>::value,
                 "The type of ArrowFragment::vid_t does not match with the "
                 "DynamicFragment::vid_t");
-#endif
 
-#ifdef NETWORKX
   if (wrapper_in->graph_def().graph_type() !=
       gs::rpc::graph::DYNAMIC_PROPERTY) {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
@@ -181,7 +178,7 @@ ToArrowFragment(vineyard::Client& client, const grape::CommSpec& comm_spec,
                         std::string(vineyard::type_name<oid_t>()));
   }
 
-  gs::DynamicToArrowConverter<oid_t> converter(comm_spec, client);
+  gs::DynamicToArrowConverter<oid_t, vertex_map_t> converter(comm_spec, client);
   BOOST_LEAF_AUTO(arrow_frag, converter.Convert(dynamic_frag));
   VINEYARD_CHECK_OK(client.Persist(arrow_frag->id()));
   BOOST_LEAF_AUTO(frag_group_id, vineyard::ConstructFragmentGroup(
@@ -254,11 +251,9 @@ AddLabelsToGraph(vineyard::ObjectID origin_frag_id,
                  const grape::CommSpec& comm_spec, vineyard::Client& client,
                  const std::string& graph_name,
                  const gs::rpc::GSParams& params) {
-  using oid_t = typename _GRAPH_TYPE::oid_t;
-  using vid_t = typename _GRAPH_TYPE::vid_t;
-
   BOOST_LEAF_AUTO(graph_info, gs::ParseCreatePropertyGraph(params));
-  gs::ArrowFragmentLoader<oid_t, vid_t> loader(client, comm_spec, graph_info);
+  gs::ArrowFragmentLoader<oid_t, vid_t, vertex_map_t> loader(client, comm_spec,
+                                                             graph_info);
 
   BOOST_LEAF_AUTO(frag_group_id,
                   loader.AddLabelsToGraphAsFragmentGroup(origin_frag_id));
@@ -340,16 +335,12 @@ void AddLabelsToGraph(
 }
 
 template class vineyard::BasicArrowVertexMapBuilder<
-    typename vineyard::InternalType<_GRAPH_TYPE::oid_t>::type,
-    _GRAPH_TYPE::vid_t>;
+    typename vineyard::InternalType<oid_t>::type, vid_t>;
 template class vineyard::ArrowVertexMap<
-    typename vineyard::InternalType<_GRAPH_TYPE::oid_t>::type,
-    _GRAPH_TYPE::vid_t>;
+    typename vineyard::InternalType<oid_t>::type, vid_t>;
 template class vineyard::ArrowVertexMapBuilder<
-    typename vineyard::InternalType<_GRAPH_TYPE::oid_t>::type,
-    _GRAPH_TYPE::vid_t>;
+    typename vineyard::InternalType<oid_t>::type, vid_t>;
 template class gs::ArrowProjectedVertexMap<
-    typename vineyard::InternalType<_GRAPH_TYPE::oid_t>::type,
-    _GRAPH_TYPE::vid_t>;
+    typename vineyard::InternalType<oid_t>::type, vid_t>;
 
 }  // extern "C"

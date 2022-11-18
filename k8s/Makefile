@@ -30,7 +30,7 @@ else
 endif
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.9.0
+VINEYARD_VERSION ?= v0.10.2
 PROFILE ?= release
 CI ?= false
 
@@ -82,7 +82,6 @@ graphscope-store-image:
 	docker pull ${REGISTRY}/$(DOCKER_ORG)/graphscope-vineyard:${VINEYARD_VERSION}
 	docker build --progress=$(BUILD_PROGRESS) \
                  --build-arg profile=${PROFILE} \
-				 --build-arg CI=${CI} \
                  -t graphscope/graphscope-store:${SHORT_SHA} \
                  --network=host \
                  -f $(WORKING_DIR)/graphscope-store.Dockerfile ..
@@ -122,6 +121,7 @@ graphscope-darwin-py3:
 		sudo strip -s $(WORKING_DIR)/../analytical_engine/exported_symbols_osx.lds /opt/graphscope/bin/grape_engine || true && \
 		sudo strip /opt/graphscope/bin/gaia_executor && \
 		export DYLD_LIBRARY_PATH=/usr/local/lib:$$DYLD_LIBRARY_PATH && \
+		install_name_tool -add_rpath /usr/local/lib /opt/graphscope/bin/gaia_executor && \
 		package_name=gs-include python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
 		rm -rf build && \
 		package_name=gs-apps python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \

@@ -87,7 +87,7 @@ public interface VertexRange<VID_T> extends FFIPointer, CXXPointer {
                     Long endValue;
 
                     {
-                        vertex.SetValue((Long) beginValue());
+                        vertex.setValue((Long) beginValue());
                         curValue = (Long) beginValue();
                         endValue = (Long) endValue();
                     }
@@ -97,7 +97,7 @@ public interface VertexRange<VID_T> extends FFIPointer, CXXPointer {
                     }
 
                     public Vertex<VID_T> next() {
-                        vertex.SetValue(curValue);
+                        vertex.setValue(curValue);
                         curValue += 1;
                         return (Vertex<VID_T>) vertex;
                     }
@@ -112,7 +112,7 @@ public interface VertexRange<VID_T> extends FFIPointer, CXXPointer {
                     Integer endValue;
 
                     {
-                        vertex.SetValue((Integer) beginValue());
+                        vertex.setValue((Integer) beginValue());
                         curValue = (Integer) beginValue();
                         endValue = (Integer) endValue();
                     }
@@ -122,7 +122,7 @@ public interface VertexRange<VID_T> extends FFIPointer, CXXPointer {
                     }
 
                     public Vertex<VID_T> next() {
-                        vertex.SetValue(curValue);
+                        vertex.setValue(curValue);
                         curValue += 1;
                         return (Vertex<VID_T>) vertex;
                     }

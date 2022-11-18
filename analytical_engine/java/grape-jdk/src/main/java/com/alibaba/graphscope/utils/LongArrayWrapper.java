@@ -50,7 +50,7 @@ public class LongArrayWrapper {
     }
 
     public long get(Vertex<Long> vertex) {
-        return data[vertex.GetValue().intValue() - left];
+        return data[vertex.getValue().intValue() - left];
     }
 
     public long get(int ind) {
@@ -62,7 +62,7 @@ public class LongArrayWrapper {
     }
 
     public void set(Vertex<Long> vertex, long newValue) {
-        data[vertex.GetValue().intValue() - left] = newValue;
+        data[vertex.getValue().intValue() - left] = newValue;
     }
 
     public void set(long ind, long newValue) {
