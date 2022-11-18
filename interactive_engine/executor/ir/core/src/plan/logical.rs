@@ -26,8 +26,8 @@ use ir_common::generated::common as common_pb;
 use ir_common::{KeyId, NameOrId};
 use vec_map::VecMap;
 
-use crate::catalogue::error::IrPatternError;
 use crate::error::{IrError, IrResult};
+use crate::glogue::error::IrPatternError;
 use crate::plan::meta::{ColumnsOpt, PlanMeta, Schema, StoreMeta, TagId, INVALID_META_ID, STORE_META};
 use crate::plan::patmat::{ExtendStrategy, MatchingStrategy, NaiveStrategy};
 

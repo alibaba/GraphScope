@@ -18,8 +18,8 @@ mod common;
 #[cfg(test)]
 mod tests {
 
-    use ir_core::catalogue::pattern::{PatternEdge, PatternVertex};
-    use ir_core::catalogue::PatternDirection;
+    use ir_core::glogue::pattern::{PatternEdge, PatternVertex};
+    use ir_core::glogue::PatternDirection;
 
     use crate::common::pattern_cases::*;
 

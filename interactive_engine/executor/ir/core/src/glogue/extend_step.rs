@@ -16,9 +16,9 @@
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as pb;
 
-use crate::catalogue::error::{IrPatternError, IrPatternResult};
-use crate::catalogue::pattern::Pattern;
-use crate::catalogue::{query_params, DynIter, PatternDirection, PatternId};
+use crate::glogue::error::{IrPatternError, IrPatternResult};
+use crate::glogue::pattern::Pattern;
+use crate::glogue::{query_params, DynIter, PatternDirection, PatternId};
 
 /// An ExactExtendEdge denotes an edge to be extended during the pattern matching.
 /// Given a ExactExtendEdge, we can uniquely locate an edge with dir in the pattern
