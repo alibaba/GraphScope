@@ -22,9 +22,9 @@ use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
 use vec_map::VecMap;
 
-use crate::catalogue::error::{IrPatternError, IrPatternResult};
-use crate::catalogue::extend_step::ExactExtendStep;
-use crate::catalogue::{
+use crate::glogue::error::{IrPatternError, IrPatternResult};
+use crate::glogue::extend_step::ExactExtendStep;
+use crate::glogue::{
     query_params, DynIter, PatternDirection, PatternId, PatternLabelId, PatternOrderTrait,
     PatternWeightTrait,
 };

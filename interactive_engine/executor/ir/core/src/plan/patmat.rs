@@ -26,9 +26,9 @@ use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
 use ir_common::NameOrId;
 
-use crate::catalogue::error::IrPatternResult;
-use crate::catalogue::pattern::Pattern;
 use crate::error::{IrError, IrResult};
+use crate::glogue::error::IrPatternResult;
+use crate::glogue::pattern::Pattern;
 use crate::plan::meta::PlanMeta;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd)]

@@ -24,8 +24,8 @@ mod test {
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
-    use ir_core::catalogue::error::IrPatternResult;
-    use ir_core::catalogue::pattern::Pattern;
+    use ir_core::glogue::error::IrPatternResult;
+    use ir_core::glogue::pattern::Pattern;
     use ir_core::plan::logical::LogicalPlan;
     use ir_core::plan::meta::{set_schema, PlanMeta};
     use ir_core::plan::physical::AsPhysical;

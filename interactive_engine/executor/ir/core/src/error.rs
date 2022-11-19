@@ -21,7 +21,7 @@ use ir_common::expr_parse::error::ExprError;
 use ir_common::NameOrId;
 use prost::EncodeError;
 
-use crate::catalogue::error::IrPatternError;
+use crate::glogue::error::IrPatternError;
 
 /// Record any error while transforming ir to a pegasus physical plan
 #[derive(Debug, Clone)]

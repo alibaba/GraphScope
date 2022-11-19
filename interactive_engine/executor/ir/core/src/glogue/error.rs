@@ -1,6 +1,6 @@
 use ir_common::error::ParsePbError;
 
-use crate::catalogue::PatternId;
+use crate::glogue::PatternId;
 
 /// Record the error for pattern match (via ExtendStrategy)
 #[derive(Debug, Clone)]
