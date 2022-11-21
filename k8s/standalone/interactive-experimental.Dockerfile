@@ -1,13 +1,10 @@
 # Interactive engine which uses experimental storage
 
+ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
 ARG BASE_VERSION=v0.10.2
-FROM registry-vpc.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:$BASE_VERSION AS builder
+FROM $REGISTRY/graphscope/graphscope-dev:$BASE_VERSION AS builder
 
-ARG profile=release
-ENV profile=$profile
 ADD . /home/graphscope/GraphScope
-
-ENV PATH="/home/graphscope/.cargo/bin:$PATH"
 
 RUN sudo chown -R graphscope:graphscope /home/graphscope/GraphScope
 RUN cd /home/graphscope/GraphScope/interactive_engine/compiler \
@@ -23,7 +20,7 @@ COPY --from=builder /home/graphscope/GraphScope/interactive_engine/compiler/set_
 COPY --from=builder /home/graphscope/GraphScope/interactive_engine/executor/ir/target/release/libir_core.so /opt/GraphScope/interactive_engine/executor/ir/target/release/libir_core.so
 COPY --from=builder /home/graphscope/GraphScope/interactive_engine/executor/ir/target/release/start_rpc_server_k8s /opt/GraphScope/interactive_engine/executor/ir/target/release/start_rpc_server_k8s
 
-RUN yum install -y sudo java-1.8.0-openjdk-devel \
+RUN yum install -y sudo java-1.8.0-openjdk \
     && yum clean all \
     && rm -rf /var/cache/yum
 

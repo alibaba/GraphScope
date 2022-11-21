@@ -14,7 +14,7 @@ It collects GIE metrics from a metric log `/var/log/graphscope/<?>/frontend/metr
 1. Install dependencies  
    ```bash
    # install prometheus_client
-   $ cd GraphScope/k8s/prometheus && pip install prometheus-client==0.14.1
+   $ pip install prometheus-client==0.14.1
    ```
 2. Start exporter  
    ```bash

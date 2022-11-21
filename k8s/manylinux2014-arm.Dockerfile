@@ -5,8 +5,8 @@
 # And the pre-built graphscope-runtime and graphscope-vineyard are available in
 # registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-runtime:arm64
 # registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:arm64
-
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/manylinux2014:2021-10-14-14ac00e-arm64
+ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
+FROM $REGISTRY/graphscope/manylinux2014:2021-10-14-14ac00e-arm64
 
 RUN curl https://mirrors.aliyun.com/repo/Centos-7.repo | sed -e "s/centos/centos-altarch/g" > /etc/yum.repos.d/CentOS-Base.repo
 
