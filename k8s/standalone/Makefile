@@ -18,42 +18,84 @@ VERSION ?= latest
 PROFILE ?= release
 
 graphscope-dev-base:
-	cd $(WORKING_DIR) && docker build --squash -t ${REGISTRY}/$(DOCKER_ORG)/graphscope-dev-base:${VERSION} \
+	cd $(WORKING_DIR) && \
+	docker build \
+		--build-arg REGISTRY=$(REGISTRY) \
+		-t ${REGISTRY}/$(DOCKER_ORG)/graphscope-dev-base:${VERSION} \
 		-f $(WORKING_DIR)/graphscope-dev-base.Dockerfile .
 
 graphscope-dev:
-	cd $(WORKING_DIR) && docker build --squash -t ${REGISTRY}/$(DOCKER_ORG)/graphscope-dev:${VERSION} \
+	cd $(WORKING_DIR) && \
+	docker build \
+		--build-arg REGISTRY=$(REGISTRY) \
+		-t ${REGISTRY}/$(DOCKER_ORG)/graphscope-dev:${VERSION} \
 		-f $(WORKING_DIR)/graphscope-dev.Dockerfile .
 
 vineyard-dev:
-	cd $(WORKING_DIR) && docker build --squash -t ${REGISTRY}/$(DOCKER_ORG)/vineyard-dev:${VERSION} \
+	cd $(WORKING_DIR) && \
+	docker build \
+		--build-arg REGISTRY=$(REGISTRY) \
+		-t ${REGISTRY}/$(DOCKER_ORG)/vineyard-dev:${VERSION} \
 		-f $(WORKING_DIR)/vineyard-dev.Dockerfile .
 
 vineyard-runtime:
-	cd $(WORKING_DIR) && docker build --squash -t ${REGISTRY}/$(DOCKER_ORG)/vineyard-runtime:${VERSION} \
+	cd $(WORKING_DIR) && \
+	docker build \
+		--build-arg REGISTRY=$(REGISTRY) \
+		-t ${REGISTRY}/$(DOCKER_ORG)/vineyard-runtime:${VERSION} \
 		-f $(WORKING_DIR)/vineyard-runtime.Dockerfile .
 
 coordinator:
-	cd $(WORKING_DIR)/../.. && docker build --target coordinator -t ${REGISTRY}/$(DOCKER_ORG)/coordinator:${VERSION} -f $(WORKING_DIR)/coordinator.Dockerfile .
+	cd $(WORKING_DIR)/../.. && \
+	docker build --target coordinator \
+		--build-arg REGISTRY=$(REGISTRY) \
+		-t ${REGISTRY}/$(DOCKER_ORG)/coordinator:${VERSION} \
+		-f $(WORKING_DIR)/coordinator.Dockerfile .
 
 analytical:
-	cd $(WORKING_DIR)/../.. && docker build --target analytical -t ${REGISTRY}/$(DOCKER_ORG)/analytical:${VERSION} -f $(WORKING_DIR)/analytical.Dockerfile .
+	cd $(WORKING_DIR)/../.. && \
+	docker build --target analytical \
+		--build-arg REGISTRY=$(REGISTRY) \
+		-t ${REGISTRY}/$(DOCKER_ORG)/analytical:${VERSION} \
+		-f $(WORKING_DIR)/analytical.Dockerfile .
 
 analytical-java:
-	cd $(WORKING_DIR)/../.. && docker build --target analytical-java -t ${REGISTRY}/$(DOCKER_ORG)/analytical-java:${VERSION} -f $(WORKING_DIR)/analytical.Dockerfile .
+	cd $(WORKING_DIR)/../.. && \
+	docker build --target analytical-java \
+		--build-arg REGISTRY=$(REGISTRY) \
+		-t ${REGISTRY}/$(DOCKER_ORG)/analytical-java:${VERSION} \
+		-f $(WORKING_DIR)/analytical.Dockerfile .
 
 interactive-frontend:
-	cd $(WORKING_DIR)/../.. && docker build --build-arg profile=$(PROFILE) --target frontend -t ${REGISTRY}/$(DOCKER_ORG)/interactive-frontend:${VERSION} -f $(WORKING_DIR)/interactive.Dockerfile .
+	cd $(WORKING_DIR)/../.. && \
+	docker build --target frontend \
+		--build-arg REGISTRY=$(REGISTRY) \
+		--build-arg profile=$(PROFILE) \
+		-t ${REGISTRY}/$(DOCKER_ORG)/interactive-frontend:${VERSION} \
+		-f $(WORKING_DIR)/interactive.Dockerfile .
 
 interactive-executor:
-	cd $(WORKING_DIR)/../.. && docker build --build-arg profile=$(PROFILE) --target executor -t ${REGISTRY}/$(DOCKER_ORG)/interactive-executor:${VERSION} -f $(WORKING_DIR)/interactive.Dockerfile .
+	cd $(WORKING_DIR)/../.. \
+	&& docker build --target executor \
+		--build-arg REGISTRY=$(REGISTRY) \
+		--build-arg profile=$(PROFILE) \
+		-t ${REGISTRY}/$(DOCKER_ORG)/interactive-executor:${VERSION} \
+		-f $(WORKING_DIR)/interactive.Dockerfile .
 
 # gie with experimental storage
 interactive-experimental:
-	cd $(WORKING_DIR)/../.. && docker build --target experimental -t ${REGISTRY}/$(DOCKER_ORG)/interactive-experimental:${VERSION} -f $(WORKING_DIR)/interactive-experimental.Dockerfile .
+	cd $(WORKING_DIR)/../.. && \
+	docker build --target experimental \
+		--build-arg REGISTRY=$(REGISTRY) \
+		-t ${REGISTRY}/$(DOCKER_ORG)/interactive-experimental:${VERSION} \
+		-f $(WORKING_DIR)/interactive-experimental.Dockerfile .
 
 learning:
-	cd $(WORKING_DIR)/../.. && docker build --target learning -t ${REGISTRY}/$(DOCKER_ORG)/learning:${VERSION} -f $(WORKING_DIR)/learning.Dockerfile .
+	cd $(WORKING_DIR)/../.. && \
+	docker build --target learning \
+		--build-arg REGISTRY=$(REGISTRY) \
+		-t ${REGISTRY}/$(DOCKER_ORG)/learning:${VERSION} \
+		-f $(WORKING_DIR)/learning.Dockerfile .
 
 
 push:

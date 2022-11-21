@@ -1,7 +1,8 @@
 # Analytical engine
 
+ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
 ARG BASE_VERSION=v0.10.2
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:$BASE_VERSION AS builder
+FROM $REGISTRY/graphscope/graphscope-dev:$BASE_VERSION AS builder
 
 ADD . /home/graphscope/GraphScope
 
@@ -11,7 +12,7 @@ RUN cd /home/graphscope/GraphScope/ \
     && make gae-install ENABLE_JAVA_SDK=OFF INSTALL_PREFIX=/home/graphscope/install
 
 ############### RUNTIME: GAE #######################
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/vineyard-dev:$BASE_VERSION AS analytical
+FROM $REGISTRY/graphscope/vineyard-dev:$BASE_VERSION AS analytical
 
 COPY --from=builder /home/graphscope/install /opt/graphscope/
 
@@ -21,7 +22,7 @@ USER graphscope
 WORKDIR /home/graphscope
 
 ############### RUNTIME: GAE-JAVA #######################
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:$BASE_VERSION AS builder
+FROM $REGISTRY/graphscope/graphscope-dev:$BASE_VERSION AS builder
 
 ADD . /home/graphscope/GraphScope
 
@@ -33,7 +34,7 @@ RUN cd /home/graphscope/GraphScope/ \
 
 FROM vineyardcloudnative/manylinux-llvm:2014-11.0.0 AS llvm
 
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/vineyard-dev:$BASE_VERSION AS analytical-java
+FROM $REGISTRY/graphscope/vineyard-dev:$BASE_VERSION AS analytical-java
 
 COPY --from=builder /home/graphscope/install /opt/graphscope/
 

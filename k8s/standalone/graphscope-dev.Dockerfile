@@ -1,8 +1,9 @@
 # the graphscope-dev image is based on graphscope-dev-base, and will install
 # libgrape-lite, vineyard, as well as necessary IO dependencies (e.g., hdfs, oss)
 
+ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
 ARG BASE_VERSION=latest
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev-base:$BASE_VERSION
+FROM $REGISTRY/graphscope/graphscope-dev-base:$BASE_VERSION
 
 USER root
 

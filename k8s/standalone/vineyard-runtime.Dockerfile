@@ -1,8 +1,9 @@
 # The vineyard-runtime image including all vineyard-related
 # dependencies that could graphscope interactive engine.
 
+ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
 ARG BASE_VERSION=v0.10.2
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/vineyard-dev:$BASE_VERSION AS builder
+FROM $REGISTRY/graphscope/vineyard-dev:$BASE_VERSION AS builder
 
 WORKDIR /root
 

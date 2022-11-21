@@ -1,5 +1,6 @@
+ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
 ARG BASE_VERSION=v0.10.2
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:$BASE_VERSION as builder
+FROM $REGISTRY/graphscope/graphscope-dev:$BASE_VERSION as builder
 
 ARG CI=false
 ENV CI=$CI
@@ -27,7 +28,7 @@ RUN sudo chown -R $(id -u):$(id -g) /home/graphscope/gs /home/graphscope/.m2 && 
 
 FROM centos:7.9.2009
 
-RUN yum install -y sudo java-1.8.0-openjdk-devel bind-utils \
+RUN yum install -y sudo java-1.8.0-openjdk bind-utils \
     && yum clean all \
     && rm -rf /var/cache/yum
 

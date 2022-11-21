@@ -1,9 +1,9 @@
 # the graphscope-dev-base image is based on manylinux2014, including all necessary
 # dependencies except vineyard for graphscope's wheel package.
-
+ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
 FROM vineyardcloudnative/manylinux-llvm:2014-11.0.0 AS llvm
 
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/manylinux2014:2022-08-16-53df7cb
+FROM $REGISTRY/graphscope/manylinux2014:2022-08-16-53df7cb
 
 # yum install dependencies
 RUN yum install -y perl which sudo wget libunwind-devel vim zip java-1.8.0-openjdk-devel msgpack-devel rapidjson-devel libuuid-devel && \

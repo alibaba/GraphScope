@@ -1,7 +1,8 @@
 # Learning engine
 
+ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
 ARG BASE_VERSION=v0.10.2
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:$BASE_VERSION AS builder
+FROM $REGISTRY/graphscope/graphscope-dev:$BASE_VERSION AS builder
 
 ADD . /home/graphscope/GraphScope
 
@@ -18,7 +19,7 @@ RUN cd /home/graphscope/GraphScope/ \
     && cp dist/*.whl /home/graphscope/install/
 
 ############### RUNTIME: GLE #######################
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/vineyard-runtime:$BASE_VERSION AS learning
+FROM $REGISTRY/graphscope/vineyard-runtime:$BASE_VERSION AS learning
 
 COPY --from=builder /home/graphscope/install /opt/graphscope
 

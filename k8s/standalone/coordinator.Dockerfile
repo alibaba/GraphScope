@@ -1,7 +1,8 @@
 # Coordinator of graphscope engines
 
+ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
 ARG BASE_VERSION=v0.10.2
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:$BASE_VERSION AS builder
+FROM $REGISTRY/graphscope/graphscope-dev:$BASE_VERSION AS builder
 
 ADD . /home/graphscope/GraphScope
 

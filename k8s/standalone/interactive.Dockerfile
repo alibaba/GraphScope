@@ -1,7 +1,8 @@
 # Interactive engine
 
+ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
 ARG BASE_VERSION=v0.10.2
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:$BASE_VERSION AS builder
+FROM $REGISTRY/graphscope/graphscope-dev:$BASE_VERSION AS builder
 
 ARG profile=release
 ENV profile=$profile
@@ -35,7 +36,7 @@ USER graphscope
 WORKDIR /home/graphscope
 
 ############### RUNTIME: executor #######################
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/vineyard-runtime:$BASE_VERSION AS executor
+FROM $REGISTRY/graphscope/vineyard-runtime:$BASE_VERSION AS executor
 
 # gaia_executor, giectl
 COPY --from=builder /home/graphscope/install/bin /opt/graphscope/bin

@@ -98,10 +98,10 @@ graphscope-darwin-py3:
 	cd $(WORKING_DIR)/../coordinator && \
 		export WITH_EXTRA_DATA=ON && \
 		rm -rf build dist/*.whl || true && \
-		sudo strip -s $(WORKING_DIR)/../analytical_engine/exported_symbols_osx.lds /opt/${REGISTRY}/$(DOCKER_ORG)/bin/grape_engine || true && \
-		sudo strip /opt/${REGISTRY}/$(DOCKER_ORG)/bin/gaia_executor && \
+		sudo strip -s $(WORKING_DIR)/../analytical_engine/exported_symbols_osx.lds /opt/graphscope/bin/grape_engine || true && \
+		sudo strip /opt/graphscope/bin/gaia_executor && \
 		export DYLD_LIBRARY_PATH=/usr/local/lib:$$DYLD_LIBRARY_PATH && \
-		install_name_tool -add_rpath /usr/local/lib /opt/${REGISTRY}/$(DOCKER_ORG)/bin/gaia_executor && \
+		install_name_tool -add_rpath /usr/local/lib /opt/graphscope/bin/gaia_executor && \
 		package_name=gs-include python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
 		rm -rf build && \
 		package_name=gs-apps python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
@@ -125,9 +125,9 @@ graphscope-manylinux2014-py3-nodocker:
 	export WITH_EXTRA_DATA=ON && \
 	cd $(WORKING_DIR)/../coordinator && \
 	rm -rf build dist/*.whl && \
-	sudo strip /opt/${REGISTRY}/$(DOCKER_ORG)/bin/grape_engine && \
-	sudo strip /opt/${REGISTRY}/$(DOCKER_ORG)/bin/gaia_executor && \
-	sudo strip /opt/${REGISTRY}/$(DOCKER_ORG)/lib/*.so && \
+	sudo strip /opt/graphscope/bin/grape_engine && \
+	sudo strip /opt/graphscope/bin/gaia_executor && \
+	sudo strip /opt/graphscope/lib/*.so && \
 	strip /tmp/gs/builtin/*/*.so && \
 	package_name=gs-include python3 setup.py bdist_wheel && \
 	rm -rf build && \
