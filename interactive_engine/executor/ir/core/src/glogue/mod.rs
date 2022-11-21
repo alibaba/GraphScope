@@ -13,11 +13,11 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::cmp::Ordering;
 use std::collections::HashMap;
 
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
-use std::cmp::Ordering;
 
 pub type PatternId = usize;
 pub type PatternLabelId = ir_common::LabelId;

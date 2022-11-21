@@ -62,7 +62,7 @@ impl FilterMapFuncGen for algebra_pb::PathStart {
             path_opt: unsafe { std::mem::transmute(self.path_opt) },
             result_opt: unsafe { std::mem::transmute(self.result_opt) },
         };
-        if pegasus::get_current_worker().index == 0 {
+        if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
             debug!("Runtime path start operator: {:?}", path_start_operator);
         }
         Ok(Box::new(path_start_operator))

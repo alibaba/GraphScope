@@ -147,7 +147,7 @@ impl SinkGen for SinkVineyardOp {
             )?;
             let graph_sink_encoder =
                 GraphSinkEncoder { graph_writer: Arc::new(Mutex::new(graph_writer)), sink_keys };
-            if pegasus::get_current_worker().index == 0 {
+            if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
                 debug!("Runtime sink graph operator: {:?}", graph_sink_encoder,);
             }
             Ok(Sinker::GraphSinker(graph_sink_encoder))

@@ -60,7 +60,7 @@ impl KeyFunctionGen for algebra_pb::GroupBy {
                 .map(|mapping| mapping.key.clone().unwrap())
                 .collect::<Vec<_>>(),
         )?;
-        if pegasus::get_current_worker().index == 0 {
+        if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
             debug!("Runtime group operator key_selector: {:?}", key_selector);
         }
         Ok(Box::new(key_selector))
@@ -70,7 +70,7 @@ impl KeyFunctionGen for algebra_pb::GroupBy {
 impl KeyFunctionGen for algebra_pb::Dedup {
     fn gen_key(self) -> FnGenResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
         let key_selector = KeySelector::with(self.keys)?;
-        if pegasus::get_current_worker().index == 0 {
+        if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
             debug!("Runtime dedup operator key_selector: {:?}", key_selector);
         }
         Ok(Box::new(key_selector))

@@ -51,7 +51,7 @@ impl MapFuncGen for algebra_pb::PathEnd {
             .map(|alias| alias.try_into())
             .transpose()?;
         let path_end = PathEndOperator { alias };
-        if pegasus::get_current_worker().index == 0 {
+        if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
             debug!("Runtime path end operator: {:?}", path_end);
         }
         Ok(Box::new(path_end))

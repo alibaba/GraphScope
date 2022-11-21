@@ -100,7 +100,7 @@ impl FlatMapFuncGen for algebra_pb::Unfold {
             .map(|alias| alias.try_into())
             .transpose()?;
         let unfold_operator = UnfoldOperator { tag, alias };
-        if pegasus::get_current_worker().index == 0 {
+        if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
             debug!("Runtime unfold operator {:?}", unfold_operator);
         }
         Ok(Box::new(unfold_operator))

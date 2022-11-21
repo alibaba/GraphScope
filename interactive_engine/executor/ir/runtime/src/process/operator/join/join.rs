@@ -24,7 +24,7 @@ use crate::process::record::{Record, RecordKey};
 impl JoinKeyGen<Record, RecordKey, Record> for algebra_pb::Join {
     fn gen_left_kv_fn(&self) -> FnGenResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
         let left_kv_fn = KeySelector::with(self.left_keys.clone())?;
-        if pegasus::get_current_worker().index == 0 {
+        if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
             debug!("Runtime join operator left_kv_fn {:?}", left_kv_fn);
         }
         Ok(Box::new(left_kv_fn))
@@ -32,7 +32,7 @@ impl JoinKeyGen<Record, RecordKey, Record> for algebra_pb::Join {
 
     fn gen_right_kv_fn(&self) -> FnGenResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
         let right_kv_fn = KeySelector::with(self.right_keys.clone())?;
-        if pegasus::get_current_worker().index == 0 {
+        if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
             debug!("Runtime join operator right_kv_fn {:?}", right_kv_fn);
         }
         Ok(Box::new(right_kv_fn))
@@ -40,7 +40,7 @@ impl JoinKeyGen<Record, RecordKey, Record> for algebra_pb::Join {
 
     fn get_join_kind(&self) -> JoinKind {
         let join_kind = unsafe { ::std::mem::transmute(self.kind) };
-        if pegasus::get_current_worker().index == 0 {
+        if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
             debug!("Runtime join operator join_kind {:?}", join_kind);
         }
         join_kind

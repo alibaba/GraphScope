@@ -62,25 +62,19 @@ impl SourceOperator {
                     if !global_ids.is_empty() {
                         // query by global_ids
                         source_op.set_src(global_ids, job_workers, partitioner)?;
-                        if pegasus::get_current_worker().index == 0 {
-                            debug!("Runtime source op of indexed scan of global ids {:?}", source_op);
-                        }
+                        debug!("Runtime source op of indexed scan of global ids {:?}", source_op);
                     } else {
                         // query by indexed_scan
                         let primary_key_values = <Vec<(NameOrId, Object)>>::try_from(ip2)?;
                         source_op.primary_key_values = Some(PKV::from(primary_key_values));
                         source_op.set_partitions(job_workers, worker_index, partitioner)?;
-                        if pegasus::get_current_worker().index == 0 {
-                            debug!("Runtime source op of indexed scan {:?}", source_op);
-                        }
+                        debug!("Runtime source op of indexed scan {:?}", source_op);
                     }
                     Ok(source_op)
                 } else {
                     let mut source_op = SourceOperator::try_from(scan)?;
                     source_op.set_partitions(job_workers, worker_index, partitioner)?;
-                    if pegasus::get_current_worker().index == 0 {
-                        debug!("Runtime source op of scan {:?}", source_op);
-                    }
+                    debug!("Runtime source op of scan {:?}", source_op);
                     Ok(source_op)
                 }
             }

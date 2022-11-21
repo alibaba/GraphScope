@@ -252,7 +252,7 @@ impl SinkGen for DefaultSinkOp {
             sink_keys,
             schema_map: if schema_map.is_empty() { None } else { Some(schema_map) },
         };
-        if pegasus::get_current_worker().index == 0 {
+        if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
             debug!("Runtime sink operator: {:?}", record_sinker);
         }
         Ok(Sinker::DefaultSinker(record_sinker))
