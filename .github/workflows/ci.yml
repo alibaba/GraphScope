@@ -603,13 +603,13 @@ jobs:
           minikube start --base-image='registry-vpc.cn-hongkong.aliyuncs.com/graphscope/kicbase:v0.0.30' \
                          --cpus='12' --memory='32000mb' --disk-size='40000mb' \
                          --mount=true --mount-string="${GS_TEST_DIR}:${GS_TEST_DIR}"
-          minikube image load registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${SHORT_SHA}
+          minikube image load graphscope/graphscope:${SHORT_SHA}
 
           export PYTHONPATH=${GITHUB_WORKSPACE}/python:${PYTHONPATH}
           cd ${GITHUB_WORKSPACE}/interactive_engine && mvn clean install --quiet -DskipTests -Drust.compile.skip=true -P graphscope,graphscope-assembly
           cd ${GITHUB_WORKSPACE}/interactive_engine/tests
-          # ./function_test.sh 8111 1 registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${SHORT_SHA}
-          ./function_test.sh 8112 2 registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${SHORT_SHA}
+          # ./function_test.sh 8111 1 graphscope/graphscope:${SHORT_SHA}
+          ./function_test.sh 8112 2 graphscope/graphscope:${SHORT_SHA}
 
   k8s-test:
     runs-on: [self-hosted, ubuntu2004]
@@ -640,10 +640,9 @@ jobs:
           tar -zxf ./wheel-${{ github.sha }}/client.tar.gz
           tar -zxf ./wheel-${{ github.sha }}/graphscope.tar.gz
 
-          # build graphscope image
           cd ${GITHUB_WORKSPACE}
           make graphscope-image
-          docker tag registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${SHORT_SHA} ${{ env.GS_IMAGE }}:${SHORT_SHA}
+          docker tag graphscope/graphscope:${SHORT_SHA} ${{ env.GS_IMAGE }}:${SHORT_SHA}
 
           cd ${GITHUB_WORKSPACE}/python
           pip3 install -r requirements.txt

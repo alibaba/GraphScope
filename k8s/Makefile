@@ -2,8 +2,6 @@ MKFILE_PATH 			:= $(abspath $(lastword $(MAKEFILE_LIST)))
 WORKING_DIR 			:= $(dir $(MKFILE_PATH))
 SHORT_SHA   			:= $(shell git rev-parse --short HEAD)
 
-DOCKER_ORG       		= graphscope
-
 .PHONY: submodule graphscope push clean
 
 ifeq ($(REGISTRY),)
@@ -40,35 +38,34 @@ submodule:
 graphscope-image: submodule
 	docker build --progress=$(BUILD_PROGRESS) \
 				 --build-arg CI=${CI} \
-				 -t ${REGISTRY}/$(DOCKER_ORG)/graphscope:${SHORT_SHA} \
+				 -t graphscope/graphscope:${SHORT_SHA} \
 				 --network=host \
 				 -f $(WORKING_DIR)/graphscope.Dockerfile ..
 
 jupyter-image:
 	docker build --progress=$(BUILD_PROGRESS) \
 				 --build-arg CI=${CI} \
-				 -t ${REGISTRY}/$(DOCKER_ORG)/jupyter:${SHORT_SHA} \
+				 -t graphscope/jupyter:${SHORT_SHA} \
 				 --network=host \
 				 -f $(WORKING_DIR)/jupyter.Dockerfile ..
 
 dataset-image:
 	docker build --progress=$(BUILD_PROGRESS) \
 				 --build-arg CI=${CI} \
-				 -t ${REGISTRY}/$(DOCKER_ORG)/dataset:${SHORT_SHA} \
+				 -t graphscope/dataset:${SHORT_SHA} \
 				 --network=host \
 				 -f $(WORKING_DIR)/dataset.Dockerfile ..
 
 graphscope-store-image:
-	docker pull ${REGISTRY}/$(DOCKER_ORG)/graphscope-dev:${VINEYARD_VERSION}
 	docker build --progress=$(BUILD_PROGRESS) \
                  --build-arg profile=${PROFILE} \
-                 -t ${REGISTRY}/$(DOCKER_ORG)/graphscope-store:${SHORT_SHA} \
+                 -t graphscope/graphscope-store:${SHORT_SHA} \
                  --network=host \
                  -f $(WORKING_DIR)/graphscope-store.Dockerfile ..
 
 graphscope-jupyter-manylinux2014-py3:
 	docker run --rm -it -v $(WORKING_DIR)/..:/work \
-		   ${REGISTRY}/$(DOCKER_ORG)/graphscope-dev:${VERSION} \
+		   ${REGISTRY}/graphscope/graphscope-dev:${VERSION} \
 		   bash -c 'pip3 install graphscope-client -U && \
 					cd /work/python/jupyter/graphscope && \
 					python3 setup.py bdist_wheel'
@@ -144,9 +141,9 @@ graphscope-manylinux2014-py3-nodocker:
 	done
 
 graphscope-manylinux2014-py3:
-	docker pull ${REGISTRY}/$(DOCKER_ORG)/graphscope-dev:${VINEYARD_VERSION}
+	docker pull ${REGISTRY}/graphscope/graphscope-dev:${VINEYARD_VERSION}
 	docker run --rm -v $(WORKING_DIR)/..:/work \
-		${REGISTRY}/$(DOCKER_ORG)/graphscope-dev:${VINEYARD_VERSION} \
+		${REGISTRY}/graphscope/graphscope-dev:${VINEYARD_VERSION} \
 		bash -c 'source ~/.bashrc && \
 			cd /work/k8s && \
 			make graphscope-manylinux2014-py3-nodocker'
@@ -191,13 +188,13 @@ graphscope-client-darwin-py3:
 		done
 
 graphscope-client-manylinux2014-py3:
-	docker pull ${REGISTRY}/$(DOCKER_ORG)/graphscope-dev:${VINEYARD_VERSION}
+	docker pull ${REGISTRY}/graphscope/graphscope-dev:${VINEYARD_VERSION}
 	docker run --rm -v $(WORKING_DIR)/..:/work \
-		${REGISTRY}/$(DOCKER_ORG)/graphscope-dev:${VINEYARD_VERSION} \
+		${REGISTRY}/graphscope/graphscope-dev:${VINEYARD_VERSION} \
 		bash -c 'cd /work/k8s && make graphscope-client-manylinux2014-py3-nodocker'
 
 push:
-	docker push ${REGISTRY}/$(DOCKER_ORG)/graphscope:${VERSION}
+	docker push ${REGISTRY}/graphscope/graphscope:${VERSION}
 
 clean:
 	docker ps -qa | xargs $(XARGS_EMPTY_FLAG) docker rm -f
