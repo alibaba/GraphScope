@@ -6,7 +6,12 @@ $(warning WARNING: No docker user found, using graphscope)
 DOCKER_ORG       		= graphscope
 endif
 
-.PHONY:  image-vineyard-runtime image-coordinator image-analytical image-analytical-java image-interactive-frontend image-interactive-executor image-interactive-experimental image-learning push clean
+.PHONY:  image-graphscope-dev-base image-graphscope-dev image-vineyard-dev image-vineyard-runtime
+.PHONY:  image-coordinator
+.PHONY:  image-analytical image-analytical-java 
+.PHONY:  image-interactive-frontend image-interactive-executor image-interactive-experimental
+.PHONY:  image-learning
+.PHONY:  push clean
 
 ifeq ($(REGISTRY),)
     REGISTRY := registry.cn-hongkong.aliyuncs.com
@@ -15,12 +20,21 @@ endif
 VERSION ?= latest
 PROFILE ?= release
 
-RPC_TARGET ?= start_rpc_server
-ARTIFACTS_DIR ?= .
+image-graphscope-dev-base:
+	cd $(WORKING_DIR) && docker build --squash -t ${REGISTRY}/$(DOCKER_ORG)/graphscope-dev-base:${VERSION} \
+		-f $(WORKING_DIR)/graphscope-dev-base.Dockerfile .
+
+image-graphscope-dev:
+	cd $(WORKING_DIR) && docker build --squash -t ${REGISTRY}/$(DOCKER_ORG)/graphscope-dev:${VERSION} \
+		-f $(WORKING_DIR)/graphscope-dev.Dockerfile .
+
+image-vineyard-dev:
+	cd $(WORKING_DIR) && docker build --squash -t ${REGISTRY}/$(DOCKER_ORG)/vineyard-dev:${VERSION} \
+		-f $(WORKING_DIR)/vineyard-dev.Dockerfile .
 
 image-vineyard-runtime:
 	cd $(WORKING_DIR) && docker build --squash -t ${REGISTRY}/$(DOCKER_ORG)/vineyard-runtime:${VERSION} \
-		-f $(WORKING_DIR)/vineyard.Dockerfile .
+		-f $(WORKING_DIR)/vineyard-runtime.Dockerfile .
 
 image-coordinator:
 	cd $(WORKING_DIR)/../.. && docker build --target coordinator -t ${REGISTRY}/$(DOCKER_ORG)/coordinator:${VERSION} -f $(WORKING_DIR)/coordinator.Dockerfile .
@@ -41,25 +55,8 @@ image-interactive-executor:
 image-interactive-experimental:
 	cd $(WORKING_DIR)/../.. && docker build --target experimental -t ${REGISTRY}/$(DOCKER_ORG)/interactive-experimental:${VERSION} -f $(WORKING_DIR)/interactive-experimental.Dockerfile .
 
-artifacts-interactive-experimental:
-	cd $(WORKING_DIR)/../../interactive_engine/compiler && make build rpc.target=$(RPC_TARGET)
-	cd $(WORKING_DIR)/../.. \
-		&& tar -cvzf gie-artifacts.tar.gz interactive_engine/compiler/target/libs \
-		interactive_engine/compiler/target/compiler-1.0-SNAPSHOT.jar \
-		interactive_engine/compiler/conf \
-		interactive_engine/compiler/set_properties.sh \
-		interactive_engine/executor/ir/target/release/libir_core.so \
-		interactive_engine/executor/ir/target/release/$(RPC_TARGET)
-
-image-interactive-experimental-local-artifacts:
-	cd $(WORKING_DIR)/../.. && docker build --target experimental \
-		--build-arg ARTIFACTS_DIR=$(ARTIFACTS_DIR) \
-		-t ${REGISTRY}/$(DOCKER_ORG)/interactive-experimental:${VERSION} \
-		-f $(WORKING_DIR)/interactive-experimental-local-artifacts.Dockerfile .
-
 image-learning:
 	cd $(WORKING_DIR)/../.. && docker build --target learning -t ${REGISTRY}/$(DOCKER_ORG)/learning:${VERSION} -f $(WORKING_DIR)/learning.Dockerfile .
-
 
 
 push:
@@ -72,6 +69,5 @@ push:
 	docker push ${REGISTRY}/$(DOCKER_ORG)/learning:${VERSION}
 
 clean:
-	docker ps -qa | xargs $(XARGS_EMPTY_FLAG) docker rm -f
 	docker images -f "dangling=true" -q | xargs $(XARGS_EMPTY_FLAG) docker rmi -f
 

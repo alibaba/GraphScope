@@ -1,15 +1,14 @@
 # Interactive engine
 
 ARG BASE_VERSION=v0.10.2
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:$BASE_VERSION AS builder
+FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:$BASE_VERSION AS builder
 
 ARG profile=release
 ENV profile=$profile
 ADD . /home/graphscope/GraphScope
 
-ENV PATH="/home/graphscope/.cargo/bin:$PATH"
-
 RUN sudo chown -R graphscope:graphscope /home/graphscope/GraphScope
+ENV PATH=$PATH:/opt/maven/apache-maven-3.8.6/bin
 RUN cd /home/graphscope/GraphScope/ \
     && mkdir /home/graphscope/install \
     && make gie-install BUILD_TYPE="$profile" INSTALL_PREFIX=/home/graphscope/install
@@ -23,7 +22,10 @@ COPY --from=builder /home/graphscope/install/conf /opt/graphscope/conf
 # jars, libir_core.so
 COPY --from=builder /home/graphscope/install/lib /opt/graphscope/lib
 
-RUN yum install -y java-1.8.0-openjdk-devel \
+ENV GRAPHSCOPE_HOME=/opt/graphscope LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib
+
+
+RUN yum install -y java-1.8.0-openjdk \
     && yum clean all \
     && rm -rf /var/cache/yum
 
@@ -39,6 +41,8 @@ FROM registry.cn-hongkong.aliyuncs.com/graphscope/vineyard-runtime:$BASE_VERSION
 COPY --from=builder /home/graphscope/install/bin /opt/graphscope/bin
 # vineyard.executor.properties, log configuration files
 COPY --from=builder /home/graphscope/install/conf /opt/graphscope/conf
+
+ENV GRAPHSCOPE_HOME=/opt/graphscope LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib
 
 ENV RUST_BACKTRACE=1
 

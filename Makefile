@@ -23,7 +23,7 @@ BUILD_TEST				?= OFF
 # build java sdk option
 ENABLE_JAVA_SDK			?= ON
 
-# PREFIX is environment variable, but if it is not set, then set default value
+# INSTALL_PREFIX is environment variable, but if it is not set, then set default value
 ifeq ($(INSTALL_PREFIX),)
     INSTALL_PREFIX := /opt/graphscope
 endif
@@ -88,6 +88,7 @@ coordinator: client
 .PHONY: gae-install gie-install gle-install
 
 gae-install: gae
+	mkdir -p $(INSTALL_PREFIX)
 	$(MAKE) -C $(GAE_BUILD_DIR) install
 	install $(K8S_DIR)/kube_ssh $(INSTALL_PREFIX)/bin/
 	install -d $(INSTALL_PREFIX)/lib/cmake/graphscope-analytical/cmake
@@ -108,6 +109,7 @@ $(GAE_BUILD_DIR)/grape_engine:
 	$(MAKE) -j$(NUMPROC)
 
 gie-install: gie
+	mkdir -p $(INSTALL_PREFIX)
 	tar -xf $(GIE_DIR)/assembly/target/graphscope.tar.gz --strip-components 1 -C $(INSTALL_PREFIX)
 gie: $(GIE_DIR)/assembly/target/graphscope.tar.gz
 
@@ -117,6 +119,7 @@ $(GIE_DIR)/assembly/target/graphscope.tar.gz:
 	mvn package -DskipTests -Drust.compile.mode=$(BUILD_TYPE) -P graphscope,graphscope-assembly --quiet
 
 gle-install: gle
+	mkdir -p $(INSTALL_PREFIX)
 	$(MAKE) -C $(GLE_BUILD_DIR) install
 gle: $(GLE_DIR)/built/lib/libgraphlearn_shared.$(SUFFIX)
 
