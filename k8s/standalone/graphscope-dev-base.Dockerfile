@@ -18,10 +18,11 @@ COPY --from=llvm /opt/llvm11.0.0 /opt/llvm11
 ENV LLVM11_HOME=/opt/llvm11
 ENV LIBCLANG_PATH=$LLVM11_HOME/lib LLVM_CONFIG_PATH=$LLVM11_HOME/bin/llvm-config
 
+COPY build_scripts /build_scripts
+
 # COPY ./download /download
 RUN mkdir /download
 
-COPY build_scripts /build_scripts
 RUN export WORKDIR=/download && bash /build_scripts/build_vineyard_dependencies.sh
 RUN export WORKDIR=/download && bash /build_scripts/build_patchelf.sh
 RUN export WORKDIR=/download && bash /build_scripts/build_maven.sh

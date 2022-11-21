@@ -9,7 +9,7 @@ cd ${WORKDIR} && \
     git clone -b master https://github.com/alibaba/libgrape-lite.git --depth=1 && \
     cd libgrape-lite && \
     cmake . && \
-    make -j`nproc` && \
+    make -j$(nproc) && \
     make install && \
     rm -rf ${WORKDIR}/libgrape-lite
 
@@ -22,7 +22,7 @@ cd ${WORKDIR} && \
     cmake . -DCMAKE_INSTALL_PREFIX=/usr/local \
         -DBUILD_VINEYARD_TESTS=OFF \
         -DBUILD_VINEYARD_PYTHON_BINDINGS=ON && \
-    make -j`nproc` && \
+    make -j$(nproc) && \
     make install && \
     strip /usr/local/bin/vineyard* /usr/local/lib/libvineyard* && \
     popd && \

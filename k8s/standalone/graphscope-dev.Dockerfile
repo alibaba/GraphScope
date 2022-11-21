@@ -6,9 +6,10 @@ FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev-base:$BASE_VERS
 
 USER root
 
+COPY build_scripts/build_vineyard.sh /build_scripts/build_vineyard.sh
+
 # COPY ./download /download
 RUN mkdir /download
-COPY build_scripts/build_vineyard.sh /build_scripts/build_vineyard.sh
 
 RUN export WORKDIR=/download && bash /build_scripts/build_vineyard.sh
 

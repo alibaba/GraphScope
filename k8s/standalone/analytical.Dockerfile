@@ -8,27 +8,34 @@ ADD . /home/graphscope/GraphScope
 RUN sudo chown -R graphscope:graphscope /home/graphscope/GraphScope
 RUN cd /home/graphscope/GraphScope/ \
     && mkdir /home/graphscope/install \
-    && make gae-install ENABLE_JAVA_SDK=OFF INSTALL_PREFIX=/home/graphscope/install \
-    && make clean \
-    && mkdir /home/graphscope/install-with-java \
-    && make gae-install ENABLE_JAVA_SDK=ON INSTALL_PREFIX=/home/graphscope/install-with-java
+    && make gae-install ENABLE_JAVA_SDK=OFF INSTALL_PREFIX=/home/graphscope/install
 
 ############### RUNTIME: GAE #######################
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/vineyard-runtime:$BASE_VERSION AS analytical
+FROM registry.cn-hongkong.aliyuncs.com/graphscope/vineyard-dev:$BASE_VERSION AS analytical
 
 COPY --from=builder /home/graphscope/install /opt/graphscope/
 
 ENV GRAPHSCOPE_HOME=/opt/graphscope LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib
 
-
 USER graphscope
 WORKDIR /home/graphscope
 
 ############### RUNTIME: GAE-JAVA #######################
-FROM vineyardcloudnative/manylinux-llvm:2014-11.0.0 AS llvm
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/vineyard-runtime:$BASE_VERSION AS analytical-java
+FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:$BASE_VERSION AS builder
 
-COPY --from=builder /home/graphscope/install-with-java /opt/graphscope/
+ADD . /home/graphscope/GraphScope
+
+RUN sudo chown -R graphscope:graphscope /home/graphscope/GraphScope
+RUN cd /home/graphscope/GraphScope/ \
+    && mkdir /home/graphscope/install \
+    && mkdir /home/graphscope/install-with-java \
+    && make gae-install ENABLE_JAVA_SDK=ON INSTALL_PREFIX=/home/graphscope/install
+
+FROM vineyardcloudnative/manylinux-llvm:2014-11.0.0 AS llvm
+
+FROM registry.cn-hongkong.aliyuncs.com/graphscope/vineyard-dev:$BASE_VERSION AS analytical-java
+
+COPY --from=builder /home/graphscope/install /opt/graphscope/
 
 ENV GRAPHSCOPE_HOME=/opt/graphscope LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib
 

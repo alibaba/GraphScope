@@ -17,7 +17,7 @@ cd ${WORKDIR} && \
     tar zxvf openmpi-4.1.4.tar.gz && \
     cd openmpi-4.1.4 && \
     ./configure --enable-mpi-cxx --disable-dlopen --prefix=/usr/local  && \
-    make -j`nproc` && \
+    make -j$(nproc) && \
     make install && \
     rm -rf ${WORKDIR}/openmpi-4.1.4 ${WORKDIR}/openmpi-4.1.4.tar.gz
 
@@ -28,7 +28,7 @@ cd ${WORKDIR} && \
     tar zxvf v0.6.0.tar.gz && \
     cd glog-0.6.0 && \
     cmake . -DBUILD_SHARED_LIBS=ON && \
-    make -j`nproc` && \
+    make -j$(nproc) && \
     make install && \
     rm -rf ${WORKDIR}/v0.6.0.tar.gz ${WORKDIR}/glog-0.6.0
 
@@ -77,7 +77,7 @@ cd ${WORKDIR} && \
         -DARROW_JEMALLOC=OFF \
         -DARROW_BUILD_SHARED=ON \
         -DARROW_BUILD_STATIC=OFF && \
-    make -j`nproc` && \
+    make -j$(nproc) && \
     make install && \
     rm -rf ${WORKDIR}/arrow-apache-arrow-9.0.0 ${WORKDIR}/apache-arrow-9.0.0.tar.gz
 
@@ -88,7 +88,7 @@ cd ${WORKDIR} && \
     tar zxvf v2.2.2.tar.gz && \
     cd gflags-2.2.2 && \
     cmake . -DBUILD_SHARED_LIBS=ON && \
-    make -j`nproc` && \
+    make -j$(nproc) && \
     make install && \
     rm -rf ${WORKDIR}/v2.2.2.tar.gz ${WORKDIR}/gflags-2.2.2
 
@@ -109,7 +109,7 @@ cd ${WORKDIR} && \
     tar zxvf OpenSSL_1_1_1h.tar.gz && \
     cd openssl-OpenSSL_1_1_1h && \
     ./config -fPIC -shared && \
-    make -j`nproc` && \
+    make -j$(nproc) && \
     make install && \
     rm -rf ${WORKDIR}/OpenSSL_1_1_1h.tar.gz ${WORKDIR}/openssl-OpenSSL_1_1_1h
 
@@ -120,7 +120,7 @@ cd ${WORKDIR} && \
     tar zxvf v1.2.11.tar.gz && \
     cd zlib-1.2.11 && \
     cmake . -DBUILD_SHARED_LIBS=ON && \
-    make -j`nproc` && \
+    make -j$(nproc) && \
     make install && \
     rm -rf ${WORKDIR}/v1.2.11.tar.gz ${WORKDIR}/zlib-1.2.11
 
@@ -131,7 +131,7 @@ cd ${WORKDIR} && \
     tar zxvf protobuf-all-21.9.tar.gz && \
     cd protobuf-21.9 && \
     ./configure --enable-shared --disable-static && \
-    make -j`nproc` && \
+    make -j$(nproc) && \
     make install && \
     ldconfig && \
     rm -rf ${WORKDIR}/protobuf-all-21.9.tar.gz ${WORKDIR}/protobuf-21.9
@@ -158,6 +158,6 @@ cd ${WORKDIR} && \
         -DgRPC_SSL_PROVIDER=package \
         -DOPENSSL_ROOT_DIR=/usr/local \
         -DCMAKE_CXX_FLAGS="-fpermissive" && \
-    make -j`nproc` && \
+    make -j$(nproc) && \
     make install && \
     rm -rf ${WORKDIR}/grpc

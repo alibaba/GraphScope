@@ -603,13 +603,13 @@ jobs:
           minikube start --base-image='registry-vpc.cn-hongkong.aliyuncs.com/graphscope/kicbase:v0.0.30' \
                          --cpus='12' --memory='32000mb' --disk-size='40000mb' \
                          --mount=true --mount-string="${GS_TEST_DIR}:${GS_TEST_DIR}"
-          minikube image load graphscope/graphscope:${SHORT_SHA}
+          minikube image load registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${SHORT_SHA}
 
           export PYTHONPATH=${GITHUB_WORKSPACE}/python:${PYTHONPATH}
           cd ${GITHUB_WORKSPACE}/interactive_engine && mvn clean install --quiet -DskipTests -Drust.compile.skip=true -P graphscope,graphscope-assembly
           cd ${GITHUB_WORKSPACE}/interactive_engine/tests
-          # ./function_test.sh 8111 1 graphscope/graphscope:${SHORT_SHA}
-          ./function_test.sh 8112 2 graphscope/graphscope:${SHORT_SHA}
+          # ./function_test.sh 8111 1 registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${SHORT_SHA}
+          ./function_test.sh 8112 2 registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${SHORT_SHA}
 
   k8s-test:
     runs-on: [self-hosted, ubuntu2004]
@@ -643,7 +643,7 @@ jobs:
           # build graphscope image
           cd ${GITHUB_WORKSPACE}
           make graphscope-image
-          docker tag graphscope/graphscope:${SHORT_SHA} ${{ env.GS_IMAGE }}:${SHORT_SHA}
+          docker tag registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:${SHORT_SHA} ${{ env.GS_IMAGE }}:${SHORT_SHA}
 
           cd ${GITHUB_WORKSPACE}/python
           pip3 install -r requirements.txt
@@ -747,8 +747,6 @@ jobs:
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: true
 
       - uses: actions/cache@v3
         with:
@@ -772,13 +770,14 @@ jobs:
           source ~/.bashrc
           export RPC_TARGET=start_rpc_server_k8s
           cd interactive_engine/compiler && make build rpc.target=${RPC_TARGET}
+          cd ${GITHUB_WORKSPACE}
           tar -czf artifacts.tar.gz interactive_engine/compiler/target/libs \
             interactive_engine/compiler/target/compiler-1.0-SNAPSHOT.jar \
             interactive_engine/compiler/conf \
             interactive_engine/compiler/set_properties.sh \
             interactive_engine/executor/ir/target/release/libir_core.so \
             interactive_engine/executor/ir/target/release/${RPC_TARGET}
-            
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
