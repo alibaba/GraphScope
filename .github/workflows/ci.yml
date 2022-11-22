@@ -88,10 +88,12 @@ jobs:
         sudo curl -L https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-22538c65/clang-format-8_linux-amd64 --output /usr/bin/clang-format
         sudo chmod +x /usr/bin/clang-format
 
-        # run format
+        # collect the source files
         cd analytical_engine/
-        find ./apps ./benchmarks ./core ./frame ./misc ./test  -name "*.h" | xargs clang-format -i --style=file
-        find ./apps ./benchmarks ./core ./frame ./misc ./test  -name "*.cc" | xargs clang-format -i --style=file
+        files=$(find ./apps ./benchmarks ./core ./frame ./misc ./test \( -name "*.h" -o -name "*.cc" \))
+
+        # run format
+        clang-format -i --style=file $(echo $files)
 
         # validate format
         function prepend() { while read line; do echo "${1}${line}"; done; }
@@ -113,6 +115,22 @@ jobs:
             echo "|"
             echo "|    https://github.com/muttleyxd/clang-tools-static-binaries/releases"
             echo "|"
+            echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+            exit -1
+        fi
+
+        # validate cpplint
+        function ec() { [[ "$1" == "-h" ]] && { shift && eval $* > /dev/null 2>&1; ec=$?; echo $ec; } || eval $*; ec=$?; }
+
+        # run cpplint
+        ec ./misc/cpplint.py $(echo $files)
+        if [[ "$ec" != "0" ]]; then
+            echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+            echo "| cpplint failures found! Run: "
+            echo "|"
+            echo "|    make gsa_cpplint"
+            echo "|"
+            echo "| to fix this error."
             echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
             exit -1
         fi
