@@ -116,14 +116,14 @@ into a distributed execution plan that is partitioned across multiple compute no
 Each partition runs on a separate compute node, managed by a local executor, 
 that schedules and executes computation on a multi-core server. 
 The engines can be deployed and work together as a full-fledged GraphScope. 
-In this form, GraphScope is able to handle complex and diversfied workflows, 
+In this form, GraphScope is able to handle complex and diversified workflows, 
 including any type of analytics, interactive, and graph neural networks (GNN) computations and their combinations. 
 Better still, the engines can be deployed separately, and work standalone for a specific kind of tasks.
 
 
 Storage layer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-GraphScope defines an unified storage interface for accessing and managing graph data.
+GraphScope defines a unified storage interface for accessing and managing graph data.
 This interface allows the storage layer to be flexible and extensible and can be easily plugged in with different storage backends. 
 GraphScope ships with many kinds of graph stores. e.g., vineyard, 
 an in-memory storage that maintains an (intermediate) data object partitioned across a cluster 
@@ -208,7 +208,7 @@ GraphScope for learning
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 GNNs have been successfully applied in many real-world applications, 
-such as ecommerce recommendation systems and finatial risk control platforms, where billion-scale graphs are very common. 
+such as ecommerce recommendation systems and financial risk control platforms, where billion-scale graphs are quite common. 
 The learning engine in GraphScope (GLE) can efficiently support distributed GNN training on large-scale graphs in such industrial scenarios. 
 GLE provides both Python and C++ interfaces for graph sampling operations and a gremlin-like GSL (Graph Sampling Language) interface to ease the definition of sampling queries. 
 For GNN models, GLE provides a set of paradigms and processes for model development, 
