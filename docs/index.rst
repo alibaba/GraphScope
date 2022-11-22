@@ -42,8 +42,8 @@ First, the graph is constructed in a data-parallel system from the external stor
 Second, some mining algorithms such as k-clique or k-core are performed to extract suspicious patterns. 
 Next, a label propagation algorithm is applied to find a set of vertices as possible fraudulent entities. 
 Then, a graph neural networks (GNN) is used to conduct k-hop neighborhood sampling for each vertex, 
-and the result is fed into a deep learning framework (e.g., TensorFlow) to predict whether an entity is fraudulent, 
-based on a GNN model. 
+and the result is fed into a deep learning framework (e.g., TensorFlow) 
+to predict whether an entity is fraudulent, based on a GNN model. 
 Finally, the results would be presented in a visualized WebUI with the ability 
 to interactively explore the results and the graph for manual verification.
 
