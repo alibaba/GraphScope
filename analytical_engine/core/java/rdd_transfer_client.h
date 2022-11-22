@@ -13,22 +13,23 @@
  * limitations under the License.
  */
 
-#ifndef ANALYTICAL_ENGINE_CORE_JAVA_GRAPHX_RDD_CLIENT_H_
-#define ANALYTICAL_ENGINE_CORE_JAVA_GRAPHX_RDD_CLIENT_H_
+#ifndef ANALYTICAL_ENGINE_CORE_JAVA_RDD_TRANSFER_CLIENT_H_
+#define ANALYTICAL_ENGINE_CORE_JAVA_RDD_TRANSFER_CLIENT_H_
 
 #include <mpi.h>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <vector>
 
-#include <google/protobuf/empty.pb.h>
-#include <grpc/grpc.h>
-#include <grpcpp/channel.h>
-#include <grpcpp/client_context.h>
-#include <grpcpp/create_channel.h>
-#include <grpcpp/security/credentials.h>
+#include "google/protobuf/empty.pb.h"
+#include "grpc/grpc.h"
+#include "grpcpp/channel.h"
+#include "grpcpp/client_context.h"
+#include "grpcpp/create_channel.h"
+#include "grpcpp/security/credentials.h"
 
 #include "arrow/array.h"
 #include "arrow/array/builder_binary.h"
@@ -36,7 +37,7 @@
 #include "arrow/table.h"
 #include "arrow/type.h"
 
-#include "rdd.grpc.pb.h"
+#include "rdd.grpc.pb.h"  // NOLINT(build/include_subdir)
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -60,7 +61,7 @@ namespace gs {
 
 class RDDReaderClient {
  public:
-  RDDReaderClient(std::shared_ptr<Channel> channel)
+  explicit RDDReaderClient(std::shared_ptr<Channel> channel)
       : stub_(GetArray::NewStub(channel)), part_id_(0) {
     vertex_schema_vector_ = {arrow::field("ID", arrow::int64()),
                              arrow::field("VALUE", arrow::utf8())};
@@ -216,3 +217,5 @@ class RDDReaderClient {
 };
 
 }  // namespace gs
+
+#endif  // ANALYTICAL_ENGINE_CORE_JAVA_RDD_TRANSFER_CLIENT_H_

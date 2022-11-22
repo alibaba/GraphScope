@@ -16,8 +16,11 @@
 #ifndef ANALYTICAL_ENGINE_CORE_JAVA_GRAPHX_CLIENT_H_
 #define ANALYTICAL_ENGINE_CORE_JAVA_GRAPHX_CLIENT_H_
 
-#include "graphx_loader.h"
-#include "rdd_transfer_client.h"
+#include <memory>
+#include <string>
+
+#include "core/java/graphx_loader.h"
+#include "core/java/rdd_transfer_client.h"
 
 namespace gs {
 
@@ -87,4 +90,5 @@ class GraphXClient
 };
 
 }  // namespace gs
-#endif
+
+#endif  // ANALYTICAL_ENGINE_CORE_JAVA_GRAPHX_CLIENT_H_

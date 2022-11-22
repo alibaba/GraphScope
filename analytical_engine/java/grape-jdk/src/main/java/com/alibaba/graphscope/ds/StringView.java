@@ -10,7 +10,7 @@ import com.alibaba.graphscope.utils.JNILibraryName;
 
 @FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
 @CXXHead("arrow/util/string_view.h")
-@FFITypeAlias("arrow::util::string_view")
+@FFITypeAlias("vineyard::arrow_string_view")
 public interface StringView extends FFIStringProvider, FFIPointer {
 
     long data();

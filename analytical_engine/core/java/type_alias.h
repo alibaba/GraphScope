@@ -145,7 +145,7 @@ struct ConvertToArrowType {
 
 /** Add one specialization for string_view, we will need this in Java FFI.*/
 template <>
-struct ConvertToArrowType<arrow::util::string_view> {
+struct ConvertToArrowType<vineyard::arrow_string_view> {
   using BuilderType =
       typename vineyard::ConvertToArrowType<std::string>::BuilderType;
   using ArrayType =

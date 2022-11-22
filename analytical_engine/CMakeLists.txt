@@ -196,10 +196,6 @@ endif ()
 find_package(libgrapelite REQUIRED)
 include_directories(${LIBGRAPELITE_INCLUDE_DIRS})
 
-find_package(vineyard 0.10.2 REQUIRED)
-include_directories(${VINEYARD_INCLUDE_DIRS})
-add_compile_options(-DENABLE_SELECTOR)
-
 find_package(Protobuf REQUIRED)
 include_directories(${Protobuf_INCLUDE_DIRS})
 
@@ -220,14 +216,31 @@ else()
     set(GRPC_LIBRARIES ${GPR_LIBRARY} ${GRPC_LIBRARY} ${GRPC_GRPC++_LIBRARY})
 endif()
 
-# Make sure FindArrow is behind FindGRPC
-# fixes the "c-ares::cares_shared" target already exists.
-include("cmake/FindArrow.cmake")
-if (ARROW_FOUND)
-    include_directories("${ARROW_INCLUDE_DIR}")
-else ()
-    message(FATAL_ERROR "arrow not found")
-endif ()
+# Make sure FindArrow is behind FindGRPC to address the "'c-ares::cares_shared' target already exists" error.
+find_package(Arrow QUIET)
+if(Arrow_FOUND)
+    set(ARROW_INCLUDE_DIR)
+    if (TARGET arrow_shared)
+        set(ARROW_SHARED_LIB arrow_shared)
+    endif()
+    if (TARGET arrow_static)
+        set(ARROW_STATIC_LIB arrow_static)
+    endif()
+else()
+    include("cmake/FindArrow.cmake")
+    if(NOT ARROW_FOUND)
+        message(FATAL_ERROR "apache-arrow is required, please install it and retry")
+    endif()
+endif()
+
+# find vineyard after arrow to avoid duplicate target names
+find_package(vineyard 0.10.2 REQUIRED)
+include_directories(${VINEYARD_INCLUDE_DIRS})
+add_compile_options(-DENABLE_SELECTOR)
+
+if(Arrow_FOUND AND Arrow_VERSION VERSION_GREATER 9.0.1)
+    set(CMAKE_CXX_STANDARD 17)
+endif()
 
 # Generate proto
 execute_process(COMMAND python3 python/graphscope/proto/proto_generator.py "${PROJECT_SOURCE_DIR}" --cpp
