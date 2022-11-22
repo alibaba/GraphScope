@@ -237,6 +237,9 @@ if(NOT Arrow_FOUND)
         include("${ANALYTICAL_ENGINE_HOME}/cmake/FindArrow.cmake")
     endif()
 endif()
+if(Arrow_FOUND AND Arrow_VERSION VERSION_GREATER 9.0.1)
+    set(CMAKE_CXX_STANDARD 17)
+endif()
 
 # find Libunwind----------------------------------------------------------------
 if(GRAPHSCOPE_ANALYTICAL_HOME)

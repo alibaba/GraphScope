@@ -115,7 +115,7 @@ class TypedArray<grape::EmptyType> {
 template <>
 struct TypedArray<std::string> {
  public:
-  using value_type = arrow::util::string_view;
+  using value_type = vineyard::arrow_string_view;
   TypedArray() : array_(NULL) {}
   explicit TypedArray(std::shared_ptr<arrow::Array> array) {
     if (array == nullptr) {

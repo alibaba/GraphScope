@@ -62,16 +62,18 @@ struct DynamicWrapper<int64_t> {
 };
 
 /**
- * @brief This is a specialized DynamicWrapper for arrow::util::string_view type
+ * @brief This is a specialized DynamicWrapper for vineyard::arrow_string_view
+ * type
  */
 template <>
 struct DynamicWrapper<std::string> {
-  static void to_dynamic(arrow::util::string_view s, dynamic::Value& t) {
+  static void to_dynamic(vineyard::arrow_string_view s, dynamic::Value& t) {
     t.SetString(std::string(s));
   }
 
   static void to_dynamic_array(const std::string& label,
-                               arrow::util::string_view s, dynamic::Value& t) {
+                               vineyard::arrow_string_view s,
+                               dynamic::Value& t) {
     t.SetArray();
     t.PushBack(label).PushBack(std::string(s));
   }

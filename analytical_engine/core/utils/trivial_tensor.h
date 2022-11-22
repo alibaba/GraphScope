@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "arrow/array/builder_binary.h"
+#include "vineyard/common/util/arrow.h"
 
 namespace arrow {
 class StringArray;
@@ -93,11 +94,11 @@ struct trivial_tensor_t<std::string> {
 
   void fill(const std::string& value) {
     arrow::StringBuilder builder;
-    builder.Reserve(size_);
+    CHECK_ARROW_ERROR(builder.Reserve(size_));
     for (size_t i = 0; i < size_; ++i) {
-      builder.Append(value);
+      CHECK_ARROW_ERROR(builder.Append(value));
     }
-    builder.Finish(&data_);
+    CHECK_ARROW_ERROR(builder.Finish(&data_));
   }
 
   std::vector<size_t> shape() const { return shape_; }
