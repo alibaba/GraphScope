@@ -29,6 +29,7 @@ limitations under the License.
 #include <utility>
 #include <vector>
 
+#include "gflags/gflags.h"
 #include "grape/config.h"
 #include "grape/grape.h"
 #include "grape/util.h"
