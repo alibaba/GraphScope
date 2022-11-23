@@ -121,7 +121,6 @@ jobs:
         
     - name: preview
       uses: afc163/surge-preview@v1
-      if: ${{ github.event.issue.pull_request }}
       id: preview_step
       with:
         surge_token: ${{ secrets.SURGE_TOKEN }}
