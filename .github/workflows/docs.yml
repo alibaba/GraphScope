@@ -118,6 +118,19 @@ jobs:
           export TAG_VER=stable
           make graphscope-docs
         fi
+        
+    - name: preview
+      uses: afc163/surge-preview@v1
+      if: ${{ github.event.issue.pull_request }}
+      id: preview_step
+      with:
+        surge_token: ${{ secrets.SURGE_TOKEN }}
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        dist: docs/_build/latest/html
+        build: echo "done"
+        
+    - name: Get the preview_url
+      run: echo "url => ${{ steps.preview_step.outputs.preview_url }}"
 
     - name: Upload Docs
       if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') }}
