@@ -53,8 +53,8 @@ def launch_server(handle, config, server_index):
         )
         g.edge_attributes(label, edge_attr[0], n_ints, n_floats, n_strings)
 
-    for node_view_label, node_label, nsplit, split_range in config["gen_labels"]:
-        g.node_view(node_view_label, node_label, nsplit=nsplit, split_range=split_range)
+    for mask, node_label, nsplit, split_range in config["gen_labels"]:
+        g.node_view(node_label, mask, nsplit=nsplit, split_range=split_range)
 
     # we guess the "worker_count" doesn't matter in the server side.
     g = g.init_vineyard(server_index=server_index, worker_count=0)

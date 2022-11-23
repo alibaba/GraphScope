@@ -237,59 +237,66 @@ Then we define the training and testing process, and run it.
 
 .. code:: python
 
+    # Note: Here we use tensorflow as NN backend to train GNN model. so please
+    # install tensorflow.
+    try:
+        # https://www.tensorflow.org/guide/migrate
+        import tensorflow.compat.v1 as tf
+        tf.disable_v2_behavior()
+    except ImportError:
+        import tensorflow as tf
+
     import graphscope.learning
-    from graphscope.learning.examples import GCN
-    from graphscope.learning.graphlearn.python.model.tf.trainer import LocalTFTrainer
-    from graphscope.learning.graphlearn.python.model.tf.optimizer import get_tf_optimizer
+    from graphscope.learning.examples import EgoGraphSAGE
+    from graphscope.learning.examples import EgoSAGESupervisedDataLoader
+    from graphscope.learning.examples.tf.trainer import LocalTrainer
 
     # supervised GCN.
-
-    def train(config, graph):
-        def model_fn():
-            return GCN(graph,
-                       config["class_num"],
-                       config["features_num"],
-                       config["batch_size"],
-                       val_batch_size=config["val_batch_size"],
-                       test_batch_size=config["test_batch_size"],
-                       categorical_attrs_desc=config["categorical_attrs_desc"],
-                       hidden_dim=config["hidden_dim"],
-                       in_drop_rate=config["in_drop_rate"],
-                       neighs_num=config["neighs_num"],
-                       hops_num=config["hops_num"],
-                       node_type=config["node_type"],
-                       edge_type=config["edge_type"],
-                       full_graph_mode=config["full_graph_mode"])
-
+    def train_gcn(graph, node_type, edge_type, class_num, features_num,
+                hops_num=2, nbrs_num=[25, 10], epochs=2,
+                hidden_dim=256, in_drop_rate=0.5, learning_rate=0.01,
+    ):
         graphscope.learning.reset_default_tf_graph()
-        trainer = LocalTFTrainer(model_fn,
-                                 epoch=config["epoch"],
-                                 optimizer=get_tf_optimizer(
-                                 config["learning_algo"],
-                                 config["learning_rate"],
-                                 config["weight_decay"]))
-        trainer.train_and_evaluate()
 
-    config = {"class_num": 349, # output dimension
-              "features_num": 130, # 128 dimension + kcore + triangle count
-              "batch_size": 500,
-              "val_batch_size": 100,
-              "test_batch_size":100,
-              "categorical_attrs_desc": "",
-              "hidden_dim": 256,
-              "in_drop_rate": 0.5,
-              "hops_num": 2,
-              "neighs_num": [5, 10],
-              "full_graph_mode": False,
-              "agg_type": "gcn",  # mean, sum
-              "learning_algo": "adam",
-              "learning_rate": 0.0005,
-              "weight_decay": 0.000005,
-              "epoch": 20,
-              "node_type": "paper",
-              "edge_type": "cites"}
+        dimensions = [features_num] + [hidden_dim] * (hops_num - 1) + [class_num]
+        model = EgoGraphSAGE(dimensions, act_func=tf.nn.relu, dropout=in_drop_rate)
 
-    train(config, lg)
+        # prepare train dataset
+        train_data = EgoSAGESupervisedDataLoader(
+            graph, graphscope.learning.Mask.TRAIN,
+            node_type=node_type, edge_type=edge_type, nbrs_num=nbrs_num, hops_num=hops_num,
+        )
+        train_embedding = model.forward(train_data.src_ego)
+        train_labels = train_data.src_ego.src.labels
+        loss = tf.reduce_mean(
+            tf.nn.sparse_softmax_cross_entropy_with_logits(
+                labels=train_labels, logits=train_embedding,
+            )
+        )
+        optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+
+        # prepare test dataset
+        test_data = EgoSAGESupervisedDataLoader(
+            graph, graphscope.learning.Mask.TEST,
+            node_type=node_type, edge_type=edge_type, nbrs_num=nbrs_num, hops_num=hops_num,
+        )
+        test_embedding = model.forward(test_data.src_ego)
+        test_labels = test_data.src_ego.src.labels
+        test_indices = tf.math.argmax(test_embedding, 1, output_type=tf.int32)
+        test_acc = tf.div(
+            tf.reduce_sum(tf.cast(tf.math.equal(test_indices, test_labels), tf.float32)),
+            tf.cast(tf.shape(test_labels)[0], tf.float32),
+        )
+
+        # train and test
+        trainer = LocalTrainer()
+        trainer.train(train_data.iterator, loss, optimizer, epochs=epochs)
+        trainer.test(test_data.iterator, test_acc)
+
+    train_gcn(lg, node_type="paper", edge_type="cites",
+            class_num=349,  # output dimension
+            features_num=130,  # input dimension, 128 + kcore + triangle count
+    )
 
 
 Closing Session

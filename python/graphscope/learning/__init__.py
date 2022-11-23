@@ -35,11 +35,11 @@ try:
         if tf is not None:
             try:
                 tf.get_logger().setLevel("ERROR")
-            except:
+            except:  # noqa: E722, pylint: disable=bare-except
                 pass
             try:
                 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-            except:
+            except:  # noqa: E722, pylint: disable=bare-except
                 pass
 
             try:
@@ -57,7 +57,7 @@ try:
         if tf is not None:
             try:
                 tf.reset_default_graph()
-            except:
+            except:  # noqa: E722, pylint: disable=bare-except
                 pass
 
     ctx = {"GRPC_VERBOSITY": "NONE"}
@@ -65,6 +65,7 @@ try:
         ctx["VINEYARD_USE_LOCAL_REGISTRY"] = "TRUE"
     with vineyard.envvars(ctx):
         import graphlearn
+        from graphlearn.python.utils import Mask
 
     try:
         import examples
