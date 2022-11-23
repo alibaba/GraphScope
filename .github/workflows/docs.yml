@@ -11,7 +11,7 @@ jobs:
       with:
         submodules: true
         fetch-depth: 0
-        
+
     - uses: dorny/paths-filter@v2
       id: changes
       with:
@@ -125,7 +125,7 @@ jobs:
           export TAG_VER=stable
           make graphscope-docs
         fi
-        
+
     - name: preview
       if: steps.changes.outputs.src == 'true'
       uses: afc163/surge-preview@v1
@@ -135,7 +135,7 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         dist: docs/_build/latest/html
         build: echo "done"
-        
+
     - name: Get the preview_url
       if: steps.changes.outputs.src == 'true'
       run: echo "url => ${{ steps.preview_step.outputs.preview_url }}"
