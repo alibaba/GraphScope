@@ -153,7 +153,7 @@ Users can pick up some components from the three layers to create a customized d
 This flexible design allows GraphScope to be deployed and optimized for specific graph computation scenarios.
 
 
-Next, we highlight some featured deployments of GraphScope.
+Next, we highlight some featured deployments of GraphScope. This is a testing.
 
 
 
