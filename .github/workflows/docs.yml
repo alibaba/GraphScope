@@ -11,6 +11,13 @@ jobs:
       with:
         submodules: true
         fetch-depth: 0
+        
+    - uses: dorny/paths-filter@v2
+      id: changes
+      with:
+        filters: |
+          src:
+            - 'docs/**'
 
     - name: Setup Java11
       uses: actions/setup-java@v3
@@ -120,6 +127,7 @@ jobs:
         fi
         
     - name: preview
+      if: steps.changes.outputs.src == 'true'
       uses: afc163/surge-preview@v1
       id: preview_step
       with:
@@ -129,6 +137,7 @@ jobs:
         build: echo "done"
         
     - name: Get the preview_url
+      if: steps.changes.outputs.src == 'true'
       run: echo "url => ${{ steps.preview_step.outputs.preview_url }}"
 
     - name: Upload Docs
