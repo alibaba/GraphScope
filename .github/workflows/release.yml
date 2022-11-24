@@ -46,7 +46,7 @@ jobs:
         time=$(date "+%Y%m%d")
         version=$(cat ${GITHUB_WORKSPACE}/VERSION)
         tag="${version}a${time}"
-        sudo docker tag registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${SHORT_SHA} ${{ env.GSS_IMAGE }}:${tag}
+        sudo docker tag graphscope/graphscope-store:${SHORT_SHA} ${{ env.GSS_IMAGE }}:${tag}
         sudo docker push ${{ env.GSS_IMAGE }}:${tag}
 
     - name: Extract Tag Name
@@ -61,7 +61,7 @@ jobs:
         docker_username: ${{ secrets.DOCKER_USER }}
       run: |
         echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.DOCKER_URL }} --password-stdin
-        sudo docker tag registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:${SHORT_SHA} ${{ env.GSS_IMAGE }}:${{ steps.tag.outputs.TAG }}
+        sudo docker tag graphscope/graphscope-store:${SHORT_SHA} ${{ env.GSS_IMAGE }}:${{ steps.tag.outputs.TAG }}
         sudo docker push ${{ env.GSS_IMAGE }}:${{ steps.tag.outputs.TAG }}
 
   release-helm-charts:
