@@ -734,6 +734,7 @@ class Graph(GraphInterface):
 
         self._key = None
         self._vineyard_id = 0
+        self._fragments = None
         self._schema = GraphSchema()
         self._detached = False
 
@@ -754,6 +755,7 @@ class Graph(GraphInterface):
         vy_info = graph_def_pb2.VineyardInfoPb()
         graph_def.extension.Unpack(vy_info)
         self._vineyard_id = vy_info.vineyard_id
+        self._fragments = list(vy_info.fragments)
         self._oid_type = data_type_to_cpp(vy_info.oid_type)
         self._generate_eid = vy_info.generate_eid
 
@@ -838,6 +840,10 @@ class Graph(GraphInterface):
             str: return vineyard id of this graph
         """
         return self._vineyard_id
+
+    @property
+    def fragments(self):
+        return self._fragments
 
     @property
     def session_id(self):

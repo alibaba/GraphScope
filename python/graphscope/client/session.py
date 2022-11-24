@@ -1202,14 +1202,17 @@ class Session(object):
         from graphscope.learning.graph import Graph as LearningGraph
         from graphscope.learning.graph import get_gl_handle
 
-        object_id = graph.vineyard_id
-        schema = graph.schema
-        engine_config = self._engine_config
-        handle = get_gl_handle(schema, object_id, self._pod_name_list, engine_config)
+        handle = get_gl_handle(
+            graph.schema,
+            graph.vineyard_id,
+            self._pod_name_list,
+            self._engine_config,
+            graph.fragments,
+        )
         config = LearningGraph.preprocess_args(handle, nodes, edges, gen_labels)
         config = base64.b64encode(json.dumps(config).encode("utf-8")).decode("utf-8")
         handle, config, endpoints = self._grpc_client.create_learning_instance(
-            object_id, handle, config
+            graph.vineyard_id, handle, config
         )
 
         handle = json.loads(base64.b64decode(handle).decode("utf-8"))
@@ -1217,7 +1220,7 @@ class Session(object):
         handle["client_count"] = 1
 
         # construct learning graph
-        g = LearningGraph(graph, handle, config, object_id)
+        g = LearningGraph(graph, handle, config, graph.vineyard_id)
         self._learning_instance_dict[graph.vineyard_id] = g
         return g
 
@@ -1496,9 +1499,11 @@ def gremlin(graph):
         >>> g = graphscope.g()
         >>> interactive_query = graphscope.gremlin()
     """
-    if _default_session_stack.is_cleared():
-        raise RuntimeError("No default session found.")
-    return get_default_session().gremlin(graph)
+    assert graph is not None, "graph cannot be None"
+    assert (
+        graph._session is not None
+    ), "The graph object is invalid"  # pylint: disable=protected-access
+    return graph._session.gremlin(graph)  # pylint: disable=protected-access
 
 
 def graphlearn(graph, nodes=None, edges=None, gen_labels=None):
@@ -1518,6 +1523,10 @@ def graphlearn(graph, nodes=None, edges=None, gen_labels=None):
         >>> g = graphscope.g()
         >>> lg = graphscope.learning(g)
     """
-    if _default_session_stack.is_cleared():
-        raise RuntimeError("No de fault session found.")
-    return get_default_session().graphlearn(graph, nodes, edges, gen_labels)
+    assert graph is not None, "graph cannot be None"
+    assert (
+        graph._session is not None
+    ), "The graph object is invalid"  # pylint: disable=protected-access
+    return graph._session.graphlearn(
+        graph, nodes, edges, gen_labels
+    )  # pylint: disable=protected-access

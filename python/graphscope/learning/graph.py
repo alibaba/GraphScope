@@ -75,8 +75,7 @@ class Graph(GLGraph):
         for mask, node_label, nsplit, split_range in config["gen_labels"]:
             self.node_view(node_label, mask, nsplit=nsplit, split_range=split_range)
 
-        # server_own=False: make sure the glog inside graph-learn get initialized
-        self.init_vineyard(worker_index=0, worker_count=1, server_own=False)
+        self.init_vineyard(worker_index=0, worker_count=1)
 
     def decode_arg(self, arg):
         if arg is None or isinstance(arg, dict):
@@ -260,7 +259,7 @@ class Graph(GLGraph):
         return super(Graph, self).E(edge_type, feed, reverse)
 
 
-def get_gl_handle(schema, vineyard_id, engine_hosts, engine_config):
+def get_gl_handle(schema, vineyard_id, engine_hosts, engine_config, fragments=None):
     """Dump a handler for GraphLearn for interaction.
 
     Fields in :code:`schema` are:
@@ -281,6 +280,7 @@ def get_gl_handle(schema, vineyard_id, engine_hosts, engine_config):
             "client_count": 1,
             "vineyard_socket": "/var/run/vineyard.sock",
             "vineyard_id": 13278328736,
+            "fragments": [13278328736, ...],  # fragment ids
             "node_schema": [
                 "user:false:false:10:0:0",
                 "item:true:false:0:0:5"
@@ -373,6 +373,7 @@ def get_gl_handle(schema, vineyard_id, engine_hosts, engine_config):
         "edge_schema": edge_schema,
         "node_attribute_types": node_attribute_types,
         "edge_attribute_types": edge_attribute_types,
+        "fragments": fragments,
     }
     handle_json_string = json.dumps(handle)
     return base64.b64encode(handle_json_string.encode("utf-8")).decode("utf-8")

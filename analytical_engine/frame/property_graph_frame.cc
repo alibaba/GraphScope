@@ -85,6 +85,9 @@ LoadGraph(const grape::CommSpec& comm_spec, vineyard::Client& client,
       graph_def.extension().UnpackTo(&vy_info);
     }
     vy_info.set_vineyard_id(new_frag_group_id);
+    for (auto const& item : fg->Fragments()) {
+      vy_info.add_fragments(item.second);
+    }
     gs::set_graph_def(frag, graph_def);
 
     auto wrapper = std::make_shared<gs::FragmentWrapper<_GRAPH_TYPE>>(
@@ -130,6 +133,9 @@ LoadGraph(const grape::CommSpec& comm_spec, vineyard::Client& client,
       graph_def.extension().UnpackTo(&vy_info);
     }
     vy_info.set_vineyard_id(frag_group_id);
+    for (auto const& item : fg->Fragments()) {
+      vy_info.add_fragments(item.second);
+    }
     vy_info.set_generate_eid(graph_info->generate_eid);
     graph_def.mutable_extension()->PackFrom(vy_info);
     gs::set_graph_def(frag, graph_def);
@@ -183,14 +189,19 @@ ToArrowFragment(vineyard::Client& client, const grape::CommSpec& comm_spec,
   VINEYARD_CHECK_OK(client.Persist(arrow_frag->id()));
   BOOST_LEAF_AUTO(frag_group_id, vineyard::ConstructFragmentGroup(
                                      client, arrow_frag->id(), comm_spec));
-  gs::rpc::graph::GraphDefPb graph_def;
+  auto fg = std::dynamic_pointer_cast<vineyard::ArrowFragmentGroup>(
+      client.GetObject(frag_group_id));
 
+  gs::rpc::graph::GraphDefPb graph_def;
   graph_def.set_key(dst_graph_name);
   gs::rpc::graph::VineyardInfoPb vy_info;
   if (graph_def.has_extension()) {
     graph_def.extension().UnpackTo(&vy_info);
   }
   vy_info.set_vineyard_id(frag_group_id);
+  for (auto const& item : fg->Fragments()) {
+    vy_info.add_fragments(item.second);
+  }
   graph_def.mutable_extension()->PackFrom(vy_info);
 
   gs::set_graph_def(arrow_frag, graph_def);
@@ -276,6 +287,9 @@ AddLabelsToGraph(vineyard::ObjectID origin_frag_id,
     graph_def.extension().UnpackTo(&vy_info);
   }
   vy_info.set_vineyard_id(frag_group_id);
+  for (auto const& item : fg->Fragments()) {
+    vy_info.add_fragments(item.second);
+  }
   vy_info.set_generate_eid(graph_info->generate_eid);
   graph_def.mutable_extension()->PackFrom(vy_info);
   gs::set_graph_def(frag, graph_def);
