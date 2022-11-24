@@ -288,9 +288,9 @@ impl<I: IndexType> From<MutTopo<I>> for CsrTopo<I> {
             mut_in_edges.append_node_adj(index, &mut in_adj_edges);
         }
 
-        let mut edges = vec![EdgeTuple::default(); raw_edges.len()];
-        for (index, edge) in raw_edges.into_iter().enumerate() {
-            edges[index] = EdgeTuple::new(edge.source(), edge.target(), edge.weight)
+        let mut edges = Vec::new();
+        for edge in raw_edges {
+            edges.push(EdgeTuple::new(edge.source(), edge.target(), edge.weight));
         }
 
         CsrTopo {
