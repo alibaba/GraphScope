@@ -104,7 +104,7 @@ def wait_for_deployment_complete(api_client, namespace, name, timeout_seconds=60
     app_api = kube_client.AppsV1Api(api_client)
     start_time = time.time()
     while time.time() - start_time < timeout_seconds:
-        time.sleep(2)
+        time.sleep(1)
         response = app_api.read_namespaced_deployment_status(
             namespace=namespace, name=name
         )
@@ -117,10 +117,8 @@ def wait_for_deployment_complete(api_client, namespace, name, timeout_seconds=60
         ):
             return True
         # check failed
-        selector = ""
-        for k, v in response.spec.selector.match_labels.items():
-            selector += k + "=" + v + ","
-        selector = selector[:-1]
+        match_labels = response.spec.selector.match_labels
+        selector = ",".join([f"{k}={v}" for k, v in match_labels.items()])
         pods = core_api.list_namespaced_pod(
             namespace=namespace, label_selector=selector
         )
@@ -249,7 +247,7 @@ def get_service_endpoints(  # noqa: C901
         service_type: str
             Service type. Valid options are NodePort, LoadBalancer and ClusterIP.
         timeout_seconds: int
-            Raise TimeoutError after waiting for this seconds, only used in LoadBalancer type.
+            Raise TimeoutError after the duration, only used in LoadBalancer type.
 
     Raises:
         TimeoutError: If the underlying cloud-provider doesn't support the LoadBalancer
@@ -268,10 +266,7 @@ def get_service_endpoints(  # noqa: C901
     svc = core_api.read_namespaced_service(name=name, namespace=namespace)
 
     # get pods
-    selector = ""
-    for k, v in svc.spec.selector.items():
-        selector += k + "=" + v + ","
-    selector = selector[:-1]
+    selector = ",".join([f"{k}={v}" for k, v in svc.spec.selector.items()])
     pods = core_api.list_namespaced_pod(namespace=namespace, label_selector=selector)
 
     ips = []
@@ -285,19 +280,21 @@ def get_service_endpoints(  # noqa: C901
     elif service_type == "LoadBalancer":
         while True:
             svc = core_api.read_namespaced_service(name=name, namespace=namespace)
-            if svc.status.load_balancer.ingress is not None:
-                for ingress in svc.status.load_balancer.ingress:
-                    if ingress.hostname is not None:
-                        ips.append(ingress.hostname)
-                    else:
-                        ips.append(ingress.ip)
-                for port in svc.spec.ports:
-                    if query_port is None or port.port == query_port:
-                        ports.append(port.port)
-                break
-            time.sleep(1)
-            if time.time() - start_time > timeout_seconds:
-                raise TimeoutError("LoadBalancer service type is not supported yet.")
+            if svc.status.load_balancer.ingress is None:
+                if time.time() - start_time > timeout_seconds:
+                    raise TimeoutError(
+                        "LoadBalancer service type is not supported yet."
+                    )
+                time.sleep(1)
+                continue
+            for ingress in svc.status.load_balancer.ingress:
+                if ingress.hostname is not None:
+                    ips.append(ingress.hostname)
+                else:
+                    ips.append(ingress.ip)
+            for port in svc.spec.ports:
+                if query_port is None or port.port == query_port:
+                    ports.append(port.port)
     elif service_type == "ClusterIP":
         ips.append(svc.spec.cluster_ip)
         for port in svc.spec.ports:
@@ -306,15 +303,10 @@ def get_service_endpoints(  # noqa: C901
     else:
         raise K8sError("Service type {0} is not supported yet".format(service_type))
 
-    # generate endpoint
-    endpoints = []
-
     if not ips or not ports:
-        raise K8sError("Get {0} service {1} failed.".format(service_type, name))
+        raise K8sError(f"Get {service_type} service {name} failed.")
 
-    for ip in ips:
-        for port in ports:
-            endpoints.append("{0}:{1}".format(ip, port))
+    endpoints = [f"{ip}:{port}" for ip in ips for port in ports]
     return endpoints
 
 
@@ -366,7 +358,7 @@ def delete_kubernetes_object(
     # convert group name from DNS subdomain format to
     # python class name convention
     group = "".join(word.capitalize() for word in group.split("."))
-    fcn_to_call = "{0}{1}Api".format(group, version.capitalize())
+    fcn_to_call = f"{group}{version.capitalize()}Api"
     k8s_api = getattr(kube_client, fcn_to_call)(
         api_client
     )  # pylint: disable=not-callable

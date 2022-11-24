@@ -2,15 +2,25 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+image:
+  registry: registry.cn-hongkong.aliyuncs.com
+  repository: graphscope
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+  ## Specify a imagePullPolicy
+  ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+  ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+  ##
+  pullPolicy: IfNotPresent
+  ## Optionally specify an array of imagePullSecrets (secrets must be manually created in the namespace)
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+  ## Example:
+  ## pullSecrets:
+  ##   - myRegistryKeySecretName
+  ##
+  pullSecrets: []
 
-imagePullPolicy: Always
-## Optionally specify an array of imagePullSecrets.
-## Secrets must be manually created in the namespace.
-## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-##
-# imagePullSecrets:
-#   - RegistryKeySecretName
-#
+
 ## Specify an array of volumes by setting enabled true.
 ## Here is an example to mount hostpath `/testingdata` to `/tmp/testingdata` in pod.
 volumes:
@@ -30,23 +40,21 @@ coordinator:
   service:
     type: NodePort
   image:
-    name: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope
-    # Overrides the image tag whose default is the chart appVersion.
-    tag: ""
+    name: coordinator
   resources:
     requests:
-      cpu: 4.0
-      memory: 4Gi
+      cpu: 0.2
+      memory: 256Mi
     limits:
-      cpu: 4.0
-      memory: 4Gi
+      cpu: 1
+      memory: 512Mi
   extraEnv: {}
   readinessProbe:
     enabled: true
-    initialDelaySeconds: 10
-    periodSeconds: 10
-    timeoutSeconds: 15
-    failureThreshold: 8
+    initialDelaySeconds: 0
+    periodSeconds: 1
+    timeoutSeconds: 5
+    failureThreshold: 20
     successThreshold: 1
   # Waiting GraphScope instance ready until reached timeout.
   timeout_seconds: 1200
@@ -56,18 +64,35 @@ engines:
   num_workers: 2
   # Available options of log_level: INFO, DEBUG
   log_level: INFO
-  image:
-    name: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope
-    # Overrides the image tag whose default is the chart appVersion.
-    tag: ""
+
+  analytical:
+    enabled: True
+    image:
+      name: analytical
+  analytical_java:
+    enabled: False
+    image:
+      name: analytical-java
+  interactive:
+    enabled: True
+    image:
+      name: interactive
+  learning:
+    enabled: True
+    image:
+      name: learning
+  dataset:
+    enabled: False
+    image:
+      name: dataset
+
   resources:
     requests:
-      cpu: 2.0
-      memory: 4Gi
+      cpu: 1
+      memory: 1Gi
     limits:
       cpu: 2.0
-      memory: 4Gi
-
+      memory: 2Gi
 
 vineyard:
   # When `vineyard.daemonset` is set to the Helm release name, the coordinator will
@@ -77,9 +102,9 @@ vineyard:
   # The vineyard IPC socket is placed on host at /var/run/vineyard-{namespace}-{release}.
   daemonset: ""
   image:
-    name: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope
+    name: ghcr.io/v6d-io/v6d/vineyardd
     # Overrides the image tag whose default is the chart appVersion.
-    tag: ""
+    tag: v0.11.2
   resources:
     requests:
       cpu: 0.5
@@ -91,19 +116,6 @@ vineyard:
   shared_mem: 8Gi
 
 
-etcd:
-  image:
-    name: quay.io/coreos/etcd
-    # Overrides the image tag whose default is the chart appVersion.
-    tag: v3.4.13
-  resources:
-    requests:
-      cpu: 0.5
-      memory: 128Mi
-    limits:
-      cpu: 0.5
-      memory: 128Mi
-
 
 withJupyter: true
 jupyter:
@@ -112,9 +124,9 @@ jupyter:
     tag: ""
   resources:
     requests:
-      cpu: 1.0
-      memory: 4Gi
+      cpu: 0.5
+      memory: 256Mi
     limits:
       cpu: 1.0
-      memory: 4Gi
+      memory: 512Mi
   port: 30080

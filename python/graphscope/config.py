@@ -37,38 +37,40 @@ class GSConfig(object):
 
     k8s_namespace = None
 
-    # etcd image
-    k8s_etcd_image = "quay.io/coreos/etcd:v3.4.13"
-
-    # All in one image
-    k8s_gs_image = f"{registry}/graphscope/graphscope:{__version__}"
-
-    # Coordinator image
-    # Also could be used as a client image
-    k8s_coordinator_image = f"{registry}/graphscope/coordinator:{__version__}"
-
-    # Dataset image
-    k8s_dataset_image = f"{registry}/graphscope/dataset:{__version__}"
+    # k8s image information
+    # GraphScope's component has a fixed name, use registry, repository and tag to
+    # uniquely identify the image. For example, the coordinator image would be
+    # ${registry}/${repository}/coordinator:${tag}
+    # The image names of all major components are:
+    #   - coordinator: The coordinator of GraphScope instance.
+    #   - analytical: The analytical engine of GraphScope instance.
+    #   - interactive: The interactive engine of GraphScope instance.
+    #   - learning: The learning engine of GraphScope instance.
+    # These are utility components for ease of use.
+    #   - dataset: A dataset container with example datasets
+    #   - jupyter: A jupyter notebook container with GraphScope client installed.
+    k8s_image_registry = "registry.cn-hongkong.aliyuncs.com"
+    k8s_image_repository = "graphscope"
+    k8s_image_tag = __version__
 
     # image pull configuration
     k8s_image_pull_policy = "IfNotPresent"
     k8s_image_pull_secrets = []
 
     # coordinator resource configuration
-    k8s_coordinator_cpu = 1.5
-    k8s_coordinator_mem = "2Gi"
+    k8s_coordinator_cpu = 0.5
+    k8s_coordinator_mem = "512Mi"
 
     # etcd resource configuration
     etcd_addrs = None
     etcd_listening_client_port = 2379
     etcd_listening_peer_port = 2380
-    k8s_etcd_num_pods = 1
-    k8s_etcd_cpu = 1.0
-    k8s_etcd_mem = "512Mi"
 
     # vineyard resource configuration
-    k8s_vineyard_daemonset = "none"
-    k8s_vineyard_cpu = 0.2
+    # image for vineyard container
+    k8s_vineyard_image = "ghcr.io/v6d-io/v6d/vineyardd:v0.11.2"
+    k8s_vineyard_daemonset = None
+    k8s_vineyard_cpu = 0.5
     k8s_vineyard_mem = "512Mi"
     vineyard_shared_mem = "4Gi"
 
@@ -84,11 +86,16 @@ class GSConfig(object):
 
     # the node selector can be a dict, see also: https://tinyurl.com/3nx6k7ph
     k8s_coordinator_pod_node_selector = None
-    k8s_etcd_pod_node_selector = None
     k8s_engine_pod_node_selector = None
 
     # launch graphscope with mars
     with_mars = False
+    with_analytical = True
+    with_analytical_java = False
+    with_interactive = True
+    with_learning = True
+    # Demo dataset related
+    with_dataset = False
 
     k8s_volumes = {}
 
@@ -107,9 +114,6 @@ class GSConfig(object):
     # kill GraphScope instance after seconds of client disconnect
     # disable dangling check by setting -1.
     dangling_timeout_seconds = 600
-
-    # Demo dataset related
-    mount_dataset = None
 
     # download_retries
     dataset_download_retries = 3

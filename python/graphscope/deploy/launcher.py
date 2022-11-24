@@ -35,7 +35,7 @@ class Launcher(metaclass=ABCMeta):
     def coordinator_endpoint(self):
         if self._coordinator_endpoint is None:
             raise RuntimeError("Get None value of coordinator endpoint.")
-        return str(self._coordinator_endpoint)
+        return self._coordinator_endpoint
 
     @abstractmethod
     def type(self):

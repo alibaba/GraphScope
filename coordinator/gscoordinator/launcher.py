@@ -32,6 +32,8 @@ def configure_environ():
     # OPAL_PREFIX for openmpi
     if os.path.isdir(os.path.join(GRAPHSCOPE_HOME, "openmpi")):
         os.environ["OPAL_PREFIX"] = os.path.join(GRAPHSCOPE_HOME, "openmpi")
+    if os.path.isdir(os.path.join("/opt", "openmpi")):
+        os.environ["OPAL_PREFIX"] = os.path.join("/opt", "openmpi")
     # Darwin is open-mpi
     if os.path.isdir(os.path.join(GRAPHSCOPE_HOME, "open-mpi")):
         os.environ["OPAL_PREFIX"] = os.path.join(GRAPHSCOPE_HOME, "open-mpi")
@@ -59,6 +61,7 @@ class AbstractLauncher(metaclass=ABCMeta):
         self._instance_id = None
         self._num_workers = None
         self._hosts = ""
+        self._analytical_engine_process = None
         self._analytical_engine_endpoint = None
         self._session_workspace = None
         configure_environ()
@@ -122,6 +125,10 @@ class AbstractLauncher(metaclass=ABCMeta):
     @property
     def analytical_engine_endpoint(self):
         return self._analytical_engine_endpoint
+
+    @property
+    def analytical_engine_process(self):
+        return self._analytical_engine_process
 
     @property
     def num_workers(self):

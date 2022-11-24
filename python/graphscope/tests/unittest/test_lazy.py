@@ -24,6 +24,7 @@ import pytest
 import graphscope
 
 graphscope.set_option(show_log=True)
+graphscope.set_option(log_level="DEBUG")
 
 from graphscope.dataset import load_p2p_network
 from graphscope.framework.loader import Loader

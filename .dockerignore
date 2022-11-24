@@ -14,11 +14,16 @@ python/proto
 # Gar file
 **/*.gar
 
+# Git
+# .git
+.cache
+
 # dot file
 *.dot
 
 # Protobuf GRPC
-**/*.pb.*
+# Needed by build analytical image in CI, the COPY should copy the generated proto files
+# **/*.pb.*
 **/*_pb2.py
 **/*_pb2_grpc.py
 

@@ -1,20 +1,19 @@
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
-ARG BASE_VERSION=latest
-FROM $REGISTRY/graphscope/graphscope-dev:$BASE_VERSION as builder
+ARG BUILDER_VERSION=latest
+FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION as builder
 
 ARG CI=false
-ENV CI=$CI
 
 ARG profile=debug
 ENV profile=$profile
 
-COPY . /home/graphscope/gs
-COPY ./interactive_engine/assembly/src/conf/maven.settings.xml /home/graphscope/.m2/settings.xml
+COPY --chown=graphscope:graphscope . /home/graphscope/gs
+
+COPY --chown=graphscope:graphscope ./interactive_engine/assembly/src/conf/maven.settings.xml /home/graphscope/.m2/settings.xml
 
 USER graphscope
 
-RUN sudo chown -R $(id -u):$(id -g) /home/graphscope/gs /home/graphscope/.m2 && \
-    cd /home/graphscope/gs && \
+RUN cd /home/graphscope/gs && \
     echo "install cppkafka" \
     && sudo yum update -y && sudo yum install -y librdkafka-devel \
     && git clone -b 0.4.0 --single-branch --depth=1 https://github.com/mfontanini/cppkafka.git /tmp/cppkafka \

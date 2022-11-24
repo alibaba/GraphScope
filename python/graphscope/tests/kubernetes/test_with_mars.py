@@ -39,18 +39,24 @@ def get_k8s_volumes():
     return k8s_volumes
 
 
-def get_gs_image_on_ci_env():
-    if "GS_IMAGE" in os.environ:
-        return os.environ["GS_IMAGE"]
-    return gs_config.k8s_gs_image
+def get_gs_registry_on_ci_env():
+    if "GS_REGISTRY" in os.environ:
+        return os.environ["GS_REGISTRY"]
+    return gs_config.k8s_image_registry
+
+
+def get_gs_tag_on_ci_env():
+    if "GS_TAG" in os.environ:
+        return os.environ["GS_TAG"]
+    return gs_config.k8s_image_tag
 
 
 @pytest.fixture
 def gs_session():
-    gs_image = get_gs_image_on_ci_env()
     sess = graphscope.session(
         num_workers=2,
-        k8s_gs_image=gs_image,
+        k8s_image_registry=get_gs_registry_on_ci_env(),
+        k8s_image_tag=get_gs_tag_on_ci_env(),
         k8s_coordinator_cpu=2,
         k8s_coordinator_mem="4Gi",
         k8s_vineyard_cpu=2,

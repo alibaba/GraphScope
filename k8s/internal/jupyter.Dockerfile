@@ -17,7 +17,7 @@ RUN sed -i 's/archive.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list &&
     sed -i 's/security.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list && \
     cat /etc/apt/sources.list && \
     apt update -y && apt install -y \
-      gcc python3-pip openssh-server sudo wget telnet git vim zip wget && \
+      gcc python3-pip openssh-server sudo telnet zip && \
     apt clean && rm -fr /var/lib/apt/lists/*
 
 # Add graphscope user with user id 1001
@@ -34,9 +34,8 @@ COPY . /home/graphscope/gs
 # Install graphscope client
 RUN cd /home/graphscope/gs && \
     if [ "${CI}" == "true" ]; then \
-        pushd artifacts/python/dist/wheelhouse; \
-        for f in * ; do python3 -m pip install --no-cache-dir $f; done || true; \
-        popd; \
+        pushd artifacts/learning; \
+        python3 -m pip install --no-cache-dir graphscope_client*; \
     else \
         python3 -m pip install --no-cache-dir graphscope_client -U; \
     fi && \

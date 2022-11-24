@@ -40,6 +40,30 @@ Transform the Docker Image Registry Secret Names to string with comma separated.
 
 
 {{/*
+Return the proper image name
+{{ include "graphscope.images.image" ( dict "imageRoot" .Values.path.to.the.image "DefaultTag" .DefaultTag "Component" .Values.path.to.component) }}
+*/}}
+{{- define "graphscope.images.image" -}}
+{{- $registryName := .imageRoot.registry -}}
+{{- $repositoryName := .imageRoot.repository -}}
+{{- $tag := .imageRoot.tag | toString -}}
+{{- $component := .Component.image.name -}}
+{{- if not $tag }}
+{{- if .DefaultTag }}
+{{- $tag = .DefaultTag -}}
+{{- else -}}
+{{- $tag = "latest" -}}
+{{- end -}}
+{{- end -}}
+{{- if $registryName }}
+{{- printf "%s/%s/%s:%s" $registryName $repositoryName $component $tag -}}
+{{- else -}}
+{{- printf "%s/%s:%s" $repositoryName $component $tag -}}
+{{- end -}}
+{{- end -}}
+
+
+{{/*
 Unique Label of GraphScope Coordinator.
 */}}
 {{- define "graphscope.coordinator.uniqueLabel" -}}

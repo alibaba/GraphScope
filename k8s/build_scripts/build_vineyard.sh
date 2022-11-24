@@ -11,12 +11,13 @@ cd ${WORKDIR} && \
     cmake . -DCMAKE_INSTALL_PREFIX=/opt/vineyard && \
     make -j$(nproc) && \
     make install && \
+    strip /opt/vineyard/bin/run_app && \
     rm -rf ${WORKDIR}/libgrape-lite
 
 # Vineyard
 echo "Installing vineyard"
 cd ${WORKDIR} && \
-    git clone -b ${VINEYARD_VERSION:-main} https://github.com/v6d-io/v6d.git --depth=1 && \
+    git clone -b v0.11.2 https://github.com/v6d-io/v6d.git --depth=1 && \
     pushd v6d && \
     git submodule update --init && \
     cmake . -DCMAKE_PREFIX_PATH=/opt/vineyard \
@@ -30,5 +31,5 @@ cd ${WORKDIR} && \
     python3 setup.py bdist_wheel && \
     python3 setup_io.py bdist_wheel && \
     pip3 install dist/* && \
-    sudo cp -r /opt/vineyard/* /usr/local/ && \
+    sudo cp -rs /opt/vineyard/* /usr/local/ && \
     rm -rf ${WORKDIR}/v6d

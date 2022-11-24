@@ -69,7 +69,7 @@ graphscope-darwin-py3:
 		python3 -m pip install --upgrade setuptools && \
 		make && \
 		sudo make install INSTALL_PREFIX=/opt/graphscope && \
-		python3 $(WORKING_DIR)/../utils/precompile.py
+		python3 $(WORKING_DIR)/../utils/precompile.py --graph --app
 	# build and delocate wheel
 	cd $(WORKING_DIR)/../../coordinator && \
 		export WITH_EXTRA_DATA=ON && \
@@ -97,7 +97,7 @@ graphscope-manylinux2014-py3-nodocker:
 	cd $(WORKING_DIR)/../.. && \
 	make && \
 	sudo make install INSTALL_PREFIX=/opt/graphscope && \
-	python3 $(WORKING_DIR)/../utils/precompile.py && \
+	python3 $(WORKING_DIR)/../utils/precompile.py --graph --app && \
 	export WITH_EXTRA_DATA=ON && \
 	cd $(WORKING_DIR)/../../coordinator && \
 	rm -rf build dist/*.whl && \

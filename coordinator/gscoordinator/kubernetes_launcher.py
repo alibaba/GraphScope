@@ -22,12 +22,13 @@ import json
 import logging
 import os
 import random
-import shutil
-import socket
+import shlex
 import subprocess
 import sys
 import time
-import traceback
+
+from gscoordinator.cluster_builder import EngineCluster
+from gscoordinator.cluster_builder import MarsCluster
 
 try:
     from kubernetes import client as kube_client
@@ -46,14 +47,8 @@ except ImportError:
     K8SApiException = None
     K8SConfigException = None
 
-from graphscope.deploy.kubernetes.resource_builder import GSEngineBuilder
-from graphscope.deploy.kubernetes.resource_builder import GSEtcdBuilder
-from graphscope.deploy.kubernetes.resource_builder import ServiceBuilder
-from graphscope.deploy.kubernetes.resource_builder import VolumeBuilder
-from graphscope.deploy.kubernetes.resource_builder import resolve_volume_builder
 from graphscope.deploy.kubernetes.utils import delete_kubernetes_object
 from graphscope.deploy.kubernetes.utils import get_kubernetes_object_info
-from graphscope.deploy.kubernetes.utils import get_service_endpoints
 from graphscope.deploy.kubernetes.utils import resolve_api_client
 from graphscope.framework.utils import PipeWatcher
 from graphscope.framework.utils import get_tempdir
@@ -65,10 +60,725 @@ from gscoordinator.utils import GRAPHSCOPE_HOME
 from gscoordinator.utils import INTERACTIVE_ENGINE_SCRIPT
 from gscoordinator.utils import WORKSPACE
 from gscoordinator.utils import ResolveMPICmdPrefix
+from gscoordinator.utils import delegate_command_to_pod
 from gscoordinator.utils import parse_as_glog_level
+from gscoordinator.utils import run_command
 from gscoordinator.version import __version__
 
 logger = logging.getLogger("graphscope")
+
+
+class KubernetesClusterLauncher(AbstractLauncher):
+    def __init__(
+        self,
+        coordinator_name=None,
+        coordinator_service_name=None,
+        delete_namespace=None,
+        engine_cpu=None,
+        engine_mem=None,
+        engine_pod_node_selector=None,
+        image_pull_policy=None,
+        image_pull_secrets=None,
+        image_registry=None,
+        image_repository=None,
+        image_tag=None,
+        instance_id=None,
+        log_level=None,
+        mars_scheduler_cpu=None,
+        mars_scheduler_mem=None,
+        mars_worker_cpu=None,
+        mars_worker_mem=None,
+        with_dataset=False,
+        namespace=None,
+        num_workers=None,
+        preemptive=None,
+        service_type=None,
+        timeout_seconds=None,
+        vineyard_cpu=None,
+        vineyard_daemonset=None,
+        vineyard_image=None,
+        vineyard_mem=None,
+        vineyard_shared_mem=None,
+        volumes=None,
+        waiting_for_delete=None,
+        with_mars=False,
+        with_analytical=True,
+        with_analytical_java=False,
+        with_interactive=True,
+        with_learning=True,
+        **kwargs,
+    ):
+
+        super().__init__()
+        self._api_client = resolve_api_client()
+        self._core_api = kube_client.CoreV1Api(self._api_client)
+        self._apps_api = kube_client.AppsV1Api(self._api_client)
+        self._resource_object = ResourceManager(self._api_client)
+
+        self._instance_id = instance_id
+        self._namespace = namespace
+        self._delete_namespace = delete_namespace
+
+        self._coordinator_name = coordinator_name
+        self._coordinator_service_name = coordinator_service_name
+
+        self._image_registry = image_registry
+        self._image_repository = image_repository
+        self._image_tag = image_tag
+
+        image_pull_secrets = image_pull_secrets.split(",") if image_pull_secrets else []
+
+        self._glog_level = parse_as_glog_level(log_level)
+
+        self._num_workers = num_workers
+
+        self._vineyard_daemonset = vineyard_daemonset
+        if vineyard_daemonset is not None:
+            try:
+                self._apps_api.read_namespaced_daemon_set(
+                    vineyard_daemonset, self._namespace
+                )
+            except K8SApiException:
+                logger.error(f"Vineyard daemonset {vineyard_daemonset} not found")
+                self._vineyard_daemonset = None
+
+        self._engine_cpu = engine_cpu
+        self._engine_mem = engine_mem
+        self._vineyard_shared_mem = vineyard_shared_mem
+
+        self._with_dataset = with_dataset
+        self._preemptive = preemptive
+        self._service_type = service_type
+
+        assert timeout_seconds is not None
+        self._timeout_seconds = timeout_seconds
+
+        self._waiting_for_delete = waiting_for_delete
+
+        self._with_analytical = with_analytical
+        self._with_analytical_java = with_analytical_java
+        self._with_interactive = with_interactive
+        self._with_learning = with_learning
+        self._with_mars = with_mars
+        self._mars_scheduler_cpu = mars_scheduler_cpu
+        self._mars_scheduler_mem = mars_scheduler_mem
+        self._mars_worker_cpu = mars_worker_cpu
+        self._mars_worker_mem = mars_worker_mem
+
+        self._pod_name_list = []
+        self._pod_ip_list = None
+        self._pod_host_ip_list = None
+
+        self._analytical_engine_endpoint = None
+        self._mars_service_endpoint = None
+
+        self._serving = False
+
+        self._analytical_engine_process = None
+        self._random_analytical_engine_rpc_port = random.randint(56001, 57000)
+        # interactive engine
+        # executor inter-processing port
+        # executor rpc port
+        # frontend port
+        self._interactive_port = 8233
+        # 8000 ~ 9000 is exposed
+        self._learning_start_port = 8000
+
+        self._graphlearn_services = {}
+        self._learning_instance_processes = {}
+
+        # workspace
+        self._instance_workspace = os.path.join(WORKSPACE, instance_id)
+        os.makedirs(self._instance_workspace, exist_ok=True)
+        self._session_workspace = None
+
+        self._engine_cluster = EngineCluster(
+            engine_cpu=engine_cpu,
+            engine_mem=engine_mem,
+            engine_pod_node_selector=engine_pod_node_selector,
+            glog_level=self._glog_level,
+            image_pull_policy=image_pull_policy,
+            image_pull_secrets=image_pull_secrets,
+            image_registry=image_registry,
+            image_repository=image_repository,
+            image_tag=image_tag,
+            instance_id=instance_id,
+            with_dataset=with_dataset,
+            namespace=namespace,
+            num_workers=num_workers,
+            preemptive=preemptive,
+            service_type=service_type,
+            vineyard_cpu=vineyard_cpu,
+            vineyard_daemonset=vineyard_daemonset,
+            vineyard_image=vineyard_image,
+            vineyard_mem=vineyard_mem,
+            vineyard_shared_mem=vineyard_shared_mem,
+            volumes=volumes,
+            with_mars=with_mars,
+            with_analytical=with_analytical,
+            with_analytical_java=with_analytical_java,
+            with_interactive=with_interactive,
+            with_learning=with_learning,
+        )
+
+        self._vineyard_service_endpoint = None
+        self.vineyard_internal_service_endpoint = None
+        self._mars_service_endpoint = None
+        if self._with_mars:
+            self._mars_cluster = MarsCluster(
+                self._instance_id, self._namespace, self._service_type
+            )
+
+    def __del__(self):
+        self.stop()
+
+    def type(self):
+        return types_pb2.K8S
+
+    def waiting_for_delete(self):
+        return self._waiting_for_delete
+
+    def get_namespace(self):
+        return self._namespace
+
+    def get_vineyard_stream_info(self):
+        hosts = [f"{self._namespace}:{host}" for host in self._pod_name_list]
+        return "kubernetes", hosts
+
+    def set_session_workspace(self, session_id):
+        self._session_workspace = os.path.join(self._instance_workspace, session_id)
+        os.makedirs(self._session_workspace, exist_ok=True)
+
+    def launch_etcd(self):
+        pass
+
+    def configure_etcd_endpoint(self):
+        pass
+
+    @property
+    def preemptive(self):
+        return self._preemptive
+
+    @property
+    def hosts(self):
+        """String of a list of pod name, comma separated."""
+        return ",".join(self._pod_name_list)
+
+    @property
+    def hosts_list(self):
+        return self._pod_name_list
+
+    def distribute_file(self, path):
+        for pod in self._pod_name_list:
+            container = self._engine_cluster.analytical_container_name
+            try:
+                # The library may exists in the analytical pod.
+                test_cmd = f"test -f {path}"
+                logger.debug(delegate_command_to_pod(test_cmd, pod, container))
+                logger.info("Library exists, skip distribute")
+            except RuntimeError:
+                cmd = f"mkdir -p {os.path.dirname(path)}"
+                logger.debug(delegate_command_to_pod(cmd, pod, container))
+                cmd = f"kubectl cp {path} {pod}:{path} -c {container}"
+                logger.debug(run_command(cmd))
+
+    def close_analytical_instance(self):
+        pass
+
+    def launch_vineyard(self):
+        """Launch vineyardd in k8s cluster."""
+        # vineyardd is auto launched in vineyardd container
+        # args = f"vineyardd -size {self._vineyard_shared_mem} \
+        #  -socket {self._engine_cluster._sock} -etcd_endpoint http://{self._pod_ip_list[0]}:2379"
+        pass
+
+    def close_etcd(self):
+        # etcd is managed by vineyard
+        pass
+
+    def close_vineyard(self):
+        # No need to close vineyardd
+        # Use delete deployment instead
+        pass
+
+    def create_interactive_instance(self, object_id: int, schema_path: str):
+        if not self._with_interactive:
+            raise NotImplementedError("Interactive engine not enabled")
+        """
+        Args:
+            object_id (int): object id of the graph.
+            schema_path (str): path of the schema file.
+        """
+        env = os.environ.copy()
+        env["GRAPHSCOPE_HOME"] = GRAPHSCOPE_HOME
+        container = self._engine_cluster.interactive_executor_container_name
+        cmd = [
+            INTERACTIVE_ENGINE_SCRIPT,
+            "create_gremlin_instance_on_k8s",
+            self._session_workspace,
+            str(object_id),
+            schema_path,
+            self.hosts,
+            container,
+            str(self._interactive_port),  # executor port
+            str(self._interactive_port + 1),  # executor rpc port
+            str(self._interactive_port + 2),  # frontend port
+            self._coordinator_name,
+        ]
+        self._interactive_port += 3
+        logger.info("Create GIE instance with command: %s", " ".join(cmd))
+        process = subprocess.Popen(
+            cmd,
+            start_new_session=True,
+            cwd=os.getcwd(),
+            env=env,
+            encoding="utf-8",
+            errors="replace",
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=1,
+            universal_newlines=True,
+        )
+        return process
+
+    def close_interactive_instance(self, object_id):
+        env = os.environ.copy()
+        env["GRAPHSCOPE_HOME"] = GRAPHSCOPE_HOME
+        container = self._engine_cluster.interactive_executor_container_name
+        cmd = [
+            INTERACTIVE_ENGINE_SCRIPT,
+            "close_gremlin_instance_on_k8s",
+            self._session_workspace,
+            str(object_id),
+            self.hosts,
+            container,
+            self._instance_id,
+        ]
+        logger.info("Close GIE instance with command: %s", " ".join(cmd))
+        process = subprocess.Popen(
+            cmd,
+            start_new_session=True,
+            cwd=os.getcwd(),
+            env=env,
+            encoding="utf-8",
+            errors="replace",
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            universal_newlines=True,
+            bufsize=1,
+        )
+        return process
+
+    def _create_mars_scheduler(self):
+        logger.info("Launching mars scheduler pod for GraphScope ...")
+        deployment = self._mars_cluster.get_mars_deployment()
+        response = self._apps_api.create_namespaced_deployment(
+            self._namespace, deployment
+        )
+        self._resource_object.append(response)
+
+    def _create_engine_stateful_set(self):
+        logger.info("Create engine headless services...")
+        service = self._engine_cluster.get_engine_headless_service()
+        response = self._core_api.create_namespaced_service(self._namespace, service)
+        self._resource_object.append(response)
+        logger.info("Creating engine pods...")
+        stateful_set = self._engine_cluster.get_engine_stateful_set()
+        response = self._apps_api.create_namespaced_stateful_set(
+            self._namespace, stateful_set
+        )
+        self._resource_object.append(response)
+
+    def _create_frontend_deployment(self):
+        logger.info("Creating frontend pods...")
+        deployment = self._engine_cluster.get_interactive_frontend_deployment()
+        response = self._apps_api.create_namespaced_deployment(
+            self._namespace, deployment
+        )
+        self._resource_object.append(response)
+
+    def _create_frontend_service(self):
+        logger.info("Creating frontend service...")
+        service = self._engine_cluster.get_interactive_frontend_service(8233)
+        response = self._core_api.create_namespaced_service(self._namespace, service)
+        self._resource_object.append(response)
+
+    def _create_vineyard_service(self):
+        logger.info("Creating vineyard service...")
+        service = self._engine_cluster.get_vineyard_service()
+        response = self._core_api.create_namespaced_service(self._namespace, service)
+        self._resource_object.append(response)
+
+    def _create_learning_service(self, object_id):
+        logger.info("Creating learning service...")
+        service = self._engine_cluster.get_learning_service(
+            object_id, self._learning_start_port
+        )
+        response = self._core_api.create_namespaced_service(self._namespace, service)
+        self._graphlearn_services[object_id] = response
+        self._resource_object.append(response)
+
+    def get_engine_config(self):
+        config = {
+            "vineyard_service_name": self._engine_cluster.vineyard_service_name,
+            "vineyard_rpc_endpoint": self._vineyard_service_endpoint,
+        }
+        if self._with_mars:
+            config["mars_endpoint"] = self._mars_service_endpoint
+        return config
+
+    def _create_services(self):
+        self._create_engine_stateful_set()
+        if self._with_interactive:
+            self._create_frontend_deployment()
+            # self._create_frontend_service()
+        if self._with_mars:
+            # scheduler used by Mars
+            self._create_mars_scheduler()
+        if self._vineyard_daemonset is None:
+            self._create_vineyard_service()
+
+    def _waiting_for_services_ready(self):
+        logger.info("Waiting for services ready...")
+        selector = ""
+        namespace = self._namespace
+        start_time = time.time()
+        event_messages = []
+        while True:
+            # TODO: Add label selector to filter out deployments.
+            statefulsets = self._apps_api.list_namespaced_stateful_set(namespace)
+            service_available = False
+            for rs in statefulsets.items:
+                if rs.metadata.name == self._engine_cluster.engine_stateful_set_name:
+                    # logger.info(
+                    #     "Engine pod: %s ready / %s total",
+                    #     rs.status.ready_replicas,
+                    #     self._num_workers,
+                    # )
+                    if rs.status.ready_replicas == self._num_workers:
+                        # service is ready
+                        service_available = True
+                        break
+
+                    # check container status
+                    labels = rs.spec.selector.match_labels
+                    selector = ",".join(f"{k}={v}" for k, v in labels.items())
+
+                    pods = self._core_api.list_namespaced_pod(
+                        namespace=namespace, label_selector=selector
+                    )
+
+                    for pod in pods.items:
+                        pod_name = pod.metadata.name
+                        field_selector = "involvedObject.name=" + pod_name
+                        stream = kube_watch.Watch().stream(
+                            self._core_api.list_namespaced_event,
+                            namespace,
+                            field_selector=field_selector,
+                            timeout_seconds=1,
+                        )
+                        for event in stream:
+                            msg = f"[{pod_name}]: {event['object'].message}"
+                            if msg not in event_messages:
+                                event_messages.append(msg)
+                                logger.info(msg)
+                                if event["object"].reason == "Failed":
+                                    raise RuntimeError("Kubernetes event error: " + msg)
+
+            if service_available:
+                break
+            if self._timeout_seconds + start_time < time.time():
+                raise TimeoutError("GraphScope Engines launching timeout.")
+            time.sleep(2)
+
+        self._pod_name_list = []
+        self._pod_ip_list = []
+        self._pod_host_ip_list = []
+        pods = self._core_api.list_namespaced_pod(
+            namespace=namespace, label_selector=selector
+        )
+        for pod in pods.items:
+            self._pod_name_list.append(pod.metadata.name)
+            self._pod_ip_list.append(pod.status.pod_ip)
+            self._pod_host_ip_list.append(pod.status.host_ip)
+        assert len(self._pod_ip_list) > 0
+        self._analytical_engine_endpoint = (
+            f"{self._pod_ip_list[0]}:{self._random_analytical_engine_rpc_port}"
+        )
+
+        self._vineyard_service_endpoint = (
+            self._engine_cluster.get_vineyard_service_endpoint(self._api_client)
+        )
+        self.vineyard_internal_endpoint = (
+            f"{self._pod_ip_list[0]}:{self._engine_cluster._vineyard_service_port}"
+        )
+
+        logger.info("GraphScope engines pod is ready.")
+        logger.info("Engines pod name list: %s", self._pod_name_list)
+        logger.info("Engines pod ip list: %s", self._pod_ip_list)
+        logger.info("Engines pod host ip list: %s", self._pod_host_ip_list)
+        logger.info("Vineyard service endpoint: %s", self._vineyard_service_endpoint)
+        if self._with_mars:
+            self._mars_service_endpoint = self._mars_cluster.get_mars_service_endpoint(
+                self._api_client
+            )
+            logger.info("Mars service endpoint: %s", self._mars_service_endpoint)
+
+    def _dump_resource_object(self):
+        resource = {}
+        if self._delete_namespace:
+            resource[self._namespace] = "Namespace"
+        else:
+            # coordinator info
+            resource[self._coordinator_name] = "Deployment"
+            resource[self._coordinator_service_name] = "Service"
+        self._resource_object.dump(extra_resource=resource)
+
+    def create_analytical_instance(self):
+        if not (self._with_analytical or self._with_analytical_java):
+            raise NotImplementedError("Analytical engine not enabled")
+        logger.info(
+            "Starting GAE rpc service on %s ...", self._analytical_engine_endpoint
+        )
+
+        # generate and distribute hostfile
+        kube_hosts_path = os.path.join(get_tempdir(), "kube_hosts")
+        with open(kube_hosts_path, "w") as f:
+            for i, pod_ip in enumerate(self._pod_ip_list):
+                f.write(f"{pod_ip} {self._pod_name_list[i]}\n")
+
+        for pod in self._pod_name_list:
+            container = self._engine_cluster.analytical_container_name
+            cmd = f"kubectl -n {self._namespace} cp {kube_hosts_path} {pod}:/tmp/hosts_of_nodes -c {container}"
+            cmd = shlex.split(cmd)
+            subprocess.check_call(cmd)
+
+        # launch engine
+        rmcp = ResolveMPICmdPrefix(rsh_agent=True)
+        cmd, mpi_env = rmcp.resolve(self._num_workers, ",".join(self._pod_name_list))
+
+        cmd.append(ANALYTICAL_ENGINE_PATH)
+        cmd.extend(["--host", "0.0.0.0"])
+        cmd.extend(["--port", str(self._random_analytical_engine_rpc_port)])
+
+        cmd.extend(["-v", str(self._glog_level)])
+        mpi_env["GLOG_v"] = str(self._glog_level)
+
+        cmd.extend(["--vineyard_socket", self._engine_cluster.vineyard_ipc_socket])
+        logger.info("Analytical engine launching command: %s", " ".join(cmd))
+
+        env = os.environ.copy()
+        env["GRAPHSCOPE_HOME"] = GRAPHSCOPE_HOME
+        env.update(mpi_env)
+
+        self._analytical_engine_process = subprocess.Popen(
+            cmd,
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            encoding="utf-8",
+            errors="replace",
+            universal_newlines=True,
+            bufsize=1,
+        )
+
+        stdout_watcher = PipeWatcher(
+            self._analytical_engine_process.stdout, sys.stdout, drop=True
+        )
+        stderr_watcher = PipeWatcher(
+            self._analytical_engine_process.stderr, sys.stderr, drop=True
+        )
+        setattr(self._analytical_engine_process, "stdout_watcher", stdout_watcher)
+        setattr(self._analytical_engine_process, "stderr_watcher", stderr_watcher)
+
+    def _delete_dangling_coordinator(self):
+        # delete service
+        try:
+            self._core_api.delete_namespaced_service(
+                self._coordinator_service_name, self._namespace
+            )
+        except K8SApiException as ex:
+            if ex.status == 404:
+                logger.warning(
+                    "coordinator service %s not found", self._coordinator_service_name
+                )
+            else:
+                logger.exception(
+                    "Deleting dangling coordinator service %s failed",
+                    self._coordinator_service_name,
+                )
+        try:
+            self._apps_api.delete_namespaced_deployment(
+                self._coordinator_name, self._namespace
+            )
+        except K8SApiException as ex:
+            if ex.status == 404:
+                logger.warning(
+                    "coordinator deployment %s not found", self._coordinator_name
+                )
+            else:
+                logger.exception(
+                    "Deleting dangling coordinator %s failed", self._coordinator_name
+                )
+
+        if self._waiting_for_delete:
+            start_time = time.time()
+            while True:
+                try:
+                    self._apps_api.read_namespaced_deployment(
+                        self._coordinator_name, self._namespace
+                    )
+                except K8SApiException as ex:
+                    if ex.status != 404:
+                        logger.exception(
+                            "Deleting dangling coordinator %s failed",
+                            self._coordinator_name,
+                        )
+                    break
+                else:
+                    time.sleep(1)
+                    if time.time() - start_time > self._timeout_seconds:
+                        logger.error(
+                            "Deleting dangling coordinator %s timeout",
+                            self._coordinator_name,
+                        )
+
+    def start(self):
+        if self._serving:
+            return True
+        try:
+            self._create_services()
+            self._waiting_for_services_ready()
+            self._dump_resource_object()
+            self._serving = True
+        except Exception:  # pylint: disable=broad-except
+            time.sleep(1)
+            logger.exception("Error when launching GraphScope on kubernetes cluster")
+            self.stop()
+            return False
+        return True
+
+    def stop(self, is_dangling=False):
+        if self._serving:
+            logger.info("Cleaning up kubernetes resources")
+            for target in self._resource_object:
+                delete_kubernetes_object(
+                    api_client=self._api_client,
+                    target=target,
+                    wait=self._waiting_for_delete,
+                    timeout_seconds=self._timeout_seconds,
+                )
+            self._resource_object.clear()
+
+            if is_dangling:
+                logger.info("Dangling coordinator detected, cleaning up...")
+                # delete everything inside namespace of graphscope instance
+                if self._delete_namespace:
+                    # delete namespace created by graphscope
+                    self._core_api.delete_namespace(self._namespace)
+                    if self._waiting_for_delete:
+                        start_time = time.time()
+                        while True:
+                            try:
+                                self._core_api.read_namespace(self._namespace)
+                            except K8SApiException as ex:
+                                if ex.status != 404:
+                                    logger.exception(
+                                        "Deleting dangling namespace %s failed",
+                                        self._namespace,
+                                    )
+                                break
+                            else:
+                                time.sleep(1)
+                                if time.time() - start_time > self._timeout_seconds:
+                                    logger.error(
+                                        "Deleting namespace %s timeout", self._namespace
+                                    )
+                else:
+                    # delete coordinator deployment and service
+                    self._delete_dangling_coordinator()
+            self._serving = False
+            logger.info("Kubernetes launcher stopped")
+
+    def create_learning_instance(self, object_id, handle, config):
+        if not self._with_learning:
+            raise NotImplementedError("Learning engine not enabled")
+        # allocate service for ports
+        # prepare arguments
+        handle = json.loads(base64.b64decode(handle.encode("utf-8")).decode("utf-8"))
+        hosts = ",".join(
+            [
+                f"{pod_name}:{port}"
+                for pod_name, port in zip(
+                    self._pod_name_list,
+                    self._engine_cluster.get_learning_ports(self._learning_start_port),
+                )
+            ]
+        )
+        handle["server"] = hosts
+        handle = base64.b64encode(json.dumps(handle).encode("utf-8")).decode("utf-8")
+
+        # launch the server
+        self._learning_instance_processes[object_id] = []
+        for pod_index, pod in enumerate(self._pod_name_list):
+            container = self._engine_cluster.learning_container_name
+            sub_cmd = f"/opt/rh/rh-python38/root/usr/bin/python3 -m gscoordinator.learning {handle} {config} {pod_index}"
+            cmd = f"kubectl -n {self._namespace} exec -it -c {container} {pod} -- {sub_cmd}"
+            logging.debug("launching learning server: %s", " ".join(cmd))
+            cmd = shlex.split(cmd)
+            proc = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                encoding="utf-8",
+                errors="replace",
+                universal_newlines=True,
+                bufsize=1,
+            )
+            stdout_watcher = PipeWatcher(
+                proc.stdout,
+                sys.stdout,
+                drop=True,
+                suppressed=(not logger.isEnabledFor(logging.DEBUG)),
+            )
+            setattr(proc, "stdout_watcher", stdout_watcher)
+            self._learning_instance_processes[object_id].append(proc)
+
+        # update the port usage record
+        self._learning_start_port += len(self._pod_name_list)
+        # Create Service
+        self._create_learning_service(object_id)
+
+        # parse the service hosts and ports
+        return self._engine_cluster.get_graphlearn_service_endpoint(
+            self._api_client, object_id, self._pod_host_ip_list
+        )
+
+    def close_learning_instance(self, object_id):
+        if object_id not in self._learning_instance_processes:
+            return
+        # delete the services
+        target = self._graphlearn_services[object_id]
+        try:
+            delete_kubernetes_object(
+                api_client=self._api_client,
+                target=target,
+                wait=self._waiting_for_delete,
+                timeout_seconds=self._timeout_seconds,
+            )
+        except Exception:  # pylint: disable=broad-except
+            logger.exception("Failed to delete graphlearn service for %s", object_id)
+
+        # terminate the process
+        for proc in self._learning_instance_processes[object_id]:
+            try:
+                proc.terminate()
+                proc.wait(1)
+            except Exception:  # pylint: disable=broad-except
+                logger.exception("Failed to terminate graphlearn server")
+        self._learning_instance_processes[object_id].clear()
 
 
 class ResourceManager(object):
@@ -117,1180 +827,17 @@ class ResourceManager(object):
     def __getitem__(self, index):
         return self._resource_object[index]
 
-    def dump(self):
-        with open(self._resource_object_path, "w") as f:
-            json.dump(self._meta_info, f)
-
-    def dump_with_extra_resource(self, resource):
-        """Also dump with extra resources. A typical scenario is
-        dump meta info of namespace for coordinator dangling processing.
+    def dump(self, extra_resource=None):
+        """Dump meta info to disk file.
+        Args:
+            extra_resource (dict): extra resource to dump.
+                A typical scenario is dumping meta info of namespace
+                for coordinator dangling processing.
         """
-        rlt = copy.deepcopy(self._meta_info)
-        rlt.update(resource)
+        if extra_resource is not None:
+            rlt = copy.deepcopy(self._meta_info)
+            rlt.update(extra_resource)
+        else:
+            rlt = self._meta_info
         with open(self._resource_object_path, "w") as f:
             json.dump(rlt, f)
-
-
-class KubernetesClusterLauncher(AbstractLauncher):
-    _gs_etcd_builder_cls = GSEtcdBuilder
-    _gs_engine_builder_cls = GSEngineBuilder
-    _gs_mars_scheduler_builder_cls = GSEngineBuilder
-
-    _etcd_name_prefix = "gs-etcd-"
-    _etcd_service_name_prefix = "gs-etcd-service-"
-    _engine_name_prefix = "gs-engine-"
-    _vineyard_service_name_prefix = "gs-vineyard-service-"
-    _gle_service_name_prefix = "gs-graphlearn-service-"
-
-    _vineyard_container_name = "vineyard"  # fixed
-    _etcd_container_name = "etcd"
-    _engine_container_name = "engine"  # fixed
-
-    _mars_scheduler_container_name = "mars"  # fixed
-    _mars_worker_container_name = "mars"  # fixed
-    _mars_scheduler_name_prefix = "marsscheduler-"
-    _mars_service_name_prefix = "mars-"
-
-    _random_analytical_engine_rpc_port = random.randint(56001, 57000)
-
-    _vineyard_service_port = 9600  # fixed
-    _mars_scheduler_port = 7103  # fixed
-    _mars_scheduler_web_port = 7104  # fixed
-    _mars_worker_port = 7105  # fixed
-
-    def __init__(
-        self,
-        namespace=None,
-        service_type=None,
-        gs_image=None,
-        etcd_image=None,
-        dataset_image=None,
-        coordinator_name=None,
-        coordinator_service_name=None,
-        etcd_addrs=None,
-        etcd_listening_client_port=None,
-        etcd_listening_peer_port=None,
-        etcd_num_pods=None,
-        etcd_cpu=None,
-        etcd_mem=None,
-        engine_cpu=None,
-        engine_mem=None,
-        vineyard_daemonset=None,
-        vineyard_cpu=None,
-        vineyard_mem=None,
-        vineyard_shared_mem=None,
-        mars_worker_cpu=None,
-        mars_worker_mem=None,
-        mars_scheduler_cpu=None,
-        mars_scheduler_mem=None,
-        etcd_pod_node_selector=None,
-        engine_pod_node_selector=None,
-        with_mars=False,
-        image_pull_policy=None,
-        image_pull_secrets=None,
-        volumes=None,
-        mount_dataset=None,
-        num_workers=None,
-        preemptive=None,
-        instance_id=None,
-        log_level=None,
-        timeout_seconds=None,
-        waiting_for_delete=None,
-        delete_namespace=None,
-        **kwargs,
-    ):
-
-        super().__init__()
-        self._api_client = resolve_api_client()
-        self._core_api = kube_client.CoreV1Api(self._api_client)
-        self._app_api = kube_client.AppsV1Api(self._api_client)
-
-        self._saved_locals = locals()
-        self._num_workers = self._saved_locals["num_workers"]
-        self._instance_id = self._saved_locals["instance_id"]
-
-        # random for multiple k8s cluster in the same namespace
-        self._engine_name = self._engine_name_prefix + self._saved_locals["instance_id"]
-        self._etcd_addrs = etcd_addrs
-        self._etcd_listening_client_port = etcd_listening_client_port
-        self._etcd_listening_peer_port = etcd_listening_peer_port
-        self._etcd_name = self._etcd_name_prefix + self._saved_locals["instance_id"]
-        self._etcd_service_name = (
-            self._etcd_service_name_prefix + self._saved_locals["instance_id"]
-        )
-        self._mars_scheduler_name = (
-            self._mars_scheduler_name_prefix + self._saved_locals["instance_id"]
-        )
-
-        self._coordinator_name = coordinator_name
-        self._coordinator_service_name = coordinator_service_name
-
-        self._resource_object: ResourceManager = ResourceManager(self._api_client)
-
-        # etcd pod info
-        self._etcd_num_pods = max(1, self._saved_locals["etcd_num_pods"])
-        self._etcd_endpoint = None
-
-        # image pull secrets
-        if image_pull_secrets is not None:
-            self._image_pull_secrets = image_pull_secrets.split(",")
-        else:
-            self._image_pull_secrets = []
-
-        if volumes:
-            self._volumes = json.loads(volumes)
-        else:
-            self._volumes = dict()
-        if etcd_pod_node_selector:
-            self._etcd_pod_node_selector = json.loads(etcd_pod_node_selector)
-        else:
-            self._etcd_pod_node_selector = dict()
-        if engine_pod_node_selector:
-            self._engine_pod_node_selector = json.loads(engine_pod_node_selector)
-        else:
-            self._engine_pod_node_selector = dict()
-
-        self._host0 = None
-        self._pod_name_list = []
-        self._pod_ip_list = None
-        self._pod_host_ip_list = None
-
-        self._analytical_engine_endpoint = None
-        self._vineyard_service_endpoint = None
-        self._mars_service_endpoint = None
-
-        self._closed = False
-        self._glog_level = parse_as_glog_level(log_level)
-
-        self._analytical_engine_process = None
-
-        # interactive engine
-        # executor inter-processing port
-        # executor rpc port
-        # frontend port
-        self._interactive_port = 8233
-
-        # 8000 ~ 9000 is exposed
-        self._learning_engine_ports_usage = 8000
-        self._graphlearn_services = dict()
-        self._learning_instance_processes = {}
-
-        # workspace
-        instance_id = self._saved_locals["instance_id"]
-        self._instance_workspace = os.path.join(WORKSPACE, instance_id)
-        os.makedirs(self._instance_workspace, exist_ok=True)
-        self._session_workspace = None
-
-        # component service name
-        if self._exists_vineyard_daemonset(self._saved_locals["vineyard_daemonset"]):
-            self._vineyard_service_name = (
-                f"{self._saved_locals['vineyard_daemonset']}-rpc"
-            )
-        else:
-            self._vineyard_service_name = (
-                f"{self._vineyard_service_name_prefix}{instance_id}"
-            )
-        self._mars_service_name = f"{self._mars_service_name_prefix}{instance_id}"
-
-    def __del__(self):
-        self.stop()
-
-    def type(self):
-        return types_pb2.K8S
-
-    def get_vineyard_service_name(self):
-        return self._vineyard_service_name
-
-    def get_vineyard_rpc_endpoint(self):
-        return self._vineyard_service_endpoint
-
-    def get_mars_scheduler_endpoint(self):
-        return self._mars_service_endpoint
-
-    def waiting_for_delete(self):
-        return self._saved_locals["waiting_for_delete"]
-
-    def get_namespace(self):
-        return self._saved_locals["namespace"]
-
-    def get_vineyard_stream_info(self):
-        hosts = [
-            "%s:%s" % (self._saved_locals["namespace"], host)
-            for host in self._pod_name_list
-        ]
-        return "kubernetes", hosts
-
-    def set_session_workspace(self, session_id):
-        self._session_workspace = os.path.join(self._instance_workspace, session_id)
-        os.makedirs(self._session_workspace, exist_ok=True)
-
-    @property
-    def preemptive(self):
-        return self._saved_locals["preemptive"]
-
-    @property
-    def hosts(self):
-        """String of a list of pod name, comma separated."""
-        return ",".join(self._pod_name_list)
-
-    def distribute_file(self, path):
-        d = os.path.dirname(path)
-        for pod in self._pod_name_list:
-            subprocess.check_call(
-                [
-                    shutil.which("kubectl"),
-                    "exec",
-                    pod,
-                    "-c",
-                    "engine",
-                    "--",
-                    "mkdir",
-                    "-p",
-                    d,
-                ]
-            )
-            subprocess.check_call(
-                [
-                    shutil.which("kubectl"),
-                    "cp",
-                    path,
-                    "{}:{}".format(pod, path),
-                    "-c",
-                    "engine",
-                ]
-            )
-
-    def close_analytical_instance(self):
-        pass
-
-    def launch_vineyard(self):
-        """Launch vineyardd in k8s cluster."""
-        # TODO: vineyard is launched by engine by now.
-        pass
-
-    def close_etcd(self):
-        # TODO: Delete etcd pods and service.
-        pass
-
-    def close_vineyard(self):
-        pass
-
-    def create_interactive_instance(self, object_id: int, schema_path: str):
-        """
-        Args:
-            config (dict): dict of op_def_pb2.OpDef.attr
-        """
-        env = os.environ.copy()
-        env["GRAPHSCOPE_HOME"] = GRAPHSCOPE_HOME
-        cmd = [
-            INTERACTIVE_ENGINE_SCRIPT,
-            "create_gremlin_instance_on_k8s",
-            self._session_workspace,
-            str(object_id),
-            schema_path,
-            self.hosts,
-            self._engine_container_name,
-            str(self._interactive_port),  # executor port
-            str(self._interactive_port + 1),  # executor rpc port
-            str(self._interactive_port + 2),  # frontend port
-            self._coordinator_name,
-        ]
-        self._interactive_port += 3
-        logger.info("Create GIE instance with command: %s", " ".join(cmd))
-        process = subprocess.Popen(
-            cmd,
-            start_new_session=True,
-            cwd=os.getcwd(),
-            env=env,
-            encoding="utf-8",
-            errors="replace",
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            bufsize=1,
-            universal_newlines=True,
-        )
-        return process
-
-    def close_interactive_instance(self, object_id):
-        env = os.environ.copy()
-        env["GRAPHSCOPE_HOME"] = GRAPHSCOPE_HOME
-        cmd = [
-            INTERACTIVE_ENGINE_SCRIPT,
-            "close_gremlin_instance_on_k8s",
-            self._session_workspace,
-            str(object_id),
-            self.hosts,
-            self._engine_container_name,
-        ]
-        logger.info("Close GIE instance with command: %s", " ".join(cmd))
-        process = subprocess.Popen(
-            cmd,
-            start_new_session=True,
-            cwd=os.getcwd(),
-            env=env,
-            encoding="utf-8",
-            errors="replace",
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            universal_newlines=True,
-            bufsize=1,
-        )
-        return process
-
-    def _create_mars_scheduler(self):
-        logger.info("Launching mars scheduler pod for GraphScope ...")
-
-        labels = {
-            "app.kubernetes.io/name": "graphscope",
-            "app.kubernetes.io/instance": self._instance_id,
-            "app.kubernetes.io/version": __version__,
-            "app.kubernetes.io/external": "mars",
-        }
-
-        # create mars service
-        service_builder = ServiceBuilder(
-            self._mars_service_name,
-            service_type=self._saved_locals["service_type"],
-            port=[self._mars_scheduler_port, self._mars_scheduler_web_port],
-            selector=labels,
-        )
-        self._resource_object.append(
-            self._core_api.create_namespaced_service(
-                self._saved_locals["namespace"], service_builder.build()
-            )
-        )
-
-        # create engine replicaset
-        scheduler_builder = self._gs_mars_scheduler_builder_cls(
-            name=self._mars_scheduler_name,
-            labels=labels,
-            num_workers=1,
-            image_pull_policy=self._saved_locals["image_pull_policy"],
-        )
-        # volume1 is for vineyard ipc socket
-        if self._exists_vineyard_daemonset(self._saved_locals["vineyard_daemonset"]):
-            vineyard_socket_volume_type = "hostPath"
-            vineyard_socket_volume_fields = {
-                "type": "Directory",
-                "path": "/var/run/vineyard-%s-%s"
-                % (
-                    self._saved_locals["namespace"],
-                    self._saved_locals["vineyard_daemonset"],
-                ),
-            }
-        else:
-            vineyard_socket_volume_type = "emptyDir"
-            vineyard_socket_volume_fields = {}
-        scheduler_builder.add_volume(
-            VolumeBuilder(
-                name="vineyard-ipc-volume",
-                volume_type=vineyard_socket_volume_type,
-                field=vineyard_socket_volume_fields,
-                mounts_list=[
-                    {"mountPath": os.path.join(get_tempdir(), "vineyard_workspace")},
-                ],
-            )
-        )
-        # volume2 is for shared memory
-        scheduler_builder.add_volume(
-            VolumeBuilder(
-                name="host-shm",
-                volume_type="emptyDir",
-                field={"medium": "Memory"},
-                mounts_list=[{"mountPath": "/dev/shm"}],
-            )
-        )
-        # add env
-        scheduler_builder.add_simple_envs(
-            {
-                "GLOG_v": str(self._glog_level),
-                "VINEYARD_IPC_SOCKET": os.path.join(
-                    get_tempdir(), "vineyard_workspace", "vineyard.sock"
-                ),
-                "WITH_VINEYARD": "ON",
-            }
-        )
-
-        # add vineyard container
-        if not self._exists_vineyard_daemonset(
-            self._saved_locals["vineyard_daemonset"]
-        ):
-            scheduler_builder.add_vineyard_container(
-                name=self._vineyard_container_name,
-                image=self._saved_locals["gs_image"],
-                cpu=self._saved_locals["vineyard_cpu"],
-                mem=self._saved_locals["vineyard_mem"],
-                shared_mem=self._saved_locals["vineyard_shared_mem"],
-                preemptive=self._saved_locals["preemptive"],
-                etcd_endpoints=self._get_etcd_endpoints(),
-                port=self._vineyard_service_port,
-            )
-
-        # add mars scheduler container
-        if self._saved_locals["with_mars"]:
-            scheduler_builder.add_mars_scheduler_container(
-                name=self._mars_scheduler_container_name,
-                image=self._saved_locals["gs_image"],
-                cpu=self._saved_locals["mars_scheduler_cpu"],
-                mem=self._saved_locals["mars_scheduler_mem"],
-                preemptive=self._saved_locals["preemptive"],
-                port=self._mars_scheduler_port,
-                web_port=self._mars_scheduler_web_port,
-            )
-        for name in self._image_pull_secrets:
-            scheduler_builder.add_image_pull_secret(name)
-
-        self._resource_object.append(
-            self._app_api.create_namespaced_replica_set(
-                self._saved_locals["namespace"], scheduler_builder.build()
-            )
-        )
-
-    def _create_engine_replicaset(self):
-        logger.info("Launching GraphScope engines pod ...")
-
-        labels = {
-            "app.kubernetes.io/name": "graphscope",
-            "app.kubernetes.io/instance": self._instance_id,
-            "app.kubernetes.io/version": __version__,
-            "app.kubernetes.io/component": "engine",
-        }
-
-        # create engine replicaset
-        engine_builder = self._gs_engine_builder_cls(
-            name=self._engine_name,
-            labels=labels,
-            num_workers=self._num_workers,
-            image_pull_policy=self._saved_locals["image_pull_policy"],
-        )
-        if self._engine_pod_node_selector:
-            engine_builder.add_engine_pod_node_selector(self._engine_pod_node_selector)
-        # volume1 is for vineyard ipc socket
-        # MaxGraph: /home/maxgraph/data/vineyard
-        if self._exists_vineyard_daemonset(self._saved_locals["vineyard_daemonset"]):
-            vineyard_socket_volume_type = "hostPath"
-            vineyard_socket_volume_fields = {
-                "type": "Directory",
-                "path": "/var/run/vineyard-%s-%s"
-                % (
-                    self._saved_locals["namespace"],
-                    self._saved_locals["vineyard_daemonset"],
-                ),
-            }
-        else:
-            vineyard_socket_volume_type = "emptyDir"
-            vineyard_socket_volume_fields = {}
-        engine_builder.add_volume(
-            VolumeBuilder(
-                name="vineyard-ipc-volume",
-                volume_type=vineyard_socket_volume_type,
-                field=vineyard_socket_volume_fields,
-                mounts_list=[
-                    {"mountPath": "/tmp/vineyard_workspace"},
-                ],
-            )
-        )
-        # volume2 is for shared memory
-        engine_builder.add_volume(
-            VolumeBuilder(
-                name="host-shm",
-                volume_type="emptyDir",
-                field={"medium": "Memory"},
-                mounts_list=[{"mountPath": "/dev/shm"}],
-            )
-        )
-
-        # Mount aliyun demo dataset bucket
-        if self._saved_locals["mount_dataset"] is not None:
-            self._volumes["dataset"] = {
-                "type": "emptyDir",
-                "field": {},
-                "mounts": {
-                    "mountPath": self._saved_locals["mount_dataset"],
-                    "readOnly": True,
-                    "mountPropagation": "HostToContainer",
-                },
-            }
-
-        # Mount user specified volumes
-        for name, volume in self._volumes.items():
-            volume_builder = resolve_volume_builder(name, volume)
-            if volume_builder is not None:
-                engine_builder.add_volume(volume_builder)
-
-        # add env
-        env = {
-            "GLOG_v": str(self._glog_level),
-            "VINEYARD_IPC_SOCKET": os.path.join(
-                get_tempdir(), "vineyard_workspace", "vineyard.sock"
-            ),
-            "WITH_VINEYARD": "ON",
-            "PATH": os.environ["PATH"],
-            "LD_LIBRARY_PATH": os.environ["LD_LIBRARY_PATH"],
-            "DYLD_LIBRARY_PATH": os.environ["DYLD_LIBRARY_PATH"],
-        }
-        if "OPAL_PREFIX" in os.environ:
-            env.update({"OPAL_PREFIX": os.environ["OPAL_PREFIX"]})
-        if "OPAL_BINDIR" in os.environ:
-            env.update({"OPAL_BINDIR": os.environ["OPAL_BINDIR"]})
-
-        engine_builder.add_simple_envs(env)
-
-        # add engine container
-        engine_builder.add_engine_container(
-            cmd=["tail", "-f", "/dev/null"],
-            name=self._engine_container_name,
-            image=self._saved_locals["gs_image"],
-            cpu=self._saved_locals["engine_cpu"],
-            mem=self._saved_locals["engine_mem"],
-            preemptive=self._saved_locals["preemptive"],
-        )
-
-        # add vineyard container
-        if not self._exists_vineyard_daemonset(
-            self._saved_locals["vineyard_daemonset"]
-        ):
-            engine_builder.add_vineyard_container(
-                name=self._vineyard_container_name,
-                image=self._saved_locals["gs_image"],
-                cpu=self._saved_locals["vineyard_cpu"],
-                mem=self._saved_locals["vineyard_mem"],
-                shared_mem=self._saved_locals["vineyard_shared_mem"],
-                preemptive=self._saved_locals["preemptive"],
-                etcd_endpoints=self._get_etcd_endpoints(),
-                port=self._vineyard_service_port,
-            )
-
-        # add mars worker container
-        if self._saved_locals["with_mars"]:
-            engine_builder.add_mars_worker_container(
-                name=self._mars_worker_container_name,
-                image=self._saved_locals["gs_image"],
-                cpu=self._saved_locals["mars_worker_cpu"],
-                mem=self._saved_locals["mars_worker_mem"],
-                preemptive=self._saved_locals["preemptive"],
-                port=self._mars_worker_port,
-                scheduler_endpoint="%s:%s"
-                % (self._mars_service_name, self._mars_scheduler_port),
-            )
-
-        if self._saved_locals["mount_dataset"]:
-            engine_builder.add_container(
-                {
-                    "name": "dataset",
-                    "image": self._saved_locals["dataset_image"],
-                    "imagePullPolicy": self._saved_locals["image_pull_policy"],
-                    "resources": {
-                        "requests": {
-                            "memory": "64Mi",
-                            "cpu": "250m",
-                        },
-                        "limits": {
-                            "memory": "64Mi",
-                            "cpu": "250m",
-                        },
-                    },
-                    "volumeMounts": [
-                        {
-                            "name": "dataset",
-                            "mountPath": "/dataset",
-                            "mountPropagation": "Bidirectional",
-                        }
-                    ],
-                    "securityContext": {"privileged": True},
-                }
-            )
-        for name in self._image_pull_secrets:
-            engine_builder.add_image_pull_secret(name)
-
-        self._resource_object.append(
-            self._app_api.create_namespaced_replica_set(
-                self._saved_locals["namespace"], engine_builder.build()
-            )
-        )
-
-    def launch_etcd(self):
-        logger.info("Launching etcd ...")
-
-        labels = {
-            "app.kubernetes.io/name": "graphscope",
-            "app.kubernetes.io/instance": self._instance_id,
-            "app.kubernetes.io/version": __version__,
-            "app.kubernetes.io/component": "etcd",
-        }
-
-        # should create service first
-        service_builder = ServiceBuilder(
-            self._etcd_service_name,
-            service_type="ClusterIP",
-            port=self._etcd_listening_client_port,
-            selector=labels,
-        )
-        self._resource_object.append(
-            self._core_api.create_namespaced_service(
-                self._saved_locals["namespace"], service_builder.build()
-            )
-        )
-
-        time.sleep(1)
-
-        # create etcd cluster
-        etcd_builder = self._gs_etcd_builder_cls(
-            name_prefix=self._etcd_name,
-            container_name=self._etcd_container_name,
-            service_name=self._etcd_service_name,
-            image=self._saved_locals["etcd_image"],
-            cpu=self._saved_locals["etcd_cpu"],
-            mem=self._saved_locals["etcd_mem"],
-            preemptive=self._saved_locals["preemptive"],
-            labels=labels,
-            image_pull_policy=self._saved_locals["image_pull_policy"],
-            num_pods=self._etcd_num_pods,
-            restart_policy="Always",
-            image_pull_secrets=self._image_pull_secrets,
-            listen_peer_service_port=self._etcd_listening_peer_port,
-            listen_client_service_port=self._etcd_listening_client_port,
-        )
-        if self._etcd_pod_node_selector:
-            etcd_builder.add_etcd_pod_node_selector(self._etcd_pod_node_selector)
-        pods, services = etcd_builder.build()
-        for svc in services:
-            self._resource_object.append(
-                self._core_api.create_namespaced_service(
-                    self._saved_locals["namespace"], svc.build()
-                )
-            )
-        for pod in pods:
-            self._resource_object.append(
-                self._core_api.create_namespaced_pod(
-                    self._saved_locals["namespace"], pod.build()
-                )
-            )
-
-    def _create_vineyard_service(self):
-        # vineyard in engine pod
-        labels = {
-            "app.kubernetes.io/name": "graphscope",
-            "app.kubernetes.io/instance": self._instance_id,
-            "app.kubernetes.io/version": __version__,
-            "app.kubernetes.io/component": "engine",
-        }
-
-        service_builder = ServiceBuilder(
-            self._vineyard_service_name,
-            service_type=self._saved_locals["service_type"],
-            port=self._vineyard_service_port,
-            selector=labels,
-        )
-        self._resource_object.append(
-            self._core_api.create_namespaced_service(
-                self._saved_locals["namespace"], service_builder.build()
-            )
-        )
-
-    def _get_vineyard_service_endpoint(self):
-        # len(endpoints) >= 1
-        endpoints = get_service_endpoints(
-            api_client=self._api_client,
-            namespace=self._saved_locals["namespace"],
-            name=self._vineyard_service_name,
-            service_type=self._saved_locals["service_type"],
-        )
-        assert len(endpoints) >= 1
-        return endpoints[0]
-
-    def _get_mars_scheduler_service_endpoint(self):
-        # Always len(endpoints) >= 1
-        endpoints = get_service_endpoints(
-            api_client=self._api_client,
-            namespace=self._saved_locals["namespace"],
-            name=self._mars_service_name,
-            service_type=self._saved_locals["service_type"],
-            query_port=self._mars_scheduler_web_port,
-        )
-        return endpoints[0]
-
-    def _create_graphlearn_service(self, object_id, start_port, num_workers):
-        targets = []
-
-        labels = {
-            "app.kubernetes.io/name": "graphscope",
-            "app.kubernetes.io/instance": self._instance_id,
-            "app.kubernetes.io/version": __version__,
-            "app.kubernetes.io/component": "engine",
-        }
-
-        service_builder = ServiceBuilder(
-            self._gle_service_name_prefix + str(object_id),
-            service_type=self._saved_locals["service_type"],
-            port=list(range(start_port, start_port + num_workers)),
-            selector=labels,
-            external_traffic_policy="Local",
-        )
-        targets.append(
-            self._core_api.create_namespaced_service(
-                self._saved_locals["namespace"], service_builder.build()
-            )
-        )
-        self._graphlearn_services[object_id] = targets
-        self._resource_object.extend(targets)
-
-    def _parse_graphlearn_service_endpoint(self, object_id):
-        if self._saved_locals["service_type"] == "NodePort":
-            services = self._core_api.list_namespaced_service(
-                self._saved_locals["namespace"]
-            )
-            for svc in services.items:
-                if svc.metadata.name == self._gle_service_name_prefix + str(object_id):
-                    endpoints = []
-                    for ip, port_spec in zip(self._pod_host_ip_list, svc.spec.ports):
-                        endpoints.append(
-                            (
-                                "%s:%s" % (ip, port_spec.node_port),
-                                int(port_spec.name.split("-")[-1]),
-                            )
-                        )
-                    endpoints.sort(key=lambda ep: ep[1])
-                    return [ep[0] for ep in endpoints]
-        elif self._saved_locals["service_type"] == "LoadBalancer":
-            endpoints = get_service_endpoints(
-                api_client=self._api_client,
-                namespace=self._saved_locals["namespace"],
-                name=self._gle_service_name_prefix + str(object_id),
-                service_type=self._saved_locals["service_type"],
-            )
-            return endpoints
-        raise RuntimeError("Get graphlearn service endpoint failed.")
-
-    def get_engine_config(self):
-        config = {
-            "vineyard_service_name": self.get_vineyard_service_name(),
-            "vineyard_rpc_endpoint": self.get_vineyard_rpc_endpoint(),
-            "mars_endpoint": self.get_mars_scheduler_endpoint(),
-        }
-        return config
-
-    def configure_etcd_endpoint(self):
-        if self._etcd_addrs is None:
-            self.launch_etcd()
-            self._etcd_endpoint = self._get_etcd_service_endpoint()
-            logger.info("etcd cluster created")
-        else:
-            self._etcd_endpoint = self._etcd_addrs
-            logger.info("Using external etcd cluster")
-        logger.info("etcd endpoint is %s", self._etcd_endpoint)
-
-    def _get_etcd_endpoints(self):
-        etcd_addrs = []
-        if self._etcd_addrs is None:
-            port = self._etcd_listening_client_port
-            etcd_addrs.append("%s:%s" % (self._etcd_service_name, port))
-            for i in range(self._etcd_num_pods):
-                etcd_addrs.append("%s-%d:%s" % (self._etcd_name, i, port))
-        else:
-            etcd_addrs = self._etcd_addrs.split(",")
-        etcd_endpoints = ["http://%s" % i for i in etcd_addrs if i]
-        return etcd_endpoints
-
-    def _create_services(self):
-        self.configure_etcd_endpoint()
-
-        if self._saved_locals["with_mars"]:
-            # scheduler used by mars
-            self._create_mars_scheduler()
-
-        logger.info("Creating engine replicaset...")
-        self._create_engine_replicaset()
-        if not self._exists_vineyard_daemonset(
-            self._saved_locals["vineyard_daemonset"]
-        ):
-            self._create_vineyard_service()
-
-    def _waiting_for_services_ready(self):
-        start_time = time.time()
-        event_messages = []
-        engine_pod_selector = ""
-        while True:
-            replicasets = self._app_api.list_namespaced_replica_set(
-                namespace=self._saved_locals["namespace"]
-            )
-            service_available = False
-            for rs in replicasets.items:
-                if rs.metadata.name == self._engine_name:
-                    # logger.info(
-                    # "Engine pod: {} ready / {} total".format(
-                    # str(rs.status.ready_replicas), self._num_workers
-                    # )
-                    # )
-                    if rs.status.ready_replicas == self._num_workers:
-                        # service is ready
-                        service_available = True
-                        break
-
-                    # check container status
-                    selector = ""
-                    for k, v in rs.spec.selector.match_labels.items():
-                        selector += f"{k}={v},"
-                    selector = selector[:-1]  # remove last comma
-                    engine_pod_selector = selector
-
-                    pods = self._core_api.list_namespaced_pod(
-                        namespace=self._saved_locals["namespace"],
-                        label_selector=selector,
-                    )
-
-                    for pod in pods.items:
-                        pod_name = pod.metadata.name
-                        field_selector = "involvedObject.name=" + pod_name
-                        stream = kube_watch.Watch().stream(
-                            self._core_api.list_namespaced_event,
-                            self._saved_locals["namespace"],
-                            field_selector=field_selector,
-                            timeout_seconds=1,
-                        )
-                        for event in stream:
-                            msg = f"[{pod_name}]: {event['object'].message}"
-                            if msg not in event_messages:
-                                event_messages.append(msg)
-                                logger.info(msg)
-                                if event["object"].reason == "Failed":
-                                    raise RuntimeError("Kubernetes event error: ", msg)
-
-            if service_available:
-                break
-            if (
-                self._saved_locals["timeout_seconds"]
-                and self._saved_locals["timeout_seconds"] + start_time < time.time()
-            ):
-                raise TimeoutError("GraphScope Engines launching timeout.")
-            time.sleep(2)
-
-        self._pod_name_list = []
-        self._pod_ip_list = []
-        self._pod_host_ip_list = []
-        pods = self._core_api.list_namespaced_pod(
-            namespace=self._saved_locals["namespace"],
-            label_selector=engine_pod_selector,
-        )
-        for pod in pods.items:
-            self._pod_name_list.append(pod.metadata.name)
-            self._pod_ip_list.append(pod.status.pod_ip)
-            self._pod_host_ip_list.append(pod.status.host_ip)
-        assert len(self._pod_ip_list) >= 1
-        self._host0 = self._pod_ip_list[0]
-        self._analytical_engine_endpoint = "{}:{}".format(
-            self._host0, self._random_analytical_engine_rpc_port
-        )
-
-        # get vineyard service endpoint
-        self._vineyard_service_endpoint = self._get_vineyard_service_endpoint()
-        if self._saved_locals["with_mars"]:
-            self._mars_service_endpoint = (
-                "http://" + self._get_mars_scheduler_service_endpoint()
-            )
-        logger.info("GraphScope engines pod is ready.")
-        logger.info("Engines pod name list: %s", self._pod_name_list)
-        logger.info("Engines pod ip list: %s", self._pod_ip_list)
-        logger.info("Engines pod host ip list: %s", self._pod_host_ip_list)
-        logger.info("Vineyard service endpoint: %s", self._vineyard_service_endpoint)
-        if self._saved_locals["with_mars"]:
-            logger.info("Mars service endpoint: %s", self._mars_service_endpoint)
-
-    def _dump_resource_object(self):
-        resource = {}
-        if self._saved_locals["delete_namespace"]:
-            resource[self._saved_locals["namespace"]] = "Namespace"
-        else:
-            # coordinator info
-            resource[self._coordinator_name] = "Deployment"
-            resource[self._coordinator_service_name] = "Service"
-
-        self._resource_object.dump_with_extra_resource(resource)
-
-    def _get_etcd_service_endpoint(self):
-        # Always len(endpoints) >= 1
-        endpoints = get_service_endpoints(
-            api_client=self._api_client,
-            namespace=self._saved_locals["namespace"],
-            name=self._etcd_service_name,
-            service_type="ClusterIP",
-        )
-        return endpoints[0]
-
-    def create_analytical_instance(self):
-        logger.info(
-            "Starting GAE rpc service on {} ...".format(
-                str(self._analytical_engine_endpoint)
-            )
-        )
-
-        # generate and distribute hostfile
-        kube_hosts_path = os.path.join(get_tempdir(), "kube_hosts")
-        with open(kube_hosts_path, "w") as f:
-            for i, pod_ip in enumerate(self._pod_ip_list):
-                f.write("{} {}\n".format(pod_ip, self._pod_name_list[i]))
-
-        for pod in self._pod_name_list:
-            subprocess.check_call(
-                [
-                    shutil.which("kubectl"),
-                    "-n",
-                    self._saved_locals["namespace"],
-                    "cp",
-                    kube_hosts_path,
-                    "{}:/tmp/hosts_of_nodes".format(pod),
-                    "-c",
-                    self._engine_container_name,
-                ]
-            )
-
-        # launch engine
-        rmcp = ResolveMPICmdPrefix(rsh_agent=True)
-        cmd, mpi_env = rmcp.resolve(self._num_workers, ",".join(self._pod_name_list))
-
-        cmd.append(ANALYTICAL_ENGINE_PATH)
-        cmd.extend(["--host", "0.0.0.0"])
-        cmd.extend(["--port", str(self._random_analytical_engine_rpc_port)])
-        cmd.extend(["--vineyard_shared_mem", self._saved_locals["vineyard_shared_mem"]])
-
-        if rmcp.openmpi():
-            cmd.extend(["-v", str(self._glog_level)])
-        else:
-            mpi_env["GLOG_v"] = str(self._glog_level)
-
-        cmd.extend(
-            [
-                "--vineyard_socket",
-                os.path.join(get_tempdir(), "vineyard_workspace", "vineyard.sock"),
-            ]
-        )
-        logger.info("Analytical engine launching command: {}".format(" ".join(cmd)))
-
-        env = os.environ.copy()
-        env["GRAPHSCOPE_HOME"] = GRAPHSCOPE_HOME
-        env.update(mpi_env)
-
-        self._analytical_engine_process = subprocess.Popen(
-            cmd,
-            env=env,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            encoding="utf-8",
-            errors="replace",
-            universal_newlines=True,
-            bufsize=1,
-        )
-
-        stdout_watcher = PipeWatcher(
-            self._analytical_engine_process.stdout, sys.stdout, drop=True
-        )
-        stderr_watcher = PipeWatcher(
-            self._analytical_engine_process.stderr, sys.stderr, drop=True
-        )
-        setattr(self._analytical_engine_process, "stdout_watcher", stdout_watcher)
-        setattr(self._analytical_engine_process, "stderr_watcher", stderr_watcher)
-
-    def _delete_dangling_coordinator(self):
-        # delete service
-        self._core_api.delete_namespaced_service(
-            name=self._coordinator_service_name,
-            namespace=self._saved_locals["namespace"],
-        )
-        self._app_api.delete_namespaced_deployment(
-            name=self._coordinator_name, namespace=self._saved_locals["namespace"]
-        )
-        if self._saved_locals["waiting_for_delete"]:
-            start_time = time.time()
-            while True:
-                try:
-                    self._app_api.read_namespaced_deployment(
-                        name=self._coordinator_name,
-                        namespace=self._saved_locals["namespace"],
-                    )
-                except K8SApiException as ex:
-                    if ex.status != 404:
-                        logger.error(
-                            "Deleting dangling coordinator {} failed: {}".format(
-                                self._coordinator_name, str(ex)
-                            )
-                        )
-                    break
-                else:
-                    time.sleep(1)
-                    if time.time() - start_time > self._saved_locals["timeout_seconds"]:
-                        logger.error(
-                            "Deleting dangling coordinator {} timeout".format(
-                                self._coordinator_name
-                            )
-                        )
-
-    def _exists_vineyard_daemonset(self, release):
-        # check if vineyard daemonset exists.
-        if not release:
-            return False
-        try:
-            self._app_api.read_namespaced_daemon_set(
-                release, self._saved_locals["namespace"]
-            )
-        except K8SApiException:
-            return False
-        return True
-
-    def start(self):
-        try:
-            self._create_services()
-            self._waiting_for_services_ready()
-            self._dump_resource_object()
-        except Exception as e:
-            time.sleep(1)
-            logger.error(
-                "Error when launching GraphScope on kubernetes cluster: %s, with traceback: %s",
-                repr(e),
-                traceback.format_exc(),
-            )
-            self.stop()
-            return False
-        return True
-
-    def stop(self, is_dangling=False):
-        if not self._closed:
-            for target in self._resource_object:
-                delete_kubernetes_object(
-                    api_client=self._api_client,
-                    target=target,
-                    wait=self._saved_locals["waiting_for_delete"],
-                    timeout_seconds=self._saved_locals["timeout_seconds"],
-                )
-            self._resource_object = []
-
-            if is_dangling:
-                logger.info("Dangling coordinator detected, cleaning up...")
-                # delete everything inside namespace of graphscope instance
-                if self._saved_locals["delete_namespace"]:
-                    # delete namespace created by graphscope
-                    self._core_api.delete_namespace(self._saved_locals["namespace"])
-                    if self._saved_locals["waiting_for_delete"]:
-                        start_time = time.time()
-                        while True:
-                            try:
-                                self._core_api.read_namespace(
-                                    self._saved_locals["namespace"]
-                                )
-                            except K8SApiException as ex:
-                                if ex.status != 404:
-                                    logger.error(
-                                        "Deleting dangling namespace {} failed: {}".format(
-                                            self._saved_locals["namespace"], str(ex)
-                                        )
-                                    )
-                                break
-                            else:
-                                time.sleep(1)
-                                if (
-                                    time.time() - start_time
-                                    > self._saved_locals["timeout_seconds"]
-                                ):
-                                    logger.error(
-                                        "Deleting namespace %s timeout"
-                                        % self._saved_locals["namespace"]
-                                    )
-                else:
-                    # delete coordinator deployment and service
-                    self._delete_dangling_coordinator()
-            self._closed = True
-
-    def create_learning_instance(self, object_id, handle, config):
-        # allocate service for ports
-        self._create_graphlearn_service(
-            object_id, self._learning_engine_ports_usage, len(self._pod_name_list)
-        )
-
-        # prepare arguments
-        handle = json.loads(base64.b64decode(handle.encode("utf-8")).decode("utf-8"))
-        hosts = ",".join(
-            [
-                "%s:%s" % (pod_name, port)
-                for pod_name, port in zip(
-                    self._pod_name_list,
-                    range(
-                        self._learning_engine_ports_usage,
-                        self._learning_engine_ports_usage + len(self._pod_name_list),
-                    ),
-                )
-            ]
-        )
-        handle["server"] = hosts
-        handle = base64.b64encode(json.dumps(handle).encode("utf-8")).decode("utf-8")
-
-        # launch the server
-        self._learning_instance_processes[object_id] = []
-        for pod_index, pod in enumerate(self._pod_name_list):
-            cmd = [
-                "kubectl",
-                "-n",
-                self._saved_locals["namespace"],
-                "exec",
-                "-it",
-                "-c",
-                self._engine_container_name,
-                pod,
-                "--",
-                "python3",
-                "-m" "gscoordinator.learning",
-                handle,
-                config,
-                str(pod_index),
-            ]
-            logging.debug("launching learning server: %s", " ".join(cmd))
-            proc = subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                encoding="utf-8",
-                errors="replace",
-                universal_newlines=True,
-                bufsize=1,
-            )
-            stdout_watcher = PipeWatcher(
-                proc.stdout,
-                sys.stdout,
-                drop=True,
-                suppressed=(not logger.isEnabledFor(logging.DEBUG)),
-            )
-            setattr(proc, "stdout_watcher", stdout_watcher)
-            self._learning_instance_processes[object_id].append(proc)
-
-        # update the port usage record
-        self._learning_engine_ports_usage += len(self._pod_name_list)
-
-        # parse the service hosts and ports
-        return self._parse_graphlearn_service_endpoint(object_id)
-
-    def close_learning_instance(self, object_id):
-        if object_id not in self._learning_instance_processes:
-            return
-
-        # delete the services
-        for target in self._graphlearn_services[object_id]:
-            try:
-                delete_kubernetes_object(
-                    api_client=self._api_client,
-                    target=target,
-                    wait=self._saved_locals["waiting_for_delete"],
-                    timeout_seconds=self._saved_locals["timeout_seconds"],
-                )
-            except Exception as e:
-                logger.error(
-                    "Failed to delete graphlearn service for %s, %s", object_id, e
-                )
-
-        # terminate the process
-        for proc in self._learning_instance_processes[object_id]:
-            try:
-                proc.terminate()
-                proc.wait(1)
-            except Exception as e:
-                logger.error("Failed to terminate graphlearn server: %s", e)
-        self._learning_instance_processes[object_id].clear()

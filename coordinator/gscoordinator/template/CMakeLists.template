@@ -352,7 +352,7 @@ elseif (JAVA_PIE_APP)
     target_link_libraries(${FRAME_NAME} ${CMAKE_JNI_LINKER_FLAGS})
     set_target_properties(${FRAME_NAME} PROPERTIES COMPILE_FLAGS "-fPIC")
     # 2.Post build after compilation, run run-llvm4jni.sh to generate bitcode, if clang enabled.
-    if ((CMAKE_CXX_COMPILER_ID MATCHES "Clang") AND RUN_LLVM4JNI_SH)
+    if ((CMAKE_CXX_COMPILER_ID MATCHES "Clang") AND (RUN_LLVM4JNI_SH AND (EXISTS ${RUN_LLVM4JNI_SH})))
         add_custom_command(TARGET ${FRAME_NAME}
                         POST_BUILD COMMAND bash ${RUN_LLVM4JNI_SH}
                                             "-output" ${LLVM4JNI_OUTPUT}

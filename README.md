@@ -271,12 +271,12 @@ The figure shows the flow of execution in the cluster mode. When users run code 
 
 To use GraphScope in a distributed setting, we need to establish a session in a python interpreter.
 
-For convenience, we provide several demo datasets, and an option `mount_dataset` to mount the dataset in the graphscope cluster. The datasets will be mounted to location you assigned in the pods. If you want to use your own data on k8s cluster, please refer to [this](docs/deployment.rst).
+For convenience, we provide several demo datasets, and an option `with_dataset` to mount the dataset in the graphscope cluster. The datasets will be mounted to `/dataset` in the pods. If you want to use your own data on k8s cluster, please refer to [this](docs/deployment.rst).
 
 ```python
 import graphscope
 
-sess = graphscope.session(mount_dataset="/dataset")
+sess = graphscope.session(with_dataset=True)
 ```
 
 For macOS, the session needs to establish with the LoadBalancer service type (which is NodePort by default).
@@ -284,7 +284,7 @@ For macOS, the session needs to establish with the LoadBalancer service type (wh
 ```python
 import graphscope
 
-sess = graphscope.session(mount_dataset="/dataset", k8s_service_type="LoadBalancer")
+sess = graphscope.session(with_dataset=True, k8s_service_type="LoadBalancer")
 ```
 
 A session tries to launch a `coordinator`, which is the entry for the back-end engines. The coordinator manages a cluster of resources (k8s pods), and the interactive/analytical/learning engines ran on them. For each pod in the cluster, there is a vineyard instance at service for distributed data in memory.

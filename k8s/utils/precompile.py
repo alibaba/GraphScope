@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import sys
 import hashlib
 import multiprocessing
@@ -32,17 +33,15 @@ except ModuleNotFoundError:
     )
 
 TEMPLATE_DIR = COORDINATOR_HOME / "gscoordinator" / "template"
+CMAKELISTS_TEMPLATE = (TEMPLATE_DIR / "CMakeLists.template").resolve()
 BUILTIN_APP_RESOURCE_PATH = (
     COORDINATOR_HOME / "gscoordinator" / "builtin" / "app" / "builtin_app.gar"
-)
-CMAKELISTS_TEMPLATE = TEMPLATE_DIR / "CMakeLists.template"
+).resolve()
 GRAPHSCOPE_HOME = (
     os.environ["GRAPHSCOPE_HOME"]
     if "GRAPHSCOPE_HOME" in os.environ
     else "/opt/graphscope"
 )
-WORKSPACE = Path(os.path.join("/", tempfile.gettempprefix(), "gs", "builtin"))
-
 
 def cmake_and_make(cmake_commands):
     try:
@@ -438,7 +437,40 @@ def compile_cpp_pie_app():
         pool.map(cmake_app, targets)
 
 
+def parse_sys_args():
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument(
+        "--graph",
+        action='store_true',
+        help="Compile graph libraries.",
+    )
+    parser.add_argument(
+        "--app",
+        action='store_true',
+        help="Compile application libraries.",
+    )
+    parser.add_argument(
+        "--output_dir",
+        type=str,
+        default=WORKSPACE,
+        help="Output directory."
+    )
+    return parser.parse_args()
+
+WORKSPACE = os.path.join("/", tempfile.gettempprefix(), "gs", "builtin")
+
 if __name__ == "__main__":
+    args = parse_sys_args()
+    print("Launching with args", args)
+    WORKSPACE = args.output_dir
+    WORKSPACE = Path(WORKSPACE).resolve()
+    print("Will output libraries to", WORKSPACE)
     os.makedirs(WORKSPACE, exist_ok=True)
-    compile_graph()
-    compile_cpp_pie_app()
+    if args.graph:
+        print("compile graph")
+        compile_graph()
+    if args.app:
+        print("compile app")
+        compile_cpp_pie_app()

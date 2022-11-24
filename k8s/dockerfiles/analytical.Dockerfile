@@ -1,54 +1,79 @@
 # Analytical engine
 
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
-ARG BASE_VERSION=latest
-FROM $REGISTRY/graphscope/graphscope-dev:$BASE_VERSION AS builder
+ARG BUILDER_VERSION=latest
+ARG RUNTIME_VERSION=latest
+############### BUILDER: ANALYTICAL #######################
+FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION AS builder
 
-COPY . /home/graphscope/GraphScope
+ARG CI=false
 
-RUN sudo chown -R graphscope:graphscope /home/graphscope/GraphScope
-RUN cd /home/graphscope/GraphScope/ \
-    && mkdir /home/graphscope/install \
-    && make analytical-install INSTALL_PREFIX=/home/graphscope/install
+COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 
-############### RUNTIME: GAE #######################
-FROM $REGISTRY/graphscope/vineyard-dev:$BASE_VERSION AS analytical
+RUN cd /home/graphscope/GraphScope/ && \
+    if [ "${CI}" == "true" ]; then \
+        cp -r artifacts/analytical /home/graphscope/install; \
+    else \
+        export GRAPHSCOPE_HOME=/home/graphscope/install; \
+        mkdir ${GRAPHSCOPE_HOME}; \
+        make analytical-install INSTALL_PREFIX=${GRAPHSCOPE_HOME}; \
+        strip ${GRAPHSCOPE_HOME}/bin/grape_engine; \
+        strip ${GRAPHSCOPE_HOME}/lib/*.so; \
+        python3 ./k8s/utils/precompile.py --graph --output_dir ${GRAPHSCOPE_HOME}/builtin; \
+        strip /home/graphscope/install/builtin/*/*.so; \
+    fi
 
-COPY --from=builder /home/graphscope/install /opt/graphscope/
+############### RUNTIME: ANALYTICAL #######################
+FROM $REGISTRY/graphscope/vineyard-dev:$RUNTIME_VERSION AS analytical
+
+ENV GRAPHSCOPE_HOME=/opt/graphscope
+ENV PATH=$PATH:$GRAPHSCOPE_HOME/bin LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GRAPHSCOPE_HOME/lib
+
+USER root
+
 COPY ./k8s/utils/kube_ssh /usr/local/bin/kube_ssh
-
-ENV GRAPHSCOPE_HOME=/opt/graphscope LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib
+COPY --from=builder /home/graphscope/install /opt/graphscope/
+RUN mkdir -p /tmp/gs && mv /opt/graphscope/builtin /tmp/gs/builtin && chown -R graphscope:graphscope /tmp/gs
+RUN chmod +x /opt/graphscope/bin/grape_engine
 
 USER graphscope
 WORKDIR /home/graphscope
 
-############### RUNTIME: GAE-JAVA #######################
-FROM $REGISTRY/graphscope/graphscope-dev:$BASE_VERSION AS builder-java
+############### BUILDER: ANALYTICAL-JAVA #######################
+FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION AS builder-java
 
-COPY . /home/graphscope/GraphScope
+COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 
-RUN sudo chown -R graphscope:graphscope /home/graphscope/GraphScope
-RUN cd /home/graphscope/GraphScope/ \
-    && mkdir /home/graphscope/install \
-    && make analytical-java-install INSTALL_PREFIX=/home/graphscope/install
+RUN cd /home/graphscope/GraphScope/ && \
+    if [ "${CI}" == "true" ]; then \
+        cp -r artifacts/analytical-java /home/graphscope/install; \
+    else \
+        export GRAPHSCOPE_HOME=/home/graphscope/install; \
+        mkdir ${GRAPHSCOPE_HOME}; \
+        make analytical-java-install INSTALL_PREFIX=${GRAPHSCOPE_HOME}; \
+        strip ${GRAPHSCOPE_HOME}/bin/grape_engine; \
+        strip ${GRAPHSCOPE_HOME}/lib/*.so; \
+        python3 ./k8s/utils/precompile.py --graph --output_dir ${GRAPHSCOPE_HOME}/builtin; \
+        strip /home/graphscope/install/builtin/*/*.so; \
+    fi
+
+############### RUNTIME: ANALYTICAL-JAVA #######################
 
 FROM vineyardcloudnative/manylinux-llvm:2014-11.0.0 AS llvm
 
-FROM $REGISTRY/graphscope/vineyard-dev:$BASE_VERSION AS analytical-java
-
-COPY --from=builder-java /home/graphscope/install /opt/graphscope/
-COPY ./k8s/utils/kube_ssh /usr/local/bin/kube_ssh
-
-ENV GRAPHSCOPE_HOME=/opt/graphscope LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib
-
+FROM $REGISTRY/graphscope/vineyard-dev:$RUNTIME_VERSION AS analytical-java
 COPY --from=llvm /opt/llvm11.0.0 /opt/llvm11
 ENV LLVM11_HOME=/opt/llvm11
 ENV LIBCLANG_PATH=$LLVM11_HOME/lib LLVM_CONFIG_PATH=$LLVM11_HOME/bin/llvm-config
 
-# Installed size: 200M
-RUN yum install -y java-1.8.0-openjdk-devel \
-    && yum clean all \
-    && rm -rf /var/cache/yum
+ENV GRAPHSCOPE_HOME=/opt/graphscope
+ENV PATH=$PATH:$GRAPHSCOPE_HOME/bin LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GRAPHSCOPE_HOME/lib
+
+USER root
+COPY ./k8s/utils/kube_ssh /usr/local/bin/kube_ssh
+COPY --from=builder-java /home/graphscope/install /opt/graphscope/
+RUN mkdir -p /tmp/gs && sudo mv /opt/graphscope/builtin /tmp/gs/builtin && chown -R graphscope:graphscope /tmp/gs
+RUN sudo chmod +x /opt/graphscope/bin/*
 
 USER graphscope
 WORKDIR /home/graphscope

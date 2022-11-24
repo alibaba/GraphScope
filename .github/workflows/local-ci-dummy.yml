@@ -1,4 +1,4 @@
-name: GraphScope CI (Dummy)
+name: GraphScope CI on Local (Dummy)
 
 on:
   pull_request:
@@ -102,19 +102,5 @@ jobs:
     strategy:
       matrix:
         deployment: ["standalone", "distributed"]
-    steps:
-    - run: 'echo "No action required" '
-
-  gie-test:
-    runs-on: ubuntu-20.04
-    needs: [build-wheels, changes]
-    if: ${{ (needs.changes.outputs.gie-function-test == 'false' || github.ref == 'refs/heads/main') && github.repository == 'alibaba/GraphScope' }}
-    steps:
-    - run: 'echo "No action required" '
-
-  k8s-test:
-    runs-on: ubuntu-20.04
-    if: ${{ github.repository == 'alibaba/GraphScope' }}
-    needs: [build-wheels]
     steps:
     - run: 'echo "No action required" '
