@@ -18,45 +18,47 @@ use ahash::{HashMap, HashMapExt};
 use indexmap::map::IndexMap;
 use itertools::Itertools;
 use petgraph::graph::IndexType;
-use petgraph::prelude::{Direction, EdgeIndex, NodeIndex};
-use vec_map::VecMap;
+use petgraph::prelude::{DiGraph, Direction, EdgeIndex, NodeIndex};
 
 use crate::common::{Label, LabelId, INVALID_LABEL_ID};
 use crate::graph_db::labeled_topo::{LabeledTopology, MutLabeledTopology};
 use crate::utils::{Iter, IterList};
 
-#[derive(Clone, Debug, Default)]
 struct MutEdgeVec<I: IndexType> {
-    /// An adjacent list which maps each node's id (as index)
-    /// to its adjacent edges (together with its label)
-    edges: VecMap<HashMap<LabelId, Vec<EdgeIndex<I>>>>,
-    /// The max node's id that has ever seen
-    max_seen_node_id: NodeIndex<I>,
-    /// The number of edges ever seen
-    edge_count: usize,
+    offsets: Vec<RangeByLabel<LabelId, I>>,
+    offsets_no_label: Vec<usize>,
+    edges: Vec<EdgeIndex<I>>,
+}
+
+impl<I: IndexType> MutEdgeVec<I> {
+    pub fn new(num_nodes: usize, num_edges: usize) -> Self {
+        let offsets = vec![RangeByLabel::default(); num_nodes + 1];
+        let offsets_no_label = vec![0; num_nodes + 1];
+        let edges = Vec::with_capacity(num_edges);
+
+        Self { offsets, offsets_no_label, edges }
+    }
+
+    pub fn append_node_adj(&mut self, node: usize, adj: &mut HashMap<LabelId, Vec<EdgeIndex<I>>>) {
+        let mut num_edges = 0;
+        // will be sorted via label
+        for label in adj.keys().cloned().sorted() {
+            for vec in adj.get_mut(&label) {
+                vec.sort();
+                self.offsets[node]
+                    .inner
+                    .insert(label, (I::new(num_edges), I::new(vec.len())));
+                num_edges += vec.len();
+                self.edges.extend(vec.drain(..));
+            }
+        }
+        self.offsets_no_label[node + 1] = num_edges;
+    }
 }
 
 impl<I: IndexType> From<MutEdgeVec<I>> for EdgeVec<I> {
     fn from(adj: MutEdgeVec<I>) -> Self {
-        let mut offsets = vec![RangeByLabel::default(); adj.node_count() + 1];
-        let mut offsets_no_label = vec![0; adj.node_count() + 1];
-        let mut edges = Vec::with_capacity(adj.edge_count());
-        for (node, mut label_vec) in adj.edges.into_iter() {
-            let mut num_edges = 0;
-            // will be sorted via label
-            for label in label_vec.keys().cloned().sorted() {
-                for vec in label_vec.get_mut(&label) {
-                    vec.sort();
-                    offsets[node]
-                        .inner
-                        .insert(label, (I::new(num_edges), I::new(vec.len())));
-                    num_edges += vec.len();
-                    edges.extend(vec.drain(..));
-                }
-            }
-            offsets_no_label[node + 1] = num_edges;
-        }
-
+        let MutEdgeVec { mut offsets, mut offsets_no_label, edges } = adj;
         for node in 1..offsets_no_label.len() {
             offsets_no_label[node] += offsets_no_label[node - 1];
         }
@@ -76,31 +78,6 @@ impl<I: IndexType> From<MutEdgeVec<I>> for EdgeVec<I> {
         edge_vec.shrink_to_fit();
 
         edge_vec
-    }
-}
-
-impl<I: IndexType> MutEdgeVec<I> {
-    pub fn add_edge(&mut self, edge: EdgeIndex<I>, label: LabelId, end_node: NodeIndex<I>) {
-        self.edges
-            .entry(end_node.index())
-            .or_insert(HashMap::new())
-            .entry(label)
-            .or_insert_with(Vec::new)
-            .push(edge);
-        if end_node > self.max_seen_node_id {
-            self.max_seen_node_id = end_node;
-        }
-        self.edge_count += 1;
-    }
-
-    #[inline]
-    pub fn node_count(&self) -> usize {
-        self.max_seen_node_id.index() + 1
-    }
-
-    #[inline]
-    pub fn edge_count(&self) -> usize {
-        self.edge_count
     }
 }
 
@@ -218,18 +195,6 @@ impl<I: IndexType + Send + Sync> EdgeVec<I> {
     }
 }
 
-#[derive(Default, Clone)]
-struct MutBiDirEdges<I: IndexType> {
-    incoming: MutEdgeVec<I>,
-    outgoing: MutEdgeVec<I>,
-}
-
-impl<I: IndexType> From<MutBiDirEdges<I>> for BiDirEdges<I> {
-    fn from(bi_edges: MutBiDirEdges<I>) -> Self {
-        Self { incoming: bi_edges.incoming.into(), outgoing: bi_edges.outgoing.into() }
-    }
-}
-
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 /// To maintain edges of both directions in a directed graph
 struct BiDirEdges<I: IndexType> {
@@ -252,16 +217,7 @@ impl<I: IndexType> EdgeTuple<I> {
 
 #[derive(Default, Clone)]
 pub struct MutTopo<I: IndexType> {
-    /// Record the label of nodes
-    nodes: Vec<Label>,
-    /// Record the edge's both end nodes' index
-    edges: Vec<EdgeTuple<I>>,
-    /// Record the adjacent edges/nodes of nodes, per each label
-    adj_edges: MutBiDirEdges<I>,
-    /// Record the currently seen max node's id
-    max_seen_node_id: usize,
-    /// Record the currently seen max edge's id
-    max_seen_edge_id: usize,
+    inner: DiGraph<Label, LabelId, I>,
 }
 
 impl<I: IndexType + Send + Sync> MutLabeledTopology for MutTopo<I> {
@@ -269,41 +225,27 @@ impl<I: IndexType + Send + Sync> MutLabeledTopology for MutTopo<I> {
     type T = CsrTopo<I>;
 
     fn current_nodes_count(&self) -> usize {
-        self.nodes.len()
+        self.inner.node_count()
     }
 
     fn current_edges_count(&self) -> usize {
-        self.edges.len()
+        self.inner.edge_count()
     }
 
     fn get_node_label_mut(&mut self, node: NodeIndex<I>) -> Option<&mut Label> {
-        self.nodes.get_mut(node.index())
+        self.inner.node_weight_mut(node)
     }
 
     #[inline]
     fn add_node(&mut self, label: Label) -> NodeIndex<I> {
-        let node_id = NodeIndex::new(self.max_seen_node_id);
-        self.nodes.push(label);
-
-        self.max_seen_node_id += 1;
-        node_id
+        self.inner.add_node(label)
     }
 
     fn add_edge(
         &mut self, start_node_id: NodeIndex<I>, end_node_id: NodeIndex<I>, edge_label: LabelId,
     ) -> EdgeIndex<I> {
-        let edge_id = EdgeIndex::new(self.max_seen_edge_id);
-        self.edges
-            .push(EdgeTuple::new(start_node_id, end_node_id, edge_label));
-        self.adj_edges
-            .outgoing
-            .add_edge(edge_id, edge_label, start_node_id);
-        self.adj_edges
-            .incoming
-            .add_edge(edge_id, edge_label, end_node_id);
-        self.max_seen_edge_id += 1;
-
-        edge_id
+        self.inner
+            .add_edge(start_node_id, end_node_id, edge_label)
     }
 
     fn into_immutable(self) -> Self::T {
@@ -312,12 +254,50 @@ impl<I: IndexType + Send + Sync> MutLabeledTopology for MutTopo<I> {
 }
 
 impl<I: IndexType> From<MutTopo<I>> for CsrTopo<I> {
-    fn from(mut mut_topo: MutTopo<I>) -> Self {
-        let nodes = mut_topo.nodes.drain(..).collect();
-        let edges = mut_topo.edges.drain(..).collect();
-        let csr = mut_topo.adj_edges.into();
+    fn from(mut_topo: MutTopo<I>) -> Self {
+        let (raw_nodes, raw_edges) = mut_topo.inner.into_nodes_edges();
+        let mut mut_in_edges = MutEdgeVec::new(raw_nodes.len(), 0);
+        let mut mut_out_edges = MutEdgeVec::new(raw_nodes.len(), 0);
+        let mut in_adj_edges = HashMap::<LabelId, Vec<EdgeIndex<I>>>::new();
+        let mut out_adj_edges = HashMap::<LabelId, Vec<EdgeIndex<I>>>::new();
+        let mut nodes = vec![Label::default(); raw_nodes.len()];
+        for (index, node) in raw_nodes.into_iter().enumerate() {
+            nodes[index] = node.weight.clone();
+            out_adj_edges.clear();
+            let mut edge_index = node.next_edge(Direction::Outgoing);
+            while edge_index != EdgeIndex::end() {
+                let edge = &raw_edges[edge_index.index()];
+                out_adj_edges
+                    .entry(edge.weight)
+                    .or_default()
+                    .push(edge_index);
+                edge_index = edge.next_edge(Direction::Outgoing);
+            }
+            mut_out_edges.append_node_adj(index, &mut out_adj_edges);
 
-        Self { nodes, edges, csr }
+            in_adj_edges.clear();
+            edge_index = node.next_edge(Direction::Incoming);
+            while edge_index != EdgeIndex::end() {
+                let edge = &raw_edges[edge_index.index()];
+                in_adj_edges
+                    .entry(edge.weight)
+                    .or_default()
+                    .push(edge_index);
+                edge_index = edge.next_edge(Direction::Incoming);
+            }
+            mut_in_edges.append_node_adj(index, &mut in_adj_edges);
+        }
+
+        let mut edges = vec![EdgeTuple::default(); raw_edges.len()];
+        for (index, edge) in raw_edges.into_iter().enumerate() {
+            edges[index] = EdgeTuple::new(edge.source(), edge.target(), edge.weight)
+        }
+
+        CsrTopo {
+            nodes,
+            edges,
+            csr: BiDirEdges { incoming: mut_in_edges.into(), outgoing: mut_out_edges.into() },
+        }
     }
 }
 
@@ -483,13 +463,24 @@ mod tests {
         let e4 = edge_index(4);
         let e5 = edge_index(5);
 
-        let mut mut_edges = MutEdgeVec::<u32>::default();
-        mut_edges.add_edge(e0, 0, n0);
-        mut_edges.add_edge(e1, 1, n1);
-        mut_edges.add_edge(e2, 1, n0);
-        mut_edges.add_edge(e3, 2, n1);
-        mut_edges.add_edge(e4, 2, n2);
-        mut_edges.add_edge(e5, 1, n3);
+        let mut mut_edges = MutEdgeVec::<u32>::new(4, 6);
+        let mut adj = HashMap::new();
+        adj.insert(0, vec![e0]);
+        adj.insert(1, vec![e2]);
+        mut_edges.append_node_adj(0, &mut adj);
+
+        adj.clear();
+        adj.insert(1, vec![e1]);
+        adj.insert(2, vec![e3]);
+        mut_edges.append_node_adj(1, &mut adj);
+
+        adj.clear();
+        adj.insert(2, vec![e4]);
+        mut_edges.append_node_adj(2, &mut adj);
+
+        adj.clear();
+        adj.insert(1, vec![e5]);
+        mut_edges.append_node_adj(3, &mut adj);
 
         let edges: EdgeVec<u32> = mut_edges.into();
 

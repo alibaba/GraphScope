@@ -65,7 +65,7 @@
       "src_vertex_type": "PERSON",
       "dst_vertex_type": "TAG"
     },
-    "person_isLocatedIn_place_0_0": {
+    "person_isLocatedIn_place_0_0.csv": {
       "etype": "ISLOCATEDIN",
       "src_vertex_type": "PERSON",
       "dst_vertex_type": "PLACE"
