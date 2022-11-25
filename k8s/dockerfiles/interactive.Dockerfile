@@ -12,7 +12,7 @@ RUN sudo chown -R graphscope:graphscope /home/graphscope/GraphScope
 ENV PATH=$PATH:/opt/maven/apache-maven-3.8.6/bin
 RUN cd /home/graphscope/GraphScope/ \
     && mkdir /home/graphscope/install \
-    && make gie-install BUILD_TYPE="$profile" INSTALL_PREFIX=/home/graphscope/install \
+    && make interactive-install BUILD_TYPE="$profile" INSTALL_PREFIX=/home/graphscope/install \
     && strip /home/graphscope/install/bin/gaia_executor
 
 ############### RUNTIME: frontend #######################

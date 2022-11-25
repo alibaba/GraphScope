@@ -9,7 +9,7 @@ ADD . /home/graphscope/GraphScope
 RUN sudo chown -R graphscope:graphscope /home/graphscope/GraphScope
 RUN cd /home/graphscope/GraphScope/ \
     && mkdir /home/graphscope/install \
-    && make gle-install INSTALL_PREFIX=/home/graphscope/install \
+    && make learning-install INSTALL_PREFIX=/home/graphscope/install \
     && python3 -m pip install "numpy==1.18.5" "pandas<1.5.0" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" wheel \
     && cd /home/graphscope/GraphScope/python \
     && python3 setup.py bdist_wheel \

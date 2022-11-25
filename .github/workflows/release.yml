@@ -32,11 +32,14 @@ jobs:
 
     - name: Build GraphScope Store Image
       run: |
-        cd ${GITHUB_WORKSPACE}
-        sudo make graphscope-store-image
+        cd ${GITHUB_WORKSPACE}/k8s
+        sudo make graphscope-store
 
     - name: Release Nightly Image
-      if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+      # if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+      # GraphScope-Store doesn't need nightly release yet.
+      # To save some resources, comment this step out temporarily.
+      if: false
       env:
         docker_password: ${{ secrets.DOCKER_PASSWORD }}
         docker_username: ${{ secrets.DOCKER_USER }}

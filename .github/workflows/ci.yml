@@ -249,7 +249,7 @@ jobs:
         export RUSTC_WRAPPER=/usr/local/bin/sccache
         sccache --start-server
 
-        cd ${GITHUB_WORKSPACE}/k8s
+        cd ${GITHUB_WORKSPACE}/k8s/internal
         # build graphscope wheels
         make graphscope-manylinux2014-py3-nodocker
         # build client wheels
@@ -604,8 +604,8 @@ jobs:
           tar -zxf ./wheel-${{ github.sha }}/graphscope.tar.gz
 
           # build graphscope image
-          cd ${GITHUB_WORKSPACE}
-          make graphscope-image
+          cd ${GITHUB_WORKSPACE}/k8s/internal
+          make graphscope
 
           cd ${GITHUB_WORKSPACE}/python
           pip3 install -r requirements.txt
@@ -658,8 +658,8 @@ jobs:
           tar -zxf ./wheel-${{ github.sha }}/client.tar.gz
           tar -zxf ./wheel-${{ github.sha }}/graphscope.tar.gz
 
-          cd ${GITHUB_WORKSPACE}
-          make graphscope-image
+          cd ${GITHUB_WORKSPACE}/k8s/internal
+          make graphscope
           docker tag graphscope/graphscope:${SHORT_SHA} ${{ env.GS_IMAGE }}:${SHORT_SHA}
 
           cd ${GITHUB_WORKSPACE}/python

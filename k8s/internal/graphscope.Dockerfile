@@ -59,6 +59,8 @@ ENV PATH=${PATH}:/home/graphscope/.local/bin
 
 COPY . /home/graphscope/gs
 
+COPY ./k8s/utils/kube_ssh /usr/local/bin/kube_ssh
+
 RUN cd /home/graphscope/gs && \
     if [ "${CI}" == "true" ]; then \
         pushd artifacts/python/dist/wheelhouse; \
