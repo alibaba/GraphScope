@@ -48,7 +48,7 @@ impl<I: IndexType> MutEdgeVec<I> {
                 vec.sort();
                 self.offsets[node]
                     .inner
-                    .insert(label, I::new(num_edges));
+                    .insert(label, (I::new(num_edges), I::new(vec.len())));
                 num_edges += vec.len();
                 self.edges.extend(vec.drain(..));
             }
@@ -81,43 +81,26 @@ impl<I: IndexType> From<MutEdgeVec<I>> for EdgeVec<I> {
 }
 
 #[derive(Default, Clone, Serialize, Deserialize)]
-struct RangeByLabel<K: IndexType, V: IndexType, C: AsRef<[(K, V)]> = Vec<(K, V)>> {
+struct RangeByLabel<K: IndexType, V: IndexType, C: AsRef<[(K, (V, V))]> = Vec<(K, (V, V))>> {
     /// K -> the key refers to label
     /// (V, V) -> the first element refers to the starting index in the sparse row,
     ///        -> the second element refers to the size of the elements regarding the given `K`
-    inner: SortedMap<K, V, C>,
+    inner: SortedMap<K, (V, V), C>,
 }
 
-impl<K: IndexType, V: IndexType, C: AsRef<[(K, V)]>> RangeByLabel<K, V, C> {
+impl<K: IndexType, V: IndexType, C: AsRef<[(K, (V, V))]>> RangeByLabel<K, V, C> {
     #[inline]
     pub fn get_index(&self) -> Option<usize> {
         self.inner
             .get_entry_at(0)
-            .map(|(_, r)| r.index())
+            .map(|(_, r)| r.0.index())
     }
 
     #[inline]
-    pub fn get_range(&self, label: K) -> Option<(usize, Option<usize>)> {
-        if let Ok(index) = self.inner.lookup_index_for(&label) {
-            let start: usize = self
-                .inner
-                .get_entry_at_unchecked(index)
-                .1
-                .index();
-            let end: Option<usize> = if index < self.inner.len() - 1 {
-                Some(
-                    self.inner
-                        .get_entry_at_unchecked(index + 1)
-                        .1
-                        .index(),
-                )
-            } else {
-                None
-            };
-            Some((start, end))
-        } else {
-            None
-        }
+    pub fn get_range(&self, label: K) -> Option<(usize, usize)> {
+        self.inner
+            .get(&label)
+            .map(|range| (range.0.index(), range.0.index() + range.1.index()))
     }
 }
 
@@ -126,15 +109,15 @@ impl<K: IndexType, V: IndexType> RangeByLabel<K, V> {
     pub fn update_by_offset(&mut self, offset: usize) {
         if self.inner.is_empty() {
             self.inner
-                .insert(K::new(INVALID_LABEL_ID as usize), V::new(offset));
+                .insert(K::new(INVALID_LABEL_ID as usize), (V::new(offset), V::default()));
         } else {
-            for (_, off) in self.inner.iter_mut() {
-                *off = V::new(off.index() + offset);
+            for (_, range) in self.inner.iter_mut() {
+                range.0 = V::new(range.0.index() + offset);
             }
         }
     }
 
-    pub fn into_immutable(self) -> RangeByLabel<K, V, Box<[(K, V)]>> {
+    pub fn into_immutable(self) -> RangeByLabel<K, V, Box<[(K, (V, V))]>> {
         RangeByLabel { inner: self.inner.into_immutable() }
     }
 }
@@ -144,7 +127,7 @@ struct EdgeVec<I: IndexType> {
     /// * `offsets[i]`: maintain the adjacent edges of the node of id i,
     /// * `offsets[i][j]` maintains the start and end indices of the adjacent edges of
     /// the label j for node i, if node i has connection to the edge of label j
-    offsets: Vec<RangeByLabel<LabelId, I, Box<[(LabelId, I)]>>>,
+    offsets: Vec<RangeByLabel<LabelId, I, Box<[(LabelId, (I, I))]>>>,
     /// A vector to maintain edges' id
     edges: Vec<EdgeIndex<I>>,
 }
@@ -190,15 +173,7 @@ impl<I: IndexType + Send + Sync> EdgeVec<I> {
     pub fn adjacent_edges(&self, node: NodeIndex<I>, label: Option<LabelId>) -> &[EdgeIndex<I>] {
         if self.has_node(node) {
             if let Some(l) = label {
-                if let Some((start, end_)) = self.offsets[node.index()].get_range(l) {
-                    let end = if let Some(end) = end_ {
-                        end
-                    } else {
-                        self.offsets[node.index() + 1]
-                            .get_index()
-                            .unwrap_or(start)
-                    };
-
+                if let Some((start, end)) = self.offsets[node.index()].get_range(l) {
                     &self.edges[start..end]
                 } else {
                     &[]
