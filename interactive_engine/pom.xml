@@ -5,7 +5,7 @@
   <groupId>com.alibaba.maxgraph</groupId>
   <artifactId>maxgraph-parent</artifactId>
   <packaging>pom</packaging>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>${revision}</version>
 
   <name>MaxGraph</name>
   <profiles>
@@ -68,6 +68,7 @@
   </profiles>
 
   <properties>
+    <revision>0.0.1-SNAPSHOT</revision>
     <rust.compile.skip>false</rust.compile.skip>
     <rust.compile.mode>debug</rust.compile.mode>
     <rust.compile.target>v6d</rust.compile.target>
