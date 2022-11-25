@@ -56,9 +56,6 @@
       <activation>
         <activeByDefault>true</activeByDefault>
       </activation>
-      <properties>
-        <revision>0.0.1-SNAPSHOT</revision>
-      </properties>
       <modules>
         <module>assembly</module>
         <module>common</module>
