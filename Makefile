@@ -2,9 +2,9 @@ MKFILE_PATH				:= $(abspath $(lastword $(MAKEFILE_LIST)))
 WORKING_DIR				:= $(dir $(MKFILE_PATH))
 GAE_DIR					:= $(WORKING_DIR)/analytical_engine
 GIE_DIR					:= $(WORKING_DIR)/interactive_engine
-GLE_DIR					:= $(WORKING_DIR)/learning_engine/graph-learn/graphlearn
+GLE_DIR					:= $(WORKING_DIR)/learning_engine/graph-learn
 GAE_BUILD_DIR			:= $(GAE_DIR)/build
-GLE_BUILD_DIR			:= $(GLE_DIR)/cmake-build
+GLE_BUILD_DIR			:= $(GLE_DIR)/graphlearn/cmake-build
 CLIENT_DIR				:= $(WORKING_DIR)/python
 COORDINATOR_DIR			:= $(WORKING_DIR)/coordinator
 K8S_DIR					:= $(WORKING_DIR)/k8s
@@ -121,14 +121,15 @@ $(GIE_DIR)/assembly/target/graphscope.tar.gz:
 gle-install: gle
 	mkdir -p $(INSTALL_PREFIX)
 	$(MAKE) -C $(GLE_BUILD_DIR) install
-gle: $(GLE_DIR)/built/lib/libgraphlearn_shared.$(SUFFIX)
+gle: $(GLE_DIR)/graphlearn/built/lib/libgraphlearn_shared.$(SUFFIX)
 
-$(GLE_DIR)/built/lib/libgraphlearn_shared.$(SUFFIX):
+$(GLE_DIR)/graphlearn/built/lib/libgraphlearn_shared.$(SUFFIX):
 	git submodule update --init
 	cd $(GLE_DIR) && git submodule update --init third_party/pybind11
 	mkdir -p $(GLE_BUILD_DIR)
 	cd $(GLE_BUILD_DIR) && \
 	cmake -DCMAKE_INSTALL_PREFIX=$(INSTALL_PREFIX) \
+		-DKNN=OFF \
 		-DWITH_VINEYARD=ON \
 		-DTESTING=${BUILD_TEST} .. && \
 	$(MAKE) -j$(NUMPROC)

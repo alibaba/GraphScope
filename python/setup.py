@@ -171,18 +171,12 @@ def find_graphscope_packages():
     for pkg in find_packages("."):
         packages.append(pkg)
 
-    # add graphlearn
-    for pkg in find_packages("../learning_engine/graph-learn/graphlearn"):
-        packages.append("graphscope.learning.%s" % pkg)
-
     return packages
 
 
 def resolve_graphscope_package_dir():
     package_dir = {
         "graphscope": "graphscope",
-        "graphscope.learning.examples": "../learning_engine/graph-learn/graphlearn/examples",
-        "graphscope.learning.graphlearn": "../learning_engine/graph-learn/graphlearn",
     }
     return package_dir
 
@@ -210,7 +204,8 @@ def build_learning_engine():
 
     include_dirs.append("/usr/local/include")
     include_dirs.append(ROOT_PATH)
-    include_dirs.append(ROOT_PATH + "/graphlearn/include")
+    include_dirs.append(ROOT_PATH + "/graphlearn")
+    include_dirs.append(ROOT_PATH + "/graphlearn/src")
     include_dirs.append(ROOT_PATH + "/graphlearn/src/include")
     include_dirs.append(ROOT_PATH + "/graphlearn/built")
     include_dirs.append(ROOT_PATH + "/third_party/pybind11/pybind11/include")
@@ -231,7 +226,8 @@ def build_learning_engine():
     sources = [
         ROOT_PATH + "/graphlearn/python/c/py_client.cc",
         ROOT_PATH + "/graphlearn/python/c/py_export.cc",
-        ROOT_PATH + "/graphlearn/python/c/py_contrib.cc",
+        # KNN not enabled
+        # ROOT_PATH + "/graphlearn/python/c/py_contrib.cc",
     ]
     ext = Extension(
         "graphscope.learning.graphlearn.pywrap_graphlearn",
