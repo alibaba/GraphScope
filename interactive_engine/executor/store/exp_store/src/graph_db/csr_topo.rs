@@ -15,13 +15,14 @@
 //!
 
 use ahash::{HashMap, HashMapExt};
-use indexmap::map::IndexMap;
+// use indexmap::map::IndexMap;
 use itertools::Itertools;
 use petgraph::graph::IndexType;
 use petgraph::prelude::{DiGraph, Direction, EdgeIndex, NodeIndex};
 
 use crate::common::{Label, LabelId, INVALID_LABEL_ID};
 use crate::graph_db::labeled_topo::{LabeledTopology, MutLabeledTopology};
+use crate::sorted_map::SortedMap;
 use crate::utils::{Iter, IterList};
 
 struct MutEdgeVec<I: IndexType> {
@@ -47,7 +48,7 @@ impl<I: IndexType> MutEdgeVec<I> {
                 vec.sort();
                 self.offsets[node]
                     .inner
-                    .insert(label, (I::new(num_edges), I::new(vec.len())));
+                    .insert(label, I::new(num_edges));
                 num_edges += vec.len();
                 self.edges.extend(vec.drain(..));
             }
@@ -63,51 +64,87 @@ impl<I: IndexType> From<MutEdgeVec<I>> for EdgeVec<I> {
             offsets_no_label[node] += offsets_no_label[node - 1];
         }
         for (node, offset) in offsets_no_label.drain(..).enumerate() {
-            if offsets[node].inner.is_empty() {
-                offsets[node]
-                    .inner
-                    .insert(INVALID_LABEL_ID, (I::new(offset), I::default()));
-            } else {
-                for (_, range) in offsets[node].inner.iter_mut() {
-                    range.0 = I::new(range.0.index() + offset);
-                }
-            }
+            offsets[node].update_by_offset(offset);
         }
 
-        let mut edge_vec = EdgeVec { offsets, edges };
+        let mut edge_vec = EdgeVec {
+            offsets: offsets
+                .into_iter()
+                .map(|x| x.into_immutable())
+                .collect(),
+            edges,
+        };
         edge_vec.shrink_to_fit();
 
         edge_vec
     }
 }
 
-#[derive(Debug, Default, PartialEq, Eq, Clone, Serialize, Deserialize)]
-struct RangeByLabel<K: IndexType, V: IndexType> {
+#[derive(Default, Clone, Serialize, Deserialize)]
+struct RangeByLabel<K: IndexType, V: IndexType, C: AsRef<[(K, V)]> = Vec<(K, V)>> {
     /// K -> the key refers to label
     /// (V, V) -> the first element refers to the starting index in the sparse row,
     ///        -> the second element refers to the size of the elements regarding the given `K`
-    inner: IndexMap<K, (V, V)>,
+    inner: SortedMap<K, V, C>,
+}
+
+impl<K: IndexType, V: IndexType, C: AsRef<[(K, V)]>> RangeByLabel<K, V, C> {
+    #[inline]
+    pub fn get_index(&self) -> Option<usize> {
+        self.inner
+            .get_entry_at(0)
+            .map(|(_, r)| r.index())
+    }
+
+    #[inline]
+    pub fn get_range(&self, label: K) -> Option<(usize, Option<usize>)> {
+        if let Ok(index) = self.inner.lookup_index_for(&label) {
+            let start: usize = self
+                .inner
+                .get_entry_at_unchecked(index)
+                .1
+                .index();
+            let end: Option<usize> = if index < self.inner.len() - 1 {
+                Some(
+                    self.inner
+                        .get_entry_at_unchecked(index + 1)
+                        .1
+                        .index(),
+                )
+            } else {
+                None
+            };
+            Some((start, end))
+        } else {
+            None
+        }
+    }
 }
 
 impl<K: IndexType, V: IndexType> RangeByLabel<K, V> {
-    pub fn get_index(&self) -> Option<usize> {
-        self.inner.first().map(|(_, r)| r.0.index())
+    #[inline]
+    pub fn update_by_offset(&mut self, offset: usize) {
+        if self.inner.is_empty() {
+            self.inner
+                .insert(K::new(INVALID_LABEL_ID as usize), V::new(offset));
+        } else {
+            for (_, off) in self.inner.iter_mut() {
+                *off = V::new(off.index() + offset);
+            }
+        }
     }
 
-    pub fn get_range(&self, label: K) -> Option<(usize, usize)> {
-        self.inner
-            .get(&label)
-            .map(|range| (range.0.index(), range.0.index() + range.1.index()))
+    pub fn into_immutable(self) -> RangeByLabel<K, V, Box<[(K, V)]>> {
+        RangeByLabel { inner: self.inner.into_immutable() }
     }
 }
-
 /// This is an extension of a typical CSR structure to support label indexing.
-#[derive(Debug, Default, PartialEq, Eq, Clone, Serialize, Deserialize)]
+#[derive(Default, Clone, Serialize, Deserialize)]
 struct EdgeVec<I: IndexType> {
     /// * `offsets[i]`: maintain the adjacent edges of the node of id i,
     /// * `offsets[i][j]` maintains the start and end indices of the adjacent edges of
     /// the label j for node i, if node i has connection to the edge of label j
-    offsets: Vec<RangeByLabel<LabelId, I>>,
+    offsets: Vec<RangeByLabel<LabelId, I, Box<[(LabelId, I)]>>>,
     /// A vector to maintain edges' id
     edges: Vec<EdgeIndex<I>>,
 }
@@ -153,19 +190,28 @@ impl<I: IndexType + Send + Sync> EdgeVec<I> {
     pub fn adjacent_edges(&self, node: NodeIndex<I>, label: Option<LabelId>) -> &[EdgeIndex<I>] {
         if self.has_node(node) {
             if let Some(l) = label {
-                if let Some((start, end)) = self.offsets[node.index()].get_range(l) {
+                if let Some((start, end_)) = self.offsets[node.index()].get_range(l) {
+                    let end = if let Some(end) = end_ {
+                        end
+                    } else {
+                        self.offsets[node.index() + 1]
+                            .get_index()
+                            .unwrap_or(start)
+                    };
+
                     &self.edges[start..end]
                 } else {
                     &[]
                 }
             } else {
-                let start = self.offsets[node.index()]
-                    .get_index()
-                    .unwrap_or(0);
-                let end = self.offsets[node.index() + 1]
-                    .get_index()
-                    .unwrap_or(0);
-                &self.edges[start..end]
+                if let Some(start) = self.offsets[node.index()].get_index() {
+                    let end = self.offsets[node.index() + 1]
+                        .get_index()
+                        .unwrap_or(start);
+                    &self.edges[start..end]
+                } else {
+                    &[]
+                }
             }
         } else {
             &[]
@@ -195,14 +241,14 @@ impl<I: IndexType + Send + Sync> EdgeVec<I> {
     }
 }
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(Default, Clone, Serialize, Deserialize)]
 /// To maintain edges of both directions in a directed graph
 struct BiDirEdges<I: IndexType> {
     incoming: EdgeVec<I>,
     outgoing: EdgeVec<I>,
 }
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(Debug, Default, Copy, Clone, Serialize, Deserialize)]
 struct EdgeTuple<I: IndexType> {
     start_node: NodeIndex<I>,
     end_node: NodeIndex<I>,
@@ -301,7 +347,7 @@ impl<I: IndexType> From<MutTopo<I>> for CsrTopo<I> {
     }
 }
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(Default, Clone, Serialize, Deserialize)]
 /// Record the topology of a graph in a CSR format
 pub struct CsrTopo<I: IndexType> {
     /// To maintain the label of nodes
@@ -440,6 +486,12 @@ impl<I: IndexType + Sync + Send> LabeledTopology for CsrTopo<I> {
                     }
                 }),
         )
+    }
+
+    #[inline]
+    fn shrink_to_fit(&mut self) {
+        self.nodes.shrink_to_fit();
+        self.edges.shrink_to_fit();
     }
 }
 
