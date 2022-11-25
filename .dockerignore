@@ -80,6 +80,7 @@ package.lock
 
 # docker: ignore learning engine's build artifacts
 learning_engine/graph-learn/cmake-build
+learning_engine/graph-learn/graphlearn/cmake-build
 
 # docker: ignore .install_prefix
 .install_prefix

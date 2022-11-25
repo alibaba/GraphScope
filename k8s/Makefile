@@ -149,14 +149,14 @@ graphscope-manylinux2014-py3:
 			make graphscope-manylinux2014-py3-nodocker'
 
 graphscope-client-manylinux2014-py3-nodocker:
-	cd $(WORKING_DIR)/../learning_engine/graph-learn && \
+	cd $(WORKING_DIR)/../learning_engine/graph-learn/graphlearn && \
 	git submodule update --init third_party/pybind11 && \
 	rm -rf cmake-build && \
 	mkdir -p cmake-build && \
 	cd cmake-build && \
 	cmake -DWITH_VINEYARD=ON .. && \
 	make graphlearn_shared -j`nproc` && \
-	export LD_LIBRARY_PATH=$(WORKING_DIR)/../learning_engine/graph-learn/built/lib:$$LD_LIBRARY_PATH && \
+	export LD_LIBRARY_PATH=$(WORKING_DIR)/../learning_engine/graph-learn/graphlearn/built/lib:$$LD_LIBRARY_PATH && \
 	for py in cp37-cp37m cp38-cp38 cp39-cp39 ; do \
 		cd $(WORKING_DIR)/../python; \
 		export PATH=/opt/python/$$py/bin:$$PATH; \
@@ -170,14 +170,14 @@ graphscope-client-manylinux2014-py3-nodocker:
 	done
 
 graphscope-client-darwin-py3:
-	cd $(WORKING_DIR)/../learning_engine/graph-learn && \
+	cd $(WORKING_DIR)/../learning_engine/graph-learn/graphlearn && \
 		git submodule update --init third_party/pybind11 && \
 		rm -rf cmake-build && \
 		mkdir -p cmake-build && \
 		cd cmake-build && \
 		cmake -DWITH_VINEYARD=ON -DTESTING=OFF .. && \
 		make graphlearn_shared -j`nproc` && \
-		export DYLD_LIBRARY_PATH=$(WORKING_DIR)/../learning_engine/graph-learn/built/lib:/usr/local/lib:$$DYLD_LIBRARY_PATH && \
+		export DYLD_LIBRARY_PATH=$(WORKING_DIR)/../learning_engine/graph-learn/graphlearn/built/lib:/usr/local/lib:$$DYLD_LIBRARY_PATH && \
 		cd $(WORKING_DIR)/../python && \
 		pip3 install -U pip && \
 		pip3 install "numpy==1.18.5" "pandas<1.5.0" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" delocate wheel && \

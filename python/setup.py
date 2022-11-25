@@ -137,6 +137,7 @@ class CustomBDistWheel(bdist_wheel):
                 "..",
                 "learning_engine",
                 "graph-learn",
+                "graphlearn",
                 "built",
                 "lib",
                 graphlearn_shared_lib,
@@ -171,7 +172,7 @@ def find_graphscope_packages():
         packages.append(pkg)
 
     # add graphlearn
-    for pkg in find_packages("../learning_engine/graph-learn"):
+    for pkg in find_packages("../learning_engine/graph-learn/graphlearn"):
         packages.append("graphscope.learning.%s" % pkg)
 
     return packages
@@ -180,7 +181,7 @@ def find_graphscope_packages():
 def resolve_graphscope_package_dir():
     package_dir = {
         "graphscope": "graphscope",
-        "graphscope.learning.examples": "../learning_engine/graph-learn/examples",
+        "graphscope.learning.examples": "../learning_engine/graph-learn/graphlearn/examples",
         "graphscope.learning.graphlearn": "../learning_engine/graph-learn/graphlearn",
     }
     return package_dir
@@ -210,7 +211,8 @@ def build_learning_engine():
     include_dirs.append("/usr/local/include")
     include_dirs.append(ROOT_PATH)
     include_dirs.append(ROOT_PATH + "/graphlearn/include")
-    include_dirs.append(ROOT_PATH + "/built")
+    include_dirs.append(ROOT_PATH + "/graphlearn/src/include")
+    include_dirs.append(ROOT_PATH + "/graphlearn/built")
     include_dirs.append(ROOT_PATH + "/third_party/pybind11/pybind11/include")
     include_dirs.append(ROOT_PATH + "/third_party/glog/build")
     include_dirs.append(ROOT_PATH + "/third_party/protobuf/build/include")
@@ -218,7 +220,7 @@ def build_learning_engine():
     # mac M1 support
     include_dirs.append("/opt/homebrew/include")
 
-    library_dirs.append(ROOT_PATH + "/built/lib")
+    library_dirs.append(ROOT_PATH + "/graphlearn/built/lib")
 
     extra_compile_args.append("-D__USE_XOPEN2K8")
     extra_compile_args.append("-std=c++11")
@@ -227,8 +229,9 @@ def build_learning_engine():
     libraries.append("graphlearn_shared")
 
     sources = [
-        ROOT_PATH + "/graphlearn/python/py_export.cc",
-        ROOT_PATH + "/graphlearn/python/py_client.cc",
+        ROOT_PATH + "/graphlearn/python/c/py_client.cc",
+        ROOT_PATH + "/graphlearn/python/c/py_export.cc",
+        ROOT_PATH + "/graphlearn/python/c/py_contrib.cc",
     ]
     ext = Extension(
         "graphscope.learning.graphlearn.pywrap_graphlearn",
