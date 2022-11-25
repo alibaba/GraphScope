@@ -20,7 +20,7 @@
     <dependency>
       <groupId>com.alibaba.maxgraph</groupId>
       <artifactId>sdk</artifactId>
-      <version>${project.parent.version}</version>
+      <version>${project.version}</version>
       <exclusions>
         <exclusion>
           <groupId>org.apache.logging.log4j</groupId>
@@ -31,7 +31,7 @@
     <dependency>
       <groupId>com.alibaba.maxgraph</groupId>
       <artifactId>groot-module</artifactId>
-      <version>${project.parent.version}</version>
+      <version>${project.version}</version>
       <exclusions>
         <exclusion>
           <groupId>org.apache.logging.log4j</groupId>
@@ -42,7 +42,7 @@
     <dependency>
       <artifactId>compiler</artifactId>
       <groupId>com.alibaba.graphscope</groupId>
-      <version>${project.parent.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>

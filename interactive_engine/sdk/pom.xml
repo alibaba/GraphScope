@@ -16,7 +16,7 @@
     <dependency>
       <groupId>com.alibaba.maxgraph</groupId>
       <artifactId>maxgraph-sdk-common</artifactId>
-      <version>${project.parent.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

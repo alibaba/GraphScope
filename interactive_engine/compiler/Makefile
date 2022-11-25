@@ -24,9 +24,8 @@ endif
 
 build:
 	cd $(CUR_DIR)/.. && \
-		mvn clean package -DskipTests -Pexperimental --quiet $(OSFLAG) && \
-		cd $(CUR_DIR)/../executor/ir/integrated && cargo build --release --bin $(rpc.target) && \
-		cd $(CUR_DIR) && mvn clean package -DskipTests --quiet $(OSFLAG)
+		mvn clean install -DskipTests -Pexperimental --quiet $(OSFLAG) && \
+		cd $(CUR_DIR)/../executor/ir/integrated && cargo build --release --bin $(rpc.target)
 
 clean:
 	cd $(CUR_DIR)/../executor/engine/pegasus/clients/java/client && mvn clean && \
@@ -36,7 +35,7 @@ clean:
 test:
 	cd $(CUR_DIR)/../executor/ir && cargo test && \
 	cd $(CUR_DIR)/../executor/ir && cargo test --features with_v6d && \
-	cd $(CUR_DIR) && mvn test -Pexperimental
+	cd $(CUR_DIR) && mvn test
 
 # start rpc server
 # make run
