@@ -51,7 +51,7 @@
         <dependency>
             <groupId>com.alibaba.pegasus</groupId>
             <artifactId>pegasus-client</artifactId>
-            <version>${project.parent.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>

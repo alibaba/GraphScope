@@ -23,8 +23,8 @@ ifeq ($(UNAME_S),Darwin)
 endif
 
 build:
-	cd $(CUR_DIR)/../executor/engine/pegasus/clients/java/client && \
-		mvn clean install -DskipTests --quiet $(OSFLAG) && \
+	cd $(CUR_DIR)/.. && \
+		mvn clean package -DskipTests -Pexperimental --quiet $(OSFLAG) && \
 		cd $(CUR_DIR)/../executor/ir/integrated && cargo build --release --bin $(rpc.target) && \
 		cd $(CUR_DIR) && mvn clean package -DskipTests --quiet $(OSFLAG)
 
@@ -36,7 +36,7 @@ clean:
 test:
 	cd $(CUR_DIR)/../executor/ir && cargo test && \
 	cd $(CUR_DIR)/../executor/ir && cargo test --features with_v6d && \
-	cd $(CUR_DIR) && mvn test
+	cd $(CUR_DIR) && mvn test -Pexperimental
 
 # start rpc server
 # make run
