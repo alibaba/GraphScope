@@ -23,10 +23,8 @@ ifeq ($(UNAME_S),Darwin)
 endif
 
 build:
-	cd $(CUR_DIR)/../executor/engine/pegasus/clients/java/client && \
-		mvn clean install -DskipTests --quiet $(OSFLAG) && \
-		cd $(CUR_DIR)/../executor/ir/integrated && cargo build --release --bin $(rpc.target) && \
-		cd $(CUR_DIR) && mvn clean package -DskipTests --quiet $(OSFLAG)
+	cd $(CUR_DIR)/.. && mvn clean install -DskipTests -Pjava-release --quiet $(OSFLAG) && \
+	cd $(CUR_DIR)/../executor/ir/integrated && cargo build --release --bin $(rpc.target)
 
 clean:
 	cd $(CUR_DIR)/../executor/engine/pegasus/clients/java/client && mvn clean && \
