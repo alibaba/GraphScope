@@ -943,7 +943,7 @@ def test_load_app_from_gar(random_gar, not_exist_gar, non_zipfile_gar):
     # type error
     with pytest.raises(ValueError, match="Wrong type"):
         ast3 = load_app([1, 2, 3, 4])
-    with pytest.raises(ValueError, match="Wrong type"):
+    with pytest.raises(AssertionError, match="'algo' cannot be None"):
         ast4 = load_app(gar=None)
     SSSP_Pregel.to_gar(random_gar)
     ast1 = load_app(random_gar)

@@ -85,6 +85,7 @@ LoadGraph(const grape::CommSpec& comm_spec, vineyard::Client& client,
       graph_def.extension().UnpackTo(&vy_info);
     }
     vy_info.set_vineyard_id(new_frag_group_id);
+    vy_info.clear_fragments();
     for (auto const& item : fg->Fragments()) {
       vy_info.add_fragments(item.second);
     }
@@ -133,6 +134,7 @@ LoadGraph(const grape::CommSpec& comm_spec, vineyard::Client& client,
       graph_def.extension().UnpackTo(&vy_info);
     }
     vy_info.set_vineyard_id(frag_group_id);
+    vy_info.clear_fragments();
     for (auto const& item : fg->Fragments()) {
       vy_info.add_fragments(item.second);
     }
@@ -199,6 +201,7 @@ ToArrowFragment(vineyard::Client& client, const grape::CommSpec& comm_spec,
     graph_def.extension().UnpackTo(&vy_info);
   }
   vy_info.set_vineyard_id(frag_group_id);
+  vy_info.clear_fragments();
   for (auto const& item : fg->Fragments()) {
     vy_info.add_fragments(item.second);
   }
@@ -287,6 +290,7 @@ AddLabelsToGraph(vineyard::ObjectID origin_frag_id,
     graph_def.extension().UnpackTo(&vy_info);
   }
   vy_info.set_vineyard_id(frag_group_id);
+  vy_info.clear_fragments();
   for (auto const& item : fg->Fragments()) {
     vy_info.add_fragments(item.second);
   }
