@@ -13,7 +13,6 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::collections::BTreeMap;
 use std::path::Path;
 
 use dyn_type::{BorrowObject, Object};
@@ -24,6 +23,7 @@ use serde::ser::Error as SerError;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::error::{GDBError, GDBResult};
+use crate::sorted_map::SortedMap;
 
 /// A generic datatype for each item in a row
 pub type ItemType = Object;
@@ -174,7 +174,7 @@ impl<'a> RowRef<'a> {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 enum Table {
     Dense(Vec<Row>),
-    Sparse(BTreeMap<usize, Row>),
+    Sparse(SortedMap<usize, Row>),
 }
 
 /// Define the functions that operate on a `PropertyTable`
@@ -217,6 +217,8 @@ pub trait PropertyTableTrait {
     fn import<P: AsRef<Path>>(path: P) -> GDBResult<Self>
     where
         Self: std::marker::Sized;
+
+    fn shrink_to_fit(&mut self);
 }
 
 /// A memory-based table to store the properties of an entity (vertex or edge)
@@ -229,7 +231,7 @@ pub struct PropertyTable {
 impl PropertyTable {
     /// Create a new sparse table
     pub fn new_sparse() -> Self {
-        Self { properties: Table::Sparse(BTreeMap::new()) }
+        Self { properties: Table::Sparse(SortedMap::default()) }
     }
 
     /// Create a new dense table
@@ -302,6 +304,13 @@ impl PropertyTableTrait for PropertyTable {
         }
         Ok(table)
     }
+
+    fn shrink_to_fit(&mut self) {
+        match &mut self.properties {
+            Table::Dense(inner) => inner.shrink_to_fit(),
+            Table::Sparse(inner) => inner.shrink_to_fit(),
+        }
+    }
 }
 
 /// A table where each row has only one value of `SimpleType` type, which is very common in edge
@@ -314,7 +323,7 @@ enum SimpleType {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SingleValueTable {
-    property: BTreeMap<usize, SimpleType>,
+    property: SortedMap<usize, SimpleType>,
 }
 
 impl PropertyTableTrait for SingleValueTable {
@@ -357,7 +366,7 @@ impl PropertyTableTrait for SingleValueTable {
     }
 
     fn new<P: AsRef<Path>>(_path: P) -> Self {
-        Self { property: BTreeMap::new() }
+        Self { property: SortedMap::default() }
     }
 
     fn export<P: AsRef<Path>>(&self, path: P) -> GDBResult<()> {
@@ -367,6 +376,10 @@ impl PropertyTableTrait for SingleValueTable {
 
     fn import<P: AsRef<Path>>(path: P) -> GDBResult<Self> {
         Ok(crate::io::import::<Self, _>(path)?)
+    }
+
+    fn shrink_to_fit(&mut self) {
+        self.property.shrink_to_fit()
     }
 }
 
