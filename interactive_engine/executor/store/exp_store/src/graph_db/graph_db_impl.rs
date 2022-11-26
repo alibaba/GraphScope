@@ -400,6 +400,21 @@ where
             .contains_key(&global_id)
     }
 
+    pub fn shrink_to_fit(&mut self) {
+        self.topology.shrink_to_fit();
+        self.vertex_prop_table.shrink_to_fit();
+        self.edge_prop_table.shrink_to_fit();
+        self.index_data.shrink_to_fit();
+    }
+
+    pub fn get_topology(&self) -> &T {
+        &self.topology
+    }
+
+    pub fn into_topology(self) -> T {
+        self.topology
+    }
+
     /// Print the statistics for debugging
     pub fn print_statistics(&self) {
         println!("Statics of the graph in partition: {}", self.partition);
