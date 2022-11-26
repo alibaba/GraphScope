@@ -16,6 +16,8 @@ graph.schema:=
 
 rpc.target:=start_rpc_server
 
+target.revision:=1.0-SNAPSHOT
+
 ifeq ($(UNAME_S),Darwin)
     ifeq ($(UNAME_M),arm64)
         OSFLAG += -Dos.detected.classifier=osx-x86_64
@@ -24,7 +26,7 @@ endif
 
 build:
 	cd $(CUR_DIR)/.. && \
-		mvn clean install -DskipTests -Pexperimental --quiet $(OSFLAG) && \
+		mvn clean install -DskipTests -Drevision=${target.revision} -Pexperimental --quiet $(OSFLAG) && \
 		cd $(CUR_DIR)/../executor/ir/integrated && cargo build --release --bin $(rpc.target)
 
 clean:
