@@ -173,7 +173,6 @@ class AppAssets(DAGNode):
             gar (bytes or BytesIO, optional): The bytes that encodes the application's source code.
                 Defaults to None.
         """
-        assert algo is not None, "'algo' cannot be None"
         self._algo = algo
         self._context_type = context
         if isinstance(self._algo, str) and (

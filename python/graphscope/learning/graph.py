@@ -83,11 +83,12 @@ class Graph(GLGraph):
         return json.loads(base64.b64decode(arg.encode("utf-8")).decode("utf-8"))
 
     def close(self):
-        if not self.closed and not self.graphscope_session.closed:
-            self.closed = True
-            super(Graph, self).close()  # close client first
-            # close server instance
-            self.graphscope_session._close_learning_instance(self)
+        if self.closed or self.graphscope_session.closed:
+            return
+        self.closed = True
+        super(Graph, self).close()  # close client first
+        # close server instance
+        self.graphscope_session._close_learning_instance(self)
 
     @staticmethod  # noqa: C901
     def preprocess_args(handle, nodes, edges, gen_labels):  # noqa: C901

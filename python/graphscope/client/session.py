@@ -1129,6 +1129,7 @@ class Session(object):
         endpoint = self._grpc_client.create_interactive_instance(object_id, schema_path)
         interactive_query = InteractiveQuery(graph, endpoint)
         self._interactive_instance_dict[object_id] = interactive_query
+        graph._attach_interactive_instance(interactive_query)
         return interactive_query
 
     def learning(self, graph, nodes=None, edges=None, gen_labels=None):
@@ -1222,6 +1223,7 @@ class Session(object):
         # construct learning graph
         g = LearningGraph(graph, handle, config, graph.vineyard_id)
         self._learning_instance_dict[graph.vineyard_id] = g
+        graph._attach_learning_instance(g)
         return g
 
     def nx(self):
