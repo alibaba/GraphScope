@@ -789,7 +789,7 @@ jobs:
           cd interactive_engine/compiler && make build rpc.target=${RPC_TARGET}
           cd ${GITHUB_WORKSPACE}
           tar -czf artifacts.tar.gz interactive_engine/compiler/target/libs \
-            interactive_engine/compiler/target/compiler-1.0-SNAPSHOT.jar \
+            interactive_engine/compiler/target/compiler-0.0.1-SNAPSHOT.jar \
             interactive_engine/compiler/conf \
             interactive_engine/compiler/set_properties.sh \
             interactive_engine/executor/ir/target/release/libir_core.so \

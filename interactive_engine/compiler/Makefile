@@ -44,14 +44,14 @@ gremlin_test:
 
 submit:
 	cd $(CUR_DIR) && $(java) \
-	  -cp ".:./target/libs/*:./target/compiler-1.0-SNAPSHOT.jar" \
+	  -cp ".:./target/libs/*:./target/compiler-0.0.1-SNAPSHOT.jar" \
 	  -Djna.library.path=../executor/ir/target/release \
 	  com.alibaba.graphscope.common.SubmitPlanServiceMain \
 	  $(OPT)
 
 run:
 	cd $(CUR_DIR) && $(java) \
-	  -cp ".:./target/libs/*:./target/compiler-1.0-SNAPSHOT.jar" \
+	  -cp ".:./target/libs/*:./target/compiler-0.0.1-SNAPSHOT.jar" \
 	  -Djna.library.path=../executor/ir/target/release \
 	  -Dgraph.schema=${graph.schema} \
 	  -Dpegasus.hosts=${pegasus.hosts} \
