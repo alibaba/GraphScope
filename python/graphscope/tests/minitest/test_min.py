@@ -22,17 +22,7 @@ import sys
 
 import pytest
 
-try:
-    # https://www.tensorflow.org/guide/migrate
-    import tensorflow.compat.v1 as tf
-
-    tf.disable_v2_behavior()
-except ImportError:
-    import tensorflow as tf
-
 import graphscope
-import graphscope.learning
-import graphscope.nx as nx
 from graphscope.analytical.udf.decorators import pregel
 from graphscope.dataset import load_modern_graph
 from graphscope.dataset import load_ogbn_mag
@@ -41,6 +31,7 @@ from graphscope.framework.app import AppAssets
 logger = logging.getLogger("graphscope")
 
 graphscope.set_option(show_log=True)
+graphscope.set_option(log_level="DEBUG")
 
 
 @pytest.fixture(scope="module")
@@ -49,38 +40,83 @@ def ogbn_small_script():
     return script
 
 
-def train(config, graph):
-    from graphscope.learning.examples import GCN
-    from graphscope.learning.graphlearn.python.model.tf import optimizer
-    from graphscope.learning.graphlearn.python.model.tf.trainer import LocalTFTrainer
+def train_gcn(
+    graph,
+    node_type,
+    edge_type,
+    class_num,
+    features_num,
+    hops_num=2,
+    nbrs_num=[25, 10],
+    epochs=2,
+    train_batch_size=128,
+    test_batch_size=128,
+    hidden_dim=256,
+    in_drop_rate=0.5,
+    learning_rate=0.01,
+):
+    try:
+        # https://www.tensorflow.org/guide/migrate
+        import tensorflow.compat.v1 as tf
 
-    def model_fn():
-        return GCN(
-            graph,
-            config["class_num"],
-            config["features_num"],
-            config["batch_size"],
-            val_batch_size=config["val_batch_size"],
-            test_batch_size=config["test_batch_size"],
-            categorical_attrs_desc=config["categorical_attrs_desc"],
-            hidden_dim=config["hidden_dim"],
-            in_drop_rate=config["in_drop_rate"],
-            neighs_num=config["neighs_num"],
-            hops_num=config["hops_num"],
-            node_type=config["node_type"],
-            edge_type=config["edge_type"],
-            full_graph_mode=config["full_graph_mode"],
-        )
+        tf.disable_v2_behavior()
+    except ImportError:
+        import tensorflow as tf
+
+    import graphscope.learning
+    from graphscope.learning.examples import EgoGraphSAGE
+    from graphscope.learning.examples import EgoSAGESupervisedDataLoader
+    from graphscope.learning.examples.tf.trainer import LocalTrainer
 
     graphscope.learning.reset_default_tf_graph()
-    trainer = LocalTFTrainer(
-        model_fn,
-        epoch=config["epoch"],
-        optimizer=optimizer.get_tf_optimizer(
-            config["learning_algo"], config["learning_rate"], config["weight_decay"]
-        ),
+
+    dimensions = [features_num] + [hidden_dim] * (hops_num - 1) + [class_num]
+    model = EgoGraphSAGE(dimensions, act_func=tf.nn.relu, dropout=in_drop_rate)
+
+    # prepare train dataset
+    train_data = EgoSAGESupervisedDataLoader(
+        graph,
+        graphscope.learning.Mask.TRAIN,
+        "random",
+        train_batch_size,
+        node_type=node_type,
+        edge_type=edge_type,
+        nbrs_num=nbrs_num,
+        hops_num=hops_num,
     )
-    trainer.train_and_evaluate()
+    train_embedding = model.forward(train_data.src_ego)
+    train_labels = train_data.src_ego.src.labels
+    loss = tf.reduce_mean(
+        tf.nn.sparse_softmax_cross_entropy_with_logits(
+            labels=train_labels,
+            logits=train_embedding,
+        )
+    )
+    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+
+    # prepare test dataset
+    test_data = EgoSAGESupervisedDataLoader(
+        graph,
+        graphscope.learning.Mask.TEST,
+        "random",
+        test_batch_size,
+        node_type=node_type,
+        edge_type=edge_type,
+        nbrs_num=nbrs_num,
+        hops_num=hops_num,
+    )
+    test_embedding = model.forward(test_data.src_ego)
+    test_labels = test_data.src_ego.src.labels
+    test_indices = tf.math.argmax(test_embedding, 1, output_type=tf.int32)
+    test_acc = tf.div(
+        tf.reduce_sum(tf.cast(tf.math.equal(test_indices, test_labels), tf.float32)),
+        tf.cast(tf.shape(test_labels)[0], tf.float32),
+    )
+
+    # train and test
+    trainer = LocalTrainer()
+    trainer.train(train_data.iterator, loss, optimizer, epochs=epochs)
+    trainer.test(test_data.iterator, test_acc)
 
 
 def simple_flow(sess, ogbn_small_script):
@@ -105,29 +141,14 @@ def simple_flow(sess, ogbn_small_script):
         ],
     )
 
-    # hyperparameters config.
-    config = {
-        "class_num": 349,  # output dimension
-        "features_num": 128,
-        "batch_size": 500,
-        "val_batch_size": 100,
-        "test_batch_size": 100,
-        "categorical_attrs_desc": "",
-        "hidden_dim": 256,
-        "in_drop_rate": 0.5,
-        "hops_num": 2,
-        "neighs_num": [5, 10],
-        "full_graph_mode": False,
-        "agg_type": "gcn",  # mean, sum
-        "learning_algo": "adam",
-        "learning_rate": 0.01,
-        "weight_decay": 0.0005,
-        "epoch": 2,
-        "node_type": "paper",
-        "edge_type": "cites",
-    }
-
-    train(config, lg)
+    # config hyperparameters and train.
+    train_gcn(
+        lg,
+        node_type="paper",
+        edge_type="cites",
+        class_num=349,  # output dimension
+        features_num=128,  # input dimension
+    )
 
 
 def test_minimum_udf_app():
@@ -149,6 +170,8 @@ def test_minimum_udf_app():
 
 
 def test_minimum_networkx():
+    import graphscope.nx as nx
+
     s = graphscope.session(cluster_type="hosts", num_workers=2)
     s.as_default()
     # case-1 run app
@@ -212,28 +235,13 @@ def test_demo_with_default_session(ogbn_small_script):
     )
 
     # hyperparameters config.
-    config = {
-        "class_num": 349,  # output dimension
-        "features_num": 130,  # 128 dimension + kcore + triangle count
-        "batch_size": 500,
-        "val_batch_size": 100,
-        "test_batch_size": 100,
-        "categorical_attrs_desc": "",
-        "hidden_dim": 256,
-        "in_drop_rate": 0.5,
-        "hops_num": 2,
-        "neighs_num": [5, 10],
-        "full_graph_mode": False,
-        "agg_type": "gcn",  # mean, sum
-        "learning_algo": "adam",
-        "learning_rate": 0.01,
-        "weight_decay": 0.0005,
-        "epoch": 2,
-        "node_type": "paper",
-        "edge_type": "cites",
-    }
-
-    train(config, lg)
+    train_gcn(
+        lg,
+        node_type="paper",
+        edge_type="cites",
+        class_num=349,  # output dimension
+        features_num=130,  # input dimension, 128 + kcore + triangle count
+    )
 
 
 def test_modern_graph():

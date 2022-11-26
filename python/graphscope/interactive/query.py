@@ -205,7 +205,7 @@ class InteractiveQuery(object):
         return traversal().withRemote(self._conn)
 
     def close(self):
-        if self.closed:
+        if self.closed or self._session.closed:
             return
         """Close interactive instance and release resources"""
         if self._conn is not None:
