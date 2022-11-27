@@ -57,6 +57,8 @@ jobs:
         # source environment variable
         source ~/.graphscope_env
         echo ${CC}
+        export CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER=${CC}
+        echo ${CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER}
 
         # change the version for nightly release
         # 0.15.0 -> 0.15.0a20220808
