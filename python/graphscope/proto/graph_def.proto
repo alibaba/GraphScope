@@ -63,6 +63,8 @@ message VineyardInfoPb {
     string property_schema_json = 8;
     // Global or local vertex map
     VertexMapTypePb vertex_map_type = 9;
+    // Fragment ids
+    repeated int64 fragments = 10;
 }
 
 // Attributes that only meaningful to and will be set by dynamic storage

@@ -33,6 +33,7 @@ from graphscope.dataset import load_modern_graph
 from graphscope.framework.loader import Loader
 
 graphscope.set_option(show_log=True)
+graphscope.set_option(log_level="DEBUG")
 logger = logging.getLogger("graphscope")
 
 

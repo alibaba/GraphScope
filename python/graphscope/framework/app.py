@@ -163,7 +163,7 @@ class AppAssets(DAGNode):
         "labeled_vertex_property",
     ]
 
-    def __init__(self, algo, context=None, gar=None, cmake_extra_options=None):
+    def __init__(self, algo=None, context=None, gar=None, cmake_extra_options=None):
         """Init assets of the algorithm.
 
         Args:

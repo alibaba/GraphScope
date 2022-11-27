@@ -70,8 +70,9 @@ public class CppHeaderName {
     public static final String CORE_JAVA_FRAGMENT_GETTER_H = "core/java/fragment_getter.h";
     public static final String CORE_JAVA_GRAPHX_RAW_DATA_H = "core/java/graphx_raw_data.h";
 
-    public static final String VINEYARD_CLIENT_H = "vineyard/client/client.h";
-    public static final String VINEYARD_STATUS_H = "vineyard/common/util/status.h";
     public static final String VINEYARD_ARRAY_BUILDER_H = "vineyard/basic/ds/array.h";
+    public static final String VINEYARD_ARROW_UTILS_H = "vineyard/basic/ds/arrow_utils.h";
+    public static final String VINEYARD_CLIENT_H = "vineyard/client/client.h";
     public static final String VINEYARD_JSON_H = "vineyard/common/util/json.h";
+    public static final String VINEYARD_STATUS_H = "vineyard/common/util/status.h";
 }

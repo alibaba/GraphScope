@@ -23,6 +23,7 @@ pub mod ldbc;
 pub mod parser;
 pub mod prelude;
 pub mod schema;
+pub mod sorted_map;
 pub mod table;
 pub mod utils;
 

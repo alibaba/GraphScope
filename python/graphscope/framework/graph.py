@@ -734,10 +734,14 @@ class Graph(GraphInterface):
 
         self._key = None
         self._vineyard_id = 0
+        self._fragments = None
         self._schema = GraphSchema()
         self._detached = False
 
         self._vertex_map = graph_node._vertex_map
+
+        self._interactive_instance_list = []
+        self._learning_instance_list = []
 
     def update_from_graph_def(self, graph_def):
         if graph_def.graph_type == graph_def_pb2.ARROW_FLATTENED:
@@ -754,6 +758,7 @@ class Graph(GraphInterface):
         vy_info = graph_def_pb2.VineyardInfoPb()
         graph_def.extension.Unpack(vy_info)
         self._vineyard_id = vy_info.vineyard_id
+        self._fragments = list(vy_info.fragments)
         self._oid_type = data_type_to_cpp(vy_info.oid_type)
         self._generate_eid = vy_info.generate_eid
 
@@ -840,6 +845,10 @@ class Graph(GraphInterface):
         return self._vineyard_id
 
     @property
+    def fragments(self):
+        return self._fragments
+
+    @property
     def session_id(self):
         """Get the currrent session_id.
 
@@ -881,8 +890,15 @@ class Graph(GraphInterface):
         rlt = None
         if self._session.info["status"] != "active" or self._key is None:
             return
-        if not self._detached:
-            rlt = self._session._wrapper(self._graph_node._unload())
+        if self._detached:
+            return
+
+        # close the associated interactive and learning instances
+        self._close_interactive_instances()
+        self._close_learning_instances()
+
+        # unload the graph
+        rlt = self._session._wrapper(self._graph_node._unload())
         self._key = None
         return rlt
 
@@ -1097,6 +1113,36 @@ class Graph(GraphInterface):
         if not self.loaded():
             raise RuntimeError("The graph is not loaded")
         return self._session._wrapper(self._graph_node.project(vertices, edges))
+
+    def _attach_interactive_instance(self, instance):
+        """Store the instance when a new interactive instance is started.
+        Args:
+            instance: interactive instance
+        """
+        self._interactive_instance_list.append(instance)
+
+    def _attach_learning_instance(self, instance):
+        """Store the instance when a new learning instance is created.
+        Args:
+            instance: learning instance
+        """
+        self._learning_instance_list.append(instance)
+
+    def _close_interactive_instances(self):
+        for instance in self._interactive_instance_list:
+            try:
+                instance.close()
+            except Exception as e:  # pylint: disable=broad-except,invalid-name
+                logger.error("Failed to close interactive instances: %s", e)
+        self._interactive_instance_list.clear()
+
+    def _close_learning_instances(self):
+        for instance in self._learning_instance_list:
+            try:
+                instance.close()
+            except Exception as e:  # pylint: disable=broad-except,invalid-name
+                logger.error("Failed to close interactive instances: %s", e)
+        self._learning_instance_list.clear()
 
 
 class UnloadedGraph(DAGNode):
