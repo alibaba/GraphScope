@@ -15,6 +15,7 @@
 
 use std::collections::{BTreeSet, HashMap};
 
+use ir_common::expr_parse::str_to_expr_pb;
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
 use ir_common::KeyId;
@@ -27,7 +28,6 @@ use rand::seq::SliceRandom;
 use rand::SeedableRng;
 
 use crate::common::pattern_meta_cases::*;
-use ir_common::expr_parse::str_to_expr_pb;
 
 pub const TAG_A: KeyId = 0;
 pub const TAG_B: KeyId = 1;

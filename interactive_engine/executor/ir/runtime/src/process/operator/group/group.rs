@@ -50,7 +50,9 @@ impl GroupGen<Record, RecordKey, Record> for algebra_pb::GroupBy {
             key_aliases.push(alias);
         }
         let group_map = GroupMap { key_aliases };
-        debug!("Runtime group operator group_map: {:?}", group_map);
+        if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
+            debug!("Runtime group operator group_map: {:?}", group_map);
+        }
         Ok(Box::new(group_map))
     }
 }
