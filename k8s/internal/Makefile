@@ -11,12 +11,17 @@ ifeq ($(REGISTRY),)
 endif
 
 
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S), Linux)
+	XARGS_EMPTY_FLAG := --no-run-if-empty
+endif
+
 # Default null
 TARGET_SERVER_PACKAGE      :=
 TARGET_CLIENT_PACKAGE      :=
 ifeq ($(UNAME_S), Linux)
 	TARGET_SERVER_PACKAGE := graphscope-manylinux2014-py3
-    TARGET_CLIENT_PACKAGE := graphscope-client-manylinux2014-py3
+  TARGET_CLIENT_PACKAGE := graphscope-client-manylinux2014-py3
 else
 	TARGET_SERVER_PACKAGE := graphscope-darwin-py3
 	TARGET_CLIENT_PACKAGE := graphscope-client-darwin-py3
