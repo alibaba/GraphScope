@@ -55,8 +55,8 @@ make their changes to the code and build with command to build graphscope image:
 
 .. code:: bash
 
-    cd GraphScope
-    make graphscope-dev-image
+    cd GraphScope/k8s
+    make graphscope-dev
 
 This command triggers the building process. It will build the current source code in a container with
 image `graphscope-vineyard`, and copy built binaries into a new image based from `graphscope-runtime`.
@@ -141,9 +141,9 @@ Then you can build GraphScope with pre-configured `make` commands.
 make install
 
 # or make the engine components
-# make gie
-# make gae
-# make gle
+# make interactive
+# make analytical
+# make learning
 ```
 
 To test the newly built binaries, manually open a session:
@@ -169,14 +169,14 @@ The wheel packages for Linux is built inside the manylinux2014 environment.
 
 .. code:: bash
 
-    cd GraphScope
+    cd GraphScope/k8s/internal
     make graphscope-py3-package
 
 - Build GraphScope Client Wheels for python{36,37,38,39}
 
 .. code:: bash
 
-    cd GraphScope
+    cd GraphScope/k8s/internal
     make graphscope-client-py3-package
 
 
@@ -197,14 +197,14 @@ Assuming you are in the root directory of GraphScope repository.
 
 .. code:: bash
 
-    cd GraphScope
+    cd GraphScope/k8s/internal
     make graphscope-py3-package
 
 Build GraphScope Client Wheels for specified python version.
 
 .. code:: bash
 
-    cd GraphScope
+    cd GraphScope/k8s/internal
     make graphscope-client-py3-package
 
 Note that if you want to build wheel packages for different Python versions, you may need to install multiple

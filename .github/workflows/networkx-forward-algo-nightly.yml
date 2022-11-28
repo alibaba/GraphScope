@@ -26,7 +26,9 @@ jobs:
     - name: Build GAE and coordinator
       run: |
         pushd ${GITHUB_WORKSPACE}
-        make gae-install ENABLE_JAVA_SDK=OFF BUILD_TEST=OFF NUMPROC=1
+        install_prefix=/opt/graphscope
+        mkdir -p ${install_prefix}
+        make analytical-install BUILD_TEST=OFF NUMPROC=1 INSTALL_PREFIX=${install_prefix}
         # also make coordinator and client for python test
         make coordinator && make client
         popd

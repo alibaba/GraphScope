@@ -32,7 +32,7 @@ RUN yum install -y sudo java-1.8.0-openjdk bind-utils \
     && yum clean all \
     && rm -rf /var/cache/yum
 
-COPY ./k8s/ready_probe.sh /tmp/ready_probe.sh
+COPY ./k8s/utils/ready_probe.sh /tmp/ready_probe.sh
 
 COPY --from=builder /home/graphscope/gs/groot.tar.gz /tmp/groot.tar.gz
 RUN tar -zxf /tmp/groot.tar.gz -C /usr/local && rm /tmp/groot.tar.gz

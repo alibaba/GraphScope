@@ -342,19 +342,20 @@ Then you can build GraphScope with pre-configured `make` commands.
 sudo make install
 
 # or make the engine components
-# make gie
-# make gae
-# make gle
+# make interactive
+# make analytical
+# make learning
 ```
 
 ### Building Docker images
 
 GraphScope ships with a [Dockerfile](k8s/graphscope.Dockerfile) that can build docker images for releasing. The images are built on a `builder` image with all dependencies installed and copied to
-a `runtime-base` image. To build images with latest version of GraphScope, go to the root directory and run this command.
+a `runtime-base` image. To build images with latest version of GraphScope, go to the `k8s/internal` directory under root directory and run this command.
 
 ```bash
 # by default, the built image is tagged as graphscope/graphscope:SHORTSHA
-make graphscope-image
+# cd k8s
+make graphscope
 ```
 
 ### Building client library

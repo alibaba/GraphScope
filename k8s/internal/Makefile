@@ -1,0 +1,167 @@
+MKFILE_PATH 			:= $(abspath $(lastword $(MAKEFILE_LIST)))
+WORKING_DIR 			:= $(dir $(MKFILE_PATH))
+
+.PHONY: graphscope-jupyter-manylinux2014-py3 graphscope-py3-package graphscope-client-py3-package
+.PHONY: graphscope-darwin-py3 graphscope-client-darwin-py3
+.PHONY: graphscope-manylinux2014-py3-nodocker graphscope-manylinux2014-py3
+.PHONY: graphscope-client-manylinux2014-py3-nodocker graphscope-client-manylinux2014-py3
+
+ifeq ($(REGISTRY),)
+    REGISTRY := registry.cn-hongkong.aliyuncs.com
+endif
+
+
+# Default null
+TARGET_SERVER_PACKAGE      :=
+TARGET_CLIENT_PACKAGE      :=
+ifeq ($(UNAME_S), Linux)
+	TARGET_SERVER_PACKAGE := graphscope-manylinux2014-py3
+    TARGET_CLIENT_PACKAGE := graphscope-client-manylinux2014-py3
+else
+	TARGET_SERVER_PACKAGE := graphscope-darwin-py3
+	TARGET_CLIENT_PACKAGE := graphscope-client-darwin-py3
+endif
+
+VERSION ?= latest
+VINEYARD_VERSION ?= v0.10.2
+PROFILE ?= release
+CI ?= false
+
+graphscope:
+	cd $(WORKING_DIR)/../.. && \
+	git submodule update --init && \
+	docker build --progress=$(BUILD_PROGRESS) \
+				 --build-arg CI=${CI} \
+				 -t graphscope/graphscope:${SHORT_SHA} \
+				 -f $(WORKING_DIR)/graphscope.Dockerfile .
+
+graphscope-jupyter-manylinux2014-py3:
+	docker run --rm -it -v $(WORKING_DIR)/../..:/work \
+		   ${REGISTRY}/graphscope/graphscope-dev:${VINEYARD_VERSION} \
+		   bash -c 'pip3 install graphscope-client -U && \
+					cd /work/python/jupyter/graphscope && \
+					python3 setup.py bdist_wheel'
+
+graphscope-py3-package: $(TARGET_SERVER_PACKAGE)
+graphscope-client-py3-package: $(TARGET_CLIENT_PACKAGE)
+
+graphscope-darwin-py3:
+	# Avoid copy vineyard library with the same basename by:
+	# 	1) reinstall vineyard to /usr/local and
+	# 	2) rm /opt/vineyard/lib
+	cd /tmp && git clone -b ${VINEYARD_VERSION} https://github.com/v6d-io/v6d.git --depth=1 && \
+		cd v6d && git submodule update --init && \
+		mkdir -p build && cd build && \
+		cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local && \
+		sudo make install -j`nproc` && \
+		sudo rm -rf /opt/vineyard/lib
+	sudo rm -rf /tmp/v6d /tmp/libgrape-lite
+	# build graphscope
+	cd $(WORKING_DIR)/../.. && \
+		python3 -m pip install --upgrade setuptools && \
+		make && \
+		sudo make install INSTALL_PREFIX=/opt/graphscope && \
+		python3 $(WORKING_DIR)/../utils/precompile.py
+	# build and delocate wheel
+	cd $(WORKING_DIR)/../../coordinator && \
+		export WITH_EXTRA_DATA=ON && \
+		rm -rf build dist/*.whl || true && \
+		sudo strip -s $(WORKING_DIR)/../../analytical_engine/exported_symbols_osx.lds /opt/graphscope/bin/grape_engine || true && \
+		sudo strip /opt/graphscope/bin/gaia_executor && \
+		export DYLD_LIBRARY_PATH=/usr/local/lib:$$DYLD_LIBRARY_PATH && \
+		install_name_tool -add_rpath /usr/local/lib /opt/graphscope/bin/gaia_executor && \
+		package_name=gs-include python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
+		rm -rf build && \
+		package_name=gs-apps python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
+		rm -rf build && \
+		package_name=gs-engine python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
+		rm -rf build && \
+		package_name=gs-coordinator python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
+		rm -rf build && \
+		package_name=graphscope python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
+		pip3 install delocate && \
+		for wheel in `ls dist/*.whl`; do \
+			delocate-listdeps -a -d $$wheel; \
+			delocate-wheel -w dist/wheelhouse -v $$wheel && rm $$wheel; \
+		done
+
+graphscope-manylinux2014-py3-nodocker:
+	cd $(WORKING_DIR)/../.. && \
+	make && \
+	sudo make install INSTALL_PREFIX=/opt/graphscope && \
+	python3 $(WORKING_DIR)/../utils/precompile.py && \
+	export WITH_EXTRA_DATA=ON && \
+	cd $(WORKING_DIR)/../../coordinator && \
+	rm -rf build dist/*.whl && \
+	sudo strip /opt/graphscope/bin/grape_engine && \
+	sudo strip /opt/graphscope/bin/gaia_executor && \
+	sudo strip /opt/graphscope/lib/*.so && \
+	strip /tmp/gs/builtin/*/*.so && \
+	package_name=gs-include python3 setup.py bdist_wheel && \
+	rm -rf build && \
+	package_name=gs-apps python3 setup.py bdist_wheel && \
+	rm -rf build && \
+	package_name=gs-engine python3 setup.py bdist_wheel && \
+	rm -rf build && \
+	package_name=gs-coordinator python3 setup.py bdist_wheel && \
+	rm -rf build && \
+	package_name=graphscope python3 setup.py bdist_wheel && \
+	cd dist && \
+	for wheel in `ls ./*.whl`; do \
+		auditwheel repair $$wheel --plat=manylinux2014_x86_64 && rm $$wheel; \
+	done
+
+graphscope-manylinux2014-py3:
+	docker pull ${REGISTRY}/graphscope/graphscope-dev:${VINEYARD_VERSION}
+	docker run --rm -v $(WORKING_DIR)/../..:/work \
+		${REGISTRY}/graphscope/graphscope-dev:${VINEYARD_VERSION} \
+		bash -c 'source ~/.bashrc && \
+			cd /work/k8s && \
+			make graphscope-manylinux2014-py3-nodocker'
+
+graphscope-client-manylinux2014-py3-nodocker:
+	cd $(WORKING_DIR)/../../learning_engine/graph-learn && \
+	git submodule update --init third_party/pybind11 && \
+	cd graphlearn && \
+	rm -rf cmake-build && \
+	mkdir -p cmake-build && \
+	cd cmake-build && \
+	cmake -DKNN=OFF -DWITH_VINEYARD=ON -DTESTING=OFF .. && \
+	make graphlearn_shared -j`nproc` && \
+	export LD_LIBRARY_PATH=$(WORKING_DIR)/../../learning_engine/graph-learn/graphlearn/built/lib:$$LD_LIBRARY_PATH && \
+	for py in cp37-cp37m cp38-cp38 cp39-cp39 ; do \
+		cd $(WORKING_DIR)/../../python; \
+		export PATH=/opt/python/$$py/bin:$$PATH; \
+		pip3 install -U pip; \
+		pip3 install "numpy==1.18.5" "pandas<1.5.0" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" wheel "auditwheel==5.0.0"; \
+		rm -rf build; \
+		rm -rf dist/*.whl; \
+		python3 setup.py bdist_wheel; \
+		cd dist; \
+		auditwheel repair ./*.whl; \
+	done
+
+graphscope-client-darwin-py3:
+	cd $(WORKING_DIR)/../../learning_engine/graph-learn && \
+		git submodule update --init third_party/pybind11 && \
+		rm -rf cmake-build && \
+		mkdir -p cmake-build && \
+		cd cmake-build && \
+		cmake -DKNN=OFF -DWITH_VINEYARD=ON -DTESTING=OFF .. && \
+		make graphlearn_shared -j`nproc` && \
+		export DYLD_LIBRARY_PATH=$(WORKING_DIR)/../../learning_engine/graph-learn/graphlearn/built/lib:/usr/local/lib:$$DYLD_LIBRARY_PATH && \
+		cd $(WORKING_DIR)/../../python && \
+		pip3 install -U pip && \
+		pip3 install "numpy==1.18.5" "pandas<1.5.0" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" delocate wheel && \
+		rm -rf build dist/*.whl || true && \
+		python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
+		for wheel in `ls dist/*.whl`; do \
+			delocate-wheel -w dist/wheelhouse -v $$wheel && rm $$wheel; \
+		done
+
+graphscope-client-manylinux2014-py3:
+	docker pull ${REGISTRY}/graphscope/graphscope-dev:${VINEYARD_VERSION}
+	docker run --rm -v $(WORKING_DIR)/../..:/work \
+		${REGISTRY}/graphscope/graphscope-dev:${VINEYARD_VERSION} \
+		bash -c 'cd /work/k8s && make graphscope-client-manylinux2014-py3-nodocker'
+

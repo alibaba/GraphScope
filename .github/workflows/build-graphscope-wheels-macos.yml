@@ -45,7 +45,7 @@ jobs:
         if [ "${{ GITHUB.REF }}" == "refs/heads/main" ];then echo "${version}a${time}" > ${GITHUB_WORKSPACE}/VERSION; fi
 
         # build graphscope server wheel
-        cd ${GITHUB_WORKSPACE}/k8s
+        cd ${GITHUB_WORKSPACE}/k8s/internal
         sudo -E make graphscope-py3-package
 
         # package
@@ -96,7 +96,7 @@ jobs:
         if [ "${{ GITHUB.REF }}" == "refs/heads/main" ];then echo "${version}a${time}" > ${GITHUB_WORKSPACE}/VERSION; fi
 
         # build graphscope client wheel
-        cd ${GITHUB_WORKSPACE}/k8s
+        cd ${GITHUB_WORKSPACE}/k8s/internal
         make graphscope-client-py3-package
 
         # package

@@ -4,17 +4,18 @@ ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
 ARG BASE_VERSION=v0.10.2
 FROM $REGISTRY/graphscope/graphscope-dev:$BASE_VERSION AS builder
 
-ADD . /home/graphscope/GraphScope
+COPY . /home/graphscope/GraphScope
 
 RUN sudo chown -R graphscope:graphscope /home/graphscope/GraphScope
 RUN cd /home/graphscope/GraphScope/ \
     && mkdir /home/graphscope/install \
-    && make gae-install ENABLE_JAVA_SDK=OFF INSTALL_PREFIX=/home/graphscope/install
+    && make analytical-install INSTALL_PREFIX=/home/graphscope/install
 
 ############### RUNTIME: GAE #######################
 FROM $REGISTRY/graphscope/vineyard-dev:$BASE_VERSION AS analytical
 
 COPY --from=builder /home/graphscope/install /opt/graphscope/
+COPY ./k8s/utils/kube_ssh /usr/local/bin/kube_ssh
 
 ENV GRAPHSCOPE_HOME=/opt/graphscope LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib
 
@@ -24,18 +25,19 @@ WORKDIR /home/graphscope
 ############### RUNTIME: GAE-JAVA #######################
 FROM $REGISTRY/graphscope/graphscope-dev:$BASE_VERSION AS builder-java
 
-ADD . /home/graphscope/GraphScope
+COPY . /home/graphscope/GraphScope
 
 RUN sudo chown -R graphscope:graphscope /home/graphscope/GraphScope
 RUN cd /home/graphscope/GraphScope/ \
     && mkdir /home/graphscope/install \
-    && make gae-install ENABLE_JAVA_SDK=ON INSTALL_PREFIX=/home/graphscope/install
+    && make analytical-java-install INSTALL_PREFIX=/home/graphscope/install
 
 FROM vineyardcloudnative/manylinux-llvm:2014-11.0.0 AS llvm
 
 FROM $REGISTRY/graphscope/vineyard-dev:$BASE_VERSION AS analytical-java
 
 COPY --from=builder-java /home/graphscope/install /opt/graphscope/
+COPY ./k8s/utils/kube_ssh /usr/local/bin/kube_ssh
 
 ENV GRAPHSCOPE_HOME=/opt/graphscope LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib
 
