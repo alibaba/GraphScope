@@ -142,7 +142,7 @@ $(INTERACTIVE_DIR)/assembly/target/graphscope.tar.gz:
 learning-install: learning
 	mkdir -p $(INSTALL_PREFIX)
 	$(MAKE) -C $(LEARNING_BUILD_DIR) install
-learning: $(LEARNING_DIR)/graphlearrn/built/lib/libgraphlearn_shared.$(SUFFIX)
+learning: $(LEARNING_DIR)/graphlearn/built/lib/libgraphlearn_shared.$(SUFFIX)
 
 $(LEARNING_DIR)/graphlearn/built/lib/libgraphlearn_shared.$(SUFFIX):
 	git submodule update --init
