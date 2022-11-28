@@ -108,7 +108,7 @@ graphscope-manylinux2014-py3-nodocker:
 	package_name=graphscope python3 setup.py bdist_wheel && \
 	cd dist && \
 	for wheel in `ls ./*.whl`; do \
-		auditwheel repair $$wheel --plat=manylinux2014_x86_64 && rm $$wheel; \
+		(auditwheel repair $$wheel --plat=manylinux2014_x86_64 && rm $$wheel) || true; \
 	done
 
 graphscope-manylinux2014-py3:
