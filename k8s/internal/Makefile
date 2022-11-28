@@ -121,7 +121,7 @@ graphscope-manylinux2014-py3:
 	docker run --rm -v $(WORKING_DIR)/../..:/work \
 		${REGISTRY}/graphscope/graphscope-dev:${VINEYARD_VERSION} \
 		bash -c 'source ~/.bashrc && \
-			cd /work/k8s && \
+			cd /work/k8s/internal && \
 			make graphscope-manylinux2014-py3-nodocker'
 
 graphscope-client-manylinux2014-py3-nodocker:
@@ -169,5 +169,5 @@ graphscope-client-manylinux2014-py3:
 	docker pull ${REGISTRY}/graphscope/graphscope-dev:${VINEYARD_VERSION}
 	docker run --rm -v $(WORKING_DIR)/../..:/work \
 		${REGISTRY}/graphscope/graphscope-dev:${VINEYARD_VERSION} \
-		bash -c 'cd /work/k8s && make graphscope-client-manylinux2014-py3-nodocker'
+		bash -c 'cd /work/k8s/internal && make graphscope-client-manylinux2014-py3-nodocker'
 
