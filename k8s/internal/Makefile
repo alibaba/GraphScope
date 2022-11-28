@@ -144,6 +144,7 @@ graphscope-client-manylinux2014-py3-nodocker:
 graphscope-client-darwin-py3:
 	cd $(WORKING_DIR)/../../learning_engine/graph-learn && \
 		git submodule update --init third_party/pybind11 && \
+		cd graphlearn && \
 		rm -rf cmake-build && \
 		mkdir -p cmake-build && \
 		cd cmake-build && \
