@@ -10,16 +10,16 @@ cd ${WORKDIR} && \
     bash cmake-3.24.3-linux-x86_64.sh --prefix=/usr/local --skip-license && \
     rm -rf ${WORKDIR}/cmake-3.24.3-linux-x86_64.sh
 
-# install openmpi v4.1.4
+# install openmpi v4.0.4
 echo "Installing openmpi"
 cd ${WORKDIR} && \
-    wget -q https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.4.tar.gz && \
-    tar zxvf openmpi-4.1.4.tar.gz && \
-    cd openmpi-4.1.4 && \
+    wget -q https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.4.tar.gz && \
+    tar zxvf openmpi-4.0.4.tar.gz && \
+    cd openmpi-4.0.4 && \
     ./configure --enable-mpi-cxx --disable-dlopen --prefix=/usr/local  && \
     make -j$(nproc) && \
     make install && \
-    rm -rf ${WORKDIR}/openmpi-4.1.4 ${WORKDIR}/openmpi-4.1.4.tar.gz
+    rm -rf ${WORKDIR}/openmpi-4.0.4 ${WORKDIR}/openmpi-4.0.4.tar.gz
 
 # GLOG 0.6.0
 echo "Installing glog"
