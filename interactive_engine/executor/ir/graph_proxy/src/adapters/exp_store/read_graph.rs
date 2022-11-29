@@ -235,8 +235,13 @@ impl ReadGraph for ExpStore {
         let label_ids = encode_storage_label(&params.labels);
         let props = params.columns.clone();
 
-        let worker_id = pegasus::get_current_worker().index;
-        let workers_num = pegasus::get_current_worker().local_peers;
+        // get_current_worker_checked() in case pegasus not started, i.e., for ci tests.
+        let worker_id = pegasus::get_current_worker_checked()
+            .map(|worker| worker.index)
+            .unwrap_or(0);
+        let workers_num = pegasus::get_current_worker_checked()
+            .map(|worker| worker.local_peers)
+            .unwrap_or(1);
         let count = self
             .store
             .count_all_vertices(label_ids.as_ref());

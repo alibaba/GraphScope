@@ -62,7 +62,7 @@ pub use pegasus_memory::alloc::check_current_task_memory;
 pub use pegasus_network::ServerDetect;
 pub use tag::Tag;
 pub use worker::Worker;
-pub use worker_id::{get_current_worker, set_current_worker, WorkerId};
+pub use worker_id::{get_current_worker, get_current_worker_checked, set_current_worker, WorkerId};
 
 use crate::api::Source;
 pub use crate::errors::{BuildJobError, JobSubmitError, SpawnJobError, StartupError};
