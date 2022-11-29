@@ -239,8 +239,7 @@ impl ReadGraph for ExpStore {
         let workers_num = pegasus::get_current_worker().local_peers;
         let count = self
             .store
-            .get_all_vertices(label_ids.as_ref())
-            .count();
+            .count_all_vertices(label_ids.as_ref());
         let partial_count = count / workers_num as usize;
         let take_count = if (worker_id + 1) % workers_num == 0 {
             count - partial_count * (workers_num as usize - 1)
