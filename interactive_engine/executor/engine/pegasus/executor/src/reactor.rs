@@ -506,7 +506,7 @@ impl DirectExecutorRuntime {
         std::thread::Builder::new()
             .name("direct-boss".into())
             .spawn(move || {
-                while SHUTDOWN_HOOK.load(Ordering::SeqCst) {
+                while !SHUTDOWN_HOOK.load(Ordering::SeqCst) {
                     match self.0.recv_timeout(Duration::from_secs(1)) {
                         Ok(g) => {
                             let name = g
