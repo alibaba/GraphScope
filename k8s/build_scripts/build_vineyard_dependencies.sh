@@ -22,6 +22,17 @@ cd ${WORKDIR} && \
     cp -rs /opt/openmpi/* /usr/local/ && \
     rm -rf ${WORKDIR}/openmpi-4.0.5 ${WORKDIR}/openmpi-4.0.5.tar.gz
 
+# gflags v2.2.2
+echo "Installing gflags"
+cd ${WORKDIR} && \
+    wget -q https://github.com/gflags/gflags/archive/v2.2.2.tar.gz && \
+    tar zxvf v2.2.2.tar.gz && \
+    cd gflags-2.2.2 && \
+    cmake . -DBUILD_SHARED_LIBS=ON && \
+    make -j$(nproc) && \
+    make install && \
+    rm -rf ${WORKDIR}/v2.2.2.tar.gz ${WORKDIR}/gflags-2.2.2
+
 # GLOG 0.6.0
 echo "Installing glog"
 cd ${WORKDIR} && \
@@ -81,17 +92,6 @@ cd ${WORKDIR} && \
     make -j$(nproc) && \
     make install && \
     rm -rf ${WORKDIR}/arrow-apache-arrow-9.0.0 ${WORKDIR}/apache-arrow-9.0.0.tar.gz
-
-# gflags v2.2.2
-echo "Installing gflags"
-cd ${WORKDIR} && \
-    wget -q https://github.com/gflags/gflags/archive/v2.2.2.tar.gz && \
-    tar zxvf v2.2.2.tar.gz && \
-    cd gflags-2.2.2 && \
-    cmake . -DBUILD_SHARED_LIBS=ON && \
-    make -j$(nproc) && \
-    make install && \
-    rm -rf ${WORKDIR}/v2.2.2.tar.gz ${WORKDIR}/gflags-2.2.2
 
 # Boost 1.74.0, required by vineyard
 echo "Installing boost"
