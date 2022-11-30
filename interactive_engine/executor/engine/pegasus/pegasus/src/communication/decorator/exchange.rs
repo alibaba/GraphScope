@@ -535,7 +535,7 @@ impl<D: Data> BlockPush for ExchangeByDataPush<D> {
                                         .get_mut(tag)
                                         .expect("expect has block;");
                                     while let Some(x) = blocks.pop_front() {
-                                        b.push_front(x);
+                                        b.push_back(x);
                                     }
                                 }
                                 Ok(false)
