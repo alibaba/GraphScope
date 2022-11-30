@@ -58,8 +58,8 @@ clean:
 	rm -rf $(ANALYTICAL_BUILD_DIR) $(ANALYTICAL_DIR)/proto
 	cd $(ANALYTICAL_DIR)/java && mvn clean
 
-	cd $(INTERACTIVE_DIR) && mvn clean
-    # TODO: use maven clean to clean ir target
+	cd $(INTERACTIVE_DIR) && mvn clean || true
+	# TODO: use maven clean to clean ir target
 	rm -rf $(INTERACTIVE_DIR)/executor/ir/target
 
 	rm -rf $(LEARNING_BUILD_DIR) $(LEARNING_DIR)/proto/*.h $(LEARNING_DIR)/proto/*.cc

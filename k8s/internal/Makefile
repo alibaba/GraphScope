@@ -11,12 +11,17 @@ ifeq ($(REGISTRY),)
 endif
 
 
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S), Linux)
+	XARGS_EMPTY_FLAG := --no-run-if-empty
+endif
+
 # Default null
 TARGET_SERVER_PACKAGE      :=
 TARGET_CLIENT_PACKAGE      :=
 ifeq ($(UNAME_S), Linux)
 	TARGET_SERVER_PACKAGE := graphscope-manylinux2014-py3
-    TARGET_CLIENT_PACKAGE := graphscope-client-manylinux2014-py3
+	TARGET_CLIENT_PACKAGE := graphscope-client-manylinux2014-py3
 else
 	TARGET_SERVER_PACKAGE := graphscope-darwin-py3
 	TARGET_CLIENT_PACKAGE := graphscope-client-darwin-py3
@@ -108,7 +113,7 @@ graphscope-manylinux2014-py3-nodocker:
 	package_name=graphscope python3 setup.py bdist_wheel && \
 	cd dist && \
 	for wheel in `ls ./*.whl`; do \
-		auditwheel repair $$wheel --plat=manylinux2014_x86_64 && rm $$wheel; \
+		(auditwheel repair $$wheel --plat=manylinux2014_x86_64 && rm $$wheel) || true; \
 	done
 
 graphscope-manylinux2014-py3:
@@ -116,7 +121,7 @@ graphscope-manylinux2014-py3:
 	docker run --rm -v $(WORKING_DIR)/../..:/work \
 		${REGISTRY}/graphscope/graphscope-dev:${VINEYARD_VERSION} \
 		bash -c 'source ~/.bashrc && \
-			cd /work/k8s && \
+			cd /work/k8s/internal && \
 			make graphscope-manylinux2014-py3-nodocker'
 
 graphscope-client-manylinux2014-py3-nodocker:
@@ -144,6 +149,7 @@ graphscope-client-manylinux2014-py3-nodocker:
 graphscope-client-darwin-py3:
 	cd $(WORKING_DIR)/../../learning_engine/graph-learn && \
 		git submodule update --init third_party/pybind11 && \
+		cd graphlearn && \
 		rm -rf cmake-build && \
 		mkdir -p cmake-build && \
 		cd cmake-build && \
@@ -163,5 +169,5 @@ graphscope-client-manylinux2014-py3:
 	docker pull ${REGISTRY}/graphscope/graphscope-dev:${VINEYARD_VERSION}
 	docker run --rm -v $(WORKING_DIR)/../..:/work \
 		${REGISTRY}/graphscope/graphscope-dev:${VINEYARD_VERSION} \
-		bash -c 'cd /work/k8s && make graphscope-client-manylinux2014-py3-nodocker'
+		bash -c 'cd /work/k8s/internal && make graphscope-client-manylinux2014-py3-nodocker'
 

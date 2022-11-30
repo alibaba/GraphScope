@@ -12,7 +12,7 @@ on:
       - "v*"
 
 env:
-  REGISTRY: registry-vpc.cn-hongkong.aliyuncs.com
+  REGISTRY: registry.cn-hongkong.aliyuncs.com
 
 jobs:
   build-wheels:
@@ -116,10 +116,7 @@ jobs:
 
         # make jupyter-image
         cd ..
-        docker build \
-				 --build-arg CI=${CI} \
-				 -t graphscope/jupyter:${SHORT_SHA} \
-				 -f ./k8s/internal/jupyter.Dockerfile .
+        docker build --build-arg CI=${CI} -t graphscope/jupyter:${SHORT_SHA} -f ./k8s/internal/jupyter.Dockerfile .
 
         # dataset image doesn't changed, we can just use the latest one
         # make dataset-image
