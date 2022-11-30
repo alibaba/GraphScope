@@ -231,20 +231,35 @@ impl ReadGraph for ExpStore {
     ) -> GraphProxyResult<Box<dyn Iterator<Item = Vertex> + Send>> {
         // DemoGraph contains a single graph partition on each server,
         // therefore, there's no need to use the specific partition id for query.
-        // Besides, we guarantee only one worker (on each server) is going to scan (with params.partitions.is_some())
-        if params.partitions.is_some() {
-            let label_ids = encode_storage_label(&params.labels);
-            let props = params.columns.clone();
-            let result = self
-                .store
-                .get_all_vertices(label_ids.as_ref())
-                .map(move |v| to_runtime_vertex(v, props.clone()));
+        // Besides, workers will scan the vertices in a parallel way
+        let label_ids = encode_storage_label(&params.labels);
+        let props = params.columns.clone();
 
-            // it is defined as filter > sample > limit; Same as follows.
-            Ok(filter_sample_limit!(result, params.filter, params.sample_ratio, params.limit))
+        // get_current_worker_checked() in case pegasus not started, i.e., for ci tests.
+        let worker_id = pegasus::get_current_worker_checked()
+            .map(|worker| worker.index)
+            .unwrap_or(0);
+        let workers_num = pegasus::get_current_worker_checked()
+            .map(|worker| worker.local_peers)
+            .unwrap_or(1);
+        let count = self
+            .store
+            .count_all_vertices(label_ids.as_ref());
+        let partial_count = count / workers_num as usize;
+        let take_count = if (worker_id + 1) % workers_num == 0 {
+            count - partial_count * (workers_num as usize - 1)
         } else {
-            Ok(Box::new(std::iter::empty()))
-        }
+            partial_count
+        };
+
+        let result = self
+            .store
+            .get_all_vertices(label_ids.as_ref())
+            .skip((worker_id % workers_num) as usize * partial_count)
+            .take(take_count)
+            .map(move |v| to_runtime_vertex(v, props.clone()));
+
+        Ok(filter_sample_limit!(result, params.filter, params.sample_ratio, params.limit))
     }
 
     fn index_scan_vertex(
@@ -256,18 +271,35 @@ impl ReadGraph for ExpStore {
     }
 
     fn scan_edge(&self, params: &QueryParams) -> GraphProxyResult<Box<dyn Iterator<Item = Edge> + Send>> {
-        if params.partitions.is_some() {
-            let label_ids = encode_storage_label(&params.labels);
-            let props = params.columns.clone();
-            let result = self
-                .store
-                .get_all_edges(label_ids.as_ref())
-                .map(move |e| to_runtime_edge(e, props.clone()));
+        // DemoGraph contains a single graph partition on each server,
+        // therefore, there's no need to use the specific partition id for query.
+        // Besides, workers will scan the edges in a parallel way
+        let label_ids = encode_storage_label(&params.labels);
+        let props = params.columns.clone();
 
-            Ok(filter_sample_limit!(result, params.filter, params.sample_ratio, params.limit))
+        // get_current_worker_checked() in case pegasus not started, i.e., for ci tests.
+        let worker_id = pegasus::get_current_worker_checked()
+            .map(|worker| worker.index)
+            .unwrap_or(0);
+        let workers_num = pegasus::get_current_worker_checked()
+            .map(|worker| worker.local_peers)
+            .unwrap_or(1);
+        let count = self.store.count_all_edges(label_ids.as_ref());
+        let partial_count = count / workers_num as usize;
+        let take_count = if (worker_id + 1) % workers_num == 0 {
+            count - partial_count * (workers_num as usize - 1)
         } else {
-            Ok(Box::new(std::iter::empty()))
-        }
+            partial_count
+        };
+
+        let result = self
+            .store
+            .get_all_edges(label_ids.as_ref())
+            .skip((worker_id % workers_num) as usize * partial_count)
+            .take(take_count)
+            .map(move |v| to_runtime_edge(v, props.clone()));
+
+        Ok(filter_sample_limit!(result, params.filter, params.sample_ratio, params.limit))
     }
 
     fn get_vertex(

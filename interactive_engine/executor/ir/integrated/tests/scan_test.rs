@@ -179,6 +179,53 @@ mod test {
         assert!(result_count < 6);
     }
 
+    // g.E()
+    #[test]
+    fn scan_edge_test() {
+        let source_iter =
+            scan_gen(pb::Scan { scan_opt: 1, alias: None, params: None, idx_predicate: None });
+        let mut result_ids = vec![];
+        let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
+        let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
+        let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
+        let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
+        let v5: DefaultId = LDBCVertexParser::to_global_id(5, 1);
+        let v6: DefaultId = LDBCVertexParser::to_global_id(6, 0);
+        let mut expected_ids = vec![(v1, v2), (v1, v3), (v1, v4), (v4, v3), (v4, v5), (v6, v3)];
+        for record in source_iter {
+            if let Some(element) = record.get(None).unwrap().as_graph_edge() {
+                result_ids.push((element.src_id as usize, element.dst_id as usize))
+            }
+        }
+        result_ids.sort();
+        expected_ids.sort();
+        assert_eq!(result_ids, expected_ids)
+    }
+
+    // g.E().hasLabel('knows')
+    #[test]
+    fn scan_edge_with_label_test() {
+        let source_iter = scan_gen(pb::Scan {
+            scan_opt: 1,
+            alias: None,
+            params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
+            idx_predicate: None,
+        });
+        let mut result_ids = vec![];
+        let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
+        let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
+        let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
+        let mut expected_ids = vec![(v1, v2), (v1, v4)];
+        for record in source_iter {
+            if let Some(element) = record.get(None).unwrap().as_graph_edge() {
+                result_ids.push((element.src_id as usize, element.dst_id as usize))
+            }
+        }
+        result_ids.sort();
+        expected_ids.sort();
+        assert_eq!(result_ids, expected_ids)
+    }
+
     // g.E().coin(0.1)
     #[test]
     fn scan_edge_sample_test() {
