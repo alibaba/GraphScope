@@ -2159,6 +2159,7 @@ mod test {
 
         let unfold_opr = pb::Unfold { tag: Some(2.into()), alias: None };
         let mut auxilia_param = pb::QueryParams::default();
+        auxilia_param.sample_ratio = 1.0;
         merge_query_params(&mut auxilia_param, expand_ac_opr.params.as_mut().unwrap());
         merge_query_params(&mut auxilia_param, expand_bc_opr.params.as_mut().unwrap());
         let auxilia_opr = pb::logical_plan::Operator::from(pb::Auxilia {
