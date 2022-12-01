@@ -111,16 +111,11 @@ def _get_extra_data():
     #   {"source_dir": "package_dir"} or
     #   {"source_dir": (package_dir, [exclude_list])}
     if name == "graphscope":
-        # engine
-        data.update(
-            {
-                "/opt/graphscope/bin/": os.path.join(RUNTIME_ROOT, "bin"),
-                "/opt/graphscope/lib64/": os.path.join(RUNTIME_ROOT, "lib64"),
-            }
-        )
-        # lib
+        # engine and lib
         data = {
+            "/opt/graphscope/bin/": os.path.join(RUNTIME_ROOT, "bin"),
             "/opt/graphscope/lib/": os.path.join(RUNTIME_ROOT, "lib"),
+            "/opt/graphscope/lib64/": os.path.join(RUNTIME_ROOT, "lib64"),
             "/usr/local/lib/libvineyard_internal_registry.{0}".format(
                 __get_lib_suffix()
             ): os.path.join(RUNTIME_ROOT, "lib"),
