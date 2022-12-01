@@ -115,8 +115,8 @@ jobs:
         make graphscope
 
         # make jupyter-image
-        # cd ..
-        # docker build --build-arg CI=${CI} -t graphscope/jupyter:${SHORT_SHA} -f ./k8s/internal/jupyter.Dockerfile .
+        cd ${GITHUB_WORKSPACE}
+        docker build --build-arg CI=${CI} -t graphscope/jupyter:${SHORT_SHA} -f ./k8s/internal/jupyter.Dockerfile .
 
         # dataset image doesn't changed, we can just use the latest one
         # make dataset-image
@@ -133,15 +133,14 @@ jobs:
         version=$(cat ${GITHUB_WORKSPACE}/VERSION)
         tag="${version}a${time}"
         # graphscope image
-        sudo docker tag graphscope/graphscope:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope:${tag}
-        sudo docker push ${{ env.REGISTRY }}/graphscope:${tag}
-        # jupyter and dataset doesn't need nightly release yet
+        sudo docker tag graphscope/graphscope:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/graphscope:${tag}
+        sudo docker push ${{ env.REGISTRY }}/graphscope/graphscope:${tag}
         # jupyter image
-        # sudo docker tag graphscope/jupyter:${SHORT_SHA} ${{ env.REGISTRY }}/jupyter:${tag}
-        # sudo docker push ${{ env.REGISTRY }}/jupyter:${tag}
+        sudo docker tag graphscope/jupyter:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/jupyter:${tag}
+        sudo docker push ${{ env.REGISTRY }}/graphscope/jupyter:${tag}
         # dataset image
-        # sudo docker tag graphscope/dataset:${SHORT_SHA} ${{ env.REGISTRY }}/dataset:${tag}
-        # sudo docker push ${{ env.REGISTRY }}/dataset:${tag}
+        # sudo docker tag graphscope/dataset:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/dataset:${tag}
+        # sudo docker push ${{ env.REGISTRY }}/graphscope/dataset:${tag}
 
     - name: Extract Tag Name
       if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
@@ -158,16 +157,16 @@ jobs:
         # graphscope image
         tag=${{ steps.tag.outputs.TAG }}
         # graphscope image
-        sudo docker tag graphscope/graphscope:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope:${tag}
-        sudo docker push ${{ env.REGISTRY }}/graphscope:${tag}
+        sudo docker tag graphscope/graphscope:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/graphscope:${tag}
+        sudo docker push ${{ env.REGISTRY }}/graphscope/graphscope:${tag}
         # jupyter image
-        sudo docker tag graphscope/jupyter:${SHORT_SHA} ${{ env.REGISTRY }}/jupyter:${tag}
-        sudo docker push ${{ env.REGISTRY }}/jupyter:${tag}
+        sudo docker tag graphscope/jupyter:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/jupyter:${tag}
+        sudo docker push ${{ env.REGISTRY }}/graphscope/jupyter:${tag}
         # dataset image
         # Note! dataset image are built mannually just use the latest one.
-        sudo docker pull ${{ env.REGISTRY }}/dataset:latest
-        sudo docker tag ${{ env.REGISTRY }}/dataset:latest ${{ env.REGISTRY }}/dataset:${tag}
-        sudo docker push ${{ env.REGISTRY }}/dataset:${tag}
+        sudo docker pull ${{ env.REGISTRY }}/graphscope/dataset:latest
+        sudo docker tag ${{ env.REGISTRY }}/graphscope/dataset:latest ${{ env.REGISTRY }}/graphscope/dataset:${tag}
+        sudo docker push ${{ env.REGISTRY }}/graphscope/dataset:${tag}
 
   ubuntu-python-test:
     if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
