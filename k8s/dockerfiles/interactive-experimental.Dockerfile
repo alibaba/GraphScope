@@ -1,7 +1,7 @@
 # Interactive engine which uses experimental storage
 
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
-ARG BASE_VERSION=v0.10.2
+ARG BASE_VERSION=latest
 FROM $REGISTRY/graphscope/graphscope-dev:$BASE_VERSION AS builder
 
 ADD . /home/graphscope/GraphScope
