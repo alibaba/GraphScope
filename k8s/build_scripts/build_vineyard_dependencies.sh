@@ -10,16 +10,28 @@ cd ${WORKDIR} && \
     bash cmake-3.24.3-linux-x86_64.sh --prefix=/usr/local --skip-license && \
     rm -rf ${WORKDIR}/cmake-3.24.3-linux-x86_64.sh
 
-# install openmpi v4.1.4
+# install openmpi v4.0.5
 echo "Installing openmpi"
 cd ${WORKDIR} && \
-    wget -q https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.4.tar.gz && \
-    tar zxvf openmpi-4.1.4.tar.gz && \
-    cd openmpi-4.1.4 && \
-    ./configure --enable-mpi-cxx --disable-dlopen --prefix=/usr/local  && \
+    wget -q https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.5.tar.gz && \
+    tar zxvf openmpi-4.0.5.tar.gz && \
+    cd openmpi-4.0.5 && \
+    ./configure --enable-mpi-cxx --disable-dlopen --prefix=/opt/openmpi  && \
     make -j$(nproc) && \
     make install && \
-    rm -rf ${WORKDIR}/openmpi-4.1.4 ${WORKDIR}/openmpi-4.1.4.tar.gz
+    cp -rs /opt/openmpi/* /usr/local/ && \
+    rm -rf ${WORKDIR}/openmpi-4.0.5 ${WORKDIR}/openmpi-4.0.5.tar.gz
+
+# gflags v2.2.2
+echo "Installing gflags"
+cd ${WORKDIR} && \
+    wget -q https://github.com/gflags/gflags/archive/v2.2.2.tar.gz && \
+    tar zxvf v2.2.2.tar.gz && \
+    cd gflags-2.2.2 && \
+    cmake . -DBUILD_SHARED_LIBS=ON && \
+    make -j$(nproc) && \
+    make install && \
+    rm -rf ${WORKDIR}/v2.2.2.tar.gz ${WORKDIR}/gflags-2.2.2
 
 # GLOG 0.6.0
 echo "Installing glog"
@@ -80,17 +92,6 @@ cd ${WORKDIR} && \
     make -j$(nproc) && \
     make install && \
     rm -rf ${WORKDIR}/arrow-apache-arrow-9.0.0 ${WORKDIR}/apache-arrow-9.0.0.tar.gz
-
-# gflags v2.2.2
-echo "Installing gflags"
-cd ${WORKDIR} && \
-    wget -q https://github.com/gflags/gflags/archive/v2.2.2.tar.gz && \
-    tar zxvf v2.2.2.tar.gz && \
-    cd gflags-2.2.2 && \
-    cmake . -DBUILD_SHARED_LIBS=ON && \
-    make -j$(nproc) && \
-    make install && \
-    rm -rf ${WORKDIR}/v2.2.2.tar.gz ${WORKDIR}/gflags-2.2.2
 
 # Boost 1.74.0, required by vineyard
 echo "Installing boost"

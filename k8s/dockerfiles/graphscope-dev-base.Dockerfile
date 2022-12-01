@@ -6,7 +6,7 @@ FROM vineyardcloudnative/manylinux-llvm:2014-11.0.0 AS llvm
 FROM $REGISTRY/graphscope/manylinux2014:2022-08-16-53df7cb
 
 # yum install dependencies
-RUN yum install -y perl which sudo wget libunwind-devel vim zip java-1.8.0-openjdk-devel msgpack-devel rapidjson-devel libuuid-devel && \
+RUN yum install -y perl which sudo wget libunwind-devel vim zip java-1.8.0-openjdk-devel msgpack-devel rapidjson-devel libuuid-devel openssh-clients && \
     yum clean all -y && \
     rm -fr /var/cache/yum
 

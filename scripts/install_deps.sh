@@ -390,6 +390,7 @@ write_envs_config() {
     {
       echo "export CC=${homebrew_prefix}/opt/llvm/bin/clang"
       echo "export CXX=${homebrew_prefix}/opt/llvm/bin/clang++"
+      echo "export CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER=${CC}"
       if [ -z "${JAVA_HOME}" ]; then
         echo "export JAVA_HOME=\$(/usr/libexec/java_home -v11)"
       fi
@@ -759,6 +760,7 @@ install_dependencies() {
     export OPENSSL_SSL_LIBRARY=${homebrew_prefix}/opt/openssl/lib/libssl.dylib
     export CC=${homebrew_prefix}/opt/llvm/bin/clang
     export CXX=${homebrew_prefix}/opt/llvm/bin/clang++
+    export CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER=${CC}
     export CPPFLAGS=-I${homebrew_prefix}/opt/llvm/include
   fi
 
