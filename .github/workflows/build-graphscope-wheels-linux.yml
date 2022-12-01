@@ -111,12 +111,12 @@ jobs:
         cd ${GITHUB_WORKSPACE}/artifacts
         tar -zxf ./wheel-${{ github.sha }}/client.tar.gz
         tar -zxf ./wheel-${{ github.sha }}/graphscope.tar.gz
-        cd ${GITHUB_WORKSPACE}/k8s
+        cd ${GITHUB_WORKSPACE}/k8s/internal
         make graphscope
 
         # make jupyter-image
-        cd ..
-        docker build --build-arg CI=${CI} -t graphscope/jupyter:${SHORT_SHA} -f ./k8s/internal/jupyter.Dockerfile .
+        # cd ..
+        # docker build --build-arg CI=${CI} -t graphscope/jupyter:${SHORT_SHA} -f ./k8s/internal/jupyter.Dockerfile .
 
         # dataset image doesn't changed, we can just use the latest one
         # make dataset-image
