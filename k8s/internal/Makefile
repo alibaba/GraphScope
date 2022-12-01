@@ -17,6 +17,8 @@ ifeq ($(UNAME_S), Linux)
 	XARGS_EMPTY_FLAG := --no-run-if-empty
 endif
 
+BUILD_PROGRESS    = auto
+
 # Default null
 TARGET_SERVER_PACKAGE      :=
 TARGET_CLIENT_PACKAGE      :=
