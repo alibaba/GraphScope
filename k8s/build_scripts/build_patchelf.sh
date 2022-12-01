@@ -7,8 +7,9 @@ echo "Working directory is ${WORKDIR:="/tmp"}"
 # with newer version.
 #
 cd ${WORKDIR} && \
-    git clone --depth=1 -b ec72eeb4ddba65abea31719ed84e41760bcb993a https://github.com/NixOS/patchelf.git && \
+    git clone https://github.com/NixOS/patchelf.git && \
     cd patchelf && \
+    git checkout ec72eeb4ddba65abea31719ed84e41760bcb993a && \
     ./bootstrap.sh && \
     ./configure && \
     make install -j && \
