@@ -1,5 +1,6 @@
 MKFILE_PATH 			:= $(abspath $(lastword $(MAKEFILE_LIST)))
 WORKING_DIR 			:= $(dir $(MKFILE_PATH))
+SHORT_SHA   			:= $(shell git rev-parse --short HEAD)
 
 .PHONY: graphscope-jupyter-manylinux2014-py3 graphscope-py3-package graphscope-client-py3-package
 .PHONY: graphscope-darwin-py3 graphscope-client-darwin-py3
