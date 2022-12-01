@@ -67,10 +67,10 @@ def _get_extra_data():
     # into site-packages/graphscope.runtime
     #
     #  For shrink the package size less than "100M", we split graphscope into
-    #   1) graphscope: libs include *.so and *.jar
+    #   1) graphscope: libs include *.so, runtime such as 'bin', and full-openmpi
     #   2) gs-coordinator: include python releated code of gscoordinator
-    #   3) gs-include: header files and full-openmpi
-    #   4) gs-engine: other runtime info such as 'bin', 'conf'
+    #   3) gs-include: header files
+    #   4) gs-engine: other runtime info such as 'conf', and *.jar
     #   5) gs-apps: precompiled builtin applications
 
     def __get_openmpi_prefix():
@@ -111,6 +111,13 @@ def _get_extra_data():
     #   {"source_dir": "package_dir"} or
     #   {"source_dir": (package_dir, [exclude_list])}
     if name == "graphscope":
+        # engine
+        data.update(
+            {
+                "/opt/graphscope/bin/": os.path.join(RUNTIME_ROOT, "bin"),
+                "/opt/graphscope/lib64/": os.path.join(RUNTIME_ROOT, "lib64"),
+            }
+        )
         # lib
         data = {
             "/opt/graphscope/lib/": os.path.join(RUNTIME_ROOT, "lib"),
@@ -118,12 +125,15 @@ def _get_extra_data():
                 __get_lib_suffix()
             ): os.path.join(RUNTIME_ROOT, "lib"),
         }
-
+        # openmpi
+        data.update(
+            {
+                __get_openmpi_prefix(): os.path.join(RUNTIME_ROOT),
+            }
+        )
     elif name == "gs-engine":
         data = {
-            "/opt/graphscope/bin/": os.path.join(RUNTIME_ROOT, "bin"),
             "/opt/graphscope/conf/": os.path.join(RUNTIME_ROOT, "conf"),
-            "/opt/graphscope/lib64/": os.path.join(RUNTIME_ROOT, "lib64"),
             "/opt/graphscope/*.jar": os.path.join(RUNTIME_ROOT),
         }
     elif name == "gs-include":
@@ -148,12 +158,6 @@ def _get_extra_data():
             data["/usr/local/include/msgpack.hpp"] = os.path.join(
                 RUNTIME_ROOT, "include"
             )
-        # openmpi
-        data.update(
-            {
-                __get_openmpi_prefix(): os.path.join(RUNTIME_ROOT),
-            }
-        )
     elif name == "gs-apps":
         # precompiled applications
         data = {
