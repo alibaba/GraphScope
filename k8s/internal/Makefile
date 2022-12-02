@@ -31,7 +31,7 @@ else
 endif
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.10.2
+VINEYARD_VERSION ?= v0.11.0
 PROFILE ?= release
 CI ?= false
 
@@ -173,4 +173,3 @@ graphscope-client-manylinux2014-py3:
 	docker run --rm -v $(WORKING_DIR)/../..:/work \
 		${REGISTRY}/graphscope/graphscope-dev:${VINEYARD_VERSION} \
 		bash -c 'cd /work/k8s/internal && make graphscope-client-manylinux2014-py3-nodocker'
-

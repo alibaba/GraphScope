@@ -11,8 +11,6 @@ RUN yum install -y centos-release-scl-rh perl which sudo wget git libunwind-deve
 
 SHELL [ "/usr/bin/scl", "enable", "devtoolset-10", "rh-python38" ]
 
-RUN python3 -m pip install --no-cache-dir libclang etcd-distro
-
 ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib:/usr/local/lib64
 
 # COPY ./download /download
@@ -21,8 +19,13 @@ RUN mkdir /download
 COPY build_scripts/build_vineyard_dependencies.sh /build_scripts/build_vineyard_dependencies.sh
 RUN export WORKDIR=/download && bash /build_scripts/build_vineyard_dependencies.sh
 
+RUN python3 -m pip install --no-cache-dir libclang etcd-distro wheel
+
+ARG VINEYARD_VERSION=main
 COPY build_scripts/build_vineyard.sh /build_scripts/build_vineyard.sh
-RUN export WORKDIR=/download && bash /build_scripts/build_vineyard.sh
+RUN export WORKDIR=/download && \
+    export VINEYARD_VERSION=$VINEYARD_VERSION && \
+    bash /build_scripts/build_vineyard.sh
 RUN rm -rf /build_scripts /download
 
 # shanghai zoneinfo
