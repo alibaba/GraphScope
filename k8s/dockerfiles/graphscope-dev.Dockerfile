@@ -12,7 +12,10 @@ COPY build_scripts/build_vineyard.sh /build_scripts/build_vineyard.sh
 # COPY ./download /download
 RUN mkdir /download
 
-RUN export WORKDIR=/download && bash /build_scripts/build_vineyard.sh
+ARG VINEYARD_VERSION=main
+RUN export WORKDIR=/download && \
+    export VINEYARD_VERSION=$VINEYARD_VERSION && \
+    bash /build_scripts/build_vineyard.sh
 
 RUN rm -rf /build_scripts /download
 

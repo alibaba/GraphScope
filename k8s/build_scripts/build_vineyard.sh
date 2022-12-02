@@ -6,7 +6,7 @@ echo "Working directory is ${WORKDIR:="/tmp"}"
 # libgrape-lite, required by vineyard
 echo "Installing libgrape-lite"
 cd ${WORKDIR} && \
-    git clone -b master https://github.com/alibaba/libgrape-lite.git --depth=1 && \
+    git clone -b ${LIBGRAPE_LITE_VERSION:-master} https://github.com/alibaba/libgrape-lite.git --depth=1 && \
     cd libgrape-lite && \
     cmake . -DCMAKE_INSTALL_PREFIX=/opt/vineyard && \
     make -j$(nproc) && \
@@ -16,7 +16,7 @@ cd ${WORKDIR} && \
 # Vineyard
 echo "Installing vineyard"
 cd ${WORKDIR} && \
-    git clone -b v0.10.2 https://github.com/v6d-io/v6d.git --depth=1 && \
+    git clone -b ${VINEYARD_VERSION:-main} https://github.com/v6d-io/v6d.git --depth=1 && \
     pushd v6d && \
     git submodule update --init && \
     cmake . -DCMAKE_PREFIX_PATH=/opt/vineyard \
@@ -32,4 +32,3 @@ cd ${WORKDIR} && \
     pip3 install dist/* && \
     sudo cp -r /opt/vineyard/* /usr/local/ && \
     rm -rf ${WORKDIR}/v6d
-

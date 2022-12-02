@@ -3,12 +3,6 @@
 
 FROM ubuntu:20.04
 
-# Install wheel package from current directory if pass "CI=true" as build options.
-# Otherwise, exec `pip install graphscope` from Pypi.
-# Example:
-#     sudo docker build --build-arg CI=${CI} .
-ARG CI=false
-
 # change bash as default
 SHELL ["/bin/bash", "-c"]
 
@@ -60,6 +54,12 @@ ENV PATH=${PATH}:/home/graphscope/.local/bin
 COPY . /home/graphscope/gs
 
 COPY ./k8s/utils/kube_ssh /usr/local/bin/kube_ssh
+
+# Install wheel package from current directory if pass "CI=true" as build options.
+# Otherwise, exec `pip install graphscope` from Pypi.
+# Example:
+#     sudo docker build --build-arg CI=${CI} .
+ARG CI=false
 
 RUN cd /home/graphscope/gs && \
     if [ "${CI}" == "true" ]; then \
