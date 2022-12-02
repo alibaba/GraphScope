@@ -79,16 +79,22 @@ fn simple_add_job_builder<M: Message>(
     Ok(())
 }
 
-fn merge_query_params(merged_params: &mut pb::QueryParams, other_params: &mut pb::QueryParams) {
-    if merged_params.is_all_columns || other_params.is_all_columns {
+fn merge_query_param_columns(
+    merged_params: &mut pb::QueryParams, is_all_columns: bool, columns: &Vec<common_pb::NameOrId>,
+) {
+    if merged_params.is_all_columns || is_all_columns {
         merged_params.is_all_columns = true;
     } else {
-        for column in &other_params.columns {
+        for column in columns {
             if !merged_params.columns.contains(column) {
                 merged_params.columns.push(column.clone());
             }
         }
     }
+}
+
+fn merge_query_params(merged_params: &mut pb::QueryParams, other_params: &mut pb::QueryParams) {
+    merge_query_param_columns(merged_params, other_params.is_all_columns, &other_params.columns);
     other_params.columns.clear();
     other_params.is_all_columns = false;
 }
@@ -769,6 +775,7 @@ fn add_intersect_job_builder(
     let intersect_tag = intersect_opr.key.as_ref();
     let mut is_adding_auxilia = false;
     let mut auxilia_param = pb::QueryParams::default();
+    auxilia_param.sample_ratio = 1.0;
     for subplan in subplans {
         // subplan would be like: 1. vec![EdgeExpand] for edge expand to intersect; 2. vec![PathExpand, GetV, EdgeExpand] for path expand to intersect
         let len = subplan.len();
@@ -792,6 +799,22 @@ fn add_intersect_job_builder(
                         if params.is_all_columns || !params.columns.is_empty() {
                             is_adding_auxilia = true;
                             merge_query_params(&mut auxilia_param, params);
+                        }
+                    }
+                    if let Some(node_meta) = plan_meta.get_curr_node_meta() {
+                        let columns = node_meta.get_columns();
+                        let is_all_columns = node_meta.is_all_columns();
+                        if !columns.is_empty() || is_all_columns {
+                            // move columns fetch into auxilia
+                            is_adding_auxilia = true;
+                            merge_query_param_columns(
+                                &mut auxilia_param,
+                                is_all_columns,
+                                &columns
+                                    .into_iter()
+                                    .map(|col| col.into())
+                                    .collect(),
+                            );
                         }
                     }
                     simple_add_job_builder(
@@ -2136,6 +2159,7 @@ mod test {
 
         let unfold_opr = pb::Unfold { tag: Some(2.into()), alias: None };
         let mut auxilia_param = pb::QueryParams::default();
+        auxilia_param.sample_ratio = 1.0;
         merge_query_params(&mut auxilia_param, expand_ac_opr.params.as_mut().unwrap());
         merge_query_params(&mut auxilia_param, expand_bc_opr.params.as_mut().unwrap());
         let auxilia_opr = pb::logical_plan::Operator::from(pb::Auxilia {
