@@ -23,6 +23,7 @@ use ir_common::KeyId;
 use pegasus::api::function::{DynIter, FlatMapFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenResult};
+use crate::process::entry::Entry;
 use crate::process::operator::flatmap::FlatMapFuncGen;
 use crate::process::record::{Record, RecordExpandIter};
 

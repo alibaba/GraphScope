@@ -16,13 +16,14 @@
 use std::convert::TryInto;
 use std::sync::Arc;
 
-use graph_proxy::apis::{GraphElement, Partitioner, VertexOrEdge};
+use graph_proxy::apis::{GraphElement, Partitioner};
 use ir_common::error::ParsePbError;
 use ir_common::generated::common as common_pb;
 use ir_common::KeyId;
 use pegasus::api::function::{FnResult, RouteFunction};
 
 use crate::error::FnExecError;
+use crate::process::entry::{Entry, EntryDataType};
 use crate::process::record::Record;
 
 pub struct RecordRouter {
@@ -49,30 +50,35 @@ impl RecordRouter {
 impl RouteFunction<Record> for RecordRouter {
     fn route(&self, t: &Record) -> FnResult<u64> {
         if let Some(entry) = t.get(self.shuffle_key.clone()) {
-            if let Some(v) = entry.as_graph_vertex() {
-                Ok(self
-                    .p
-                    .get_partition(&v.id(), self.num_workers)?)
-            } else if let Some(e) = entry.as_graph_edge() {
-                // shuffle e to the partition that contains other_id
-                Ok(self
-                    .p
-                    .get_partition(&e.get_other_id(), self.num_workers)?)
-            } else if let Some(p) = entry.as_graph_path() {
-                let path_end = p
-                    .get_path_end()
-                    .ok_or(FnExecError::unexpected_data_error("get path_end failed in shuffle"))?;
-                match path_end {
-                    VertexOrEdge::V(v) => Ok(self
-                        .p
-                        .get_partition(&v.id(), self.num_workers)?),
-                    VertexOrEdge::E(e) => Ok(self
-                        .p
-                        .get_partition(&e.get_other_id(), self.num_workers)?),
+            // TODO: this may occur bugs if `Id` is actually an edge entry.
+            match entry.get_type() {
+                EntryDataType::Id | EntryDataType::V => {
+                    let id = entry
+                        .as_id()
+                        .ok_or(FnExecError::unexpected_data_error("get id failed in shuffle"))?;
+                    Ok(self.p.get_partition(&id, self.num_workers)?)
                 }
-            } else {
-                //TODO(bingqing): deal with other element shuffle
-                Ok(0)
+                EntryDataType::E => {
+                    let e = entry
+                        .as_graph_edge()
+                        .ok_or(FnExecError::unexpected_data_error("get edge failed in shuffle"))?;
+                    Ok(self
+                        .p
+                        .get_partition(&e.src_id, self.num_workers)?)
+                }
+                EntryDataType::P => {
+                    let p = entry
+                        .as_graph_path()
+                        .ok_or(FnExecError::unexpected_data_error("get path failed in shuffle"))?;
+                    let path_end = p
+                        .get_path_end()
+                        .ok_or(FnExecError::unexpected_data_error("get path_end failed in shuffle"))?;
+                    Ok(self
+                        .p
+                        .get_partition(&path_end.id(), self.num_workers)?)
+                }
+                // TODO:
+                _ => Ok(0),
             }
         } else {
             Ok(0)

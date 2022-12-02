@@ -31,6 +31,7 @@ mod test {
     use ir_common::NameOrId;
     use pegasus::api::{Map, Sink};
     use pegasus::JobConf;
+    use runtime::process::entry::Entry;
     use runtime::process::operator::flatmap::FlatMapFuncGen;
     use runtime::process::operator::map::FilterMapFuncGen;
     use runtime::process::operator::source::SourceOperator;

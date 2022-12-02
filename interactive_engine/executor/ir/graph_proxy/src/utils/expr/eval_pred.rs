@@ -261,25 +261,29 @@ impl EvalPred for Operand {
                 if let Some(context) = _context {
                     if let Some(elem) = context.get(tag.as_ref()) {
                         if let Some(key) = prop_key {
-                            if let Some(graph_element) = elem.as_graph_element() {
-                                match key {
-                                    PropKey::Id => result = true,
-                                    PropKey::Label => {
-                                        result = graph_element.label().is_some();
-                                    }
-                                    PropKey::Len => result = graph_element.len() > 0,
-                                    PropKey::All => {
-                                        // TODO(longbin) Do we need to look into the properties?
-                                        result = graph_element.details().is_some()
-                                    }
-                                    PropKey::Key(key) => {
-                                        if let Some(details) = graph_element.details() {
-                                            result = details.get_property(key).is_some();
+                            if let PropKey::Len = key {
+                                result = elem.len() > 0
+                            } else {
+                                if let Some(graph_element) = elem.as_graph_element() {
+                                    match key {
+                                        PropKey::Id => result = true,
+                                        PropKey::Label => {
+                                            result = graph_element.label().is_some();
+                                        }
+                                        PropKey::Len => unreachable!(),
+                                        PropKey::All => {
+                                            // TODO(longbin) Do we need to look into the properties?
+                                            result = graph_element.details().is_some()
+                                        }
+                                        PropKey::Key(key) => {
+                                            if let Some(details) = graph_element.details() {
+                                                result = details.get_property(key).is_some();
+                                            }
                                         }
                                     }
+                                } else {
+                                    result = false
                                 }
-                            } else {
-                                result = false
                             }
                         } else {
                             result = true;

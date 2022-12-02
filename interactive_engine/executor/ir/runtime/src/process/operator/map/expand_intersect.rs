@@ -13,29 +13,39 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::any::Any;
 use std::collections::BTreeMap;
 use std::convert::TryInto;
-use std::sync::Arc;
 
+use dyn_type::BorrowObject;
 use graph_proxy::apis::graph::element::GraphElement;
-use graph_proxy::apis::{Direction, DynDetails, QueryParams, Statement, Vertex, ID};
+use graph_proxy::apis::{Direction, DynDetails, Edge, Element, QueryParams, Statement, Vertex, ID};
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::KeyId;
 use pegasus::api::function::{FilterMapFunction, FnResult};
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
+use pegasus_common::downcast::*;
+use pegasus_common::impl_as_any;
 
 use crate::error::{FnExecError, FnGenError, FnGenResult};
+use crate::process::entry::{DynEntry, Entry};
 use crate::process::operator::map::FilterMapFuncGen;
-use crate::process::record::{Entry, Record};
+use crate::process::record::Record;
 
 /// An ExpandOrIntersect operator to expand neighbors
 /// and intersect with the ones of the same tag found previously (if exists).
 /// Notice that edge_or_end_v_tag (the alias of expanded neighbors) must be specified.
-struct ExpandOrIntersect<E: Into<Entry>> {
+struct ExpandVertexOrIntersect {
     start_v_tag: Option<KeyId>,
     edge_or_end_v_tag: KeyId,
-    stmt: Box<dyn Statement<ID, E>>,
+    stmt: Box<dyn Statement<ID, Vertex>>,
+}
+
+struct ExpandEdgeVOrIntersect {
+    start_v_tag: Option<KeyId>,
+    edge_or_end_v_tag: KeyId,
+    stmt: Box<dyn Statement<ID, Edge>>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]
@@ -43,6 +53,8 @@ pub struct Intersection {
     vertex_vec: Vec<Vertex>,
     count_vec: Vec<u32>,
 }
+
+impl_as_any!(Intersection);
 
 impl Intersection {
     pub fn from_iter<I: Iterator<Item = Vertex>>(iter: I) -> Intersection {
@@ -103,6 +115,13 @@ impl Intersection {
             .zip(&self.count_vec)
             .flat_map(move |(vertex, count)| std::iter::repeat(vertex).take(*count as usize))
     }
+
+    pub fn drain(&mut self) -> impl Iterator<Item = Vertex> + '_ {
+        self.vertex_vec
+            .drain(..)
+            .zip(&self.count_vec)
+            .flat_map(move |(vertex, count)| std::iter::repeat(vertex).take(*count as usize))
+    }
 }
 
 impl Encode for Intersection {
@@ -121,7 +140,17 @@ impl Decode for Intersection {
     }
 }
 
-impl<E: Into<Entry> + 'static> FilterMapFunction<Record, Record> for ExpandOrIntersect<E> {
+impl Element for Intersection {
+    fn len(&self) -> usize {
+        self.len()
+    }
+
+    fn as_borrow_object(&self) -> BorrowObject {
+        BorrowObject::None
+    }
+}
+
+impl FilterMapFunction<Record, Record> for ExpandVertexOrIntersect {
     fn exec(&self, mut input: Record) -> FnResult<Option<Record>> {
         let entry = input
             .get(self.start_v_tag)
@@ -129,32 +158,21 @@ impl<E: Into<Entry> + 'static> FilterMapFunction<Record, Record> for ExpandOrInt
                 "get start_v_tag {:?} from record in `ExpandOrIntersect` operator, the record is {:?}",
                 self.start_v_tag, input
             )))?;
-        if let Some(v) = entry.as_graph_vertex() {
-            let id = v.id();
-            let iter = self.stmt.exec(id)?.map(|e| match e.into() {
-                Entry::V(v) => v,
-                Entry::E(e) => {
-                    Vertex::new(e.get_other_id(), e.get_other_label().cloned(), DynDetails::default())
-                }
-                _ => {
-                    unreachable!()
-                }
-            });
+        if let Some(id) = entry.as_id() {
+            let iter = self.stmt.exec(id)?;
             if let Some(pre_entry) = input.get_column_mut(&self.edge_or_end_v_tag) {
                 // the case of expansion and intersection
-                match pre_entry {
-                    Entry::Intersection(pre_intersection) => {
-                        pre_intersection.intersect(iter);
-                        if pre_intersection.is_empty() {
-                            Ok(None)
-                        } else {
-                            Ok(Some(input))
-                        }
-                    }
-                    _ => Err(FnExecError::unexpected_data_error(&format!(
-                        "entry {:?} is not a intersection in ExpandOrIntersect",
-                        pre_entry
-                    )))?,
+                let pre_intersection = pre_entry
+                    .as_any_mut()
+                    .downcast_mut::<Intersection>()
+                    .ok_or(FnExecError::unexpected_data_error(&format!(
+                        "entry  is not a intersection in ExpandOrIntersect"
+                    )))?;
+                pre_intersection.intersect(iter);
+                if pre_intersection.is_empty() {
+                    Ok(None)
+                } else {
+                    Ok(Some(input))
                 }
             } else {
                 // the case of expansion only
@@ -164,8 +182,55 @@ impl<E: Into<Entry> + 'static> FilterMapFunction<Record, Record> for ExpandOrInt
                 } else {
                     // append columns without changing head
                     let columns = input.get_columns_mut();
-                    columns
-                        .insert(self.edge_or_end_v_tag as usize, Arc::new(neighbors_intersection.into()));
+                    columns.insert(self.edge_or_end_v_tag as usize, DynEntry::new(neighbors_intersection));
+                    Ok(Some(input))
+                }
+            }
+        } else {
+            Err(FnExecError::unsupported_error(&format!(
+                "expand or intersect entry {:?} of tag {:?} failed in ExpandOrIntersect",
+                entry, self.edge_or_end_v_tag
+            )))?
+        }
+    }
+}
+
+impl FilterMapFunction<Record, Record> for ExpandEdgeVOrIntersect {
+    fn exec(&self, mut input: Record) -> FnResult<Option<Record>> {
+        let entry = input
+            .get(self.start_v_tag)
+            .ok_or(FnExecError::get_tag_error(&format!(
+                "get start_v_tag {:?} from record in `ExpandOrIntersect` operator, the record is {:?}",
+                self.start_v_tag, input
+            )))?;
+        if let Some(id) = entry.as_id() {
+            let iter = self
+                .stmt
+                .exec(id)?
+                .map(|e| Vertex::new(e.get_other_id(), None, DynDetails::default()));
+            if let Some(pre_entry) = input.get_column_mut(&self.edge_or_end_v_tag) {
+                // the case of expansion and intersection
+                let pre_intersection = pre_entry
+                    .as_any_mut()
+                    .downcast_mut::<Intersection>()
+                    .ok_or(FnExecError::unexpected_data_error(&format!(
+                        "entry  is not a intersection in ExpandOrIntersect"
+                    )))?;
+                pre_intersection.intersect(iter);
+                if pre_intersection.is_empty() {
+                    Ok(None)
+                } else {
+                    Ok(Some(input))
+                }
+            } else {
+                // the case of expansion only
+                let neighbors_intersection = Intersection::from_iter(iter);
+                if neighbors_intersection.is_empty() {
+                    Ok(None)
+                } else {
+                    // append columns without changing head
+                    let columns = input.get_columns_mut();
+                    columns.insert(self.edge_or_end_v_tag as usize, DynEntry::new(neighbors_intersection));
                     Ok(Some(input))
                 }
             }
@@ -206,12 +271,12 @@ impl FilterMapFuncGen for algebra_pb::EdgeExpand {
                 // Expand vertices with filters on edges.
                 // This can be regarded as a combination of EdgeExpand (with expand_opt as Edge) + GetV
                 let stmt = graph.prepare_explore_edge(direction, &query_params)?;
-                let edge_expand_operator = ExpandOrIntersect { start_v_tag, edge_or_end_v_tag, stmt };
+                let edge_expand_operator = ExpandEdgeVOrIntersect { start_v_tag, edge_or_end_v_tag, stmt };
                 Ok(Box::new(edge_expand_operator))
             } else {
                 // Expand vertices without any filters
                 let stmt = graph.prepare_explore_vertex(direction, &query_params)?;
-                let edge_expand_operator = ExpandOrIntersect { start_v_tag, edge_or_end_v_tag, stmt };
+                let edge_expand_operator = ExpandVertexOrIntersect { start_v_tag, edge_or_end_v_tag, stmt };
                 Ok(Box::new(edge_expand_operator))
             }
         }

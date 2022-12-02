@@ -30,6 +30,7 @@ mod test {
     use ir_core::plan::physical::AsPhysical;
     use pegasus_client::builder::JobBuilder;
     use pegasus_server::JobRequest;
+    use runtime::process::entry::Entry;
 
     use crate::common::test::{
         default_sink_target, initialize, parse_result, query_params, submit_query, CREATED_LABEL,

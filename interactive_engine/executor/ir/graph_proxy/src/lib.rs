@@ -59,6 +59,8 @@ macro_rules! filter_limit {
 macro_rules! sample_limit {
     ($iter: expr, $s: expr, $n: expr) => {
         if let Some(ratio) = $s {
+            use rand::prelude::StdRng;
+            use rand::{Rng, SeedableRng};
             let mut rng: StdRng = SeedableRng::from_entropy();
             let r = $iter.filter(move |_| rng.gen_bool(ratio));
             limit_n!(r, $n)

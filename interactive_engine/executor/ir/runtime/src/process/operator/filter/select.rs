@@ -62,6 +62,7 @@ mod tests {
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
 
+    use crate::process::entry::Entry;
     use crate::process::operator::filter::FilterFuncGen;
     use crate::process::operator::tests::{init_source, PERSON_LABEL};
     use crate::process::record::Record;

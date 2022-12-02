@@ -26,6 +26,7 @@ mod test {
     use graph_store::common::DefaultId;
     use graph_store::ldbc::LDBCVertexParser;
     use ir_common::generated::algebra as pb;
+    use runtime::process::entry::Entry;
     use runtime::process::operator::source::SourceOperator;
     use runtime::process::record::Record;
 

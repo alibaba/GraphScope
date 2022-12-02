@@ -25,24 +25,24 @@ use ir_common::KeyId;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::error::{FnExecError, FnExecResult, FnGenError, FnGenResult};
+use crate::process::entry::{CollectionEntry, DynEntry, Entry};
 use crate::process::operator::accum::accumulator::{
     Accumulator, Count, DistinctCount, Maximum, Minimum, Sum, ToList, ToSet,
 };
 use crate::process::operator::accum::AccumFactoryGen;
 use crate::process::operator::TagKey;
-use crate::process::record::{Entry, Record};
+use crate::process::record::Record;
 
 #[derive(Debug, Clone)]
 pub enum EntryAccumulator {
-    // TODO(bingqing): more accum kind
     ToCount(Count<()>),
-    ToList(ToList<Entry>),
-    ToMin(Minimum<Entry>),
-    ToMax(Maximum<Entry>),
-    ToSet(ToSet<Entry>),
-    ToDistinctCount(DistinctCount<Entry>),
-    ToSum(Sum<Entry>),
-    ToAvg(Sum<Entry>, Count<()>),
+    ToList(ToList<DynEntry>),
+    ToMin(Minimum<DynEntry>),
+    ToMax(Maximum<DynEntry>),
+    ToSet(ToSet<DynEntry>),
+    ToDistinctCount(DistinctCount<DynEntry>),
+    ToSum(Sum<DynEntry>),
+    ToAvg(Sum<DynEntry>, Count<()>),
 }
 
 /// Accumulator for Record, including multiple accumulators for entries(columns) in Record.
@@ -56,7 +56,7 @@ pub struct RecordAccumulator {
 impl Accumulator<Record, Record> for RecordAccumulator {
     fn accum(&mut self, mut next: Record) -> FnExecResult<()> {
         for (accumulator, tag_key, _) in self.accum_ops.iter_mut() {
-            let entry = tag_key.get_entry(&mut next)?;
+            let entry = tag_key.get_arc_entry(&mut next)?;
             accumulator.accum(entry)?;
         }
         Ok(())
@@ -66,14 +66,14 @@ impl Accumulator<Record, Record> for RecordAccumulator {
         let mut record = Record::default();
         for (accumulator, _, alias) in self.accum_ops.iter_mut() {
             let entry = accumulator.finalize()?;
-            record.append(entry, alias.clone());
+            record.append_arc_entry(entry, alias.clone());
         }
         Ok(record)
     }
 }
 
-impl Accumulator<Entry, Entry> for EntryAccumulator {
-    fn accum(&mut self, next: Entry) -> FnExecResult<()> {
+impl Accumulator<DynEntry, DynEntry> for EntryAccumulator {
+    fn accum(&mut self, next: DynEntry) -> FnExecResult<()> {
         // ignore non-exist tag/label/property values;
         if !next.is_none() {
             match self {
@@ -94,15 +94,15 @@ impl Accumulator<Entry, Entry> for EntryAccumulator {
         }
     }
 
-    fn finalize(&mut self) -> FnExecResult<Entry> {
+    fn finalize(&mut self) -> FnExecResult<DynEntry> {
         match self {
             EntryAccumulator::ToCount(count) => {
                 let cnt = count.finalize()?;
-                Ok(object!(cnt).into())
+                Ok(DynEntry::new(object!(cnt)))
             }
             EntryAccumulator::ToList(list) => {
-                let list_entry = list.finalize()?;
-                Ok(Entry::Collection(list_entry))
+                let list_entry: Vec<DynEntry> = list.finalize()?;
+                Ok(DynEntry::new(CollectionEntry { inner: list_entry }))
             }
             EntryAccumulator::ToMin(min) => min
                 .finalize()?
@@ -112,11 +112,11 @@ impl Accumulator<Entry, Entry> for EntryAccumulator {
                 .ok_or(FnExecError::accum_error("max_entry is none")),
             EntryAccumulator::ToSet(set) => {
                 let set_entry = set.finalize()?;
-                Ok(Entry::Collection(set_entry))
+                Ok(DynEntry::new(CollectionEntry { inner: set_entry }))
             }
             EntryAccumulator::ToDistinctCount(distinct_count) => {
                 let cnt = distinct_count.finalize()?;
-                Ok(object!(cnt).into())
+                Ok(DynEntry::new(object!(cnt)))
             }
             EntryAccumulator::ToSum(sum) => sum
                 .finalize()?
@@ -127,7 +127,7 @@ impl Accumulator<Entry, Entry> for EntryAccumulator {
                     .ok_or(FnExecError::accum_error("sum_entry is none"))?;
                 let cnt = count.finalize()?;
                 // TODO: confirm if it should be Object::None, or throw error;
-                let result = (Object::None).into();
+                let result = DynEntry::new(Object::None);
                 if cnt == 0 {
                     warn!("cnt value is 0 in accum avg");
                     Ok(result)
@@ -144,7 +144,7 @@ impl Accumulator<Entry, Entry> for EntryAccumulator {
                                 .map(|val| val.div(primitive_cnt))
                                 .map_err(|e| FnExecError::accum_error(&format!("{}", e)))?;
                             let result_obj: Object = result.into();
-                            Ok(result_obj.into())
+                            Ok(DynEntry::new(result_obj))
                         }
                     }
                 } else {
@@ -256,31 +256,31 @@ impl Decode for EntryAccumulator {
                 Ok(EntryAccumulator::ToCount(cnt))
             }
             1 => {
-                let list = <ToList<Entry>>::read_from(reader)?;
+                let list = <ToList<DynEntry>>::read_from(reader)?;
                 Ok(EntryAccumulator::ToList(list))
             }
             2 => {
-                let min = <Minimum<Entry>>::read_from(reader)?;
+                let min = <Minimum<DynEntry>>::read_from(reader)?;
                 Ok(EntryAccumulator::ToMin(min))
             }
             3 => {
-                let max = <Maximum<Entry>>::read_from(reader)?;
+                let max = <Maximum<DynEntry>>::read_from(reader)?;
                 Ok(EntryAccumulator::ToMax(max))
             }
             4 => {
-                let set = <ToSet<Entry>>::read_from(reader)?;
+                let set = <ToSet<DynEntry>>::read_from(reader)?;
                 Ok(EntryAccumulator::ToSet(set))
             }
             5 => {
-                let distinct_count = <DistinctCount<Entry>>::read_from(reader)?;
+                let distinct_count = <DistinctCount<DynEntry>>::read_from(reader)?;
                 Ok(EntryAccumulator::ToDistinctCount(distinct_count))
             }
             6 => {
-                let sum = <Sum<Entry>>::read_from(reader)?;
+                let sum = <Sum<DynEntry>>::read_from(reader)?;
                 Ok(EntryAccumulator::ToSum(sum))
             }
             7 => {
-                let sum = <Sum<Entry>>::read_from(reader)?;
+                let sum = <Sum<DynEntry>>::read_from(reader)?;
                 let count = <Count<()>>::read_from(reader)?;
                 Ok(EntryAccumulator::ToAvg(sum, count))
             }
@@ -318,7 +318,6 @@ impl Decode for RecordAccumulator {
 #[cfg(test)]
 mod tests {
 
-    use std::borrow::BorrowMut;
     use std::cmp::Ordering;
 
     use ir_common::generated::algebra as pb;
@@ -327,10 +326,12 @@ mod tests {
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
 
+    use crate::process::entry::{CollectionEntry, DynEntry, Entry};
     use crate::process::operator::accum::accumulator::Accumulator;
     use crate::process::operator::accum::AccumFactoryGen;
     use crate::process::operator::tests::{init_source, init_vertex1, init_vertex2, TAG_A, TAG_B};
-    use crate::process::record::{Entry, Record};
+    use crate::process::record::Record;
+    use pegasus_common::downcast::AsAny;
 
     fn fold_test(source: Vec<Record>, fold_opr_pb: pb::GroupBy) -> ResultStream<Record> {
         let conf = JobConf::new("fold_test");
@@ -367,11 +368,12 @@ mod tests {
         };
         let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
         let mut result = fold_test(init_source(), fold_opr_pb);
-        let mut fold_result = Entry::Collection(vec![]);
-        let expected_result = Entry::Collection(vec![init_vertex1().into(), init_vertex2().into()]);
+        let mut fold_result = CollectionEntry::default().into();
+        let expected_result =
+            CollectionEntry { inner: vec![init_vertex1().into(), init_vertex2().into()] }.into();
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(Some(TAG_A)) {
-                fold_result = entry.as_ref().clone();
+                fold_result = entry.clone();
             }
         }
         assert_eq!(fold_result, expected_result);
@@ -387,11 +389,12 @@ mod tests {
         };
         let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
         let mut result = fold_test(init_source(), fold_opr_pb);
-        let mut fold_result = Entry::Collection(vec![]);
-        let expected_result = Entry::Collection(vec![init_vertex1().into(), init_vertex2().into()]);
+        let mut fold_result = CollectionEntry::default().into();
+        let expected_result =
+            CollectionEntry { inner: vec![init_vertex1().into(), init_vertex2().into()] }.into();
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(None) {
-                fold_result = entry.as_ref().clone();
+                fold_result = entry.clone();
             }
         }
         assert_eq!(fold_result, expected_result);
@@ -410,12 +413,7 @@ mod tests {
         let mut cnt = 0;
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(Some(TAG_A)) {
-                cnt = match entry.as_ref() {
-                    Entry::OffGraph(cnt) => cnt.as_u64().unwrap(),
-                    _ => {
-                        unreachable!()
-                    }
-                };
+                cnt = entry.as_object().unwrap().as_u64().unwrap();
             }
         }
         assert_eq!(cnt, 2);
@@ -436,20 +434,14 @@ mod tests {
         };
         let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function_1, function_2] };
         let mut result = fold_test(init_source(), fold_opr_pb);
-        let mut fold_result: (Entry, Entry) = (Entry::Collection(vec![]), object!(0).into());
-        let expected_result: (Entry, Entry) =
-            (Entry::Collection(vec![init_vertex1().into(), init_vertex2().into()]), object!(2).into());
+        let mut fold_result: (DynEntry, DynEntry) = (CollectionEntry::default().into(), object!(0).into());
+        let expected_result: (DynEntry, DynEntry) = (
+            CollectionEntry { inner: vec![init_vertex1().into(), init_vertex2().into()] }.into(),
+            object!(2).into(),
+        );
         if let Some(Ok(record)) = result.next() {
-            let collection_entry = record
-                .get(Some(TAG_A))
-                .unwrap()
-                .as_ref()
-                .clone();
-            let count_entry = record
-                .get(Some(TAG_B))
-                .unwrap()
-                .as_ref()
-                .clone();
+            let collection_entry = record.get(Some(TAG_A)).unwrap().clone();
+            let count_entry = record.get(Some(TAG_B)).unwrap().clone();
             fold_result = (collection_entry, count_entry);
         }
         assert_eq!(fold_result, expected_result);
@@ -470,13 +462,7 @@ mod tests {
         let mut res = 0.into();
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(Some(TAG_A)) {
-                res = match entry.as_ref() {
-                    // this is Prop, since get_entry returns entry type of prop
-                    Entry::OffGraph(obj) => obj.clone(),
-                    _ => {
-                        unreachable!()
-                    }
-                };
+                res = entry.as_object().unwrap().clone();
             }
         }
         assert_eq!(res, object!(27));
@@ -497,13 +483,7 @@ mod tests {
         let mut res = "".into();
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(Some(TAG_A)) {
-                res = match entry.as_ref() {
-                    // this is Prop, since get_entry returns entry type of prop
-                    Entry::OffGraph(obj) => obj.clone(),
-                    _ => {
-                        unreachable!()
-                    }
-                };
+                res = entry.as_object().unwrap().clone();
             }
         }
         assert_eq!(res, object!("vadas"));
@@ -529,12 +509,7 @@ mod tests {
         let mut cnt = 0;
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(Some(TAG_A)) {
-                cnt = match entry.as_ref() {
-                    Entry::OffGraph(cnt) => cnt.as_u64().unwrap(),
-                    _ => {
-                        unreachable!()
-                    }
-                };
+                cnt = entry.as_object().unwrap().as_u64().unwrap();
             }
         }
         assert_eq!(cnt, 2);
@@ -554,16 +529,22 @@ mod tests {
         };
         let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
         let mut result = fold_test(source, fold_opr_pb);
-        let mut fold_result = Entry::Collection(vec![]);
-        let expected_result = Entry::Collection(vec![init_vertex1().into(), init_vertex2().into()]);
+        let mut fold_result = CollectionEntry::default();
+        let expected_result = CollectionEntry { inner: vec![init_vertex1().into(), init_vertex2().into()] };
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(Some(TAG_A)) {
-                fold_result = entry.as_ref().clone();
+                fold_result = entry
+                    // .inner
+                    .as_any_ref()
+                    .downcast_ref::<CollectionEntry>()
+                    .unwrap()
+                    .clone();
             }
         }
-        if let Entry::Collection(collection) = fold_result.borrow_mut() {
-            collection.sort_by(|v1, v2| v1.partial_cmp(&v2).unwrap_or(Ordering::Equal));
-        }
+        fold_result
+            .inner
+            .sort_by(|v1, v2| v1.partial_cmp(&v2).unwrap_or(Ordering::Equal));
+
         assert_eq!(fold_result, expected_result);
     }
 
@@ -583,12 +564,7 @@ mod tests {
         let mut res = "".into();
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(Some(TAG_A)) {
-                res = match entry.as_ref() {
-                    Entry::OffGraph(obj) => obj.clone(),
-                    _ => {
-                        unreachable!()
-                    }
-                };
+                res = entry.as_object().unwrap().clone();
             }
         }
         assert_eq!(res, object!(60));
@@ -610,12 +586,7 @@ mod tests {
         let mut res = "".into();
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(None) {
-                res = match entry.as_ref() {
-                    Entry::OffGraph(obj) => obj.clone(),
-                    _ => {
-                        unreachable!()
-                    }
-                };
+                res = entry.as_object().unwrap().clone();
             }
         }
         assert_eq!(res, object!(20));

@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::any::Any;
 use std::cmp::Ordering;
 use std::convert::{TryFrom, TryInto};
 use std::hash::{Hash, Hasher};
@@ -23,11 +24,13 @@ use ir_common::error::ParsePbError;
 use ir_common::generated::results as result_pb;
 use ir_common::{LabelId, NameOrId};
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
+use pegasus_common::downcast::*;
+use pegasus_common::impl_as_any;
 
 use crate::apis::{read_id, write_id, DynDetails, Element, GraphElement, ID};
 use crate::utils::expr::eval::Context;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct Vertex {
     id: ID,
     label: Option<LabelId>,
@@ -67,6 +70,8 @@ impl GraphElement for Vertex {
         Some(&self.details)
     }
 }
+
+impl_as_any!(Vertex);
 
 impl Encode for Vertex {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {

@@ -93,6 +93,7 @@ mod tests {
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
 
+    use crate::process::entry::Entry;
     use crate::process::operator::sort::CompareFunctionGen;
     use crate::process::operator::tests::{
         init_source, init_source_with_tag, to_var_pb, PERSON_LABEL, TAG_A,

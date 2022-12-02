@@ -81,13 +81,15 @@ impl KeyFunctionGen for algebra_pb::Dedup {
 mod tests {
     use ahash::HashMap;
     use dyn_type::Object;
-    use graph_proxy::apis::{DynDetails, GraphElement, Vertex, ID};
+    use graph_proxy::apis::GraphElement;
+    use graph_proxy::apis::{DynDetails, Vertex, ID};
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
     use ir_common::NameOrId;
     use pegasus::api::{Dedup, KeyBy, Map, Sink};
     use pegasus::JobConf;
 
+    use crate::process::entry::Entry;
     use crate::process::operator::keyed::KeyFunctionGen;
     use crate::process::operator::tests::PERSON_LABEL;
     use crate::process::record::Record;

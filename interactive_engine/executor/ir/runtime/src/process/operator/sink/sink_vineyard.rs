@@ -25,6 +25,7 @@ use ir_common::generated::schema as schema_pb;
 use ir_common::KeyId;
 
 use crate::error::{FnExecError, FnExecResult, FnGenResult};
+use crate::process::entry::Entry;
 use crate::process::operator::accum::accumulator::Accumulator;
 use crate::process::operator::sink::{SinkGen, Sinker};
 use crate::process::record::Record;

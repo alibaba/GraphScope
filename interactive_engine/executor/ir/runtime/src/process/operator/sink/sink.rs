@@ -16,21 +16,23 @@
 use std::borrow::BorrowMut;
 use std::collections::HashMap;
 use std::convert::TryInto;
-use std::ops::Deref;
 
 use dyn_type::Object;
-use graph_proxy::apis::{Edge, GraphElement, GraphPath, Vertex, VertexOrEdge};
+use graph_proxy::apis::{Edge, Element, GraphElement, GraphPath, Vertex};
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::sink_default::MetaType;
 use ir_common::generated::common as common_pb;
 use ir_common::generated::results as result_pb;
 use ir_common::{KeyId, NameOrId};
 use pegasus::api::function::{FnResult, MapFunction};
+use pegasus_common::downcast::AsAny;
 use prost::Message;
 
 use crate::error::FnGenResult;
+use crate::process::entry::{CollectionEntry, DynEntry, Entry, EntryDataType};
+use crate::process::operator::map::Intersection;
 use crate::process::operator::sink::{SinkGen, Sinker};
-use crate::process::record::{Entry, Record};
+use crate::process::record::Record;
 
 #[derive(Debug)]
 pub struct RecordSinkEncoder {
@@ -41,11 +43,15 @@ pub struct RecordSinkEncoder {
 }
 
 impl RecordSinkEncoder {
-    fn entry_to_pb(&self, e: &Entry) -> result_pb::Entry {
-        let inner = match e {
-            Entry::Collection(collection) => {
+    fn entry_to_pb(&self, e: &DynEntry) -> result_pb::Entry {
+        let inner = match e.get_type() {
+            EntryDataType::Collection => {
+                let collection = e
+                    .as_any_ref()
+                    .downcast_ref::<CollectionEntry>()
+                    .unwrap();
                 let mut collection_pb = Vec::with_capacity(collection.len());
-                for element in collection.into_iter() {
+                for element in &collection.inner {
                     let element_pb = self.element_to_pb(element);
                     collection_pb.push(element_pb);
                 }
@@ -53,7 +59,11 @@ impl RecordSinkEncoder {
                     collection: collection_pb,
                 }))
             }
-            Entry::Intersection(intersection) => {
+            EntryDataType::Intersect => {
+                let intersection = e
+                    .as_any_ref()
+                    .downcast_ref::<Intersection>()
+                    .unwrap();
                 let mut collection_pb = Vec::with_capacity(intersection.len());
                 for v in intersection.iter() {
                     let vertex_pb = self.vertex_to_pb(v);
@@ -73,29 +83,32 @@ impl RecordSinkEncoder {
         result_pb::Entry { inner }
     }
 
-    fn element_to_pb(&self, e: &Entry) -> result_pb::Element {
-        let inner = match e {
-            Entry::V(v) => {
-                let vertex_pb = self.vertex_to_pb(v);
+    fn element_to_pb(&self, e: &DynEntry) -> result_pb::Element {
+        let inner = match e.get_type() {
+            EntryDataType::V => {
+                let vertex_pb = self.vertex_to_pb(e.as_graph_vertex().unwrap());
                 Some(result_pb::element::Inner::Vertex(vertex_pb))
             }
-            Entry::E(e) => {
-                let edge_pb = self.edge_to_pb(e);
+            EntryDataType::E => {
+                let edge_pb = self.edge_to_pb(e.as_graph_edge().unwrap());
                 Some(result_pb::element::Inner::Edge(edge_pb))
             }
-            Entry::P(p) => {
-                let path_pb = self.path_to_pb(p);
+            EntryDataType::P => {
+                let path_pb = self.path_to_pb(e.as_graph_path().unwrap());
                 Some(result_pb::element::Inner::GraphPath(path_pb))
             }
-            Entry::OffGraph(o) => {
-                let obj_pb = self.object_to_pb(o.clone());
+            EntryDataType::Obj => {
+                let obj_pb = self.object_to_pb(e.as_object().unwrap().clone());
                 Some(result_pb::element::Inner::Object(obj_pb))
             }
-            Entry::Collection(_) => {
+            EntryDataType::Collection => {
                 unreachable!()
             }
-            Entry::Intersection(_) => {
+            EntryDataType::Intersect => {
                 unreachable!()
+            }
+            _ => {
+                todo!()
             }
         };
         result_pb::Element { inner }
@@ -170,20 +183,10 @@ impl RecordSinkEncoder {
         }
     }
 
-    fn vertex_or_edge_to_pb(&self, vertex_or_edge: &VertexOrEdge) -> result_pb::graph_path::VertexOrEdge {
-        match vertex_or_edge {
-            VertexOrEdge::V(v) => {
-                let vertex_pb = self.vertex_to_pb(v);
-                result_pb::graph_path::VertexOrEdge {
-                    inner: Some(result_pb::graph_path::vertex_or_edge::Inner::Vertex(vertex_pb)),
-                }
-            }
-            VertexOrEdge::E(e) => {
-                let edge_pb = self.edge_to_pb(e);
-                result_pb::graph_path::VertexOrEdge {
-                    inner: Some(result_pb::graph_path::vertex_or_edge::Inner::Edge(edge_pb)),
-                }
-            }
+    fn vertex_or_edge_to_pb(&self, vertex_or_edge: &Vertex) -> result_pb::graph_path::VertexOrEdge {
+        let vertex_pb = self.vertex_to_pb(vertex_or_edge);
+        result_pb::graph_path::VertexOrEdge {
+            inner: Some(result_pb::graph_path::vertex_or_edge::Inner::Vertex(vertex_pb)),
         }
     }
 
@@ -210,7 +213,7 @@ impl MapFunction<Record, Vec<u8>> for RecordSinkEncoder {
         let mut sink_columns = Vec::with_capacity(self.sink_keys.len());
         for sink_key in self.sink_keys.iter() {
             if let Some(entry) = input.get(sink_key.clone()) {
-                let entry_pb = self.entry_to_pb(entry.deref());
+                let entry_pb = self.entry_to_pb(entry);
                 let column_pb = result_pb::Column {
                     name_or_id: sink_key
                         .clone()

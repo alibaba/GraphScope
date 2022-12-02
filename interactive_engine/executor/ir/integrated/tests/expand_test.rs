@@ -19,7 +19,6 @@ mod common;
 
 #[cfg(test)]
 mod test {
-    use std::borrow::Borrow;
     use std::sync::Arc;
 
     use dyn_type::object;
@@ -33,12 +32,14 @@ mod test {
     use pegasus::api::{Map, Sink};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
+    use runtime::process::entry::Entry;
     use runtime::process::operator::flatmap::FlatMapFuncGen;
-    use runtime::process::operator::map::FilterMapFuncGen;
+    use runtime::process::operator::map::{FilterMapFuncGen, Intersection};
     use runtime::process::operator::source::SourceOperator;
-    use runtime::process::record::{Entry, Record};
+    use runtime::process::record::Record;
 
     use crate::common::test::*;
+    use pegasus_common::downcast::AsAny;
 
     // g.V()
     fn source_gen(alias: Option<common_pb::NameOrId>) -> Box<dyn Iterator<Item = Record> + Send> {
@@ -755,15 +756,20 @@ mod test {
             vec![expected_collection.clone(), expected_collection.clone(), expected_collection];
         let mut result_collections: Vec<Vec<usize>> = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Entry::Intersection(intersection) = record.get(Some(TAG_C)).unwrap().borrow() {
-                let mut result_collection: Vec<usize> = intersection
-                    .clone()
-                    .iter()
-                    .map(|r| r.id() as usize)
-                    .collect();
-                result_collection.sort();
-                result_collections.push(result_collection);
-            }
+            let intersection = record
+                .get(Some(TAG_C))
+                .unwrap()
+                // .inner
+                .as_any_ref()
+                .downcast_ref::<Intersection>()
+                .unwrap();
+            let mut result_collection: Vec<usize> = intersection
+                .clone()
+                .iter()
+                .map(|r| r.id() as usize)
+                .collect();
+            result_collection.sort();
+            result_collections.push(result_collection);
         }
         assert_eq!(result_collections, expected_collections)
     }
@@ -828,15 +834,21 @@ mod test {
         let expected_collections = vec![vec![v4]];
         let mut result_collections = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Entry::Intersection(intersection) = record.get(Some(TAG_C)).unwrap().borrow() {
-                let mut result_collection: Vec<DefaultId> = intersection
-                    .clone()
-                    .iter()
-                    .map(|r| r.id() as DefaultId)
-                    .collect();
-                result_collection.sort();
-                result_collections.push(result_collection);
-            }
+            let intersection = record
+                .get(Some(TAG_C))
+                .unwrap()
+                //    .inner
+                .as_any_ref()
+                .downcast_ref::<Intersection>()
+                .unwrap();
+
+            let mut result_collection: Vec<DefaultId> = intersection
+                .clone()
+                .iter()
+                .map(|r| r.id() as DefaultId)
+                .collect();
+            result_collection.sort();
+            result_collections.push(result_collection);
         }
         assert_eq!(result_collections, expected_collections)
     }
