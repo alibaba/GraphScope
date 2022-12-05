@@ -1,0 +1,16 @@
+:root {
+	--fa-font-brands: normal 400 1em/1 "Font Awesome 6 Brands";
+}
+
+body {
+	--sidebar-tree-space-above: 0rem;
+	--sidebar-item-spacing-vertical: 0.4rem;
+}
+
+.sidebar-logo {
+	max-height: 25px;
+}
+
+.sidebar-scroll {
+	margin-bottom: 175px;
+}

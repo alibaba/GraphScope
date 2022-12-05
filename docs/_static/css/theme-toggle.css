@@ -1,0 +1,13 @@
+.fa.fa-2x {
+    font-size: 36px;
+}
+
+/* Decrease the padding of button block in panels */
+div.card-body.card-body-less-padding {
+    padding: 0.25em;
+}
+
+/* Disable theme toggle */
+div.theme-toggle-container.theme-toggle-content {
+    display: none;
+}

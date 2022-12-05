@@ -22,6 +22,7 @@ copyright = '2020-2023, DAMO Academy, Alibaba Inc.'
 author = 'DAMO Academy, Alibaba Inc.'
 
 master_doc = 'index'
+html_context = {}  # Dict[str, Any]
 
 # -- General configuration ---------------------------------------------------
 
@@ -37,6 +38,9 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'sphinx.ext.autosectionlabel',
+    'sphinx_panels',
+    'sphinxemoji.sphinxemoji',
+    "sphinxext.opengraph",
     'sphinx_ext',
 ]
 
@@ -56,23 +60,46 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+exclude_patterns = [
+    '_build',
+    '.ipynb_checkpoints',
+]
 
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'furo'
 
-# replace "view page source" with "edit on github" in Read The Docs theme
-#  * https://github.com/readthedocs/sphinx_rtd_theme/issues/529
-html_context = {
-    'display_github': True,
-    'github_user': 'alibaba',
-    'github_repo': 'graphscope',
-    'github_version': 'main/docs/',
-    'theme_vcs_pageview_mode': 'edit'
+# force rendering the versions dropdown
+html_context["READTHEDOCS"] = True
+
+html_sidebars = {
+    "**": [
+        "sidebar/scroll-start.html",
+        "sidebar/brand.html",
+        "sidebar/search.html",
+        "sidebar/navigation.html",
+        "sidebar/rtd-versions.html",
+        "sidebar/scroll-end.html",
+    ]
+}
+
+html_theme_options = {
+    "sidebar_hide_name": True,  # we use the logo
+    "navigation_with_keys": True,
+    "source_repository": "https://github.com/alibaba/GraphScope/",
+    "source_branch": "main",
+    "source_directory": "docs/",
+    "footer_icons": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/alibaba/GraphScope",
+            "html": "",
+            "class": "fa fa-solid fa-github fa-2x",
+        },
+    ],
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -80,9 +107,27 @@ html_context = {
 # so a file named "default.css" will overwrite the builtin "default.css".
 
 # These folders are copied to the documentation's HTML output
-html_static_path = ['_templates']
+html_static_path = [
+    'images/',
+    "_static/",
+]
+
+html_logo = "images/logo-w.png"
+
+html_js_files = [
+    "js/readthedocs.js",
+    "js/readthedocs-doc-embed.js",
+]
+
 html_css_files = [
-    'css/custom.css',
+    "css/brands.min.css",    # font-awesome
+    "css/regular.min.css",    # font-awesome
+    "css/solid.min.css",    # font-awesome
+    "css/fontawesome.min.css",    # font-awesome
+    "css/custom.css",
+    "css/panels.css",
+    "css/rst-versions.css",
+    "css/theme-toggle.css",
 ]
 
 # generate autosummary pages
