@@ -226,6 +226,8 @@ each of which can be independently scaled to chase for the best end-to-end throu
 
    installation
    getting_started
+   overview
+   best_practices
    tutorials
    deployment
    loading_graph
