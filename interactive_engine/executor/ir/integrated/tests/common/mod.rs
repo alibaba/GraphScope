@@ -44,6 +44,10 @@ pub mod test {
     pub const TAG_B: KeyId = 1;
     pub const TAG_C: KeyId = 2;
     pub const TAG_D: KeyId = 3;
+    pub const TAG_E: KeyId = 4;
+    pub const TAG_F: KeyId = 5;
+    pub const TAG_G: KeyId = 6;
+    pub const TAG_H: KeyId = 7;
 
     pub const PERSON_LABEL: LabelId = 0;
     pub const SOFTWARE_LABEL: LabelId = 1;

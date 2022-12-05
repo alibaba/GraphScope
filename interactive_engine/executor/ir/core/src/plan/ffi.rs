@@ -96,7 +96,7 @@ pub enum ResultCode {
     /// A queried tag has not been specified
     TagNotExistError = 12,
     UnSupported = 13,
-    Others = 16,
+    Others = 14,
 }
 
 #[repr(C)]
@@ -151,6 +151,7 @@ impl From<IrError> for FfiResult {
             IrError::ParsePbError(err) => FfiResult::new(ResultCode::ParsePbError, err.to_string()),
             IrError::ParseExprError(err) => FfiResult::new(ResultCode::ParseExprError, err.to_string()),
             IrError::InvalidPattern(s) => FfiResult::new(ResultCode::Others, s),
+            IrError::InvalidExtendPattern(err) => FfiResult::new(ResultCode::Others, err.to_string()),
             IrError::PbEncodeError(err) => FfiResult::new(ResultCode::Others, err.to_string()),
             IrError::MissingData(d) => {
                 FfiResult::new(ResultCode::MissingDataError, format!("required data {:?} is missing", d))

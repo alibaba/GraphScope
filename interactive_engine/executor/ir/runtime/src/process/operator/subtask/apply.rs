@@ -117,7 +117,9 @@ impl ApplyGen<Record, Vec<Record>, Option<Record>> for algebra_pb::Apply {
             }
         }
         let apply_operator = ApplyOperator { join_kind, alias };
-        debug!("Runtime apply operator {:?}", apply_operator);
+        if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
+            debug!("Runtime apply operator {:?}", apply_operator);
+        }
         Ok(Box::new(apply_operator))
     }
 }

@@ -93,7 +93,7 @@ public class DefaultMessageStore<OID_T extends WritableComparable, MSG_T extends
             if (!fragment.innerVertexGid2Vertex(gid, vertex)) {
                 throw new IllegalStateException("gid to vertex convertion failed: " + gid);
             }
-            GS_VID_T lid = vertex.GetValue();
+            GS_VID_T lid = vertex.getValue();
             addLidMessage(lid, msg);
             cnt += 1;
         }
@@ -111,7 +111,7 @@ public class DefaultMessageStore<OID_T extends WritableComparable, MSG_T extends
         if (!fragment.innerVertexGid2Vertex(gid, vertex)) {
             throw new IllegalStateException("gid to vertex convertion failed: " + gid);
         }
-        GS_VID_T lid = vertex.GetValue();
+        GS_VID_T lid = vertex.getValue();
         if (!messages.containsKey(lid)) {
             messages.put(lid, new ArrayList<>());
         }

@@ -541,3 +541,52 @@ def test_Load_complex_graph_variants(
         dst_field="member_student_id",
     )
     assert graph.schema is not None
+
+
+def test_local_vertex_map_e_file(graphscope_session, student_group_e):
+    graph = graphscope_session.g(vertex_map="local")
+    graph = graph.add_edges(student_group_e)
+    assert graph.schema is not None
+    ret = graphscope.wcc(graph)
+    df = ret.to_dataframe({"id": "v.id", "community": "r"})
+    assert df.shape == (10, 2)
+
+
+def test_local_vertex_map_complete_form_loader(
+    graphscope_session, student_group_e, student_v
+):
+    graph = graphscope_session.load_from(
+        edges={
+            "group": (
+                student_group_e,
+                ["group_id", "member_size"],
+                (
+                    "leader_student_id",
+                    "student",
+                ),
+                ("member_student_id", "student"),
+                "both_out_in",
+            )
+        },
+        vertices={
+            "student": (
+                student_v,
+                ["name", "lesson_nums", "avg_score"],
+                "student_id",
+            )
+        },
+        vertex_map="local",
+    )
+    assert graph.schema is not None
+    ret = graphscope.wcc(graph)
+    df = ret.to_dataframe({"id": "v.id", "community": "r"})
+    assert df.shape == (10, 2)
+
+
+def test_local_vertex_map_e_file_str(graphscope_session, student_group_e):
+    graph = graphscope_session.g(oid_type="str", vertex_map="local")
+    graph = graph.add_edges(student_group_e)
+    assert graph.schema is not None
+    ret = graphscope.wcc(graph)
+    df = ret.to_dataframe({"id": "v.id", "community": "r"})
+    assert df.shape == (10, 2)

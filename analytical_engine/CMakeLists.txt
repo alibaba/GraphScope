@@ -110,8 +110,15 @@ endif ()
 set(CMAKE_THREAD_PREFER_PTHREAD ON)
 
 include(GNUInstallDirs)
+# reference: https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling#always-full-rpath
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_INSTALL_PREFIX}/lib64")
+if(APPLE)
+    # the LC_RPATH on Mac seems doesn't support multiple path (seperated with ':seperated with `:`)
+    # fortunately, we just need to take care `lib` on Mac.
+    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+else()
+    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_INSTALL_PREFIX}/lib64:${CMAKE_INSTALL_PREFIX}/lib/x86_64-linux-gnu")
+endif()
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 find_package(Threads REQUIRED)
@@ -181,13 +188,6 @@ if (GLOG_FOUND)
 endif ()
 
 
-include("cmake/FindArrow.cmake")
-if (ARROW_FOUND)
-    include_directories("${ARROW_INCLUDE_DIR}")
-else ()
-    message(FATAL_ERROR "arrow not found")
-endif ()
-
 include("cmake/FindLibUnwind.cmake")
 if (${LIBUNWIND_FOUND})
     add_definitions(-DWITH_LIBUNWIND)
@@ -195,10 +195,6 @@ endif ()
 
 find_package(libgrapelite REQUIRED)
 include_directories(${LIBGRAPELITE_INCLUDE_DIRS})
-
-find_package(vineyard 0.9.0 REQUIRED)
-include_directories(${VINEYARD_INCLUDE_DIRS})
-add_compile_options(-DENABLE_SELECTOR)
 
 find_package(Protobuf REQUIRED)
 include_directories(${Protobuf_INCLUDE_DIRS})
@@ -218,6 +214,32 @@ if(gRPC_FOUND)
 else()
     include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindGRPC.cmake)
     set(GRPC_LIBRARIES ${GPR_LIBRARY} ${GRPC_LIBRARY} ${GRPC_GRPC++_LIBRARY})
+endif()
+
+# Make sure FindArrow is behind FindGRPC to address the "'c-ares::cares_shared' target already exists" error.
+find_package(Arrow QUIET)
+if(Arrow_FOUND)
+    set(ARROW_INCLUDE_DIR)
+    if (TARGET arrow_shared)
+        set(ARROW_SHARED_LIB arrow_shared)
+    endif()
+    if (TARGET arrow_static)
+        set(ARROW_STATIC_LIB arrow_static)
+    endif()
+else()
+    include("cmake/FindArrow.cmake")
+    if(NOT ARROW_FOUND)
+        message(FATAL_ERROR "apache-arrow is required, please install it and retry")
+    endif()
+endif()
+
+# find vineyard after arrow to avoid duplicate target names
+find_package(vineyard 0.11.0 REQUIRED)
+include_directories(${VINEYARD_INCLUDE_DIRS})
+add_compile_options(-DENABLE_SELECTOR)
+
+if(Arrow_FOUND AND Arrow_VERSION VERSION_GREATER 9.0.1)
+    set(CMAKE_CXX_STANDARD 17)
 endif()
 
 # Generate proto
@@ -315,7 +337,7 @@ if (BUILD_TESTS)
         target_include_directories(property_graph_java_app_benchmarks PRIVATE core utils apps)
         target_compile_definitions(property_graph_java_app_benchmarks PUBLIC ENABLE_JAVA_SDK)
         target_link_libraries(property_graph_java_app_benchmarks gs_proto ${JNI_LIBRARIES} ${Boost_LIBRARIES} ${CMAKE_DL_LIBS}  ${VINEYARD_LIBRARIES})
-        
+
         # giraph runner
         add_executable(giraph_runner test/giraph_runner.cc core/java/javasdk.cc)
         target_include_directories(giraph_runner PRIVATE core utils apps)
@@ -331,6 +353,11 @@ if (BUILD_TESTS)
         target_include_directories(graphx_loader_test PRIVATE core utils apps)
         target_compile_definitions(graphx_loader_test PUBLIC ENABLE_JAVA_SDK)
         target_link_libraries(graphx_loader_test ${CMAKE_DL_LIBS} ${VINEYARD_LIBRARIES} ${Boost_LIBRARIES} ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES})
+
+        add_executable(run_java_string_app test/run_java_string_app.cc core/java/javasdk.cc)
+        target_include_directories(run_java_string_app PRIVATE core utils apps)
+        target_compile_definitions(run_java_string_app PUBLIC ENABLE_JAVA_SDK)
+        target_link_libraries(run_java_string_app ${CMAKE_DL_LIBS} ${VINEYARD_LIBRARIES} ${Boost_LIBRARIES} ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES} ${JNI_LIBRARIES})
 
         if (${LIBUNWIND_FOUND})
             target_link_libraries(run_java_app ${LIBUNWIND_LIBRARIES})
@@ -355,6 +382,7 @@ if (BUILD_TESTS)
     endmacro()
 
     add_vineyard_app(run_vy_app SRCS test/run_vy_app.cc)
+    add_vineyard_app(run_vy_app_local_vm SRCS test/run_vy_app_local_vm.cc)
 
     add_vineyard_app(run_load_from_stream SRCS test/run_load_from_stream.cc)
 

@@ -17,17 +17,21 @@
 package com.alibaba.graphscope.graphx.rdd
 
 import com.alibaba.fastffi.{FFIByteString, FFITypeFactory}
-import com.alibaba.graphscope.ds.Vertex
+import com.alibaba.graphscope.ds.{PrimitiveTypedArray, StringTypedArray, Vertex}
 import com.alibaba.graphscope.fragment.adaptor.{AbstractArrowProjectedAdaptor, ArrowProjectedAdaptor}
 import com.alibaba.graphscope.fragment.{ArrowProjectedFragment, IFragment}
 import com.alibaba.graphscope.graphx.VineyardClient
 import com.alibaba.graphscope.graphx.graph.impl.FragmentStructure
 import com.alibaba.graphscope.graphx.rdd.FragmentPartition.getHost
 import com.alibaba.graphscope.graphx.rdd.impl.GrapeEdgePartition
-import com.alibaba.graphscope.graphx.store.impl.{ImmutableOffHeapEdgeStore, InHeapVertexDataStore}
+import com.alibaba.graphscope.graphx.store.impl.{
+  ImmutableOffHeapEdgeStore,
+  InHeapEdgeDataStore,
+  InHeapVertexDataStore
+}
 import com.alibaba.graphscope.graphx.store.{EdgeDataStore, VertexDataStore}
 import com.alibaba.graphscope.graphx.utils.{CircularArray, EIDAccessor, GrapeUtils, ScalaFFIFactory}
-import com.alibaba.graphscope.utils.FFITypeFactoryhelper
+import com.alibaba.graphscope.utils.{FFITypeFactoryhelper, VertexDataUtils}
 import org.apache.spark.graphx.PartitionID
 import org.apache.spark.graphx.grape.{GrapeEdgeRDD, GrapeVertexRDD}
 import org.apache.spark.internal.Logging
@@ -312,7 +316,7 @@ object FragmentRDD {
             } else {
               var i = begin
               while (i < end) {
-                vertex.SetValue(i)
+                vertex.setValue(i)
                 vertexDataStore.set(i.toInt, frag.getData(vertex))
                 i += 1
               }
@@ -339,13 +343,31 @@ object FragmentRDD {
         val projectedFragment = adaptor.getBaseArrayProjectedFragment
           .asInstanceOf[ArrowProjectedFragment[Long, Long, _, ED]]
         val edataArray = projectedFragment.getEdataArrayAccessor
-        val edataStore = new ImmutableOffHeapEdgeStore[ED](
-          edataArray.getLength.toInt,
-          1,
-          client,
-          new EIDAccessor(projectedFragment.getOutEdgesPtr.getAddress),
-          edataArray
-        )
+        val edataStore = {
+          if (GrapeUtils.isPrimitive[ED]) {
+            val primitiveTypedArray = ScalaFFIFactory.newPrimitiveTypedArray[ED]
+            primitiveTypedArray.setAddress(edataArray.getAddress)
+            new ImmutableOffHeapEdgeStore[ED](
+              edataArray.getLength.toInt,
+              1,
+              client,
+              new EIDAccessor(projectedFragment.getOutEdgesPtr.getAddress),
+              primitiveTypedArray
+            )
+          } else {
+            val stringTypedArray: StringTypedArray = ScalaFFIFactory.newStringTypedArray
+            stringTypedArray.setAddress(edataArray.getAddress)
+            val onHeapArray = GrapeUtils
+              .readComplexArray[ED](stringTypedArray)
+            new InHeapEdgeDataStore[ED](
+              edataArray.getLength.toInt,
+              1,
+              client,
+              onHeapArray,
+              new EIDAccessor(projectedFragment.getOutEdgesPtr.getAddress)
+            )
+          }
+        }
         edataStore
         //no need to copy
       }

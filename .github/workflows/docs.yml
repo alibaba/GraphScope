@@ -12,6 +12,13 @@ jobs:
         submodules: true
         fetch-depth: 0
 
+    - uses: dorny/paths-filter@v2
+      id: changes
+      with:
+        filters: |
+          src:
+            - 'docs/**'
+
     - name: Setup Java11
       uses: actions/setup-java@v3
       with:
@@ -107,14 +114,6 @@ jobs:
         sudo apt update
         sudo apt install -y doxygen
 
-        # Install fastffi for Java sdk compilation
-        cd /tmp/
-        git clone https://github.com/alibaba/fastFFI.git
-        cd fastFFI
-        git checkout a166c6287f2efb938c27fb01b3d499932d484f9c
-        export PATH=${PATH}:${LLVM11_HOME}/bin
-        mvn clean install -DskipTests -Dmaven.antrun.skip=true --quiet
-
         # generate a taged version
         cd ${GITHUB_WORKSPACE}
         make graphscope-docs
@@ -126,6 +125,20 @@ jobs:
           export TAG_VER=stable
           make graphscope-docs
         fi
+
+    - name: preview
+      if: steps.changes.outputs.src == 'true'
+      uses: afc163/surge-preview@v1
+      id: preview_step
+      with:
+        surge_token: ${{ secrets.SURGE_TOKEN }}
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        dist: docs/_build/latest/html
+        build: echo "done"
+
+    - name: Get the preview_url
+      if: steps.changes.outputs.src == 'true'
+      run: echo "url => ${{ steps.preview_step.outputs.preview_url }}"
 
     - name: Upload Docs
       if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') }}
@@ -169,4 +182,3 @@ jobs:
         git add -A
         git commit --amend --no-edit -m "Generate latest docs on CI, from commit ${{ github.sha }}." --author "github-actions <github-actions@github.com>" -s --date="$(date -R)"
         git push -f origin gh-pages
-

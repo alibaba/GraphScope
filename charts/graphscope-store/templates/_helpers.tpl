@@ -70,12 +70,12 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 Return the proper graphscope-store image name
 */}}
 {{- define "graphscope-store.image" -}}
-{{ include "graphscope-store.images.image" (dict "imageRoot" .Values.image "global" .Values.global) }}
+{{ include "graphscope-store.images.image" (dict "imageRoot" .Values.image "global" .Values.global "DefaultTag" .Chart.AppVersion ) }}
 {{- end -}}
 
 {{/*
 Return the proper image name
-{{ include "graphscope-store.images.image" ( dict "imageRoot" .Values.path.to.the.image "global" $) }}
+{{ include "graphscope-store.images.image" ( dict "imageRoot" .Values.path.to.the.image "global" $ "DefaultTag" .DefaultTag ) }}
 */}}
 {{- define "graphscope-store.images.image" -}}
 {{- $registryName := .imageRoot.registry -}}
@@ -85,6 +85,13 @@ Return the proper image name
     {{- if .global.imageRegistry }}
      {{- $registryName = .global.imageRegistry -}}
     {{- end -}}
+{{- end -}}
+{{- if not $tag }}
+{{- if .DefaultTag }}
+{{- $tag = .DefaultTag -}}
+{{- else -}}
+{{- $tag = "latest" -}}
+{{- end -}}
 {{- end -}}
 {{- if $registryName }}
 {{- printf "%s/%s:%s" $registryName $repositoryName $tag -}}

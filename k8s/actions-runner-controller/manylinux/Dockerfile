@@ -1,4 +1,6 @@
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.9.0
+ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
+ARG BASE_VERSION=latest
+FROM $REGISTRY/graphscope/graphscope-dev:$BASE_VERSION
 
 ARG TARGETPLATFORM
 ARG RUNNER_VERSION=2.287.1

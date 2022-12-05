@@ -42,7 +42,7 @@ public class DoubleArrayWrapper {
     }
 
     public double get(Vertex<Long> vertex) {
-        return data[vertex.GetValue().intValue()];
+        return data[vertex.getValue().intValue()];
     }
 
     public void set(int ind, double newValue) {
@@ -54,11 +54,11 @@ public class DoubleArrayWrapper {
     }
 
     public void set(Vertex<Long> vertex, AtomicDouble adouble) {
-        data[vertex.GetValue().intValue()] = adouble.get();
+        data[vertex.getValue().intValue()] = adouble.get();
     }
 
     public void set(Vertex<Long> vertex, double newValue) {
-        data[vertex.GetValue().intValue()] = newValue;
+        data[vertex.getValue().intValue()] = newValue;
     }
 
     public void set(double newValue) {

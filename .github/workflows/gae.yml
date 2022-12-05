@@ -29,26 +29,17 @@ jobs:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.9.0
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.11.0
       options:
         --shm-size 4096m
     steps:
     - uses: actions/checkout@v3
 
-    - name: Install latest libgrape-lite and vineyard
+    - name: Install latest vineyard
       if: false
       run: |
-        git clone --single-branch --depth=1 https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
-        pushd /tmp/libgrape-lite
-        mkdir -p build && cd build
-        cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard
-        make -j$(nproc)
-        sudo make install
-        popd
-        rm -fr /tmp/libgrape-lite
-
         git clone --single-branch --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
-        pushd /tmp/v6d
+        cd /tmp/v6d
         git submodule update --init
         mkdir -p build && cd build
         cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard \
@@ -57,9 +48,6 @@ jobs:
                  -DBUILD_VINEYARD_TESTS=OFF
         make -j$(nproc)
         sudo make install
-        popd
-
-        rm -fr /tmp/v6d
 
         # copy to /usr/local, keep the same logic as gsvineyard.Dockerfile
         sudo cp -r /opt/vineyard/* /usr/local/
@@ -69,8 +57,8 @@ jobs:
         RUN_JAVA_TESTS: ON
       run: |
         # default install to "/opt/graphscope"
-        make gae ENABLE_JAVA_SDK=ON BUILD_TEST=ON NUMPROC=1
-        sudo make gae-install
+        make analytical-java BUILD_TEST=ON NUMPROC=1
+        sudo make analytical-java-install
         # also make coordinator and client for python test
         make client
         make coordinator

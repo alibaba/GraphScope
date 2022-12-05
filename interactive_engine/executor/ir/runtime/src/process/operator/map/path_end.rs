@@ -30,14 +30,14 @@ struct PathEndOperator {
 
 impl MapFunction<Record, Record> for PathEndOperator {
     fn exec(&self, mut input: Record) -> FnResult<Record> {
-        let entry = input
-            .get(None)
-            .ok_or(FnExecError::get_tag_error(&format!(
-                "get None tag from the current record in `PathEnd` operator, the record is {:?}",
-                input
-            )))?
-            .clone();
         if self.alias.is_some() {
+            let entry = input
+                .get(None)
+                .ok_or(FnExecError::get_tag_error(&format!(
+                    "get None tag from the current record in `PathEnd` operator, the record is {:?}",
+                    input
+                )))?
+                .clone();
             input.append_arc_entry(entry.clone(), self.alias.clone());
         }
         Ok(input)
@@ -51,7 +51,9 @@ impl MapFuncGen for algebra_pb::PathEnd {
             .map(|alias| alias.try_into())
             .transpose()?;
         let path_end = PathEndOperator { alias };
-        debug!("Runtime path end operator: {:?}", path_end);
+        if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
+            debug!("Runtime path end operator: {:?}", path_end);
+        }
         Ok(Box::new(path_end))
     }
 }

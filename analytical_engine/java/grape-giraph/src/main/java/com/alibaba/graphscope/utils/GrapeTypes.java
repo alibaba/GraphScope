@@ -16,15 +16,9 @@
 package com.alibaba.graphscope.utils;
 
 import com.alibaba.graphscope.fragment.ArrowProjectedFragment;
-import com.alibaba.graphscope.fragment.ArrowProjectedStringEDFragment;
-import com.alibaba.graphscope.fragment.ArrowProjectedStringVDFragment;
-import com.alibaba.graphscope.fragment.ArrowProjectedStringVEDFragment;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
 import com.alibaba.graphscope.fragment.adaptor.ArrowProjectedAdaptor;
-import com.alibaba.graphscope.fragment.adaptor.ArrowProjectedStringEDAdaptor;
-import com.alibaba.graphscope.fragment.adaptor.ArrowProjectedStringVDAdaptor;
-import com.alibaba.graphscope.fragment.adaptor.ArrowProjectedStringVEDAdaptor;
 import com.alibaba.graphscope.fragment.adaptor.ImmutableEdgecutFragmentAdaptor;
 
 import org.slf4j.Logger;
@@ -106,24 +100,6 @@ public class GrapeTypes {
                     GrapeReflectionUtils.getTypeArgumentFromInterface(
                             ArrowProjectedFragment.class,
                             adaptor.getArrowProjectedFragment().getClass());
-        } else if (ArrowProjectedStringVDAdaptor.class.isAssignableFrom(fragmentClass)) {
-            ArrowProjectedStringVDAdaptor adaptor = (ArrowProjectedStringVDAdaptor) fragment;
-            classes =
-                    GrapeReflectionUtils.getTypeArgumentFromInterface(
-                            ArrowProjectedStringVDFragment.class,
-                            adaptor.getArrowProjectedStrVDFragment().getClass());
-        } else if (ArrowProjectedStringEDAdaptor.class.isAssignableFrom(fragmentClass)) {
-            ArrowProjectedStringEDAdaptor adaptor = (ArrowProjectedStringEDAdaptor) fragment;
-            classes =
-                    GrapeReflectionUtils.getTypeArgumentFromInterface(
-                            ArrowProjectedStringEDFragment.class,
-                            adaptor.getArrowProjectedStrEDFragment().getClass());
-        } else if (ArrowProjectedStringVEDAdaptor.class.isAssignableFrom(fragmentClass)) {
-            ArrowProjectedStringVEDAdaptor adaptor = (ArrowProjectedStringVEDAdaptor) fragment;
-            classes =
-                    GrapeReflectionUtils.getTypeArgumentFromInterface(
-                            ArrowProjectedStringVEDFragment.class,
-                            adaptor.getArrowProjectedStrVEDFragment().getClass());
         } else {
             return false;
         }

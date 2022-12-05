@@ -5,7 +5,7 @@
     <parent>
         <artifactId>maxgraph-parent</artifactId>
         <groupId>com.alibaba.maxgraph</groupId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>${revision}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -15,12 +15,12 @@
         <dependency>
             <artifactId>compiler</artifactId>
             <groupId>com.alibaba.graphscope</groupId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.alibaba.maxgraph</groupId>
             <artifactId>maxgraph-common</artifactId>
-            <version>${project.parent.version}</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 </project>

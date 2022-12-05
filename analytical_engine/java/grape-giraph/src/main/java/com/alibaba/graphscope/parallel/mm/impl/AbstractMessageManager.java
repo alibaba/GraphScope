@@ -153,7 +153,7 @@ public abstract class AbstractMessageManager<
 
     @Override
     public void forceContinue() {
-        grapeMessager.ForceContinue();
+        grapeMessager.forceContinue();
     }
 
     protected void checkLid(long lid) {

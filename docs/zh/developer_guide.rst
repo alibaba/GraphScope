@@ -13,7 +13,7 @@ GraphScope 遵循 Apache License 2.0 的开源协议。
 
 .. code:: bash
 
-    sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:latest
+    sudo docker pull registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:latest
 
 开发者需要通过 ``git clone`` 的命令从我们的开源代码库 `repo <https://github.com/alibaba/GraphScope>`_ 中获得最新版的代码,
 在此基础上做开发或代码的更改，然后在代码的根目录执行：
@@ -21,7 +21,7 @@ GraphScope 遵循 Apache License 2.0 的开源协议。
 .. code:: bash
 
     # set docker container shared memory: 10G
-    sudo docker run --shm-size 10240m -it registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:latest /bin/bash
+    sudo docker run --shm-size 10240m -it registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:latest /bin/bash
 
     git clone https://github.com/alibaba/GraphScope.git
 
@@ -51,10 +51,10 @@ GraphScope 遵循 Apache License 2.0 的开源协议。
 
 .. code:: bash
 
-    cd GraphScope
-    make graphscope-dev-image
+    cd GraphScope/k8s
+    make graphscope-dev
 
-该命令会开始 GraphScope 的构建过程，该过程将在 `graphscope-vineyard` 的容器中构建当前源代码， 并将生成的可执行文件复制到
+该命令会开始 GraphScope 的构建过程，该过程将在 `graphscope-dev` 的容器中构建当前源代码， 并将生成的可执行文件复制到
 运行时基础镜像 `graphscope-runtime` 中， 生成的镜像将被标记(tag)为 ``graphscope/graphscope:SHORTSHA``。
 
 GraphScope 的 Python 客户端不包含在该镜像中，构建也与引擎有所不同，如果开发者正在开发 Python 客户端并且未修改引擎相关的文件，
@@ -88,14 +88,14 @@ Linux 下的 `Wheel <https://pypi.org/project/graphscope>`_ 分发包是基于 m
 
 .. code:: bash
 
-    cd GraphScope
+    cd GraphScope/k8s/internal
     make graphscope-py3-package
 
 - 在 Python{36,37,38,39} 下分别构建 GraphScope client wheels
 
 .. code:: bash
 
-    cd GraphScope
+    cd GraphScope/k8s/internal
     make graphscope-client-py3-package
 
 macOS
@@ -105,7 +105,7 @@ macOS
 
 .. code:: bash
 
-    cd GraphScope
+    cd GraphScope/k8s/internal
     ./scripts/install_deps.sh --dev --vineyard_prefix /opt/vineyard
     source ~/.graphscope_env
 
@@ -113,14 +113,14 @@ macOS
 
 .. code:: bash
 
-    cd GraphScope
+    cd GraphScope/k8s/internal
     make graphscope-py3-package
 
 - 基于当前 Mac 环境下的 Python 版本构建 GraphScope client wheels
 
 .. code:: bash
 
-    cd GraphScope
+    cd GraphScope/k8s/internal
     make graphscope-client-py3-package
 
 

@@ -57,7 +57,9 @@ impl CompareFunction<Record> for RecordCompare {
 impl CompareFunctionGen for algebra_pb::OrderBy {
     fn gen_cmp(self) -> FnGenResult<Box<dyn CompareFunction<Record>>> {
         let record_compare = RecordCompare::try_from(self)?;
-        debug!("Runtime order operator cmp: {:?}", record_compare);
+        if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
+            debug!("Runtime order operator cmp: {:?}", record_compare);
+        }
         Ok(Box::new(record_compare))
     }
 }

@@ -154,7 +154,7 @@ object GrapeVertexRDD extends Logging {
         val vertex =
           FFITypeFactoryhelper.newVertexLong().asInstanceOf[Vertex[Long]]
         for (i <- 0 until ePart.graphStructure.getInnerVertexSize.toInt) {
-          vertex.SetValue(i)
+          vertex.setValue(i)
           vertexDataStore.set(i, frag.getData(vertex))
         }
         //only set inner vertices

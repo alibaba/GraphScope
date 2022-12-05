@@ -17,10 +17,42 @@ public abstract class AbstractArrowProjectedAdaptor<OID_T, VID_T, VDATA_T, EDATA
             LoggerFactory.getLogger(AbstractArrowProjectedAdaptor.class.getName());
 
     private BaseArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T> baseFragment;
+    private Class<? extends OID_T> oidClass;
+    private Class<? extends VID_T> vidClass;
+    private Class<? extends VDATA_T> vdataClass;
+    private Class<? extends EDATA_T> edataClass;
+
+    @Override
+    public Class<? extends OID_T> getOidClass() {
+        return oidClass;
+    }
+
+    @Override
+    public Class<? extends VID_T> getVidClass() {
+        return vidClass;
+    }
+
+    @Override
+    public Class<? extends VDATA_T> getVdataClass() {
+        return vdataClass;
+    }
+
+    @Override
+    public Class<? extends EDATA_T> getEdataClass() {
+        return edataClass;
+    }
 
     public AbstractArrowProjectedAdaptor(
-            BaseArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T> frag) {
+            BaseArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T> frag,
+            Class<? extends OID_T> oidClass,
+            Class<? extends VID_T> vidClass,
+            Class<? extends VDATA_T> vdataClass,
+            Class<? extends EDATA_T> edataClass) {
         baseFragment = frag;
+        this.oidClass = oidClass;
+        this.vidClass = vidClass;
+        this.vdataClass = vdataClass;
+        this.edataClass = edataClass;
     }
 
     public BaseArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>

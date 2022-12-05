@@ -112,10 +112,10 @@ public class PageRankContext extends VertexDataContext<IFragment<Long, Long, Lon
 
             Vertex<Long> cur = FFITypeFactoryhelper.newVertexLong();
             for (long index = 0; index < frag.getInnerVerticesNum(); ++index) {
-                cur.SetValue(index);
+                cur.setValue(index);
                 Long oid = frag.getId(cur);
                 bufferedWriter.write(
-                        cur.GetValue() + "\t" + oid + "\t" + pagerank.get(index) + "\n");
+                        cur.getValue() + "\t" + oid + "\t" + pagerank.get(index) + "\n");
             }
             bufferedWriter.close();
         } catch (IOException e) {

@@ -19,13 +19,13 @@ package com.alibaba.graphscope.context;
 import com.alibaba.fastffi.FFIByteString;
 import com.alibaba.fastffi.FFITypeFactory;
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.graphscope.arrow.array.ArrowArrayBuilder;
-import com.alibaba.graphscope.arrow.array.ArrowStringArrayBuilder;
+import com.alibaba.graphscope.arrow.array.BaseArrowArrayBuilder;
+import com.alibaba.graphscope.arrow.array.PrimitiveArrowArrayBuilder;
+import com.alibaba.graphscope.arrow.array.StringArrowArrayBuilder;
+import com.alibaba.graphscope.ds.StringView;
 import com.alibaba.graphscope.fragment.BaseArrowProjectedFragment;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.fragment.mapper.ArrowProjectedFragmentMapper;
-import com.alibaba.graphscope.fragment.mapper.ArrowProjectedStringVDFragmentMapper;
-import com.alibaba.graphscope.fragment.mapper.ArrowProjectedStringVEDFragmentMapper;
 import com.alibaba.graphscope.graphx.GraphXConf;
 import com.alibaba.graphscope.graphx.GraphXParallelPIE;
 import com.alibaba.graphscope.graphx.VineyardClient;
@@ -206,13 +206,14 @@ public class GraphXParallelAdaptorContext<VDATA_T, EDATA_T, MSG>
         long new_id = 0;
         // copy vdata to arrow
         if (GrapeUtils.isPrimitive(conf.getVdClass())) {
-            ArrowArrayBuilder.Factory<VDATA_T> vertexDataBuilderFactory =
+            PrimitiveArrowArrayBuilder.Factory<VDATA_T> vertexDataBuilderFactory =
                     FFITypeFactory.getFactory(
-                            ArrowArrayBuilder.class,
+                            PrimitiveArrowArrayBuilder.class,
                             "gs::ArrowArrayBuilder<"
                                     + GrapeUtils.classToStr(conf.getVdClass(), true)
                                     + ">");
-            ArrowArrayBuilder<VDATA_T> vertexDataBuilder = vertexDataBuilderFactory.create();
+            PrimitiveArrowArrayBuilder<VDATA_T> vertexDataBuilder =
+                    vertexDataBuilderFactory.create();
             vertexDataBuilder.reserve(vdArray.size());
             for (int i = 0; i < projectedFragment.getInnerVerticesNum(); ++i) {
                 vertexDataBuilder.unsafeAppend(vdArray.get(i));
@@ -237,41 +238,48 @@ public class GraphXParallelAdaptorContext<VDATA_T, EDATA_T, MSG>
                             .get()
                             .id();
         } else {
-            ArrowStringArrayBuilder vdBuilder =
+            StringArrowArrayBuilder vdBuilder =
                     GrapeUtils.fillComplexArrowArrayBuilder(
                             vdArray, ClassTag.apply(conf.getVdClass()));
+            BaseArrowArrayBuilder.Factory<StringView> vertexDataBuilderFactory =
+                    FFITypeFactory.getFactory(
+                            BaseArrowArrayBuilder.class, "gs::ArrowArrayBuilder<std::string>");
+            BaseArrowArrayBuilder<StringView> vertexDataBuilder = vertexDataBuilderFactory.create();
+            vertexDataBuilder.setAddress(vdBuilder.getAddress());
 
             if (conf.isEDPrimitive()) {
-                ArrowProjectedStringVDFragmentMapper.Factory<Long, Long, EDATA_T> factory =
+                ArrowProjectedFragmentMapper.Factory<Long, Long, StringView, EDATA_T> factory =
                         FFITypeFactory.getFactory(
-                                ArrowProjectedStringVDFragmentMapper.class,
-                                CppClassName.CPP_ARROW_PROJECTED_STRING_VD_FRAGMENT_MAPPER
-                                        + "<int64_t,uint64_t,"
+                                ArrowProjectedFragmentMapper.class,
+                                CppClassName.CPP_ARROW_PROJECTED_FRAGMENT_MAPPER
+                                        + "<int64_t,uint64_t,std::string,"
                                         + GrapeUtils.classToStr(conf.getEdClass(), true)
                                         + ">");
-                ArrowProjectedStringVDFragmentMapper<Long, Long, EDATA_T> mapper = factory.create();
+                ArrowProjectedFragmentMapper<Long, Long, StringView, EDATA_T> mapper =
+                        factory.create();
                 new_id =
                         mapper.map(
                                         projectedFragment.getArrowFragment(),
                                         projectedFragment.vertexLabel(),
                                         projectedFragment.edgePropId(),
-                                        vdBuilder,
+                                        vertexDataBuilder,
                                         client)
                                 .get()
                                 .id();
             } else {
-                ArrowProjectedStringVEDFragmentMapper.Factory<Long, Long> factory =
+                ArrowProjectedFragmentMapper.Factory<Long, Long, StringView, StringView> factory =
                         FFITypeFactory.getFactory(
-                                ArrowProjectedStringVEDFragmentMapper.class,
-                                CppClassName.CPP_ARROW_PROJECTED_STRING_ED_FRAGMENT_MAPPER
-                                        + "<int64_t,uint64_t>");
-                ArrowProjectedStringVEDFragmentMapper<Long, Long> mapper = factory.create();
+                                ArrowProjectedFragmentMapper.class,
+                                CppClassName.CPP_ARROW_PROJECTED_FRAGMENT_MAPPER
+                                        + "<int64_t,uint64_t,std::string,std::string>");
+                ArrowProjectedFragmentMapper<Long, Long, StringView, StringView> mapper =
+                        factory.create();
                 new_id =
                         mapper.map(
                                         projectedFragment.getArrowFragment(),
                                         projectedFragment.vertexLabel(),
                                         projectedFragment.edgePropId(),
-                                        vdBuilder,
+                                        vertexDataBuilder,
                                         client)
                                 .get()
                                 .id();

@@ -248,10 +248,10 @@ class FragmentWrapper {};
  * @tparam OID_T OID type
  * @tparam VID_T VID type
  */
-template <typename OID_T, typename VID_T>
-class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
+template <typename OID_T, typename VID_T, typename VERTEX_MAP_T>
+class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T, VERTEX_MAP_T>>
     : public ILabeledFragmentWrapper {
-  using fragment_t = vineyard::ArrowFragment<OID_T, VID_T>;
+  using fragment_t = vineyard::ArrowFragment<OID_T, VID_T, VERTEX_MAP_T>;
   using label_id_t = typename fragment_t::label_id_t;
 
  public:
@@ -280,6 +280,8 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
     auto* client = dynamic_cast<vineyard::Client*>(meta.GetClient());
     BOOST_LEAF_AUTO(frag_group_id, vineyard::ConstructFragmentGroup(
                                        *client, fragment_->id(), comm_spec));
+    auto fg = std::dynamic_pointer_cast<vineyard::ArrowFragmentGroup>(
+        client->GetObject(frag_group_id));
     auto dst_graph_def = graph_def_;
 
     dst_graph_def.set_key(dst_graph_name);
@@ -288,6 +290,10 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
       dst_graph_def.extension().UnpackTo(&vy_info);
     }
     vy_info.set_vineyard_id(frag_group_id);
+    vy_info.clear_fragments();
+    for (auto const& item : fg->Fragments()) {
+      vy_info.add_fragments(item.second);
+    }
     dst_graph_def.mutable_extension()->PackFrom(vy_info);
 
     auto wrapper = std::make_shared<FragmentWrapper<fragment_t>>(
@@ -319,6 +325,8 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
     VINEYARD_CHECK_OK(client->Persist(new_frag_id));
     BOOST_LEAF_AUTO(frag_group_id, vineyard::ConstructFragmentGroup(
                                        *client, new_frag_id, comm_spec));
+    auto fg = std::dynamic_pointer_cast<vineyard::ArrowFragmentGroup>(
+        client->GetObject(frag_group_id));
     auto new_frag = client->GetObject<fragment_t>(new_frag_id);
 
     rpc::graph::GraphDefPb new_graph_def;
@@ -330,6 +338,10 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
       graph_def_.extension().UnpackTo(&vy_info);
     }
     vy_info.set_vineyard_id(frag_group_id);
+    vy_info.clear_fragments();
+    for (auto const& item : fg->Fragments()) {
+      vy_info.add_fragments(item.second);
+    }
     new_graph_def.mutable_extension()->PackFrom(vy_info);
 
     set_graph_def(new_frag, new_graph_def);
@@ -518,6 +530,8 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
     VINEYARD_CHECK_OK(client->Persist(new_frag_id));
     BOOST_LEAF_AUTO(frag_group_id, vineyard::ConstructFragmentGroup(
                                        *client, new_frag_id, comm_spec));
+    auto fg = std::dynamic_pointer_cast<vineyard::ArrowFragmentGroup>(
+        client->GetObject(frag_group_id));
     auto new_frag = client->GetObject<fragment_t>(new_frag_id);
 
     rpc::graph::GraphDefPb new_graph_def;
@@ -527,6 +541,10 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
       graph_def_.extension().UnpackTo(&vy_info);
     }
     vy_info.set_vineyard_id(frag_group_id);
+    vy_info.clear_fragments();
+    for (auto const& item : fg->Fragments()) {
+      vy_info.add_fragments(item.second);
+    }
     new_graph_def.mutable_extension()->PackFrom(vy_info);
 
     set_graph_def(new_frag, new_graph_def);
@@ -675,6 +693,8 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
     VINEYARD_CHECK_OK(client->Persist(new_frag_id));
     BOOST_LEAF_AUTO(frag_group_id, vineyard::ConstructFragmentGroup(
                                        *client, new_frag_id, comm_spec));
+    auto fg = std::dynamic_pointer_cast<vineyard::ArrowFragmentGroup>(
+        client->GetObject(frag_group_id));
     auto new_frag = client->GetObject<fragment_t>(new_frag_id);
 
     rpc::graph::GraphDefPb new_graph_def;
@@ -686,6 +706,10 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
       graph_def_.extension().UnpackTo(&vy_info);
     }
     vy_info.set_vineyard_id(frag_group_id);
+    vy_info.clear_fragments();
+    for (auto const& item : fg->Fragments()) {
+      vy_info.add_fragments(item.second);
+    }
     new_graph_def.mutable_extension()->PackFrom(vy_info);
 
     set_graph_def(new_frag, new_graph_def);
@@ -718,10 +742,13 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T>>
  * @tparam OID_T OID type
  * @tparam VID_T VID type
  */
-template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T>
-class FragmentWrapper<ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
+template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T,
+          typename VERTEX_MAP_T>
+class FragmentWrapper<
+    ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T, VERTEX_MAP_T>>
     : public IFragmentWrapper {
-  using fragment_t = ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>;
+  using fragment_t =
+      ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T, VERTEX_MAP_T>;
 
  public:
   FragmentWrapper(const std::string& id, rpc::graph::GraphDefPb graph_def,
@@ -785,10 +812,13 @@ class FragmentWrapper<ArrowProjectedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
 /**
  * @brief A specialized FragmentWrapper for ArrowFlattenedFragment.
  */
-template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T>
-class FragmentWrapper<ArrowFlattenedFragment<OID_T, VID_T, VDATA_T, EDATA_T>>
+template <typename OID_T, typename VID_T, typename VDATA_T, typename EDATA_T,
+          typename VERTEX_MAP_T>
+class FragmentWrapper<
+    ArrowFlattenedFragment<OID_T, VID_T, VDATA_T, EDATA_T, VERTEX_MAP_T>>
     : public IFragmentWrapper {
-  using fragment_t = ArrowFlattenedFragment<OID_T, VID_T, VDATA_T, EDATA_T>;
+  using fragment_t =
+      ArrowFlattenedFragment<OID_T, VID_T, VDATA_T, EDATA_T, VERTEX_MAP_T>;
 
  public:
   FragmentWrapper(const std::string& id, rpc::graph::GraphDefPb graph_def,

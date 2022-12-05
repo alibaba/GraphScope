@@ -28,6 +28,7 @@ import com.alibaba.fastffi.CXXValue;
 import com.alibaba.fastffi.CXXValueRangeElement;
 import com.alibaba.fastffi.FFIFactory;
 import com.alibaba.fastffi.FFIGen;
+import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.graphscope.utils.JNILibraryName;
@@ -78,14 +79,16 @@ public interface Vertex<VID_T> extends FFIPointer, CXXPointer, CXXValueRangeElem
      *
      * @return vertex id.
      */
-    VID_T GetValue();
+    @FFINameAlias("GetValue")
+    VID_T getValue();
 
     /**
      * Set vertex id.
      *
      * @param id id to be set.
      */
-    void SetValue(VID_T id);
+    @FFINameAlias("SetValue")
+    void setValue(VID_T id);
 
     /**
      * Factory class to create vertex instance.

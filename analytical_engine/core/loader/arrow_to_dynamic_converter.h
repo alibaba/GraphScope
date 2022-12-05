@@ -62,16 +62,18 @@ struct DynamicWrapper<int64_t> {
 };
 
 /**
- * @brief This is a specialized DynamicWrapper for arrow::util::string_view type
+ * @brief This is a specialized DynamicWrapper for vineyard::arrow_string_view
+ * type
  */
 template <>
 struct DynamicWrapper<std::string> {
-  static void to_dynamic(arrow::util::string_view s, dynamic::Value& t) {
+  static void to_dynamic(vineyard::arrow_string_view s, dynamic::Value& t) {
     t.SetString(std::string(s));
   }
 
   static void to_dynamic_array(const std::string& label,
-                               arrow::util::string_view s, dynamic::Value& t) {
+                               vineyard::arrow_string_view s,
+                               dynamic::Value& t) {
     t.SetArray();
     t.PushBack(label).PushBack(std::string(s));
   }
@@ -302,7 +304,7 @@ class ArrowToDynamicConverter {
   void initFragmentSchema(std::shared_ptr<dst_fragment_t> frag,
                           const vineyard::PropertyGraphSchema& schema) {
     // init vertex properties schema
-    for (label_id_t label_id = 0; label_id < schema.all_vertex_label_num();
+    for (size_t label_id = 0; label_id < schema.all_vertex_label_num();
          ++label_id) {
       for (auto& p : schema.GetVertexPropertyListByLabel(label_id)) {
         dynamic::Value key(p.first);
@@ -310,7 +312,7 @@ class ArrowToDynamicConverter {
                                           dynamic::Value::allocator_);
       }
     }
-    for (label_id_t label_id = 0; label_id < schema.all_edge_label_num();
+    for (size_t label_id = 0; label_id < schema.all_edge_label_num();
          ++label_id) {
       for (auto& p : schema.GetEdgePropertyListByLabel(label_id)) {
         dynamic::Value key(p.first);

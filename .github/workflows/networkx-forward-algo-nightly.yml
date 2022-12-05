@@ -16,7 +16,7 @@ jobs:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-vineyard:v0.9.0
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.11.0
       options:
         --shm-size 4096m
 
@@ -26,7 +26,9 @@ jobs:
     - name: Build GAE and coordinator
       run: |
         pushd ${GITHUB_WORKSPACE}
-        make gae ENABLE_JAVA_SDK=OFF BUILD_TEST=OFF NUMPROC=1
+        install_prefix=/opt/graphscope
+        mkdir -p ${install_prefix}
+        make analytical-install BUILD_TEST=OFF NUMPROC=1 INSTALL_PREFIX=${install_prefix}
         # also make coordinator and client for python test
         make coordinator && make client
         popd
@@ -36,6 +38,7 @@ jobs:
         DEPLOYMENT: 'standalone'
       run: |
         cd ${GITHUB_WORKSPACE}/python
+        export GRAPHSCOPE_HOME=/opt/graphscope
         python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
           --cov-report=term -s -v -m "not slow" graphscope/nx/algorithms/tests/forward
 

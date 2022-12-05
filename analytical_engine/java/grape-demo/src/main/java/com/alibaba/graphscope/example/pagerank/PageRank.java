@@ -28,7 +28,6 @@ import com.alibaba.graphscope.parallel.ParallelEngine;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
 import com.alibaba.graphscope.parallel.message.DoubleMsg;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
-import com.alibaba.graphscope.utils.Unused;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,11 +63,7 @@ public class PageRank extends Communicator
                         ctx.pagerank.set(vertex, base / edgeNum);
                         DoubleMsg msg = FFITypeFactoryhelper.newDoubleMsg(base / edgeNum);
                         parallelMessageManager.sendMsgThroughOEdges(
-                                fragment,
-                                vertex,
-                                msg,
-                                finalTid,
-                                Unused.getUnused(Long.class, Double.class, Double.class));
+                                fragment, vertex, msg, finalTid);
                     }
                 };
         forEachVertex(innerVertices, ctx.thread_num, ctx.executor, calc);
@@ -82,7 +77,7 @@ public class PageRank extends Communicator
         DoubleMsg localSumMsg = FFITypeFactoryhelper.newDoubleMsg(base * ctx.danglingVNum);
         sum(localSumMsg, msgDanglingSum);
         ctx.danglingSum = msgDanglingSum.getData();
-        parallelMessageManager.ForceContinue();
+        parallelMessageManager.forceContinue();
     }
 
     @Override
@@ -118,12 +113,7 @@ public class PageRank extends Communicator
                     });
             Supplier<DoubleMsg> msgSupplier = () -> DoubleMsg.factory.create();
             parallelMessageManager.parallelProcess(
-                    fragment,
-                    ctx.thread_num,
-                    ctx.executor,
-                    msgSupplier,
-                    consumer,
-                    Unused.getUnused(Long.class, Double.class, Double.class));
+                    fragment, ctx.thread_num, ctx.executor, msgSupplier, consumer);
         } // finish receive data
 
         BiConsumer<Vertex<Long>, Integer> calc =
@@ -141,11 +131,7 @@ public class PageRank extends Communicator
                         DoubleMsg msg =
                                 FFITypeFactoryhelper.newDoubleMsg(ctx.nextResult.get(vertex));
                         parallelMessageManager.sendMsgThroughOEdges(
-                                fragment,
-                                vertex,
-                                msg,
-                                finalTid,
-                                Unused.getUnused(Long.class, Double.class, Double.class));
+                                fragment, vertex, msg, finalTid);
                     }
                 });
         forEachVertex(innerVertices, ctx.thread_num, ctx.executor, calc);
@@ -166,6 +152,6 @@ public class PageRank extends Communicator
         sum(localSumMsg, msgDanglingSum);
         ctx.danglingSum = msgDanglingSum.getData();
         ctx.sumDoubleTime += System.nanoTime() - time0;
-        parallelMessageManager.ForceContinue();
+        parallelMessageManager.forceContinue();
     }
 }

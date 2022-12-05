@@ -42,126 +42,12 @@
 
 namespace bl = boost::leaf;
 
-void output_property(std::ofstream& fout, std::shared_ptr<arrow::Table> table,
-                     int64_t row_id, int col_id) {
-  auto column = table->column(col_id);
-  auto type = column->type();
-  CHECK_LE(column->num_chunks(), 1);
-  if (type == arrow::int64()) {
-    std::shared_ptr<arrow::Int64Array> array =
-        std::dynamic_pointer_cast<arrow::Int64Array>(column->chunk(0));
-    fout << array->Value(row_id);
-  } else if (type == arrow::float64()) {
-    std::shared_ptr<arrow::DoubleArray> array =
-        std::dynamic_pointer_cast<arrow::DoubleArray>(column->chunk(0));
-    fout << array->Value(row_id);
-  } else {
-    LOG(FATAL) << "unexpected type: " << type->ToString();
-  }
-}
-
-void output_properties(std::ofstream& fout, std::shared_ptr<arrow::Table> table,
-                       int row_id) {
-  int col_num = table->num_columns();
-  output_property(fout, table, row_id, 0);
-  for (int col_id = 1; col_id < col_num; ++col_id) {
-    fout << ",";
-    output_property(fout, table, row_id, col_id);
-  }
-}
-
 using FragmentType =
     vineyard::ArrowFragment<vineyard::property_graph_types::OID_TYPE,
                             vineyard::property_graph_types::VID_TYPE>;
 
-void output_vertex_properties(std::shared_ptr<FragmentType> frag,
-                              const std::string& fout_name) {
-  int label_num = frag->vertex_label_num();
-  for (int i = 0; i < label_num; ++i) {
-    FragmentType::vertex_range_t range = frag->InnerVertices(i);
-    std::shared_ptr<arrow::Table> vd_table = frag->vertex_data_table(i);
-    std::ofstream fout(fout_name + "_" + std::to_string(i), std::ios::binary);
-    int64_t offset;
-    for (auto v : range) {
-      fout << frag->GetId(v) << ",";
-      offset = frag->vertex_offset(v);
-      output_properties(fout, vd_table, offset);
-      fout << std::endl;
-    }
-    fout.close();
-  }
-}
-
-void output_in_adj_list_properties(std::shared_ptr<FragmentType> frag,
-                                   const std::string& fout_name) {
-  int vertex_label_num = frag->vertex_label_num();
-  int edge_label_num = frag->edge_label_num();
-  std::vector<std::ofstream> fout_list(edge_label_num);
-  std::vector<std::shared_ptr<arrow::Table>> tables(edge_label_num);
-  for (int i = 0; i < edge_label_num; ++i) {
-    fout_list[i].open(fout_name + "_" + std::to_string(i), std::ios::binary);
-    tables[i] = frag->edge_data_table(i);
-  }
-  for (int i = 0; i < vertex_label_num; ++i) {
-    FragmentType::vertex_range_t range = frag->InnerVertices(i);
-    for (auto v : range) {
-      FragmentType::oid_t dst = frag->GetId(v);
-      for (int j = 0; j < edge_label_num; ++j) {
-        FragmentType::adj_list_t adj_list = frag->GetIncomingAdjList(v, j);
-        for (auto& e : adj_list) {
-          FragmentType::vertex_t src_v = e.neighbor();
-          FragmentType::oid_t src = frag->GetId(src_v);
-
-          int src_label = frag->vertex_label(src_v);
-          int dst_label = frag->vertex_label(v);
-
-          fout_list[j] << src << "," << dst << "," << src_label << ","
-                       << dst_label << ",";
-          output_properties(fout_list[j], tables[j], e.edge_id());
-          fout_list[j] << std::endl;
-        }
-      }
-    }
-  }
-  for (int i = 0; i < edge_label_num; ++i) {
-    fout_list[i].close();
-  }
-}
-
-void output_out_adj_list_properties(std::shared_ptr<FragmentType> frag,
-                                    const std::string& fout_name) {
-  int vertex_label_num = frag->vertex_label_num();
-  int edge_label_num = frag->edge_label_num();
-  std::vector<std::ofstream> fout_list(edge_label_num);
-  std::vector<std::shared_ptr<arrow::Table>> tables(edge_label_num);
-  for (int i = 0; i < edge_label_num; ++i) {
-    fout_list[i].open(fout_name + "_" + std::to_string(i), std::ios::binary);
-    tables[i] = frag->edge_data_table(i);
-  }
-  for (int i = 0; i < vertex_label_num; ++i) {
-    FragmentType::vertex_range_t range = frag->InnerVertices(i);
-    for (auto v : range) {
-      FragmentType::oid_t src = frag->GetId(v);
-      for (int j = 0; j < edge_label_num; ++j) {
-        FragmentType::adj_list_t adj_list = frag->GetOutgoingAdjList(v, j);
-        for (auto& e : adj_list) {
-          FragmentType::vertex_t dst_v = e.neighbor();
-          FragmentType::oid_t dst = frag->GetId(dst_v);
-
-          int src_label = frag->vertex_label(v);
-          int dst_label = frag->vertex_label(dst_v);
-          fout_list[j] << src << "," << dst << "," << src_label << ","
-                       << dst_label << ",";
-          output_properties(fout_list[j], tables[j], e.edge_id());
-          fout_list[j] << std::endl;
-        }
-      }
-    }
-  }
-  for (int i = 0; i < edge_label_num; ++i) {
-    fout_list[i].close();
-  }
-}
+using ProjectedFragmentType =
+    gs::ArrowProjectedFragment<int64_t, uint64_t, double, int64_t>;
 
 void RunWCC(std::shared_ptr<FragmentType> fragment,
             const grape::CommSpec& comm_spec, const std::string& out_prefix) {
@@ -306,9 +192,6 @@ void RunAutoSSSP(std::shared_ptr<FragmentType> fragment,
 
   worker->Finalize();
 }
-
-using ProjectedFragmentType =
-    gs::ArrowProjectedFragment<int64_t, uint64_t, double, int64_t>;
 
 void RunProjectedWCC(std::shared_ptr<ProjectedFragmentType> fragment,
                      const grape::CommSpec& comm_spec,
@@ -540,9 +423,10 @@ int main(int argc, char** argv) {
 
     vineyard::ObjectID fragment_id;
     {
-      auto loader = std::make_unique<
-          gs::ArrowFragmentLoader<vineyard::property_graph_types::OID_TYPE,
-                                  vineyard::property_graph_types::VID_TYPE>>(
+      using oid_t = vineyard::property_graph_types::OID_TYPE;
+      using vid_t = vineyard::property_graph_types::VID_TYPE;
+
+      auto loader = std::make_unique<gs::ArrowFragmentLoader<oid_t, vid_t>>(
           client, comm_spec, efiles, vfiles, directed != 0);
       fragment_id =
           bl::try_handle_all([&loader]() { return loader->LoadFragment(); },
@@ -557,7 +441,7 @@ int main(int argc, char** argv) {
     }
 
     LOG(INFO) << "[worker-" << comm_spec.worker_id()
-              << "] loaded graph to vineyard ...";
+              << "] loaded graph to vineyard ... ";
 
     MPI_Barrier(comm_spec.comm());
 

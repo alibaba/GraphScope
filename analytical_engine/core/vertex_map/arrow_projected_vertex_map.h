@@ -47,11 +47,14 @@ namespace gs {
  * @tparam OID_T OID type
  * @tparam VID_T VID type
  */
-template <typename OID_T, typename VID_T>
+template <typename OID_T, typename VID_T,
+          typename VERTEX_MAP_T = vineyard::ArrowVertexMap<OID_T, VID_T>>
 class ArrowProjectedVertexMap
-    : public vineyard::Registered<ArrowProjectedVertexMap<OID_T, VID_T>> {
+    : public vineyard::Registered<
+          ArrowProjectedVertexMap<OID_T, VID_T, VERTEX_MAP_T>> {
   using oid_t = OID_T;
   using vid_t = VID_T;
+  using property_vertex_map_t = VERTEX_MAP_T;
   using label_id_t = vineyard::property_graph_types::LABEL_ID_TYPE;
   using oid_array_t = typename vineyard::ConvertToArrowType<oid_t>::ArrayType;
 
@@ -60,25 +63,29 @@ class ArrowProjectedVertexMap
 #if VINEYARD_VERSION >= 2007
   static std::unique_ptr<vineyard::Object> Create() __attribute__((used)) {
     return std::static_pointer_cast<vineyard::Object>(
-        std::unique_ptr<ArrowProjectedVertexMap<oid_t, vid_t>>{
-            new ArrowProjectedVertexMap<oid_t, vid_t>()});
+        std::unique_ptr<
+            ArrowProjectedVertexMap<oid_t, vid_t, property_vertex_map_t>>{
+            new ArrowProjectedVertexMap<oid_t, vid_t,
+                                        property_vertex_map_t>()});
   }
 #endif
 #else
   static std::shared_ptr<vineyard::Object> Create() __attribute__((used)) {
     return std::static_pointer_cast<vineyard::Object>(
-        std::make_shared<ArrowProjectedVertexMap<oid_t, vid_t>>());
+        std::make_shared<
+            ArrowProjectedVertexMap<oid_t, vid_t, property_vertex_map_t>>());
   }
 #endif
 
-  static std::shared_ptr<ArrowProjectedVertexMap<OID_T, VID_T>> Project(
-      std::shared_ptr<vineyard::ArrowVertexMap<OID_T, VID_T>> vm,
-      label_id_t v_label) {
+  static std::shared_ptr<ArrowProjectedVertexMap<OID_T, VID_T, VERTEX_MAP_T>>
+  Project(std::shared_ptr<property_vertex_map_t> vm, label_id_t v_label) {
     vineyard::Client& client =
         *dynamic_cast<vineyard::Client*>(vm->meta().GetClient());
 
     vineyard::ObjectMeta meta;
-    meta.SetTypeName(type_name<ArrowProjectedVertexMap<oid_t, vid_t>>());
+    meta.SetTypeName(
+        type_name<
+            ArrowProjectedVertexMap<oid_t, vid_t, property_vertex_map_t>>());
 
     meta.AddKeyValue("projected_label", v_label);
     meta.AddMember("arrow_vertex_map", vm->meta());
@@ -88,7 +95,8 @@ class ArrowProjectedVertexMap
     vineyard::ObjectID id;
     VINEYARD_CHECK_OK(client.CreateMetaData(meta, id));
 
-    return std::dynamic_pointer_cast<ArrowProjectedVertexMap<OID_T, VID_T>>(
+    return std::dynamic_pointer_cast<
+        ArrowProjectedVertexMap<OID_T, VID_T, VERTEX_MAP_T>>(
         client.GetObject(id));
   }
 
@@ -96,50 +104,32 @@ class ArrowProjectedVertexMap
     this->meta_ = meta;
     this->id_ = meta.GetId();
 
-    vertex_map_ = std::make_shared<vineyard::ArrowVertexMap<oid_t, vid_t>>();
+    vertex_map_ = std::make_shared<property_vertex_map_t>();
     vertex_map_->Construct(meta.GetMemberMeta("arrow_vertex_map"));
 
-    fnum_ = vertex_map_->fnum_;
-    label_num_ = vertex_map_->label_num_;
+    fnum_ = vertex_map_->fnum();
+    label_num_ = vertex_map_->label_num();
     label_id_ = meta.GetKeyValue<label_id_t>("projected_label");
     id_parser_.Init(fnum_, label_num_);
-    oid_arrays_.resize(fnum_);
-    o2g_.resize(fnum_);
-    for (fid_t i = 0; i < fnum_; ++i) {
-      oid_arrays_[i] = vertex_map_->oid_arrays_[i][label_id_];
-      o2g_[i] = vertex_map_->o2g_[i][label_id_];
-    }
   }
 
   bool GetOid(vid_t gid, oid_t& oid) const {
     if (id_parser_.GetLabelId(gid) == label_id_) {
-      int64_t offset = id_parser_.GetOffset(gid);
-      fid_t fid = id_parser_.GetFid(gid);
-      if (offset < oid_arrays_[fid]->length()) {
-        oid = oid_arrays_[fid]->GetView(offset);
-        return true;
-      }
+      return vertex_map_->GetOid(gid, oid);
     }
     return false;
   }
 
   bool GetGid(fid_t fid, oid_t oid, vid_t& gid) const {
     if (fid < fnum_) {
-      auto& hm = o2g_[fid];
-      auto iter = hm.find(oid);
-      if (iter != hm.end()) {
-        gid = iter->second;
-        if (id_parser_.GetLabelId(gid) == label_id_) {
-          return true;
-        }
-      }
+      return vertex_map_->GetGid(fid, label_id_, oid, gid);
     }
     return false;
   }
 
   bool GetGid(oid_t oid, vid_t& gid) const {
     for (fid_t i = 0; i < fnum_; ++i) {
-      if (GetGid(i, oid, gid)) {
+      if (vertex_map_->GetGid(i, label_id_, oid, gid)) {
         return true;
       }
     }
@@ -147,11 +137,7 @@ class ArrowProjectedVertexMap
   }
 
   size_t GetTotalVerticesNum() const {
-    int64_t ret = 0;
-    for (auto oid_array : oid_arrays_) {
-      ret += oid_array->length();
-    }
-    return static_cast<size_t>(ret);
+    return vertex_map_->GetTotalNodesNum(label_id_);
   }
 
  private:
@@ -160,132 +146,8 @@ class ArrowProjectedVertexMap
   label_id_t label_id_;
 
   vineyard::IdParser<vid_t> id_parser_;
-  std::vector<std::shared_ptr<oid_array_t>> oid_arrays_;
-  std::vector<vineyard::Hashmap<oid_t, vid_t>> o2g_;
-
-  std::shared_ptr<vineyard::ArrowVertexMap<oid_t, vid_t>> vertex_map_;
+  std::shared_ptr<property_vertex_map_t> vertex_map_;
 };
-
-template <typename VID_T>
-class ArrowProjectedVertexMap<arrow::util::string_view, VID_T>
-    : public vineyard::Registered<
-          ArrowProjectedVertexMap<arrow::util::string_view, VID_T>> {
-  using oid_t = arrow::util::string_view;
-  using vid_t = VID_T;
-  using label_id_t = vineyard::property_graph_types::LABEL_ID_TYPE;
-  using oid_array_t = arrow::LargeStringArray;
-
- public:
-#if defined(VINEYARD_VERSION) && defined(VINEYARD_VERSION_MAJOR)
-#if VINEYARD_VERSION >= 2007
-  static std::unique_ptr<vineyard::Object> Create() __attribute__((used)) {
-    return std::static_pointer_cast<vineyard::Object>(
-        std::unique_ptr<ArrowProjectedVertexMap<oid_t, vid_t>>{
-            new ArrowProjectedVertexMap<oid_t, vid_t>()});
-  }
-#endif
-#else
-  static std::shared_ptr<vineyard::Object> Create() __attribute__((used)) {
-    return std::static_pointer_cast<vineyard::Object>(
-        std::make_shared<ArrowProjectedVertexMap<oid_t, vid_t>>());
-  }
-#endif
-
-  static std::shared_ptr<ArrowProjectedVertexMap<oid_t, VID_T>> Project(
-      std::shared_ptr<vineyard::ArrowVertexMap<oid_t, VID_T>> vm,
-      label_id_t v_label) {
-    vineyard::Client& client =
-        *dynamic_cast<vineyard::Client*>(vm->meta().GetClient());
-
-    vineyard::ObjectMeta meta;
-    meta.SetTypeName(type_name<ArrowProjectedVertexMap<oid_t, vid_t>>());
-
-    meta.AddKeyValue("projected_label", v_label);
-    meta.AddMember("arrow_vertex_map", vm->meta());
-
-    meta.SetNBytes(0);
-
-    vineyard::ObjectID id;
-    VINEYARD_CHECK_OK(client.CreateMetaData(meta, id));
-
-    return std::dynamic_pointer_cast<ArrowProjectedVertexMap<oid_t, VID_T>>(
-        client.GetObject(id));
-  }
-
-  void Construct(const vineyard::ObjectMeta& meta) {
-    this->meta_ = meta;
-    this->id_ = meta.GetId();
-
-    vertex_map_ = std::make_shared<vineyard::ArrowVertexMap<oid_t, vid_t>>();
-    vertex_map_->Construct(meta.GetMemberMeta("arrow_vertex_map"));
-
-    fnum_ = vertex_map_->fnum_;
-    label_num_ = vertex_map_->label_num_;
-    label_id_ = meta.GetKeyValue<label_id_t>("projected_label");
-    id_parser_.Init(fnum_, label_num_);
-    oid_arrays_.resize(fnum_);
-    o2g_ptrs_.resize(fnum_);
-    for (fid_t i = 0; i < fnum_; ++i) {
-      oid_arrays_[i] = vertex_map_->oid_arrays_[i][label_id_];
-      o2g_ptrs_[i] = &vertex_map_->o2g_[i][label_id_];
-    }
-  }
-
-  bool GetOid(vid_t gid, oid_t& oid) const {
-    if (id_parser_.GetLabelId(gid) == label_id_) {
-      int64_t offset = id_parser_.GetOffset(gid);
-      fid_t fid = id_parser_.GetFid(gid);
-      if (offset < oid_arrays_[fid]->length()) {
-        oid = oid_arrays_[fid]->GetView(offset);
-        return true;
-      }
-    }
-    return false;
-  }
-
-  bool GetGid(fid_t fid, oid_t oid, vid_t& gid) const {
-    if (fid < fnum_) {
-      auto& hm = *o2g_ptrs_[fid];
-      auto iter = hm.find(oid);
-      if (iter != hm.end()) {
-        gid = iter->second;
-        if (id_parser_.GetLabelId(gid) == label_id_) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  bool GetGid(oid_t oid, vid_t& gid) const {
-    for (fid_t i = 0; i < fnum_; ++i) {
-      if (GetGid(i, oid, gid)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  size_t GetTotalVerticesNum() const {
-    int64_t ret = 0;
-    for (auto oid_array : oid_arrays_) {
-      ret += oid_array->length();
-    }
-    return static_cast<size_t>(ret);
-  }
-
- private:
-  fid_t fnum_;
-  label_id_t label_num_;
-  label_id_t label_id_;
-
-  vineyard::IdParser<vid_t> id_parser_;
-  std::vector<std::shared_ptr<oid_array_t>> oid_arrays_;
-  std::vector<ska::flat_hash_map<oid_t, vid_t>*> o2g_ptrs_;
-
-  std::shared_ptr<vineyard::ArrowVertexMap<oid_t, vid_t>> vertex_map_;
-};
-
 }  // namespace gs
 
 #endif  // ANALYTICAL_ENGINE_CORE_VERTEX_MAP_ARROW_PROJECTED_VERTEX_MAP_H_

@@ -16,15 +16,10 @@
 
 package com.alibaba.graphscope.graphx.graph.impl
 
+import com.alibaba.fastffi.FFIByteString
+import com.alibaba.graphscope.arrow.array.BaseArrowArrayBuilder
 import com.alibaba.graphscope.ds.{PropertyNbrUnit, Vertex}
-import com.alibaba.graphscope.fragment.adaptor.{
-  AbstractArrowProjectedAdaptor,
-  ArrowProjectedAdaptor,
-  ArrowProjectedStringEDAdaptor,
-  ArrowProjectedStringVDAdaptor,
-  ArrowProjectedStringVEDAdaptor
-}
-import com.alibaba.graphscope.fragment.mapper.ArrowProjectedFragmentMapper
+import com.alibaba.graphscope.fragment.adaptor.{AbstractArrowProjectedAdaptor, ArrowProjectedAdaptor}
 import com.alibaba.graphscope.fragment.{
   ArrowProjectedFragment,
   BaseArrowProjectedFragment,
@@ -104,7 +99,7 @@ class FragmentStructure(
     var i      = startLid.toInt
     val vertex = FFITypeFactoryhelper.newVertexLong().asInstanceOf[Vertex[Long]]
     while (i < endLid) {
-      vertex.SetValue(i)
+      vertex.setValue(i)
       res(i) = getOutDegree(vertex).toInt
       i += 1
     }
@@ -124,7 +119,7 @@ class FragmentStructure(
     var i      = startLid.toInt
     val vertex = FFITypeFactoryhelper.newVertexLong().asInstanceOf[Vertex[Long]]
     while (i < endLid) {
-      vertex.SetValue(i)
+      vertex.setValue(i)
       res(i) = getInDegree(vertex).toInt
       i += 1
     }
@@ -143,7 +138,7 @@ class FragmentStructure(
     var i      = 0
     val vertex = FFITypeFactoryhelper.newVertexLong().asInstanceOf[Vertex[Long]]
     while (i < endLid) {
-      vertex.SetValue(i)
+      vertex.setValue(i)
       res(i) = getInDegree(vertex).toInt + getOutDegree(vertex).toInt
       i += 1
     }
@@ -332,14 +327,14 @@ class FragmentStructure(
   override def getOutNbrIds(vertex: Vertex[Long]): Array[VertexId] = {
     val size = getOutDegree(vertex)
     val res  = new Array[VertexId](size.toInt)
-    fillOutNbrIdsImpl(vertex.GetValue(), res)
+    fillOutNbrIdsImpl(vertex.getValue(), res)
     res
   }
 
   override def getInNbrIds(vertex: Vertex[Long]): Array[VertexId] = {
     val size = getInDegree(vertex)
     val res  = new Array[VertexId](size.toInt)
-    fillInNbrIdsImpl(vertex.GetValue().toInt, res)
+    fillInNbrIdsImpl(vertex.getValue().toInt, res)
     res
   }
 
@@ -358,7 +353,7 @@ class FragmentStructure(
     var i      = startInd
     val vertex = FFITypeFactoryhelper.newVertexLong().asInstanceOf[Vertex[Long]]
     while (curOff < endOff) {
-      vertex.SetValue(iePtr.vid())
+      vertex.setValue(iePtr.vid())
       val dstOid = getId(vertex)
       array(i) = dstOid
       curOff += 1
@@ -370,7 +365,7 @@ class FragmentStructure(
   override def getInOutNbrIds(vertex: Vertex[Long]): Array[VertexId] = {
     val size = getInDegree(vertex) + getOutDegree(vertex)
     val res  = new Array[VertexId](size.toInt)
-    val vid  = vertex.GetValue()
+    val vid  = vertex.getValue()
     fillOutNbrIdsImpl(vid, res, 0)
     fillInNbrIdsImpl(vid.toInt, res, getOutDegree(vertex).toInt)
     res
@@ -391,7 +386,7 @@ class FragmentStructure(
     var i      = startInd
     val vertex = FFITypeFactoryhelper.newVertexLong().asInstanceOf[Vertex[Long]]
     while (curOff < endOff) {
-      vertex.SetValue(oePtr.vid())
+      vertex.setValue(oePtr.vid())
       val dstOid = getId(vertex)
       array(i) = dstOid
       curOff += 1
@@ -464,7 +459,7 @@ class FragmentStructure(
       val curAddress = getOEBeginOffset(curLid) * 16 + myAddress
       val endAddress = getOEEndOffset(curLid) * 16 + myAddress
       myNbr.setAddress(curAddress)
-      vertex.SetValue(curLid)
+      vertex.setValue(curLid)
       if (edgeReversed) {
         edgeTriplet.dstId = innerVertexLid2Oid(vertex)
         edgeTriplet.dstAttr = vertexDataStore.get(curLid)
@@ -475,7 +470,7 @@ class FragmentStructure(
       while (myNbr.getAddress < endAddress) {
         val dstLid = myNbr.vid().toInt
         val eid    = myNbr.eid().toInt
-        vertex.SetValue(dstLid)
+        vertex.setValue(dstLid)
         if (edgeReversed) {
           edgeTriplet.srcId = getId(vertex)
           edgeTriplet.srcAttr = vertexDataStore.get(dstLid)
@@ -558,7 +553,7 @@ class FragmentStructure(
       val curAddress = getOEBeginOffset(curLid) * 16 + myAddress
       val endAddress = getOEEndOffset(curLid) * 16 + myAddress
       myNbr.setAddress(curAddress)
-      vertex.SetValue(curLid)
+      vertex.setValue(curLid)
       if (edgeReversed) {
         edge.dstId = innerVertexLid2Oid(vertex)
       } else {
@@ -567,7 +562,7 @@ class FragmentStructure(
       while (myNbr.getAddress < endAddress) {
         val dstLid = myNbr.vid().toInt
         val eid    = myNbr.eid().toInt
-        vertex.SetValue(dstLid)
+        vertex.setValue(dstLid)
         if (edgeReversed) {
           edge.srcId = getId(vertex)
         } else {
@@ -594,18 +589,43 @@ class FragmentStructure(
       client: VineyardClient
   ): String = {
 
+    /** when map to the new fragment, the dest vertex data or edge data could be complex type, we should store it
+      * as string. We don't want to create too many mapper classes.
+      */
+    val vertexDataArrayBuilder: BaseArrowArrayBuilder[_] = {
+      val res = ScalaFFIFactory.newBaseArrowArrayBuilder[VD] //create ffiByteString for non-primitive vd
+      if (GrapeUtils.isPrimitive[VD]) {
+        val tmp = GrapeUtils.vertexDataStore2ArrowArrayBuilder(vertexDataStore, ivnum.toInt)
+        res.setAddress(tmp.getAddress)
+      } else {
+        val stringVDArrayBuilder = GrapeUtils.vertexDataStore2ArrowStringArrayBuilder(vertexDataStore, ivnum.toInt)
+        res.setAddress(stringVDArrayBuilder.getAddress)
+      }
+      res
+    }
+
+    val edgeDataArrayBuilder: BaseArrowArrayBuilder[_] = {
+      val res = ScalaFFIFactory.newBaseArrowArrayBuilder[ED] //create ffiByteString for non-primitive ed
+      if (GrapeUtils.isPrimitive[ED]) {
+        val tmp = GrapeUtils.edgeDataStore2ArrowArrayBuilder(edgeDataStore)
+        res.setAddress(tmp.getAddress)
+      } else {
+        val stringEDArrayBuilder = GrapeUtils.edgeDataStore2ArrowStringArrayBuilder(edgeDataStore)
+        res.setAddress(stringEDArrayBuilder.getAddress)
+      }
+      res
+    }
+    val castedFrag = fragment.asInstanceOf[ArrowProjectedAdaptor[Long, Long, _, _]].getArrowProjectedFragment
+
     if (GrapeUtils.isPrimitive[VD] && GrapeUtils.isPrimitive[ED]) {
-      val vertexDataArrayBuilder = GrapeUtils.vertexDataStore2ArrowArrayBuilder(vertexDataStore, ivnum.toInt)
-      val edgeDataArrayBuilder   = GrapeUtils.edgeDataStore2ArrowArrayBuilder(edgeDataStore)
-      val castedFrag = fragment.asInstanceOf[ArrowProjectedAdaptor[Long, Long, _, _]].getArrowProjectedFragment
-      val mapper     = ScalaFFIFactory.newProjectedFragmentMapper[VD, ED]
+      val mapper = ScalaFFIFactory.newProjectedFragmentMapper[VD, ED]
       if (edgeDataArrayBuilder == null) {
         mapper
           .map(
             castedFrag.getArrowFragment,
             castedFrag.vertexLabel(),
             castedFrag.edgePropId(),
-            vertexDataArrayBuilder,
+            vertexDataArrayBuilder.asInstanceOf[BaseArrowArrayBuilder[VD]],
             client
           )
           .get()
@@ -617,8 +637,8 @@ class FragmentStructure(
             castedFrag.getArrowFragment,
             castedFrag.vertexLabel(),
             castedFrag.edgeLabel(),
-            vertexDataArrayBuilder,
-            edgeDataArrayBuilder,
+            vertexDataArrayBuilder.asInstanceOf[BaseArrowArrayBuilder[VD]],
+            edgeDataArrayBuilder.asInstanceOf[BaseArrowArrayBuilder[ED]],
             client
           )
           .get()
@@ -626,18 +646,14 @@ class FragmentStructure(
           .toString()
       }
     } else if (!GrapeUtils.isPrimitive[VD] && GrapeUtils.isPrimitive[ED]) {
-      val vertexDataArrayBuilder = GrapeUtils.vertexDataStore2ArrowStringArrayBuilder(vertexDataStore, ivnum.toInt)
-      val edgeDataArrayBuilder   = GrapeUtils.edgeDataStore2ArrowArrayBuilder(edgeDataStore)
-      val castedFrag =
-        fragment.asInstanceOf[ArrowProjectedStringVDAdaptor[Long, Long, _]].getArrowProjectedStrVDFragment
-      val mapper = ScalaFFIFactory.newProjectedStringVDFragmentMapper[VD, ED]
+      val mapper = ScalaFFIFactory.newProjectedFragmentMapper[FFIByteString, ED]
       if (edgeDataArrayBuilder == null) {
         mapper
           .map(
             castedFrag.getArrowFragment,
             castedFrag.vertexLabel(),
             castedFrag.edgePropId(),
-            vertexDataArrayBuilder,
+            vertexDataArrayBuilder.asInstanceOf[BaseArrowArrayBuilder[FFIByteString]],
             client
           )
           .get()
@@ -649,8 +665,8 @@ class FragmentStructure(
             castedFrag.getArrowFragment,
             castedFrag.vertexLabel(),
             castedFrag.edgeLabel(),
-            vertexDataArrayBuilder,
-            edgeDataArrayBuilder,
+            vertexDataArrayBuilder.asInstanceOf[BaseArrowArrayBuilder[FFIByteString]],
+            edgeDataArrayBuilder.asInstanceOf[BaseArrowArrayBuilder[ED]],
             client
           )
           .get()
@@ -658,18 +674,14 @@ class FragmentStructure(
           .toString()
       }
     } else if (GrapeUtils.isPrimitive[VD] && !GrapeUtils.isPrimitive[ED]) {
-      val vertexDataArrayBuilder = GrapeUtils.vertexDataStore2ArrowArrayBuilder(vertexDataStore, ivnum.toInt)
-      val edgeDataArrayBuilder   = GrapeUtils.edgeDataStore2ArrowStringArrayBuilder(edgeDataStore)
-      val castedFrag =
-        fragment.asInstanceOf[ArrowProjectedStringEDAdaptor[Long, Long, _]].getArrowProjectedStrEDFragment
-      val mapper = ScalaFFIFactory.newProjectedStringEDFragmentMapper[VD, ED]
+      val mapper = ScalaFFIFactory.newProjectedFragmentMapper[VD, FFIByteString]
       if (edgeDataArrayBuilder == null) {
         mapper
           .map(
             castedFrag.getArrowFragment,
             castedFrag.vertexLabel(),
             castedFrag.edgePropId(),
-            vertexDataArrayBuilder,
+            vertexDataArrayBuilder.asInstanceOf[BaseArrowArrayBuilder[VD]],
             client
           )
           .get()
@@ -681,8 +693,8 @@ class FragmentStructure(
             castedFrag.getArrowFragment,
             castedFrag.vertexLabel(),
             castedFrag.edgeLabel(),
-            vertexDataArrayBuilder,
-            edgeDataArrayBuilder,
+            vertexDataArrayBuilder.asInstanceOf[BaseArrowArrayBuilder[VD]],
+            edgeDataArrayBuilder.asInstanceOf[BaseArrowArrayBuilder[FFIByteString]],
             client
           )
           .get()
@@ -690,18 +702,14 @@ class FragmentStructure(
           .toString()
       }
     } else {
-      val vertexDataArrayBuilder = GrapeUtils.vertexDataStore2ArrowStringArrayBuilder(vertexDataStore, ivnum.toInt)
-      val edgeDataArrayBuilder   = GrapeUtils.edgeDataStore2ArrowStringArrayBuilder(edgeDataStore)
-      val castedFrag =
-        fragment.asInstanceOf[ArrowProjectedStringVEDAdaptor[Long, Long]].getArrowProjectedStrVEDFragment
-      val mapper = ScalaFFIFactory.newProjectedStringVEDFragmentMapper[VD, ED]
+      val mapper = ScalaFFIFactory.newProjectedFragmentMapper[FFIByteString, FFIByteString]
       if (edgeDataArrayBuilder == null) {
         mapper
           .map(
             castedFrag.getArrowFragment,
             castedFrag.vertexLabel(),
             castedFrag.edgePropId(),
-            vertexDataArrayBuilder,
+            vertexDataArrayBuilder.asInstanceOf[BaseArrowArrayBuilder[FFIByteString]],
             client
           )
           .get()
@@ -713,8 +721,8 @@ class FragmentStructure(
             castedFrag.getArrowFragment,
             castedFrag.vertexLabel(),
             castedFrag.edgeLabel(),
-            vertexDataArrayBuilder,
-            edgeDataArrayBuilder,
+            vertexDataArrayBuilder.asInstanceOf[BaseArrowArrayBuilder[FFIByteString]],
+            edgeDataArrayBuilder.asInstanceOf[BaseArrowArrayBuilder[FFIByteString]],
             client
           )
           .get()

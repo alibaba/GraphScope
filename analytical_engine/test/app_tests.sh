@@ -313,10 +313,45 @@ function run_lpa() {
   info "Finished running lpa on property graph."
 }
 
+function run_local_vertex_map() {
+  num_procs=$1
+  shift
+  executable=$1
+  shift
+  socket_file=$1
+  shift
+  e_label_num=$1
+  shift
+  e_prefix=$1
+  shift
+  v_label_num=$1
+  shift
+  v_prefix=$1
+  shift
 
-# The results of bfs and sssp_path is are non-determinstic. 
-# The result of bfs is random because diamond-shaped subgraph, 
-# e.g. there are four edges: 1->2, 1->3, 2->4, 3->4. 
+  cmd="${cmd_prefix} -n ${num_procs} --host localhost:${num_procs} ${executable} ${socket_file}"
+
+  cmd="${cmd} ${e_label_num}"
+  for ((i = 0; i < e_label_num; i++)); do
+    cmd="${cmd} '${e_prefix}_${i}#src_label=v0&dst_label=v0&label=e${i}'"
+  done
+
+  cmd="${cmd} ${v_label_num}"
+  for ((i = 0; i < v_label_num; i++)); do
+    cmd="${cmd} '${v_prefix}_${i}#label=v${i}'"
+  done
+
+  cmd="${cmd} $*"
+
+  echo "${cmd}"
+  eval "${cmd}"
+  echo "Finished running lpa on property graph."
+}
+
+
+# The results of bfs and sssp_path is are non-determinstic.
+# The result of bfs is random because diamond-shaped subgraph,
+# e.g. there are four edges: 1->2, 1->3, 2->4, 3->4.
 # For vertex 4, result of bfs may come from vertex 2 or vertex 3.
 #
 # The result of sssp_path is random when there are more than one paths for the
@@ -325,29 +360,29 @@ function run_lpa() {
 # sssp_average_length is a time-consuming app, so we skip it for graph p2p.
 
 declare -a apps=(
-  "sssp" 
-  "sssp_has_path" 
+  "sssp"
+  "sssp_has_path"
   # "sssp_path"
-  "cdlp_auto" 
-  "sssp_auto" 
-  "wcc_auto" 
-  "lcc_auto" 
-  "bfs_auto" 
+  "cdlp_auto"
+  "sssp_auto"
+  "wcc_auto"
+  "lcc_auto"
+  "bfs_auto"
   # "pagerank_auto"
-  "kcore" 
-  "hits" 
-  # "bfs" 
-  "avg_clustering" 
-  "transitivity" 
+  "kcore"
+  "hits"
+  # "bfs"
+  "avg_clustering"
+  "transitivity"
   "triangles"
   # "sssp_average_length"
 )
 
 # these algorithms need to check with directed flag
 declare -a apps_with_directed=(
-  # "katz" 
-  # "eigenvector" 
-  "degree_centrality" 
+  # "katz"
+  # "eigenvector"
+  "degree_centrality"
   "clustering"
 )
 
@@ -373,17 +408,20 @@ done
 
 start_vineyard
 
-run_vy ${np} ./run_vy_app "${socket_file}" 2 "${test_dir}"/new_property/v2_e2/twitter_e 2 "${test_dir}"/new_property/v2_e2/twitter_v 0 
+run_vy ${np} ./run_vy_app "${socket_file}" 2 "${test_dir}"/new_property/v2_e2/twitter_e 2 "${test_dir}"/new_property/v2_e2/twitter_v 0
 run_vy_2 ${np} ./run_vy_app "${socket_file}" 4 "${test_dir}"/projected_property/twitter_property_e "${test_dir}"/projected_property/twitter_property_v 1
-run_lpa ${np} ./run_vy_app "${socket_file}" 1 "${test_dir}"/property/lpa_dataset/lpa_3000_e 2 "${test_dir}"/property/lpa_dataset/lpa_3000_v 0 1 lpa 
-run_sampling_path 2 ./run_vy_app "${socket_file}" "${test_dir}"/property/sampling_path 0 1 sampling_path 0-0-1-4-2 
+run_lpa ${np} ./run_vy_app "${socket_file}" 1 "${test_dir}"/property/lpa_dataset/lpa_3000_e 2 "${test_dir}"/property/lpa_dataset/lpa_3000_v 0 1 lpa
+run_sampling_path 2 ./run_vy_app "${socket_file}" "${test_dir}"/property/sampling_path 0 1 sampling_path 0-0-1-4-2
+
+# local vm
+run_vy_2 ${np} ./run_vy_app_local_vm "${socket_file}" 1 "${test_dir}"/property/p2p-31_property_e "${test_dir}"/property/p2p-31_property_v 1
 
 run_vy ${np} ./run_pregel_app "${socket_file}" 2 "${test_dir}"/new_property/v2_e2/twitter_e 2 "${test_dir}"/new_property/v2_e2/twitter_v
 rm -rf ./test_output/*
 cp ./outputs_pregel_sssp/* ./test_output
 exact_verify "${test_dir}"/twitter-sssp-4
 
-run ${np} ./run_pregel_app tc "${test_dir}"/p2p-31.e "${test_dir}"/p2p-31.v ./test_output 
+run ${np} ./run_pregel_app tc "${test_dir}"/p2p-31.e "${test_dir}"/p2p-31.v ./test_output
 exact_verify "${test_dir}/p2p-31"-triangles
 
 if [[ "${RUN_JAVA_TESTS}" == "ON" ]];
@@ -394,6 +432,11 @@ then
   then
     echo "Running Java tests..."
     run_vy_2 ${np} ./run_java_app "${socket_file}" 1 "${test_dir}"/projected_property/twitter_property_e "${test_dir}"/projected_property/twitter_property_v 1 0 1 com.alibaba.graphscope.example.bfs.BFS
+    GLOG_v=10 ./run_java_string_app /tmp/vineyard.sock \
+        1 "${test_dir}/projected_property/twitter_property_e_0#src_label=v&dst_label=v&label=e&include_all_columns=true&column_types=int64_t,int64_t,int32_t,int32_t,std::string" \
+        1 "${test_dir}/projected_property/twitter_property_v_0#label=v&include_all_columns=true&column_types=int64_t,std::string" \
+        com.alibaba.graphscope.example.stringApp.StringApp
+
     echo "Running girpah tests..."
     ./giraph_runner --vertex_input_format_class  giraph:com.alibaba.graphscope.example.giraph.format.P2PVertexInputFormat \
       --edge_input_format_class giraph:com.alibaba.graphscope.example.giraph.format.P2PEdgeInputFormat --vfile "${test_dir}"/p2p-31.v \

@@ -187,7 +187,7 @@ class DegreeAssortativity
     degree_t res = 0;
     for (auto& e : adjList) {
       degree_t data = 0;
-      static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
+      vineyard::static_if<!std::is_same<edata_t, grape::EmptyType>{}>(
           [&](auto& e, auto& edata) {
             edata = static_cast<degree_t>(e.get_data());
           })(e, data);

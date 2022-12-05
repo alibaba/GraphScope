@@ -754,8 +754,16 @@ class OperationExecutor:
         def _process_loader_func(loader, vineyard_endpoint, vineyard_ipc_socket):
             # loader is type of attr_value_pb2.Chunk
             protocol = loader.attr[types_pb2.PROTOCOL].s.decode()
-            if protocol in ("hdfs", "hive", "oss", "s3"):
-                source = loader.attr[types_pb2.SOURCE].s.decode()
+            source = loader.attr[types_pb2.SOURCE].s.decode()
+            if (
+                protocol in ("hdfs", "hive", "oss", "s3")
+                or protocol == "file"
+                and (
+                    source.endswith(".orc")
+                    or source.endswith(".parquet")
+                    or source.endswith(".pq")
+                )
+            ):
                 storage_options = json.loads(
                     loader.attr[types_pb2.STORAGE_OPTIONS].s.decode()
                 )

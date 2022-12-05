@@ -57,7 +57,7 @@ public class GraphXParallelAdaptor<VDATA_T, EDATA_T, MSG>
         GraphXParallelPIE<VDATA_T, EDATA_T, MSG> proxy = ctx.getGraphXProxy();
         // In the first round we first update all outer vertex messages.
         proxy.syncOuterVertexData();
-        messageManager.ForceContinue();
+        messageManager.forceContinue();
     }
 
     @Override
@@ -70,11 +70,11 @@ public class GraphXParallelAdaptor<VDATA_T, EDATA_T, MSG>
         GraphXParallelPIE<VDATA_T, EDATA_T, MSG> proxy = ctx.getGraphXProxy();
         if (proxy.curRound() == 1) {
             proxy.parallelPEval();
-            messageManager.ForceContinue();
+            messageManager.forceContinue();
         } else {
             boolean maxIterationReached = proxy.parallelIncEval();
             if (!maxIterationReached) {
-                messageManager.ForceContinue();
+                messageManager.forceContinue();
             }
         }
     }

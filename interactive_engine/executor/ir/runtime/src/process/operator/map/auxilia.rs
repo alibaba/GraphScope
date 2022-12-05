@@ -119,7 +119,9 @@ impl FilterMapFuncGen for algebra_pb::Auxilia {
             .map(|alias| alias.try_into())
             .collect::<Result<_, _>>()?;
         let auxilia_operator = AuxiliaOperator { tag, query_params, alias, remove_tags };
-        debug!("Runtime AuxiliaOperator: {:?}", auxilia_operator);
+        if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
+            debug!("Runtime AuxiliaOperator: {:?}", auxilia_operator);
+        }
         Ok(Box::new(auxilia_operator))
     }
 }

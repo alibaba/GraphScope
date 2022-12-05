@@ -14,8 +14,8 @@ readonly GREEN="\033[0;32m"
 readonly NC="\033[0m" # No Color
 
 readonly GRAPE_BRANCH="master" # libgrape-lite branch
-readonly V6D_VERSION="0.9.0"  # vineyard version
-readonly V6D_BRANCH="v0.9.0" # vineyard branch
+readonly V6D_VERSION="0.11.0"  # vineyard version
+readonly V6D_BRANCH="v0.11.0" # vineyard branch
 
 readonly OUTPUT_ENV_FILE="${HOME}/.graphscope_env"
 IS_IN_WSL=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && IS_IN_WSL=true
@@ -390,6 +390,7 @@ write_envs_config() {
     {
       echo "export CC=${homebrew_prefix}/opt/llvm/bin/clang"
       echo "export CXX=${homebrew_prefix}/opt/llvm/bin/clang++"
+      echo "export CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER=${CC}"
       if [ -z "${JAVA_HOME}" ]; then
         echo "export JAVA_HOME=\$(/usr/libexec/java_home -v11)"
       fi
@@ -604,7 +605,7 @@ install_dependencies() {
         -P /tmp/
       sudo apt install -y -V /tmp/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
       sudo apt update -y
-      sudo apt install -y libarrow-dev libarrow-python-dev
+      sudo apt install -y libarrow-dev
       # remove apache-arrow from packages_to_install
       packages_to_install=("${packages_to_install[@]/apache-arrow}")
     fi
@@ -759,6 +760,7 @@ install_dependencies() {
     export OPENSSL_SSL_LIBRARY=${homebrew_prefix}/opt/openssl/lib/libssl.dylib
     export CC=${homebrew_prefix}/opt/llvm/bin/clang
     export CXX=${homebrew_prefix}/opt/llvm/bin/clang++
+    export CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER=${CC}
     export CPPFLAGS=-I${homebrew_prefix}/opt/llvm/include
   fi
 

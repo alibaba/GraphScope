@@ -70,6 +70,8 @@ pub trait LabeledTopology {
     fn get_adjacent_nodes_of_labels_iter(
         &self, node: NodeIndex<Self::I>, labels: Vec<LabelId>, dir: Direction,
     ) -> Iter<NodeIndex<Self::I>>;
+
+    fn shrink_to_fit(&mut self);
 }
 
 pub trait MutLabeledTopology {
@@ -241,6 +243,12 @@ impl<I: IndexType + Send + Sync> LabeledTopology for PGWrapper<I> {
                     }
                 }),
         )
+    }
+
+    #[inline]
+    fn shrink_to_fit(&mut self) {
+        self.inner.shrink_to_fit();
+        self.adjacent_label_indices.shrink_to_fit();
     }
 }
 

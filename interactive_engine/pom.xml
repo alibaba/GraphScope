@@ -5,11 +5,18 @@
   <groupId>com.alibaba.maxgraph</groupId>
   <artifactId>maxgraph-parent</artifactId>
   <packaging>pom</packaging>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>${revision}</version>
 
   <name>MaxGraph</name>
   <profiles>
     <!-- DO NOT CHANGE THE *ORDER* IN WHICH THESE PROFILES ARE DEFINED! -->
+    <profile>
+      <id>experimental</id>
+      <modules>
+        <module>executor/engine/pegasus/clients/java/client</module>
+        <module>compiler</module>
+      </modules>
+    </profile>
     <profile>
       <id>graphscope</id>
       <properties>
@@ -68,6 +75,7 @@
   </profiles>
 
   <properties>
+    <revision>0.0.1-SNAPSHOT</revision>
     <rust.compile.skip>false</rust.compile.skip>
     <rust.compile.mode>debug</rust.compile.mode>
     <rust.compile.target>v6d</rust.compile.target>
@@ -101,6 +109,7 @@
     <metrics.core.version>3.2.5</metrics.core.version>
     <aliyun.oss.version>3.14.1</aliyun.oss.version>
     <skip.tests>true</skip.tests>
+    <flatten.maven.plugin>1.1.0</flatten.maven.plugin>
   </properties>
 
   <dependencyManagement>
@@ -713,5 +722,32 @@
         </plugin>
       </plugins>
     </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>flatten-maven-plugin</artifactId>
+        <version>${flatten.maven.plugin}</version>
+        <configuration>
+          <updatePomFile>true</updatePomFile>
+          <flattenMode>resolveCiFriendliesOnly</flattenMode>
+        </configuration>
+        <executions>
+          <execution>
+            <id>flatten</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>flatten</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>flatten.clean</id>
+            <phase>clean</phase>
+            <goals>
+              <goal>clean</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
 </project>

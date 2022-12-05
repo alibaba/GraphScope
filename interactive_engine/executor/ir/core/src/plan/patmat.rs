@@ -27,6 +27,9 @@ use ir_common::generated::common as common_pb;
 use ir_common::NameOrId;
 
 use crate::error::{IrError, IrResult};
+use crate::glogue::error::IrPatternResult;
+use crate::glogue::pattern::Pattern;
+use crate::plan::meta::PlanMeta;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd)]
 #[repr(i32)]
@@ -1150,6 +1153,29 @@ impl MatchingStrategy for NaiveStrategy {
     }
 }
 
+pub struct ExtendStrategy {
+    pattern: Pattern,
+}
+
+/// Initializer of a ExtendStrategy
+impl ExtendStrategy {
+    pub fn init(pb_pattern: &pb::Pattern, plan_meta: &PlanMeta) -> IrPatternResult<Self> {
+        let pattern = Pattern::from_pb_pattern(pb_pattern, plan_meta)?;
+        Ok(ExtendStrategy { pattern })
+    }
+}
+
+/// Build pattern match Logical Plan for ExtendStrategy
+impl MatchingStrategy for ExtendStrategy {
+    fn build_logical_plan(&self) -> IrResult<pb::LogicalPlan> {
+        // TODO: generate optimized logical plan based on catalogue
+        let logical_plan = self
+            .pattern
+            .generate_simple_extend_match_plan()?;
+        Ok(logical_plan)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use std::collections::HashMap;
@@ -1290,7 +1316,6 @@ mod test {
     fn sentence_into_logical_plan() {
         // case 1.
         let a_out_b = gen_sentence_x_out_y("a", Some("b"), false, false);
-
         // As(a), Out(), As(b)
         let plan = a_out_b.build_logical_plan().unwrap();
         assert_eq!(plan.nodes.len(), 3);

@@ -78,7 +78,7 @@ public class WCCContext extends VertexDataContext<IFragment<Long, Long, Long, Do
 
             Vertex<Long> cur = FFITypeFactoryhelper.newVertexLong();
             for (long index = 0; index < frag.getInnerVerticesNum(); ++index) {
-                cur.SetValue(index);
+                cur.setValue(index);
                 Long oid = frag.getId(cur);
                 bufferedWriter.write(oid + "\t" + comp_id.get(index) + "\n");
             }

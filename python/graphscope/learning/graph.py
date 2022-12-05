@@ -22,6 +22,7 @@ import json
 from copy import deepcopy
 
 try:
+    import graphlearn
     from graphlearn import Graph as GLGraph
 except ImportError:
     GLGraph = object
@@ -71,13 +72,10 @@ class Graph(GLGraph):
             )
             self.edge_attributes(label, edge_attr[0], n_ints, n_floats, n_strings)
 
-        for node_view_label, node_label, nsplit, split_range in config["gen_labels"]:
-            self.node_view(
-                node_view_label, node_label, nsplit=nsplit, split_range=split_range
-            )
+        for mask, node_label, nsplit, split_range in config["gen_labels"]:
+            self.node_view(node_label, mask, nsplit=nsplit, split_range=split_range)
 
-        # server_own=False: make sure the glog inside graph-learn get initialized
-        self.init_vineyard(worker_index=0, worker_count=1, server_own=False)
+        self.init_vineyard(worker_index=0, worker_count=1)
 
     def decode_arg(self, arg):
         if arg is None or isinstance(arg, dict):
@@ -85,11 +83,12 @@ class Graph(GLGraph):
         return json.loads(base64.b64decode(arg.encode("utf-8")).decode("utf-8"))
 
     def close(self):
-        if not self.closed and not self.graphscope_session.closed:
-            self.closed = True
-            super(Graph, self).close()  # close client first
-            # close server instance
-            self.graphscope_session._close_learning_instance(self)
+        if self.closed or self.graphscope_session.closed:
+            return
+        self.closed = True
+        super(Graph, self).close()  # close client first
+        # close server instance
+        self.graphscope_session._close_learning_instance(self)
 
     @staticmethod  # noqa: C901
     def preprocess_args(handle, nodes, edges, gen_labels):  # noqa: C901
@@ -210,74 +209,58 @@ class Graph(GLGraph):
         handle_copy["client_count"] = worker_count
         return base64.b64encode(json.dumps(handle_copy).encode("utf-8")).decode("utf-8")
 
-    def V(self, t, feed=None):
-        """Entry of Gremlin-like query. Start from node.
+    def V(
+        self,
+        t,
+        feed=None,
+        node_from=graphlearn.pywrap.NodeFrom.NODE,
+        mask=graphlearn.python.utils.Mask.NONE,
+    ):
+        """Entry of GSL, starting from VERTEX.
 
         Args:
-        t (string): The type of node which is the entry of query or the type
-                    of edge when node is from edge source or dst.
-        feed (None| numpy.ndarray | types.GeneratorType | `Nodes`): When `feed`
-            is not `None`, the `type` should be a node type, which means query the
-            attributes of the specified node ids.
-            None: Default. Sample nodes with the following .shuffle and .batch API.
-            numpy.ndarray: Any shape of ids. Get nodes of the given ids and
-            node_type.
-            types.Generator: A generator of numpy.ndarray. Get nodes of generated
-            ids and given node_type.
-            `Nodes`: A `Nodes` object.
+            t (string): The type of node which is the entry of query or the type
+                of edge when node is from edge source or dst.
+            feed (None| numpy.ndarray | types.GeneratorType | `Nodes`): When `feed`
+                is not `None`, the `type` should be a node type, which means query the
+                attributes of the specified node ids.
 
-        Return:
-        A 'Query' object.
-
-        Example:
-
-        .. code:: python
-
-            >>> import numpy as np
-            >>> g.V("user").shuffle().batch(64)
-            >>> g.V("user", feed=np.array([1, 2, 3]))
-            >>> def gen():
-            >>>   while True:
-            >>>     yield  np.array([1, 2, 3])
-            >>> gen = gen()
-            >>> g.V("user", feed=gen)
+                - None: Default. Sample nodes with the following .shuffle and .batch API.
+                  numpy.ndarray: Any shape of ids. Get nodes of the given ids and
+                  node_type.
+                - types.Generator: A generator of numpy.ndarray. Get nodes of generated
+                  ids and given node_type.
+                - `Nodes`: A `Nodes` object.
+            node_from (NodeFrom): Default is `NodeFrom.NODE`, which means sample or
+                or iterate node from node. `NodeFrom.EDGE_SRC` means sample or
+                iterate node from source node of edge, and `NodeFrom.EDGE_DST` means
+                sample or iterate node from destination node of edge. If node is from
+                edge, the `type` must be an edge type.
+            mask (NONE | TRAIN | TEST | VAL): The given node set is indexed by both the
+                raw node type and mask value. The default mask value is NONE, which plays
+                nothing on the index.
         """
-        return super(Graph, self).V(t, feed)
+        return super(Graph, self).V(t, feed, node_from, mask)
 
     def E(self, edge_type, feed=None, reverse=False):
-        """Entry of Gremlin-like query. Start from edge.
+        """Entry of GSL, starting from EDGE.
 
         Args:
             edge_type (string): The type of edge which is the entry of query.
             feed (None| (np.ndarray, np.ndarray) | types.GeneratorType | `Edges`):
-                None: Default. Sample edges with the following .shuffle and .batch API.
-                (np.ndarray, np.ndarray): src_ids, dst_ids. Get edges of the given
-                (src_ids, dst_ids) and given edge_type. src_ids and dst_ids must be
-                the same shape, dtype is int.
-                types.Generator: A generator of (numpy.ndarray, numpy.ndarray). Get
-                edges of generated (src_ids, dst_ids) and given edge_type.
-                `Edges`: An `Edges` object.
 
-        Return:
-            A 'Query' object.
-
-        Example:
-
-        .. code:: python
-
-            >>> import numpy as np
-            >>> g.E("buy").shuffle().batch(64)
-            >>> g.E("buy", feed=(np.array([1, 2, 3]), np.array([4, 5, 6]))
-            >>> def gen():
-            >>>   while True:
-            >>>     yield  (np.array([1, 2, 3]), np.array([4, 5, 6]))
-            >>> gen = gen()
-            >>> g.E("buy", feed=gen)
+                - None: Default. Sample edges with the following .shuffle and .batch API.
+                  (np.ndarray, np.ndarray): src_ids, dst_ids. Get edges of the given
+                  (src_ids, dst_ids) and given edge_type. src_ids and dst_ids must be
+                  the same shape, dtype is int.
+                - types.Generator: A generator of (numpy.ndarray, numpy.ndarray). Get
+                  edges of generated (src_ids, dst_ids) and given edge_type.
+                - `Edges`: An `Edges` object.
         """
         return super(Graph, self).E(edge_type, feed, reverse)
 
 
-def get_gl_handle(schema, vineyard_id, engine_hosts, engine_config):
+def get_gl_handle(schema, vineyard_id, engine_hosts, engine_config, fragments=None):
     """Dump a handler for GraphLearn for interaction.
 
     Fields in :code:`schema` are:
@@ -298,6 +281,7 @@ def get_gl_handle(schema, vineyard_id, engine_hosts, engine_config):
             "client_count": 1,
             "vineyard_socket": "/var/run/vineyard.sock",
             "vineyard_id": 13278328736,
+            "fragments": [13278328736, ...],  # fragment ids
             "node_schema": [
                 "user:false:false:10:0:0",
                 "item:true:false:0:0:5"
@@ -390,6 +374,7 @@ def get_gl_handle(schema, vineyard_id, engine_hosts, engine_config):
         "edge_schema": edge_schema,
         "node_attribute_types": node_attribute_types,
         "edge_attribute_types": edge_attribute_types,
+        "fragments": fragments,
     }
     handle_json_string = json.dumps(handle)
     return base64.b64encode(handle_json_string.encode("utf-8")).decode("utf-8")

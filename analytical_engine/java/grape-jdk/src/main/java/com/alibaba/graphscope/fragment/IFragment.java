@@ -37,6 +37,14 @@ import java.io.Serializable;
  */
 public interface IFragment<OID_T, VID_T, VDATA_T, EDATA_T> extends Serializable {
 
+    Class<? extends OID_T> getOidClass();
+
+    Class<? extends VID_T> getVidClass();
+
+    Class<? extends VDATA_T> getVdataClass();
+
+    Class<? extends EDATA_T> getEdataClass();
+
     /**
      * Return the underlying fragment type,i.e. ArrowProjected or Simple.
      *

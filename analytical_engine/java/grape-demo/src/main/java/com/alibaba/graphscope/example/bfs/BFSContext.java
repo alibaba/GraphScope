@@ -85,7 +85,7 @@ public class BFSContext extends VertexDataContext<IFragment<Long, Long, Double, 
 
             Vertex<Long> cur = FFITypeFactoryhelper.newVertexLong();
             for (long index = 0; index < frag.getInnerVerticesNum(); ++index) {
-                cur.SetValue(index);
+                cur.setValue(index);
                 Long oid = frag.getId(cur);
                 bufferedWriter.write(oid + "\t" + partialResults.get(index) + "\n");
             }
