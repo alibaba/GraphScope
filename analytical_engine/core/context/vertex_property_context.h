@@ -409,14 +409,16 @@ class VertexPropertyContextWrapper : public IVertexPropertyContextWrapper {
 
       switch (selector.type()) {
       case SelectorType::kVertexId: {
-        BOOST_LEAF_AUTO(tensor_builder, trans_utils.VertexIdToVYTensorBuilder(
-                                            client, vertices));
+        BOOST_LEAF_AUTO(tensor_builder,
+                        trans_utils.template VertexIdToVYTensorBuilder<oid_t>(
+                            client, vertices));
         df_builder.AddColumn(col_name, tensor_builder);
         break;
       }
       case SelectorType::kVertexData: {
-        BOOST_LEAF_AUTO(tensor_builder, trans_utils.VertexDataToVYTensorBuilder(
-                                            client, vertices));
+        BOOST_LEAF_AUTO(tensor_builder,
+                        trans_utils.template VertexDataToVYTensorBuilder<oid_t>(
+                            client, vertices));
         df_builder.AddColumn(col_name, tensor_builder);
         break;
       }

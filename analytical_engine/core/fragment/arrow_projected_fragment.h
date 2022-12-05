@@ -756,6 +756,11 @@ class ArrowProjectedFragment
     return IsInnerVertex(v) ? GetInnerVertexId(v) : GetOuterVertexId(v);
   }
 
+  inline internal_oid_t GetInternalId(const vertex_t& v) const {
+    return IsInnerVertex(v) ? GetInnerVertexInternalId(v)
+                            : GetOuterVertexInternalId(v);
+  }
+
   inline fid_t GetFragId(const vertex_t& v) const {
     return IsInnerVertex(v) ? fid_ : vid_parser_.GetFid(GetOuterVertexGid(v));
   }
@@ -833,19 +838,27 @@ class ArrowProjectedFragment
   }
 
   inline oid_t GetInnerVertexId(const vertex_t& v) const {
+    return oid_t(GetInnerVertexInternalId(v));
+  }
+
+  inline internal_oid_t GetInnerVertexInternalId(const vertex_t& v) const {
     internal_oid_t internal_oid;
     CHECK(vm_ptr_->GetOid(
         vid_parser_.GenerateId(fid_, vid_parser_.GetLabelId(v.GetValue()),
                                vid_parser_.GetOffset(v.GetValue())),
         internal_oid));
-    return oid_t(internal_oid);
+    return internal_oid;
   }
 
   inline oid_t GetOuterVertexId(const vertex_t& v) const {
+    return oid_t(GetOuterVertexInternalId(v));
+  }
+
+  inline internal_oid_t GetOuterVertexInternalId(const vertex_t& v) const {
     vid_t gid = GetOuterVertexGid(v);
     internal_oid_t internal_oid;
     CHECK(vm_ptr_->GetOid(gid, internal_oid));
-    return oid_t(internal_oid);
+    return internal_oid;
   }
 
   inline oid_t Gid2Oid(const vid_t& gid) const {

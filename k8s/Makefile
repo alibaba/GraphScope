@@ -8,7 +8,7 @@ ifeq ($(REGISTRY),)
 endif
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.11.0
+VINEYARD_VERSION ?= v0.11.1
 PROFILE ?= release
 CI ?= false
 
