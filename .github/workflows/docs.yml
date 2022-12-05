@@ -160,7 +160,6 @@ jobs:
         git checkout gh-pages
 
         cd docs/
-        rm -rf !(_build|latest|stable|v*)
 
         if [ -d "_build/latest" ];
         then
@@ -176,6 +175,7 @@ jobs:
 
         if [ -d "_build/stable" ];
         then
+            rm -rf !(_build|latest|stable|v*)
             cp -R _build/stable/html/* ./
         fi
 
