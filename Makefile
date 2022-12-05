@@ -10,8 +10,6 @@ COORDINATOR_DIR			:= $(WORKING_DIR)/coordinator
 K8S_DIR					:= $(WORKING_DIR)/k8s
 DOCS_DIR				:= $(WORKING_DIR)/docs
 
-VERSION					?= 0.18.0
-
 BUILD_TYPE				?= release
 
 # analytical engine build options
