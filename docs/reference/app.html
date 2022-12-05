@@ -152,7 +152,7 @@
 <h2>AppAssets<a class="headerlink" href="#appassets" title="Permalink to this headline"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="graphscope.framework.app.AppAssets">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">graphscope.framework.app.</span></span><span class="sig-name descname"><span class="pre">AppAssets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">algo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmake_extra_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#AppAssets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.AppAssets" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">graphscope.framework.app.</span></span><span class="sig-name descname"><span class="pre">AppAssets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">algo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmake_extra_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#AppAssets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.AppAssets" title="Permalink to this definition"></a></dt>
 <dd><p>A class represents an app asset node in a DAG that holds the bytes of the gar resource.</p>
 <p>Assets includes an algorithm name, and gar (for user defined algorithm),
 a context type (one of ‘tensor’, ‘vertex_data’, ‘vertex_property’,
@@ -161,7 +161,7 @@ and its type (one of <cite>cpp_pie</cite>, <cite>cython_pie</cite>, <cite>cython
 <p>The instance of this class can be passed to init <a class="reference internal" href="#graphscope.framework.app.AppDAGNode" title="graphscope.framework.app.AppDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.app.AppDAGNode</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.framework.app.AppAssets.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">algo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmake_extra_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#AppAssets.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.AppAssets.__init__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">algo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmake_extra_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/app.html#AppAssets.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.app.AppAssets.__init__" title="Permalink to this definition"></a></dt>
 <dd><p>Init assets of the algorithm.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1300,7 +1300,9 @@ evaluated in eager mode.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.wcc">
 <span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">wcc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/analytical/app/wcc.html#wcc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.wcc" title="Permalink to this definition"></a></dt>
-<dd><p>Evaluate weakly connected components on the <cite>graph</cite>.</p>
+<dd><p>Evaluate weakly connected components on the <cite>graph</cite>.
+This is an optimized version of WCC.
+Note this cannot be compiled against a property graph that has multiple labels.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>graph</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.Graph</span></code>) – A simple graph.</p>
@@ -1393,6 +1395,16 @@ evaluated in eager mode.</p>
 
             
               
+                <dd><a href="../v0.18.0/index.html">v0.18.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../v0.17.0/index.html">v0.17.0</a></dd>
               
             
@@ -1404,6 +1416,16 @@ evaluated in eager mode.</p>
             
               
                 <dd><a href="../v0.16.0/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../default-ready/index.html">default-ready</a></dd>
               
             
 
@@ -1433,7 +1455,57 @@ evaluated in eager mode.</p>
 
             
               
+                <dd><a href="../after-grape-shuffle/index.html">after-grape-shuffle</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../before-grape-shuffle/index.html">before-grape-shuffle</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../v0.13.0/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../before-move-to-scala/index.html">before-move-to-scala</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../graphx-rdd-graph2frag/index.html">graphx-rdd-graph2frag</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../graphx-poc-spark/index.html">graphx-poc-spark</a></dd>
               
             
 
@@ -1513,7 +1585,37 @@ evaluated in eager mode.</p>
 
             
               
+                <dd><a href="../v0.2/index.html">v0.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1/index.html">v0.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../v0.7.0/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.6.0-rev1/index.html">v0.6.0-rev1</a></dd>
               
             
 

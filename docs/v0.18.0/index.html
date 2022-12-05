@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GraphScope: A One-Stop Large-Scale Graph Computing System from Alibaba &mdash; GraphScope  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="installation.html" />
+
+ 
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4TMYCGJ0X2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-4TMYCGJ0X2');
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="#" class="icon icon-home"> GraphScope
+          </a>
+              <div class="version">
+                v0.18.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div>
+  <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+    
+      
+      
+        
+          
+        
+      
+      
+        <p class="caption"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="loading_graph.html">Loading Graphs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="graph_transformation.html">Graph Transformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analytics_engine.html">GraphScope Analytical Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">GraphScope Interactive Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="learning_engine.html">GraphScope Learning Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="persistent_graph_store.html">Persistent Graph Store</a></li>
+<li class="toctree-l1"><a class="reference internal" href="frequently_asked_questions.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference/python_index.html">Python API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
+</ul>
+
+      
+    
+  </div>
+
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">GraphScope</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">GraphScope: A One-Stop Large-Scale Graph Computing System from Alibaba</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/alibaba/graphscope/edit/main/docs/index.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="graphscope-a-one-stop-large-scale-graph-computing-system-from-alibaba">
+<h1>GraphScope: A One-Stop Large-Scale Graph Computing System from Alibaba<a class="headerlink" href="#graphscope-a-one-stop-large-scale-graph-computing-system-from-alibaba" title="Permalink to this headline"></a></h1>
+<p>GraphScope is a unified distributed graph computing platform
+that provides a one-stop environment for performing diverse graph
+operations on a cluster of computers through a user-friendly
+Python interface. GraphScope makes multi-staged processing of
+large-scale graph data on compute clusters simple by combining
+several important pieces of Alibaba technology: including GRAPE,
+GraphCompute, and Graph-Learn (GL) for analytics, interactive,
+and graph neural networks (GNN) computation, respectively,
+and the vineyard store that offers efficient in-memory data transfers.</p>
+<div class="section" id="motivation">
+<h2>Motivation<a class="headerlink" href="#motivation" title="Permalink to this headline"></a></h2>
+<p>With the rapid growth of graph data and its applications,
+many graph processing systems are developed.
+However, existing systems are often designed for a specific type of graph computation,
+while tools or systems involving various graph computations are often called for instead.
+For example, in e-commerce platforms, some sellers and buyers may conduct fraudulent
+transactions and reviews collaboratively in order to inflate their ratings and rankings.
+In practice, all the users and transactions can be organized as a large-scale graph
+which contains vertices such as buyers, sellers, and items, and edges representing
+buying, selling, or reviewing relationships.</p>
+<a class="reference internal image-reference" href="_images/gs-example.png"><img alt="an example in e-commerce." class="align-center" src="_images/gs-example.png" style="width: 500px;" /></a>
+<p>Various techniques can be applied to identify suspicious users and transactions on this transaction graph.
+For example, an anti-fraud workflow may consist of the following five steps.
+First, the graph is constructed in a data-parallel system from the external storage.
+Second, some mining algorithms such as k-clique or k-core are performed to extract suspicious patterns.
+Next, a label propagation algorithm is applied to find a set of vertices as possible fraudulent entities.
+Then, a graph neural networks (GNN) is used to conduct k-hop neighborhood sampling for each vertex,
+and the result is fed into a deep learning framework (e.g., TensorFlow)
+to predict whether an entity is fraudulent, based on a GNN model.
+Finally, the results would be presented in a visualized WebUI with the ability
+to interactively explore the results and the graph for manual verification.</p>
+<p>As shown in this pipeline, we may find real-world graph computations are often
+far more complicated that intertwine many types of graph computations in one single workload.
+Many challenges arise in this scenario.
+The programming abstractions of applications varies from vertex-centric model for iterative algorithms,
+to random graph walking for graph traversal, and to specializations for pattern matching.
+As a result, developers often have to comprise multiple systems,
+and manage the complexities of date representation, resources utilization,
+and performance tuning across multiple systems. Furthermore, all these applications
+have their own runtime characteristics,
+and require different design of trade-offs and optimizations in the computation engine,
+which should be tightly coupled with specific programming abstractions.
+Last but not least, due to the diverse graph computation workloads,
+the system should be orchestrated in a flexible way to support different types of graph computations,
+either complex pipelines or simple tasks.</p>
+<p>To tackle the aforementioned problems,
+we propose GraphScope, with a layered and disaggregated design,
+providing a one-stop and efficient solution for a wide range of graph computations at scale.</p>
+</div>
+<div class="section" id="unified-graph-computing-platform">
+<h2>Unified Graph Computing Platform<a class="headerlink" href="#unified-graph-computing-platform" title="Permalink to this headline"></a></h2>
+<p>GraphScope is a full-fledged, in-production system for one-stop analysis on big graph data.
+Achieving this goal requires a wide variety of components to interact,
+including cluster management(deployment) software, graph store (as input, output and to hold intermediate results),
+distributed execution engines, language constructs, and development tools.</p>
+<a class="reference internal image-reference" href="_images/gs-workflow.png"><img alt="GraphScope workflow." class="align-center" src="_images/gs-workflow.png" style="width: 600px;" /></a>
+<div class="section" id="application-layer">
+<h3>Application layer<a class="headerlink" href="#application-layer" title="Permalink to this headline"></a></h3>
+<p>Graph processing often requires specific applications for each particular task.
+They can be interactive queries, written in Gremlin, Cypher or GQL,
+or graph analytics with iterative computation, such as pagerank,
+connected components, or GNN model for graph learning tasks.
+For interactive queries, GraphScope supports Gremlin,
+which is the de-facto traversal language developed by Apache foundation.
+Other language support like Cypher and GQL is under development.
+For graph analytics and graph learning tasks,
+GraphScope has a built-in library containing common algorithms for various domains
+(such as graph neural networks, clustering, and pattern matching) to ease the development of new graph applications.
+GraphScope gives the programmer the illusion of writing for a single machine
+using a general purpose high-level programming model and to have the system deal with the complexities
+that arise from distributed execution.
+In addition, this approach allows GraphScope to seamlessly combine multiple
+graph execution engines in one unified platform as described below.</p>
+</div>
+<div class="section" id="execution-engine-layer">
+<h3>Execution engine layer<a class="headerlink" href="#execution-engine-layer" title="Permalink to this headline"></a></h3>
+<p>GraphScope execution layer consists of three engines, namely GraphScope Interactive
+Engine (GIE), GraphScope Analytics Engine (GAE), GraphScope Learning Engine (GLE),
+and provides the functionality of interactive, analytical,
+and graph-based machine learning, respectively.
+A common feature all those execution engines provide is the automatic support
+for efficient distributed execution of queries and algorithms in their target domains.
+Each query/algorithm is automatically and transparently compiled by GraphScope
+into a distributed execution plan that is partitioned across multiple compute nodes for parallel execution.
+Each partition runs on a separate compute node, managed by a local executor,
+that schedules and executes computation on a multi-core server.
+The engines can be deployed and work together as a full-fledged GraphScope.
+In this form, GraphScope is able to handle complex and diversified workflows,
+including any type of analytics, interactive, and graph neural networks (GNN) computations and their combinations.
+Better still, the engines can be deployed separately, and work standalone for a specific kind of tasks.</p>
+</div>
+<div class="section" id="storage-layer">
+<h3>Storage layer<a class="headerlink" href="#storage-layer" title="Permalink to this headline"></a></h3>
+<p>GraphScope defines a unified storage interface for accessing and managing graph data.
+This interface allows the storage layer to be flexible and extensible and can be easily plugged in with different storage backends.
+GraphScope ships with many kinds of graph stores. e.g., vineyard,
+an in-memory storage that maintains an (intermediate) data object partitioned across a cluster
+and enables data sharing without copying across the engines in a workflow.
+An on-disk and multi-versioned persistent graph store named groot is also provided.
+Unlike vineyard which focuses on the in-memory analytics workload, groot takes responsibility for running continuous
+graph data management service and ingesting frequently updates for the graph data.
+In addition, GraphScope has an archive store,
+which supports quickly synchronizing data from a relation database via bin-log
+and creating a graph view for computation tasks defined on graphs.
+Besides, there are many other in-house managed graph stores that are used at Alibaba
+and some third-party stores are ready to be plugged in.
+Benefiting from the unified interface, all the stores can be chosen by users on their own demands,
+while the engine layer can be transparently used without any modification.</p>
+</div>
+</div>
+<div class="section" id="disaggregated-design-for-diverse-graph-applications">
+<h2>Disaggregated Design for Diverse Graph Applications<a class="headerlink" href="#disaggregated-design-for-diverse-graph-applications" title="Permalink to this headline"></a></h2>
+<p>GraphScope employed a disaggregated design,
+which allows users to deploy GraphScope with only some parts of the components to simplify the deployment and meet their own needs.
+For example, if a user only needs to run a community detection over a social network graph,
+a deployment with only the analytical engine should be sufficient.
+In GraphScope system design, the components are divided into three layers as mentioned above,
+namely application layer, engine layer, and storage layer.
+Users can pick up some components from the three layers to create a customized deployment.
+This flexible design allows GraphScope to be deployed and optimized for specific graph computation scenarios.</p>
+<p>Next, we highlight some featured deployments of GraphScope.</p>
+<div class="section" id="graphscope-for-bi-analysis">
+<h3>GraphScope for BI analysis<a class="headerlink" href="#graphscope-for-bi-analysis" title="Permalink to this headline"></a></h3>
+<p>The users for BI analysis are supposed to be business analysts who are querying and analyzing the data interactively via a WebUI.
+Thus, the concurrency is unlikely to be high,
+but the latency for complex queries is the key concern.
+In this scenario, GraphScope works as an interactive query answering service over an evolving graph.
+In the application layer, it should support Gremlin or Cypher query languages.
+In the engine layer, an interactive engine (GIE) is deployed. When the engine receives a query written in Gremlin/Cypher,
+the compiler GAIA compiles the query into a unified interpreted representation (IR).
+Then a universal query optimizer is applied to optimize the IR, to translate the IR for different backends.
+In this BI scenario, the queries are more like OLAP style, thus the IR would be interpreted into data parallel plan.
+Next, a code-gen module would generate the physical plan and apply it to Pegasus,
+which is a distributed data-parallel compute engine based on the cyclic dataflow computation model lying at the core of GIE.
+In the storage layer, a dynamic graph store is deployed and responsible for storing the graph data.
+With this combination, GraphScope can provide a high-performance and interactive query answering service for BI analysis.</p>
+</div>
+<div class="section" id="graphscope-for-high-qps-queries">
+<h3>GraphScope for high QPS queries<a class="headerlink" href="#graphscope-for-high-qps-queries" title="Permalink to this headline"></a></h3>
+<p>In some service scenarios, e.g., recommendation or searching,
+the graph queries are coming at an extremely high rate.
+GraphScope can handle these scenarios by deploying a similar set of components in the BI scenario.
+However, the universal query optimizer would generate a query plan that is more suitable for high QPS queries.
+Then a designed code-gen module generates physical plan for another core engine,
+Hiactor, which is a high-performance and concurrent actor framework and responsible for processing the OLTP-like queries at the core of GIE.
+Since the storage layer provides a unified interface,
+users may choose to deploy an in-memory graph store (e.g., vineyard) or a persistent graph store (e.g., groot) to meet their own needs.
+One may find that the deployment of GraphScope for high QPS queries is similar to the deployment for BI analysis.
+However, the universal optimizer generates different plans and dispatches them to different backends according to the different workload characteristics.</p>
+</div>
+<div class="section" id="graphscope-for-graph-analytics">
+<h3>GraphScope for graph analytics<a class="headerlink" href="#graphscope-for-graph-analytics" title="Permalink to this headline"></a></h3>
+<p>GraphScope is both performant and easy-to-use for graph analytical jobs.
+In this scenario, applications are provided as iterative algorithms in the built-in library or customized by the users.
+The algorithms can be implemented in FLASH-style API, Pregel API, or GRAPE native API.
+All these kinds of algorithms would be compiled in the engine layer and run on GRAPE,
+which is a processing system proposed on <a class="reference external" href="https://dl.acm.org/doi/10.1145/3282488">this paper</a> in SIGMOD2017.
+GRAPE differs from prior systems in its ability to parallelize sequential graph algorithms as a whole.
+In GRAPE, sequential algorithms can be easily “plugged into” with only minor changes and get parallelized to handle large graphs efficiently.
+To achieve high performance, deployment for this scenario usually chooses an in-memory graph store for the storage layer.</p>
+</div>
+<div class="section" id="graphscope-for-learning">
+<h3>GraphScope for learning<a class="headerlink" href="#graphscope-for-learning" title="Permalink to this headline"></a></h3>
+<p>GNNs have been successfully applied in many real-world applications,
+such as ecommerce recommendation systems and financial risk control platforms, where billion-scale graphs are quite common.
+The learning engine in GraphScope (GLE) can efficiently support distributed GNN training on large-scale graphs in such industrial scenarios.
+GLE provides both Python and C++ interfaces for graph sampling operations and a gremlin-like GSL (Graph Sampling Language) interface to ease the definition of sampling queries.
+For GNN models, GLE provides a set of paradigms and processes for model development,
+and also provides a rich set of example models. Users can flexibly choose TensorFlow or PyTorch as the training backend.
+To allow for a flexible and cost-effective resource configuration,
+the processes of sampling and training in GLE are decoupled,
+each of which can be independently scaled to chase for the best end-to-end throughput.</p>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#install-graphscope-locally-without-kubernetes">Install GraphScope locally without Kubernetes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#install-graphscope-client-for-kubernetes">Install GraphScope Client for Kubernetes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#example-node-clustering-on-citation-network">Example: Node clustering on Citation Network</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#launching-session">Launching Session</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#loading-graph">Loading Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#interactive-query">Interactive Query</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#graph-analytics">Graph Analytics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#graph-neural-networks-gnns">Graph Neural Networks (GNNs)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#closing-session">Closing Session</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/01_node_classification_on_citation.ipynb">Node Classification on citation network</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/02_graph_manipulations_with_networkx_compatible_apis.ipynb">Graph Manipulations with NetowrkX Compatible APIs</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/03_run_graphscope_like_networkx.ipynb">Run GraphScope like NetworkX</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/04_loading_graphs.ipynb">Loading Graphs</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/05_builtin_analytical_algorithms.ipynb">Built-in Analytical Algorithms</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/06_writing_your_own_algorithms.ipynb">Writing Your Own Algorithms</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/07_interactive_query_with_gremlin.ipynb">Interactive Query with Gremlin</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/08_unsupervised_learning_with_graphsage.ipynb">Unsupervised Learning with GraphSage</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/09_supervised_learning_with_gcn.ipynb">Supervised Learning with GCN</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/10_revisit_classification_on_citation_network_on_k8s.ipynb">Revisit Classification on Citation Network on K8s</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/11_unsupervised_learning_with_bipartite_graphsage.ipynb">Unsupervised Learning with Bipartite GraphSage</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="deployment.html#deployment-with-helm">Deployment with Helm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment.html#deploy-with-aws-aliyun">Deploy with AWS/Aliyun</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment.html#deployment-on-local">Deployment on local</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="loading_graph.html">Loading Graphs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="loading_graph.html#load-built-in-datasets">Load Built-in Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="loading_graph.html#loading-your-own-datasets">Loading Your Own Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="loading_graph.html#advanced-usage">Advanced Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="loading_graph.html#loading-from-pandas-or-numpy">Loading From Pandas or Numpy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="loading_graph.html#loader-variants">Loader Variants</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="graph_transformation.html">Graph Transformations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="graph_transformation.html#attach-new-labels">Attach new labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph_transformation.html#projection">Projection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph_transformation.html#transform-to-simple-graph-implicitly">Transform to simple graph implicitly</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph_transformation.html#add-results-back-to-graph-as-a-property">Add results back to graph as a property</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="analytics_engine.html">GraphScope Analytical Engine</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#built-in-algorithms">Built-in Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#result-processing">Result Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#writing-your-own-algorithms-in-pie">Writing Your Own Algorithms in PIE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#writing-algorithms-in-pregel">Writing Algorithms in Pregel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#using-math-h-functions-in-algorithms">Using <code class="docutils literal notranslate"><span class="pre">math.h</span></code> Functions in Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#run-your-own-algorithms">Run Your Own Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#run-algorithm-in-java">Run Algorithm in Java</a></li>
+<li class="toctree-l2"><a class="reference internal" href="analytics_engine.html#glossory">Glossory</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="interactive_engine.html">GraphScope Interactive Engine</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine.html#apache-tinkerpop">Apache TinkerPop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine.html#connecting-gremlin-within-python">Connecting Gremlin within Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine.html#connecting-gremlin-within-java">Connecting Gremlin within Java</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine.html#id2">Gremlin Console</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine.html#programming-with-gremlin-101">Programming with Gremlin–101</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interactive_engine.html#compatibility-with-tinkerpop">Compatibility with TinkerPop</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="learning_engine.html">GraphScope Learning Engine</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="learning_engine.html#graph-learning-model">Graph Learning Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="learning_engine.html#developing-your-own-model">Developing Your Own Model</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="persistent_graph_store.html">Persistent Graph Store</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="persistent_graph_store.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="persistent_graph_store.html#deploying-store-service">Deploying Store Service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="persistent_graph_store.html#defining-graph-schema">Defining Graph Schema</a></li>
+<li class="toctree-l2"><a class="reference internal" href="persistent_graph_store.html#running-gremlin-queries">Running Gremlin Queries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="persistent_graph_store.html#realtime-write">Realtime Write</a></li>
+<li class="toctree-l2"><a class="reference internal" href="persistent_graph_store.html#bulk-loading">Bulk Loading</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="frequently_asked_questions.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guide.html">Developer Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="developer_guide.html#building-and-testing-graphscope-locally-with-docker">Building and Testing GraphScope locally with Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer_guide.html#building-and-testing-graphscope-on-kubernetes">Building and Testing GraphScope on Kubernetes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer_guide.html#building-and-testing-graphscope-on-local">Building and Testing GraphScope on local</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer_guide.html#build-python-wheels">Build Python Wheels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer_guide.html#code-format">Code Format</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference/python_index.html">Python API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="reference/session.html">Session</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/graph.html">Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/app.html">Analytical App</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/context.html">Context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/selector.html">Selector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/operation.html">Operation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/cython_sdk.html">Cython SDK API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/interactive.html">Interactive Query</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/learning.html">Graph Learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/networkx/index.html">NetworkX-style API</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reference/analytical_engine_index.html">Analytical Engine API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="reference/analytical_engine_index.html#analytical-engine">Analytical Engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/analytical_engine_index.html#fragments-in-graphscope">Fragments in GraphScope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/analytical_engine_index.html#analytical-apps">Analytical Apps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/analytical_engine_index.html#analytical-workers">Analytical Workers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/analytical_engine_index.html#app-s-context">App’s Context</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline"></a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020-2023, DAMO Academy, Alibaba Inc..</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+  
+
+  <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"> Read the Docs</span>
+      v: v0.18.0
+      <span class="fa fa-caret-down"></span>
+    </span>
+    <div class="rst-other-versions">
+      <dl>
+        <dt>Versions</dt>
+        
+          
+
+            
+              
+                <dd><a href="../latest/index.html">latest</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../#">stable</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.18.0/index.html">v0.18.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.17.0/index.html">v0.17.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.16.0/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.15.0/index.html">v0.15.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.14.0/index.html">v0.14.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.13.0/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.12.0/index.html">v0.12.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.11.0/index.html">v0.11.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.10.1/index.html">v0.10.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.10.0/index.html">v0.10.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.9.1/index.html">v0.9.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.9.0/index.html">v0.9.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.8.0/index.html">v0.8.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.7.0/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.6.1/index.html">v0.6.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.6.0/index.html">v0.6.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.5.0/index.html">v0.5.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.4.1/index.html">v0.4.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.4.0/index.html">v0.4.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.3.0/index.html">v0.3.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.2.1/index.html">v0.2.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.2.0/index.html">v0.2.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.3/index.html">v0.1.3</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.2/index.html">v0.1.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.1/index.html">v0.1.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1.0/index.html">v0.1.0</a></dd>
+              
+            
+
+          
+        
+      </dl>
+    </div>
+  </div>
+
+  <div class="rst-languages shift-up" role="note" aria-label="languages">
+    <div class="rst-other-languages">
+      <dl>
+        <dt>Languages</dt>
+        <dd><a href="#">en</a></dd>
+        <dd><a href="zh/index.html">zh_CN</a></dd>
+      </dl>
+
+      <hr />
+      <small>
+        <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+      </small>
+    </div>
+  </div>
+
+
+</body>
+</html>

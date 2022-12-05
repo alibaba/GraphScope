@@ -368,8 +368,22 @@
         <span class="c1"># doesn&#39;t add an additional stream layer.</span>
         <span class="c1"># Maybe handled by vineyard in the near future</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">protocol</span> <span class="o">==</span> <span class="s2">&quot;file&quot;</span><span class="p">:</span>
-            <span class="n">source</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">#</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">)</span>
-            <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.orc&quot;</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.parquet&quot;</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.pq&quot;</span><span class="p">)</span>
+            <span class="p">):</span>
+                <span class="c1"># orc and parquet: handled by vineyard</span>
+                <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">)</span>
+                <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">STORAGE_OPTIONS</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span>
+                    <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">storage_options</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">READ_OPTIONS</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span>
+                    <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">source</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">#</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">)</span>
+                <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">protocol</span> <span class="o">==</span> <span class="s2">&quot;pandas&quot;</span><span class="p">:</span>
             <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">VALUES</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span>
         <span class="k">else</span><span class="p">:</span>  <span class="c1"># Let vineyard handle other data source.</span>
@@ -446,6 +460,16 @@
 
             
               
+                <dd><a href="../../../v0.18.0/index.html">v0.18.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../../../v0.17.0/index.html">v0.17.0</a></dd>
               
             
@@ -457,6 +481,16 @@
             
               
                 <dd><a href="../../../v0.16.0/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../default-ready/index.html">default-ready</a></dd>
               
             
 
@@ -486,7 +520,57 @@
 
             
               
+                <dd><a href="../../../after-grape-shuffle/index.html">after-grape-shuffle</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../before-grape-shuffle/index.html">before-grape-shuffle</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../../../v0.13.0/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../before-move-to-scala/index.html">before-move-to-scala</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../graphx-rdd-graph2frag/index.html">graphx-rdd-graph2frag</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../graphx-poc-spark/index.html">graphx-poc-spark</a></dd>
               
             
 
@@ -566,7 +650,37 @@
 
             
               
+                <dd><a href="../../../v0.2/index.html">v0.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1/index.html">v0.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../../../v0.7.0/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.6.0-rev1/index.html">v0.6.0-rev1</a></dd>
               
             
 

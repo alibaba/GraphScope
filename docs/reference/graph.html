@@ -146,7 +146,7 @@
 <h2>Graph object<a class="headerlink" href="#graph-object" title="Permalink to this headline"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="graphscope.framework.graph.GraphDAGNode">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">graphscope.framework.graph.</span></span><span class="sig-name descname"><span class="pre">GraphDAGNode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incoming_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'int64'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate_eid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">graphscope.framework.graph.</span></span><span class="sig-name descname"><span class="pre">GraphDAGNode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incoming_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'int64'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate_eid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'global'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode" title="Permalink to this definition"></a></dt>
 <dd><p>A class represents a graph node in a DAG.</p>
 <p>In GraphScope, all operations that generate a new graph will return
 a instance of <a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">GraphDAGNode</span></code></a>, which will be automatically
@@ -172,7 +172,7 @@ executed by <code class="xref py py-meth docutils literal notranslate"><span cla
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.framework.graph.GraphDAGNode.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incoming_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'int64'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate_eid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.__init__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incoming_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'int64'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate_eid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'global'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.__init__" title="Permalink to this definition"></a></dt>
 <dd><p>Construct a <a class="reference internal" href="#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">GraphDAGNode</span></code></a> object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -190,6 +190,8 @@ which can be one of:</p>
 <li><p><strong>oid_type</strong> – (str, optional): Type of vertex original id. Defaults to “int64”.</p></li>
 <li><p><strong>directed</strong> – (bool, optional): Directed graph or not. Defaults to True.</p></li>
 <li><p><strong>generate_eid</strong> – (bool, optional): Generate id for each edge when setted True. Defaults to True.</p></li>
+<li><p><strong>vertex_map</strong> (<em>str</em><em>, </em><em>optional</em>) – Indicate use global vertex map or local vertex map. Can be “global” or “local”.
+Defaults to global.</p></li>
 </ul>
 </dd>
 </dl>
@@ -290,7 +292,7 @@ Here the src_label and dst_label must be both specified or both unspecified,</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.framework.graph.GraphDAGNode.project">
-<span class="sig-name descname"><span class="pre">project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertices</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edges</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.project"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.project" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertices</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edges</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/framework/graph.html#GraphDAGNode.project"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph.GraphDAGNode.project" title="Permalink to this definition"></a></dt>
 <dd><p>Project a subgraph from the property graph, and return a new graph.
 A graph produced by project just like a normal property graph, and can be projected further.</p>
 <dl class="field-list simple">
@@ -583,7 +585,7 @@ See more additional info in <cite>Loading Graph</cite> section of Docs, and impl
 <h2>Graph Functions<a class="headerlink" href="#graph-functions" title="Permalink to this headline"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.framework.graph_builder.load_from">
-<span class="sig-prename descclassname"><span class="pre">graphscope.framework.graph_builder.</span></span><span class="sig-name descname"><span class="pre">load_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edges</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Sequence</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader"><span class="pre">graphscope.framework.loader.Loader</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard._C.Object</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard._C.ObjectID</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard._C.ObjectName</span><span class="p"><span class="pre">,</span> </span><span class="pre">Mapping</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader"><span class="pre">graphscope.framework.loader.Loader</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard._C.Object</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard._C.ObjectID</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard._C.ObjectName</span><span class="p"><span class="pre">,</span> </span><span class="pre">Sequence</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertices</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Sequence</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader"><span class="pre">graphscope.framework.loader.Loader</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard._C.Object</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard._C.ObjectID</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard._C.ObjectName</span><span class="p"><span class="pre">,</span> </span><span class="pre">Mapping</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader"><span class="pre">graphscope.framework.loader.Loader</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard._C.Object</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard._C.ObjectID</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard._C.ObjectName</span><span class="p"><span class="pre">,</span> </span><span class="pre">Sequence</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'int64_t'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate_eid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vformat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eformat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><span class="pre">graphscope.framework.graph.Graph</span></a><a class="reference internal" href="../_modules/graphscope/framework/graph_builder.html#load_from"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph_builder.load_from" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.framework.graph_builder.</span></span><span class="sig-name descname"><span class="pre">load_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edges</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Sequence</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader"><span class="pre">graphscope.framework.loader.Loader</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard._C.Object</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard._C.ObjectID</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard._C.ObjectName</span><span class="p"><span class="pre">,</span> </span><span class="pre">Mapping</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader"><span class="pre">graphscope.framework.loader.Loader</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard._C.Object</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard._C.ObjectID</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard._C.ObjectName</span><span class="p"><span class="pre">,</span> </span><span class="pre">Sequence</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertices</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Sequence</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader"><span class="pre">graphscope.framework.loader.Loader</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard._C.Object</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard._C.ObjectID</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard._C.ObjectName</span><span class="p"><span class="pre">,</span> </span><span class="pre">Mapping</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#graphscope.framework.loader.Loader" title="graphscope.framework.loader.Loader"><span class="pre">graphscope.framework.loader.Loader</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">pandas.core.frame.DataFrame</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard._C.Object</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard._C.ObjectID</span><span class="p"><span class="pre">,</span> </span><span class="pre">vineyard._C.ObjectName</span><span class="p"><span class="pre">,</span> </span><span class="pre">Sequence</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'int64_t'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate_eid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vformat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eformat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'global'</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><span class="pre">graphscope.framework.graph.Graph</span></a><a class="reference internal" href="../_modules/graphscope/framework/graph_builder.html#load_from"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.framework.graph_builder.load_from" title="Permalink to this definition"></a></dt>
 <dd><p>Load a Arrow property graph using a list of vertex/edge specifications.</p>
 <div class="deprecated">
 <p><span class="versionmodified deprecated">Deprecated since version version: </span>0.3
@@ -594,36 +596,36 @@ Use <code class="xref py py-class docutils literal notranslate"><span class="pre
 <dt>Use Dict of tuples to setup a graph.</dt><dd><p>We can use a dict to set vertex and edge configurations,
 which can be used to build graphs.</p>
 <p>Examples:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span>g = graphscope_session.load_from(
-    edges={
-        &quot;group&quot;: [
-            (
-                &quot;file:///home/admin/group.e&quot;,
-                [&quot;group_id&quot;, &quot;member_size&quot;],
-                (&quot;leader_student_id&quot;, &quot;student&quot;),
-                (&quot;member_student_id&quot;, &quot;student&quot;),
-            ),
-            (
-                &quot;file:///home/admin/group_for_teacher_student.e&quot;,
-                [&quot;group_id&quot;, &quot;group_name&quot;, &quot;establish_date&quot;],
-                (&quot;teacher_in_charge_id&quot;, &quot;teacher&quot;),
-                (&quot;member_student_id&quot;, &quot;student&quot;),
-            ),
-        ]
-    },
-    vertices={
-        &quot;student&quot;: (
-            &quot;file:///home/admin/student.v&quot;,
-            [&quot;name&quot;, &quot;lesson_nums&quot;, &quot;avg_score&quot;],
-            &quot;student_id&quot;,
-        ),
-        &quot;teacher&quot;: (
-            &quot;file:///home/admin/teacher.v&quot;,
-            [&quot;name&quot;, &quot;salary&quot;, &quot;age&quot;],
-            &quot;teacher_id&quot;,
-        ),
-    },
-)
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">graphscope_session</span><span class="o">.</span><span class="n">load_from</span><span class="p">(</span>
+    <span class="n">edges</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;group&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">(</span>
+                <span class="s2">&quot;file:///home/admin/group.e&quot;</span><span class="p">,</span>
+                <span class="p">[</span><span class="s2">&quot;group_id&quot;</span><span class="p">,</span> <span class="s2">&quot;member_size&quot;</span><span class="p">],</span>
+                <span class="p">(</span><span class="s2">&quot;leader_student_id&quot;</span><span class="p">,</span> <span class="s2">&quot;student&quot;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s2">&quot;member_student_id&quot;</span><span class="p">,</span> <span class="s2">&quot;student&quot;</span><span class="p">),</span>
+            <span class="p">),</span>
+            <span class="p">(</span>
+                <span class="s2">&quot;file:///home/admin/group_for_teacher_student.e&quot;</span><span class="p">,</span>
+                <span class="p">[</span><span class="s2">&quot;group_id&quot;</span><span class="p">,</span> <span class="s2">&quot;group_name&quot;</span><span class="p">,</span> <span class="s2">&quot;establish_date&quot;</span><span class="p">],</span>
+                <span class="p">(</span><span class="s2">&quot;teacher_in_charge_id&quot;</span><span class="p">,</span> <span class="s2">&quot;teacher&quot;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s2">&quot;member_student_id&quot;</span><span class="p">,</span> <span class="s2">&quot;student&quot;</span><span class="p">),</span>
+            <span class="p">),</span>
+        <span class="p">]</span>
+    <span class="p">},</span>
+    <span class="n">vertices</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;student&quot;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="s2">&quot;file:///home/admin/student.v&quot;</span><span class="p">,</span>
+            <span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;lesson_nums&quot;</span><span class="p">,</span> <span class="s2">&quot;avg_score&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;student_id&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="s2">&quot;teacher&quot;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="s2">&quot;file:///home/admin/teacher.v&quot;</span><span class="p">,</span>
+            <span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;salary&quot;</span><span class="p">,</span> <span class="s2">&quot;age&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;teacher_id&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">},</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 <p>‘e’ is the label of edges, and ‘v’ is the label for vertices, edges are stored in the ‘both_in_out’ format
@@ -635,36 +637,36 @@ edges with label ‘e’ linking from ‘v’ to ‘v’.</p>
 <dt>Use Dict of dict to setup a graph.</dt><dd><p>We can also give each element inside the tuple a meaningful name,
 makes it more understandable.</p>
 <p>Examples:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span>g = graphscope_session.load_from(
-    edges={
-        &quot;group&quot;: [
-            {
-                &quot;loader&quot;: &quot;file:///home/admin/group.e&quot;,
-                &quot;properties&quot;: [&quot;group_id&quot;, &quot;member_size&quot;],
-                &quot;source&quot;: (&quot;leader_student_id&quot;, &quot;student&quot;),
-                &quot;destination&quot;: (&quot;member_student_id&quot;, &quot;student&quot;),
-            },
-            {
-                &quot;loader&quot;: &quot;file:///home/admin/group_for_teacher_student.e&quot;,
-                &quot;properties&quot;: [&quot;group_id&quot;, &quot;group_name&quot;, &quot;establish_date&quot;],
-                &quot;source&quot;: (&quot;teacher_in_charge_id&quot;, &quot;teacher&quot;),
-                &quot;destination&quot;: (&quot;member_student_id&quot;, &quot;student&quot;),
-            },
-        ]
-    },
-    vertices={
-        &quot;student&quot;: {
-            &quot;loader&quot;: &quot;file:///home/admin/student.v&quot;,
-            &quot;properties&quot;: [&quot;name&quot;, &quot;lesson_nums&quot;, &quot;avg_score&quot;],
-            &quot;vid&quot;: &quot;student_id&quot;,
-        },
-        &quot;teacher&quot;: {
-            &quot;loader&quot;: &quot;file:///home/admin/teacher.v&quot;,
-            &quot;properties&quot;: [&quot;name&quot;, &quot;salary&quot;, &quot;age&quot;],
-            &quot;vid&quot;: &quot;teacher_id&quot;,
-        },
-    },
-)
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">graphscope_session</span><span class="o">.</span><span class="n">load_from</span><span class="p">(</span>
+    <span class="n">edges</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;group&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;loader&quot;</span><span class="p">:</span> <span class="s2">&quot;file:///home/admin/group.e&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;group_id&quot;</span><span class="p">,</span> <span class="s2">&quot;member_size&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;leader_student_id&quot;</span><span class="p">,</span> <span class="s2">&quot;student&quot;</span><span class="p">),</span>
+                <span class="s2">&quot;destination&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;member_student_id&quot;</span><span class="p">,</span> <span class="s2">&quot;student&quot;</span><span class="p">),</span>
+            <span class="p">},</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;loader&quot;</span><span class="p">:</span> <span class="s2">&quot;file:///home/admin/group_for_teacher_student.e&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;group_id&quot;</span><span class="p">,</span> <span class="s2">&quot;group_name&quot;</span><span class="p">,</span> <span class="s2">&quot;establish_date&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;teacher_in_charge_id&quot;</span><span class="p">,</span> <span class="s2">&quot;teacher&quot;</span><span class="p">),</span>
+                <span class="s2">&quot;destination&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;member_student_id&quot;</span><span class="p">,</span> <span class="s2">&quot;student&quot;</span><span class="p">),</span>
+            <span class="p">},</span>
+        <span class="p">]</span>
+    <span class="p">},</span>
+    <span class="n">vertices</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;student&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;loader&quot;</span><span class="p">:</span> <span class="s2">&quot;file:///home/admin/student.v&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;lesson_nums&quot;</span><span class="p">,</span> <span class="s2">&quot;avg_score&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;vid&quot;</span><span class="p">:</span> <span class="s2">&quot;student_id&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;teacher&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;loader&quot;</span><span class="p">:</span> <span class="s2">&quot;file:///home/admin/teacher.v&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;salary&quot;</span><span class="p">,</span> <span class="s2">&quot;age&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;vid&quot;</span><span class="p">:</span> <span class="s2">&quot;teacher_id&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">},</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </dd>
@@ -683,6 +685,7 @@ should be treated as directed or undirected.</p></li>
 <li><p><strong>generate_eid</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to generate a unique edge id for each edge. Generated eid will be placed
 in third column. This feature is for cooperating with interactive engine.
 If you only need to work with analytical engine, set it to False. Defaults to False.</p></li>
+<li><p><strong>vertex_map</strong> (<em>str</em><em>, </em><em>optional</em>) – Indicate use global vertex map or local vertex map. Can be “global” or “local”.</p></li>
 </ul>
 </dd>
 </dl>
@@ -756,6 +759,16 @@ If you only need to work with analytical engine, set it to False. Defaults to Fa
 
             
               
+                <dd><a href="../v0.18.0/index.html">v0.18.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../v0.17.0/index.html">v0.17.0</a></dd>
               
             
@@ -767,6 +780,16 @@ If you only need to work with analytical engine, set it to False. Defaults to Fa
             
               
                 <dd><a href="../v0.16.0/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../default-ready/index.html">default-ready</a></dd>
               
             
 
@@ -796,7 +819,57 @@ If you only need to work with analytical engine, set it to False. Defaults to Fa
 
             
               
+                <dd><a href="../after-grape-shuffle/index.html">after-grape-shuffle</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../before-grape-shuffle/index.html">before-grape-shuffle</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../v0.13.0/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../before-move-to-scala/index.html">before-move-to-scala</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../graphx-rdd-graph2frag/index.html">graphx-rdd-graph2frag</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../graphx-poc-spark/index.html">graphx-poc-spark</a></dd>
               
             
 
@@ -876,7 +949,37 @@ If you only need to work with analytical engine, set it to False. Defaults to Fa
 
             
               
+                <dd><a href="../v0.2/index.html">v0.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1/index.html">v0.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../v0.7.0/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.6.0-rev1/index.html">v0.6.0-rev1</a></dd>
               
             
 

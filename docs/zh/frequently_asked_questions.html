@@ -211,6 +211,9 @@ GraphScope 在支持以下环境中运行</p>
 <li><p>为什么在 Kubernetes 集群上拉起 GraphScope 实例时，产生超时异常？</p>
 <p>大多数情况下，超时的原因是因为在 Kubernetes 集群拉起 GraphScope 实例时需要下载对应镜像，这一步通常需要几分钟的时间，你可以通过 <code class="docutils literal notranslate"><span class="pre">graphscope.set_option(timeout_seconds=600)</span></code> 适当的增加超时等待时间来解决该问题。</p>
 </li>
+<li><p>启动GraphScope时由于连接v6d，etcd等组件失败而导致GraphScope启动失败?</p>
+<p>这可能是由于你所使用的机器（或容器）所在的企业网络内要求相应的代理设置方可正常使用网络。这些代理设置可能会导致错误的地址解析以及端口占用。为避免类似情况，可在环境变量 <code class="docutils literal notranslate"><span class="pre">no_proxy</span></code> 或 <code class="docutils literal notranslate"><span class="pre">NO_PROXY</span></code> 中加入GraphScope相关的地址，如  <code class="docutils literal notranslate"><span class="pre">hostname</span> <span class="pre">-i</span></code> 以及 <code class="docutils literal notranslate"><span class="pre">0.0.0.0</span></code> （请注意`no_proxy的前后缀规则 &lt;<a class="reference external" href="https://unix.stackexchange.com/questions/23452/set-a-network-range-in-the-no-proxy-environment-variable">https://unix.stackexchange.com/questions/23452/set-a-network-range-in-the-no-proxy-environment-variable</a>&gt;`_）</p>
+</li>
 </ol>
 <p><strong>其他问题</strong></p>
 <blockquote>
@@ -283,6 +286,16 @@ GraphScope 在支持以下环境中运行</p>
 
             
               
+                <dd><a href="../v0.18.0/zh/index.html">v0.18.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../v0.17.0/zh/index.html">v0.17.0</a></dd>
               
             
@@ -294,6 +307,16 @@ GraphScope 在支持以下环境中运行</p>
             
               
                 <dd><a href="../v0.16.0/zh/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../default-ready/zh/index.html">default-ready</a></dd>
               
             
 
@@ -323,7 +346,57 @@ GraphScope 在支持以下环境中运行</p>
 
             
               
+                <dd><a href="../after-grape-shuffle/zh/index.html">after-grape-shuffle</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../before-grape-shuffle/zh/index.html">before-grape-shuffle</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../v0.13.0/zh/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../before-move-to-scala/zh/index.html">before-move-to-scala</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../graphx-rdd-graph2frag/zh/index.html">graphx-rdd-graph2frag</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../graphx-poc-spark/zh/index.html">graphx-poc-spark</a></dd>
               
             
 
@@ -403,7 +476,37 @@ GraphScope 在支持以下环境中运行</p>
 
             
               
+                <dd><a href="../v0.2/zh/index.html">v0.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1/zh/index.html">v0.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../v0.7.0/zh/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.6.0-rev1/zh/index.html">v0.6.0-rev1</a></dd>
               
             
 

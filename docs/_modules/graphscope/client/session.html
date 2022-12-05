@@ -1185,9 +1185,18 @@
         <span class="sd">&quot;&quot;&quot;Get configuration of the session.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config_params</span></div>
 
-    <span class="k">def</span> <span class="nf">g</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">oid_type</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">generate_eid</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">g</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">incoming_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">oid_type</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">,</span>
+        <span class="n">directed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">generate_eid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">vertex_map</span><span class="o">=</span><span class="s2">&quot;global&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span>
-            <span class="n">GraphDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming_data</span><span class="p">,</span> <span class="n">oid_type</span><span class="p">,</span> <span class="n">directed</span><span class="p">,</span> <span class="n">generate_eid</span><span class="p">)</span>
+            <span class="n">GraphDAGNode</span><span class="p">(</span>
+                <span class="bp">self</span><span class="p">,</span> <span class="n">incoming_data</span><span class="p">,</span> <span class="n">oid_type</span><span class="p">,</span> <span class="n">directed</span><span class="p">,</span> <span class="n">generate_eid</span><span class="p">,</span> <span class="n">vertex_map</span>
+            <span class="p">)</span>
         <span class="p">)</span>
 
 <div class="viewcode-block" id="Session.load_from"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.load_from">[docs]</a>    <span class="k">def</span> <span class="nf">load_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -1243,6 +1252,7 @@
         <span class="n">endpoint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">create_interactive_instance</span><span class="p">(</span><span class="n">object_id</span><span class="p">,</span> <span class="n">schema_path</span><span class="p">)</span>
         <span class="n">interactive_query</span> <span class="o">=</span> <span class="n">InteractiveQuery</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_dict</span><span class="p">[</span><span class="n">object_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">interactive_query</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">_attach_interactive_instance</span><span class="p">(</span><span class="n">interactive_query</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">interactive_query</span></div>
 
 <div class="viewcode-block" id="Session.learning"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.learning">[docs]</a>    <span class="k">def</span> <span class="nf">learning</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gen_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -1316,14 +1326,17 @@
         <span class="kn">from</span> <span class="nn">graphscope.learning.graph</span> <span class="kn">import</span> <span class="n">Graph</span> <span class="k">as</span> <span class="n">LearningGraph</span>
         <span class="kn">from</span> <span class="nn">graphscope.learning.graph</span> <span class="kn">import</span> <span class="n">get_gl_handle</span>
 
-        <span class="n">object_id</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span>
-        <span class="n">schema</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">schema</span>
-        <span class="n">engine_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine_config</span>
-        <span class="n">handle</span> <span class="o">=</span> <span class="n">get_gl_handle</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">object_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pod_name_list</span><span class="p">,</span> <span class="n">engine_config</span><span class="p">)</span>
+        <span class="n">handle</span> <span class="o">=</span> <span class="n">get_gl_handle</span><span class="p">(</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pod_name_list</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_engine_config</span><span class="p">,</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">fragments</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="n">config</span> <span class="o">=</span> <span class="n">LearningGraph</span><span class="o">.</span><span class="n">preprocess_args</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">gen_labels</span><span class="p">)</span>
         <span class="n">config</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">config</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
         <span class="n">handle</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">endpoints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">create_learning_instance</span><span class="p">(</span>
-            <span class="n">object_id</span><span class="p">,</span> <span class="n">handle</span><span class="p">,</span> <span class="n">config</span>
+            <span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">,</span> <span class="n">handle</span><span class="p">,</span> <span class="n">config</span>
         <span class="p">)</span>
 
         <span class="n">handle</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
@@ -1331,8 +1344,9 @@
         <span class="n">handle</span><span class="p">[</span><span class="s2">&quot;client_count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
 
         <span class="c1"># construct learning graph</span>
-        <span class="n">g</span> <span class="o">=</span> <span class="n">LearningGraph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">handle</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">object_id</span><span class="p">)</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">LearningGraph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">handle</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_learning_instance_dict</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">g</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">_attach_learning_instance</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">g</span></div>
 
     <span class="k">def</span> <span class="nf">nx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1560,7 +1574,13 @@
 <span class="n">_default_session_stack</span> <span class="o">=</span> <span class="n">_DefaultSessionStack</span><span class="p">()</span>  <span class="c1"># pylint: disable=protected-access</span>
 
 
-<div class="viewcode-block" id="g"><a class="viewcode-back" href="../../../reference/generated/graphscope.g.html#graphscope.g">[docs]</a><span class="k">def</span> <span class="nf">g</span><span class="p">(</span><span class="n">incoming_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">oid_type</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">generate_eid</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="g"><a class="viewcode-back" href="../../../reference/generated/graphscope.g.html#graphscope.g">[docs]</a><span class="k">def</span> <span class="nf">g</span><span class="p">(</span>
+    <span class="n">incoming_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">oid_type</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">,</span>
+    <span class="n">directed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">generate_eid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">vertex_map</span><span class="o">=</span><span class="s2">&quot;global&quot;</span><span class="p">,</span>
+<span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Construct a GraphScope graph object on the default session.</span>
 
 <span class="sd">    It will launch and set a session to default when there is no default session found.</span>
@@ -1582,7 +1602,9 @@
 <span class="sd">        &gt;&gt;&gt; sess.as_default()</span>
 <span class="sd">        &gt;&gt;&gt; g = graphscope.g() # creating graph on the session &quot;sess&quot;</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">get_default_session</span><span class="p">()</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">incoming_data</span><span class="p">,</span> <span class="n">oid_type</span><span class="p">,</span> <span class="n">directed</span><span class="p">,</span> <span class="n">generate_eid</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">get_default_session</span><span class="p">()</span><span class="o">.</span><span class="n">g</span><span class="p">(</span>
+        <span class="n">incoming_data</span><span class="p">,</span> <span class="n">oid_type</span><span class="p">,</span> <span class="n">directed</span><span class="p">,</span> <span class="n">generate_eid</span><span class="p">,</span> <span class="n">vertex_map</span>
+    <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="gremlin"><a class="viewcode-back" href="../../../reference/generated/graphscope.gremlin.html#graphscope.gremlin">[docs]</a><span class="k">def</span> <span class="nf">gremlin</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
@@ -1602,9 +1624,11 @@
 <span class="sd">        &gt;&gt;&gt; g = graphscope.g()</span>
 <span class="sd">        &gt;&gt;&gt; interactive_query = graphscope.gremlin()</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">_default_session_stack</span><span class="o">.</span><span class="n">is_cleared</span><span class="p">():</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;No default session found.&quot;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">get_default_session</span><span class="p">()</span><span class="o">.</span><span class="n">gremlin</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span></div>
+    <span class="k">assert</span> <span class="n">graph</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;graph cannot be None&quot;</span>
+    <span class="k">assert</span> <span class="p">(</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">_session</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="p">),</span> <span class="s2">&quot;The graph object is invalid&quot;</span>  <span class="c1"># pylint: disable=protected-access</span>
+    <span class="k">return</span> <span class="n">graph</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">gremlin</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>  <span class="c1"># pylint: disable=protected-access</span></div>
 
 
 <div class="viewcode-block" id="graphlearn"><a class="viewcode-back" href="../../../reference/generated/graphscope.graphlearn.html#graphscope.graphlearn">[docs]</a><span class="k">def</span> <span class="nf">graphlearn</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gen_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -1624,9 +1648,13 @@
 <span class="sd">        &gt;&gt;&gt; g = graphscope.g()</span>
 <span class="sd">        &gt;&gt;&gt; lg = graphscope.learning(g)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">_default_session_stack</span><span class="o">.</span><span class="n">is_cleared</span><span class="p">():</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;No de fault session found.&quot;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">get_default_session</span><span class="p">()</span><span class="o">.</span><span class="n">graphlearn</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">gen_labels</span><span class="p">)</span></div>
+    <span class="k">assert</span> <span class="n">graph</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;graph cannot be None&quot;</span>
+    <span class="k">assert</span> <span class="p">(</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">_session</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="p">),</span> <span class="s2">&quot;The graph object is invalid&quot;</span>  <span class="c1"># pylint: disable=protected-access</span>
+    <span class="k">return</span> <span class="n">graph</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">graphlearn</span><span class="p">(</span>
+        <span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">gen_labels</span>
+    <span class="p">)</span>  <span class="c1"># pylint: disable=protected-access</span></div>
 </pre></div>
 
            </div>
@@ -1690,6 +1718,16 @@
 
             
               
+                <dd><a href="../../../v0.18.0/index.html">v0.18.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../../../v0.17.0/index.html">v0.17.0</a></dd>
               
             
@@ -1701,6 +1739,16 @@
             
               
                 <dd><a href="../../../v0.16.0/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../default-ready/index.html">default-ready</a></dd>
               
             
 
@@ -1730,7 +1778,57 @@
 
             
               
+                <dd><a href="../../../after-grape-shuffle/index.html">after-grape-shuffle</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../before-grape-shuffle/index.html">before-grape-shuffle</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../../../v0.13.0/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../before-move-to-scala/index.html">before-move-to-scala</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../graphx-rdd-graph2frag/index.html">graphx-rdd-graph2frag</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../graphx-poc-spark/index.html">graphx-poc-spark</a></dd>
               
             
 
@@ -1810,7 +1908,37 @@
 
             
               
+                <dd><a href="../../../v0.2/index.html">v0.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1/index.html">v0.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../../../v0.7.0/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.6.0-rev1/index.html">v0.6.0-rev1</a></dd>
               
             
 

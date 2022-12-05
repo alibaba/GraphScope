@@ -306,6 +306,7 @@
         <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">OID_TYPE</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_oid_type</span><span class="p">)</span>
         <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">VID_TYPE</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="s2">&quot;uint64_t&quot;</span><span class="p">)</span>
         <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">IS_FROM_VINEYARD_ID</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">b_to_attr</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="n">types_pb2</span><span class="o">.</span><span class="n">VERTEX_MAP_TYPE</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">i_to_attr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_vertex_map</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">create_graph</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">config</span>
         <span class="p">)</span>
@@ -347,6 +348,7 @@
         <span class="n">oid_type</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">,</span>
         <span class="n">directed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">generate_eid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">vertex_map</span><span class="o">=</span><span class="s2">&quot;global&quot;</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Construct a :class:`GraphDAGNode` object.</span>
 
@@ -363,6 +365,9 @@
 <span class="sd">            oid_type: (str, optional): Type of vertex original id. Defaults to &quot;int64&quot;.</span>
 <span class="sd">            directed: (bool, optional): Directed graph or not. Defaults to True.</span>
 <span class="sd">            generate_eid: (bool, optional): Generate id for each edge when setted True. Defaults to True.</span>
+<span class="sd">            vertex_map (str, optional): Indicate use global vertex map or local vertex map. Can be &quot;global&quot; or &quot;local&quot;.</span>
+<span class="sd">                Defaults to global.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
@@ -374,6 +379,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_directed</span> <span class="o">=</span> <span class="n">directed</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_generate_eid</span> <span class="o">=</span> <span class="n">generate_eid</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_graph_type</span> <span class="o">=</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_vertex_map</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">vertex_map_type_to_enum</span><span class="p">(</span><span class="n">vertex_map</span><span class="p">)</span>
+
         <span class="c1"># list of pair &lt;parent_op_key, VertexLabel/EdgeLabel&gt;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_unsealed_vertices_and_edges</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
         <span class="c1"># check for newly added vertices and edges.</span>
@@ -427,7 +434,12 @@
         <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">project_to_simple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">v_prop</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">e_prop</span><span class="p">))</span>
         <span class="c1"># construct dag node</span>
         <span class="n">graph_dag_node</span> <span class="o">=</span> <span class="n">GraphDAGNode</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_oid_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_directed</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_eid</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span>
+            <span class="n">op</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_oid_type</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_directed</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_generate_eid</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_vertex_map</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">graph_dag_node</span><span class="o">.</span><span class="n">_base_graph</span> <span class="o">=</span> <span class="bp">self</span>
         <span class="k">return</span> <span class="n">graph_dag_node</span>
@@ -445,7 +457,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_graph_type</span> <span class="o">=</span> <span class="n">incoming_data</span><span class="o">.</span><span class="n">graph_type</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">incoming_data</span><span class="p">,</span> <span class="n">GraphDAGNode</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">incoming_data</span><span class="o">.</span><span class="n">session_id</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> not in the same session.&quot;</span><span class="o">.</span><span class="n">formar</span><span class="p">(</span><span class="n">incoming_data</span><span class="p">))</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">incoming_data</span><span class="si">}</span><span class="s2"> not in the same session.&quot;</span><span class="p">)</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span>
         <span class="k">elif</span> <span class="n">vineyard</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span>
             <span class="n">incoming_data</span><span class="p">,</span> <span class="p">(</span><span class="n">vineyard</span><span class="o">.</span><span class="n">Object</span><span class="p">,</span> <span class="n">vineyard</span><span class="o">.</span><span class="n">ObjectID</span><span class="p">,</span> <span class="n">vineyard</span><span class="o">.</span><span class="n">ObjectName</span><span class="p">)</span>
@@ -553,7 +565,12 @@
         <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">add_labels_to_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loader_op</span><span class="p">)</span>
         <span class="c1"># construct dag node</span>
         <span class="n">graph_dag_node</span> <span class="o">=</span> <span class="n">GraphDAGNode</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_oid_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_directed</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_eid</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span>
+            <span class="n">op</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_oid_type</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_directed</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_generate_eid</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_vertex_map</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">graph_dag_node</span><span class="o">.</span><span class="n">_v_labels</span> <span class="o">=</span> <span class="n">v_labels</span>
         <span class="n">graph_dag_node</span><span class="o">.</span><span class="n">_e_labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_e_labels</span>
@@ -702,7 +719,12 @@
         <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">add_labels_to_graph</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">loader_op</span><span class="p">)</span>
         <span class="c1"># construct dag node</span>
         <span class="n">graph_dag_node</span> <span class="o">=</span> <span class="n">GraphDAGNode</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_oid_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_directed</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_eid</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span>
+            <span class="n">op</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_oid_type</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_directed</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_generate_eid</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_vertex_map</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">graph_dag_node</span><span class="o">.</span><span class="n">_v_labels</span> <span class="o">=</span> <span class="n">v_labels</span>
         <span class="n">graph_dag_node</span><span class="o">.</span><span class="n">_e_labels</span> <span class="o">=</span> <span class="n">e_labels</span>
@@ -740,7 +762,7 @@
             <span class="n">results</span><span class="o">.</span><span class="n">_check_selector</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
         <span class="n">selector</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span>
         <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">selector</span><span class="p">)</span>
-        <span class="n">graph_dag_node</span> <span class="o">=</span> <span class="n">GraphDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
+        <span class="n">graph_dag_node</span> <span class="o">=</span> <span class="n">GraphDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">vertex_map</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_vertex_map</span><span class="p">)</span>
         <span class="n">graph_dag_node</span><span class="o">.</span><span class="n">_base_graph</span> <span class="o">=</span> <span class="bp">self</span>
         <span class="k">return</span> <span class="n">graph_dag_node</span></div>
 
@@ -786,7 +808,12 @@
         <span class="p">)</span>
         <span class="c1"># construct dag node</span>
         <span class="n">graph_dag_node</span> <span class="o">=</span> <span class="n">GraphDAGNode</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_oid_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_directed</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_eid</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span>
+            <span class="n">op</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_oid_type</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_directed</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_generate_eid</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_vertex_map</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">graph_dag_node</span><span class="o">.</span><span class="n">_base_graph</span> <span class="o">=</span> <span class="bp">self</span>
         <span class="k">return</span> <span class="n">graph_dag_node</span></div></div>
@@ -830,8 +857,14 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_vineyard_id</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fragments</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span> <span class="o">=</span> <span class="n">GraphSchema</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_detached</span> <span class="o">=</span> <span class="kc">False</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_detached</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_vertex_map</span> <span class="o">=</span> <span class="n">graph_node</span><span class="o">.</span><span class="n">_vertex_map</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_learning_instance_list</span> <span class="o">=</span> <span class="p">[]</span></div>
 
     <span class="k">def</span> <span class="nf">update_from_graph_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_def</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_FLATTENED</span><span class="p">:</span>
@@ -848,6 +881,7 @@
         <span class="n">vy_info</span> <span class="o">=</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">VineyardInfoPb</span><span class="p">()</span>
         <span class="n">graph_def</span><span class="o">.</span><span class="n">extension</span><span class="o">.</span><span class="n">Unpack</span><span class="p">(</span><span class="n">vy_info</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_vineyard_id</span> <span class="o">=</span> <span class="n">vy_info</span><span class="o">.</span><span class="n">vineyard_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fragments</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">vy_info</span><span class="o">.</span><span class="n">fragments</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_oid_type</span> <span class="o">=</span> <span class="n">data_type_to_cpp</span><span class="p">(</span><span class="n">vy_info</span><span class="o">.</span><span class="n">oid_type</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_generate_eid</span> <span class="o">=</span> <span class="n">vy_info</span><span class="o">.</span><span class="n">generate_eid</span>
 
@@ -908,10 +942,14 @@
         <span class="n">vid_type</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">data_type_to_cpp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">_vid_type</span><span class="p">)</span>
         <span class="n">vdata_type</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">data_type_to_cpp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">vdata_type</span><span class="p">)</span>
         <span class="n">edata_type</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">data_type_to_cpp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="o">.</span><span class="n">edata_type</span><span class="p">)</span>
+        <span class="n">vertex_map_type</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">vertex_map_type_to_cpp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_vertex_map</span><span class="p">)</span>
+        <span class="n">vertex_map_type</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">vertex_map_type</span><span class="si">}</span><span class="s2">&lt;</span><span class="si">{</span><span class="n">oid_type</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">vid_type</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">:</span>
-            <span class="n">template</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;vineyard::ArrowFragment&lt;</span><span class="si">{</span><span class="n">oid_type</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">vid_type</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
+            <span class="n">template</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;vineyard::ArrowFragment&lt;</span><span class="si">{</span><span class="n">oid_type</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">vid_type</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">vertex_map_type</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
+            <span class="p">)</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROJECTED</span><span class="p">:</span>
-            <span class="n">template</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;gs::ArrowProjectedFragment&lt;</span><span class="si">{</span><span class="n">oid_type</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">vid_type</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">vdata_type</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">edata_type</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
+            <span class="n">template</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;gs::ArrowProjectedFragment&lt;</span><span class="si">{</span><span class="n">oid_type</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">vid_type</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">vdata_type</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">edata_type</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">vertex_map_type</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_FLATTENED</span><span class="p">:</span>
             <span class="n">template</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;ArrowFlattenedFragmen&lt;</span><span class="si">{</span><span class="n">oid_type</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">vid_type</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">vdata_type</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">edata_type</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">DYNAMIC_PROJECTED</span><span class="p">:</span>
@@ -928,6 +966,10 @@
 <span class="sd">            str: return vineyard id of this graph</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vineyard_id</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fragments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fragments</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">session_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -968,10 +1010,18 @@
 
     <span class="k">def</span> <span class="nf">_unload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Unload this graph from graphscope engine.&quot;&quot;&quot;</span>
+        <span class="n">rlt</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;active&quot;</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_detached</span><span class="p">:</span>
-            <span class="n">rlt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph_node</span><span class="o">.</span><span class="n">_unload</span><span class="p">())</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_detached</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="c1"># close the associated interactive and learning instances</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_close_interactive_instances</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_close_learning_instances</span><span class="p">()</span>
+
+        <span class="c1"># unload the graph</span>
+        <span class="n">rlt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph_node</span><span class="o">.</span><span class="n">_unload</span><span class="p">())</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">return</span> <span class="n">rlt</span>
 
@@ -1185,7 +1235,37 @@
     <span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">loaded</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;The graph is not loaded&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph_node</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="p">,</span> <span class="n">edges</span><span class="p">))</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph_node</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="p">,</span> <span class="n">edges</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_attach_interactive_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Store the instance when a new interactive instance is started.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            instance: interactive instance</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_attach_learning_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Store the instance when a new learning instance is created.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            instance: learning instance</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_learning_instance_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_close_interactive_instances</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">instance</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_list</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">instance</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except,invalid-name</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Failed to close interactive instances: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_list</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_close_learning_instances</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">instance</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_learning_instance_list</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">instance</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except,invalid-name</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Failed to close interactive instances: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_learning_instance_list</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
 
 
 <span class="k">class</span> <span class="nc">UnloadedGraph</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">):</span>
@@ -1259,6 +1339,16 @@
 
             
               
+                <dd><a href="../../../v0.18.0/index.html">v0.18.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../../../v0.17.0/index.html">v0.17.0</a></dd>
               
             
@@ -1270,6 +1360,16 @@
             
               
                 <dd><a href="../../../v0.16.0/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../default-ready/index.html">default-ready</a></dd>
               
             
 
@@ -1299,7 +1399,57 @@
 
             
               
+                <dd><a href="../../../after-grape-shuffle/index.html">after-grape-shuffle</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../before-grape-shuffle/index.html">before-grape-shuffle</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../../../v0.13.0/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../before-move-to-scala/index.html">before-move-to-scala</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../graphx-rdd-graph2frag/index.html">graphx-rdd-graph2frag</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../graphx-poc-spark/index.html">graphx-poc-spark</a></dd>
               
             
 
@@ -1379,7 +1529,37 @@
 
             
               
+                <dd><a href="../../../v0.2/index.html">v0.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1/index.html">v0.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../../../v0.7.0/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.6.0-rev1/index.html">v0.6.0-rev1</a></dd>
               
             
 

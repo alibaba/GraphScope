@@ -168,8 +168,8 @@ make client
 <h2>基于 Kubernetes 环境构建并测试 GraphScope<a class="headerlink" href="#kubernetes-graphscope" title="Permalink to this headline"></a></h2>
 <p>开发者需要通过 <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span></code> 的命令从我们的开源代码库 <a class="reference external" href="https://github.com/alibaba/GraphScope">repo</a> 中获得最新版的代码,
 在此基础上做开发或代码的更改，然后通过如下命令构建 GraphScope 镜像。</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope
-make graphscope-dev-image
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope/k8s
+make graphscope-dev
 </pre></div>
 </div>
 <p>该命令会开始 GraphScope 的构建过程，该过程将在 <cite>graphscope-vineyard</cite> 的容器中构建当前源代码， 并将生成的可执行文件复制到
@@ -197,14 +197,14 @@ python3 setup.py install
 <ul class="simple">
 <li><p>构建 GraphScope Server Wheels</p></li>
 </ul>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope/k8s/internal
 make graphscope-py3-package
 </pre></div>
 </div>
 <ul class="simple">
 <li><p>在 Python{36,37,38,39} 下分别构建 GraphScope client wheels</p></li>
 </ul>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope/k8s/internal
 make graphscope-client-py3-package
 </pre></div>
 </div>
@@ -212,7 +212,7 @@ make graphscope-client-py3-package
 <div class="section" id="macos">
 <h3>macOS<a class="headerlink" href="#macos" title="Permalink to this headline"></a></h3>
 <p>由于 macOS 下的构建过程是在本地(非docker container)中进行，因此需要本地事先安装 GraphScope 的依赖。</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope/k8s/internal
 ./scripts/install_deps.sh --dev --vineyard_prefix /opt/vineyard
 <span class="nb">source</span> ~/.graphscope_env
 </pre></div>
@@ -220,14 +220,14 @@ make graphscope-client-py3-package
 <ul class="simple">
 <li><p>构建 GraphScope Server Wheels</p></li>
 </ul>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope/k8s/internal
 make graphscope-py3-package
 </pre></div>
 </div>
 <ul class="simple">
 <li><p>基于当前 Mac 环境下的 Python 版本构建 GraphScope client wheels</p></li>
 </ul>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope/k8s/internal
 make graphscope-client-py3-package
 </pre></div>
 </div>
@@ -306,6 +306,16 @@ make graphscope-client-py3-package
 
             
               
+                <dd><a href="../v0.18.0/zh/index.html">v0.18.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../v0.17.0/zh/index.html">v0.17.0</a></dd>
               
             
@@ -317,6 +327,16 @@ make graphscope-client-py3-package
             
               
                 <dd><a href="../v0.16.0/zh/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../default-ready/zh/index.html">default-ready</a></dd>
               
             
 
@@ -346,7 +366,57 @@ make graphscope-client-py3-package
 
             
               
+                <dd><a href="../after-grape-shuffle/zh/index.html">after-grape-shuffle</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../before-grape-shuffle/zh/index.html">before-grape-shuffle</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../v0.13.0/zh/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../before-move-to-scala/zh/index.html">before-move-to-scala</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../graphx-rdd-graph2frag/zh/index.html">graphx-rdd-graph2frag</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../graphx-poc-spark/zh/index.html">graphx-poc-spark</a></dd>
               
             
 
@@ -426,7 +496,37 @@ make graphscope-client-py3-package
 
             
               
+                <dd><a href="../v0.2/zh/index.html">v0.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.1/zh/index.html">v0.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../v0.7.0/zh/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../v0.6.0-rev1/zh/index.html">v0.6.0-rev1</a></dd>
               
             
 

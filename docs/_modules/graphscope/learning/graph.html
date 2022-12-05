@@ -145,6 +145,7 @@
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 
 <span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">graphlearn</span>
     <span class="kn">from</span> <span class="nn">graphlearn</span> <span class="kn">import</span> <span class="n">Graph</span> <span class="k">as</span> <span class="n">GLGraph</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
     <span class="n">GLGraph</span> <span class="o">=</span> <span class="nb">object</span>
@@ -194,13 +195,10 @@
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">edge_attributes</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">edge_attr</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n_ints</span><span class="p">,</span> <span class="n">n_floats</span><span class="p">,</span> <span class="n">n_strings</span><span class="p">)</span>
 
-        <span class="k">for</span> <span class="n">node_view_label</span><span class="p">,</span> <span class="n">node_label</span><span class="p">,</span> <span class="n">nsplit</span><span class="p">,</span> <span class="n">split_range</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;gen_labels&quot;</span><span class="p">]:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">node_view</span><span class="p">(</span>
-                <span class="n">node_view_label</span><span class="p">,</span> <span class="n">node_label</span><span class="p">,</span> <span class="n">nsplit</span><span class="o">=</span><span class="n">nsplit</span><span class="p">,</span> <span class="n">split_range</span><span class="o">=</span><span class="n">split_range</span>
-            <span class="p">)</span>
+        <span class="k">for</span> <span class="n">mask</span><span class="p">,</span> <span class="n">node_label</span><span class="p">,</span> <span class="n">nsplit</span><span class="p">,</span> <span class="n">split_range</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;gen_labels&quot;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">node_view</span><span class="p">(</span><span class="n">node_label</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">nsplit</span><span class="o">=</span><span class="n">nsplit</span><span class="p">,</span> <span class="n">split_range</span><span class="o">=</span><span class="n">split_range</span><span class="p">)</span>
 
-        <span class="c1"># server_own=False: make sure the glog inside graph-learn get initialized</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">init_vineyard</span><span class="p">(</span><span class="n">worker_index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">worker_count</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">server_own</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_vineyard</span><span class="p">(</span><span class="n">worker_index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">worker_count</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">decode_arg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">arg</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
@@ -208,11 +206,12 @@
         <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphscope_session</span><span class="o">.</span><span class="n">closed</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">closed</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="nb">super</span><span class="p">(</span><span class="n">Graph</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>  <span class="c1"># close client first</span>
-            <span class="c1"># close server instance</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">graphscope_session</span><span class="o">.</span><span class="n">_close_learning_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphscope_session</span><span class="o">.</span><span class="n">closed</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">closed</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Graph</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>  <span class="c1"># close client first</span>
+        <span class="c1"># close server instance</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graphscope_session</span><span class="o">.</span><span class="n">_close_learning_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>  <span class="c1"># noqa: C901</span>
     <span class="k">def</span> <span class="nf">preprocess_args</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">gen_labels</span><span class="p">):</span>  <span class="c1"># noqa: C901</span>
@@ -333,74 +332,58 @@
         <span class="n">handle_copy</span><span class="p">[</span><span class="s2">&quot;client_count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">worker_count</span>
         <span class="k">return</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">handle_copy</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Graph.V"><a class="viewcode-back" href="../../../reference/learning.html#graphscope.learning.graph.Graph.V">[docs]</a>    <span class="k">def</span> <span class="nf">V</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Entry of Gremlin-like query. Start from node.</span>
+<div class="viewcode-block" id="Graph.V"><a class="viewcode-back" href="../../../reference/learning.html#graphscope.learning.graph.Graph.V">[docs]</a>    <span class="k">def</span> <span class="nf">V</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">t</span><span class="p">,</span>
+        <span class="n">feed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">node_from</span><span class="o">=</span><span class="n">graphlearn</span><span class="o">.</span><span class="n">pywrap</span><span class="o">.</span><span class="n">NodeFrom</span><span class="o">.</span><span class="n">NODE</span><span class="p">,</span>
+        <span class="n">mask</span><span class="o">=</span><span class="n">graphlearn</span><span class="o">.</span><span class="n">python</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">Mask</span><span class="o">.</span><span class="n">NONE</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Entry of GSL, starting from VERTEX.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">        t (string): The type of node which is the entry of query or the type</span>
-<span class="sd">                    of edge when node is from edge source or dst.</span>
-<span class="sd">        feed (None| numpy.ndarray | types.GeneratorType | `Nodes`): When `feed`</span>
-<span class="sd">            is not `None`, the `type` should be a node type, which means query the</span>
-<span class="sd">            attributes of the specified node ids.</span>
-<span class="sd">            None: Default. Sample nodes with the following .shuffle and .batch API.</span>
-<span class="sd">            numpy.ndarray: Any shape of ids. Get nodes of the given ids and</span>
-<span class="sd">            node_type.</span>
-<span class="sd">            types.Generator: A generator of numpy.ndarray. Get nodes of generated</span>
-<span class="sd">            ids and given node_type.</span>
-<span class="sd">            `Nodes`: A `Nodes` object.</span>
+<span class="sd">            t (string): The type of node which is the entry of query or the type</span>
+<span class="sd">                of edge when node is from edge source or dst.</span>
+<span class="sd">            feed (None| numpy.ndarray | types.GeneratorType | `Nodes`): When `feed`</span>
+<span class="sd">                is not `None`, the `type` should be a node type, which means query the</span>
+<span class="sd">                attributes of the specified node ids.</span>
 
-<span class="sd">        Return:</span>
-<span class="sd">        A &#39;Query&#39; object.</span>
-
-<span class="sd">        Example:</span>
-
-<span class="sd">        .. code:: python</span>
-
-<span class="sd">            &gt;&gt;&gt; import numpy as np</span>
-<span class="sd">            &gt;&gt;&gt; g.V(&quot;user&quot;).shuffle().batch(64)</span>
-<span class="sd">            &gt;&gt;&gt; g.V(&quot;user&quot;, feed=np.array([1, 2, 3]))</span>
-<span class="sd">            &gt;&gt;&gt; def gen():</span>
-<span class="sd">            &gt;&gt;&gt;   while True:</span>
-<span class="sd">            &gt;&gt;&gt;     yield  np.array([1, 2, 3])</span>
-<span class="sd">            &gt;&gt;&gt; gen = gen()</span>
-<span class="sd">            &gt;&gt;&gt; g.V(&quot;user&quot;, feed=gen)</span>
+<span class="sd">                - None: Default. Sample nodes with the following .shuffle and .batch API.</span>
+<span class="sd">                  numpy.ndarray: Any shape of ids. Get nodes of the given ids and</span>
+<span class="sd">                  node_type.</span>
+<span class="sd">                - types.Generator: A generator of numpy.ndarray. Get nodes of generated</span>
+<span class="sd">                  ids and given node_type.</span>
+<span class="sd">                - `Nodes`: A `Nodes` object.</span>
+<span class="sd">            node_from (NodeFrom): Default is `NodeFrom.NODE`, which means sample or</span>
+<span class="sd">                or iterate node from node. `NodeFrom.EDGE_SRC` means sample or</span>
+<span class="sd">                iterate node from source node of edge, and `NodeFrom.EDGE_DST` means</span>
+<span class="sd">                sample or iterate node from destination node of edge. If node is from</span>
+<span class="sd">                edge, the `type` must be an edge type.</span>
+<span class="sd">            mask (NONE | TRAIN | TEST | VAL): The given node set is indexed by both the</span>
+<span class="sd">                raw node type and mask value. The default mask value is NONE, which plays</span>
+<span class="sd">                nothing on the index.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">Graph</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">feed</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">Graph</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">feed</span><span class="p">,</span> <span class="n">node_from</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Graph.E"><a class="viewcode-back" href="../../../reference/learning.html#graphscope.learning.graph.Graph.E">[docs]</a>    <span class="k">def</span> <span class="nf">E</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge_type</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Entry of Gremlin-like query. Start from edge.</span>
+        <span class="sd">&quot;&quot;&quot;Entry of GSL, starting from EDGE.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            edge_type (string): The type of edge which is the entry of query.</span>
 <span class="sd">            feed (None| (np.ndarray, np.ndarray) | types.GeneratorType | `Edges`):</span>
-<span class="sd">                None: Default. Sample edges with the following .shuffle and .batch API.</span>
-<span class="sd">                (np.ndarray, np.ndarray): src_ids, dst_ids. Get edges of the given</span>
-<span class="sd">                (src_ids, dst_ids) and given edge_type. src_ids and dst_ids must be</span>
-<span class="sd">                the same shape, dtype is int.</span>
-<span class="sd">                types.Generator: A generator of (numpy.ndarray, numpy.ndarray). Get</span>
-<span class="sd">                edges of generated (src_ids, dst_ids) and given edge_type.</span>
-<span class="sd">                `Edges`: An `Edges` object.</span>
 
-<span class="sd">        Return:</span>
-<span class="sd">            A &#39;Query&#39; object.</span>
-
-<span class="sd">        Example:</span>
-
-<span class="sd">        .. code:: python</span>
-
-<span class="sd">            &gt;&gt;&gt; import numpy as np</span>
-<span class="sd">            &gt;&gt;&gt; g.E(&quot;buy&quot;).shuffle().batch(64)</span>
-<span class="sd">            &gt;&gt;&gt; g.E(&quot;buy&quot;, feed=(np.array([1, 2, 3]), np.array([4, 5, 6]))</span>
-<span class="sd">            &gt;&gt;&gt; def gen():</span>
-<span class="sd">            &gt;&gt;&gt;   while True:</span>
-<span class="sd">            &gt;&gt;&gt;     yield  (np.array([1, 2, 3]), np.array([4, 5, 6]))</span>
-<span class="sd">            &gt;&gt;&gt; gen = gen()</span>
-<span class="sd">            &gt;&gt;&gt; g.E(&quot;buy&quot;, feed=gen)</span>
+<span class="sd">                - None: Default. Sample edges with the following .shuffle and .batch API.</span>
+<span class="sd">                  (np.ndarray, np.ndarray): src_ids, dst_ids. Get edges of the given</span>
+<span class="sd">                  (src_ids, dst_ids) and given edge_type. src_ids and dst_ids must be</span>
+<span class="sd">                  the same shape, dtype is int.</span>
+<span class="sd">                - types.Generator: A generator of (numpy.ndarray, numpy.ndarray). Get</span>
+<span class="sd">                  edges of generated (src_ids, dst_ids) and given edge_type.</span>
+<span class="sd">                - `Edges`: An `Edges` object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">Graph</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">E</span><span class="p">(</span><span class="n">edge_type</span><span class="p">,</span> <span class="n">feed</span><span class="p">,</span> <span class="n">reverse</span><span class="p">)</span></div></div>
 
 
-<span class="k">def</span> <span class="nf">get_gl_handle</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">vineyard_id</span><span class="p">,</span> <span class="n">engine_hosts</span><span class="p">,</span> <span class="n">engine_config</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">get_gl_handle</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">vineyard_id</span><span class="p">,</span> <span class="n">engine_hosts</span><span class="p">,</span> <span class="n">engine_config</span><span class="p">,</span> <span class="n">fragments</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Dump a handler for GraphLearn for interaction.</span>
 
 <span class="sd">    Fields in :code:`schema` are:</span>
@@ -421,6 +404,7 @@
 <span class="sd">            &quot;client_count&quot;: 1,</span>
 <span class="sd">            &quot;vineyard_socket&quot;: &quot;/var/run/vineyard.sock&quot;,</span>
 <span class="sd">            &quot;vineyard_id&quot;: 13278328736,</span>
+<span class="sd">            &quot;fragments&quot;: [13278328736, ...],  # fragment ids</span>
 <span class="sd">            &quot;node_schema&quot;: [</span>
 <span class="sd">                &quot;user:false:false:10:0:0&quot;,</span>
 <span class="sd">                &quot;item:true:false:0:0:5&quot;</span>
@@ -513,6 +497,7 @@
         <span class="s2">&quot;edge_schema&quot;</span><span class="p">:</span> <span class="n">edge_schema</span><span class="p">,</span>
         <span class="s2">&quot;node_attribute_types&quot;</span><span class="p">:</span> <span class="n">node_attribute_types</span><span class="p">,</span>
         <span class="s2">&quot;edge_attribute_types&quot;</span><span class="p">:</span> <span class="n">edge_attribute_types</span><span class="p">,</span>
+        <span class="s2">&quot;fragments&quot;</span><span class="p">:</span> <span class="n">fragments</span><span class="p">,</span>
     <span class="p">}</span>
     <span class="n">handle_json_string</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">handle_json_string</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
@@ -579,6 +564,16 @@
 
             
               
+                <dd><a href="../../../v0.18.0/index.html">v0.18.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../../../v0.17.0/index.html">v0.17.0</a></dd>
               
             
@@ -590,6 +585,16 @@
             
               
                 <dd><a href="../../../v0.16.0/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../default-ready/index.html">default-ready</a></dd>
               
             
 
@@ -619,7 +624,57 @@
 
             
               
+                <dd><a href="../../../after-grape-shuffle/index.html">after-grape-shuffle</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../before-grape-shuffle/index.html">before-grape-shuffle</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../../../v0.13.0/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../before-move-to-scala/index.html">before-move-to-scala</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../graphx-rdd-graph2frag/index.html">graphx-rdd-graph2frag</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../graphx-poc-spark/index.html">graphx-poc-spark</a></dd>
               
             
 
@@ -699,7 +754,37 @@
 
             
               
+                <dd><a href="../../../v0.2/index.html">v0.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1/index.html">v0.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../../../v0.7.0/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.6.0-rev1/index.html">v0.6.0-rev1</a></dd>
               
             
 

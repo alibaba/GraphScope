@@ -177,6 +177,7 @@
     <span class="n">generate_eid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">vformat</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">eformat</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">vertex_map</span><span class="o">=</span><span class="s2">&quot;global&quot;</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Graph</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Load a Arrow property graph using a list of vertex/edge specifications.</span>
 
@@ -274,6 +275,7 @@
 <span class="sd">        generate_eid (bool, optional): Whether to generate a unique edge id for each edge. Generated eid will be placed</span>
 <span class="sd">            in third column. This feature is for cooperating with interactive engine.</span>
 <span class="sd">            If you only need to work with analytical engine, set it to False. Defaults to False.</span>
+<span class="sd">        vertex_map (str, optional): Indicate use global vertex map or local vertex map. Can be &quot;global&quot; or &quot;local&quot;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># Don&#39;t import the :code:`nx` in top-level statments to improve the</span>
@@ -291,6 +293,7 @@
     <span class="c1"># generate and add a loader op to dag</span>
     <span class="n">loader_op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">create_loader</span><span class="p">(</span><span class="n">v_labels</span> <span class="o">+</span> <span class="n">e_labels</span><span class="p">)</span>
     <span class="n">sess</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">add_op</span><span class="p">(</span><span class="n">loader_op</span><span class="p">)</span>
+    <span class="n">vertex_map</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">vertex_map_type_to_enum</span><span class="p">(</span><span class="n">vertex_map</span><span class="p">)</span>
     <span class="c1"># construct create graph op</span>
     <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">DIRECTED</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">b_to_attr</span><span class="p">(</span><span class="n">directed</span><span class="p">),</span>
@@ -298,11 +301,12 @@
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">GENERATE_EID</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">b_to_attr</span><span class="p">(</span><span class="n">generate_eid</span><span class="p">),</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">VID_TYPE</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">s_to_attr</span><span class="p">(</span><span class="s2">&quot;uint64_t&quot;</span><span class="p">),</span>
         <span class="n">types_pb2</span><span class="o">.</span><span class="n">IS_FROM_VINEYARD_ID</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">b_to_attr</span><span class="p">(</span><span class="kc">False</span><span class="p">),</span>
+        <span class="n">types_pb2</span><span class="o">.</span><span class="n">VERTEX_MAP_TYPE</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">i_to_attr</span><span class="p">(</span><span class="n">vertex_map</span><span class="p">),</span>
     <span class="p">}</span>
     <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">create_graph</span><span class="p">(</span>
         <span class="n">sess</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_PROPERTY</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">loader_op</span><span class="p">],</span> <span class="n">attrs</span><span class="o">=</span><span class="n">config</span>
     <span class="p">)</span>
-    <span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">vertex_map</span><span class="o">=</span><span class="n">vertex_map</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">graph</span></div>
 </pre></div>
 
@@ -367,6 +371,16 @@
 
             
               
+                <dd><a href="../../../v0.18.0/index.html">v0.18.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../../../v0.17.0/index.html">v0.17.0</a></dd>
               
             
@@ -378,6 +392,16 @@
             
               
                 <dd><a href="../../../v0.16.0/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../default-ready/index.html">default-ready</a></dd>
               
             
 
@@ -407,7 +431,57 @@
 
             
               
+                <dd><a href="../../../after-grape-shuffle/index.html">after-grape-shuffle</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../before-grape-shuffle/index.html">before-grape-shuffle</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../../../v0.13.0/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../before-move-to-scala/index.html">before-move-to-scala</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../graphx-rdd-graph2frag/index.html">graphx-rdd-graph2frag</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../graphx-poc-spark/index.html">graphx-poc-spark</a></dd>
               
             
 
@@ -487,7 +561,37 @@
 
             
               
+                <dd><a href="../../../v0.2/index.html">v0.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.1/index.html">v0.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../../../v0.7.0/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../v0.6.0-rev1/index.html">v0.6.0-rev1</a></dd>
               
             
 

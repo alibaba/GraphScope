@@ -322,59 +322,66 @@ features following the last step.</p>
 </pre></div>
 </div>
 <p>Then we define the training and testing process, and run it.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope.learning</span>
-<span class="kn">from</span> <span class="nn">graphscope.learning.examples</span> <span class="kn">import</span> <span class="n">GCN</span>
-<span class="kn">from</span> <span class="nn">graphscope.learning.graphlearn.python.model.tf.trainer</span> <span class="kn">import</span> <span class="n">LocalTFTrainer</span>
-<span class="kn">from</span> <span class="nn">graphscope.learning.graphlearn.python.model.tf.optimizer</span> <span class="kn">import</span> <span class="n">get_tf_optimizer</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Note: Here we use tensorflow as NN backend to train GNN model. so please</span>
+<span class="c1"># install tensorflow.</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="c1"># https://www.tensorflow.org/guide/migrate</span>
+    <span class="kn">import</span> <span class="nn">tensorflow.compat.v1</span> <span class="k">as</span> <span class="nn">tf</span>
+    <span class="n">tf</span><span class="o">.</span><span class="n">disable_v2_behavior</span><span class="p">()</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+<span class="kn">import</span> <span class="nn">graphscope.learning</span>
+<span class="kn">from</span> <span class="nn">graphscope.learning.examples</span> <span class="kn">import</span> <span class="n">EgoGraphSAGE</span>
+<span class="kn">from</span> <span class="nn">graphscope.learning.examples</span> <span class="kn">import</span> <span class="n">EgoSAGESupervisedDataLoader</span>
+<span class="kn">from</span> <span class="nn">graphscope.learning.examples.tf.trainer</span> <span class="kn">import</span> <span class="n">LocalTrainer</span>
 
 <span class="c1"># supervised GCN.</span>
-
-<span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">model_fn</span><span class="p">():</span>
-        <span class="k">return</span> <span class="n">GCN</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span>
-                   <span class="n">config</span><span class="p">[</span><span class="s2">&quot;class_num&quot;</span><span class="p">],</span>
-                   <span class="n">config</span><span class="p">[</span><span class="s2">&quot;features_num&quot;</span><span class="p">],</span>
-                   <span class="n">config</span><span class="p">[</span><span class="s2">&quot;batch_size&quot;</span><span class="p">],</span>
-                   <span class="n">val_batch_size</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;val_batch_size&quot;</span><span class="p">],</span>
-                   <span class="n">test_batch_size</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;test_batch_size&quot;</span><span class="p">],</span>
-                   <span class="n">categorical_attrs_desc</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;categorical_attrs_desc&quot;</span><span class="p">],</span>
-                   <span class="n">hidden_dim</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;hidden_dim&quot;</span><span class="p">],</span>
-                   <span class="n">in_drop_rate</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;in_drop_rate&quot;</span><span class="p">],</span>
-                   <span class="n">neighs_num</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;neighs_num&quot;</span><span class="p">],</span>
-                   <span class="n">hops_num</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;hops_num&quot;</span><span class="p">],</span>
-                   <span class="n">node_type</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;node_type&quot;</span><span class="p">],</span>
-                   <span class="n">edge_type</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;edge_type&quot;</span><span class="p">],</span>
-                   <span class="n">full_graph_mode</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;full_graph_mode&quot;</span><span class="p">])</span>
-
+<span class="k">def</span> <span class="nf">train_gcn</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">node_type</span><span class="p">,</span> <span class="n">edge_type</span><span class="p">,</span> <span class="n">class_num</span><span class="p">,</span> <span class="n">features_num</span><span class="p">,</span>
+            <span class="n">hops_num</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">nbrs_num</span><span class="o">=</span><span class="p">[</span><span class="mi">25</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">hidden_dim</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">in_drop_rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+<span class="p">):</span>
     <span class="n">graphscope</span><span class="o">.</span><span class="n">learning</span><span class="o">.</span><span class="n">reset_default_tf_graph</span><span class="p">()</span>
-    <span class="n">trainer</span> <span class="o">=</span> <span class="n">LocalTFTrainer</span><span class="p">(</span><span class="n">model_fn</span><span class="p">,</span>
-                             <span class="n">epoch</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;epoch&quot;</span><span class="p">],</span>
-                             <span class="n">optimizer</span><span class="o">=</span><span class="n">get_tf_optimizer</span><span class="p">(</span>
-                             <span class="n">config</span><span class="p">[</span><span class="s2">&quot;learning_algo&quot;</span><span class="p">],</span>
-                             <span class="n">config</span><span class="p">[</span><span class="s2">&quot;learning_rate&quot;</span><span class="p">],</span>
-                             <span class="n">config</span><span class="p">[</span><span class="s2">&quot;weight_decay&quot;</span><span class="p">]))</span>
-    <span class="n">trainer</span><span class="o">.</span><span class="n">train_and_evaluate</span><span class="p">()</span>
 
-<span class="n">config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;class_num&quot;</span><span class="p">:</span> <span class="mi">349</span><span class="p">,</span> <span class="c1"># output dimension</span>
-          <span class="s2">&quot;features_num&quot;</span><span class="p">:</span> <span class="mi">130</span><span class="p">,</span> <span class="c1"># 128 dimension + kcore + triangle count</span>
-          <span class="s2">&quot;batch_size&quot;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span>
-          <span class="s2">&quot;val_batch_size&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
-          <span class="s2">&quot;test_batch_size&quot;</span><span class="p">:</span><span class="mi">100</span><span class="p">,</span>
-          <span class="s2">&quot;categorical_attrs_desc&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-          <span class="s2">&quot;hidden_dim&quot;</span><span class="p">:</span> <span class="mi">256</span><span class="p">,</span>
-          <span class="s2">&quot;in_drop_rate&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
-          <span class="s2">&quot;hops_num&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
-          <span class="s2">&quot;neighs_num&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span>
-          <span class="s2">&quot;full_graph_mode&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-          <span class="s2">&quot;agg_type&quot;</span><span class="p">:</span> <span class="s2">&quot;gcn&quot;</span><span class="p">,</span>  <span class="c1"># mean, sum</span>
-          <span class="s2">&quot;learning_algo&quot;</span><span class="p">:</span> <span class="s2">&quot;adam&quot;</span><span class="p">,</span>
-          <span class="s2">&quot;learning_rate&quot;</span><span class="p">:</span> <span class="mf">0.0005</span><span class="p">,</span>
-          <span class="s2">&quot;weight_decay&quot;</span><span class="p">:</span> <span class="mf">0.000005</span><span class="p">,</span>
-          <span class="s2">&quot;epoch&quot;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
-          <span class="s2">&quot;node_type&quot;</span><span class="p">:</span> <span class="s2">&quot;paper&quot;</span><span class="p">,</span>
-          <span class="s2">&quot;edge_type&quot;</span><span class="p">:</span> <span class="s2">&quot;cites&quot;</span><span class="p">}</span>
+    <span class="n">dimensions</span> <span class="o">=</span> <span class="p">[</span><span class="n">features_num</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">hidden_dim</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">hops_num</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">class_num</span><span class="p">]</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">EgoGraphSAGE</span><span class="p">(</span><span class="n">dimensions</span><span class="p">,</span> <span class="n">act_func</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">,</span> <span class="n">dropout</span><span class="o">=</span><span class="n">in_drop_rate</span><span class="p">)</span>
 
-<span class="n">train</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">lg</span><span class="p">)</span>
+    <span class="c1"># prepare train dataset</span>
+    <span class="n">train_data</span> <span class="o">=</span> <span class="n">EgoSAGESupervisedDataLoader</span><span class="p">(</span>
+        <span class="n">graph</span><span class="p">,</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">learning</span><span class="o">.</span><span class="n">Mask</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">,</span>
+        <span class="n">node_type</span><span class="o">=</span><span class="n">node_type</span><span class="p">,</span> <span class="n">edge_type</span><span class="o">=</span><span class="n">edge_type</span><span class="p">,</span> <span class="n">nbrs_num</span><span class="o">=</span><span class="n">nbrs_num</span><span class="p">,</span> <span class="n">hops_num</span><span class="o">=</span><span class="n">hops_num</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">train_embedding</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">train_data</span><span class="o">.</span><span class="n">src_ego</span><span class="p">)</span>
+    <span class="n">train_labels</span> <span class="o">=</span> <span class="n">train_data</span><span class="o">.</span><span class="n">src_ego</span><span class="o">.</span><span class="n">src</span><span class="o">.</span><span class="n">labels</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">(</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">sparse_softmax_cross_entropy_with_logits</span><span class="p">(</span>
+            <span class="n">labels</span><span class="o">=</span><span class="n">train_labels</span><span class="p">,</span> <span class="n">logits</span><span class="o">=</span><span class="n">train_embedding</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">optimizer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">AdamOptimizer</span><span class="p">(</span><span class="n">learning_rate</span><span class="o">=</span><span class="n">learning_rate</span><span class="p">)</span>
+
+    <span class="c1"># prepare test dataset</span>
+    <span class="n">test_data</span> <span class="o">=</span> <span class="n">EgoSAGESupervisedDataLoader</span><span class="p">(</span>
+        <span class="n">graph</span><span class="p">,</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">learning</span><span class="o">.</span><span class="n">Mask</span><span class="o">.</span><span class="n">TEST</span><span class="p">,</span>
+        <span class="n">node_type</span><span class="o">=</span><span class="n">node_type</span><span class="p">,</span> <span class="n">edge_type</span><span class="o">=</span><span class="n">edge_type</span><span class="p">,</span> <span class="n">nbrs_num</span><span class="o">=</span><span class="n">nbrs_num</span><span class="p">,</span> <span class="n">hops_num</span><span class="o">=</span><span class="n">hops_num</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">test_embedding</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">test_data</span><span class="o">.</span><span class="n">src_ego</span><span class="p">)</span>
+    <span class="n">test_labels</span> <span class="o">=</span> <span class="n">test_data</span><span class="o">.</span><span class="n">src_ego</span><span class="o">.</span><span class="n">src</span><span class="o">.</span><span class="n">labels</span>
+    <span class="n">test_indices</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">test_embedding</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">output_type</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="n">test_acc</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">div</span><span class="p">(</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">test_indices</span><span class="p">,</span> <span class="n">test_labels</span><span class="p">),</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)),</span>
+        <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">test_labels</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="c1"># train and test</span>
+    <span class="n">trainer</span> <span class="o">=</span> <span class="n">LocalTrainer</span><span class="p">()</span>
+    <span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">train_data</span><span class="o">.</span><span class="n">iterator</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">)</span>
+    <span class="n">trainer</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="n">test_data</span><span class="o">.</span><span class="n">iterator</span><span class="p">,</span> <span class="n">test_acc</span><span class="p">)</span>
+
+<span class="n">train_gcn</span><span class="p">(</span><span class="n">lg</span><span class="p">,</span> <span class="n">node_type</span><span class="o">=</span><span class="s2">&quot;paper&quot;</span><span class="p">,</span> <span class="n">edge_type</span><span class="o">=</span><span class="s2">&quot;cites&quot;</span><span class="p">,</span>
+        <span class="n">class_num</span><span class="o">=</span><span class="mi">349</span><span class="p">,</span>  <span class="c1"># output dimension</span>
+        <span class="n">features_num</span><span class="o">=</span><span class="mi">130</span><span class="p">,</span>  <span class="c1"># input dimension, 128 + kcore + triangle count</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -454,6 +461,16 @@ Then, the coordinator will dealloc all the applied resources in the k8s cluster.
 
             
               
+                <dd><a href="v0.18.0/index.html">v0.18.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="v0.17.0/index.html">v0.17.0</a></dd>
               
             
@@ -465,6 +482,16 @@ Then, the coordinator will dealloc all the applied resources in the k8s cluster.
             
               
                 <dd><a href="v0.16.0/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="default-ready/index.html">default-ready</a></dd>
               
             
 
@@ -494,7 +521,57 @@ Then, the coordinator will dealloc all the applied resources in the k8s cluster.
 
             
               
+                <dd><a href="after-grape-shuffle/index.html">after-grape-shuffle</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="before-grape-shuffle/index.html">before-grape-shuffle</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="v0.13.0/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="before-move-to-scala/index.html">before-move-to-scala</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="graphx-rdd-graph2frag/index.html">graphx-rdd-graph2frag</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="graphx-poc-spark/index.html">graphx-poc-spark</a></dd>
               
             
 
@@ -574,7 +651,37 @@ Then, the coordinator will dealloc all the applied resources in the k8s cluster.
 
             
               
+                <dd><a href="v0.2/index.html">v0.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="v0.1/index.html">v0.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="v0.7.0/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="v0.6.0-rev1/index.html">v0.6.0-rev1</a></dd>
               
             
 

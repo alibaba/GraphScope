@@ -502,7 +502,7 @@ how to implement your own algorithms in java.</p>
 <div class="section" id="run-a-demo-java-algorithm">
 <h3>Run a Demo Java Algorithm<a class="headerlink" href="#run-a-demo-java-algorithm" title="Permalink to this headline"></a></h3>
 <p>We provide some sample java app implementation, and you can directly run them on Graphscope Analytical Engine. First you
-need to download a <a class="reference external" href="https://github.com/GraphScope/gstest/blob/master/jars/grape-demo-0.17.0-shaded.jar">grape-demo.jar</a>。</p>
+need to download a <a class="reference external" href="https://graphscope.oss-cn-beijing.aliyuncs.com/jar/grape-demo-0.18.0-shaded.jar">grape-demo.jar</a>。</p>
 <p>Then open your GraphScope python client, try to load a graph, and run the sample sssp algorithm.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
 <span class="kn">from</span> <span class="nn">graphscope</span> <span class="kn">import</span> <span class="n">JavaApp</span>
@@ -529,14 +529,11 @@ need to download a <a class="reference external" href="https://github.com/GraphS
 </div>
 <div class="section" id="writing-your-own-algorithms-in-java">
 <h3>Writing Your Own Algorithms in Java<a class="headerlink" href="#writing-your-own-algorithms-in-java" title="Permalink to this headline"></a></h3>
-<p>To develop your algorithm in java, first, you will need <code class="docutils literal notranslate"><span class="pre">grape-jdk</span></code> installed on your developing environment.
-Currently you need to build from source. Please follow <a class="reference internal" href="reference/gae_java/about.html#gae-java-sdk-about"><span class="std std-ref">About Grape JDK</span></a> for building grape-jdk from source.</p>
-<p>After installing <code class="docutils literal notranslate"><span class="pre">grape-jdk</span></code>, you can include it as dependency in your maven project. You shall add classifier <em>shaded</em> to use the jar which includes all necessary dependencies.</p>
+<p>To develop your algorithm in java, you should create your maven project, and include <cite>grape-jdk</cite> as dependency.</p>
 <div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;dependency&gt;</span>
   <span class="nt">&lt;groupId&gt;</span>com.alibaba.graphscope<span class="nt">&lt;/groupId&gt;</span>
   <span class="nt">&lt;artifactId&gt;</span>grape-jdk<span class="nt">&lt;/artifactId&gt;</span>
-  <span class="nt">&lt;version&gt;</span>0.1<span class="nt">&lt;/version&gt;</span>
-  <span class="nt">&lt;classifier&gt;</span>shaded<span class="nt">&lt;/classifier&gt;</span>
+  <span class="nt">&lt;version&gt;</span>0.18.1<span class="nt">&lt;/version&gt;</span>
 <span class="nt">&lt;/dependency&gt;</span>
 </pre></div>
 </div>
@@ -823,6 +820,16 @@ and you need to specify the app you want in this run.</p>
 
             
               
+                <dd><a href="v0.18.0/index.html">v0.18.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="v0.17.0/index.html">v0.17.0</a></dd>
               
             
@@ -834,6 +841,16 @@ and you need to specify the app you want in this run.</p>
             
               
                 <dd><a href="v0.16.0/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="default-ready/index.html">default-ready</a></dd>
               
             
 
@@ -863,7 +880,57 @@ and you need to specify the app you want in this run.</p>
 
             
               
+                <dd><a href="after-grape-shuffle/index.html">after-grape-shuffle</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="before-grape-shuffle/index.html">before-grape-shuffle</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="v0.13.0/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="before-move-to-scala/index.html">before-move-to-scala</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="graphx-rdd-graph2frag/index.html">graphx-rdd-graph2frag</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="graphx-poc-spark/index.html">graphx-poc-spark</a></dd>
               
             
 
@@ -943,7 +1010,37 @@ and you need to specify the app you want in this run.</p>
 
             
               
+                <dd><a href="v0.2/index.html">v0.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="v0.1/index.html">v0.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="v0.7.0/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="v0.6.0-rev1/index.html">v0.6.0-rev1</a></dd>
               
             
 

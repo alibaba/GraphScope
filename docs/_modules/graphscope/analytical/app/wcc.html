@@ -145,7 +145,7 @@
 <span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">not_compatible_for</span>
 <span class="kn">from</span> <span class="nn">graphscope.framework.app</span> <span class="kn">import</span> <span class="n">project_to_simple</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;wcc&quot;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;wcc&quot;</span><span class="p">,</span> <span class="s2">&quot;wcc_auto&quot;</span><span class="p">,</span> <span class="s2">&quot;wcc_projected&quot;</span><span class="p">]</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;graphscope&quot;</span><span class="p">)</span>
 
@@ -154,6 +154,8 @@
 <span class="nd">@not_compatible_for</span><span class="p">(</span><span class="s2">&quot;arrow_property&quot;</span><span class="p">,</span> <span class="s2">&quot;dynamic_property&quot;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">wcc</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Evaluate weakly connected components on the `graph`.</span>
+<span class="sd">    This is an optimized version of WCC.</span>
+<span class="sd">    Note this cannot be compiled against a property graph that has multiple labels.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        graph (:class:`graphscope.Graph`): A simple graph.</span>
@@ -184,6 +186,64 @@
     <span class="k">return</span> <span class="n">AppAssets</span><span class="p">(</span>
         <span class="n">algo</span><span class="o">=</span><span class="s2">&quot;wcc&quot;</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s2">&quot;vertex_data&quot;</span><span class="p">,</span> <span class="n">cmake_extra_options</span><span class="o">=</span><span class="n">cmake_extra_options</span>
     <span class="p">)(</span><span class="n">graph</span><span class="p">)</span></div>
+
+
+<span class="nd">@project_to_simple</span>
+<span class="nd">@not_compatible_for</span><span class="p">(</span><span class="s2">&quot;arrow_property&quot;</span><span class="p">,</span> <span class="s2">&quot;dynamic_property&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">wcc_projected</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Evaluate weakly connected components on the `graph`.</span>
+<span class="sd">    This is a naive version of WCC.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        graph (:class:`graphscope.Graph`): A simple graph.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        :class:`graphscope.framework.context.VertexDataContextDAGNode`:</span>
+<span class="sd">            A context with each vertex assigned with the component ID, evaluated in eager mode.</span>
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">    .. code:: python</span>
+
+<span class="sd">        &gt;&gt;&gt; import graphscope</span>
+<span class="sd">        &gt;&gt;&gt; from graphscope.dataset import load_p2p_network</span>
+<span class="sd">        &gt;&gt;&gt; sess = graphscope.session(cluster_type=&quot;hosts&quot;, mode=&quot;eager&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; g = load_p2p_network(sess)</span>
+<span class="sd">        &gt;&gt;&gt; # project to a simple graph (if needed)</span>
+<span class="sd">        &gt;&gt;&gt; pg = g.project(vertices={&quot;host&quot;: [&quot;id&quot;]}, edges={&quot;connect&quot;: [&quot;dist&quot;]})</span>
+<span class="sd">        &gt;&gt;&gt; c = graphscope.wcc_projected(pg)</span>
+<span class="sd">        &gt;&gt;&gt; sess.close()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">AppAssets</span><span class="p">(</span><span class="n">algo</span><span class="o">=</span><span class="s2">&quot;wcc_projected&quot;</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s2">&quot;vertex_data&quot;</span><span class="p">)(</span><span class="n">graph</span><span class="p">)</span>
+
+
+<span class="nd">@project_to_simple</span>
+<span class="nd">@not_compatible_for</span><span class="p">(</span><span class="s2">&quot;arrow_property&quot;</span><span class="p">,</span> <span class="s2">&quot;dynamic_property&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">wcc_auto</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Evaluate weakly connected components on the `graph`.</span>
+<span class="sd">    This is an auto parallel version of WCC.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        graph (:class:`graphscope.Graph`): A simple graph.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        :class:`graphscope.framework.context.VertexDataContextDAGNode`:</span>
+<span class="sd">            A context with each vertex assigned with the component ID, evaluated in eager mode.</span>
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">    .. code:: python</span>
+
+<span class="sd">        &gt;&gt;&gt; import graphscope</span>
+<span class="sd">        &gt;&gt;&gt; from graphscope.dataset import load_p2p_network</span>
+<span class="sd">        &gt;&gt;&gt; sess = graphscope.session(cluster_type=&quot;hosts&quot;, mode=&quot;eager&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; g = load_p2p_network(sess)</span>
+<span class="sd">        &gt;&gt;&gt; # project to a simple graph (if needed)</span>
+<span class="sd">        &gt;&gt;&gt; pg = g.project(vertices={&quot;host&quot;: [&quot;id&quot;]}, edges={&quot;connect&quot;: [&quot;dist&quot;]})</span>
+<span class="sd">        &gt;&gt;&gt; c = graphscope.wcc_auto(pg)</span>
+<span class="sd">        &gt;&gt;&gt; sess.close()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">AppAssets</span><span class="p">(</span><span class="n">algo</span><span class="o">=</span><span class="s2">&quot;wcc_auto&quot;</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s2">&quot;vertex_data&quot;</span><span class="p">)(</span><span class="n">graph</span><span class="p">)</span>
 </pre></div>
 
            </div>
@@ -247,6 +307,16 @@
 
             
               
+                <dd><a href="../../../../v0.18.0/index.html">v0.18.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../../../../v0.17.0/index.html">v0.17.0</a></dd>
               
             
@@ -258,6 +328,16 @@
             
               
                 <dd><a href="../../../../v0.16.0/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../default-ready/index.html">default-ready</a></dd>
               
             
 
@@ -287,7 +367,57 @@
 
             
               
+                <dd><a href="../../../../after-grape-shuffle/index.html">after-grape-shuffle</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../before-grape-shuffle/index.html">before-grape-shuffle</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../../../../v0.13.0/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../before-move-to-scala/index.html">before-move-to-scala</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../graphx-rdd-graph2frag/index.html">graphx-rdd-graph2frag</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../graphx-poc-spark/index.html">graphx-poc-spark</a></dd>
               
             
 
@@ -367,7 +497,37 @@
 
             
               
+                <dd><a href="../../../../v0.2/index.html">v0.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.1/index.html">v0.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="../../../../v0.7.0/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="../../../../v0.6.0-rev1/index.html">v0.6.0-rev1</a></dd>
               
             
 

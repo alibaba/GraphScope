@@ -175,8 +175,8 @@ make client
 <h2>Building and Testing GraphScope on Kubernetes<a class="headerlink" href="#building-and-testing-graphscope-on-kubernetes" title="Permalink to this headline"></a></h2>
 <p>For developers, they just need to <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span></code> the latest version of code from our <a class="reference external" href="https://github.com/alibaba/GraphScope">repo</a>,
 make their changes to the code and build with command to build graphscope image:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope
-make graphscope-dev-image
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope/k8s
+make graphscope-dev
 </pre></div>
 </div>
 <p>This command triggers the building process. It will build the current source code in a container with
@@ -241,9 +241,9 @@ you need to run the command after install the default dependencies.</p>
 # to make graphscope whole package, including python package + engine binaries.
 make install</p>
 <p># or make the engine components
-# make gie
-# make gae
-# make gle
+# make interactive
+# make analytical
+# make learning
 <a href="#id7"><span class="problematic" id="id8">``</span></a><a href="#id9"><span class="problematic" id="id10">`</span></a></p>
 <p>To test the newly built binaries, manually open a session:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">graphscope</span>
@@ -262,14 +262,14 @@ make install</p>
 <ul class="simple">
 <li><p>Build GraphScope Server Wheels</p></li>
 </ul>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope/k8s/internal
 make graphscope-py3-package
 </pre></div>
 </div>
 <ul class="simple">
 <li><p>Build GraphScope Client Wheels for python{36,37,38,39}</p></li>
 </ul>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope/k8s/internal
 make graphscope-client-py3-package
 </pre></div>
 </div>
@@ -286,12 +286,12 @@ make graphscope-client-py3-package
 <ul class="simple">
 <li><p>Build GraphScope Server Wheels</p></li>
 </ul>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope/k8s/internal
 make graphscope-py3-package
 </pre></div>
 </div>
 <p>Build GraphScope Client Wheels for specified python version.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> GraphScope/k8s/internal
 make graphscope-client-py3-package
 </pre></div>
 </div>
@@ -372,6 +372,16 @@ for C++ and <a class="reference external" href="https://github.com/psf/black#the
 
             
               
+                <dd><a href="v0.18.0/index.html">v0.18.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="v0.17.0/index.html">v0.17.0</a></dd>
               
             
@@ -383,6 +393,16 @@ for C++ and <a class="reference external" href="https://github.com/psf/black#the
             
               
                 <dd><a href="v0.16.0/index.html">v0.16.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="default-ready/index.html">default-ready</a></dd>
               
             
 
@@ -412,7 +432,57 @@ for C++ and <a class="reference external" href="https://github.com/psf/black#the
 
             
               
+                <dd><a href="after-grape-shuffle/index.html">after-grape-shuffle</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="before-grape-shuffle/index.html">before-grape-shuffle</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="v0.13.0/index.html">v0.13.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="before-move-to-scala/index.html">before-move-to-scala</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="graphx-rdd-graph2frag/index.html">graphx-rdd-graph2frag</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="graphx-poc-spark/index.html">graphx-poc-spark</a></dd>
               
             
 
@@ -492,7 +562,37 @@ for C++ and <a class="reference external" href="https://github.com/psf/black#the
 
             
               
+                <dd><a href="v0.2/index.html">v0.2</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="v0.1/index.html">v0.1</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
                 <dd><a href="v0.7.0/index.html">v0.7.0</a></dd>
+              
+            
+
+          
+        
+          
+
+            
+              
+                <dd><a href="v0.6.0-rev1/index.html">v0.6.0-rev1</a></dd>
               
             
 
