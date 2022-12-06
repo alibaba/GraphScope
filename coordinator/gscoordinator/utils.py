@@ -370,7 +370,7 @@ def compile_app(
                 "Skip running llvm4jni since env var LLVM4JNI_HOME not found or run.sh not found under LLVM4JNI_HOME"
             )
         logger.info(" ".join(cmake_commands))
-    elif app_type != "cpp_pie":
+    elif app_type not in ("cpp_pie", "cpp_pregel"):
         if app_type == "cython_pregel":
             pxd_name = "pregel"
             cmake_commands += ["-DCYTHON_PREGEL_APP=True"]
@@ -1467,7 +1467,7 @@ def _codegen_app_info(attr, meta_file: str, java_class_path: str):
     for app in config_yaml["app"]:
         if app["algo"] == algo:
             app_type = app["type"]  # cpp_pie or cython_pregel or cython_pie, java_pie
-            if app_type == "cpp_pie":
+            if app_type in ("cpp_pie", "cpp_pregel"):
                 return (
                     app_type,
                     app["src"],
