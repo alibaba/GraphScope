@@ -389,7 +389,12 @@ class AppDAGNode(DAGNode):
         if not isinstance(self._graph, DAGNode) and not self._graph.loaded():
             raise RuntimeError("The graph is not loaded")
 
-        if self._app_assets.type in ["cpp_pregel", "cython_pie", "cython_pregel", "java_pie"]:
+        if self._app_assets.type in [
+            "cpp_pregel",
+            "cython_pie",
+            "cython_pregel",
+            "java_pie",
+        ]:
             # cython app support kwargs only
             check_argument(
                 not args, "Only support using keyword arguments in cython app."
