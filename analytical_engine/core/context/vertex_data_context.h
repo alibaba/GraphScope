@@ -445,8 +445,9 @@ class VertexDataContextWrapper : public IVertexDataContextWrapper {
 
       switch (selector.type()) {
       case SelectorType::kVertexId: {
-        BOOST_LEAF_AUTO(tensor_builder, trans_utils.VertexIdToVYTensorBuilder(
-                                            client, vertices));
+        BOOST_LEAF_AUTO(tensor_builder,
+                        trans_utils.template VertexIdToVYTensorBuilder<oid_t>(
+                            client, vertices));
         df_builder.AddColumn(col_name, tensor_builder);
         break;
       }
@@ -879,8 +880,9 @@ class LabeledVertexDataContextWrapper
 
       switch (selector.type()) {
       case SelectorType::kVertexId: {
-        BOOST_LEAF_AUTO(tensor_builder, trans_utils.VertexIdToVYTensorBuilder(
-                                            client, vertices));
+        BOOST_LEAF_AUTO(tensor_builder,
+                        trans_utils.template VertexIdToVYTensorBuilder<oid_t>(
+                            client, vertices));
         df_builder.AddColumn(col_name, tensor_builder);
         break;
       }

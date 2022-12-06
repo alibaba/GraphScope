@@ -238,6 +238,8 @@ def compile_cpp_pie_app():
         "std::string", "uint64_t", "grape::EmptyType", "double", sv
     )
     psull = project_template.format("std::string", "uint64_t", "int64_t", "int64_t", sv)
+    psusl = project_template.format("std::string", "uint64_t", "std::string", "int64_t", sv)
+    psusu = project_template.format("std::string", "uint64_t", "std::string", "uint64_t", sv)
 
     plull = project_template.format("int64_t", "uint64_t", "int64_t", "int64_t", lv)
     pluee = project_template.format(
@@ -253,8 +255,15 @@ def compile_cpp_pie_app():
             ("pagerank", pluee),
             ("pagerank", plull),
             ("wcc", psuee, ["-DWCC_USE_GID=ON"]),
-            ("wcc", pluee),
+            ("wcc", psuel, ["-DWCC_USE_GID=ON"]),
+            ("wcc", psued, ["-DWCC_USE_GID=ON"]),
+            ("wcc", psull, ["-DWCC_USE_GID=ON"]),
+            ("wcc", psusl, ["-DWCC_USE_GID=ON"]),
+            ("wcc", psusu, ["-DWCC_USE_GID=ON"]),
             ("wcc", plull),
+            ("wcc", pluee),
+            ("wcc", pluel),
+            ("wcc", plued),
             ("sssp", psuel),
             ("sssp", psued),
             ("sssp", pluel),
