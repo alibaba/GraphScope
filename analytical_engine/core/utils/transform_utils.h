@@ -1150,7 +1150,10 @@ class TransformUtils<
                                                                  part_idx);
       for (size_t i = 0; i < vertices.size(); i++) {
         auto const value = frag_.GetId(vertices[i]);
-        tensor_builder->Append(value.GetString(), value.GetStringLength());
+        tensor_builder->Append(
+            reinterpret_cast<typename vineyard::TensorBuilder<
+                std::string>::value_const_pointer_t>(value.GetString()),
+            value.GetStringLength());
       }
       return std::dynamic_pointer_cast<vineyard::ITensorBuilder>(
           tensor_builder);
