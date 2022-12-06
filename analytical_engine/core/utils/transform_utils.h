@@ -1149,7 +1149,7 @@ class TransformUtils<
           std::make_shared<vineyard::TensorBuilder<std::string>>(client, shape,
                                                                  part_idx);
       for (size_t i = 0; i < vertices.size(); i++) {
-        tensor_builder->Append(frag_.GetId(vertices[i]));
+        tensor_builder->Append(frag_.GetId(vertices[i]).GetString());
       }
       return std::dynamic_pointer_cast<vineyard::ITensorBuilder>(
           tensor_builder);
