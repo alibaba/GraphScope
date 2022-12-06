@@ -480,6 +480,7 @@ class ArrowFlattenedFragment {
   using fragment_t = vineyard::ArrowFragment<OID_T, VID_T, VERTEX_MAP_T>;
   using oid_t = OID_T;
   using vid_t = VID_T;
+  using internal_oid_t = typename vineyard::InternalType<oid_t>::type;
   using eid_t = typename fragment_t::eid_t;
   using vdata_t = VDATA_T;
   using edata_t = EDATA_T;
@@ -599,6 +600,11 @@ class ArrowFlattenedFragment {
   inline oid_t GetId(const vertex_t& v) const {
     vertex_t v_(union_id_parser_.ParseContinuousLid(v.GetValue()));
     return fragment_->GetId(v_);
+  }
+
+  inline internal_oid_t GetInternalId(const vertex_t& v) const {
+    vertex_t v_(union_id_parser_.ParseContinuousLid(v.GetValue()));
+    return fragment_->GetInternalId(v_);
   }
 
   inline fid_t GetFragId(const vertex_t& u) const {

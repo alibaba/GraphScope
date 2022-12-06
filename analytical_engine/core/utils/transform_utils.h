@@ -342,7 +342,10 @@ build_vy_tensor_builder(vineyard::Client& client, size_t size, FUNC_T&& func,
 
   for (size_t i = 0; i < size; i++) {
     std::string data = func(i);
-    tensor_builder->Append(data.data(), data.size());
+    tensor_builder->Append(
+        reinterpret_cast<typename tensor_builder_t::value_const_pointer_t>(
+            data.data()),
+        data.size());
   }
 
   return std::dynamic_pointer_cast<vineyard::ITensorBuilder>(tensor_builder);
@@ -409,7 +412,9 @@ build_vy_tensor(vineyard::Client& client, size_t size, FUNC_T&& func,
                   "Can not transform dynamic type");
 }
 
-template <typename FRAG_T, typename DATA_T>
+template <typename FRAG_T, typename DATA_T,
+          typename std::enable_if<
+              !std::is_same<std::string, DATA_T>::value>::type* = nullptr>
 std::shared_ptr<vineyard::TensorBuilder<DATA_T>>
 column_to_vy_tensor_builder_impl(
     vineyard::Client& client, const std::shared_ptr<IColumn>& column,
@@ -421,6 +426,29 @@ column_to_vy_tensor_builder_impl(
 
   for (size_t i = 0; i < vertices.size(); i++) {
     tensor_builder->data()[i] = col->at(vertices[i]);
+  }
+  return tensor_builder;
+}
+
+template <typename FRAG_T, typename DATA_T,
+          typename std::enable_if<
+              std::is_same<std::string, DATA_T>::value>::type* = nullptr>
+std::shared_ptr<vineyard::TensorBuilder<DATA_T>>
+column_to_vy_tensor_builder_impl(
+    vineyard::Client& client, const std::shared_ptr<IColumn>& column,
+    const std::vector<typename FRAG_T::vertex_t>& vertices) {
+  auto col = std::dynamic_pointer_cast<Column<FRAG_T, DATA_T>>(column);
+  std::vector<int64_t> shape{static_cast<int64_t>(vertices.size())};
+  auto tensor_builder =
+      std::make_unique<vineyard::TensorBuilder<DATA_T>>(client, shape);
+
+  for (size_t i = 0; i < vertices.size(); i++) {
+    const std::string data = col->at(vertices[i]);
+    tensor_builder->Append(
+        reinterpret_cast<
+            typename vineyard::TensorBuilder<DATA_T>::value_const_pointer_t>(
+            data.data()),
+        data.size());
   }
   return tensor_builder;
 }
@@ -821,7 +849,11 @@ class TransformUtils<FRAG_T,
     for (size_t i = 0; i < vertices.size(); i++) {
       const std::string data =
           frag_.template GetData<DATA_T>(vertices[i], prop_id);
-      tensor_builder->Append(data.data(), data.size());
+      tensor_builder->Append(
+          reinterpret_cast<
+              typename vineyard::TensorBuilder<DATA_T>::value_const_pointer_t>(
+              data.data()),
+          data.size());
     }
     return tensor_builder;
   }
