@@ -52,6 +52,9 @@ message ConnectSessionResponse {
   ClusterType cluster_type = 3;
   int32 num_workers = 6;
   string namespace = 7;
+
+  string engine_config = 10;
+  repeated string host_names = 11;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

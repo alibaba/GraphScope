@@ -184,6 +184,14 @@ class CoordinatorServiceServicer(
 
     @Monitor.connectSession
     def ConnectSession(self, request, context):
+        if self._launcher._analytical_engine_endpoint is not None:
+            engine_config = self._operation_executor.get_analytical_engine_config()
+            engine_config.update(self._launcher.get_engine_config())
+            host_names = self._launcher.hosts.split(",")
+        else:
+            engine_config = {}
+            host_names = []
+
         # A session is already connected.
         if self._connected:
             if getattr(request, "reconnect", False):
@@ -192,6 +200,8 @@ class CoordinatorServiceServicer(
                     cluster_type=self._launcher.type(),
                     num_workers=self._launcher.num_workers,
                     namespace=self._launcher.get_namespace(),
+                    engine_config=json.dumps(engine_config),
+                    host_names=host_names,
                 )
             else:
                 # connect failed, more than one connection at the same time.
@@ -232,6 +242,8 @@ class CoordinatorServiceServicer(
             cluster_type=self._launcher.type(),
             num_workers=self._launcher.num_workers,
             namespace=self._launcher.get_namespace(),
+            engine_config=json.dumps(engine_config),
+            host_names=host_names,
         )
 
     @Monitor.closeSession

@@ -1037,23 +1037,30 @@ class Session(object):
                 self._cluster_type,
                 self._config_params["num_workers"],
                 self._config_params["k8s_namespace"],
+                self._engine_config,
+                pod_name_list,
             ) = self._grpc_client.connect(
                 cleanup_instance=not bool(self._config_params["addr"]),
                 dangling_timeout_seconds=self._config_params[
                     "dangling_timeout_seconds"
                 ],
             )
+            self._pod_name_list = list(pod_name_list)
+
             # fetch logs
             if self._config_params["addr"] or self._cluster_type == types_pb2.K8S:
                 self._grpc_client.fetch_logs()
             _session_dict[self._session_id] = self
+
             # Launch analytical engine right after session connected.
-            # This may be changed to on demand launching in the future.
-            (
-                self._engine_config,
-                pod_name_list,
-            ) = self._grpc_client.create_analytical_instance()
-            self._pod_name_list = list(pod_name_list)
+            # This may be changed to on demand launching in the future
+            if not self._engine_config and not self._pod_name_list:
+                (
+                    self._engine_config,
+                    pod_name_list,
+                ) = self._grpc_client.create_analytical_instance()
+                self._pod_name_list = list(pod_name_list)
+            else:
         except Exception:
             self.close()
             raise
