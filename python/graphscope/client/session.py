@@ -1060,7 +1060,6 @@ class Session(object):
                     pod_name_list,
                 ) = self._grpc_client.create_analytical_instance()
                 self._pod_name_list = list(pod_name_list)
-            else:
         except Exception:
             self.close()
             raise
