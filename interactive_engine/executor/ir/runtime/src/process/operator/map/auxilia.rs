@@ -52,7 +52,7 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                     result_iter.next().map(|mut vertex| {
                         // TODO:confirm the update case, and avoid it if possible.
                         if let Some(details) = entry
-                            .as_graph_vertex()
+                            .as_vertex()
                             .map(|v| v.details())
                             .unwrap_or(None)
                         {
@@ -69,13 +69,13 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                 }
                 EntryDataType::E => {
                     let id = entry
-                        .as_graph_edge()
+                        .as_edge()
                         .ok_or(FnExecError::Unreachable)?
                         .id();
                     let mut result_iter = graph.get_edge(&[id], &self.query_params)?;
                     result_iter.next().map(|mut edge| {
                         if let Some(details) = entry
-                            .as_graph_edge()
+                            .as_edge()
                             .map(|e| e.details())
                             .unwrap_or(None)
                         {

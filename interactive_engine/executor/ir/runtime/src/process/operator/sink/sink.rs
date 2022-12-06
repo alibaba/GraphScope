@@ -86,11 +86,11 @@ impl RecordSinkEncoder {
     fn element_to_pb(&self, e: &DynEntry) -> result_pb::Element {
         let inner = match e.get_type() {
             EntryDataType::V => {
-                let vertex_pb = self.vertex_to_pb(e.as_graph_vertex().unwrap());
+                let vertex_pb = self.vertex_to_pb(e.as_vertex().unwrap());
                 Some(result_pb::element::Inner::Vertex(vertex_pb))
             }
             EntryDataType::E => {
-                let edge_pb = self.edge_to_pb(e.as_graph_edge().unwrap());
+                let edge_pb = self.edge_to_pb(e.as_edge().unwrap());
                 Some(result_pb::element::Inner::Edge(edge_pb))
             }
             EntryDataType::P => {

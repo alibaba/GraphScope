@@ -66,10 +66,10 @@ pub trait Entry: Debug + Send + Sync + AsAny + Element {
     fn as_vid(&self) -> Option<ID> {
         None
     }
-    fn as_graph_vertex(&self) -> Option<&Vertex> {
+    fn as_vertex(&self) -> Option<&Vertex> {
         None
     }
-    fn as_graph_edge(&self) -> Option<&Edge> {
+    fn as_edge(&self) -> Option<&Edge> {
         None
     }
     fn as_graph_path(&self) -> Option<&GraphPath> {
@@ -128,12 +128,12 @@ impl Entry for DynEntry {
         self.inner.as_vid()
     }
 
-    fn as_graph_vertex(&self) -> Option<&Vertex> {
-        self.inner.as_graph_vertex()
+    fn as_vertex(&self) -> Option<&Vertex> {
+        self.inner.as_vertex()
     }
 
-    fn as_graph_edge(&self) -> Option<&Edge> {
-        self.inner.as_graph_edge()
+    fn as_edge(&self) -> Option<&Edge> {
+        self.inner.as_edge()
     }
 
     fn as_graph_path(&self) -> Option<&GraphPath> {
@@ -155,13 +155,11 @@ impl Encode for DynEntry {
             }
             EntryDataType::V => {
                 writer.write_u8(1)?;
-                self.as_graph_vertex()
-                    .unwrap()
-                    .write_to(writer)?;
+                self.as_vertex().unwrap().write_to(writer)?;
             }
             EntryDataType::E => {
                 writer.write_u8(2)?;
-                self.as_graph_edge().unwrap().write_to(writer)?;
+                self.as_edge().unwrap().write_to(writer)?;
             }
             EntryDataType::P => {
                 writer.write_u8(3)?;
@@ -247,7 +245,7 @@ impl GraphElement for DynEntry {
     fn id(&self) -> ID {
         match self.get_type() {
             EntryDataType::Vid | EntryDataType::V => self.as_vid().unwrap(),
-            EntryDataType::E => self.as_graph_edge().unwrap().id(),
+            EntryDataType::E => self.as_edge().unwrap().id(),
             _ => unreachable!(),
         }
     }
@@ -256,11 +254,11 @@ impl GraphElement for DynEntry {
         match self.get_type() {
             EntryDataType::Vid => None,
             EntryDataType::V => self
-                .as_graph_vertex()
+                .as_vertex()
                 .map(|v| v.label())
                 .unwrap_or(None),
             EntryDataType::E => self
-                .as_graph_edge()
+                .as_edge()
                 .map(|v| v.label())
                 .unwrap_or(None),
             _ => unreachable!(),
@@ -271,11 +269,11 @@ impl GraphElement for DynEntry {
         match self.get_type() {
             EntryDataType::Vid => None,
             EntryDataType::V => self
-                .as_graph_vertex()
+                .as_vertex()
                 .map(|v| v.details())
                 .unwrap_or(None),
             EntryDataType::E => self
-                .as_graph_edge()
+                .as_edge()
                 .map(|v| v.details())
                 .unwrap_or(None),
             _ => unreachable!(),
@@ -288,7 +286,7 @@ impl Hash for DynEntry {
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self.get_type() {
             EntryDataType::Vid | EntryDataType::V => self.as_vid().hash(state),
-            EntryDataType::E => self.as_graph_edge().hash(state),
+            EntryDataType::E => self.as_edge().hash(state),
             EntryDataType::P => self.as_graph_path().hash(state),
             EntryDataType::Obj => self.as_object().hash(state),
             EntryDataType::Intersect => self
@@ -309,7 +307,7 @@ impl PartialEq for DynEntry {
         if (self.get_type()).eq(&other.get_type()) {
             match self.get_type() {
                 EntryDataType::Vid | EntryDataType::V => self.as_vid().eq(&other.as_vid()),
-                EntryDataType::E => self.as_graph_edge().eq(&other.as_graph_edge()),
+                EntryDataType::E => self.as_edge().eq(&other.as_edge()),
                 EntryDataType::P => self.as_graph_path().eq(&other.as_graph_path()),
                 EntryDataType::Obj => self.as_object().eq(&other.as_object()),
                 EntryDataType::Intersect => self
@@ -337,9 +335,7 @@ impl PartialOrd for DynEntry {
         if (self.get_type()).eq(&other.get_type()) {
             match self.get_type() {
                 EntryDataType::Vid | EntryDataType::V => self.as_vid().partial_cmp(&other.as_vid()),
-                EntryDataType::E => self
-                    .as_graph_edge()
-                    .partial_cmp(&other.as_graph_edge()),
+                EntryDataType::E => self.as_edge().partial_cmp(&other.as_edge()),
                 EntryDataType::P => self
                     .as_graph_path()
                     .partial_cmp(&other.as_graph_path()),
@@ -452,7 +448,7 @@ impl Entry for Vertex {
         Some(self.id())
     }
 
-    fn as_graph_vertex(&self) -> Option<&Vertex> {
+    fn as_vertex(&self) -> Option<&Vertex> {
         Some(self)
     }
 }
@@ -462,7 +458,7 @@ impl Entry for Edge {
         EntryDataType::E
     }
 
-    fn as_graph_edge(&self) -> Option<&Edge> {
+    fn as_edge(&self) -> Option<&Edge> {
         Some(self)
     }
 }
@@ -606,6 +602,13 @@ impl From<GraphPath> for DynEntry {
 impl From<Object> for DynEntry {
     fn from(o: Object) -> Self {
         DynEntry::new(o)
+    }
+}
+
+impl From<Vec<DynEntry>> for DynEntry {
+    fn from(vec: Vec<DynEntry>) -> Self {
+        let c = CollectionEntry { inner: vec };
+        DynEntry::new(c)
     }
 }
 

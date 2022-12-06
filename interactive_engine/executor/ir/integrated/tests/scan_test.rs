@@ -55,7 +55,7 @@ mod test {
         let v6: DefaultId = LDBCVertexParser::to_global_id(6, 0);
         let mut expected_ids = vec![v1, v2, v3, v4, v5, v6];
         for record in source_iter {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
                 result_ids.push(element.id() as usize)
             }
         }
@@ -80,7 +80,7 @@ mod test {
         let v6: DefaultId = LDBCVertexParser::to_global_id(6, 0);
         let mut expected_ids = vec![v1, v2, v4, v6];
         for record in source_iter {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
                 result_ids.push(element.id() as usize)
             }
         }
@@ -107,7 +107,7 @@ mod test {
         let v6: DefaultId = LDBCVertexParser::to_global_id(6, 0);
         let mut expected_ids = vec![v1, v2, v3, v4, v5, v6];
         for record in source_iter {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
                 result_ids.push(element.id() as usize)
             }
         }
@@ -130,7 +130,7 @@ mod test {
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
         let mut expected_ids = vec![v1];
         for record in source_iter {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
                 result_ids.push(element.id() as usize)
             }
         }
@@ -154,7 +154,7 @@ mod test {
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
         let mut expected_ids = vec![v1, v2];
         for record in source_iter {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
                 result_ids.push(element.id() as usize)
             }
         }
@@ -172,7 +172,7 @@ mod test {
             scan_gen(pb::Scan { scan_opt: 0, alias: None, params: Some(params), idx_predicate: None });
         let mut result_count = 0;
         for record in source_iter {
-            if let Some(_element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(_element) = record.get(None).unwrap().as_vertex() {
                 result_count += 1
             }
         }
@@ -194,7 +194,7 @@ mod test {
         let v6: DefaultId = LDBCVertexParser::to_global_id(6, 0);
         let mut expected_ids = vec![(v1, v2), (v1, v3), (v1, v4), (v4, v3), (v4, v5), (v6, v3)];
         for record in source_iter {
-            if let Some(element) = record.get(None).unwrap().as_graph_edge() {
+            if let Some(element) = record.get(None).unwrap().as_edge() {
                 result_ids.push((element.src_id as usize, element.dst_id as usize))
             }
         }
@@ -218,7 +218,7 @@ mod test {
         let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
         let mut expected_ids = vec![(v1, v2), (v1, v4)];
         for record in source_iter {
-            if let Some(element) = record.get(None).unwrap().as_graph_edge() {
+            if let Some(element) = record.get(None).unwrap().as_edge() {
                 result_ids.push((element.src_id as usize, element.dst_id as usize))
             }
         }
@@ -236,7 +236,7 @@ mod test {
             scan_gen(pb::Scan { scan_opt: 1, alias: None, params: Some(params), idx_predicate: None });
         let mut result_count = 0;
         for record in source_iter {
-            if let Some(_element) = record.get(None).unwrap().as_graph_edge() {
+            if let Some(_element) = record.get(None).unwrap().as_edge() {
                 result_count += 1
             }
         }

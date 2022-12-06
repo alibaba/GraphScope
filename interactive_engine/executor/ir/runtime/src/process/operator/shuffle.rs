@@ -59,7 +59,7 @@ impl RouteFunction<Record> for RecordRouter {
                 }
                 EntryDataType::E => {
                     let e = entry
-                        .as_graph_edge()
+                        .as_edge()
                         .ok_or(FnExecError::unexpected_data_error("get edge failed in shuffle"))?;
                     Ok(self
                         .p

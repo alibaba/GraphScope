@@ -171,7 +171,7 @@ mod tests {
         let expected_result = vec![1, 2];
         let mut result_ids = vec![];
         while let Some(Ok(res)) = result.next() {
-            if let Some(v) = res.get(None).unwrap().as_graph_vertex() {
+            if let Some(v) = res.get(None).unwrap().as_vertex() {
                 result_ids.push(v.id());
             }
         }
@@ -194,7 +194,7 @@ mod tests {
         let expected_result = vec![1, 2];
         let mut result_ids = vec![];
         while let Some(Ok(res)) = result.next() {
-            if let Some(v) = res.get(None).unwrap().as_graph_vertex() {
+            if let Some(v) = res.get(None).unwrap().as_vertex() {
                 result_ids.push(v.id());
             }
         }

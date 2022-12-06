@@ -75,7 +75,7 @@ mod test {
             match result {
                 Ok(res) => {
                     let entry = parse_result(res).unwrap();
-                    if let Some(vertex) = entry.get(None).unwrap().as_graph_vertex() {
+                    if let Some(vertex) = entry.get(None).unwrap().as_vertex() {
                         result_collection.push(vertex.id());
                     }
                 }

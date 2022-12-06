@@ -308,7 +308,7 @@ pub(crate) mod tests {
         let expected = init_vertex2();
         let record = init_record();
         let entry = tag_key.get_arc_entry(&record).unwrap();
-        if let Some(element) = entry.as_graph_vertex() {
+        if let Some(element) = entry.as_vertex() {
             assert_eq!(element.id(), expected.id());
         } else {
             assert!(false);

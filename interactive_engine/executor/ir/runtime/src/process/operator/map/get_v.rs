@@ -37,7 +37,7 @@ struct GetVertexOperator {
 impl FilterMapFunction<Record, Record> for GetVertexOperator {
     fn exec(&self, mut input: Record) -> FnResult<Option<Record>> {
         if let Some(entry) = input.get(self.start_tag) {
-            if let Some(e) = entry.as_graph_edge() {
+            if let Some(e) = entry.as_edge() {
                 let (id, label) = match self.opt {
                     VOpt::Start => (e.src_id, e.get_src_label()),
                     VOpt::End => (e.dst_id, e.get_dst_label()),

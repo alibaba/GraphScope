@@ -231,18 +231,9 @@ mod test {
             match result {
                 Ok(res) => {
                     let entry = parse_result(res).unwrap();
-                    let a = entry
-                        .get(Some(TAG_A))
-                        .unwrap()
-                        .as_graph_vertex();
-                    let b = entry
-                        .get(Some(TAG_B))
-                        .unwrap()
-                        .as_graph_vertex();
-                    let c = entry
-                        .get(Some(TAG_C))
-                        .unwrap()
-                        .as_graph_vertex();
+                    let a = entry.get(Some(TAG_A)).unwrap().as_vertex();
+                    let b = entry.get(Some(TAG_B)).unwrap().as_vertex();
+                    let c = entry.get(Some(TAG_C)).unwrap().as_vertex();
                     result_collection.push((a.unwrap().id(), b.unwrap().id(), c.unwrap().id()));
                 }
                 Err(e) => {
@@ -280,22 +271,10 @@ mod test {
             match result {
                 Ok(res) => {
                     let entry = parse_result(res).unwrap();
-                    let a = entry
-                        .get(Some(TAG_A))
-                        .unwrap()
-                        .as_graph_vertex();
-                    let b = entry
-                        .get(Some(TAG_B))
-                        .unwrap()
-                        .as_graph_vertex();
-                    let c = entry
-                        .get(Some(TAG_C))
-                        .unwrap()
-                        .as_graph_vertex();
-                    let d = entry
-                        .get(Some(TAG_D))
-                        .unwrap()
-                        .as_graph_vertex();
+                    let a = entry.get(Some(TAG_A)).unwrap().as_vertex();
+                    let b = entry.get(Some(TAG_B)).unwrap().as_vertex();
+                    let c = entry.get(Some(TAG_C)).unwrap().as_vertex();
+                    let d = entry.get(Some(TAG_D)).unwrap().as_vertex();
                     result_collection.push((
                         a.unwrap().id(),
                         b.unwrap().id(),

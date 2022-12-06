@@ -117,7 +117,7 @@ mod tests {
         let mut result = select_test(init_source(), select_opr_pb);
         let mut count = 0;
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
                 assert!(element.id() < 2)
             }
             count += 1;
@@ -216,7 +216,7 @@ mod tests {
         let mut result = select_test(init_source(), select_opr_pb);
         let mut count = 0;
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
                 assert!(element.id() > 1)
             }
             count += 1;
@@ -232,7 +232,7 @@ mod tests {
         let mut result = select_test(init_source(), select_opr_pb);
         let mut count = 0;
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
                 assert!(element.id() < 2)
             }
             count += 1;
@@ -249,7 +249,7 @@ mod tests {
         let mut result = select_test(init_source(), select_opr_pb);
         let mut count = 0;
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
                 {
                     assert_eq!(
                         element
@@ -276,7 +276,7 @@ mod tests {
         let mut result = select_test(init_source(), select_opr_pb);
         let mut count = 0;
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
                 {
                     assert_eq!(element.id(), 1);
                 }
@@ -294,7 +294,7 @@ mod tests {
         let mut result = select_test(init_source(), select_opr_pb);
         let mut count = 0;
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
                 {
                     assert_eq!(element.label().unwrap().clone(), PERSON_LABEL);
                 }

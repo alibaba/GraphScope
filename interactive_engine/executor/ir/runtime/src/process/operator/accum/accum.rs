@@ -25,7 +25,7 @@ use ir_common::KeyId;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::error::{FnExecError, FnExecResult, FnGenError, FnGenResult};
-use crate::process::entry::{CollectionEntry, DynEntry, Entry};
+use crate::process::entry::{DynEntry, Entry};
 use crate::process::operator::accum::accumulator::{
     Accumulator, Count, DistinctCount, Maximum, Minimum, Sum, ToList, ToSet,
 };
@@ -98,11 +98,11 @@ impl Accumulator<DynEntry, DynEntry> for EntryAccumulator {
         match self {
             EntryAccumulator::ToCount(count) => {
                 let cnt = count.finalize()?;
-                Ok(DynEntry::new(object!(cnt)))
+                Ok(object!(cnt).into())
             }
             EntryAccumulator::ToList(list) => {
                 let list_entry: Vec<DynEntry> = list.finalize()?;
-                Ok(DynEntry::new(CollectionEntry { inner: list_entry }))
+                Ok(list_entry.into())
             }
             EntryAccumulator::ToMin(min) => min
                 .finalize()?
@@ -112,11 +112,11 @@ impl Accumulator<DynEntry, DynEntry> for EntryAccumulator {
                 .ok_or(FnExecError::accum_error("max_entry is none")),
             EntryAccumulator::ToSet(set) => {
                 let set_entry = set.finalize()?;
-                Ok(DynEntry::new(CollectionEntry { inner: set_entry }))
+                Ok(set_entry.into())
             }
             EntryAccumulator::ToDistinctCount(distinct_count) => {
                 let cnt = distinct_count.finalize()?;
-                Ok(DynEntry::new(object!(cnt)))
+                Ok(object!(cnt).into())
             }
             EntryAccumulator::ToSum(sum) => sum
                 .finalize()?
@@ -127,7 +127,7 @@ impl Accumulator<DynEntry, DynEntry> for EntryAccumulator {
                     .ok_or(FnExecError::accum_error("sum_entry is none"))?;
                 let cnt = count.finalize()?;
                 // TODO: confirm if it should be Object::None, or throw error;
-                let result = DynEntry::new(Object::None);
+                let result = (Object::None).into();
                 if cnt == 0 {
                     warn!("cnt value is 0 in accum avg");
                     Ok(result)
@@ -144,7 +144,7 @@ impl Accumulator<DynEntry, DynEntry> for EntryAccumulator {
                                 .map(|val| val.div(primitive_cnt))
                                 .map_err(|e| FnExecError::accum_error(&format!("{}", e)))?;
                             let result_obj: Object = result.into();
-                            Ok(DynEntry::new(result_obj))
+                            Ok(result_obj.into())
                         }
                     }
                 } else {

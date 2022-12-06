@@ -46,7 +46,7 @@ impl<E: Entry + 'static> FlatMapFunction<Record, Record> for EdgeExpandOperator<
                     // the case of expand edge, and get end vertex;
                     ExpandOpt::Vertex => {
                         let neighbors_iter = iter.map(|e| {
-                            if let Some(e) = e.as_graph_edge() {
+                            if let Some(e) = e.as_edge() {
                                 Vertex::new(
                                     e.get_other_id(),
                                     e.get_other_label().cloned(),

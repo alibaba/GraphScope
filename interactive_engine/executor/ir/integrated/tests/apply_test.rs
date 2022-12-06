@@ -90,7 +90,7 @@ mod test {
             match result {
                 Ok(res) => {
                     let record = parse_result(res).unwrap();
-                    if let Some(vertex) = record.get(None).unwrap().as_graph_vertex() {
+                    if let Some(vertex) = record.get(None).unwrap().as_vertex() {
                         result_collection.push(vertex.id() as DefaultId);
                     }
                 }
@@ -127,7 +127,7 @@ mod test {
             match result {
                 Ok(res) => {
                     let record = parse_result(res).unwrap();
-                    if let Some(vertex) = record.get(None).unwrap().as_graph_vertex() {
+                    if let Some(vertex) = record.get(None).unwrap().as_vertex() {
                         result_collection.push(vertex.id() as DefaultId);
                     }
                 }
@@ -229,7 +229,7 @@ mod test {
             match result {
                 Ok(res) => {
                     let record = parse_result(res).unwrap();
-                    if let Some(vertex) = record.get(None).unwrap().as_graph_vertex() {
+                    if let Some(vertex) = record.get(None).unwrap().as_vertex() {
                         let cnt = record
                             .get(Some(TAG_A))
                             .unwrap()
@@ -276,7 +276,7 @@ mod test {
             match result {
                 Ok(res) => {
                     let record = parse_result(res).unwrap();
-                    if let Some(vertex) = record.get(None).unwrap().as_graph_vertex() {
+                    if let Some(vertex) = record.get(None).unwrap().as_vertex() {
                         let object = record
                             .get(Some(TAG_A))
                             .unwrap()

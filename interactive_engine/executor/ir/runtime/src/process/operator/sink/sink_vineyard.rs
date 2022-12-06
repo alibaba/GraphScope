@@ -46,7 +46,7 @@ impl Accumulator<Record, Record> for GraphSinkEncoder {
                     "tag {:?} in GraphWriter on {:?}",
                     sink_key, next
                 )))?;
-            if let Some(v) = entry.as_graph_vertex() {
+            if let Some(v) = entry.as_vertex() {
                 let vertex_pk = graph
                     .get_primary_key(&v.id())?
                     .ok_or(GraphProxyError::query_store_error("get_primary_key() returns empty pk"))?;
@@ -62,7 +62,7 @@ impl Accumulator<Record, Record> for GraphSinkEncoder {
                         break;
                     }
                 }
-            } else if let Some(e) = entry.as_graph_edge() {
+            } else if let Some(e) = entry.as_edge() {
                 let src_vertex_pk =
                     graph
                         .get_primary_key(&e.src_id)?
@@ -267,10 +267,10 @@ mod tests {
     impl Accumulator<Record, Record> for TestGraphWriter {
         fn accum(&mut self, mut next: Record) -> FnExecResult<()> {
             let entry = next.take(None).unwrap();
-            if let Some(v) = entry.as_graph_vertex() {
+            if let Some(v) = entry.as_vertex() {
                 let pk = get_primary_key(&v.id());
                 self.add_vertex(v.label().unwrap().clone(), pk, v.details().cloned())?;
-            } else if let Some(e) = entry.as_graph_edge() {
+            } else if let Some(e) = entry.as_edge() {
                 let src_pk = get_primary_key(&e.src_id);
                 let dst_pk = get_primary_key(&e.dst_id);
                 self.add_edge(

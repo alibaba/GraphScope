@@ -418,7 +418,7 @@ mod tests {
             let v = res
                 .get(Some(TAG_A))
                 .unwrap()
-                .as_graph_vertex()
+                .as_vertex()
                 .unwrap();
             a_results.push(v.id());
             let b_val = res
@@ -638,12 +638,12 @@ mod tests {
             let v1 = res
                 .get(Some(TAG_C))
                 .unwrap()
-                .as_graph_vertex()
+                .as_vertex()
                 .unwrap();
             let v2 = res
                 .get(Some(TAG_D))
                 .unwrap()
-                .as_graph_vertex()
+                .as_vertex()
                 .unwrap();
             results.push(v1.id());
             results.push(v2.id());
