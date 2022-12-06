@@ -325,13 +325,13 @@ mod tests {
     use pegasus::api::{Fold, Sink};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
+    use pegasus_common::downcast::AsAny;
 
     use crate::process::entry::{CollectionEntry, DynEntry, Entry};
     use crate::process::operator::accum::accumulator::Accumulator;
     use crate::process::operator::accum::AccumFactoryGen;
     use crate::process::operator::tests::{init_source, init_vertex1, init_vertex2, TAG_A, TAG_B};
     use crate::process::record::Record;
-    use pegasus_common::downcast::AsAny;
 
     fn fold_test(source: Vec<Record>, fold_opr_pb: pb::GroupBy) -> ResultStream<Record> {
         let conf = JobConf::new("fold_test");

@@ -32,6 +32,7 @@ mod test {
     use pegasus::api::{Map, Sink};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
+    use pegasus_common::downcast::AsAny;
     use runtime::process::entry::Entry;
     use runtime::process::operator::flatmap::FlatMapFuncGen;
     use runtime::process::operator::map::{FilterMapFuncGen, Intersection};
@@ -39,7 +40,6 @@ mod test {
     use runtime::process::record::Record;
 
     use crate::common::test::*;
-    use pegasus_common::downcast::AsAny;
 
     // g.V()
     fn source_gen(alias: Option<common_pb::NameOrId>) -> Box<dyn Iterator<Item = Record> + Send> {

@@ -16,6 +16,7 @@
 use std::borrow::BorrowMut;
 use std::hash::Hash;
 
+use graph_proxy::apis::{GraphPath, Vertex};
 use graph_proxy::utils::expr::eval::Context;
 use ir_common::{KeyId, NameOrId};
 use pegasus::api::function::DynIter;
@@ -23,7 +24,6 @@ use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 use vec_map::VecMap;
 
 use crate::process::entry::{DynEntry, Entry, EntryDataType};
-use graph_proxy::apis::{GraphPath, Vertex};
 
 #[derive(Debug, Clone, Default)]
 pub struct Record {

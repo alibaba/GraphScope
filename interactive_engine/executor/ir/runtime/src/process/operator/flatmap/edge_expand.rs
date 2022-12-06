@@ -24,7 +24,7 @@ use ir_common::KeyId;
 use pegasus::api::function::{DynIter, FlatMapFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenError, FnGenResult};
-use crate::process::entry::{Entry, EntryDataType};
+use crate::process::entry::Entry;
 use crate::process::operator::flatmap::FlatMapFuncGen;
 use crate::process::record::{Record, RecordExpandIter, RecordPathExpandIter};
 
@@ -40,58 +40,52 @@ impl<E: Entry + 'static> FlatMapFunction<Record, Record> for EdgeExpandOperator<
 
     fn exec(&self, mut input: Record) -> FnResult<Self::Target> {
         if let Some(entry) = input.get(self.start_v_tag) {
-            match entry.get_type() {
-                EntryDataType::Id | EntryDataType::V => {
-                    let id = entry.as_id().ok_or(FnExecError::Unreachable)?;
-                    let iter = self.stmt.exec(id)?;
-                    match self.expand_opt {
-                        // the case of expand edge, and get end vertex;
-                        ExpandOpt::Vertex => {
-                            let neighbors_iter = iter.map(|e| {
-                                if let Some(e) = e.as_graph_edge() {
-                                    Vertex::new(
-                                        e.get_other_id(),
-                                        e.get_other_label().cloned(),
-                                        DynDetails::default(),
-                                    )
-                                } else {
-                                    unreachable!()
-                                }
-                            });
-                            Ok(Box::new(RecordExpandIter::new(
-                                input,
-                                self.alias.as_ref(),
-                                Box::new(neighbors_iter),
-                            )))
-                        }
-                        // the case of expand neighbors, including edges/vertices
-                        ExpandOpt::Edge => {
-                            Ok(Box::new(RecordExpandIter::new(input, self.alias.as_ref(), iter)))
-                        }
-                        // the case of get degree. TODO: this case should be a `Map`
-                        ExpandOpt::Degree => {
-                            let degree = iter.count();
-                            input.append(object!(degree), self.alias);
-                            Ok(Box::new(vec![input].into_iter()))
-                        }
+            if let Some(id) = entry.as_vid() {
+                let iter = self.stmt.exec(id)?;
+                match self.expand_opt {
+                    // the case of expand edge, and get end vertex;
+                    ExpandOpt::Vertex => {
+                        let neighbors_iter = iter.map(|e| {
+                            if let Some(e) = e.as_graph_edge() {
+                                Vertex::new(
+                                    e.get_other_id(),
+                                    e.get_other_label().cloned(),
+                                    DynDetails::default(),
+                                )
+                            } else {
+                                unreachable!()
+                            }
+                        });
+                        Ok(Box::new(RecordExpandIter::new(
+                            input,
+                            self.alias.as_ref(),
+                            Box::new(neighbors_iter),
+                        )))
+                    }
+                    // the case of expand neighbors, including edges/vertices
+                    ExpandOpt::Edge => {
+                        Ok(Box::new(RecordExpandIter::new(input, self.alias.as_ref(), iter)))
+                    }
+                    // the case of get degree. TODO: this case should be a `Map`
+                    ExpandOpt::Degree => {
+                        let degree = iter.count();
+                        input.append(object!(degree), self.alias);
+                        Ok(Box::new(vec![input].into_iter()))
                     }
                 }
-                EntryDataType::P => {
-                    let graph_path = entry
-                        .as_graph_path()
-                        .ok_or(FnExecError::Unreachable)?;
-                    let path_end = graph_path
-                        .get_path_end()
-                        .ok_or(FnExecError::unexpected_data_error("Get path_end failed in path expand"))?;
-                    let id = path_end.id();
-                    let iter = self.stmt.exec(id)?;
-                    let curr_path = graph_path.clone();
-                    Ok(Box::new(RecordPathExpandIter::new(input, curr_path, iter)))
-                }
-                _ => Err(FnExecError::unexpected_data_error(&format!(
+            } else if let Some(graph_path) = entry.as_graph_path() {
+                let path_end = graph_path
+                    .get_path_end()
+                    .ok_or(FnExecError::unexpected_data_error("Get path_end failed in path expand"))?;
+                let id = path_end.id();
+                let iter = self.stmt.exec(id)?;
+                let curr_path = graph_path.clone();
+                Ok(Box::new(RecordPathExpandIter::new(input, curr_path, iter)))
+            } else {
+                Err(FnExecError::unexpected_data_error(&format!(
                     "Cannot Expand from current entry {:?}",
                     entry
-                )))?,
+                )))?
             }
         } else {
             Ok(Box::new(vec![].into_iter()))

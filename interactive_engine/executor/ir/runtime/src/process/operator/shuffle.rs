@@ -50,11 +50,10 @@ impl RecordRouter {
 impl RouteFunction<Record> for RecordRouter {
     fn route(&self, t: &Record) -> FnResult<u64> {
         if let Some(entry) = t.get(self.shuffle_key.clone()) {
-            // TODO: this may occur bugs if `Id` is actually an edge entry.
             match entry.get_type() {
-                EntryDataType::Id | EntryDataType::V => {
+                EntryDataType::Vid | EntryDataType::V => {
                     let id = entry
-                        .as_id()
+                        .as_vid()
                         .ok_or(FnExecError::unexpected_data_error("get id failed in shuffle"))?;
                     Ok(self.p.get_partition(&id, self.num_workers)?)
                 }

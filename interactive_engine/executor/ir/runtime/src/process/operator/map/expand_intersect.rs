@@ -158,7 +158,7 @@ impl FilterMapFunction<Record, Record> for ExpandVertexOrIntersect {
                 "get start_v_tag {:?} from record in `ExpandOrIntersect` operator, the record is {:?}",
                 self.start_v_tag, input
             )))?;
-        if let Some(id) = entry.as_id() {
+        if let Some(id) = entry.as_vid() {
             let iter = self.stmt.exec(id)?;
             if let Some(pre_entry) = input.get_column_mut(&self.edge_or_end_v_tag) {
                 // the case of expansion and intersection
@@ -203,7 +203,7 @@ impl FilterMapFunction<Record, Record> for ExpandEdgeVOrIntersect {
                 "get start_v_tag {:?} from record in `ExpandOrIntersect` operator, the record is {:?}",
                 self.start_v_tag, input
             )))?;
-        if let Some(id) = entry.as_id() {
+        if let Some(id) = entry.as_vid() {
             let iter = self
                 .stmt
                 .exec(id)?
