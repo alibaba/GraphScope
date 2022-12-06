@@ -1161,7 +1161,8 @@ class TransformUtils<
 
   bl::result<vineyard::ObjectID> VertexIdToVYTensor(
       vineyard::Client& client, const std::vector<vertex_t>& vertices) {
-    BOOST_LEAF_AUTO(base_builder, VertexIdToVYTensorBuilder(client, vertices));
+    BOOST_LEAF_AUTO(base_builder,
+                    VertexIdToVYTensorBuilder<oid_t>(client, vertices));
     BOOST_LEAF_AUTO(oid_type, GetOidTypeId());
 
     if (oid_type == vineyard::TypeToInt<int64_t>::value) {
