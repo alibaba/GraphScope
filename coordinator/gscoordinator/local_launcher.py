@@ -92,7 +92,7 @@ class LocalLauncher(AbstractLauncher):
     def stop(self, is_dangling=False):
         self.close_analytical_instance()
         self.close_vineyard()
-        self.close_etcd()
+        # self.close_etcd()
 
     def set_session_workspace(self, session_id):
         self._session_workspace = os.path.join(self._instance_workspace, session_id)
@@ -399,8 +399,7 @@ class LocalLauncher(AbstractLauncher):
         cmd.extend(["--socket", self.vineyard_socket])
         cmd.extend(["--rpc_socket_port", str(self._vineyard_rpc_port)])
         cmd.extend(["--size", self._shared_mem])
-        cmd.extend(["-etcd_endpoint", self._etcd_endpoint])
-        cmd.extend(["-etcd_prefix", f"vineyard.gsa.{ts}"])
+        cmd.extend(["--meta", "local"])
         env = os.environ.copy()
         env["GLOG_v"] = str(self._glog_level)
         env.update(mpi_env)
@@ -512,7 +511,7 @@ class LocalLauncher(AbstractLauncher):
 
     def start(self):
         # create etcd
-        self.configure_etcd_endpoint()
+        # self.configure_etcd_endpoint()
         # create vineyard
         self.launch_vineyard()
 
