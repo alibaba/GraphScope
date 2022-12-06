@@ -85,3 +85,6 @@ learning_engine/graph-learn/graphlearn/cmake-build
 # docker: ignore .install_prefix
 .install_prefix
 
+# Core dump
+core.*
+*.core
