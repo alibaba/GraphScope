@@ -174,6 +174,7 @@ mod tests {
     use pegasus::JobConf;
 
     use crate::error::FnExecResult;
+    use crate::process::entry::Entry;
     use crate::process::operator::accum::accumulator::Accumulator;
     use crate::process::operator::tests::{init_source, init_vertex1, init_vertex2, PERSON_LABEL};
     use crate::process::record::Record;

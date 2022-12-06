@@ -759,7 +759,6 @@ mod test {
             let intersection = record
                 .get(Some(TAG_C))
                 .unwrap()
-                // .inner
                 .as_any_ref()
                 .downcast_ref::<Intersection>()
                 .unwrap();
@@ -837,7 +836,6 @@ mod test {
             let intersection = record
                 .get(Some(TAG_C))
                 .unwrap()
-                //    .inner
                 .as_any_ref()
                 .downcast_ref::<Intersection>()
                 .unwrap();
