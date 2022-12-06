@@ -695,6 +695,7 @@ class OperationExecutor:
         import vineyard.io
 
         storage_options = json.loads(op.attr[types_pb2.STORAGE_OPTIONS].s.decode())
+        write_options = json.loads(op.attr[types_pb2.WRITE_OPTIONS].s.decode())
         fd = op.attr[types_pb2.FD].s.decode()
         df = op.attr[types_pb2.VINEYARD_ID].s.decode()
         engine_config = self.get_analytical_engine_config()
@@ -716,6 +717,7 @@ class OperationExecutor:
             vineyard_ipc_socket=vineyard_ipc_socket,
             vineyard_endpoint=vineyard_endpoint,
             storage_options=storage_options,
+            write_options=write_options,
             deployment=deployment,
             hosts=hosts,
         )
