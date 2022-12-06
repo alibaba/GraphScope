@@ -153,6 +153,8 @@ class GRPCClient(object):
             response.cluster_type,
             response.num_workers,
             response.namespace,
+            json.loads(response.engine_config),
+            response.host_names,
         )
 
     @suppress_grpc_error
