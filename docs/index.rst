@@ -219,25 +219,100 @@ each of which can be independently scaled to chase for the best end-to-end throu
 
 
 
+.. toctree::
+   :maxdepth: 2
+   :caption: What is GraphScope
+
+   overview
+   basic_and_featured_functionalities
+   graphscope_for_data_scientists
+   graphscope_for_traversal_queries
+   graphscope_for_graph_analytics
+   graphscope_for_learning
+   performance_and_benchmark
+   graphscope_positioning
+   glossary
+   release_notes
+   frequently_asked_questions
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents
+   :caption: Getting Started
+
+   python_tutorials
+   java_tutorials
+   cpp_tutorials
+   walkthrough_examples_acrossing_engines
+   video_tutorials
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Deployment and Usage 
 
    installation
-   getting_started
-   overview
-   best_practices
-   tutorials
-   deployment
-   loading_graph
-   graph_transformation
-   analytics_engine
-   interactive_engine
-   learning_engine
-   persistent_graph_store
-   frequently_asked_questions
-   developer_guide
+   deploy_on_self-managed_k8s
+   deploy_on_clouds
+   deploy_with_helm
+   deploy_as_job_for_analytical_jobs
+   deploy_as_service_with_groot
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Operations & Observability
+
+   how_to_find_logs
+   monitoring
+   error_codes
+   how_to_report_bug
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Advanced Topics
+
+   dive_into_engines
+   storages_and_unified_interface
+   performance_tuning
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Development
+
+   env_preparation
+   code_style_guide
+   algorithm_development
+   test your code
+   submit a pull-request
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Utilities
+
+   bulk_loader
+   resources_estimator
+
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Community
+
+   how_to_contribute
+   contact_us
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Reference
+
+   reference/python_index
+   reference/analytical_engine_index
+   Analytical Engine Java API Reference <reference/gae_java/index>
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Reference
+
+   reference/python_index
+   reference/analytical_engine_index
+   Analytical Engine Java API Reference <reference/gae_java/index>
 
 .. toctree::
    :maxdepth: 2
