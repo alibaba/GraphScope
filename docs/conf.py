@@ -112,7 +112,7 @@ html_static_path = [
     "_static/",
 ]
 
-html_logo = "images/logo-w.png"
+html_logo = "images/logo-h.png"
 
 html_js_files = [
     "js/readthedocs.js",
