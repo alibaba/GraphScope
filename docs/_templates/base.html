@@ -7,6 +7,12 @@ This template exists as a way to implement a language menu just as what
 
 #}
 
+{% block body %}
+  <script>
+    document.body.dataset.theme = "light";
+  </script>
+{% endblock %}
+
 {%- block extrahead %}
 
 {{ super() }}
