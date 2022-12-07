@@ -149,7 +149,7 @@ class AppAssets(DAGNode):
     Assets includes an algorithm name, and gar (for user defined algorithm),
     a context type (one of 'tensor', 'vertex_data', 'vertex_property',
     'labeled_vertex_data', 'dynamic_vertex_data', 'labeled_vertex_property'),
-    and its type (one of `cpp_pie`, `cython_pie`, `cython_pregel`),
+    and its type (one of `cpp_pie`, `cpp_pregel`, `cython_pie`, `cython_pregel`),
 
     The instance of this class can be passed to init :class:`graphscope.framework.app.AppDAGNode`
     """
@@ -246,7 +246,7 @@ class AppAssets(DAGNode):
 
     @property
     def type(self):
-        """Algorithm type, one of `cpp_pie`, `cython_pie`, `java_pie` or `cython_pregel`.
+        """Algorithm type, one of `cpp_pie`, `cpp_pregel`, `cython_pie`, `java_pie` or `cython_pregel`.
 
         Returns:
             str: Algorithm type of this asset.
@@ -389,7 +389,12 @@ class AppDAGNode(DAGNode):
         if not isinstance(self._graph, DAGNode) and not self._graph.loaded():
             raise RuntimeError("The graph is not loaded")
 
-        if self._app_assets.type in ["cython_pie", "cython_pregel", "java_pie"]:
+        if self._app_assets.type in [
+            "cpp_pregel",
+            "cython_pie",
+            "cython_pregel",
+            "java_pie",
+        ]:
             # cython app support kwargs only
             check_argument(
                 not args, "Only support using keyword arguments in cython app."

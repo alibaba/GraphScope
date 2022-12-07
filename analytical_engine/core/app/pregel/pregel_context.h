@@ -88,10 +88,13 @@ class PregelContext
  * @tparam VID_T VID type
  * @tparam COMPUTE_CONTEXT_T
  */
-template <typename OID_T, typename VID_T, typename COMPUTE_CONTEXT_T>
-class PregelContext<vineyard::ArrowFragment<OID_T, VID_T>, COMPUTE_CONTEXT_T>
-    : public LabeledVertexDataContext<vineyard::ArrowFragment<OID_T, VID_T>,
-                                      typename COMPUTE_CONTEXT_T::vd_t> {
+template <typename OID_T, typename VID_T, typename VERTEX_MAP_T,
+          typename COMPUTE_CONTEXT_T>
+class PregelContext<vineyard::ArrowFragment<OID_T, VID_T, VERTEX_MAP_T>,
+                    COMPUTE_CONTEXT_T>
+    : public LabeledVertexDataContext<
+          vineyard::ArrowFragment<OID_T, VID_T, VERTEX_MAP_T>,
+          typename COMPUTE_CONTEXT_T::vd_t> {
   using fragment_t = vineyard::ArrowFragment<OID_T, VID_T>;
   using vid_t = typename fragment_t::vid_t;
   using vd_t = typename COMPUTE_CONTEXT_T::vd_t;
