@@ -201,7 +201,7 @@ All these kinds of algorithms would be compiled in the engine layer and run on G
 which is a processing system proposed on `this paper <https://dl.acm.org/doi/10.1145/3282488>`_ in SIGMOD2017. 
 GRAPE differs from prior systems in its ability to parallelize sequential graph algorithms as a whole. 
 In GRAPE, sequential algorithms can be easily “plugged into” with only minor changes and get parallelized to handle large graphs efficiently. 
-To achieve high performance, deployment for this scenario usually chooses an in-memory graph store for the storage layer.
+To achieve high performance, deployment for this scenario usually chooses an in-memory graph store for the storage layer. 
 
 
 GraphScope for learning
@@ -250,10 +250,10 @@ each of which can be independently scaled to chase for the best end-to-end throu
    :caption: Deployment and Usage 
 
    installation
-   deploy_on_self-managed_k8s
+   deploy_on_self_managed_k8s
    deploy_on_clouds
    deploy_with_helm
-   deploy_as_job_for_analytical_jobs
+   deploy_as_job_for_analytical_tasks
    deploy_as_service_with_groot
 
 .. toctree::
@@ -280,8 +280,8 @@ each of which can be independently scaled to chase for the best end-to-end throu
    env_preparation
    code_style_guide
    algorithm_development
-   test your code
-   submit a pull-request
+   test_code
+   submit_pr
 
 .. toctree::
    :maxdepth: 2
