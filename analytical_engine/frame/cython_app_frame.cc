@@ -104,7 +104,7 @@ void _Compute(MessageIterator<_MD_TYPE> messages, Vertex<_VD_TYPE, _MD_TYPE>& v,
 }
 
 #ifdef _ENABLE_COMBINE
-double _Combine(MessageIterator<_MD_TYPE> messages) {
+_MD_TYPE _Combine(MessageIterator<_MD_TYPE> messages) {
   return Combine(messages);
 }
 #endif
