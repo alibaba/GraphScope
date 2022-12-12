@@ -45,6 +45,7 @@
 #include "core/context/vertex_property_context.h"
 #include "core/error.h"
 #include "core/java/javasdk.h"
+#include "core/java/utils.h"
 #include "core/object/i_fragment_wrapper.h"
 
 namespace gs {
@@ -355,6 +356,13 @@ class JavaContextBase : public grape::ContextBase {
 
     // JVM runtime opt should consists of java.libaray.path and
     // java.class.path maybe this should be set by the backend not user.
+    std::string grape_jvm_opt = generate_jvm_opts();
+    if (!grape_jvm_opt.empty()) {
+      putenv(const_cast<char*>(grape_jvm_opt.data()));
+      VLOG(10) << "Find GRAPE_JVM_OPTS in params, setting to env..."
+                << grape_jvm_opt;
+    }
+
     if (getenv("GRAPE_JVM_OPTS")) {
       VLOG(1) << "OK, GRAPE_JVM_OPTS has been set.";
     } else {

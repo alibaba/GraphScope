@@ -1069,6 +1069,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         logger.info("Analytical engine launching command: {}".format(" ".join(cmd)))
 
         env = os.environ.copy()
+        env["GRAPHSCOPE_HOME"] = GRAPHSCOPE_HOME
         env.update(mpi_env)
 
         self._analytical_engine_process = subprocess.Popen(

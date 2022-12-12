@@ -22,10 +22,6 @@ then
     echo "Infered GRAPHSCOPE_HOME "${gs_runtime}
 fi
 
-if [[ "$SPARK_HOME"x == x ]];
-then
-    echo "[warn] No SPARK_HOME found!"
-fi
 
 GRAPHX_GRAPE_SDK=`ls ${GRAPHSCOPE_HOME}/lib/grape-graphx-*.jar`
 GRAPE_RUNTIME_JAR=`ls ${GRAPHSCOPE_HOME}/lib/grape-runtime-*.jar`
@@ -57,7 +53,8 @@ fi
 
 export GRAPE_JVM_OPTS="-Dcom.alibaba.fastffi.rvBuffer=2147483648 -XX:+StartAttachListener -XX:+PreserveFramePointer \
 -XX:+UseG1GC -XX:G1HeapRegionSize=32M \
--XX:+PrintGCDetails -XX:+PrintGCDateStamps \
+${_JVM_OPTS} \
 -XX:+UnlockDiagnosticVMOptions -XX:LoopUnrollLimit=1 -XX:-TieredCompilation \
 -Djava.library.path=${GRAPHSCOPE_HOME}/lib \
 -Djava.class.path=${class_path}"
+echo "GRAPE_JVM_OPTS=${GRAPE_JVM_OPTS}"
