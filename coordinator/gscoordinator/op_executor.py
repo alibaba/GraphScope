@@ -341,9 +341,10 @@ class OperationExecutor:
                     "Connecting to analytical engine... retrying %d time", retry
                 )
                 logger.warning("Error code: %s, details %s", e.code(), e.details())
+                retry += 1
                 time.sleep(3)
         raise RuntimeError(
-            "Failed to connect to engine in a 60s, creating analytical engine may failed."
+            "Failed to connect to engine in 60s, deployment may failed. Please check coordinator log for details"
         )
 
     @property
