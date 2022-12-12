@@ -184,7 +184,7 @@ class CoordinatorServiceServicer(
 
     @Monitor.connectSession
     def ConnectSession(self, request, context):
-        if self._launcher._analytical_engine_endpoint is not None:
+        if self._operation_executor is not None:
             engine_config = self._operation_executor.get_analytical_engine_config()
             engine_config.update(self._launcher.get_engine_config())
             host_names = self._launcher.hosts.split(",")

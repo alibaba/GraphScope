@@ -4,6 +4,7 @@ import logging
 import os
 import pickle
 import random
+import time
 import zipfile
 from concurrent import futures
 from io import BytesIO
@@ -325,10 +326,25 @@ class OperationExecutor:
             ("grpc.max_receive_message_length", GS_GRPC_MAX_MESSAGE_LENGTH),
             ("grpc.max_metadata_size", GS_GRPC_MAX_MESSAGE_LENGTH),
         ]
-        channel = grpc.insecure_channel(
-            self._launcher.analytical_engine_endpoint, options=options
+        # Check connectivity, otherwise the stub is useless
+        retry = 0
+        while retry < 20:
+            try:
+                channel = grpc.insecure_channel(
+                    self._launcher.analytical_engine_endpoint, options=options
+                )
+                stub = engine_service_pb2_grpc.EngineServiceStub(channel)
+                stub.HeartBeat(message_pb2.HeartBeatRequest())
+                return stub
+            except grpc.RpcError as e:
+                logger.warning(
+                    "Connecting to analytical engine... retrying %d time", retry
+                )
+                logger.warning("Error code: %s, details %s", e.code(), e.details())
+                time.sleep(3)
+        raise RuntimeError(
+            "Failed to connect to engine in a 60s, creating analytical engine may failed."
         )
-        return engine_service_pb2_grpc.EngineServiceStub(channel)
 
     @property
     def analytical_grpc_stub(self):
