@@ -307,3 +307,27 @@ def test_local_vm_distribute(gs_session_distributed, p2p_property_dir):
     wcc_result = np.loadtxt(f"{os.environ['GS_TEST_DIR']}/p2p-31-wcc_auto", dtype=int)
     # Test algorithm correctness
     assert np.all(ret == wcc_result)
+
+
+def get_addr_on_ci_env():
+    if "GS_ADDR" in os.environ:
+        return os.environ["GS_ADDR"]
+    else:
+        raise RuntimeError("`GS_ADDR` doesn't existed in environ")
+
+
+@pytest.mark.skipif("GS_ADDR" not in os.environ, reason="GS_ADDR not specified")
+def test_helm_installation():
+    addr = get_addr_on_ci_env()
+    sess = graphscope.session(addr=addr)
+    g = sess.g()
+    assert g is not None
+    sess.close()
+    sess = graphscope.session(addr=addr)
+    g = sess.g()
+    assert g is not None
+    sess.close()
+    sess = graphscope.session(addr=addr)
+    g = sess.g()
+    assert g is not None
+    sess.close()
