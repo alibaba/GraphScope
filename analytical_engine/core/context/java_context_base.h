@@ -45,7 +45,6 @@
 #include "core/context/vertex_property_context.h"
 #include "core/error.h"
 #include "core/java/javasdk.h"
-#include "core/java/utils.h"
 #include "core/object/i_fragment_wrapper.h"
 
 namespace gs {
@@ -60,6 +59,32 @@ static constexpr const char* IFRAGMENT_HELPER_CLASS =
     "com.alibaba.graphscope.runtime.IFragmentHelper";
 static constexpr const char* SET_CLASS_LOADER_METHOD_SIG =
     "(Ljava/net/URLClassLoader;)V";
+
+std::string exec(const char* cmd) {
+  std::array<char, 128> buffer;
+  std::string result;
+  std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+  if (!pipe) {
+    throw std::runtime_error("popen() failed!");
+  }
+  while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+    result += buffer.data();
+  }
+  return result;
+}
+
+std::string generate_jvm_opts() {
+  char* gs_home = getenv("GRAPHSCOPE_HOME");
+  if (!gs_home) {
+    LOG(ERROR) << "No GRAPHSCOPE_HOME found in env";
+    return "";
+  }
+  std::string cmd =
+      std::string("source ") + std::string(gs_home) + "/conf/grape_jvm_opts";
+  std::string res = exec(cmd.c_str());
+  VLOG(10) << "jvm opts res: " << res;
+  return res;
+}
 
 /**
  * @brief JavaContextBase is the base class for JavaPropertyContext and
