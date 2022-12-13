@@ -21,7 +21,6 @@ import com.alibaba.graphscope.context.ParallelContextBase;
 import com.alibaba.graphscope.context.VertexDataContext;
 import com.alibaba.graphscope.ds.GSVertexArray;
 import com.alibaba.graphscope.ds.Vertex;
-import com.alibaba.graphscope.ds.VertexRange;
 import com.alibaba.graphscope.ds.VertexSet;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
@@ -31,9 +30,6 @@ import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -96,7 +92,7 @@ public class SSSPContext extends VertexDataContext<IFragment<Long, Long, Long, L
 
         GSVertexArray<Double> vertexArray = data();
         Vertex<Long> cur = FFITypeFactoryhelper.newVertexLong();
-        for (long vid = 0; vid < frag.getInnerVerticesNum(); ++vid){
+        for (long vid = 0; vid < frag.getInnerVerticesNum(); ++vid) {
             cur.setValue(vid);
             vertexArray.setValue(cur, (double) partialResults.get(vid));
         }
