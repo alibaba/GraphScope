@@ -184,7 +184,7 @@ class CoordinatorServiceServicer(
 
     @Monitor.connectSession
     def ConnectSession(self, request, context):
-        if self._operation_executor is not None:
+        if self._launcher.analytical_engine_endpoint is not None:
             engine_config = self._operation_executor.get_analytical_engine_config()
             engine_config.update(self._launcher.get_engine_config())
             host_names = self._launcher.hosts.split(",")
@@ -222,12 +222,13 @@ class CoordinatorServiceServicer(
 
         # Connect to serving coordinator.
         self._connected = True
-        self._session_id = self._generate_session_id()
-        self._launcher.set_session_workspace(self._session_id)
+        if self._session_id is None:  # else reuse previous session.
+            self._session_id = self._generate_session_id()
+            self._launcher.set_session_workspace(self._session_id)
 
-        self._operation_executor = OperationExecutor(
-            self._session_id, self._launcher, self._object_manager
-        )
+            self._operation_executor = OperationExecutor(
+                self._session_id, self._launcher, self._object_manager
+            )
 
         # Cleanup after timeout seconds
         self._dangling_timeout_seconds = request.dangling_timeout_seconds
@@ -255,10 +256,11 @@ class CoordinatorServiceServicer(
             return message_pb2.CloseSessionResponse()
 
         self._connected = False
-        self._session_id = None
 
         self.cleanup(cleanup_instance=self._cleanup_instance, is_dangling=False)
-        self._operation_executor = None
+        if self._cleanup_instance:
+            self._session_id = None
+            self._operation_executor = None
 
         # Session closed, stop streaming logs
         sys.stdout.drop(True)
