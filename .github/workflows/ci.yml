@@ -728,6 +728,7 @@ jobs:
           export NODE_PORT=$(kubectl get services coordinator-service-graphscope -ojsonpath="{.spec.ports[0].nodePort}")
           echo "GraphScope service listen on ${NODE_IP}:${NODE_PORT}"
           export GS_ADDR=${NODE_IP}:${NODE_PORT}
+          cd ${GITHUB_WORKSPACE}/python
           python3 -m pytest -s -vvv ./graphscope/tests/kubernetes/test_demo_script.py -k test_helm_installation
 
       - name: HDFS test
