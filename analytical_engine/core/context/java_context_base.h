@@ -360,7 +360,7 @@ class JavaContextBase : public grape::ContextBase {
     if (!grape_jvm_opt.empty()) {
       putenv(const_cast<char*>(grape_jvm_opt.data()));
       VLOG(10) << "Find GRAPE_JVM_OPTS in params, setting to env..."
-                << grape_jvm_opt;
+               << grape_jvm_opt;
     }
 
     if (getenv("GRAPE_JVM_OPTS")) {
