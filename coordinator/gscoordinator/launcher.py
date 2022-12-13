@@ -121,8 +121,6 @@ class AbstractLauncher(metaclass=ABCMeta):
 
     @property
     def analytical_engine_endpoint(self):
-        if self._analytical_engine_endpoint is None:
-            raise RuntimeError("Analytical engine endpoint not set.")
         return self._analytical_engine_endpoint
 
     @property
