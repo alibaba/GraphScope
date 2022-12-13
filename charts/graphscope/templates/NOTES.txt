@@ -4,8 +4,8 @@ The GraphScope has been deployed.
 --------------------------
 {{- if contains "NodePort" .Values.coordinator.service.type }}
 
-  export NODE_IP=$(kubectl --namespace {{ .Release.Namespace }}  get pod -l {{ template "graphscope.coordinator.labelSelector" . }} --no-headers=true | awk '/ /{print $1}' | xargs kubectl --namespace {{ .Release.Namespace }} get pod -o jsonpath="{.status.hostIP}")
-  export NODE_PORT=$(kubectl --namespace {{ .Release.Namespace }} get services -o jsonpath="{.spec.ports[0].nodePort}" coordinator-service-{{ template "graphscope.fullname" . }})
+  export NODE_IP=$(kubectl --namespace {{ .Release.Namespace }}  get pod -l {{ template "graphscope.coordinator.labelSelector" . }} -ojsonpath="{.items[0].status.hostIP}")
+  export NODE_PORT=$(kubectl --namespace {{ .Release.Namespace }} get services coordinator-service-{{ template "graphscope.fullname" . }}  -ojsonpath="{.spec.ports[0].nodePort}")
   echo "GraphScope service listen on ${NODE_IP}:${NODE_PORT}"
 
 {{- else if contains "LoadBalancer" .Values.coordinator.service.type }}
@@ -23,7 +23,7 @@ The GraphScope has been deployed.
 
   A jupyter-lab container is shipped with GraphScope, you can get the jupyter URL by executing:
 
-      'kubectl --namespace {{ .Release.Namespace }} logs --tail=10 -lgraphscope.components=coordinator -c jupyter'
+      'kubectl --namespace {{ .Release.Namespace }} logs --tail=10 -l {{ template "graphscope.coordinator.labelSelector" . }} -c jupyter'
 
   Then replace the '127.0.0.1:8888' to '${NODE_IP}:{{ .Values.jupyter.port }}'.
 
