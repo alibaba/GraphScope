@@ -66,7 +66,7 @@ class GSClientWrapper(
   log.info(s"init session with: ${initSessionCmd}")
   pythonInterpreter.runCommand(initSessionCmd)
 
-  pythonInterpreter.getMatched("GraphScope coordinator service connected")
+  pythonInterpreter.getMatched("Analytical engine is listening on")
   log.info("Successfully start gs session")
   val startedSocket: String     = getStartedSocket(pythonInterpreter)
   val v6dClient: VineyardClient = createVineyardClient(startedSocket)
