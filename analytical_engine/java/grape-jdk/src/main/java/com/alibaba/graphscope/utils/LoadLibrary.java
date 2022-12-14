@@ -19,6 +19,8 @@ package com.alibaba.graphscope.utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+
 public class LoadLibrary {
     private static Logger logger = LoggerFactory.getLogger(LoadLibrary.class.getName());
     /**
@@ -26,7 +28,7 @@ public class LoadLibrary {
      *
      * @param userLibrary library to load, fully-specified path
      */
-    public static void invoke(String userLibrary) throws UnsatisfiedLinkError {
+    public static void invoke(String userLibrary) throws UnsatisfiedLinkError, IOException {
         logger.info("loading library " + userLibrary);
         System.load(userLibrary);
     }

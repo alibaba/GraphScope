@@ -26,7 +26,6 @@ import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
 import java.util.Iterator;
 
@@ -38,7 +37,7 @@ import java.util.Iterator;
  * @param <VID_T> vertex id type.
  * @param <EDATA_T> edge data type.
  */
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @CXXHead(ARROW_PROJECTED_FRAGMENT_H)
 @CXXHead(CORE_JAVA_TYPE_ALIAS_H)
 @FFITypeAlias(PROJECTED_ADJ_LIST)

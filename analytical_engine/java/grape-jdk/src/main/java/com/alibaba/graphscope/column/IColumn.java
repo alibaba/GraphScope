@@ -27,9 +27,8 @@ import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @CXXHead(CORE_JAVA_TYPE_ALIAS_H)
 @FFITypeAlias(I_COLUMN)
 public interface IColumn extends FFIPointer {

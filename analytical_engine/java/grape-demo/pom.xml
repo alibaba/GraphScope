@@ -47,6 +47,7 @@
       <groupId>com.alibaba.graphscope</groupId>
       <artifactId>grape-giraph</artifactId>
       <classifier>shaded</classifier>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.alibaba.graphscope</groupId>
@@ -64,21 +65,6 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.spark</groupId>
-      <artifactId>spark-graphx_2.12</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.spark</groupId>
-      <artifactId>spark-sql_2.12</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-library</artifactId>
-      <scope>provided</scope>
     </dependency>
   </dependencies>
 
@@ -136,6 +122,7 @@
                   <include>com.alibaba.graphscope:*</include>
                   <include>com.alibaba.fastffi:*</include>
                   <include>it.unimi.dsi:fastutil*</include>
+		  <include>org.apache.spark:*</include>
                 </includes>
               </artifactSet>
               <filters>
@@ -148,7 +135,19 @@
                     <exclude>META-INF/*.RSA</exclude>
                   </excludes>
                 </filter>
+                <filter>
+		    <artifact>org.apache.spark:*</artifact>
+                    <includes>
+			<include>org/apache/spark/**</include>
+	            </includes>
+		</filter>
               </filters>
+              <relocations>
+                <relocation>
+                  <pattern>org.apache.spark.graphx</pattern>
+                  <shadedPattern>org.apache.spark.gs.graphx</shadedPattern>
+                </relocation>
+              </relocations>
             </configuration>
           </execution>
         </executions>

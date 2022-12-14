@@ -472,6 +472,31 @@ jobject CreateGiraphAdaptorContext(JNIEnv* env, const char* context_class_name,
   CHECK_NOTNULL(res);
   return env->NewGlobalRef(res);
 }
+std::string exec(const char* cmd) {
+  std::array<char, 128> buffer;
+  std::string result;
+  std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+  if (!pipe) {
+    throw std::runtime_error("popen() failed!");
+  }
+  while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+    result += buffer.data();
+  }
+  return result;
+}
+
+std::string generate_jvm_opts() {
+  char* gs_home = getenv("GRAPHSCOPE_HOME");
+  if (!gs_home) {
+    LOG(ERROR) << "No GRAPHSCOPE_HOME found in env";
+    return "";
+  }
+  std::string cmd =
+      std::string("source ") + std::string(gs_home) + "/conf/grape_jvm_opts";
+  std::string res = exec(cmd.c_str());
+  VLOG(10) << "jvm opts res: " << res;
+  return res;
+}
 
 }  // namespace gs
 #endif

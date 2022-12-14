@@ -25,13 +25,14 @@ fi
 
 GRAPHX_GRAPE_SDK=`ls ${GRAPHSCOPE_HOME}/lib/grape-graphx-*.jar`
 GRAPE_RUNTIME_JAR=`ls ${GRAPHSCOPE_HOME}/lib/grape-runtime-*.jar`
+GIRAPH_GRAPE_SDK=`ls ${GRAPHSCOPE_HOME}/lib/grape-giraph-*.jar`
 # This env point to the directory where the output for llvm4jni run.sh on Grape-runtime.jar resides
 if [[ "${RUNTIME_LLVM4JNI_OUTPUT}"x != x ]];
 then
     echo "find env RUNTIME_LLVM4JNI_OUTPUT, append to init java class path"
-    class_path=${RUNTIME_LLVM4JNI_OUTPUT}:${GRAPE_RUNTIME_JAR}:${GRAPHX_GRAPE_SDK}
+    class_path=${RUNTIME_LLVM4JNI_OUTPUT}:${GRAPE_RUNTIME_JAR}:${GRAPHX_GRAPE_SDK}:${GIRAPH_GRAPE_SDK}
 else 
-    class_path=${GRAPE_RUNTIME_JAR}:${GRAPHX_GRAPE_SDK}
+    class_path=${GRAPE_RUNTIME_JAR}:${GRAPHX_GRAPE_SDK}:${GIRAPH_GRAPE_SDK}
 fi
 
 #include jars in spark/jars

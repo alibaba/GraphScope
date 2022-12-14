@@ -199,8 +199,11 @@ class JavaLoaderInvoker {
     edata_offsets.resize(load_thread_num);
     // Construct the FFIPointer
 
-    if (!getenv("USER_JAR_PATH") || !getenv("GRAPE_JVM_OPTS")) {
-      LOG(ERROR) << "expect env USER_JAR_PATH and GRAPE_JVM_OPTS set";
+    std::string grape_jvm_opt = generate_jvm_opts();
+    if (!grape_jvm_opt.empty()) {
+      putenv(const_cast<char*>(grape_jvm_opt.data()));
+      VLOG(10) << "Find GRAPE_JVM_OPTS in params, setting to env..."
+               << grape_jvm_opt;
     }
 
     createFFIPointers();
@@ -472,6 +475,10 @@ class JavaLoaderInvoker {
         gs_class_loader_obj = gs::CreateClassLoader(env);
       } else {
         std::string user_jar_path = getenv("USER_JAR_PATH");
+        if (getenv("GIRAPH_JAR_PATH")) {
+          user_jar_path += ":";
+          user_jar_path += getenv("GIRAPH_JAR_PATH");
+        }
         gs_class_loader_obj = gs::CreateClassLoader(env, user_jar_path);
       }
       CHECK_NOTNULL(gs_class_loader_obj);

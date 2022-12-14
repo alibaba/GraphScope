@@ -29,9 +29,8 @@ import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.graphscope.stdcxx.StdMap;
 import com.alibaba.graphscope.utils.CppClassName;
 import com.alibaba.graphscope.utils.CppHeaderName;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @CXXHead(CppHeaderName.VINEYARD_CLIENT_H)
 @CXXHead(CppHeaderName.VINEYARD_JSON_H)
 @CXXHead(system = "map")

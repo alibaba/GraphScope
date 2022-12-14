@@ -8,9 +8,8 @@ import com.alibaba.fastffi.FFIFactory;
 import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.fastffi.FFITypeFactory;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @CXXHead(value = CORE_JAVA_JAVA_MESSAGES_H)
 @FFITypeAlias(value = INT_MSG)
 public interface IntMsg extends MsgBase {

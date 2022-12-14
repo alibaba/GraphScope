@@ -76,9 +76,11 @@ jobs:
         cd ${GITHUB_WORKSPACE}/analytical_engine/java
         mvn test -Dmaven.antrun.skip=true --quiet
 
-        source ${GRAPHSCOPE_HOME}/conf/grape_jvm_opts
         version=$(cat ${GITHUB_WORKSPACE}/VERSION)
         export USER_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-demo/target/grape-demo-${version}-shaded.jar
+        # for giraph test
+        export GIRAPH_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-giraph/target/grape-giraph-${version}-shaded.jar
+        
         cd ${GITHUB_WORKSPACE}/analytical_engine/build
         ../test/app_tests.sh --test_dir ${GS_TEST_DIR}
 
@@ -90,7 +92,6 @@ jobs:
       run: |
         version=$(cat ${GITHUB_WORKSPACE}/VERSION)
         export USER_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-demo/target/grape-demo-${version}-shaded.jar
-        source ${GRAPHSCOPE_HOME}/conf/grape_jvm_opts
 
         cd ${GITHUB_WORKSPACE}/python
         python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml \

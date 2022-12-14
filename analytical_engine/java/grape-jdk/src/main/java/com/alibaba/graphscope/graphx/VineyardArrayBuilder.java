@@ -26,9 +26,8 @@ import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.graphscope.stdcxx.StdVector;
 import com.alibaba.graphscope.utils.CppClassName;
 import com.alibaba.graphscope.utils.CppHeaderName;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @CXXHead(CppHeaderName.VINEYARD_ARRAY_BUILDER_H)
 @FFITypeAlias(CppClassName.VINEYARD_ARRAY_BUILDER)
 public interface VineyardArrayBuilder<EDATA_T> extends FFIPointer {

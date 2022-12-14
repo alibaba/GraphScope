@@ -61,6 +61,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.BitSet;
 import java.util.Objects;
@@ -148,6 +149,7 @@ public class GiraphComputationAdaptorContext<OID_T, VID_T, VDATA_T, EDATA_T>
 
     public void setClassLoader(URLClassLoader classLoader) {
         this.classLoader = classLoader;
+        logger.info("set class loader search path {}", urlsToString(classLoader.getURLs()));
     }
 
     public void writeBackVertexData() {
@@ -551,5 +553,14 @@ public class GiraphComputationAdaptorContext<OID_T, VID_T, VDATA_T, EDATA_T>
                         configuration.getGrapeEdataClass(), configuration.getEdgeValueClass())
                 && ConfigurationUtils.checkTypeConsistency(
                         configuration.getGrapeVdataClass(), configuration.getVertexValueClass());
+    }
+
+    private static String urlsToString(URL[] urls) {
+        StringBuilder sb = new StringBuilder();
+        for (URL url : urls) {
+            sb.append(url);
+            sb.append(",");
+        }
+        return sb.toString();
     }
 }
