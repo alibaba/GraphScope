@@ -136,6 +136,7 @@ class LocalLauncher(AbstractLauncher):
 
         env = os.environ.copy()
         env.update(mpi_env)
+        env["GRAPHSCOPE_HOME"] = GRAPHSCOPE_HOME
 
         logger.info("Launch analytical engine with command: %s", " ".join(cmd))
 

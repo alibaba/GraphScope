@@ -19,8 +19,8 @@ package com.alibaba.graphscope.example.sssp;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.graphscope.context.ParallelContextBase;
 import com.alibaba.graphscope.context.VertexDataContext;
+import com.alibaba.graphscope.ds.GSVertexArray;
 import com.alibaba.graphscope.ds.Vertex;
-import com.alibaba.graphscope.ds.VertexRange;
 import com.alibaba.graphscope.ds.VertexSet;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.parallel.ParallelMessageManager;
@@ -30,9 +30,6 @@ import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -92,29 +89,12 @@ public class SSSPContext extends VertexDataContext<IFragment<Long, Long, Long, L
         logger.info(
                 "frag: " + frag.fid() + " receiveMessageTime: " + receiveMessageTime / 1000000000);
         logger.info("frag: " + frag.fid() + " execTime: " + execTime / 1000000000);
-        String prefix = "/tmp/sssp_parallel_output_threadNum_" + threadNum + "_";
-        String filePath = prefix + "_frag_" + frag.fid();
-        try {
-            FileWriter fileWritter = new FileWriter(filePath);
-            BufferedWriter bufferedWriter = new BufferedWriter(fileWritter);
-            VertexRange<Long> innerNodes = frag.innerVertices();
-            logger.info(
-                    frag.getInnerVerticesNum()
-                            + " "
-                            + innerNodes.beginValue()
-                            + " "
-                            + innerNodes.endValue());
 
-            Vertex<Long> cur = FFITypeFactoryhelper.newVertexLong();
-            for (long index = 0; index < frag.getInnerVerticesNum(); ++index) {
-                cur.setValue(index);
-                Long oid = frag.getId(cur);
-                bufferedWriter.write(
-                        cur.getValue() + "\t" + oid + "\t" + partialResults.get(index) + "\n");
-            }
-            bufferedWriter.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+        GSVertexArray<Double> vertexArray = data();
+        Vertex<Long> cur = FFITypeFactoryhelper.newVertexLong();
+        for (long vid = 0; vid < frag.getInnerVerticesNum(); ++vid) {
+            cur.setValue(vid);
+            vertexArray.setValue(cur, (double) partialResults.get(vid));
         }
     }
 

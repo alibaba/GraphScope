@@ -60,6 +60,32 @@ static constexpr const char* IFRAGMENT_HELPER_CLASS =
 static constexpr const char* SET_CLASS_LOADER_METHOD_SIG =
     "(Ljava/net/URLClassLoader;)V";
 
+std::string exec(const char* cmd) {
+  std::array<char, 128> buffer;
+  std::string result;
+  std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+  if (!pipe) {
+    throw std::runtime_error("popen() failed!");
+  }
+  while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+    result += buffer.data();
+  }
+  return result;
+}
+
+std::string generate_jvm_opts() {
+  char* gs_home = getenv("GRAPHSCOPE_HOME");
+  if (!gs_home) {
+    LOG(ERROR) << "No GRAPHSCOPE_HOME found in env";
+    return "";
+  }
+  std::string cmd =
+      std::string("source ") + std::string(gs_home) + "/conf/grape_jvm_opts";
+  std::string res = exec(cmd.c_str());
+  VLOG(10) << "jvm opts res: " << res;
+  return res;
+}
+
 /**
  * @brief JavaContextBase is the base class for JavaPropertyContext and
  * JavaProjectedContext.
@@ -355,6 +381,13 @@ class JavaContextBase : public grape::ContextBase {
 
     // JVM runtime opt should consists of java.libaray.path and
     // java.class.path maybe this should be set by the backend not user.
+    std::string grape_jvm_opt = generate_jvm_opts();
+    if (!grape_jvm_opt.empty()) {
+      putenv(const_cast<char*>(grape_jvm_opt.data()));
+      VLOG(10) << "Find GRAPE_JVM_OPTS in params, setting to env..."
+               << grape_jvm_opt;
+    }
+
     if (getenv("GRAPE_JVM_OPTS")) {
       VLOG(1) << "OK, GRAPE_JVM_OPTS has been set.";
     } else {
