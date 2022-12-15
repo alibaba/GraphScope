@@ -94,7 +94,7 @@ class Loader(object):
     Loader can take various data sources, and assemble necessary information into a AttrValue.
     """
 
-    def __init__(self, source, delimiter=",", header_row=True, **kwargs):
+    def __init__(self, source, delimiter=",", header_row=True, filetype=None, **kwargs):
         """Initialize a loader with configurable options.
         Note: Loader cannot be reused since it may change inner state when constructing
         information for loading a graph.
@@ -124,6 +124,9 @@ class Loader(object):
                 will be read from the first row of source, else they are named by 'f0', 'f1', ....
                 Defaults to True.
 
+            filetype (str, optional): Specify the type of files to load, can be "CSV", "ORC", and
+                "PARQUET". Default is "CSV".
+
         Notes:
             Data is resolved by drivers in `vineyard <https://github.com/v6d-io/v6d>`_ .
             See more additional info in `Loading Graph` section of Docs, and implementations in `vineyard`.
@@ -147,6 +150,7 @@ class Loader(object):
         # find more details in fsspec
         #   https://filesystem-spec.readthedocs.io/en/latest/
         self.storage_options = kwargs
+        self.storage_options["filetype"] = filetype
         # also parse protocol and source in `resolve` method
         self.resolve(source)
 
@@ -249,6 +253,8 @@ class Loader(object):
                 self.source.endswith(".orc")
                 or self.source.endswith(".parquet")
                 or self.source.endswith(".pq")
+                or str(self.storage_options.get("filetype")).upper()
+                in ["ORC", "PARQUET"]
             ):
                 # orc and parquet: handled by vineyard
                 config[types_pb2.SOURCE] = utils.s_to_attr(self.source)
@@ -263,14 +269,16 @@ class Loader(object):
                 config[types_pb2.SOURCE] = utils.s_to_attr(source)
         elif self.protocol == "pandas":
             config[types_pb2.VALUES] = self.source
+            config[types_pb2.STORAGE_OPTIONS] = utils.s_to_attr(
+                json.dumps(self.storage_options)
+            )
+            config[types_pb2.READ_OPTIONS] = utils.s_to_attr(json.dumps({}))
         else:  # Let vineyard handle other data source.
             config[types_pb2.SOURCE] = utils.s_to_attr(self.source)
-            if self.protocol != "vineyard":
-                # need spawn an io stream in coordinator
-                config[types_pb2.STORAGE_OPTIONS] = utils.s_to_attr(
-                    json.dumps(self.storage_options)
-                )
-                config[types_pb2.READ_OPTIONS] = utils.s_to_attr(
-                    json.dumps(self.options.to_dict())
-                )
+            config[types_pb2.STORAGE_OPTIONS] = utils.s_to_attr(
+                json.dumps(self.storage_options)
+            )
+            config[types_pb2.READ_OPTIONS] = utils.s_to_attr(
+                json.dumps(self.options.to_dict())
+            )
         return config

@@ -774,6 +774,20 @@ class OperationExecutor:
             # loader is type of attr_value_pb2.Chunk
             protocol = loader.attr[types_pb2.PROTOCOL].s.decode()
             source = loader.attr[types_pb2.SOURCE].s.decode()
+            try:
+                storage_options = json.loads(
+                    loader.attr[types_pb2.STORAGE_OPTIONS].s.decode()
+                )
+                read_options = json.loads(
+                    loader.attr[types_pb2.READ_OPTIONS].s.decode()
+                )
+            except:  # noqa: E722, pylint: disable=bare-except
+                storage_options = {}
+                read_options = {}
+            filetype = storage_options.get("filetype", None)
+            if filetype is None:
+                filetype = read_options.get("filetype", None)
+            filetype = str(filetype).upper()
             if (
                 protocol in ("hdfs", "hive", "oss", "s3")
                 or protocol == "file"
@@ -782,13 +796,8 @@ class OperationExecutor:
                     or source.endswith(".parquet")
                     or source.endswith(".pq")
                 )
+                or filetype in ["ORC", "PARQUET"]
             ):
-                storage_options = json.loads(
-                    loader.attr[types_pb2.STORAGE_OPTIONS].s.decode()
-                )
-                read_options = json.loads(
-                    loader.attr[types_pb2.READ_OPTIONS].s.decode()
-                )
                 new_protocol, new_source = _spawn_vineyard_io_stream(
                     source,
                     storage_options,
