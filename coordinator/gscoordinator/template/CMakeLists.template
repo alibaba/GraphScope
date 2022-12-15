@@ -399,7 +399,7 @@ endif ()
 include("${ANALYTICAL_ENGINE_HOME}/build/graphscope-analytical-config.cmake" OPTIONAL)
 
 # setup the CXX ABI options after fully loaded the environment
-message("GCC ABI backwards compatible: ${GRAPHSCOPE_GCC_ABI_BACKWARDS_COMPATIBLE}")
+# message("GCC ABI backwards compatible: ${GRAPHSCOPE_GCC_ABI_BACKWARDS_COMPATIBLE}")
 if("${GRAPHSCOPE_GCC_ABI_BACKWARDS_COMPATIBLE}" STREQUAL "0")
     add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
 elseif("${GRAPHSCOPE_GCC_ABI_BACKWARDS_COMPATIBLE}" STREQUAL "1")

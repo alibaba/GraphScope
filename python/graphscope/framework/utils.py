@@ -35,6 +35,16 @@ import pandas as pd
 import psutil
 from google.protobuf.any_pb2 import Any
 
+try:
+    from numpy import long as numpy_long
+except ImportError:
+    from numpy.compat import long as numpy_long
+
+try:
+    from numpy import object as numpy_object
+except ImportError:
+    from numpy import object_ as numpy_object
+
 from graphscope.client.archive import OutArchive
 from graphscope.framework.errors import check_argument
 from graphscope.proto import attr_value_pb2
@@ -626,11 +636,11 @@ def _from_numpy_dtype(dtype):
         np.dtype(np.uint32): types_pb2.UINT32,
         np.dtype(np.uint64): types_pb2.UINT64,
         np.dtype(np.intc): types_pb2.INT,
-        np.dtype(np.long): types_pb2.LONG,
+        np.dtype(numpy_long): types_pb2.LONG,
         np.dtype(bool): types_pb2.BOOLEAN,
         np.dtype(float): types_pb2.FLOAT,
         np.dtype(np.double): types_pb2.DOUBLE,
-        np.dtype(np.object): types_pb2.STRING,
+        np.dtype(numpy_object): types_pb2.STRING,
     }
     pbdtype = dtype_reverse_map.get(dtype)
     if pbdtype is None:
@@ -649,11 +659,11 @@ def _to_numpy_dtype(dtype):
         types_pb2.UINT32: np.uint32,
         types_pb2.UINT64: np.uint64,
         types_pb2.INT: np.intc,
-        types_pb2.LONG: np.long,
+        types_pb2.LONG: numpy_long,
         types_pb2.BOOLEAN: np.bool,
         types_pb2.FLOAT: np.float,
         types_pb2.DOUBLE: np.double,
-        types_pb2.STRING: np.object,
+        types_pb2.STRING: numpy_object,
     }
     npdtype = dtype_map.get(dtype)
     if npdtype is None:

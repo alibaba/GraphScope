@@ -16,7 +16,7 @@ jobs:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.11.1
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.11.2
       options:
         --shm-size 4096m
 
