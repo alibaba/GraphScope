@@ -1672,7 +1672,7 @@ def parse_as_glog_level(log_level):
             log_level = -1
         else:
             log_level = getattr(logging, log_level.upper())
-    python_to_glog = {10: 10, 20: 1}
+    python_to_glog = {0: 100, 10: 10, 20: 1}
     return python_to_glog.get(log_level, 1)
 
 
