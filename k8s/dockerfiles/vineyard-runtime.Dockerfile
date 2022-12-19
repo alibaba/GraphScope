@@ -5,6 +5,7 @@ ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
 ARG BUILDER_VERSION=latest
 FROM $REGISTRY/graphscope/vineyard-dev:$BUILDER_VERSION AS builder
 
+USER root
 WORKDIR /root
 
 RUN mkdir artifacts && \
