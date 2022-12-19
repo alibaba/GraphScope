@@ -1,32 +1,29 @@
 name: Build GraphScope Images on Linux
 
-on: [push, pull_request]
-  # workflow_dispatch:
-  # schedule:
-  #   # The notifications for scheduled workflows are sent to the user who
-  #   # last modified the cron syntax in the workflow file.
-  #   # Trigger the workflow at 03:00(CST) every day.
-  #   - cron:  '00 19 * * *'
-  # push:
-  #   tags:
-  #     - "v*"
+# on: [push, pull_request]
+on:
+  workflow_dispatch:
+  schedule:
+    # The notifications for scheduled workflows are sent to the user who
+    # last modified the cron syntax in the workflow file.
+    # Trigger the workflow at 03:00(CST) every day.
+    - cron:  '00 19 * * *'
+  push:
+    tags:
+      - "v*"
 
 env:
   REGISTRY: registry.cn-hongkong.aliyuncs.com
 
 jobs:
   build-image:
-    # if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
+    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
     runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@v3
       with:
         submodules: true
-
-    # - uses: actions/download-artifact@v3
-    #   with:
-    #     path: artifacts
 
     - name: Add envs to GITHUB_ENV
       run: |
@@ -44,8 +41,8 @@ jobs:
         make learning CI=false
 
         # make jupyter-image
-        cd ${GITHUB_WORKSPACE}
-        docker build --build-arg CI=${CI} -t graphscope/jupyter:${SHORT_SHA} -f ./k8s/internal/jupyter.Dockerfile .
+        # cd ${GITHUB_WORKSPACE}
+        # docker build --build-arg CI=${CI} -t graphscope/jupyter:${SHORT_SHA} -f ./k8s/internal/jupyter.Dockerfile .
 
         # dataset image doesn't changed, we can just use the latest one
         # make dataset-image
@@ -78,8 +75,8 @@ jobs:
         sudo docker push ${{ env.REGISTRY }}/graphscope/learning:${tag}
 
         # jupyter image
-        sudo docker tag graphscope/jupyter:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/jupyter:${tag}
-        sudo docker push ${{ env.REGISTRY }}/graphscope/jupyter:${tag}
+        # sudo docker tag graphscope/jupyter:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/jupyter:${tag}
+        # sudo docker push ${{ env.REGISTRY }}/graphscope/jupyter:${tag}
         # dataset image
         # sudo docker tag graphscope/dataset:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/dataset:${tag}
         # sudo docker push ${{ env.REGISTRY }}/graphscope/dataset:${tag}
@@ -115,9 +112,9 @@ jobs:
         sudo docker push ${{ env.REGISTRY }}/graphscope/learning:${tag}
 
         # jupyter image
-        sudo docker tag graphscope/jupyter:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/jupyter:${tag}
-        sudo docker tag graphscope/jupyter:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/jupyter:latest
-        sudo docker push ${{ env.REGISTRY }}/graphscope/jupyter:${tag}
+        # sudo docker tag graphscope/jupyter:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/jupyter:${tag}
+        # sudo docker tag graphscope/jupyter:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/jupyter:latest
+        # sudo docker push ${{ env.REGISTRY }}/graphscope/jupyter:${tag}
 
         # dataset image
         # Note! dataset image are built mannually just use the latest one.
@@ -143,12 +140,5 @@ jobs:
         sudo docker push ${{ env.REGISTRY }}/graphscope/learning:${tag}
 
         # jupyter image
-        sudo docker tag graphscope/jupyter:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/jupyter:${tag}
-        sudo docker tag graphscope/jupyter:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/jupyter:latest
-        sudo docker push ${{ env.REGISTRY }}/graphscope/jupyter:${tag}
-
-        # dataset image
-        # Note! dataset image are built mannually just use the latest one.
-        sudo docker pull ${{ env.REGISTRY }}/graphscope/dataset:latest
-        sudo docker tag ${{ env.REGISTRY }}/graphscope/dataset:latest ${{ env.REGISTRY }}/graphscope/dataset:${tag}
-        sudo docker push ${{ env.REGISTRY }}/graphscope/dataset:${tag}
+        # sudo docker tag graphscope/jupyter:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/jupyter:${tag}
+        # sudo docker push ${{ env.REGISTRY }}/graphscope/jupyter:${tag}

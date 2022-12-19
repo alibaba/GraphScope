@@ -25,7 +25,7 @@ RUN tar xzf /root/artifacts.tar.gz -C /usr/local/ && rm /root/artifacts.tar.gz
 
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:/usr/local/lib64
 
-RUN yum install -y sudo libunwind-devel && \
+RUN yum install -y sudo libunwind-devel libgomp && \
     yum clean all -y --enablerepo='*' && \
     rm -rf /var/cache/yum
 

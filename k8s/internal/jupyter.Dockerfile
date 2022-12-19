@@ -34,8 +34,9 @@ COPY . /home/graphscope/gs
 # Install graphscope client
 RUN cd /home/graphscope/gs && \
     if [ "${CI}" == "true" ]; then \
-        pushd artifacts/learning; \
-        python3 -m pip install --no-cache-dir graphscope_client*; \
+        pushd artifacts/python/dist/wheelhouse; \
+        for f in * ; do python3 -m pip install --no-cache-dir $f; done || true; \
+        popd; \
     else \
         python3 -m pip install --no-cache-dir graphscope_client -U; \
     fi && \

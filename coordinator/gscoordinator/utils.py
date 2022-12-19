@@ -507,7 +507,7 @@ def compile_app(
             f.write(content)
 
     # compile
-    commands = [" ".join(cmake_commands), "make -j4"]
+    commands = [" ".join(cmake_commands), "make -j2"]
     lib_path = compile_library(commands, library_dir, library_name, launcher)
 
     return lib_path, java_jar_path, java_codegen_out_dir, app_type
@@ -581,7 +581,7 @@ def compile_graph_frame(
         raise ValueError(f"Illegal graph type: {graph_type}")
 
     # compile
-    commands = [" ".join(cmake_commands), "make -j4"]
+    commands = [" ".join(cmake_commands), "make -j2"]
     lib_path = compile_library(commands, library_dir, library_name, launcher)
     return lib_path, None, None, None
 

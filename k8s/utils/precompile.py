@@ -27,10 +27,8 @@ try:
     COORDINATOR_HOME = Path(gscoordinator.__file__).parent.parent.absolute()
 except ModuleNotFoundError:
     COORDINATOR_HOME = Path(
-        os.path.abspath(
             os.path.join(os.path.dirname(__file__), "..", "..", "coordinator")
-        )
-    )
+    ).resolve()
 
 TEMPLATE_DIR = COORDINATOR_HOME / "gscoordinator" / "template"
 CMAKELISTS_TEMPLATE = (TEMPLATE_DIR / "CMakeLists.template").resolve()
