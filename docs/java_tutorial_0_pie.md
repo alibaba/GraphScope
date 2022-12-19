@@ -1,19 +1,17 @@
 # Querying graph via GraphScope JavaSDK
 
-GraphScope provide sufficient support for ``java programmers`` to implement graph algorithms and run it on GraphScope Analytical Engine.
-In this tutorial, you will first try exploring GraphScope JavaSDK with some example algorithms, then implement your own algorithm, and 
-submit to GraphScope.
+GraphScope provides sufficient support for ``java programmers`` to implement graph algorithms and run it on GraphScope Analytical Engine.
+In this tutorial, you will first try to explore GraphScope JavaSDK with some example algorithms, then implement your own algorithm, finally submit to GraphScope.
 
-## Run example algorithms with provided jar
+## Run example algorithms with example jar
 
-An example jar which constains implementation of several graph algorithms(i.e. PageRank, SSSP, BFS) is provided at 
+An example jar which constains implementation of several graph algorithms(i.e. PageRank, SSSP, BFS) is provided in 
 [grape-demo.jar](https://graphscope.oss-cn-beijing.aliyuncs.com/jar/grape-demo-0.19.0-shaded.jar). You can run the graph algorithms provided in this jar by submitting the downloaded jar to GraphScope.
 
 Here we provide an example to run `SSSP` on p2p dataset.
 
 ```python
 import graphscope
-from graphscope import JavaApp
 from graphscope.dataset import load_p2p_network
 from graphscope.framework.app import load_app
 
@@ -25,7 +23,7 @@ sess = graphscope.session(cluster_type='hosts')
 
 graph = load_p2p_network(sess)    
 
-"""This app need to run on simple graph"""
+"""Java algorithm need to run on simple graph"""
 graph = graph.project(vertices={"host": ['id']}, edges={"connect": ["dist"]})
 
 sess.add_lib("/home/graphscope/grape-demo-0.19.0-shaded.jar") # replace path to grape-demo.jar
@@ -50,7 +48,7 @@ You can include `GRAPE-jdk` as a dependency in your maven project by adding foll
 <dependency>
   <groupId>com.alibaba.graphscope</groupId>
   <artifactId>grape-jdk</artifactId>
-  <version>0.18.1</version>
+  <version>0.19.0</version>
 </dependency>
 ```
 
@@ -68,11 +66,11 @@ include runtime jars in your fat-jar.
 
 ### Implement your algorithm
 
-Different from the *pregel* interface provided by **Apache Giraph** and **Spark GraphX**, `GRAPE-jdk` provide user with **PIE** programming interface. Unlike *pregel*'s vertex-centric interface, **PIE** 
-models graph computing in a subgraph-centric manner. 
+Different from the *pregel* interface provided by **Apache Giraph** and **Spark GraphX**, `GRAPE-jdk` provides user with **PIE** programming interface. Unlike *pregel*'s ``vertex-centric`` interface, **PIE** 
+models graph computing in a ``subgraph-centric`` manner. 
 In `PIE` model, the program requires less supersteps and the size of generated message has been drastically reduced, which lead to great performance improvement.
 
-To implement a `PIE` algorithm, you need to provide two separate functions, `PEval` and `IncEval`. `PEval` function will be execute only once at the first round of computation, and `IncEval` will be called for multiple times untile covergence. You can also supposed to provide a class called `Context`. You can put intermediate
+To implement a `PIE` algorithm, you need to provide two separate functions, `PEval` and `IncEval`. `PEval` function will be execute only once at the first round of computation, and `IncEval` will be called for multiple times untile covergence. You are also supposed to provide a class called `Context`. You can put intermediate
 results, init configuration in this class. The `init` method will be called before
 `PEval`.
 

@@ -3,13 +3,13 @@
 [Apache Spark](https://spark.apache.org/) is a famous engine for large-scale data analytics. [Spark GraphX](https://spark.apache.org/graphx/) is Spark's graph
 computing module, which provides  flexible and efficient graph computation framework.
 
-Graphscope is also developed to integrated with Spark GraphX. User can easily deploy a graphscope cluster colocated with spark cluster. And by switch `SparkSession` to `GSSparkSession`, user can experience up to 7 times performance 
-improvment when running GraphX algorithms.
+Graphscope is also developed to be integrated with Spark GraphX. User can easily deploy a graphscope cluster colocated with spark cluster. And by switch `SparkSession` to `GSSparkSession`, user can experience up to 7 times performance 
+improvement when running GraphX algorithms.
 
 ## Deploy GraphScope along with Spark
 
 We assume you already have a spark cluster deployed. If you don't have a spark cluster deployed, please refer to [spark-cluster-overview](https://spark.apache.org/docs/latest/cluster-overview.html) to deploy a spark cluster.
-Spark distributions with **version >=3.1.3** has been tested to be compatible with GraphScope.
+Spark distributions with **version ==3.1.3** has been tested to be compatible with GraphScope.
 
 Also, GraphScope can be easily distributed with python package. Since GraphScope only 
 support python3, you shall upgrade your python enviroment before proceeding on.
@@ -47,11 +47,16 @@ Different from Giraph-on-Graphscope, for GraphX-GraphScope integration, we need 
 
 ### Generate GraphScope env
 
+There are several enviroment variables needs to be set before running GraphX algo on 
+GraphScope. We provide user with a useful kit to do this: [GraphScope-cli](https://github.com/GraphScope/cli). Follow the instructions of `cli` to get the built scripts, unzip to obtain `gs` script.
+
 ```bash
-bash spark_classpath_command.sh
+# run this command to obtain graphscope_4spark.env file
+./gs spark-classpath
+source .graphscope_4spark.env
 ```
-Then you will find `.graphscope_4spark.env` locally. run `source .graphscope_4spark.env` to export neccessary enviroment
-variables from disk.
+
+Then you will find `.graphscope_4spark.env` locally. run `source .graphscope_4spark.env` to export neccessary enviroment variables from disk.
 
 ### Submit to Spark
 
@@ -75,7 +80,56 @@ Remember to replace the placeholders like `${master_url}` with acutal cluster ur
 To develop your GraphX algorithms which can run on GraphScope, users shall program towards the RDD interfaces provided by Spark GraphX, since all GraphX interfaces are
 supported by Graphscope.
 
+### Include dependency
+
+Include `grape-graphx` dependency in your project's `pom.xml`.
+
+```xml
+<dependency>
+  <groupId>com.alibaba.graphscope</groupId>
+  <artifactId>grape-graphx</artifactId>
+  <classifier>shaded</classifier>
+  <scope>provided</scope>
+  <version>0.19.0</version>
+</dependency>
+```
+
+And you also need to configure `maven-shaded-plugin` with following configuration to make sure the conflicts can be correctly resolved.
+
+```xml
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-shade-plugin</artifactId>
+    <executions>
+        <execution>
+        <goals>
+            <goal>shade</goal>
+        </goals>
+        <phase>package</phase>
+        <configuration>
+            <filters>
+                <filter>
+                    <artifact>org.apache.spark:*</artifact>
+                    <includes>
+                        <include>org/apache/spark/**</include>
+                    </includes>
+                </filter>
+            </filters>
+            <relocations>
+            <relocation>
+                <pattern>org.apache.spark.graphx</pattern>
+                <shadedPattern>org.apache.spark.gs.graphx</shadedPattern>
+            </relocation>
+            </relocations>
+        </configuration>
+        </execution>
+    </executions>
+</plugin>
+```
+
+
 ### Develop customized GraphX algorithm towards GraphScope.
+
 
 Other than the interface provided by GraphX, GraphScope also provide some other graphscope-only features
 via `GSSparkSession`. User shall use `GSSparkSession` insteadof `SparkSession` to make their algorithm runnable on GraphScope.

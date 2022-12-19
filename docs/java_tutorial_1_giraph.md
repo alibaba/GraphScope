@@ -1,6 +1,6 @@
 # Run existing jars developed for Apache Giraph on Graphscope
 
-[Apache Giraph](https://giraph.apache.org/intro.html) is a famous graph computing framework, built on top of Apache Hadoop. Through `pregel` interface, user can write vertex-cetric graph algorithms. 
+[Apache Giraph](https://giraph.apache.org/intro.html) is one of the most famous graph computing frameworks, built on top of Apache Hadoop. Through `pregel` interface, user can write ``vertex-cetric`` graph algorithms. 
 
 GraphScope aiming to provide one-stop graph processing framework, including intergrating with popular open-source graph computing framework.
 Actually, Giraph algorithms can be easily run on Graphscope without any adaptation.
@@ -44,10 +44,11 @@ sess = graphscope.session(cluster_type='hosts')
 
 sess.add_lib("/home/graphscope/grape-demo-0.19.0-shaded.jar")
 
+# Remember to put giraph: before class name.
 vformat = "giraph:com.alibaba.graphscope.example.giraph.format.P2PVertexInputFormat"
 eformat = "giraph:com.alibaba.graphscope.example.giraph.format.P2PEdgeInputFormat"
 
-#Suppose GS_TEST_DIR is /home/graphscope/gstest/
+# Replace path p2p.v and p2p.3 with your own path.
 graph = sess.load_from(
     vertices=os.path.expandvars("/home/graphscope/p2p-31.v"),
     vformat=vformat,
@@ -64,7 +65,7 @@ ctx.to_numpy('r')
 
 ## Run your own Giraph apps.
 
-After a successful running of example giraph SSSP algorithm, you may want to try your own giraph algorithm on GraphScope(which runs much faster then Giraph itself). 
+After a successful running of example giraph SSSP algorithm, you may want to try your own giraph algorithm on GraphScope(**which runs much faster then Giraph itself**). 
 
 ### Develop Giraph algorithm
 
