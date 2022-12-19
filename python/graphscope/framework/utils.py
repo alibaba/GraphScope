@@ -626,11 +626,11 @@ def _from_numpy_dtype(dtype):
         np.dtype(np.uint32): types_pb2.UINT32,
         np.dtype(np.uint64): types_pb2.UINT64,
         np.dtype(np.intc): types_pb2.INT,
-        np.dtype(np.long): types_pb2.LONG,
+        np.dtype(int): types_pb2.LONG,
         np.dtype(bool): types_pb2.BOOLEAN,
         np.dtype(float): types_pb2.FLOAT,
         np.dtype(np.double): types_pb2.DOUBLE,
-        np.dtype(np.object): types_pb2.STRING,
+        np.dtype(object): types_pb2.STRING,
     }
     pbdtype = dtype_reverse_map.get(dtype)
     if pbdtype is None:
@@ -649,11 +649,11 @@ def _to_numpy_dtype(dtype):
         types_pb2.UINT32: np.uint32,
         types_pb2.UINT64: np.uint64,
         types_pb2.INT: np.intc,
-        types_pb2.LONG: np.long,
-        types_pb2.BOOLEAN: np.bool,
-        types_pb2.FLOAT: np.float,
+        types_pb2.LONG: int,
+        types_pb2.BOOLEAN: bool,
+        types_pb2.FLOAT: float,
         types_pb2.DOUBLE: np.double,
-        types_pb2.STRING: np.object,
+        types_pb2.STRING: object,
     }
     npdtype = dtype_map.get(dtype)
     if npdtype is None:
