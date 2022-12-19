@@ -26,7 +26,9 @@ try:
     COORDINATOR_HOME = Path(gscoordinator.__file__).parent.parent.absolute()
 except ModuleNotFoundError:
     COORDINATOR_HOME = Path(
-        os.path.join(os.path.dirname(__file__), "..", "..", "coordinator")
+        os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "..", "coordinator")
+        )
     )
 
 TEMPLATE_DIR = COORDINATOR_HOME / "gscoordinator" / "template"
@@ -51,7 +53,7 @@ def cmake_and_make(cmake_commands):
             encoding="utf-8",
             errors="replace",
             universal_newlines=True,
-            check=True
+            check=True,
         )
         make_process = subprocess.run(
             [shutil.which("make"), "-j4"],
@@ -67,6 +69,7 @@ def cmake_and_make(cmake_commands):
         print(e.stderr)
         raise
 
+
 def get_lib_path(app_dir, app_name):
     if sys.platform == "linux" or sys.platform == "linux2":
         return app_dir / f"lib{app_name}.so"
@@ -74,6 +77,7 @@ def get_lib_path(app_dir, app_name):
         return app_dir / f"lib{app_name}.dylib"
     else:
         raise RuntimeError(f"Unsupported platform {sys.platform}")
+
 
 def cmake_graph(graph_class):
     print("Start to compile", graph_class)
@@ -163,10 +167,12 @@ def get_app_info(algo: str):
 
     raise KeyError("Algorithm %s does not exist in the gar resource." % algo)
 
+
 def internal_type(t):  # The template of vertex map needs special care.
     if t == "std::string":
         return "vineyard::arrow_string_view"
     return t
+
 
 def compile_graph():
     property_frame_template = "vineyard::ArrowFragment<{},{},{}>"
@@ -174,8 +180,11 @@ def compile_graph():
     flattened_frame_template = "gs::ArrowFlattenedFragment<{},{},{},{}>"
     dynamic_projected_frame_template = "gs::DynamicProjectedFragment<{},{}>"
 
-    vertex_map_templates = ["vineyard::ArrowVertexMap<{},{}>", "vineyard::ArrowLocalVertexMap<{},{}>"]
-    
+    vertex_map_templates = [
+        "vineyard::ArrowVertexMap<{},{}>",
+        "vineyard::ArrowLocalVertexMap<{},{}>",
+    ]
+
     oid_types = ["int64_t", "std::string"]
     vid_types = ["uint64_t"]
     vdata_types = ["int64_t", "grape::EmptyType"]
@@ -214,7 +223,10 @@ def compile_graph():
 
 def compile_cpp_pie_app():
     targets = []
-    vertex_map_templates = ["vineyard::ArrowVertexMap<{},{}>", "vineyard::ArrowLocalVertexMap<{},{}>"]
+    vertex_map_templates = [
+        "vineyard::ArrowVertexMap<{},{}>",
+        "vineyard::ArrowLocalVertexMap<{},{}>",
+    ]
 
     lv = vertex_map_templates[0].format(internal_type("int64_t"), "uint64_t")
     sv = vertex_map_templates[0].format(internal_type("std::string"), "uint64_t")
@@ -238,8 +250,12 @@ def compile_cpp_pie_app():
         "std::string", "uint64_t", "grape::EmptyType", "double", sv
     )
     psull = project_template.format("std::string", "uint64_t", "int64_t", "int64_t", sv)
-    psusl = project_template.format("std::string", "uint64_t", "std::string", "int64_t", sv)
-    psusu = project_template.format("std::string", "uint64_t", "std::string", "uint64_t", sv)
+    psusl = project_template.format(
+        "std::string", "uint64_t", "std::string", "int64_t", sv
+    )
+    psusu = project_template.format(
+        "std::string", "uint64_t", "std::string", "uint64_t", sv
+    )
 
     plull = project_template.format("int64_t", "uint64_t", "int64_t", "int64_t", lv)
     pluee = project_template.format(
@@ -248,7 +264,9 @@ def compile_cpp_pie_app():
     pluel = project_template.format(
         "int64_t", "uint64_t", "grape::EmptyType", "int64_t", lv
     )
-    plued = project_template.format("int64_t", "uint64_t", "grape::EmptyType", "double", lv)
+    plued = project_template.format(
+        "int64_t", "uint64_t", "grape::EmptyType", "double", lv
+    )
     targets.extend(
         [
             ("pagerank", psuee),

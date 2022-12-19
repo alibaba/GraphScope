@@ -47,6 +47,22 @@ class TestConvertNumpyMatrix:
         assert sorted(G1.nodes()) == sorted(G2.nodes())
         assert edges_equal(sorted(G1.edges()), sorted(G2.edges()))
 
+    @pytest.mark.skip(reason="not known, temporarily skipped (@tao)")
+    def test_identity_graph_matrix(self):
+        pass
+
+    @pytest.mark.skip(reason="not known, temporarily skipped (@tao)")
+    def test_identity_graph_array(self):
+        pass
+
+    @pytest.mark.skip(reason="not known, temporarily skipped (@tao)")
+    def test_identity_digraph_matrix(self):
+        pass
+
+    @pytest.mark.skip(reason="not known, temporarily skipped (@tao)")
+    def test_identity_digraph_array(self):
+        pass
+
     def test_from_numpy_matrix_type(self):
         pass
 

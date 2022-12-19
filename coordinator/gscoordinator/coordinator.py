@@ -280,6 +280,8 @@ class CoordinatorServiceServicer(
                 yield response
 
     def _RunStep(self, request_iterator, context):
+        from gremlin_python.driver.protocol import GremlinServerError
+
         # split dag
         dag_manager = DAGManager(request_iterator)
         loader_op_bodies = {}
@@ -327,6 +329,20 @@ class CoordinatorServiceServicer(
                 context.set_details(exc.details())
                 for response in responses:
                     yield response
+            except GremlinServerError as exc:
+                response_head = responses[0]
+                response_head.head.code = error_code
+                response_head.head.error_msg = f"Error occurred during RunStep, The traceback is: {traceback.format_exc()}"
+                response_head.head.full_exception = pickle.dumps(
+                    (
+                        GremlinServerError,
+                        {
+                            "code": exc.status_code,
+                            "message": exc.status_message,
+                            "attributes": exc.status_attributes,
+                        },
+                    )
+                )
             except Exception as exc:
                 response_head = responses[0]
                 response_head.head.code = error_code

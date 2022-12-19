@@ -478,8 +478,6 @@ def compile_graph_frame(
     library_dir = os.path.join(workspace, library_name)
     os.makedirs(library_dir, exist_ok=True)
 
-    os.chdir(library_dir)
-
     graph_type = attr[types_pb2.GRAPH_TYPE].i
 
     # set OPAL_PREFIX in CMAKE_PREFIX_PATH
@@ -493,7 +491,7 @@ def compile_graph_frame(
     ]
     if os.environ.get("GRAPHSCOPE_ANALYTICAL_DEBUG", "") == "1":
         cmake_commands.append("-DCMAKE_BUILD_TYPE=Debug")
-    logger.info("enable java sdk {}".format(engine_config["enable_java_sdk"]))
+    logger.info("Enable java sdk: %s", engine_config["enable_java_sdk"])
     if graph_type == graph_def_pb2.ARROW_PROPERTY:
         cmake_commands += ["-DPROPERTY_GRAPH_FRAME=True"]
     elif graph_type in (
@@ -507,20 +505,21 @@ def compile_graph_frame(
     # replace and generate cmakelist
     cmakelists_file_tmp = os.path.join(TEMPLATE_DIR, "CMakeLists.template")
     cmakelists_file = os.path.join(library_dir, "CMakeLists.txt")
-    with open(cmakelists_file_tmp, mode="r") as template:
+    with open(cmakelists_file_tmp, mode="r", encoding="utf-8") as template:
         content = template.read()
         content = Template(content).safe_substitute(
             _analytical_engine_home=ANALYTICAL_ENGINE_HOME,
             _frame_name=library_name,
             _graph_type=graph_class,
         )
-        with open(cmakelists_file, mode="w") as f:
+        with open(cmakelists_file, mode="w", encoding="utf-8") as f:
             f.write(content)
 
     # compile
     logger.info("Building graph library ...")
     cmake_process = subprocess.Popen(
         cmake_commands,
+        cwd=library_dir,
         env=os.environ.copy(),
         encoding="utf-8",
         errors="replace",
@@ -535,6 +534,7 @@ def compile_graph_frame(
 
     make_process = subprocess.Popen(
         [shutil.which("make"), "-j4", "VERBOSE=true"],
+        cwd=library_dir,
         env=os.environ.copy(),
         encoding="utf-8",
         errors="replace",
@@ -549,7 +549,7 @@ def compile_graph_frame(
     lib_path = get_lib_path(library_dir, library_name)
     if not os.path.isfile(lib_path):
         raise CompilationError(
-            f"Failed to compile graph {graph_class} on platform {get_platform_info()}"
+            f"Failed to compile graph {graph_class} at {library_dir} on platform {get_platform_info()}"
         )
     # TODO(siyuan): Append cmake/make logs to error message when failed.
     return lib_path, None, None, None

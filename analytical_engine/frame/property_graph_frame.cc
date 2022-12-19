@@ -96,8 +96,8 @@ LoadGraph(const grape::CommSpec& comm_spec, vineyard::Client& client,
     return std::dynamic_pointer_cast<gs::IFragmentWrapper>(wrapper);
   } else {
     BOOST_LEAF_AUTO(graph_info, gs::ParseCreatePropertyGraph(params));
-    gs::ArrowFragmentLoader<oid_t, vid_t, vertex_map_t> loader(
-        client, comm_spec, graph_info);
+    using loader_t = gs::arrow_fragment_loader_t<oid_t, vid_t, vertex_map_t>;
+    loader_t loader(client, comm_spec, graph_info);
 
     MPI_Barrier(comm_spec.comm());
     {
@@ -266,11 +266,11 @@ AddLabelsToGraph(vineyard::ObjectID origin_frag_id,
                  const std::string& graph_name,
                  const gs::rpc::GSParams& params) {
   BOOST_LEAF_AUTO(graph_info, gs::ParseCreatePropertyGraph(params));
-  gs::ArrowFragmentLoader<oid_t, vid_t, vertex_map_t> loader(client, comm_spec,
-                                                             graph_info);
+  using loader_t = gs::arrow_fragment_loader_t<oid_t, vid_t, vertex_map_t>;
+  loader_t loader(client, comm_spec, graph_info);
 
   BOOST_LEAF_AUTO(frag_group_id,
-                  loader.AddLabelsToGraphAsFragmentGroup(origin_frag_id));
+                  loader.AddLabelsToFragmentAsFragmentGroup(origin_frag_id));
   MPI_Barrier(comm_spec.comm());
 
   LOG_IF(INFO, comm_spec.worker_id() == 0)
