@@ -41,8 +41,8 @@ pub enum EntryAccumulator {
     ToMax(Maximum<DynEntry>),
     ToSet(ToSet<DynEntry>),
     ToDistinctCount(DistinctCount<DynEntry>),
-    ToSum(Sum<DynEntry>),
-    ToAvg(Sum<DynEntry>, Count<()>),
+    ToSum(Sum<Primitives>),
+    ToAvg(Sum<Primitives>, Count<()>),
 }
 
 /// Accumulator for Record, including multiple accumulators for entries(columns) in Record.
@@ -83,9 +83,31 @@ impl Accumulator<DynEntry, DynEntry> for EntryAccumulator {
                 EntryAccumulator::ToMax(max) => max.accum(next),
                 EntryAccumulator::ToSet(set) => set.accum(next),
                 EntryAccumulator::ToDistinctCount(distinct_count) => distinct_count.accum(next),
-                EntryAccumulator::ToSum(sum) => sum.accum(next),
+                EntryAccumulator::ToSum(sum) => {
+                    let primitive = next
+                        .as_object()
+                        .ok_or(FnExecError::unexpected_data_error("DynEntry is not a object type `Sum`"))?
+                        .as_primitive()
+                        .map_err(|e| {
+                            FnExecError::unexpected_data_error(&format!(
+                                "DynEntry is not a primitive type `Sum` {}",
+                                e
+                            ))
+                        })?;
+                    sum.accum(primitive)
+                }
                 EntryAccumulator::ToAvg(sum, count) => {
-                    sum.accum(next)?;
+                    let primitive = next
+                        .as_object()
+                        .ok_or(FnExecError::unexpected_data_error("DynEntry is not a object type `ToAvg`"))?
+                        .as_primitive()
+                        .map_err(|e| {
+                            FnExecError::unexpected_data_error(&format!(
+                                "DynEntry is not a primitive type `ToAvg` {}",
+                                e
+                            ))
+                        })?;
+                    sum.accum(primitive)?;
                     count.accum(())
                 }
             }
@@ -118,11 +140,14 @@ impl Accumulator<DynEntry, DynEntry> for EntryAccumulator {
                 let cnt = distinct_count.finalize()?;
                 Ok(object!(cnt).into())
             }
-            EntryAccumulator::ToSum(sum) => sum
-                .finalize()?
-                .ok_or(FnExecError::accum_error("sum_entry is none")),
+            EntryAccumulator::ToSum(sum) => {
+                let primitive = sum
+                    .finalize()?
+                    .ok_or(FnExecError::accum_error("sum_entry is none"))?;
+                Ok(object!(primitive).into())
+            }
             EntryAccumulator::ToAvg(sum, count) => {
-                let sum_entry = sum
+                let sum_primitive = sum
                     .finalize()?
                     .ok_or(FnExecError::accum_error("sum_entry is none"))?;
                 let cnt = count.finalize()?;
@@ -131,24 +156,10 @@ impl Accumulator<DynEntry, DynEntry> for EntryAccumulator {
                 if cnt == 0 {
                     warn!("cnt value is 0 in accum avg");
                     Ok(result)
-                } else if let Some(sum_val) = sum_entry.as_object() {
-                    match sum_val {
-                        Object::None => {
-                            warn!("sum value is none in accum avg");
-                            Ok(result)
-                        }
-                        _ => {
-                            let primitive_cnt = Primitives::Float(cnt as f64);
-                            let result = sum_val
-                                .as_primitive()
-                                .map(|val| val.div(primitive_cnt))
-                                .map_err(|e| FnExecError::accum_error(&format!("{}", e)))?;
-                            let result_obj: Object = result.into();
-                            Ok(result_obj.into())
-                        }
-                    }
                 } else {
-                    Err(FnExecError::accum_error("unreachable"))
+                    let cnt_primitive = Primitives::Float(cnt as f64);
+                    let result = sum_primitive.div(cnt_primitive);
+                    Ok(object!(result).into())
                 }
             }
         }
@@ -276,11 +287,11 @@ impl Decode for EntryAccumulator {
                 Ok(EntryAccumulator::ToDistinctCount(distinct_count))
             }
             6 => {
-                let sum = <Sum<DynEntry>>::read_from(reader)?;
+                let sum = <Sum<Primitives>>::read_from(reader)?;
                 Ok(EntryAccumulator::ToSum(sum))
             }
             7 => {
-                let sum = <Sum<DynEntry>>::read_from(reader)?;
+                let sum = <Sum<Primitives>>::read_from(reader)?;
                 let count = <Count<()>>::read_from(reader)?;
                 Ok(EntryAccumulator::ToAvg(sum, count))
             }

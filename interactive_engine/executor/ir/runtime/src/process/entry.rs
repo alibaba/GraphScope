@@ -31,16 +31,24 @@ use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 use pegasus_common::downcast::*;
 use pegasus_common::impl_as_any;
 
-use crate::process::operator::map::Intersection;
+use crate::process::operator::map::IntersectionEntry;
 
 #[derive(Debug)]
 pub enum EntryDataType {
-    Vid, // A vertex global id
+    // TODO: Specified as a vertex global id for tmp;
+    // After we separate GetVertexProperty and GetEdgeProperty in `Auxilia`, this would be an `Id`.
+    Vid,
+    /// Graph Vertex
     V,
+    /// Graph Edge
     E,
+    /// Graph Path
     P,
+    /// Common data type of `Object`, including Primitives, String, etc.
     Obj,
+    /// A specific type used in `ExtendIntersect`, for an optimized implementation of `Intersection`
     Intersect,
+    /// Type of collection consisting of entries
     Collection,
 }
 
@@ -63,6 +71,7 @@ impl PartialEq for EntryDataType {
 
 pub trait Entry: Debug + Send + Sync + AsAny + Element {
     fn get_type(&self) -> EntryDataType;
+    // TODO: would be `as_id()`
     fn as_vid(&self) -> Option<ID> {
         None
     }
@@ -173,7 +182,7 @@ impl Encode for DynEntry {
                 writer.write_u8(5)?;
                 self.inner
                     .as_any_ref()
-                    .downcast_ref::<Intersection>()
+                    .downcast_ref::<IntersectionEntry>()
                     .unwrap()
                     .write_to(writer)?;
             }
@@ -196,7 +205,7 @@ impl Decode for DynEntry {
         match entry_type {
             0 => {
                 let id = read_id(reader)?;
-                Ok(DynEntry::new(IDEntry { id }))
+                Ok(DynEntry::new(IdEntry { id }))
             }
             1 => {
                 let vertex = Vertex::read_from(reader)?;
@@ -215,7 +224,7 @@ impl Decode for DynEntry {
                 Ok(DynEntry::new(obj))
             }
             5 => {
-                let intersect = Intersection::read_from(reader)?;
+                let intersect = IntersectionEntry::read_from(reader)?;
                 Ok(DynEntry::new(intersect))
             }
             6 => {
@@ -291,7 +300,7 @@ impl Hash for DynEntry {
             EntryDataType::Obj => self.as_object().hash(state),
             EntryDataType::Intersect => self
                 .as_any_ref()
-                .downcast_ref::<Intersection>()
+                .downcast_ref::<IntersectionEntry>()
                 .hash(state),
             EntryDataType::Collection => self
                 .as_any_ref()
@@ -312,10 +321,10 @@ impl PartialEq for DynEntry {
                 EntryDataType::Obj => self.as_object().eq(&other.as_object()),
                 EntryDataType::Intersect => self
                     .as_any_ref()
-                    .downcast_ref::<Intersection>()
+                    .downcast_ref::<IntersectionEntry>()
                     .eq(&other
                         .as_any_ref()
-                        .downcast_ref::<Intersection>()),
+                        .downcast_ref::<IntersectionEntry>()),
                 EntryDataType::Collection => self
                     .as_any_ref()
                     .downcast_ref::<CollectionEntry>()
@@ -342,11 +351,11 @@ impl PartialOrd for DynEntry {
                 EntryDataType::Obj => self.as_object().partial_cmp(&other.as_object()),
                 EntryDataType::Intersect => self
                     .as_any_ref()
-                    .downcast_ref::<Intersection>()
+                    .downcast_ref::<IntersectionEntry>()
                     .partial_cmp(
                         &other
                             .as_any_ref()
-                            .downcast_ref::<Intersection>(),
+                            .downcast_ref::<IntersectionEntry>(),
                     ),
                 EntryDataType::Collection => self
                     .as_any_ref()
@@ -366,33 +375,14 @@ impl PartialOrd for DynEntry {
 // demanded when need to group (ToSet) the entry;
 impl Eq for DynEntry {}
 
-// demanded when need to group (ToSum) the entry;
-impl std::ops::Add for DynEntry {
-    type Output = DynEntry;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        if (self.get_type()).eq(&rhs.get_type()) {
-            if EntryDataType::Obj.eq(&self.get_type()) {
-                match (self.as_object(), rhs.as_object()) {
-                    (Some(Object::Primitive(p1)), Some(Object::Primitive(p2))) => {
-                        return DynEntry::new(Object::Primitive(p1.add(p2.clone())));
-                    }
-                    _ => {}
-                }
-            }
-        }
-        DynEntry::new(Object::None)
-    }
-}
-
 #[derive(Debug, Clone, Default)]
-pub struct IDEntry {
+pub struct IdEntry {
     id: ID,
 }
 
-impl_as_any!(IDEntry);
+impl_as_any!(IdEntry);
 
-impl Entry for IDEntry {
+impl Entry for IdEntry {
     fn get_type(&self) -> EntryDataType {
         EntryDataType::Vid
     }
@@ -402,20 +392,20 @@ impl Entry for IDEntry {
     }
 }
 
-impl Encode for IDEntry {
+impl Encode for IdEntry {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
         write_id(writer, self.id)
     }
 }
 
-impl Decode for IDEntry {
+impl Decode for IdEntry {
     fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
         let id = read_id(reader)?;
-        Ok(IDEntry { id })
+        Ok(IdEntry { id })
     }
 }
 
-impl Element for IDEntry {
+impl Element for IdEntry {
     fn as_graph_element(&self) -> Option<&dyn GraphElement> {
         Some(self)
     }
@@ -429,7 +419,7 @@ impl Element for IDEntry {
     }
 }
 
-impl GraphElement for IDEntry {
+impl GraphElement for IdEntry {
     fn id(&self) -> ID {
         self.id
     }
@@ -473,7 +463,7 @@ impl Entry for Object {
     }
 }
 
-impl Entry for Intersection {
+impl Entry for IntersectionEntry {
     fn get_type(&self) -> EntryDataType {
         EntryDataType::Intersect
     }

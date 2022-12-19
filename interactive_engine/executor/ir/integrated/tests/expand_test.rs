@@ -35,7 +35,7 @@ mod test {
     use pegasus_common::downcast::AsAny;
     use runtime::process::entry::Entry;
     use runtime::process::operator::flatmap::FlatMapFuncGen;
-    use runtime::process::operator::map::{FilterMapFuncGen, Intersection};
+    use runtime::process::operator::map::{FilterMapFuncGen, IntersectionEntry};
     use runtime::process::operator::source::SourceOperator;
     use runtime::process::record::Record;
 
@@ -756,7 +756,7 @@ mod test {
                 .get(Some(TAG_C))
                 .unwrap()
                 .as_any_ref()
-                .downcast_ref::<Intersection>()
+                .downcast_ref::<IntersectionEntry>()
                 .unwrap();
             let mut result_collection: Vec<usize> = intersection
                 .clone()
@@ -833,7 +833,7 @@ mod test {
                 .get(Some(TAG_C))
                 .unwrap()
                 .as_any_ref()
-                .downcast_ref::<Intersection>()
+                .downcast_ref::<IntersectionEntry>()
                 .unwrap();
 
             let mut result_collection: Vec<DefaultId> = intersection

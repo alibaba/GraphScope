@@ -23,7 +23,7 @@ use pegasus::api::function::{DynIter, FlatMapFunction, FnResult};
 use crate::error::{FnExecError, FnGenResult};
 use crate::process::entry::{CollectionEntry, EntryDataType};
 use crate::process::operator::flatmap::FlatMapFuncGen;
-use crate::process::operator::map::Intersection;
+use crate::process::operator::map::IntersectionEntry;
 use crate::process::record::Record;
 
 #[derive(Debug)]
@@ -68,7 +68,7 @@ impl FlatMapFunction<Record, Record> for UnfoldOperator {
                 EntryDataType::Intersect => {
                     let intersection = entry
                         .as_any_mut()
-                        .downcast_mut::<Intersection>()
+                        .downcast_mut::<IntersectionEntry>()
                         .unwrap();
                     let mut res = Vec::with_capacity(intersection.len());
                     for item in intersection.drain() {

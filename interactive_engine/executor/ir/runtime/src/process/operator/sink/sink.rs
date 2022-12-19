@@ -30,7 +30,7 @@ use prost::Message;
 
 use crate::error::FnGenResult;
 use crate::process::entry::{CollectionEntry, DynEntry, Entry, EntryDataType};
-use crate::process::operator::map::Intersection;
+use crate::process::operator::map::IntersectionEntry;
 use crate::process::operator::sink::{SinkGen, Sinker};
 use crate::process::record::Record;
 
@@ -62,7 +62,7 @@ impl RecordSinkEncoder {
             EntryDataType::Intersect => {
                 let intersection = e
                     .as_any_ref()
-                    .downcast_ref::<Intersection>()
+                    .downcast_ref::<IntersectionEntry>()
                     .unwrap();
                 let mut collection_pb = Vec::with_capacity(intersection.len());
                 for v in intersection.iter() {

@@ -49,15 +49,15 @@ struct ExpandEdgeVOrIntersect {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]
-pub struct Intersection {
+pub struct IntersectionEntry {
     vertex_vec: Vec<Vertex>,
     count_vec: Vec<u32>,
 }
 
-impl_as_any!(Intersection);
+impl_as_any!(IntersectionEntry);
 
-impl Intersection {
-    pub fn from_iter<I: Iterator<Item = Vertex>>(iter: I) -> Intersection {
+impl IntersectionEntry {
+    pub fn from_iter<I: Iterator<Item = Vertex>>(iter: I) -> IntersectionEntry {
         let mut vertex_count_map = BTreeMap::new();
         for vertex in iter {
             let cnt = vertex_count_map.entry(vertex).or_insert(0);
@@ -69,7 +69,7 @@ impl Intersection {
             vertex_vec.push(vertex);
             count_vec.push(cnt);
         }
-        Intersection { vertex_vec, count_vec }
+        IntersectionEntry { vertex_vec, count_vec }
     }
 
     fn intersect<Iter: Iterator<Item = Vertex>>(&mut self, seeker: Iter) {
@@ -124,7 +124,7 @@ impl Intersection {
     }
 }
 
-impl Encode for Intersection {
+impl Encode for IntersectionEntry {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
         self.vertex_vec.write_to(writer)?;
         self.count_vec.write_to(writer)?;
@@ -132,15 +132,15 @@ impl Encode for Intersection {
     }
 }
 
-impl Decode for Intersection {
+impl Decode for IntersectionEntry {
     fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
         let vertex_vec = <Vec<Vertex>>::read_from(reader)?;
         let count_vec = <Vec<u32>>::read_from(reader)?;
-        Ok(Intersection { vertex_vec, count_vec })
+        Ok(IntersectionEntry { vertex_vec, count_vec })
     }
 }
 
-impl Element for Intersection {
+impl Element for IntersectionEntry {
     fn len(&self) -> usize {
         self.len()
     }
@@ -164,7 +164,7 @@ impl FilterMapFunction<Record, Record> for ExpandVertexOrIntersect {
                 // the case of expansion and intersection
                 let pre_intersection = pre_entry
                     .as_any_mut()
-                    .downcast_mut::<Intersection>()
+                    .downcast_mut::<IntersectionEntry>()
                     .ok_or(FnExecError::unexpected_data_error(&format!(
                         "entry  is not a intersection in ExpandOrIntersect"
                     )))?;
@@ -176,7 +176,7 @@ impl FilterMapFunction<Record, Record> for ExpandVertexOrIntersect {
                 }
             } else {
                 // the case of expansion only
-                let neighbors_intersection = Intersection::from_iter(iter);
+                let neighbors_intersection = IntersectionEntry::from_iter(iter);
                 if neighbors_intersection.is_empty() {
                     Ok(None)
                 } else {
@@ -212,7 +212,7 @@ impl FilterMapFunction<Record, Record> for ExpandEdgeVOrIntersect {
                 // the case of expansion and intersection
                 let pre_intersection = pre_entry
                     .as_any_mut()
-                    .downcast_mut::<Intersection>()
+                    .downcast_mut::<IntersectionEntry>()
                     .ok_or(FnExecError::unexpected_data_error(&format!(
                         "entry  is not a intersection in ExpandOrIntersect"
                     )))?;
@@ -224,7 +224,7 @@ impl FilterMapFunction<Record, Record> for ExpandEdgeVOrIntersect {
                 }
             } else {
                 // the case of expansion only
-                let neighbors_intersection = Intersection::from_iter(iter);
+                let neighbors_intersection = IntersectionEntry::from_iter(iter);
                 if neighbors_intersection.is_empty() {
                     Ok(None)
                 } else {
@@ -288,7 +288,7 @@ mod tests {
 
     use graph_proxy::apis::{GraphElement, Vertex, ID};
 
-    use super::Intersection;
+    use super::IntersectionEntry;
 
     fn to_vertex_iter(id_vec: Vec<ID>) -> impl Iterator<Item = Vertex> {
         id_vec.into_iter().map(|id| id.into())
@@ -296,7 +296,7 @@ mod tests {
 
     #[test]
     fn intersect_test_01() {
-        let mut intersection = Intersection::from_iter(to_vertex_iter(vec![1, 2, 3]));
+        let mut intersection = IntersectionEntry::from_iter(to_vertex_iter(vec![1, 2, 3]));
         let seeker = to_vertex_iter(vec![1, 2, 3, 4, 5]);
         intersection.intersect(seeker);
         assert_eq!(
@@ -310,7 +310,7 @@ mod tests {
 
     #[test]
     fn intersect_test_02() {
-        let mut intersection = Intersection::from_iter(to_vertex_iter(vec![1, 2, 3, 4, 5]));
+        let mut intersection = IntersectionEntry::from_iter(to_vertex_iter(vec![1, 2, 3, 4, 5]));
         let seeker = to_vertex_iter(vec![3, 2, 1]);
         intersection.intersect(seeker);
         assert_eq!(
@@ -324,7 +324,7 @@ mod tests {
 
     #[test]
     fn intersect_test_03() {
-        let mut intersection = Intersection::from_iter(to_vertex_iter(vec![1, 2, 3, 4, 5]));
+        let mut intersection = IntersectionEntry::from_iter(to_vertex_iter(vec![1, 2, 3, 4, 5]));
         let seeker = to_vertex_iter(vec![9, 7, 5, 3, 1]);
         intersection.intersect(seeker);
         assert_eq!(
@@ -338,7 +338,7 @@ mod tests {
 
     #[test]
     fn intersect_test_04() {
-        let mut intersection = Intersection::from_iter(to_vertex_iter(vec![1, 2, 3, 4, 5]));
+        let mut intersection = IntersectionEntry::from_iter(to_vertex_iter(vec![1, 2, 3, 4, 5]));
         let seeker = to_vertex_iter(vec![9, 8, 7, 6]);
         intersection.intersect(seeker);
         assert_eq!(
@@ -352,7 +352,7 @@ mod tests {
 
     #[test]
     fn intersect_test_05() {
-        let mut intersection = Intersection::from_iter(to_vertex_iter(vec![1, 2, 3, 4, 5, 1]));
+        let mut intersection = IntersectionEntry::from_iter(to_vertex_iter(vec![1, 2, 3, 4, 5, 1]));
         let seeker = to_vertex_iter(vec![1, 2, 3]);
         intersection.intersect(seeker);
         assert_eq!(
@@ -366,7 +366,7 @@ mod tests {
 
     #[test]
     fn intersect_test_06() {
-        let mut intersection = Intersection::from_iter(to_vertex_iter(vec![1, 2, 3]));
+        let mut intersection = IntersectionEntry::from_iter(to_vertex_iter(vec![1, 2, 3]));
         let seeker = to_vertex_iter(vec![1, 2, 3, 4, 5, 1]);
         intersection.intersect(seeker);
         assert_eq!(
@@ -380,7 +380,7 @@ mod tests {
 
     #[test]
     fn intersect_test_07() {
-        let mut intersection = Intersection::from_iter(to_vertex_iter(vec![1, 1, 2, 2, 3, 3, 4, 5]));
+        let mut intersection = IntersectionEntry::from_iter(to_vertex_iter(vec![1, 1, 2, 2, 3, 3, 4, 5]));
         let seeker = to_vertex_iter(vec![1, 2, 3]);
         intersection.intersect(seeker);
         assert_eq!(
@@ -394,7 +394,7 @@ mod tests {
 
     #[test]
     fn intersect_test_08() {
-        let mut intersection = Intersection::from_iter(to_vertex_iter(vec![1, 2, 3]));
+        let mut intersection = IntersectionEntry::from_iter(to_vertex_iter(vec![1, 2, 3]));
         let seeker = to_vertex_iter(vec![1, 1, 2, 2, 3, 3, 4, 5]);
         intersection.intersect(seeker);
         assert_eq!(
@@ -408,7 +408,7 @@ mod tests {
 
     #[test]
     fn intersect_test_09() {
-        let mut intersection = Intersection::from_iter(to_vertex_iter(vec![1, 1, 2, 2, 3, 3]));
+        let mut intersection = IntersectionEntry::from_iter(to_vertex_iter(vec![1, 1, 2, 2, 3, 3]));
         let seeker = to_vertex_iter(vec![1, 1, 2, 2, 3, 3, 4, 5]);
         intersection.intersect(seeker);
         assert_eq!(
