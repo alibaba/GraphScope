@@ -45,22 +45,14 @@ wget https://graphscope.oss-cn-beijing.aliyuncs.com/jar/grape-demo-0.19.0-shaded
 
 Different from Giraph-on-Graphscope, for GraphX-GraphScope integration, we need to submit jobs to spark cluster, not with GraphScope python client.
 
-### Generate GraphScope env
-
-There are several enviroment variables needs to be set before running GraphX algo on 
-GraphScope. We provide user with a useful kit to do this: [GraphScope-cli](https://github.com/GraphScope/cli). Follow the instructions of `cli` to get the built scripts, unzip to obtain `gs` script.
-
-```bash
-# run this command to obtain graphscope_4spark.env file
-./gs spark-classpath
-source .graphscope_4spark.env
-```
-
-Then you will find `.graphscope_4spark.env` locally. run `source .graphscope_4spark.env` to export neccessary enviroment variables from disk.
 
 ### Submit to Spark
 
 ```bash
+# Path to Graphscope jars is need for running graphx algo on GraphScope.
+# FIXME(yuansi): Here we assume env var GRAPHSCOPE_HOME available in environment.
+export GS_JARS=`ls ${GRAPHSCOPE_HOME}/lib/grape-graphx-*.jar`:`ls ${GRAPHSCOPE_HOME}/lib/grape-runtime-*.jar` 
+
 # default port is 7077, for standalone cluster, like spark://${host}:${port}
 /bin/spark-submit --verbose --master spark://${master_url} \
 --archives pyspark_venv_gs.tar.gz#environment  --jars ${GS_JARS} \
