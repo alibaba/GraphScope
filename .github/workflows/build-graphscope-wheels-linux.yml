@@ -133,8 +133,8 @@ jobs:
         version=$(cat ${GITHUB_WORKSPACE}/VERSION)
         tag="${version}a${time}"
         # graphscope image
-        sudo docker tag graphscope/graphscope:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/graphscope:${tag}
-        sudo docker push ${{ env.REGISTRY }}/graphscope/graphscope:${tag}
+        # sudo docker tag graphscope/graphscope:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/graphscope:${tag}
+        # sudo docker push ${{ env.REGISTRY }}/graphscope/graphscope:${tag}
         # jupyter image
         sudo docker tag graphscope/jupyter:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/jupyter:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/jupyter:${tag}
@@ -157,16 +157,20 @@ jobs:
         # graphscope image
         tag=${{ steps.tag.outputs.TAG }}
         # graphscope image
-        sudo docker tag graphscope/graphscope:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/graphscope:${tag}
-        sudo docker push ${{ env.REGISTRY }}/graphscope/graphscope:${tag}
+        # sudo docker tag graphscope/graphscope:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/graphscope:${tag}
+        # sudo docker push ${{ env.REGISTRY }}/graphscope/graphscope:${tag}
         # jupyter image
         sudo docker tag graphscope/jupyter:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/jupyter:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/jupyter:${tag}
         # dataset image
         # Note! dataset image are built mannually just use the latest one.
-        sudo docker pull ${{ env.REGISTRY }}/graphscope/dataset:latest
-        sudo docker tag ${{ env.REGISTRY }}/graphscope/dataset:latest ${{ env.REGISTRY }}/graphscope/dataset:${tag}
-        sudo docker push ${{ env.REGISTRY }}/graphscope/dataset:${tag}
+        # sudo docker pull ${{ env.REGISTRY }}/graphscope/dataset:latest
+        # sudo docker tag ${{ env.REGISTRY }}/graphscope/dataset:latest ${{ env.REGISTRY }}/graphscope/dataset:${tag}
+        # sudo docker push ${{ env.REGISTRY }}/graphscope/dataset:${tag}
+
+        tag=latest
+        sudo docker tag graphscope/jupyter:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/jupyter:${tag}
+        sudo docker push ${{ env.REGISTRY }}/graphscope/jupyter:${tag}
 
   ubuntu-python-test:
     if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}

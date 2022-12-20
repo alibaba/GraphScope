@@ -24,7 +24,7 @@ COPY build_scripts /build_scripts
 RUN mkdir /download
 
 RUN export WORKDIR=/download && bash /build_scripts/build_vineyard_dependencies.sh
-RUN export WORKDIR=/download && bash /build_scripts/build_patchelf.sh
+# RUN export WORKDIR=/download && bash /build_scripts/build_patchelf.sh
 RUN export WORKDIR=/download && bash /build_scripts/build_maven.sh
 ENV PATH=$PATH:/opt/apache-maven-3.8.6/bin
 RUN rm -rf /build_scripts /download
@@ -63,3 +63,4 @@ RUN curl -sf -L https://static.rust-lang.org/rustup.sh | \
     rustup component add rustfmt
 ENV PATH=/home/graphscope/.cargo/bin:$PATH
 ENV RUST_BACKTRACE=1
+

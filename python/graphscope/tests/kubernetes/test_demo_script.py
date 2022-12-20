@@ -48,27 +48,30 @@ def get_k8s_volumes():
     return k8s_volumes
 
 
-def get_gs_image_on_ci_env():
-    if "GS_IMAGE" in os.environ:
-        return os.environ["GS_IMAGE"]
-    return gs_config.k8s_gs_image
+def get_gs_registry_on_ci_env():
+    if "GS_REGISTRY" in os.environ:
+        return os.environ["GS_REGISTRY"]
+    return gs_config.k8s_image_registry
+
+
+def get_gs_tag_on_ci_env():
+    if "GS_TAG" in os.environ:
+        return os.environ["GS_TAG"]
+    return gs_config.k8s_image_tag
 
 
 @pytest.fixture
 def gs_session():
-    gs_image = get_gs_image_on_ci_env()
     sess = graphscope.session(
         num_workers=1,
-        k8s_gs_image=gs_image,
+        k8s_image_registry=get_gs_registry_on_ci_env(),
+        k8s_image_tag=get_gs_tag_on_ci_env(),
         k8s_coordinator_cpu=2,
         k8s_coordinator_mem="4Gi",
         k8s_vineyard_cpu=2,
         k8s_vineyard_mem="512Mi",
         k8s_engine_cpu=2,
         k8s_engine_mem="4Gi",
-        k8s_etcd_cpu=2,
-        k8s_etcd_mem="256Mi",
-        k8s_etcd_num_pods=2,
         vineyard_shared_mem="4Gi",
         k8s_volumes=get_k8s_volumes(),
     )
@@ -78,19 +81,16 @@ def gs_session():
 
 @pytest.fixture
 def gs_session_distributed():
-    gs_image = get_gs_image_on_ci_env()
     sess = graphscope.session(
         num_workers=2,
-        k8s_gs_image=gs_image,
+        k8s_image_registry=get_gs_registry_on_ci_env(),
+        k8s_image_tag=get_gs_tag_on_ci_env(),
         k8s_coordinator_cpu=2,
         k8s_coordinator_mem="4Gi",
         k8s_vineyard_cpu=2,
         k8s_vineyard_mem="1Gi",
         k8s_engine_cpu=2,
         k8s_engine_mem="4Gi",
-        k8s_etcd_cpu=1,
-        k8s_etcd_mem="256Mi",
-        k8s_etcd_num_pods=2,
         vineyard_shared_mem="4Gi",
         k8s_volumes=get_k8s_volumes(),
     )
@@ -223,10 +223,10 @@ def test_multiple_session():
         [random.choice(string.ascii_lowercase) for _ in range(6)]
     )
 
-    gs_image = get_gs_image_on_ci_env()
     sess = graphscope.session(
         num_workers=1,
-        k8s_gs_image=gs_image,
+        k8s_image_registry=get_gs_registry_on_ci_env(),
+        k8s_image_tag=get_gs_tag_on_ci_env(),
         k8s_volumes=get_k8s_volumes(),
     )
     info = sess.info
@@ -236,7 +236,8 @@ def test_multiple_session():
     sess2 = graphscope.session(
         k8s_namespace=namespace,
         num_workers=2,
-        k8s_gs_image=gs_image,
+        k8s_image_registry=get_gs_registry_on_ci_env(),
+        k8s_image_tag=get_gs_tag_on_ci_env(),
         k8s_volumes=get_k8s_volumes(),
     )
 

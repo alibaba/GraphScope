@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "vineyard/graph/fragment/arrow_fragment.h"
+#include "vineyard/graph/utils/table_shuffler.h"
 
 #include "core/error.h"
 #include "core/fragment/dynamic_fragment.h"

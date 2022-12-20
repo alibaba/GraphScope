@@ -1,4 +1,3 @@
-cmake>=3.21.2
 etcd-distro>=3.5.1
 graphscope-client>=0.11.0
 grpcio<=1.43.0,>=1.40.0

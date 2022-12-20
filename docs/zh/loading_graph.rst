@@ -28,10 +28,10 @@ GraphScope 内置了一组流行的数据集，以及载入他们的工具函数
 
     import graphscope
     from graphscope.dataset import load_ogbn_mag
-    sess = graphscope.session(cluster_type='k8s', mount_dataset='/dataset')
+    sess = graphscope.session(cluster_type='k8s', with_dataset=True)
     graph = load_ogbn_mag(sess, '/dataset/ogbn_mag_small')
 
-这里，我们首先创建一个会话，然后将数据集桶挂载到 :file:`/dataset`，此路径相对于 Pod 的本地路径。然后我们将会话作为参数传入，路径 :file:`/dataset/ogbn_mag_small` 作为第二个参数。 :file:`/dataset` 是我们通过 `mount_dataset` 的参数指定的挂载路径， `ogbn_mag_small` 是这个数据集所在的文件夹的名字。
+这里，我们首先创建一个会话，然后将数据集桶挂载到 :file:`/dataset`，此路径相对于 Pod 的本地路径。然后我们将会话作为参数传入，路径 :file:`/dataset/ogbn_mag_small` 作为第二个参数。 :file:`/dataset` 是我们通过 `with_dataset` 的参数指定的挂载路径， `ogbn_mag_small` 是这个数据集所在的文件夹的名字。
 
 你可以在 `<https://github.com/alibaba/GraphScope/tree/main/python/graphscope/dataset>`_ 找到所有目前支持的数据集，文件中包括详细的介绍和用法。
 

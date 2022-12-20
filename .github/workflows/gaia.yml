@@ -104,7 +104,7 @@ jobs:
         cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && ./ir_exprimental_pattern_ci.sh
 
     - name: Upload GIE log
-      if: always()
+      if: failure()
       uses: actions/upload-artifact@v3
       with:
         name: gie-log

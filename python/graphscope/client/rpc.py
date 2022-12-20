@@ -48,8 +48,8 @@ class GRPCClient(object):
         ]
         self._launcher = launcher
         self._grpc_utils = GRPCUtils()
-        self._channel = grpc.insecure_channel(endpoint, options=options)
-        self._stub = coordinator_service_pb2_grpc.CoordinatorServiceStub(self._channel)
+        channel = grpc.insecure_channel(endpoint, options=options)
+        self._stub = coordinator_service_pb2_grpc.CoordinatorServiceStub(channel)
         self._session_id = None
         self._logs_fetching_thread = None
         self._reconnect = reconnect

@@ -31,6 +31,7 @@ new_data_dir = os.path.expandvars("${GS_TEST_DIR}/new_property/v2_e2")
 
 def setUpModule():
     graphscope.set_option(show_log=True)
+    graphscope.set_option(log_level="DEBUG")
 
 
 @pytest.fixture

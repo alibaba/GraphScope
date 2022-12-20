@@ -218,7 +218,7 @@ def get_platform_info():
     def _get_gcc_version():
         gcc = shutil.which("gcc")
         if gcc is None:
-            raise RuntimeError("gcc command not found.")
+            return None
         return subprocess.check_output([gcc, "--version"], stderr=subprocess.STDOUT)
 
     platform_info = (
