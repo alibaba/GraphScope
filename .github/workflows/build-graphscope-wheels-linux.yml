@@ -44,7 +44,7 @@ jobs:
 
         cd ${GITHUB_WORKSPACE}/k8s/internal
         # build graphscope wheels
-        sudo -E -u runner make graphscope-py3-package
+        sudo -E -u runner make graphscope-py3-package GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} INSTALL_PREFIX=${GITHUB_WORKSPACE}/install
 
         # build client wheels
         sudo -E -u runner make graphscope-client-py3-package

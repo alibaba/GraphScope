@@ -89,7 +89,7 @@ Linux 下的 `Wheel <https://pypi.org/project/graphscope>`_ 分发包是基于 m
 .. code:: bash
 
     cd GraphScope/k8s/internal
-    make graphscope-py3-package
+    make graphscope-py3-package GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} INSTALL_PREFIX=${HOME}/install
 
 - 在 Python{36,37,38,39} 下分别构建 GraphScope client wheels
 
@@ -114,7 +114,7 @@ macOS
 .. code:: bash
 
     cd GraphScope/k8s/internal
-    make graphscope-py3-package
+    make graphscope-py3-package GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} INSTALL_PREFIX=${HOME}/install
 
 - 基于当前 Mac 环境下的 Python 版本构建 GraphScope client wheels
 

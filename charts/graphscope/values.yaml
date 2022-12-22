@@ -89,7 +89,7 @@ vineyard:
   image:
     name: vineyardcloudnative/vineyardd
     # Overrides the image tag whose default is the chart appVersion.
-    tag: v0.11.2
+    tag: v0.12.2
   resources:
     requests:
       cpu: 0.5

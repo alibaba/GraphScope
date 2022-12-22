@@ -56,14 +56,16 @@ GRAPHSCOPE_REQUIRED_PACKAGES = [
     f"gs-apps == {version}",
 ]
 
+GRAPHSCOPE_HOME = os.environ.get("GRAPHSCOPE_HOME", "/usr/local")
+INSTALL_PREFIX = os.environ.get("INSTALL_PREFIX", "/opt/graphscope")
 
-# copy any files contains in /opt/graphscope into site-packages/graphscope.runtime
+# copy any files contains in ${INSTALL_PREFIX} into site-packages/graphscope.runtime
 def _get_extra_data():
     # Copy
-    #   1) /opt/graphscope
+    #   1) ${INSTALL_PREFIX}
     #   2) headers of arrow/glog/gflags/google/openmpi/vineyard
     #   3) openmpi
-    #   4) /tmp/gs/builtin
+    #   4) builtin app libraries
     # into site-packages/graphscope.runtime
     #
     #  For shrink the package size less than "100M", we split graphscope into
@@ -113,12 +115,12 @@ def _get_extra_data():
     if name == "graphscope":
         # engine and lib
         data = {
-            "/opt/graphscope/bin/": os.path.join(RUNTIME_ROOT, "bin"),
-            "/opt/graphscope/lib/": os.path.join(RUNTIME_ROOT, "lib"),
-            "/opt/graphscope/lib64/": os.path.join(RUNTIME_ROOT, "lib64"),
-            "/usr/local/lib/libvineyard_internal_registry.{0}".format(
-                __get_lib_suffix()
-            ): os.path.join(RUNTIME_ROOT, "lib"),
+            f"{INSTALL_PREFIX}/bin/": os.path.join(RUNTIME_ROOT, "bin"),
+            f"{INSTALL_PREFIX}/lib/": os.path.join(RUNTIME_ROOT, "lib"),
+            f"{INSTALL_PREFIX}/lib64/": os.path.join(RUNTIME_ROOT, "lib64"),
+            f"${GRAPHSCOPE_HOME}/lib/libvineyard_internal_registry.{__get_lib_suffix()}": os.path.join(
+                RUNTIME_ROOT, "lib"
+            ),
         }
         # openmpi
         data.update(
@@ -128,20 +130,22 @@ def _get_extra_data():
         )
     elif name == "gs-engine":
         data = {
-            "/opt/graphscope/conf/": os.path.join(RUNTIME_ROOT, "conf"),
-            "/opt/graphscope/*.jar": os.path.join(RUNTIME_ROOT),
+            f"{INSTALL_PREFIX}/conf/": os.path.join(RUNTIME_ROOT, "conf"),
+            f"{INSTALL_PREFIX}/*.jar": os.path.join(RUNTIME_ROOT),
         }
     elif name == "gs-include":
         data = {
-            "/opt/graphscope/include/": os.path.join(RUNTIME_ROOT, "include"),
-            "/usr/local/include/grape": os.path.join(RUNTIME_ROOT, "include"),
-            "/usr/local/include/string_view": os.path.join(RUNTIME_ROOT, "include"),
+            f"{INSTALL_PREFIX}/include/": os.path.join(RUNTIME_ROOT, "include"),
+            f"${GRAPHSCOPE_HOME}/include/grape": os.path.join(RUNTIME_ROOT, "include"),
+            f"${GRAPHSCOPE_HOME}/include/string_view": os.path.join(
+                RUNTIME_ROOT, "include"
+            ),
             "/opt/vineyard/include/": os.path.join(RUNTIME_ROOT, "include"),
-            "/usr/local/include/arrow": os.path.join(RUNTIME_ROOT, "include"),
-            "/usr/local/include/boost": os.path.join(RUNTIME_ROOT, "include"),
-            "/usr/local/include/glog": os.path.join(RUNTIME_ROOT, "include"),
-            "/usr/local/include/gflags": os.path.join(RUNTIME_ROOT, "include"),
-            "/usr/local/include/google": os.path.join(RUNTIME_ROOT, "include"),
+            f"${GRAPHSCOPE_HOME}/include/arrow": os.path.join(RUNTIME_ROOT, "include"),
+            f"${GRAPHSCOPE_HOME}/include/boost": os.path.join(RUNTIME_ROOT, "include"),
+            f"${GRAPHSCOPE_HOME}/include/glog": os.path.join(RUNTIME_ROOT, "include"),
+            f"${GRAPHSCOPE_HOME}/include/gflags": os.path.join(RUNTIME_ROOT, "include"),
+            f"${GRAPHSCOPE_HOME}/include/google": os.path.join(RUNTIME_ROOT, "include"),
         }
         if platform.system() == "Linux":
             data["/usr/include/rapidjson"] = os.path.join(RUNTIME_ROOT, "include")

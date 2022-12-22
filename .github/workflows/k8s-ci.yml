@@ -189,7 +189,7 @@ jobs:
         fi
 
   build-analytical:
-    runs-on: [self-hosted, manylinux2014]
+    runs-on: [self-hosted, manylinux2014-ci-test]
     needs: [changes]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
@@ -197,13 +197,15 @@ jobs:
 
     - name: Build Artifact
       run: |
-        export GRAPHSCOPE_HOME=${{ github.workspace }}/install
-        mkdir ${GRAPHSCOPE_HOME}
-        make analytical-install INSTALL_PREFIX=${GRAPHSCOPE_HOME}
-        strip ${GRAPHSCOPE_HOME}/bin/grape_engine
-        strip ${GRAPHSCOPE_HOME}/lib/*.so
-        python3 ./k8s/utils/precompile.py --graph --output_dir ${GRAPHSCOPE_HOME}/builtin
-        strip ${GRAPHSCOPE_HOME}/builtin/*/*.so
+        source ${HOME}/.graphscope_env
+        export INSTALL_DIR=${{ github.workspace }}/install
+        mkdir ${INSTALL_DIR}
+        make analytical-install INSTALL_PREFIX=${INSTALL_DIR}
+        strip ${INSTALL_DIR}/bin/grape_engine
+        strip ${INSTALL_DIR}/lib/*.so
+        sudo cp -rs ${INSTALL_DIR}/* /opt/graphscope/
+        python3 ./k8s/utils/precompile.py --graph --output_dir ${INSTALL_DIR}/builtin
+        strip ${INSTALL_DIR}/builtin/*/*.so
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v3
@@ -213,7 +215,7 @@ jobs:
         retention-days: 5
 
   build-analytical-java:
-    runs-on: [self-hosted, manylinux2014]
+    runs-on: [self-hosted, manylinux2014-ci-test]
     needs: [changes]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
@@ -227,14 +229,16 @@ jobs:
 
     - name: Build Artifact
       run: |
-        export GRAPHSCOPE_HOME=${{ github.workspace }}/install
-        mkdir ${GRAPHSCOPE_HOME}
-        make analytical-java-install INSTALL_PREFIX=${GRAPHSCOPE_HOME}
-        strip ${GRAPHSCOPE_HOME}/bin/grape_engine
-        strip ${GRAPHSCOPE_HOME}/bin/graphx_runner
-        strip ${GRAPHSCOPE_HOME}/lib/*.so
-        python3 ./k8s/utils/precompile.py --graph --output_dir ${GRAPHSCOPE_HOME}/builtin
-        strip ${GRAPHSCOPE_HOME}/builtin/*/*.so
+        source ${HOME}/.graphscope_env
+        export INSTALL_DIR=${{ github.workspace }}/install
+        mkdir ${INSTALL_DIR}
+        make analytical-java-install INSTALL_PREFIX=${INSTALL_DIR}
+        strip ${INSTALL_DIR}/bin/grape_engine
+        strip ${INSTALL_DIR}/bin/graphx_runner
+        strip ${INSTALL_DIR}/lib/*.so
+        sudo cp -rs ${INSTALL_DIR}/* /opt/graphscope/
+        python3 ./k8s/utils/precompile.py --graph --output_dir ${INSTALL_DIR}/builtin
+        strip ${INSTALL_DIR}/builtin/*/*.so
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v3
@@ -244,7 +248,7 @@ jobs:
         retention-days: 5
 
   build-interactive:
-    runs-on: [self-hosted, manylinux2014]
+    runs-on: [self-hosted, manylinux2014-ci-test]
     needs: [changes]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
@@ -268,6 +272,7 @@ jobs:
 
     - name: Build Artifact
       run: |
+        source ${HOME}/.graphscope_env
         mkdir install
         export SCCACHE_DIR=~/.cache/sccache
         export RUSTC_WRAPPER=/usr/local/bin/sccache
@@ -284,7 +289,7 @@ jobs:
         retention-days: 5
 
   build-learning:
-    runs-on: [self-hosted, manylinux2014]
+    runs-on: [self-hosted, manylinux2014-ci-test]
     needs: [changes]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
@@ -301,6 +306,7 @@ jobs:
 
     - name: Build Artifact
       run: |
+        source ${HOME}/.graphscope_env
         mkdir install
         make learning-install INSTALL_PREFIX=${{ github.workspace }}/install
         python3 -m pip install "numpy==1.18.5" "pandas<1.5.0" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" wheel
@@ -537,7 +543,7 @@ jobs:
   build-gie-experimental:
     # Require the user id of the self-hosted is 1001, which may need to be
     # configured manually when a new self-hosted runner is added.
-    runs-on: [self-hosted, manylinux2014]
+    runs-on: [self-hosted, manylinux2014-ci-test]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
       - uses: actions/checkout@v3
@@ -561,7 +567,7 @@ jobs:
 
       - name: Build GIE Experimental Artifacts
         run: |
-          source ~/.bashrc
+          source ~/.graphscope_env
           export RPC_TARGET=start_rpc_server_k8s
           cd interactive_engine/compiler && make build rpc.target=${RPC_TARGET}
           cd ${GITHUB_WORKSPACE}
