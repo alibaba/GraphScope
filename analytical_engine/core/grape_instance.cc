@@ -176,6 +176,7 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::loadGraph(
 
 bl::result<void> GrapeInstance::unloadGraph(const rpc::GSParams& params) {
   BOOST_LEAF_AUTO(graph_name, params.Get<std::string>(rpc::GRAPH_NAME));
+  VLOG(1) << "Unloading Graph " << graph_name;
   if (params.HasKey(rpc::VINEYARD_ID)) {
     BOOST_LEAF_AUTO(frag_group_id, params.Get<int64_t>(rpc::VINEYARD_ID));
     bool exists = false;
@@ -183,22 +184,17 @@ bl::result<void> GrapeInstance::unloadGraph(const rpc::GSParams& params) {
     if (exists) {
       std::shared_ptr<vineyard::ArrowFragmentGroup> fg;
       VY_OK_OR_RAISE(client_->GetObject(frag_group_id, fg));
-      auto fid = comm_spec_.WorkerToFrag(comm_spec_.worker_id());
-      auto frag_id = fg->Fragments().at(fid);
 
       // ensure all workers obtain the expected information
       MPI_Barrier(comm_spec_.comm());
 
-      // delete the fragment group first
+      // delete the fragment group and the corresponding fragments
       if (comm_spec_.worker_id() == 0) {
-        VINEYARD_SUPPRESS(client_->DelData(frag_group_id, false, true));
+        VINEYARD_SUPPRESS(
+            client_->DelData(frag_group_id, /*force*/ false, /*deep*/ true));
       }
-      // ensure all fragments get deleted
-      MPI_Barrier(comm_spec_.comm());
-      VINEYARD_SUPPRESS(client_->DelData(frag_id, false, true));
     }
   }
-  VLOG(1) << "Unloading Graph " << graph_name;
   return object_manager_.RemoveObject(graph_name);
 }
 
