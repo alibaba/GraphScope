@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - '**'
-      - '!.github/workflows/ci.yml'
+      - '!.github/workflows/local-ci.yml'
       - '!Makefile'
       - '!analytical_engine/**'
       - '!charts/**'
