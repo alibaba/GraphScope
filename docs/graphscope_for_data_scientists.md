@@ -1,16 +1,18 @@
 # GrpahScope for Data Scientists
 
-## How it gets started
-
 A large number of real-world datasets can be naturally represented by graphs. Typical cases 
 are knowledge graphs, social networks, traffic networks and web graphs. Given the ever-growing amount of graph data available, graph computation, which tries to explore underlying insights hidden in graph data, has attracted increasing attention from data scientists.
 
-Typically, to work over graph data, data scientists often begin with small graphs on a single machine using easy- and ready-to-use tools (such as NetworkX in Python and TinkerPop) to develop and tune their graph algorithms. However, they may meet a lot of obstacles when they attempt to verify the effectiveness of developed algorithms on large graphs, as existing ready-to-use graph computation tools are only designed for single machine environment. Although there exist many efficient distributed parallel graph computation systems for large graphs, these systems usually have totally different APIs and programming models, and data scientist suffer from high learning curves.
+However, based on our experience of developing graph algorithms and feedbacks from other data scientists, we find that there still exist many challenging issues for data scientists to handle a real-world workload involving graph compuatition.
 
-In addition, a real-world job developed by data scientists may be very complicated and contains other types of computation (e.g., SQL for data cleaning and deep learning for GNN model training). Therefore, how the tools for graph computations can seamlessly co-work and integrate with other data processing tools is very important.
+## Challenges of handling graph computation
+
+*It is difficult to develop graph algorithms for large graphs.* Typically, to work over graph data, data scientists often begin with small graphs on a single machine using easy- and ready-to-use tools (such as NetworkX in Python and TinkerPop) to develop and tune their graph algorithms. However, they may meet a lot of obstacles when they attempt to verify the effectiveness of developed algorithms on large graphs, as existing ready-to-use graph computation tools are only designed for single machine environment. Although there exist many efficient distributed parallel graph computation systems for large graphs, these systems usually have totally different APIs and programming models, and data scientist suffer from high learning curves.
+
+*It is hard to develop a complex workflow which contains graph computation and other types of computations.* A real-world job developed by data scientists may be very complicated and contains other types of computation (e.g., SQL for data cleaning and deep learning for GNN model training). Therefore, how the tools for graph computations can seamlessly co-work and integrate with other data processing tools is very important. While distributed graph algorithms are already hard to implement efficiently in existing systems, implementing such complex workflows becomes more challenging.
 
 
-## How GraphScope solve it
+## Solutions of GraphScope
 
 Fortunately, GraphScope can handle the above two issues in two ways. First, it provides a single-machine programming abstraction in Python that supports a variety of graph operations in easy-to-use tools (TinkerPop, NetworkX, etc.), while hides the system distributed deployment and running complexity from the data scientists. Second, it provides efficient in-memory data transfer with high-level data structures as interfaces, and allows seamless integration of GraphScope with other data processing tools in PyData ecosystem.
 
