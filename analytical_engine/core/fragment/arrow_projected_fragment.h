@@ -463,6 +463,11 @@ class ArrowProjectedFragment
                    << type_name<vdata_t>();
         return nullptr;
       }
+    } else if (v_prop < 0 ||
+               static_cast<size_t>(v_prop) >=
+                   fragment->vertex_tables_[v_label]->num_columns()) {
+      LOG(ERROR) << "v_prop " << v_prop << " is out of range";
+      return nullptr;
     } else {
       auto prop_type = fragment->vertex_tables_[v_label]->field(v_prop)->type();
       auto vdata_type = vineyard::ConvertToArrowType<vdata_t>::TypeValue();
@@ -482,6 +487,11 @@ class ArrowProjectedFragment
                    << type_name<edata_t>();
         return nullptr;
       }
+    } else if (e_prop < 0 ||
+               static_cast<size_t>(e_prop) >=
+                   fragment->edge_tables_[e_label]->num_columns()) {
+      LOG(ERROR) << "e_prop " << e_prop << " is out of range";
+      return nullptr;
     } else {
       auto prop_type = fragment->edge_tables_[e_label]->field(e_prop)->type();
       auto edata_type = vineyard::ConvertToArrowType<edata_t>::TypeValue();
