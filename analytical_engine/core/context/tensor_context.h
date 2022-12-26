@@ -546,7 +546,8 @@ class TensorContextWrapper : public ITensorContextWrapper {
       case SelectorType::kResult: {
         typename vineyard::ConvertToArrowType<data_t>::BuilderType builder;
         std::shared_ptr<
-            typename vineyard::ConvertToArrowType<data_t>::ArrayType> arr_ptr;
+            typename vineyard::ConvertToArrowType<data_t>::ArrayType>
+            arr_ptr;
         for (size_t offset = 0; offset < tensor.size(); offset++) {
           ARROW_OK_OR_RAISE(builder.Append(tensor.data()[offset]));
         }
