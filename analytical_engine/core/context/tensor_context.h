@@ -530,6 +530,40 @@ class TensorContextWrapper : public ITensorContextWrapper {
     return vy_obj->id();
   }
 
+  bl::result<std::vector<std::pair<std::string, std::shared_ptr<arrow::Array>>>>
+  ToArrowArrays(
+      const grape::CommSpec& comm_spec,
+      const std::vector<std::pair<std::string, Selector>>& selectors) override {
+    auto& frag = ctx_->fragment();
+    auto& tensor = ctx_->tensor();
+    std::vector<std::pair<std::string, std::shared_ptr<arrow::Array>>>
+        arrow_arrays;
+    for (auto& pair : selectors) {
+      auto& col_name = pair.first;
+      auto& selector = pair.second;
+      std::shared_ptr<arrow::Array> arr;
+      switch (selector.type()) {
+      case SelectorType::kResult: {
+        typename vineyard::ConvertToArrowType<data_t>::BuilderType builder;
+        std::shared_ptr<typename vineyard::ConvertToArrowType<data_t>::ArrayType> arr_ptr;
+        for (size_t offset = 0; offset < tensor.size(); offset++) {
+          ARROW_OK_OR_RAISE(builder.Append(tensor.data()[offset]));
+        }
+        CHECK_ARROW_ERROR(builder.Finish(&arr_ptr));
+        arr = std::dynamic_pointer_cast<arrow::Array>(arr_ptr);
+        break;
+      }
+      default:
+        RETURN_GS_ERROR(
+            vineyard::ErrorCode::kUnsupportedOperationError,
+            "Unsupported operation, available selector type: result. selector: " +
+                selector.str());
+      }
+      arrow_arrays.emplace_back(col_name, arr);
+    }
+    return arrow_arrays;
+  }
+
  private:
   std::shared_ptr<IFragmentWrapper> frag_wrapper_;
   std::shared_ptr<context_t> ctx_;
@@ -660,6 +694,34 @@ class TensorContextWrapper<FRAG_T, std::string> : public ITensorContextWrapper {
       const grape::CommSpec& comm_spec, vineyard::Client& client) override {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
                     "Not implemented ToVineyardDataframe for string type");
+  }
+
+  bl::result<std::vector<std::pair<std::string, std::shared_ptr<arrow::Array>>>>
+  ToArrowArrays(
+      const grape::CommSpec& comm_spec,
+      const std::vector<std::pair<std::string, Selector>>& selectors) override {
+    auto& frag = ctx_->fragment();
+    auto& tensor = ctx_->tensor();
+    std::vector<std::pair<std::string, std::shared_ptr<arrow::Array>>>
+        arrow_arrays;
+    for (auto& pair : selectors) {
+      auto& col_name = pair.first;
+      auto& selector = pair.second;
+      std::shared_ptr<arrow::Array> arr;
+      switch (selector.type()) {
+      case SelectorType::kResult: {
+        arr = std::dynamic_pointer_cast<arrow::Array>(tensor.data());
+        break;
+      }
+      default:
+        RETURN_GS_ERROR(
+            vineyard::ErrorCode::kUnsupportedOperationError,
+            "Unsupported operation, available selector type: result. selector: " +
+                selector.str());
+      }
+      arrow_arrays.emplace_back(col_name, arr);
+    }
+    return arrow_arrays;
   }
 
  private:
@@ -974,6 +1036,14 @@ class TensorContextWrapper<
     builder.AddChunk(df_chunk_id);
 
     return builder.Seal(client)->id();
+  }
+
+  bl::result<std::vector<std::pair<std::string, std::shared_ptr<arrow::Array>>>>
+  ToArrowArrays(
+      const grape::CommSpec& comm_spec,
+      const std::vector<std::pair<std::string, Selector>>& selectors) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Not implemented ToArrowArrays for dynamic type");
   }
 
  private:
