@@ -545,7 +545,8 @@ class TensorContextWrapper : public ITensorContextWrapper {
       switch (selector.type()) {
       case SelectorType::kResult: {
         typename vineyard::ConvertToArrowType<data_t>::BuilderType builder;
-        std::shared_ptr<typename vineyard::ConvertToArrowType<data_t>::ArrayType> arr_ptr;
+        std::shared_ptr<
+            typename vineyard::ConvertToArrowType<data_t>::ArrayType> arr_ptr;
         for (size_t offset = 0; offset < tensor.size(); offset++) {
           ARROW_OK_OR_RAISE(builder.Append(tensor.data()[offset]));
         }
@@ -554,10 +555,10 @@ class TensorContextWrapper : public ITensorContextWrapper {
         break;
       }
       default:
-        RETURN_GS_ERROR(
-            vineyard::ErrorCode::kUnsupportedOperationError,
-            "Unsupported operation, available selector type: result. selector: " +
-                selector.str());
+        RETURN_GS_ERROR(vineyard::ErrorCode::kUnsupportedOperationError,
+                        "Unsupported operation, available selector type: "
+                        "result. selector: " +
+                            selector.str());
       }
       arrow_arrays.emplace_back(col_name, arr);
     }
@@ -714,10 +715,10 @@ class TensorContextWrapper<FRAG_T, std::string> : public ITensorContextWrapper {
         break;
       }
       default:
-        RETURN_GS_ERROR(
-            vineyard::ErrorCode::kUnsupportedOperationError,
-            "Unsupported operation, available selector type: result. selector: " +
-                selector.str());
+        RETURN_GS_ERROR(vineyard::ErrorCode::kUnsupportedOperationError,
+                        "Unsupported operation, available selector type: "
+                        "result. selector: " +
+                            selector.str());
       }
       arrow_arrays.emplace_back(col_name, arr);
     }

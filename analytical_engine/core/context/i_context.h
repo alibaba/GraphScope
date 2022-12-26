@@ -336,7 +336,7 @@ class ITensorContextWrapper : public IContextWrapper {
 
   virtual bl::result<
       std::vector<std::pair<std::string, std::shared_ptr<arrow::Array>>>>
-    ToArrowArrays(
+  ToArrowArrays(
       const grape::CommSpec& comm_spec,
       const std::vector<std::pair<std::string, Selector>>& selectors) = 0;
 };
