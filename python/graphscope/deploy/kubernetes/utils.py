@@ -295,6 +295,7 @@ def get_service_endpoints(  # noqa: C901
             for port in svc.spec.ports:
                 if query_port is None or port.port == query_port:
                     ports.append(port.port)
+            break
     elif service_type == "ClusterIP":
         ips.append(svc.spec.cluster_ip)
         for port in svc.spec.ports:

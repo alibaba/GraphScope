@@ -1,4 +1,4 @@
-name: GraphScope CI  on Kubernetes (Dummy)
+name: GraphScope CI on Kubernetes (Dummy)
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - '**'
-      - '!.github/workflows/ci.yml'
+      - '!.github/workflows/k8s-ci.yml'
       - '!Makefile'
       - '!analytical_engine/**'
       - '!charts/**'

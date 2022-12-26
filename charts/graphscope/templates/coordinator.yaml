@@ -116,7 +116,7 @@ spec:
           - {{ .Values.engines.resources.requests.memory }}
           {{- if .Values.volumes.enabled }}
           - '--k8s_volumes'
-          - {{ mustToJson .Values.volumes.items | quote}}
+          - {{ mustToJson .Values.volumes.items | b64enc | quote}}
           {{- end }}
           - "--timeout_seconds"
           - {{ .Values.coordinator.timeout_seconds | quote }}
