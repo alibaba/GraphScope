@@ -68,12 +68,12 @@ class ArrowFragmentLoader
     : public vineyard::ArrowFragmentLoader<OID_T, VID_T, VERTEX_MAP_T> {
   using Base = vineyard::ArrowFragmentLoader<OID_T, VID_T, VERTEX_MAP_T>;
 
-  using Base::internal_oid_t;
-  using Base::label_id_t;
-  using Base::oid_array_t;
-  using Base::oid_t;
-  using Base::vertex_map_t;
-  using Base::vid_t;
+  using typename Base::internal_oid_t;
+  using typename Base::label_id_t;
+  using typename Base::oid_array_t;
+  using typename Base::oid_t;
+  using typename Base::vertex_map_t;
+  using typename Base::vid_t;
 
   using Base::CONSOLIDATE_TAG;
   using Base::DST_LABEL_TAG;
@@ -83,12 +83,12 @@ class ArrowFragmentLoader
 
   using Base::id_column;
 
-  using Base::partitioner_t;
+  using typename Base::partitioner_t;
 
-  using Base::edge_table_info_t;
-  using Base::oid_array_vec_t;
-  using Base::vertex_table_info_t;
-  using Base::vid_array_vec_t;
+  using typename Base::edge_table_info_t;
+  using typename Base::oid_array_vec_t;
+  using typename Base::vertex_table_info_t;
+  using typename Base::vid_array_vec_t;
 
   // not sure why 'using' doesn't work for table_vec_t.
   using table_vec_t = std::vector<std::shared_ptr<arrow::Table>>;
