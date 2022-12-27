@@ -32,7 +32,6 @@
 #include "graphscope/proto/message.pb.h"
 #include "graphscope/proto/op_def.pb.h"
 
-
 namespace gs {
 struct CommandDetail;
 

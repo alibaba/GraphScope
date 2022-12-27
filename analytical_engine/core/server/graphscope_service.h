@@ -23,16 +23,15 @@
 #include <vector>
 
 #include "boost/lexical_cast.hpp"
+#include "grpcpp/server_context.h"
 #include "grpcpp/support/status.h"
 #include "grpcpp/support/status_code_enum.h"
 #include "grpcpp/support/sync_stream.h"
-#include "grpcpp/server_context.h"
 
 #include "core/server/dispatcher.h"
 #include "graphscope/proto/engine_service.grpc.pb.h"
 #include "graphscope/proto/message.pb.h"
 #include "graphscope/proto/op_def.pb.h"
-
 
 namespace gs {
 namespace rpc {
