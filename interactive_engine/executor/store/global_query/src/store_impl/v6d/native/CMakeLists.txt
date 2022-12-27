@@ -5,7 +5,14 @@ if(POLICY CMP0025)
   cmake_policy(SET CMP0025 NEW)
 endif()
 
-set(CMAKE_CXX_STANDARD 14)
+include(CheckCXXCompilerFlag)
+CHECK_CXX_COMPILER_FLAG("-std=c++17" HAS_STDCXX_17)
+if (HAS_STDCXX_17)
+    set(CMAKE_CXX_STANDARD 14)
+else()
+    set(CMAKE_CXX_STANDARD 14)
+endif()
+
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 SET(DEFAULT_BUILD_TYPE "Release")
@@ -41,7 +48,7 @@ macro(install_vineyard_target target)
 endmacro()
 
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wno-deprecated-declarations")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-deprecated-declarations")
 
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
