@@ -20,9 +20,7 @@
 #include <string>
 #include <utility>
 
-namespace grpc {
-class Server;
-}  // namespace grpc
+#include "grpcpp/server.h"
 
 namespace gs {
 class Dispatcher;

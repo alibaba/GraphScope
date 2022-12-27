@@ -30,6 +30,7 @@ fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("cargo:rustc-link-search=/usr/local/lib");
     println!("cargo:rustc-link-search=/usr/local/lib64");
+    println!("cargo:rustc-link-search=/opt/vineyard/lib");
     println!("cargo:rustc-link-search=/opt/homebrew/lib");
     println!("cargo:rustc-link-search={}/build", dst.display());
     println!("cargo:rustc-link-lib=v6d_native_store");
