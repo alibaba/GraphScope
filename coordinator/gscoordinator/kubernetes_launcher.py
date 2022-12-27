@@ -121,7 +121,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
 
         self._coordinator_name = coordinator_name
         self._coordinator_service_name = coordinator_service_name
-        
+
         self._owner_references = self.get_coordinator_owner_references()
         self._image_registry = image_registry
         self._image_repository = image_repository
@@ -255,7 +255,6 @@ class KubernetesClusterLauncher(AbstractLauncher):
                 logger.error(f"Coordinator {self._coordinator_name} not found")
 
         return owner_references
-
 
     def waiting_for_delete(self):
         return self._waiting_for_delete
