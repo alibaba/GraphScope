@@ -43,6 +43,7 @@
 #include "core/config.h"
 #include "core/context/context_protocols.h"
 #include "core/context/i_context.h"
+#include "core/context/selector.h"
 #include "core/context/tensor_dataframe_builder.h"
 #include "core/error.h"
 #include "core/utils/mpi_utils.h"
