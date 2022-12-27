@@ -419,6 +419,8 @@ jobs:
       - name: Helm Test
         run: |
           cd charts
+          helm template graphscope --set image.registry="",image.tag=${SHORT_SHA} \
+                                  ./graphscope
           helm install graphscope --set image.registry="",image.tag=${SHORT_SHA} \
                                   ./graphscope
           helm test graphscope --timeout 5m0s
