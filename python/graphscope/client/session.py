@@ -22,6 +22,7 @@
 import atexit
 import base64
 import contextlib
+import gc
 import json
 import logging
 import os
@@ -691,6 +692,8 @@ class Session(object):
         # networkx module
         self._nx = None
 
+        self._lock = threading.RLock()
+
     def __repr__(self):
         return str(self.info)
 
@@ -953,7 +956,21 @@ class Session(object):
         Returns:
             Different values for different output types of :class:`Operation`
         """
-        return self.run_fetches(fetches)
+
+        # There might be a deadlock without `gc.collect()`:
+        #
+        #  - thread 1 uses `run()` to issue grpc requests
+        #  - during the process, e.g., print traceback, it triggers certain `__del__()`
+        #    and that issues a `run_fetches()` again, that further requires the lock
+        #  - then a deadlock been introduced.
+        #
+        # Thus we simply choose to call `gc.collect()` to force those `__del__()` been
+        # invoked before actually issuing the grpc request to avoid the deadlock.
+        #
+        gc.collect()
+
+        with self._lock:
+            return self.run_fetches(fetches)
 
     def run_fetches(self, fetches):
         """Run operations of `fetches` without the session lock."""

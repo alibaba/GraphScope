@@ -176,7 +176,7 @@ class CoordinatorServiceServicer(
         self._operation_executor: OperationExecutor = None
 
         # a lock that protects the coordinator
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
         atexit.register(self.cleanup)
 
     def __del__(self):
@@ -329,12 +329,16 @@ class CoordinatorServiceServicer(
                 # merge the responses
                 responses[0].head.results.extend(head.head.results)
                 responses.extend(bodies)
+
             except grpc.RpcError as exc:
                 # Not raised by graphscope, maybe socket closed, etc.
                 context.set_code(exc.code())
                 context.set_details(exc.details())
-                for response in responses:
-                    yield response
+
+                # stop yield to raise the grpc errors to the client, as the
+                # client may consume nothing if error happens
+                return
+
             except GremlinServerError as exc:
                 response_head = responses[0]
                 response_head.head.code = error_code
@@ -349,6 +353,9 @@ class CoordinatorServiceServicer(
                         },
                     )
                 )
+                # stop iteration to propagate the error to client immediately
+                break
+
             except Exception as exc:
                 response_head = responses[0]
                 response_head.head.code = error_code
@@ -980,6 +987,7 @@ def start_server(launcher, args):
 
     # handle SIGTERM signal
     def terminate(signum, frame):
+        server.stop(True)
         coordinator_service_servicer.cleanup()
 
     signal.signal(signal.SIGTERM, terminate)
