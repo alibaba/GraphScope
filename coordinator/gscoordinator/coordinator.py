@@ -301,7 +301,6 @@ class CoordinatorServiceServicer(
             run_dag_on, dag, dag_bodies = dag_manager.next_dag()
             error_code = error_codes_pb2.COORDINATOR_INTERNAL_ERROR
             head, bodies = None, None
-            # logger.info('dag: %s', dag)
             try:
                 # run on analytical engine
                 if run_dag_on == GSEngine.analytical_engine:
