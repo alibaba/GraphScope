@@ -31,9 +31,8 @@ import com.alibaba.fastffi.FFISetter;
 import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.fastffi.FFITypeFactory;
 import com.alibaba.fastffi.FFIVector;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @FFIMirror
 @FFINameSpace("sample")
 @FFITypeAlias("FFIMirrorSample")

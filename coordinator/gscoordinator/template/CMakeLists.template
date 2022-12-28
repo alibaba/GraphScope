@@ -338,9 +338,13 @@ elseif (JAVA_PIE_APP)
             message(FATAL_ERROR "Preprocess failed")
         endif()
     endif()
+# find jni---------------------------------------------------------------------
+     find_package(JNI REQUIRED)
+     include_directories(SYSTEM ${JAVA_INCLUDE_PATH})
+     include_directories(SYSTEM ${JAVA_INCLUDE_PATH2})
 
     # 1. cmake
-    file(GLOB_RECURSE FILES_NEED_COMPILE "${OUTPUT_DIR}/SOURCE_OUTPUT/*.cc")
+    file(GLOB_RECURSE FILES_NEED_COMPILE "${OUTPUT_DIR}/SOURCE_OUTPUT/*.cc" ${ANALYTICAL_JAVASDK_CC})
     add_library(${FRAME_NAME} SHARED ${FILES_NEED_COMPILE}
                                     ${ANALYTICAL_ENGINE_FRAME_DIR}/app_frame.cc)
     target_include_directories(${FRAME_NAME} PRIVATE ${OUTPUT_DIR}/SOURCE_OUTPUT/)
@@ -349,7 +353,7 @@ elseif (JAVA_PIE_APP)
                                                     _GRAPH_HEADER=$_graph_header
                                                     _APP_TYPE=$_app_type
                                                     _APP_HEADER=$_app_header)
-    target_link_libraries(${FRAME_NAME} ${CMAKE_JNI_LINKER_FLAGS})
+    target_link_libraries(${FRAME_NAME} ${CMAKE_JNI_LINKER_FLAGS} ${JAVA_JVM_LIBRARY} ${JNI_LIBRARIES})
     set_target_properties(${FRAME_NAME} PROPERTIES COMPILE_FLAGS "-fPIC")
     # 2.Post build after compilation, run run-llvm4jni.sh to generate bitcode, if clang enabled.
     if ((CMAKE_CXX_COMPILER_ID MATCHES "Clang") AND (RUN_LLVM4JNI_SH AND (EXISTS ${RUN_LLVM4JNI_SH})))

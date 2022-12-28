@@ -27,7 +27,6 @@ import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
 /**
  * AdjList is the data structure representing the edges(destination vertex and edge data) of a
@@ -37,7 +36,7 @@ import com.alibaba.graphscope.utils.JNILibraryName;
  * href="https://github.com/alibaba/libgrape-lite/blob/master/grape/graph/adj_list.h">C++ AdjList
  * class</a>
  */
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @CXXHead({GRAPE_ADJ_LIST_H, GRAPE_TYPES_H})
 @FFITypeAlias(GRAPE_ADJ_LIST)
 public interface GrapeAdjList<VID_T, EDATA_T>

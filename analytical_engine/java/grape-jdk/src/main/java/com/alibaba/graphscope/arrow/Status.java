@@ -23,9 +23,8 @@ import com.alibaba.fastffi.CXXHead;
 import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @CXXHead(ARROW_STATUS_H)
 @FFITypeAlias(ARROW_STATUS)
 public interface Status extends FFIPointer {

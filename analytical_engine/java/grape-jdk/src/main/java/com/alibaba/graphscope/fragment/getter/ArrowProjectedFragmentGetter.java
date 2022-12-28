@@ -29,9 +29,8 @@ import com.alibaba.graphscope.graphx.VineyardClient;
 import com.alibaba.graphscope.stdcxx.StdSharedPtr;
 import com.alibaba.graphscope.utils.CppClassName;
 import com.alibaba.graphscope.utils.CppHeaderName;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @CXXHead(CppHeaderName.ARROW_FRAGMENT_H)
 @CXXHead(CppHeaderName.CORE_JAVA_FRAGMENT_GETTER_H)
 @FFITypeAlias(CppClassName.CPP_ARROW_PROJECTED_FRAGMENT_GETTER)
