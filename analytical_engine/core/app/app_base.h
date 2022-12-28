@@ -83,7 +83,7 @@ class AppBase {
   using fragment_t = FRAG_T;                                      \
   using context_t = CONTEXT_T;                                    \
   using message_manager_t = grape::DefaultMessageManager;         \
-  using worker_t = DefaultWorker<APP_T>;                          \
+  using worker_t = gs::DefaultWorker<APP_T>;                      \
   static std::shared_ptr<worker_t> CreateWorker(                  \
       std::shared_ptr<APP_T> app, std::shared_ptr<FRAG_T> frag) { \
     return std::shared_ptr<worker_t>(new worker_t(app, frag));    \

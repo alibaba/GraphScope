@@ -25,9 +25,11 @@
 
 #include "grape/communication/communicator.h"
 #include "grape/config.h"
+#include "grape/fragment/fragment_base.h"
 #include "grape/parallel/parallel_engine.h"
 #include "grape/util.h"
 #include "grape/worker/comm_spec.h"
+#include "vineyard/graph/fragment/fragment_traits.h"
 
 #include "core/parallel/parallel_property_message_manager.h"
 

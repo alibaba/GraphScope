@@ -82,8 +82,8 @@ class ParallelPropertyAppBase {
  public:                                                           \
   using fragment_t = FRAG_T;                                       \
   using context_t = CONTEXT_T;                                     \
-  using message_manager_t = ParallelPropertyMessageManager;        \
-  using worker_t = ParallelPropertyWorker<APP_T>;                  \
+  using message_manager_t = gs::ParallelPropertyMessageManager;    \
+  using worker_t = gs::ParallelPropertyWorker<APP_T>;              \
   virtual ~APP_T() {}                                              \
   static std::shared_ptr<worker_t> CreateWorker(                   \
       std::shared_ptr<APP_T> app, std::shared_ptr<FRAG_T> frag) {  \
