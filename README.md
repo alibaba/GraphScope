@@ -5,7 +5,7 @@
     A One-Stop Large-Scale Graph Computing System from Alibaba
 </p>
 
-[![GraphScope CI](https://github.com/alibaba/GraphScope/workflows/GraphScope%20CI/badge.svg)](https://github.com/alibaba/GraphScope/actions?workflow=GraphScope+CI)
+[![GraphScope CI](https://github.com/alibaba/GraphScope/actions/workflows/local-ci.yml/badge.svg)](https://github.com/alibaba/GraphScope/actions/workflows/local-ci.yml)
 [![Coverage](https://codecov.io/gh/alibaba/GraphScope/branch/main/graph/badge.svg)](https://codecov.io/gh/alibaba/GraphScope)
 [![Playground](https://shields.io/badge/JupyterLab-Try%20GraphScope%20Now!-F37626?logo=jupyter)](https://try.graphscope.app)
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/alibaba/GraphScope)
