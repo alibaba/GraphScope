@@ -111,6 +111,15 @@ if GRAPHSCOPE_HOME is None:
 #   1) infer from GRAPHSCOPE_HOME
 ANALYTICAL_ENGINE_HOME = GRAPHSCOPE_HOME
 ANALYTICAL_ENGINE_PATH = os.path.join(ANALYTICAL_ENGINE_HOME, "bin", "grape_engine")
+if not os.path.isfile(ANALYTICAL_ENGINE_PATH):
+    # try to get analytical engine from build dir
+    if os.path.isfile(
+        os.path.join(GRAPHSCOPE_HOME, "analytical_engine", "build", "grape_engine")
+    ):
+        ANALYTICAL_ENGINE_HOME = os.path.join(GRAPHSCOPE_HOME, "analytical_engine")
+        ANALYTICAL_ENGINE_PATH = os.path.join(
+            ANALYTICAL_ENGINE_HOME, "build", "grape_engine"
+        )
 
 ANALYTICAL_BUILTIN_SPACE = os.path.join(GRAPHSCOPE_HOME, "precompiled", "builtin")
 
@@ -133,6 +142,13 @@ ANALYTICAL_ENGINE_JAVA_JVM_OPTS += (
 # INTERACTIVE_ENGINE_SCRIPT
 INTERACTIVE_INSTANCE_TIMEOUT_SECONDS = 120  # 2 mins
 INTERACTIVE_ENGINE_SCRIPT = os.path.join(GRAPHSCOPE_HOME, "bin", "giectl")
+if not os.path.isfile(INTERACTIVE_ENGINE_SCRIPT):
+    if os.path.isfile(
+        os.path.join(GRAPHSCOPE_HOME, ".install_prefix", "bin", "giectl")
+    ):
+        INTERACTIVE_ENGINE_SCRIPT = os.path.join(
+            GRAPHSCOPE_HOME, ".install_prefix", "bin", "giectl"
+        )
 
 # default threads per worker configuration for GIE/GAIA
 INTERACTIVE_ENGINE_THREADS_PER_WORKER = 2
