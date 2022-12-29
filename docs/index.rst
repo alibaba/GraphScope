@@ -22,7 +22,7 @@ and the vineyard store that offers efficient in-memory data transfers.
    :caption: What is GraphScope
 
    overview
-   basic_and_featured_functionalities
+   key_features
    graphscope_for_data_scientists
    graphscope_for_traversal_queries
    graphscope_for_graph_analytics
