@@ -24,7 +24,6 @@ import com.alibaba.fastffi.FFIFactory;
 import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.fastffi.FFITypeFactory;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
 /**
  * DoubleMsg is a java wrapper for <a
@@ -34,7 +33,7 @@ import com.alibaba.graphscope.utils.JNILibraryName;
  * Boxing types in value. So to enabling user passing Long,Double,Int as messages, we provide
  * Wrappers for these primitive types. Feel free to use them in messageManger.
  */
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @CXXHead(value = CORE_JAVA_JAVA_MESSAGES_H)
 @FFITypeAlias(value = DOUBLE_MSG)
 public interface DoubleMsg extends MsgBase {

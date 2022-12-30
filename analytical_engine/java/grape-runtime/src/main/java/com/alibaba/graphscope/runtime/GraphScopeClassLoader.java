@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.runtime;
 
+import org.scijava.nativelib.NativeLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +49,7 @@ public class GraphScopeClassLoader {
 
     static {
         try {
-            System.loadLibrary("grape-jni");
+            NativeLoader.loadLibrary("grape-jni");
             logger.info("loaded jni lib");
         } catch (Exception e) {
             e.printStackTrace();

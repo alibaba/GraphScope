@@ -122,6 +122,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         self._coordinator_name = coordinator_name
         self._coordinator_service_name = coordinator_service_name
 
+        self._owner_references = self.get_coordinator_owner_references()
         self._image_registry = image_registry
         self._image_repository = image_repository
         self._image_tag = image_tag
@@ -234,6 +235,26 @@ class KubernetesClusterLauncher(AbstractLauncher):
 
     def type(self):
         return types_pb2.K8S
+
+    def get_coordinator_owner_references(self):
+        owner_references = []
+        if self._coordinator_name:
+            try:
+                deployment = self._apps_api.read_namespaced_deployment(
+                    self._coordinator_name, self._namespace
+                )
+                owner_references.append(
+                    kube_client.V1OwnerReference(
+                        api_version="apps/v1",
+                        kind="Deployment",
+                        name=self._coordinator_name,
+                        uid=deployment.metadata.uid,
+                    )
+                )
+            except K8SApiException:
+                logger.error(f"Coordinator {self._coordinator_name} not found")
+
+        return owner_references
 
     def waiting_for_delete(self):
         return self._waiting_for_delete
@@ -374,6 +395,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
     def _create_mars_scheduler(self):
         logger.info("Launching mars scheduler pod for GraphScope ...")
         deployment = self._mars_cluster.get_mars_deployment()
+        deployment.metadata.owner_references = self._owner_references
         response = self._apps_api.create_namespaced_deployment(
             self._namespace, deployment
         )
@@ -382,10 +404,12 @@ class KubernetesClusterLauncher(AbstractLauncher):
     def _create_engine_stateful_set(self):
         logger.info("Create engine headless services...")
         service = self._engine_cluster.get_engine_headless_service()
+        service.metadata.owner_references = self._owner_references
         response = self._core_api.create_namespaced_service(self._namespace, service)
         self._resource_object.append(response)
         logger.info("Creating engine pods...")
         stateful_set = self._engine_cluster.get_engine_stateful_set()
+        stateful_set.metadata.owner_references = self._owner_references
         response = self._apps_api.create_namespaced_stateful_set(
             self._namespace, stateful_set
         )
@@ -394,6 +418,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
     def _create_frontend_deployment(self):
         logger.info("Creating frontend pods...")
         deployment = self._engine_cluster.get_interactive_frontend_deployment()
+        deployment.metadata.owner_references = self._owner_references
         response = self._apps_api.create_namespaced_deployment(
             self._namespace, deployment
         )
@@ -402,12 +427,14 @@ class KubernetesClusterLauncher(AbstractLauncher):
     def _create_frontend_service(self):
         logger.info("Creating frontend service...")
         service = self._engine_cluster.get_interactive_frontend_service(8233)
+        service.metadata.owner_references = self._owner_references
         response = self._core_api.create_namespaced_service(self._namespace, service)
         self._resource_object.append(response)
 
     def _create_vineyard_service(self):
         logger.info("Creating vineyard service...")
         service = self._engine_cluster.get_vineyard_service()
+        service.metadata.owner_references = self._owner_references
         response = self._core_api.create_namespaced_service(self._namespace, service)
         self._resource_object.append(response)
 
@@ -416,6 +443,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         service = self._engine_cluster.get_learning_service(
             object_id, self._learning_start_port
         )
+        service.metadata.owner_references = self._owner_references
         response = self._core_api.create_namespaced_service(self._namespace, service)
         self._graphlearn_services[object_id] = response
         self._resource_object.append(response)

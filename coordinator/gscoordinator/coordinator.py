@@ -176,7 +176,7 @@ class CoordinatorServiceServicer(
         self._operation_executor: OperationExecutor = None
 
         # a lock that protects the coordinator
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
         atexit.register(self.cleanup)
 
     def __del__(self):
@@ -301,7 +301,6 @@ class CoordinatorServiceServicer(
             run_dag_on, dag, dag_bodies = dag_manager.next_dag()
             error_code = error_codes_pb2.COORDINATOR_INTERNAL_ERROR
             head, bodies = None, None
-            # logger.info('dag: %s', dag)
             try:
                 # run on analytical engine
                 if run_dag_on == GSEngine.analytical_engine:
@@ -329,12 +328,16 @@ class CoordinatorServiceServicer(
                 # merge the responses
                 responses[0].head.results.extend(head.head.results)
                 responses.extend(bodies)
+
             except grpc.RpcError as exc:
                 # Not raised by graphscope, maybe socket closed, etc.
                 context.set_code(exc.code())
                 context.set_details(exc.details())
-                for response in responses:
-                    yield response
+
+                # stop yield to raise the grpc errors to the client, as the
+                # client may consume nothing if error happens
+                return
+
             except GremlinServerError as exc:
                 response_head = responses[0]
                 response_head.head.code = error_code
@@ -349,6 +352,9 @@ class CoordinatorServiceServicer(
                         },
                     )
                 )
+                # stop iteration to propagate the error to client immediately
+                break
+
             except Exception as exc:
                 response_head = responses[0]
                 response_head.head.code = error_code
@@ -980,6 +986,7 @@ def start_server(launcher, args):
 
     # handle SIGTERM signal
     def terminate(signum, frame):
+        server.stop(True)
         coordinator_service_servicer.cleanup()
 
     signal.signal(signal.SIGTERM, terminate)

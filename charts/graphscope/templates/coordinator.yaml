@@ -39,21 +39,6 @@ spec:
           tcpSocket:
             port: 59001
         {{- end }}
-        lifecycle:
-          preStop:
-            exec:
-              command:
-                - /bin/bash
-                - -c
-                - |
-                  export uid=$(kubectl get deployment coordinator-{{ include "graphscope.fullname" . }} -n {{ .Release.Namespace }} -o jsonpath='{.metadata.uid}') &&
-                  kubectl patch role/{{ include "graphscope.fullname" . }}-role \
-                  -n {{ .Release.Namespace }} \
-                  --patch '{"metadata": {"ownerReferences": {"apiVersion": "apps/v1", "kind": "Deployment","name": "coordinator-{{ include "graphscope.fullname" . }}","uid": $uid}}}' &&
-                  kubectl patch rolebinding/{{ include "graphscope.fullname" . }}-role-binding \
-                  -n {{ .Release.Namespace }} \
-                  --patch '{"metadata": {"ownerReferences": {"apiVersion": "apps/v1", "kind": "Deployment","name": "coordinator-{{ include "graphscope.fullname" . }}","uid": $uid}}}' &&
-                  /opt/rh/rh-python38/root/usr/bin/python3 -m gscoordinator.hook.prestop
         args:
           - python3
           - "-m"
@@ -81,7 +66,7 @@ spec:
           - "--k8s_image_repository"
           - {{ .Values.image.repository }}
           - "--k8s_image_tag"
-          {{- if .Values.image.tag }}
+          {{- if .Values.image.tag | quote }}
           - {{ .Values.image.tag }}
           {{- else }}
           - {{ .Chart.AppVersion }}

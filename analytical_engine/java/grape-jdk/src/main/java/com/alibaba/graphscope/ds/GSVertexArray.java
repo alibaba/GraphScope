@@ -32,7 +32,6 @@ import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
 /**
  * A java wrapper for gs template class <a href=
@@ -42,7 +41,7 @@ import com.alibaba.graphscope.utils.JNILibraryName;
  *
  * @param <T> vertex data type.
  */
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @CXXHead(GS_CORE_CONFIG_H)
 @CXXHead(CORE_JAVA_TYPE_ALIAS_H)
 @CXXHead(GRAPE_VERTEX_ARRAY_H)

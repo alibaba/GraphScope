@@ -60,32 +60,6 @@ static constexpr const char* IFRAGMENT_HELPER_CLASS =
 static constexpr const char* SET_CLASS_LOADER_METHOD_SIG =
     "(Ljava/net/URLClassLoader;)V";
 
-std::string exec(const char* cmd) {
-  std::array<char, 128> buffer;
-  std::string result;
-  std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
-  if (!pipe) {
-    throw std::runtime_error("popen() failed!");
-  }
-  while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-    result += buffer.data();
-  }
-  return result;
-}
-
-std::string generate_jvm_opts() {
-  char* gs_home = getenv("GRAPHSCOPE_HOME");
-  if (!gs_home) {
-    LOG(ERROR) << "No GRAPHSCOPE_HOME found in env";
-    return "";
-  }
-  std::string cmd =
-      std::string("source ") + std::string(gs_home) + "/conf/grape_jvm_opts";
-  std::string res = exec(cmd.c_str());
-  VLOG(10) << "jvm opts res: " << res;
-  return res;
-}
-
 /**
  * @brief JavaContextBase is the base class for JavaPropertyContext and
  * JavaProjectedContext.
@@ -203,8 +177,6 @@ class JavaContextBase : public grape::ContextBase {
         url_class_loader_object_ = env->NewGlobalRef(gs_class_loader_obj);
       }
 
-      loadJNILibrary(env, user_library_name);
-
       VLOG(1) << "Creating app object: " << app_class_name_;
       app_object_ = LoadAndCreate(env, url_class_loader_object_,
                                   app_class_name_, serial_path.c_str());
@@ -293,20 +265,11 @@ class JavaContextBase : public grape::ContextBase {
 
       // There are cases(giraph) where jar_name can be full
       // path(/tmp/gs/session/resource/....), so we judge whether this case.
-      std::string jar_unpack_path;
-      if (preprocess_jar_name(jar_name)) {
-        jar_unpack_path = jar_name;
-        VLOG(1) << "using raw jar name since it is absolute";
-      } else {
-        jar_unpack_path = lib_dir.string();
-        jar_unpack_path += "/";
-        jar_unpack_path += jar_name;
-      }
 
       snprintf(user_class_path, sizeof(user_class_path),
                "%s:/usr/local/lib:/opt/graphscope/lib:%s:%s/CLASS_OUTPUT/:%s",
                lib_dir.string().c_str(), llvm4jni_output_dir.c_str(),
-               java_codegen_cp.c_str(), jar_unpack_path.c_str());
+               java_codegen_cp.c_str(), jar_name.c_str());
     } else {
       // for giraph_runner testing, user jar can be absolute path.
       snprintf(user_class_path, sizeof(user_class_path),

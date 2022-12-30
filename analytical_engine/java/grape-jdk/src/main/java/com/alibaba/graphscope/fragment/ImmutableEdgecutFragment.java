@@ -27,7 +27,6 @@ import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.graphscope.ds.GrapeAdjList;
 import com.alibaba.graphscope.ds.Vertex;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
 /**
  * Java wrapper for grape ImmutableEdgecutFragment.
@@ -71,7 +70,7 @@ import com.alibaba.graphscope.utils.JNILibraryName;
  * @see com.alibaba.graphscope.fragment.EdgecutFragment
  * @see com.alibaba.graphscope.fragment.FragmentBase
  */
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @CXXHead(GRAPE_FRAGMENT_IMMUTABLE_EDGECUT_FRAGMENT_H)
 @FFITypeAlias(GRAPE_IMMUTABLE_FRAGMENT)
 public interface ImmutableEdgecutFragment<OID_T, VID_T, VDATA_T, EDATA_T>

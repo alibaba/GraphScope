@@ -12,9 +12,8 @@ import com.alibaba.graphscope.stdcxx.StdSharedPtr;
 import com.alibaba.graphscope.stdcxx.StdVector;
 import com.alibaba.graphscope.utils.CppClassName;
 import com.alibaba.graphscope.utils.CppHeaderName;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @CXXHead(CppHeaderName.CORE_JAVA_GRAPHX_RAW_DATA_H)
 @FFITypeAlias(CppClassName.GS_GRAPHX_RAW_DATA_BUILDER)
 public interface GraphXRawDataBuilder<OID_T, VID_T, VD_T, ED_T> extends FFIPointer {

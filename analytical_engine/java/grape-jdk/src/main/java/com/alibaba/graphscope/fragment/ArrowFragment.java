@@ -33,7 +33,6 @@ import com.alibaba.graphscope.ds.Vertex;
 import com.alibaba.graphscope.ds.VertexRange;
 import com.alibaba.graphscope.utils.CppClassName;
 import com.alibaba.graphscope.utils.CppHeaderName;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
 /**
  * ArrowFragment is the java wrapper for <a href=
@@ -43,7 +42,7 @@ import com.alibaba.graphscope.utils.JNILibraryName;
  *
  * @param <OID_T> original vertex id type
  */
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @CXXHead(CppHeaderName.ARROW_FRAGMENT_H)
 @CXXHead(CppHeaderName.CORE_JAVA_TYPE_ALIAS_H)
 @CXXHead(system = "stdint.h")

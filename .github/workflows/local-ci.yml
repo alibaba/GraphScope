@@ -364,7 +364,7 @@ jobs:
         popd
 
         # install pytest
-        python3 -m pip install pytest pytest-cov
+        python3 -m pip install pytest pytest-cov pytest-timeout
 
     - name: Setup tmate session
       uses: mxschmitt/action-tmate@v3

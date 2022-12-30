@@ -36,13 +36,12 @@ import com.alibaba.graphscope.fragment.ArrowProjectedFragment;
 import com.alibaba.graphscope.fragment.FragmentType;
 import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
 /**
  * The default message manager, used in serial apps {@link DefaultAppBase} and {@link
  * DefaultAppBase}.
  */
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @FFITypeAlias(GRAPE_DEFAULT_MESSAGE_MANAGER)
 @CXXHead({
     GRAPE_ADJ_LIST_H,

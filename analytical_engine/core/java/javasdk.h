@@ -90,6 +90,9 @@ jobject CreateGiraphAdaptor(JNIEnv* env, const char* app_class_name,
 jobject CreateGiraphAdaptorContext(JNIEnv* env, const char* context_class_name,
                                    const jobject& fragment_obj);
 
+std::string exec(const char* cmd);
+
+std::string generate_jvm_opts();
 }  // namespace gs
 #endif
 #endif  // ANALYTICAL_ENGINE_CORE_JAVA_JAVASDK_H_

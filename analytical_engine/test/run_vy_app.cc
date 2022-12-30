@@ -47,7 +47,10 @@ using FragmentType =
                             vineyard::property_graph_types::VID_TYPE>;
 
 using ProjectedFragmentType =
-    gs::ArrowProjectedFragment<int64_t, uint64_t, double, int64_t>;
+    gs::ArrowProjectedFragment<int64_t, uint64_t, grape::EmptyType,
+                               grape::EmptyType>;
+using ProjectedFragmentType2 =
+    gs::ArrowProjectedFragment<int64_t, uint64_t, grape::EmptyType, int64_t>;
 
 void RunWCC(std::shared_ptr<FragmentType> fragment,
             const grape::CommSpec& comm_spec, const std::string& out_prefix) {
@@ -220,15 +223,15 @@ void RunProjectedWCC(std::shared_ptr<ProjectedFragmentType> fragment,
   worker->Finalize();
 }
 
-void RunProjectedSSSP(std::shared_ptr<ProjectedFragmentType> fragment,
+void RunProjectedSSSP(std::shared_ptr<ProjectedFragmentType2> fragment,
                       const grape::CommSpec& comm_spec,
                       const std::string& out_prefix) {
   /*
     using AppType =
-        grape::SSSPProjected<ProjectedFragmentType>;
-    using AppType = grape::SSSPAuto<ProjectedFragmentType>;
+        grape::SSSPProjected<ProjectedFragmentType2>;
+    using AppType = grape::SSSPAuto<ProjectedFragmentType2>;
   */
-  using AppType = grape::SSSP<ProjectedFragmentType>;
+  using AppType = grape::SSSP<ProjectedFragmentType2>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
   auto spec = grape::DefaultParallelEngineSpec();
@@ -358,17 +361,30 @@ void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
       RunAutoWCC(fragment, comm_spec, "./outputs_auto_wcc/");
       RunAutoSSSP(fragment, comm_spec, "./outputs_auto_sssp/");
     } else {
-      std::shared_ptr<ProjectedFragmentType> projected_fragment =
-          ProjectedFragmentType::Project(fragment, 0, 0, 0, 0);
+      {
+        // v_prop is grape::EmptyType, e_prop is grape::EmptyType
+        std::shared_ptr<ProjectedFragmentType> projected_fragment =
+            ProjectedFragmentType::Project(fragment, 0, -1, 0, -1);
+        RunProjectedWCC(projected_fragment, comm_spec,
+                        "./output_projected_wcc/");
+        RunProjectedCDLP(projected_fragment, comm_spec,
+                         "./output_projected_cdlp/");
+        RunProjectedLCC(projected_fragment, comm_spec,
+                        "./output_projected_lcc/");
+        RunProjectedPR(projected_fragment, comm_spec,
+                       "./output_projected_pagerank/");
+        RunProjectedBFS(projected_fragment, comm_spec,
+                        "./output_projected_bfs/");
+      }
 
-      RunProjectedWCC(projected_fragment, comm_spec, "./output_projected_wcc/");
-      RunProjectedSSSP(projected_fragment, comm_spec,
-                       "./output_projected_sssp/");
-      RunProjectedCDLP(projected_fragment, comm_spec,
-                       "./output_projected_cdlp/");
-      RunProjectedBFS(projected_fragment, comm_spec, "./output_projected_bfs/");
-      RunProjectedLCC(projected_fragment, comm_spec, "./output_projected_lcc/");
-      RunProjectedPR(projected_fragment, comm_spec, "./output_projected_pr/");
+      {
+        // v_prop is grape::EmptyType, e_prop is int64_t
+        std::shared_ptr<ProjectedFragmentType2> projected_fragment =
+            ProjectedFragmentType2::Project(fragment, 0, -1, 0, 2);
+
+        RunProjectedSSSP(projected_fragment, comm_spec,
+                         "./output_projected_sssp/");
+      }
     }
   }
 }
@@ -454,4 +470,7 @@ int main(int argc, char** argv) {
   return 0;
 }
 
-template class gs::ArrowProjectedFragment<int64_t, uint64_t, double, int64_t>;
+template class gs::ArrowProjectedFragment<int64_t, uint64_t, grape::EmptyType,
+                                          grape::EmptyType>;
+template class gs::ArrowProjectedFragment<int64_t, uint64_t, grape::EmptyType,
+                                          int64_t>;
