@@ -1863,6 +1863,8 @@ class ResolveMPICmdPrefix(object):
                 [
                     self.find_mpi(),
                     "--allow-run-as-root",
+                    "--bind-to",
+                    "none",
                 ]
             )
         else:
