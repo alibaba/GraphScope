@@ -15,7 +15,7 @@
  */
 package com.alibaba.graphscope.groot.common.config;
 
-import com.alibaba.graphscope.common.RoleType;
+import com.alibaba.graphscope.groot.common.RoleType;
 
 public class DiscoveryConfig {
     public static final String DNS_NAME_PREFIX_FORMAT = "dns.name.prefix.%s";

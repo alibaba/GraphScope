@@ -13,7 +13,7 @@
  */
 package com.alibaba.graphscope.groot.servers;
 
-import com.alibaba.graphscope.common.RoleType;
+import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 

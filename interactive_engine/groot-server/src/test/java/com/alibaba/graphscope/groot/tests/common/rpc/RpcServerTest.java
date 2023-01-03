@@ -15,7 +15,7 @@ package com.alibaba.graphscope.groot.tests.common.rpc;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.alibaba.graphscope.common.RoleType;
+import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.discovery.GrootNode;

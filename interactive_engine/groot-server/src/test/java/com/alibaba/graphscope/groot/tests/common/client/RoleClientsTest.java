@@ -15,8 +15,8 @@ package com.alibaba.graphscope.groot.tests.common.client;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.alibaba.graphscope.common.RoleType;
 import com.alibaba.graphscope.compiler.api.exception.NodeConnectException;
+import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.rpc.ChannelManager;

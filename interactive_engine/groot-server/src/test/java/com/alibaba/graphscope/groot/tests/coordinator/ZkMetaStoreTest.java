@@ -15,9 +15,9 @@ package com.alibaba.graphscope.groot.tests.coordinator;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.alibaba.graphscope.common.util.CuratorUtils;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.ZkConfig;
+import com.alibaba.graphscope.groot.common.util.CuratorUtils;
 import com.alibaba.graphscope.groot.coordinator.ZkMetaStore;
 import com.alibaba.graphscope.groot.meta.MetaStore;
 

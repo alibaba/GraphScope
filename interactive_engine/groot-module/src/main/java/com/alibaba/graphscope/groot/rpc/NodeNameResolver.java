@@ -13,7 +13,7 @@
  */
 package com.alibaba.graphscope.groot.rpc;
 
-import com.alibaba.graphscope.common.RoleType;
+import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.discovery.GrootNode;
 import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
 

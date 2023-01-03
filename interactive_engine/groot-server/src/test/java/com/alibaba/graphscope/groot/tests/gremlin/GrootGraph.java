@@ -53,7 +53,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-@Graph.OptIn("gremlin.com.alibaba.graphscope.groot.tests.GremlinStandardTestSuite")
+@Graph.OptIn("com.alibaba.graphscope.groot.tests.gremlin.GremlinStandardTestSuite")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
         method = "g_V_groupCount_selectXvaluesX_unfold_dedup",

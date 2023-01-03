@@ -13,7 +13,7 @@
  */
 package com.alibaba.graphscope.groot.common.config;
 
-import com.alibaba.graphscope.common.RoleType;
+import com.alibaba.graphscope.groot.common.RoleType;
 
 public class CommonConfig {
     public static final String NODE_COUNT_FORMAT = "%s.node.count";

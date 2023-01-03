@@ -26,9 +26,7 @@ use groot_store::db::api::{
 };
 use groot_store::db::graph::entity::{PropertiesIter, PropertyImpl, RocksEdgeImpl, RocksVertexImpl};
 use groot_store::db::graph::store::GraphStore;
-use groot_store::db::wrapper::wrapper_partition_graph::{
-    WrapperPartitionGraph, WrapperPartitionSnapshot,
-};
+use groot_store::db::wrapper::wrapper_partition_graph::{WrapperPartitionGraph, WrapperPartitionSnapshot};
 
 use crate::store::graph::{FfiPartitionGraph, PartitionGraphHandle};
 

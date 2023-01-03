@@ -13,9 +13,10 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::time::Duration;
+
 use pegasus::api::{IterCondition, Iteration, Map, Sink};
 use pegasus::JobConf;
-use std::time::Duration;
 
 /// test binary merge pipeline;
 #[test]

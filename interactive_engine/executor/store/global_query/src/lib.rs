@@ -14,8 +14,8 @@
 //! limitations under the License.
 
 extern crate alloc;
-extern crate itertools;
 extern crate groot_store;
+extern crate itertools;
 #[macro_use]
 extern crate log;
 

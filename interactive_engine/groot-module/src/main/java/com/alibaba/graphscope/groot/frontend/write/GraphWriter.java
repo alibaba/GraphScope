@@ -1,6 +1,5 @@
 package com.alibaba.graphscope.groot.frontend.write;
 
-import com.alibaba.graphscope.common.util.WriteSessionUtil;
 import com.alibaba.graphscope.compiler.api.exception.GrootException;
 import com.alibaba.graphscope.compiler.api.exception.PropertyDefNotFoundException;
 import com.alibaba.graphscope.compiler.api.schema.DataType;
@@ -9,6 +8,7 @@ import com.alibaba.graphscope.compiler.api.schema.GraphProperty;
 import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.SnapshotCache;
+import com.alibaba.graphscope.groot.common.util.WriteSessionUtil;
 import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.metrics.MetricsAgent;

@@ -19,7 +19,6 @@ use std::io::Write;
 use std::sync::Arc;
 
 use byteorder::{BigEndian, WriteBytesExt};
-use itertools::Itertools;
 use groot_store::api::prelude::Property;
 use groot_store::api::{Condition, LabelId, PartitionId, PropId, SnapshotId, VertexId};
 use groot_store::db::api::multi_version_graph::MultiVersionGraph;
@@ -29,6 +28,7 @@ use groot_store::db::graph::entity::{RocksEdgeImpl, RocksVertexImpl};
 use groot_store::db::graph::get_vertex_id_by_primary_keys;
 use groot_store::db::graph::store::GraphStore;
 use groot_store::db::storage::RawBytes;
+use itertools::Itertools;
 
 use crate::apis::global_query::GlobalGraphQuery;
 use crate::apis::global_query::{PartitionLabeledVertexIds, PartitionVertexIds};

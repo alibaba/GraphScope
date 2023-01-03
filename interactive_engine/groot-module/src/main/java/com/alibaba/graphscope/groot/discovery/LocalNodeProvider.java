@@ -13,8 +13,8 @@
  */
 package com.alibaba.graphscope.groot.discovery;
 
-import com.alibaba.graphscope.common.RoleType;
 import com.alibaba.graphscope.compiler.api.exception.GrootException;
+import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 

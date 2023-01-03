@@ -13,7 +13,7 @@
  */
 package com.alibaba.graphscope.groot.rpc;
 
-import com.alibaba.graphscope.common.RoleType;
+import com.alibaba.graphscope.groot.common.RoleType;
 
 import io.grpc.ManagedChannel;
 

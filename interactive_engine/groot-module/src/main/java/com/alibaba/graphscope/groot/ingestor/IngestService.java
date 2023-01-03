@@ -13,12 +13,12 @@
  */
 package com.alibaba.graphscope.groot.ingestor;
 
-import com.alibaba.graphscope.common.RoleType;
-import com.alibaba.graphscope.common.util.ThreadFactoryUtils;
 import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.IngestorConfig;
+import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
 import com.alibaba.graphscope.groot.discovery.GrootNode;
 import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
 import com.alibaba.graphscope.groot.meta.MetaService;

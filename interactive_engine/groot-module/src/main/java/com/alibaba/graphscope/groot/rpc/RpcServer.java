@@ -13,7 +13,7 @@
  */
 package com.alibaba.graphscope.groot.rpc;
 
-import static com.alibaba.graphscope.common.util.RpcUtils.createGrpcExecutor;
+import static com.alibaba.graphscope.groot.common.util.RpcUtils.createGrpcExecutor;
 
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;

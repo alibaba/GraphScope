@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.util;
+package com.alibaba.graphscope.groot.common.util;
 
 import com.alibaba.graphscope.compiler.api.schema.*;
 import com.alibaba.graphscope.sdkcommon.util.JSON;

@@ -18,8 +18,8 @@ package com.alibaba.graphscope.groot.servers.ir;
 
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
-import com.alibaba.graphscope.common.util.IrSchemaParser;
 import com.alibaba.graphscope.compiler.api.schema.*;
+import com.alibaba.graphscope.groot.common.util.IrSchemaParser;
 
 import org.apache.commons.lang3.tuple.Pair;
 

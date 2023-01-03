@@ -1,4 +1,4 @@
-package com.alibaba.graphscope.common.util;
+package com.alibaba.graphscope.groot.common.util;
 
 public class WriteSessionUtil {
 

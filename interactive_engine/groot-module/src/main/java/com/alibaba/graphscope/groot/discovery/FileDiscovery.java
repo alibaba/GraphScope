@@ -13,7 +13,7 @@
  */
 package com.alibaba.graphscope.groot.discovery;
 
-import com.alibaba.graphscope.common.RoleType;
+import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.*;
 
 import org.slf4j.Logger;

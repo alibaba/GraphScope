@@ -16,11 +16,11 @@ package com.alibaba.graphscope.groot.tests.common.discovery;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
-import com.alibaba.graphscope.common.RoleType;
-import com.alibaba.graphscope.common.util.CuratorUtils;
+import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.ZkConfig;
+import com.alibaba.graphscope.groot.common.util.CuratorUtils;
 import com.alibaba.graphscope.groot.discovery.LocalNodeProvider;
 import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
 import com.alibaba.graphscope.groot.discovery.ZkDiscovery;
