@@ -87,7 +87,7 @@ start_max_node() {
        -Dconfig.file="${GROOT_CONF_FILE}" \
        -Dlog.dir="${LOG_DIR}" \
        -Dlog.name="${LOG_NAME}" \
-       -cp "${libpath}" com.alibaba.graphscope.servers.MaxNode \
+       -cp "${libpath}" com.alibaba.graphscope.groot.servers.MaxNode \
        "$@" > >(tee -a "${LOG_DIR}/${LOG_NAME}.out") 2> >(tee -a "${LOG_DIR}/${LOG_NAME}.err" >&2)
 }
 
@@ -127,7 +127,7 @@ start_server() {
       -Dconfig.file="${GROOT_CONF_FILE}" \
       -Dlog.dir="${LOG_DIR}" \
       -Dlog.name="${LOG_NAME}" \
-      -cp "${libpath}" com.alibaba.graphscope.servers.GrootGraph \
+      -cp "${libpath}" com.alibaba.graphscope.groot.servers.GrootGraph \
       "$@" > >(tee -a "${LOG_DIR}/${LOG_NAME}.out") 2> >(tee -a "${LOG_DIR}/${LOG_NAME}.err" >&2)
 }
 
