@@ -69,7 +69,7 @@ _setup_env() {
       GS_LOG=${HOME}/.local/log/graphscope
     fi
     readonly GS_LOG
-    mkdir -p ${GS_LOG}
+    export LOG_DIR=${GS_LOG}
   fi
 
   mkdir -p ${LOG_DIR}
