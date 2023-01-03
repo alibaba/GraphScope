@@ -17,9 +17,9 @@ import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.store.GraphPartition;
 import com.alibaba.graphscope.groot.store.GraphPartitionBackup;
 import com.alibaba.graphscope.groot.store.external.ExternalStorage;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.common.config.StoreConfig;
-import com.alibaba.maxgraph.proto.groot.GraphDefPb;
+import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.config.StoreConfig;
+import com.alibaba.graphscope.proto.groot.GraphDefPb;
 import com.sun.jna.Pointer;
 
 import org.apache.commons.codec.binary.Hex;

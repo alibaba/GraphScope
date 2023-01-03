@@ -16,7 +16,7 @@ package com.alibaba.graphscope.groot.coordinator;
 import com.alibaba.graphscope.groot.discovery.MaxGraphNode;
 import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
-import com.alibaba.maxgraph.common.RoleType;
+import com.alibaba.graphscope.common.RoleType;
 
 import java.util.HashMap;
 import java.util.Map;

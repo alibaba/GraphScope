@@ -13,11 +13,11 @@
  */
 package com.alibaba.graphscope.groot.discovery;
 
-import com.alibaba.maxgraph.common.RoleType;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.common.config.ZkConfig;
-import com.alibaba.maxgraph.common.util.ThreadFactoryUtils;
-import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
+import com.alibaba.graphscope.common.RoleType;
+import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.config.ZkConfig;
+import com.alibaba.graphscope.common.util.ThreadFactoryUtils;
+import com.alibaba.graphscope.compiler.api.exception.GrootException;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.state.ConnectionState;
@@ -117,7 +117,7 @@ public class ZkDiscovery implements NodeDiscovery {
             }
             logger.info("ZkDiscovery started");
         } catch (Exception e) {
-            throw new MaxGraphException(e);
+            throw new GrootException(e);
         }
     }
 

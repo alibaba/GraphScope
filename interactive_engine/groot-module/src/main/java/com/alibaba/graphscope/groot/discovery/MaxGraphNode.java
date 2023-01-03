@@ -13,10 +13,10 @@
  */
 package com.alibaba.graphscope.groot.discovery;
 
-import com.alibaba.maxgraph.common.RoleType;
-import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
+import com.alibaba.graphscope.common.RoleType;
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
+import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.compiler.api.exception.GrootException;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -58,7 +58,7 @@ public class MaxGraphNode {
             try {
                 host = InetAddress.getLocalHost().getHostAddress();
             } catch (UnknownHostException e) {
-                throw new MaxGraphException(e);
+                throw new GrootException(e);
             }
         }
         return new MaxGraphNode(role.getName(), idx, host, port);

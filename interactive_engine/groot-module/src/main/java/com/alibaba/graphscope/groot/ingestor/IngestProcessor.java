@@ -21,9 +21,9 @@ import com.alibaba.graphscope.groot.wal.LogReader;
 import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.graphscope.groot.wal.LogWriter;
 import com.alibaba.graphscope.groot.wal.ReadLogEntry;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.common.config.IngestorConfig;
-import com.alibaba.maxgraph.compiler.api.exception.IngestRejectException;
+import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.config.IngestorConfig;
+import com.alibaba.graphscope.compiler.api.exception.IngestRejectException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

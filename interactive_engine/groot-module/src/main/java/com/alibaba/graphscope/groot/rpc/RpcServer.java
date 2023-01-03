@@ -13,12 +13,12 @@
  */
 package com.alibaba.graphscope.groot.rpc;
 
-import static com.alibaba.maxgraph.common.util.RpcUtils.createGrpcExecutor;
+import static com.alibaba.graphscope.common.util.RpcUtils.createGrpcExecutor;
 
 import com.alibaba.graphscope.groot.discovery.LocalNodeProvider;
 import com.alibaba.graphscope.groot.discovery.MaxGraphNode;
-import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
+import com.alibaba.graphscope.groot.common.config.Configs;
 
 import io.grpc.BindableService;
 import io.grpc.Server;

@@ -12,19 +12,19 @@ import com.alibaba.graphscope.groot.operation.OperationType;
 import com.alibaba.graphscope.groot.operation.VertexId;
 import com.alibaba.graphscope.groot.operation.dml.*;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
-import com.alibaba.maxgraph.common.util.WriteSessionUtil;
-import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
-import com.alibaba.maxgraph.compiler.api.exception.PropertyDefNotFoundException;
-import com.alibaba.maxgraph.compiler.api.schema.DataType;
-import com.alibaba.maxgraph.compiler.api.schema.GraphElement;
-import com.alibaba.maxgraph.compiler.api.schema.GraphProperty;
-import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
-import com.alibaba.maxgraph.sdkcommon.common.EdgeRecordKey;
-import com.alibaba.maxgraph.sdkcommon.common.VertexRecordKey;
-import com.alibaba.maxgraph.sdkcommon.schema.EdgeKind;
-import com.alibaba.maxgraph.sdkcommon.schema.LabelId;
-import com.alibaba.maxgraph.sdkcommon.schema.PropertyValue;
-import com.alibaba.maxgraph.sdkcommon.util.PkHashUtils;
+import com.alibaba.graphscope.common.util.WriteSessionUtil;
+import com.alibaba.graphscope.compiler.api.exception.GrootException;
+import com.alibaba.graphscope.compiler.api.exception.PropertyDefNotFoundException;
+import com.alibaba.graphscope.compiler.api.schema.DataType;
+import com.alibaba.graphscope.compiler.api.schema.GraphElement;
+import com.alibaba.graphscope.compiler.api.schema.GraphProperty;
+import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
+import com.alibaba.graphscope.sdkcommon.common.EdgeRecordKey;
+import com.alibaba.graphscope.sdkcommon.common.VertexRecordKey;
+import com.alibaba.graphscope.sdkcommon.schema.EdgeKind;
+import com.alibaba.graphscope.sdkcommon.schema.LabelId;
+import com.alibaba.graphscope.sdkcommon.schema.PropertyValue;
+import com.alibaba.graphscope.sdkcommon.util.PkHashUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -95,7 +95,7 @@ public class GraphWriter implements MetricsAgent {
         try {
             return future.get();
         } catch (InterruptedException | ExecutionException e) {
-            throw new MaxGraphException(e);
+            throw new GrootException(e);
         }
     }
 

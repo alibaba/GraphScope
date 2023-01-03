@@ -47,7 +47,7 @@ from gscoordinator.utils import get_app_sha256
 from gscoordinator.utils import get_graph_sha256
 from gscoordinator.utils import get_lib_path
 from gscoordinator.utils import op_pre_process
-from gscoordinator.utils import to_maxgraph_schema
+from gscoordinator.utils import to_interactive_engine_schema
 
 logger = logging.getLogger("graphscope")
 
@@ -208,7 +208,7 @@ class OperationExecutor:
                 )
                 if op_result.graph_def.graph_type == graph_def_pb2.ARROW_PROPERTY:
                     dump_string(
-                        to_maxgraph_schema(vy_info.property_schema_json),
+                        to_interactive_engine_schema(vy_info.property_schema_json),
                         schema_path,
                     )
                     vy_info.schema_path = schema_path

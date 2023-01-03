@@ -13,10 +13,10 @@
  */
 package com.alibaba.graphscope.groot.discovery;
 
-import com.alibaba.maxgraph.common.RoleType;
-import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
+import com.alibaba.graphscope.common.RoleType;
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
+import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.compiler.api.exception.GrootException;
 
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -43,7 +43,7 @@ public class LocalNodeProvider implements Function<Integer, MaxGraphNode> {
                         null, MaxGraphNode.createGraphNode(roleType, configs, port));
         if (!suc) {
             if (!CommonConfig.DISCOVERY_MODE.get(this.configs).equalsIgnoreCase("file")) {
-                throw new MaxGraphException("localNode can only be set once");
+                throw new GrootException("localNode can only be set once");
             }
         }
         return localNodeRef.get();

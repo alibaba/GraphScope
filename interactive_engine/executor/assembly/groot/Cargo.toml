@@ -1,5 +1,5 @@
 [package]
-name = "maxgraph-ffi"
+name = "groot-ffi"
 version = "0.1.0"
 authors = ["graphscope@alibaba-inc.com"]
 edition = "2018"
@@ -9,7 +9,7 @@ crate-type = ["rlib", "cdylib"]
 
 [dependencies]
 global_query = { path = "../../store/global_query" }
-maxgraph-store = { path = "../../store/groot" }
+groot-store = { path = "../../store/groot" }
 gaia_pegasus = { path = "../../engine/pegasus/pegasus", package = "pegasus" }
 pegasus_network = { path = "../../engine/pegasus/network" }
 pegasus_server = { path = "../../engine/pegasus/server" }

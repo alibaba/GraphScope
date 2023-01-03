@@ -19,13 +19,13 @@ import com.alibaba.graphscope.groot.SnapshotWithSchema;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.meta.MetaStore;
 import com.alibaba.graphscope.groot.store.StoreBackupId;
-import com.alibaba.maxgraph.common.config.BackupConfig;
-import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.common.util.ThreadFactoryUtils;
-import com.alibaba.maxgraph.compiler.api.exception.BackupException;
-import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
-import com.alibaba.maxgraph.sdkcommon.common.BackupInfo;
+import com.alibaba.graphscope.groot.common.config.BackupConfig;
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
+import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.common.util.ThreadFactoryUtils;
+import com.alibaba.graphscope.compiler.api.exception.BackupException;
+import com.alibaba.graphscope.compiler.api.exception.GrootException;
+import com.alibaba.graphscope.sdkcommon.common.BackupInfo;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -112,7 +112,7 @@ public class BackupManager {
         try {
             recover();
         } catch (IOException e) {
-            throw new MaxGraphException(e);
+            throw new GrootException(e);
         }
 
         this.localListener = new LocalSnapshotListener(this.schemaManager, this.localSnapshotCache);

@@ -424,9 +424,9 @@ class CoordinatorServiceServicer(
                     return rlt[0].strip()
             return ""
 
-        # maxgraph endpoint pattern
+        # frontend endpoint pattern
         FRONTEND_PATTERN = re.compile("(?<=FRONTEND_ENDPOINT:).*$")
-        # maxgraph external endpoint, for clients that are outside of cluster to connect
+        # frontend external endpoint, for clients that are outside of cluster to connect
         # only available in kubernetes mode, exposed by NodePort or LoadBalancer
         FRONTEND_EXTERNAL_PATTERN = re.compile("(?<=FRONTEND_EXTERNAL_ENDPOINT:).*$")
 
@@ -445,7 +445,7 @@ class CoordinatorServiceServicer(
             return_code = proc.poll()
             if return_code != 0:
                 raise RuntimeError(f"Error code: {return_code}, message {outs}")
-            # match maxgraph endpoint and check for ready
+            # match frontend endpoint and check for ready
             endpoint = _match_frontend_endpoint(FRONTEND_PATTERN, outs)
             # coordinator use internal endpoint
             gie_manager.set_endpoint(endpoint)

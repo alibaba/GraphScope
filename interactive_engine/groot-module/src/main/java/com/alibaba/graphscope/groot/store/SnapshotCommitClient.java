@@ -14,8 +14,8 @@
 package com.alibaba.graphscope.groot.store;
 
 import com.alibaba.graphscope.groot.rpc.RpcClient;
-import com.alibaba.maxgraph.proto.groot.CommitSnapshotIdRequest;
-import com.alibaba.maxgraph.proto.groot.SnapshotCommitGrpc;
+import com.alibaba.graphscope.proto.groot.CommitSnapshotIdRequest;
+import com.alibaba.graphscope.proto.groot.SnapshotCommitGrpc;
 
 import io.grpc.ManagedChannel;
 

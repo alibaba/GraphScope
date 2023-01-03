@@ -21,9 +21,9 @@ use std::time::Duration;
 
 use gaia_pegasus::Configuration as GaiaConfig;
 use global_query::GlobalGraph;
-use maxgraph_store::api::PartitionId;
-use maxgraph_store::db::api::{GraphConfig, GraphResult};
-use maxgraph_store::db::graph::store::GraphStore;
+use groot_store::api::PartitionId;
+use groot_store::db::api::{GraphConfig, GraphResult};
+use groot_store::db::graph::store::GraphStore;
 use pegasus_network::config::{NetworkConfig, ServerAddr};
 use pegasus_network::SimpleServerDetector;
 use pegasus_server::rpc::{start_all, RPCServerConfig, ServiceStartListener};

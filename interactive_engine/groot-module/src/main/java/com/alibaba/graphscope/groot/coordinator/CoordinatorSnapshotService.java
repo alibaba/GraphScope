@@ -1,8 +1,8 @@
 package com.alibaba.graphscope.groot.coordinator;
 
-import com.alibaba.maxgraph.proto.groot.CoordinatorSnapshotServiceGrpc;
-import com.alibaba.maxgraph.proto.groot.UpdateMinQuerySnapshotIdRequest;
-import com.alibaba.maxgraph.proto.groot.UpdateMinQuerySnapshotIdResponse;
+import com.alibaba.graphscope.proto.groot.CoordinatorSnapshotServiceGrpc;
+import com.alibaba.graphscope.proto.groot.UpdateMinQuerySnapshotIdRequest;
+import com.alibaba.graphscope.proto.groot.UpdateMinQuerySnapshotIdResponse;
 
 import io.grpc.stub.StreamObserver;
 

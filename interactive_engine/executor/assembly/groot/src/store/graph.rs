@@ -5,19 +5,19 @@ use std::os::raw::{c_char, c_void};
 use std::str;
 use std::sync::{Arc, Once};
 
-use maxgraph_store::db::api::multi_version_graph::MultiVersionGraph;
-use maxgraph_store::db::api::PropertyMap;
-use maxgraph_store::db::api::{
+use groot_store::db::api::multi_version_graph::MultiVersionGraph;
+use groot_store::db::api::PropertyMap;
+use groot_store::db::api::{
     DataLoadTarget, EdgeId, EdgeKind, GraphConfigBuilder, GraphResult, SnapshotId, TypeDef,
 };
-use maxgraph_store::db::common::bytes::util::parse_pb;
-use maxgraph_store::db::graph::store::GraphStore;
-use maxgraph_store::db::proto::common::{CommitDataLoadPb, PrepareDataLoadPb};
-use maxgraph_store::db::proto::model::{
+use groot_store::db::common::bytes::util::parse_pb;
+use groot_store::db::graph::store::GraphStore;
+use groot_store::db::proto::common::{CommitDataLoadPb, PrepareDataLoadPb};
+use groot_store::db::proto::model::{
     AddEdgeKindPb, ConfigPb, CreateVertexTypePb, DataOperationPb, DdlOperationPb, EdgeIdPb, EdgeKindPb,
     EdgeLocationPb, LabelIdPb, OpTypePb, OperationBatchPb, OperationPb, TypeDefPb, VertexIdPb,
 };
-use maxgraph_store::db::wrapper::wrapper_partition_graph::WrapperPartitionGraph;
+use groot_store::db::wrapper::wrapper_partition_graph::WrapperPartitionGraph;
 
 use crate::store::jna_response::JnaResponse;
 

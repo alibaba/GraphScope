@@ -21,11 +21,11 @@ import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.operation.OperationBlob;
 import com.alibaba.graphscope.groot.wal.LogService;
-import com.alibaba.maxgraph.common.RoleType;
-import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.common.config.IngestorConfig;
-import com.alibaba.maxgraph.common.util.ThreadFactoryUtils;
+import com.alibaba.graphscope.common.RoleType;
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
+import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.config.IngestorConfig;
+import com.alibaba.graphscope.common.util.ThreadFactoryUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

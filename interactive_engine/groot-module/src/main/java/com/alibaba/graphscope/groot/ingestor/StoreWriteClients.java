@@ -17,7 +17,7 @@ import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
-import com.alibaba.maxgraph.common.RoleType;
+import com.alibaba.graphscope.common.RoleType;
 
 import io.grpc.ManagedChannel;
 

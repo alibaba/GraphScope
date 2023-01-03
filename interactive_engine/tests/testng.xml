@@ -1,7 +1,7 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 <suite name="preserve order test runs" parallel="false" thread-count="1">
     <listeners>
-        <listener class-name="com.alibaba.maxgraph.function.test.GraphTestListener"/>
+        <listener class-name="com.alibaba.graphscope.function.test.GraphTestListener"/>
     </listeners>
     <parameter name="clean" value="False"/>
 
@@ -13,8 +13,8 @@
             </dependencies>
         </groups>
         <classes>
-            <class name="com.alibaba.maxgraph.function.test.LoadVineyardDataTest"/>
-            <class name="com.alibaba.maxgraph.function.test.CreateInstanceTest"/>
+            <class name="com.alibaba.graphscope.function.test.LoadVineyardDataTest"/>
+            <class name="com.alibaba.graphscope.function.test.CreateInstanceTest"/>
         </classes>
     </test> 
 
@@ -27,8 +27,8 @@
             </dependencies>
         </groups>
         <classes>
-            <class name="com.alibaba.maxgraph.function.test.LoadVineyardDataTest"/>
-            <class name="com.alibaba.maxgraph.function.test.CreateInstanceTest"/>
+            <class name="com.alibaba.graphscope.function.test.LoadVineyardDataTest"/>
+            <class name="com.alibaba.graphscope.function.test.CreateInstanceTest"/>
         </classes>
     </test>
 
@@ -40,8 +40,8 @@
             </dependencies>
         </groups>
         <classes>
-            <class name="com.alibaba.maxgraph.function.test.LoadVineyardDataTest"/>
-            <class name="com.alibaba.maxgraph.function.test.CreateInstanceTest"/>
+            <class name="com.alibaba.graphscope.function.test.LoadVineyardDataTest"/>
+            <class name="com.alibaba.graphscope.function.test.CreateInstanceTest"/>
         </classes>
     </test>
 
@@ -53,15 +53,15 @@
             </dependencies>
         </groups>
         <classes>
-            <class name="com.alibaba.maxgraph.function.test.LoadVineyardDataTest"/>
-            <class name="com.alibaba.maxgraph.function.test.CreateInstanceTest"/>
+            <class name="com.alibaba.graphscope.function.test.LoadVineyardDataTest"/>
+            <class name="com.alibaba.graphscope.function.test.CreateInstanceTest"/>
         </classes>
     </test>
 
     <test name="gremlin standard query test" junit="true">
 
         <classes>
-	        <class name="com.alibaba.maxgraph.function.test.gremlin.GremlinStandardTest"/>
+	        <class name="com.alibaba.graphscope.function.test.gremlin.GremlinStandardTest"/>
         </classes>
     </test>
 

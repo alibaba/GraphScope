@@ -15,9 +15,9 @@
  */
 package com.alibaba.graphscope.groot.schema.request;
 
-import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
+import com.alibaba.graphscope.compiler.api.exception.GrootException;
 
-public class DdlException extends MaxGraphException {
+public class DdlException extends GrootException {
 
     public DdlException(String msg) {
         super(msg);

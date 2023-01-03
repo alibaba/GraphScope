@@ -13,7 +13,7 @@
  */
 package com.alibaba.graphscope.groot.discovery;
 
-import com.alibaba.maxgraph.common.RoleType;
+import com.alibaba.graphscope.common.RoleType;
 
 import java.util.Map;
 

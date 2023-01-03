@@ -13,7 +13,7 @@
  */
 package com.alibaba.graphscope.groot.sdk;
 
-import com.alibaba.maxgraph.sdkcommon.common.BackupInfo;
+import com.alibaba.graphscope.sdkcommon.common.BackupInfo;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

@@ -1,7 +1,7 @@
 package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.graphscope.groot.meta.MetaStore;
-import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
+import com.alibaba.graphscope.compiler.api.exception.GrootException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.FileNotFoundException;
@@ -24,7 +24,7 @@ public class IdAllocator {
         try {
             recover();
         } catch (IOException e) {
-            throw new MaxGraphException(e);
+            throw new GrootException(e);
         }
     }
 

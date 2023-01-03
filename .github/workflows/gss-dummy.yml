@@ -35,8 +35,5 @@ jobs:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     needs: [gremlin-test]
-    strategy:
-      matrix:
-        executor: [maxgraph]
     steps:
     - run: 'echo "No action required" '

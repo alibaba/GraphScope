@@ -15,7 +15,7 @@ package com.alibaba.graphscope.groot.rpc;
 
 import com.alibaba.graphscope.groot.discovery.MaxGraphNode;
 import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
-import com.alibaba.maxgraph.common.RoleType;
+import com.alibaba.graphscope.common.RoleType;
 
 import io.grpc.Attributes;
 import io.grpc.EquivalentAddressGroup;

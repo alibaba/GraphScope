@@ -1,8 +1,8 @@
 package com.alibaba.graphscope.groot.frontend;
 
-import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.common.util.WriteSessionUtil;
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
+import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.common.util.WriteSessionUtil;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;

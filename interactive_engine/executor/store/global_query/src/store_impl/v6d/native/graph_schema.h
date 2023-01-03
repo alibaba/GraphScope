@@ -102,7 +102,7 @@ class MGPropertyGraphSchema {
 
   // In Analytical engine, assume label ids of vertex entries are continuous
   // from zero, and property ids of each label is also continuous from zero.
-  // When transform schema to Maxgraph style, we gather all property names and
+  // When transform schema to Interactive Engine style, we gather all property names and
   // unique them, assign each name a id (index of the vector), then preserve a
   // vector<int> for each label, stores mappings from original id to transformed
   // id.

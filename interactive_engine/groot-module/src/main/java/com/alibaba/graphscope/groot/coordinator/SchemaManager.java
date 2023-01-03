@@ -21,9 +21,9 @@ import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.schema.ddl.DdlExecutors;
 import com.alibaba.graphscope.groot.schema.ddl.DdlResult;
 import com.alibaba.graphscope.groot.schema.request.DdlRequestBatch;
-import com.alibaba.maxgraph.common.util.ThreadFactoryUtils;
-import com.alibaba.maxgraph.compiler.api.exception.ServiceNotReadyException;
-import com.alibaba.maxgraph.sdkcommon.schema.GraphDef;
+import com.alibaba.graphscope.common.util.ThreadFactoryUtils;
+import com.alibaba.graphscope.compiler.api.exception.ServiceNotReadyException;
+import com.alibaba.graphscope.sdkcommon.schema.GraphDef;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

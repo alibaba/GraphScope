@@ -5,14 +5,14 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <artifactId>maxgraph-parent</artifactId>
-    <groupId>com.alibaba.maxgraph</groupId>
+    <artifactId>interactive-parent</artifactId>
+    <groupId>com.alibaba.graphscope</groupId>
     <version>${revision}</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <groupId>com.alibaba.maxgraph</groupId>
-  <artifactId>maxgraph-tests</artifactId>
+  <groupId>com.alibaba.graphscope</groupId>
+  <artifactId>tests</artifactId>
 
   <dependencies>
     <dependency>
@@ -63,13 +63,8 @@
       <version>${tinkerpop.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.tinkerpop</groupId>
-      <artifactId>gremlin-test</artifactId>
-      <version>${tinkerpop.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.alibaba.maxgraph</groupId>
-      <artifactId>maxgraph-sdk-common</artifactId>
+      <groupId>com.alibaba.graphscope</groupId>
+      <artifactId>sdk-common</artifactId>
       <version>0.0.1-SNAPSHOT</version>
     </dependency>
   </dependencies>
