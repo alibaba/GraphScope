@@ -94,7 +94,7 @@ start_max_node() {
 start_load_tools() {
   _setup_env
   java -cp "${GROOT_HOME}/lib/data-load-tool-0.0.1-SNAPSHOT.jar" \
-       com.alibaba.graphscope.dataload.LoadTool "$@"
+       com.alibaba.graphscope.groot.dataload.LoadTool "$@"
 }
 
 # start server with v2

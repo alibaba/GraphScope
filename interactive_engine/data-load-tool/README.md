@@ -67,7 +67,7 @@ The loading process contains three steps:
   Build data by running the hadoop map-reduce job with following command:
   
   ```
-  $ hadoop jar data-load-tool-0.0.1-SNAPSHOT.jar databuild.com.alibaba.graphscope.dataload.OfflineBuild <path/to/config/file>
+  $ hadoop jar data-load-tool-0.0.1-SNAPSHOT.jar databuild.com.alibaba.graphscope.groot.dataload.OfflineBuild <path/to/config/file>
   ```
 
   The config file should follow a format that is recognized by Java `java.util.Properties` class. Here is an example:
