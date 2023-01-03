@@ -16,15 +16,15 @@
 
 package com.alibaba.graphscope.groot.servers.ir;
 
+import com.alibaba.graphscope.common.RoleType;
+import com.alibaba.graphscope.compiler.api.exception.GrootException;
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
+import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.discovery.*;
 import com.alibaba.graphscope.groot.servers.jna.GaiaLibrary;
 import com.alibaba.graphscope.groot.servers.jna.GaiaPortsResponse;
 import com.alibaba.graphscope.groot.store.GraphPartition;
 import com.alibaba.graphscope.groot.store.jna.JnaGraphStore;
-import com.alibaba.graphscope.common.RoleType;
-import com.alibaba.graphscope.groot.common.config.CommonConfig;
-import com.alibaba.graphscope.groot.common.config.Configs;
-import com.alibaba.graphscope.compiler.api.exception.GrootException;
 import com.sun.jna.Pointer;
 
 import org.slf4j.Logger;
@@ -45,7 +45,7 @@ public class GaiaEngine implements ExecutorEngine {
     private LocalNodeProvider rpcNodeProvider;
     private int nodeCount;
 
-    private Map<Integer, MaxGraphNode> engineNodes = new ConcurrentHashMap<>();
+    private Map<Integer, GrootNode> engineNodes = new ConcurrentHashMap<>();
 
     public GaiaEngine(Configs configs, DiscoveryFactory discoveryFactory) {
         this.configs = configs;
@@ -106,7 +106,7 @@ public class GaiaEngine implements ExecutorEngine {
     }
 
     @Override
-    public void nodesJoin(RoleType role, Map<Integer, MaxGraphNode> nodes) {
+    public void nodesJoin(RoleType role, Map<Integer, GrootNode> nodes) {
         if (role == RoleType.GAIA_ENGINE) {
             this.engineNodes.putAll(nodes);
             if (this.engineNodes.size() == this.nodeCount) {
@@ -125,7 +125,7 @@ public class GaiaEngine implements ExecutorEngine {
     }
 
     @Override
-    public void nodesLeft(RoleType role, Map<Integer, MaxGraphNode> nodes) {
+    public void nodesLeft(RoleType role, Map<Integer, GrootNode> nodes) {
         if (role == RoleType.GAIA_ENGINE) {
             nodes.keySet().forEach(k -> this.engineNodes.remove(k));
         }

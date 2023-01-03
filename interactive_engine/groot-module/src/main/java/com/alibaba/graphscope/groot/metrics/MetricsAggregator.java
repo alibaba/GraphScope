@@ -13,11 +13,11 @@
  */
 package com.alibaba.graphscope.groot.metrics;
 
-import com.alibaba.graphscope.groot.CompletionCallback;
-import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.alibaba.graphscope.common.RoleType;
+import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

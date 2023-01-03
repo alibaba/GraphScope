@@ -15,12 +15,12 @@ package com.alibaba.graphscope.groot.tests.common.rpc;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.alibaba.graphscope.groot.discovery.LocalNodeProvider;
-import com.alibaba.graphscope.groot.discovery.MaxGraphNode;
-import com.alibaba.graphscope.groot.rpc.RpcServer;
 import com.alibaba.graphscope.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.discovery.GrootNode;
+import com.alibaba.graphscope.groot.discovery.LocalNodeProvider;
+import com.alibaba.graphscope.groot.rpc.RpcServer;
 
 import org.junit.jupiter.api.Test;
 
@@ -40,7 +40,7 @@ public class RpcServerTest {
         LocalNodeProvider localNodeProvider = new LocalNodeProvider(configs);
         RpcServer rpcServer = new RpcServer(configs, localNodeProvider);
         rpcServer.start();
-        MaxGraphNode localNode = localNodeProvider.get();
+        GrootNode localNode = localNodeProvider.get();
         assertEquals(port, localNode.getPort());
         assertEquals(port, rpcServer.getPort());
         rpcServer.stop();

@@ -148,7 +148,7 @@ void get_graph_handle(ObjectId id, PartitionId channel_num,
         vineyard::htap::MGPropertyGraphSchema mgschema;
         mgschema.FromJSON(schema_json);
         handle->schema =
-            new vineyard::htap::MGPropertyGraphSchema(mgschema.TransformToMaxGraph());
+            new vineyard::htap::MGPropertyGraphSchema(mgschema.TransformToInteractive());
       }
     }
   }

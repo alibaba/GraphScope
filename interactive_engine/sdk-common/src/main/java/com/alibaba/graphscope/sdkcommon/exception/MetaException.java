@@ -22,7 +22,7 @@ import com.alibaba.graphscope.sdkcommon.util.ExceptionUtils.ErrorCode;
 import java.text.MessageFormat;
 import java.util.List;
 
-public class MetaException extends MaxGraphException {
+public class MetaException extends GrootException {
     public MetaException(ErrorCode code, String msg) {
         super(code, msg);
     }
@@ -119,18 +119,18 @@ public class MetaException extends MaxGraphException {
         return new MetaException(ErrorCode.IndexCanBeUsedOnlyOnEdge, msg);
     }
 
-    public static MaxGraphException indexTypeMustBeUnique(String name) {
+    public static GrootException indexTypeMustBeUnique(String name) {
         String msg =
                 MessageFormat.format("Index Type Must be unique in one Vertex/Edge: {0}", name);
         return new MetaException(ErrorCode.IndexTypeMustUnique, msg);
     }
 
-    public static MaxGraphException vertexPrimaryChanged() {
+    public static GrootException vertexPrimaryChanged() {
         return new MetaException(
                 ErrorCode.InvalidTypeChanged, "Can not change the primary key of Vertex" + " Type");
     }
 
-    public static MaxGraphException storageEngineChanged(StorageEngine from, StorageEngine to) {
+    public static GrootException storageEngineChanged(StorageEngine from, StorageEngine to) {
         return new MetaException(
                 ErrorCode.InvalidTypeChanged,
                 "Can not change Storage Engine from " + from.name() + " to " + to.name());
@@ -142,7 +142,7 @@ public class MetaException extends MaxGraphException {
                 "Property: " + propertyName + " type can not " + "be changed");
     }
 
-    public static MaxGraphException dimensionTypeChanged(boolean from, boolean to) {
+    public static GrootException dimensionTypeChanged(boolean from, boolean to) {
         return new MetaException(
                 ErrorCode.InvalidTypeChanged,
                 "Can not change dimensionType from "
@@ -151,12 +151,12 @@ public class MetaException extends MaxGraphException {
                         + wrapDimension(to));
     }
 
-    public static MaxGraphException typeChanged() {
+    public static GrootException typeChanged() {
         return new MetaException(
                 ErrorCode.InvalidTypeChanged, "Can not change Vertex Or Edge's type and label");
     }
 
-    public static MaxGraphException dataTypeNotValid(DataType dataType) {
+    public static GrootException dataTypeNotValid(DataType dataType) {
         return new MetaException(
                 ErrorCode.DataTypeNotValid, "unSupported data type: " + dataType.toString());
     }

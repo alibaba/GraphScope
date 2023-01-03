@@ -16,11 +16,11 @@ package com.alibaba.graphscope.groot.tests.common.discovery;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.alibaba.graphscope.groot.discovery.LocalNodeProvider;
-import com.alibaba.graphscope.groot.discovery.MaxGraphNode;
 import com.alibaba.graphscope.common.RoleType;
-import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.compiler.api.exception.GrootException;
+import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.discovery.GrootNode;
+import com.alibaba.graphscope.groot.discovery.LocalNodeProvider;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -40,7 +40,7 @@ public class LocalNodeProviderTest {
                         .put("discovery.mode", "zookeeper")
                         .build();
         LocalNodeProvider localNodeProvider = new LocalNodeProvider(configs);
-        MaxGraphNode node = localNodeProvider.apply(port);
+        GrootNode node = localNodeProvider.apply(port);
 
         Assertions.assertAll(
                 () -> assertEquals(node.getRoleName(), role.getName()),

@@ -15,9 +15,9 @@ package com.alibaba.graphscope.groot.tests.common;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.meta.DefaultMetaService;
 import com.alibaba.graphscope.groot.meta.MetaService;
-import com.alibaba.graphscope.groot.common.config.Configs;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

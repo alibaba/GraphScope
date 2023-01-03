@@ -13,10 +13,10 @@
  */
 package com.alibaba.graphscope.groot.dataload.databuild;
 
-import com.alibaba.graphscope.groot.sdk.MaxGraphClient;
 import com.alibaba.graphscope.compiler.api.schema.GraphEdge;
 import com.alibaba.graphscope.compiler.api.schema.GraphElement;
 import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
+import com.alibaba.graphscope.groot.sdk.GrootClient;
 import com.alibaba.graphscope.sdkcommon.common.DataLoadTarget;
 import com.alibaba.graphscope.sdkcommon.schema.GraphSchemaMapper;
 import com.alibaba.graphscope.sdkcommon.util.UuidUtils;
@@ -68,7 +68,7 @@ public class OfflineBuild {
         String outputPath = properties.getProperty(OUTPUT_PATH);
         String columnMappingConfigStr = properties.getProperty(COLUMN_MAPPING_CONFIG);
         String graphEndpoint = properties.getProperty(GRAPH_ENDPOINT);
-        MaxGraphClient client = MaxGraphClient.newBuilder().setHosts(graphEndpoint).build();
+        GrootClient client = GrootClient.newBuilder().setHosts(graphEndpoint).build();
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, FileColumnMapping> columnMappingConfig =
                 objectMapper.readValue(

@@ -19,5 +19,5 @@ import org.apache.tinkerpop.gremlin.GraphProviderClass;
 import org.junit.runner.RunWith;
 
 @RunWith(GremlinStandardTestSuite.class)
-@GraphProviderClass(provider = MaxTestGraphProvider.class, graph = MaxTestGraph.class)
+@GraphProviderClass(provider = GrootGraphProvider.class, graph = GrootGraph.class)
 public class GremlinStandardTest {}

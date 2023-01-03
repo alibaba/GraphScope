@@ -19,11 +19,11 @@ import io.grpc.NameResolver;
 
 import java.net.URI;
 
-public class MaxGraphNameResolverFactory extends NameResolver.Factory {
+public class GrootNameResolverFactory extends NameResolver.Factory {
 
     private NodeDiscovery discovery;
 
-    public MaxGraphNameResolverFactory(NodeDiscovery discovery) {
+    public GrootNameResolverFactory(NodeDiscovery discovery) {
         this.discovery = discovery;
     }
 

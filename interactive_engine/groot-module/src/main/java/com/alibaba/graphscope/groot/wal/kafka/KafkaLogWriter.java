@@ -15,9 +15,9 @@
  */
 package com.alibaba.graphscope.groot.wal.kafka;
 
+import com.alibaba.graphscope.compiler.api.exception.GrootException;
 import com.alibaba.graphscope.groot.wal.LogEntry;
 import com.alibaba.graphscope.groot.wal.LogWriter;
-import com.alibaba.graphscope.compiler.api.exception.GrootException;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;

@@ -13,7 +13,12 @@
  */
 package com.alibaba.graphscope.groot.servers;
 
+import com.alibaba.graphscope.common.RoleType;
+import com.alibaba.graphscope.common.util.CuratorUtils;
+import com.alibaba.graphscope.compiler.api.exception.GrootException;
 import com.alibaba.graphscope.groot.SnapshotCache;
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
+import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.coordinator.*;
 import com.alibaba.graphscope.groot.discovery.*;
 import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
@@ -21,17 +26,12 @@ import com.alibaba.graphscope.groot.meta.DefaultMetaService;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.meta.MetaStore;
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
-import com.alibaba.graphscope.groot.rpc.MaxGraphNameResolverFactory;
+import com.alibaba.graphscope.groot.rpc.GrootNameResolverFactory;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.alibaba.graphscope.groot.rpc.RpcServer;
 import com.alibaba.graphscope.groot.schema.ddl.DdlExecutors;
 import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.graphscope.groot.wal.kafka.KafkaLogService;
-import com.alibaba.graphscope.common.RoleType;
-import com.alibaba.graphscope.groot.common.config.CommonConfig;
-import com.alibaba.graphscope.groot.common.config.Configs;
-import com.alibaba.graphscope.common.util.CuratorUtils;
-import com.alibaba.graphscope.compiler.api.exception.GrootException;
 
 import io.grpc.NameResolver;
 
@@ -69,7 +69,7 @@ public class Coordinator extends NodeBase {
             this.discovery = new ZkDiscovery(configs, localNodeProvider, this.curator);
             metaStore = new ZkMetaStore(configs, this.curator);
         }
-        NameResolver.Factory nameResolverFactory = new MaxGraphNameResolverFactory(this.discovery);
+        NameResolver.Factory nameResolverFactory = new GrootNameResolverFactory(this.discovery);
         this.channelManager = new ChannelManager(configs, nameResolverFactory);
 
         RoleClients<FrontendSnapshotClient> frontendSnapshotClients =

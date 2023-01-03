@@ -15,7 +15,7 @@
  */
 package com.alibaba.graphscope.sdkcommon.meta;
 
-import com.alibaba.graphscope.sdkcommon.exception.MaxGraphException;
+import com.alibaba.graphscope.sdkcommon.exception.GrootException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -52,7 +52,7 @@ public class DataTypeDeserializer extends StdDeserializer<DataType> {
                 DataType ret = new DataType(InternalDataType.valueOf(data.toUpperCase()));
                 return ret;
             }
-        } catch (MaxGraphException ex) {
+        } catch (GrootException ex) {
             throw new IOException(ex);
         }
         return null;

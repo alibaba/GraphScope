@@ -16,24 +16,24 @@
 
 package com.alibaba.graphscope.groot.servers.ir;
 
+import com.alibaba.graphscope.common.RoleType;
 import com.alibaba.graphscope.common.client.RpcChannelFetcher;
 import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
+import com.alibaba.graphscope.compiler.api.schema.SchemaFetcher;
 import com.alibaba.graphscope.gremlin.integration.result.TestGraphFactory;
 import com.alibaba.graphscope.gremlin.service.IrGremlinServer;
-import com.alibaba.graphscope.groot.discovery.DiscoveryFactory;
-import com.alibaba.graphscope.groot.frontend.SnapshotUpdateCommitter;
-import com.alibaba.graphscope.groot.meta.MetaService;
-import com.alibaba.graphscope.groot.rpc.ChannelManager;
-import com.alibaba.graphscope.groot.store.StoreService;
-import com.alibaba.graphscope.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.FrontendConfig;
 import com.alibaba.graphscope.groot.common.config.GremlinConfig;
-import com.alibaba.graphscope.compiler.api.schema.SchemaFetcher;
+import com.alibaba.graphscope.groot.discovery.DiscoveryFactory;
+import com.alibaba.graphscope.groot.frontend.SnapshotUpdateCommitter;
+import com.alibaba.graphscope.groot.meta.MetaService;
+import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.servers.AbstractService;
 import com.alibaba.graphscope.groot.servers.ComputeServiceProducer;
+import com.alibaba.graphscope.groot.store.StoreService;
 
 import java.util.HashMap;
 import java.util.Map;

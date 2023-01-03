@@ -27,11 +27,11 @@ public interface NodeDiscovery {
 
     void removeListener(Listener listener);
 
-    MaxGraphNode getLocalNode();
+    GrootNode getLocalNode();
 
     interface Listener {
-        void nodesJoin(RoleType role, Map<Integer, MaxGraphNode> nodes);
+        void nodesJoin(RoleType role, Map<Integer, GrootNode> nodes);
 
-        void nodesLeft(RoleType role, Map<Integer, MaxGraphNode> nodes);
+        void nodesLeft(RoleType role, Map<Integer, GrootNode> nodes);
     }
 }

@@ -15,7 +15,7 @@
  */
 package com.alibaba.graphscope.sdkcommon.meta;
 
-import com.alibaba.graphscope.sdkcommon.exception.MaxGraphException;
+import com.alibaba.graphscope.sdkcommon.exception.GrootException;
 import com.alibaba.graphscope.sdkcommon.util.ExceptionUtils;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -68,14 +68,14 @@ public class DataType {
                 || this.type == InternalDataType.LONG;
     }
 
-    public void setExpression(String expression) throws MaxGraphException {
+    public void setExpression(String expression) throws GrootException {
         if (isPrimitiveType()) {
             this.expression = null;
             return;
         }
 
         if (!isValid(expression)) {
-            throw new MaxGraphException(
+            throw new GrootException(
                     ExceptionUtils.ErrorCode.DataTypeNotValid,
                     "expression is not valid, subType "
                             + "must be primitiveTypes: "

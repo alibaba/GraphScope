@@ -18,6 +18,8 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
+import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.ingestor.BatchSender;
 import com.alibaba.graphscope.groot.ingestor.StoreWriter;
 import com.alibaba.graphscope.groot.meta.MetaService;
@@ -27,8 +29,6 @@ import com.alibaba.graphscope.groot.operation.OperationBlob;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 import com.alibaba.graphscope.groot.operation.VertexId;
 import com.alibaba.graphscope.groot.operation.dml.OverwriteVertexOperation;
-import com.alibaba.graphscope.groot.common.config.CommonConfig;
-import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.sdkcommon.schema.LabelId;
 
 import org.junit.jupiter.api.Test;

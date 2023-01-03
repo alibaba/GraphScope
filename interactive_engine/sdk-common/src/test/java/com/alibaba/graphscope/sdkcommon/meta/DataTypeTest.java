@@ -15,7 +15,7 @@
  */
 package com.alibaba.graphscope.sdkcommon.meta;
 
-import com.alibaba.graphscope.sdkcommon.exception.MaxGraphException;
+import com.alibaba.graphscope.sdkcommon.exception.GrootException;
 import com.alibaba.graphscope.sdkcommon.util.JSON;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
@@ -25,7 +25,7 @@ import org.testng.annotations.Test;
 public class DataTypeTest {
 
     @Test
-    public void test() throws MaxGraphException {
+    public void test() throws GrootException {
 
         DataType dataType = new DataType(InternalDataType.SET);
         dataType.setExpression("String");
@@ -39,19 +39,19 @@ public class DataTypeTest {
         dataType.setExpression("INt,StrinG");
 
         final DataType data1 = new DataType(InternalDataType.MAP);
-        Assert.expectThrows(MaxGraphException.class, () -> data1.setExpression("INt1,StrinG"));
+        Assert.expectThrows(GrootException.class, () -> data1.setExpression("INt1,StrinG"));
 
         final DataType data2 = new DataType(InternalDataType.LIST);
         data2.setExpression("String");
         data2.setExpression("iNT");
-        Assert.expectThrows(MaxGraphException.class, () -> data2.setExpression("INt1,StrinG"));
+        Assert.expectThrows(GrootException.class, () -> data2.setExpression("INt1,StrinG"));
 
         final DataType data3 = DataType.INT;
         data3.setExpression("String");
     }
 
     @Test
-    public void testSerializer() throws MaxGraphException {
+    public void testSerializer() throws GrootException {
         DataType dataType = new DataType(InternalDataType.LIST);
         dataType.setExpression("LONG");
         Assert.assertEquals(JSON.toJson("LIST<LONG>"), JSON.toJson(dataType));
@@ -61,7 +61,7 @@ public class DataTypeTest {
     }
 
     @Test
-    public void testDeserializer() throws MaxGraphException {
+    public void testDeserializer() throws GrootException {
         DataType dataType = new DataType(InternalDataType.LIST);
         dataType.setExpression("INT");
         DataType dataType1 = JSON.fromJson(JSON.toJson(dataType), DataType.class);
@@ -85,7 +85,7 @@ public class DataTypeTest {
     }
 
     @Test
-    public void testDeserializeMember() throws MaxGraphException {
+    public void testDeserializeMember() throws GrootException {
         DataType dataType = new DataType(InternalDataType.LIST);
         dataType.setExpression("INT");
         A a = new A(dataType);

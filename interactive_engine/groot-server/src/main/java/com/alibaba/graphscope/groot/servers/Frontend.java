@@ -13,7 +13,14 @@
  */
 package com.alibaba.graphscope.groot.servers;
 
+import com.alibaba.graphscope.common.RoleType;
+import com.alibaba.graphscope.common.util.CuratorUtils;
+import com.alibaba.graphscope.common.util.RpcUtils;
+import com.alibaba.graphscope.compiler.api.exception.GrootException;
 import com.alibaba.graphscope.groot.SnapshotCache;
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
+import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.config.FrontendConfig;
 import com.alibaba.graphscope.groot.discovery.FileDiscovery;
 import com.alibaba.graphscope.groot.discovery.LocalNodeProvider;
 import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
@@ -43,17 +50,10 @@ import com.alibaba.graphscope.groot.metrics.MetricsCollectService;
 import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.rpc.AuthorizationServerInterceptor;
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
-import com.alibaba.graphscope.groot.rpc.MaxGraphNameResolverFactory;
+import com.alibaba.graphscope.groot.rpc.GrootNameResolverFactory;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.alibaba.graphscope.groot.rpc.RpcServer;
 import com.alibaba.graphscope.groot.schema.ddl.DdlExecutors;
-import com.alibaba.graphscope.common.RoleType;
-import com.alibaba.graphscope.groot.common.config.CommonConfig;
-import com.alibaba.graphscope.groot.common.config.Configs;
-import com.alibaba.graphscope.groot.common.config.FrontendConfig;
-import com.alibaba.graphscope.common.util.CuratorUtils;
-import com.alibaba.graphscope.common.util.RpcUtils;
-import com.alibaba.graphscope.compiler.api.exception.GrootException;
 import com.google.common.annotations.VisibleForTesting;
 
 import io.grpc.BindableService;
@@ -86,7 +86,7 @@ public class Frontend extends NodeBase {
             this.curator = CuratorUtils.makeCurator(configs);
             this.discovery = new ZkDiscovery(configs, localNodeProvider, this.curator);
         }
-        NameResolver.Factory nameResolverFactory = new MaxGraphNameResolverFactory(this.discovery);
+        NameResolver.Factory nameResolverFactory = new GrootNameResolverFactory(this.discovery);
         this.channelManager = new ChannelManager(configs, nameResolverFactory);
         SnapshotCache snapshotCache = new SnapshotCache();
         this.metaService = new DefaultMetaService(configs);

@@ -26,7 +26,7 @@ import com.alibaba.graphscope.compiler.api.schema.GraphElement;
 import com.alibaba.graphscope.compiler.api.schema.GraphProperty;
 import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
 import com.alibaba.graphscope.compiler.api.schema.GraphVertex;
-import com.alibaba.graphscope.sdkcommon.exception.MaxGraphException;
+import com.alibaba.graphscope.sdkcommon.exception.GrootException;
 import com.alibaba.graphscope.sdkcommon.meta.InternalDataType;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -179,7 +179,7 @@ public class DefaultGraphSchema implements GraphSchema {
                                                 StringUtils.removeStart(
                                                         propDataTypeString, "LIST<"),
                                                 ">"));
-                            } catch (MaxGraphException e) {
+                            } catch (GrootException e) {
                                 throw new RuntimeException(e);
                             }
                         } else {

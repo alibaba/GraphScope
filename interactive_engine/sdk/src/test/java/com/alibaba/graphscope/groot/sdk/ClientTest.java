@@ -31,7 +31,7 @@ public class ClientTest {
 
     String host = "localhost";
     int port = 55556;
-    MaxGraphClient client = MaxGraphClient.newBuilder().addHost(host, port).build();
+    GrootClient client = GrootClient.newBuilder().addHost(host, port).build();
 
     @Test
     void testIngestData() {

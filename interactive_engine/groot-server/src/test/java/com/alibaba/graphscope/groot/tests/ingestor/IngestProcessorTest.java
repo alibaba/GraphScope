@@ -15,6 +15,7 @@ package com.alibaba.graphscope.groot.tests.ingestor;
 
 import static org.mockito.Mockito.*;
 
+import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.ingestor.BatchSender;
 import com.alibaba.graphscope.groot.ingestor.IngestCallback;
 import com.alibaba.graphscope.groot.ingestor.IngestProcessor;
@@ -24,7 +25,6 @@ import com.alibaba.graphscope.groot.wal.LogReader;
 import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.graphscope.groot.wal.LogWriter;
 import com.alibaba.graphscope.groot.wal.ReadLogEntry;
-import com.alibaba.graphscope.groot.common.config.Configs;
 
 import org.junit.jupiter.api.Test;
 

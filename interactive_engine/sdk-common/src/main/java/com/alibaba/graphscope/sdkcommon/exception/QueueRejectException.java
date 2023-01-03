@@ -17,7 +17,7 @@ package com.alibaba.graphscope.sdkcommon.exception;
 
 import com.alibaba.graphscope.sdkcommon.util.ExceptionUtils;
 
-public class QueueRejectException extends MaxGraphException {
+public class QueueRejectException extends GrootException {
     public QueueRejectException(String msg) {
         super(ExceptionUtils.ErrorCode.QueueReject, msg);
     }

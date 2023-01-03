@@ -19,15 +19,15 @@ package com.alibaba.graphscope.groot.tests.ffi;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.alibaba.graphscope.groot.store.StoreService;
-import com.alibaba.graphscope.groot.store.jna.GraphLibrary;
-import com.alibaba.graphscope.groot.store.jna.JnaGraphStore;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.servers.MaxNode;
 import com.alibaba.graphscope.groot.servers.NodeBase;
 import com.alibaba.graphscope.groot.servers.Store;
-import com.alibaba.graphscope.groot.tests.gremlin.MaxTestGraph;
-import com.alibaba.graphscope.groot.tests.gremlin.MaxTestGraphProvider;
+import com.alibaba.graphscope.groot.store.StoreService;
+import com.alibaba.graphscope.groot.store.jna.GraphLibrary;
+import com.alibaba.graphscope.groot.store.jna.JnaGraphStore;
+import com.alibaba.graphscope.groot.tests.gremlin.GrootGraph;
+import com.alibaba.graphscope.groot.tests.gremlin.GrootGraphProvider;
 import com.sun.jna.Pointer;
 
 import org.apache.commons.configuration2.Configuration;
@@ -48,7 +48,7 @@ public class FfiTest {
 
     @Test
     public void testFfi() throws Exception {
-        GraphProvider provider = new MaxTestGraphProvider();
+        GraphProvider provider = new GrootGraphProvider();
         LoadGraphWith.GraphData modern = LoadGraphWith.GraphData.MODERN;
         Map<String, Object> conf = new HashMap<>();
         conf.put(CommonConfig.STORE_NODE_COUNT.getKey(), "1");
@@ -70,7 +70,7 @@ public class FfiTest {
                     }
                 };
         provider.loadGraphData(graph, loadGraphWith, FfiTest.class, "testFfi");
-        MaxNode maxNode = ((MaxTestGraph) graph).getMaxNode();
+        MaxNode maxNode = ((GrootGraph) graph).getMaxNode();
         List<NodeBase> storeNodes = maxNode.getStores();
         assertEquals(storeNodes.size(), 1);
         Store store = (Store) storeNodes.get(0);

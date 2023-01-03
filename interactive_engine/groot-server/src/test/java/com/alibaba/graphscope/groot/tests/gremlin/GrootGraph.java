@@ -13,14 +13,14 @@
  */
 package com.alibaba.graphscope.groot.tests.gremlin;
 
-import com.alibaba.graphscope.groot.sdk.MaxGraphClient;
+import com.alibaba.graphscope.compiler.api.exception.GrootException;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.GremlinConfig;
-import com.alibaba.graphscope.compiler.api.exception.GrootException;
-import com.alibaba.graphscope.sdkcommon.io.MaxGraphIORegistry;
+import com.alibaba.graphscope.groot.sdk.GrootClient;
 import com.alibaba.graphscope.groot.servers.MaxNode;
 import com.alibaba.graphscope.groot.servers.NodeBase;
+import com.alibaba.graphscope.sdkcommon.io.GrootIORegistry;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.LoadGraphWith;
@@ -1521,18 +1521,18 @@ import java.util.Map;
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ValueMapTest",
         method = "g_V_valueMapXname_ageX",
         reason = "unsupported")
-public class MaxTestGraph implements Graph {
-    private static final Logger logger = LoggerFactory.getLogger(MaxTestGraph.class);
+public class GrootGraph implements Graph {
+    private static final Logger logger = LoggerFactory.getLogger(GrootGraph.class);
 
-    public static MaxTestGraph INSTANCE = null;
+    public static GrootGraph INSTANCE = null;
 
     private NodeBase maxNode;
     private RemoteConnection remoteConnection;
     private Cluster cluster;
 
-    private MaxGraphClient ddlClient;
+    private GrootClient ddlClient;
 
-    public MaxTestGraph(Configs configs) {
+    public GrootGraph(Configs configs) {
         try {
             this.maxNode = new MaxNode(configs);
             this.maxNode.start();
@@ -1541,7 +1541,7 @@ public class MaxTestGraph implements Graph {
             Thread.sleep(3000);
             int port = GremlinConfig.GREMLIN_PORT.get(configs);
             this.cluster = createCluster("localhost", port);
-            this.ddlClient = MaxGraphClient.newBuilder().addHost("localhost", 55556).build();
+            this.ddlClient = GrootClient.newBuilder().addHost("localhost", 55556).build();
             this.remoteConnection = DriverRemoteConnection.using(cluster);
         } catch (Throwable e) {
             this.closeGraph();
@@ -1549,7 +1549,7 @@ public class MaxTestGraph implements Graph {
         }
     }
 
-    public static MaxTestGraph open(final Configuration conf) throws Exception {
+    public static GrootGraph open(final Configuration conf) throws Exception {
         if (INSTANCE == null) {
             logger.info("open new MaxTestGraph");
             String log4rsPath =
@@ -1562,13 +1562,13 @@ public class MaxTestGraph implements Graph {
             Configs.Builder builder = Configs.newBuilder();
             conf.getKeys().forEachRemaining((k) -> builder.put(k, conf.getString(k)));
             Configs configs = builder.put(CommonConfig.LOG4RS_CONFIG.getKey(), log4rsPath).build();
-            INSTANCE = new MaxTestGraph(configs);
+            INSTANCE = new GrootGraph(configs);
         }
         return INSTANCE;
     }
 
     private Cluster createCluster(String ip, int port) {
-        GryoMapper.Builder kryo = GryoMapper.build().addRegistry(MaxGraphIORegistry.instance());
+        GryoMapper.Builder kryo = GryoMapper.build().addRegistry(GrootIORegistry.instance());
         MessageSerializer serializer = new GryoMessageSerializerV1d0(kryo);
         return Cluster.build()
                 .maxContentLength(65536000)

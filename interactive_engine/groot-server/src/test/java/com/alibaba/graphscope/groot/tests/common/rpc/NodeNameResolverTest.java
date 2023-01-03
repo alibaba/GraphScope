@@ -15,10 +15,10 @@ package com.alibaba.graphscope.groot.tests.common.rpc;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.alibaba.graphscope.groot.discovery.MaxGraphNode;
-import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
-import com.alibaba.graphscope.groot.rpc.MaxGraphNameResolverFactory;
 import com.alibaba.graphscope.common.RoleType;
+import com.alibaba.graphscope.groot.discovery.GrootNode;
+import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
+import com.alibaba.graphscope.groot.rpc.GrootNameResolverFactory;
 
 import io.grpc.ConnectivityState;
 import io.grpc.ManagedChannel;
@@ -45,8 +45,7 @@ public class NodeNameResolverTest {
 
         ManagedChannel channel =
                 ManagedChannelBuilder.forTarget(uri)
-                        .nameResolverFactory(
-                                new MaxGraphNameResolverFactory(new MockDiscovery(port)))
+                        .nameResolverFactory(new GrootNameResolverFactory(new MockDiscovery(port)))
                         .usePlaintext()
                         .build();
         CountDownLatch latch = new CountDownLatch(1);
@@ -87,7 +86,7 @@ public class NodeNameResolverTest {
             listener.nodesJoin(
                     RoleType.STORE,
                     Collections.singletonMap(
-                            0, new MaxGraphNode(RoleType.STORE.getName(), 0, "localhost", port)));
+                            0, new GrootNode(RoleType.STORE.getName(), 0, "localhost", port)));
         }
 
         @Override
@@ -95,11 +94,11 @@ public class NodeNameResolverTest {
             listener.nodesLeft(
                     RoleType.STORE,
                     Collections.singletonMap(
-                            0, new MaxGraphNode(RoleType.STORE.getName(), 0, "localhost", port)));
+                            0, new GrootNode(RoleType.STORE.getName(), 0, "localhost", port)));
         }
 
         @Override
-        public MaxGraphNode getLocalNode() {
+        public GrootNode getLocalNode() {
             return null;
         }
     }

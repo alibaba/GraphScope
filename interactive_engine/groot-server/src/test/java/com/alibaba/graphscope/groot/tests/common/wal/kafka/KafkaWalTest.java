@@ -15,6 +15,9 @@ package com.alibaba.graphscope.groot.tests.common.wal.kafka;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
+import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.config.KafkaConfig;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.operation.OperationBlob;
 import com.alibaba.graphscope.groot.wal.LogEntry;
@@ -23,9 +26,6 @@ import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.graphscope.groot.wal.LogWriter;
 import com.alibaba.graphscope.groot.wal.ReadLogEntry;
 import com.alibaba.graphscope.groot.wal.kafka.KafkaLogService;
-import com.alibaba.graphscope.groot.common.config.CommonConfig;
-import com.alibaba.graphscope.groot.common.config.Configs;
-import com.alibaba.graphscope.groot.common.config.KafkaConfig;
 import com.salesforce.kafka.test.junit5.SharedKafkaTestResource;
 
 import org.junit.jupiter.api.Test;

@@ -17,10 +17,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 import com.alibaba.graphscope.groot.store.SnapshotSortQueue;
-import com.alibaba.graphscope.groot.common.config.Configs;
 
 import org.junit.jupiter.api.Test;
 

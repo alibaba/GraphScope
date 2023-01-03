@@ -17,7 +17,7 @@ package com.alibaba.graphscope.sdkcommon.exception;
 
 import com.alibaba.graphscope.sdkcommon.util.ExceptionUtils;
 
-public class AuthException extends MaxGraphException {
+public class AuthException extends GrootException {
     public AuthException(ExceptionUtils.ErrorCode code, String msg) {
         super(code, msg);
     }

@@ -15,6 +15,7 @@ package com.alibaba.graphscope.groot.tests.common.schema.ddl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.alibaba.graphscope.compiler.api.schema.DataType;
 import com.alibaba.graphscope.groot.operation.Operation;
 import com.alibaba.graphscope.groot.operation.ddl.AddEdgeKindOperation;
 import com.alibaba.graphscope.groot.operation.ddl.CreateEdgeTypeOperation;
@@ -31,7 +32,6 @@ import com.alibaba.graphscope.groot.schema.request.DdlRequestBatch;
 import com.alibaba.graphscope.groot.schema.request.DropEdgeTypeRequest;
 import com.alibaba.graphscope.groot.schema.request.DropVertexTypeRequest;
 import com.alibaba.graphscope.groot.schema.request.RemoveEdgeKindRequest;
-import com.alibaba.graphscope.compiler.api.schema.DataType;
 import com.alibaba.graphscope.proto.groot.DdlRequestBatchPb;
 import com.alibaba.graphscope.proto.groot.GraphDefPb;
 import com.alibaba.graphscope.sdkcommon.schema.EdgeKind;

@@ -15,7 +15,7 @@ package com.alibaba.graphscope.groot.common.config;
 
 public class StoreConfig {
     public static final Config<String> STORE_DATA_PATH =
-            Config.stringConfig("store.data.path", "/maxgraph_data");
+            Config.stringConfig("store.data.path", "/groot_data");
 
     public static final Config<Integer> STORE_WRITE_THREAD_COUNT =
             Config.intConfig("store.write.thread.count", 1);

@@ -13,12 +13,12 @@
  */
 package com.alibaba.graphscope.groot.store.jna;
 
+import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.config.StoreConfig;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.store.GraphPartition;
 import com.alibaba.graphscope.groot.store.GraphPartitionBackup;
 import com.alibaba.graphscope.groot.store.external.ExternalStorage;
-import com.alibaba.graphscope.groot.common.config.Configs;
-import com.alibaba.graphscope.groot.common.config.StoreConfig;
 import com.alibaba.graphscope.proto.groot.GraphDefPb;
 import com.sun.jna.Pointer;
 

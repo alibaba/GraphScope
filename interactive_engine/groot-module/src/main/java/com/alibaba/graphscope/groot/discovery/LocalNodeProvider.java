@@ -14,18 +14,18 @@
 package com.alibaba.graphscope.groot.discovery;
 
 import com.alibaba.graphscope.common.RoleType;
+import com.alibaba.graphscope.compiler.api.exception.GrootException;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
-import com.alibaba.graphscope.compiler.api.exception.GrootException;
 
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
-public class LocalNodeProvider implements Function<Integer, MaxGraphNode> {
+public class LocalNodeProvider implements Function<Integer, GrootNode> {
 
     private Configs configs;
     private RoleType roleType;
-    private AtomicReference<MaxGraphNode> localNodeRef = new AtomicReference<>();
+    private AtomicReference<GrootNode> localNodeRef = new AtomicReference<>();
 
     public LocalNodeProvider(Configs configs) {
         this(RoleType.fromName(CommonConfig.ROLE_NAME.get(configs)), configs);
@@ -37,10 +37,10 @@ public class LocalNodeProvider implements Function<Integer, MaxGraphNode> {
     }
 
     @Override
-    public MaxGraphNode apply(Integer port) {
+    public GrootNode apply(Integer port) {
         boolean suc =
                 localNodeRef.compareAndSet(
-                        null, MaxGraphNode.createGraphNode(roleType, configs, port));
+                        null, GrootNode.createGraphNode(roleType, configs, port));
         if (!suc) {
             if (!CommonConfig.DISCOVERY_MODE.get(this.configs).equalsIgnoreCase("file")) {
                 throw new GrootException("localNode can only be set once");
@@ -49,7 +49,7 @@ public class LocalNodeProvider implements Function<Integer, MaxGraphNode> {
         return localNodeRef.get();
     }
 
-    public MaxGraphNode get() {
+    public GrootNode get() {
         return localNodeRef.get();
     }
 }

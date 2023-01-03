@@ -16,15 +16,15 @@ package com.alibaba.graphscope.groot.tests.store;
 import static org.mockito.Mockito.*;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.common.config.BackupConfig;
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
+import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.store.BackupAgent;
 import com.alibaba.graphscope.groot.store.GraphPartition;
 import com.alibaba.graphscope.groot.store.StoreBackupId;
 import com.alibaba.graphscope.groot.store.StoreService;
 import com.alibaba.graphscope.groot.store.jna.JnaGraphBackupEngine;
 import com.alibaba.graphscope.groot.store.jna.JnaGraphStore;
-import com.alibaba.graphscope.groot.common.config.BackupConfig;
-import com.alibaba.graphscope.groot.common.config.CommonConfig;
-import com.alibaba.graphscope.groot.common.config.Configs;
 
 import org.junit.jupiter.api.Test;
 

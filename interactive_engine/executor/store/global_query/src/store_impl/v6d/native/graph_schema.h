@@ -42,7 +42,7 @@ using PropertyType = std::shared_ptr<arrow::DataType>;
 
 class MGPropertyGraphSchema {
   enum class SchemaType {
-    kMaxGraph,
+    kInteractive,
     kAnalytical,
   };
 
@@ -81,7 +81,7 @@ class MGPropertyGraphSchema {
 
   void DumpToFile(std::string const& path);
 
-  MGPropertyGraphSchema TransformToMaxGraph();
+  MGPropertyGraphSchema TransformToInteractive();
 
   const std::vector<Entry>& VertexEntries() const { return vertex_entries_; }
 

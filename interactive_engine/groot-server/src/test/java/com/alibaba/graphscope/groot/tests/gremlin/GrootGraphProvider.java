@@ -13,8 +13,8 @@
  */
 package com.alibaba.graphscope.groot.tests.gremlin;
 
-import com.alibaba.graphscope.groot.common.config.StoreConfig;
 import com.alibaba.graphscope.compiler.api.exception.GrootException;
+import com.alibaba.graphscope.groot.common.config.StoreConfig;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.AbstractGraphProvider;
@@ -29,11 +29,11 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.*;
 
-public class MaxTestGraphProvider extends AbstractGraphProvider implements AutoCloseable {
+public class GrootGraphProvider extends AbstractGraphProvider implements AutoCloseable {
 
-    private static final Logger logger = LoggerFactory.getLogger(MaxTestGraphProvider.class);
+    private static final Logger logger = LoggerFactory.getLogger(GrootGraphProvider.class);
 
-    private MaxTestGraph graph;
+    private GrootGraph graph;
     private String storeDataPath;
 
     private Set<LoadGraphWith.GraphData> loadedGraphs = new HashSet<>();
@@ -53,7 +53,7 @@ public class MaxTestGraphProvider extends AbstractGraphProvider implements AutoC
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        properties.put(Graph.GRAPH, MaxTestGraph.class.getName());
+        properties.put(Graph.GRAPH, GrootGraph.class.getName());
         if (this.storeDataPath == null) {
             this.storeDataPath = makeTestDirectory(graphName, test, testMethodName);
         }
@@ -64,7 +64,7 @@ public class MaxTestGraphProvider extends AbstractGraphProvider implements AutoC
     @Override
     public void clear(Graph graph, Configuration configuration) throws Exception {
         if (graph != null) {
-            this.graph = (MaxTestGraph) graph;
+            this.graph = (GrootGraph) graph;
         }
     }
 
@@ -75,8 +75,8 @@ public class MaxTestGraphProvider extends AbstractGraphProvider implements AutoC
         LoadGraphWith.GraphData graphData = LoadGraphWith.GraphData.MODERN;
         if (loadedGraphs.contains(graphData)) return;
         try {
-            ((MaxTestGraph) graph).loadSchema(graphData);
-            ((MaxTestGraph) graph).loadData(graphData);
+            ((GrootGraph) graph).loadSchema(graphData);
+            ((GrootGraph) graph).loadData(graphData);
             loadedGraphs.add(graphData);
         } catch (URISyntaxException | IOException e) {
             logger.error("load schema failed", e);

@@ -13,12 +13,12 @@
  */
 package com.alibaba.graphscope.groot.frontend;
 
+import com.alibaba.graphscope.compiler.api.schema.*;
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.metrics.MetricsAggregator;
 import com.alibaba.graphscope.groot.schema.request.*;
-import com.alibaba.graphscope.compiler.api.schema.*;
 import com.alibaba.graphscope.proto.DataLoadTargetPb;
 import com.alibaba.graphscope.proto.groot.*;
 import com.alibaba.graphscope.proto.groot.CommitDataLoadRequest;

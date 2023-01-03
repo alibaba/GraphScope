@@ -13,9 +13,9 @@
  */
 package com.alibaba.graphscope.groot.tests.gremlin;
 
-import com.alibaba.graphscope.groot.sdk.MaxGraphClient;
 import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
-import com.alibaba.graphscope.sdkcommon.io.MaxGraphIORegistry;
+import com.alibaba.graphscope.groot.sdk.GrootClient;
+import com.alibaba.graphscope.sdkcommon.io.GrootIORegistry;
 import com.alibaba.graphscope.sdkcommon.schema.GraphDef;
 
 import org.apache.commons.configuration2.Configuration;
@@ -442,12 +442,12 @@ public class RemoteTestGraph implements Graph {
     private RemoteConnection remoteConnection;
     private Cluster cluster;
     private boolean started = false;
-    private MaxGraphClient sdkClient;
+    private GrootClient sdkClient;
 
     public RemoteTestGraph(String host, int port) {
         this.cluster = createCluster(host, port);
         this.remoteConnection = DriverRemoteConnection.using(cluster);
-        this.sdkClient = MaxGraphClient.newBuilder().addHost(host, 55555).build();
+        this.sdkClient = GrootClient.newBuilder().addHost(host, 55555).build();
         this.started = true;
     }
 
@@ -458,7 +458,7 @@ public class RemoteTestGraph implements Graph {
     }
 
     private Cluster createCluster(String ip, int port) {
-        GryoMapper.Builder kryo = GryoMapper.build().addRegistry(MaxGraphIORegistry.instance());
+        GryoMapper.Builder kryo = GryoMapper.build().addRegistry(GrootIORegistry.instance());
         MessageSerializer serializer = new GryoMessageSerializerV1d0(kryo);
         return Cluster.build()
                 .maxContentLength(65536000)

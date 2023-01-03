@@ -13,9 +13,9 @@
  */
 package com.alibaba.graphscope.groot.coordinator;
 
-import com.alibaba.graphscope.groot.meta.MetaStore;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.CoordinatorConfig;
+import com.alibaba.graphscope.groot.meta.MetaStore;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

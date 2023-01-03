@@ -69,8 +69,8 @@ impl GaiaServer {
         let gaia_rpc_config = make_gaia_rpc_config(self.config.clone());
         info!("Server config {:?}\nRPC config {:?}", gaia_config, gaia_rpc_config);
         let (server_port, rpc_port) = self.rpc_runtime.block_on(async {
-            let query_maxgraph = QueryGrootGraph::new(self.graph.clone(), self.graph.clone());
-            let job_compiler = query_maxgraph.initialize_job_assembly();
+            let query = QueryGrootGraph::new(self.graph.clone(), self.graph.clone());
+            let job_compiler = query.initialize_job_assembly();
             let service_listener = GaiaServiceListener::default();
             let service_listener_clone = service_listener.clone();
             self.rpc_runtime.spawn(async move {

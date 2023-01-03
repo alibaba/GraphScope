@@ -1,5 +1,12 @@
 package com.alibaba.graphscope.groot.frontend.write;
 
+import com.alibaba.graphscope.common.util.WriteSessionUtil;
+import com.alibaba.graphscope.compiler.api.exception.GrootException;
+import com.alibaba.graphscope.compiler.api.exception.PropertyDefNotFoundException;
+import com.alibaba.graphscope.compiler.api.schema.DataType;
+import com.alibaba.graphscope.compiler.api.schema.GraphElement;
+import com.alibaba.graphscope.compiler.api.schema.GraphProperty;
+import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
@@ -12,13 +19,6 @@ import com.alibaba.graphscope.groot.operation.OperationType;
 import com.alibaba.graphscope.groot.operation.VertexId;
 import com.alibaba.graphscope.groot.operation.dml.*;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
-import com.alibaba.graphscope.common.util.WriteSessionUtil;
-import com.alibaba.graphscope.compiler.api.exception.GrootException;
-import com.alibaba.graphscope.compiler.api.exception.PropertyDefNotFoundException;
-import com.alibaba.graphscope.compiler.api.schema.DataType;
-import com.alibaba.graphscope.compiler.api.schema.GraphElement;
-import com.alibaba.graphscope.compiler.api.schema.GraphProperty;
-import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
 import com.alibaba.graphscope.sdkcommon.common.EdgeRecordKey;
 import com.alibaba.graphscope.sdkcommon.common.VertexRecordKey;
 import com.alibaba.graphscope.sdkcommon.schema.EdgeKind;

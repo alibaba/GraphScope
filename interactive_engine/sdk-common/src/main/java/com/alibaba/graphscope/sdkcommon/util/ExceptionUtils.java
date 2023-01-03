@@ -15,7 +15,7 @@
  */
 package com.alibaba.graphscope.sdkcommon.util;
 
-import com.alibaba.graphscope.sdkcommon.exception.MaxGraphException;
+import com.alibaba.graphscope.sdkcommon.exception.GrootException;
 import com.alibaba.graphscope.sdkcommon.exception.QueueRejectException;
 
 public class ExceptionUtils {
@@ -132,7 +132,7 @@ public class ExceptionUtils {
         }
     }
 
-    public static void checkAndThrow(int errCode, String errMsg) throws MaxGraphException {
+    public static void checkAndThrow(int errCode, String errMsg) throws GrootException {
         ErrorCode errorCode = ErrorCode.fromInt(errCode);
         switch (errorCode) {
             case OK:
@@ -142,7 +142,7 @@ public class ExceptionUtils {
             case QueueReject:
                 throw new QueueRejectException(errMsg);
             default:
-                throw new MaxGraphException(errorCode, errMsg);
+                throw new GrootException(errorCode, errMsg);
         }
     }
 }

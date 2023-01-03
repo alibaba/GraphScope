@@ -15,8 +15,8 @@
  */
 package com.alibaba.graphscope.groot.wal.kafka;
 
-import com.alibaba.graphscope.groot.wal.LogEntry;
 import com.alibaba.graphscope.compiler.api.exception.GrootException;
+import com.alibaba.graphscope.groot.wal.LogEntry;
 import com.alibaba.graphscope.proto.groot.LogEntryPb;
 import com.google.protobuf.InvalidProtocolBufferException;
 

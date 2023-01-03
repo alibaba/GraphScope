@@ -1,7 +1,7 @@
 package com.alibaba.graphscope.groot.coordinator;
 
-import com.alibaba.graphscope.groot.meta.MetaStore;
 import com.alibaba.graphscope.compiler.api.exception.GrootException;
+import com.alibaba.graphscope.groot.meta.MetaStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.FileNotFoundException;

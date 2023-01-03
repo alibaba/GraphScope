@@ -204,11 +204,9 @@
 
 The following files
 
-   interactive_engine/tests/src/test/java/com/alibaba/maxgraph/function/test/gremlin/GremlinStandardTestSuite.java
-   interactive_engine/src/frontend/compiler/src/main/java/com/alibaba/maxgraph/server/AbstractMixedOpProcessor.java
-   interactive_engine/src/frontend/compiler/src/main/java/com/alibaba/maxgraph/tinkerpop/traversal/DefaultMaxGraphTraversal.java
-   interactive_engine/tests/src/main/java/com/alibaba/maxgraph/function/test/RemoteTestGraph.java
-   interactive_engine/tests/src/test/java/com/alibaba/maxgraph/function/test/gremlin/GratefulProcessTest.java
+   interactive_engine/tests/src/test/java/com/alibaba/graphscope/function/test/gremlin/GremlinStandardTestSuite.java
+   interactive_engine/tests/src/main/java/com/alibaba/graphscope/function/test/RemoteTestGraph.java
+   interactive_engine/tests/src/test/java/com/alibaba/graphscope/function/test/gremlin/GratefulProcessTest.java
 
 are referred and derived from the tinkerpop project, which have the following license:
 

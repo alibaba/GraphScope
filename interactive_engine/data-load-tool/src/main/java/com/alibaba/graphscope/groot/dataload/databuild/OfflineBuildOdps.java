@@ -13,12 +13,12 @@
  */
 package com.alibaba.graphscope.groot.dataload.databuild;
 
-import com.alibaba.graphscope.groot.dataload.util.HttpClient;
-import com.alibaba.graphscope.groot.sdk.MaxGraphClient;
 import com.alibaba.graphscope.compiler.api.schema.*;
 import com.alibaba.graphscope.compiler.api.schema.GraphEdge;
 import com.alibaba.graphscope.compiler.api.schema.GraphElement;
 import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
+import com.alibaba.graphscope.groot.dataload.util.HttpClient;
+import com.alibaba.graphscope.groot.sdk.GrootClient;
 import com.alibaba.graphscope.sdkcommon.common.DataLoadTarget;
 import com.alibaba.graphscope.sdkcommon.schema.GraphSchemaMapper;
 import com.alibaba.graphscope.sdkcommon.util.UuidUtils;
@@ -121,8 +121,8 @@ public class OfflineBuildOdps {
         String username = properties.getProperty(USER_NAME);
         String password = properties.getProperty(PASS_WORD);
 
-        MaxGraphClient client =
-                MaxGraphClient.newBuilder()
+        GrootClient client =
+                GrootClient.newBuilder()
                         .setHosts(graphEndpoint)
                         .setUsername(username)
                         .setPassword(password)

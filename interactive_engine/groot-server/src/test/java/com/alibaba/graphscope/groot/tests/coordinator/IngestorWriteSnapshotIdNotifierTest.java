@@ -15,11 +15,11 @@ package com.alibaba.graphscope.groot.tests.coordinator;
 
 import static org.mockito.Mockito.*;
 
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
+import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.coordinator.IngestorSnapshotClient;
 import com.alibaba.graphscope.groot.coordinator.IngestorWriteSnapshotIdNotifier;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
-import com.alibaba.graphscope.groot.common.config.CommonConfig;
-import com.alibaba.graphscope.groot.common.config.Configs;
 
 import org.junit.jupiter.api.Test;
 

@@ -29,9 +29,9 @@ global_ctx = dict()
 local_ctx = dict()
 
 
-class MaxGraphTestServer(BaseHTTPRequestHandler):
+class InteractiveTestServer(BaseHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
-        super(MaxGraphTestServer, self).__init__(*args, **kwargs)
+        super(InteractiveTestServer, self).__init__(*args, **kwargs)
 
     def _set_response(self):
         self.send_response(200)
@@ -73,7 +73,7 @@ class MaxGraphTestServer(BaseHTTPRequestHandler):
         logging.info("eval done")
 
 
-def run(server_class=HTTPServer, handler_class=MaxGraphTestServer, port=8080):
+def run(server_class=HTTPServer, handler_class=InteractiveTestServer, port=8080):
     logging.basicConfig(level=logging.INFO)
     server_address = ("", port)
     httpd = server_class(server_address, handler_class)

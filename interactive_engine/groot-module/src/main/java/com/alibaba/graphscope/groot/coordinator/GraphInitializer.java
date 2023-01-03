@@ -13,12 +13,12 @@
  */
 package com.alibaba.graphscope.groot.coordinator;
 
-import com.alibaba.graphscope.groot.meta.MetaStore;
-import com.alibaba.graphscope.groot.wal.LogService;
+import com.alibaba.graphscope.compiler.api.exception.GrootException;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.ZkConfig;
-import com.alibaba.graphscope.compiler.api.exception.GrootException;
+import com.alibaba.graphscope.groot.meta.MetaStore;
+import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.graphscope.sdkcommon.common.BackupInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

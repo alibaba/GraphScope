@@ -17,12 +17,12 @@ package com.alibaba.graphscope.sdkcommon.io;
 
 import org.apache.tinkerpop.gremlin.structure.io.AbstractIoRegistry;
 
-public class MaxGraphIORegistry extends AbstractIoRegistry {
-    private static final MaxGraphIORegistry INSTANCE = new MaxGraphIORegistry();
+public class GrootIORegistry extends AbstractIoRegistry {
+    private static final GrootIORegistry INSTANCE = new GrootIORegistry();
 
-    public MaxGraphIORegistry() {}
+    public GrootIORegistry() {}
 
-    public static MaxGraphIORegistry instance() {
+    public static GrootIORegistry instance() {
         return INSTANCE;
     }
 }

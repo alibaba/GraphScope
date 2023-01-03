@@ -14,10 +14,10 @@
 package com.alibaba.graphscope.groot.discovery;
 
 import com.alibaba.graphscope.common.RoleType;
-import com.alibaba.graphscope.groot.common.config.Configs;
-import com.alibaba.graphscope.groot.common.config.ZkConfig;
 import com.alibaba.graphscope.common.util.ThreadFactoryUtils;
 import com.alibaba.graphscope.compiler.api.exception.GrootException;
+import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.config.ZkConfig;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.state.ConnectionState;
@@ -43,14 +43,14 @@ public class ZkDiscovery implements NodeDiscovery {
     public static final String ROOT_NODE = "discovery";
 
     private List<Listener> listeners = new ArrayList<>();
-    private ServiceDiscovery<MaxGraphNode> serviceDiscovery;
-    private List<ServiceCache<MaxGraphNode>> serviceCaches;
+    private ServiceDiscovery<GrootNode> serviceDiscovery;
+    private List<ServiceCache<GrootNode>> serviceCaches;
 
     private LocalNodeProvider localNodeProvider;
     private CuratorFramework curator;
     private String discoveryBasePath;
     private ExecutorService singleThreadExecutor;
-    private AtomicReference<Map<RoleType, Map<Integer, MaxGraphNode>>> currentNodesRef =
+    private AtomicReference<Map<RoleType, Map<Integer, GrootNode>>> currentNodesRef =
             new AtomicReference<>(new HashMap<>());
 
     private Object lock = new Object();
@@ -70,7 +70,7 @@ public class ZkDiscovery implements NodeDiscovery {
     @Override
     public void start() {
         try {
-            MaxGraphNode localNode = localNodeProvider.get();
+            GrootNode localNode = localNodeProvider.get();
             this.currentNodesRef = new AtomicReference<>(new HashMap<>());
             this.singleThreadExecutor =
                     new ThreadPoolExecutor(
@@ -81,17 +81,17 @@ public class ZkDiscovery implements NodeDiscovery {
                             new LinkedBlockingQueue<>(),
                             ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                     "zk-discovery", logger));
-            ServiceInstance<MaxGraphNode> instance =
-                    ServiceInstance.<MaxGraphNode>builder()
+            ServiceInstance<GrootNode> instance =
+                    ServiceInstance.<GrootNode>builder()
                             .name(localNode.getRoleName())
                             .id(String.valueOf(localNode.getIdx()))
                             .payload(localNode)
                             .build();
-            JsonInstanceSerializer<MaxGraphNode> serializer =
-                    new JsonInstanceSerializer<>(MaxGraphNode.class);
+            JsonInstanceSerializer<GrootNode> serializer =
+                    new JsonInstanceSerializer<>(GrootNode.class);
 
             this.serviceDiscovery =
-                    ServiceDiscoveryBuilder.builder(MaxGraphNode.class)
+                    ServiceDiscoveryBuilder.builder(GrootNode.class)
                             .client(curator)
                             .basePath(discoveryBasePath)
                             .serializer(serializer)
@@ -107,7 +107,7 @@ public class ZkDiscovery implements NodeDiscovery {
             RoleType[] roleTypes = RoleType.values();
             this.serviceCaches = new ArrayList<>(roleTypes.length);
             for (RoleType role : roleTypes) {
-                ServiceCache<MaxGraphNode> serviceCache =
+                ServiceCache<GrootNode> serviceCache =
                         this.serviceDiscovery.serviceCacheBuilder().name(role.getName()).build();
                 NodeChangeListener listener = new NodeChangeListener(role, serviceCache);
                 serviceCache.addListener(listener, this.singleThreadExecutor);
@@ -124,7 +124,7 @@ public class ZkDiscovery implements NodeDiscovery {
     @Override
     public void stop() {
         if (this.serviceCaches != null) {
-            for (ServiceCache<MaxGraphNode> serviceCache : this.serviceCaches) {
+            for (ServiceCache<GrootNode> serviceCache : this.serviceCaches) {
                 try {
                     serviceCache.close();
                 } catch (Exception e) {
@@ -146,9 +146,9 @@ public class ZkDiscovery implements NodeDiscovery {
     private class NodeChangeListener implements ServiceCacheListener {
 
         private RoleType roleType;
-        private ServiceCache<MaxGraphNode> serviceCache;
+        private ServiceCache<GrootNode> serviceCache;
 
-        public NodeChangeListener(RoleType roleType, ServiceCache<MaxGraphNode> serviceCache) {
+        public NodeChangeListener(RoleType roleType, ServiceCache<GrootNode> serviceCache) {
             this.roleType = roleType;
             this.serviceCache = serviceCache;
         }
@@ -157,23 +157,23 @@ public class ZkDiscovery implements NodeDiscovery {
         public void cacheChanged() {
             logger.debug("cacheChanged. roleType [" + roleType.getName() + "]");
             synchronized (lock) {
-                Map<Integer, MaxGraphNode> newRoleNodes = new HashMap<>();
-                for (ServiceInstance<MaxGraphNode> instance : this.serviceCache.getInstances()) {
-                    MaxGraphNode maxGraphNode = instance.getPayload();
-                    newRoleNodes.put(maxGraphNode.getIdx(), maxGraphNode);
+                Map<Integer, GrootNode> newRoleNodes = new HashMap<>();
+                for (ServiceInstance<GrootNode> instance : this.serviceCache.getInstances()) {
+                    GrootNode grootNode = instance.getPayload();
+                    newRoleNodes.put(grootNode.getIdx(), grootNode);
                 }
 
-                Map<RoleType, Map<Integer, MaxGraphNode>> currentNodesCopy =
+                Map<RoleType, Map<Integer, GrootNode>> currentNodesCopy =
                         new HashMap<>(currentNodesRef.get());
-                Map<Integer, MaxGraphNode> currentRoleNodes =
+                Map<Integer, GrootNode> currentRoleNodes =
                         currentNodesCopy.put(roleType, newRoleNodes);
                 currentNodesRef.set(currentNodesCopy);
 
                 if (currentRoleNodes != null && !currentRoleNodes.isEmpty()) {
-                    Map<Integer, MaxGraphNode> removed = new HashMap<>();
+                    Map<Integer, GrootNode> removed = new HashMap<>();
                     currentRoleNodes.forEach(
                             (id, currentNode) -> {
-                                MaxGraphNode newNode = newRoleNodes.get(id);
+                                GrootNode newNode = newRoleNodes.get(id);
                                 if (newNode == null || !newNode.equals(currentNode)) {
                                     removed.put(currentNode.getIdx(), currentNode);
                                 }
@@ -182,11 +182,11 @@ public class ZkDiscovery implements NodeDiscovery {
                 }
 
                 if (newRoleNodes != null && !newRoleNodes.isEmpty()) {
-                    Map<Integer, MaxGraphNode> added = new HashMap<>();
+                    Map<Integer, GrootNode> added = new HashMap<>();
                     newRoleNodes.forEach(
                             (id, newNode) -> {
                                 if (currentRoleNodes != null) {
-                                    MaxGraphNode currentNode = currentRoleNodes.get(id);
+                                    GrootNode currentNode = currentRoleNodes.get(id);
                                     if (currentNode != null && currentNode.equals(newNode)) {
                                         return;
                                     }
@@ -204,7 +204,7 @@ public class ZkDiscovery implements NodeDiscovery {
         }
     }
 
-    private void notifyRemoved(RoleType role, Map<Integer, MaxGraphNode> removed) {
+    private void notifyRemoved(RoleType role, Map<Integer, GrootNode> removed) {
         if (removed.isEmpty()) {
             return;
         }
@@ -227,7 +227,7 @@ public class ZkDiscovery implements NodeDiscovery {
         }
     }
 
-    private void notifyAdded(RoleType role, Map<Integer, MaxGraphNode> added) {
+    private void notifyAdded(RoleType role, Map<Integer, GrootNode> added) {
         if (added.isEmpty()) {
             return;
         }
@@ -254,10 +254,10 @@ public class ZkDiscovery implements NodeDiscovery {
     public void addListener(Listener listener) {
         synchronized (lock) {
             this.listeners.add(listener);
-            Map<RoleType, Map<Integer, MaxGraphNode>> currentNodes = this.currentNodesRef.get();
-            for (Map.Entry<RoleType, Map<Integer, MaxGraphNode>> e : currentNodes.entrySet()) {
+            Map<RoleType, Map<Integer, GrootNode>> currentNodes = this.currentNodesRef.get();
+            for (Map.Entry<RoleType, Map<Integer, GrootNode>> e : currentNodes.entrySet()) {
                 RoleType role = e.getKey();
-                Map<Integer, MaxGraphNode> nodes = e.getValue();
+                Map<Integer, GrootNode> nodes = e.getValue();
                 if (!nodes.isEmpty()) {
                     this.singleThreadExecutor.execute(
                             () -> {
@@ -286,7 +286,7 @@ public class ZkDiscovery implements NodeDiscovery {
     }
 
     @Override
-    public MaxGraphNode getLocalNode() {
+    public GrootNode getLocalNode() {
         return this.localNodeProvider.get();
     }
 }

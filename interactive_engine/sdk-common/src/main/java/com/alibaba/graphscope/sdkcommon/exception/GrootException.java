@@ -17,16 +17,16 @@ package com.alibaba.graphscope.sdkcommon.exception;
 
 import com.alibaba.graphscope.sdkcommon.util.ExceptionUtils;
 
-public class MaxGraphException extends Exception {
+public class GrootException extends Exception {
 
     private int errorCode;
 
-    public MaxGraphException(ExceptionUtils.ErrorCode code, String msg) {
+    public GrootException(ExceptionUtils.ErrorCode code, String msg) {
         super(msg);
         this.errorCode = code.toInt();
     }
 
-    public MaxGraphException(ExceptionUtils.ErrorCode code, Throwable e, String msg) {
+    public GrootException(ExceptionUtils.ErrorCode code, Throwable e, String msg) {
         super(msg, e);
         this.errorCode = code.toInt();
     }

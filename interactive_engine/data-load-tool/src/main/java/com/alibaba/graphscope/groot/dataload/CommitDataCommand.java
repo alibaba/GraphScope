@@ -1,9 +1,9 @@
 package com.alibaba.graphscope.groot.dataload;
 
-import com.alibaba.graphscope.groot.sdk.MaxGraphClient;
 import com.alibaba.graphscope.compiler.api.schema.GraphEdge;
 import com.alibaba.graphscope.compiler.api.schema.GraphElement;
 import com.alibaba.graphscope.groot.dataload.databuild.ColumnMappingInfo;
+import com.alibaba.graphscope.groot.sdk.GrootClient;
 import com.alibaba.graphscope.sdkcommon.common.DataLoadTarget;
 
 import java.io.IOException;
@@ -18,8 +18,8 @@ public class CommitDataCommand extends DataCommand {
     }
 
     public void run() {
-        MaxGraphClient client =
-                MaxGraphClient.newBuilder()
+        GrootClient client =
+                GrootClient.newBuilder()
                         .setHosts(graphEndpoint)
                         .setUsername(username)
                         .setPassword(password)

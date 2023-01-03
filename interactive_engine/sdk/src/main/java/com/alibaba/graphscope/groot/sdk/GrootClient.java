@@ -13,14 +13,6 @@
  */
 package com.alibaba.graphscope.groot.sdk;
 
-import com.alibaba.graphscope.proto.write.BatchWriteRequest;
-import com.alibaba.graphscope.proto.write.BatchWriteResponse;
-import com.alibaba.graphscope.proto.write.ClientWriteGrpc;
-import com.alibaba.graphscope.proto.write.ClientWriteGrpc.ClientWriteBlockingStub;
-import com.alibaba.graphscope.proto.write.DataRecordPb;
-import com.alibaba.graphscope.proto.write.GetClientIdRequest;
-import com.alibaba.graphscope.proto.write.WriteRequestPb;
-import com.alibaba.graphscope.proto.write.WriteTypePb;
 import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
 import com.alibaba.graphscope.proto.groot.ClearIngestRequest;
 import com.alibaba.graphscope.proto.groot.ClientBackupGrpc;
@@ -52,6 +44,14 @@ import com.alibaba.graphscope.proto.groot.RemoteFlushRequest;
 import com.alibaba.graphscope.proto.groot.RestoreFromGraphBackupRequest;
 import com.alibaba.graphscope.proto.groot.VerifyGraphBackupRequest;
 import com.alibaba.graphscope.proto.groot.VerifyGraphBackupResponse;
+import com.alibaba.graphscope.proto.write.BatchWriteRequest;
+import com.alibaba.graphscope.proto.write.BatchWriteResponse;
+import com.alibaba.graphscope.proto.write.ClientWriteGrpc;
+import com.alibaba.graphscope.proto.write.ClientWriteGrpc.ClientWriteBlockingStub;
+import com.alibaba.graphscope.proto.write.DataRecordPb;
+import com.alibaba.graphscope.proto.write.GetClientIdRequest;
+import com.alibaba.graphscope.proto.write.WriteRequestPb;
+import com.alibaba.graphscope.proto.write.WriteTypePb;
 import com.alibaba.graphscope.sdkcommon.BasicAuth;
 import com.alibaba.graphscope.sdkcommon.common.BackupInfo;
 import com.alibaba.graphscope.sdkcommon.common.DataLoadTarget;
@@ -77,8 +77,8 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class MaxGraphClient implements Closeable {
-    private static final Logger logger = LoggerFactory.getLogger(MaxGraphClient.class);
+public class GrootClient implements Closeable {
+    private static final Logger logger = LoggerFactory.getLogger(GrootClient.class);
 
     private ClientGrpc.ClientBlockingStub stub;
     private ClientWriteGrpc.ClientWriteBlockingStub writeStub;
@@ -88,7 +88,7 @@ public class MaxGraphClient implements Closeable {
 
     private BatchWriteRequest.Builder batchWriteBuilder;
 
-    private MaxGraphClient(
+    private GrootClient(
             ClientBlockingStub clientBlockingStub,
             ClientWriteBlockingStub clientWriteBlockingStub,
             ClientBackupBlockingStub clientBackupBlockingStub,
@@ -289,32 +289,32 @@ public class MaxGraphClient implements Closeable {
         this.stub.clearIngest(ClearIngestRequest.newBuilder().build());
     }
 
-    public static MaxGraphClientBuilder newBuilder() {
-        return new MaxGraphClientBuilder();
+    public static GrootClientBuilder newBuilder() {
+        return new GrootClientBuilder();
     }
 
-    public static class MaxGraphClientBuilder {
+    public static class GrootClientBuilder {
         private List<SocketAddress> addrs;
         private String username;
         private String password;
         private List<String> gremlinHosts;
         private int gremlinPort;
 
-        private MaxGraphClientBuilder() {
+        private GrootClientBuilder() {
             this.addrs = new ArrayList<>();
             this.gremlinHosts = new ArrayList<>();
         }
 
-        public MaxGraphClientBuilder addAddress(SocketAddress address) {
+        public GrootClientBuilder addAddress(SocketAddress address) {
             this.addrs.add(address);
             return this;
         }
 
-        public MaxGraphClientBuilder addHost(String host, int port) {
+        public GrootClientBuilder addHost(String host, int port) {
             return this.addAddress(new InetSocketAddress(host, port));
         }
 
-        public MaxGraphClientBuilder setHosts(String hosts) {
+        public GrootClientBuilder setHosts(String hosts) {
             List<SocketAddress> addresses = new ArrayList<>();
             for (String host : hosts.split(",")) {
                 String[] items = host.split(":");
@@ -324,27 +324,27 @@ public class MaxGraphClient implements Closeable {
             return this;
         }
 
-        public MaxGraphClientBuilder setUsername(String username) {
+        public GrootClientBuilder setUsername(String username) {
             this.username = username;
             return this;
         }
 
-        public MaxGraphClientBuilder setPassword(String password) {
+        public GrootClientBuilder setPassword(String password) {
             this.password = password;
             return this;
         }
 
-        public MaxGraphClientBuilder setGremlinPort(int gremlinPort) {
+        public GrootClientBuilder setGremlinPort(int gremlinPort) {
             this.gremlinPort = gremlinPort;
             return this;
         }
 
-        public MaxGraphClientBuilder addGremlinHost(String host) {
+        public GrootClientBuilder addGremlinHost(String host) {
             this.gremlinHosts.add(host);
             return this;
         }
 
-        public MaxGraphClient build() {
+        public GrootClient build() {
             MultiAddrResovlerFactory multiAddrResovlerFactory =
                     new MultiAddrResovlerFactory(this.addrs);
             ManagedChannel channel =
@@ -367,7 +367,7 @@ public class MaxGraphClient implements Closeable {
             CloseableGremlinClient gremlinClient =
                     new CloseableGremlinClient(
                             this.gremlinHosts, this.gremlinPort, this.username, this.password);
-            return new MaxGraphClient(
+            return new GrootClient(
                     clientBlockingStub,
                     clientWriteBlockingStub,
                     clientBackupBlockingStub,

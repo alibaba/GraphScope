@@ -14,9 +14,9 @@
 package com.alibaba.graphscope.groot.discovery;
 
 import com.alibaba.graphscope.common.RoleType;
+import com.alibaba.graphscope.compiler.api.exception.GrootException;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
-import com.alibaba.graphscope.compiler.api.exception.GrootException;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -27,7 +27,7 @@ import java.net.UnknownHostException;
 import java.util.Objects;
 
 @JsonRootName("details")
-public class MaxGraphNode {
+public class GrootNode {
 
     private String roleName;
     private int idx;
@@ -35,7 +35,7 @@ public class MaxGraphNode {
     private int port;
 
     @JsonCreator
-    public MaxGraphNode(
+    public GrootNode(
             @JsonProperty("roleName") String roleName,
             @JsonProperty("idx") int idx,
             @JsonProperty("host") String host,
@@ -46,12 +46,12 @@ public class MaxGraphNode {
         this.port = port;
     }
 
-    public static MaxGraphNode createLocalNode(Configs configs, int port) {
+    public static GrootNode createLocalNode(Configs configs, int port) {
         RoleType role = RoleType.fromName(CommonConfig.ROLE_NAME.get(configs));
         return createGraphNode(role, configs, port);
     }
 
-    public static MaxGraphNode createGraphNode(RoleType role, Configs configs, int port) {
+    public static GrootNode createGraphNode(RoleType role, Configs configs, int port) {
         int idx = CommonConfig.NODE_IDX.get(configs);
         String host = CommonConfig.RPC_HOST.get(configs);
         if (host.isEmpty()) {
@@ -61,7 +61,7 @@ public class MaxGraphNode {
                 throw new GrootException(e);
             }
         }
-        return new MaxGraphNode(role.getName(), idx, host, port);
+        return new GrootNode(role.getName(), idx, host, port);
     }
 
     @JsonIgnore
@@ -87,7 +87,7 @@ public class MaxGraphNode {
 
     @Override
     public String toString() {
-        return "MaxGraphNode{"
+        return "GrootNode{"
                 + "roleName='"
                 + roleName
                 + '\''
@@ -106,7 +106,7 @@ public class MaxGraphNode {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        MaxGraphNode that = (MaxGraphNode) o;
+        GrootNode that = (GrootNode) o;
 
         if (idx != that.idx) return false;
         if (port != that.port) return false;

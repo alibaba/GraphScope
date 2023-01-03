@@ -16,9 +16,9 @@
 
 package com.alibaba.graphscope.groot.servers.ir;
 
+import com.alibaba.graphscope.common.RoleType;
 import com.alibaba.graphscope.common.client.RpcChannelFetcher;
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
-import com.alibaba.graphscope.common.RoleType;
 import com.alibaba.pegasus.RpcChannel;
 
 import java.util.ArrayList;

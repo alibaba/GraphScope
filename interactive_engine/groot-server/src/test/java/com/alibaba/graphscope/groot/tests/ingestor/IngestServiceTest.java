@@ -15,7 +15,11 @@ package com.alibaba.graphscope.groot.tests.ingestor;
 
 import static org.mockito.Mockito.*;
 
-import com.alibaba.graphscope.groot.discovery.MaxGraphNode;
+import com.alibaba.graphscope.common.RoleType;
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
+import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.config.IngestorConfig;
+import com.alibaba.graphscope.groot.discovery.GrootNode;
 import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
 import com.alibaba.graphscope.groot.ingestor.IngestProcessor;
 import com.alibaba.graphscope.groot.ingestor.IngestProgressFetcher;
@@ -24,10 +28,6 @@ import com.alibaba.graphscope.groot.ingestor.StoreWriter;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.wal.LogService;
-import com.alibaba.graphscope.common.RoleType;
-import com.alibaba.graphscope.groot.common.config.CommonConfig;
-import com.alibaba.graphscope.groot.common.config.Configs;
-import com.alibaba.graphscope.groot.common.config.IngestorConfig;
 
 import org.junit.jupiter.api.Test;
 
@@ -95,11 +95,11 @@ public class IngestServiceTest {
 
         Listener listener = null;
 
-        void addNode(RoleType roleType, Map<Integer, MaxGraphNode> nodes) {
+        void addNode(RoleType roleType, Map<Integer, GrootNode> nodes) {
             listener.nodesJoin(roleType, nodes);
         }
 
-        void removeNode(RoleType roleType, Map<Integer, MaxGraphNode> nodes) {
+        void removeNode(RoleType roleType, Map<Integer, GrootNode> nodes) {
             listener.nodesLeft(roleType, nodes);
         }
 
@@ -120,7 +120,7 @@ public class IngestServiceTest {
         }
 
         @Override
-        public MaxGraphNode getLocalNode() {
+        public GrootNode getLocalNode() {
             return null;
         }
     }

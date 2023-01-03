@@ -13,6 +13,11 @@
  */
 package com.alibaba.graphscope.groot.servers;
 
+import com.alibaba.graphscope.common.RoleType;
+import com.alibaba.graphscope.common.util.CuratorUtils;
+import com.alibaba.graphscope.compiler.api.exception.GrootException;
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
+import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.discovery.*;
 import com.alibaba.graphscope.groot.ingestor.IngestProgressFetcher;
 import com.alibaba.graphscope.groot.ingestor.IngestService;
@@ -27,15 +32,10 @@ import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.metrics.MetricsCollectService;
 import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
-import com.alibaba.graphscope.groot.rpc.MaxGraphNameResolverFactory;
+import com.alibaba.graphscope.groot.rpc.GrootNameResolverFactory;
 import com.alibaba.graphscope.groot.rpc.RpcServer;
 import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.graphscope.groot.wal.kafka.KafkaLogService;
-import com.alibaba.graphscope.common.RoleType;
-import com.alibaba.graphscope.groot.common.config.CommonConfig;
-import com.alibaba.graphscope.groot.common.config.Configs;
-import com.alibaba.graphscope.common.util.CuratorUtils;
-import com.alibaba.graphscope.compiler.api.exception.GrootException;
 
 import io.grpc.NameResolver;
 
@@ -63,7 +63,7 @@ public class Ingestor extends NodeBase {
             this.curator = CuratorUtils.makeCurator(configs);
             this.discovery = new ZkDiscovery(configs, localNodeProvider, this.curator);
         }
-        NameResolver.Factory nameResolverFactory = new MaxGraphNameResolverFactory(this.discovery);
+        NameResolver.Factory nameResolverFactory = new GrootNameResolverFactory(this.discovery);
         this.channelManager = new ChannelManager(configs, nameResolverFactory);
         this.metaService = new DefaultMetaService(configs);
         LogService logService = new KafkaLogService(configs);

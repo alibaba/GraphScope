@@ -13,10 +13,10 @@
  */
 package com.alibaba.graphscope.groot.frontend;
 
+import com.alibaba.graphscope.compiler.api.schema.DataType;
 import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.schema.request.DdlRequestBatch;
 import com.alibaba.graphscope.proto.ddl.*;
-import com.alibaba.graphscope.compiler.api.schema.DataType;
 import com.alibaba.graphscope.sdkcommon.schema.*;
 import com.alibaba.graphscope.sdkcommon.schema.GraphDef;
 import com.google.protobuf.Any;

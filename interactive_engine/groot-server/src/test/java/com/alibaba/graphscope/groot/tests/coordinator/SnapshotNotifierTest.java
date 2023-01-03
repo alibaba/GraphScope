@@ -15,16 +15,16 @@ package com.alibaba.graphscope.groot.tests.coordinator;
 
 import static org.mockito.Mockito.*;
 
+import com.alibaba.graphscope.common.RoleType;
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
+import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.coordinator.FrontendSnapshotClient;
 import com.alibaba.graphscope.groot.coordinator.NotifyFrontendListener;
 import com.alibaba.graphscope.groot.coordinator.SnapshotManager;
 import com.alibaba.graphscope.groot.coordinator.SnapshotNotifier;
-import com.alibaba.graphscope.groot.discovery.MaxGraphNode;
+import com.alibaba.graphscope.groot.discovery.GrootNode;
 import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
-import com.alibaba.graphscope.common.RoleType;
-import com.alibaba.graphscope.groot.common.config.CommonConfig;
-import com.alibaba.graphscope.groot.common.config.Configs;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -42,8 +42,8 @@ public class SnapshotNotifierTest {
                 new SnapshotNotifier(discovery, snapshotManager, null, roleClients);
         snapshotNotifier.start();
 
-        MaxGraphNode localNode =
-                MaxGraphNode.createLocalNode(
+        GrootNode localNode =
+                GrootNode.createLocalNode(
                         Configs.newBuilder()
                                 .put(
                                         CommonConfig.ROLE_NAME.getKey(),

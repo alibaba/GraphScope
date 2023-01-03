@@ -1,6 +1,6 @@
 package com.alibaba.graphscope.groot.dataload;
 
-import com.alibaba.graphscope.groot.sdk.MaxGraphClient;
+import com.alibaba.graphscope.groot.sdk.GrootClient;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,8 +17,8 @@ public class IngestDataCommand extends DataCommand {
     }
 
     public void run() {
-        MaxGraphClient client =
-                MaxGraphClient.newBuilder()
+        GrootClient client =
+                GrootClient.newBuilder()
                         .setHosts(graphEndpoint)
                         .setUsername(username)
                         .setPassword(password)

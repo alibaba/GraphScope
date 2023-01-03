@@ -13,9 +13,9 @@
  */
 package com.alibaba.graphscope.groot.store;
 
+import com.alibaba.graphscope.common.RoleType;
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
-import com.alibaba.graphscope.common.RoleType;
 
 import java.util.List;
 

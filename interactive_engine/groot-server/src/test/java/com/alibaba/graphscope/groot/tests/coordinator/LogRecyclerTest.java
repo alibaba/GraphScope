@@ -17,11 +17,11 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
+import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.config.CoordinatorConfig;
 import com.alibaba.graphscope.groot.coordinator.LogRecycler;
 import com.alibaba.graphscope.groot.coordinator.SnapshotManager;
 import com.alibaba.graphscope.groot.wal.LogService;
-import com.alibaba.graphscope.groot.common.config.Configs;
-import com.alibaba.graphscope.groot.common.config.CoordinatorConfig;
 
 import org.junit.jupiter.api.Test;
 

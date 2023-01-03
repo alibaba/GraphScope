@@ -16,12 +16,12 @@
 
 package com.alibaba.graphscope.groot.servers.ir;
 
-import com.alibaba.graphscope.groot.meta.MetaService;
-import com.alibaba.graphscope.groot.store.GraphPartition;
-import com.alibaba.graphscope.groot.store.StoreService;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.servers.AbstractService;
+import com.alibaba.graphscope.groot.store.GraphPartition;
+import com.alibaba.graphscope.groot.store.StoreService;
 
 public class GaiaService implements AbstractService {
 
