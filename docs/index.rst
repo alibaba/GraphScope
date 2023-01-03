@@ -244,6 +244,7 @@ each of which can be independently scaled to chase for the best end-to-end throu
    cpp_tutorials
    walkthrough_examples_acrossing_engines
    video_tutorials
+   gremlin_tutorials
 
 .. toctree::
    :maxdepth: 2
