@@ -487,7 +487,7 @@ g.V().match(__.as("a").out().has("name", "marko").as("b"), __.as("b").out().as("
 #### subgraph()
 an edge-induced subgraph extracted from the original graph.
 
-Parameters:
+Parameters: </br>
 graphName - the name of the side-effect key that will hold the subgraph.
 ```java
 g.E().subgraph("all") 
@@ -589,7 +589,7 @@ Expression(s) in project or filter:
     g.V().select(expr("@.name")) // = g.V().values("name")
     ```
 ### Aggregate (Group)
-The group()-step in standard gremlin has limited capabilities (i.e. grouping can only be performed based on a single key, and only one aggregate calculation can be applied in each group), which cannot be applied to the requirements of performing group calculations on multiple keys or values; Therefore, we further extend the capabilities of the group()-step, allowing multiple variables to be set and different aliases to be configured in key by()-step and value by()-step respectively;
+The group()-step in standard gremlin has limited capabilities (i.e. grouping can only be performed based on a single key, and only one aggregate calculation can be applied in each group), which cannot be applied to the requirements of performing group calculations on multiple keys or values; Therefore, we further extend the capabilities of the group()-step, allowing multiple variables to be set and different aliases to be configured in key by()-step and value by()-step respectively.
 
 Usages of the key by()-step:
 ```java
@@ -641,7 +641,7 @@ The following steps will remain unsupported.
 #### repeat()
 * repeat().times() </br>
 In graph pattern scenarios, `repeat().times()` can be replaced equivalently by the `PathExpand`-step.
-    ```
+    ```java
     g.V().repeat(out("knows")).times(2) // = g.V().out("1..3", "knows").endV()
     g.V().repeat(out("knows").simplePath()).times(2) // = g.V().out("1..3", "knows").with('PATH_OPT', 'SIMPLE').endV()
     ```
