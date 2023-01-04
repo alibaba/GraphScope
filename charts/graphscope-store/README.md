@@ -147,7 +147,7 @@ $ helm install my-release -f values.yaml graphscope/graphscope-store
 
 ## Persistence
 
-The [GraphScope Store](https://github.com/alibaba/GraphScope/tree/main/interactive_engine/src/v2/src/main) image stores the GraphScope Store data at the `/var/lib/graphscope-store` and configurations at the `/etc/graphscope-store/my.cnf`, and coordinator meta information at the `/etc/graphscope-store/my.meta` path of the container.
+The [GraphScope Store](https://github.com/alibaba/GraphScope/tree/main/interactive_engine/src/v2/src/main) image stores the GraphScope Store data at the `/var/lib/graphscope-store` and configurations at the `/etc/graphscope-store/groot.config`, and coordinator meta information at the `/etc/graphscope-store/my.meta` path of the container.
 
 The chart mounts a [Persistent Volume](https://kubernetes.io/docs/user-guide/persistent-volumes/) volume at this location. The volume is created using dynamic volume provisioning by default. An existing PersistentVolumeClaim can also be defined for this purpose.
 
