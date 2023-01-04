@@ -134,9 +134,8 @@ spec:
         - name: config
           configMap:
             name: {{ include "graphscope-store.configmapName" . }}
-  {{- if and .Values.store.persistence.enabled .Values.store.persistence.existingClaim }}
             defaultMode: 0755
-
+  {{- if and .Values.store.persistence.enabled .Values.store.persistence.existingClaim }}
         - name: data
           persistentVolumeClaim:
             claimName: {{ tpl .Values.store.persistence.existingClaim . }}
