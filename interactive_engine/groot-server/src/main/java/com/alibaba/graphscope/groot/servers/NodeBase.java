@@ -17,9 +17,13 @@ import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.Closeable;
 
 public abstract class NodeBase implements Closeable {
+    private static final Logger logger = LoggerFactory.getLogger(NodeBase.class);
 
     protected RoleType roleType;
     protected int idx;
@@ -30,6 +34,7 @@ public abstract class NodeBase implements Closeable {
     }
 
     public NodeBase(Configs configs) {
+        logger.info("Configs {}", configs.toString());
         this.roleType = RoleType.fromName(CommonConfig.ROLE_NAME.get(configs));
         this.idx = CommonConfig.NODE_IDX.get(configs);
     }
