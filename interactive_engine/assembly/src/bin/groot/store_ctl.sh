@@ -97,7 +97,7 @@ start_load_tools() {
        com.alibaba.graphscope.groot.dataload.LoadTool "$@"
 }
 
-# start server with v2
+# start groot server
 start_server() {
   _setup_env
 

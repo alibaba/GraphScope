@@ -1,5 +1,5 @@
-<configuration>
-    <property name="log_dir" value="${log.dir:-/var/log/graphscope/store}"/>
+<configuration scan="true" scanPeriod="30 seconds">
+    <property name="log_dir" value="${log.dir:-/var/log/graphscope}"/>
     <property name="log_name" value="${log.name:-groot}"/>
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${log_dir}/${log_name}.log</file>

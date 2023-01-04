@@ -80,9 +80,9 @@ spec:
                      -e "s/COORDINATOR/$(DNS_NAME_PREFIX_COORDINATOR)/g" \
                      -e "s/STORE/$(DNS_NAME_PREFIX_STORE)/g" \
                      -e "s@LOG4RS_CONFIG@${GRAPHSCOPE_HOME}/groot/conf/log4rs.yml@g" \
-            /etc/graphscope-store/my.cnf.tpl | sudo tee /etc/graphscope-store/my.cnf
+            /etc/graphscope-store/groot.config.tpl | sudo tee /etc/graphscope-store/groot.config
 
-            LOG_NAME=graphscope-store GROOT_CONF_FILE=/etc/graphscope-store/my.cnf \
+            LOG_NAME=graphscope-store GROOT_CONF_FILE=/etc/graphscope-store/groot.config \
               ${GRAPHSCOPE_HOME}/groot/bin/store_ctl.sh start_server $(EXECUTOR)
           env:
             - name: DEBUG
@@ -145,8 +145,8 @@ spec:
           {{- end }}
           volumeMounts:
             - name: config
-              mountPath: /etc/graphscope-store/my.cnf.tpl
-              subPath: my.cnf
+              mountPath: /etc/graphscope-store/groot.config.tpl
+              subPath: groot.config
 
       volumes:
         - name: config

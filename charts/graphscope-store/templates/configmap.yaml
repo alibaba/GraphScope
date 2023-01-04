@@ -13,7 +13,7 @@ metadata:
   annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
   {{- end }}
 data:
-  my.cnf: |-
+  groot.config: |-
     ## Common Config
     graph.name={{ .Values.graphName }}
     role.name=ROLE

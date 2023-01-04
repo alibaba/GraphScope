@@ -7,7 +7,7 @@ appenders:
   file:
     kind: rolling_file
     append: true
-    path: "/var/log/graphscope/store/store-executor.log"
+    path: "/var/log/graphscope/store-executor.log"
     encoder:
       pattern: "{d(%Y-%m-%d %H:%M:%S.%f)} {h({l:<5})} (({f}:{L})) [{T}] {m}{n}"
     policy:
@@ -16,12 +16,12 @@ appenders:
         limit: 100mb
       roller:
         kind: fixed_window
-        pattern: "/var/log/graphscope/store/store-executor.log.{}"
+        pattern: "/var/log/graphscope/store-executor.log.{}"
         count: 10
 
 root:
   level: info
   appenders:
     - file
-    - console
+    - stdout
 

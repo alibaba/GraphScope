@@ -36,7 +36,6 @@ commonAnnotations: {}
 ##
 commonLabels: {}
 
-## Configure GraphScope Components with a custom my.cnf file
 ##
 javaOpts: ""
 
@@ -64,6 +63,7 @@ htapLoaderConfig: "v6d_modern_loader.json"
 ## need by vineyard in distributed env
 etcdEndpoint: "etcd-for-vineyard.default.svc.cluster.local:2379"
 
+## Configure GraphScope Components with a custom groot.config file
 extraConfig: ""
 
 ## Role Based Access

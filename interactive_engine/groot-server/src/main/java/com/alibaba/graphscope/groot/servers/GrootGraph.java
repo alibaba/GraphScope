@@ -15,7 +15,6 @@ package com.alibaba.graphscope.groot.servers;
 
 import com.alibaba.graphscope.compiler.api.exception.GrootException;
 import com.alibaba.graphscope.groot.common.RoleType;
-import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 
 import org.slf4j.Logger;
@@ -29,7 +28,6 @@ public class GrootGraph {
     public static void main(String[] args) throws IOException {
         String configFile = System.getProperty("config.file");
         Configs conf = new Configs(configFile);
-        conf = Configs.newBuilder(conf).put(CommonConfig.ENGINE_TYPE.getKey(), "gaia").build();
 
         NodeBase node;
         if (args.length == 0) {
