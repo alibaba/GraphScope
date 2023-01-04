@@ -66,6 +66,8 @@ data:
     executor.query.port=55557
     executor.engine.port=55558
 
+    log4rs.config=LOG4RS_CONFIG
+
     ## GAIA Config
     gaia.rpc.port=60000
     gaia.engine.port=60001
