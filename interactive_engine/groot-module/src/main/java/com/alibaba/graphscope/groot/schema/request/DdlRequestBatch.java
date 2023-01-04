@@ -15,8 +15,8 @@
  */
 package com.alibaba.graphscope.groot.schema.request;
 
-import com.alibaba.maxgraph.proto.groot.DdlRequestBatchPb;
-import com.alibaba.maxgraph.proto.groot.DdlRequestPb;
+import com.alibaba.graphscope.proto.groot.DdlRequestBatchPb;
+import com.alibaba.graphscope.proto.groot.DdlRequestPb;
 import com.google.common.base.Objects;
 
 import java.util.ArrayList;

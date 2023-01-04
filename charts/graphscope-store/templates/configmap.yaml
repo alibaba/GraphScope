@@ -50,7 +50,6 @@ data:
     kafka.topic={{ .Values.kafkaTopic }}
 
     ## Frontend Config
-    graph.store.type={{ .Values.graphStoreType }}
     gremlin.server.port=12312
 
     executor.worker.per.process={{ .Values.executorWorkerPerProcess }}

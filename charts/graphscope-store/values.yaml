@@ -35,21 +35,17 @@ commonAnnotations: {}
 ##
 commonLabels: {}
 
-## Configure which executor (maxgraph or gaia) to use for store and frontend
-##
-executor: "gaia"
-
 ## Configure GraphScope Components with a custom my.cnf file
 ##
 javaOpts: ""
 
-graphName: "maxgraph"
+graphName: "graphscope"
 
-maxgraphLogbackFile: ""
+grootLogbackFile: ""
 
 rpcMaxBytesMb: 4
 
-engineType: "maxgraph"
+engineType: "gaia"
 
 discoveryMode: "file"
 
@@ -68,10 +64,9 @@ storeDataPath: "/var/lib/graphscope-store"
 storeWriteThreadCount: 1
 
 ## Kafka Config
-kafkaTopic: "graph_test"
+kafkaTopic: "graphscope"
 
 ## Frontend Config
-graphStoreType: "maxgraph"
 # gremlinServerPort: 12312
 
 executorWorkerPerProcess: 2

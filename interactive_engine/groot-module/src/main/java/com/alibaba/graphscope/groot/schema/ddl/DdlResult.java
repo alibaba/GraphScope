@@ -14,7 +14,7 @@
 package com.alibaba.graphscope.groot.schema.ddl;
 
 import com.alibaba.graphscope.groot.operation.Operation;
-import com.alibaba.maxgraph.sdkcommon.schema.GraphDef;
+import com.alibaba.graphscope.sdkcommon.schema.GraphDef;
 
 import java.util.List;
 

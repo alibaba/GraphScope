@@ -13,13 +13,13 @@
  */
 package com.alibaba.graphscope.groot.wal.kafka;
 
+import com.alibaba.graphscope.compiler.api.exception.GrootException;
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
+import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.config.KafkaConfig;
 import com.alibaba.graphscope.groot.wal.LogReader;
 import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.graphscope.groot.wal.LogWriter;
-import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.common.config.KafkaConfig;
-import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.DeleteRecordsResult;
@@ -69,7 +69,7 @@ public class KafkaLogService implements LogService {
         try {
             admin.createTopics(Collections.singleton(newTopic)).all().get();
         } catch (InterruptedException | ExecutionException e) {
-            throw new MaxGraphException("create topics [" + this.topic + "] failed", e);
+            throw new GrootException("create topics [" + this.topic + "] failed", e);
         }
     }
 
@@ -79,7 +79,7 @@ public class KafkaLogService implements LogService {
         try {
             admin.deleteTopics(Arrays.asList(topic)).all().get();
         } catch (InterruptedException | ExecutionException e) {
-            throw new MaxGraphException("delete topics [" + this.topic + "] failed", e);
+            throw new GrootException("delete topics [" + this.topic + "] failed", e);
         }
     }
 
@@ -89,7 +89,7 @@ public class KafkaLogService implements LogService {
         try {
             return admin.listTopics().names().get().contains(this.topic);
         } catch (InterruptedException | ExecutionException e) {
-            throw new MaxGraphException("list topics failed", e);
+            throw new GrootException("list topics failed", e);
         }
     }
 

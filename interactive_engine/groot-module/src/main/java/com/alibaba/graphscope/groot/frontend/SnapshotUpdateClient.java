@@ -17,9 +17,9 @@
 package com.alibaba.graphscope.groot.frontend;
 
 import com.alibaba.graphscope.groot.rpc.RpcClient;
-import com.alibaba.maxgraph.proto.groot.CoordinatorSnapshotServiceGrpc;
-import com.alibaba.maxgraph.proto.groot.UpdateMinQuerySnapshotIdRequest;
-import com.alibaba.maxgraph.proto.groot.UpdateMinQuerySnapshotIdResponse;
+import com.alibaba.graphscope.proto.groot.CoordinatorSnapshotServiceGrpc;
+import com.alibaba.graphscope.proto.groot.UpdateMinQuerySnapshotIdRequest;
+import com.alibaba.graphscope.proto.groot.UpdateMinQuerySnapshotIdResponse;
 
 import io.grpc.ManagedChannel;
 

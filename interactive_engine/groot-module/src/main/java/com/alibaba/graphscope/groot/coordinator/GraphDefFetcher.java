@@ -14,7 +14,7 @@
 package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.graphscope.groot.rpc.RoleClients;
-import com.alibaba.maxgraph.sdkcommon.schema.GraphDef;
+import com.alibaba.graphscope.sdkcommon.schema.GraphDef;
 
 public class GraphDefFetcher {
 

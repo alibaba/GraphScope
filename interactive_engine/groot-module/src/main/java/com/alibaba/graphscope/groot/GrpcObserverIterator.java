@@ -13,7 +13,7 @@
  */
 package com.alibaba.graphscope.groot;
 
-import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
+import com.alibaba.graphscope.compiler.api.exception.GrootException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,13 +41,13 @@ public class GrpcObserverIterator<T> implements CloseableIterator<T> {
     public boolean hasNext() {
         Throwable t = this.exception.get();
         if (t != null) {
-            throw new MaxGraphException(t);
+            throw new GrootException(t);
         }
         if (head == null) {
             try {
                 head = buffer.take();
             } catch (InterruptedException ie) {
-                throw new MaxGraphException(ie);
+                throw new GrootException(ie);
             }
             if (head == PILL) {
                 return false;
@@ -62,7 +62,7 @@ public class GrpcObserverIterator<T> implements CloseableIterator<T> {
             throw new NoSuchElementException();
         }
         if (head instanceof Throwable) {
-            throw new MaxGraphException((Throwable) head);
+            throw new GrootException((Throwable) head);
         }
         T res = (T) head;
         head = null;

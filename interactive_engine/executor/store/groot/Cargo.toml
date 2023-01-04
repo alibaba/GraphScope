@@ -1,5 +1,5 @@
 [package]
-name = "maxgraph-store"
+name = "groot-store"
 version = "0.1.0"
 authors = ["勤远 <wubin.cwb@alibaba-inc.com>"]
 edition = "2018"

@@ -15,11 +15,11 @@ package com.alibaba.graphscope.groot.frontend;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
-import com.alibaba.maxgraph.proto.groot.StoreClearIngestRequest;
-import com.alibaba.maxgraph.proto.groot.StoreClearIngestResponse;
-import com.alibaba.maxgraph.proto.groot.StoreIngestGrpc;
-import com.alibaba.maxgraph.proto.groot.StoreIngestRequest;
-import com.alibaba.maxgraph.proto.groot.StoreIngestResponse;
+import com.alibaba.graphscope.proto.groot.StoreClearIngestRequest;
+import com.alibaba.graphscope.proto.groot.StoreClearIngestResponse;
+import com.alibaba.graphscope.proto.groot.StoreIngestGrpc;
+import com.alibaba.graphscope.proto.groot.StoreIngestRequest;
+import com.alibaba.graphscope.proto.groot.StoreIngestResponse;
 
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;

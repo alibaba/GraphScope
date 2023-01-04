@@ -1880,11 +1880,11 @@ class ResolveMPICmdPrefix(object):
 
 # In Analytical engine, assume label ids of vertex entries are continuous
 # from zero, and property ids of each label is also continuous from zero.
-# When transform schema to Maxgraph style, we gather all property names and
+# When transform schema to interactive engine style, we gather all property names and
 # unique them, assign each name a id (index of the vector), then preserve a
 # vector<int> for each label, stores mappings from original id to transformed
 # id.
-def to_maxgraph_schema(gsa_schema_json):
+def to_interactive_engine_schema(gsa_schema_json):
     gsa_schema = json.loads(gsa_schema_json)
     prop_set = set()
     vertex_label_num = 0

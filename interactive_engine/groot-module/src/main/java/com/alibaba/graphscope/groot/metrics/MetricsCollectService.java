@@ -15,9 +15,9 @@
  */
 package com.alibaba.graphscope.groot.metrics;
 
-import com.alibaba.maxgraph.proto.groot.CollectMetricsRequest;
-import com.alibaba.maxgraph.proto.groot.CollectMetricsResponse;
-import com.alibaba.maxgraph.proto.groot.MetricsCollectGrpc;
+import com.alibaba.graphscope.proto.groot.CollectMetricsRequest;
+import com.alibaba.graphscope.proto.groot.CollectMetricsResponse;
+import com.alibaba.graphscope.proto.groot.MetricsCollectGrpc;
 
 import io.grpc.stub.StreamObserver;
 

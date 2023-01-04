@@ -85,7 +85,6 @@ Here we give a list of most frequently used parameters.
 | clusterDomain | Default Kubernetes cluster domain | cluster.local |
 | commonLabels | Labels to add to all deployed objects | {} |
 | commonAnnotations | Annotations to add to all deployed objects | {} |
-| executor | Executor type, "maxgraph" or "gaia" | maxgraph |
 | javaOpts | Java options | "" |
 | auth.username | Username | "" |
 | auth.password | Password | "" |
