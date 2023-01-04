@@ -56,7 +56,6 @@ data:
     executor.query.thread.count={{ .Values.executorQueryThreadCount }}
     executor.query.manager.thread.count={{ .Values.executorQueryManagerThreadCount }}
     executor.query.store.thread.count={{ .Values.executorQueryStoreThreadCount }}
-    log4rs.config={{ .Values.log4rsConfig }}
 
     dns.name.prefix.frontend=FRONTEND
     dns.name.prefix.ingestor=INGESTOR
@@ -75,6 +74,14 @@ data:
     auth.username={{ .Values.auth.username }}
     auth.password={{ .Values.auth.password }}
 
+    # Pegasus config
+    pegasus.worker.num={{ .Values.pegasus.worker.num }}
+    pegasus.timeout={{ .Values.pegasus.timeout }}
+    pegasus.batch.size=1024
+    pegasus.output.capacity=16
+    pegasus.memory.limit=2147483647
+    pegasus.hosts=PEGASUS_HOSTS
+
     ## Extra Config
     {{- if .Values.extraConfig }}
     {{- $config_list := regexSplit ";" .Values.extraConfig -1 }}
@@ -82,4 +89,69 @@ data:
     {{ . }}
     {{- end }}
     {{- end }}
+  setup.sh: |-
+    #!/bin/bash
+
+    /etc/groot/ready_probe.sh
+
+    [[ `hostname` =~ -([0-9]+)$ ]] || exit 1
+    ordinal=${BASH_REMATCH[1]}
+
+    pegasus_hosts=""
+    i=0
+    while [ $i -ne $STORE_COUNT ]; do
+    pod=`echo $DNS_NAME_PREFIX_STORE | sed -e "s/{}/$i/g"`
+    # 60001 is fixed gaia engine port
+    pegasus_hosts="${pegasus_hosts},${pod}:60001"
+      i=$(($i+1))
+    done
+    pegasus_hosts=${pegasus_hosts:1}
+
+    sudo sed -e "s/GRAPH_NAME/${GRAPH_NAME}/g" \
+              -e "s/ROLE/${ROLE}/g" \
+              -e "s/INDEX/${ordinal}/g" \
+              -e "s/KAFKA_SERVERS/${KAFKA_SERVERS}/g" \
+              -e "s/FRONTEND/${DNS_NAME_PREFIX_FRONTEND}/g" \
+              -e "s/INGESTOR/${DNS_NAME_PREFIX_INGESTOR}/g" \
+              -e "s/COORDINATOR/${DNS_NAME_PREFIX_COORDINATOR}/g" \
+              -e "s/STORE/${DNS_NAME_PREFIX_STORE}/g" \
+              -e "s/PEGASUS_HOSTS/${pegasus_hosts}/g" \
+              -e "s@LOG4RS_CONFIG@${GRAPHSCOPE_HOME}/groot/conf/log4rs.yml@g" \
+    /etc/groot/groot.config.tpl | sudo tee /etc/groot/groot.config
+
+    export LOG_NAME=graphscope-store
+    export GROOT_CONF_FILE=/etc/groot/groot.config
+    ${GRAPHSCOPE_HOME}/groot/bin/store_ctl.sh start_server ${EXECUTOR}
+  ready_probe.sh: |-
+    #!/bin/bash
+
+    until nslookup "${DNS_NAME_SERVICE_KAFKA}"; do
+      echo "waiting for kafka..."; sleep 1;
+    done;
+
+    for ((i=0; i < ${FRONTEND_COUNT}; i++)); do
+      until nslookup "${DNS_NAME_PREFIX_FRONTEND/\{\}/${i}}"; do
+        echo "waiting for frontend..."; sleep 1;
+      done;
+    done;
+
+    for ((i=0; i < ${INGESTOR_COUNT}; i++)); do
+      until nslookup "${DNS_NAME_PREFIX_INGESTOR/\{\}/${i}}"; do
+        echo "waiting for ingestor..."; sleep 1;
+      done;
+    done;
+
+    for ((i=0; i < ${COORDINATOR_COUNT}; i++)); do
+      until nslookup "${DNS_NAME_PREFIX_COORDINATOR/\{\}/${i}}"; do
+        echo "waiting for coordinator..."; sleep 1;
+      done;
+    done;
+
+    for ((i=0; i < ${STORE_COUNT}; i++)); do
+      until nslookup "${DNS_NAME_PREFIX_STORE/\{\}/${i}}"; do
+        echo "waiting for store..."; sleep 1;
+      done;
+    done;
+
+    echo "All component started"
 {{- end -}}

@@ -103,9 +103,6 @@ public class IrServiceProducer implements ComputeServiceProducer {
     private com.alibaba.graphscope.common.config.Configs getConfigs() {
         Map<String, String> configMap = new HashMap<>();
 
-        int executorCount = CommonConfig.STORE_NODE_COUNT.get(configs);
-        configMap.put(PegasusConfig.PEGASUS_SERVER_NUM.getKey(), String.valueOf(executorCount));
-
         addToConfigMapIfExist(PegasusConfig.PEGASUS_WORKER_NUM.getKey(), configMap);
         addToConfigMapIfExist(PegasusConfig.PEGASUS_TIMEOUT.getKey(), configMap);
         addToConfigMapIfExist(PegasusConfig.PEGASUS_BATCH_SIZE.getKey(), configMap);
