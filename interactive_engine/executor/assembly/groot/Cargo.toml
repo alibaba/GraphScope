@@ -14,8 +14,8 @@ gaia_pegasus = { path = "../../engine/pegasus/pegasus", package = "pegasus" }
 pegasus_network = { path = "../../engine/pegasus/network" }
 pegasus_server = { path = "../../engine/pegasus/server" }
 runtime_integration =  { path = "../../ir/integrated" }
-log = "0.3"
-log4rs = "0.8.0"
+log = "0.4"
+log4rs = "1.2"
 tokio = { version = "1.0", features = ["macros", "sync"] }
 
 [features]
