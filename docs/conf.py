@@ -31,7 +31,7 @@ html_context = {}  # Dict[str, Any]
 # ones.
 extensions = [
     'breathe',
-    'recommonmark',
+    'myst_parser',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.mathjax',
