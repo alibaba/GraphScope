@@ -28,7 +28,7 @@ public class IrIdentifier extends IrNode {
      */
     @Override
     public RelDataType inferReturnType() {
-        throw new NotImplementedException();
+        throw new NotImplementedException("");
     }
 
     /**

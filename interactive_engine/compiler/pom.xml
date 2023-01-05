@@ -248,10 +248,30 @@
                                 <argument>org.apache.tinkerpop.gremlin.language.grammar</argument>
                                 <argument>-encoding</argument>
                                 <argument>utf-8</argument>
+                                <sourceDirectory>${basedir}/src/main/antlr4/GremlinGS.g4</sourceDirectory>
                             </arguments>
                             <visitor>true</visitor>
                             <outputDirectory>
                                 ${project.build.directory}/generated-sources/antlr4/org/apache/tinkerpop/gremlin/language/grammar/
+                            </outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>cypher</id>
+                        <goals>
+                            <goal>antlr4</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>
+                                <argument>-package</argument>
+                                <argument>com.alibaba.graphscope.grammar.cypher</argument>
+                                <argument>-encoding</argument>
+                                <argument>utf-8</argument>
+                                <sourceDirectory>${basedir}/src/main/antlr4/CypherGS.g4</sourceDirectory>
+                            </arguments>
+                            <visitor>true</visitor>
+                            <outputDirectory>
+                                ${project.build.directory}/generated-sources/antlr4/com/alibaba/graphscope/grammar/cypher
                             </outputDirectory>
                         </configuration>
                     </execution>

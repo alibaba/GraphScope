@@ -29,7 +29,7 @@ public class IrOperator {
         if (returnTypeInference != null) {
             return returnTypeInference.inferReturnType(irCall);
         }
-        throw new NotImplementedException();
+        throw new NotImplementedException("");
     }
 
     public void validateCall(IrCall irCall) {

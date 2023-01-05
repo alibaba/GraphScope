@@ -18,7 +18,7 @@ public class IrLiteral extends IrNode {
 
     @Override
     public RelDataType inferReturnType() {
-        throw new NotImplementedException();
+        throw new NotImplementedException("");
     }
 
     @Override

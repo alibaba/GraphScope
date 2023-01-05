@@ -15,6 +15,6 @@ public class OrderByClause {
     private IrNodeList orderByList;
 
     public OrderByClause addOrderBy(IrNode expr, OrderOpt opt) {
-        throw new NotImplementedException();
+        throw new NotImplementedException("");
     }
 }

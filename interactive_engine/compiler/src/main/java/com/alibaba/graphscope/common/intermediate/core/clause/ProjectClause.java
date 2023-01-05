@@ -15,6 +15,6 @@ public class ProjectClause extends AbstractClause {
     private IrNodeList projectList;
 
     public ProjectClause addProject(@Nullable String alias, IrNode expr) {
-        throw new NotImplementedException();
+        throw new NotImplementedException("");
     }
 }

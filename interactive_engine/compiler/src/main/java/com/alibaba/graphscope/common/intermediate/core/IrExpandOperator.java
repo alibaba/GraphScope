@@ -1,29 +1,29 @@
 package com.alibaba.graphscope.common.intermediate.core;
 
 import com.alibaba.graphscope.common.intermediate.core.clause.type.DirectionOpt;
-import com.alibaba.graphscope.common.intermediate.core.clause.type.ExtendOpt;
 import com.alibaba.graphscope.common.intermediate.core.type.IrOperandTypeChecker;
 import com.alibaba.graphscope.common.intermediate.core.type.IrReturnTypeInference;
+import jline.internal.Nullable;
+import org.apache.commons.lang3.NotImplementedException;
 
-public class IrExtendOperator extends IrOperator {
-    private ExtendOpt extendOpt;
+public class IrExpandOperator extends IrOperator {
     private DirectionOpt directionOpt;
 
-    public IrExtendOperator(
+    public IrExpandOperator(
             String name,
-            ExtendOpt extendOpt,
             DirectionOpt directionOpt,
             IrOperatorKind kind,
-            IrOperandTypeChecker operandTypeChecker,
+            @Nullable IrOperandTypeChecker operandTypeChecker,
             IrReturnTypeInference returnTypeInference) {
         super(name, kind, operandTypeChecker, returnTypeInference);
     }
 
-    public ExtendOpt getExtendOpt() {
-        return extendOpt;
-    }
-
     public DirectionOpt getDirectionOpt() {
         return directionOpt;
+    }
+
+    @Override
+    public void validateCall(IrCall irCall) {
+        throw new NotImplementedException("");
     }
 }

@@ -11,6 +11,6 @@ public class WhereClause extends AbstractClause {
     private IrNode expr;
 
     public WhereClause setFilter(IrNode expr) {
-        throw new NotImplementedException();
+        throw new NotImplementedException("");
     }
 }

@@ -9,10 +9,10 @@ public class LimitClause extends AbstractClause {
     private IrNodeList range;
 
     public LimitClause setLower(int lower) {
-        throw new NotImplementedException();
+        throw new NotImplementedException("");
     }
 
     public LimitClause setUpper(int upper) {
-        throw new NotImplementedException();
+        throw new NotImplementedException("");
     }
 }
