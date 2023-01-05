@@ -81,7 +81,6 @@ data:
     pegasus.timeout={{ .Values.pegasus.timeout }}
     pegasus.batch.size=1024
     pegasus.output.capacity=16
-    pegasus.memory.limit=2147483647
     pegasus.hosts=PEGASUS_HOSTS
 
     ## Extra Config

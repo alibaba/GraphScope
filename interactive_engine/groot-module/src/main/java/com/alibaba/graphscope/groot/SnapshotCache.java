@@ -92,7 +92,7 @@ public class SnapshotCache {
                         || graphDef.getSchemaVersion() > oldGraphDef.getVersion())) {
             newSnapshotInfoBuilder.setGraphDef(graphDef);
             logger.info("schema updated. schema version [" + graphDef.getVersion() + "]");
-            logger.info("graphDef: " + graphDef);
+            logger.info("graphDef: " + graphDef.formatJson());
         }
         this.snapshotWithSchemaRef.set(newSnapshotInfoBuilder.build());
         logger.debug("snapshotId update to [" + snapshotId + "]");
