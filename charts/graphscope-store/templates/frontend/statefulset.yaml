@@ -74,8 +74,6 @@ spec:
               value: {{ .Values.javaOpts | quote }}
             - name: ROLE
               value: "frontend"
-            - name: EXECUTOR
-              value: "frontend-gaia"
             - name: FRONTEND_COUNT
               value: {{ .Values.frontend.replicaCount | quote }}
             - name: INGESTOR_COUNT
