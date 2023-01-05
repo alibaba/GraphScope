@@ -80,16 +80,16 @@ spec:
                      -e "s/COORDINATOR/$(DNS_NAME_PREFIX_COORDINATOR)/g" \
                      -e "s/STORE/$(DNS_NAME_PREFIX_STORE)/g" \
                      -e "s@LOG4RS_CONFIG@${GRAPHSCOPE_HOME}/groot/conf/log4rs.yml@g" \
-            /etc/graphscope-store/my.cnf.tpl | sudo tee /etc/graphscope-store/my.cnf
+            /etc/graphscope-store/groot.config.tpl | sudo tee /etc/graphscope-store/groot.config
 
-            LOG_NAME=graphscope-store MAXGRAPH_CONF_FILE=/etc/graphscope-store/my.cnf \
-              ${GRAPHSCOPE_HOME}/groot/bin/store_ctl.sh maxgraph $(EXECUTOR)
+            LOG_NAME=graphscope-store GROOT_CONF_FILE=/etc/graphscope-store/groot.config \
+              ${GRAPHSCOPE_HOME}/groot/bin/store_ctl.sh start_server $(EXECUTOR)
           env:
             - name: DEBUG
               value: "false"
             - name: GRAPH_NAME
               value: {{ .Values.graphName | quote }}
-            - name: MAXGRAPH_JAVA_OPTS
+            - name: GROOT_JAVA_OPTS
               value: {{ .Values.javaOpts | quote }}
             - name: EXECUTOR
               value: "store-gaia"
@@ -115,9 +115,9 @@ spec:
               value: {{ $kafkaFullname}}-headless.{{ $releaseNamespace }}.svc.{{ $clusterDomain }}
             - name: KAFKA_SERVERS
               value: {{ include "graphscope-store.kafka.brokerlist" . }}
-            {{- if .Values.maxgraphLogbackFile }}
-            - name: MAXGRAPH_LOGBACK_FILE
-              value: {{ .Values.maxgraphLogbackFile | quote }}
+            {{- if .Values.grootLogbackFile }}
+            - name: GROOT_LOGBACK_FILE
+              value: {{ .Values.grootLogbackFile | quote }}
             {{- end }}
           ports:
             - name: port
@@ -139,8 +139,8 @@ spec:
             - name: data
               mountPath: {{ .Values.storeDataPath }}
             - name: config
-              mountPath: /etc/graphscope-store/my.cnf.tpl
-              subPath: my.cnf
+              mountPath: /etc/graphscope-store/groot.config.tpl
+              subPath: groot.config
 
       securityContext:
         runAsUser: 1001

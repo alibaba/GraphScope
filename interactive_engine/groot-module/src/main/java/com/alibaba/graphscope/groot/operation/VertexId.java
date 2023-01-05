@@ -13,7 +13,7 @@
  */
 package com.alibaba.graphscope.groot.operation;
 
-import com.alibaba.maxgraph.proto.groot.VertexIdPb;
+import com.alibaba.graphscope.proto.groot.VertexIdPb;
 
 public class VertexId {
     private long id;

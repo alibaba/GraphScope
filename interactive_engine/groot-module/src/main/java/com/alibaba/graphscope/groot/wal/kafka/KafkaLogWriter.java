@@ -15,9 +15,9 @@
  */
 package com.alibaba.graphscope.groot.wal.kafka;
 
+import com.alibaba.graphscope.compiler.api.exception.GrootException;
 import com.alibaba.graphscope.groot.wal.LogEntry;
 import com.alibaba.graphscope.groot.wal.LogWriter;
-import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
@@ -66,7 +66,7 @@ public class KafkaLogWriter implements LogWriter {
             recordMetadata = future.get();
         } catch (InterruptedException | ExecutionException e) {
             logger.error("append kafka failed", e);
-            throw new MaxGraphException(e);
+            throw new GrootException(e);
         }
         return recordMetadata.offset();
     }

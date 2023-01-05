@@ -13,8 +13,8 @@
  */
 package com.alibaba.graphscope.groot.discovery;
 
-import com.alibaba.maxgraph.common.RoleType;
-import com.alibaba.maxgraph.common.config.*;
+import com.alibaba.graphscope.groot.common.RoleType;
+import com.alibaba.graphscope.groot.common.config.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +26,7 @@ public class FileDiscovery implements NodeDiscovery {
     private Logger logger = LoggerFactory.getLogger(FileDiscovery.class);
 
     private Configs configs;
-    private Map<RoleType, Map<Integer, MaxGraphNode>> allNodes = new HashMap<>();
+    private Map<RoleType, Map<Integer, GrootNode>> allNodes = new HashMap<>();
     private boolean started = false;
 
     public FileDiscovery(Configs configs) {
@@ -35,24 +35,24 @@ public class FileDiscovery implements NodeDiscovery {
         int storeCount = CommonConfig.STORE_NODE_COUNT.get(this.configs);
         String storeNamePrefix = DiscoveryConfig.DNS_NAME_PREFIX_STORE.get(this.configs);
         int port = CommonConfig.RPC_PORT.get(this.configs);
-        Map<Integer, MaxGraphNode> storeNodes =
+        Map<Integer, GrootNode> storeNodes =
                 makeRoleNodes(storeCount, storeNamePrefix, RoleType.STORE.getName(), port);
         this.allNodes.put(RoleType.STORE, storeNodes);
 
         int graphPort = StoreConfig.EXECUTOR_GRAPH_PORT.get(this.configs);
-        Map<Integer, MaxGraphNode> graphNodes =
+        Map<Integer, GrootNode> graphNodes =
                 makeRoleNodes(
                         storeCount, storeNamePrefix, RoleType.EXECUTOR_GRAPH.getName(), graphPort);
         this.allNodes.put(RoleType.EXECUTOR_GRAPH, graphNodes);
 
         int queryPort = StoreConfig.EXECUTOR_QUERY_PORT.get(this.configs);
-        Map<Integer, MaxGraphNode> queryNodes =
+        Map<Integer, GrootNode> queryNodes =
                 makeRoleNodes(
                         storeCount, storeNamePrefix, RoleType.EXECUTOR_QUERY.getName(), queryPort);
         this.allNodes.put(RoleType.EXECUTOR_QUERY, queryNodes);
 
         int enginePort = StoreConfig.EXECUTOR_ENGINE_PORT.get(this.configs);
-        Map<Integer, MaxGraphNode> engineNodes =
+        Map<Integer, GrootNode> engineNodes =
                 makeRoleNodes(
                         storeCount,
                         storeNamePrefix,
@@ -61,13 +61,13 @@ public class FileDiscovery implements NodeDiscovery {
         this.allNodes.put(RoleType.EXECUTOR_ENGINE, engineNodes);
 
         int gaiaRpcPort = GaiaConfig.GAIA_RPC_PORT.get(this.configs);
-        Map<Integer, MaxGraphNode> gaiaRpcNodes =
+        Map<Integer, GrootNode> gaiaRpcNodes =
                 makeRoleNodes(
                         storeCount, storeNamePrefix, RoleType.GAIA_RPC.getName(), gaiaRpcPort);
         this.allNodes.put(RoleType.GAIA_RPC, gaiaRpcNodes);
 
         int gaiaEnginePort = GaiaConfig.GAIA_ENGINE_PORT.get(this.configs);
-        Map<Integer, MaxGraphNode> gaiaEngineNodes =
+        Map<Integer, GrootNode> gaiaEngineNodes =
                 makeRoleNodes(
                         storeCount,
                         storeNamePrefix,
@@ -78,14 +78,14 @@ public class FileDiscovery implements NodeDiscovery {
         // Frontend nodes
         int frontendCount = CommonConfig.FRONTEND_NODE_COUNT.get(this.configs);
         String frontendNamePrefix = DiscoveryConfig.DNS_NAME_PREFIX_FRONTEND.get(this.configs);
-        Map<Integer, MaxGraphNode> frontendNodes =
+        Map<Integer, GrootNode> frontendNodes =
                 makeRoleNodes(frontendCount, frontendNamePrefix, RoleType.FRONTEND.getName(), port);
         this.allNodes.put(RoleType.FRONTEND, frontendNodes);
 
         // Ingestor nodes
         int ingestorCount = CommonConfig.INGESTOR_NODE_COUNT.get(this.configs);
         String ingestorNamePrefix = DiscoveryConfig.DNS_NAME_PREFIX_INGESTOR.get(this.configs);
-        Map<Integer, MaxGraphNode> ingestorNodes =
+        Map<Integer, GrootNode> ingestorNodes =
                 makeRoleNodes(ingestorCount, ingestorNamePrefix, RoleType.INGESTOR.getName(), port);
         this.allNodes.put(RoleType.INGESTOR, ingestorNodes);
 
@@ -93,7 +93,7 @@ public class FileDiscovery implements NodeDiscovery {
         int coordinatorCount = CommonConfig.COORDINATOR_NODE_COUNT.get(this.configs);
         String coordinatorNamePrefix =
                 DiscoveryConfig.DNS_NAME_PREFIX_COORDINATOR.get(this.configs);
-        Map<Integer, MaxGraphNode> coordinatorNodes =
+        Map<Integer, GrootNode> coordinatorNodes =
                 makeRoleNodes(
                         coordinatorCount,
                         coordinatorNamePrefix,
@@ -109,12 +109,12 @@ public class FileDiscovery implements NodeDiscovery {
         }
     }
 
-    private Map<Integer, MaxGraphNode> makeRoleNodes(
+    private Map<Integer, GrootNode> makeRoleNodes(
             int nodeCount, String namePrefix, String role, int port) {
-        Map<Integer, MaxGraphNode> nodes = new HashMap<>();
+        Map<Integer, GrootNode> nodes = new HashMap<>();
         for (int i = 0; i < nodeCount; i++) {
             String host = namePrefix.replace("{}", String.valueOf(i));
-            nodes.put(i, new MaxGraphNode(role, i, host, port));
+            nodes.put(i, new GrootNode(role, i, host, port));
         }
         return nodes;
     }
@@ -126,9 +126,9 @@ public class FileDiscovery implements NodeDiscovery {
 
     @Override
     public void addListener(Listener listener) {
-        for (Map.Entry<RoleType, Map<Integer, MaxGraphNode>> e : allNodes.entrySet()) {
+        for (Map.Entry<RoleType, Map<Integer, GrootNode>> e : allNodes.entrySet()) {
             RoleType role = e.getKey();
-            Map<Integer, MaxGraphNode> nodes = e.getValue();
+            Map<Integer, GrootNode> nodes = e.getValue();
             if (!nodes.isEmpty()) {
                 try {
                     listener.nodesJoin(role, nodes);
@@ -144,7 +144,7 @@ public class FileDiscovery implements NodeDiscovery {
     public void removeListener(Listener listener) {}
 
     @Override
-    public MaxGraphNode getLocalNode() {
+    public GrootNode getLocalNode() {
         return null;
     }
 }

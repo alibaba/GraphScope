@@ -16,9 +16,9 @@ package com.alibaba.graphscope.groot.coordinator;
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.schema.request.DdlException;
 import com.alibaba.graphscope.groot.schema.request.DdlRequestBatch;
-import com.alibaba.maxgraph.proto.groot.SchemaGrpc;
-import com.alibaba.maxgraph.proto.groot.SubmitBatchDdlRequest;
-import com.alibaba.maxgraph.proto.groot.SubmitBatchDdlResponse;
+import com.alibaba.graphscope.proto.groot.SchemaGrpc;
+import com.alibaba.graphscope.proto.groot.SubmitBatchDdlRequest;
+import com.alibaba.graphscope.proto.groot.SubmitBatchDdlResponse;
 
 import io.grpc.stub.StreamObserver;
 

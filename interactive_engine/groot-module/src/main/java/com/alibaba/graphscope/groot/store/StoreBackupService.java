@@ -16,7 +16,7 @@
 package com.alibaba.graphscope.groot.store;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
-import com.alibaba.maxgraph.proto.groot.*;
+import com.alibaba.graphscope.proto.groot.*;
 
 import io.grpc.stub.StreamObserver;
 

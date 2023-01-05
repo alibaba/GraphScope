@@ -1,8 +1,8 @@
 package com.alibaba.graphscope.groot.coordinator;
 
-import com.alibaba.maxgraph.proto.groot.AllocateIdRequest;
-import com.alibaba.maxgraph.proto.groot.AllocateIdResponse;
-import com.alibaba.maxgraph.proto.groot.IdAllocateGrpc;
+import com.alibaba.graphscope.proto.groot.AllocateIdRequest;
+import com.alibaba.graphscope.proto.groot.AllocateIdResponse;
+import com.alibaba.graphscope.proto.groot.IdAllocateGrpc;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;

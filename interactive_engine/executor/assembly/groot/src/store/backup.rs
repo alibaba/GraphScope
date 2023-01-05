@@ -18,8 +18,8 @@ use std::ffi::CStr;
 use std::os::raw::{c_char, c_void};
 use std::{mem, str};
 
-use maxgraph_store::db::api::multi_version_graph::{GraphBackup, MultiVersionGraph};
-use maxgraph_store::db::graph::store::{GraphBackupEngine, GraphStore};
+use groot_store::db::api::multi_version_graph::{GraphBackup, MultiVersionGraph};
+use groot_store::db::graph::store::{GraphBackupEngine, GraphStore};
 
 use crate::store::graph::GraphHandle;
 use crate::store::jna_response::JnaResponse;

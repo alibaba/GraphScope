@@ -18,7 +18,7 @@ import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 
 public interface GraphLibrary extends Library {
-    GraphLibrary INSTANCE = Native.load("maxgraph_ffi", GraphLibrary.class);
+    GraphLibrary INSTANCE = Native.load("groot_ffi", GraphLibrary.class);
 
     Pointer openGraphStore(byte[] config, int len);
 

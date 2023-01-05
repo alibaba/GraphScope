@@ -13,13 +13,13 @@
  */
 package com.alibaba.graphscope.groot.coordinator;
 
+import com.alibaba.graphscope.compiler.api.exception.GrootException;
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
+import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.config.ZkConfig;
 import com.alibaba.graphscope.groot.meta.MetaStore;
 import com.alibaba.graphscope.groot.wal.LogService;
-import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.common.config.ZkConfig;
-import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
-import com.alibaba.maxgraph.sdkcommon.common.BackupInfo;
+import com.alibaba.graphscope.sdkcommon.common.BackupInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -53,7 +53,7 @@ public class GraphInitializer {
             initializeZkIfNeeded();
             initializeMetaIfNeeded();
         } catch (Exception e) {
-            throw new MaxGraphException(e);
+            throw new GrootException(e);
         }
     }
 
