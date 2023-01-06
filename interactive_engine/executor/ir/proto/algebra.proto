@@ -496,3 +496,124 @@ message LogicalPlan {
   /// The root nodes' array indices
   repeated int32 roots = 2;
 }
+
+// The entity data type, i.e., type of vertex or edge.
+message EntityType {
+  message PropType {
+    int32 prop_id = 1;
+    common.DataType type = 2;
+  }
+  map<int32, PropType> label_prop_types = 1;
+}
+
+// The path data type.
+message PathType {
+  repeated EntityType entity_types = 1;
+}
+
+// IrDataType, which could be either basic type, entity type or path type.
+message IrDataType {
+  oneof type {
+    common.DataType data_type = 1;
+    EntityType entity_type = 2;
+    PathType path_type = 3;
+  }
+}
+
+message IrColType {
+  IrDataType type = 1;
+  int32 alias = 2;
+}
+
+message Repartition {
+  message Shuffle {
+    common.Variable shuffle_key = 1;
+  }
+  message Broadcast {}
+  oneof Strategy {
+    Shuffle to_another  = 1;
+    Broadcast to_others  = 2;
+  }
+}
+
+message PhysicalUnion {
+  repeated PhysicalPlan sub_plans = 1;
+}
+
+message PhysicalIntersect {
+  repeated PhysicalPlan sub_plans = 1;
+  int32 key = 2;
+}
+
+message PhysicalJoin {
+  enum JoinKind {
+    // Inner join
+    INNER = 0;
+    // Left outer join
+    LEFT_OUTER = 1;
+    // Right outer join
+    RIGHT_OUTER = 2;
+    // Full outer join
+    FULL_OUTER = 3;
+    // Left semi-join, right alternative can be naturally adapted
+    SEMI = 4;
+    // Left anti-join, right alternative can be naturally adapted
+    ANTI = 5;
+    // aka. Cartesian product
+    TIMES = 6;
+  }
+  // The key to perferm Join (on results output by left_plan)
+  repeated common.Variable left_keys = 1;
+  // The key to perferm Join (on results output by right_plan)
+  repeated common.Variable right_keys = 2;
+  JoinKind kind = 3;
+  PhysicalPlan left_plan = 4;
+  PhysicalPlan right_plan = 5;
+}
+
+message PhysicalApply {
+    // Define how to join the result of the subtask back to the original relation
+    PhysicalJoin.JoinKind join = 1;
+    // The variables to perform grouping, or segmenting.
+    // If not specified, it is an Apply; otherwise, it is a SegmentApply
+    repeated common.Variable keys = 2;
+    // To project on certain tags of the input relation to execute the subtask
+    repeated int32 tags = 3;
+    // The subtask will be perform on certain tags as keys of the input relation
+    PhysicalPlan sub_plan = 4;
+    // Define the alias of output from `Apply`
+    int32 alias = 5;
+}
+
+message PhysicalOpr {
+  message Operator {
+    oneof op_kind {
+      Project project = 1;
+      Select select = 2;
+      GroupBy group_by = 3;
+      OrderBy order_by = 4;
+      Dedup dedup = 5;
+      Unfold unfold = 6;
+      Limit limit = 7;
+      Scan scan = 8;
+      Sink sink = 9;
+      PhysicalApply apply = 10;
+      PhysicalJoin join = 11;
+      PhysicalUnion union = 12;
+      PhysicalIntersect intersect = 13;
+      Repartition repartition = 14;
+      // Saving the room for relational operators
+      GetV vertex = 30;
+      EdgeExpand edge = 31;
+      PathExpand path = 32;
+    }
+  }
+  // The node's operator
+  Operator opr = 1;
+  // The type of outputs of operator
+  repeated IrColType op_type = 2;
+}
+
+message PhysicalPlan {
+  repeated PhysicalOpr plan = 1;
+}
