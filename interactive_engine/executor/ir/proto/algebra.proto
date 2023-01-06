@@ -527,7 +527,7 @@ message IrColType {
 
 message Repartition {
   message Shuffle {
-    common.Variable shuffle_key = 1;
+    optional int32 shuffle_key = 1;
   }
   message Broadcast {}
   oneof Strategy {
@@ -546,43 +546,25 @@ message PhysicalIntersect {
 }
 
 message PhysicalJoin {
-  enum JoinKind {
-    // Inner join
-    INNER = 0;
-    // Left outer join
-    LEFT_OUTER = 1;
-    // Right outer join
-    RIGHT_OUTER = 2;
-    // Full outer join
-    FULL_OUTER = 3;
-    // Left semi-join, right alternative can be naturally adapted
-    SEMI = 4;
-    // Left anti-join, right alternative can be naturally adapted
-    ANTI = 5;
-    // aka. Cartesian product
-    TIMES = 6;
-  }
   // The key to perferm Join (on results output by left_plan)
   repeated common.Variable left_keys = 1;
   // The key to perferm Join (on results output by right_plan)
   repeated common.Variable right_keys = 2;
-  JoinKind kind = 3;
+  Join.JoinKind join_kind = 3;
   PhysicalPlan left_plan = 4;
   PhysicalPlan right_plan = 5;
 }
 
 message PhysicalApply {
     // Define how to join the result of the subtask back to the original relation
-    PhysicalJoin.JoinKind join = 1;
+    Join.JoinKind join_kind = 1;
     // The variables to perform grouping, or segmenting.
     // If not specified, it is an Apply; otherwise, it is a SegmentApply
     repeated common.Variable keys = 2;
-    // To project on certain tags of the input relation to execute the subtask
-    repeated int32 tags = 3;
     // The subtask will be perform on certain tags as keys of the input relation
-    PhysicalPlan sub_plan = 4;
+    PhysicalPlan sub_plan = 3;
     // Define the alias of output from `Apply`
-    int32 alias = 5;
+    optional int32 alias = 4;
 }
 
 message PhysicalOpr {

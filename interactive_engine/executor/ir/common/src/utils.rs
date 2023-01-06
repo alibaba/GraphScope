@@ -666,6 +666,14 @@ impl pb::edge_expand::Direction {
     }
 }
 
+impl From<pb::physical_opr::operator::OpKind> for pb::PhysicalOpr {
+    fn from(op_kind: pb::physical_opr::operator::OpKind) -> Self {
+        let opr = pb::physical_opr::Operator { op_kind: Some(op_kind) };
+        // TODO: add op_type once supported
+        pb::PhysicalOpr { opr: Some(opr), op_type: vec![] }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
