@@ -13,7 +13,7 @@
  */
 package com.alibaba.graphscope.groot.sdk.example;
 
-import com.alibaba.graphscope.groot.sdk.MaxGraphClient;
+import com.alibaba.graphscope.groot.sdk.GrootClient;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +51,7 @@ public class LoadLdbc {
                         + batchSize
                         + "]");
 
-        MaxGraphClient client = MaxGraphClient.newBuilder().addHost(host, port).build();
+        GrootClient client = GrootClient.newBuilder().addHost(host, port).build();
         int processed = 0;
         int ignored = 0;
         for (Path path : Files.list(Paths.get(dataDir)).collect(Collectors.toList())) {
@@ -94,7 +94,7 @@ public class LoadLdbc {
         return origin;
     }
 
-    private static void processVertex(MaxGraphClient client, String label, Path path, int batchSize)
+    private static void processVertex(GrootClient client, String label, Path path, int batchSize)
             throws IOException, ParseException {
         List<String> propertyNames = new ArrayList<>();
         int count = 0;
@@ -148,7 +148,7 @@ public class LoadLdbc {
     }
 
     private static void processEdge(
-            MaxGraphClient client,
+            GrootClient client,
             String label,
             String srcLabel,
             String dstLabel,

@@ -14,7 +14,7 @@
 package com.alibaba.graphscope.groot.wal;
 
 import com.alibaba.graphscope.groot.operation.OperationBatch;
-import com.alibaba.maxgraph.proto.groot.LogEntryPb;
+import com.alibaba.graphscope.proto.groot.LogEntryPb;
 
 public class LogEntry {
     private long snapshotId;

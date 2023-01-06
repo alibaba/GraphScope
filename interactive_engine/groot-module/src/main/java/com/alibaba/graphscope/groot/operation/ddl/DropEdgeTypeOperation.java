@@ -15,8 +15,8 @@ package com.alibaba.graphscope.groot.operation.ddl;
 
 import com.alibaba.graphscope.groot.operation.Operation;
 import com.alibaba.graphscope.groot.operation.OperationType;
-import com.alibaba.maxgraph.proto.groot.DdlOperationPb;
-import com.alibaba.maxgraph.sdkcommon.schema.LabelId;
+import com.alibaba.graphscope.proto.groot.DdlOperationPb;
+import com.alibaba.graphscope.sdkcommon.schema.LabelId;
 import com.google.protobuf.ByteString;
 
 public class DropEdgeTypeOperation extends Operation {

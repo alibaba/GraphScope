@@ -85,7 +85,6 @@ Here we give a list of most frequently used parameters.
 | clusterDomain | Default Kubernetes cluster domain | cluster.local |
 | commonLabels | Labels to add to all deployed objects | {} |
 | commonAnnotations | Annotations to add to all deployed objects | {} |
-| executor | Executor type, "maxgraph" or "gaia" | maxgraph |
 | javaOpts | Java options | "" |
 | auth.username | Username | "" |
 | auth.password | Password | "" |
@@ -129,11 +128,11 @@ $ helm install my-release \
 ```
 
 Add multiple extra config to the component which is defined in the configmap by
-`--set extraConfig=k1=v1;k2=v2`. Note we use `;` to seperate config items. For example,
+`--set extraConfig="k1=v1;k2=v2"`. Note we use `;` to seperate config items. For example,
 
 ```bash
 $ helm install my-release \
-  --set extraConfig=k1=v1;k2=v2 graphscope/graphscope-store
+  --set extraConfig="k1=v1;k2=v2" graphscope/graphscope-store
 ```
 
 
@@ -148,7 +147,7 @@ $ helm install my-release -f values.yaml graphscope/graphscope-store
 
 ## Persistence
 
-The [GraphScope Store](https://github.com/alibaba/GraphScope/tree/main/interactive_engine/src/v2/src/main) image stores the GraphScope Store data at the `/var/lib/graphscope-store` and configurations at the `/etc/graphscope-store/my.cnf`, and coordinator meta information at the `/etc/graphscope-store/my.meta` path of the container.
+The [GraphScope Store](https://github.com/alibaba/GraphScope/tree/main/interactive_engine/src/v2/src/main) image stores the GraphScope Store data at the `/var/lib/graphscope-store` and configurations at the `/etc/groot/groot.config`, and coordinator meta information at the `/etc/groot/my.meta` path of the container.
 
 The chart mounts a [Persistent Volume](https://kubernetes.io/docs/user-guide/persistent-volumes/) volume at this location. The volume is created using dynamic volume provisioning by default. An existing PersistentVolumeClaim can also be defined for this purpose.
 
@@ -160,9 +159,13 @@ This chart allows you to set your custom affinity using the `XXX.affinity` param
 
 ## Troubleshooting
 
-Find more information about how to deal with common errors related to Bitnami’s Helm charts in [this troubleshooting guide](https://docs.bitnami.com/general/how-to/troubleshoot-helm-chart-issues).
+The java part use `logback` as logging library, and rust part use `log4rs` as logging library.
+Both of them supports reload configuration periodically.
+Inside the image, you could find
+  - the configuration for `logback` in `/usr/local/groot/conf/logback.xml`
+  - the configuration for `log4rs` in `/usr/local/groot/conf/log4rs.yml`
 
-
+The application will apply the latest log configuration after at most 30 seconds, if these config files are modified.
 ## Upgrading
 
 ```bash

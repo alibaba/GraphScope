@@ -1,5 +1,5 @@
 [package]
-name = "maxgraph-store"
+name = "groot-store"
 version = "0.1.0"
 authors = ["勤远 <wubin.cwb@alibaba-inc.com>"]
 edition = "2018"
@@ -7,7 +7,7 @@ build = "build.rs"
 
 [dependencies]
 byteorder = "1"
-log = "0.3"
+log = "0.4"
 protobuf = { version = "2.27", features = ["with-bytes"] }
 serde = "1.0.72"
 serde_derive = "1.0.72"
@@ -17,7 +17,7 @@ tempfile = "3"
 crossbeam-epoch = "0.7"
 rust-ini = "0.13"
 libc = "0.2"
-log4rs = "0.8.0"
+log4rs = "1.2"
 grpcio = "0.10"
 grpcio-sys = { version = "0.10", features = ["openssl-vendored"] }
 # deactivation of bzip2 due to https://github.com/rust-rocksdb/rust-rocksdb/issues/609

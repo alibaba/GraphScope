@@ -3,7 +3,7 @@ use std::fmt;
 use std::fmt::Formatter;
 use std::os::raw::{c_char, c_void};
 
-use maxgraph_store::db::api::{GraphError, GraphErrorCode, GraphResult};
+use groot_store::db::api::{GraphError, GraphErrorCode, GraphResult};
 
 #[repr(C)]
 #[allow(non_snake_case)]

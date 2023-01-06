@@ -15,10 +15,10 @@ package com.alibaba.graphscope.groot.frontend;
 
 import com.alibaba.graphscope.groot.rpc.RpcClient;
 import com.alibaba.graphscope.groot.schema.request.DdlException;
-import com.alibaba.maxgraph.proto.groot.DdlRequestBatchPb;
-import com.alibaba.maxgraph.proto.groot.SchemaGrpc;
-import com.alibaba.maxgraph.proto.groot.SubmitBatchDdlRequest;
-import com.alibaba.maxgraph.proto.groot.SubmitBatchDdlResponse;
+import com.alibaba.graphscope.proto.groot.DdlRequestBatchPb;
+import com.alibaba.graphscope.proto.groot.SchemaGrpc;
+import com.alibaba.graphscope.proto.groot.SubmitBatchDdlRequest;
+import com.alibaba.graphscope.proto.groot.SubmitBatchDdlResponse;
 
 import io.grpc.ManagedChannel;
 

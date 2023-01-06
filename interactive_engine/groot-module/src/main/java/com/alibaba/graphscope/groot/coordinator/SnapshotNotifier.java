@@ -13,10 +13,10 @@
  */
 package com.alibaba.graphscope.groot.coordinator;
 
-import com.alibaba.graphscope.groot.discovery.MaxGraphNode;
+import com.alibaba.graphscope.groot.common.RoleType;
+import com.alibaba.graphscope.groot.discovery.GrootNode;
 import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
-import com.alibaba.maxgraph.common.RoleType;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -51,7 +51,7 @@ public class SnapshotNotifier implements NodeDiscovery.Listener {
     }
 
     @Override
-    public void nodesJoin(RoleType role, Map<Integer, MaxGraphNode> nodes) {
+    public void nodesJoin(RoleType role, Map<Integer, GrootNode> nodes) {
         if (role != RoleType.FRONTEND) {
             return;
         }
@@ -66,7 +66,7 @@ public class SnapshotNotifier implements NodeDiscovery.Listener {
     }
 
     @Override
-    public void nodesLeft(RoleType role, Map<Integer, MaxGraphNode> nodes) {
+    public void nodesLeft(RoleType role, Map<Integer, GrootNode> nodes) {
         if (role != RoleType.FRONTEND) {
             return;
         }

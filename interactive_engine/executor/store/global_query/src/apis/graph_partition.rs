@@ -13,8 +13,8 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use maxgraph_store::api::prelude::Property;
-use maxgraph_store::api::{LabelId, PartitionId, VertexId};
+use groot_store::api::prelude::Property;
+use groot_store::api::{LabelId, PartitionId, VertexId};
 
 // Partition manager for graph query
 pub trait GraphPartitionManager: Send + Sync {

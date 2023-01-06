@@ -35,8 +35,6 @@ do
     (( count++ ))
 done
 
-server_num="pegasus.server.num: $SERVERSSIZE"
-
 graph_schema="graph.schema: $GRAPH_SCHEMA"
 
 properties="$worker_num\n$timeout\n$batch_size\n$output_capacity\n$hosts\n$server_num\n$graph_schema"

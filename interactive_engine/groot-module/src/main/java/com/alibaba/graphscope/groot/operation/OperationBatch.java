@@ -13,8 +13,8 @@
  */
 package com.alibaba.graphscope.groot.operation;
 
-import com.alibaba.maxgraph.proto.groot.OperationBatchPb;
-import com.alibaba.maxgraph.proto.groot.OperationPb;
+import com.alibaba.graphscope.proto.groot.OperationBatchPb;
+import com.alibaba.graphscope.proto.groot.OperationPb;
 
 import java.util.ArrayList;
 import java.util.Iterator;

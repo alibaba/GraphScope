@@ -17,9 +17,9 @@ import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.operation.BatchId;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
-import com.alibaba.maxgraph.proto.groot.IngestorWriteGrpc;
-import com.alibaba.maxgraph.proto.groot.WriteIngestorRequest;
-import com.alibaba.maxgraph.proto.groot.WriteIngestorResponse;
+import com.alibaba.graphscope.proto.groot.IngestorWriteGrpc;
+import com.alibaba.graphscope.proto.groot.WriteIngestorRequest;
+import com.alibaba.graphscope.proto.groot.WriteIngestorResponse;
 
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;

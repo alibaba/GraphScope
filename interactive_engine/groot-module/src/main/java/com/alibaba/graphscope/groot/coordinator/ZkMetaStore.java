@@ -13,10 +13,10 @@
  */
 package com.alibaba.graphscope.groot.coordinator;
 
+import com.alibaba.graphscope.compiler.api.exception.GrootException;
+import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.config.ZkConfig;
 import com.alibaba.graphscope.groot.meta.MetaStore;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.common.config.ZkConfig;
-import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -49,7 +49,7 @@ public class ZkMetaStore implements MetaStore {
         try {
             stat = this.curator.checkExists().forPath(fullPath);
         } catch (Exception e) {
-            throw new MaxGraphException(e);
+            throw new GrootException(e);
         }
         return stat != null;
     }

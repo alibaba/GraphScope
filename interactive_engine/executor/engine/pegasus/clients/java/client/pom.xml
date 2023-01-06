@@ -5,8 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>maxgraph-parent</artifactId>
-        <groupId>com.alibaba.maxgraph</groupId>
+        <artifactId>interactive-parent</artifactId>
+        <groupId>com.alibaba.graphscope</groupId>
         <version>${revision}</version>
         <relativePath>../../../../../../pom.xml</relativePath>
     </parent>

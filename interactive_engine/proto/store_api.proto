@@ -15,7 +15,7 @@
  */
 syntax = "proto3";
 
-option java_package = "com.alibaba.maxgraph.proto";
+option java_package = "com.alibaba.graphscope.proto";
 
 package tinkerpop;
 import "sdk/message.proto";
@@ -112,7 +112,7 @@ message BatchVertexEdgeRequest {
     repeated uint32 label_list                          = 4;
     bool edge_prop_flag                                 = 5;
     uint64 limit_count                                  = 6;
-    repeated maxgraph.LogicalCompare logical_compare    = 7;
+    repeated graphscope.interactive.LogicalCompare logical_compare    = 7;
 }
 
 message BatchVertexEdgeResponse {

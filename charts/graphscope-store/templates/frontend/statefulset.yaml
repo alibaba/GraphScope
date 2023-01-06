@@ -64,37 +64,16 @@ spec:
           image: {{ include "graphscope-store.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
           command:
-          - /bin/bash
-          - -c
-          - |
-            /tmp/ready_probe.sh
-
-            [[ `hostname` =~ -([0-9]+)$ ]] || exit 1
-            ordinal=${BASH_REMATCH[1]}
-            sudo sed -e "s/GRAPH_NAME/$(GRAPH_NAME)/g" \
-                     -e "s/ROLE/$(ROLE)/g" \
-                     -e "s/INDEX/${ordinal}/g" \
-                     -e "s/KAFKA_SERVERS/$(KAFKA_SERVERS)/g" \
-                     -e "s/FRONTEND/$(DNS_NAME_PREFIX_FRONTEND)/g" \
-                     -e "s/INGESTOR/$(DNS_NAME_PREFIX_INGESTOR)/g" \
-                     -e "s/COORDINATOR/$(DNS_NAME_PREFIX_COORDINATOR)/g" \
-                     -e "s/STORE/$(DNS_NAME_PREFIX_STORE)/g" \
-                     -e "s@LOG4RS_CONFIG@${GRAPHSCOPE_HOME}/groot/conf/log4rs.yml@g" \
-            /etc/graphscope-store/my.cnf.tpl | sudo tee /etc/graphscope-store/my.cnf
-
-            LOG_NAME=graphscope-store MAXGRAPH_CONF_FILE=/etc/graphscope-store/my.cnf \
-              ${GRAPHSCOPE_HOME}/groot/bin/store_ctl.sh maxgraph $(EXECUTOR)
+            - /etc/groot/setup.sh
           env:
             - name: DEBUG
               value: "false"
             - name: GRAPH_NAME
               value: {{ .Values.graphName | quote }}
-            - name: MAXGRAPH_JAVA_OPTS
+            - name: GROOT_JAVA_OPTS
               value: {{ .Values.javaOpts | quote }}
             - name: ROLE
               value: "frontend"
-            - name: EXECUTOR
-              value: "frontend-gaia"
             - name: FRONTEND_COUNT
               value: {{ .Values.frontend.replicaCount | quote }}
             - name: INGESTOR_COUNT
@@ -115,10 +94,6 @@ spec:
               value: {{ $kafkaFullname}}-headless.{{ $releaseNamespace }}.svc.{{ $clusterDomain }}
             - name: KAFKA_SERVERS
               value: {{ include "graphscope-store.kafka.brokerlist" . }}
-            {{- if .Values.maxgraphLogbackFile }}
-            - name: MAXGRAPH_LOGBACK_FILE
-              value: {{ .Values.maxgraphLogbackFile | quote }}
-            {{- end }}
           ports:
             - name: port
               containerPort: 55555
@@ -145,11 +120,18 @@ spec:
           {{- end }}
           volumeMounts:
             - name: config
-              mountPath: /etc/graphscope-store/my.cnf.tpl
-              subPath: my.cnf
+              mountPath: /etc/groot/groot.config.tpl
+              subPath: groot.config
+            - name: config
+              mountPath: /etc/groot/setup.sh
+              subPath: setup.sh
+            - name: config
+              mountPath: /etc/groot/ready_probe.sh
+              subPath: ready_probe.sh
 
       volumes:
         - name: config
           configMap:
             name: {{ include "graphscope-store.configmapName" . }}
+            defaultMode: 0755
 

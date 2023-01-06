@@ -18,7 +18,7 @@ package com.alibaba.graphscope.groot.coordinator;
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
 import com.alibaba.graphscope.groot.store.StoreBackupId;
-import com.alibaba.maxgraph.proto.groot.*;
+import com.alibaba.graphscope.proto.groot.*;
 
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;

@@ -15,7 +15,7 @@
  */
 package com.alibaba.graphscope.groot.store;
 
-import com.alibaba.maxgraph.proto.groot.StoreBackupIdPb;
+import com.alibaba.graphscope.proto.groot.StoreBackupIdPb;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -21,9 +21,9 @@ use std::time::Duration;
 
 use gaia_pegasus::Configuration as GaiaConfig;
 use global_query::GlobalGraph;
-use maxgraph_store::api::PartitionId;
-use maxgraph_store::db::api::{GraphConfig, GraphResult};
-use maxgraph_store::db::graph::store::GraphStore;
+use groot_store::api::PartitionId;
+use groot_store::db::api::{GraphConfig, GraphResult};
+use groot_store::db::graph::store::GraphStore;
 use pegasus_network::config::{NetworkConfig, ServerAddr};
 use pegasus_network::SimpleServerDetector;
 use pegasus_server::rpc::{start_all, RPCServerConfig, ServiceStartListener};
@@ -69,8 +69,8 @@ impl GaiaServer {
         let gaia_rpc_config = make_gaia_rpc_config(self.config.clone());
         info!("Server config {:?}\nRPC config {:?}", gaia_config, gaia_rpc_config);
         let (server_port, rpc_port) = self.rpc_runtime.block_on(async {
-            let query_maxgraph = QueryGrootGraph::new(self.graph.clone(), self.graph.clone());
-            let job_compiler = query_maxgraph.initialize_job_assembly();
+            let query = QueryGrootGraph::new(self.graph.clone(), self.graph.clone());
+            let job_compiler = query.initialize_job_assembly();
             let service_listener = GaiaServiceListener::default();
             let service_listener_clone = service_listener.clone();
             self.rpc_runtime.spawn(async move {

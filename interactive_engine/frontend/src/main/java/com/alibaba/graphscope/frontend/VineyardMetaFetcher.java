@@ -18,9 +18,9 @@ package com.alibaba.graphscope.frontend;
 
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
-import com.alibaba.maxgraph.common.util.IrSchemaParser;
-import com.alibaba.maxgraph.compiler.api.schema.GraphSchema;
-import com.alibaba.maxgraph.compiler.schema.JsonFileSchemaFetcher;
+import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
+import com.alibaba.graphscope.compiler.schema.JsonFileSchemaFetcher;
+import com.alibaba.graphscope.groot.common.util.IrSchemaParser;
 
 import java.util.Optional;
 
