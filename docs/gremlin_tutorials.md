@@ -5,7 +5,7 @@ This documentation guides you how to work with the gremlin graph traversal langu
 
 ## Steps
 ### Source
-#### V()
+#### [V()](https://tinkerpop.apache.org/docs/current/reference/#v-step)
 The V()-step is meant to iterate over all vertices from the graph. Moreover, `vertexIds` can be injected into the traversal to select a subset of vertices.
 
 Parameters: </br>
@@ -15,7 +15,7 @@ g.V()
 g.V(1)
 g.V(1,2,3)
 ```
-#### E()
+#### [E()](https://tinkerpop.apache.org/docs/current/reference/#e-step)
 The E()-step is meant to iterate over all edges from the graph. Moreover, `edgeIds` can be injected into the traversal to select a subset of edges.
 
 Parameters: </br>
@@ -25,7 +25,7 @@ g.E()
 g.E(1)
 g.E(1,2,3)
 ```
-### Expand
+### [Expand](https://tinkerpop.apache.org/docs/current/reference/#vertex-steps)
 #### outE()
 Map the vertex to its outgoing incident edges given the edge labels.
 
@@ -101,7 +101,7 @@ Map the edge to its incident vertices.
 g.V().outE().bothV() # both endpoints of the outgoing edges
 ```
 ### Filter
-#### hasId()
+#### [hasId()](https://tinkerpop.apache.org/docs/current/reference/#has-step)
 The hasId()-step is meant to filter graph elements based on their identifiers.
 
 Parameters: </br>
@@ -169,7 +169,7 @@ propertyKey - the key of the property to filter on for non-existence.
 ```bash
 g.V().hasNot("age") # find vertices not-containing property `age`
 ```
-#### is()
+#### [is()](https://tinkerpop.apache.org/docs/current/reference/#is-step)
 The is()-step is meant to filter the object if it is unequal to the provided value or fails the provided predicate.
 
 Parameters: </br>
@@ -181,7 +181,7 @@ Parameters: </br>
     ```bash
     g.V().out().count().is(P.eq(1))
     ```
-#### where(traversal)
+#### [where(traversal)](https://tinkerpop.apache.org/docs/current/reference/#where-step)
 The where(traversal)-step is meant to filter the current object by applying it to the nested traversal.
 
 Parameters: </br>
@@ -215,7 +215,7 @@ The by() can be applied to a number of different steps to alter their behaviors.
     ```bash
     g.V().as("a").out().out().as("b").where("b", P.eq("a")).by(out().count()) # whether entry `b` and entry `a` have the same count of one-hop neighbors?
     ```
-#### not(traversal)
+#### [not(traversal)](https://tinkerpop.apache.org/docs/current/reference/#not-step)
 The not()-step is opposite to the where()-step and removes objects from the traversal stream when the traversal provided as an argument does not return any objects.
 
 Parameters: </br>
@@ -224,7 +224,7 @@ notTraversal - the traversal to filter by.
 g.V().not(out().count())
 g.V().not(out().count().is(gt(0)))
 ```
-#### dedup()
+#### [dedup()](https://tinkerpop.apache.org/docs/current/reference/#dedup-step)
 Remove all duplicates in the traversal stream up to this point.
 
 Parameters:
@@ -254,17 +254,17 @@ Usages of the modulated by()-step: </br>
     g.V().as("a").out().dedup("a").by(out().count())
     ```
 ### Project
-#### id()
+#### [id()](https://tinkerpop.apache.org/docs/current/reference/#id-step)
 The id()-step is meant to map the graph element to its identifier.
 ```bash
 g.V().id()
 ```
-#### label()
+#### [label()](https://tinkerpop.apache.org/docs/current/reference/#label-step)
 The label()-step is meant to map the graph element to its label.
 ```bash
 g.V().label()
 ```
-#### constant()
+#### [constant()](https://tinkerpop.apache.org/docs/current/reference/#constant-step)
 The constant()-step is meant to map any object to a fixed object value.
 
 Parameters: </br>
@@ -274,7 +274,7 @@ g.V().constant(1)
 g.V().constant("marko")
 g.V().constant(1.0)
 ```
-#### valueMap()
+#### [valueMap()](https://tinkerpop.apache.org/docs/current/reference/#valuemap-step)
 The valueMap()-step is meant to map the graph element to a map of the property entries according to their actual properties. If no property keys are provided, then all property values are retrieved.
 
 Parameters: </br>
@@ -284,7 +284,7 @@ g.V().valueMap()
 g.V().valueMap("name")
 g.V().valueMap("name", "age")
 ```
-#### values
+#### [values()](https://tinkerpop.apache.org/docs/current/reference/#values-step)
 The values()-step is meant to map the graph element to the values of the associated properties given the provide property keys. Here we just allow only one property key as the argument to the `values()` to implement the step as a map instead of a flat-map, which may be a little different from the standard gremlin.
 
 Parameters: </br>
@@ -292,7 +292,7 @@ propertyKey - the property to retrieve its value from.
 ```bash
 g.V().values("name")
 ```
-#### select()
+#### [select()](https://tinkerpop.apache.org/docs/current/reference/#select-step)
 The select()-step is meant to map the traverser to the object specified by the selectKey or to a map projection of sideEffect values.
 
 Parameters: </br>
@@ -323,37 +323,37 @@ Usages of the modulated by()-step: </br>
     g.V().as("a").select("a").by(out().count())
     ```
 ### Aggregate
-#### count()
+#### [count()](https://tinkerpop.apache.org/docs/current/reference/#count-step)
 Count the number of traverser(s) up to this point.
 ```bash
 g.V().count()
 ```
-#### fold()
+#### [fold()](https://tinkerpop.apache.org/docs/current/reference/#fold-step)
 Rolls up objects in the stream into an aggregate list.
 ```bash
 g.V().limit(10).fold() # select top-10 vertices from the stream and fold them into single list
 ```
-#### sum()
+#### [sum()](https://tinkerpop.apache.org/docs/current/reference/#sum-step)
 Sum the traverser values up to this point.
 ```bash
 g.V().values("age").sum()
 ```
-#### min()
+#### [min()](https://tinkerpop.apache.org/docs/current/reference/#min-step)
 Determines the minimum value in the stream.
 ```bash
 g.V().values("age").min()
 ```
-#### max()
+#### [max()](https://tinkerpop.apache.org/docs/current/reference/#max-step)
 Determines the maximum value in the stream.
 ```bash
 g.V().values("age").max()
 ```
-#### mean()
+#### [mean()](https://tinkerpop.apache.org/docs/current/reference/#mean-step)
 Compute the average value in the stream.
 ```bash
 g.V().values("age").mean()
 ```
-#### group()
+#### [group()](https://tinkerpop.apache.org/docs/current/reference/#group-step)
 Organize objects in the stream into a Map. Calls to group() are typically accompanied with by() modulators which help specify how the grouping should occur.
 
 Usages of the key by()-step:
@@ -392,7 +392,7 @@ Usages of the value by()-step:
     g.V().group().by().by(dedup().count()) # count the number of distinct elements in each group
     g.V().group().by().by(dedup().fold()) # de-duplicate in each group list
     ```
-#### groupCount()
+#### [groupCount()](https://tinkerpop.apache.org/docs/current/reference/#groupcount-step)
 Counts the number of times a particular objects has been part of a traversal, returning a map where the object is the key and the value is the count.
 
 Usages of the key by()-step:
@@ -409,7 +409,7 @@ Usages of the key by()-step:
     g.V().groupCount().by(values("name")) # = g.V().groupCount().by("name")
     g.V().groupCount().by(out().count())
     ```
-### Order
+### [Order](https://tinkerpop.apache.org/docs/current/reference/#order-step)
 #### order()
 Order all the objects in the traversal up to this point and then emit them one-by-one in their ordered sequence.
 
@@ -441,7 +441,7 @@ Usages of the modulated by()-step: </br>
     g.V().order().by(out().count(), Order.desc)
     ```
 ### Statistics
-#### limit()
+#### [limit()](https://tinkerpop.apache.org/docs/current/reference/#limit-step)
 Filter the objects in the traversal by the number of them to pass through the stream, where only the first n objects are allowed as defined by the limit argument.
 
 Parameters: </br>
@@ -449,7 +449,7 @@ limit - the number at which to end the stream.
 ```bash
 g.V().limit(10)
 ```
-#### coin()
+#### [coin()](https://tinkerpop.apache.org/docs/current/reference/#coin-step)
 Filter the object in the stream given a biased coin toss.
 
 Parameters: </br>
@@ -458,7 +458,7 @@ probability - the probability that the object will pass through.
 g.V().coin(0.2) # range is [0, 1]
 ```
 ### Union
-#### union()
+#### [union()](https://tinkerpop.apache.org/docs/current/reference/#union-step)
 Merges the results of an arbitrary number of traversals.
 
 Parameters: </br>
@@ -467,7 +467,7 @@ unionTraversals - the traversals to merge.
 g.V().union(out(), out().out())
 ```
 ### Match
-#### match()
+#### [match()](https://tinkerpop.apache.org/docs/current/reference/#match-step)
 The match()-step provides a declarative form of graph patterns to match with. With match(), the user provides a collection of "sentences," called patterns, that have variables defined that must hold true throughout the duration of the match(). For most of the complex graph patterns, it is usually much easier to express via match() than with single-path traversals.
 
 Parameters: </br>
@@ -484,7 +484,7 @@ g.V().match(__.as("a").out().out().as("b"), not(__.as("a").out().as("b")))
 g.V().match(__.as("a").out().has("name", "marko").as("b"), __.as("b").out().as("c"))
 ```
 ### Subgraph
-#### subgraph()
+#### [subgraph()](https://tinkerpop.apache.org/docs/current/reference/#subgraph-step)
 An edge-induced subgraph extracted from the original graph.
 
 Parameters: </br>
@@ -493,7 +493,7 @@ graphName - the name of the side-effect key that will hold the subgraph.
 g.E().subgraph("all") 
 g.V().has('name', "marko").outE("knows").subgraph("partial")
 ```
-## Ext-Steps
+## Syntactic Sugars
 The following steps are extended to denote more complex situations.
 ### PathExpand
 In Graph querying, expanding a multiple-hops path from a starting point is called `PathExpand`, which is commonly used in graph scenarios. In addition, there are different requirements for expanding strategies in different scenarios, i.e. it is required to output a simple path or all vertices explored along the expanding path. We introduce the with()-step to configure the corresponding behaviors of the `PathExpand`-step.
@@ -513,15 +513,58 @@ g.V().out("1..10") # = g.V().out("1..10").with('PATH_OPT', 'ARBITRARY').with('RE
 g.V().out("1..10", "knows") # expand hops within the range of [1, 10) along the outgoing edges which label is `knows`, vertices can be duplicated and only the end vertex should be kept
 g.V().out("1..10", "knows", "created") # expand hops within the range of [1, 10) along the outgoing edges which label is `knows` or `created`, vertices can be duplicated and only the end vertex should be kept
 ``` 
+Running Example:
+```bash
+gremlin> g.V().out("1..3", "knows").with('RESULT_OPT', 'ALL_V')
+==>[v[1], v[2]]
+==>[v[1], v[4]]
+gremlin> g.V().out("1..3", "knows").with('RESULT_OPT', 'END_V').endV()
+==>v[2]
+==>v[4]
+```
 #### in()
 Expand a multiple-hops path along the incoming edges, which length is within the given range.
 ```bash
 g.V().in("1..10").with('PATH_OPT', 'ARBITRARY').with('RESULT_OPT', 'END_V')
 ```
+Running Example:
+```bash
+gremlin> g.V().in("1..3", "knows").with('RESULT_OPT', 'ALL_V')
+==>[v[2], v[1]]
+==>[v[4], v[1]]
+gremlin> g.V().in("1..3", "knows").with('RESULT_OPT', 'END_V').endV()
+==>v[1]
+==>v[1]
+```
 #### both()
 Expand a multiple-hops path along the incident edges, which length is within the given range.
 ```bash
 g.V().both("1..10").with('PATH_OPT', 'ARBITRARY').with('RESULT_OPT', 'END_V')
+```
+Running Example:
+```bash
+gremlin> g.V().both("1..3", "knows").with('RESULT_OPT', 'ALL_V')
+==>[v[2], v[1]]
+==>[v[1], v[2]]
+==>[v[1], v[4]]
+==>[v[2], v[1], v[2]]
+==>[v[2], v[1], v[4]]
+==>[v[4], v[1]]
+==>[v[1], v[2], v[1]]
+==>[v[1], v[4], v[1]]
+==>[v[4], v[1], v[2]]
+==>[v[4], v[1], v[4]]
+gremlin> g.V().both("1..3", "knows").with('RESULT_OPT', 'END_V').endV()
+==>v[1]
+==>v[1]
+==>v[2]
+==>v[4]
+==>v[2]
+==>v[1]
+==>v[1]
+==>v[4]
+==>v[2]
+==>v[4]
 ```
 #### endV()
 By default, all kept vertices are stored in a path collection which can be unfolded by a `endV()`-step.
@@ -584,6 +627,23 @@ Expression(s) in project or filter:
     ```bash
     g.V().select(expr("@.name")) # = g.V().values("name")
     ```
+Running Example:
+```bash
+gremlin> g.V().where(expr("@.name == \"marko\""))
+==>v[1]
+gremlin> g.V().as("a").where(expr("@a.name == \"marko\" || (@a.age > 10)"))
+==>v[2]
+==>v[1]
+==>v[4]
+==>v[6]
+gremlin> g.V().select(expr("@.name"))
+==>marko
+==>vadas
+==>lop
+==>josh
+==>ripple
+==>peter
+```
 ### Aggregate (Group)
 The group()-step in standard gremlin has limited capabilities (i.e. grouping can only be performed based on a single key, and only one aggregate calculation can be applied in each group), which cannot be applied to the requirements of performing group calculations on multiple keys or values; Therefore, we further extend the capabilities of the group()-step, allowing multiple variables to be set and different aliases to be configured in key by()-step and value by()-step respectively.
 
@@ -595,7 +655,21 @@ group().by(out().count().as("k1"), values("name").as("k2")) # group by the count
 
 Usages of the value by()-step:
 ```bash
-group().by("name").by(count().as("v1"), values("age").sum().as("k2")) # calculate the count of vertices and the sum of `age` respectively in each group
+group().by("name").by(count().as("v1"), values("age").sum().as("v2")) # calculate the count of vertices and the sum of `age` respectively in each group
+```
+Running Example:
+```bash
+gremlin> g.V().hasLabel("person").group().by(values("name").as("k1"), values("age").as("k2"))
+==>{[josh, 32]=[v[4]], [vadas, 27]=[v[2]], [peter, 35]=[v[6]], [marko, 29]=[v[1]]}
+gremlin> g.V().hasLabel("person").group().by(out().count().as("k1"), values("name").as("k2"))
+==>{[2, josh]=[v[4]], [0, vadas]=[v[2]], [3, marko]=[v[1]], [1, peter]=[v[6]]}
+gremlin> g.V().hasLabel("person").group().by("name").by(count().as("v1"), values("age").sum().as("v2"))
+==>{marko=[1, 29], peter=[1, 35], josh=[1, 32], vadas=[1, 27]}
+gremlin> g.V().hasLabel("person").group().by("name").by(count().as("v1"), values("age").sum().as("v2")).select("v1", "v2")
+==>{v1=1, v2=35}
+==>{v1=1, v2=32}
+==>{v1=1, v2=27}
+==>{v1=1, v2=29}
 ```
 ## Limitations
 Here we list steps which are unsupported yet. Some will be supported in the near future while others will remain unsupported for some reasons.
@@ -643,6 +717,8 @@ In graph pattern scenarios, `repeat().times()` can be replaced equivalently by t
     ```
 * repeat().until() </br>
 It is a imperative syntax, not declarative.
+#### properties()
+The properties()-step retrieves and then unfolds properties from a graph element. The valueMap()-step can reflect all the properties of each graph element in a map form, which could be much more clear than the results of the properties()-step for the latter could mix up the properties of all the graph elements in the same output.
 #### sideEffect
 It is required to maintain global variables for `SideEffect`-step during actual execution, which is hard to implement in distributed scenarios. i.e.
 * group("a")

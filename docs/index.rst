@@ -242,9 +242,9 @@ each of which can be independently scaled to chase for the best end-to-end throu
    python_tutorials
    java_tutorials
    cpp_tutorials
+   gremlin_tutorials
    walkthrough_examples_acrossing_engines
    video_tutorials
-   gremlin_tutorials
 
 .. toctree::
    :maxdepth: 2
