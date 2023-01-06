@@ -15,7 +15,7 @@
 
 use std::sync::Arc;
 
-use maxgraph_store::api::{Condition, Edge, LabelId, PartitionId, PropId, SnapshotId, Vertex, VertexId};
+use groot_store::api::{Condition, Edge, LabelId, PartitionId, PropId, SnapshotId, Vertex, VertexId};
 
 use crate::apis::graph_schema::Schema;
 

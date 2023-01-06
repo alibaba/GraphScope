@@ -3,8 +3,8 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <parent>
-    <artifactId>maxgraph-parent</artifactId>
-    <groupId>com.alibaba.maxgraph</groupId>
+    <artifactId>interactive-parent</artifactId>
+    <groupId>com.alibaba.graphscope</groupId>
     <version>${revision}</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
@@ -37,12 +37,12 @@
       </build>
       <dependencies>
       <dependency>
-        <groupId>com.alibaba.maxgraph</groupId>
+        <groupId>com.alibaba.graphscope</groupId>
         <artifactId>frontend</artifactId>
         <version>${project.version}</version>
       </dependency>
         <dependency>
-          <groupId>com.alibaba.maxgraph</groupId>
+          <groupId>com.alibaba.graphscope</groupId>
           <artifactId>executor</artifactId>
           <version>${project.version}</version>
         </dependency>
@@ -66,22 +66,22 @@
       </build>
       <dependencies>
         <dependency>
-          <groupId>com.alibaba.maxgraph</groupId>
+          <groupId>com.alibaba.graphscope</groupId>
           <artifactId>groot-server</artifactId>
           <version>${project.version}</version>
         </dependency>
         <dependency>
-          <groupId>com.alibaba.maxgraph</groupId>
-          <artifactId>data_load_tools</artifactId>
+          <groupId>com.alibaba.graphscope</groupId>
+          <artifactId>data-load-tool</artifactId>
           <version>${project.version}</version>
         </dependency>
         <dependency>
-          <groupId>com.alibaba.maxgraph</groupId>
+          <groupId>com.alibaba.graphscope</groupId>
           <artifactId>executor</artifactId>
           <version>${project.version}</version>
         </dependency>
         <dependency>
-          <groupId>com.alibaba.maxgraph</groupId>
+          <groupId>com.alibaba.graphscope</groupId>
           <artifactId>c-end-lgraph</artifactId>
           <version>${project.version}</version>
         </dependency>

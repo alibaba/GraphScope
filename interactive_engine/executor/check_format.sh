@@ -17,9 +17,11 @@ CURRENT=$(pwd)
 if ! rustup toolchain list | grep -q nightly; then
   echo 'Installing nightly toolchain...'
   rustup toolchain install nightly
-  rustup component add rustfmt --toolchain nightly-x86_64-unknown-linux-gnu
+  rustup component add rustfmt --toolchain nightly
 fi
-cd ${CURRENT}/assembly/
+cd ${CURRENT}/assembly/groot
+cargo +nightly fmt -- --check
+cd ${CURRENT}/assembly/v6d
 cargo +nightly fmt -- --check
 cd ${CURRENT}/common/dyn_type/
 cargo +nightly fmt -- --check

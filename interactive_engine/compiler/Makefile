@@ -57,7 +57,6 @@ run:
 	  -Djna.library.path=../executor/ir/target/release \
 	  -Dgraph.schema=${graph.schema} \
 	  -Dpegasus.hosts=${pegasus.hosts} \
-	  -Dpegasus.server.num=${pegasus.server.num} \
 	  com.alibaba.graphscope.gremlin.service.GraphServiceMain
 
 # start rpc server

@@ -14,10 +14,10 @@
 package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.graphscope.groot.rpc.RpcClient;
-import com.alibaba.maxgraph.proto.groot.FetchSchemaRequest;
-import com.alibaba.maxgraph.proto.groot.FetchSchemaResponse;
-import com.alibaba.maxgraph.proto.groot.StoreSchemaGrpc;
-import com.alibaba.maxgraph.sdkcommon.schema.GraphDef;
+import com.alibaba.graphscope.proto.groot.FetchSchemaRequest;
+import com.alibaba.graphscope.proto.groot.FetchSchemaResponse;
+import com.alibaba.graphscope.proto.groot.StoreSchemaGrpc;
+import com.alibaba.graphscope.sdkcommon.schema.GraphDef;
 
 import io.grpc.ManagedChannel;
 

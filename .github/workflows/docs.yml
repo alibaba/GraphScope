@@ -113,6 +113,7 @@ jobs:
         # Install pip dependencies, build builtin gar, and generate proto stuffs.
         sudo apt update
         sudo apt install -y doxygen
+        pip3 install furo
 
         # generate a taged version
         cd ${GITHUB_WORKSPACE}

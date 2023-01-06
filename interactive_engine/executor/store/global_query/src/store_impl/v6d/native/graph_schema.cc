@@ -191,8 +191,8 @@ void MGPropertyGraphSchema::DumpToFile(std::string const& path) {
   json_file.close();
 }
 
-MGPropertyGraphSchema MGPropertyGraphSchema::TransformToMaxGraph() {
-  if (schema_type_ == SchemaType::kMaxGraph) {
+MGPropertyGraphSchema MGPropertyGraphSchema::TransformToInteractive() {
+  if (schema_type_ == SchemaType::kInteractive) {
     return *this;
   }
   unique_property_names_.clear();
@@ -245,7 +245,7 @@ MGPropertyGraphSchema MGPropertyGraphSchema::TransformToMaxGraph() {
   }
   new_schema.set_unique_property_names(unique_property_names_);
   new_schema.set_fnum(fnum_);
-  new_schema.set_schema_type(SchemaType::kMaxGraph);
+  new_schema.set_schema_type(SchemaType::kInteractive);
   return new_schema;
 }
 
