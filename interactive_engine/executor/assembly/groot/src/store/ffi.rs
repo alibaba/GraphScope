@@ -17,18 +17,16 @@ use std::os::raw::{c_char, c_void};
 use std::str;
 use std::sync::Arc;
 
-use maxgraph_store::db::api::partition_graph::PartitionGraph;
-use maxgraph_store::db::api::partition_snapshot::PartitionSnapshot;
-use maxgraph_store::db::api::types::{Property, PropertyReader, PropertyValue, RocksEdge, RocksVertex};
-use maxgraph_store::db::api::{
+use groot_store::db::api::partition_graph::PartitionGraph;
+use groot_store::db::api::partition_snapshot::PartitionSnapshot;
+use groot_store::db::api::types::{Property, PropertyReader, PropertyValue, RocksEdge, RocksVertex};
+use groot_store::db::api::{
     EdgeId, EdgeKind, GraphConfigBuilder, GraphError, LabelId, PropertyId, Records, SerialId, SnapshotId,
     VertexId,
 };
-use maxgraph_store::db::graph::entity::{PropertiesIter, PropertyImpl, RocksEdgeImpl, RocksVertexImpl};
-use maxgraph_store::db::graph::store::GraphStore;
-use maxgraph_store::db::wrapper::wrapper_partition_graph::{
-    WrapperPartitionGraph, WrapperPartitionSnapshot,
-};
+use groot_store::db::graph::entity::{PropertiesIter, PropertyImpl, RocksEdgeImpl, RocksVertexImpl};
+use groot_store::db::graph::store::GraphStore;
+use groot_store::db::wrapper::wrapper_partition_graph::{WrapperPartitionGraph, WrapperPartitionSnapshot};
 
 use crate::store::graph::{FfiPartitionGraph, PartitionGraphHandle};
 

@@ -23,9 +23,8 @@ import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.graphscope.utils.CppClassName;
 import com.alibaba.graphscope.utils.CppHeaderName;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @CXXHead(CppHeaderName.ARROW_PROJECTED_FRAGMENT_H)
 @FFITypeAlias(CppClassName.GS_ARROW_PROJECTED_FRAGMENT_IMPL_TYPED_ARRAY)
 public interface PrimitiveTypedArray<DATA_T> extends BaseTypedArray<DATA_T> {

@@ -2,8 +2,8 @@
 # libgrape-lite, vineyard, as well as necessary IO dependencies (e.g., hdfs, oss)
 
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
-ARG BASE_VERSION=latest
-FROM $REGISTRY/graphscope/graphscope-dev-base:$BASE_VERSION
+ARG BUILDER_VERSION=latest
+FROM $REGISTRY/graphscope/graphscope-dev-base:$BUILDER_VERSION
 
 USER root
 
@@ -20,3 +20,4 @@ RUN export WORKDIR=/download && \
 RUN rm -rf /build_scripts /download
 
 USER graphscope
+

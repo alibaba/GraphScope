@@ -1,12 +1,11 @@
 # Interactive engine which uses experimental storage
 
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
-ARG BASE_VERSION=latest
-FROM $REGISTRY/graphscope/graphscope-dev:$BASE_VERSION AS builder
+ARG BUILDER_VERSION=latest
+FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION AS builder
 
-ADD . /home/graphscope/GraphScope
+COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 
-RUN sudo chown -R graphscope:graphscope /home/graphscope/GraphScope
 RUN cd /home/graphscope/GraphScope/interactive_engine/compiler \
     && make build rpc.target=start_rpc_server_k8s
 

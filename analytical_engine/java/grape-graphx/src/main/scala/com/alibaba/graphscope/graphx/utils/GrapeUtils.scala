@@ -31,6 +31,7 @@ import com.alibaba.graphscope.serialization.{FFIByteVectorOutputStream, FakeFFIB
 import com.alibaba.graphscope.stdcxx._
 import com.alibaba.graphscope.utils.ThreadSafeBitSet
 import com.alibaba.graphscope.utils.array.PrimitiveArray
+import org.apache.spark.SparkEnv
 import org.apache.spark.graphx.PartitionID
 import org.apache.spark.internal.Logging
 import org.apache.spark.rdd.RDD
@@ -563,7 +564,7 @@ object GrapeUtils extends Logging {
   def extractHostInfo(
       rdd: RDD[(Int, _)],
       numPartition: Int
-  ): (mutable.HashMap[String, ArrayBuffer[Int]], Array[Int]) = {
+  ): (mutable.HashMap[String, ArrayBuffer[Int]], mutable.HashMap[Int, Int]) = {
     val array = rdd
       .mapPartitionsWithIndex((ind, iter) => {
         if (iter.hasNext) {
@@ -572,7 +573,8 @@ object GrapeUtils extends Logging {
             val (ind, _) = iter.next()
             set.add(ind)
           }
-          set.toIterator.map(a => (a, InetAddress.getLocalHost.getHostName))
+          val spark_env = SparkEnv.get
+          set.toIterator.map(a => (a, InetAddress.getLocalHost.getHostName, spark_env.executorId))
         } else Iterator.empty
       })
       .collect()
@@ -583,17 +585,21 @@ object GrapeUtils extends Logging {
       array.length == numPartition,
       s"result array neq num partitions ${array.length} , ${numPartition}"
     )
-    val tmpMap = new mutable.HashMap[String, ArrayBuffer[Int]]()
+    val tmpMap           = new mutable.HashMap[String, ArrayBuffer[Int]]()
+    val executorId2Times = new mutable.HashMap[Int, Int]()
     for (tuple <- array) {
-      val host = tuple._2
-      val pid  = tuple._1
+      val executorId = tuple._3
+      val host       = tuple._2
+      val pid        = tuple._1
       if (!tmpMap.contains(host)) {
         tmpMap(host) = new ArrayBuffer[PartitionID]()
       }
+      val executorIdInt = executorId.toInt
+      executorId2Times.put(executorIdInt, executorId2Times.getOrElse(executorIdInt, 0) + 1)
       tmpMap(host).+=(pid)
     }
     val numPart = array.length
-    val res     = new Array[Int](numPart)
+    val res     = new Array[Int](numPart) //pid to executor id
     val keys    = tmpMap.keys.iterator
     var i       = 0
     while (keys.hasNext) {
@@ -604,7 +610,7 @@ object GrapeUtils extends Logging {
       }
       i += 1
     }
-    (tmpMap, res)
+    (tmpMap, executorId2Times)
   }
 
   def getHostIdStrFromFragmentGroup(

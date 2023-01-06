@@ -30,8 +30,6 @@
 
   <properties>
     <jacoco.version>0.8.7</jacoco.version>
-    <jni.library.name>grape-jni</jni.library.name>
-    <jni.library.path>${project.basedir}/target/native/</jni.library.path>
   </properties>
 
   <dependencies>
@@ -77,6 +75,11 @@
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.scijava</groupId>
+      <artifactId>native-lib-loader</artifactId>
     </dependency>
   </dependencies>
 

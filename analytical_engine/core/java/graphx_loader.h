@@ -31,6 +31,8 @@
 #include "vineyard/basic/ds/arrow_utils.h"
 #include "vineyard/client/client.h"
 #include "vineyard/graph/loader/basic_ev_fragment_loader.h"
+#include "vineyard/graph/loader/basic_ev_fragment_loader_impl.h"
+#include "vineyard/graph/utils/table_shuffler_impl.h"
 
 #include "core/java/graphx_raw_data.h"
 

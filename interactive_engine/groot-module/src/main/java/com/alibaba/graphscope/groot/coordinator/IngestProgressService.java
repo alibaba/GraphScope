@@ -13,9 +13,9 @@
  */
 package com.alibaba.graphscope.groot.coordinator;
 
-import com.alibaba.maxgraph.proto.groot.GetTailOffsetsRequest;
-import com.alibaba.maxgraph.proto.groot.GetTailOffsetsResponse;
-import com.alibaba.maxgraph.proto.groot.IngestProgressGrpc;
+import com.alibaba.graphscope.proto.groot.GetTailOffsetsRequest;
+import com.alibaba.graphscope.proto.groot.GetTailOffsetsResponse;
+import com.alibaba.graphscope.proto.groot.IngestProgressGrpc;
 
 import io.grpc.stub.StreamObserver;
 

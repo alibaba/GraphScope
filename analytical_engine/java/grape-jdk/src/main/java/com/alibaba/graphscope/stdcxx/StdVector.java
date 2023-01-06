@@ -28,9 +28,8 @@ import com.alibaba.fastffi.FFIFactory;
 import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFISettablePointer;
 import com.alibaba.fastffi.FFITypeAlias;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @CXXHead(system = {"vector", "string"})
 @CXXHead(CORE_JAVA_TYPE_ALIAS_H)
 @FFITypeAlias("std::vector")

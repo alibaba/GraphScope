@@ -16,12 +16,8 @@ spec:
       {{- include "graphscope.imagePullSecrets" . | indent 6 }}
       containers:
       - name: coordinator
-        {{- if .Values.coordinator.image.tag }}
-        image: "{{ .Values.coordinator.image.name }}:{{ .Values.coordinator.image.tag }}"
-        {{- else }}
-        image: "{{ .Values.coordinator.image.name }}:{{ .Chart.AppVersion }}"
-        {{- end }}
-        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        image: {{ include "graphscope.images.image" (dict "imageRoot" .Values.image "DefaultTag" .Chart.AppVersion "Component" .Values.coordinator) }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
         resources: {{- toYaml .Values.coordinator.resources | nindent 10 }}
         env:
           - name: PYTHONUNBUFFERED
@@ -43,22 +39,7 @@ spec:
           tcpSocket:
             port: 59001
         {{- end }}
-        lifecycle:
-          preStop:
-            exec:
-              command:
-                - /bin/bash
-                - -c
-                - |
-                  kubectl patch role/{{ include "graphscope.fullname" . }}-role \
-                  -n {{ .Release.Namespace }} \
-                  --type json \
-                  --patch='[ { "op": "remove", "path": "/metadata/finalizers" } ]' && \
-                  kubectl patch rolebinding/{{ include "graphscope.fullname" . }}-role-binding \
-                  -n {{ .Release.Namespace }} \
-                  --type json \
-                  --patch='[ { "op": "remove", "path": "/metadata/finalizers" } ]'
-        command:
+        args:
           - python3
           - "-m"
           - gscoordinator
@@ -78,37 +59,35 @@ spec:
           - {{ .Values.coordinator.service.type }}
           - "--preemptive"
           - {{ .Values.preemptive | quote }}
-          - "--k8s_gs_image"
-          {{- if .Values.engines.image.tag }}
-          - "{{ .Values.engines.image.name }}:{{ .Values.engines.image.tag }}"
-          {{- else }}
-          - "{{ .Values.engines.image.name }}:{{ .Chart.AppVersion }}"
+          {{- if .Values.image.registry }}
+          - "--k8s_image_registry"
+          - {{ .Values.image.registry }}
           {{- end }}
-          - "--k8s_etcd_image"
-          {{- if .Values.etcd.image.tag }}
-          - "{{ .Values.etcd.image.name }}:{{ .Values.etcd.image.tag }}"
+          - "--k8s_image_repository"
+          - {{ .Values.image.repository }}
+          - "--k8s_image_tag"
+          {{- if .Values.image.tag | quote }}
+          - {{ .Values.image.tag }}
           {{- else }}
-          - "{{ .Values.etcd.image.name }}:{{ .Chart.AppVersion }}"
+          - {{ .Chart.AppVersion }}
           {{- end }}
           - "--k8s_image_pull_policy"
-          - {{ .Values.imagePullPolicy | quote }}
+          - {{ .Values.image.pullPolicy | quote }}
+          {{- if .Values.image.pullSecrets}}
           - "--k8s_image_pull_secrets"
           - {{ include "graphscope.imagePullSecretsStr" . | default (printf "''") | trimAll "\n" | quote }}
+          {{- end }}
           - "--k8s_coordinator_name"
           {{- $fullname := include "graphscope.fullname" . }}
           - {{ printf "%s-%s" "coordinator" $fullname | quote }}
           - "--k8s_coordinator_service_name"
           - {{ printf "%s-%s" "coordinator-service" $fullname | quote }}
-          - "--k8s_etcd_cpu"
-          - {{ .Values.etcd.resources.requests.cpu | quote }}
-          - "--k8s_etcd_mem"
-          - {{ .Values.etcd.resources.requests.memory }}
-          - "--k8s_vineyard_daemonset"
           {{- if .Values.vineyard.daemonset }}
+          - "--k8s_vineyard_daemonset"
           - {{ .Values.vineyard.daemonset }}
-          {{- else }}
-          - "\"\""
           {{- end }}
+          - "--k8s_vineyard_image"
+          - {{ .Values.vineyard.image.name }}:{{ .Values.vineyard.image.tag }}
           - "--k8s_vineyard_cpu"
           - {{ .Values.vineyard.resources.requests.cpu | quote }}
           - "--k8s_vineyard_mem"
@@ -119,11 +98,9 @@ spec:
           - {{ .Values.engines.resources.requests.cpu | quote }}
           - "--k8s_engine_mem"
           - {{ .Values.engines.resources.requests.memory }}
-          - '--k8s_volumes'
           {{- if .Values.volumes.enabled }}
-          - {{ mustToJson .Values.volumes.items | quote}}
-          {{- else }}
-          - "{}"
+          - '--k8s_volumes'
+          - {{ mustToJson .Values.volumes.items | b64enc | quote}}
           {{- end }}
           - "--timeout_seconds"
           - {{ .Values.coordinator.timeout_seconds | quote }}
@@ -133,6 +110,17 @@ spec:
           - "False"
           - "--k8s_delete_namespace"
           - "False"
+          - "--k8s_with_analytical"
+          - {{ .Values.engines.analytical.enabled | quote }}
+          - "--k8s_with_analytical_java"
+          - {{ .Values.engines.analytical_java.enabled | quote }}
+          - "--k8s_with_interactive"
+          - {{ .Values.engines.interactive.enabled | quote }}
+          - "--k8s_with_learning"
+          - {{ .Values.engines.learning.enabled | quote }}
+          - "--k8s_with_dataset"
+          - {{ .Values.engines.dataset.enabled | quote }}
+
       {{- if .Values.withJupyter }}
       - name: jupyter
         {{- if .Values.jupyter.image.tag }}

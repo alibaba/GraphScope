@@ -3,11 +3,9 @@ kind: Role
 metadata:
   name: {{ include "graphscope.fullname" . }}-role
   namespace: {{ .Release.Namespace }}
-  finalizers:
-  - kubernetes
 rules:
 - apiGroups: ["apps", "extensions", ""]
-  resources: ["configmaps", "deployments", "deployments/status", "endpoints", "events", "pods", "pods/log", "pods/exec", "pods/status", "services", "replicasets"]
+  resources: ["configmaps", "deployments", "deployments/status", "statefulsets", "statefulsets/status", "endpoints", "events", "pods", "pods/log", "pods/exec", "pods/status", "services", "replicasets"]
   verbs: ["*"]
 - apiGroups: ["rbac.authorization.k8s.io"]
   resources: ["roles", "rolebindings"]
@@ -18,8 +16,6 @@ kind: RoleBinding
 metadata:
   name: {{ include "graphscope.fullname" . }}-role-binding
   namespace: {{ .Release.Namespace }}
-  finalizers:
-  - kubernetes
 subjects:
 - kind: ServiceAccount
   name: default

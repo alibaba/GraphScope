@@ -47,7 +47,7 @@ from gscoordinator.utils import get_app_sha256
 from gscoordinator.utils import get_graph_sha256
 from gscoordinator.utils import get_lib_path
 from gscoordinator.utils import op_pre_process
-from gscoordinator.utils import to_maxgraph_schema
+from gscoordinator.utils import to_interactive_engine_schema
 
 logger = logging.getLogger("graphscope")
 
@@ -208,7 +208,7 @@ class OperationExecutor:
                 )
                 if op_result.graph_def.graph_type == graph_def_pb2.ARROW_PROPERTY:
                     dump_string(
-                        to_maxgraph_schema(vy_info.property_schema_json),
+                        to_interactive_engine_schema(vy_info.property_schema_json),
                         schema_path,
                     )
                     vy_info.schema_path = schema_path
@@ -251,7 +251,10 @@ class OperationExecutor:
             if not os.path.isfile(app_lib_path):
                 # compile and distribute
                 compiled_path = self._compile_lib_and_distribute(
-                    compile_app, app_sig, op
+                    compile_app,
+                    app_sig,
+                    op,
+                    self._java_class_path,
                 )
                 if app_lib_path != compiled_path:
                     msg = f"Computed app library path != compiled path, {app_lib_path} versus {compiled_path}"
@@ -274,7 +277,9 @@ class OperationExecutor:
             if not os.path.isfile(graph_lib_path):
                 # compile and distribute
                 compiled_path = self._compile_lib_and_distribute(
-                    compile_graph_frame, graph_sig, op
+                    compile_graph_frame,
+                    graph_sig,
+                    op,
                 )
                 if graph_lib_path != compiled_path:
                     raise RuntimeError(
@@ -371,7 +376,7 @@ class OperationExecutor:
                 config["enable_java_sdk"] = "OFF"
         return config
 
-    def _compile_lib_and_distribute(self, compile_func, lib_name, op):
+    def _compile_lib_and_distribute(self, compile_func, lib_name, op, *args, **kwargs):
         algo_name = op.attr[types_pb2.APP_ALGO].s.decode("utf-8")
         if (
             types_pb2.GAR in op.attr
@@ -381,19 +386,21 @@ class OperationExecutor:
             space = self._udf_app_workspace
         else:
             space = self._builtin_workspace
-        app_lib_path, java_jar_path, java_ffi_path, app_type = compile_func(
+        lib_path, java_jar_path, java_ffi_path, app_type = compile_func(
             space,
             lib_name,
             op.attr,
             self.get_analytical_engine_config(),
-            self._java_class_path,
+            self._launcher,
+            *args,
+            **kwargs,
         )
         # for java app compilation, we need to distribute the jar and ffi generated
         if app_type == "java_pie":
             self._launcher.distribute_file(java_jar_path)
             self._launcher.distribute_file(java_ffi_path)
-        self._launcher.distribute_file(app_lib_path)
-        return app_lib_path
+        self._launcher.distribute_file(lib_path)
+        return lib_path
 
     def heart_beat(self, request):
         return self.analytical_grpc_stub.HeartBeat(request)
@@ -645,12 +652,13 @@ class OperationExecutor:
             # only 1 GIE executor on local cluster
             executor_workers_num = 1
             threads_per_executor = self._launcher.num_workers * threads_per_worker
+            engine_config = self.get_analytical_engine_config()
+            vineyard_rpc_endpoint = engine_config["vineyard_rpc_endpoint"]
         else:
             executor_workers_num = self._launcher.num_workers
             threads_per_executor = threads_per_worker
+            vineyard_rpc_endpoint = self._launcher.vineyard_internal_endpoint
         total_builder_chunks = executor_workers_num * threads_per_executor
-        engine_config = self.get_analytical_engine_config()
-        vineyard_rpc_endpoint = engine_config["vineyard_rpc_endpoint"]
 
         (
             _graph_builder_id,
@@ -716,7 +724,10 @@ class OperationExecutor:
         fd = op.attr[types_pb2.FD].s.decode()
         df = op.attr[types_pb2.VINEYARD_ID].s.decode()
         engine_config = self.get_analytical_engine_config()
-        vineyard_endpoint = engine_config["vineyard_rpc_endpoint"]
+        if self._launcher.type() == types_pb2.HOSTS:
+            vineyard_endpoint = engine_config["vineyard_rpc_endpoint"]
+        else:
+            vineyard_endpoint = self._launcher.vineyard_internal_endpoint
         vineyard_ipc_socket = engine_config["vineyard_socket"]
         deployment, hosts = self._launcher.get_vineyard_stream_info()
         dfstream = vineyard.io.open(
@@ -774,6 +785,20 @@ class OperationExecutor:
             # loader is type of attr_value_pb2.Chunk
             protocol = loader.attr[types_pb2.PROTOCOL].s.decode()
             source = loader.attr[types_pb2.SOURCE].s.decode()
+            try:
+                storage_options = json.loads(
+                    loader.attr[types_pb2.STORAGE_OPTIONS].s.decode()
+                )
+                read_options = json.loads(
+                    loader.attr[types_pb2.READ_OPTIONS].s.decode()
+                )
+            except:  # noqa: E722, pylint: disable=bare-except
+                storage_options = {}
+                read_options = {}
+            filetype = storage_options.get("filetype", None)
+            if filetype is None:
+                filetype = read_options.get("filetype", None)
+            filetype = str(filetype).upper()
             if (
                 protocol in ("hdfs", "hive", "oss", "s3")
                 or protocol == "file"
@@ -782,13 +807,8 @@ class OperationExecutor:
                     or source.endswith(".parquet")
                     or source.endswith(".pq")
                 )
+                or filetype in ["ORC", "PARQUET"]
             ):
-                storage_options = json.loads(
-                    loader.attr[types_pb2.STORAGE_OPTIONS].s.decode()
-                )
-                read_options = json.loads(
-                    loader.attr[types_pb2.READ_OPTIONS].s.decode()
-                )
                 new_protocol, new_source = _spawn_vineyard_io_stream(
                     source,
                     storage_options,
@@ -803,7 +823,10 @@ class OperationExecutor:
                 loader.attr[types_pb2.SOURCE].CopyFrom(utils.s_to_attr(new_source))
 
         engine_config = self.get_analytical_engine_config()
-        vineyard_endpoint = engine_config["vineyard_rpc_endpoint"]
+        if self._launcher.type() == types_pb2.HOSTS:
+            vineyard_endpoint = engine_config["vineyard_rpc_endpoint"]
+        else:
+            vineyard_endpoint = self._launcher.vineyard_internal_endpoint
         vineyard_ipc_socket = engine_config["vineyard_socket"]
 
         for loader in op.large_attr.chunk_meta_list.items:

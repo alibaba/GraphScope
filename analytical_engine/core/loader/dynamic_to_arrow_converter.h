@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "vineyard/graph/fragment/arrow_fragment.h"
+#include "vineyard/graph/utils/table_shuffler.h"
 
 #include "core/error.h"
 #include "core/fragment/dynamic_fragment.h"
@@ -467,7 +468,7 @@ class VertexMapConverter<vineyard::ArrowVertexMap<int64_t, uint64_t>> {
     }
     ARROW_OK_OR_RAISE(builder.Finish(&local_oid_array));
 
-    VY_OK_OR_RAISE(vineyard::FragmentAllGatherArray<oid_t>(
+    VY_OK_OR_RAISE(vineyard::FragmentAllGatherArray<oid_array_t>(
         comm_spec_, local_oid_array, oid_lists[0]));
 
     vineyard::BasicArrowVertexMapBuilder<
@@ -520,7 +521,7 @@ class VertexMapConverter<vineyard::ArrowVertexMap<
     }
     ARROW_OK_OR_RAISE(builder.Finish(&local_oid_array));
 
-    VY_OK_OR_RAISE(vineyard::FragmentAllGatherArray<oid_t>(
+    VY_OK_OR_RAISE(vineyard::FragmentAllGatherArray<oid_array_t>(
         comm_spec_, local_oid_array, oid_lists[0]));
 
     vineyard::BasicArrowVertexMapBuilder<

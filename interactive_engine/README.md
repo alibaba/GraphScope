@@ -16,7 +16,7 @@ GIE is designed to faithfully preserve the programming model of [Gremlin](http:/
 
 GIE achieves high performance for complex Gremlin traversal, using a parallelizing compiler and a corresponding system that can execute distributed dataflow computations efficiently on large clusters.
 
-Here is a comparsion between GIE (labeled as GraphScope in the figure) and JanusGraph using the [LDBC Social Network Benchmark](http://ldbcouncil.org/benchmarks/snb) (Interactive Workload):
+Here is a comparison between GIE (labeled as GraphScope in the figure) and JanusGraph using the [LDBC Social Network Benchmark](http://ldbcouncil.org/benchmarks/snb) (Interactive Workload):
 
 <div align="center">
     <img src="benchmark/figures/summary.jpg" width="500" alt="summary-perf">
@@ -44,7 +44,7 @@ As an example, the graph depicted in the above figure is a simplified version [3
 
 In reality, the graph could contain billions of vertices (e.g., users) and hundreds of billions to trillions of edges (e.g., payments), and the entire fraudulent process can involve much more complex chains of transactions, through many entities, with various constraints, which therefore requires complex interactive analysis to identify.
 
-Thus, we started this project to offer a new distributed-system infrastructure for the new class of graph applications.  **This branch contains our first technology preview -- MaxGraph release**.  It has been in use by a small community of developers at Alibaba for over a year, resulting in tens of large applications and many more small programs.
+Thus, we started this project to offer a new distributed-system infrastructure for the new class of graph applications.  **This branch contains our first technology preview -- GAIA release**.  It has been in use by a small community of developers at Alibaba for over a year, resulting in tens of large applications and many more small programs.
 
 Feedback from users has generally been very positive.  Even so, with our experience with the system rapidly growing due to wider usage within Alibaba, we have identified important areas for improvement, such as:
 
@@ -52,13 +52,13 @@ Feedback from users has generally been very positive.  Even so, with our experie
 
 * *Early termination*. Traversing all candidate paths fully is often unnecessary, especially for interactive queries with dynamic conditions running on diverse input graphs.  For example, in the following query, only the first k results are needed.  For real-world queries on large graph data, such wasted computation can be hidden deeply in nested traversals (e.g., a predicate that can be evaluated early from partial inputs) and significantly impact query performance.  While avoiding such wastage is straightforward in a sequential implementation, it leads to an interesting trade-off between parallelism and wasted computation for a fully-parallel execution.
 
-    ```java
+    ```bash
     g.V(2).repeat(out().simplePath())
      .times(4).path()
      .limit(k)
     ```
 
-We have addressed the above issues for real production deployment at Alibaba as reported in this research paper [1].  The improvements are NOT yet included in the MaxGraph release, but they will most likely be shipped as the next major update in the first half of 2021.
+We have addressed the above issues for real production deployment at Alibaba as reported in this research paper [1].  The improvements are NOT yet included in the GAIA release, but they will most likely be shipped as the next major update in the first half of 2021.
 
 We welcome community feedback on our plans (including issues, features, etc.).  The best way to give feedback is to open an issue in this repository.
 

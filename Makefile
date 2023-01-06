@@ -153,7 +153,6 @@ $(LEARNING_DIR)/graphlearn/built/lib/libgraphlearn_shared.$(SUFFIX):
 		-DTESTING=${BUILD_TEST} .. && \
 	$(MAKE) -j$(NUMPROC)
 
-## wheels
 .PHONY: prepare-client graphscope-docs
 
 prepare-client:
@@ -184,4 +183,3 @@ k8stest:
 	pip3 install tensorflow==2.5.2 "pandas<1.5.0"
 	cd $(CLIENT_DIR) && \
 	python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml --cov-report=term -s -v ./graphscope/tests/kubernetes
-

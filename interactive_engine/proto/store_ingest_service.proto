@@ -15,7 +15,7 @@
  */
 syntax = "proto3";
 
-option java_package = "com.alibaba.maxgraph.proto.groot";
+option java_package = "com.alibaba.graphscope.proto.groot";
 option java_multiple_files = true;
 
 service StoreIngest {

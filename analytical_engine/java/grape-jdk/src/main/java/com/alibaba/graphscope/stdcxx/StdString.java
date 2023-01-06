@@ -30,9 +30,8 @@ import com.alibaba.fastffi.FFIStringProvider;
 import com.alibaba.fastffi.FFIStringReceiver;
 import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.fastffi.FFITypeFactory;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @CXXHead(system = "string")
 @FFITypeAlias("std::string")
 public interface StdString
@@ -132,7 +131,7 @@ public interface StdString
         StdString create(@CXXReference StdString string);
     }
 
-    @FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+    @FFIGen
     @CXXHead(system = "string")
     @FFITypeAlias("std::string::iterator")
     interface Iterator extends CXXValueRangeElement<Iterator>, FFIPointer {

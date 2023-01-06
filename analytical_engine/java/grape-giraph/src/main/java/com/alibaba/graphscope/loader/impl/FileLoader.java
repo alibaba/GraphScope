@@ -118,6 +118,7 @@ public class FileLoader implements LoaderBase {
     public FileLoader(int id, URLClassLoader classLoader) {
         this.classLoader = classLoader;
         logger.info("FileLoader using classLoader {} to load vif and eif", classLoader);
+        this.giraphConfiguration.setClassLoader(this.classLoader);
         loaderId = id;
         try {
             vertexIdField = VertexImpl.class.getDeclaredField("initializeOid");
@@ -184,11 +185,12 @@ public class FileLoader implements LoaderBase {
      */
     public int loadVerticesAndEdges(String inputPath, String vformatClass)
             throws ExecutionException, InterruptedException, ClassNotFoundException {
-        logger.debug("vertex input path {}", inputPath);
+        logger.info("vertex input path {}, vformat class{}", inputPath, vformatClass.toString());
         giraphConfiguration.setVertexInputFormatClass(
                 (Class<? extends VertexInputFormat>) this.classLoader.loadClass(vformatClass));
         ImmutableClassesGiraphConfiguration conf =
                 new ImmutableClassesGiraphConfiguration(giraphConfiguration);
+        conf.setClassLoader(this.classLoader);
         try {
             vertexInputFormatClz = conf.getVertexInputFormatClass();
 

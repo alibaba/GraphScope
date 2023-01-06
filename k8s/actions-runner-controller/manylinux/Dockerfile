@@ -1,6 +1,6 @@
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
-ARG BASE_VERSION=latest
-FROM $REGISTRY/graphscope/graphscope-dev:$BASE_VERSION
+ARG BUILDER_VERSION=latest
+FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION
 
 ARG TARGETPLATFORM
 ARG RUNNER_VERSION=2.287.1

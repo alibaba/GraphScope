@@ -1,6 +1,6 @@
 package com.alibaba.graphscope.groot.rpc;
 
-import com.alibaba.maxgraph.sdkcommon.BasicAuth;
+import com.alibaba.graphscope.sdkcommon.BasicAuth;
 
 import io.grpc.Metadata;
 import io.grpc.ServerCall;

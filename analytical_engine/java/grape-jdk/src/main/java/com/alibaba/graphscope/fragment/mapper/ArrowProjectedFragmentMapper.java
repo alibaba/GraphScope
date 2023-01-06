@@ -33,9 +33,8 @@ import com.alibaba.graphscope.fragment.ArrowFragment;
 import com.alibaba.graphscope.fragment.ArrowProjectedFragment;
 import com.alibaba.graphscope.graphx.VineyardClient;
 import com.alibaba.graphscope.stdcxx.StdSharedPtr;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @CXXHead(ARROW_PROJECTED_FRAGMENT_MAPPER_H)
 @CXXHead(CORE_JAVA_TYPE_ALIAS_H)
 @FFITypeAlias(CPP_ARROW_PROJECTED_FRAGMENT_MAPPER)

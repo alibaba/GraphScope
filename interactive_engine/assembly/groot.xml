@@ -10,16 +10,16 @@
         <fileSet>
             <directory>${project.parent.basedir}/executor/assembly/groot/target/debug</directory>
             <includes>
-                <include>libmaxgraph_ffi.so</include>
-                <include>libmaxgraph_ffi.dylib</include>
+                <include>libgroot_ffi.so</include>
+                <include>libgroot_ffi.dylib</include>
             </includes>
             <outputDirectory>native</outputDirectory>
         </fileSet>
         <fileSet>
             <directory>${project.parent.basedir}/executor/assembly/groot/target/release</directory>
             <includes>
-                <include>libmaxgraph_ffi.so</include>
-                <include>libmaxgraph_ffi.dylib</include>
+                <include>libgroot_ffi.so</include>
+                <include>libgroot_ffi.dylib</include>
             </includes>
             <outputDirectory>native</outputDirectory>
         </fileSet>
@@ -35,7 +35,7 @@
             <directory>${project.parent.basedir}/lgraph/build/install</directory>
             <excludes>
                 <exclude>include/*</exclude>
-                <exclude>lib*/libmaxgraph_ffi*</exclude>
+                <exclude>lib*/libgroot_ffi*</exclude>
             </excludes>
             <outputDirectory>native</outputDirectory>
         </fileSet>
@@ -57,13 +57,13 @@
         <dependencySet>
             <outputDirectory>lib</outputDirectory>
             <excludes>
-                <exclude>com.alibaba.maxgraph:data_load_tools</exclude>
+                <exclude>com.alibaba.graphscope:data-load-tool</exclude>
             </excludes>
         </dependencySet>
         <dependencySet>
             <outputDirectory>loader</outputDirectory>
             <includes>
-                <include>com.alibaba.maxgraph:data_load_tools</include>
+                <include>com.alibaba.graphscope:data-load-tool</include>
             </includes>
         </dependencySet>
     </dependencySets>

@@ -29,6 +29,7 @@ from graphscope.framework.loader import Loader
 def p2p_property_graph(num_workers, directed=True):
     data_dir = os.path.expandvars("${GS_TEST_DIR}/property")
     graphscope.set_option(show_log=True)
+    graphscope.set_option(log_level="DEBUG")
     sess = graphscope.session(num_workers=num_workers, cluster_type="hosts")
     graph = sess.g(directed=directed)
     graph = graph.add_vertices("{}/p2p-31_property_v_0".format(data_dir), "person")

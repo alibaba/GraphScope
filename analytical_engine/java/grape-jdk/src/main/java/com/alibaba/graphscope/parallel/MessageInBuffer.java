@@ -40,9 +40,8 @@ import com.alibaba.graphscope.fragment.IFragment;
 import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
 import com.alibaba.graphscope.fragment.adaptor.ArrowProjectedAdaptor;
 import com.alibaba.graphscope.fragment.adaptor.ImmutableEdgecutFragmentAdaptor;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @FFITypeAlias(GRAPE_MESSAGE_IN_BUFFER)
 @CXXHead({
     GRAPE_PARALLEL_MESSAGE_IN_BUFFER_H,

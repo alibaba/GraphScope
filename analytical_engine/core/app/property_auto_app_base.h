@@ -73,15 +73,15 @@ class PropertyAutoAppBase {
   virtual void IncEval(const FRAG_T& graph, CONTEXT_T& context) = 0;
 };
 
-#define INSTALL_AUTO_PROPERTY_WORKER(APP_T, CONTEXT_T, FRAG_T)      \
- public:                                                            \
-  using fragment_t = FRAG_T;                                        \
-  using context_t = CONTEXT_T;                                      \
-  using message_manager_t = PropertyAutoMessageManager<fragment_t>; \
-  using worker_t = PropertyAutoWorker<APP_T>;                       \
-  static std::shared_ptr<worker_t> CreateWorker(                    \
-      std::shared_ptr<APP_T> app, std::shared_ptr<FRAG_T> frag) {   \
-    return std::shared_ptr<worker_t>(new worker_t(app, frag));      \
+#define INSTALL_AUTO_PROPERTY_WORKER(APP_T, CONTEXT_T, FRAG_T)          \
+ public:                                                                \
+  using fragment_t = FRAG_T;                                            \
+  using context_t = CONTEXT_T;                                          \
+  using message_manager_t = gs::PropertyAutoMessageManager<fragment_t>; \
+  using worker_t = gs::PropertyAutoWorker<APP_T>;                       \
+  static std::shared_ptr<worker_t> CreateWorker(                        \
+      std::shared_ptr<APP_T> app, std::shared_ptr<FRAG_T> frag) {       \
+    return std::shared_ptr<worker_t>(new worker_t(app, frag));          \
   }
 
 }  // namespace gs

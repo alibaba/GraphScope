@@ -14,11 +14,16 @@ python/proto
 # Gar file
 **/*.gar
 
+# Git
+# .git
+.cache
+
 # dot file
 *.dot
 
 # Protobuf GRPC
-**/*.pb.*
+# Needed by build analytical image in CI, the COPY should copy the generated proto files
+# **/*.pb.*
 **/*_pb2.py
 **/*_pb2_grpc.py
 
@@ -61,7 +66,7 @@ interactive_engine/rust-common/src/proto/*
 
 interactive_engine/executor/store/groot/src/db/proto/*
 !interactive_engine/executor/store/groot/src/db/proto/mod.rs
-interactive_engine/data_load_tools/dependency-reduced-pom.xml
+interactive_engine/data-load-tool/dependency-reduced-pom.xml
 interactive_engine/gaia-adaptor/dependency-reduced-pom.xml
 interactive_engine/executor/Cargo.lock
 interactive_engine/executor/engine/pegasus/benchmark/src/graph/storage/clickhouse/pb_gen/*

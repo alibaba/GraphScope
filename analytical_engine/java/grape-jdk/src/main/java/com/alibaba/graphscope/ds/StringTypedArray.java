@@ -26,9 +26,8 @@ import com.alibaba.fastffi.FFIFactory;
 import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFITypeAlias;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @CXXHead(ARROW_PROJECTED_FRAGMENT_H)
 @CXXHead(system = "cstdint")
 @FFITypeAlias(GS_ARROW_PROJECTED_FRAGMENT_IMPL_STRING_TYPED_ARRAY)

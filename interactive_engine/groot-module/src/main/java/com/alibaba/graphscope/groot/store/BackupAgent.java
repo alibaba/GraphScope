@@ -13,12 +13,12 @@
  */
 package com.alibaba.graphscope.groot.store;
 
+import com.alibaba.graphscope.compiler.api.exception.BackupException;
 import com.alibaba.graphscope.groot.CompletionCallback;
-import com.alibaba.maxgraph.common.config.BackupConfig;
-import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.common.util.ThreadFactoryUtils;
-import com.alibaba.maxgraph.compiler.api.exception.BackupException;
+import com.alibaba.graphscope.groot.common.config.BackupConfig;
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
+import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

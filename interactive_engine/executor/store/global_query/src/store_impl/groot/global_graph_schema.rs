@@ -16,8 +16,8 @@
 
 use std::collections::HashMap;
 
-use maxgraph_store::api::DataType;
-use maxgraph_store::db::api::{GraphDef, ValueType};
+use groot_store::api::DataType;
+use groot_store::db::api::{GraphDef, ValueType};
 
 use crate::apis::graph_schema::Schema;
 

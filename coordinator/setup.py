@@ -68,7 +68,7 @@ def _get_extra_data():
     #
     #  For shrink the package size less than "100M", we split graphscope into
     #   1) graphscope: libs include *.so, runtime such as 'bin', and full-openmpi
-    #   2) gs-coordinator: include python releated code of gscoordinator
+    #   2) gs-coordinator: include python related code of gscoordinator
     #   3) gs-include: header files
     #   4) gs-engine: other runtime info such as 'conf', and *.jar
     #   5) gs-apps: precompiled builtin applications

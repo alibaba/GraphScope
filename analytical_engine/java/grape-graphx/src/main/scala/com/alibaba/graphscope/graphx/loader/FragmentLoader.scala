@@ -32,6 +32,7 @@ object FragmentLoader extends Logging {
       fragNum: Int,
       hosts2Pids: mutable.HashMap[String, ArrayBuffer[Int]],
       hostName2ExecutorId: mutable.HashMap[String, ArrayBuffer[String]],
+      executorId2Time: mutable.HashMap[Int, Int],
       vertexStorageLevel: StorageLevel,
       edgeStorageLevel: StorageLevel
   ): GrapeGraphImpl[VD, ED] = {
@@ -58,15 +59,19 @@ object FragmentLoader extends Logging {
     var hostInd            = 0
     var curPartition       = 0
     log.info(s"num Empty partitions ${numEmptyPartitions}, num Frag ${fragNum}")
+    log.info(s"executor ids to times: ${executorId2Time.toString()}")
     //one executor, one fragment,
     //the data must exist on there executors.
+    //hostname -> executors
+    //partition -> executors
+    //partition -> host
     for (host <- hostArray) {
       var curCores = 0
       for (executorId <- hostName2ExecutorId(host)) {
         curCores += executorId2Cores(executorId)
       }
       hostname2Cores(host) = curCores
-      hostname2Cores(host) = hostname2Cores(host) / ( hostName2ExecutorId(host).size * 2) + 1
+      hostname2Cores(host) = hostname2Cores(host) / (hostName2ExecutorId(host).size * 2) + 1
       log.info(s"for host ${host}, there are executor ids ${hostName2ExecutorId(host)
         .mkString(",")} total cores ${curCores}, per executor parallelsim ${hostname2Cores(host)}")
     }
@@ -83,10 +88,17 @@ object FragmentLoader extends Logging {
       )
       val innerIterator = hostName2ExecutorId(host).iterator
       while (innerIterator.hasNext) {
-        rddHosts(curPartition) = host
-        rddLocations(curPartition) = "executor_" + host + "_" + innerIterator.next()
-        partitionIds(curPartition) = curPartition
-        curPartition += 1
+        val curExecutorId = innerIterator.next()
+        require(executorId2Time.contains(curExecutorId.toInt))
+        var timesExecutorAppears = executorId2Time(curExecutorId.toInt)
+        log.info(s"executor ${curExecutorId} appears ${timesExecutorAppears} times")
+        while (timesExecutorAppears > 0) {
+          rddHosts(curPartition) = host
+          rddLocations(curPartition) = "executor_" + host + "_" + curExecutorId
+          partitionIds(curPartition) = curPartition
+          curPartition += 1
+          timesExecutorAppears -= 1
+        }
       }
       hostInd += 1
     }

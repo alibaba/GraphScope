@@ -43,9 +43,9 @@ typedef void* EdgeTypeBuilder;
 /**
  * step 1: 创建Local的GraphBuilder
  *
- * graph_name: maxgraph给定的graph name
+ * graph_name: interactive engine 给定的graph name
  * schema: Schema handle
- * index: maxgraph对每个builder的给定的index
+ * index: interactive engine 对每个builder的给定的index
  *
  * 📌 vineyard client library会从环境变量中得到vineyard_ipc_socket。
  */

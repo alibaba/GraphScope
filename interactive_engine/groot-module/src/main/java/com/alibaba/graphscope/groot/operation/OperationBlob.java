@@ -13,7 +13,7 @@
  */
 package com.alibaba.graphscope.groot.operation;
 
-import com.alibaba.maxgraph.proto.groot.OperationPb;
+import com.alibaba.graphscope.proto.groot.OperationPb;
 import com.google.protobuf.ByteString;
 
 public class OperationBlob {

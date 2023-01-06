@@ -34,6 +34,7 @@ from graphscope.framework.loader import Loader
 @pytest.fixture(scope="module")
 def graphscope_session():
     graphscope.set_option(show_log=True)
+    graphscope.set_option(log_level="DEBUG")
     if os.environ.get("DEPLOYMENT", None) == "standalone":
         sess = graphscope.session(cluster_type="hosts", num_workers=1)
     else:

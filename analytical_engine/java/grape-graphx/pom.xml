@@ -37,6 +37,7 @@
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.scalatest</groupId>
@@ -49,7 +50,6 @@
     <dependency>
       <groupId>org.apache.spark</groupId>
       <artifactId>spark-graphx_2.12</artifactId>
-      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
@@ -140,8 +140,6 @@
                 <includes>
                   <include>com.alibaba.graphscope:*</include>
                   <include>com.alibaba.fastffi:*</include>
-                  <include>org.scala-lang:*</include>
-                  <include>org.apache.spark:spark-graphx_2.12*</include>
                   <include>it.unimi.dsi:fastutil*</include>
                 </includes>
               </artifactSet>

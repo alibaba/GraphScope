@@ -1,5 +1,5 @@
 ## Common Config
-graph.name=maxgraph
+graph.name=graphscope
 role.name=
 node.idx=
 rpc.port=0
@@ -27,12 +27,12 @@ store.data.path=./data
 store.write.thread.count=1
 
 ## Zk Config
-zk.base.path=/maxgraph/graph_test
+zk.base.path=/graphscope/groot
 zk.connect.string=graph_env:2181
 
 ## Kafka Config
 kafka.servers=graph_env:9092
-kafka.topic=graph_test
+kafka.topic=groot
 
 ## Frontend Config
 gremlin.server.port=12312

@@ -27,7 +27,6 @@ import com.alibaba.fastffi.CXXValue;
 import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFITypeAlias;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
 /**
  * Definition of Nbr for projected fragment <a
@@ -37,7 +36,7 @@ import com.alibaba.graphscope.utils.JNILibraryName;
  * @param <VID_T> vertex id type.
  * @param <EDATA_T> edge data type.
  */
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @CXXHead(ARROW_PROJECTED_FRAGMENT_H)
 @CXXHead(CORE_JAVA_TYPE_ALIAS_H)
 @FFITypeAlias(PROJECTED_NBR)

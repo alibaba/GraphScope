@@ -234,7 +234,7 @@ else()
 endif()
 
 # find vineyard after arrow to avoid duplicate target names
-find_package(vineyard 0.11.1 REQUIRED)
+find_package(vineyard 0.11.2 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 add_compile_options(-DENABLE_SELECTOR)
 
@@ -453,8 +453,10 @@ if(ENABLE_JAVA_SDK)
     )
     set(GAE_JAVA_RUNTIME_JAR "${GAE_JAVA_RUNTIME_DIR}/target/grape-runtime-${GRAPHSCOPE_ANALYTICAL_JAR_VERSION}-shaded.jar")
     set(GAE_JAVA_GRAPHX_JAR "${GAE_JAVA_DIR}/grape-graphx/target/grape-graphx-${GRAPHSCOPE_ANALYTICAL_JAR_VERSION}-shaded.jar")
+    set(GAE_JAVA_GIRAPH_JAR "${GAE_JAVA_DIR}/grape-giraph/target/grape-giraph-${GRAPHSCOPE_ANALYTICAL_JAR_VERSION}-shaded.jar")
+
     add_custom_command(
-        OUTPUT "${GAE_JAVA_RUNTIME_DIR}/target/native/libgrape-jni.so"
+        OUTPUT "${GAE_JAVA_RUNTIME_JAR}"
         COMMAND mvn -Drevision=${GRAPHSCOPE_ANALYTICAL_JAR_VERSION} clean install -DskipTests --quiet
         DEPENDS gs_proto
         WORKING_DIRECTORY ${GAE_JAVA_DIR}
@@ -462,12 +464,12 @@ if(ENABLE_JAVA_SDK)
         VERBATIM
     )
     add_custom_target(grape_jni ALL
-        DEPENDS "${GAE_JAVA_RUNTIME_DIR}/target/native/libgrape-jni.so"
+         DEPENDS "${GAE_JAVA_RUNTIME_JAR}"
     )
     install(FILES DESTINATION lib)
-    install(FILES "${GAE_JAVA_RUNTIME_DIR}/target/native/libgrape-jni.so" DESTINATION lib)
     install(FILES "${GAE_JAVA_RUNTIME_JAR}" DESTINATION lib)
     install(FILES "${GAE_JAVA_GRAPHX_JAR}" DESTINATION lib)
+    install(FILES "${GAE_JAVA_GIRAPH_JAR}" DESTINATION lib)
     install(FILES "${GAE_JAVA_DIR}/grape_jvm_opts" DESTINATION conf)
     install(FILES "${GAE_JAVA_DIR}/run_graphx.sh" DESTINATION bin)
  endif()
