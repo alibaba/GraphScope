@@ -69,6 +69,7 @@ and the vineyard store that offers efficient in-memory data transfers.
    :caption: Advanced Topics
 
    dive_into_engines
+   supported_gremlin_steps
    storages_and_unified_interface
    performance_tuning
 
