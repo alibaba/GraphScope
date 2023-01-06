@@ -40,7 +40,6 @@ and the vineyard store that offers efficient in-memory data transfers.
    python_tutorials
    java_tutorials
    cpp_tutorials
-   gremlin_tutorials
    walkthrough_examples_acrossing_engines
    video_tutorials
 
