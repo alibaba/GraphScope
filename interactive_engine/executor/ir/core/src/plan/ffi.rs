@@ -617,6 +617,7 @@ pub extern "C" fn build_physical_plan(
             let req_result = builder.build();
             match req_result {
                 Ok(req) => {
+                    // print!("req: {:?}", req);
                     let mut req_bytes = req.encode_to_vec().into_boxed_slice();
                     let data = FfiData {
                         ptr: req_bytes.as_mut_ptr() as *mut c_void,
@@ -942,8 +943,11 @@ mod project {
     use super::*;
     /// To initialize a project operator.
     #[no_mangle]
-    pub extern "C" fn init_project_operator(is_append: bool) -> *const c_void {
-        let project = Box::new(pb::Project { mappings: vec![], is_append });
+    pub extern "C" fn init_project_operator(is_append: i32) -> *const c_void {
+        let project = Box::new(pb::Project {
+            mappings: vec![],
+            is_append: if is_append == 0 { false } else { true },
+        });
         Box::into_raw(project) as *const c_void
     }
 

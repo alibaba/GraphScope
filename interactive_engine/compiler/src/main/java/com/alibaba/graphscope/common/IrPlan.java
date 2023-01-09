@@ -189,7 +189,7 @@ public class IrPlan implements Closeable {
                 }
                 List<Pair> exprWithAlias = (List<Pair>) exprOpt.get().applyArg();
                 // append always and sink by parameters
-                Pointer ptrProject = irCoreLib.initProjectOperator(true);
+                Pointer ptrProject = irCoreLib.initProjectOperator(1);
                 exprWithAlias.forEach(
                         p -> {
                             String expr = (String) p.getValue0();
