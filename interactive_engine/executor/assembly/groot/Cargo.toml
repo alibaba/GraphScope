@@ -16,7 +16,7 @@ pegasus_server = { path = "../../engine/pegasus/server" }
 runtime_integration =  { path = "../../ir/integrated" }
 log = "0.4"
 log4rs = "1.2"
-tokio = { version = "1.0", features = ["macros", "sync"] }
+tokio = { version = "1.24", features = ["macros", "sync"] }
 
 [features]
 column_filter_push_down = ["runtime_integration/column_filter_push_down"]
