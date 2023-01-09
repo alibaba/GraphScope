@@ -7,6 +7,9 @@ import jline.internal.Nullable;
  */
 public class IrLabelType {
     private String label;
+    private int labelId;
     @Nullable private String srcLabel;
+    @Nullable private int srcLabelId;
     @Nullable private String dstLabel;
+    @Nullable private int dstLabelId;
 }
