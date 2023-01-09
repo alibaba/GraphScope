@@ -57,36 +57,9 @@ enum SimpleOpr {
     Sink,
 }
 
-fn get_opr2() -> pb::logical_plan::Operator {
-    let item = common_pb::NameOrId{ item: Some(common_pb::name_or_id::Item::Name("name".parse().unwrap())) };
-    let property = common_pb::Property{item: Some(common_pb::property::Item::Key(item))};
-    let variable = common_pb::Variable{ tag: None, property: Some(property) };
-    let expr_opr = common_pb::ExprOpr{item: Some(common_pb::expr_opr::Item::Var(variable))};
-    let expression = common_pb::Expression{operators: vec![expr_opr]};
-    let expr_alias = pb::project::ExprAlias{expr: Some(expression), alias: None };
-    let project = pb::Project{mappings: vec![expr_alias], is_append: true };
-    let opr = pb::logical_plan::Operator{opr: Some(pb::logical_plan::operator::Opr::Project(project))};
-    opr
-}
-
 fn simple_add_job_builder<M: Message>(
     builder: &mut JobBuilder, ir_opr: &M, opr: SimpleOpr,
 ) -> IrResult<()> {
-    // let _ = match opr {
-    //     SimpleOpr::FilterMap => {
-            println!("----------------------");
-    println!("ir_opr: {:?}, len: {:?}, bytes: {:?}", ir_opr, ir_opr.encoded_len(), ir_opr.encode_to_vec());
-            // println!("len: {:?}, bytes: {:?}", ir_opr.encoded_len(), ir_opr.encode_to_vec());
-            println!("------------------");
-            let opr2 = get_opr2();
-            println!("opr2: {:?}, len: {:?}, bytes: {:?}", opr2, opr2.encoded_len(), opr2.encode_to_vec());
-
-    //     },
-    //     _ => {
-    //         print!("pass");
-    //     }
-    // };
-
     let bytes = ir_opr.encode_to_vec();
     let _ = match opr {
         SimpleOpr::Source => builder.add_source(bytes),
@@ -125,26 +98,9 @@ fn merge_query_params(merged_params: &mut pb::QueryParams, other_params: &mut pb
     other_params.columns.clear();
     other_params.is_all_columns = false;
 }
-//     let project = pb::Project{mappings: vec![expr_alias], is_append: true };
-//     let opr = pb::logical_plan::Operator{opr: Some(pb::logical_plan::operator::Opr::Project(project))};
-//     opr
-fn get_opr3(input: pb::Project) -> pb::logical_plan::Operator {
-    let project = pb::Project {
-        mappings: input.mappings.clone(),
-        is_append: true,
-    };
-    pb::logical_plan::Operator {
-        opr:  Some(pb::logical_plan::operator::Opr::Project(project)),
-    }
-}
+
 impl AsPhysical for pb::Project {
     fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
-        print!("1");
-        println!("------- IS APPEND: {:?} {}", self.is_append, self.is_append);
-        let opr3 = get_opr3(self.clone());
-        println!("----------------");
-        println!("opr3: {:?}, len: {:?}, bytes: {:?}", opr3, opr3.encoded_len(), opr3.encode_to_vec());
-
         simple_add_job_builder(
             builder,
             &pb::logical_plan::Operator::from(self.clone()),
@@ -189,8 +145,6 @@ impl AsPhysical for pb::Select {
                 )))
             }
         } else {
-            print!("2");
-
             simple_add_job_builder(
                 builder,
                 &pb::logical_plan::Operator::from(self.clone()),
@@ -204,8 +158,6 @@ impl AsPhysical for pb::Scan {
     fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut scan = self.clone();
         scan.post_process(builder, plan_meta)?;
-        print!("3");
-
         simple_add_job_builder(builder, &pb::logical_plan::Operator::from(scan), SimpleOpr::Source)
     }
 
@@ -282,10 +234,8 @@ impl AsPhysical for pb::EdgeExpand {
         } else {
             return Err(IrError::MissingData("EdgeExpand::params".to_string()));
         }
-        print!("4");
 
         simple_add_job_builder(
-
             builder,
             &pb::logical_plan::Operator::from(self.clone()),
             SimpleOpr::Flatmap,
@@ -316,8 +266,6 @@ impl AsPhysical for pb::PathExpand {
                         path_opt: self.path_opt,
                         result_opt: self.result_opt,
                     };
-                    print!("5");
-
                     simple_add_job_builder(
                         builder,
                         &pb::logical_plan::Operator::from(path_start),
@@ -344,8 +292,6 @@ impl AsPhysical for pb::PathExpand {
                         });
                     }
                     let path_end = pb::PathEnd { alias: self.alias.clone() };
-                    print!("6");
-
                     simple_add_job_builder(
                         builder,
                         &pb::logical_plan::Operator::from(path_end),
@@ -411,8 +357,6 @@ impl AsPhysical for pb::GetV {
         let opt: pb::get_v::VOpt = unsafe { ::std::mem::transmute(self.opt) };
         match opt {
             pb::get_v::VOpt::Both => {
-                print!("7");
-
                 simple_add_job_builder(
                     builder,
                     &pb::logical_plan::Operator::from(self.clone()),
@@ -448,8 +392,6 @@ impl AsPhysical for pb::As {
 
 impl AsPhysical for pb::Auxilia {
     fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
-        print!("9");
-
         simple_add_job_builder(
             builder,
             &pb::logical_plan::Operator::from(self.clone()),
@@ -477,8 +419,6 @@ impl AsPhysical for pb::OrderBy {
     fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
         let opr = pb::logical_plan::Operator::from(self.clone());
         if self.limit.is_none() {
-            print!("10");
-
             simple_add_job_builder(builder, &opr, SimpleOpr::SortBy)
         } else {
             let range = self.limit.clone().unwrap();
@@ -495,8 +435,6 @@ impl AsPhysical for pb::OrderBy {
 
 impl AsPhysical for pb::Dedup {
     fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
-        print!("11");
-
         simple_add_job_builder(builder, &pb::logical_plan::Operator::from(self.clone()), SimpleOpr::Dedup)
     }
 }
@@ -505,12 +443,8 @@ impl AsPhysical for pb::GroupBy {
     fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
         let opr = pb::logical_plan::Operator::from(self.clone());
         if self.mappings.is_empty() {
-            print!("12");
-
             simple_add_job_builder(builder, &opr, SimpleOpr::Fold)
         } else {
-            print!("13");
-
             simple_add_job_builder(builder, &opr, SimpleOpr::GroupBy)
         }
     }
@@ -519,8 +453,6 @@ impl AsPhysical for pb::GroupBy {
 impl AsPhysical for pb::Unfold {
     fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
         let opr = pb::logical_plan::Operator::from(self.clone());
-        print!("14");
-
         simple_add_job_builder(builder, &opr, SimpleOpr::Flatmap)
     }
 }
@@ -571,7 +503,6 @@ impl AsPhysical for pb::Sink {
                 }
             }
         };
-        print!("15");
 
         simple_add_job_builder(builder, &pb::logical_plan::Operator::from(sink_opr), SimpleOpr::Sink)
     }
@@ -655,7 +586,7 @@ impl AsPhysical for LogicalPlan {
         use pb::logical_plan::operator::Opr::*;
         let mut _prev_node_opt: Option<NodeType> = None;
         let mut curr_node_opt = self.get_first_node();
-        print!("plan: {:#?}", self);
+        debug!("plan: {:#?}", self);
         debug!("is_partition: {:?}", self.meta.is_partition());
         while curr_node_opt.is_some() {
             let curr_node = curr_node_opt.as_ref().unwrap();
@@ -713,7 +644,6 @@ impl AsPhysical for LogicalPlan {
                             .into(),
                         );
                         fused.oprs.push(expand_degree.into());
-                        print!("PROJECT 1");
                         fused.oprs.push(
                             pb::Project {
                                 mappings: vec![pb::project::ExprAlias {
@@ -887,8 +817,6 @@ fn add_intersect_job_builder(
                             );
                         }
                     }
-                    print!("16");
-
                     simple_add_job_builder(
                         builder,
                         &pb::logical_plan::Operator::from(edgexpd.clone()),
@@ -1005,7 +933,6 @@ mod test {
 
     #[allow(dead_code)]
     fn build_project(expr: &str) -> pb::Project {
-        print!("BUILD PROJECT, {:?}", expr);
         pb::Project {
             mappings: vec![pb::project::ExprAlias {
                 expr: str_to_expr_pb(expr.to_string()).ok(),

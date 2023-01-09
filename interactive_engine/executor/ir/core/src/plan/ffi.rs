@@ -617,7 +617,6 @@ pub extern "C" fn build_physical_plan(
             let req_result = builder.build();
             match req_result {
                 Ok(req) => {
-                    // print!("req: {:?}", req);
                     let mut req_bytes = req.encode_to_vec().into_boxed_slice();
                     let data = FfiData {
                         ptr: req_bytes.as_mut_ptr() as *mut c_void,
