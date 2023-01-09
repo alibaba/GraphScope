@@ -93,7 +93,7 @@ public interface IrCoreLibrary extends Library {
     FfiResult.ByValue appendOrderbyOperator(
             Pointer plan, Pointer orderBy, int parent, IntByReference oprIdx);
 
-    Pointer initProjectOperator(int isAppend);
+    Pointer initProjectOperator(boolean isAppend);
 
     FfiResult.ByValue addProjectExprAlias(Pointer project, String expr, FfiAlias.ByValue alias);
 

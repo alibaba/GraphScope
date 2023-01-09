@@ -371,7 +371,7 @@ impl TryFrom<FfiVariable> for common_pb::Variable {
 #[derive(Default)]
 pub struct FfiAlias {
     alias: FfiNameOrId,
-    is_query_given: bool,
+    is_query_given: i32,
 }
 
 impl TryFrom<FfiAlias> for Option<common_pb::NameOrId> {

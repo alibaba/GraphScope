@@ -24,5 +24,6 @@ public class IrTypeMapper extends DefaultTypeMapper {
     private IrTypeMapper() {
         super();
         addTypeConverter(IntEnum.class, new EnumConverter());
+        addTypeConverter(Boolean.class, new BooleanConverter());
     }
 }
