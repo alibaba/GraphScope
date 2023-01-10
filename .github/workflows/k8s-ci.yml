@@ -419,9 +419,9 @@ jobs:
       - name: Helm Test
         run: |
           cd charts
-          helm template graphscope --set image.registry="",image.tag=${SHORT_SHA} \
+          helm template graphscope --set image.registry="",image.tag="${SHORT_SHA}" \
                                   ./graphscope
-          helm install graphscope --set image.registry="",image.tag=${SHORT_SHA} \
+          helm install graphscope --set image.registry="",image.tag="${SHORT_SHA}" \
                                   ./graphscope
           helm test graphscope --timeout 5m0s
           export NODE_IP=$(kubectl get pod -lgraphscope.coordinator.name=coordinator-graphscope -ojsonpath="{.items[0].status.hostIP}")
