@@ -398,6 +398,7 @@ write_envs_config() {
       echo "export OPENSSL_ROOT_DIR=${homebrew_prefix}/opt/openssl"
       echo "export OPENSSL_LIBRARIES=${homebrew_prefix}/opt/openssl/lib"
       echo "export OPENSSL_SSL_LIBRARY=${homebrew_prefix}/opt/openssl/lib/libssl.dylib"
+      echo "export LDFLAGS=\"$LDFLAGS -Wl,-rpath,/usr/local/opt/libomp/lib -L/usr/local/opt/libomp/lib\""
     } >> ${OUTPUT_ENV_FILE}
 
   elif [[ "${PLATFORM}" == *"Ubuntu"* ]]; then
@@ -556,7 +557,7 @@ install_cppkafka() {
 
   if [[ "${PLATFORM}" == *"Darwin"* ]]; then
     declare -r homebrew_prefix=$(brew --prefix)
-    export LDFLAGS="-L${homebrew_prefix}/opt/openssl@3/lib"
+    export LDFLAGS="${LDFLAGS} -L${homebrew_prefix}/opt/openssl@3/lib"
     export CPPFLAGS="-I${homebrew_prefix}/opt/openssl@3/include"
   fi
 
@@ -762,6 +763,7 @@ install_dependencies() {
     export CXX=${homebrew_prefix}/opt/llvm/bin/clang++
     export CARGO_TARGET_X86_64_APPLE_DARWIN_LINKER=${CC}
     export CPPFLAGS=-I${homebrew_prefix}/opt/llvm/include
+    export LDFLAGS="${LDFLAGS} -Wl,-rpath,/usr/local/opt/libomp/lib -L/usr/local/opt/libomp/lib"
   fi
 
   log "Installing python packages for vineyard codegen."
