@@ -81,7 +81,7 @@ def _get_extra_data():
         elif platform.system() == "Darwin":
             openmpi_prefix = (
                 subprocess.check_output([shutil.which("brew"), "--prefix", "openmpi"])
-                .decode("utf-8")
+                .decode("utf-8", errors="ignore")
                 .strip("\n")
             )
         else:

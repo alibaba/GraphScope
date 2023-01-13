@@ -1064,7 +1064,9 @@ class TransformUtils<
       }
     }
 
-    if (oid_type == dynamic::Type::kInt64Type) {
+    if (oid_type == dynamic::Type::kInt32Type) {
+      return vineyard::TypeToInt<int32_t>::value;
+    } else if (oid_type == dynamic::Type::kInt64Type) {
       return vineyard::TypeToInt<int64_t>::value;
     } else if (oid_type == dynamic::Type::kStringType) {
       return vineyard::TypeToInt<std::string>::value;
@@ -1102,7 +1104,16 @@ class TransformUtils<
 
     BOOST_LEAF_AUTO(oid_type, GetOidTypeId());
 
-    if (oid_type == vineyard::TypeToInt<int64_t>::value) {
+    if (oid_type == vineyard::TypeToInt<int32_t>::value) {
+      typename vineyard::ConvertToArrowType<int32_t>::BuilderType builder;
+      for (auto& v : inner_vertices) {
+        ARROW_OK_OR_RAISE(builder.Append(frag_.GetId(v).GetInt()));
+      }
+      std::shared_ptr<typename vineyard::ConvertToArrowType<int32_t>::ArrayType>
+          ret;
+      ARROW_OK_OR_RAISE(builder.Finish(&ret));
+      return std::dynamic_pointer_cast<arrow::Array>(ret);
+    } else if (oid_type == vineyard::TypeToInt<int64_t>::value) {
       typename vineyard::ConvertToArrowType<int64_t>::BuilderType builder;
       for (auto& v : inner_vertices) {
         ARROW_OK_OR_RAISE(builder.Append(frag_.GetId(v).GetInt64()));
@@ -1136,7 +1147,15 @@ class TransformUtils<
 
     BOOST_LEAF_AUTO(oid_type, GetOidTypeId());
 
-    if (oid_type == vineyard::TypeToInt<int64_t>::value) {
+    if (oid_type == vineyard::TypeToInt<int32_t>::value) {
+      auto tensor_builder = std::make_shared<vineyard::TensorBuilder<int32_t>>(
+          client, shape, part_idx);
+      for (size_t i = 0; i < vertices.size(); i++) {
+        tensor_builder->data()[i] = frag_.GetId(vertices[i]).GetInt();
+      }
+      return std::dynamic_pointer_cast<vineyard::ITensorBuilder>(
+          tensor_builder);
+    } else if (oid_type == vineyard::TypeToInt<int64_t>::value) {
       auto tensor_builder = std::make_shared<vineyard::TensorBuilder<int64_t>>(
           client, shape, part_idx);
       for (size_t i = 0; i < vertices.size(); i++) {
@@ -1169,7 +1188,14 @@ class TransformUtils<
                                       client, vertices));
     BOOST_LEAF_AUTO(oid_type, GetOidTypeId());
 
-    if (oid_type == vineyard::TypeToInt<int64_t>::value) {
+    if (oid_type == vineyard::TypeToInt<int32_t>::value) {
+      auto builder =
+          std::dynamic_pointer_cast<vineyard::TensorBuilder<int32_t>>(
+              base_builder);
+      auto tensor = builder->Seal(client);
+      VY_OK_OR_RAISE(tensor->Persist(client));
+      return tensor->id();
+    } else if (oid_type == vineyard::TypeToInt<int64_t>::value) {
       auto builder =
           std::dynamic_pointer_cast<vineyard::TensorBuilder<int64_t>>(
               base_builder);

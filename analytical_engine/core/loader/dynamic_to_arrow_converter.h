@@ -285,6 +285,70 @@ template <typename DST_FRAG_T, typename OID_T>
 struct COOBuilder {};
 
 /**
+ * @brief This is a specialized EdgeArrayBuilder for int32_t
+ * @tparam DST_FRAG_T
+ */
+template <typename DST_FRAG_T>
+struct COOBuilder<DST_FRAG_T, int32_t> {
+  using oid_t = int32_t;
+  using src_fragment_t = DynamicFragment;
+  using dst_fragment_t = DST_FRAG_T;
+
+  auto Build(
+      const std::shared_ptr<src_fragment_t>& src_frag,
+      const std::shared_ptr<typename dst_fragment_t::vertex_map_t>& dst_vm)
+      -> bl::result<std::pair<std::shared_ptr<arrow::Array>,
+                              std::shared_ptr<arrow::Array>>> {
+    auto fid = src_frag->fid();
+
+    auto inner_vertices = src_frag->InnerVertices();
+    arrow::UInt64Builder src_builder, dst_builder;
+    std::shared_ptr<arrow::Array> src_array, dst_array;
+
+    for (const auto& u : inner_vertices) {
+      if (!src_frag->IsAliveInnerVertex(u)) {
+        continue;
+      }
+      auto u_oid = src_frag->GetId(u);
+      vineyard::property_graph_types::VID_TYPE u_gid;
+
+      CHECK(dst_vm->GetGid(fid, 0, u_oid.GetInt(), u_gid));
+
+      for (auto& e : src_frag->GetOutgoingAdjList(u)) {
+        auto& v = e.neighbor;
+        if (!src_frag->directed() && u.GetValue() > v.GetValue()) {
+          continue;
+        }
+        auto v_oid = src_frag->GetId(v);
+        vineyard::property_graph_types::VID_TYPE v_gid;
+
+        CHECK(dst_vm->GetGid(0, v_oid.GetInt(), v_gid));
+        ARROW_OK_OR_RAISE(src_builder.Append(u_gid));
+        ARROW_OK_OR_RAISE(dst_builder.Append(v_gid));
+      }
+      if (src_frag->directed()) {
+        for (auto& e : src_frag->GetIncomingAdjList(u)) {
+          auto& v = e.neighbor;
+          if (src_frag->IsOuterVertex(v)) {
+            auto v_oid = src_frag->GetId(v);
+            vineyard::property_graph_types::VID_TYPE v_gid;
+
+            CHECK(dst_vm->GetGid(0, v_oid.GetInt(), v_gid));
+            ARROW_OK_OR_RAISE(src_builder.Append(v_gid));
+            ARROW_OK_OR_RAISE(dst_builder.Append(u_gid));
+          }
+        }
+      }
+    }
+
+    ARROW_OK_OR_RAISE(src_builder.Finish(&src_array));
+    ARROW_OK_OR_RAISE(dst_builder.Finish(&dst_array));
+
+    return std::make_pair(src_array, dst_array);
+  }
+};
+
+/**
  * @brief This is a specialized EdgeArrayBuilder for int64_t
  * @tparam DST_FRAG_T
  */

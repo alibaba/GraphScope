@@ -178,7 +178,7 @@ class EngineCluster:
         return self._sock
 
     def base64_decode(self, string):
-        return base64.b64decode(string).decode("utf-8")
+        return base64.b64decode(string).decode("utf-8", errors="ignore")
 
     def get_common_env(self):
         def put_if_exists(env: dict, key: str):

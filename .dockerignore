@@ -5,11 +5,18 @@
 **/*.egg-info/
 **/*.eggs
 
+# artifacts, use for testing
+/google-java-format-1.13.0-all-deps.jar
+
+
 # coordinator
 coordinator/proto
 
 # python
 python/proto
+python/build
+python/*.tar.gz
+python/*.zip
 
 # Gar file
 **/*.gar
@@ -86,6 +93,14 @@ package.lock
 # docker: ignore learning engine's build artifacts
 learning_engine/graph-learn/cmake-build
 learning_engine/graph-learn/graphlearn/cmake-build
+learning_engine/graph-learn/graphlearn/built
+learning_engine/graph-learn/graphlearn/build
+learning_engine/graph-learn/graphlearn/examples/data
+learning_engine/graph-learn/graphlearn/**/graphlearn.*.log*
+!learning_engine/graph-learn/graphlearn/examples/data/*.py
+learning_engine/graph-learn/graphlearn/pywrap_graphlearn.cpython*
+learning_engine/graph-learn/graphlearn/src/contrib/knn
+learning_engine/graph-learn/graphlearn/python/lib
 
 # docker: ignore .install_prefix
 .install_prefix

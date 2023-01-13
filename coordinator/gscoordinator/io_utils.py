@@ -84,7 +84,7 @@ class StdStreamWrapper(ObjectWrapper):
 
         self._stream_backup.write(line)
         self._stream_backup.flush()
-        line = line.encode("utf-8", "ignore").decode("utf-8")
+        line = line.encode("utf-8", "ignore").decode("utf-8", errors="ignore")
         if not self._drop:
             self._lines.put(line)
 

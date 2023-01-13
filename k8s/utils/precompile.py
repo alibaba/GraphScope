@@ -17,7 +17,7 @@ import yaml
 
 
 def compute_sig(s):
-    return hashlib.sha256(s.encode("utf-8")).hexdigest()
+    return hashlib.sha256(s.encode("utf-8", errors="ignore")).hexdigest()
 
 
 NETWORKX = os.environ.get("NETWORKX", "ON")
@@ -203,10 +203,11 @@ def compile_graph():
                     graph_class = projected_frame_template.format(
                         oid, vid, vdata, edata, vertex_map
                     )
+                    graph_classes.append(graph_class)
+
                     flattend_graph_class = flattened_frame_template.format(
                         oid, vid, vdata, edata
                     )
-                    graph_classes.append(graph_class)
                     graph_classes.append(flattend_graph_class)
 
     for vdata in vdata_types:

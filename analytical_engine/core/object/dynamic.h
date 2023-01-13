@@ -49,6 +49,7 @@ enum Type {
   kStringType = 5,
   kInt64Type = 6,
   kDoubleType = 7,
+  kInt32Type = 8,
 };
 
 // An inherit class of rapidjson::Value to support more features.
@@ -299,6 +300,7 @@ static inline rpc::graph::DataTypePb DynamicType2RpcType(const Type& t) {
   static const std::map<Type, rpc::graph::DataTypePb> type2type = {
       {Type::kNullType, rpc::graph::DataTypePb::NULLVALUE},
       {Type::kBoolType, rpc::graph::DataTypePb::BOOL},
+      {Type::kInt32Type, rpc::graph::DataTypePb::INT},
       {Type::kInt64Type, rpc::graph::DataTypePb::LONG},
       {Type::kDoubleType, rpc::graph::DataTypePb::DOUBLE},
       {Type::kStringType, rpc::graph::DataTypePb::STRING},

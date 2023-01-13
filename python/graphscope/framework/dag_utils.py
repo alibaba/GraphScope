@@ -196,6 +196,7 @@ def add_labels_to_graph(graph, loader_op):
         types_pb2.DIRECTED: utils.b_to_attr(graph._directed),
         types_pb2.OID_TYPE: utils.s_to_attr(graph._oid_type),
         types_pb2.GENERATE_EID: utils.b_to_attr(graph._generate_eid),
+        types_pb2.RETAIN_OID: utils.b_to_attr(graph._retain_oid),
         types_pb2.VERTEX_MAP_TYPE: utils.i_to_attr(graph._vertex_map),
         types_pb2.VID_TYPE: utils.s_to_attr("uint64_t"),
         types_pb2.IS_FROM_VINEYARD_ID: utils.b_to_attr(False),

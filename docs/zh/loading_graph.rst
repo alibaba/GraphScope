@@ -304,9 +304,12 @@ GraphScope 可以从输入文件中推断点的类型，大部分情况下工作
 
 类 `Graph` 有三个配置元信息的参数，分别为：
 
-- `oid_type`, 可以为 `int64_t` 或 `string`。 默认为 `int64_t`，会有更快的速度，和使用更少的内存。当ID不能用 `int64_t` 表示时，才应该使用 `string`。
+- `oid_type`, 可以为 `int32_t`, `int64_t` 或 `string`。 默认为 `int64_t`，会有更快的速度，和使用更少的内存。
+              当ID不能用 `int64_t` 表示时，才应该使用 `string`，如果确定图点ID范围不会超过 `2^31-1`，建议使用
+              `int32_t` 来降低内存开销。
 - `directed`, bool, 默认为`True`. 指示载入无向图还是有向图。
 - `generate_eid`, bool, 默认为 `True`. 指示是否为每条边分配一个全局唯一的ID。
+- `retain_oid`, bool, 默认为 `True`. 指示是否是否将点原始ID保留为属性。
 
 
 完整的示例
@@ -316,7 +319,7 @@ GraphScope 可以从输入文件中推断点的类型，大部分情况下工作
 
 .. code:: python
 
-    graph = sess.g(oid_type='int64_t', directed=True, generate_eid=True)
+    graph = sess.g(oid_type='int64_t', directed=True, generate_eid=True, retain_oid=True)
     graph = graph.add_vertices('/home/ldbc_sample/person_0_0.csv', label='person')
     graph = graph.add_vertices('/home/ldbc_sample/comment_0_0.csv', label='comment')
     graph = graph.add_vertices('/home/ldbc_sample/post_0_0.csv', label='post')

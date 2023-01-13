@@ -409,4 +409,4 @@ def load_ldbc(sess=None, prefix=None, directed=True):
             )
         ],
     }
-    return sess.load_from(edges, vertices, directed, generate_eid=True)
+    return sess.load_from(edges, vertices, directed, generate_eid=True, retain_oid=True)

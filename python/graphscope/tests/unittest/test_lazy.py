@@ -46,7 +46,7 @@ def sess():
 
 @pytest.fixture(scope="module")
 def arrow_property_graph_lpa_u2i(sess):
-    g = sess.g(generate_eid=False)
+    g = sess.g(generate_eid=False, retain_oid=False)
     g = g.add_vertices(f"{property_dir}/lpa_dataset/lpa_3000_v_0", "v0")
     g = g.add_vertices(f"{property_dir}/lpa_dataset/lpa_3000_v_1", "v1")
     g = g.add_edges(
@@ -83,7 +83,7 @@ def test_vertices_omitted_form_loader(sess, student_group_e):
 
 
 def test_construct_graph_step_by_step(sess):
-    _g = sess.g(generate_eid=False)
+    _g = sess.g(generate_eid=False, retain_oid=False)
     g = sess.run(_g)
     _g1 = g.add_vertices(f"{new_property_dir}/twitter_v_0", "v0")
     g1 = sess.run(_g1)

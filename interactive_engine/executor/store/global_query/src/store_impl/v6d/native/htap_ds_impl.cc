@@ -75,7 +75,11 @@ void get_graph_handle(ObjectId id, PartitionId channel_num,
   }
 
   handle->schema = NULL;
+  handle->fragments = NULL;
+  handle->int32_fragments = NULL;
+  handle->string_fragments = NULL;
   handle->vertex_map = NULL;
+  handle->int32_vertex_map = NULL;
   handle->string_vertex_map = NULL;
 
   for (const auto& pair : fg->Fragments()) {
@@ -93,13 +97,23 @@ void get_graph_handle(ObjectId id, PartitionId channel_num,
       if (meta.GetKeyValue("oid_type") == vineyard::type_name<OID_TYPE>()) {
         if (handle->fragments == nullptr) {
           handle->use_int64_oid = true;
+          handle->use_int32_oid = false;
           handle->use_string_oid = false;
           handle->fragments = new FRAGMENT_TYPE[total_frag_num];
         }
         handle->fragments[fid].Construct(meta);
+      } else if (meta.GetKeyValue("oid_type") == vineyard::type_name<INT32_OID_TYPE>()) {
+        if (handle->int32_fragments == nullptr) {
+          handle->use_int64_oid = false;
+          handle->use_int32_oid = true;
+          handle->use_string_oid = false;
+          handle->int32_fragments = new INT32_FRAGMENT_TYPE[total_frag_num];
+        }
+        handle->int32_fragments[fid].Construct(meta);
       } else if (meta.GetKeyValue("oid_type") == vineyard::type_name<STRING_OID_TYPE>()) {
         if (handle->string_fragments == nullptr) {
           handle->use_int64_oid = false;
+          handle->use_int32_oid = false;
           handle->use_string_oid = true;
           handle->string_fragments = new STRING_FRAGMENT_TYPE[total_frag_num];
         }
@@ -110,10 +124,12 @@ void get_graph_handle(ObjectId id, PartitionId channel_num,
                    << ", with VID type " << meta.GetKeyValue("vid_type");
       }
 
-      if (handle->vertex_map == nullptr && handle->string_vertex_map == nullptr ) {
+      if (handle->vertex_map == nullptr && handle->int32_vertex_map == nullptr && handle->string_vertex_map == nullptr) {
         vineyard::ObjectID vertex_map_id = vineyard::InvalidObjectID();
         if (handle->fragments != nullptr) {
           vertex_map_id = handle->fragments[fid].vertex_map_id();
+        } else if (handle->int32_fragments != nullptr) {
+          vertex_map_id = handle->int32_fragments[fid].vertex_map_id();
         } else {
           vertex_map_id = handle->string_fragments[fid].vertex_map_id();
         }
@@ -128,6 +144,9 @@ void get_graph_handle(ObjectId id, PartitionId channel_num,
         if (handle->fragments != nullptr) {
           handle->vertex_map = new VERTEX_MAP_TYPE();
           handle->vertex_map->Construct(vm_meta);
+        } else if (handle->int32_fragments != nullptr) {
+          handle->int32_vertex_map = new INT32_VERTEX_MAP_TYPE();
+          handle->int32_vertex_map->Construct(vm_meta);
         } else {
           handle->string_vertex_map = new STRING_VERTEX_MAP_TYPE();
           handle->string_vertex_map->Construct(vm_meta);
@@ -142,6 +161,8 @@ void get_graph_handle(ObjectId id, PartitionId channel_num,
         vineyard::json schema_json;
         if (handle->fragments != nullptr) {
           handle->fragments[fid].schema().ToJSON(schema_json);
+        } else if (handle->int32_fragments != nullptr) {
+          handle->int32_fragments[fid].schema().ToJSON(schema_json);
         } else {
           handle->string_fragments[fid].schema().ToJSON(schema_json);
         }
@@ -161,6 +182,8 @@ void get_graph_handle(ObjectId id, PartitionId channel_num,
       VID_TYPE ivnum;
       if (handle->use_int64_oid) {
         ivnum = handle->vertex_map->GetInnerVertexSize(i, j);
+      } else if (handle->use_int32_oid) {
+        ivnum = handle->int32_vertex_map->GetInnerVertexSize(i, j);
       } else {
         ivnum = handle->string_vertex_map->GetInnerVertexSize(i, j);
       }
@@ -188,6 +211,10 @@ void free_graph_handle(GraphHandleImpl* handle) {
     delete[] handle->fragments;
     handle->fragments = nullptr;
   }
+  if (handle->int32_fragments != nullptr) {
+    delete[] handle->int32_fragments;
+    handle->int32_fragments = nullptr;
+  }
   if (handle->string_fragments != nullptr) {
     delete[] handle->string_fragments;
     handle->string_fragments = nullptr;
@@ -195,6 +222,10 @@ void free_graph_handle(GraphHandleImpl* handle) {
   if (handle->vertex_map != nullptr) {
     delete[] handle->vertex_map;
     handle->vertex_map = nullptr;
+  }
+  if (handle->int32_vertex_map != nullptr) {
+    delete[] handle->int32_vertex_map;
+    handle->int32_vertex_map = nullptr;
   }
   if (handle->string_vertex_map != nullptr) {
     delete[] handle->string_vertex_map;
@@ -305,6 +336,8 @@ typename FRAGMENT_TYPE::oid_t get_outer_id(FRAGMENT_TYPE* frag, Vertex v) {
 template
 FRAGMENT_TYPE::oid_t get_outer_id(FRAGMENT_TYPE* frag, Vertex v);
 template
+INT32_FRAGMENT_TYPE::oid_t get_outer_id(INT32_FRAGMENT_TYPE* frag, Vertex v);
+template
 STRING_FRAGMENT_TYPE::oid_t get_outer_id(STRING_FRAGMENT_TYPE* frag, Vertex v);
 
 template <typename FRAGMENT_TYPE>
@@ -326,6 +359,9 @@ int get_vertex_property(FRAGMENT_TYPE* frag, Vertex v, PropertyId id,
 
 template
 int get_vertex_property(FRAGMENT_TYPE* frag, Vertex v, PropertyId id,
+                        Property* p_out);
+template
+int get_vertex_property(INT32_FRAGMENT_TYPE* frag, Vertex v, PropertyId id,
                         Property* p_out);
 template
 int get_vertex_property(STRING_FRAGMENT_TYPE* frag, Vertex v, PropertyId id,
@@ -353,6 +389,9 @@ void get_vertex_properties(FRAGMENT_TYPE* frag, Vertex v,
 
 template
 void get_vertex_properties(FRAGMENT_TYPE* frag, Vertex v,
+                           PropertiesIteratorImpl* iter);
+template
+void get_vertex_properties(INT32_FRAGMENT_TYPE* frag, Vertex v,
                            PropertiesIteratorImpl* iter);
 template
 void get_vertex_properties(STRING_FRAGMENT_TYPE* frag, Vertex v,
@@ -425,6 +464,9 @@ int get_vertices_next(GetVertexIteratorImpl* iter, Vertex* v_out) {
 
 template
 void get_vertices(FRAGMENT_TYPE* frag, LabelId* label, VertexId* ids, int count,
+                  GetVertexIteratorImpl* out);
+template
+void get_vertices(INT32_FRAGMENT_TYPE* frag, LabelId* label, VertexId* ids, int count,
                   GetVertexIteratorImpl* out);
 template
 void get_vertices(STRING_FRAGMENT_TYPE* frag, LabelId* label, VertexId* ids, int count,
@@ -566,6 +608,11 @@ void get_all_vertices(FRAGMENT_TYPE* frag, PartitionId channel_id,
                       int labels_count, int64_t limit,
                       GetAllVerticesIteratorImpl* out);
 template
+void get_all_vertices(INT32_FRAGMENT_TYPE* frag, PartitionId channel_id,
+                      const VID_TYPE* chunk_sizes, LabelId* labels,
+                      int labels_count, int64_t limit,
+                      GetAllVerticesIteratorImpl* out);
+template
 void get_all_vertices(STRING_FRAGMENT_TYPE* frag, PartitionId channel_id,
                       const VID_TYPE* chunk_sizes, LabelId* labels,
                       int labels_count, int64_t limit,
@@ -587,6 +634,8 @@ EdgeId get_edge_id(FRAGMENT_TYPE* frag, LabelId label, int64_t offset) {
 template
 EdgeId get_edge_id(FRAGMENT_TYPE* frag, LabelId label, int64_t offset);
 template
+EdgeId get_edge_id(INT32_FRAGMENT_TYPE* frag, LabelId label, int64_t offset);
+template
 EdgeId get_edge_id(STRING_FRAGMENT_TYPE* frag, LabelId label, int64_t offset);
 
 template <typename FRAGMENT_TYPE>
@@ -602,6 +651,9 @@ int get_edge_property(FRAGMENT_TYPE* frag, LabelId label, int64_t offset,
 
 template
 int get_edge_property(FRAGMENT_TYPE* frag, LabelId label, int64_t offset,
+                      PropertyId id, Property* p_out);
+template
+int get_edge_property(INT32_FRAGMENT_TYPE* frag, LabelId label, int64_t offset,
                       PropertyId id, Property* p_out);
 template
 int get_edge_property(STRING_FRAGMENT_TYPE* frag, LabelId label, int64_t offset,
@@ -622,6 +674,9 @@ void get_edge_properties(FRAGMENT_TYPE* frag, LabelId label, int64_t offset,
 
 template
 void get_edge_properties(FRAGMENT_TYPE* frag, LabelId label, int64_t offset,
+                         PropertiesIteratorImpl* iter);
+template
+void get_edge_properties(INT32_FRAGMENT_TYPE* frag, LabelId label, int64_t offset,
                          PropertiesIteratorImpl* iter);
 template
 void get_edge_properties(STRING_FRAGMENT_TYPE* frag, LabelId label, int64_t offset,
@@ -665,9 +720,15 @@ void get_out_edges(FRAGMENT_TYPE_T* frag,
   iter->eid_parser = eid_parser;
   if (frag->oid_typename() == vineyard::type_name<OID_TYPE>()) {
     iter->fragment = reinterpret_cast<FRAGMENT_TYPE *>(frag);
+    iter->int32_fragment = nullptr;
+    iter->string_fragment = nullptr;
+  } else if (frag->oid_typename() == vineyard::type_name<INT32_OID_TYPE>()) {
+    iter->fragment = nullptr;
+    iter->int32_fragment = reinterpret_cast<INT32_FRAGMENT_TYPE *>(frag);
     iter->string_fragment = nullptr;
   } else {
     iter->fragment = nullptr;
+    iter->int32_fragment = nullptr;
     iter->string_fragment = reinterpret_cast<STRING_FRAGMENT_TYPE *>(frag);
   }
   VERTEX_TYPE vert;
@@ -754,6 +815,11 @@ void get_out_edges(FRAGMENT_TYPE* frag,
                    LabelId* labels, int labels_count, int64_t limit,
                    EdgeIteratorImpl* iter);
 template
+void get_out_edges(INT32_FRAGMENT_TYPE* frag,
+                   vineyard::IdParser<EID_TYPE>* eid_parser, VertexId src_id,
+                   LabelId* labels, int labels_count, int64_t limit,
+                   EdgeIteratorImpl* iter);
+template
 void get_out_edges(STRING_FRAGMENT_TYPE* frag,
                    vineyard::IdParser<EID_TYPE>* eid_parser, VertexId src_id,
                    LabelId* labels, int labels_count, int64_t limit,
@@ -802,9 +868,15 @@ void get_in_edges(FRAGMENT_TYPE_T* frag, vineyard::IdParser<EID_TYPE>* eid_parse
   iter->eid_parser = eid_parser;
   if (frag->oid_typename() == vineyard::type_name<OID_TYPE>()) {
     iter->fragment = reinterpret_cast<FRAGMENT_TYPE *>(frag);
+    iter->int32_fragment = nullptr;
+    iter->string_fragment = nullptr;
+  } else if (frag->oid_typename() == vineyard::type_name<INT32_OID_TYPE>()) {
+    iter->fragment = nullptr;
+    iter->int32_fragment = reinterpret_cast<INT32_FRAGMENT_TYPE *>(frag);
     iter->string_fragment = nullptr;
   } else {
     iter->fragment = nullptr;
+    iter->int32_fragment = nullptr;
     iter->string_fragment = reinterpret_cast<STRING_FRAGMENT_TYPE *>(frag);
   }
   VERTEX_TYPE vert;
@@ -890,6 +962,10 @@ void get_in_edges(FRAGMENT_TYPE* frag, vineyard::IdParser<EID_TYPE>* eid_parser,
                   VertexId dst_id, LabelId* labels, int labels_count,
                   int64_t limit, EdgeIteratorImpl* iter);
 template
+void get_in_edges(INT32_FRAGMENT_TYPE* frag, vineyard::IdParser<EID_TYPE>* eid_parser,
+                  VertexId dst_id, LabelId* labels, int labels_count,
+                  int64_t limit, EdgeIteratorImpl* iter);
+template
 void get_in_edges(STRING_FRAGMENT_TYPE* frag, vineyard::IdParser<EID_TYPE>* eid_parser,
                   VertexId dst_id, LabelId* labels, int labels_count,
                   int64_t limit, EdgeIteratorImpl* iter);
@@ -941,9 +1017,15 @@ void get_all_edges(FRAGMENT_TYPE_T* frag, PartitionId channel_id,
 
   if (frag->oid_typename() == vineyard::type_name<OID_TYPE>()) {
     out->fragment = reinterpret_cast<FRAGMENT_TYPE *>(frag);
+    out->int32_fragment = nullptr;
+    out->string_fragment = nullptr;
+  } else if (frag->oid_typename() == vineyard::type_name<INT32_OID_TYPE>()) {
+    out->fragment = nullptr;
+    out->int32_fragment = reinterpret_cast<INT32_FRAGMENT_TYPE *>(frag);
     out->string_fragment = nullptr;
   } else {
     out->fragment = nullptr;
+    out->int32_fragment = nullptr;
     out->string_fragment = reinterpret_cast<STRING_FRAGMENT_TYPE *>(frag);
   }
   out->e_labels = static_cast<LabelId*>(malloc(sizeof(LabelId) * labels_count));
@@ -984,6 +1066,12 @@ void get_all_edges(FRAGMENT_TYPE_T* frag, PartitionId channel_id,
 
 template
 void get_all_edges(FRAGMENT_TYPE* frag, PartitionId channel_id,
+                   const VID_TYPE* chunk_sizes,
+                   vineyard::IdParser<EID_TYPE>* eid_parser, LabelId* labels,
+                   int labels_count, int64_t limit,
+                   GetAllEdgesIteratorImpl* out);
+template
+void get_all_edges(INT32_FRAGMENT_TYPE* frag, PartitionId channel_id,
                    const VID_TYPE* chunk_sizes,
                    vineyard::IdParser<EID_TYPE>* eid_parser, LabelId* labels,
                    int labels_count, int64_t limit,

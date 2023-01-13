@@ -33,11 +33,11 @@ class GraphXClient
   GraphXClient(int listen_port, int part_cnt, vineyard::Client& client,
                const grape::CommSpec& comm_spec,
                const GraphXPartitioner<OID_T>& partitioner,
-               bool directed = true, bool retain_oid = false,
-               bool generate_eid = false)
+               bool directed = true, bool generate_eid = false,
+               bool retain_oid = false)
       : vineyard::BasicEVFragmentLoader<OID_T, VID_T, GraphXPartitioner<OID_T>>(
-            client, comm_spec, partitioner, directed, retain_oid,
-            generate_eid) {
+            client, comm_spec, partitioner, directed, generate_eid,
+            retain_oid) {
     listen_port_ = listen_port;
     part_cnt_ = part_cnt;
   }

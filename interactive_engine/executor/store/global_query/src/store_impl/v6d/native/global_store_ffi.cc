@@ -644,6 +644,9 @@ int v6d_get_vertex_id_from_primary_key(GraphHandle graph, LabelId label_id,
   if (handle->use_int64_oid) {
     htap_impl::OID_TYPE oid = std::stoll(key);
     get_gid_ret = handle->vertex_map->GetGid(label_id, oid, gid);
+  } else if (handle->use_int32_oid) {
+    htap_impl::INT32_OID_TYPE oid = std::stoi(key);
+    get_gid_ret = handle->int32_vertex_map->GetGid(label_id, oid, gid);
   } else {
     htap_impl::STRING_OID_TYPE oid = key;
     get_gid_ret = handle->string_vertex_map->GetGid(label_id, oid, gid);

@@ -223,14 +223,20 @@ class LocalLauncher(AbstractLauncher):
 
     def create_learning_instance(self, object_id, handle, config):
         # prepare argument
-        handle = json.loads(base64.b64decode(handle.encode("utf-8")).decode("utf-8"))
+        handle = json.loads(
+            base64.b64decode(handle.encode("utf-8", errors="ignore")).decode(
+                "utf-8", errors="ignore"
+            )
+        )
 
         server_list = [
             f"localhost:{get_free_port('localhost')}" for _ in range(self.num_workers)
         ]
         hosts = ",".join(server_list)
         handle["server"] = hosts
-        handle = base64.b64encode(json.dumps(handle).encode("utf-8")).decode("utf-8")
+        handle = base64.b64encode(
+            json.dumps(handle).encode("utf-8", errors="ignore")
+        ).decode("utf-8", errors="ignore")
 
         # launch the server
         env = os.environ.copy()

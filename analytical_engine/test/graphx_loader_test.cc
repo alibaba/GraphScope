@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
   comm_spec.Init(MPI_COMM_WORLD);
   gs::GraphXPartitioner<int64_t> partitioner;
   std::vector<int> pid2Fid;
-  for (int i = 0; i < comm_spec.fnum(); ++i) {
+  for (grape::fid_t i = 0; i < comm_spec.fnum(); ++i) {
     pid2Fid.push_back(i);
   }
   partitioner.Init(pid2Fid);

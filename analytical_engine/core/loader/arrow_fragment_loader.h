@@ -98,6 +98,7 @@ class ArrowFragmentLoader
   using Base::directed_;
   using Base::efiles_;
   using Base::generate_eid_;
+  using Base::retain_oid_;
   using Base::vfiles_;
 
  public:
@@ -105,8 +106,10 @@ class ArrowFragmentLoader
                       const grape::CommSpec& comm_spec,
                       const std::vector<std::string>& efiles,
                       const std::vector<std::string>& vfiles,
-                      bool directed = true)
-      : Base(client, comm_spec, efiles, vfiles, directed, false),
+                      bool directed = true, bool generate_eid = false,
+                      bool retain_oid = false)
+      : Base(client, comm_spec, efiles, vfiles, directed, generate_eid,
+             retain_oid),
         graph_info_(nullptr),
         giraph_enabled_(false) {}
 
@@ -115,7 +118,7 @@ class ArrowFragmentLoader
                       std::shared_ptr<detail::Graph> graph_info)
       : Base(client, comm_spec, std::vector<std::string>{},
              std::vector<std::string>{}, graph_info->directed,
-             graph_info->generate_eid),
+             graph_info->generate_eid, graph_info->retain_oid),
         graph_info_(graph_info) {
 #ifdef ENABLE_JAVA_SDK
     // check when vformat or eformat start with giraph. if not, we

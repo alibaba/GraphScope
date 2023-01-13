@@ -72,6 +72,7 @@ vineyard::ObjectID LoadGiraphFragment(
   auto graph = std::make_shared<detail::Graph>();
   graph->directed = directed;
   graph->generate_eid = false;
+  graph->retain_oid = false;
 
   auto vertex = std::make_shared<detail::Vertex>();
   vertex->label = "label1";
