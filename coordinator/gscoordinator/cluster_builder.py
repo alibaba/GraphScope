@@ -432,7 +432,13 @@ class EngineCluster:
 
     def get_engine_pod_template_spec(self):
         spec = self.get_engine_pod_spec()
-        return ResourceBuilder.get_pod_template_spec(spec, self._engine_labels)
+        if self._with_analytical or self._with_analytical_java:
+            default_container = self.analytical_container_name
+        else:
+            default_container = None
+        return ResourceBuilder.get_pod_template_spec(
+            spec, self._engine_labels, default_container=default_container
+        )
 
     def get_engine_stateful_set(self):
         name = self.engine_stateful_set_name
