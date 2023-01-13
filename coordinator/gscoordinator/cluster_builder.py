@@ -378,15 +378,7 @@ class EngineCluster:
 
         socket_volume = self.get_vineyard_socket_volume()
         shm_volume = self.get_shm_volume()
-
         volumes.extend([socket_volume[0], shm_volume[0]])
-        if self._vineyard_daemonset is None:
-            containers.append(
-                self.get_vineyard_container(
-                    volume_mounts=[socket_volume[1], shm_volume[1]]
-                )
-            )
-
         engine_volume_mounts = [socket_volume[2], shm_volume[2]]
 
         if self._volumes and self._volumes is not None:
@@ -394,13 +386,6 @@ class EngineCluster:
             volumes.extend(udf_volumes[0])
             engine_volume_mounts.extend(udf_volumes[2])
 
-        if self._with_dataset:
-            dataset_volume = self.get_dataset_volume()
-            volumes.append(dataset_volume[0])
-            containers.append(
-                self.get_dataset_container(volume_mounts=[dataset_volume[1]])
-            )
-            engine_volume_mounts.append(dataset_volume[2])
         if self._with_analytical:
             containers.append(
                 self.get_analytical_container(volume_mounts=engine_volume_mounts)
@@ -421,8 +406,24 @@ class EngineCluster:
             containers.append(
                 self.get_learning_container(volume_mounts=engine_volume_mounts)
             )
+
+        if self._vineyard_daemonset is None:
+            containers.append(
+                self.get_vineyard_container(
+                    volume_mounts=[socket_volume[1], shm_volume[1]]
+                )
+            )
+        if self._with_dataset:
+            dataset_volume = self.get_dataset_volume()
+            volumes.append(dataset_volume[0])
+            containers.append(
+                self.get_dataset_container(volume_mounts=[dataset_volume[1]])
+            )
+            engine_volume_mounts.append(dataset_volume[2])
+
         if self._with_mars:
             containers.append(self.get_mars_container())
+
         return ResourceBuilder.get_pod_spec(
             containers=containers,
             image_pull_secrets=self._image_pull_secrets,

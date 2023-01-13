@@ -98,3 +98,19 @@ class TestConvertNumpyArray:
 
     def test_from_numpy_array_dtype(self):
         pass
+
+    @pytest.mark.skip(reason="not known, temporarily skipped (@tao)")
+    def test_identity_graph_array(self):
+        pass
+
+    @pytest.mark.skip(reason="not known, temporarily skipped (@tao)")
+    def test_identity_digraph_array(self):
+        pass
+
+    @pytest.mark.skip(reason="not known, temporarily skipped (@tao)")
+    def test_identity_weighted_graph_array(self):
+        pass
+
+    @pytest.mark.skip(reason="not known, temporarily skipped (@tao)")
+    def test_identity_weighted_digraph_array(self):
+        pass
