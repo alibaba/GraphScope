@@ -64,7 +64,15 @@ class TestConvertNumpyMatrix:
         pass
 
     @pytest.mark.skip(reason="not known, temporarily skipped (@tao)")
+    def test_identity_weighted_graph_matrix(self):
+        pass
+
+    @pytest.mark.skip(reason="not known, temporarily skipped (@tao)")
     def test_identity_weighted_graph_array(self):
+        pass
+
+    @pytest.mark.skip(reason="not known, temporarily skipped (@tao)")
+    def test_identity_weighted_digraph_matrix(self):
         pass
 
     @pytest.mark.skip(reason="not known, temporarily skipped (@tao)")

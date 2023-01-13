@@ -203,7 +203,7 @@ def test_default_prop_is_none_loader(graphscope_session, student_group_e, studen
     graph = graphscope_session.g(generate_eid=False, retain_oid=False)
     graph = graph.add_vertices(student_v, "student")
     graph = graph.add_edges(student_group_e, "group")
-    assert len(graph.schema.get_vertex_properties("student")) == 4
+    assert len(graph.schema.get_vertex_properties("student")) == 3
     assert len(graph.schema.get_edge_properties("group")) == 2
 
 
@@ -211,7 +211,7 @@ def test_prop_is_empty_loader(graphscope_session, student_group_e, student_v):
     graph = graphscope_session.g(generate_eid=False, retain_oid=False)
     graph = graph.add_vertices(student_v, "student", [], "student_id")
     graph = graph.add_edges(student_group_e, "group", [])
-    assert len(graph.schema.get_vertex_properties("student")) == 1
+    assert len(graph.schema.get_vertex_properties("student")) == 0
     assert len(graph.schema.get_edge_properties("group")) == 0
 
 
@@ -228,6 +228,29 @@ def test_properties_omitted_loader_with_generate_eid(
 def test_loader_with_specified_data_type(
     graphscope_session, student_group_e, student_v
 ):
+    # retain oid
+    graph = graphscope_session.g(oid_type="string", generate_eid=False, retain_oid=True)
+    graph = graph.add_vertices(
+        student_v,
+        "student",
+        ["name", ("lesson_nums", "int"), ("avg_score", "float")],
+        "student_id",
+    )
+    graph = graph.add_edges(
+        student_group_e, "group", ["group_id", ("member_size", "int")]
+    )
+    assert [p.type for p in graph.schema.get_vertex_properties("student")] == [
+        graph_def_pb2.STRING,
+        graph_def_pb2.INT,
+        graph_def_pb2.FLOAT,
+        graph_def_pb2.STRING,
+    ]
+    assert [p.type for p in graph.schema.get_edge_properties("group")] == [
+        graph_def_pb2.STRING,
+        graph_def_pb2.INT,
+    ]
+
+    # don't retain oid
     graph = graphscope_session.g(
         oid_type="string", generate_eid=False, retain_oid=False
     )
@@ -244,7 +267,6 @@ def test_loader_with_specified_data_type(
         graph_def_pb2.STRING,
         graph_def_pb2.INT,
         graph_def_pb2.FLOAT,
-        graph_def_pb2.STRING,
     ]
     assert [p.type for p in graph.schema.get_edge_properties("group")] == [
         graph_def_pb2.STRING,
