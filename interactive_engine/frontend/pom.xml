@@ -15,12 +15,10 @@
         <dependency>
             <artifactId>compiler</artifactId>
             <groupId>com.alibaba.graphscope</groupId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.alibaba.graphscope</groupId>
             <artifactId>interactive-common</artifactId>
-            <version>${project.version}</version>
         </dependency>
     </dependencies>
 </project>

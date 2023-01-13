@@ -15,13 +15,12 @@ package com.alibaba.graphscope.sdkcommon.schema.mapper;
 
 import com.alibaba.graphscope.compiler.api.schema.EdgeRelation;
 import com.alibaba.graphscope.compiler.api.schema.GraphVertex;
-import com.google.common.base.MoreObjects;
 
 /** Default edge relation */
 public class DefaultEdgeRelation implements EdgeRelation {
-    private GraphVertex source;
-    private GraphVertex target;
-    private long tableId;
+    private final GraphVertex source;
+    private final GraphVertex target;
+    private final long tableId;
 
     public DefaultEdgeRelation(GraphVertex source, GraphVertex target, long tableId) {
         this.source = source;
@@ -45,10 +44,11 @@ public class DefaultEdgeRelation implements EdgeRelation {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("source", this.getSource().getLabel())
-                .add("target", this.getTarget().getLabel())
-                .toString();
+        return "DefaultEdgeRelation{" +
+                "source=" + source +
+                ", target=" + target +
+                ", tableId=" + tableId +
+                '}';
     }
 
     @Override

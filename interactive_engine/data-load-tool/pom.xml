@@ -12,25 +12,15 @@
 
   <artifactId>data-load-tool</artifactId>
 
-  <properties>
-    <odps.sdk.public.version>0.36.4-public</odps.sdk.public.version>
-    <scala.version>2.12.10</scala.version>
-    <scala.binary.version>2.12</scala.binary.version>
-    <spark.version>3.1.1</spark.version>
-    <maven.compiler.release>8</maven.compiler.release>
-  </properties>
-
   <dependencies>
     <dependency>
         <groupId>com.aliyun.odps</groupId>
         <artifactId>odps-sdk-commons</artifactId>
-        <version>${odps.sdk.public.version}</version>
     </dependency>
 
     <dependency>
         <groupId>com.aliyun.odps</groupId>
         <artifactId>odps-sdk-mapred</artifactId>
-        <version>${odps.sdk.public.version}</version>
     </dependency>
 
     <dependency>
@@ -42,7 +32,6 @@
           <artifactId>hadoop-common</artifactId>
         </exclusion>
       </exclusions>
-      <version>${revision}</version>
     </dependency>
     <dependency>
       <groupId>org.rocksdb</groupId>
@@ -56,20 +45,17 @@
     <dependency>
       <groupId>org.apache.spark</groupId>
       <artifactId>spark-core_${scala.binary.version}</artifactId>
-      <version>3.1.1</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
       <artifactId>spark-sql_${scala.binary.version}</artifactId>
-      <version>3.1.1</version>
       <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
-      <version>${scala.version}</version>
       <scope>provided</scope>
     </dependency>
 
@@ -81,16 +67,13 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
-      <version>3.10</version>
     </dependency>
-
   </dependencies>
   <build>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.5.1</version>
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
@@ -99,7 +82,6 @@
       <plugin>
         <groupId>net.alchim31.maven</groupId>
         <artifactId>scala-maven-plugin</artifactId>
-        <version>3.2.2</version>
         <executions>
           <execution>
             <goals>
@@ -111,7 +93,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>3.2.4</version>
         <executions>
           <execution>
             <phase>package</phase>

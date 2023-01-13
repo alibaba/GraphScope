@@ -32,7 +32,7 @@ public class GraphTestListener implements ISuiteListener {
     public void onStart(ISuite suite) {
         try {
             ConfigTemplateRender render =
-                    new ConfigTemplateRender(TestUtils.getLoadlResource(FUNCTION_TEST_CONFIG));
+                    new ConfigTemplateRender(TestUtils.getLoadResource(FUNCTION_TEST_CONFIG));
             Configuration testConf = new Configuration(render.renderFromSysEnv());
             TestGlobalMeta.setTestConf(testConf);
         } catch (GraphTestException e) {

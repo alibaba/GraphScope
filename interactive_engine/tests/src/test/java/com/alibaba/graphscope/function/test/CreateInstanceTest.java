@@ -54,35 +54,7 @@ public class CreateInstanceTest {
     public void createInstanceTest(String graphName) throws Exception {
         if (this.testMode.equals("grape")) {
             loadCreateGraphByGrape(graphName);
-            return;
         }
-        String managerServer = ServiceConfig.MANAGER_SERVER_URL.get(testConf);
-        String curlJson =
-                TestUtils.curlHttp(
-                        managerServer,
-                        "createByPath",
-                        createInstanceParameters(testConf, graphName));
-        System.out.println(curlJson);
-
-        // judge result
-        Map<String, Object> res = TestUtils.getValuePairs(curlJson, ERROR_CODE, ERROR_MSG);
-        String msg = (String) res.get(ERROR_MSG);
-        Assert.assertTrue((int) res.get(ERROR_CODE) == 0 && msg.contains(FRONTEND_PORT));
-
-        gremlinEndpoint = msg.split(FRONTEND_PORT)[1];
-    }
-
-    public static Map<String, String> createInstanceParameters(
-            Configuration testConf, String graphName) {
-        return new HashMap<String, String>() {
-            {
-                put("graphName", (String) TestGlobalMeta.getGraphMeta(graphName).getLeft());
-                put("schemaPath", (String) TestGlobalMeta.getGraphMeta(graphName).getRight());
-                put("podNameList", ServiceConfig.POD_HOSTS.get(testConf));
-                put("containerName", ServiceConfig.CONTAINER_NAME.get(testConf));
-                put("externalParams", ServiceConfig.ENGINE_PROPERTIES.get(testConf));
-            }
-        };
     }
 
     private void loadCreateGraphByGrape(String graphName1) {

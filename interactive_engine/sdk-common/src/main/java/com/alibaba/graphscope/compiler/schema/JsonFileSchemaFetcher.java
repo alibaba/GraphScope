@@ -18,6 +18,7 @@ package com.alibaba.graphscope.compiler.schema;
 import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
 import com.alibaba.graphscope.compiler.api.schema.SchemaFetcher;
 
+import com.alibaba.graphscope.sdkcommon.schema.GraphSchemaMapper;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
@@ -31,7 +32,7 @@ public class JsonFileSchemaFetcher implements SchemaFetcher {
     public JsonFileSchemaFetcher(String filePath) {
         try {
             String schemaString = new String(Files.readAllBytes(Paths.get(filePath)));
-            this.graphSchema = DefaultGraphSchema.buildSchemaFromJson(schemaString);
+            this.graphSchema = GraphSchemaMapper.parseFromJson(schemaString).toGraphSchema();
             this.snapshot = Integer.MAX_VALUE - 1;
         } catch (IOException e) {
             throw new RuntimeException(e);

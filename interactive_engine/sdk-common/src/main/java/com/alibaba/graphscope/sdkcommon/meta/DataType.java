@@ -15,6 +15,8 @@
  */
 package com.alibaba.graphscope.sdkcommon.meta;
 
+import java.util.Objects;
+
 import com.alibaba.graphscope.sdkcommon.exception.GrootException;
 import com.alibaba.graphscope.sdkcommon.util.ExceptionUtils;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -22,10 +24,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
-
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author beimian
@@ -47,6 +45,7 @@ public class DataType {
     public static final DataType STRING = new DataType(InternalDataType.STRING);
     public static final DataType DATE = new DataType(InternalDataType.DATE);
 
+    // For LIST, SET and MAP
     @JsonProperty private String expression;
     @JsonProperty private InternalDataType type;
 
@@ -79,7 +78,7 @@ public class DataType {
                     ExceptionUtils.ErrorCode.DataTypeNotValid,
                     "expression is not valid, subType "
                             + "must be primitiveTypes: "
-                            + InternalDataType.primitiveTypes.toString());
+                            + InternalDataType.primitiveTypes);
         }
         this.expression = expression;
     }
@@ -100,7 +99,7 @@ public class DataType {
     @JsonValue
     public String getJson() {
         return this.type.name()
-                + (StringUtils.isEmpty(this.expression) ? "" : "<" + this.expression + ">");
+                + (this.expression.isEmpty() ? "" : "<" + this.expression + ">");
     }
 
     public boolean isValid(String expression) {
@@ -119,11 +118,7 @@ public class DataType {
     }
 
     public boolean validSubTypes(String expression) {
-        if (!InternalDataType.primitiveTypes.contains(expression.trim().toUpperCase())) {
-            return false;
-        }
-
-        return true;
+        return InternalDataType.primitiveTypes.contains(expression.trim().toUpperCase());
     }
 
     public boolean isPrimitiveType() {
@@ -170,20 +165,21 @@ public class DataType {
         if (this == o) return true;
         if (!(o instanceof DataType)) return false;
         DataType dataType = (DataType) o;
-        return Objects.equal(getExpression(), dataType.getExpression())
+        // a == b || (a != null && a.equals(b))
+        return Objects.equals(getExpression(), dataType.getExpression())
                 && getType() == dataType.getType();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(getExpression(), getType());
+        return Objects.hashCode(getExpression() + getType());
     }
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("expression", expression)
-                .add("type", type)
-                .toString();
+        return "DataType{" +
+                "expression='" + expression + '\'' +
+                ", type=" + type +
+                '}';
     }
 }

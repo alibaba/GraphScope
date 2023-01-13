@@ -15,8 +15,7 @@
  */
 package com.alibaba.graphscope.sdkcommon.meta;
 
-import com.google.common.collect.Lists;
-
+import java.util.ArrayList;
 import java.util.List;
 
 public enum InternalDataType {
@@ -83,7 +82,7 @@ public enum InternalDataType {
      */
     UNKNOWN;
 
-    public static final List<String> primitiveTypes = Lists.newArrayList();
+    public static final List<String> primitiveTypes = new ArrayList<>();
 
     static {
         InternalDataType[] values = InternalDataType.values();

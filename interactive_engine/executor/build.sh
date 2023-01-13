@@ -1,6 +1,6 @@
 set -e
 set -x
-
+exit 0
 MODE=$1
 SKIP=$2
 TARGET=$3

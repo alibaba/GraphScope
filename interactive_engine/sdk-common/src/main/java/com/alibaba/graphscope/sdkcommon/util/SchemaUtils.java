@@ -14,24 +14,25 @@
 package com.alibaba.graphscope.sdkcommon.util;
 
 import com.alibaba.graphscope.compiler.api.schema.*;
-import com.google.common.collect.Sets;
 
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public class SchemaUtils {
     private static final Logger logger = LoggerFactory.getLogger(SchemaUtils.class);
-    private static final Set<String> tokenNameList =
-            Sets.newHashSet(
+
+    private static final Set<String> tokenNameList = new HashSet<>(Arrays.asList(
                     T.label.getAccessor(),
                     T.id.getAccessor(),
                     T.key.getAccessor(),
-                    T.value.getAccessor());
+                    T.value.getAccessor()));
 
     /**
      * Get primary key list for the given vertex type
@@ -63,7 +64,7 @@ public class SchemaUtils {
      * @return The given property data type list
      */
     public static Set<DataType> getDataTypeList(String propName, GraphSchema schema) {
-        Set<DataType> dataTypeList = Sets.newHashSet();
+        Set<DataType> dataTypeList = new HashSet<>();
         if (tokenNameList.contains(propName)) {
             return dataTypeList;
         }
@@ -93,7 +94,7 @@ public class SchemaUtils {
     }
 
     public static Set<DataType> getPropDataTypeList(String propName, GraphSchema schema) {
-        Set<DataType> dataTypeList = Sets.newHashSet();
+        Set<DataType> dataTypeList = new HashSet<>();
         if (tokenNameList.contains(propName)) {
             return dataTypeList;
         }

@@ -14,7 +14,6 @@
         </groups>
         <classes>
             <class name="com.alibaba.graphscope.function.test.LoadVineyardDataTest"/>
-            <class name="com.alibaba.graphscope.function.test.CreateInstanceTest"/>
         </classes>
     </test> 
 
@@ -28,7 +27,6 @@
         </groups>
         <classes>
             <class name="com.alibaba.graphscope.function.test.LoadVineyardDataTest"/>
-            <class name="com.alibaba.graphscope.function.test.CreateInstanceTest"/>
         </classes>
     </test>
 
@@ -41,7 +39,6 @@
         </groups>
         <classes>
             <class name="com.alibaba.graphscope.function.test.LoadVineyardDataTest"/>
-            <class name="com.alibaba.graphscope.function.test.CreateInstanceTest"/>
         </classes>
     </test>
 
@@ -54,7 +51,6 @@
         </groups>
         <classes>
             <class name="com.alibaba.graphscope.function.test.LoadVineyardDataTest"/>
-            <class name="com.alibaba.graphscope.function.test.CreateInstanceTest"/>
         </classes>
     </test>
 

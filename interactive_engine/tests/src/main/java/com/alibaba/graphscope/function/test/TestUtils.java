@@ -17,14 +17,13 @@ package com.alibaba.graphscope.function.test;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.HashMap;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -38,19 +37,18 @@ public class TestUtils {
      * @param mode     create/delete
      * @param paras
      * @return json formatted
-     * @throws Exception
      */
     public static String curlHttp(String endpoint, String mode, Map<String, String> paras)
             throws GraphTestException {
         try {
             List<String> valuePairs =
                     paras.entrySet().stream()
-                            .map(k -> new String(k.getKey() + "=" + k.getValue()))
+                            .map(k -> k.getKey() + "=" + k.getValue())
                             .collect(Collectors.toList());
             String paraStr = String.join("&", valuePairs);
-            System.out.println(String.format("http://%s/instance/%s?%s", endpoint, mode, paraStr));
+            System.out.printf("http://%s/instance/%s?%s%n", endpoint, mode, paraStr);
             URL url = new URL(String.format("http://%s/instance/%s?%s", endpoint, mode, paraStr));
-            return IOUtils.toString(url.openStream(), "utf-8");
+            return IOUtils.toString(url.openStream(), StandardCharsets.UTF_8);
         } catch (Exception e) {
             throw new GraphTestException(e);
         }
@@ -72,21 +70,13 @@ public class TestUtils {
                 return Pair.of(errorCode, infoValueList.get(0));
             }
         } catch (Exception e) {
-            logger.error("exception is " + e);
+            logger.error("Run command failed, exception is " + e);
         }
         return Pair.of(-1, null);
     }
 
-    public static Map<String, Object> getValuePairs(String jsonStr, String... keys) {
-        JSONObject object = new JSONObject(jsonStr);
-        Map<String, Object> res = new HashMap<>();
-        for (String key : keys) {
-            res.put(key, object.get(key));
-        }
-        return res;
-    }
 
-    public static InputStream getLoadlResource(String fileName) {
+    public static InputStream getLoadResource(String fileName) {
         return Thread.currentThread().getContextClassLoader().getResourceAsStream(fileName);
     }
 

@@ -20,7 +20,6 @@ import com.alibaba.graphscope.compiler.api.schema.*;
 import com.alibaba.graphscope.sdkcommon.util.JSON;
 import com.google.common.collect.ImmutableMap;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -127,7 +126,7 @@ public class IrSchemaParser {
         boolean isPrimaryKey = false;
         if (primaryKeys != null && !primaryKeys.isEmpty()) {
             for (GraphProperty key : primaryKeys) {
-                if (StringUtils.equals(propertyName, key.getName())) {
+                if (propertyName.equals(key.getName())) {
                     isPrimaryKey = true;
                     break;
                 }

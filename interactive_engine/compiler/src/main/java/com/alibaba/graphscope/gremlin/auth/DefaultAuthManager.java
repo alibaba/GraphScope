@@ -19,7 +19,6 @@ package com.alibaba.graphscope.gremlin.auth;
 import com.alibaba.graphscope.common.config.AuthConfig;
 import com.alibaba.graphscope.common.config.Configs;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.tinkerpop.gremlin.server.auth.AuthenticatedUser;
 import org.apache.tinkerpop.gremlin.server.auth.AuthenticationException;
 
@@ -51,6 +50,6 @@ public class DefaultAuthManager implements AuthManager<AuthenticatedUser> {
     public boolean requireAuthentication() {
         String authUserName = AuthConfig.AUTH_USERNAME.get(configs);
         String authPassword = AuthConfig.AUTH_PASSWORD.get(configs);
-        return !StringUtils.isEmpty(authUserName) && !StringUtils.isEmpty(authPassword);
+        return !(authUserName == null || authUserName.isEmpty()) && !(authPassword == null || authPassword.isEmpty());
     }
 }

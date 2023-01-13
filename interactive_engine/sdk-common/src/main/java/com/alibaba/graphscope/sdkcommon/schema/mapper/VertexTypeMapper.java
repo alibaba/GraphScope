@@ -17,8 +17,9 @@ import com.alibaba.graphscope.compiler.api.schema.GraphProperty;
 import com.alibaba.graphscope.compiler.api.schema.GraphVertex;
 import com.alibaba.graphscope.compiler.api.schema.PrimaryKeyConstraint;
 import com.alibaba.graphscope.sdkcommon.schema.TypeEnum;
-import com.google.common.collect.Lists;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,9 +38,10 @@ public class VertexTypeMapper extends SchemaElementMapper {
         vertexIndexMapper.setName("primary_key");
         vertexIndexMapper.setIndexType("PRIMARY_KEY");
         vertexIndexMapper.setPropertyNames(primaryKeyConstraint.getPrimaryKeyList());
-        vertexTypeMapper.setIndexes(Lists.newArrayList(vertexIndexMapper));
-
-        List<GraphPropertyMapper> propertyMapperList = Lists.newArrayList();
+        ArrayList<VertexIndexMapper> vertexIndexMapperList = new ArrayList<>();
+        vertexIndexMapperList.add(vertexIndexMapper);
+        vertexTypeMapper.setIndexes(vertexIndexMapperList);
+        List<GraphPropertyMapper> propertyMapperList = new ArrayList<>();
         for (GraphProperty graphProperty : graphVertex.getPropertyList()) {
             propertyMapperList.add(GraphPropertyMapper.parseFromGrapyProperty(graphProperty));
         }
@@ -70,7 +72,7 @@ public class VertexTypeMapper extends SchemaElementMapper {
                 this.getPropertyDefList().stream()
                         .map(GraphPropertyMapper::toGraphProperty)
                         .collect(Collectors.toList());
-        List<String> primaryKeyList = Lists.newArrayList();
+        List<String> primaryKeyList = new ArrayList<>();
         /// TODO only support primary key now
         if (this.indexes.size() == 1) {
             primaryKeyList.addAll(indexes.get(0).getPropertyNames());

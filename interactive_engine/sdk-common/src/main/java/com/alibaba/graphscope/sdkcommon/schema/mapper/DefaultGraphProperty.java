@@ -16,16 +16,15 @@ package com.alibaba.graphscope.sdkcommon.schema.mapper;
 import com.alibaba.graphscope.compiler.api.exception.GraphSchemaException;
 import com.alibaba.graphscope.compiler.api.schema.DataType;
 import com.alibaba.graphscope.compiler.api.schema.GraphProperty;
-import com.google.common.base.MoreObjects;
 
 /** Default graph property in memory for testing */
 public class DefaultGraphProperty implements GraphProperty {
-    private String name;
-    private int id;
-    private DataType dataType;
-    private String comment;
-    private boolean hasDefaultValue;
-    private Object defaultValue;
+    private final String name;
+    private final int id;
+    private final DataType dataType;
+    private final String comment;
+    private final boolean hasDefaultValue;
+    private final Object defaultValue;
 
     public DefaultGraphProperty(String name, int id, DataType dataType) {
         this(name, id, dataType, "", false, null);
@@ -87,13 +86,13 @@ public class DefaultGraphProperty implements GraphProperty {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("name", this.getName())
-                .add("id", this.getId())
-                .add("dataType", this.getDataType())
-                .add("comment", this.getComment())
-                .add("hasDefaultValue", this.hasDefaultValue())
-                .add("defaultValue", this.getDefaultValue())
-                .toString();
+        return "DefaultGraphProperty{" +
+                "name='" + name + '\'' +
+                ", id=" + id +
+                ", dataType=" + dataType +
+                ", comment='" + comment + '\'' +
+                ", hasDefaultValue=" + hasDefaultValue +
+                ", defaultValue=" + defaultValue +
+                '}';
     }
 }
