@@ -67,7 +67,7 @@ spec:
           - {{ .Values.image.repository }}
           - "--k8s_image_tag"
           {{- if .Values.image.tag | quote }}
-          - {{ .Values.image.tag }}
+          - {{ .Values.image.tag | quote }}
           {{- else }}
           - {{ .Chart.AppVersion }}
           {{- end }}

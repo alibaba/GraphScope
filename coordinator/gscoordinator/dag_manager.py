@@ -17,6 +17,7 @@
 #
 
 import copy
+import logging
 import os
 import queue
 from enum import Enum
@@ -32,6 +33,8 @@ CHUNK_SIZE = (
     if "GS_GRPC_CHUNK_SIZE" in os.environ
     else 256 * 1024 * 1024 - 1
 )
+
+logger = logging.getLogger("graphscope")
 
 
 class GSEngine(Enum):

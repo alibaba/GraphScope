@@ -218,7 +218,11 @@ class OperationExecutor:
                 _, app_sig, app_lib_path = self._maybe_compile_app(op)
                 self._object_manager.put(
                     app_sig,
-                    LibMeta(op_result.result.decode("utf-8"), "app", app_lib_path),
+                    LibMeta(
+                        op_result.result.decode("utf-8", errors="ignore"),
+                        "app",
+                        app_lib_path,
+                    ),
                 )
             # unregister graph
             elif op.op == types_pb2.UNLOAD_GRAPH:
@@ -237,7 +241,7 @@ class OperationExecutor:
             os.path.join(ANALYTICAL_BUILTIN_SPACE, app_sig), app_sig
         )
         if not os.path.isfile(app_lib_path):
-            algo_name = op.attr[types_pb2.APP_ALGO].s.decode("utf-8")
+            algo_name = op.attr[types_pb2.APP_ALGO].s.decode("utf-8", errors="ignore")
             if (
                 types_pb2.GAR in op.attr
                 or algo_name.startswith("giraph:")
@@ -260,7 +264,7 @@ class OperationExecutor:
                     msg = f"Computed app library path != compiled path, {app_lib_path} versus {compiled_path}"
                     raise RuntimeError(msg)
         op.attr[types_pb2.APP_LIBRARY_PATH].CopyFrom(
-            attr_value_pb2.AttrValue(s=app_lib_path.encode("utf-8"))
+            attr_value_pb2.AttrValue(s=app_lib_path.encode("utf-8", errors="ignore"))
         )
         return op, app_sig, app_lib_path
 
@@ -290,10 +294,10 @@ class OperationExecutor:
                 types_pb2.REGISTER_GRAPH_TYPE,
                 config={
                     types_pb2.GRAPH_LIBRARY_PATH: attr_value_pb2.AttrValue(
-                        s=graph_lib_path.encode("utf-8")
+                        s=graph_lib_path.encode("utf-8", errors="ignore")
                     ),
                     types_pb2.TYPE_SIGNATURE: attr_value_pb2.AttrValue(
-                        s=graph_sig.encode("utf-8")
+                        s=graph_sig.encode("utf-8", errors="ignore")
                     ),
                     types_pb2.GRAPH_TYPE: attr_value_pb2.AttrValue(
                         i=op.attr[types_pb2.GRAPH_TYPE].i
@@ -321,7 +325,7 @@ class OperationExecutor:
                 ),
             )
         op.attr[types_pb2.TYPE_SIGNATURE].CopyFrom(
-            attr_value_pb2.AttrValue(s=graph_sig.encode("utf-8"))
+            attr_value_pb2.AttrValue(s=graph_sig.encode("utf-8", errors="ignore"))
         )
         return op
 
@@ -363,7 +367,9 @@ class OperationExecutor:
     def get_analytical_engine_config(self) -> {}:
         dag_def = create_single_op_dag(types_pb2.GET_ENGINE_CONFIG)
         response_head, _ = self.run_on_analytical_engine(dag_def, [], {})
-        config = json.loads(response_head.head.results[0].result.decode("utf-8"))
+        config = json.loads(
+            response_head.head.results[0].result.decode("utf-8", errors="ignore")
+        )
         config["engine_hosts"] = self._launcher.hosts
         # Disable ENABLE_JAVA_SDK when java is not installed on coordinator
         if config["enable_java_sdk"] == "ON":
@@ -377,7 +383,7 @@ class OperationExecutor:
         return config
 
     def _compile_lib_and_distribute(self, compile_func, lib_name, op, *args, **kwargs):
-        algo_name = op.attr[types_pb2.APP_ALGO].s.decode("utf-8")
+        algo_name = op.attr[types_pb2.APP_ALGO].s.decode("utf-8", errors="ignore")
         if (
             types_pb2.GAR in op.attr
             or algo_name.startswith("giraph:")
@@ -616,6 +622,8 @@ class OperationExecutor:
                 types_pb2.DIRECTED: utils.b_to_attr(True),
                 types_pb2.OID_TYPE: utils.s_to_attr(oid_type),
                 types_pb2.GENERATE_EID: utils.b_to_attr(False),
+                # otherwise the new graph cannot be used for GIE
+                types_pb2.RETAIN_OID: utils.b_to_attr(True),
                 types_pb2.VID_TYPE: utils.s_to_attr("uint64_t"),
                 types_pb2.IS_FROM_VINEYARD_ID: utils.b_to_attr(False),
             }

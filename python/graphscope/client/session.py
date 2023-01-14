@@ -125,7 +125,7 @@ class _FetchHandler(object):
         # get app dag node as base
         app_dag_node = self._fetches[seq]
         # construct app
-        app = App(app_dag_node, op_result.result.decode("utf-8"))
+        app = App(app_dag_node, op_result.result.decode("utf-8", errors="ignore"))
         return app
 
     def _rebuild_context(self, seq, op_result: op_def_pb2.OpResult):
@@ -133,7 +133,7 @@ class _FetchHandler(object):
 
         # get context dag node as base
         context_dag_node = self._fetches[seq]
-        ret = json.loads(op_result.result.decode("utf-8"))
+        ret = json.loads(op_result.result.decode("utf-8", errors="ignore"))
         context_type = ret["context_type"]
         if context_type == "dynamic_vertex_data":
             # for nx
@@ -163,7 +163,9 @@ class _FetchHandler(object):
                             rets.append(OutArchive(op_result.result))
                         else:
                             # for nx Graph
-                            rets.append(op_result.result.decode("utf-8"))
+                            rets.append(
+                                op_result.result.decode("utf-8", errors="ignore")
+                            )
                     if op.output_types == types_pb2.GREMLIN_RESULTS:
                         rets.append(self._rebuild_gremlin_results(seq, op_result))
                     if op.output_types == types_pb2.GRAPH:
@@ -177,7 +179,9 @@ class _FetchHandler(object):
                         types_pb2.VINEYARD_DATAFRAME,
                     ):
                         rets.append(
-                            json.loads(op_result.result.decode("utf-8"))["object_id"]
+                            json.loads(
+                                op_result.result.decode("utf-8", errors="ignore")
+                            )["object_id"]
                         )
                     if op.output_types in (types_pb2.TENSOR, types_pb2.DATAFRAME):
                         if (
@@ -1090,11 +1094,18 @@ class Session(object):
         oid_type="int64",
         directed=True,
         generate_eid=True,
+        retain_oid=True,
         vertex_map="global",
     ):
         return self._wrapper(
             GraphDAGNode(
-                self, incoming_data, oid_type, directed, generate_eid, vertex_map
+                self,
+                incoming_data,
+                oid_type,
+                directed,
+                generate_eid,
+                retain_oid,
+                vertex_map,
             )
         )
 
@@ -1233,12 +1244,14 @@ class Session(object):
             graph.fragments,
         )
         config = LearningGraph.preprocess_args(handle, nodes, edges, gen_labels)
-        config = base64.b64encode(json.dumps(config).encode("utf-8")).decode("utf-8")
+        config = base64.b64encode(
+            json.dumps(config).encode("utf-8", errors="ignore")
+        ).decode("utf-8", errors="ignore")
         handle, config, endpoints = self._grpc_client.create_learning_instance(
             graph.vineyard_id, handle, config
         )
 
-        handle = json.loads(base64.b64decode(handle).decode("utf-8"))
+        handle = json.loads(base64.b64decode(handle).decode("utf-8", errors="ignore"))
         handle["server"] = ",".join(endpoints)
         handle["client_count"] = 1
 
@@ -1486,6 +1499,7 @@ def g(
     oid_type="int64",
     directed=True,
     generate_eid=True,
+    retain_oid=True,
     vertex_map="global",
 ):
     """Construct a GraphScope graph object on the default session.
@@ -1510,7 +1524,7 @@ def g(
         >>> g = graphscope.g() # creating graph on the session "sess"
     """
     return get_default_session().g(
-        incoming_data, oid_type, directed, generate_eid, vertex_map
+        incoming_data, oid_type, directed, generate_eid, retain_oid, vertex_map
     )
 
 

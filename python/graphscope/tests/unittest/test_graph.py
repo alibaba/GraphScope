@@ -576,6 +576,22 @@ def test_add_column_string_oid(
     assert "pagerank" in property_names
 
 
+def test_add_column_int32_oid(
+    p2p_property_graph_int32, p2p_project_directed_graph_int32
+):
+    g1 = p2p_property_graph_int32
+    g2 = p2p_project_directed_graph_int32
+
+    property_names = [p.name for p in g1.schema.get_vertex_properties("person")]
+    assert "pagerank" not in property_names
+
+    ctx = graphscope.pagerank(g2)
+    g3 = g1.add_column(ctx, selector={"pagerank": "r"})
+
+    property_names = [p.name for p in g3.schema.get_vertex_properties("person")]
+    assert "pagerank" in property_names
+
+
 def test_graph_lifecycle(graphscope_session):
     graph = load_p2p_network(graphscope_session)
     c = graphscope.wcc(graph)

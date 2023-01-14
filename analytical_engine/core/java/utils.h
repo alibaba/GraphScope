@@ -139,11 +139,11 @@ std::shared_ptr<vineyard::Object> buildPrimitiveArray(
     vineyard::Client& client, std::vector<T>& raw_data) {
   using arrow_builder_t = typename vineyard::ConvertToArrowType<T>::BuilderType;
   arrow_builder_t builder;
-  builder.AppendValues(raw_data);
+  ARROW_CHECK_OK(builder.AppendValues(raw_data));
 
   using arrow_array_t = typename vineyard::ConvertToArrowType<T>::ArrayType;
   std::shared_ptr<arrow_array_t> arrow_array;
-  builder.Finish(&arrow_array);
+  ARROW_CHECK_OK(builder.Finish(&arrow_array));
 
   using vineyard_builder_t =
       typename vineyard::ConvertToArrowType<T>::VineyardBuilderType;

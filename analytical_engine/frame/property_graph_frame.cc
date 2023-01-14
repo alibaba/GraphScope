@@ -139,6 +139,7 @@ LoadGraph(const grape::CommSpec& comm_spec, vineyard::Client& client,
       vy_info.add_fragments(item.second);
     }
     vy_info.set_generate_eid(graph_info->generate_eid);
+    vy_info.set_retain_oid(graph_info->retain_oid);
     graph_def.mutable_extension()->PackFrom(vy_info);
     gs::set_graph_def(frag, graph_def);
 
@@ -168,6 +169,15 @@ ToArrowFragment(vineyard::Client& client, const grape::CommSpec& comm_spec,
 
   gs::TransformUtils<gs::DynamicFragment> trans_utils(comm_spec, *dynamic_frag);
   BOOST_LEAF_AUTO(oid_type, trans_utils.GetOidTypeId());
+
+  if (oid_type == vineyard::TypeToInt<int32_t>::value &&
+      !std::is_same<oid_t, int32_t>::value &&
+      !std::is_same<oid_t, int64_t>::value) {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "The oid type of DynamicFragment is int32, but the "
+                    "oid type of destination fragment is: " +
+                        std::string(vineyard::type_name<oid_t>()));
+  }
 
   if (oid_type == vineyard::TypeToInt<int64_t>::value &&
       !std::is_same<oid_t, int32_t>::value &&
@@ -295,6 +305,7 @@ AddLabelsToGraph(vineyard::ObjectID origin_frag_id,
     vy_info.add_fragments(item.second);
   }
   vy_info.set_generate_eid(graph_info->generate_eid);
+  vy_info.set_retain_oid(graph_info->retain_oid);
   graph_def.mutable_extension()->PackFrom(vy_info);
   gs::set_graph_def(frag, graph_def);
 

@@ -735,7 +735,11 @@ class KubernetesClusterLauncher(AbstractLauncher):
             raise NotImplementedError("Learning engine not enabled")
         # allocate service for ports
         # prepare arguments
-        handle = json.loads(base64.b64decode(handle.encode("utf-8")).decode("utf-8"))
+        handle = json.loads(
+            base64.b64decode(handle.encode("utf-8", errors="ignore")).decode(
+                "utf-8", errors="ignore"
+            )
+        )
         hosts = ",".join(
             [
                 f"{pod_name}:{port}"
@@ -746,7 +750,9 @@ class KubernetesClusterLauncher(AbstractLauncher):
             ]
         )
         handle["server"] = hosts
-        handle = base64.b64encode(json.dumps(handle).encode("utf-8")).decode("utf-8")
+        handle = base64.b64encode(
+            json.dumps(handle).encode("utf-8", errors="ignore")
+        ).decode("utf-8", errors="ignore")
 
         # launch the server
         self._learning_instance_processes[object_id] = []

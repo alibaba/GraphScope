@@ -52,8 +52,8 @@ static inline std::shared_ptr<vineyard::Object> buildStringArray(
       typename vineyard::ConvertToArrowType<std::string>::BuilderType;
   arrow_builder_t builder;
   // builder.AppendValues(raw_data);
-  builder.Reserve(offsets.size());
-  builder.ReserveData(buffer.size());
+  ARROW_CHECK_OK(builder.Reserve(offsets.size()));
+  ARROW_CHECK_OK(builder.ReserveData(buffer.size()));
   const char* ptr = buffer.data();
   for (auto offset : offsets) {
     builder.UnsafeAppend(ptr, offset);
@@ -63,7 +63,7 @@ static inline std::shared_ptr<vineyard::Object> buildStringArray(
   using arrow_array_t =
       typename vineyard::ConvertToArrowType<std::string>::ArrayType;
   std::shared_ptr<arrow_array_t> arrow_array;
-  builder.Finish(&arrow_array);
+  ARROW_CHECK_OK(builder.Finish(&arrow_array));
   using vineyard_builder_t =
       typename vineyard::InternalType<std::string>::vineyard_builder_type;
   vineyard_builder_t v6d_builder(client, arrow_array);

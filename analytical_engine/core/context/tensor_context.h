@@ -84,7 +84,8 @@ inline InArchive& operator<<(
   size_t size = tensor.size();
   if (size > 0) {
     auto type = gs::dynamic::GetType(tensor.data()[0]);
-    CHECK(type == gs::dynamic::Type::kInt64Type ||
+    CHECK(type == gs::dynamic::Type::kInt32Type ||
+          type == gs::dynamic::Type::kInt64Type ||
           type == gs::dynamic::Type::kDoubleType ||
           type == gs::dynamic::Type::kStringType);
     for (size_t i = 0; i < tensor.size(); i++) {
@@ -791,7 +792,9 @@ class TensorContextWrapper<
       for (auto dim_size : first_shape) {
         *arc << static_cast<int64_t>(dim_size);
       }
-      if (data_type == dynamic::Type::kInt64Type) {
+      if (data_type == dynamic::Type::kInt32Type) {
+        *arc << static_cast<int>(vineyard::TypeToInt<int32_t>::value);
+      } else if (data_type == dynamic::Type::kInt64Type) {
         *arc << static_cast<int>(vineyard::TypeToInt<int64_t>::value);
       } else if (data_type == dynamic::Type::kDoubleType) {
         *arc << static_cast<int>(vineyard::TypeToInt<double>::value);

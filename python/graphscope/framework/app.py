@@ -287,7 +287,7 @@ class AppAssets(DAGNode):
             str: signature of this assets
         """
         s = hashlib.sha256()
-        s.update(self._algo.encode("utf-8"))
+        s.update(self._algo.encode("utf-8", errors="ignore"))
         if self._gar:
             s.update(self._gar)
         return s.hexdigest()
@@ -454,7 +454,7 @@ class App(object):
         """Signature is computed by all critical components of the App."""
         return hashlib.sha256(
             "{}.{}".format(self._app_assets.signature, self._graph.template_str).encode(
-                "utf-8"
+                "utf-8", errors="ignore"
             )
         ).hexdigest()
 

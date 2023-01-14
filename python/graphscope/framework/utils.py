@@ -201,7 +201,7 @@ def get_java_version():
     java_exec = find_java()
     pattern = r'"(\d+\.\d+\.\d+).*"'
     version = subprocess.check_output([java_exec, "-version"], stderr=subprocess.STDOUT)
-    return re.search(pattern, version.decode("utf-8")).groups()[0]
+    return re.search(pattern, version.decode("utf-8", errors="ignore")).groups()[0]
 
 
 def get_platform_info():
@@ -278,7 +278,7 @@ def b_to_attr(b: bool) -> attr_value_pb2.AttrValue:
 
 def s_to_attr(s: str) -> attr_value_pb2.AttrValue:
     check_argument(isinstance(s, str))
-    return attr_value_pb2.AttrValue(s=s.encode("utf-8"))
+    return attr_value_pb2.AttrValue(s=s.encode("utf-8", errors="ignore"))
 
 
 def bytes_to_attr(s: bytes) -> attr_value_pb2.AttrValue:
@@ -318,7 +318,8 @@ def report_type_to_attr(t):
 def list_str_to_attr(list_of_str):
     attr = attr_value_pb2.AttrValue()
     attr.list.s[:] = [
-        item.encode("utf-8") if isinstance(item, str) else item for item in list_of_str
+        item.encode("utf-8", errors="ignore") if isinstance(item, str) else item
+        for item in list_of_str
     ]
     return attr
 

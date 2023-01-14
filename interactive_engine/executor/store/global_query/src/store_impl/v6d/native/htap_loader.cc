@@ -36,7 +36,8 @@ struct htap_loader_options {
   std::vector<std::string> efiles;
   std::vector<std::string> vfiles;
   int directed;
-  int generate_eid;
+  int generate_eid = 1;
+  int retain_oid = 1;
 };
 
 namespace detail {
@@ -56,6 +57,9 @@ bool parse_options_from_args(struct htap_loader_options &options, int current_in
   }
   if (argc > current_index) {
     options.generate_eid = atoi(argv[current_index++]);
+  }
+  if (argc > current_index) {
+    options.retain_oid = atoi(argv[current_index++]);
   }
   return true;
 }
@@ -106,6 +110,15 @@ bool parse_options_from_config_json(struct htap_loader_options &options, std::st
       options.generate_eid = config["generate_eid"].get<std::string>() == "true";
     }
   }
+  if (config.contains("retain_oid")) {
+    if (config["retain_oid"].is_boolean()) {
+      options.retain_oid = config["retain_oid"].get<bool>();
+    } else if (config["retain_oid"].is_number_integer()) {
+      options.retain_oid = config["retain_oid"].get<int>();
+    } else {
+      options.retain_oid = config["retain_oid"].get<std::string>() == "true";
+    }
+  }
   return true;
 }
 
@@ -113,7 +126,7 @@ bool parse_options_from_config_json(struct htap_loader_options &options, std::st
 
 int main(int argc, char **argv) {
   if (argc < 3) {
-    printf("usage: ./vineyard_htap_loader <e_label_num> <efiles...> <v_label_num> <vfiles...> [directed] [generate_eid]\n"
+    printf("usage: ./vineyard_htap_loader <e_label_num> <efiles...> <v_label_num> <vfiles...> [directed] [generate_eid] [retain_oid]\n"
            "\n"
            "   or: ./vineyard_htap_loader --config <config.json>"
            "\n\n");
@@ -145,7 +158,7 @@ int main(int argc, char **argv) {
           vineyard::property_graph_types::OID_TYPE,
           vineyard::property_graph_types::VID_TYPE>>(
             client, comm_spec, options.efiles, options.vfiles,
-            options.directed != 0, options.generate_eid != 0);
+            options.directed != 0, options.generate_eid != 0, options.retain_oid != 0);
 
       fragment_group_id = boost::leaf::try_handle_all(
           [&]() { return loader->LoadFragmentAsFragmentGroup(); },

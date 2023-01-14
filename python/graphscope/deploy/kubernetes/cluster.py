@@ -325,7 +325,9 @@ class KubernetesClusterLauncher(Launcher):
         self._resource_object.extend(targets)
 
     def base64_encode(self, string):
-        return base64.b64encode(string.encode("utf-8")).decode("utf-8")
+        return base64.b64encode(string.encode("utf-8", errors="ignore")).decode(
+            "utf-8", errors="ignore"
+        )
 
     def _get_coordinator_args(self):
         args = [

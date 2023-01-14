@@ -203,11 +203,11 @@ def get_app_sha256(attr, java_class_path: str):
 
     if app_type == "cpp_pie":
         app_sha256 = hashlib.sha256(
-            f"{app_type}.{app_class}.{graph_type}".encode("utf-8")
+            f"{app_type}.{app_class}.{graph_type}".encode("utf-8", errors="ignore")
         ).hexdigest()
     elif app_type == "java_pie":
         s = hashlib.sha256()
-        s.update(f"{graph_type}.{vd_type}".encode("utf-8"))
+        s.update(f"{graph_type}.{vd_type}".encode("utf-8", errors="ignore"))
         app_sha256 = s.hexdigest()
         logger.info(
             "app sha256 for app {} with graph {}:{}, is {}".format(
@@ -216,7 +216,9 @@ def get_app_sha256(attr, java_class_path: str):
         )
     else:
         s = hashlib.sha256()
-        s.update(f"{app_type}.{app_class}.{graph_type}".encode("utf-8"))
+        s.update(
+            f"{app_type}.{app_class}.{graph_type}".encode("utf-8", errors="ignore")
+        )
         if types_pb2.GAR in attr:
             s.update(attr[types_pb2.GAR].s)
         app_sha256 = s.hexdigest()
@@ -225,7 +227,7 @@ def get_app_sha256(attr, java_class_path: str):
 
 def get_graph_sha256(attr):
     _, graph_class, _ = _codegen_graph_info(attr)
-    return hashlib.sha256(graph_class.encode("utf-8")).hexdigest()
+    return hashlib.sha256(graph_class.encode("utf-8", errors="ignore")).hexdigest()
 
 
 def check_java_app_graph_consistency(
@@ -270,14 +272,14 @@ def run_command(args: str, cwd=None):
     logger.info("Running command: %s, cwd: %s", args, cwd)
     cp = subprocess.run(shlex.split(args), capture_output=True, cwd=cwd)
     if cp.returncode != 0:
-        err = cp.stderr.decode("ascii")
+        err = cp.stderr.decode("utf-8", errors="ignore")
         logger.error(
             "Failed to run command: %s, error message is: %s",
             args,
             err,
         )
         raise RuntimeError(f"Failed to run command: {args}, err: {err}")
-    return cp.stdout.decode("ascii")
+    return cp.stdout.decode("utf-8", errors="ignore")
 
 
 def delegate_command_to_pod(args: str, pod: str, container: str):
@@ -424,9 +426,9 @@ def compile_app(
     graph_header, graph_type, graph_oid_type = _codegen_graph_info(attr)
     if app_type == "java_pie":
         logger.info(
-            "Check consistent between java app {} and graph {}".format(
-                java_app_class, graph_type
-            )
+            "Check consistent between java app %s and graph %s",
+            java_app_class,
+            graph_type,
         )
         check_java_app_graph_consistency(app_class, graph_type, java_app_class)
 
@@ -444,7 +446,11 @@ def compile_app(
         f"-DCMAKE_PREFIX_PATH='{GRAPHSCOPE_HOME};{OPAL_PREFIX}'",
     ]
     if types_pb2.CMAKE_EXTRA_OPTIONS in attr:
-        extra_options = attr[types_pb2.CMAKE_EXTRA_OPTIONS].s.decode("utf-8").split(" ")
+        extra_options = (
+            attr[types_pb2.CMAKE_EXTRA_OPTIONS]
+            .s.decode("utf-8", errors="ignore")
+            .split(" ")
+        )
         cmake_commands.extend(extra_options)
 
     if os.environ.get("GRAPHSCOPE_ANALYTICAL_DEBUG", "") == "1":
@@ -715,7 +721,9 @@ def _pre_process_for_bind_app_op(op, op_result_pool, key_to_op, **kwargs):
             # get graph runtime information from results
             result = op_result_pool[key_of_parent_op]
             op.attr[types_pb2.GRAPH_NAME].CopyFrom(
-                attr_value_pb2.AttrValue(s=result.graph_def.key.encode("utf-8"))
+                attr_value_pb2.AttrValue(
+                    s=result.graph_def.key.encode("utf-8", errors="ignore")
+                )
             )
             op.attr[types_pb2.GRAPH_TYPE].CopyFrom(
                 attr_value_pb2.AttrValue(i=result.graph_def.graph_type)
@@ -771,7 +779,11 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
     result = op_result_pool[key_of_parent_op]
     # set app key
     op.attr[types_pb2.APP_NAME].CopyFrom(
-        attr_value_pb2.AttrValue(s=result.result.decode("utf-8").encode("utf-8"))
+        attr_value_pb2.AttrValue(
+            s=result.result.decode("utf-8", errors="ignore").encode(
+                "utf-8", errors="ignore"
+            )
+        )
     )
 
     # loading graph with giraph format need jvm environ.
@@ -784,7 +796,7 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
         engine_jvm_opts = kwargs.pop("engine_jvm_opts")
         op.attr[types_pb2.JVM_OPTS].CopyFrom(utils.s_to_attr(engine_jvm_opts))
 
-    app_type = parent_op.attr[types_pb2.APP_ALGO].s.decode("utf-8")
+    app_type = parent_op.attr[types_pb2.APP_ALGO].s.decode("utf-8", errors="ignore")
 
     if app_type.startswith("java_pie:") or app_type.startswith("giraph:"):
         logger.debug("args len: {}".format(len(op.query_args.args)))
@@ -803,10 +815,10 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
         # we need extra param in first arg.
         user_params["jar_name"] = engine_java_class_path
         user_params["frag_name"] = "gs::ArrowProjectedFragment<{},{},{},{}>".format(
-            parent_op.attr[types_pb2.OID_TYPE].s.decode("utf-8"),
-            parent_op.attr[types_pb2.VID_TYPE].s.decode("utf-8"),
-            parent_op.attr[types_pb2.V_DATA_TYPE].s.decode("utf-8"),
-            parent_op.attr[types_pb2.E_DATA_TYPE].s.decode("utf-8"),
+            parent_op.attr[types_pb2.OID_TYPE].s.decode("utf-8", errors="ignore"),
+            parent_op.attr[types_pb2.VID_TYPE].s.decode("utf-8", errors="ignore"),
+            parent_op.attr[types_pb2.V_DATA_TYPE].s.decode("utf-8", errors="ignore"),
+            parent_op.attr[types_pb2.E_DATA_TYPE].s.decode("utf-8", errors="ignore"),
         )
 
         # for giraph app, we need to add args into orginal query_args, which is a json string
@@ -823,7 +835,9 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
 
         # For java app, we need lib path as an explicit arg.
         lib_param = Any()
-        lib_path = parent_op.attr[types_pb2.APP_LIBRARY_PATH].s.decode("utf-8")
+        lib_path = parent_op.attr[types_pb2.APP_LIBRARY_PATH].s.decode(
+            "utf-8", errors="ignore"
+        )
         logger.info("Java app: Lib path {}".format(lib_path))
         lib_param.Pack(data_types_pb2.StringValue(value=lib_path))
         op.query_args.args.extend([lib_param])
@@ -844,17 +858,19 @@ def _pre_process_for_unload_app_op(op, op_result_pool, key_to_op, **kwargs):
     assert len(op.parents) == 1
     key_of_parent_op = op.parents[0]
     result = op_result_pool[key_of_parent_op]
-    op.attr[types_pb2.APP_NAME].CopyFrom(utils.s_to_attr(result.result.decode("utf-8")))
+    op.attr[types_pb2.APP_NAME].CopyFrom(
+        utils.s_to_attr(result.result.decode("utf-8", errors="ignore"))
+    )
 
 
 def _pre_process_for_unload_context_op(op, op_result_pool, key_to_op, **kwargs):
     assert len(op.parents) == 1
     key_of_parent_op = op.parents[0]
     result = op_result_pool[key_of_parent_op]
-    parent_op_result = json.loads(result.result.decode("utf-8"))
+    parent_op_result = json.loads(result.result.decode("utf-8", errors="ignore"))
     context_key = parent_op_result["context_key"]
     op.attr[types_pb2.CONTEXT_KEY].CopyFrom(
-        attr_value_pb2.AttrValue(s=context_key.encode("utf-8"))
+        attr_value_pb2.AttrValue(s=context_key.encode("utf-8", errors="ignore"))
     )
 
 
@@ -871,9 +887,9 @@ def _pre_process_for_add_column_op(op, op_result_pool, key_to_op, **kwargs):
     for key_of_parent_op in op.parents:
         parent_op = key_to_op[key_of_parent_op]
         if parent_op.op == types_pb2.RUN_APP:
-            selector = op.attr[types_pb2.SELECTOR].s.decode("utf-8")
+            selector = op.attr[types_pb2.SELECTOR].s.decode("utf-8", errors="ignore")
             r = op_result_pool[key_of_parent_op]
-            parent_op_result = json.loads(r.result.decode("utf-8"))
+            parent_op_result = json.loads(r.result.decode("utf-8", errors="ignore"))
             context_key = parent_op_result["context_key"]
             context_type = parent_op_result["context_type"]
             selector = _transform_dataframe_selector(context_type, schema, selector)
@@ -912,17 +928,17 @@ def _pre_process_for_context_op(op, op_result_pool, key_to_op, **kwargs):
     graph_op = __backtrack_key_of_graph_op(key_of_parent_op)
     r = op_result_pool[key_of_parent_op]
     # set context key
-    parent_op_result = json.loads(r.result.decode("utf-8"))
+    parent_op_result = json.loads(r.result.decode("utf-8", errors="ignore"))
     context_key = parent_op_result["context_key"]
     context_type = parent_op_result["context_type"]
     op.attr[types_pb2.CONTEXT_KEY].CopyFrom(
-        attr_value_pb2.AttrValue(s=context_key.encode("utf-8"))
+        attr_value_pb2.AttrValue(s=context_key.encode("utf-8", errors="ignore"))
     )
     r = op_result_pool[graph_op.key]
     # transform selector
     schema = GraphSchema()
     schema.from_graph_def(r.graph_def)
-    selector = op.attr[types_pb2.SELECTOR].s.decode("utf-8")
+    selector = op.attr[types_pb2.SELECTOR].s.decode("utf-8", errors="ignore")
     if op.op in (
         types_pb2.CONTEXT_TO_DATAFRAME,
         types_pb2.TO_VINEYARD_DATAFRAME,
@@ -934,7 +950,7 @@ def _pre_process_for_context_op(op, op_result_pool, key_to_op, **kwargs):
         selector = _transform_numpy_selector(context_type, schema, selector)
     if selector is not None:
         op.attr[types_pb2.SELECTOR].CopyFrom(
-            attr_value_pb2.AttrValue(s=selector.encode("utf-8"))
+            attr_value_pb2.AttrValue(s=selector.encode("utf-8", errors="ignore"))
         )
 
 
@@ -948,7 +964,7 @@ def _pre_process_for_data_sink_op(op, op_result_pool, key_to_op, **kwargs):
         types_pb2.VINEYARD_DATAFRAME,
     ):
         # dependent to to_vineyard_dataframe
-        r = json.loads(result.result.decode("utf-8"))["object_id"]
+        r = json.loads(result.result.decode("utf-8", errors="ignore"))["object_id"]
         op.attr[types_pb2.VINEYARD_ID].CopyFrom(utils.s_to_attr(r))
 
 
@@ -959,7 +975,7 @@ def _pre_process_for_output_graph_op(op, op_result_pool, key_to_op, **kwargs):
     schema = GraphSchema()
     schema.from_graph_def(r.graph_def)
     graph_name = r.graph_def.key
-    selector = op.attr[types_pb2.SELECTOR].s.decode("utf-8")
+    selector = op.attr[types_pb2.SELECTOR].s.decode("utf-8", errors="ignore")
     if op.op == types_pb2.GRAPH_TO_DATAFRAME:
         selector = _transform_dataframe_selector(
             "labeled_vertex_property", schema, selector
@@ -971,10 +987,10 @@ def _pre_process_for_output_graph_op(op, op_result_pool, key_to_op, **kwargs):
         )
     if selector is not None:
         op.attr[types_pb2.SELECTOR].CopyFrom(
-            attr_value_pb2.AttrValue(s=selector.encode("utf-8"))
+            attr_value_pb2.AttrValue(s=selector.encode("utf-8", errors="ignore"))
         )
     op.attr[types_pb2.GRAPH_NAME].CopyFrom(
-        attr_value_pb2.AttrValue(s=graph_name.encode("utf-8"))
+        attr_value_pb2.AttrValue(s=graph_name.encode("utf-8", errors="ignore"))
     )
 
 
@@ -991,8 +1007,8 @@ def _pre_process_for_project_to_simple_op(  # noqa: C901
         r.graph_def.extension.Unpack(graph_info)
         schema = json.loads(graph_info.property_schema_json)
         graph_name = r.graph_def.key
-        v_prop = op.attr[types_pb2.V_PROP_KEY].s.decode("utf-8")
-        e_prop = op.attr[types_pb2.E_PROP_KEY].s.decode("utf-8")
+        v_prop = op.attr[types_pb2.V_PROP_KEY].s.decode("utf-8", errors="ignore")
+        e_prop = op.attr[types_pb2.E_PROP_KEY].s.decode("utf-8", errors="ignore")
         v_prop_type = graph_def_pb2.NULLVALUE
         e_prop_type = graph_def_pb2.NULLVALUE
         if v_prop != "None" and v_prop in schema["vertex"]:
@@ -1001,7 +1017,7 @@ def _pre_process_for_project_to_simple_op(  # noqa: C901
             e_prop_type = schema["edge"][e_prop]
 
         op.attr[types_pb2.GRAPH_NAME].CopyFrom(
-            attr_value_pb2.AttrValue(s=graph_name.encode("utf-8"))
+            attr_value_pb2.AttrValue(s=graph_name.encode("utf-8", errors="ignore"))
         )
         op.attr[types_pb2.GRAPH_TYPE].CopyFrom(
             utils.graph_type_to_attr(graph_def_pb2.DYNAMIC_PROJECTED)
@@ -1046,7 +1062,7 @@ def _pre_process_for_project_to_simple_op(  # noqa: C901
         need_flatten_graph = True
 
     # check and get vertex property
-    v_prop = op.attr[types_pb2.V_PROP_KEY].s.decode("utf-8")
+    v_prop = op.attr[types_pb2.V_PROP_KEY].s.decode("utf-8", errors="ignore")
     if v_prop == "None":
         v_prop_id = -1
         v_prop_type = graph_def_pb2.NULLVALUE
@@ -1075,7 +1091,7 @@ def _pre_process_for_project_to_simple_op(  # noqa: C901
                 break
 
     # check and get edge property
-    e_prop = op.attr[types_pb2.E_PROP_KEY].s.decode("utf-8")
+    e_prop = op.attr[types_pb2.E_PROP_KEY].s.decode("utf-8", errors="ignore")
     if e_prop == "None":
         e_prop_id = -1
         e_prop_type = graph_def_pb2.NULLVALUE
@@ -1104,7 +1120,7 @@ def _pre_process_for_project_to_simple_op(  # noqa: C901
                 break
 
     op.attr[types_pb2.GRAPH_NAME].CopyFrom(
-        attr_value_pb2.AttrValue(s=graph_name.encode("utf-8"))
+        attr_value_pb2.AttrValue(s=graph_name.encode("utf-8", errors="ignore"))
     )
     op.attr[types_pb2.OID_TYPE].CopyFrom(
         utils.s_to_attr(utils.data_type_to_cpp(schema.oid_type))
@@ -1159,8 +1175,12 @@ def _pre_process_for_project_op(op, op_result_pool, key_to_op, **kwargs):
     schema = GraphSchema()
     schema.from_graph_def(r.graph_def)
     graph_name = r.graph_def.key
-    vertices = json.loads(op.attr[types_pb2.VERTEX_COLLECTIONS].s.decode("utf-8"))
-    edges = json.loads(op.attr[types_pb2.EDGE_COLLECTIONS].s.decode("utf-8"))
+    vertices = json.loads(
+        op.attr[types_pb2.VERTEX_COLLECTIONS].s.decode("utf-8", errors="ignore")
+    )
+    edges = json.loads(
+        op.attr[types_pb2.EDGE_COLLECTIONS].s.decode("utf-8", errors="ignore")
+    )
     vertex_collections = {}
     edge_collections = {}
     for label, props in vertices.items():
@@ -1200,7 +1220,7 @@ def _pre_process_for_project_op(op, op_result_pool, key_to_op, **kwargs):
         e_attr.attr[label].CopyFrom(utils.list_i_to_attr(props))
     attr.list.func.extend([v_attr, e_attr])
     op.attr[types_pb2.GRAPH_NAME].CopyFrom(
-        attr_value_pb2.AttrValue(s=graph_name.encode("utf-8"))
+        attr_value_pb2.AttrValue(s=graph_name.encode("utf-8", errors="ignore"))
     )
     op.attr[types_pb2.ARROW_PROPERTY_DEFINITION].CopyFrom(attr)
     del op.attr[types_pb2.VERTEX_COLLECTIONS]
@@ -1499,7 +1519,7 @@ def _codegen_app_info(attr, meta_file: str, java_class_path: str):
         with zip_ref.open(meta_file, "r") as f:
             config_yaml = yaml.safe_load(f)
 
-    algo = attr[types_pb2.APP_ALGO].s.decode("utf-8")
+    algo = attr[types_pb2.APP_ALGO].s.decode("utf-8", errors="ignore")
     # for algo start with giraph:, we don't find info in meta
     if algo.startswith("giraph:") or algo.startswith("java_pie:"):
         real_algo = algo.split(":")[1]
@@ -1587,18 +1607,18 @@ def _codegen_graph_info(attr):
     # cause they are not always avaiable in all types of graphs
     def oid_type():
         if types_pb2.OID_TYPE in attr:
-            return attr[types_pb2.OID_TYPE].s.decode("utf-8")
+            return attr[types_pb2.OID_TYPE].s.decode("utf-8", errors="ignore")
         else:  # DynamicProjectedFragment doesn't have oid
             return None
 
     def vid_type():
-        return attr[types_pb2.VID_TYPE].s.decode("utf-8")
+        return attr[types_pb2.VID_TYPE].s.decode("utf-8", errors="ignore")
 
     def vdata_type():
-        return attr[types_pb2.V_DATA_TYPE].s.decode("utf-8")
+        return attr[types_pb2.V_DATA_TYPE].s.decode("utf-8", errors="ignore")
 
     def edata_type():
-        return attr[types_pb2.E_DATA_TYPE].s.decode("utf-8")
+        return attr[types_pb2.E_DATA_TYPE].s.decode("utf-8", errors="ignore")
 
     def vertex_map_type():
         if types_pb2.VERTEX_MAP_TYPE not in attr:

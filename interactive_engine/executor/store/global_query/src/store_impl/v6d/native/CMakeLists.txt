@@ -8,7 +8,7 @@ endif()
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++17" HAS_STDCXX_17)
 if (HAS_STDCXX_17)
-    set(CMAKE_CXX_STANDARD 14)
+    set(CMAKE_CXX_STANDARD 17)
 else()
     set(CMAKE_CXX_STANDARD 14)
 endif()
@@ -57,7 +57,7 @@ find_package(Threads REQUIRED)
 #  we need edge src/dst ids in etable.
 add_definitions(-DENDPOINT_LISTS)
 
-find_package(vineyard 0.11.4 REQUIRED)
+find_package(vineyard 0.11.6 REQUIRED)
 add_library(v6d_native_store global_store_ffi.cc
                          htap_ds_impl.cc
                          graph_builder_ffi.cc

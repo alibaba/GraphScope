@@ -67,35 +67,35 @@ jobs:
 
   build-analytical:
     runs-on: ubuntu-20.04
-    needs: [build-wheels, changes]
+    needs: [changes]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
     - run: 'echo "No action required" '
 
   build-analytical-java:
     runs-on: ubuntu-20.04
-    needs: [build-wheels, changes]
+    needs: [changes]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
     - run: 'echo "No action required" '
 
   build-interactive:
     runs-on: ubuntu-20.04
-    needs: [build-wheels, changes]
+    needs: [changes]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
     - run: 'echo "No action required" '
 
   build-learning:
     runs-on: ubuntu-20.04
-    needs: [build-wheels, changes]
+    needs: [changes]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
     - run: 'echo "No action required" '
 
   # build-coordinator:
   #   runs-on: ubuntu-20.04
-  #   needs: [build-wheels, changes]
+  #   needs: [changes]
   #   if: ${{ github.repository == 'alibaba/GraphScope' }}
   #   steps:
   #   - run: 'echo "No action required" '

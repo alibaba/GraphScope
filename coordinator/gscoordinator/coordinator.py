@@ -955,7 +955,7 @@ def start_server(launcher, args):
 
     # register gRPC server
     server = grpc.server(
-        futures.ThreadPoolExecutor(os.cpu_count() or 1),
+        futures.ThreadPoolExecutor(max(4, os.cpu_count() or 1)),
         options=[
             ("grpc.max_send_message_length", GS_GRPC_MAX_MESSAGE_LENGTH),
             ("grpc.max_receive_message_length", GS_GRPC_MAX_MESSAGE_LENGTH),

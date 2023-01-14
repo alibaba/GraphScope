@@ -29,7 +29,11 @@ logger = logging.getLogger("graphscope")
 def decode_arg(arg):
     if isinstance(arg, dict):
         return arg
-    return json.loads(base64.b64decode(arg.encode("utf-8")).decode("utf-8"))
+    return json.loads(
+        base64.b64decode(arg.encode("utf-8", errors="ignore")).decode(
+            "utf-8", errors="ignore"
+        )
+    )
 
 
 def launch_server(handle, config, server_index):

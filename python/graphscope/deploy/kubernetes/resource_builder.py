@@ -200,10 +200,14 @@ class ResourceBuilder:
         return pod_spec
 
     @staticmethod
-    def get_pod_template_spec(spec: kube_client.V1PodSpec, labels: dict):
+    def get_pod_template_spec(spec: kube_client.V1PodSpec, labels: dict, annotations=None, default_container=None):
         pod_template_spec = kube_client.V1PodTemplateSpec()
         pod_template_spec.spec = spec
-        pod_template_spec.metadata = kube_client.V1ObjectMeta(labels=labels)
+        if annotations is None:
+            annotations = dict()
+        if default_container is not None:
+            annotations['kubectl.kubernetes.io/default-container'] = default_container
+        pod_template_spec.metadata = kube_client.V1ObjectMeta(labels=labels, annotations=annotations)
         return pod_template_spec
 
     @staticmethod
@@ -333,7 +337,7 @@ class CoordinatorDeployment:
 
     def get_coordinator_pod_template_spec(self):
         spec = self.get_coordinator_pod_spec()
-        return ResourceBuilder.get_pod_template_spec(spec, self._labels)
+        return ResourceBuilder.get_pod_template_spec(spec, self._labels, default_container='coordinator')
 
     def get_coordinator_deployment_spec(self, replicas):
         template = self.get_coordinator_pod_template_spec()

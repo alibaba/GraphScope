@@ -65,6 +65,9 @@ message VineyardInfoPb {
     VertexMapTypePb vertex_map_type = 9;
     // Fragment ids
     repeated int64 fragments = 10;
+
+    // retain_oid
+    bool retain_oid = 11;
 }
 
 // Attributes that only meaningful to and will be set by dynamic storage

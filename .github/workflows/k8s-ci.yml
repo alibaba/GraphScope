@@ -377,7 +377,7 @@ jobs:
           echo "StrictHostKeyChecking no" >> ~/.ssh/config
           sudo /etc/init.d/ssh start
 
-      - name: Kubernetes Test
+      - name: Prepare Kubernetes
         env:
           GS_TEST_DIR: ${{ github.workspace }}/gstest
         run: |
@@ -400,6 +400,29 @@ jobs:
           echo "Loaded executor"
           minikube image load graphscope/learning:${SHORT_SHA}
           echo "loaded learning"
+
+      - name: Helm Test
+        run: |
+          cd charts
+          helm template graphscope --set image.registry="",image.tag="${SHORT_SHA}",withJupyter=false \
+                                  ./graphscope
+          helm install graphscope --set image.registry="",image.tag="${SHORT_SHA}",withJupyter=false \
+                                  ./graphscope
+          helm test graphscope --timeout 5m0s
+          export NODE_IP=$(kubectl get pod -lgraphscope.coordinator.name=coordinator-graphscope -ojsonpath="{.items[0].status.hostIP}")
+          export NODE_PORT=$(kubectl get services coordinator-service-graphscope -ojsonpath="{.spec.ports[0].nodePort}")
+          echo "GraphScope service listen on ${NODE_IP}:${NODE_PORT}"
+          export GS_ADDR=${NODE_IP}:${NODE_PORT}
+          cd ${GITHUB_WORKSPACE}/python
+          python3 -m pytest -s -vvv ./graphscope/tests/kubernetes/test_demo_script.py -k test_helm_installation
+
+      - name: Kubernetes Test
+        env:
+          GS_TEST_DIR: ${{ github.workspace }}/gstest
+        run: |
+          export GS_REGISTRY=""
+          export GS_TAG=${SHORT_SHA}
+
           cd ${GITHUB_WORKSPACE}/python
           python3 -m pytest --ignore=./graphscope/tests/kubernetes/test_store_service.py \
                           --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
@@ -416,21 +439,6 @@ jobs:
           file: ./python/coverage.xml
           fail_ci_if_error: false
 
-      - name: Helm Test
-        run: |
-          cd charts
-          helm template graphscope --set image.registry="",image.tag="${SHORT_SHA}" \
-                                  ./graphscope
-          helm install graphscope --set image.registry="",image.tag="${SHORT_SHA}" \
-                                  ./graphscope
-          helm test graphscope --timeout 5m0s
-          export NODE_IP=$(kubectl get pod -lgraphscope.coordinator.name=coordinator-graphscope -ojsonpath="{.items[0].status.hostIP}")
-          export NODE_PORT=$(kubectl get services coordinator-service-graphscope -ojsonpath="{.spec.ports[0].nodePort}")
-          echo "GraphScope service listen on ${NODE_IP}:${NODE_PORT}"
-          export GS_ADDR=${NODE_IP}:${NODE_PORT}
-          cd ${GITHUB_WORKSPACE}/python
-          python3 -m pytest -s -vvv ./graphscope/tests/kubernetes/test_demo_script.py -k test_helm_installation
-
       - name: HDFS test
         env:
           JAVA_HOME: /usr/lib/jvm/default-java
@@ -438,6 +446,7 @@ jobs:
         run: |
           export GS_REGISTRY=""
           export GS_TAG=${SHORT_SHA}
+
           # install hadoop HDFS
           tar -zxf /home/runner/hadoop-2.10.1.tar.gz -C /tmp/
           cd ${GITHUB_WORKSPACE}/.github/workflows/hadoop_scripts
