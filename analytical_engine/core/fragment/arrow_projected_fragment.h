@@ -34,6 +34,7 @@
 #include "grape/types.h"
 #include "grape/utils/vertex_array.h"
 #include "vineyard/basic/ds/arrow_utils.h"
+#include "vineyard/common/util/config.h"
 #include "vineyard/graph/fragment/arrow_fragment.h"
 
 #include "core/config.h"
@@ -523,23 +524,21 @@ class ArrowProjectedFragment
 
     size_t nbytes = 0;
     if (fragment->directed()) {
-      std::shared_ptr<arrow::Int64Array> ie_offsets_begin_arrow,
-          ie_offsets_end_arrow;
+      vineyard::FixedInt64Builder ie_offsets_begin_builder(
+          client, fragment->tvnums_[v_label]);
+      vineyard::FixedInt64Builder ie_offsets_end_builder(
+          client, fragment->tvnums_[v_label]);
       selectEdgeByNeighborLabel(
           fragment, v_label, fragment->ie_lists_[v_label][e_label]->GetArray(),
           fragment->ie_offsets_lists_[v_label][e_label]->GetArray(),
-          ie_offsets_begin_arrow, ie_offsets_end_arrow);
-      vineyard::NumericArrayBuilder<int64_t> ie_offsets_begin_builder(
-          client, ie_offsets_begin_arrow);
+          ie_offsets_begin_builder.data(), ie_offsets_end_builder.data());
+
       ie_offsets_begin =
           std::dynamic_pointer_cast<vineyard::NumericArray<int64_t>>(
               ie_offsets_begin_builder.Seal(client));
-      vineyard::NumericArrayBuilder<int64_t> ie_offsets_end_builder(
-          client, ie_offsets_end_arrow);
       ie_offsets_end =
           std::dynamic_pointer_cast<vineyard::NumericArray<int64_t>>(
               ie_offsets_end_builder.Seal(client));
-
       nbytes += ie_offsets_begin->nbytes();
       nbytes += ie_offsets_end->nbytes();
     }
@@ -547,19 +546,18 @@ class ArrowProjectedFragment
     std::shared_ptr<vineyard::NumericArray<int64_t>> oe_offsets_begin,
         oe_offsets_end;
     {
-      std::shared_ptr<arrow::Int64Array> oe_offsets_begin_arrow,
-          oe_offsets_end_arrow;
+      vineyard::FixedInt64Builder oe_offsets_begin_builder(
+          client, fragment->tvnums_[v_label]);
+      vineyard::FixedInt64Builder oe_offsets_end_builder(
+          client, fragment->tvnums_[v_label]);
       selectEdgeByNeighborLabel(
           fragment, v_label, fragment->oe_lists_[v_label][e_label]->GetArray(),
           fragment->oe_offsets_lists_[v_label][e_label]->GetArray(),
-          oe_offsets_begin_arrow, oe_offsets_end_arrow);
-      vineyard::NumericArrayBuilder<int64_t> oe_offsets_begin_builder(
-          client, oe_offsets_begin_arrow);
+          oe_offsets_begin_builder.data(), oe_offsets_end_builder.data());
+
       oe_offsets_begin =
           std::dynamic_pointer_cast<vineyard::NumericArray<int64_t>>(
               oe_offsets_begin_builder.Seal(client));
-      vineyard::NumericArrayBuilder<int64_t> oe_offsets_end_builder(
-          client, oe_offsets_end_arrow);
       oe_offsets_end =
           std::dynamic_pointer_cast<vineyard::NumericArray<int64_t>>(
               oe_offsets_end_builder.Seal(client));
@@ -605,22 +603,17 @@ class ArrowProjectedFragment
       vineyard::NumericArray<int64_t> ie_offsets_begin;
       ie_offsets_begin.Construct(meta.GetMemberMeta("ie_offsets_begin"));
       ie_offsets_begin_ = ie_offsets_begin.GetArray();
-    }
-    if (directed_) {
       vineyard::NumericArray<int64_t> ie_offsets_end;
       ie_offsets_end.Construct(meta.GetMemberMeta("ie_offsets_end"));
       ie_offsets_end_ = ie_offsets_end.GetArray();
     }
-    {
-      vineyard::NumericArray<int64_t> oe_offsets_begin;
-      oe_offsets_begin.Construct(meta.GetMemberMeta("oe_offsets_begin"));
-      oe_offsets_begin_ = oe_offsets_begin.GetArray();
-    }
-    {
-      vineyard::NumericArray<int64_t> oe_offsets_end;
-      oe_offsets_end.Construct(meta.GetMemberMeta("oe_offsets_end"));
-      oe_offsets_end_ = oe_offsets_end.GetArray();
-    }
+
+    vineyard::NumericArray<int64_t> oe_offsets_begin;
+    oe_offsets_begin.Construct(meta.GetMemberMeta("oe_offsets_begin"));
+    oe_offsets_begin_ = oe_offsets_begin.GetArray();
+    vineyard::NumericArray<int64_t> oe_offsets_end;
+    oe_offsets_end.Construct(meta.GetMemberMeta("oe_offsets_end"));
+    oe_offsets_end_ = oe_offsets_end.GetArray();
 
     inner_vertices_ = fragment_->InnerVertices(vertex_label_);
     outer_vertices_ = fragment_->OuterVertices(vertex_label_);
@@ -1046,45 +1039,105 @@ class ArrowProjectedFragment
   }
 
  private:
+  /**
+   * @brief For edges (indicated by nbr_list[begin:end)) of a given vertex,
+   *        range of destinations with vertex label `v_label`.
+   *
+   * As the CSR is sorted by local_id, we use bisect to find the target
+   * position.
+   *
+   * N.B.: use ref to avoid the shared_ptr copy
+   */
   inline static std::pair<int64_t, int64_t> getRangeOfLabel(
-      std::shared_ptr<property_graph_t> fragment, label_id_t v_label,
-      std::shared_ptr<arrow::FixedSizeBinaryArray> nbr_list, int64_t begin,
-      int64_t end) {
-    int64_t i, j;
+      const std::shared_ptr<property_graph_t>& fragment, label_id_t v_label,
+      const std::shared_ptr<arrow::FixedSizeBinaryArray>& nbr_list,
+      int64_t begin, int64_t end) {
+    auto& id_parser = fragment->vid_parser_;
+
+    int64_t i = 0, j = 0;
+    const nbr_unit_t* nbrs =
+        reinterpret_cast<const nbr_unit_t*>(nbr_list->raw_values());
+    const nbr_unit_t* left = nbrs + begin;
+    const nbr_unit_t* right = nbrs + end;
+
+    // Backup: the original sequentical-scan implementation for easier
+    // understanding the semantics for code readers, as well as debugging
+    // in the future.
+    /*
     for (i = begin; i != end; ++i) {
-      const nbr_unit_t* ptr =
-          reinterpret_cast<const nbr_unit_t*>(nbr_list->GetValue(i));
-      if (fragment->vid_parser_.GetLabelId(ptr->vid) == v_label) {
+    if (id_parser.GetLabelId(nbrs[i].vid) == v_label) {
         break;
       }
     }
     for (j = i; j != end; ++j) {
-      const nbr_unit_t* ptr =
-          reinterpret_cast<const nbr_unit_t*>(nbr_list->GetValue(j));
-      if (fragment->vid_parser_.GetLabelId(ptr->vid) != v_label) {
+      if (id_parser.GetLabelId(nbrs[j].vid) != v_label) {
         break;
       }
+    }
+    */
+
+    {
+      // https://en.cppreference.com/w/cpp/algorithm/lower_bound
+      const nbr_unit_t *first = left, *last = right;
+      size_t count = last - first, step = 0;
+      const nbr_unit_t* iter = nullptr;
+      while (count > 0) {
+        step = count / 2;
+        iter = first + step;
+        if (id_parser.GetLabelId(iter->vid) < v_label) {
+          first = ++iter;
+          count -= step + 1;
+        } else {
+          count = step;
+        }
+      }
+      i = first - left + begin;
+    }
+    {
+      // https://en.cppreference.com/w/cpp/algorithm/upper_bound
+      const nbr_unit_t *first = left, *last = right;
+      size_t count = last - first, step = 0;
+      const nbr_unit_t* iter = nullptr;
+      while (count > 0) {
+        step = count / 2;
+        iter = first + step;
+        if (id_parser.GetLabelId(iter->vid) <= v_label) {
+          first = ++iter;
+          count -= step + 1;
+        } else {
+          count = step;
+        }
+      }
+      j = first - left + begin;
     }
     return std::make_pair(i, j);
   }
 
-  static bl::result<void> selectEdgeByNeighborLabel(
-      std::shared_ptr<property_graph_t> fragment, label_id_t v_label,
-      std::shared_ptr<arrow::FixedSizeBinaryArray> nbr_list,
-      std::shared_ptr<arrow::Int64Array> offsets,
-      std::shared_ptr<arrow::Int64Array>& begins,
-      std::shared_ptr<arrow::Int64Array>& ends) {
-    arrow::Int64Builder begins_builder, ends_builder;
-    vid_t tvnum = fragment->tvnums_[v_label];
-
-    for (vid_t i = 0; i != tvnum; ++i) {
-      auto ret = getRangeOfLabel(fragment, v_label, nbr_list, offsets->Value(i),
-                                 offsets->Value(i + 1));
-      ARROW_OK_OR_RAISE(begins_builder.Append(ret.first));
-      ARROW_OK_OR_RAISE(ends_builder.Append(ret.second));
-    }
-    ARROW_OK_OR_RAISE(begins_builder.Finish(&begins));
-    ARROW_OK_OR_RAISE(ends_builder.Finish(&ends));
+  /**
+   * @brief For each vertex `v` in fragment, select the range of edges
+   *        with destination that has label `v_label` in CSR.
+   */
+  static boost::leaf::result<void> selectEdgeByNeighborLabel(
+      const std::shared_ptr<property_graph_t>& fragment, label_id_t v_label,
+      const std::shared_ptr<arrow::FixedSizeBinaryArray>& nbr_list,
+      const std::shared_ptr<arrow::Int64Array>& offsets, int64_t* begins,
+      int64_t* ends) {
+    const int64_t* offset_values = offsets->raw_values();
+    vineyard::parallel_for(
+        static_cast<vid_t>(0), fragment->tvnums_[v_label],
+        [&](vid_t i) {
+          int64_t begin = offset_values[i], end = offset_values[i + 1];
+          if (begin == end) {  // optimzie for vertices that has no edge.
+            begins[i] = begin;
+            ends[i] = end;
+          } else {
+            auto range =
+                getRangeOfLabel(fragment, v_label, nbr_list, begin, end);
+            begins[i] = range.first;
+            ends[i] = range.second;
+          }
+        },
+        std::thread::hardware_concurrency());
     return {};
   }
 

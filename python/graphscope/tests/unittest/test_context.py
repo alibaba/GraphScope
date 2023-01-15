@@ -82,15 +82,26 @@ def test_context_output(simple_context):
     )
 
 
-def test_add_column_after_computation(arrow_property_graph):
-    sg = arrow_property_graph.project(vertices={"v0": ["id"]}, edges={"e0": ["weight"]})
+@pytest.mark.parametrize(
+    "v_label,e_label",
+    [
+        ("v0", "e0"),
+        ("v0", "e1"),
+        ("v1", "e0"),
+        ("v1", "e1"),
+    ],
+)
+def test_add_column_after_computation(arrow_property_graph, v_label, e_label):
+    sg = arrow_property_graph.project(
+        vertices={v_label: ["id"]}, edges={e_label: ["weight"]}
+    )
     ret = sssp(sg, 20)
     g2 = arrow_property_graph.add_column(
         ret, {"id_col": "v.id", "data_col": "v.data", "result_col": "r"}
     )
-    assert "id_col" in [p.name for p in g2.schema.get_vertex_properties("v0")]
-    assert "data_col" in [p.name for p in g2.schema.get_vertex_properties("v0")]
-    assert "result_col" in [p.name for p in g2.schema.get_vertex_properties("v0")]
+    assert "id_col" in [p.name for p in g2.schema.get_vertex_properties(v_label)]
+    assert "data_col" in [p.name for p in g2.schema.get_vertex_properties(v_label)]
+    assert "result_col" in [p.name for p in g2.schema.get_vertex_properties(v_label)]
 
 
 def test_lpa_u2i(arrow_property_graph_lpa_u2i):

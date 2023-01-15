@@ -7,7 +7,7 @@ ifeq ($(REGISTRY),)
 endif
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.11.6
+VINEYARD_VERSION ?= v0.11.7
 # This is the version of builder base image in most cases, except for graphscope-dev
 BUILDER_VERSION ?= $(VINEYARD_VERSION)
 # This is the version of runtime base image

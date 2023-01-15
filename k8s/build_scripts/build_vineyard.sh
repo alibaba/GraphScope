@@ -17,7 +17,7 @@ cd ${WORKDIR} && \
 # Vineyard
 echo "Installing vineyard"
 cd ${WORKDIR} && \
-    git clone -b v0.11.6 https://github.com/v6d-io/v6d.git --depth=1 && \
+    git clone -b v0.11.7 https://github.com/v6d-io/v6d.git --depth=1 && \
     pushd v6d && \
     git submodule update --init && \
     cmake . -DCMAKE_PREFIX_PATH=/opt/vineyard \
