@@ -184,9 +184,9 @@ function run_vy() {
     if [ "$first" = true ]
         then
           first=false
-          cmd="${cmd}${e_prefix}_${src}_${dst}_${e}#src_label=v${src}&dst_label=v${dst}&label=e${e}"
+          cmd="${cmd}${e_prefix}_${src}_${dst}_${e}#header_row=True#src_label=v${src}&dst_label=v${dst}&label=e${e}"
         else
-          cmd="${cmd};${e_prefix}_${src}_${dst}_${e}#src_label=v${src}&dst_label=v${dst}&label=e${e}"
+          cmd="${cmd};${e_prefix}_${src}_${dst}_${e}#header_row=True#src_label=v${src}&dst_label=v${dst}&label=e${e}"
     fi
       done
     done
@@ -195,7 +195,7 @@ function run_vy() {
 
   cmd="${cmd} ${v_label_num}"
   for ((i = 0; i < v_label_num; i++)); do
-    cmd="${cmd} ${v_prefix}_${i}#label=v${i}"
+    cmd="${cmd} ${v_prefix}_${i}#header_row=True#label=v${i}"
   done
 
   cmd="${cmd} $*"
@@ -230,12 +230,12 @@ function run_vy_2() {
 
   cmd="${cmd} ${label_num}"
   for ((i = 0; i < label_num; i++)); do
-    cmd="${cmd} '${e_prefix}_${i}#src_label=v${i}&dst_label=v${i}&label=e${i}'"
+    cmd="${cmd} '${e_prefix}_${i}#header_row=True#src_label=v${i}&dst_label=v${i}&label=e${i}'"
   done
 
   cmd="${cmd} ${label_num}"
   for ((i = 0; i < label_num; i++)); do
-    cmd="${cmd} '${v_prefix}_${i}#label=v${i}'"
+    cmd="${cmd} '${v_prefix}_${i}#header_row=True#label=v${i}'"
   done
 
   cmd="${cmd} $*"
@@ -260,16 +260,16 @@ function run_sampling_path() {
   cmd="${cmd_prefix} -n ${num_procs} --host localhost:${num_procs} ${executable} ${socket_file}"
 
   cmd="${cmd} 5"
-  cmd="${cmd} '${data_dir}/sampling_path_1000_e_0#src_label=v0&dst_label=v1&label=e0'"
-  cmd="${cmd} '${data_dir}/sampling_path_1000_e_1#src_label=v0&dst_label=v2&label=e1'"
-  cmd="${cmd} '${data_dir}/sampling_path_1000_e_2#src_label=v0&dst_label=v2&label=e2'"
-  cmd="${cmd} '${data_dir}/sampling_path_1000_e_3#src_label=v0&dst_label=v2&label=e3'"
-  cmd="${cmd} '${data_dir}/sampling_path_1000_e_4#src_label=v1&dst_label=v2&label=e4'"
+  cmd="${cmd} '${data_dir}/sampling_path_1000_e_0#header_row=True#src_label=v0&dst_label=v1&label=e0'"
+  cmd="${cmd} '${data_dir}/sampling_path_1000_e_1#header_row=True#src_label=v0&dst_label=v2&label=e1'"
+  cmd="${cmd} '${data_dir}/sampling_path_1000_e_2#header_row=True#src_label=v0&dst_label=v2&label=e2'"
+  cmd="${cmd} '${data_dir}/sampling_path_1000_e_3#header_row=True#src_label=v0&dst_label=v2&label=e3'"
+  cmd="${cmd} '${data_dir}/sampling_path_1000_e_4#header_row=True#src_label=v1&dst_label=v2&label=e4'"
 
   cmd="${cmd} 3"
-  cmd="${cmd} '${data_dir}/sampling_path_1000_v_0#label=v0'"
-  cmd="${cmd} '${data_dir}/sampling_path_1000_v_1#label=v1'"
-  cmd="${cmd} '${data_dir}/sampling_path_1000_v_2#label=v2'"
+  cmd="${cmd} '${data_dir}/sampling_path_1000_v_0#header_row=True#label=v0'"
+  cmd="${cmd} '${data_dir}/sampling_path_1000_v_1#header_row=True#label=v1'"
+  cmd="${cmd} '${data_dir}/sampling_path_1000_v_2#header_row=True#label=v2'"
 
   cmd="${cmd} $*"
 
@@ -298,12 +298,12 @@ function run_lpa() {
 
   cmd="${cmd} ${e_label_num}"
   for ((i = 0; i < e_label_num; i++)); do
-    cmd="${cmd} '${e_prefix}_${i}#src_label=v0&dst_label=v1&label=e${i}'"
+    cmd="${cmd} '${e_prefix}_${i}#header_row=True#src_label=v0&dst_label=v1&label=e${i}'"
   done
 
   cmd="${cmd} ${v_label_num}"
   for ((i = 0; i < v_label_num; i++)); do
-    cmd="${cmd} '${v_prefix}_${i}#label=v${i}'"
+    cmd="${cmd} '${v_prefix}_${i}#header_row=True#label=v${i}'"
   done
 
   cmd="${cmd} $*"
@@ -333,12 +333,12 @@ function run_local_vertex_map() {
 
   cmd="${cmd} ${e_label_num}"
   for ((i = 0; i < e_label_num; i++)); do
-    cmd="${cmd} '${e_prefix}_${i}#src_label=v0&dst_label=v0&label=e${i}'"
+    cmd="${cmd} '${e_prefix}_${i}#header_row=True#src_label=v0&dst_label=v0&label=e${i}'"
   done
 
   cmd="${cmd} ${v_label_num}"
   for ((i = 0; i < v_label_num; i++)); do
-    cmd="${cmd} '${v_prefix}_${i}#label=v${i}'"
+    cmd="${cmd} '${v_prefix}_${i}#header_row=True#label=v${i}'"
   done
 
   cmd="${cmd} $*"
@@ -433,8 +433,8 @@ then
     echo "Running Java tests..."
     run_vy_2 ${np} ./run_java_app "${socket_file}" 1 "${test_dir}"/projected_property/twitter_property_e "${test_dir}"/projected_property/twitter_property_v 1 0 1 com.alibaba.graphscope.example.bfs.BFS
     GLOG_v=10 ./run_java_string_app /tmp/vineyard.sock \
-        1 "${test_dir}/projected_property/twitter_property_e_0#src_label=v&dst_label=v&label=e&include_all_columns=true&column_types=int64_t,int64_t,int32_t,int32_t,std::string" \
-        1 "${test_dir}/projected_property/twitter_property_v_0#label=v&include_all_columns=true&column_types=int64_t,std::string" \
+        1 "${test_dir}/projected_property/twitter_property_e_0#header_row=True#src_label=v&dst_label=v&label=e&include_all_columns=true&column_types=int64_t,int64_t,int32_t,int32_t,std::string" \
+        1 "${test_dir}/projected_property/twitter_property_v_0#header_row=True#label=v&include_all_columns=true&column_types=int64_t,std::string" \
         com.alibaba.graphscope.example.stringApp.StringApp
 
     echo "Running girpah tests..."

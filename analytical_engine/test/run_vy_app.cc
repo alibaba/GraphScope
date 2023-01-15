@@ -34,6 +34,7 @@
 #include "cdlp/cdlp.h"
 #include "lcc/lcc.h"
 #include "pagerank/pagerank.h"
+#include "pagerank/pagerank_auto.h"
 #include "pagerank/pagerank_local.h"
 #include "sssp/sssp.h"
 #include "wcc/wcc.h"
@@ -319,8 +320,8 @@ void RunProjectedPR(std::shared_ptr<ProjectedFragmentType> fragment,
                     const grape::CommSpec& comm_spec,
                     const std::string& out_prefix) {
   // using AppType = grape::PageRankAuto<ProjectedFragmentType>;
-  // using AppType = grape::PageRank<ProjectedFragmentType>;
-  using AppType = grape::PageRankLocal<ProjectedFragmentType>;
+  using AppType = grape::PageRank<ProjectedFragmentType>;
+  // using AppType = grape::PageRankLocal<ProjectedFragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
   auto spec = grape::DefaultParallelEngineSpec();
@@ -454,7 +455,7 @@ int main(int argc, char** argv) {
 
     LOG(INFO) << "Connected to IPCServer: " << ipc_socket;
 
-    vineyard::ObjectID fragment_id;
+    vineyard::ObjectID fragment_id = vineyard::InvalidObjectID();
     {
       auto loader = std::make_unique<gs::ArrowFragmentLoader<oid_t, vid_t>>(
           client, comm_spec, efiles, vfiles, directed != 0,
@@ -472,15 +473,15 @@ int main(int argc, char** argv) {
     }
 
     LOG(INFO) << "[worker-" << comm_spec.worker_id()
-              << "] loaded graph to vineyard ... ";
+              << "] loaded graph to vineyard ... " << fragment_id;
     LOG(INFO) << "peek memory: " << vineyard::get_peak_rss_pretty()
               << std::endl;
 
     MPI_Barrier(comm_spec.comm());
 
     Run(client, comm_spec, fragment_id, run_projected, app_name, path_pattern);
-    LOG(INFO) << "peek memory: " << vineyard::get_peak_rss_pretty()
-              << std::endl;
+    LOG(INFO) << "memory: " << vineyard::get_rss_pretty()
+              << ", peek memory: " << vineyard::get_peak_rss_pretty();
 
     MPI_Barrier(comm_spec.comm());
   }
