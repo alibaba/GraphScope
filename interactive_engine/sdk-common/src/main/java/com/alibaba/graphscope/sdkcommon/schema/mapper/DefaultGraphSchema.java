@@ -60,9 +60,7 @@ public class DefaultGraphSchema implements GraphSchema {
     }
 
     public void dropProperty(String label, String property) {
-        this.getElement(label)
-                .getPropertyList()
-                .removeIf(v -> v.getName().equals(property));
+        this.getElement(label).getPropertyList().removeIf(v -> v.getName().equals(property));
     }
 
     @Override
@@ -180,9 +178,6 @@ public class DefaultGraphSchema implements GraphSchema {
 
     @Override
     public String toString() {
-        return "DefaultGraphSchema{" +
-                "vertexList=" + vertexList +
-                ", edgeList=" + edgeList +
-                '}';
+        return "DefaultGraphSchema{" + "vertexList=" + vertexList + ", edgeList=" + edgeList + '}';
     }
 }

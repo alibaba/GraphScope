@@ -75,7 +75,6 @@ public class TestUtils {
         return Pair.of(-1, null);
     }
 
-
     public static InputStream getLoadResource(String fileName) {
         return Thread.currentThread().getContextClassLoader().getResourceAsStream(fileName);
     }

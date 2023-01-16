@@ -120,43 +120,34 @@ public enum DataType {
         InternalDataType internalDataType = dataType.getType();
         switch (internalDataType) {
             case BOOL:
-                    return DataType.BOOL;
+                return DataType.BOOL;
 
             case CHAR:
-
-                    return DataType.CHAR;
+                return DataType.CHAR;
 
             case SHORT:
-
-                    return DataType.SHORT;
+                return DataType.SHORT;
 
             case INT:
-
-                    return DataType.INT;
+                return DataType.INT;
 
             case LONG:
-
-                    return DataType.LONG;
+                return DataType.LONG;
 
             case FLOAT:
-
-                    return DataType.FLOAT;
+                return DataType.FLOAT;
 
             case DOUBLE:
-
-                    return DataType.DOUBLE;
+                return DataType.DOUBLE;
 
             case STRING:
-
-                    return DataType.STRING;
+                return DataType.STRING;
 
             case BYTES:
-
-                    return DataType.BYTES;
+                return DataType.BYTES;
 
             case DATE:
-
-                    return DataType.STRING;
+                return DataType.STRING;
 
             case LIST:
                 {
@@ -183,13 +174,15 @@ public enum DataType {
                             }
                         default:
                             {
-                                throw new IllegalArgumentException("Unsupported property data type " + dataType);
+                                throw new IllegalArgumentException(
+                                        "Unsupported property data type " + dataType);
                             }
                     }
                 }
             default:
                 {
-                    throw new IllegalArgumentException("Unsupported property data type " + dataType);
+                    throw new IllegalArgumentException(
+                            "Unsupported property data type " + dataType);
                 }
         }
     }

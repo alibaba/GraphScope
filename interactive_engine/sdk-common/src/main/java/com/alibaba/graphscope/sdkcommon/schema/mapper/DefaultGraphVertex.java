@@ -105,14 +105,21 @@ public class DefaultGraphVertex implements GraphVertex {
 
     @Override
     public String toString() {
-        return "DefaultGraphVertex{" +
-                "label='" + label + '\'' +
-                ", labelId=" + labelId +
-                ", propertyList=" + propertyList +
-                ", primaryKeyConstraint=" + primaryKeyConstraint +
-                ", versionId=" + versionId +
-                ", tableId=" + tableId +
-                '}';
+        return "DefaultGraphVertex{"
+                + "label='"
+                + label
+                + '\''
+                + ", labelId="
+                + labelId
+                + ", propertyList="
+                + propertyList
+                + ", primaryKeyConstraint="
+                + primaryKeyConstraint
+                + ", versionId="
+                + versionId
+                + ", tableId="
+                + tableId
+                + '}';
     }
 
     @Override

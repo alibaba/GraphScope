@@ -103,7 +103,8 @@ public class GraphSchemaMapper {
             for (JsonNode typeNode : typeArray) {
                 String type = typeNode.get("type").asText();
                 if (type.equalsIgnoreCase("VERTEX")) {
-                    VertexTypeMapper typeMapper = mapper.convertValue(typeNode, VertexTypeMapper.class);
+                    VertexTypeMapper typeMapper =
+                            mapper.convertValue(typeNode, VertexTypeMapper.class);
                     graphSchema.types.add(typeMapper);
                 } else {
                     EdgeTypeMapper typeMapper = mapper.convertValue(typeNode, EdgeTypeMapper.class);
@@ -116,5 +117,3 @@ public class GraphSchemaMapper {
         }
     }
 }
-
-

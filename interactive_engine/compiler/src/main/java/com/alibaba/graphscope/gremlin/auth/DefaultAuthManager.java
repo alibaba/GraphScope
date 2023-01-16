@@ -50,6 +50,7 @@ public class DefaultAuthManager implements AuthManager<AuthenticatedUser> {
     public boolean requireAuthentication() {
         String authUserName = AuthConfig.AUTH_USERNAME.get(configs);
         String authPassword = AuthConfig.AUTH_PASSWORD.get(configs);
-        return !(authUserName == null || authUserName.isEmpty()) && !(authPassword == null || authPassword.isEmpty());
+        return !(authUserName == null || authUserName.isEmpty())
+                && !(authPassword == null || authPassword.isEmpty());
     }
 }

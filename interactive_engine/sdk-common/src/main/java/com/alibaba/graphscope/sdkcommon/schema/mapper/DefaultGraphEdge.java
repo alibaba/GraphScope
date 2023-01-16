@@ -108,12 +108,18 @@ public class DefaultGraphEdge implements GraphEdge {
 
     @Override
     public String toString() {
-        return "DefaultGraphEdge{" +
-                "label='" + label + '\'' +
-                ", id=" + id +
-                ", propertyList=" + propertyList +
-                ", relationList=" + relationList +
-                ", versionId=" + versionId +
-                '}';
+        return "DefaultGraphEdge{"
+                + "label='"
+                + label
+                + '\''
+                + ", id="
+                + id
+                + ", propertyList="
+                + propertyList
+                + ", relationList="
+                + relationList
+                + ", versionId="
+                + versionId
+                + '}';
     }
 }

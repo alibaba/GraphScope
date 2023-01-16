@@ -15,8 +15,6 @@
  */
 package com.alibaba.graphscope.sdkcommon.meta;
 
-import java.util.Objects;
-
 import com.alibaba.graphscope.sdkcommon.exception.GrootException;
 import com.alibaba.graphscope.sdkcommon.util.ExceptionUtils;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -24,6 +22,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import java.util.Objects;
 
 /**
  * @author beimian
@@ -98,8 +98,7 @@ public class DataType {
 
     @JsonValue
     public String getJson() {
-        return this.type.name()
-                + (this.expression.isEmpty() ? "" : "<" + this.expression + ">");
+        return this.type.name() + (this.expression.isEmpty() ? "" : "<" + this.expression + ">");
     }
 
     public boolean isValid(String expression) {
@@ -177,9 +176,6 @@ public class DataType {
 
     @Override
     public String toString() {
-        return "DataType{" +
-                "expression='" + expression + '\'' +
-                ", type=" + type +
-                '}';
+        return "DataType{" + "expression='" + expression + '\'' + ", type=" + type + '}';
     }
 }

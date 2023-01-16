@@ -66,7 +66,8 @@ public class InteractiveBenchmark {
                                     .addContactPoint(address[0])
                                     .port(Integer.parseInt(address[1]))
                                     .serializer(initializeSerialize());
-                    if (!(username == null || username.isEmpty()) && !(password == null || password.isEmpty())) {
+                    if (!(username == null || username.isEmpty())
+                            && !(password == null || password.isEmpty())) {
                         cluster.credentials(username, password);
                     }
                     client = cluster.create().connect();

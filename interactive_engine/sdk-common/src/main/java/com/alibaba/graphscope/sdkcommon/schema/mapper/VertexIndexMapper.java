@@ -15,7 +15,6 @@ package com.alibaba.graphscope.sdkcommon.schema.mapper;
 
 import java.util.List;
 
-
 public class VertexIndexMapper {
     private String name;
     private String indexType;

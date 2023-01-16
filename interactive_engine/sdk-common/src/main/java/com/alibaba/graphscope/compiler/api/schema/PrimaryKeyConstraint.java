@@ -14,9 +14,7 @@
 package com.alibaba.graphscope.compiler.api.schema;
 
 import com.alibaba.graphscope.compiler.api.exception.GraphSchemaException;
-import com.google.common.base.MoreObjects;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -37,9 +35,7 @@ public class PrimaryKeyConstraint {
 
     @Override
     public String toString() {
-        return "PrimaryKeyConstraint{" +
-                "primaryKeyList=" + String.join(",", primaryKeyList) +
-                '}';
+        return "PrimaryKeyConstraint{" + "primaryKeyList=" + String.join(",", primaryKeyList) + '}';
     }
 
     @Override

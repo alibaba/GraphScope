@@ -43,10 +43,8 @@ public class IrSchemaParser {
         List<GraphEdge> edges = graphSchema.getEdgeList();
         List entities = new ArrayList();
         List relations = new ArrayList();
-        vertices.forEach(
-                v -> entities.add(getVertex(graphSchema, v)));
-        edges.forEach(
-                e -> relations.add(getEdge(graphSchema, e)));
+        vertices.forEach(v -> entities.add(getVertex(graphSchema, v)));
+        edges.forEach(e -> relations.add(getEdge(graphSchema, e)));
         Map<String, Object> schemaMap = new HashMap<>();
         schemaMap.put("entities", entities);
         schemaMap.put("relations", relations);

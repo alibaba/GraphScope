@@ -19,7 +19,6 @@ import com.alibaba.graphscope.compiler.api.schema.PrimaryKeyConstraint;
 import com.alibaba.graphscope.sdkcommon.schema.TypeEnum;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 

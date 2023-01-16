@@ -17,8 +17,8 @@ package com.alibaba.graphscope.compiler.schema;
 
 import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
 import com.alibaba.graphscope.compiler.api.schema.SchemaFetcher;
-
 import com.alibaba.graphscope.sdkcommon.schema.GraphSchemaMapper;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;

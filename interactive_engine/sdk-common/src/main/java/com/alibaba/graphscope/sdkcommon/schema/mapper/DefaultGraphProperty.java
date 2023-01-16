@@ -86,13 +86,21 @@ public class DefaultGraphProperty implements GraphProperty {
 
     @Override
     public String toString() {
-        return "DefaultGraphProperty{" +
-                "name='" + name + '\'' +
-                ", id=" + id +
-                ", dataType=" + dataType +
-                ", comment='" + comment + '\'' +
-                ", hasDefaultValue=" + hasDefaultValue +
-                ", defaultValue=" + defaultValue +
-                '}';
+        return "DefaultGraphProperty{"
+                + "name='"
+                + name
+                + '\''
+                + ", id="
+                + id
+                + ", dataType="
+                + dataType
+                + ", comment='"
+                + comment
+                + '\''
+                + ", hasDefaultValue="
+                + hasDefaultValue
+                + ", defaultValue="
+                + defaultValue
+                + '}';
     }
 }

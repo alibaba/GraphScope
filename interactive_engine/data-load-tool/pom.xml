@@ -31,6 +31,7 @@
     <dependency>
         <groupId>com.aliyun.odps</groupId>
         <artifactId>odps-sdk-mapred</artifactId>
+        <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
@@ -80,7 +81,6 @@
       <artifactId>spark-sql_${scala.binary.version}</artifactId>
       <scope>provided</scope>
     </dependency>
-
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>

@@ -29,8 +29,6 @@ import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
 
 @Test(groups = "create_instance")
 public class CreateInstanceTest {

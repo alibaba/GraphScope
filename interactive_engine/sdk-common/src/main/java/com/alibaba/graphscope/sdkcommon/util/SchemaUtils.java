@@ -28,11 +28,13 @@ import java.util.stream.Collectors;
 public class SchemaUtils {
     private static final Logger logger = LoggerFactory.getLogger(SchemaUtils.class);
 
-    private static final Set<String> tokenNameList = new HashSet<>(Arrays.asList(
-                    T.label.getAccessor(),
-                    T.id.getAccessor(),
-                    T.key.getAccessor(),
-                    T.value.getAccessor()));
+    private static final Set<String> tokenNameList =
+            new HashSet<>(
+                    Arrays.asList(
+                            T.label.getAccessor(),
+                            T.id.getAccessor(),
+                            T.key.getAccessor(),
+                            T.value.getAccessor()));
 
     /**
      * Get primary key list for the given vertex type

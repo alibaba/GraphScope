@@ -44,11 +44,14 @@ public class DefaultEdgeRelation implements EdgeRelation {
 
     @Override
     public String toString() {
-        return "DefaultEdgeRelation{" +
-                "source=" + source +
-                ", target=" + target +
-                ", tableId=" + tableId +
-                '}';
+        return "DefaultEdgeRelation{"
+                + "source="
+                + source
+                + ", target="
+                + target
+                + ", tableId="
+                + tableId
+                + '}';
     }
 
     @Override
