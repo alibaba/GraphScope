@@ -2,7 +2,7 @@ package com.alibaba.graphscope.groot.discovery;
 
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
-import com.alibaba.graphscope.groot.common.util.CuratorUtils;
+import com.alibaba.graphscope.groot.CuratorUtils;
 
 import org.apache.curator.framework.CuratorFramework;
 

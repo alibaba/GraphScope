@@ -18,7 +18,7 @@ import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
-import com.alibaba.graphscope.groot.common.util.CuratorUtils;
+import com.alibaba.graphscope.groot.CuratorUtils;
 import com.alibaba.graphscope.groot.coordinator.*;
 import com.alibaba.graphscope.groot.discovery.*;
 import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
