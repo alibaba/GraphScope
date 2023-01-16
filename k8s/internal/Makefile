@@ -137,7 +137,7 @@ graphscope-client-manylinux2014-py3-nodocker:
 	cmake -DKNN=OFF -DWITH_VINEYARD=ON -DTESTING=OFF .. && \
 	make graphlearn_shared -j`nproc` && \
 	export LD_LIBRARY_PATH=$(WORKING_DIR)/../../learning_engine/graph-learn/graphlearn/built/lib:$$LD_LIBRARY_PATH && \
-	for py in cp37-cp37m cp38-cp38 cp39-cp39 cp310-cp310; do \
+	for py in cp37-cp37m cp38-cp38 cp39-cp39 cp310-cp310 cp311-cp311; do \
 		cd $(WORKING_DIR)/../../python; \
 		export PATH=/opt/python/$$py/bin:$$PATH; \
 		pip3 install -U pip; \
