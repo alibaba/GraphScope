@@ -288,9 +288,6 @@ setup(
     },
     setup_requires=[
         "setuptools_scm>=5.0.0",
-        "grpcio",
-        "grpcio-tools",
-        "numpy",
     ],
     package_dir=resolve_graphscope_package_dir(),
     packages=find_graphscope_packages(),

@@ -1,7 +1,9 @@
 Cython==3.0a6
 gremlinpython>=3.4.9
-grpcio<=1.43.0,>=1.40.0
-grpcio-tools<=1.43.0,>=1.40.0
+grpcio;python_version>="3.8"
+grpcio<=1.43.0,>=1.40.0;python_version<"3.8"
+grpcio-tools;python_version>="3.8"
+grpcio-tools<=1.43.0,>=1.40.0;python_version<"3.8"
 kubernetes
 msgpack
 nest_asyncio
@@ -18,5 +20,5 @@ pysimdjson
 PyYAML
 scipy
 tqdm
-vineyard>=0.5.2; sys_platform != "win32"
-vineyard-io>=0.5.2; sys_platform != "win32"
+vineyard>=0.11.1; sys_platform != "win32"
+vineyard-io>=0.11.1; sys_platform != "win32"

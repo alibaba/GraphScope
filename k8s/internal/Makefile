@@ -57,7 +57,7 @@ graphscope-darwin-py3:
 	# Avoid copy vineyard library with the same basename by:
 	# 	1) reinstall vineyard to /usr/local and
 	# 	2) rm /opt/vineyard/lib
-	cd /tmp && git clone -b main https://github.com/v6d-io/v6d.git --depth=1 && \
+	cd /tmp && git clone -b ${VINEYARD_VERSION} https://github.com/v6d-io/v6d.git --depth=1 && \
 		cd v6d && git submodule update --init && \
 		mkdir -p build && cd build && \
 		cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local && \
