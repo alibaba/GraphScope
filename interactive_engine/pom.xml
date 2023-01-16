@@ -125,7 +125,6 @@
     <scala.version>2.12.10</scala.version>
     <scala.binary.version>2.12</scala.binary.version>
     <spark.version>3.1.1</spark.version>
-    <maven.compiler.release>8</maven.compiler.release>
 
     <!-- Plugin -->
     <maven.surefire.version>2.22.2</maven.surefire.version>
