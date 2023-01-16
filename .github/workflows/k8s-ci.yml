@@ -43,7 +43,7 @@ env:
 jobs:
   # JOB to run change detection
   changes:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     # Set job outputs to values from filter step
     outputs:
       gae-python: ${{ steps.filter.outputs.gae-python }}

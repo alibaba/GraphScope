@@ -26,7 +26,7 @@ concurrency:
 
 jobs:
   build-gae:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.11.7

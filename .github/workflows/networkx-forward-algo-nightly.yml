@@ -11,7 +11,7 @@ on:
 jobs:
   forward-algo-test:
     if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}

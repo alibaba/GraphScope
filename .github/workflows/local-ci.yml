@@ -43,7 +43,7 @@ env:
 jobs:
   # JOB to run change detection
   changes:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     # Set job outputs to values from filter step
     outputs:
       gae-python: ${{ steps.filter.outputs.gae-python }}
@@ -272,7 +272,7 @@ jobs:
         retention-days: 5
 
   mini-test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     needs: [build-wheels]
     steps:
@@ -325,7 +325,7 @@ jobs:
           path: ~/.local/log/graphscope
 
   python-unittest:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs: [build-wheels, changes]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     defaults:
@@ -391,7 +391,7 @@ jobs:
         fail_ci_if_error: false
 
   networkx-basic-test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs: [build-wheels, changes]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     defaults:
@@ -480,7 +480,7 @@ jobs:
             $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/nx/tests/convert
 
   networkx-algo-and-generator-test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs: [build-wheels, changes]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     strategy:

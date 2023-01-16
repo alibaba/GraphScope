@@ -17,7 +17,7 @@ jobs:
         shell: bash --noprofile --norc -eo pipefail {0}
     strategy:
       matrix:
-        os: [ubuntu-20.04, macos-10.15]
+        os: [ubuntu-latest, macos-10.15]
     steps:
     - uses: actions/checkout@v3
       with:
@@ -39,7 +39,7 @@ jobs:
         make BUILD_TYPE=debug
 
     - name: Run Python Test
-      if: matrix.os == 'ubuntu-20.04'
+      if: matrix.os == 'ubuntu-latest'
       env:
         FULL_TEST_SUITE: ON
         GS_TEST_DIR: ${{ github.workspace }}/gstest
@@ -51,7 +51,7 @@ jobs:
 
     - name: Upload Coverage
       uses: codecov/codecov-action@v3
-      if: matrix.os == 'ubuntu-20.04'
+      if: matrix.os == 'ubuntu-latest'
       with:
         file: ./python/coverage.xml
         fail_ci_if_error: true

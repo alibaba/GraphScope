@@ -21,7 +21,7 @@ concurrency:
 
 jobs:
   gaia-test:
-    runs-on: [self-hosted, manylinux2014]
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
       with:
@@ -43,6 +43,11 @@ jobs:
           ~/.cargo/git/db/
           ~/.cache/sccache
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Setup | Rust
+      uses: ATiltedTree/setup-rust@v1
+      with:
+        rust-version: nightly
 
     - name: Rust Format Check
       run: |

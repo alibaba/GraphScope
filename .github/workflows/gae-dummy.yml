@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   build-gae:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
     - run: 'echo "No action required" '
