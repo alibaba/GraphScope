@@ -72,6 +72,10 @@ jobs:
         cd ${GITHUB_WORKSPACE}/interactive_engine/compiler
         make build
 
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      if: always()
+
     - name: Ir Unit Test
       run: |
         source ${HOME}/.bashrc
