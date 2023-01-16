@@ -575,6 +575,17 @@
         <plugin>
           <artifactId>maven-assembly-plugin</artifactId>
           <version>${maven.assembly.version}</version>
+          <configuration>
+            <appendAssemblyId>false</appendAssemblyId>
+          </configuration>
+          <executions>
+            <execution>
+              <phase>package</phase>
+              <goals>
+                <goal>single</goal>
+              </goals>
+            </execution>
+          </executions>
         </plugin>
 
         <plugin>
