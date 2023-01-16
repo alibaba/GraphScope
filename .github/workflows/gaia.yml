@@ -73,7 +73,7 @@ jobs:
         make build
 
     - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
+      uses: siyuan0322/action-tmate@master
       if: always()
 
     - name: Ir Unit Test
