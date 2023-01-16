@@ -62,11 +62,12 @@ jobs:
       uses: ATiltedTree/setup-rust@v1
       with:
         rust-version: nightly
+        components: rustfmt
 
     - name: Install Dependencies
       run: |
         # install rdkafka
-        sudo yum install -y librdkafka-devel
+        sudo apt-get install -y librdkafka-dev
 
         # install cppkafka
         git clone -b 0.4.0 --single-branch --depth=1 \
@@ -78,14 +79,8 @@ jobs:
 
     - name: Build GraphScope Store With Column Filter Push Down
       run: |
-        source ${HOME}/.bashrc
-        export SCCACHE_DIR=~/.cache/sccache
-        export RUSTC_WRAPPER=/usr/local/bin/sccache
-        sccache --start-server
         cd ${GITHUB_WORKSPACE}/interactive_engine
-        mvn clean install -P groot,groot-assembly -Drust.compile.mode=debug -DskipTests -Dgroot.compile.feature="column_filter_push_down" --quiet
-
-        sccache --show-stats
+        mvn package -P groot,groot-assembly -Drust.compile.mode=debug -DskipTests -Dgroot.compile.feature="column_filter_push_down" --quiet
 
     - name: Gremlin Tests with Column Filter Push Down
       run: |
@@ -95,13 +90,8 @@ jobs:
 
     - name: Build GraphScope Store
       run: |
-        source ${HOME}/.bashrc
-        export SCCACHE_DIR=~/.cache/sccache
-        export RUSTC_WRAPPER=/usr/local/bin/sccache
         cd ${GITHUB_WORKSPACE}/interactive_engine
-        mvn clean install -P groot,groot-assembly -Drust.compile.mode=debug -DskipTests --quiet
-
-        sccache --show-stats
+        mvn package -P groot,groot-assembly -Drust.compile.mode=debug -DskipTests --quiet
 
     - name: Gremlin Test
       run: |

@@ -48,6 +48,7 @@ jobs:
       uses: ATiltedTree/setup-rust@v1
       with:
         rust-version: nightly
+        components: rustfmt
 
     - name: Rust Format Check
       run: |
@@ -57,11 +58,7 @@ jobs:
     - name: Install Dependencies
       run: |
         # install rdkafka
-        sudo yum install -y librdkafka-devel
-
-        export SCCACHE_DIR=~/.cache/sccache
-        export RUSTC_WRAPPER=/usr/local/bin/sccache
-        sccache --start-server
+        sudo apt-get install -y librdkafka-dev
 
         # install cppkafka
         git clone -b 0.4.0 --single-branch --depth=1 \
@@ -103,7 +100,6 @@ jobs:
 
     - name: Ir Integration Pattern Test on Experimental Store
       run: |
-        source ${HOME}/.bashrc
         cd ${GITHUB_WORKSPACE}
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git
         cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && ./ir_exprimental_pattern_ci.sh
