@@ -90,11 +90,6 @@ jobs:
         cd interactive_engine/groot-server
         mvn test -P gremlin-test
 
-    - name: Setup tmate session
-      run: |
-        sleep 1800
-      if: always()
-
     - name: Build GraphScope Store
       run: |
         source ${HOME}/.bashrc
