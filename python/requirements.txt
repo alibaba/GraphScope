@@ -1,9 +1,9 @@
 Cython==3.0a6
 gremlinpython>=3.4.9
-grpcio;python_version>="3.8"
-grpcio<=1.43.0,>=1.40.0;python_version<"3.8"
-grpcio-tools;python_version>="3.8"
-grpcio-tools<=1.43.0,>=1.40.0;python_version<"3.8"
+grpcio;python_version>="3.10"
+grpcio<=1.43.0,>=1.40.0;python_version<"3.10"
+grpcio-tools;python_version>="3.10"
+grpcio-tools<=1.43.0,>=1.40.0;python_version<"3.10"
 kubernetes
 msgpack
 nest_asyncio
@@ -15,7 +15,8 @@ packaging
 pandas
 protobuf>=3.15.0,<=3.18.1
 psutil
-pyarrow<=6.0.0
+pyarrow;python_version>="3.11"
+pyarrow<=6.0.0;python_version<"3.11"
 pysimdjson
 PyYAML
 scipy
