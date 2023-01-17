@@ -142,10 +142,8 @@ graphscope-client-manylinux2014-py3-nodocker:
 		cd $(WORKING_DIR)/../../python; \
 		export PATH=/opt/python/$$py/bin:$$PATH; \
 		pip3 install -U pip; \
-		if [ "$$py" == "cp37-cp37m" ] || [ "$$py" == "cp38-cp38" ]; then \
+		if [ "$$py" == "cp37-cp37m" ] || [ "$$py" == "cp38-cp38" ] || [ "$$py" == "cp39-cp39" ]; then \
 			pip3 install "numpy==1.18.5" "pandas" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" wheel "auditwheel==5.0.0"; \
-		elif [ "$$py" == "cp39-cp39" ]; then \
-			pip3 install "numpy==1.19.3" "pandas" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" wheel "auditwheel==5.0.0"; \
 		else \
 			pip3 install "numpy" "pandas" "grpcio" "grpcio-tools" wheel "auditwheel==5.0.0"; \
 		fi; \
@@ -169,10 +167,8 @@ graphscope-client-darwin-py3:
 		cd $(WORKING_DIR)/../../python && \
 		py=$$(python3 -V 2>&1 | sed 's/.* \([0-9]\).\([0-9]\).*/\1\2/') && \
 		pip3 install -U pip && \
-		if [ "$$py" == "37" ] || [ "$$py" == "38" ]; then \
+		if [ "$$py" == "37" ] || [ "$$py" == "38" ] || [ "$$py" == "39" ]; then \
 			pip3 install "numpy==1.18.5" "pandas" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" delocate wheel; \
-		elif [ "$$py" == "39" ]; then \
-			pip3 install "numpy==1.19.3" "pandas" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" delocate wheel; \
 		else \
 			pip3 install "numpy" "pandas" "grpcio" "grpcio-tools" delocate wheel; \
 		fi; \
