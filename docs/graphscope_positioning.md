@@ -1,8 +1,16 @@
 # The Product Positioning of GraphScope
 
 [GraphScope](./overview.md) is an open-source, cloud-native computing framework for a variety of graph workloads,
-including analytical processing, interactive querying and graph learning. But how GraphScope differs
-from many other graph products that offer similar functionalities? We elaborate in details.
+including analytical processing, interactive querying and graph learning. But how does GraphScope stand our
+among a bunch of graph products that offer similar functionalities? In summarize,
+- If you are searching for a scalable system for graph analytical processing, GraphScope may be your best option,
+with the state-of-the-art performance and a range of SDKs and programming interfaces.
+- If you are searching for a graph database for graph queries, and performance and scalability are your primary concerns
+rather than transaction guarantees, then GraphScope is a suitable platform.
+- If you are searching for a system that simultaneously offers various types of graph workloads, GraphScope
+is the ideal platform for high-performance and scalability.
+
+We elaborate in details in the following.
 
 ## Compare with Graph Databases
 Graph databases, such as [Neo4j](https://neo4j.com/), [JanusGraph](http://www.janusgraph.cn/) and [Nebula](https://www.nebula-graph.com.cn/),
@@ -64,12 +72,3 @@ Compared to the multi-system design, GraphScope offers more user-friendly progra
 interfaces and more efficient data movements. Additionally, the [disaggregated design](./overview.md) of
 GraphScope allows users to independently deploy each engine, if they only need to focus on certain workloads.
 
-## Conclusion
-If you are searching for a scalable system for graph analytical processing, GraphScope may be your best option,
-with the state-of-the-art performance and a range of SDKs and programming interfaces.
-
-If you are searching for a graph database for graph queries, and performance and scalability are your primary concerns
-rather than transaction guarantees, then GraphScope is a suitable platform.
-
-If you are searching for a system that simultaneously offers various types of graph workloads, GraphScope
-is the ideal platform for high-performance and scalability.
