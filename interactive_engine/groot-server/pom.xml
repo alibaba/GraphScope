@@ -42,11 +42,11 @@
       <artifactId>pegasus-client</artifactId>
     </dependency>
 
-    <dependency>
+    <!-- <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-client</artifactId>
       <scope>compile</scope>
-    </dependency>
+    </dependency> -->
 
     <dependency>
       <groupId>org.slf4j</groupId>

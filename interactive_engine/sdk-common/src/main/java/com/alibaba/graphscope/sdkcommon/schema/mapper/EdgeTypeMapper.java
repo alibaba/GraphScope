@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@JsonIgnoreProperties
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class EdgeTypeMapper extends SchemaElementMapper {
     private List<EdgeRelationMapper> relationShips;
 

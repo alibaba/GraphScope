@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@JsonIgnoreProperties
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class VertexTypeMapper extends SchemaElementMapper {
     private List<VertexIndexMapper> indexes;
     private long tableId;
