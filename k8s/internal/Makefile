@@ -169,6 +169,8 @@ graphscope-client-darwin-py3:
 		pip3 install -U pip && \
 		if [ "$$py" == "311" ]; then \
 			pip3 install "numpy" "pandas" "grpcio" "grpcio-tools" delocate wheel; \
+		elif [ "$$py" == "310" ]; then \
+			pip3 install "numpy==1.21.6" "pandas" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" delocate wheel; \
 		else \
 			pip3 install "numpy==1.18.5" "pandas" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" delocate wheel; \
 		fi; \
