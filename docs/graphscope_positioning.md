@@ -7,6 +7,7 @@ among a bunch of graph products that offer similar functionalities? In summarize
 with the state-of-the-art performance and a range of SDKs and programming interfaces.
 - If you are searching for a graph database for graph queries, and performance and scalability are your primary concerns
 rather than transaction guarantees, then GraphScope is a suitable platform.
+- If you have the demand for large-scale distributed graph learning, GraphScope is just the solution.
 - If you are searching for a system that simultaneously offers various types of graph workloads, GraphScope
 is the ideal platform for its functionality, high-performance and scalability.
 
@@ -46,6 +47,17 @@ concentrate on low latency of large (long-running) analytical queries. Such kind
 are widely used in [business intelligence](https://ldbcouncil.org/benchmarks/snb/),
 including querying cycles (e.g. in anti money laundering),
 paths (e.g. in investment tracing) and complex patterns (e.g. in fraud detection).
+
+## Compare with Graph Learning Systems
+GraphScope offers a distributed graph learning framework(GLE) to ease the development and training
+of graph neural networks(GNNs). In industrial scenarios, it is common that GNNs are applied over large-scale graph,
+which cannot be efficiently supported by GNN systems such as [PyG](https://github.com/pyg-team/pytorch_geometric)
+and [DGL](https://github.com/dmlc/dgl). While, GLE targets for GNN training in industrial scenarios,
+where the graphs are often large, e.g., billion of nodes and tens of billions of edges.
+To better accommodate the resource requirements of large-scale GNN training, GLE decouples the graph
+sampling and model training into independent stages, and each stage can be flexibly scaled to improve
+the end-to-end throughput.
+
 
 ## Handling Various Types of Graph Workloads
 Given various types of graph workloads, existing systems have proposed two solutions.
