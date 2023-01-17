@@ -8,9 +8,18 @@ with the state-of-the-art performance and a range of SDKs and programming interf
 - If you are searching for a graph database for graph queries, and performance and scalability are your primary concerns
 rather than transaction guarantees, then GraphScope is a suitable platform.
 - If you are searching for a system that simultaneously offers various types of graph workloads, GraphScope
-is the ideal platform for high-performance and scalability.
+is the ideal platform for its functionality, high-performance and scalability.
 
 We elaborate in details in the following.
+
+## Compare with Graph Processing Systems
+Most large-scale graph processing systems, including [PowerGraph](https://github.com/jegonzal/PowerGraph)(commit a038f97
+) [GeminiGraph](https://github.com/thu-pacman/GeminiGraph)(commit 170e7d3
+) and [Plato](https://github.com/Tencent/plato)(commit 21009d6), handles only the graph analytical processing workloads.
+Our [empirical studies](./performance_and_benchmark.md) via the LDBC [Graphalytics](http://graphalytics.org/) benchmark
+have demonstrated that GraphScope outperforms these systems in all algorithms.
+Furthermore, GraphScope has the added advantages of supporting
+not only analytical processing but also graph queries and graph learning.
 
 ## Compare with Graph Databases
 Graph databases, such as [Neo4j](https://neo4j.com/), [JanusGraph](http://www.janusgraph.cn/) and [Nebula](https://www.nebula-graph.com.cn/),
@@ -37,15 +46,6 @@ concentrate on low latency of large (long-running) analytical queries. Such kind
 are widely used in [business intelligence](https://ldbcouncil.org/benchmarks/snb/),
 including querying cycles (e.g. in anti money laundering),
 paths (e.g. in investment tracing) and complex patterns (e.g. in fraud detection).
-
-## Compare with Graph Processing Systems
-Most large-scale graph processing systems, including [PowerGraph](https://github.com/jegonzal/PowerGraph)(commit a038f97
-) [GeminiGraph](https://github.com/thu-pacman/GeminiGraph)(commit 170e7d3
-) and [Plato](https://github.com/Tencent/plato)(commit 21009d6), handles only the graph analytical processing workloads.
-Our [empirical studies](./performance_and_benchmark.md) via the LDBC [Graphalytics](http://graphalytics.org/) benchmark
-have demonstrated that GraphScope outperforms these systems in all algorithms.
-Furthermore, GraphScope has the added advantages of supporting
-not only analytical processing but also graph queries and graph learning.
 
 ## Handling Various Types of Graph Workloads
 Given various types of graph workloads, existing systems have proposed two solutions.
