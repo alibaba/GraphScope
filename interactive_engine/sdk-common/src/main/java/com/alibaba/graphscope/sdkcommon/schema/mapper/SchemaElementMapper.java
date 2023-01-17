@@ -13,7 +13,6 @@
  */
 package com.alibaba.graphscope.sdkcommon.schema.mapper;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.List;
 
