@@ -18,12 +18,14 @@ import com.alibaba.graphscope.compiler.api.schema.GraphEdge;
 import com.alibaba.graphscope.compiler.api.schema.GraphProperty;
 import com.alibaba.graphscope.compiler.api.schema.GraphVertex;
 import com.alibaba.graphscope.sdkcommon.schema.TypeEnum;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@JsonIgnoreProperties
 public class EdgeTypeMapper extends SchemaElementMapper {
     private List<EdgeRelationMapper> relationShips;
 

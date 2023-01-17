@@ -17,11 +17,13 @@ import com.alibaba.graphscope.compiler.api.schema.GraphProperty;
 import com.alibaba.graphscope.compiler.api.schema.GraphVertex;
 import com.alibaba.graphscope.compiler.api.schema.PrimaryKeyConstraint;
 import com.alibaba.graphscope.sdkcommon.schema.TypeEnum;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@JsonIgnoreProperties
 public class VertexTypeMapper extends SchemaElementMapper {
     private List<VertexIndexMapper> indexes;
     private long tableId;
