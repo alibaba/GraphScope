@@ -41,7 +41,7 @@ impl<E: Entry + 'static> FlatMapFunction<Record, Record> for EdgeExpandOperator<
     fn exec(&self, mut input: Record) -> FnResult<Self::Target> {
         if let Some(entry) = input.get(self.start_v_tag) {
             match entry.get_type() {
-                EntryType::VID | EntryType::VERTEX => {
+                EntryType::Vertex => {
                     let id = entry.id();
                     let iter = self.stmt.exec(id)?;
                     match self.expand_opt {
@@ -76,7 +76,7 @@ impl<E: Entry + 'static> FlatMapFunction<Record, Record> for EdgeExpandOperator<
                         }
                     }
                 }
-                EntryType::PATH => {
+                EntryType::Path => {
                     let graph_path = entry
                         .as_graph_path()
                         .ok_or(FnExecError::Unreachable)?;

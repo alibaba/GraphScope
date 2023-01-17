@@ -45,7 +45,7 @@ pub struct RecordSinkEncoder {
 impl RecordSinkEncoder {
     fn entry_to_pb(&self, e: &DynEntry) -> result_pb::Entry {
         let inner = match e.get_type() {
-            EntryType::COLLECTION => {
+            EntryType::Collection => {
                 let collection = e
                     .as_any_ref()
                     .downcast_ref::<CollectionEntry>()
@@ -59,7 +59,7 @@ impl RecordSinkEncoder {
                     collection: collection_pb,
                 }))
             }
-            EntryType::INTERSECT => {
+            EntryType::Intersection => {
                 let intersection = e
                     .as_any_ref()
                     .downcast_ref::<IntersectionEntry>()
@@ -85,30 +85,26 @@ impl RecordSinkEncoder {
 
     fn element_to_pb(&self, e: &DynEntry) -> result_pb::Element {
         let inner = match e.get_type() {
-            EntryType::VID => {
-                let vertex_pb = self.vid_to_pb(&e.id());
-                Some(result_pb::element::Inner::Vertex(vertex_pb))
-            }
-            EntryType::VERTEX => {
+            EntryType::Vertex => {
                 let vertex_pb = self.vertex_to_pb(e.as_vertex().unwrap());
                 Some(result_pb::element::Inner::Vertex(vertex_pb))
             }
-            EntryType::EDGE => {
+            EntryType::Edge => {
                 let edge_pb = self.edge_to_pb(e.as_edge().unwrap());
                 Some(result_pb::element::Inner::Edge(edge_pb))
             }
-            EntryType::PATH => {
+            EntryType::Path => {
                 let path_pb = self.path_to_pb(e.as_graph_path().unwrap());
                 Some(result_pb::element::Inner::GraphPath(path_pb))
             }
-            EntryType::OBJECT => {
+            EntryType::Object => {
                 let obj_pb = self.object_to_pb(e.as_object().unwrap().clone());
                 Some(result_pb::element::Inner::Object(obj_pb))
             }
-            EntryType::COLLECTION => {
+            EntryType::Collection => {
                 unreachable!()
             }
-            EntryType::INTERSECT => {
+            EntryType::Intersection => {
                 unreachable!()
             }
         };

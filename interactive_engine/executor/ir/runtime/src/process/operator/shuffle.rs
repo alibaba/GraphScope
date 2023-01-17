@@ -51,11 +51,11 @@ impl RouteFunction<Record> for RecordRouter {
     fn route(&self, t: &Record) -> FnResult<u64> {
         if let Some(entry) = t.get(self.shuffle_key.clone()) {
             match entry.get_type() {
-                EntryType::VID | EntryType::VERTEX => {
+                EntryType::Vertex => {
                     let id = entry.id();
                     Ok(self.p.get_partition(&id, self.num_workers)?)
                 }
-                EntryType::EDGE => {
+                EntryType::Edge => {
                     let e = entry
                         .as_edge()
                         .ok_or(FnExecError::Unreachable)?;
@@ -63,7 +63,7 @@ impl RouteFunction<Record> for RecordRouter {
                         .p
                         .get_partition(&e.src_id, self.num_workers)?)
                 }
-                EntryType::PATH => {
+                EntryType::Path => {
                     let p = entry
                         .as_graph_path()
                         .ok_or(FnExecError::Unreachable)?;

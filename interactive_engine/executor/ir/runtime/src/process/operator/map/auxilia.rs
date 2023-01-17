@@ -46,7 +46,7 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
             // If queryable, then turn into graph element and do the query
             let graph = get_graph().ok_or(FnExecError::NullGraphError)?;
             let new_entry: Option<DynEntry> = match entry.get_type() {
-                EntryType::VID | EntryType::VERTEX => {
+                EntryType::Vertex => {
                     let id = entry.id();
                     let mut result_iter = graph.get_vertex(&[id], &self.query_params)?;
                     result_iter.next().map(|mut vertex| {
@@ -67,7 +67,7 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                         DynEntry::new(vertex)
                     })
                 }
-                EntryType::EDGE => {
+                EntryType::Edge => {
                     let id = entry.id();
                     let mut result_iter = graph.get_edge(&[id], &self.query_params)?;
                     result_iter.next().map(|mut edge| {

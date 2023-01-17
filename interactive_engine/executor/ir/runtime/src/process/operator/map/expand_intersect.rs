@@ -152,7 +152,7 @@ impl<E: Entry + 'static> FilterMapFunction<Record, Record> for ExpandOrIntersect
                 self.start_v_tag, input
             )))?;
         match entry.get_type() {
-            EntryType::VID | EntryType::VERTEX => {
+            EntryType::Vertex => {
                 let id = entry.id();
                 let iter = self.stmt.exec(id)?.map(|e| {
                     if let Some(vertex) = e.as_vertex() {

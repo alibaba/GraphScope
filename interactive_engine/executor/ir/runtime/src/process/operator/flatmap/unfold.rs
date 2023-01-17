@@ -15,13 +15,13 @@
 
 use std::convert::TryInto;
 
-use graph_proxy::apis::Element;
+use graph_proxy::apis::{DynDetails, Element, Vertex};
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::KeyId;
 use pegasus::api::function::{DynIter, FlatMapFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenResult};
-use crate::process::entry::{CollectionEntry, EntryType, IdEntry};
+use crate::process::entry::{CollectionEntry, EntryType};
 use crate::process::operator::flatmap::FlatMapFuncGen;
 use crate::process::operator::map::IntersectionEntry;
 use crate::process::record::Record;
@@ -52,7 +52,7 @@ impl FlatMapFunction<Record, Record> for UnfoldOperator {
         input.take(None);
         if let Some(entry) = entry.get_mut() {
             match entry.get_type() {
-                EntryType::COLLECTION => {
+                EntryType::Collection => {
                     let collection = entry
                         .as_any_mut()
                         .downcast_mut::<CollectionEntry>()
@@ -65,7 +65,7 @@ impl FlatMapFunction<Record, Record> for UnfoldOperator {
                     }
                     Ok(Box::new(res.into_iter()))
                 }
-                EntryType::INTERSECT => {
+                EntryType::Intersection => {
                     let intersection = entry
                         .as_any_mut()
                         .downcast_mut::<IntersectionEntry>()
@@ -73,12 +73,12 @@ impl FlatMapFunction<Record, Record> for UnfoldOperator {
                     let mut res = Vec::with_capacity(intersection.len());
                     for item in intersection.drain() {
                         let mut new_entry = input.clone();
-                        new_entry.append(IdEntry::new(item), self.alias);
+                        new_entry.append(Vertex::new(item, None, DynDetails::default()), self.alias);
                         res.push(new_entry);
                     }
                     Ok(Box::new(res.into_iter()))
                 }
-                EntryType::PATH => Err(FnExecError::unsupported_error(&format!(
+                EntryType::Path => Err(FnExecError::unsupported_error(&format!(
                     "unfold path entry {:?} in UnfoldOperator",
                     entry
                 )))?,

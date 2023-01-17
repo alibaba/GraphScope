@@ -137,8 +137,8 @@ impl Context<DynEntry> for Record {
             .map(|entry| {
                 let entry_type = entry.get_type();
                 match entry_type {
-                    EntryType::COLLECTION => None,
-                    EntryType::INTERSECT => None,
+                    EntryType::Collection => None,
+                    EntryType::Intersection => None,
                     _ => Some(entry),
                 }
             })
