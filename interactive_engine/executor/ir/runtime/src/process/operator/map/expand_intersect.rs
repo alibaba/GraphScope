@@ -19,7 +19,7 @@ use std::convert::TryInto;
 
 use dyn_type::BorrowObject;
 use graph_proxy::apis::graph::element::GraphElement;
-use graph_proxy::apis::{Direction, DynDetails, Edge, Element, QueryParams, Statement, Vertex, ID};
+use graph_proxy::apis::{Direction, Element, QueryParams, Statement, ID};
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::KeyId;
@@ -29,35 +29,29 @@ use pegasus_common::downcast::*;
 use pegasus_common::impl_as_any;
 
 use crate::error::{FnExecError, FnGenError, FnGenResult};
-use crate::process::entry::{DynEntry, Entry};
+use crate::process::entry::{DynEntry, Entry, EntryType};
 use crate::process::operator::map::FilterMapFuncGen;
 use crate::process::record::Record;
 
 /// An ExpandOrIntersect operator to expand neighbors
 /// and intersect with the ones of the same tag found previously (if exists).
 /// Notice that edge_or_end_v_tag (the alias of expanded neighbors) must be specified.
-struct ExpandVertexOrIntersect {
+struct ExpandOrIntersect<E: Entry> {
     start_v_tag: Option<KeyId>,
     edge_or_end_v_tag: KeyId,
-    stmt: Box<dyn Statement<ID, Vertex>>,
-}
-
-struct ExpandEdgeVOrIntersect {
-    start_v_tag: Option<KeyId>,
-    edge_or_end_v_tag: KeyId,
-    stmt: Box<dyn Statement<ID, Edge>>,
+    stmt: Box<dyn Statement<ID, E>>,
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]
 pub struct IntersectionEntry {
-    vertex_vec: Vec<Vertex>,
+    vertex_vec: Vec<ID>,
     count_vec: Vec<u32>,
 }
 
 impl_as_any!(IntersectionEntry);
 
 impl IntersectionEntry {
-    pub fn from_iter<I: Iterator<Item = Vertex>>(iter: I) -> IntersectionEntry {
+    pub fn from_iter<I: Iterator<Item = ID>>(iter: I) -> IntersectionEntry {
         let mut vertex_count_map = BTreeMap::new();
         for vertex in iter {
             let cnt = vertex_count_map.entry(vertex).or_insert(0);
@@ -72,14 +66,13 @@ impl IntersectionEntry {
         IntersectionEntry { vertex_vec, count_vec }
     }
 
-    fn intersect<Iter: Iterator<Item = Vertex>>(&mut self, seeker: Iter) {
+    fn intersect<Iter: Iterator<Item = ID>>(&mut self, seeker: Iter) {
         let len = self.vertex_vec.len();
         let mut s = vec![0; len];
-        for item in seeker {
-            let vid = item.id();
+        for vid in seeker {
             if let Ok(idx) = self
                 .vertex_vec
-                .binary_search_by(|e| e.id().cmp(&vid))
+                .binary_search_by(|e| e.cmp(&vid))
             {
                 s[idx] += 1;
             }
@@ -97,11 +90,11 @@ impl IntersectionEntry {
         self.count_vec.drain(idx..);
     }
 
-    pub fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.vertex_vec.is_empty()
     }
 
-    pub fn len(&self) -> usize {
+    fn len(&self) -> usize {
         let mut len = 0;
         for count in self.count_vec.iter() {
             len += *count;
@@ -109,14 +102,14 @@ impl IntersectionEntry {
         len as usize
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = &Vertex> {
+    pub fn iter(&self) -> impl Iterator<Item = &ID> {
         self.vertex_vec
             .iter()
             .zip(&self.count_vec)
             .flat_map(move |(vertex, count)| std::iter::repeat(vertex).take(*count as usize))
     }
 
-    pub fn drain(&mut self) -> impl Iterator<Item = Vertex> + '_ {
+    pub fn drain(&mut self) -> impl Iterator<Item = ID> + '_ {
         self.vertex_vec
             .drain(..)
             .zip(&self.count_vec)
@@ -134,7 +127,7 @@ impl Encode for IntersectionEntry {
 
 impl Decode for IntersectionEntry {
     fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
-        let vertex_vec = <Vec<Vertex>>::read_from(reader)?;
+        let vertex_vec = <Vec<ID>>::read_from(reader)?;
         let count_vec = <Vec<u32>>::read_from(reader)?;
         Ok(IntersectionEntry { vertex_vec, count_vec })
     }
@@ -150,7 +143,7 @@ impl Element for IntersectionEntry {
     }
 }
 
-impl FilterMapFunction<Record, Record> for ExpandVertexOrIntersect {
+impl<E: Entry + 'static> FilterMapFunction<Record, Record> for ExpandOrIntersect<E> {
     fn exec(&self, mut input: Record) -> FnResult<Option<Record>> {
         let entry = input
             .get(self.start_v_tag)
@@ -158,87 +151,50 @@ impl FilterMapFunction<Record, Record> for ExpandVertexOrIntersect {
                 "get start_v_tag {:?} from record in `ExpandOrIntersect` operator, the record is {:?}",
                 self.start_v_tag, input
             )))?;
-        if let Some(id) = entry.as_vid() {
-            let iter = self.stmt.exec(id)?;
-            if let Some(pre_entry) = input.get_column_mut(&self.edge_or_end_v_tag) {
-                // the case of expansion and intersection
-                let pre_intersection = pre_entry
-                    .as_any_mut()
-                    .downcast_mut::<IntersectionEntry>()
-                    .ok_or(FnExecError::unexpected_data_error(&format!(
-                        "entry  is not a intersection in ExpandOrIntersect"
-                    )))?;
-                pre_intersection.intersect(iter);
-                if pre_intersection.is_empty() {
-                    Ok(None)
+        match entry.get_type() {
+            EntryType::VID | EntryType::VERTEX => {
+                let id = entry.id();
+                let iter = self.stmt.exec(id)?.map(|e| {
+                    if let Some(vertex) = e.as_vertex() {
+                        vertex.id() as ID
+                    } else if let Some(edge) = e.as_edge() {
+                        edge.get_other_id() as ID
+                    } else {
+                        unreachable!()
+                    }
+                });
+                if let Some(pre_entry) = input.get_column_mut(&self.edge_or_end_v_tag) {
+                    // the case of expansion and intersection
+                    let pre_intersection = pre_entry
+                        .as_any_mut()
+                        .downcast_mut::<IntersectionEntry>()
+                        .ok_or(FnExecError::unexpected_data_error(&format!(
+                            "entry  is not a intersection in ExpandOrIntersect"
+                        )))?;
+                    pre_intersection.intersect(iter);
+                    if pre_intersection.is_empty() {
+                        Ok(None)
+                    } else {
+                        Ok(Some(input))
+                    }
                 } else {
-                    Ok(Some(input))
-                }
-            } else {
-                // the case of expansion only
-                let neighbors_intersection = IntersectionEntry::from_iter(iter);
-                if neighbors_intersection.is_empty() {
-                    Ok(None)
-                } else {
-                    // append columns without changing head
-                    let columns = input.get_columns_mut();
-                    columns.insert(self.edge_or_end_v_tag as usize, DynEntry::new(neighbors_intersection));
-                    Ok(Some(input))
-                }
-            }
-        } else {
-            Err(FnExecError::unsupported_error(&format!(
-                "expand or intersect entry {:?} of tag {:?} failed in ExpandOrIntersect",
-                entry, self.edge_or_end_v_tag
-            )))?
-        }
-    }
-}
-
-impl FilterMapFunction<Record, Record> for ExpandEdgeVOrIntersect {
-    fn exec(&self, mut input: Record) -> FnResult<Option<Record>> {
-        let entry = input
-            .get(self.start_v_tag)
-            .ok_or(FnExecError::get_tag_error(&format!(
-                "get start_v_tag {:?} from record in `ExpandOrIntersect` operator, the record is {:?}",
-                self.start_v_tag, input
-            )))?;
-        if let Some(id) = entry.as_vid() {
-            let iter = self
-                .stmt
-                .exec(id)?
-                .map(|e| Vertex::new(e.get_other_id(), None, DynDetails::default()));
-            if let Some(pre_entry) = input.get_column_mut(&self.edge_or_end_v_tag) {
-                // the case of expansion and intersection
-                let pre_intersection = pre_entry
-                    .as_any_mut()
-                    .downcast_mut::<IntersectionEntry>()
-                    .ok_or(FnExecError::unexpected_data_error(&format!(
-                        "entry  is not a intersection in ExpandOrIntersect"
-                    )))?;
-                pre_intersection.intersect(iter);
-                if pre_intersection.is_empty() {
-                    Ok(None)
-                } else {
-                    Ok(Some(input))
-                }
-            } else {
-                // the case of expansion only
-                let neighbors_intersection = IntersectionEntry::from_iter(iter);
-                if neighbors_intersection.is_empty() {
-                    Ok(None)
-                } else {
-                    // append columns without changing head
-                    let columns = input.get_columns_mut();
-                    columns.insert(self.edge_or_end_v_tag as usize, DynEntry::new(neighbors_intersection));
-                    Ok(Some(input))
+                    // the case of expansion only
+                    let neighbors_intersection = IntersectionEntry::from_iter(iter);
+                    if neighbors_intersection.is_empty() {
+                        Ok(None)
+                    } else {
+                        // append columns without changing head
+                        let columns = input.get_columns_mut();
+                        columns
+                            .insert(self.edge_or_end_v_tag as usize, DynEntry::new(neighbors_intersection));
+                        Ok(Some(input))
+                    }
                 }
             }
-        } else {
-            Err(FnExecError::unsupported_error(&format!(
+            _ => Err(FnExecError::unsupported_error(&format!(
                 "expand or intersect entry {:?} of tag {:?} failed in ExpandOrIntersect",
                 entry, self.edge_or_end_v_tag
-            )))?
+            )))?,
         }
     }
 }
@@ -271,12 +227,12 @@ impl FilterMapFuncGen for algebra_pb::EdgeExpand {
                 // Expand vertices with filters on edges.
                 // This can be regarded as a combination of EdgeExpand (with expand_opt as Edge) + GetV
                 let stmt = graph.prepare_explore_edge(direction, &query_params)?;
-                let edge_expand_operator = ExpandEdgeVOrIntersect { start_v_tag, edge_or_end_v_tag, stmt };
+                let edge_expand_operator = ExpandOrIntersect { start_v_tag, edge_or_end_v_tag, stmt };
                 Ok(Box::new(edge_expand_operator))
             } else {
                 // Expand vertices without any filters
                 let stmt = graph.prepare_explore_vertex(direction, &query_params)?;
-                let edge_expand_operator = ExpandVertexOrIntersect { start_v_tag, edge_or_end_v_tag, stmt };
+                let edge_expand_operator = ExpandOrIntersect { start_v_tag, edge_or_end_v_tag, stmt };
                 Ok(Box::new(edge_expand_operator))
             }
         }
@@ -286,12 +242,12 @@ impl FilterMapFuncGen for algebra_pb::EdgeExpand {
 #[cfg(test)]
 mod tests {
 
-    use graph_proxy::apis::{GraphElement, Vertex, ID};
+    use graph_proxy::apis::ID;
 
     use super::IntersectionEntry;
 
-    fn to_vertex_iter(id_vec: Vec<ID>) -> impl Iterator<Item = Vertex> {
-        id_vec.into_iter().map(|id| id.into())
+    fn to_vertex_iter(id_vec: Vec<ID>) -> impl Iterator<Item = ID> {
+        id_vec.into_iter()
     }
 
     #[test]
@@ -299,13 +255,7 @@ mod tests {
         let mut intersection = IntersectionEntry::from_iter(to_vertex_iter(vec![1, 2, 3]));
         let seeker = to_vertex_iter(vec![1, 2, 3, 4, 5]);
         intersection.intersect(seeker);
-        assert_eq!(
-            intersection
-                .iter()
-                .map(|vertex| vertex.id())
-                .collect::<Vec<ID>>(),
-            vec![1, 2, 3]
-        )
+        assert_eq!(intersection.drain().collect::<Vec<ID>>(), vec![1, 2, 3])
     }
 
     #[test]
@@ -313,13 +263,7 @@ mod tests {
         let mut intersection = IntersectionEntry::from_iter(to_vertex_iter(vec![1, 2, 3, 4, 5]));
         let seeker = to_vertex_iter(vec![3, 2, 1]);
         intersection.intersect(seeker);
-        assert_eq!(
-            intersection
-                .iter()
-                .map(|vertex| vertex.id())
-                .collect::<Vec<ID>>(),
-            vec![1, 2, 3]
-        )
+        assert_eq!(intersection.drain().collect::<Vec<ID>>(), vec![1, 2, 3])
     }
 
     #[test]
@@ -327,13 +271,7 @@ mod tests {
         let mut intersection = IntersectionEntry::from_iter(to_vertex_iter(vec![1, 2, 3, 4, 5]));
         let seeker = to_vertex_iter(vec![9, 7, 5, 3, 1]);
         intersection.intersect(seeker);
-        assert_eq!(
-            intersection
-                .iter()
-                .map(|vertex| vertex.id())
-                .collect::<Vec<ID>>(),
-            vec![1, 3, 5]
-        )
+        assert_eq!(intersection.drain().collect::<Vec<ID>>(), vec![1, 3, 5])
     }
 
     #[test]
@@ -341,13 +279,7 @@ mod tests {
         let mut intersection = IntersectionEntry::from_iter(to_vertex_iter(vec![1, 2, 3, 4, 5]));
         let seeker = to_vertex_iter(vec![9, 8, 7, 6]);
         intersection.intersect(seeker);
-        assert_eq!(
-            intersection
-                .iter()
-                .map(|vertex| vertex.id())
-                .collect::<Vec<ID>>(),
-            Vec::<ID>::new()
-        )
+        assert_eq!(intersection.drain().collect::<Vec<ID>>(), Vec::<ID>::new())
     }
 
     #[test]
@@ -355,13 +287,7 @@ mod tests {
         let mut intersection = IntersectionEntry::from_iter(to_vertex_iter(vec![1, 2, 3, 4, 5, 1]));
         let seeker = to_vertex_iter(vec![1, 2, 3]);
         intersection.intersect(seeker);
-        assert_eq!(
-            intersection
-                .iter()
-                .map(|vertex| vertex.id())
-                .collect::<Vec<ID>>(),
-            vec![1, 1, 2, 3]
-        )
+        assert_eq!(intersection.drain().collect::<Vec<ID>>(), vec![1, 1, 2, 3])
     }
 
     #[test]
@@ -369,13 +295,7 @@ mod tests {
         let mut intersection = IntersectionEntry::from_iter(to_vertex_iter(vec![1, 2, 3]));
         let seeker = to_vertex_iter(vec![1, 2, 3, 4, 5, 1]);
         intersection.intersect(seeker);
-        assert_eq!(
-            intersection
-                .iter()
-                .map(|vertex| vertex.id())
-                .collect::<Vec<ID>>(),
-            vec![1, 1, 2, 3]
-        )
+        assert_eq!(intersection.drain().collect::<Vec<ID>>(), vec![1, 1, 2, 3])
     }
 
     #[test]
@@ -383,13 +303,7 @@ mod tests {
         let mut intersection = IntersectionEntry::from_iter(to_vertex_iter(vec![1, 1, 2, 2, 3, 3, 4, 5]));
         let seeker = to_vertex_iter(vec![1, 2, 3]);
         intersection.intersect(seeker);
-        assert_eq!(
-            intersection
-                .iter()
-                .map(|vertex| vertex.id())
-                .collect::<Vec<ID>>(),
-            vec![1, 1, 2, 2, 3, 3]
-        )
+        assert_eq!(intersection.drain().collect::<Vec<ID>>(), vec![1, 1, 2, 2, 3, 3])
     }
 
     #[test]
@@ -397,13 +311,7 @@ mod tests {
         let mut intersection = IntersectionEntry::from_iter(to_vertex_iter(vec![1, 2, 3]));
         let seeker = to_vertex_iter(vec![1, 1, 2, 2, 3, 3, 4, 5]);
         intersection.intersect(seeker);
-        assert_eq!(
-            intersection
-                .iter()
-                .map(|vertex| vertex.id())
-                .collect::<Vec<ID>>(),
-            vec![1, 1, 2, 2, 3, 3]
-        )
+        assert_eq!(intersection.drain().collect::<Vec<ID>>(), vec![1, 1, 2, 2, 3, 3])
     }
 
     #[test]
@@ -411,12 +319,6 @@ mod tests {
         let mut intersection = IntersectionEntry::from_iter(to_vertex_iter(vec![1, 1, 2, 2, 3, 3]));
         let seeker = to_vertex_iter(vec![1, 1, 2, 2, 3, 3, 4, 5]);
         intersection.intersect(seeker);
-        assert_eq!(
-            intersection
-                .iter()
-                .map(|vertex| vertex.id())
-                .collect::<Vec<ID>>(),
-            vec![1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3]
-        )
+        assert_eq!(intersection.drain().collect::<Vec<ID>>(), vec![1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3])
     }
 }

@@ -23,7 +23,7 @@ use ir_common::KeyId;
 use pegasus::api::function::{FnResult, RouteFunction};
 
 use crate::error::FnExecError;
-use crate::process::entry::{Entry, EntryDataType};
+use crate::process::entry::{Entry, EntryType};
 use crate::process::record::Record;
 
 pub struct RecordRouter {
@@ -51,24 +51,22 @@ impl RouteFunction<Record> for RecordRouter {
     fn route(&self, t: &Record) -> FnResult<u64> {
         if let Some(entry) = t.get(self.shuffle_key.clone()) {
             match entry.get_type() {
-                EntryDataType::Vid | EntryDataType::V => {
-                    let id = entry
-                        .as_vid()
-                        .ok_or(FnExecError::unexpected_data_error("get id failed in shuffle"))?;
+                EntryType::VID | EntryType::VERTEX => {
+                    let id = entry.id();
                     Ok(self.p.get_partition(&id, self.num_workers)?)
                 }
-                EntryDataType::E => {
+                EntryType::EDGE => {
                     let e = entry
                         .as_edge()
-                        .ok_or(FnExecError::unexpected_data_error("get edge failed in shuffle"))?;
+                        .ok_or(FnExecError::Unreachable)?;
                     Ok(self
                         .p
                         .get_partition(&e.src_id, self.num_workers)?)
                 }
-                EntryDataType::P => {
+                EntryType::PATH => {
                     let p = entry
                         .as_graph_path()
-                        .ok_or(FnExecError::unexpected_data_error("get path failed in shuffle"))?;
+                        .ok_or(FnExecError::Unreachable)?;
                     let path_end = p
                         .get_path_end()
                         .ok_or(FnExecError::unexpected_data_error("get path_end failed in shuffle"))?;

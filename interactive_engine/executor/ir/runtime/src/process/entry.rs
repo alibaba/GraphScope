@@ -34,47 +34,44 @@ use pegasus_common::impl_as_any;
 use crate::process::operator::map::IntersectionEntry;
 
 #[derive(Debug)]
-pub enum EntryDataType {
+pub enum EntryType {
     // TODO: Specified as a vertex global id for tmp;
     // After we separate GetVertexProperty and GetEdgeProperty in `Auxilia`, this would be an `Id`.
-    Vid,
+    VID,
     /// Graph Vertex
-    V,
+    VERTEX,
     /// Graph Edge
-    E,
+    EDGE,
     /// Graph Path
-    P,
+    PATH,
     /// Common data type of `Object`, including Primitives, String, etc.
-    Obj,
+    OBJECT,
     /// A specific type used in `ExtendIntersect`, for an optimized implementation of `Intersection`
-    Intersect,
+    INTERSECT,
     /// Type of collection consisting of entries
-    Collection,
+    COLLECTION,
 }
 
-impl PartialEq for EntryDataType {
+impl PartialEq for EntryType {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (EntryDataType::Vid, EntryDataType::Vid)
-            | (EntryDataType::Vid, EntryDataType::V)
-            | (EntryDataType::V, EntryDataType::Vid)
-            | (EntryDataType::V, EntryDataType::V)
-            | (EntryDataType::E, EntryDataType::E)
-            | (EntryDataType::P, EntryDataType::P)
-            | (EntryDataType::Obj, EntryDataType::Obj)
-            | (EntryDataType::Intersect, EntryDataType::Intersect)
-            | (EntryDataType::Collection, EntryDataType::Collection) => true,
+            (EntryType::VID, EntryType::VID)
+            | (EntryType::VID, EntryType::VERTEX)
+            | (EntryType::VERTEX, EntryType::VID)
+            | (EntryType::VERTEX, EntryType::VERTEX)
+            | (EntryType::EDGE, EntryType::EDGE)
+            | (EntryType::PATH, EntryType::PATH)
+            | (EntryType::OBJECT, EntryType::OBJECT)
+            | (EntryType::INTERSECT, EntryType::INTERSECT)
+            | (EntryType::COLLECTION, EntryType::COLLECTION) => true,
             _ => false,
         }
     }
 }
 
 pub trait Entry: Debug + Send + Sync + AsAny + Element {
-    fn get_type(&self) -> EntryDataType;
-    // TODO: would be `as_id()`
-    fn as_vid(&self) -> Option<ID> {
-        None
-    }
+    fn get_type(&self) -> EntryType;
+
     fn as_vertex(&self) -> Option<&Vertex> {
         None
     }
@@ -119,7 +116,7 @@ impl DynEntry {
 
     pub fn is_none(&self) -> bool {
         match self.get_type() {
-            EntryDataType::Obj => self
+            EntryType::OBJECT => self
                 .as_object()
                 .map(|obj| obj.eq(&Object::None))
                 .unwrap_or(false),
@@ -129,12 +126,8 @@ impl DynEntry {
 }
 
 impl Entry for DynEntry {
-    fn get_type(&self) -> EntryDataType {
+    fn get_type(&self) -> EntryType {
         self.inner.get_type()
-    }
-
-    fn as_vid(&self) -> Option<u64> {
-        self.inner.as_vid()
     }
 
     fn as_vertex(&self) -> Option<&Vertex> {
@@ -158,27 +151,27 @@ impl Encode for DynEntry {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
         let entry_type = self.get_type();
         match entry_type {
-            EntryDataType::Vid => {
+            EntryType::VID => {
                 writer.write_u8(0)?;
-                write_id(writer, self.as_vid().unwrap())?;
+                write_id(writer, self.id())?;
             }
-            EntryDataType::V => {
+            EntryType::VERTEX => {
                 writer.write_u8(1)?;
                 self.as_vertex().unwrap().write_to(writer)?;
             }
-            EntryDataType::E => {
+            EntryType::EDGE => {
                 writer.write_u8(2)?;
                 self.as_edge().unwrap().write_to(writer)?;
             }
-            EntryDataType::P => {
+            EntryType::PATH => {
                 writer.write_u8(3)?;
                 self.as_graph_path().unwrap().write_to(writer)?;
             }
-            EntryDataType::Obj => {
+            EntryType::OBJECT => {
                 writer.write_u8(4)?;
                 self.as_object().unwrap().write_to(writer)?;
             }
-            EntryDataType::Intersect => {
+            EntryType::INTERSECT => {
                 writer.write_u8(5)?;
                 self.inner
                     .as_any_ref()
@@ -186,7 +179,7 @@ impl Encode for DynEntry {
                     .unwrap()
                     .write_to(writer)?;
             }
-            EntryDataType::Collection => {
+            EntryType::COLLECTION => {
                 writer.write_u8(6)?;
                 self.inner
                     .as_any_ref()
@@ -253,39 +246,28 @@ impl Element for DynEntry {
 impl GraphElement for DynEntry {
     fn id(&self) -> ID {
         match self.get_type() {
-            EntryDataType::Vid | EntryDataType::V => self.as_vid().unwrap(),
-            EntryDataType::E => self.as_edge().unwrap().id(),
+            EntryType::VID | EntryType::VERTEX | EntryType::EDGE => {
+                self.inner.as_graph_element().unwrap().id()
+            }
             _ => unreachable!(),
         }
     }
 
     fn label(&self) -> Option<i32> {
         match self.get_type() {
-            EntryDataType::Vid => None,
-            EntryDataType::V => self
-                .as_vertex()
-                .map(|v| v.label())
-                .unwrap_or(None),
-            EntryDataType::E => self
-                .as_edge()
-                .map(|v| v.label())
-                .unwrap_or(None),
-            _ => unreachable!(),
+            EntryType::VID | EntryType::VERTEX | EntryType::EDGE => {
+                self.inner.as_graph_element().unwrap().label()
+            }
+            _ => None,
         }
     }
 
     fn details(&self) -> Option<&DynDetails> {
         match self.get_type() {
-            EntryDataType::Vid => None,
-            EntryDataType::V => self
-                .as_vertex()
-                .map(|v| v.details())
-                .unwrap_or(None),
-            EntryDataType::E => self
-                .as_edge()
-                .map(|v| v.details())
-                .unwrap_or(None),
-            _ => unreachable!(),
+            EntryType::VID | EntryType::VERTEX | EntryType::EDGE => {
+                self.inner.as_graph_element().unwrap().details()
+            }
+            _ => None,
         }
     }
 }
@@ -294,15 +276,16 @@ impl GraphElement for DynEntry {
 impl Hash for DynEntry {
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self.get_type() {
-            EntryDataType::Vid | EntryDataType::V => self.as_vid().hash(state),
-            EntryDataType::E => self.as_edge().hash(state),
-            EntryDataType::P => self.as_graph_path().hash(state),
-            EntryDataType::Obj => self.as_object().hash(state),
-            EntryDataType::Intersect => self
+            EntryType::VID => self.id().hash(state),
+            EntryType::VERTEX => self.as_vertex().hash(state),
+            EntryType::EDGE => self.as_edge().hash(state),
+            EntryType::PATH => self.as_graph_path().hash(state),
+            EntryType::OBJECT => self.as_object().hash(state),
+            EntryType::INTERSECT => self
                 .as_any_ref()
                 .downcast_ref::<IntersectionEntry>()
                 .hash(state),
-            EntryDataType::Collection => self
+            EntryType::COLLECTION => self
                 .as_any_ref()
                 .downcast_ref::<CollectionEntry>()
                 .hash(state),
@@ -315,17 +298,18 @@ impl PartialEq for DynEntry {
     fn eq(&self, other: &Self) -> bool {
         if (self.get_type()).eq(&other.get_type()) {
             match self.get_type() {
-                EntryDataType::Vid | EntryDataType::V => self.as_vid().eq(&other.as_vid()),
-                EntryDataType::E => self.as_edge().eq(&other.as_edge()),
-                EntryDataType::P => self.as_graph_path().eq(&other.as_graph_path()),
-                EntryDataType::Obj => self.as_object().eq(&other.as_object()),
-                EntryDataType::Intersect => self
+                EntryType::VID => self.id().eq(&other.id()),
+                EntryType::VERTEX => self.as_vertex().eq(&other.as_vertex()),
+                EntryType::EDGE => self.as_edge().eq(&other.as_edge()),
+                EntryType::PATH => self.as_graph_path().eq(&other.as_graph_path()),
+                EntryType::OBJECT => self.as_object().eq(&other.as_object()),
+                EntryType::INTERSECT => self
                     .as_any_ref()
                     .downcast_ref::<IntersectionEntry>()
                     .eq(&other
                         .as_any_ref()
                         .downcast_ref::<IntersectionEntry>()),
-                EntryDataType::Collection => self
+                EntryType::COLLECTION => self
                     .as_any_ref()
                     .downcast_ref::<CollectionEntry>()
                     .eq(&other
@@ -343,13 +327,14 @@ impl PartialOrd for DynEntry {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         if (self.get_type()).eq(&other.get_type()) {
             match self.get_type() {
-                EntryDataType::Vid | EntryDataType::V => self.as_vid().partial_cmp(&other.as_vid()),
-                EntryDataType::E => self.as_edge().partial_cmp(&other.as_edge()),
-                EntryDataType::P => self
+                EntryType::VID => self.id().partial_cmp(&other.id()),
+                EntryType::VERTEX => self.as_vertex().partial_cmp(&other.as_vertex()),
+                EntryType::EDGE => self.as_edge().partial_cmp(&other.as_edge()),
+                EntryType::PATH => self
                     .as_graph_path()
                     .partial_cmp(&other.as_graph_path()),
-                EntryDataType::Obj => self.as_object().partial_cmp(&other.as_object()),
-                EntryDataType::Intersect => self
+                EntryType::OBJECT => self.as_object().partial_cmp(&other.as_object()),
+                EntryType::INTERSECT => self
                     .as_any_ref()
                     .downcast_ref::<IntersectionEntry>()
                     .partial_cmp(
@@ -357,7 +342,7 @@ impl PartialOrd for DynEntry {
                             .as_any_ref()
                             .downcast_ref::<IntersectionEntry>(),
                     ),
-                EntryDataType::Collection => self
+                EntryType::COLLECTION => self
                     .as_any_ref()
                     .downcast_ref::<CollectionEntry>()
                     .partial_cmp(
@@ -380,15 +365,17 @@ pub struct IdEntry {
     id: ID,
 }
 
+impl IdEntry {
+    pub fn new(id: ID) -> Self {
+        IdEntry { id }
+    }
+}
+
 impl_as_any!(IdEntry);
 
 impl Entry for IdEntry {
-    fn get_type(&self) -> EntryDataType {
-        EntryDataType::Vid
-    }
-
-    fn as_vid(&self) -> Option<ID> {
-        Some(self.id)
+    fn get_type(&self) -> EntryType {
+        EntryType::VID
     }
 }
 
@@ -430,12 +417,8 @@ impl GraphElement for IdEntry {
 }
 
 impl Entry for Vertex {
-    fn get_type(&self) -> EntryDataType {
-        EntryDataType::V
-    }
-
-    fn as_vid(&self) -> Option<u64> {
-        Some(self.id())
+    fn get_type(&self) -> EntryType {
+        EntryType::VERTEX
     }
 
     fn as_vertex(&self) -> Option<&Vertex> {
@@ -444,8 +427,8 @@ impl Entry for Vertex {
 }
 
 impl Entry for Edge {
-    fn get_type(&self) -> EntryDataType {
-        EntryDataType::E
+    fn get_type(&self) -> EntryType {
+        EntryType::EDGE
     }
 
     fn as_edge(&self) -> Option<&Edge> {
@@ -454,8 +437,8 @@ impl Entry for Edge {
 }
 
 impl Entry for Object {
-    fn get_type(&self) -> EntryDataType {
-        EntryDataType::Obj
+    fn get_type(&self) -> EntryType {
+        EntryType::OBJECT
     }
 
     fn as_object(&self) -> Option<&Object> {
@@ -464,14 +447,14 @@ impl Entry for Object {
 }
 
 impl Entry for IntersectionEntry {
-    fn get_type(&self) -> EntryDataType {
-        EntryDataType::Intersect
+    fn get_type(&self) -> EntryType {
+        EntryType::INTERSECT
     }
 }
 
 impl Entry for GraphPath {
-    fn get_type(&self) -> EntryDataType {
-        EntryDataType::P
+    fn get_type(&self) -> EntryType {
+        EntryType::PATH
     }
 
     fn as_graph_path(&self) -> Option<&GraphPath> {
@@ -487,8 +470,8 @@ pub struct CollectionEntry {
 impl_as_any!(CollectionEntry);
 
 impl Entry for CollectionEntry {
-    fn get_type(&self) -> EntryDataType {
-        EntryDataType::Collection
+    fn get_type(&self) -> EntryType {
+        EntryType::COLLECTION
     }
 }
 

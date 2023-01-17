@@ -21,7 +21,7 @@ use ir_common::KeyId;
 use pegasus::api::function::{DynIter, FlatMapFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenResult};
-use crate::process::entry::{CollectionEntry, EntryDataType};
+use crate::process::entry::{CollectionEntry, EntryType, IdEntry};
 use crate::process::operator::flatmap::FlatMapFuncGen;
 use crate::process::operator::map::IntersectionEntry;
 use crate::process::record::Record;
@@ -52,7 +52,7 @@ impl FlatMapFunction<Record, Record> for UnfoldOperator {
         input.take(None);
         if let Some(entry) = entry.get_mut() {
             match entry.get_type() {
-                EntryDataType::Collection => {
+                EntryType::COLLECTION => {
                     let collection = entry
                         .as_any_mut()
                         .downcast_mut::<CollectionEntry>()
@@ -65,7 +65,7 @@ impl FlatMapFunction<Record, Record> for UnfoldOperator {
                     }
                     Ok(Box::new(res.into_iter()))
                 }
-                EntryDataType::Intersect => {
+                EntryType::INTERSECT => {
                     let intersection = entry
                         .as_any_mut()
                         .downcast_mut::<IntersectionEntry>()
@@ -73,12 +73,12 @@ impl FlatMapFunction<Record, Record> for UnfoldOperator {
                     let mut res = Vec::with_capacity(intersection.len());
                     for item in intersection.drain() {
                         let mut new_entry = input.clone();
-                        new_entry.append(item, self.alias);
+                        new_entry.append(IdEntry::new(item), self.alias);
                         res.push(new_entry);
                     }
                     Ok(Box::new(res.into_iter()))
                 }
-                EntryDataType::P => Err(FnExecError::unsupported_error(&format!(
+                EntryType::PATH => Err(FnExecError::unsupported_error(&format!(
                     "unfold path entry {:?} in UnfoldOperator",
                     entry
                 )))?,

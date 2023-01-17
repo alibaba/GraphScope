@@ -444,7 +444,7 @@ mod test {
         let expected_ids = vec![2, 4];
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_vertex() {
+            if let Some(element) = record.get(None) {
                 result_ids.push(element.id() as usize);
                 assert!(element
                     .details()
@@ -493,7 +493,7 @@ mod test {
         let expected_ids = vec![1, 4, 4, 6];
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_vertex() {
+            if let Some(element) = record.get(None) {
                 result_ids.push(element.id() as usize);
                 assert!(element
                     .details()
@@ -542,7 +542,7 @@ mod test {
         let expected_ids = vec![1, 1, 2, 4];
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_vertex() {
+            if let Some(element) = record.get(None) {
                 result_ids.push(element.id() as usize);
                 assert!(element
                     .details()
@@ -591,7 +591,7 @@ mod test {
         let expected_ids = vec![1, 1, 2, 4];
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_vertex() {
+            if let Some(element) = record.get(None) {
                 result_ids.push(element.id() as usize);
                 assert!(element
                     .details()
@@ -761,7 +761,7 @@ mod test {
             let mut result_collection: Vec<usize> = intersection
                 .clone()
                 .iter()
-                .map(|r| r.id() as usize)
+                .map(|r| *r as usize)
                 .collect();
             result_collection.sort();
             result_collections.push(result_collection);
@@ -839,7 +839,7 @@ mod test {
             let mut result_collection: Vec<DefaultId> = intersection
                 .clone()
                 .iter()
-                .map(|r| r.id() as DefaultId)
+                .map(|r| *r as DefaultId)
                 .collect();
             result_collection.sort();
             result_collections.push(result_collection);
@@ -912,7 +912,7 @@ mod test {
         let expected_ids = vec![v4];
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_vertex() {
+            if let Some(element) = record.get(None) {
                 result_ids.push(element.id() as usize);
             }
         }
@@ -980,7 +980,7 @@ mod test {
         let mut expected_ids = vec![v1, v1, v3, v3, v4, v4];
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_vertex() {
+            if let Some(element) = record.get(None) {
                 result_ids.push(element.id() as usize);
             }
         }
@@ -1058,7 +1058,7 @@ mod test {
         let mut expected_ids = vec![v4];
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_vertex() {
+            if let Some(element) = record.get(None) {
                 result_ids.push(element.id() as usize);
             }
         }

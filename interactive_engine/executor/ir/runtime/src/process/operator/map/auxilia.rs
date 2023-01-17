@@ -21,7 +21,7 @@ use ir_common::KeyId;
 use pegasus::api::function::{FilterMapFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenResult};
-use crate::process::entry::{DynEntry, Entry, EntryDataType};
+use crate::process::entry::{DynEntry, Entry, EntryType};
 use crate::process::operator::map::FilterMapFuncGen;
 use crate::process::record::Record;
 
@@ -46,8 +46,8 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
             // If queryable, then turn into graph element and do the query
             let graph = get_graph().ok_or(FnExecError::NullGraphError)?;
             let new_entry: Option<DynEntry> = match entry.get_type() {
-                EntryDataType::Vid | EntryDataType::V => {
-                    let id = entry.as_vid().unwrap();
+                EntryType::VID | EntryType::VERTEX => {
+                    let id = entry.id();
                     let mut result_iter = graph.get_vertex(&[id], &self.query_params)?;
                     result_iter.next().map(|mut vertex| {
                         // TODO:confirm the update case, and avoid it if possible.
@@ -67,11 +67,8 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                         DynEntry::new(vertex)
                     })
                 }
-                EntryDataType::E => {
-                    let id = entry
-                        .as_edge()
-                        .ok_or(FnExecError::Unreachable)?
-                        .id();
+                EntryType::EDGE => {
+                    let id = entry.id();
                     let mut result_iter = graph.get_edge(&[id], &self.query_params)?;
                     result_iter.next().map(|mut edge| {
                         if let Some(details) = entry

@@ -18,7 +18,7 @@ use std::collections::HashMap;
 use std::convert::TryInto;
 
 use dyn_type::Object;
-use graph_proxy::apis::{Edge, Element, GraphElement, GraphPath, Vertex};
+use graph_proxy::apis::{Edge, Element, GraphElement, GraphPath, Vertex, ID};
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::sink_default::MetaType;
 use ir_common::generated::common as common_pb;
@@ -29,7 +29,7 @@ use pegasus_common::downcast::AsAny;
 use prost::Message;
 
 use crate::error::FnGenResult;
-use crate::process::entry::{CollectionEntry, DynEntry, Entry, EntryDataType};
+use crate::process::entry::{CollectionEntry, DynEntry, Entry, EntryType};
 use crate::process::operator::map::IntersectionEntry;
 use crate::process::operator::sink::{SinkGen, Sinker};
 use crate::process::record::Record;
@@ -45,7 +45,7 @@ pub struct RecordSinkEncoder {
 impl RecordSinkEncoder {
     fn entry_to_pb(&self, e: &DynEntry) -> result_pb::Entry {
         let inner = match e.get_type() {
-            EntryDataType::Collection => {
+            EntryType::COLLECTION => {
                 let collection = e
                     .as_any_ref()
                     .downcast_ref::<CollectionEntry>()
@@ -59,14 +59,14 @@ impl RecordSinkEncoder {
                     collection: collection_pb,
                 }))
             }
-            EntryDataType::Intersect => {
+            EntryType::INTERSECT => {
                 let intersection = e
                     .as_any_ref()
                     .downcast_ref::<IntersectionEntry>()
                     .unwrap();
                 let mut collection_pb = Vec::with_capacity(intersection.len());
                 for v in intersection.iter() {
-                    let vertex_pb = self.vertex_to_pb(v);
+                    let vertex_pb = self.vid_to_pb(v);
                     let element_pb =
                         result_pb::Element { inner: Some(result_pb::element::Inner::Vertex(vertex_pb)) };
                     collection_pb.push(element_pb);
@@ -85,30 +85,31 @@ impl RecordSinkEncoder {
 
     fn element_to_pb(&self, e: &DynEntry) -> result_pb::Element {
         let inner = match e.get_type() {
-            EntryDataType::V => {
+            EntryType::VID => {
+                let vertex_pb = self.vid_to_pb(&e.id());
+                Some(result_pb::element::Inner::Vertex(vertex_pb))
+            }
+            EntryType::VERTEX => {
                 let vertex_pb = self.vertex_to_pb(e.as_vertex().unwrap());
                 Some(result_pb::element::Inner::Vertex(vertex_pb))
             }
-            EntryDataType::E => {
+            EntryType::EDGE => {
                 let edge_pb = self.edge_to_pb(e.as_edge().unwrap());
                 Some(result_pb::element::Inner::Edge(edge_pb))
             }
-            EntryDataType::P => {
+            EntryType::PATH => {
                 let path_pb = self.path_to_pb(e.as_graph_path().unwrap());
                 Some(result_pb::element::Inner::GraphPath(path_pb))
             }
-            EntryDataType::Obj => {
+            EntryType::OBJECT => {
                 let obj_pb = self.object_to_pb(e.as_object().unwrap().clone());
                 Some(result_pb::element::Inner::Object(obj_pb))
             }
-            EntryDataType::Collection => {
+            EntryType::COLLECTION => {
                 unreachable!()
             }
-            EntryDataType::Intersect => {
+            EntryType::INTERSECT => {
                 unreachable!()
-            }
-            _ => {
-                todo!()
             }
         };
         result_pb::Element { inner }
@@ -155,6 +156,15 @@ impl RecordSinkEncoder {
         }
         // if we can not find mapped meta_name, we return meta_id.to_string() instead.
         NameOrId::Str(meta_id.to_string())
+    }
+
+    fn vid_to_pb(&self, vid: &ID) -> result_pb::Vertex {
+        result_pb::Vertex {
+            id: *vid as i64,
+            label: None,
+            // TODO: return detached vertex without property for now
+            properties: vec![],
+        }
     }
 
     fn vertex_to_pb(&self, v: &Vertex) -> result_pb::Vertex {

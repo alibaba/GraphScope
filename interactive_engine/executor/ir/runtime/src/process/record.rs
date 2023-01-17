@@ -23,7 +23,7 @@ use pegasus::api::function::DynIter;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 use vec_map::VecMap;
 
-use crate::process::entry::{DynEntry, Entry, EntryDataType};
+use crate::process::entry::{DynEntry, Entry, EntryType};
 
 #[derive(Debug, Clone, Default)]
 pub struct Record {
@@ -137,8 +137,8 @@ impl Context<DynEntry> for Record {
             .map(|entry| {
                 let entry_type = entry.get_type();
                 match entry_type {
-                    EntryDataType::Collection => None,
-                    EntryDataType::Intersect => None,
+                    EntryType::COLLECTION => None,
+                    EntryType::INTERSECT => None,
                     _ => Some(entry),
                 }
             })
