@@ -13,7 +13,6 @@
  */
 package com.alibaba.graphscope.sdkcommon.schema.mapper;
 
-
 import java.util.List;
 
 public abstract class SchemaElementMapper {
