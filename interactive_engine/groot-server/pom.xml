@@ -43,7 +43,7 @@
     </dependency>
 
     <dependency>
-      <groupId>com.apache.hadoop</groupId>
+      <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-client</artifactId>
     </dependency>
 
