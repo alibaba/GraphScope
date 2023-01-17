@@ -13,15 +13,15 @@ GraphScope Interactive Engine(GIE) leverages Gremlin, a graph traversal language
 [Cypher](https://neo4j.com/developer/cypher/) is a declarative programming language for graph queries. It is designed to make it easy for users to specify the graph patterns they are interested in. We are currently working on adding support for the Cypher language to provide users with more flexibility and options on graph queries. 
 
 ## High Performant Built-in Algorithms
-TODO: How many, for analytics and learning, high performance, link to performance.
+GraphScope is equipped with various built-in graph algorithms, consisting of 20 graph analytics algorithms and 8 GNN models. The built-in algorithms are highly optimized, and offer superior performance. For example, we have performed a comparison with state-of-the-art graph processing systems on LDBC Graph Analytics Benchmark, and the results show GraphScope outperforms other graph systems (see more detailed results [here]([https://github.com/alibaba/libgrape-lite/blob/master/Performance.md)).
+
+
 
 ## Extensible Algorithm Library for Graph Analytics 
 
 GraphScope Analytical Engine(GAE) provides a rich set of commonly used algorithms, including connectivity and path analysis, community detection and centrality computations. This [directory](https://github.com/alibaba/GraphScope/tree/main/analytical_engine/apps) includes a full list of the built-in algorithms, which is continuously growing.
 
-GAE also provides developers the flexibility to customize their own algorithms in a pure Python mode. Currently, the programing models that GAE supports include the sub-graph based [PIE](https://dl.acm.org/doi/10.1145/3282488) model and the vertex-centric [Pregel](https://dl.acm.org/doi/10.1145/1807167.1807184) model. GAE also supports implementing and running algorithms in Java (only in the PIE model).
-
-TODO(wanglei): mention, support Java, PIE, Pregel models...
+GAE also provides developers the flexibility to customize their own algorithms with different programming models and programming languages. Currently, the programing models that GAE supports include the sub-graph based [PIE](https://dl.acm.org/doi/10.1145/3282488) model and the vertex-centric [Pregel](https://dl.acm.org/doi/10.1145/1807167.1807184) model. Meanwhile, GAE provides a multi-language SDK, and users can choose to write their own algorithms in C++, Java or Python.
 
 ## GNN Training & Inference
 
@@ -31,7 +31,7 @@ To support online inference on dynamic graphs, we propose Dynamic Graph Service 
 
 
 ## Cloud Native Design
-support k8s, TBF. 
+GraphScope supports run on a cluster managed by Kubernetes(k8s). On the storage layer, Vineyard works as the distributed in-memory data manager, and different execution engines of GraphScope can efficiently share data via Vineyard. On the engine layer, users can deploy execution engines of GraphScope on demand, and freely scale computation resources of each engine. 
 
 ## Across-Engine Workflow Orchestration
 

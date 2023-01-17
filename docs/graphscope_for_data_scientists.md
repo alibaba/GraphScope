@@ -80,8 +80,9 @@ g = sess.g().add_vertices(df_v).add_edges(df_e)
 ```
 
 Meanwhile, GraphScope can write its outputs as dataframe format for further processing.
+
 ```python
 # result = graphscope.pagerank(g)
 result.to_dataframe({"node": "v.id", "r": "r"})
-``
+```
 
