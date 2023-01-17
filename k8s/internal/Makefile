@@ -142,10 +142,10 @@ graphscope-client-manylinux2014-py3-nodocker:
 		cd $(WORKING_DIR)/../../python; \
 		export PATH=/opt/python/$$py/bin:$$PATH; \
 		pip3 install -U pip; \
-		if [ "$$py" == "cp37-cp37m" ] || [ "$$py" == "cp38-cp38" ] || [ "$$py" == "cp39-cp39" ]; then \
-			pip3 install "numpy==1.18.5" "pandas" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" wheel "auditwheel==5.0.0"; \
-		else \
+		if [ "$$py" == "cp311-cp311" ]; then \
 			pip3 install "numpy" "pandas" "grpcio" "grpcio-tools" wheel "auditwheel==5.0.0"; \
+		else \
+			pip3 install "numpy==1.18.5" "pandas" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" wheel "auditwheel==5.0.0"; \
 		fi; \
 		rm -rf build; \
 		rm -rf dist/*.whl; \
@@ -165,12 +165,12 @@ graphscope-client-darwin-py3:
 		make graphlearn_shared -j`nproc` && \
 		export DYLD_LIBRARY_PATH=$(WORKING_DIR)/../../learning_engine/graph-learn/graphlearn/built/lib:/usr/local/lib:$$DYLD_LIBRARY_PATH && \
 		cd $(WORKING_DIR)/../../python && \
-		py=$$(python3 -V 2>&1 | sed 's/.* \([0-9]\).\([0-9]\).*/\1\2/') && \
+		py=$$(python3 -V 2>&1 | awk '{print $$2}' | awk -F '.' '{print $$1$$2}') && \
 		pip3 install -U pip && \
-		if [ "$$py" == "37" ] || [ "$$py" == "38" ] || [ "$$py" == "39" ]; then \
-			pip3 install "numpy==1.18.5" "pandas" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" delocate wheel; \
-		else \
+		if [ "$$py" == "311" ]; then \
 			pip3 install "numpy" "pandas" "grpcio" "grpcio-tools" delocate wheel; \
+		else \
+			pip3 install "numpy==1.18.5" "pandas" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" delocate wheel; \
 		fi; \
 		rm -rf build dist/*.whl || true && \
 		python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
