@@ -74,7 +74,7 @@ Given various types of graph workloads, existing systems have proposed two solut
   pipeline using a script language. Additionally, the requirement
   for data movement among different systems may introduce significant overhead.
 
-In comparison, GraphScope has a [loosely-coupled](./overview.md) design, which integrate three
+In comparison, GraphScope has a [loosely-coupled](./overview.md) design, which integrates three
 engines - GAE for analytical processing, GIE for graph queries, and GLE for learning.
 The non-trivial integration features a common programming interface on top to fulfil a complex graph pipeline that can involve
 one or more types of workloads, and a distributed storage layer [vineyard](https://v6d.io) for
