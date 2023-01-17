@@ -275,7 +275,8 @@ jobs:
         popd
 
         # install tensorflow
-        python3 -m pip install pytest "tensorflow<=2.5.2" "pandas<1.5.0" "wrapt" --user
+        python3 -m pip install pytest "tensorflow<=2.5.2" "pandas<1.5.0"  --user
+        python3 -m pip install -U wrapt --user
         # install jdk
         dnf install -y java-11-openjdk-devel
 
