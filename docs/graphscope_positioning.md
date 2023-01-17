@@ -76,7 +76,8 @@ Given various types of graph workloads, existing systems have proposed two solut
 
 In comparison, GraphScope has a [loosely-coupled](./overview.md) design, which integrates three
 engines - GAE for analytical processing, GIE for graph queries, and GLE for learning.
-The non-trivial integration features a common programming interface on top to fulfil a complex graph pipeline that can involve
+The non-trivial integration features a common programming interface on top for easily implement
+a complex graph pipeline that can involve
 one or more types of workloads, and a distributed storage layer [vineyard](https://v6d.io) for
 efficient, copy-free in-memory data movements across the engines. Compared to the one-system design,
 GraphScope has demonstrated superior performance due to the separated computing engine.
