@@ -41,6 +41,12 @@
       <groupId>com.alibaba.pegasus</groupId>
       <artifactId>pegasus-client</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>com.apache.hadoop</groupId>
+      <artifactId>hadoop-client</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>

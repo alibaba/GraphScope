@@ -15,11 +15,15 @@ package com.alibaba.graphscope.sdkcommon.schema.mapper;
 
 import com.alibaba.graphscope.compiler.api.schema.DataType;
 import com.alibaba.graphscope.compiler.api.schema.GraphProperty;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class GraphPropertyMapper {
     private int id;
     private String name;
+
+    @JsonProperty("data_type")
     private String dataType;
+
     private String comment;
 
     public int getId() {
@@ -54,7 +58,7 @@ public class GraphPropertyMapper {
         this.comment = comment;
     }
 
-    public static GraphPropertyMapper parseFromGrapyProperty(GraphProperty graphProperty) {
+    public static GraphPropertyMapper parseFromGraphProperty(GraphProperty graphProperty) {
         GraphPropertyMapper propertyMapper = new GraphPropertyMapper();
         propertyMapper.setId(graphProperty.getId());
         propertyMapper.setName(graphProperty.getName());

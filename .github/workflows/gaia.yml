@@ -72,10 +72,6 @@ jobs:
         cd ${GITHUB_WORKSPACE}/interactive_engine/compiler
         make build
 
-    - name: Setup tmate session
-      uses: siyuan0322/action-tmate@master
-      if: false
-
     - name: Ir Unit Test
       run: |
         source ${HOME}/.bashrc

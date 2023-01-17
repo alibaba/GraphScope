@@ -42,7 +42,7 @@ public class EdgeTypeMapper extends SchemaElementMapper {
 
         List<GraphPropertyMapper> propertyMapperList = new ArrayList<>();
         for (GraphProperty graphProperty : graphEdge.getPropertyList()) {
-            propertyMapperList.add(GraphPropertyMapper.parseFromGrapyProperty(graphProperty));
+            propertyMapperList.add(GraphPropertyMapper.parseFromGraphProperty(graphProperty));
         }
         edgeTypeMapper.setPropertyDefList(propertyMapperList);
 

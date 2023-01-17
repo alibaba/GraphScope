@@ -590,10 +590,6 @@ jobs:
           name: gie-experimental
           path: artifacts
 
-      - name: Display structure of downloaded files
-        run: ls -R
-        working-directory: artifacts
-
       - name: Add envs to GITHUB_ENV
         run: |
           short_sha=$(git rev-parse --short HEAD)

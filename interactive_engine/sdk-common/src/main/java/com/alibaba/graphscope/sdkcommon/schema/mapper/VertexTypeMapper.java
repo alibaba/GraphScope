@@ -42,7 +42,7 @@ public class VertexTypeMapper extends SchemaElementMapper {
         vertexTypeMapper.setIndexes(vertexIndexMapperList);
         List<GraphPropertyMapper> propertyMapperList = new ArrayList<>();
         for (GraphProperty graphProperty : graphVertex.getPropertyList()) {
-            propertyMapperList.add(GraphPropertyMapper.parseFromGrapyProperty(graphProperty));
+            propertyMapperList.add(GraphPropertyMapper.parseFromGraphProperty(graphProperty));
         }
         vertexTypeMapper.setPropertyDefList(propertyMapperList);
         vertexTypeMapper.setVersionId(graphVertex.getVersionId());
