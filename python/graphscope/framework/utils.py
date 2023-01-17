@@ -201,14 +201,14 @@ def get_java_version():
     java_exec = find_java()
     pattern = r'"(\d+\.\d+\.\d+).*"'
     version = subprocess.check_output([java_exec, "-version"], stderr=subprocess.STDOUT)
-    return re.search(pattern, version.decode("utf-8")).groups()[0]
+    return re.search(pattern, version.decode("utf-8", errors="ignore")).groups()[0]
 
 
 def get_platform_info():
     def _get_gcc_version():
         gcc = shutil.which("gcc")
         if gcc is None:
-            raise RuntimeError("gcc command not found.")
+            return None
         return subprocess.check_output([gcc, "--version"], stderr=subprocess.STDOUT)
 
     platform_info = (
@@ -278,7 +278,7 @@ def b_to_attr(b: bool) -> attr_value_pb2.AttrValue:
 
 def s_to_attr(s: str) -> attr_value_pb2.AttrValue:
     check_argument(isinstance(s, str))
-    return attr_value_pb2.AttrValue(s=s.encode("utf-8"))
+    return attr_value_pb2.AttrValue(s=s.encode("utf-8", errors="ignore"))
 
 
 def bytes_to_attr(s: bytes) -> attr_value_pb2.AttrValue:
@@ -318,7 +318,8 @@ def report_type_to_attr(t):
 def list_str_to_attr(list_of_str):
     attr = attr_value_pb2.AttrValue()
     attr.list.s[:] = [
-        item.encode("utf-8") if isinstance(item, str) else item for item in list_of_str
+        item.encode("utf-8", errors="ignore") if isinstance(item, str) else item
+        for item in list_of_str
     ]
     return attr
 
@@ -626,11 +627,11 @@ def _from_numpy_dtype(dtype):
         np.dtype(np.uint32): types_pb2.UINT32,
         np.dtype(np.uint64): types_pb2.UINT64,
         np.dtype(np.intc): types_pb2.INT,
-        np.dtype(np.long): types_pb2.LONG,
+        np.dtype(int): types_pb2.LONG,
         np.dtype(bool): types_pb2.BOOLEAN,
         np.dtype(float): types_pb2.FLOAT,
         np.dtype(np.double): types_pb2.DOUBLE,
-        np.dtype(np.object): types_pb2.STRING,
+        np.dtype(object): types_pb2.STRING,
     }
     pbdtype = dtype_reverse_map.get(dtype)
     if pbdtype is None:
@@ -649,11 +650,11 @@ def _to_numpy_dtype(dtype):
         types_pb2.UINT32: np.uint32,
         types_pb2.UINT64: np.uint64,
         types_pb2.INT: np.intc,
-        types_pb2.LONG: np.long,
-        types_pb2.BOOLEAN: np.bool,
-        types_pb2.FLOAT: np.float,
+        types_pb2.LONG: int,
+        types_pb2.BOOLEAN: bool,
+        types_pb2.FLOAT: float,
         types_pb2.DOUBLE: np.double,
-        types_pb2.STRING: np.object,
+        types_pb2.STRING: object,
     }
     npdtype = dtype_map.get(dtype)
     if npdtype is None:

@@ -153,6 +153,8 @@ class GRPCClient(object):
             response.cluster_type,
             response.num_workers,
             response.namespace,
+            json.loads(response.engine_config),
+            response.host_names,
         )
 
     @suppress_grpc_error
@@ -189,7 +191,11 @@ class GRPCClient(object):
                 response.error_msg,
             )
             if response.full_exception:
-                raise pickle.loads(response.full_exception)
+                exc = pickle.loads(response.full_exception)
+                if isinstance(exc, tuple):
+                    raise exc[0](*exc[1:])
+                else:
+                    raise exc
         return response
 
     def create_analytical_instance(self):

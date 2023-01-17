@@ -13,10 +13,10 @@
  */
 package com.alibaba.graphscope.groot.store;
 
-import com.alibaba.maxgraph.proto.groot.FetchSchemaRequest;
-import com.alibaba.maxgraph.proto.groot.FetchSchemaResponse;
-import com.alibaba.maxgraph.proto.groot.GraphDefPb;
-import com.alibaba.maxgraph.proto.groot.StoreSchemaGrpc;
+import com.alibaba.graphscope.proto.groot.FetchSchemaRequest;
+import com.alibaba.graphscope.proto.groot.FetchSchemaResponse;
+import com.alibaba.graphscope.proto.groot.GraphDefPb;
+import com.alibaba.graphscope.proto.groot.StoreSchemaGrpc;
 
 import io.grpc.stub.StreamObserver;
 

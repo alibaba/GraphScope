@@ -13,9 +13,8 @@ import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.graphscope.arrow.Status;
 import com.alibaba.graphscope.ds.StringView;
 import com.alibaba.graphscope.stdcxx.CCharPointer;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @CXXHead(CORE_JAVA_TYPE_ALIAS_H)
 @FFITypeAlias(GS_ARROW_STRING_ARRAY_BUILDER)
 public interface StringArrowArrayBuilder extends BaseArrowArrayBuilder<StringView> {

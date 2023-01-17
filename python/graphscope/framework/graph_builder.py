@@ -52,6 +52,7 @@ def load_from(
     directed=True,
     oid_type="int64_t",
     generate_eid=True,
+    retain_oid=True,
     vformat=None,
     eformat=None,
     vertex_map="global",
@@ -148,10 +149,13 @@ def load_from(
             If None, we assume all edge's src_label and dst_label are deduced and unambiguous.
         directed (bool, optional): Indicate whether the graph
             should be treated as directed or undirected.
-        oid_type (str, optional): ID type of graph. Can be "int64_t" or "string". Defaults to "int64_t".
+        oid_type (str, optional): ID type of graph. Can be "int32_t", "int64_t" or "string". Defaults to "int64_t".
         generate_eid (bool, optional): Whether to generate a unique edge id for each edge. Generated eid will be placed
             in third column. This feature is for cooperating with interactive engine.
-            If you only need to work with analytical engine, set it to False. Defaults to False.
+            If you only need to work with analytical engine, set it to False. Defaults to True.
+        retain_oid (bool, optional): Whether to keep the orignal ID column as the last column of vertex table.
+            This feature is for cooperating with interactive engine.
+            If you only need to work with analytical engine, set it to False. Defaults to True.
         vertex_map (str, optional): Indicate use global vertex map or local vertex map. Can be "global" or "local".
     """
 
@@ -163,8 +167,8 @@ def load_from(
     if isinstance(edges, (Graph, nx.Graph, *VineyardObjectTypes)):
         return sess.g(edges)
     oid_type = utils.normalize_data_type_str(oid_type)
-    if oid_type not in ("int64_t", "std::string"):
-        raise ValueError("oid_type can only be int64_t or string.")
+    if oid_type not in ("int32_t", "int64_t", "std::string"):
+        raise ValueError("oid_type can only be int32_t, int64_t or string.")
     v_labels = normalize_parameter_vertices(vertices, oid_type, vformat)
     e_labels = normalize_parameter_edges(edges, oid_type, eformat)
     # generate and add a loader op to dag
@@ -176,6 +180,7 @@ def load_from(
         types_pb2.DIRECTED: utils.b_to_attr(directed),
         types_pb2.OID_TYPE: utils.s_to_attr(oid_type),
         types_pb2.GENERATE_EID: utils.b_to_attr(generate_eid),
+        types_pb2.RETAIN_OID: utils.b_to_attr(retain_oid),
         types_pb2.VID_TYPE: utils.s_to_attr("uint64_t"),
         types_pb2.IS_FROM_VINEYARD_ID: utils.b_to_attr(False),
         types_pb2.VERTEX_MAP_TYPE: utils.i_to_attr(vertex_map),

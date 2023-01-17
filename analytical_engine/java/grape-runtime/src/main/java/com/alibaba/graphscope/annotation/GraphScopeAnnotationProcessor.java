@@ -297,7 +297,7 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
         logger.info("foreign vdata type " + foreignVdataType);
         logger.info("foreign oid type " + foreignOidType);
         logger.info("foreign edata type " + foreignEdataType);
-        logger.info("foriegn frag type :" + foreignFragType);
+        logger.info("foreign frag type :" + foreignFragType);
         String foreignArrowProjectFragNameConcat =
                 makeParameterizedType(
                         foreignArrowProjectedTempalteName,

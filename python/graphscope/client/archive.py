@@ -73,7 +73,7 @@ class OutArchive(object):
         equivalents to the length.
         """
         size = self.get_size()
-        string = self.get_block(size).tobytes().decode("utf-8")
+        string = self.get_block(size).tobytes().decode("utf-8", errors="ignore")
         return string
 
     def get_int(self):

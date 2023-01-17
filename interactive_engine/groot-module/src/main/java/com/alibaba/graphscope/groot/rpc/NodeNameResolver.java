@@ -13,9 +13,9 @@
  */
 package com.alibaba.graphscope.groot.rpc;
 
-import com.alibaba.graphscope.groot.discovery.MaxGraphNode;
+import com.alibaba.graphscope.groot.common.RoleType;
+import com.alibaba.graphscope.groot.discovery.GrootNode;
 import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
-import com.alibaba.maxgraph.common.RoleType;
 
 import io.grpc.Attributes;
 import io.grpc.EquivalentAddressGroup;
@@ -64,7 +64,7 @@ public class NodeNameResolver extends NameResolver implements NodeDiscovery.List
     }
 
     @Override
-    public void nodesJoin(RoleType role, Map<Integer, MaxGraphNode> nodes) {
+    public void nodesJoin(RoleType role, Map<Integer, GrootNode> nodes) {
         logger.debug(
                 "Add nodes "
                         + nodes
@@ -75,13 +75,12 @@ public class NodeNameResolver extends NameResolver implements NodeDiscovery.List
         if (role != this.roleType) {
             return;
         }
-        MaxGraphNode maxGraphNode = nodes.get(this.idx);
-        if (maxGraphNode == null) {
+        GrootNode grootNode = nodes.get(this.idx);
+        if (grootNode == null) {
             return;
         }
-        logger.info("connection ready. node [" + maxGraphNode + "]");
-        InetSocketAddress address =
-                new InetSocketAddress(maxGraphNode.getHost(), maxGraphNode.getPort());
+        logger.info("connection ready. node [" + grootNode + "]");
+        InetSocketAddress address = new InetSocketAddress(grootNode.getHost(), grootNode.getPort());
         EquivalentAddressGroup server = new EquivalentAddressGroup(address);
         ResolutionResult resolutionResult =
                 ResolutionResult.newBuilder()
@@ -92,9 +91,9 @@ public class NodeNameResolver extends NameResolver implements NodeDiscovery.List
     }
 
     @Override
-    public void nodesLeft(RoleType role, Map<Integer, MaxGraphNode> nodes) {
+    public void nodesLeft(RoleType role, Map<Integer, GrootNode> nodes) {
         if (role == this.roleType) {
-            MaxGraphNode lostNode = nodes.get(this.idx);
+            GrootNode lostNode = nodes.get(this.idx);
             if (lostNode != null) {
                 logger.info("connection lost. node [" + lostNode + "]");
                 this.listener.onResult(ResolutionResult.newBuilder().build());

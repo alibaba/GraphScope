@@ -24,6 +24,7 @@ from gscoordinator.utils import WORKSPACE
 from gscoordinator.utils import ResolveMPICmdPrefix
 from gscoordinator.utils import get_timestamp
 from gscoordinator.utils import parse_as_glog_level
+from gscoordinator.utils import run_command
 
 logger = logging.getLogger("graphscope")
 
@@ -136,6 +137,7 @@ class LocalLauncher(AbstractLauncher):
 
         env = os.environ.copy()
         env.update(mpi_env)
+        env["GRAPHSCOPE_HOME"] = GRAPHSCOPE_HOME
 
         logger.info("Launch analytical engine with command: %s", " ".join(cmd))
 
@@ -221,14 +223,20 @@ class LocalLauncher(AbstractLauncher):
 
     def create_learning_instance(self, object_id, handle, config):
         # prepare argument
-        handle = json.loads(base64.b64decode(handle.encode("utf-8")).decode("utf-8"))
+        handle = json.loads(
+            base64.b64decode(handle.encode("utf-8", errors="ignore")).decode(
+                "utf-8", errors="ignore"
+            )
+        )
 
         server_list = [
             f"localhost:{get_free_port('localhost')}" for _ in range(self.num_workers)
         ]
         hosts = ",".join(server_list)
         handle["server"] = hosts
-        handle = base64.b64encode(json.dumps(handle).encode("utf-8")).decode("utf-8")
+        handle = base64.b64encode(
+            json.dumps(handle).encode("utf-8", errors="ignore")
+        ).decode("utf-8", errors="ignore")
 
         # launch the server
         env = os.environ.copy()
@@ -466,18 +474,11 @@ class LocalLauncher(AbstractLauncher):
                 proc.terminate()
 
     def distribute_file(self, path) -> None:
-        d = os.path.dirname(path)
+        dir = os.path.dirname(path)
         for host in self.hosts.split(","):
             if host not in ("localhost", "127.0.0.1"):
-                # TODO: handle failure, The error message is in CallProcessError.output as bytes
-                subprocess.check_output(
-                    [shutil.which("ssh"), host, "mkdir -p {}".format(d)],
-                    stderr=subprocess.STDOUT,
-                )
-                subprocess.check_output(
-                    [shutil.which("scp"), "-r", path, "{}:{}".format(host, path)],
-                    stderr=subprocess.STDOUT,
-                )
+                logger.debug(run_command(f"ssh {host} mkdir -p {dir}"))
+                logger.debug(run_command(f"scp -r {path} {host}:{path}"))
 
     @staticmethod
     def find_etcd() -> [str]:
@@ -511,10 +512,17 @@ class LocalLauncher(AbstractLauncher):
         logger.info("etcd endpoint is %s", self._etcd_endpoint)
 
     def start(self):
-        # create etcd
-        self.configure_etcd_endpoint()
-        # create vineyard
-        self.launch_vineyard()
+        try:
+            # create etcd
+            self.configure_etcd_endpoint()
+            # create vineyard
+            self.launch_vineyard()
+        except Exception:  # pylint: disable=broad-except
+            time.sleep(1)
+            logger.exception("Error when launching GraphScope on local")
+            self.stop()
+            return False
+        return True
 
     def get_engine_config(self) -> dict:
         config = {

@@ -22,6 +22,7 @@
 import atexit
 import base64
 import contextlib
+import gc
 import json
 import logging
 import os
@@ -124,7 +125,7 @@ class _FetchHandler(object):
         # get app dag node as base
         app_dag_node = self._fetches[seq]
         # construct app
-        app = App(app_dag_node, op_result.result.decode("utf-8"))
+        app = App(app_dag_node, op_result.result.decode("utf-8", errors="ignore"))
         return app
 
     def _rebuild_context(self, seq, op_result: op_def_pb2.OpResult):
@@ -132,7 +133,7 @@ class _FetchHandler(object):
 
         # get context dag node as base
         context_dag_node = self._fetches[seq]
-        ret = json.loads(op_result.result.decode("utf-8"))
+        ret = json.loads(op_result.result.decode("utf-8", errors="ignore"))
         context_type = ret["context_type"]
         if context_type == "dynamic_vertex_data":
             # for nx
@@ -162,7 +163,9 @@ class _FetchHandler(object):
                             rets.append(OutArchive(op_result.result))
                         else:
                             # for nx Graph
-                            rets.append(op_result.result.decode("utf-8"))
+                            rets.append(
+                                op_result.result.decode("utf-8", errors="ignore")
+                            )
                     if op.output_types == types_pb2.GREMLIN_RESULTS:
                         rets.append(self._rebuild_gremlin_results(seq, op_result))
                     if op.output_types == types_pb2.GRAPH:
@@ -176,7 +179,9 @@ class _FetchHandler(object):
                         types_pb2.VINEYARD_DATAFRAME,
                     ):
                         rets.append(
-                            json.loads(op_result.result.decode("utf-8"))["object_id"]
+                            json.loads(
+                                op_result.result.decode("utf-8", errors="ignore")
+                            )["object_id"]
                         )
                     if op.output_types in (types_pb2.TENSOR, types_pb2.DATAFRAME):
                         if (
@@ -261,7 +266,6 @@ class Session(object):
         you can find all params detail in :meth:`__init__` method.
 
         >>> s = graphscope.session(
-        ...         k8s_gs_image="registry.cn-hongkong.aliyuncs.com/graphscope/graphscope:latest",
         ...         k8s_vineyard_cpu=0.1,
         ...         k8s_vineyard_mem="256Mi",
         ...         vineyard_shared_mem="4Gi",
@@ -286,9 +290,9 @@ class Session(object):
         preemptive=gs_config.preemptive,
         k8s_namespace=gs_config.k8s_namespace,
         k8s_service_type=gs_config.k8s_service_type,
-        k8s_gs_image=gs_config.k8s_gs_image,
-        k8s_etcd_image=gs_config.k8s_etcd_image,
-        k8s_dataset_image=gs_config.k8s_dataset_image,
+        k8s_image_registry=gs_config.k8s_image_registry,
+        k8s_image_repository=gs_config.k8s_image_repository,
+        k8s_image_tag=gs_config.k8s_image_tag,
         k8s_image_pull_policy=gs_config.k8s_image_pull_policy,
         k8s_image_pull_secrets=gs_config.k8s_image_pull_secrets,
         k8s_coordinator_cpu=gs_config.k8s_coordinator_cpu,
@@ -296,9 +300,7 @@ class Session(object):
         etcd_addrs=gs_config.etcd_addrs,
         etcd_listening_client_port=gs_config.etcd_listening_client_port,
         etcd_listening_peer_port=gs_config.etcd_listening_peer_port,
-        k8s_etcd_num_pods=gs_config.k8s_etcd_num_pods,
-        k8s_etcd_cpu=gs_config.k8s_etcd_cpu,
-        k8s_etcd_mem=gs_config.k8s_etcd_mem,
+        k8s_vineyard_image=gs_config.k8s_vineyard_image,
         k8s_vineyard_daemonset=gs_config.k8s_vineyard_daemonset,
         k8s_vineyard_cpu=gs_config.k8s_vineyard_cpu,
         k8s_vineyard_mem=gs_config.k8s_vineyard_mem,
@@ -310,14 +312,17 @@ class Session(object):
         k8s_mars_scheduler_cpu=gs_config.mars_scheduler_cpu,
         k8s_mars_scheduler_mem=gs_config.mars_scheduler_mem,
         k8s_coordinator_pod_node_selector=gs_config.k8s_coordinator_pod_node_selector,
-        k8s_etcd_pod_node_selector=gs_config.k8s_etcd_pod_node_selector,
         k8s_engine_pod_node_selector=gs_config.k8s_engine_pod_node_selector,
         k8s_volumes=gs_config.k8s_volumes,
         k8s_waiting_for_delete=gs_config.k8s_waiting_for_delete,
         timeout_seconds=gs_config.timeout_seconds,
         dangling_timeout_seconds=gs_config.dangling_timeout_seconds,
         with_mars=gs_config.with_mars,
-        mount_dataset=gs_config.mount_dataset,
+        with_analytical=gs_config.with_analytical,
+        with_analytical_java=gs_config.with_analytical_java,
+        with_interactive=gs_config.with_interactive,
+        with_learning=gs_config.with_learning,
+        with_dataset=gs_config.with_dataset,
         reconnect=False,
         hosts=["localhost"],
         **kw,
@@ -359,15 +364,17 @@ class Session(object):
             k8s_service_type (str, optional): Type determines how the GraphScope service is exposed.
                 Valid options are NodePort, and LoadBalancer. Defaults to NodePort.
 
-            k8s_gs_image (str, optional): The GraphScope engine's image.
+            k8s_image_registry (str, optional): The GraphScope image registry.
 
-            k8s_etcd_image (str, optional): The image of etcd, which used by vineyard.
+            k8s_image_repository (str, optional): The GraphScope image repository.
 
-            k8s_dataset_image(str, optional): The image which mounts aliyun dataset bucket to local path.
+            k8s_image_tag (str, optional): The GraphScope image tag.
 
             k8s_image_pull_policy (str, optional): Kubernetes image pull policy. Defaults to "IfNotPresent".
 
             k8s_image_pull_secrets (list[str], optional): A list of secret name used to authorize pull image.
+
+            k8s_vineyard_image (str, optional): The image of vineyard.
 
             k8s_vineyard_daemonset (str, optional): The name of vineyard Helm deployment to use. GraphScope will try to
                 discovery the daemonset from kubernetes cluster, then use it if exists, and fallback to launching
@@ -390,12 +397,6 @@ class Session(object):
             etcd_addrs (str, optional): The addr of external etcd cluster,
                 with formats like 'etcd01:port,etcd02:port,etcd03:port'
 
-            k8s_etcd_num_pods (int, optional): The number of etcd pods. Defaults to 3.
-
-            k8s_etcd_cpu (float, optional): Minimum number of CPU cores request for etcd pod. Defaults to 0.5.
-
-            k8s_etcd_mem (str, optional): Minimum number of memory request for etcd pod. Defaults to '128Mi'.
-
             k8s_mars_worker_cpu (float, optional):
                 Minimum number of CPU cores request for mars worker container. Defaults to 0.5.
 
@@ -412,10 +413,6 @@ class Session(object):
                 Node selector to the coordinator pod on k8s. Default is None.
                 See also: https://tinyurl.com/3nx6k7ph
 
-            k8s_etcd_pod_node_selector (dict, optional):
-                Node selector to the etcd pod on k8s. Default is None.
-                See also: https://tinyurl.com/3nx6k7ph
-
             k8s_engine_pod_node_selector = None
                 Node selector to the engine pod on k8s. Default is None.
                 See also: https://tinyurl.com/3nx6k7ph
@@ -423,8 +420,20 @@ class Session(object):
             with_mars (bool, optional):
                 Launch graphscope with mars. Defaults to False.
 
-            mount_dataset (str, optional):
-                Create a container and mount aliyun demo dataset bucket to the path specified by `mount_dataset`.
+            with_analytical (bool, optional):
+                Launch graphscope with analytical engine. Defaults to True.
+
+            with_analytical_java (bool, optional):
+                Launch graphscope with analytical engine with java support. Defaults to False.
+
+            with_interactive (bool, optional):
+                Launch graphscope with interactive engine. Defaults to True.
+
+            with_learning (bool, optional):
+                Launch graphscope with learning engine. Defaults to True.
+
+            with_dataset (bool, optional):
+                Create a container and mount aliyun demo dataset bucket to the path `/dataset`.
 
             k8s_volumes (dict, optional): A dict of k8s volume which represents a directory containing data, accessible to the
                 containers in a pod. Defaults to {}.
@@ -488,8 +497,6 @@ class Session(object):
             k8s_waiting_for_delete (bool, optional): Waiting for service delete or not. Defaults to False.
 
             **kw (dict, optional): Other optional parameters will be put to :code:`**kw`.
-                - k8s_minikube_vm_driver: Deprecated.
-
                 - k8s_client_config (dict, optional):
                     Provide configurable parameters for connecting to remote k8s,
                     which strongly relies on the `kube_config.load_kube_config` function.
@@ -538,8 +545,9 @@ class Session(object):
             "preemptive",
             "k8s_namespace",
             "k8s_service_type",
-            "k8s_gs_image",
-            "k8s_etcd_image",
+            "k8s_image_registry",
+            "k8s_image_repository",
+            "k8s_image_tag",
             "k8s_image_pull_policy",
             "k8s_image_pull_secrets",
             "k8s_coordinator_cpu",
@@ -547,9 +555,7 @@ class Session(object):
             "etcd_addrs",
             "etcd_listening_client_port",
             "etcd_listening_peer_port",
-            "k8s_etcd_num_pods",
-            "k8s_etcd_cpu",
-            "k8s_etcd_mem",
+            "k8s_vineyard_image",
             "k8s_vineyard_daemonset",
             "k8s_vineyard_cpu",
             "k8s_vineyard_mem",
@@ -561,16 +567,18 @@ class Session(object):
             "k8s_mars_scheduler_cpu",
             "k8s_mars_scheduler_mem",
             "k8s_coordinator_pod_node_selector",
-            "k8s_etcd_pod_node_selector",
             "k8s_engine_pod_node_selector",
             "with_mars",
+            "with_analytical",
+            "with_analytical_java",
+            "with_interactive",
+            "with_learning",
             "reconnect",
             "k8s_volumes",
             "k8s_waiting_for_delete",
             "timeout_seconds",
             "dangling_timeout_seconds",
-            "mount_dataset",
-            "k8s_dataset_image",
+            "with_dataset",
             "hosts",
         )
         self._deprecated_params = (
@@ -604,6 +612,12 @@ class Session(object):
             raise NotImplementedError(
                 "Mars cluster cannot be launched along with local GraphScope deployment"
             )
+        if with_analytical and with_analytical_java:
+            logger.warning(
+                "Cannot setup `with_analytical` and `with_analytical_java` at the same time"
+            )
+            logger.warning("Disabled `analytical`.")
+            self._config_params["with_analytical"] = False
 
         # deprecated params handle
         for param in self._deprecated_params:
@@ -615,11 +629,6 @@ class Session(object):
                 if param == "show_log" or param == "log_level":
                     warnings.warn(
                         f"Please use `graphscope.set_option({param}={kw.pop(param, None)})` instead",
-                        category=DeprecationWarning,
-                    )
-                if param == "k8s_vineyard_shared_mem":
-                    warnings.warn(
-                        "Please use 'vineyard_shared_mem' instead",
                         category=DeprecationWarning,
                     )
                 kw.pop(param, None)
@@ -686,6 +695,8 @@ class Session(object):
 
         # networkx module
         self._nx = None
+
+        self._lock = threading.RLock()
 
     def __repr__(self):
         return str(self.info)
@@ -949,7 +960,21 @@ class Session(object):
         Returns:
             Different values for different output types of :class:`Operation`
         """
-        return self.run_fetches(fetches)
+
+        # There might be a deadlock without `gc.collect()`:
+        #
+        #  - thread 1 uses `run()` to issue grpc requests
+        #  - during the process, e.g., print traceback, it triggers certain `__del__()`
+        #    and that issues a `run_fetches()` again, that further requires the lock
+        #  - then a deadlock been introduced.
+        #
+        # Thus we simply choose to call `gc.collect()` to force those `__del__()` been
+        # invoked before actually issuing the grpc request to avoid the deadlock.
+        #
+        gc.collect()
+
+        with self._lock:
+            return self.run_fetches(fetches)
 
     def run_fetches(self, fetches):
         """Run operations of `fetches` without the session lock."""
@@ -978,11 +1003,6 @@ class Session(object):
             # try to connect to exist coordinator
             self._coordinator_endpoint = self._config_params["addr"]
         elif self._cluster_type == types_pb2.K8S:
-            if (
-                self._config_params["k8s_etcd_image"] is None
-                or self._config_params["k8s_gs_image"] is None
-            ):
-                raise K8sError("None image found.")
             if isinstance(
                 self._config_params["k8s_client_config"],
                 kube_client.api_client.ApiClient,
@@ -1037,23 +1057,29 @@ class Session(object):
                 self._cluster_type,
                 self._config_params["num_workers"],
                 self._config_params["k8s_namespace"],
+                self._engine_config,
+                pod_name_list,
             ) = self._grpc_client.connect(
                 cleanup_instance=not bool(self._config_params["addr"]),
                 dangling_timeout_seconds=self._config_params[
                     "dangling_timeout_seconds"
                 ],
             )
+            self._pod_name_list = list(pod_name_list)
+
             # fetch logs
             if self._config_params["addr"] or self._cluster_type == types_pb2.K8S:
                 self._grpc_client.fetch_logs()
             _session_dict[self._session_id] = self
+
             # Launch analytical engine right after session connected.
-            # This may be changed to on demand launching in the future.
-            (
-                self._engine_config,
-                pod_name_list,
-            ) = self._grpc_client.create_analytical_instance()
-            self._pod_name_list = list(pod_name_list)
+            # This may be changed to on demand launching in the future
+            if not self._engine_config and not self._pod_name_list:
+                (
+                    self._engine_config,
+                    pod_name_list,
+                ) = self._grpc_client.create_analytical_instance()
+                self._pod_name_list = list(pod_name_list)
         except Exception:
             self.close()
             raise
@@ -1068,11 +1094,18 @@ class Session(object):
         oid_type="int64",
         directed=True,
         generate_eid=True,
+        retain_oid=True,
         vertex_map="global",
     ):
         return self._wrapper(
             GraphDAGNode(
-                self, incoming_data, oid_type, directed, generate_eid, vertex_map
+                self,
+                incoming_data,
+                oid_type,
+                directed,
+                generate_eid,
+                retain_oid,
+                vertex_map,
             )
         )
 
@@ -1211,12 +1244,14 @@ class Session(object):
             graph.fragments,
         )
         config = LearningGraph.preprocess_args(handle, nodes, edges, gen_labels)
-        config = base64.b64encode(json.dumps(config).encode("utf-8")).decode("utf-8")
+        config = base64.b64encode(
+            json.dumps(config).encode("utf-8", errors="ignore")
+        ).decode("utf-8", errors="ignore")
         handle, config, endpoints = self._grpc_client.create_learning_instance(
             graph.vineyard_id, handle, config
         )
 
-        handle = json.loads(base64.b64decode(handle).decode("utf-8"))
+        handle = json.loads(base64.b64decode(handle).decode("utf-8", errors="ignore"))
         handle["server"] = ",".join(endpoints)
         handle["client_count"] = 1
 
@@ -1298,6 +1333,10 @@ def set_option(**kwargs):
         - k8s_mars_scheduler_cpu
         - k8s_mars_scheduler_mem
         - with_mars
+        - with_analytical
+        - with_analytical_java
+        - with_interactive
+        - with_learning
         - k8s_volumes
         - k8s_waiting_for_delete
         - timeout_seconds
@@ -1351,6 +1390,10 @@ def get_option(key):
         - k8s_mars_scheduler_cpu
         - k8s_mars_scheduler_mem
         - with_mars
+        - with_analytical
+        - with_analytical_java
+        - with_interactive
+        - with_learning
         - k8s_volumes
         - k8s_waiting_for_delete
         - timeout_seconds
@@ -1456,6 +1499,7 @@ def g(
     oid_type="int64",
     directed=True,
     generate_eid=True,
+    retain_oid=True,
     vertex_map="global",
 ):
     """Construct a GraphScope graph object on the default session.
@@ -1480,7 +1524,7 @@ def g(
         >>> g = graphscope.g() # creating graph on the session "sess"
     """
     return get_default_session().g(
-        incoming_data, oid_type, directed, generate_eid, vertex_map
+        incoming_data, oid_type, directed, generate_eid, retain_oid, vertex_map
     )
 
 

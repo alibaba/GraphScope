@@ -13,7 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use maxgraph_store::api::{DataType, LabelId, PropId};
+use groot_store::api::{DataType, LabelId, PropId};
 
 pub trait Schema: Send + Sync {
     fn get_prop_id(&self, name: &str) -> Option<PropId>;

@@ -1,5 +1,6 @@
 MKFILE_PATH 			:= $(abspath $(lastword $(MAKEFILE_LIST)))
 WORKING_DIR 			:= $(dir $(MKFILE_PATH))
+SHORT_SHA   			:= $(shell git rev-parse --short HEAD)
 
 .PHONY: graphscope-jupyter-manylinux2014-py3 graphscope-py3-package graphscope-client-py3-package
 .PHONY: graphscope-darwin-py3 graphscope-client-darwin-py3
@@ -11,19 +12,26 @@ ifeq ($(REGISTRY),)
 endif
 
 
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S), Linux)
+	XARGS_EMPTY_FLAG := --no-run-if-empty
+endif
+
+BUILD_PROGRESS    = auto
+
 # Default null
 TARGET_SERVER_PACKAGE      :=
 TARGET_CLIENT_PACKAGE      :=
 ifeq ($(UNAME_S), Linux)
 	TARGET_SERVER_PACKAGE := graphscope-manylinux2014-py3
-    TARGET_CLIENT_PACKAGE := graphscope-client-manylinux2014-py3
+	TARGET_CLIENT_PACKAGE := graphscope-client-manylinux2014-py3
 else
 	TARGET_SERVER_PACKAGE := graphscope-darwin-py3
 	TARGET_CLIENT_PACKAGE := graphscope-client-darwin-py3
 endif
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.10.2
+VINEYARD_VERSION ?= v0.11.7
 PROFILE ?= release
 CI ?= false
 
@@ -61,7 +69,7 @@ graphscope-darwin-py3:
 		python3 -m pip install --upgrade setuptools && \
 		make && \
 		sudo make install INSTALL_PREFIX=/opt/graphscope && \
-		python3 $(WORKING_DIR)/../utils/precompile.py
+		python3 $(WORKING_DIR)/../utils/precompile.py --graph --app
 	# build and delocate wheel
 	cd $(WORKING_DIR)/../../coordinator && \
 		export WITH_EXTRA_DATA=ON && \
@@ -89,7 +97,7 @@ graphscope-manylinux2014-py3-nodocker:
 	cd $(WORKING_DIR)/../.. && \
 	make && \
 	sudo make install INSTALL_PREFIX=/opt/graphscope && \
-	python3 $(WORKING_DIR)/../utils/precompile.py && \
+	python3 $(WORKING_DIR)/../utils/precompile.py --graph --app && \
 	export WITH_EXTRA_DATA=ON && \
 	cd $(WORKING_DIR)/../../coordinator && \
 	rm -rf build dist/*.whl && \
@@ -108,7 +116,7 @@ graphscope-manylinux2014-py3-nodocker:
 	package_name=graphscope python3 setup.py bdist_wheel && \
 	cd dist && \
 	for wheel in `ls ./*.whl`; do \
-		auditwheel repair $$wheel --plat=manylinux2014_x86_64 && rm $$wheel; \
+		(auditwheel repair $$wheel --plat=manylinux2014_x86_64 && rm $$wheel) || true; \
 	done
 
 graphscope-manylinux2014-py3:
@@ -116,7 +124,7 @@ graphscope-manylinux2014-py3:
 	docker run --rm -v $(WORKING_DIR)/../..:/work \
 		${REGISTRY}/graphscope/graphscope-dev:${VINEYARD_VERSION} \
 		bash -c 'source ~/.bashrc && \
-			cd /work/k8s && \
+			cd /work/k8s/internal && \
 			make graphscope-manylinux2014-py3-nodocker'
 
 graphscope-client-manylinux2014-py3-nodocker:
@@ -144,6 +152,7 @@ graphscope-client-manylinux2014-py3-nodocker:
 graphscope-client-darwin-py3:
 	cd $(WORKING_DIR)/../../learning_engine/graph-learn && \
 		git submodule update --init third_party/pybind11 && \
+		cd graphlearn && \
 		rm -rf cmake-build && \
 		mkdir -p cmake-build && \
 		cd cmake-build && \
@@ -163,5 +172,4 @@ graphscope-client-manylinux2014-py3:
 	docker pull ${REGISTRY}/graphscope/graphscope-dev:${VINEYARD_VERSION}
 	docker run --rm -v $(WORKING_DIR)/../..:/work \
 		${REGISTRY}/graphscope/graphscope-dev:${VINEYARD_VERSION} \
-		bash -c 'cd /work/k8s && make graphscope-client-manylinux2014-py3-nodocker'
-
+		bash -c 'cd /work/k8s/internal && make graphscope-client-manylinux2014-py3-nodocker'

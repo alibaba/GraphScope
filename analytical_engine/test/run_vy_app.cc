@@ -34,6 +34,8 @@
 #include "cdlp/cdlp.h"
 #include "lcc/lcc.h"
 #include "pagerank/pagerank.h"
+#include "pagerank/pagerank_auto.h"
+#include "pagerank/pagerank_local.h"
 #include "sssp/sssp.h"
 #include "wcc/wcc.h"
 
@@ -42,12 +44,16 @@
 
 namespace bl = boost::leaf;
 
-using FragmentType =
-    vineyard::ArrowFragment<vineyard::property_graph_types::OID_TYPE,
-                            vineyard::property_graph_types::VID_TYPE>;
+using oid_t = vineyard::property_graph_types::OID_TYPE;
+using vid_t = vineyard::property_graph_types::VID_TYPE;
+
+using FragmentType = vineyard::ArrowFragment<oid_t, vid_t>;
 
 using ProjectedFragmentType =
-    gs::ArrowProjectedFragment<int64_t, uint64_t, double, int64_t>;
+    gs::ArrowProjectedFragment<oid_t, vid_t, grape::EmptyType,
+                               grape::EmptyType>;
+using ProjectedFragmentType2 =
+    gs::ArrowProjectedFragment<oid_t, vid_t, grape::EmptyType, int64_t>;
 
 void RunWCC(std::shared_ptr<FragmentType> fragment,
             const grape::CommSpec& comm_spec, const std::string& out_prefix) {
@@ -196,11 +202,8 @@ void RunAutoSSSP(std::shared_ptr<FragmentType> fragment,
 void RunProjectedWCC(std::shared_ptr<ProjectedFragmentType> fragment,
                      const grape::CommSpec& comm_spec,
                      const std::string& out_prefix) {
-  /*
-    using AppType =
-        grape::WCCProjected<ProjectedFragmentType>;
-    using AppType = grape::WCCAuto<ProjectedFragmentType>;
-  */
+  // using AppType = grape::WCCProjected<ProjectedFragmentType>;
+  // using AppType = grape::WCCAuto<ProjectedFragmentType>;
   using AppType = grape::WCC<ProjectedFragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
@@ -220,15 +223,12 @@ void RunProjectedWCC(std::shared_ptr<ProjectedFragmentType> fragment,
   worker->Finalize();
 }
 
-void RunProjectedSSSP(std::shared_ptr<ProjectedFragmentType> fragment,
+void RunProjectedSSSP(std::shared_ptr<ProjectedFragmentType2> fragment,
                       const grape::CommSpec& comm_spec,
                       const std::string& out_prefix) {
-  /*
-    using AppType =
-        grape::SSSPProjected<ProjectedFragmentType>;
-    using AppType = grape::SSSPAuto<ProjectedFragmentType>;
-  */
-  using AppType = grape::SSSP<ProjectedFragmentType>;
+  // using AppType = grape::SSSPProjected<ProjectedFragmentType2>;
+  // using AppType = grape::SSSPAuto<ProjectedFragmentType2>;
+  using AppType = grape::SSSP<ProjectedFragmentType2>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
   auto spec = grape::DefaultParallelEngineSpec();
@@ -321,6 +321,7 @@ void RunProjectedPR(std::shared_ptr<ProjectedFragmentType> fragment,
                     const std::string& out_prefix) {
   // using AppType = grape::PageRankAuto<ProjectedFragmentType>;
   using AppType = grape::PageRank<ProjectedFragmentType>;
+  // using AppType = grape::PageRankLocal<ProjectedFragmentType>;
   auto app = std::make_shared<AppType>();
   auto worker = AppType::CreateWorker(app, fragment);
   auto spec = grape::DefaultParallelEngineSpec();
@@ -358,17 +359,50 @@ void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
       RunAutoWCC(fragment, comm_spec, "./outputs_auto_wcc/");
       RunAutoSSSP(fragment, comm_spec, "./outputs_auto_sssp/");
     } else {
-      std::shared_ptr<ProjectedFragmentType> projected_fragment =
-          ProjectedFragmentType::Project(fragment, 0, 0, 0, 0);
+      {
+        // v_prop is grape::EmptyType, e_prop is grape::EmptyType
+        LOG(INFO) << "start project ... memory = " << vineyard::get_rss_pretty()
+                  << ", peak = " << vineyard::get_peak_rss_pretty();
+        std::shared_ptr<ProjectedFragmentType> projected_fragment =
+            ProjectedFragmentType::Project(fragment, 0, -1, 0, -1);
+        LOG(INFO) << "finish project ... memory = "
+                  << vineyard::get_rss_pretty()
+                  << ", peak = " << vineyard::get_peak_rss_pretty();
 
-      RunProjectedWCC(projected_fragment, comm_spec, "./output_projected_wcc/");
-      RunProjectedSSSP(projected_fragment, comm_spec,
-                       "./output_projected_sssp/");
-      RunProjectedCDLP(projected_fragment, comm_spec,
-                       "./output_projected_cdlp/");
-      RunProjectedBFS(projected_fragment, comm_spec, "./output_projected_bfs/");
-      RunProjectedLCC(projected_fragment, comm_spec, "./output_projected_lcc/");
-      RunProjectedPR(projected_fragment, comm_spec, "./output_projected_pr/");
+        RunProjectedWCC(projected_fragment, comm_spec,
+                        "./output_projected_wcc/");
+        RunProjectedCDLP(projected_fragment, comm_spec,
+                         "./output_projected_cdlp/");
+        RunProjectedLCC(projected_fragment, comm_spec,
+                        "./output_projected_lcc/");
+        RunProjectedPR(projected_fragment, comm_spec,
+                       "./output_projected_pagerank/");
+        RunProjectedBFS(projected_fragment, comm_spec,
+                        "./output_projected_bfs/");
+
+        LOG(INFO) << "finish running application ... memory = "
+                  << vineyard::get_rss_pretty()
+                  << ", peak = " << vineyard::get_peak_rss_pretty();
+      }
+
+      {
+        // v_prop is grape::EmptyType, e_prop is int64_t
+
+        LOG(INFO) << "start project ... memory = " << vineyard::get_rss_pretty()
+                  << ", peak = " << vineyard::get_peak_rss_pretty();
+        std::shared_ptr<ProjectedFragmentType2> projected_fragment =
+            ProjectedFragmentType2::Project(fragment, 0, -1, 0, 2);
+        LOG(INFO) << "finish project ... memory = "
+                  << vineyard::get_rss_pretty()
+                  << ", peak = " << vineyard::get_peak_rss_pretty();
+
+        RunProjectedSSSP(projected_fragment, comm_spec,
+                         "./output_projected_sssp/");
+
+        LOG(INFO) << "finish running application ... memory = "
+                  << vineyard::get_rss_pretty()
+                  << ", peak = " << vineyard::get_peak_rss_pretty();
+      }
     }
   }
 }
@@ -421,13 +455,11 @@ int main(int argc, char** argv) {
 
     LOG(INFO) << "Connected to IPCServer: " << ipc_socket;
 
-    vineyard::ObjectID fragment_id;
+    vineyard::ObjectID fragment_id = vineyard::InvalidObjectID();
     {
-      using oid_t = vineyard::property_graph_types::OID_TYPE;
-      using vid_t = vineyard::property_graph_types::VID_TYPE;
-
       auto loader = std::make_unique<gs::ArrowFragmentLoader<oid_t, vid_t>>(
-          client, comm_spec, efiles, vfiles, directed != 0);
+          client, comm_spec, efiles, vfiles, directed != 0,
+          /* generate_eid */ false, /* retain_oid */ false);
       fragment_id =
           bl::try_handle_all([&loader]() { return loader->LoadFragment(); },
                              [](const vineyard::GSError& e) {
@@ -441,11 +473,15 @@ int main(int argc, char** argv) {
     }
 
     LOG(INFO) << "[worker-" << comm_spec.worker_id()
-              << "] loaded graph to vineyard ... ";
+              << "] loaded graph to vineyard ... " << fragment_id;
+    LOG(INFO) << "peek memory: " << vineyard::get_peak_rss_pretty()
+              << std::endl;
 
     MPI_Barrier(comm_spec.comm());
 
     Run(client, comm_spec, fragment_id, run_projected, app_name, path_pattern);
+    LOG(INFO) << "memory: " << vineyard::get_rss_pretty()
+              << ", peek memory: " << vineyard::get_peak_rss_pretty();
 
     MPI_Barrier(comm_spec.comm());
   }
@@ -454,4 +490,7 @@ int main(int argc, char** argv) {
   return 0;
 }
 
-template class gs::ArrowProjectedFragment<int64_t, uint64_t, double, int64_t>;
+template class gs::ArrowProjectedFragment<int64_t, uint64_t, grape::EmptyType,
+                                          grape::EmptyType>;
+template class gs::ArrowProjectedFragment<int64_t, uint64_t, grape::EmptyType,
+                                          int64_t>;

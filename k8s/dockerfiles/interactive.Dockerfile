@@ -1,22 +1,35 @@
 # Interactive engine
 
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
-ARG BASE_VERSION=v0.10.2
-FROM $REGISTRY/graphscope/graphscope-dev:$BASE_VERSION AS builder
+ARG BUILDER_VERSION=latest
+ARG RUNTIME_VERSION=latest
+FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION AS builder
+
+ARG CI=false
 
 ARG profile=release
 ENV profile=$profile
-ADD . /home/graphscope/GraphScope
+COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 
-RUN sudo chown -R graphscope:graphscope /home/graphscope/GraphScope
 ENV PATH=$PATH:/opt/maven/apache-maven-3.8.6/bin
-RUN cd /home/graphscope/GraphScope/ \
-    && mkdir /home/graphscope/install \
-    && make interactive-install BUILD_TYPE="$profile" INSTALL_PREFIX=/home/graphscope/install \
-    && strip /home/graphscope/install/bin/gaia_executor
+
+RUN cd /home/graphscope/GraphScope/ && \
+    if [ "${CI}" == "true" ]; then \
+        cp -r artifacts/interactive /home/graphscope/install; \
+    else \
+        mkdir /home/graphscope/install; \
+        make interactive-install BUILD_TYPE="$profile" INSTALL_PREFIX=/home/graphscope/install; \
+    fi
 
 ############### RUNTIME: frontend #######################
 FROM centos:7.9.2009 AS frontend
+
+ENV GRAPHSCOPE_HOME=/opt/graphscope
+ENV PATH=$PATH:$GRAPHSCOPE_HOME/bin LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GRAPHSCOPE_HOME/lib
+
+RUN yum install -y java-1.8.0-openjdk sudo \
+    && yum clean all \
+    && rm -rf /var/cache/yum
 
 COPY --from=builder /home/graphscope/install/bin/giectl /opt/graphscope/bin/giectl
 # vineyard.frontend.properties, log configuration files
@@ -24,29 +37,31 @@ COPY --from=builder /home/graphscope/install/conf /opt/graphscope/conf
 # jars, libir_core.so
 COPY --from=builder /home/graphscope/install/lib /opt/graphscope/lib
 
-ENV GRAPHSCOPE_HOME=/opt/graphscope LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib
-
-
-RUN yum install -y java-1.8.0-openjdk \
-    && yum clean all \
-    && rm -rf /var/cache/yum
+RUN chmod +x /opt/graphscope/bin/giectl
 
 RUN useradd -m graphscope -u 1001 \
     && echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+RUN sudo mkdir -p /var/log/graphscope \
+  && sudo chown -R graphscope:graphscope /var/log/graphscope
+
 USER graphscope
 WORKDIR /home/graphscope
 
 ############### RUNTIME: executor #######################
-FROM $REGISTRY/graphscope/vineyard-runtime:$BASE_VERSION AS executor
+FROM $REGISTRY/graphscope/vineyard-runtime:$RUNTIME_VERSION AS executor
+
+ENV GRAPHSCOPE_HOME=/opt/graphscope
+ENV PATH=$PATH:$GRAPHSCOPE_HOME/bin LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GRAPHSCOPE_HOME/lib
+ENV RUST_BACKTRACE=1
 
 # gaia_executor, giectl
 COPY --from=builder /home/graphscope/install/bin /opt/graphscope/bin
 # vineyard.executor.properties, log configuration files
 COPY --from=builder /home/graphscope/install/conf /opt/graphscope/conf
 
-ENV GRAPHSCOPE_HOME=/opt/graphscope LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/graphscope/lib
+RUN sudo chmod +x /opt/graphscope/bin/*
 
-ENV RUST_BACKTRACE=1
 
 USER graphscope
 WORKDIR /home/graphscope

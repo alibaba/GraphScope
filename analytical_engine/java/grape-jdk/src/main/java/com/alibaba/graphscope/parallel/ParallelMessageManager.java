@@ -39,7 +39,6 @@ import com.alibaba.graphscope.fragment.ImmutableEdgecutFragment;
 import com.alibaba.graphscope.fragment.adaptor.ArrowProjectedAdaptor;
 import com.alibaba.graphscope.fragment.adaptor.ImmutableEdgecutFragmentAdaptor;
 import com.alibaba.graphscope.utils.FFITypeFactoryhelper;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -49,7 +48,7 @@ import java.util.function.Supplier;
 /**
  * The parallel message manager, used in serial apps {@link com.alibaba.graphscope.app.ParallelAppBase}.
  */
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @FFITypeAlias(GRAPE_PARALLEL_MESSAGE_MANAGER)
 @CXXHead({
     GRAPE_PARALLEL_PARALLEL_MESSAGE_MANAGER_H,

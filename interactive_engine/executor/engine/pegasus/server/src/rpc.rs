@@ -275,7 +275,7 @@ impl<S: pb::job_service_server::JobService> RPCJobServer<S> {
         }
 
         if let Some(dur) = rpc_config.rpc_timeout_ms.take() {
-            builder.timeout(Duration::from_millis(dur));
+            builder = builder.timeout(Duration::from_millis(dur));
         }
 
         if let Some(size) = rpc_config.rpc_initial_stream_window_size {

@@ -31,7 +31,7 @@ from graphscope.proto import graph_def_pb2
 
 
 def ldbc_sample_single_label(prefix, directed):
-    graph = graphscope.g(directed=directed, generate_eid=False)
+    graph = graphscope.g(directed=directed, generate_eid=False, retain_oid=False)
     graph = graph.add_vertices(
         Loader(os.path.join(prefix, "comment_0_0.csv"), delimiter="|"), "comment"
     )
@@ -43,7 +43,9 @@ def ldbc_sample_single_label(prefix, directed):
 
 
 def ldbc_sample_string_oid(prefix, directed):
-    graph = graphscope.g(directed=directed, oid_type="string", generate_eid=False)
+    graph = graphscope.g(
+        directed=directed, oid_type="string", generate_eid=False, retain_oid=False
+    )
     graph = graph.add_vertices(
         Loader(os.path.join(prefix, "comment_0_0.csv"), delimiter="|"), "comment"
     )
@@ -55,7 +57,7 @@ def ldbc_sample_string_oid(prefix, directed):
 
 
 def ldbc_sample_single_label_with_sess(sess, prefix, directed):
-    graph = sess.g(directed=directed, generate_eid=False)
+    graph = sess.g(directed=directed, generate_eid=False, retain_oid=False)
     graph = graph.add_vertices(
         Loader(os.path.join(prefix, "comment_0_0.csv"), delimiter="|"), "comment"
     )
@@ -67,7 +69,7 @@ def ldbc_sample_single_label_with_sess(sess, prefix, directed):
 
 
 def ldbc_sample_multi_labels(prefix, directed):
-    graph = graphscope.g(directed=directed, generate_eid=False)
+    graph = graphscope.g(directed=directed, generate_eid=False, retain_oid=False)
     graph = (
         graph.add_vertices(
             Loader(os.path.join(prefix, "comment_0_0.csv"), delimiter="|"),
@@ -138,6 +140,7 @@ def load_p2p(prefix, directed):
         },
         directed=directed,
         generate_eid=False,
+        retain_oid=False,
     )
     return graph
 

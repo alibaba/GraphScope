@@ -14,7 +14,7 @@
 package com.alibaba.graphscope.groot.schema.request;
 
 import com.alibaba.graphscope.groot.operation.OperationType;
-import com.alibaba.maxgraph.proto.groot.DdlRequestPb;
+import com.alibaba.graphscope.proto.groot.DdlRequestPb;
 import com.google.common.base.Objects;
 import com.google.protobuf.ByteString;
 

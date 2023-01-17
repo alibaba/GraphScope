@@ -11,15 +11,15 @@ edition = "2018"
 pegasus_graph = { path = "../graph" }
 pegasus = { path = "../pegasus" }
 pegasus_common = { path = "../common" }
-tonic = { version = "0.5", features = ["default", "compression"] }
-prost = "0.8"
-tokio = { version = "1.0", features = ["macros", "sync", "rt-multi-thread"] }
+tonic = { version = "0.8", features = ["default", "compression"] }
+prost = "0.11"
+tokio = { version = "1.24", features = ["macros", "sync", "rt-multi-thread"] }
 structopt = "0.3"
-futures = "0.3.19"
+futures = "0.3"
 log = "0.4"
 
 [build-dependencies]
-tonic-build = { version = "0.5", features = ["default", "compression"] }
+tonic-build = { version = "0.8", features = ["default", "compression"] }
 
 [features]
 default = []

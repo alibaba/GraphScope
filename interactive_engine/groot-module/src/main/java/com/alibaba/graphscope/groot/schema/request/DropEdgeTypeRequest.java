@@ -14,8 +14,8 @@
 package com.alibaba.graphscope.groot.schema.request;
 
 import com.alibaba.graphscope.groot.operation.OperationType;
-import com.alibaba.maxgraph.sdkcommon.schema.TypeDef;
-import com.alibaba.maxgraph.sdkcommon.schema.TypeEnum;
+import com.alibaba.graphscope.sdkcommon.schema.TypeDef;
+import com.alibaba.graphscope.sdkcommon.schema.TypeEnum;
 import com.google.protobuf.ByteString;
 
 public class DropEdgeTypeRequest extends AbstractDdlRequest {

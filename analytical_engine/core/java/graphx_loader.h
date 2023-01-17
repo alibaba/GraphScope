@@ -31,6 +31,8 @@
 #include "vineyard/basic/ds/arrow_utils.h"
 #include "vineyard/client/client.h"
 #include "vineyard/graph/loader/basic_ev_fragment_loader.h"
+#include "vineyard/graph/loader/basic_ev_fragment_loader_impl.h"
+#include "vineyard/graph/utils/table_shuffler_impl.h"
 
 #include "core/java/graphx_raw_data.h"
 
@@ -101,11 +103,11 @@ class GraphXLoader
   explicit GraphXLoader(vineyard::ObjectID objId, vineyard::Client& client,
                         const grape::CommSpec& comm_spec,
                         const GraphXPartitioner<OID_T>& partitioner,
-                        bool directed = true, bool retain_oid = false,
-                        bool generate_eid = false)
+                        bool directed = true, bool generate_eid = false,
+                        bool retain_oid = false)
       : vineyard::BasicEVFragmentLoader<OID_T, VID_T, GraphXPartitioner<OID_T>>(
-            client, comm_spec, partitioner, directed, retain_oid,
-            generate_eid) {
+            client, comm_spec, partitioner, directed, generate_eid,
+            retain_oid) {
     this->raw_data =
         std::dynamic_pointer_cast<raw_data_t>(client.GetObject(objId));
   }

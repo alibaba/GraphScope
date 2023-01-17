@@ -72,6 +72,7 @@ vineyard::ObjectID LoadGiraphFragment(
   auto graph = std::make_shared<detail::Graph>();
   graph->directed = directed;
   graph->generate_eid = false;
+  graph->retain_oid = false;
 
   auto vertex = std::make_shared<detail::Vertex>();
   vertex->label = "label1";
@@ -233,12 +234,21 @@ void CreateAndQuery(std::string params) {
       "gs::ArrowProjectedFragment<int64_t,uint64_t,int64_t,int64_t>";
   pt.put("frag_name", frag_name);
 
+  std::string jar_name;
   if (getenv("USER_JAR_PATH")) {
-    pt.put("jar_name", getenv("USER_JAR_PATH"));
+    jar_name = getenv("USER_JAR_PATH");
   } else {
     LOG(ERROR) << "JAR_NAME not set";
     return;
   }
+  if (getenv("GIRAPH_JAR_PATH")) {
+    jar_name += ":";
+    jar_name += getenv("GIRAPH_JAR_PATH");
+  } else {
+    LOG(FATAL) << "GIRAPH_JAR_PATH not set";
+    return;
+  }
+  pt.put("jar_name", jar_name);
 
   std::stringstream ss;
   boost::property_tree::json_parser::write_json(ss, pt);

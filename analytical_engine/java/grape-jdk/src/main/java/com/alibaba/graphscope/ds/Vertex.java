@@ -31,7 +31,6 @@ import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
 /**
  * Java Wrapper for <a href=
@@ -39,7 +38,7 @@ import com.alibaba.graphscope.utils.JNILibraryName;
  *
  * @param <VID_T> vertex id type. Long recommended.
  */
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @CXXHead(GRAPE_VERTEX_ARRAY_H)
 @FFITypeAlias(GRAPE_VERTEX)
 @CXXTemplate(

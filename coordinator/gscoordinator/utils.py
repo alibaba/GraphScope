@@ -25,6 +25,7 @@ import inspect
 import json
 import logging
 import os
+import shlex
 import shutil
 import subprocess
 import sys
@@ -100,19 +101,26 @@ if GRAPHSCOPE_HOME is None:
         GRAPHSCOPE_HOME = DEFAULT_GRAPHSCOPE_HOME
 
 # resolve from develop source tree
+# Here the GRAPHSCOPE_HOME has been set to the root of the source tree,
+# So the engine location doesn't need to check again,
+# just rely on GRAPHSCOPE_HOME.
 if GRAPHSCOPE_HOME is None:
     GRAPHSCOPE_HOME = os.path.join(COORDINATOR_HOME, "..")
 
 # ANALYTICAL_ENGINE_HOME
 #   1) infer from GRAPHSCOPE_HOME
-ANALYTICAL_ENGINE_HOME = os.path.join(GRAPHSCOPE_HOME)
+ANALYTICAL_ENGINE_HOME = GRAPHSCOPE_HOME
 ANALYTICAL_ENGINE_PATH = os.path.join(ANALYTICAL_ENGINE_HOME, "bin", "grape_engine")
 if not os.path.isfile(ANALYTICAL_ENGINE_PATH):
     # try to get analytical engine from build dir
-    ANALYTICAL_ENGINE_HOME = os.path.join(GRAPHSCOPE_HOME, "analytical_engine")
-    ANALYTICAL_ENGINE_PATH = os.path.join(
-        ANALYTICAL_ENGINE_HOME, "build", "grape_engine"
-    )
+    if os.path.isfile(
+        os.path.join(GRAPHSCOPE_HOME, "analytical_engine", "build", "grape_engine")
+    ):
+        ANALYTICAL_ENGINE_HOME = os.path.join(GRAPHSCOPE_HOME, "analytical_engine")
+        ANALYTICAL_ENGINE_PATH = os.path.join(
+            ANALYTICAL_ENGINE_HOME, "build", "grape_engine"
+        )
+
 ANALYTICAL_BUILTIN_SPACE = os.path.join(GRAPHSCOPE_HOME, "precompiled", "builtin")
 
 # ANALYTICAL_ENGINE_JAVA_HOME
@@ -121,15 +129,20 @@ ANALYTICAL_ENGINE_JAVA_HOME = ANALYTICAL_ENGINE_HOME
 ANALYTICAL_ENGINE_JAVA_RUNTIME_JAR = os.path.join(
     ANALYTICAL_ENGINE_JAVA_HOME,
     "lib",
-    "grape-runtime-{}-shaded.jar".format(__version__),
+    f"grape-runtime-{__version__}-shaded.jar",
 )
-ANALYTICAL_ENGINE_JAVA_INIT_CLASS_PATH = "{}".format(ANALYTICAL_ENGINE_JAVA_RUNTIME_JAR)
+ANALYTICAL_ENGINE_JAVA_GIRAPH_JAR = os.path.join(
+    ANALYTICAL_ENGINE_JAVA_HOME,
+    "lib",
+    f"grape-giraph-{__version__}-shaded.jar",
+)
+ANALYTICAL_ENGINE_JAVA_INIT_CLASS_PATH = (
+    f"{ANALYTICAL_ENGINE_JAVA_RUNTIME_JAR}:{ANALYTICAL_ENGINE_JAVA_GIRAPH_JAR}"
+)
 
-ANALYTICAL_ENGINE_JAVA_JVM_OPTS = (
-    "-Djava.library.path={}/lib -Djava.class.path={}".format(
-        GRAPHSCOPE_HOME,
-        ANALYTICAL_ENGINE_JAVA_INIT_CLASS_PATH,
-    )
+ANALYTICAL_ENGINE_JAVA_JVM_OPTS = f"-Djava.library.path={GRAPHSCOPE_HOME}/lib"
+ANALYTICAL_ENGINE_JAVA_JVM_OPTS += (
+    f" -Djava.class.path={ANALYTICAL_ENGINE_JAVA_INIT_CLASS_PATH}"
 )
 
 
@@ -137,13 +150,12 @@ ANALYTICAL_ENGINE_JAVA_JVM_OPTS = (
 INTERACTIVE_INSTANCE_TIMEOUT_SECONDS = 120  # 2 mins
 INTERACTIVE_ENGINE_SCRIPT = os.path.join(GRAPHSCOPE_HOME, "bin", "giectl")
 if not os.path.isfile(INTERACTIVE_ENGINE_SCRIPT):
-    INTERACTIVE_ENGINE_SCRIPT = os.path.join(
-        GRAPHSCOPE_HOME, ".install_prefix", "bin", "giectl"
-    )
-if not os.path.isfile(INTERACTIVE_ENGINE_SCRIPT):
-    INTERACTIVE_ENGINE_SCRIPT = os.path.join(
-        GRAPHSCOPE_HOME, "interactive_engine", "bin", "giectl"
-    )
+    if os.path.isfile(
+        os.path.join(GRAPHSCOPE_HOME, ".install_prefix", "bin", "giectl")
+    ):
+        INTERACTIVE_ENGINE_SCRIPT = os.path.join(
+            GRAPHSCOPE_HOME, ".install_prefix", "bin", "giectl"
+        )
 
 # default threads per worker configuration for GIE/GAIA
 INTERACTIVE_ENGINE_THREADS_PER_WORKER = 2
@@ -154,7 +166,7 @@ LLVM4JNI_USER_OUT_DIR_BASE = "user-llvm4jni-output"
 PROCESSOR_MAIN_CLASS = "com.alibaba.graphscope.annotation.Main"
 JAVA_CODEGEN_OUTPUT_PREFIX = "gs-ffi"
 GRAPE_PROCESSOR_JAR = os.path.join(
-    GRAPHSCOPE_HOME, "lib", "grape-runtime-{}-shaded.jar".format(__version__)
+    GRAPHSCOPE_HOME, "lib", f"grape-runtime-{__version__}-shaded.jar"
 )
 
 GIRAPH_DRIVER_CLASS = "com.alibaba.graphscope.app.GiraphComputationAdaptor"
@@ -191,11 +203,11 @@ def get_app_sha256(attr, java_class_path: str):
 
     if app_type == "cpp_pie":
         app_sha256 = hashlib.sha256(
-            f"{app_type}.{app_class}.{graph_type}".encode("utf-8")
+            f"{app_type}.{app_class}.{graph_type}".encode("utf-8", errors="ignore")
         ).hexdigest()
     elif app_type == "java_pie":
         s = hashlib.sha256()
-        s.update(f"{graph_type}.{vd_type}".encode("utf-8"))
+        s.update(f"{graph_type}.{vd_type}".encode("utf-8", errors="ignore"))
         app_sha256 = s.hexdigest()
         logger.info(
             "app sha256 for app {} with graph {}:{}, is {}".format(
@@ -204,7 +216,9 @@ def get_app_sha256(attr, java_class_path: str):
         )
     else:
         s = hashlib.sha256()
-        s.update(f"{app_type}.{app_class}.{graph_type}".encode("utf-8"))
+        s.update(
+            f"{app_type}.{app_class}.{graph_type}".encode("utf-8", errors="ignore")
+        )
         if types_pb2.GAR in attr:
             s.update(attr[types_pb2.GAR].s)
         app_sha256 = s.hexdigest()
@@ -213,7 +227,7 @@ def get_app_sha256(attr, java_class_path: str):
 
 def get_graph_sha256(attr):
     _, graph_class, _ = _codegen_graph_info(attr)
-    return hashlib.sha256(graph_class.encode("utf-8")).hexdigest()
+    return hashlib.sha256(graph_class.encode("utf-8", errors="ignore")).hexdigest()
 
 
 def check_java_app_graph_consistency(
@@ -254,8 +268,116 @@ def check_java_app_graph_consistency(
     return True
 
 
+def run_command(args: str, cwd=None):
+    logger.info("Running command: %s, cwd: %s", args, cwd)
+    cp = subprocess.run(shlex.split(args), capture_output=True, cwd=cwd)
+    if cp.returncode != 0:
+        err = cp.stderr.decode("utf-8", errors="ignore")
+        logger.error(
+            "Failed to run command: %s, error message is: %s",
+            args,
+            err,
+        )
+        raise RuntimeError(f"Failed to run command: {args}, err: {err}")
+    return cp.stdout.decode("utf-8", errors="ignore")
+
+
+def delegate_command_to_pod(args: str, pod: str, container: str):
+    """Delegate a command to a pod.
+
+    Args:
+        command (str): Command to be delegated.
+        pod_name (str): Pod name.
+        namespace (str): Namespace of the pod.
+
+    Returns:
+        str: Output of the command.
+    """
+    # logger.info("Delegate command to pod: %s, %s, %s", args, pod, container)
+    args = f'kubectl exec -c {container} {pod} -- bash -c "{args}"'
+    return run_command(args)
+
+
+def compile_library(commands, workdir, output_name, launcher):
+    if launcher.type() == types_pb2.K8S:
+        return _compile_on_kubernetes(
+            commands,
+            workdir,
+            output_name,
+            launcher.hosts_list[0],
+            launcher._engine_cluster.analytical_container_name,
+        )
+    elif launcher.type() == types_pb2.HOSTS:
+        return _compile_on_local(commands, workdir, output_name)
+    else:
+        raise RuntimeError(f"Unsupported launcher type: {launcher.type()}")
+
+
+def _compile_on_kubernetes(commands, workdir, output_name, pod, container):
+    logger.info(
+        "compile on kubernetes, %s, %s, %s, %s, %s",
+        commands,
+        workdir,
+        output_name,
+        pod,
+        container,
+    )
+    try:
+        full_path = get_lib_path(workdir, output_name)
+        try:
+            # The library may exists in the analytical pod.
+            test_cmd = f"test -f {full_path}"
+            logger.debug(delegate_command_to_pod(test_cmd, pod, container))
+            logger.info("Library exists, skip compilation")
+            cp = f"kubectl cp {pod}:{full_path} {full_path} -c {container}"
+            logger.debug(run_command(cp))
+            return full_path
+        except RuntimeError:
+            pass
+        parent_dir = os.path.dirname(workdir)
+        mkdir = f"mkdir -p {parent_dir}"
+        logger.debug(delegate_command_to_pod(mkdir, pod, container))
+        cp = f"kubectl cp {workdir} {pod}:{workdir} -c {container}"
+        logger.debug(run_command(cp))
+        prepend = "source scl_source enable devtoolset-10 rh-python38 &&"
+        for command in commands:
+            command = f"{prepend} cd {workdir} && {command}"
+            logger.debug(delegate_command_to_pod(command, pod, container))
+        cp = f"kubectl cp {pod}:{full_path} {full_path} -c {container}"
+        logger.debug(run_command(cp))
+        if not os.path.isfile(full_path):
+            logger.error("Could not find desired library, found files are:")
+            logger.error(os.listdir(workdir))
+            raise FileNotFoundError(full_path)
+    except Exception as e:
+        raise CompilationError(f"Failed to compile {output_name} on kubernetes") from e
+    return full_path
+
+
+def _compile_on_local(commands, workdir, output_name):
+    logger.info("compile on local, %s, %s, %s", commands, workdir, output_name)
+    try:
+        for command in commands:
+            logger.debug(run_command(command, cwd=workdir))
+        full_path = get_lib_path(workdir, output_name)
+        if not os.path.isfile(full_path):
+            logger.error("Could not find desired library")
+            logger.info(os.listdir(workdir))
+            raise FileNotFoundError(full_path)
+    except Exception as e:
+        raise CompilationError(
+            f"Failed to compile {output_name} on platform {get_platform_info()}"
+        ) from e
+    return full_path
+
+
 def compile_app(
-    workspace: str, library_name, attr, engine_config: dict, java_class_path: str
+    workspace: str,
+    library_name: str,
+    attr: dict,
+    engine_config: dict,
+    launcher,
+    java_class_path: str,
 ):
     """Compile an application.
 
@@ -271,10 +393,11 @@ def compile_app(
         str: Directory containing generated java and jni code. For c++/python app, return None.
         str: App type.
     """
-    app_dir = os.path.join(workspace, library_name)
-    os.makedirs(app_dir, exist_ok=True)
+    logger.info("Building app library...")
+    library_dir = os.path.join(workspace, library_name)
+    os.makedirs(library_dir, exist_ok=True)
 
-    _extract_gar(app_dir, attr)
+    _extract_gar(library_dir, attr)
     # codegen app and graph info
     # vd_type and md_type is None in cpp_pie
     (
@@ -303,17 +426,13 @@ def compile_app(
     graph_header, graph_type, graph_oid_type = _codegen_graph_info(attr)
     if app_type == "java_pie":
         logger.info(
-            "Check consistent between java app {} and graph {}".format(
-                java_app_class, graph_type
-            )
+            "Check consistent between java app %s and graph %s",
+            java_app_class,
+            graph_type,
         )
         check_java_app_graph_consistency(app_class, graph_type, java_app_class)
 
-    os.chdir(app_dir)
-
-    extra_options = []
-    if types_pb2.CMAKE_EXTRA_OPTIONS in attr:
-        extra_options = attr[types_pb2.CMAKE_EXTRA_OPTIONS].s.decode("utf-8").split(" ")
+    os.chdir(library_dir)
 
     module_name = ""
     # Output directory for java codegen
@@ -321,28 +440,32 @@ def compile_app(
     # set OPAL_PREFIX in CMAKE_PREFIX_PATH
     OPAL_PREFIX = os.environ.get("OPAL_PREFIX", "")
     cmake_commands = [
-        shutil.which("cmake"),
+        "cmake",
         ".",
         f"-DNETWORKX={engine_config['networkx']}",
         f"-DCMAKE_PREFIX_PATH='{GRAPHSCOPE_HOME};{OPAL_PREFIX}'",
     ]
-    cmake_commands.extend(extra_options)
+    if types_pb2.CMAKE_EXTRA_OPTIONS in attr:
+        extra_options = (
+            attr[types_pb2.CMAKE_EXTRA_OPTIONS]
+            .s.decode("utf-8", errors="ignore")
+            .split(" ")
+        )
+        cmake_commands.extend(extra_options)
+
     if os.environ.get("GRAPHSCOPE_ANALYTICAL_DEBUG", "") == "1":
         cmake_commands.append("-DCMAKE_BUILD_TYPE=Debug")
     if app_type == "java_pie":
-        if not os.path.isfile(GRAPE_PROCESSOR_JAR):
-            raise RuntimeError("Grape runtime jar not found")
         # for java need to run preprocess, and the generated files can be reused,
         # if the fragment & vd type is same.
-
         java_codegen_out_dir = os.path.join(
-            workspace, "{}-{}".format(JAVA_CODEGEN_OUTPUT_PREFIX, library_name)
+            workspace, f"{JAVA_CODEGEN_OUTPUT_PREFIX}-{library_name}"
         )
+        # TODO(zhanglei): Could this codegen caching happends on engine side?
         if os.path.isdir(java_codegen_out_dir):
             logger.info(
-                "Desired java codegen directory: {} exists, skip...".format(
-                    java_codegen_out_dir
-                )
+                "Found existing java codegen directory: %s, skipped codegen",
+                java_codegen_out_dir,
             )
             cmake_commands += ["-DJAVA_APP_CODEGEN=OFF"]
         else:
@@ -350,53 +473,51 @@ def compile_app(
         cmake_commands += [
             "-DENABLE_JAVA_SDK=ON",
             "-DJAVA_PIE_APP=ON",
-            "-DPRE_CP={}:{}".format(GRAPE_PROCESSOR_JAR, java_jar_path),
-            "-DPROCESSOR_MAIN_CLASS={}".format(PROCESSOR_MAIN_CLASS),
-            "-DJAR_PATH={}".format(java_jar_path),
-            "-DOUTPUT_DIR={}".format(java_codegen_out_dir),
+            f"-DPRE_CP={GRAPE_PROCESSOR_JAR}:{java_jar_path}",
+            f"-DPROCESSOR_MAIN_CLASS={PROCESSOR_MAIN_CLASS}",
+            f"-DJAR_PATH={java_jar_path}",
+            f"-DOUTPUT_DIR={java_codegen_out_dir}",
         ]
         # if run llvm4jni.sh not found, we just go ahead,since it is optional.
-        if LLVM4JNI_HOME and os.path.isfile(os.path.join(LLVM4JNI_HOME, "run.sh")):
+        # The go ahead part moves to `gscoordinator/template/CMakeLists.template`
+        if LLVM4JNI_HOME:
             llvm4jni_user_out_dir = os.path.join(
-                workspace, "{}-{}".format(LLVM4JNI_USER_OUT_DIR_BASE, library_name)
+                workspace, f"{LLVM4JNI_USER_OUT_DIR_BASE}-{library_name}"
             )
             cmake_commands += [
-                "-DRUN_LLVM4JNI_SH={}".format(os.path.join(LLVM4JNI_HOME, "run.sh")),
-                "-DLLVM4JNI_OUTPUT={}".format(llvm4jni_user_out_dir),
-                "-DLIB_PATH={}".format(get_lib_path(app_dir, library_name)),
+                f"-DRUN_LLVM4JNI_SH={os.path.join(LLVM4JNI_HOME, 'run.sh')}",
+                f"-DLLVM4JNI_OUTPUT={llvm4jni_user_out_dir}",
+                f"-DLIB_PATH={get_lib_path(library_dir, library_name)}",
             ]
         else:
             logger.info(
                 "Skip running llvm4jni since env var LLVM4JNI_HOME not found or run.sh not found under LLVM4JNI_HOME"
             )
-        logger.info(" ".join(cmake_commands))
-    elif app_type != "cpp_pie":
+    elif app_type not in ("cpp_pie", "cpp_pregel"):
         if app_type == "cython_pregel":
             pxd_name = "pregel"
-            cmake_commands += ["-DCYTHON_PREGEL_APP=True"]
+            cmake_commands += ["-DCYTHON_PREGEL_APP=ON"]
             if pregel_combine:
-                cmake_commands += ["-DENABLE_PREGEL_COMBINE=True"]
+                cmake_commands += ["-DENABLE_PREGEL_COMBINE=ON"]
         else:
             pxd_name = "pie"
-            cmake_commands += ["-DCYTHON_PIE_APP=True"]
+            cmake_commands += ["-DCYTHON_PIE_APP=ON"]
 
         # Copy pxd file and generate cc file from pyx
         shutil.copyfile(
             os.path.join(TEMPLATE_DIR, f"{pxd_name}.pxd.template"),
-            os.path.join(app_dir, f"{pxd_name}.pxd"),
+            os.path.join(library_dir, f"{pxd_name}.pxd"),
         )
         # Assume the gar will have and only have one .pyx file
-        for pyx_file in glob.glob(app_dir + "/*.pyx"):
+        for pyx_file in glob.glob(library_dir + "/*.pyx"):
             module_name = os.path.splitext(os.path.basename(pyx_file))[0]
-            cc_file = os.path.join(app_dir, module_name + ".cc")
-            subprocess.check_call(
-                [shutil.which("cython"), "-3", "--cplus", "-o", cc_file, pyx_file]
-            )
+            cc_file = os.path.join(library_dir, module_name + ".cc")
+            subprocess.check_call(["cython", "-3", "--cplus", "-o", cc_file, pyx_file])
         app_header = f"{module_name}.h"
 
     # replace and generate cmakelist
     cmakelists_file_tmp = os.path.join(TEMPLATE_DIR, "CMakeLists.template")
-    cmakelists_file = os.path.join(app_dir, "CMakeLists.txt")
+    cmakelists_file = os.path.join(library_dir, "CMakeLists.txt")
     with open(cmakelists_file_tmp, mode="r") as template:
         content = template.read()
         content = Template(content).safe_substitute(
@@ -415,47 +536,20 @@ def compile_app(
             f.write(content)
 
     # compile
-    logger.info("Building app ...")
-    cmake_process = subprocess.Popen(
-        cmake_commands,
-        env=os.environ.copy(),
-        encoding="utf-8",
-        errors="replace",
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.PIPE,
-        universal_newlines=True,
-        bufsize=1,
-    )
-    cmake_stderr_watcher = PipeWatcher(cmake_process.stderr, sys.stderr)
-    setattr(cmake_process, "stderr_watcher", cmake_stderr_watcher)
-    cmake_process.wait()
+    commands = [" ".join(cmake_commands), "make -j2"]
+    lib_path = compile_library(commands, library_dir, library_name, launcher)
 
-    make_process = subprocess.Popen(
-        [shutil.which("make"), "-j4", "VERBOSE=true"],
-        env=os.environ.copy(),
-        encoding="utf-8",
-        errors="replace",
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.PIPE,
-        universal_newlines=True,
-        bufsize=1,
-    )
-    make_stderr_watcher = PipeWatcher(make_process.stderr, sys.stderr)
-    setattr(make_process, "stderr_watcher", make_stderr_watcher)
-    make_process.wait()
-    lib_path = get_lib_path(app_dir, library_name)
-    if not os.path.isfile(lib_path):
-        raise CompilationError(
-            f"Failed to compile app {app_class} on platform {get_platform_info()}"
-        )
-    # TODO(siyuan): Append cmake/make logs to error message when failed.
     return lib_path, java_jar_path, java_codegen_out_dir, app_type
 
 
 def compile_graph_frame(
-    workspace: str, library_name, attr: dict, engine_config: dict, java_class_path: str
+    workspace: str,
+    library_name: str,
+    attr: dict,
+    engine_config: dict,
+    launcher,
 ):
-    """Compile an application.
+    """Compile a graph.
 
     Args:
         workspace (str): Working dir.
@@ -472,20 +566,29 @@ def compile_graph_frame(
         None: For consistency with compile_app.
         None: for consistency with compile_app.
     """
-
+    logger.info("Building graph library ...")
     _, graph_class, _ = _codegen_graph_info(attr)
 
     library_dir = os.path.join(workspace, library_name)
     os.makedirs(library_dir, exist_ok=True)
 
-    os.chdir(library_dir)
-
-    graph_type = attr[types_pb2.GRAPH_TYPE].i
+    # replace and generate cmakelist
+    cmakelists_file_tmp = os.path.join(TEMPLATE_DIR, "CMakeLists.template")
+    cmakelists_file = os.path.join(library_dir, "CMakeLists.txt")
+    with open(cmakelists_file_tmp, mode="r", encoding="utf-8") as template:
+        content = template.read()
+        content = Template(content).safe_substitute(
+            _analytical_engine_home=ANALYTICAL_ENGINE_HOME,
+            _frame_name=library_name,
+            _graph_type=graph_class,
+        )
+        with open(cmakelists_file, mode="w", encoding="utf-8") as f:
+            f.write(content)
 
     # set OPAL_PREFIX in CMAKE_PREFIX_PATH
     OPAL_PREFIX = os.environ.get("OPAL_PREFIX", "")
     cmake_commands = [
-        shutil.which("cmake"),
+        "cmake",
         ".",
         f"-DNETWORKX={engine_config['networkx']}",
         f"-DENABLE_JAVA_SDK={engine_config['enable_java_sdk']}",
@@ -493,65 +596,22 @@ def compile_graph_frame(
     ]
     if os.environ.get("GRAPHSCOPE_ANALYTICAL_DEBUG", "") == "1":
         cmake_commands.append("-DCMAKE_BUILD_TYPE=Debug")
-    logger.info("enable java sdk {}".format(engine_config["enable_java_sdk"]))
+    logger.info("Enable java sdk: %s", engine_config["enable_java_sdk"])
+    graph_type = attr[types_pb2.GRAPH_TYPE].i
     if graph_type == graph_def_pb2.ARROW_PROPERTY:
-        cmake_commands += ["-DPROPERTY_GRAPH_FRAME=True"]
+        cmake_commands += ["-DPROPERTY_GRAPH_FRAME=ON"]
     elif graph_type in (
         graph_def_pb2.ARROW_PROJECTED,
         graph_def_pb2.DYNAMIC_PROJECTED,
         graph_def_pb2.ARROW_FLATTENED,
     ):
-        cmake_commands += ["-DPROJECT_FRAME=True"]
+        cmake_commands += ["-DPROJECT_FRAME=ON"]
     else:
         raise ValueError(f"Illegal graph type: {graph_type}")
-    # replace and generate cmakelist
-    cmakelists_file_tmp = os.path.join(TEMPLATE_DIR, "CMakeLists.template")
-    cmakelists_file = os.path.join(library_dir, "CMakeLists.txt")
-    with open(cmakelists_file_tmp, mode="r") as template:
-        content = template.read()
-        content = Template(content).safe_substitute(
-            _analytical_engine_home=ANALYTICAL_ENGINE_HOME,
-            _frame_name=library_name,
-            _graph_type=graph_class,
-        )
-        with open(cmakelists_file, mode="w") as f:
-            f.write(content)
 
     # compile
-    logger.info("Building graph library ...")
-    cmake_process = subprocess.Popen(
-        cmake_commands,
-        env=os.environ.copy(),
-        encoding="utf-8",
-        errors="replace",
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.PIPE,
-        universal_newlines=True,
-        bufsize=1,
-    )
-    cmake_stderr_watcher = PipeWatcher(cmake_process.stderr, sys.stderr)
-    setattr(cmake_process, "stderr_watcher", cmake_stderr_watcher)
-    cmake_process.wait()
-
-    make_process = subprocess.Popen(
-        [shutil.which("make"), "-j4", "VERBOSE=true"],
-        env=os.environ.copy(),
-        encoding="utf-8",
-        errors="replace",
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.PIPE,
-        universal_newlines=True,
-        bufsize=1,
-    )
-    make_stderr_watcher = PipeWatcher(make_process.stderr, sys.stderr)
-    setattr(make_process, "stderr_watcher", make_stderr_watcher)
-    make_process.wait()
-    lib_path = get_lib_path(library_dir, library_name)
-    if not os.path.isfile(lib_path):
-        raise CompilationError(
-            f"Failed to compile graph {graph_class} on platform {get_platform_info()}"
-        )
-    # TODO(siyuan): Append cmake/make logs to error message when failed.
+    commands = [" ".join(cmake_commands), "make -j2"]
+    lib_path = compile_library(commands, library_dir, library_name, launcher)
     return lib_path, None, None, None
 
 
@@ -661,7 +721,9 @@ def _pre_process_for_bind_app_op(op, op_result_pool, key_to_op, **kwargs):
             # get graph runtime information from results
             result = op_result_pool[key_of_parent_op]
             op.attr[types_pb2.GRAPH_NAME].CopyFrom(
-                attr_value_pb2.AttrValue(s=result.graph_def.key.encode("utf-8"))
+                attr_value_pb2.AttrValue(
+                    s=result.graph_def.key.encode("utf-8", errors="ignore")
+                )
             )
             op.attr[types_pb2.GRAPH_TYPE].CopyFrom(
                 attr_value_pb2.AttrValue(i=result.graph_def.graph_type)
@@ -717,7 +779,11 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
     result = op_result_pool[key_of_parent_op]
     # set app key
     op.attr[types_pb2.APP_NAME].CopyFrom(
-        attr_value_pb2.AttrValue(s=result.result.decode("utf-8").encode("utf-8"))
+        attr_value_pb2.AttrValue(
+            s=result.result.decode("utf-8", errors="ignore").encode(
+                "utf-8", errors="ignore"
+            )
+        )
     )
 
     # loading graph with giraph format need jvm environ.
@@ -730,7 +796,7 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
         engine_jvm_opts = kwargs.pop("engine_jvm_opts")
         op.attr[types_pb2.JVM_OPTS].CopyFrom(utils.s_to_attr(engine_jvm_opts))
 
-    app_type = parent_op.attr[types_pb2.APP_ALGO].s.decode("utf-8")
+    app_type = parent_op.attr[types_pb2.APP_ALGO].s.decode("utf-8", errors="ignore")
 
     if app_type.startswith("java_pie:") or app_type.startswith("giraph:"):
         logger.debug("args len: {}".format(len(op.query_args.args)))
@@ -749,10 +815,10 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
         # we need extra param in first arg.
         user_params["jar_name"] = engine_java_class_path
         user_params["frag_name"] = "gs::ArrowProjectedFragment<{},{},{},{}>".format(
-            parent_op.attr[types_pb2.OID_TYPE].s.decode("utf-8"),
-            parent_op.attr[types_pb2.VID_TYPE].s.decode("utf-8"),
-            parent_op.attr[types_pb2.V_DATA_TYPE].s.decode("utf-8"),
-            parent_op.attr[types_pb2.E_DATA_TYPE].s.decode("utf-8"),
+            parent_op.attr[types_pb2.OID_TYPE].s.decode("utf-8", errors="ignore"),
+            parent_op.attr[types_pb2.VID_TYPE].s.decode("utf-8", errors="ignore"),
+            parent_op.attr[types_pb2.V_DATA_TYPE].s.decode("utf-8", errors="ignore"),
+            parent_op.attr[types_pb2.E_DATA_TYPE].s.decode("utf-8", errors="ignore"),
         )
 
         # for giraph app, we need to add args into orginal query_args, which is a json string
@@ -769,7 +835,9 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
 
         # For java app, we need lib path as an explicit arg.
         lib_param = Any()
-        lib_path = parent_op.attr[types_pb2.APP_LIBRARY_PATH].s.decode("utf-8")
+        lib_path = parent_op.attr[types_pb2.APP_LIBRARY_PATH].s.decode(
+            "utf-8", errors="ignore"
+        )
         logger.info("Java app: Lib path {}".format(lib_path))
         lib_param.Pack(data_types_pb2.StringValue(value=lib_path))
         op.query_args.args.extend([lib_param])
@@ -790,17 +858,19 @@ def _pre_process_for_unload_app_op(op, op_result_pool, key_to_op, **kwargs):
     assert len(op.parents) == 1
     key_of_parent_op = op.parents[0]
     result = op_result_pool[key_of_parent_op]
-    op.attr[types_pb2.APP_NAME].CopyFrom(utils.s_to_attr(result.result.decode("utf-8")))
+    op.attr[types_pb2.APP_NAME].CopyFrom(
+        utils.s_to_attr(result.result.decode("utf-8", errors="ignore"))
+    )
 
 
 def _pre_process_for_unload_context_op(op, op_result_pool, key_to_op, **kwargs):
     assert len(op.parents) == 1
     key_of_parent_op = op.parents[0]
     result = op_result_pool[key_of_parent_op]
-    parent_op_result = json.loads(result.result.decode("utf-8"))
+    parent_op_result = json.loads(result.result.decode("utf-8", errors="ignore"))
     context_key = parent_op_result["context_key"]
     op.attr[types_pb2.CONTEXT_KEY].CopyFrom(
-        attr_value_pb2.AttrValue(s=context_key.encode("utf-8"))
+        attr_value_pb2.AttrValue(s=context_key.encode("utf-8", errors="ignore"))
     )
 
 
@@ -817,9 +887,9 @@ def _pre_process_for_add_column_op(op, op_result_pool, key_to_op, **kwargs):
     for key_of_parent_op in op.parents:
         parent_op = key_to_op[key_of_parent_op]
         if parent_op.op == types_pb2.RUN_APP:
-            selector = op.attr[types_pb2.SELECTOR].s.decode("utf-8")
+            selector = op.attr[types_pb2.SELECTOR].s.decode("utf-8", errors="ignore")
             r = op_result_pool[key_of_parent_op]
-            parent_op_result = json.loads(r.result.decode("utf-8"))
+            parent_op_result = json.loads(r.result.decode("utf-8", errors="ignore"))
             context_key = parent_op_result["context_key"]
             context_type = parent_op_result["context_type"]
             selector = _transform_dataframe_selector(context_type, schema, selector)
@@ -858,17 +928,17 @@ def _pre_process_for_context_op(op, op_result_pool, key_to_op, **kwargs):
     graph_op = __backtrack_key_of_graph_op(key_of_parent_op)
     r = op_result_pool[key_of_parent_op]
     # set context key
-    parent_op_result = json.loads(r.result.decode("utf-8"))
+    parent_op_result = json.loads(r.result.decode("utf-8", errors="ignore"))
     context_key = parent_op_result["context_key"]
     context_type = parent_op_result["context_type"]
     op.attr[types_pb2.CONTEXT_KEY].CopyFrom(
-        attr_value_pb2.AttrValue(s=context_key.encode("utf-8"))
+        attr_value_pb2.AttrValue(s=context_key.encode("utf-8", errors="ignore"))
     )
     r = op_result_pool[graph_op.key]
     # transform selector
     schema = GraphSchema()
     schema.from_graph_def(r.graph_def)
-    selector = op.attr[types_pb2.SELECTOR].s.decode("utf-8")
+    selector = op.attr[types_pb2.SELECTOR].s.decode("utf-8", errors="ignore")
     if op.op in (
         types_pb2.CONTEXT_TO_DATAFRAME,
         types_pb2.TO_VINEYARD_DATAFRAME,
@@ -880,7 +950,7 @@ def _pre_process_for_context_op(op, op_result_pool, key_to_op, **kwargs):
         selector = _transform_numpy_selector(context_type, schema, selector)
     if selector is not None:
         op.attr[types_pb2.SELECTOR].CopyFrom(
-            attr_value_pb2.AttrValue(s=selector.encode("utf-8"))
+            attr_value_pb2.AttrValue(s=selector.encode("utf-8", errors="ignore"))
         )
 
 
@@ -894,7 +964,7 @@ def _pre_process_for_data_sink_op(op, op_result_pool, key_to_op, **kwargs):
         types_pb2.VINEYARD_DATAFRAME,
     ):
         # dependent to to_vineyard_dataframe
-        r = json.loads(result.result.decode("utf-8"))["object_id"]
+        r = json.loads(result.result.decode("utf-8", errors="ignore"))["object_id"]
         op.attr[types_pb2.VINEYARD_ID].CopyFrom(utils.s_to_attr(r))
 
 
@@ -905,7 +975,7 @@ def _pre_process_for_output_graph_op(op, op_result_pool, key_to_op, **kwargs):
     schema = GraphSchema()
     schema.from_graph_def(r.graph_def)
     graph_name = r.graph_def.key
-    selector = op.attr[types_pb2.SELECTOR].s.decode("utf-8")
+    selector = op.attr[types_pb2.SELECTOR].s.decode("utf-8", errors="ignore")
     if op.op == types_pb2.GRAPH_TO_DATAFRAME:
         selector = _transform_dataframe_selector(
             "labeled_vertex_property", schema, selector
@@ -917,10 +987,10 @@ def _pre_process_for_output_graph_op(op, op_result_pool, key_to_op, **kwargs):
         )
     if selector is not None:
         op.attr[types_pb2.SELECTOR].CopyFrom(
-            attr_value_pb2.AttrValue(s=selector.encode("utf-8"))
+            attr_value_pb2.AttrValue(s=selector.encode("utf-8", errors="ignore"))
         )
     op.attr[types_pb2.GRAPH_NAME].CopyFrom(
-        attr_value_pb2.AttrValue(s=graph_name.encode("utf-8"))
+        attr_value_pb2.AttrValue(s=graph_name.encode("utf-8", errors="ignore"))
     )
 
 
@@ -937,8 +1007,8 @@ def _pre_process_for_project_to_simple_op(  # noqa: C901
         r.graph_def.extension.Unpack(graph_info)
         schema = json.loads(graph_info.property_schema_json)
         graph_name = r.graph_def.key
-        v_prop = op.attr[types_pb2.V_PROP_KEY].s.decode("utf-8")
-        e_prop = op.attr[types_pb2.E_PROP_KEY].s.decode("utf-8")
+        v_prop = op.attr[types_pb2.V_PROP_KEY].s.decode("utf-8", errors="ignore")
+        e_prop = op.attr[types_pb2.E_PROP_KEY].s.decode("utf-8", errors="ignore")
         v_prop_type = graph_def_pb2.NULLVALUE
         e_prop_type = graph_def_pb2.NULLVALUE
         if v_prop != "None" and v_prop in schema["vertex"]:
@@ -947,7 +1017,7 @@ def _pre_process_for_project_to_simple_op(  # noqa: C901
             e_prop_type = schema["edge"][e_prop]
 
         op.attr[types_pb2.GRAPH_NAME].CopyFrom(
-            attr_value_pb2.AttrValue(s=graph_name.encode("utf-8"))
+            attr_value_pb2.AttrValue(s=graph_name.encode("utf-8", errors="ignore"))
         )
         op.attr[types_pb2.GRAPH_TYPE].CopyFrom(
             utils.graph_type_to_attr(graph_def_pb2.DYNAMIC_PROJECTED)
@@ -992,7 +1062,7 @@ def _pre_process_for_project_to_simple_op(  # noqa: C901
         need_flatten_graph = True
 
     # check and get vertex property
-    v_prop = op.attr[types_pb2.V_PROP_KEY].s.decode("utf-8")
+    v_prop = op.attr[types_pb2.V_PROP_KEY].s.decode("utf-8", errors="ignore")
     if v_prop == "None":
         v_prop_id = -1
         v_prop_type = graph_def_pb2.NULLVALUE
@@ -1021,7 +1091,7 @@ def _pre_process_for_project_to_simple_op(  # noqa: C901
                 break
 
     # check and get edge property
-    e_prop = op.attr[types_pb2.E_PROP_KEY].s.decode("utf-8")
+    e_prop = op.attr[types_pb2.E_PROP_KEY].s.decode("utf-8", errors="ignore")
     if e_prop == "None":
         e_prop_id = -1
         e_prop_type = graph_def_pb2.NULLVALUE
@@ -1050,7 +1120,7 @@ def _pre_process_for_project_to_simple_op(  # noqa: C901
                 break
 
     op.attr[types_pb2.GRAPH_NAME].CopyFrom(
-        attr_value_pb2.AttrValue(s=graph_name.encode("utf-8"))
+        attr_value_pb2.AttrValue(s=graph_name.encode("utf-8", errors="ignore"))
     )
     op.attr[types_pb2.OID_TYPE].CopyFrom(
         utils.s_to_attr(utils.data_type_to_cpp(schema.oid_type))
@@ -1105,8 +1175,12 @@ def _pre_process_for_project_op(op, op_result_pool, key_to_op, **kwargs):
     schema = GraphSchema()
     schema.from_graph_def(r.graph_def)
     graph_name = r.graph_def.key
-    vertices = json.loads(op.attr[types_pb2.VERTEX_COLLECTIONS].s.decode("utf-8"))
-    edges = json.loads(op.attr[types_pb2.EDGE_COLLECTIONS].s.decode("utf-8"))
+    vertices = json.loads(
+        op.attr[types_pb2.VERTEX_COLLECTIONS].s.decode("utf-8", errors="ignore")
+    )
+    edges = json.loads(
+        op.attr[types_pb2.EDGE_COLLECTIONS].s.decode("utf-8", errors="ignore")
+    )
     vertex_collections = {}
     edge_collections = {}
     for label, props in vertices.items():
@@ -1146,7 +1220,7 @@ def _pre_process_for_project_op(op, op_result_pool, key_to_op, **kwargs):
         e_attr.attr[label].CopyFrom(utils.list_i_to_attr(props))
     attr.list.func.extend([v_attr, e_attr])
     op.attr[types_pb2.GRAPH_NAME].CopyFrom(
-        attr_value_pb2.AttrValue(s=graph_name.encode("utf-8"))
+        attr_value_pb2.AttrValue(s=graph_name.encode("utf-8", errors="ignore"))
     )
     op.attr[types_pb2.ARROW_PROPERTY_DEFINITION].CopyFrom(attr)
     del op.attr[types_pb2.VERTEX_COLLECTIONS]
@@ -1418,7 +1492,7 @@ def _probe_for_java_app(attr, java_class_path, real_algo):
         driver_header = "apps/java_pie/java_pie_projected_parallel_app.h"
         class_name = "gs::JavaPIEProjectedParallelApp"
     else:
-        raise RuntimeError("Not a supported java_app_type: {}".format(_java_app_type))
+        raise RuntimeError(f"Not a supported java_app_type: {_java_app_type}")
     return driver_header, class_name, _vd_type, _frag_param_str
 
 
@@ -1445,7 +1519,7 @@ def _codegen_app_info(attr, meta_file: str, java_class_path: str):
         with zip_ref.open(meta_file, "r") as f:
             config_yaml = yaml.safe_load(f)
 
-    algo = attr[types_pb2.APP_ALGO].s.decode("utf-8")
+    algo = attr[types_pb2.APP_ALGO].s.decode("utf-8", errors="ignore")
     # for algo start with giraph:, we don't find info in meta
     if algo.startswith("giraph:") or algo.startswith("java_pie:"):
         real_algo = algo.split(":")[1]
@@ -1467,7 +1541,7 @@ def _codegen_app_info(attr, meta_file: str, java_class_path: str):
     for app in config_yaml["app"]:
         if app["algo"] == algo:
             app_type = app["type"]  # cpp_pie or cython_pregel or cython_pie, java_pie
-            if app_type == "cpp_pie":
+            if app_type in ("cpp_pie", "cpp_pregel"):
                 return (
                     app_type,
                     app["src"],
@@ -1533,18 +1607,18 @@ def _codegen_graph_info(attr):
     # cause they are not always avaiable in all types of graphs
     def oid_type():
         if types_pb2.OID_TYPE in attr:
-            return attr[types_pb2.OID_TYPE].s.decode("utf-8")
+            return attr[types_pb2.OID_TYPE].s.decode("utf-8", errors="ignore")
         else:  # DynamicProjectedFragment doesn't have oid
             return None
 
     def vid_type():
-        return attr[types_pb2.VID_TYPE].s.decode("utf-8")
+        return attr[types_pb2.VID_TYPE].s.decode("utf-8", errors="ignore")
 
     def vdata_type():
-        return attr[types_pb2.V_DATA_TYPE].s.decode("utf-8")
+        return attr[types_pb2.V_DATA_TYPE].s.decode("utf-8", errors="ignore")
 
     def edata_type():
-        return attr[types_pb2.E_DATA_TYPE].s.decode("utf-8")
+        return attr[types_pb2.E_DATA_TYPE].s.decode("utf-8", errors="ignore")
 
     def vertex_map_type():
         if types_pb2.VERTEX_MAP_TYPE not in attr:
@@ -1672,7 +1746,7 @@ def parse_as_glog_level(log_level):
             log_level = -1
         else:
             log_level = getattr(logging, log_level.upper())
-    python_to_glog = {10: 10, 20: 1}
+    python_to_glog = {0: 100, 10: 10, 20: 1}
     return python_to_glog.get(log_level, 1)
 
 
@@ -1700,7 +1774,7 @@ class ResolveMPICmdPrefix(object):
          '-n', '4', '-host', 'h1:2,h2:1,h3:1']
 
         >>> env
-        {'OMPI_MCA_plm_rsh_agent': '/usr/bin/kube_ssh', # if /usr/bin/kube_ssh in $PATH
+        {'e': '/usr/local/bin/kube_ssh', # if kube_ssh in $PATH
          'OMPI_MCA_btl_vader_single_copy_mechanism': 'none',
          'OMPI_MCA_orte_allowed_exit_without_sync': '1'}
 
@@ -1797,7 +1871,7 @@ class ResolveMPICmdPrefix(object):
             env["OMPI_MCA_btl_vader_single_copy_mechanism"] = "none"
             env["OMPI_MCA_orte_allowed_exit_without_sync"] = "1"
             # OMPI sends SIGCONT -> SIGTERM -> SIGKILL to the worker process,
-            # set the following MCA parameter to zero will emilinates the chances
+            # set the following MCA parameter to zero will eliminate the chances
             # where the process dies before receiving the SIGTERM and do cleanup.
             env["OMPI_MCA_odls_base_sigkill_timeout"] = "0"
 
@@ -1809,6 +1883,8 @@ class ResolveMPICmdPrefix(object):
                 [
                     self.find_mpi(),
                     "--allow-run-as-root",
+                    "--bind-to",
+                    "none",
                 ]
             )
         else:
@@ -1824,11 +1900,11 @@ class ResolveMPICmdPrefix(object):
 
 # In Analytical engine, assume label ids of vertex entries are continuous
 # from zero, and property ids of each label is also continuous from zero.
-# When transform schema to Maxgraph style, we gather all property names and
+# When transform schema to interactive engine style, we gather all property names and
 # unique them, assign each name a id (index of the vector), then preserve a
 # vector<int> for each label, stores mappings from original id to transformed
 # id.
-def to_maxgraph_schema(gsa_schema_json):
+def to_interactive_engine_schema(gsa_schema_json):
     gsa_schema = json.loads(gsa_schema_json)
     prop_set = set()
     vertex_label_num = 0

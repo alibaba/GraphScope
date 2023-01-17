@@ -16,10 +16,10 @@ package com.alibaba.graphscope.groot.schema.ddl;
 import com.alibaba.graphscope.groot.operation.Operation;
 import com.alibaba.graphscope.groot.operation.ddl.RemoveEdgeKindOperation;
 import com.alibaba.graphscope.groot.schema.request.DdlException;
-import com.alibaba.maxgraph.proto.groot.EdgeKindPb;
-import com.alibaba.maxgraph.sdkcommon.schema.EdgeKind;
-import com.alibaba.maxgraph.sdkcommon.schema.GraphDef;
-import com.alibaba.maxgraph.sdkcommon.schema.LabelId;
+import com.alibaba.graphscope.proto.groot.EdgeKindPb;
+import com.alibaba.graphscope.sdkcommon.schema.EdgeKind;
+import com.alibaba.graphscope.sdkcommon.schema.GraphDef;
+import com.alibaba.graphscope.sdkcommon.schema.LabelId;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 

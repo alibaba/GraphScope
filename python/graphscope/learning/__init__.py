@@ -23,6 +23,9 @@ import sys
 try:
     sys.path.insert(0, os.path.dirname(__file__))
 
+    # adapt to latest graph-learn where "import ego_data_loader" is directly used
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), "examples", "tf"))
+
     import vineyard
 
     # suppress the warnings of tensorflow
@@ -78,3 +81,6 @@ except ImportError:
     pass
 finally:
     sys.path.pop(sys.path.index(os.path.dirname(__file__)))
+    sys.path.pop(
+        sys.path.index(os.path.join(os.path.dirname(__file__), "examples", "tf"))
+    )

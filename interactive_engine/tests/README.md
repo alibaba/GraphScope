@@ -11,7 +11,7 @@ cd GraphScope/interactive_engine/tests
 ```
 ./function_test.sh _start <client-server port> <vineyard-server num> 1>log 2>&1 
 ```
-* start test ( load modern graph -> create maxgraph instance -> run gremlin test )
+* start test ( load modern graph -> create interactive engine instance -> run gremlin test )
 ```
 # see reports under target/surefire-reports/testng-results.xml
 ./function_test.sh _test 

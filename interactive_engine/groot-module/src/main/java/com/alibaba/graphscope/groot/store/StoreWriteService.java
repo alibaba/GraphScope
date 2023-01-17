@@ -14,10 +14,10 @@
 package com.alibaba.graphscope.groot.store;
 
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
-import com.alibaba.maxgraph.proto.groot.StoreDataBatchPb;
-import com.alibaba.maxgraph.proto.groot.StoreWriteGrpc;
-import com.alibaba.maxgraph.proto.groot.WriteStoreRequest;
-import com.alibaba.maxgraph.proto.groot.WriteStoreResponse;
+import com.alibaba.graphscope.proto.groot.StoreDataBatchPb;
+import com.alibaba.graphscope.proto.groot.StoreWriteGrpc;
+import com.alibaba.graphscope.proto.groot.WriteStoreRequest;
+import com.alibaba.graphscope.proto.groot.WriteStoreResponse;
 
 import io.grpc.stub.StreamObserver;
 

@@ -2,12 +2,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.alibaba.maxgraph</groupId>
-  <artifactId>maxgraph-parent</artifactId>
+  <groupId>com.alibaba.graphscope</groupId>
+  <artifactId>interactive-parent</artifactId>
   <packaging>pom</packaging>
   <version>${revision}</version>
 
-  <name>MaxGraph</name>
+  <name>InteractiveEngine</name>
   <profiles>
     <!-- DO NOT CHANGE THE *ORDER* IN WHICH THESE PROFILES ARE DEFINED! -->
     <profile>
@@ -41,7 +41,7 @@
         <module>assembly</module>
         <module>common</module>
         <module>executor</module>
-        <module>data_load_tools</module>
+        <module>data-load-tool</module>
         <module>groot-module</module>
         <module>groot-server</module>
         <module>lgraph</module>
@@ -59,7 +59,7 @@
       <modules>
         <module>assembly</module>
         <module>common</module>
-        <module>data_load_tools</module>
+        <module>data-load-tool</module>
         <module>executor</module>
         <module>frontend</module>
         <module>groot-module</module>
@@ -93,8 +93,8 @@
     <jackson.databind.version>2.14.0-rc1</jackson.databind.version>
     <maven.surefire.version>2.22.2</maven.surefire.version>
     <os.maven.plugin.version>1.6.2</os.maven.plugin.version>
-    <protoc.version>3.18.0</protoc.version>
-    <protobuf.version>3.19.6</protobuf.version>
+    <protoc.version>3.21.12</protoc.version>
+    <protobuf.version>3.21.12</protobuf.version>
     <logback.version>1.2.3</logback.version>
     <zookeeper.version>3.6.3</zookeeper.version>
     <kafka.version>2.7.2</kafka.version>
@@ -115,13 +115,13 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>com.alibaba.maxgraph</groupId>
-        <artifactId>maxgraph-common</artifactId>
+        <groupId>com.alibaba.graphscope</groupId>
+        <artifactId>interactive-common</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.alibaba.maxgraph</groupId>
-        <artifactId>maxgraph-sdk-common</artifactId>
+        <groupId>com.alibaba.graphscope</groupId>
+        <artifactId>sdk-common</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -654,7 +654,6 @@
           <version>${maven.surefire.version}</version>
           <configuration>
             <excludes>
-              <exclude>com/alibaba/maxgraph/client/gremlin/additional/*</exclude>
               <exclude>**/GaiaAdaptor*.java</exclude>
               <exclude>**/ClientTest.java</exclude>
               <exclude>**/DataLoadingTest.java</exclude>
@@ -694,12 +693,8 @@
           <configuration>
             <instrumentation>
               <excludes>
-                <exclude>com/alibaba/maxgraph/client/gremlin/additional/*</exclude>
-                <exclude>com/alibaba/maxgraph/proto/*</exclude>
-                <exclude>com/alibaba/maxgraph/rpc/GremlinService.class</exclude>
-                <exclude>com/alibaba/maxgraph/rpc/MaxGraphServiceGrpc.class</exclude>
-                <exclude>com/alibaba/maxgraph/Message.class</exclude>
-                <exclude>com/alibaba/maxgraph/id_client/proto/*</exclude>
+                <exclude>com/alibaba/graphscope/proto/*</exclude>
+                <exclude>com/alibaba/graphscope/Message.class</exclude>
               </excludes>
             </instrumentation>
           </configuration>

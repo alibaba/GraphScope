@@ -347,9 +347,9 @@ int main(int argc, char** argv) {
       using vid_t = vineyard::property_graph_types::VID_TYPE;
       using vertex_map_t = vineyard::ArrowLocalVertexMap<
           typename vineyard::InternalType<oid_t>::type, vid_t>;
-      auto loader =
-          std::make_unique<gs::ArrowFragmentLoader<oid_t, vid_t, vertex_map_t>>(
-              client, comm_spec, efiles, vfiles, directed != 0);
+      using loader_t = gs::arrow_fragment_loader_t<oid_t, vid_t, vertex_map_t>;
+      auto loader = std::make_unique<loader_t>(client, comm_spec, efiles,
+                                               vfiles, directed != 0);
       fragment_id =
           bl::try_handle_all([&loader]() { return loader->LoadFragment(); },
                              [](const vineyard::GSError& e) {

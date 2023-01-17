@@ -13,9 +13,9 @@
  */
 package com.alibaba.graphscope.groot.meta;
 
-import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.common.config.KafkaConfig;
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
+import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.config.KafkaConfig;
 
 import java.util.ArrayList;
 import java.util.Arrays;

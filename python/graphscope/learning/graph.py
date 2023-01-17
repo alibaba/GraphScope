@@ -80,7 +80,11 @@ class Graph(GLGraph):
     def decode_arg(self, arg):
         if arg is None or isinstance(arg, dict):
             return arg
-        return json.loads(base64.b64decode(arg.encode("utf-8")).decode("utf-8"))
+        return json.loads(
+            base64.b64decode(arg.encode("utf-8", errors="ignore")).decode(
+                "utf-8", errors="ignore"
+            )
+        )
 
     def close(self):
         if self.closed or self.graphscope_session.closed:
@@ -207,7 +211,9 @@ class Graph(GLGraph):
         handle_copy = self.handle.copy()
         handle_copy["config"] = self.config
         handle_copy["client_count"] = worker_count
-        return base64.b64encode(json.dumps(handle_copy).encode("utf-8")).decode("utf-8")
+        return base64.b64encode(
+            json.dumps(handle_copy).encode("utf-8", errors="ignore")
+        ).decode("utf-8", errors="ignore")
 
     def V(
         self,
@@ -308,7 +314,7 @@ def get_gl_handle(schema, vineyard_id, engine_hosts, engine_config, fragments=No
 
     .. code:: python
 
-       base64.b64decode(handle.encode('ascii')).decode('ascii')
+       base64.b64decode(handle.encode('ascii', errors="ignore")).decode('ascii', errors="ignore")
 
     Note that the ports are selected from a range :code:`(8000, 9000)`.
 
@@ -377,4 +383,6 @@ def get_gl_handle(schema, vineyard_id, engine_hosts, engine_config, fragments=No
         "fragments": fragments,
     }
     handle_json_string = json.dumps(handle)
-    return base64.b64encode(handle_json_string.encode("utf-8")).decode("utf-8")
+    return base64.b64encode(handle_json_string.encode("utf-8", errors="ignore")).decode(
+        "utf-8", errors="ignore"
+    )

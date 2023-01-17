@@ -13,7 +13,7 @@
  */
 package com.alibaba.graphscope.groot.sdk.example;
 
-import com.alibaba.graphscope.groot.sdk.MaxGraphClient;
+import com.alibaba.graphscope.groot.sdk.GrootClient;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +36,7 @@ public class IngestFile {
         int port = Integer.valueOf(args[2]);
         int batchSize = Integer.valueOf(args[3]);
 
-        MaxGraphClient client = MaxGraphClient.newBuilder().addHost(host, port).build();
+        GrootClient client = GrootClient.newBuilder().addHost(host, port).build();
         File file = new File(inputFile);
         String fileName = file.getName();
         String label = fileName.split("_")[0];

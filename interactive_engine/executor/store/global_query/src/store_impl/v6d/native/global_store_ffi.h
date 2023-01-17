@@ -267,10 +267,10 @@ int v6d_get_vertex_id_from_primary_key(GraphHandle graph, LabelId label_id,
 
 // 返回本地的partition列表。
 //
-// 因为maxgraph已经有GraphHandler，因此不需要传worker_global_index。
+// 因为 GIE 已经有GraphHandler，因此不需要传worker_global_index。
 //
 // partition_ids:
-// 接收返回值，调用者（maxgraph）负责使用free_partition_list释放内存
+// 接收返回值，调用者（GIE）负责使用free_partition_list释放内存
 // partition_id_size: partition_ids的长度
 //
 void v6d_get_process_partition_list(GraphHandle graph, PartitionId** partition_ids,

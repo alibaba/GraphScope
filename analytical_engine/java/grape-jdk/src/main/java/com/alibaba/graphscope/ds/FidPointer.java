@@ -21,10 +21,9 @@ import com.alibaba.fastffi.CXXPointerRangeElement;
 import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
 /** A pointer to an unsigned pointer */
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @FFITypeAlias("unsigned")
 public interface FidPointer extends FFIPointer, CXXPointerRangeElement<FidPointer> {
     @CXXOperator("*&")

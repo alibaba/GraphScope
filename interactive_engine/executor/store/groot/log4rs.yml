@@ -82,7 +82,7 @@ root:
   - executor
 
 loggers:
-  maxgraph-store:
+  groot-store:
     level: info
     additive: false
     appenders:

@@ -32,14 +32,14 @@ def resolve_git_tags():
             [shutil.which("git"), "describe", "--exact-match", "--tags", "HEAD"],
             stderr=subprocess.DEVNULL,
         )
-        head = head.decode("utf-8").strip()
+        head = head.decode("utf-8", errors="ignore").strip()
     except:
         head = "latest"
     releases = (
         subprocess.check_output(
             [shutil.which("git"), "tag", "--list", "--sort=-creatordate"]
         )
-        .decode("utf-8")
+        .decode("utf-8", errors="ignore")
         .strip()
         .split()
     )

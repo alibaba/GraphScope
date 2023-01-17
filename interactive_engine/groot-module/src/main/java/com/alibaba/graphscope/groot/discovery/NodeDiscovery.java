@@ -13,7 +13,7 @@
  */
 package com.alibaba.graphscope.groot.discovery;
 
-import com.alibaba.maxgraph.common.RoleType;
+import com.alibaba.graphscope.groot.common.RoleType;
 
 import java.util.Map;
 
@@ -27,11 +27,11 @@ public interface NodeDiscovery {
 
     void removeListener(Listener listener);
 
-    MaxGraphNode getLocalNode();
+    GrootNode getLocalNode();
 
     interface Listener {
-        void nodesJoin(RoleType role, Map<Integer, MaxGraphNode> nodes);
+        void nodesJoin(RoleType role, Map<Integer, GrootNode> nodes);
 
-        void nodesLeft(RoleType role, Map<Integer, MaxGraphNode> nodes);
+        void nodesLeft(RoleType role, Map<Integer, GrootNode> nodes);
     }
 }

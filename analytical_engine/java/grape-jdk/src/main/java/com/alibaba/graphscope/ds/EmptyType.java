@@ -25,14 +25,13 @@ import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
 import com.alibaba.fastffi.FFITypeFactory;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
 /**
  * Empty type is an type placeholder to put in a template class or template method, it is a wrapper
  * for <a
  * href="https://github.com/alibaba/libgrape-lite/blob/master/grape/types.h">grape::EmptyType</a>.
  */
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @CXXHead(GRAPE_TYPES_H)
 @FFITypeAlias(GRAPE_EMPTY_TYPE)
 public interface EmptyType extends FFIPointer {

@@ -66,15 +66,15 @@ grpc_generate_cpp(
 include_directories(${PROTO_HDRS_DEST_DIR}/sdk)
 include_directories(${PROTO_HDRS_DEST_DIR})
 
-# Maxgraph Ffi Dependency
+# Interactive Ffi Dependency
 if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
   set(DYLIB_SUFFIX "dylib")
 else ()
   set(DYLIB_SUFFIX "so")
 endif ()
 
-set(Maxgraph_FFI_LIB_DIR ${Lgraph_SOURCE_DIR}/../executor/assembly/groot/target)
-set(Maxgraph_FFI_LIB ${Maxgraph_FFI_LIB_DIR}/libmaxgraph_ffi.${DYLIB_SUFFIX})
+set(groot_ffi_LIB_DIR ${Lgraph_SOURCE_DIR}/../executor/assembly/groot/target)
+set(groot_ffi_LIB ${groot_ffi_LIB_DIR}/libgroot_ffi.${DYLIB_SUFFIX})
 
 # Add library
 set(Lgraph_PROJECT_FILES
@@ -127,7 +127,7 @@ target_include_directories(lgraph
     ${Lgraph_SOURCE_DIR}/src)
 target_link_libraries(lgraph
   PUBLIC
-    ${Maxgraph_FFI_LIB}
+    ${groot_ffi_LIB}
     gRPC::grpc++_reflection
     protobuf::libprotobuf
     CppKafka::cppkafka)
@@ -159,7 +159,7 @@ if (Lgraph_INSTALL)
       DESTINATION ${Lgraph_CONFIG_INSTALL_DIR})
 
     install(
-      FILES ${Maxgraph_FFI_LIB}
+      FILES ${groot_ffi_LIB}
       DESTINATION ${CMAKE_INSTALL_LIBDIR}
     )
 

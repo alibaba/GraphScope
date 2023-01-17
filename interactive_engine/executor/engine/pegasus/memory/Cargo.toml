@@ -10,5 +10,5 @@ mem = []
 
 [dependencies]
 #log = "0.4"
-crossbeam-utils = "0.8.7"
+crossbeam-utils = "0.8.14"
 lazy_static = "1.3.0"

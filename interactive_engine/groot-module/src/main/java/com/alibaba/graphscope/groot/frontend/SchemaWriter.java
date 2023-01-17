@@ -15,7 +15,7 @@ package com.alibaba.graphscope.groot.frontend;
 
 import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.alibaba.graphscope.groot.schema.request.DdlRequestBatch;
-import com.alibaba.maxgraph.proto.groot.DdlRequestBatchPb;
+import com.alibaba.graphscope.proto.groot.DdlRequestBatchPb;
 
 public class SchemaWriter {
 

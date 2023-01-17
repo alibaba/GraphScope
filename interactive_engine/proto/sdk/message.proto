@@ -15,10 +15,10 @@
  */
 syntax = "proto3";
 
-option java_package = "com.alibaba.maxgraph";
+option java_package = "com.alibaba.graphscope";
 import "sdk/schema.proto";
 
-package maxgraph;
+package graphscope.interactive;
 
 enum ClassType{
     VERTEX          = 0;
@@ -35,7 +35,7 @@ enum ClassType{
 
 enum ErrorCode {
     OK                     = 0;
-    UNIMPLEMENT            = 1;
+    UNIMPLEMENTED            = 1;
     LABEL_NOT_FOUND        = 2;
     DATA_TYPE_NOT_SUPPORT  = 3;
     CLASS_TYPE_NOT_SUPPORT = 4;

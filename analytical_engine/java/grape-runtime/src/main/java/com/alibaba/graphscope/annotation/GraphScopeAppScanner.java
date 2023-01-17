@@ -56,6 +56,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.tools.JavaFileObject;
@@ -232,40 +234,42 @@ public class GraphScopeAppScanner {
         return generate();
     }
 
+    private static String[] matchWithPattern(String graphTemplateStr, Pattern pattern) {
+
+        return null;
+    }
     // gs::ArrowProjectedFragment
     // can also be ArrowProjectedFragment<java.lang.Long,....>
-    private String[] parseGraphTemplateStr(String graphTemplateStr) {
-        String[] first = graphTemplateStr.split("<");
-        if (first.length != 2) {
-            logger.error("parse fragment type error" + graphTemplateStr);
-            return first;
-        } else if (first[0].equals("gs::ArrowProjectedFragment")
-                || first[0].equals("ArrowProjectedFragment")) {
-            String typeParams = first[1].substring(0, first[1].length() - 1);
-            String[] second = typeParams.split(",");
-            if (second.length != 4) {
-                logger.error("Inproper num of type params" + typeParams);
+    public static String[] parseGraphTemplateStr(String graphTemplateStr) {
+        {
+            Pattern pattern =
+                    Pattern.compile(
+                            "(.+)<(.+),(.+),(.+),(.+),vineyard::ArrowVertexMap<(.+),(.+)>>");
+            Matcher matcher = pattern.matcher(graphTemplateStr);
+            if (matcher.find()) {
+                return new String[] {
+                    matcher.group(1),
+                    matcher.group(2),
+                    matcher.group(3),
+                    matcher.group(4),
+                    matcher.group(5)
+                };
             }
-            return new String[] {
-                "gs::ArrowProjectedFragment",
-                second[0].trim(),
-                second[1].trim(),
-                second[2].trim(),
-                second[3].trim()
-            };
-        } else if (first[0].equals("vineyard::ArrowFragment")) {
-            String typeParams = first[1].substring(0, first[1].length() - 1);
-            String[] second = typeParams.split(",");
-            if (second.length != 2) {
-                logger.error("Inproper num of type params" + typeParams);
-            }
-            return new String[] {
-                first[0].trim(), second[0].trim(), second[1].trim(), "int64_t", "int64_t"
-            };
-        } else {
-            logger.error("unrecognized " + graphTemplateStr);
-            return null;
         }
+        {
+            Pattern pattern = Pattern.compile("(.+)<(.+),(.+),(.+),(.+)>");
+            Matcher matcher = pattern.matcher(graphTemplateStr);
+            if (matcher.find()) {
+                return new String[] {
+                    matcher.group(1),
+                    matcher.group(2),
+                    matcher.group(3),
+                    matcher.group(4),
+                    matcher.group(5)
+                };
+            }
+        }
+        throw new IllegalStateException("unrecognized " + graphTemplateStr);
     }
 
     private String getFFIGenBatch() {
@@ -470,6 +474,17 @@ public class GraphScopeAppScanner {
                         if (Main.ignoreError) {
                             if (Main.verbose) {
                                 logger.error("WARNING: incompatible class error " + className);
+                            }
+                        } else {
+                            throw new IllegalStateException(e);
+                        }
+                    } catch (UnsupportedClassVersionError e) {
+                        if (Main.ignoreError) {
+                            if (Main.verbose) {
+                                logger.error(
+                                        "WARNING: unsupported class version"
+                                                + className
+                                                + e.getMessage());
                             }
                         } else {
                             throw new IllegalStateException(e);

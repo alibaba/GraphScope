@@ -13,12 +13,12 @@
  */
 package com.alibaba.graphscope.groot.frontend;
 
+import com.alibaba.graphscope.compiler.api.schema.DataType;
 import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.schema.request.DdlRequestBatch;
 import com.alibaba.graphscope.proto.ddl.*;
-import com.alibaba.maxgraph.compiler.api.schema.DataType;
-import com.alibaba.maxgraph.sdkcommon.schema.*;
-import com.alibaba.maxgraph.sdkcommon.schema.GraphDef;
+import com.alibaba.graphscope.sdkcommon.schema.*;
+import com.alibaba.graphscope.sdkcommon.schema.GraphDef;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 
@@ -164,13 +164,13 @@ public class ClientDdlService extends ClientDdlGrpc.ClientDdlImplBase {
                 builder.addEdgeKinds(edgeKindPb);
             }
         }
-        MaxGraphInfoPb maxGraphInfoPb =
-                MaxGraphInfoPb.newBuilder()
+        GrootInfoPb grootInfoPb =
+                GrootInfoPb.newBuilder()
                         .setLastLabelId(graphDef.getLabelIdx())
                         .setLastTableId(graphDef.getTableIdx())
                         .setLastPropertyId(graphDef.getPropertyIdx())
                         .build();
-        builder.setExtension(Any.pack(maxGraphInfoPb));
+        builder.setExtension(Any.pack(grootInfoPb));
         return builder.build();
     }
 

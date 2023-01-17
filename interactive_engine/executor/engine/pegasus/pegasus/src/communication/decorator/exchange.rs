@@ -176,7 +176,7 @@ impl<D: Data> ExchangeByDataPush<D> {
 
     fn update_end(
         &mut self, target: Option<usize>, end: &EndOfScope,
-    ) -> impl Iterator<Item = (u64, u64, DynPeers)> {
+    ) -> impl Iterator<Item=(u64, u64, DynPeers)> {
         let mut push_stat = Vec::with_capacity(self.pushes.len());
         for (index, p) in self.pushes.iter().enumerate() {
             let mut pushes = p.get_push_count(&end.tag).unwrap_or(0) as u64;
@@ -245,7 +245,7 @@ impl<D: Data> ExchangeByDataPush<D> {
         }
 
         if has_block {
-            if !batch.is_empty() {
+            if !batch.is_empty() || batch.is_last() {
                 trace_worker!(
                     "output[{:?}] blocking on push batch(len={}) of {:?} ;",
                     self.port,
@@ -534,9 +534,10 @@ impl<D: Data> BlockPush for ExchangeByDataPush<D> {
                                         .blocks
                                         .get_mut(tag)
                                         .expect("expect has block;");
-                                    while let Some(x) = blocks.pop_front() {
-                                        b.push_back(x);
+                                    while let Some(x) = b.pop_back() {
+                                        blocks.push_front(x);
                                     }
+                                    *b = blocks;
                                 }
                                 Ok(false)
                             } else {
@@ -590,7 +591,7 @@ impl<D: Data> ExchangeByBatchPush<D> {
 
     fn update_end(
         &mut self, target: Option<usize>, end: &EndOfScope,
-    ) -> impl Iterator<Item = (u64, u64, DynPeers)> {
+    ) -> impl Iterator<Item=(u64, u64, DynPeers)> {
         let mut push_stat = Vec::with_capacity(self.pushes.len());
         for (index, p) in self.pushes.iter().enumerate() {
             let mut pushes = p.get_push_count(&end.tag).unwrap_or(0) as u64;
