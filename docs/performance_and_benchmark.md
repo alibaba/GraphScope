@@ -1,9 +1,12 @@
 # Performance and Benchmark
-We evaluated performance of **libgrape-lite** with [LDBC Graph Analytics Benchmark](http://graphalytics.org/). In addition to the ease of programming, we find that **libgrape-lite** achieves high performance comparably to the state-of-the-art systems. The experiments were conducted on 4 instances of [r6.8xlarge](https://www.alibabacloud.com/help/doc-detail/25378.htm#d12e563) on [AlibabaCloud ECS](https://www.alibabacloud.com/product/ecs), each with 32 threads, over LDBC XL-size datasets. Instances are imaged with [Aliyun Linux (a CentOS-variant)](https://www.alibabacloud.com/help/doc-detail/111881.htm). The datasets can be downloaded from [here](https://ldbcouncil.org/benchmarks/graphalytics/).
+We evaluated performance of GraphScope with the benchmarks provided by [Linked Data Benchmark Council (LDBC)](https://ldbcouncil.org/). Specifically, we evaluated **Graph Analytical Engine (GAE)** with [LDBC Graph Analytics Benchmark](http://graphalytics.org/), which is an industrial-grade benchmark that enables the objective comparison of graph analysis platforms. We also evaluated **Graph Interactive Engine (GIE)** with LDBC Social Network Benchmark, which focuses on graph database management systems and includes two workloads for interactive transactional queries and analytical queries. We compared GraphScope's performance to the state-of-the-art systems including PowerGraph, GeminiGraph, Plato, Neo4j, etc. and found GraphScope achieves high performance in most cases.
 
-We compared **libgrape-lite** with [PowerGraph](https://github.com/jegonzal/PowerGraph)(commit a038f97
+## Graph Analytical Engine
+We evaluated performance of **Graph Analytical Engine** (**GAE**, in short in the following) with [LDBC Graph Analytics Benchmark](http://graphalytics.org/). In addition to the ease of programming, we find that **GAE** achieves high performance comparably to the state-of-the-art systems. The experiments were conducted on 4 instances of [r6.8xlarge](https://www.alibabacloud.com/help/doc-detail/25378.htm#d12e563) on [AlibabaCloud ECS](https://www.alibabacloud.com/product/ecs), each with 32 threads, over LDBC XL-size datasets. Instances are imaged with [Aliyun Linux (a CentOS-variant)](https://www.alibabacloud.com/help/doc-detail/111881.htm). The datasets can be downloaded from [here](https://ldbcouncil.org/benchmarks/graphalytics/).
+
+We compared **GAE** with [PowerGraph](https://github.com/jegonzal/PowerGraph)(commit a038f97
 ) [GeminiGraph](https://github.com/thu-pacman/GeminiGraph)(commit 170e7d3
-) and [Plato](https://github.com/Tencent/plato)(commit 21009d6). Each system is built with GCC(v4.8.5) and MPICH(v3.1). To make the comparisons fair, **libgrape_lite** was built with HUGE_PAGES and jemalloc disabled.
+) and [Plato](https://github.com/Tencent/plato)(commit 21009d6). Each system is built with GCC(v4.8.5) and MPICH(v3.1). To make the comparisons fair, **GAE** was built with HUGE_PAGES and jemalloc disabled.
 
 We made minor changes on their code and datasets:
 - Turned on `-O3` optimization for all three systems.
@@ -13,11 +16,11 @@ We made minor changes on their code and datasets:
 - Changed the load strategy from `load_directed` to `load_undirected_from_directed` for PageRank in GeminiGraph
 - Reformat the datasets to adapt Plato and GeminiGraph's formats (e.g., 0-based continuous vertex ids)
 
-## Results
+### Results
 The results are reported below. The numbers in the table represent the evaluation time in seconds. 
 The best results are marked in **bold**.
 
-| Algorithm | Dataset        | PowerGraph | GeminiGraph | Plato | libgrape-lite |
+| Algorithm | Dataset        | PowerGraph | GeminiGraph | Plato | GAE |
 |-----------|----------------|------------|-------------|-------|---------------|
 | SSSP      | datagen-9_0-fb | 5.08       | 0.62        | N/A   | **0.42**      |
 |           | datagen-9_1-fb | 5.30       | 0.78        | N/A   | **0.56**      |
@@ -57,7 +60,7 @@ The inconsistences of PageRank come from different settings on convergence condi
 To give a comprehensive comparison, we made our best efforts to revise our application([pagerank_local.h](examples/analytical_apps/pagerank/pagerank_local.h)), making them output the same results as competitor systems.
 The performance results are shown as below. 
 
-| Algorithm | Dataset        | GeminiGraph | Plato | libgrape-lite |
+| Algorithm | Dataset        | GeminiGraph | Plato | GAE |
 |-----------|----------------|-------------|-------|---------------|
 | PageRank  | datagen-9_0-fb | 2.21        | 4.65  | **1.39**      |
 |           | datagen-9_1-fb | 2.72        | 5.38  | **1.73**      |
@@ -65,8 +68,8 @@ The performance results are shown as below.
 |           | graph500-26    | 4.75        | 12.25 | **2.34**      |
 |           | com-friendster | 8.19        | 15.82 | **5.84**      |
 
-## Performance on GPUs
-We compare the libgrape-lite GPU version with [gunrock](https://github.com/gunrock/gunrock)(commit 0c9a96, tag:v0.5.1) and [groute](https://github.com/groute/groute)(commit 5ce160).
+### Performance on GPUs
+We compare the GAE GPU version with [gunrock](https://github.com/gunrock/gunrock)(commit 0c9a96, tag:v0.5.1) and [groute](https://github.com/groute/groute)(commit 5ce160).
 Each system is built with GCC(v7.3.0), OpenMPI(v4.1.1), and CUDA(v10.0). 
 The experiments were conducted on GPU instances of [gn6v-c8g1.16xlarge](https://www.alibabacloud.com/help/zh/doc-detail/25378.htm#gn6v) on [AlibabaCloud ECS](https://www.alibabacloud.com/product/ecs), 
 equipped with 8x 16GB NVIDIA-V100 GPU, and 256 GB host memory.
@@ -76,7 +79,7 @@ Since the device memory of GPUs is limited, we conducted the comparison on sever
 The results are reported below. The numbers in the table represent the evaluation time in milliseconds. 
 The best results are marked in **bold**.
 
-| Algorithm   | Dataset          | Gunrock   | Groute   | libgrape-lite-GPU |
+| Algorithm   | Dataset          | Gunrock   | Groute   | GAE-GPU |
 |-------------|------------------|-----------|----------|-------------------|
 | SSSP        | soc-LiveJournal1 |   89.9345 | 215.560  |        **32.3029**|
 |             | soc-twitter-2010 |  129.454  | 389.155  |        **88.0549**|
@@ -95,6 +98,9 @@ The best results are marked in **bold**.
 |             | soc-sinaweibo    |  483.178  | 5593.807 |        **228.367**|
 |             | soc-orkut        |   57.6946 | N/A      |        **49.2339**|
 
-## Reproducing the results
+### Reproducing the results
 
 We will release a public image containing the script, together with all the systems and datasets on AlibabaCloud and AWS soon.
+
+## Graph Interactive Engine
+TBF
