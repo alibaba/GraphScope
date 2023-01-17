@@ -13,7 +13,7 @@ GraphScope Interactive Engine(GIE) leverages Gremlin, a graph traversal language
 [Cypher](https://neo4j.com/developer/cypher/) is a declarative programming language for graph queries. It is designed to make it easy for users to specify the graph patterns they are interested in. We are currently working on adding support for the Cypher language to provide users with more flexibility and options on graph queries. 
 
 ## High Performant Built-in Algorithms
-GraphScope is equipped with various built-in graph algorithms, consisting of 20 graph analytics algorithms and 8 GNN models. The built-in algorithms are highly optimized, and offer superior performance. For example, we have performed a comparison with state-of-the-art graph processing systems on LDBC Graph Analytics Benchmark, and the results show GraphScope outperforms other graph systems (see more detailed results [here]([https://github.com/alibaba/libgrape-lite/blob/master/Performance.md)).
+GraphScope is equipped with various built-in graph algorithms, consisting of 20 graph analytics algorithms and 8 GNN models. The built-in algorithms are highly optimized, and offer superior performance. For example, we have performed a comparison with state-of-the-art graph processing systems on LDBC Graph Analytics Benchmark, and the results show GraphScope outperforms other graph systems (see more detailed results [here]([https://graphscope.io/docs/latest/performance_and_benchmark.html)).
 
 
 
