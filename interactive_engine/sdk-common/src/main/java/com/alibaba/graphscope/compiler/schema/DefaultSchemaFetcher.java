@@ -20,36 +20,25 @@ import com.alibaba.graphscope.compiler.api.schema.SchemaFetcher;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+public class DefaultSchemaFetcher implements SchemaFetcher {
+    private GraphSchema schema;
 
-public class JsonFileSchemaFetcher implements SchemaFetcher {
-    private long snapshot;
-    private GraphSchema graphSchema;
-
-    public JsonFileSchemaFetcher(String filePath) {
-        try {
-            String schemaString = new String(Files.readAllBytes(Paths.get(filePath)));
-            this.graphSchema = DefaultGraphSchema.buildSchemaFromJson(schemaString);
-            this.snapshot = Integer.MAX_VALUE - 1;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public DefaultSchemaFetcher(GraphSchema schema) {
+        this.schema = schema;
     }
 
     @Override
     public Pair<GraphSchema, Long> getSchemaSnapshotPair() {
-        return Pair.of(graphSchema, snapshot);
+        return Pair.of(schema, 1L);
     }
 
     @Override
     public int getPartitionNum() {
-        return -1;
+        return 4;
     }
 
     @Override
     public int getVersion() {
-        return -1;
+        return 1;
     }
 }

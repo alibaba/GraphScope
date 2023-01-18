@@ -415,6 +415,7 @@ jobs:
           export GS_ADDR=${NODE_IP}:${NODE_PORT}
           cd ${GITHUB_WORKSPACE}/python
           python3 -m pytest -s -vvv ./graphscope/tests/kubernetes/test_demo_script.py -k test_helm_installation
+          helm delete graphscope
 
       - name: Kubernetes Test
         env:
