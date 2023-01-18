@@ -126,6 +126,10 @@ def simple_flow(sess, ogbn_small_script):
     interactive = sess.gremlin(graph)
     papers = interactive.execute(ogbn_small_script).one()
 
+    # waiting for graphlearn support python3.10
+    if sys.version_info[1] >= 10:
+        return
+
     # GLE on ogbn_mag_small graph
     paper_features = []
     for i in range(128):
@@ -216,6 +220,10 @@ def test_demo_with_default_session(ogbn_small_script):
 
     sub_graph = sub_graph.add_column(ret1, {"kcore": "r"})
     sub_graph = sub_graph.add_column(ret2, {"tc": "r"})
+
+    # waiting for graphlearn support python3.10
+    if sys.version_info[1] >= 10:
+        return
 
     # GLE on ogbn_mag_small graph
     paper_features = []

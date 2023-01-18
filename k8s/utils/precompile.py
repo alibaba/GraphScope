@@ -458,7 +458,7 @@ def parse_sys_args():
     )
     return parser.parse_args()
 
-WORKSPACE = os.path.join("/", tempfile.gettempprefix(), "gs", "builtin")
+WORKSPACE = Path(os.path.join("/", tempfile.gettempprefix(), "gs", "builtin")).resolve()
 
 if __name__ == "__main__":
     args = parse_sys_args()
