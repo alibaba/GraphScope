@@ -3,13 +3,12 @@
 [GraphScope](./overview.md) is an open-source, cloud-native computing framework for a variety of graph workloads,
 including analytical processing, interactive querying and graph learning. But how does GraphScope stand out
 among a bunch of graph products that offer similar functionalities? In summary,
-- If you are searching for a scalable system for graph analytical processing, GraphScope may be your best option,
-with the state-of-the-art performance and a range of SDKs and programming interfaces.
+- If you are searching for a scalable system for graph analytical processing, GraphScope may be your best option.
 - If you are searching for a graph database for graph queries, and performance and scalability are your primary concerns
 rather than transaction guarantees, then GraphScope is a suitable platform.
 - If you have the demand for large-scale distributed graph learning, GraphScope is just the solution.
 - If you are searching for a system that simultaneously offers various types of graph workloads, GraphScope
-is the ideal platform for its functionality, high-performance and scalability.
+is the ideal platform.
 
 We elaborate in details in the following.
 
@@ -19,8 +18,10 @@ Most large-scale graph processing systems, including [PowerGraph](https://github
 ) and [Plato](https://github.com/Tencent/plato)(commit 21009d6), handles only the graph analytical processing workloads.
 Our [empirical studies](./performance_and_benchmark.md) via the LDBC [Graphalytics](http://graphalytics.org/) benchmark
 have demonstrated that GraphScope outperforms these systems in all algorithms.
-Furthermore, GraphScope has the added advantages of supporting
-not only analytical processing but also graph queries and graph learning.
+Furthermore, GraphScope has the added advantages of supporting a range of SDKs and programming interfaces for graph analytics:
+- It offers data scientists a [Python SDKs](./python_tutorials.md) to quickly integrate graph processing into their existing data analytics ecosystem.
+- It allows Java users of [Giraph](https://giraph.apache.org/) and [GraphX](https://spark.apache.org/graphx/) to seamlessly
+  [migrate the existing code](./java_tutorials.md) (without changing a line) to GraphScope, enabling them to enjoy automatic performance improvements.
 
 ## Compare with Graph Databases
 Graph databases, such as [Neo4j](https://neo4j.com/), [JanusGraph](http://www.janusgraph.cn/) and [Nebula](https://www.nebula-graph.com.cn/),
@@ -57,7 +58,6 @@ where the graphs are often large, e.g., billion of nodes and tens of billions of
 To better accommodate the resource requirements of large-scale GNN training, GLE decouples the graph
 sampling and model training into independent stages, and each stage can be flexibly scaled to improve
 the end-to-end throughput.
-
 
 ## Handling Various Types of Graph Workloads
 Given various types of graph workloads, existing systems have proposed two solutions.
