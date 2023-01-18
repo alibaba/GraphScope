@@ -160,7 +160,8 @@ jobs:
     needs: [build-wheels]
     strategy:
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        # The protobuf version of tenorflow and grpcio is conflicts in python 3.11
+        python-version: ['3.7', '3.8', '3.9', '3.10']
 
     steps:
     - uses: actions/download-artifact@v3
@@ -175,6 +176,7 @@ jobs:
     - name: Prepare Environment
       shell: bash
       run: |
+        echo "Python version: ${{ matrix.python-version }}"
         # install graphscope-client
         cd artifacts
         tar -zxf ./wheel-${{ github.sha }}/client.tar.gz
@@ -192,7 +194,11 @@ jobs:
         popd
 
         # install tensorflow
-        python3 -m pip install pytest "tensorflow<=2.5.2" "pandas<1.5.0" --user
+        if [ "${{ matrix.python-version }}" == "3.10" ]; then
+          python3 -m pip install pytest "tensorflow<=2.8.4" "pandas" --user
+        else
+          python3 -m pip install pytest "tensorflow<=2.5.2" "pandas" --user
+        fi
         # install java
         sudo apt update -y && sudo apt install openjdk-11-jdk -y
 
@@ -248,7 +254,8 @@ jobs:
         popd
 
         # install tensorflow
-        python3 -m pip install pytest "tensorflow<=2.5.2" "pandas<1.5.0" --user
+        python3 -m pip install pytest "tensorflow<=2.5.2" "pandas<1.5.0"  --user
+        python3 -m pip install -U wrapt --user
         # install jdk
         dnf install -y java-11-openjdk-devel
 
