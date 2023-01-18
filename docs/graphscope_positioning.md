@@ -19,7 +19,7 @@ Most large-scale graph processing systems, including [PowerGraph](https://github
 Our [empirical studies](./performance_and_benchmark.md) via the LDBC [Graphalytics](http://graphalytics.org/) benchmark
 have demonstrated that GraphScope outperforms these systems in all algorithms.
 Furthermore, GraphScope has the added advantages of supporting a range of SDKs and programming interfaces for graph analytics:
-- It offers data scientists a [Python SDKs](./python_tutorials.md) to quickly integrate graph processing into their existing data analytics ecosystem.
+- It offers data scientists a [Python SDK](./python_tutorials.md) to quickly integrate graph processing into their existing data analytics ecosystem.
 - It allows Java users of [Giraph](https://giraph.apache.org/) and [GraphX](https://spark.apache.org/graphx/) to seamlessly
   [migrate the existing code](./java_tutorials.md) (without changing a line) to GraphScope, enabling them to enjoy automatic performance improvements.
 
@@ -82,6 +82,6 @@ one or more types of workloads, and a distributed storage layer [vineyard](https
 efficient, copy-free in-memory data movements across the engines. Compared to the one-system design,
 GraphScope has demonstrated superior performance due to the separated computing engine.
 Compared to the multi-system design, GraphScope offers more user-friendly programming
-interfaces and more efficient data movements. Additionally, the [disaggregated design](./overview.md) of
-GraphScope allows users to independently deploy each engine, if they only need to focus on certain workloads.
+interfaces and more efficient data movements. Additionally, GraphScope allows users to [independently
+deploy each engine](./overview.md), if they only need to focus on certain workloads.
 
