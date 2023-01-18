@@ -33,7 +33,7 @@ jobs:
     - name: Build GraphScope Store Image
       run: |
         cd ${GITHUB_WORKSPACE}/k8s
-        sudo make graphscope-store
+        sudo make graphscope-store VERSION=${SHORT_SHA}
 
     - name: Release Nightly Image
       # if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
