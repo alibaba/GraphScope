@@ -1,0 +1,1742 @@
+<!doctype html>
+<html class="no-js">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
+
+    <!-- Generated with Sphinx 4.0.3 and Furo 2022.12.07 -->
+        <title>networkx.generators.degree_seq - GraphScope documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/brands.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/regular.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/solid.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/fontawesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/panels.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/rst-versions.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/theme-toggle.css" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+
+
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4TMYCGJ0X2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-4TMYCGJ0X2');
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+</head>
+  <body>
+    
+  <script>
+    document.body.dataset.theme = "light";
+  </script>
+
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../../index.html"><div class="brand">GraphScope  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../../../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../../_static/logo-h.png" alt="Logo"/>
+  </div>
+  
+  
+</a><form class="sidebar-search-container" method="get" action="../../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-tree">
+  <p class="caption"><span class="caption-text">What is GraphScope</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../key_features.html">Key Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../graphscope_for_data_scientists.html">GrpahScope for Data Scientists</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../graphscope_for_traversal_queries.html">GraphScope for Traversal Queries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../graphscope_for_graph_analytics.html">GraphScope for Graph Analytics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../graphscope_for_learning.html">GraphScope for Learning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../performance_and_benchmark.html">Performance and Benchmark</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../graphscope_positioning.html">GraphScope positioning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../frequently_asked_questions.html">Frequently Asked Questions</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../python_tutorials.html">Tutorials for Python Users</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../java_tutorials.html">Tutorials for Java Users</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cpp_tutorials.html">Tutorials for C++ Users</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../walkthrough_examples_acrossing_engines.html">Walkthrough Examples acrossing Engines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../video_tutorials.html">Video Tutorials</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Deployment and Usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deploy_on_self_managed_k8s.html">Deploy on Self-managed K8s</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deploy_on_clouds.html">Deploy on clouds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deploy_with_helm.html">Deploy with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deploy_as_job_for_analytical_tasks.html">Deploy as K8s <code class="docutils literal notranslate"><span class="pre">Job</span></code> for analytical tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deploy_as_service_with_groot.html">Deploy as Service with Groot</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Operations &amp; Observability</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../how_to_find_logs.html">How to Find Logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../monitoring.html">Monitoring</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../error_codes.html">Error Codes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../how_to_report_bug.html">How to Report Bugs</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advanced Topics</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dive_into_engines.html">Dive into Engines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../supported_gremlin_steps.html">Tutorials for Gremlin Users</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../storages_and_unified_interface.html">Storage and Unified Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../performance_tuning.html">Performance Tuning</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../env_preparation.html">Development Environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../code_style_guide.html">Code Style Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../algorithm_development.html">Algorithm Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../test_code.html">How to Test</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../submit_pr.html">How to Submit Pull-requests</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Utilities</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../bulk_loader.html">Bulk Loader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../resources_estimator.html">Resources Estimator</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Community</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../how_to_contribute.html">How to Contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contact_us.html">Contact</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.session.html">graphscope.session</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.set_option.html">graphscope.set_option</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.get_option.html">graphscope.get_option</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.g.html">graphscope.g</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.gremlin.html">graphscope.gremlin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.graphlearn.html">graphscope.graphlearn</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/graph.html">Graph</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.app.load_app.html">graphscope.framework.app.load_app</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/context.html">Context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/selector.html">Selector</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.operation.Operation.__init__.html">graphscope.framework.operation.Operation.__init__</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.operation.Operation.as_op_def.html">graphscope.framework.operation.Operation.as_op_def</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.operation.Operation.key.html">graphscope.framework.operation.Operation.key</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.operation.Operation.signature.html">graphscope.framework.operation.Operation.signature</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.operation.Operation.eval.html">graphscope.framework.operation.Operation.eval</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.operation.Operation.evaluated.html">graphscope.framework.operation.Operation.evaluated</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.create_app.html">graphscope.framework.dag_utils.create_app</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.bind_app.html">graphscope.framework.dag_utils.bind_app</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.run_app.html">graphscope.framework.dag_utils.run_app</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.create_graph.html">graphscope.framework.dag_utils.create_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.create_loader.html">graphscope.framework.dag_utils.create_loader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.add_labels_to_graph.html">graphscope.framework.dag_utils.add_labels_to_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.dynamic_to_arrow.html">graphscope.framework.dag_utils.dynamic_to_arrow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.arrow_to_dynamic.html">graphscope.framework.dag_utils.arrow_to_dynamic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.modify_edges.html">graphscope.framework.dag_utils.modify_edges</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.modify_vertices.html">graphscope.framework.dag_utils.modify_vertices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.report_graph.html">graphscope.framework.dag_utils.report_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.project_arrow_property_graph.html">graphscope.framework.dag_utils.project_arrow_property_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.project_to_simple.html">graphscope.framework.dag_utils.project_to_simple</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.copy_graph.html">graphscope.framework.dag_utils.copy_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.to_directed.html">graphscope.framework.dag_utils.to_directed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.to_undirected.html">graphscope.framework.dag_utils.to_undirected</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.create_graph_view.html">graphscope.framework.dag_utils.create_graph_view</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.clear_graph.html">graphscope.framework.dag_utils.clear_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.clear_edges.html">graphscope.framework.dag_utils.clear_edges</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.create_subgraph.html">graphscope.framework.dag_utils.create_subgraph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.create_unload_op.html">graphscope.framework.dag_utils.create_unload_op</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.unload_app.html">graphscope.framework.dag_utils.unload_app</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.unload_graph.html">graphscope.framework.dag_utils.unload_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.unload_context.html">graphscope.framework.dag_utils.unload_context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.context_to_numpy.html">graphscope.framework.dag_utils.context_to_numpy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.context_to_dataframe.html">graphscope.framework.dag_utils.context_to_dataframe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.to_vineyard_tensor.html">graphscope.framework.dag_utils.to_vineyard_tensor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.to_vineyard_dataframe.html">graphscope.framework.dag_utils.to_vineyard_dataframe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.to_data_sink.html">graphscope.framework.dag_utils.to_data_sink</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.output.html">graphscope.framework.dag_utils.output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.get_context_data.html">graphscope.framework.dag_utils.get_context_data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.add_column.html">graphscope.framework.dag_utils.add_column</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.graph_to_numpy.html">graphscope.framework.dag_utils.graph_to_numpy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.graph_to_dataframe.html">graphscope.framework.dag_utils.graph_to_dataframe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.gremlin_query.html">graphscope.framework.dag_utils.gremlin_query</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.gremlin_to_subgraph.html">graphscope.framework.dag_utils.gremlin_to_subgraph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.fetch_gremlin_result.html">graphscope.framework.dag_utils.fetch_gremlin_result</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.Vertex.html">graphscope.Vertex</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.declare.html">graphscope.declare</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/interactive.html">Interactive Query</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/learning.html">Graph Learning</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/networkx/graphs.html">Graph types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/networkx/transformation.html">Graph Transformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/networkx/builtin.html">Builtin algorithms</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.degree.html">graphscope.nx.classes.function.degree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.degree_histogram.html">graphscope.nx.classes.function.degree_histogram</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.info.html">graphscope.nx.classes.function.info</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.create_empty_copy.html">graphscope.nx.classes.function.create_empty_copy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.is_directed.html">graphscope.nx.classes.function.is_directed</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.to_directed.html">graphscope.nx.classes.function.to_directed</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.to_undirected.html">graphscope.nx.classes.function.to_undirected</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.is_empty.html">graphscope.nx.classes.function.is_empty</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.add_star.html">graphscope.nx.classes.function.add_star</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.add_path.html">graphscope.nx.classes.function.add_path</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.add_cycle.html">graphscope.nx.classes.function.add_cycle</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.subgraph.html">graphscope.nx.classes.function.subgraph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.induced_subgraph.html">graphscope.nx.classes.function.induced_subgraph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.edge_subgraph.html">graphscope.nx.classes.function.edge_subgraph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.nodes.html">graphscope.nx.classes.function.nodes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.number_of_nodes.html">graphscope.nx.classes.function.number_of_nodes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.neighbors.html">graphscope.nx.classes.function.neighbors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.all_neighbors.html">graphscope.nx.classes.function.all_neighbors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.non_neighbors.html">graphscope.nx.classes.function.non_neighbors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.common_neighbors.html">graphscope.nx.classes.function.common_neighbors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.edges.html">graphscope.nx.classes.function.edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.number_of_edges.html">graphscope.nx.classes.function.number_of_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.non_edges.html">graphscope.nx.classes.function.non_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.selfloop_edges.html">graphscope.nx.classes.function.selfloop_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.number_of_selfloops.html">graphscope.nx.classes.function.number_of_selfloops</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.nodes_with_selfloops.html">graphscope.nx.classes.function.nodes_with_selfloops</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.is_weighted.html">graphscope.nx.classes.function.is_weighted</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.is_negatively_weighted.html">graphscope.nx.classes.function.is_negatively_weighted</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.freeze.html">graphscope.nx.classes.function.freeze</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.is_frozen.html">graphscope.nx.classes.function.is_frozen</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas.html">graphscope.nx.generators.atlas.graph_atlas</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas_g.html">graphscope.nx.generators.atlas.graph_atlas_g</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.balanced_tree.html">graphscope.nx.generators.classic.balanced_tree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.barbell_graph.html">graphscope.nx.generators.classic.barbell_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.binomial_tree.html">graphscope.nx.generators.classic.binomial_tree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.complete_graph.html">graphscope.nx.generators.classic.complete_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.complete_multipartite_graph.html">graphscope.nx.generators.classic.complete_multipartite_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.circular_ladder_graph.html">graphscope.nx.generators.classic.circular_ladder_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.circulant_graph.html">graphscope.nx.generators.classic.circulant_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.cycle_graph.html">graphscope.nx.generators.classic.cycle_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.dorogovtsev_goltsev_mendes_graph.html">graphscope.nx.generators.classic.dorogovtsev_goltsev_mendes_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.empty_graph.html">graphscope.nx.generators.classic.empty_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.path_graph.html">graphscope.nx.generators.classic.path_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.star_graph.html">graphscope.nx.generators.classic.star_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.full_rary_tree.html">graphscope.nx.generators.classic.full_rary_tree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.ladder_graph.html">graphscope.nx.generators.classic.ladder_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.lollipop_graph.html">graphscope.nx.generators.classic.lollipop_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.null_graph.html">graphscope.nx.generators.classic.null_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.trivial_graph.html">graphscope.nx.generators.classic.trivial_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.turan_graph.html">graphscope.nx.generators.classic.turan_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.wheel_graph.html">graphscope.nx.generators.classic.wheel_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.expanders.margulis_gabber_galil_graph.html">graphscope.nx.generators.expanders.margulis_gabber_galil_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.expanders.chordal_cycle_graph.html">graphscope.nx.generators.expanders.chordal_cycle_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.expanders.paley_graph.html">graphscope.nx.generators.expanders.paley_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.make_small_graph.html">graphscope.nx.generators.small.make_small_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.LCF_graph.html">graphscope.nx.generators.small.LCF_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.bull_graph.html">graphscope.nx.generators.small.bull_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.chvatal_graph.html">graphscope.nx.generators.small.chvatal_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.cubical_graph.html">graphscope.nx.generators.small.cubical_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.desargues_graph.html">graphscope.nx.generators.small.desargues_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.diamond_graph.html">graphscope.nx.generators.small.diamond_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.dodecahedral_graph.html">graphscope.nx.generators.small.dodecahedral_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.frucht_graph.html">graphscope.nx.generators.small.frucht_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.heawood_graph.html">graphscope.nx.generators.small.heawood_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.house_graph.html">graphscope.nx.generators.small.house_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.house_x_graph.html">graphscope.nx.generators.small.house_x_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.icosahedral_graph.html">graphscope.nx.generators.small.icosahedral_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.krackhardt_kite_graph.html">graphscope.nx.generators.small.krackhardt_kite_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.moebius_kantor_graph.html">graphscope.nx.generators.small.moebius_kantor_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.octahedral_graph.html">graphscope.nx.generators.small.octahedral_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.pappus_graph.html">graphscope.nx.generators.small.pappus_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.petersen_graph.html">graphscope.nx.generators.small.petersen_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.sedgewick_maze_graph.html">graphscope.nx.generators.small.sedgewick_maze_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.tetrahedral_graph.html">graphscope.nx.generators.small.tetrahedral_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.truncated_cube_graph.html">graphscope.nx.generators.small.truncated_cube_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.truncated_tetrahedron_graph.html">graphscope.nx.generators.small.truncated_tetrahedron_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.tutte_graph.html">graphscope.nx.generators.small.tutte_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.duplication.duplication_divergence_graph.html">graphscope.nx.generators.duplication.duplication_divergence_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.duplication.partial_duplication_graph.html">graphscope.nx.generators.duplication.partial_duplication_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.degree_seq.configuration_model.html">graphscope.nx.generators.degree_seq.configuration_model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.degree_seq.directed_configuration_model.html">graphscope.nx.generators.degree_seq.directed_configuration_model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.degree_seq.expected_degree_graph.html">graphscope.nx.generators.degree_seq.expected_degree_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.degree_seq.havel_hakimi_graph.html">graphscope.nx.generators.degree_seq.havel_hakimi_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.degree_seq.directed_havel_hakimi_graph.html">graphscope.nx.generators.degree_seq.directed_havel_hakimi_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.degree_seq.degree_sequence_tree.html">graphscope.nx.generators.degree_seq.degree_sequence_tree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.degree_seq.random_degree_sequence_graph.html">graphscope.nx.generators.degree_seq.random_degree_sequence_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.directed.gn_graph.html">graphscope.nx.generators.directed.gn_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.directed.gnr_graph.html">graphscope.nx.generators.directed.gnr_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.directed.gnc_graph.html">graphscope.nx.generators.directed.gnc_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.directed.random_k_out_graph.html">graphscope.nx.generators.directed.random_k_out_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.directed.scale_free_graph.html">graphscope.nx.generators.directed.scale_free_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.geometric.random_geometric_graph.html">graphscope.nx.generators.geometric.random_geometric_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.geometric.soft_random_geometric_graph.html">graphscope.nx.generators.geometric.soft_random_geometric_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.geometric.geographical_threshold_graph.html">graphscope.nx.generators.geometric.geographical_threshold_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.geometric.waxman_graph.html">graphscope.nx.generators.geometric.waxman_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.geometric.thresholded_random_geometric_graph.html">graphscope.nx.generators.geometric.thresholded_random_geometric_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.ego.ego_graph.html">graphscope.nx.generators.ego.ego_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/networkx.generators.stochastic.stochastic_graph.html">networkx.generators.stochastic.stochastic_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/networkx.generators.internet_as_graphs.random_internet_as_graph.html">networkx.generators.internet_as_graphs.random_internet_as_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.intersection.uniform_random_intersection_graph.html">graphscope.nx.generators.intersection.uniform_random_intersection_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.intersection.k_random_intersection_graph.html">graphscope.nx.generators.intersection.k_random_intersection_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.intersection.general_random_intersection_graph.html">graphscope.nx.generators.intersection.general_random_intersection_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.social.karate_club_graph.html">graphscope.nx.generators.social.karate_club_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.social.davis_southern_women_graph.html">graphscope.nx.generators.social.davis_southern_women_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.social.florentine_families_graph.html">graphscope.nx.generators.social.florentine_families_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.social.les_miserables_graph.html">graphscope.nx.generators.social.les_miserables_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.community.caveman_graph.html">graphscope.nx.generators.community.caveman_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.community.connected_caveman_graph.html">graphscope.nx.generators.community.connected_caveman_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.community.gaussian_random_partition_graph.html">graphscope.nx.generators.community.gaussian_random_partition_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.community.LFR_benchmark_graph.html">graphscope.nx.generators.community.LFR_benchmark_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.community.planted_partition_graph.html">graphscope.nx.generators.community.planted_partition_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.community.random_partition_graph.html">graphscope.nx.generators.community.random_partition_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.community.relaxed_caveman_graph.html">graphscope.nx.generators.community.relaxed_caveman_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.community.ring_of_cliques.html">graphscope.nx.generators.community.ring_of_cliques</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.community.stochastic_block_model.html">graphscope.nx.generators.community.stochastic_block_model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.community.windmill_graph.html">graphscope.nx.generators.community.windmill_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.spectral_graph_forge.spectral_graph_forge.html">graphscope.nx.generators.spectral_graph_forge.spectral_graph_forge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.trees.random_tree.html">graphscope.nx.generators.trees.random_tree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.trees.prefix_tree.html">graphscope.nx.generators.trees.prefix_tree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.nonisomorphic_trees.nonisomorphic_trees.html">graphscope.nx.generators.nonisomorphic_trees.nonisomorphic_trees</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.nonisomorphic_trees.number_of_nonisomorphic_trees.html">graphscope.nx.generators.nonisomorphic_trees.number_of_nonisomorphic_trees</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.triads.triad_graph.html">graphscope.nx.generators.triads.triad_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.joint_degree_seq.is_valid_joint_degree.html">graphscope.nx.generators.joint_degree_seq.is_valid_joint_degree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.joint_degree_seq.joint_degree_graph.html">graphscope.nx.generators.joint_degree_seq.joint_degree_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.joint_degree_seq.is_valid_directed_joint_degree.html">graphscope.nx.generators.joint_degree_seq.is_valid_directed_joint_degree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.joint_degree_seq.directed_joint_degree_graph.html">graphscope.nx.generators.joint_degree_seq.directed_joint_degree_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.mycielski.mycielskian.html">graphscope.nx.generators.mycielski.mycielskian</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.mycielski.mycielski_graph.html">graphscope.nx.generators.mycielski.mycielski_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.harary_graph.hnm_harary_graph.html">graphscope.nx.generators.harary_graph.hnm_harary_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.harary_graph.hkn_harary_graph.html">graphscope.nx.generators.harary_graph.hkn_harary_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.sudoku.sudoku_graph.html">graphscope.nx.generators.sudoku.sudoku_graph</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/networkx/io.html">Reading graphs</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
+</ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../zh/index.html">GraphScope: 一站式图计算系统</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../zh/installation.html">安装</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../zh/getting_started.html">快速上手</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../zh/deployment.html">部署</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../zh/tutorials.html">入门教程</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/01_node_classification_on_citation_network.ipynb">论文引用关系网中的节点分类任务</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/02_graph_manipulations_with_networkx_compatible_apis.ipynb">使用兼容 NetworkX 的 API 进行图操作</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/03_run_graphscope_like_networkx.ipynb">用 GraphScope 像 NetworkX 一样进行图分析</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/04_loading_graphs.ipynb">载入图数据</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/05_builtin_analytical_algorithms.ipynb">内置的图分析算法</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/06_writing_your_own_algorithms.ipynb">编写自定义图分析算法</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/07_interactive_query_with_gremlin.ipynb">使用查询语言 Gremlin 进行交互式查询</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/08_unsupervised_learning_with_graphsage.ipynb">使用 GraphSage 进行无监督图学习</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/09_unsupervised_learning_with_bipartite_graphsage.ipynb">基于 BipartiteGraphSage 的二部图无监督学习</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/10_supervised_learning_with_gcn.ipynb">使用 GCN 进行有监督图学习</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/11_revisit_classification_on_citation_network_on_k8s.ipynb">基于 Kubernetes 环境再探论文引用网络中的节点分类任务</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../zh/loading_graph.html">载图</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../zh/graph_transformation.html">图的变换操作</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../zh/analytics_engine.html">图分析引擎</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../zh/interactive_engine.html">图交互式分析引擎</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../zh/learning_engine.html">图学习引擎</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../zh/frequently_asked_questions.html">常见问题</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../zh/developer_guide.html">开发者指南</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://graphscope.io/docs/reference/python_index.html">Python API 参考</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://graphscope.io/docs/reference/analytical_engine_index.html">图分析引擎 API 参考</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../zh/index.html#id1">索引</a></li>
+</ul>
+
+</div>
+
+<div class="rst-versions rst-versions-ver" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Read the Docs</span>
+    v: v0.19.0
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Versions</dt>
+      
+        
+
+          
+            
+              <dd><a href="../../../../latest/index.html">latest</a></dd>
+            
+          
+        
+      
+        
+          
+            
+              <dd><a href="../../../../index.html">stable</a></dd>
+            
+          
+
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.19.0/index.html">v0.19.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.18.0/index.html">v0.18.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.17.0/index.html">v0.17.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.16.0/index.html">v0.16.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.15.0/index.html">v0.15.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.14.0/index.html">v0.14.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.13.0/index.html">v0.13.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.12.0/index.html">v0.12.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.11.0/index.html">v0.11.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.10.1/index.html">v0.10.1</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.10.0/index.html">v0.10.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.9.1/index.html">v0.9.1</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.9.0/index.html">v0.9.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.8.0/index.html">v0.8.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.7.0/index.html">v0.7.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.6.1/index.html">v0.6.1</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.6.0/index.html">v0.6.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.5.0/index.html">v0.5.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.4.1/index.html">v0.4.1</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.4.0/index.html">v0.4.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.3.0/index.html">v0.3.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.2.1/index.html">v0.2.1</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.2.0/index.html">v0.2.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.1.3/index.html">v0.1.3</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.1.2/index.html">v0.1.2</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.1.1/index.html">v0.1.1</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.1.0/index.html">v0.1.0</a></dd>
+            
+          
+        
+      
+      
+    </dl>
+  </div>
+</div>
+
+<div class="rst-versions rst-versions-lang shift-up" role="note" aria-label="versions">
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Languages</dt>
+      <dd><a href="../../../index.html">en</a></dd>
+      <dd><a href="../../../zh/index.html">zh_CN</a></dd>
+    </dl>
+
+    <hr />
+    <small>
+      <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+    </small>
+  </div>
+</div>
+</div>
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <h1>Source code for networkx.generators.degree_seq</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Generate graphs with a given degree sequence or expected degree sequence.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">heapq</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">combinations</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">zip_longest</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">itemgetter</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">networkx.utils</span> <span class="kn">import</span> <span class="n">random_weighted_sample</span><span class="p">,</span> <span class="n">py_random_state</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;configuration_model&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;directed_configuration_model&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;expected_degree_graph&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;havel_hakimi_graph&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;directed_havel_hakimi_graph&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;degree_sequence_tree&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;random_degree_sequence_graph&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="n">chaini</span> <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span>
+
+
+<span class="k">def</span> <span class="nf">_to_stublist</span><span class="p">(</span><span class="n">degree_sequence</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a list of degree-repeated node numbers.</span>
+
+<span class="sd">    ``degree_sequence`` is a list of nonnegative integers representing</span>
+<span class="sd">    the degrees of nodes in a graph.</span>
+
+<span class="sd">    This function returns a list of node numbers with multiplicities</span>
+<span class="sd">    according to the given degree sequence. For example, if the first</span>
+<span class="sd">    element of ``degree_sequence`` is ``3``, then the first node number,</span>
+<span class="sd">    ``0``, will appear at the head of the returned list three times. The</span>
+<span class="sd">    node numbers are assumed to be the numbers zero through</span>
+<span class="sd">    ``len(degree_sequence) - 1``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &gt;&gt;&gt; degree_sequence = [1, 2, 3]</span>
+<span class="sd">    &gt;&gt;&gt; _to_stublist(degree_sequence)</span>
+<span class="sd">    [0, 1, 1, 2, 2, 2]</span>
+
+<span class="sd">    If a zero appears in the sequence, that means the node exists but</span>
+<span class="sd">    has degree zero, so that number will be skipped in the returned</span>
+<span class="sd">    list::</span>
+
+<span class="sd">    &gt;&gt;&gt; degree_sequence = [2, 0, 1]</span>
+<span class="sd">    &gt;&gt;&gt; _to_stublist(degree_sequence)</span>
+<span class="sd">    [0, 0, 2]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">chaini</span><span class="p">([</span><span class="n">n</span><span class="p">]</span> <span class="o">*</span> <span class="n">d</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">degree_sequence</span><span class="p">)))</span>
+
+
+<span class="k">def</span> <span class="nf">_configuration_model</span><span class="p">(</span>
+    <span class="n">deg_sequence</span><span class="p">,</span> <span class="n">create_using</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">in_deg_sequence</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Helper function for generating either undirected or directed</span>
+<span class="sd">    configuration model graphs.</span>
+
+<span class="sd">    ``deg_sequence`` is a list of nonnegative integers representing the</span>
+<span class="sd">    degree of the node whose label is the index of the list element.</span>
+
+<span class="sd">    ``create_using`` see :func:`~networkx.empty_graph`.</span>
+
+<span class="sd">    ``directed`` and ``in_deg_sequence`` are required if you want the</span>
+<span class="sd">    returned graph to be generated using the directed configuration</span>
+<span class="sd">    model algorithm. If ``directed`` is ``False``, then ``deg_sequence``</span>
+<span class="sd">    is interpreted as the degree sequence of an undirected graph and</span>
+<span class="sd">    ``in_deg_sequence`` is ignored. Otherwise, if ``directed`` is</span>
+<span class="sd">    ``True``, then ``deg_sequence`` is interpreted as the out-degree</span>
+<span class="sd">    sequence and ``in_deg_sequence`` as the in-degree sequence of a</span>
+<span class="sd">    directed graph.</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">       ``deg_sequence`` and ``in_deg_sequence`` need not be the same</span>
+<span class="sd">       length.</span>
+
+<span class="sd">    ``seed`` is a random.Random or numpy.random.RandomState instance</span>
+
+<span class="sd">    This function returns a graph, directed if and only if ``directed``</span>
+<span class="sd">    is ``True``, generated according to the configuration model</span>
+<span class="sd">    algorithm. For more information on the algorithm, see the</span>
+<span class="sd">    :func:`configuration_model` or :func:`directed_configuration_model`</span>
+<span class="sd">    functions.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">deg_sequence</span><span class="p">)</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+    <span class="c1"># If empty, return the null graph immediately.</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">G</span>
+    <span class="c1"># Build a list of available degree-repeated nodes.  For example,</span>
+    <span class="c1"># for degree sequence [3, 2, 1, 1, 1], the &quot;stub list&quot; is</span>
+    <span class="c1"># initially [0, 0, 0, 1, 1, 2, 3, 4], that is, node 0 has degree</span>
+    <span class="c1"># 3 and thus is repeated 3 times, etc.</span>
+    <span class="c1">#</span>
+    <span class="c1"># Also, shuffle the stub list in order to get a random sequence of</span>
+    <span class="c1"># node pairs.</span>
+    <span class="k">if</span> <span class="n">directed</span><span class="p">:</span>
+        <span class="n">pairs</span> <span class="o">=</span> <span class="n">zip_longest</span><span class="p">(</span><span class="n">deg_sequence</span><span class="p">,</span> <span class="n">in_deg_sequence</span><span class="p">,</span> <span class="n">fillvalue</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># Unzip the list of pairs into a pair of lists.</span>
+        <span class="n">out_deg</span><span class="p">,</span> <span class="n">in_deg</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">pairs</span><span class="p">)</span>
+
+        <span class="n">out_stublist</span> <span class="o">=</span> <span class="n">_to_stublist</span><span class="p">(</span><span class="n">out_deg</span><span class="p">)</span>
+        <span class="n">in_stublist</span> <span class="o">=</span> <span class="n">_to_stublist</span><span class="p">(</span><span class="n">in_deg</span><span class="p">)</span>
+
+        <span class="n">seed</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">out_stublist</span><span class="p">)</span>
+        <span class="n">seed</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">in_stublist</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">stublist</span> <span class="o">=</span> <span class="n">_to_stublist</span><span class="p">(</span><span class="n">deg_sequence</span><span class="p">)</span>
+        <span class="c1"># Choose a random balanced bipartition of the stublist, which</span>
+        <span class="c1"># gives a random pairing of nodes. In this implementation, we</span>
+        <span class="c1"># shuffle the list and then split it in half.</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">stublist</span><span class="p">)</span>
+        <span class="n">half</span> <span class="o">=</span> <span class="n">n</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="n">seed</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">stublist</span><span class="p">)</span>
+        <span class="n">out_stublist</span><span class="p">,</span> <span class="n">in_stublist</span> <span class="o">=</span> <span class="n">stublist</span><span class="p">[:</span><span class="n">half</span><span class="p">],</span> <span class="n">stublist</span><span class="p">[</span><span class="n">half</span><span class="p">:]</span>
+    <span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">out_stublist</span><span class="p">,</span> <span class="n">in_stublist</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">G</span>
+
+
+<div class="viewcode-block" id="configuration_model"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.degree_seq.configuration_model.html#graphscope.nx.generators.degree_seq.configuration_model">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">configuration_model</span><span class="p">(</span><span class="n">deg_sequence</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a random graph with the given degree sequence.</span>
+
+<span class="sd">    The configuration model generates a random pseudograph (graph with</span>
+<span class="sd">    parallel edges and self loops) by randomly assigning edges to</span>
+<span class="sd">    match the given degree sequence.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    deg_sequence :  list of nonnegative integers</span>
+<span class="sd">        Each list entry corresponds to the degree of a node.</span>
+<span class="sd">    create_using : NetworkX graph constructor, optional (default MultiGraph)</span>
+<span class="sd">        Graph type to create. If graph instance, then cleared before populated.</span>
+<span class="sd">    seed : integer, random_state, or None (default)</span>
+<span class="sd">        Indicator of random number generation state.</span>
+<span class="sd">        See :ref:`Randomness&lt;randomness&gt;`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : MultiGraph</span>
+<span class="sd">        A graph with the specified degree sequence.</span>
+<span class="sd">        Nodes are labeled starting at 0 with an index</span>
+<span class="sd">        corresponding to the position in deg_sequence.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        If the degree sequence does not have an even sum.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    is_graphical</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    As described by Newman [1]_.</span>
+
+<span class="sd">    A non-graphical degree sequence (not realizable by some simple</span>
+<span class="sd">    graph) is allowed since this function returns graphs with self</span>
+<span class="sd">    loops and parallel edges.  An exception is raised if the degree</span>
+<span class="sd">    sequence does not have an even sum.</span>
+
+<span class="sd">    This configuration model construction process can lead to</span>
+<span class="sd">    duplicate edges and loops.  You can remove the self-loops and</span>
+<span class="sd">    parallel edges (see below) which will likely result in a graph</span>
+<span class="sd">    that doesn&#39;t have the exact degree sequence specified.</span>
+
+<span class="sd">    The density of self-loops and parallel edges tends to decrease as</span>
+<span class="sd">    the number of nodes increases. However, typically the number of</span>
+<span class="sd">    self-loops will approach a Poisson distribution with a nonzero mean,</span>
+<span class="sd">    and similarly for the number of parallel edges.  Consider a node</span>
+<span class="sd">    with *k* stubs. The probability of being joined to another stub of</span>
+<span class="sd">    the same node is basically (*k* - *1*) / *N*, where *k* is the</span>
+<span class="sd">    degree and *N* is the number of nodes. So the probability of a</span>
+<span class="sd">    self-loop scales like *c* / *N* for some constant *c*. As *N* grows,</span>
+<span class="sd">    this means we expect *c* self-loops. Similarly for parallel edges.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] M.E.J. Newman, &quot;The structure and function of complex networks&quot;,</span>
+<span class="sd">       SIAM REVIEW 45-2, pp 167-256, 2003.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    You can create a degree sequence following a particular distribution</span>
+<span class="sd">    by using the one of the distribution functions in</span>
+<span class="sd">    :mod:`~networkx.utils.random_sequence` (or one of your own). For</span>
+<span class="sd">    example, to create an undirected multigraph on one hundred nodes</span>
+<span class="sd">    with degree sequence chosen from the power law distribution:</span>
+
+<span class="sd">    &gt;&gt;&gt; sequence = nx.random_powerlaw_tree_sequence(100, tries=5000)</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.configuration_model(sequence)</span>
+<span class="sd">    &gt;&gt;&gt; len(G)</span>
+<span class="sd">    100</span>
+<span class="sd">    &gt;&gt;&gt; actual_degrees = [d for v, d in G.degree()]</span>
+<span class="sd">    &gt;&gt;&gt; actual_degrees == sequence</span>
+<span class="sd">    True</span>
+
+<span class="sd">    The returned graph is a multigraph, which may have parallel</span>
+<span class="sd">    edges. To remove any parallel edges from the returned graph:</span>
+
+<span class="sd">    &gt;&gt;&gt; G = nx.Graph(G)</span>
+
+<span class="sd">    Similarly, to remove self-loops:</span>
+
+<span class="sd">    &gt;&gt;&gt; G.remove_edges_from(nx.selfloop_edges(G))</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">deg_sequence</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Invalid degree sequence: sum of degrees must be even, not odd&quot;</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">create_using</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">MultiGraph</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXNotImplemented</span><span class="p">(</span><span class="s2">&quot;not implemented for directed graphs&quot;</span><span class="p">)</span>
+
+    <span class="n">G</span> <span class="o">=</span> <span class="n">_configuration_model</span><span class="p">(</span><span class="n">deg_sequence</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="directed_configuration_model"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.degree_seq.directed_configuration_model.html#graphscope.nx.generators.degree_seq.directed_configuration_model">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">directed_configuration_model</span><span class="p">(</span>
+    <span class="n">in_degree_sequence</span><span class="p">,</span> <span class="n">out_degree_sequence</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a directed_random graph with the given degree sequences.</span>
+
+<span class="sd">    The configuration model generates a random directed pseudograph</span>
+<span class="sd">    (graph with parallel edges and self loops) by randomly assigning</span>
+<span class="sd">    edges to match the given degree sequences.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    in_degree_sequence :  list of nonnegative integers</span>
+<span class="sd">       Each list entry corresponds to the in-degree of a node.</span>
+<span class="sd">    out_degree_sequence :  list of nonnegative integers</span>
+<span class="sd">       Each list entry corresponds to the out-degree of a node.</span>
+<span class="sd">    create_using : NetworkX graph constructor, optional (default MultiDiGraph)</span>
+<span class="sd">        Graph type to create. If graph instance, then cleared before populated.</span>
+<span class="sd">    seed : integer, random_state, or None (default)</span>
+<span class="sd">        Indicator of random number generation state.</span>
+<span class="sd">        See :ref:`Randomness&lt;randomness&gt;`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : MultiDiGraph</span>
+<span class="sd">        A graph with the specified degree sequences.</span>
+<span class="sd">        Nodes are labeled starting at 0 with an index</span>
+<span class="sd">        corresponding to the position in deg_sequence.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        If the degree sequences do not have the same sum.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    configuration_model</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Algorithm as described by Newman [1]_.</span>
+
+<span class="sd">    A non-graphical degree sequence (not realizable by some simple</span>
+<span class="sd">    graph) is allowed since this function returns graphs with self</span>
+<span class="sd">    loops and parallel edges.  An exception is raised if the degree</span>
+<span class="sd">    sequences does not have the same sum.</span>
+
+<span class="sd">    This configuration model construction process can lead to</span>
+<span class="sd">    duplicate edges and loops.  You can remove the self-loops and</span>
+<span class="sd">    parallel edges (see below) which will likely result in a graph</span>
+<span class="sd">    that doesn&#39;t have the exact degree sequence specified.  This</span>
+<span class="sd">    &quot;finite-size effect&quot; decreases as the size of the graph increases.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Newman, M. E. J. and Strogatz, S. H. and Watts, D. J.</span>
+<span class="sd">       Random graphs with arbitrary degree distributions and their applications</span>
+<span class="sd">       Phys. Rev. E, 64, 026118 (2001)</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    One can modify the in- and out-degree sequences from an existing</span>
+<span class="sd">    directed graph in order to create a new directed graph. For example,</span>
+<span class="sd">    here we modify the directed path graph:</span>
+
+<span class="sd">    &gt;&gt;&gt; D = nx.DiGraph([(0, 1), (1, 2), (2, 3)])</span>
+<span class="sd">    &gt;&gt;&gt; din = list(d for n, d in D.in_degree())</span>
+<span class="sd">    &gt;&gt;&gt; dout = list(d for n, d in D.out_degree())</span>
+<span class="sd">    &gt;&gt;&gt; din.append(1)</span>
+<span class="sd">    &gt;&gt;&gt; dout[0] = 2</span>
+<span class="sd">    &gt;&gt;&gt; # We now expect an edge from node 0 to a new node, node 3.</span>
+<span class="sd">    ... D = nx.directed_configuration_model(din, dout)</span>
+
+<span class="sd">    The returned graph is a directed multigraph, which may have parallel</span>
+<span class="sd">    edges. To remove any parallel edges from the returned graph:</span>
+
+<span class="sd">    &gt;&gt;&gt; D = nx.DiGraph(D)</span>
+
+<span class="sd">    Similarly, to remove self-loops:</span>
+
+<span class="sd">    &gt;&gt;&gt; D.remove_edges_from(nx.selfloop_edges(D))</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">in_degree_sequence</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">out_degree_sequence</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Invalid degree sequences: sequences must have equal sums&quot;</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">create_using</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">create_using</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">MultiDiGraph</span>
+
+    <span class="n">G</span> <span class="o">=</span> <span class="n">_configuration_model</span><span class="p">(</span>
+        <span class="n">out_degree_sequence</span><span class="p">,</span>
+        <span class="n">create_using</span><span class="p">,</span>
+        <span class="n">directed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">in_deg_sequence</span><span class="o">=</span><span class="n">in_degree_sequence</span><span class="p">,</span>
+        <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;directed configuration_model </span><span class="si">{}</span><span class="s2"> nodes </span><span class="si">{}</span><span class="s2"> edges&quot;</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="expected_degree_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.degree_seq.expected_degree_graph.html#graphscope.nx.generators.degree_seq.expected_degree_graph">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">expected_degree_graph</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">selfloops</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns a random graph with given expected degrees.</span>
+
+<span class="sd">    Given a sequence of expected degrees $W=(w_0,w_1,\ldots,w_{n-1})$</span>
+<span class="sd">    of length $n$ this algorithm assigns an edge between node $u$ and</span>
+<span class="sd">    node $v$ with probability</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">       p_{uv} = \frac{w_u w_v}{\sum_k w_k} .</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    w : list</span>
+<span class="sd">        The list of expected degrees.</span>
+<span class="sd">    selfloops: bool (default=True)</span>
+<span class="sd">        Set to False to remove the possibility of self-loop edges.</span>
+<span class="sd">    seed : integer, random_state, or None (default)</span>
+<span class="sd">        Indicator of random number generation state.</span>
+<span class="sd">        See :ref:`Randomness&lt;randomness&gt;`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Graph</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; z = [10 for i in range(100)]</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.expected_degree_graph(z)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The nodes have integer labels corresponding to index of expected degrees</span>
+<span class="sd">    input sequence.</span>
+
+<span class="sd">    The complexity of this algorithm is $\mathcal{O}(n+m)$ where $n$ is the</span>
+<span class="sd">    number of nodes and $m$ is the expected number of edges.</span>
+
+<span class="sd">    The model in [1]_ includes the possibility of self-loop edges.</span>
+<span class="sd">    Set selfloops=False to produce a graph without self loops.</span>
+
+<span class="sd">    For finite graphs this model doesn&#39;t produce exactly the given</span>
+<span class="sd">    expected degree sequence.  Instead the expected degrees are as</span>
+<span class="sd">    follows.</span>
+
+<span class="sd">    For the case without self loops (selfloops=False),</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">       E[deg(u)] = \sum_{v \ne u} p_{uv}</span>
+<span class="sd">                = w_u \left( 1 - \frac{w_u}{\sum_k w_k} \right) .</span>
+
+
+<span class="sd">    NetworkX uses the standard convention that a self-loop edge counts 2</span>
+<span class="sd">    in the degree of a node, so with self loops (selfloops=True),</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">       E[deg(u)] =  \sum_{v \ne u} p_{uv}  + 2 p_{uu}</span>
+<span class="sd">                = w_u \left( 1 + \frac{w_u}{\sum_k w_k} \right) .</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Fan Chung and L. Lu, Connected components in random graphs with</span>
+<span class="sd">       given expected degree sequences, Ann. Combinatorics, 6,</span>
+<span class="sd">       pp. 125-145, 2002.</span>
+<span class="sd">    .. [2] Joel Miller and Aric Hagberg,</span>
+<span class="sd">       Efficient generation of networks with given expected degrees,</span>
+<span class="sd">       in Algorithms and Models for the Web-Graph (WAW 2011),</span>
+<span class="sd">       Alan Frieze, Paul Horn, and Paweł Prałat (Eds), LNCS 6732,</span>
+<span class="sd">       pp. 115-126, 2011.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="c1"># If there are no nodes are no edges in the graph, return the empty graph.</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">max</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">G</span>
+
+    <span class="n">rho</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="nb">sum</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+    <span class="c1"># Sort the weights in decreasing order. The original order of the</span>
+    <span class="c1"># weights dictates the order of the (integer) node labels, so we</span>
+    <span class="c1"># need to remember the permutation applied in the sorting.</span>
+    <span class="n">order</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">w</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">mapping</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="p">:</span> <span class="n">u</span> <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">order</span><span class="p">)}</span>
+    <span class="n">seq</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">order</span><span class="p">]</span>
+    <span class="n">last</span> <span class="o">=</span> <span class="n">n</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">selfloops</span><span class="p">:</span>
+        <span class="n">last</span> <span class="o">-=</span> <span class="mi">1</span>
+    <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">last</span><span class="p">):</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">u</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">selfloops</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">factor</span> <span class="o">=</span> <span class="n">seq</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">*</span> <span class="n">rho</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">seq</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">*</span> <span class="n">factor</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">while</span> <span class="n">v</span> <span class="o">&lt;</span> <span class="n">n</span> <span class="ow">and</span> <span class="n">p</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">p</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">r</span> <span class="o">=</span> <span class="n">seed</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
+                <span class="n">v</span> <span class="o">+=</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">p</span><span class="p">)))</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">:</span>
+                <span class="n">q</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">seq</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">*</span> <span class="n">factor</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">seed</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">q</span> <span class="o">/</span> <span class="n">p</span><span class="p">:</span>
+                    <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">mapping</span><span class="p">[</span><span class="n">u</span><span class="p">],</span> <span class="n">mapping</span><span class="p">[</span><span class="n">v</span><span class="p">])</span>
+                <span class="n">v</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="n">q</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="havel_hakimi_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.degree_seq.havel_hakimi_graph.html#graphscope.nx.generators.degree_seq.havel_hakimi_graph">[docs]</a><span class="k">def</span> <span class="nf">havel_hakimi_graph</span><span class="p">(</span><span class="n">deg_sequence</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a simple graph with given degree sequence constructed</span>
+<span class="sd">    using the Havel-Hakimi algorithm.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    deg_sequence: list of integers</span>
+<span class="sd">        Each integer corresponds to the degree of a node (need not be sorted).</span>
+<span class="sd">    create_using : NetworkX graph constructor, optional (default=nx.Graph)</span>
+<span class="sd">        Graph type to create. If graph instance, then cleared before populated.</span>
+<span class="sd">        Directed graphs are not allowed.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXException</span>
+<span class="sd">        For a non-graphical degree sequence (i.e. one</span>
+<span class="sd">        not realizable by some simple graph).</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The Havel-Hakimi algorithm constructs a simple graph by</span>
+<span class="sd">    successively connecting the node of highest degree to other nodes</span>
+<span class="sd">    of highest degree, resorting remaining nodes by degree, and</span>
+<span class="sd">    repeating the process. The resulting graph has a high</span>
+<span class="sd">    degree-associativity.  Nodes are labeled 1,.., len(deg_sequence),</span>
+<span class="sd">    corresponding to their position in deg_sequence.</span>
+
+<span class="sd">    The basic algorithm is from Hakimi [1]_ and was generalized by</span>
+<span class="sd">    Kleitman and Wang [2]_.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Hakimi S., On Realizability of a Set of Integers as</span>
+<span class="sd">       Degrees of the Vertices of a Linear Graph. I,</span>
+<span class="sd">       Journal of SIAM, 10(3), pp. 496-506 (1962)</span>
+<span class="sd">    .. [2] Kleitman D.J. and Wang D.L.</span>
+<span class="sd">       Algorithms for Constructing Graphs and Digraphs with Given Valences</span>
+<span class="sd">       and Factors  Discrete Mathematics, 6(1), pp. 79-88 (1973)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_graphical</span><span class="p">(</span><span class="n">deg_sequence</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;Invalid degree sequence&quot;</span><span class="p">)</span>
+
+    <span class="n">p</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">deg_sequence</span><span class="p">)</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;Directed graphs are not supported&quot;</span><span class="p">)</span>
+    <span class="n">num_degs</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="p">)]</span>
+    <span class="n">dmax</span><span class="p">,</span> <span class="n">dsum</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">deg_sequence</span><span class="p">:</span>
+        <span class="c1"># Process only the non-zero integers</span>
+        <span class="k">if</span> <span class="n">d</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">num_degs</span><span class="p">[</span><span class="n">d</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+            <span class="n">dmax</span><span class="p">,</span> <span class="n">dsum</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">dmax</span><span class="p">,</span> <span class="n">d</span><span class="p">),</span> <span class="n">dsum</span> <span class="o">+</span> <span class="n">d</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="c1"># Return graph if no edges</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">G</span>
+
+    <span class="n">modstubs</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span> <span class="o">*</span> <span class="p">(</span><span class="n">dmax</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># Successively reduce degree sequence by removing the maximum degree</span>
+    <span class="k">while</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># Retrieve the maximum degree in the sequence</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">num_degs</span><span class="p">[</span><span class="n">dmax</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">dmax</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="c1"># If there are not enough stubs to connect to, then the sequence is</span>
+        <span class="c1"># not graphical</span>
+        <span class="k">if</span> <span class="n">dmax</span> <span class="o">&gt;</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;Non-graphical integer sequence&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Remove largest stub in list</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="n">num_degs</span><span class="p">[</span><span class="n">dmax</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="n">n</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="c1"># Reduce the next dmax largest stubs</span>
+        <span class="n">mslen</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">dmax</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dmax</span><span class="p">):</span>
+            <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">num_degs</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">k</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="n">num_degs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+            <span class="n">n</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">modstubs</span><span class="p">[</span><span class="n">mslen</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+                <span class="n">mslen</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="c1"># Add back to the list any nonzero stubs that were removed</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mslen</span><span class="p">):</span>
+            <span class="p">(</span><span class="n">stubval</span><span class="p">,</span> <span class="n">stubtarget</span><span class="p">)</span> <span class="o">=</span> <span class="n">modstubs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">num_degs</span><span class="p">[</span><span class="n">stubval</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stubtarget</span><span class="p">)</span>
+            <span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="directed_havel_hakimi_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.degree_seq.directed_havel_hakimi_graph.html#graphscope.nx.generators.degree_seq.directed_havel_hakimi_graph">[docs]</a><span class="k">def</span> <span class="nf">directed_havel_hakimi_graph</span><span class="p">(</span><span class="n">in_deg_sequence</span><span class="p">,</span> <span class="n">out_deg_sequence</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a directed graph with the given degree sequences.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    in_deg_sequence :  list of integers</span>
+<span class="sd">        Each list entry corresponds to the in-degree of a node.</span>
+<span class="sd">    out_deg_sequence : list of integers</span>
+<span class="sd">        Each list entry corresponds to the out-degree of a node.</span>
+<span class="sd">    create_using : NetworkX graph constructor, optional (default DiGraph)</span>
+<span class="sd">        Graph type to create. If graph instance, then cleared before populated.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : DiGraph</span>
+<span class="sd">        A graph with the specified degree sequences.</span>
+<span class="sd">        Nodes are labeled starting at 0 with an index</span>
+<span class="sd">        corresponding to the position in deg_sequence</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        If the degree sequences are not digraphical.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    configuration_model</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Algorithm as described by Kleitman and Wang [1]_.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] D.J. Kleitman and D.L. Wang</span>
+<span class="sd">       Algorithms for Constructing Graphs and Digraphs with Given Valences</span>
+<span class="sd">       and Factors Discrete Mathematics, 6(1), pp. 79-88 (1973)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">in_deg_sequence</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">make_list_of_ints</span><span class="p">(</span><span class="n">in_deg_sequence</span><span class="p">)</span>
+    <span class="n">out_deg_sequence</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">make_list_of_ints</span><span class="p">(</span><span class="n">out_deg_sequence</span><span class="p">)</span>
+
+    <span class="c1"># Process the sequences and form two heaps to store degree pairs with</span>
+    <span class="c1"># either zero or nonzero out degrees</span>
+    <span class="n">sumin</span><span class="p">,</span> <span class="n">sumout</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+    <span class="n">nin</span><span class="p">,</span> <span class="n">nout</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">in_deg_sequence</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">out_deg_sequence</span><span class="p">)</span>
+    <span class="n">maxn</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">nin</span><span class="p">,</span> <span class="n">nout</span><span class="p">)</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">(</span><span class="n">maxn</span><span class="p">,</span> <span class="n">create_using</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">maxn</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">G</span>
+    <span class="n">maxin</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">stubheap</span><span class="p">,</span> <span class="n">zeroheap</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxn</span><span class="p">):</span>
+        <span class="n">in_deg</span><span class="p">,</span> <span class="n">out_deg</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="n">nout</span><span class="p">:</span>
+            <span class="n">out_deg</span> <span class="o">=</span> <span class="n">out_deg_sequence</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="n">nin</span><span class="p">:</span>
+            <span class="n">in_deg</span> <span class="o">=</span> <span class="n">in_deg_sequence</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">in_deg</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">out_deg</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span>
+                <span class="s2">&quot;Invalid degree sequences. Sequence values must be positive.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">sumin</span><span class="p">,</span> <span class="n">sumout</span><span class="p">,</span> <span class="n">maxin</span> <span class="o">=</span> <span class="n">sumin</span> <span class="o">+</span> <span class="n">in_deg</span><span class="p">,</span> <span class="n">sumout</span> <span class="o">+</span> <span class="n">out_deg</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">maxin</span><span class="p">,</span> <span class="n">in_deg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">in_deg</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">stubheap</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">out_deg</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">in_deg</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">out_deg</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">zeroheap</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">out_deg</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">sumin</span> <span class="o">!=</span> <span class="n">sumout</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span>
+            <span class="s2">&quot;Invalid degree sequences. Sequences must have equal sums.&quot;</span>
+        <span class="p">)</span>
+    <span class="n">heapq</span><span class="o">.</span><span class="n">heapify</span><span class="p">(</span><span class="n">stubheap</span><span class="p">)</span>
+    <span class="n">heapq</span><span class="o">.</span><span class="n">heapify</span><span class="p">(</span><span class="n">zeroheap</span><span class="p">)</span>
+
+    <span class="n">modstubs</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span> <span class="o">*</span> <span class="p">(</span><span class="n">maxin</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># Successively reduce degree sequence by removing the maximum</span>
+    <span class="k">while</span> <span class="n">stubheap</span><span class="p">:</span>
+        <span class="c1"># Remove first value in the sequence with a non-zero in degree</span>
+        <span class="p">(</span><span class="n">freeout</span><span class="p">,</span> <span class="n">freein</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span> <span class="o">=</span> <span class="n">heapq</span><span class="o">.</span><span class="n">heappop</span><span class="p">(</span><span class="n">stubheap</span><span class="p">)</span>
+        <span class="n">freein</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">if</span> <span class="n">freein</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">stubheap</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">zeroheap</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;Non-digraphical integer sequence&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Attach arcs from the nodes with the most stubs</span>
+        <span class="n">mslen</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">freein</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">zeroheap</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">stubheap</span> <span class="ow">or</span> <span class="n">stubheap</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">zeroheap</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="p">(</span><span class="n">stubout</span><span class="p">,</span> <span class="n">stubsource</span><span class="p">)</span> <span class="o">=</span> <span class="n">heapq</span><span class="o">.</span><span class="n">heappop</span><span class="p">(</span><span class="n">zeroheap</span><span class="p">)</span>
+                <span class="n">stubin</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="p">(</span><span class="n">stubout</span><span class="p">,</span> <span class="n">stubin</span><span class="p">,</span> <span class="n">stubsource</span><span class="p">)</span> <span class="o">=</span> <span class="n">heapq</span><span class="o">.</span><span class="n">heappop</span><span class="p">(</span><span class="n">stubheap</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">stubout</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;Non-digraphical integer sequence&quot;</span><span class="p">)</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">stubsource</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+            <span class="c1"># Check if source is now totally connected</span>
+            <span class="k">if</span> <span class="n">stubout</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">stubin</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">modstubs</span><span class="p">[</span><span class="n">mslen</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">stubout</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">stubin</span><span class="p">,</span> <span class="n">stubsource</span><span class="p">)</span>
+                <span class="n">mslen</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># Add the nodes back to the heaps that still have available stubs</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mslen</span><span class="p">):</span>
+            <span class="n">stub</span> <span class="o">=</span> <span class="n">modstubs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">stub</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">heapq</span><span class="o">.</span><span class="n">heappush</span><span class="p">(</span><span class="n">stubheap</span><span class="p">,</span> <span class="n">stub</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">heapq</span><span class="o">.</span><span class="n">heappush</span><span class="p">(</span><span class="n">zeroheap</span><span class="p">,</span> <span class="p">(</span><span class="n">stub</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">stub</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="n">freeout</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">heapq</span><span class="o">.</span><span class="n">heappush</span><span class="p">(</span><span class="n">zeroheap</span><span class="p">,</span> <span class="p">(</span><span class="n">freeout</span><span class="p">,</span> <span class="n">target</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="degree_sequence_tree"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.degree_seq.degree_sequence_tree.html#graphscope.nx.generators.degree_seq.degree_sequence_tree">[docs]</a><span class="k">def</span> <span class="nf">degree_sequence_tree</span><span class="p">(</span><span class="n">deg_sequence</span><span class="p">,</span> <span class="n">create_using</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Make a tree for the given degree sequence.</span>
+
+<span class="sd">    A tree has #nodes-#edges=1 so</span>
+<span class="sd">    the degree sequence must have</span>
+<span class="sd">    len(deg_sequence)-sum(deg_sequence)/2=1</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># The sum of the degree sequence must be even (for any undirected graph).</span>
+    <span class="n">degree_sum</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">deg_sequence</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">degree_sum</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Invalid degree sequence: sum of degrees must be even, not odd&quot;</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">deg_sequence</span><span class="p">)</span> <span class="o">-</span> <span class="n">degree_sum</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;Invalid degree sequence: tree must have number of nodes equal&quot;</span>
+            <span class="s2">&quot; to one less than the number of edges&quot;</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">empty_graph</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">create_using</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;Directed Graph not supported&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Sort all degrees greater than 1 in decreasing order.</span>
+    <span class="c1">#</span>
+    <span class="c1"># TODO Does this need to be sorted in reverse order?</span>
+    <span class="n">deg</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">deg_sequence</span> <span class="k">if</span> <span class="n">s</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># make path graph as backbone</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">deg</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span>
+    <span class="n">nx</span><span class="o">.</span><span class="n">add_path</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+    <span class="n">last</span> <span class="o">=</span> <span class="n">n</span>
+
+    <span class="c1"># add the leaves</span>
+    <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">nedges</span> <span class="o">=</span> <span class="n">deg</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span> <span class="o">-</span> <span class="mi">2</span>
+        <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">last</span><span class="p">,</span> <span class="n">last</span> <span class="o">+</span> <span class="n">nedges</span><span class="p">):</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+        <span class="n">last</span> <span class="o">+=</span> <span class="n">nedges</span>
+
+    <span class="c1"># in case we added one too many</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">deg_sequence</span><span class="p">):</span>
+        <span class="n">G</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">G</span></div>
+
+
+<div class="viewcode-block" id="random_degree_sequence_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.degree_seq.random_degree_sequence_graph.html#graphscope.nx.generators.degree_seq.random_degree_sequence_graph">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">random_degree_sequence_graph</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tries</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns a simple random graph with the given degree sequence.</span>
+
+<span class="sd">    If the maximum degree $d_m$ in the sequence is $O(m^{1/4})$ then the</span>
+<span class="sd">    algorithm produces almost uniform random graphs in $O(m d_m)$ time</span>
+<span class="sd">    where $m$ is the number of edges.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sequence :  list of integers</span>
+<span class="sd">        Sequence of degrees</span>
+<span class="sd">    seed : integer, random_state, or None (default)</span>
+<span class="sd">        Indicator of random number generation state.</span>
+<span class="sd">        See :ref:`Randomness&lt;randomness&gt;`.</span>
+<span class="sd">    tries : int, optional</span>
+<span class="sd">        Maximum number of tries to create a graph</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : Graph</span>
+<span class="sd">        A graph with the specified degree sequence.</span>
+<span class="sd">        Nodes are labeled starting at 0 with an index</span>
+<span class="sd">        corresponding to the position in the sequence.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    NetworkXUnfeasible</span>
+<span class="sd">        If the degree sequence is not graphical.</span>
+<span class="sd">    NetworkXError</span>
+<span class="sd">        If a graph is not produced in specified number of tries</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    is_graphical, configuration_model</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The generator algorithm [1]_ is not guaranteed to produce a graph.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] Moshen Bayati, Jeong Han Kim, and Amin Saberi,</span>
+<span class="sd">       A sequential algorithm for generating random graphs.</span>
+<span class="sd">       Algorithmica, Volume 58, Number 4, 860-910,</span>
+<span class="sd">       DOI: 10.1007/s00453-009-9340-1</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; sequence = [1, 2, 2, 3]</span>
+<span class="sd">    &gt;&gt;&gt; G = nx.random_degree_sequence_graph(sequence, seed=42)</span>
+<span class="sd">    &gt;&gt;&gt; sorted(d for n, d in G.degree())</span>
+<span class="sd">    [1, 2, 2, 3]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">DSRG</span> <span class="o">=</span> <span class="n">DegreeSequenceRandomGraph</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="n">seed</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">try_n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">tries</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">DSRG</span><span class="o">.</span><span class="n">generate</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXUnfeasible</span><span class="p">:</span>
+            <span class="k">pass</span>
+    <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;failed to generate graph in </span><span class="si">{</span><span class="n">tries</span><span class="si">}</span><span class="s2"> tries&quot;</span><span class="p">)</span></div>
+
+
+<span class="k">class</span> <span class="nc">DegreeSequenceRandomGraph</span><span class="p">:</span>
+    <span class="c1"># class to generate random graphs with a given degree sequence</span>
+    <span class="c1"># use random_degree_sequence_graph()</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">degree</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_graphical</span><span class="p">(</span><span class="n">degree</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXUnfeasible</span><span class="p">(</span><span class="s2">&quot;degree sequence is not graphical&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rng</span> <span class="o">=</span> <span class="n">rng</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">degree</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">degree</span><span class="p">)</span>
+        <span class="c1"># node labels are integers 0,...,n-1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">degree</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>  <span class="c1"># number of edges</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">degree</span><span class="p">)</span>  <span class="c1"># maximum degree</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># remaining_degree is mapping from int-&gt;remaining degree</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remaining_degree</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">degree</span><span class="p">))</span>
+        <span class="c1"># add all nodes to make sure we get isolated nodes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remaining_degree</span><span class="p">)</span>
+        <span class="c1"># remove zero degree nodes</span>
+        <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remaining_degree</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="n">d</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">remaining_degree</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remaining_degree</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># build graph in three phases according to how many unmatched edges</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">phase1</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">phase2</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">phase3</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span>
+
+    <span class="k">def</span> <span class="nf">update_remaining</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">aux_graph</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># decrement remaining nodes, modify auxiliary graph if in phase3</span>
+        <span class="k">if</span> <span class="n">aux_graph</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># remove edges from auxiliary graph</span>
+            <span class="n">aux_graph</span><span class="o">.</span><span class="n">remove_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">remaining_degree</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">remaining_degree</span><span class="p">[</span><span class="n">u</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">aux_graph</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">aux_graph</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remaining_degree</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">remaining_degree</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">remaining_degree</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">aux_graph</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">aux_graph</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remaining_degree</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">p</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="c1"># degree probability</span>
+        <span class="k">return</span> <span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">degree</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">degree</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="mf">4.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">q</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="c1"># remaining degree probability</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remaining_degree</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">remaining_degree</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">remaining_degree</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">/</span> <span class="n">norm</span>
+
+    <span class="k">def</span> <span class="nf">suitable_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns True if and only if an arbitrary remaining node can</span>
+<span class="sd">        potentially be joined with some other remaining node.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remaining_degree</span><span class="p">)</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">phase1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># choose node pairs from (degree) weighted distribution</span>
+        <span class="n">rem_deg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">remaining_degree</span>
+        <span class="k">while</span> <span class="nb">sum</span><span class="p">(</span><span class="n">rem_deg</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">&gt;=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="o">**</span><span class="mi">2</span><span class="p">:</span>
+            <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">random_weighted_sample</span><span class="p">(</span><span class="n">rem_deg</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">))</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>  <span class="c1"># accept edge</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">update_remaining</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">phase2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># choose remaining nodes uniformly at random and use rejection sampling</span>
+        <span class="n">remaining_deg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">remaining_degree</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">remaining_deg</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmax</span><span class="p">:</span>
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">remaining_deg</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="mi">2</span><span class="p">))</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">q</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+                    <span class="k">break</span>
+            <span class="k">if</span> <span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>  <span class="c1"># accept edge</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">update_remaining</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">phase3</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># build potential remaining edges and choose with rejection sampling</span>
+        <span class="n">potential_edges</span> <span class="o">=</span> <span class="n">combinations</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remaining_degree</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="c1"># build auxiliary graph of potential edges not already in graph</span>
+        <span class="n">H</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">(</span>
+            <span class="p">[(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="n">potential_edges</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)]</span>
+        <span class="p">)</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">remaining_degree</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">suitable_edge</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXUnfeasible</span><span class="p">(</span><span class="s2">&quot;no suitable edges left&quot;</span><span class="p">)</span>
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">H</span><span class="o">.</span><span class="n">edges</span><span class="p">())))</span>
+                <span class="k">if</span> <span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">q</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+                    <span class="k">break</span>
+            <span class="k">if</span> <span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>  <span class="c1"># accept edge</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">update_remaining</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">aux_graph</span><span class="o">=</span><span class="n">H</span><span class="p">)</span>
+</pre></div>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2020-2023, DAMO Academy, Alibaba Inc.
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              <a class="muted-link fa fa-solid fa-github fa-2x" href="https://github.com/alibaba/GraphScope" aria-label="GitHub"></a>
+              
+            </div>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/scripts/furo.js"></script>
+    <script src="../../../_static/js/readthedocs.js"></script>
+    <script src="../../../_static/js/readthedocs-doc-embed.js"></script>
+    </body>
+</html>

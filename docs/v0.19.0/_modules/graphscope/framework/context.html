@@ -1,0 +1,1688 @@
+<!doctype html>
+<html class="no-js">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
+
+    <!-- Generated with Sphinx 4.0.3 and Furo 2022.12.07 -->
+        <title>graphscope.framework.context - GraphScope documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/brands.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/regular.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/solid.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/fontawesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/panels.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/rst-versions.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/theme-toggle.css" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+
+
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4TMYCGJ0X2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-4TMYCGJ0X2');
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+</head>
+  <body>
+    
+  <script>
+    document.body.dataset.theme = "light";
+  </script>
+
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../../index.html"><div class="brand">GraphScope  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../../../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../../_static/logo-h.png" alt="Logo"/>
+  </div>
+  
+  
+</a><form class="sidebar-search-container" method="get" action="../../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-tree">
+  <p class="caption"><span class="caption-text">What is GraphScope</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../key_features.html">Key Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../graphscope_for_data_scientists.html">GrpahScope for Data Scientists</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../graphscope_for_traversal_queries.html">GraphScope for Traversal Queries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../graphscope_for_graph_analytics.html">GraphScope for Graph Analytics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../graphscope_for_learning.html">GraphScope for Learning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../performance_and_benchmark.html">Performance and Benchmark</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../graphscope_positioning.html">GraphScope positioning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../frequently_asked_questions.html">Frequently Asked Questions</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../python_tutorials.html">Tutorials for Python Users</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../java_tutorials.html">Tutorials for Java Users</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cpp_tutorials.html">Tutorials for C++ Users</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../walkthrough_examples_acrossing_engines.html">Walkthrough Examples acrossing Engines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../video_tutorials.html">Video Tutorials</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Deployment and Usage</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deploy_on_self_managed_k8s.html">Deploy on Self-managed K8s</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deploy_on_clouds.html">Deploy on clouds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deploy_with_helm.html">Deploy with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deploy_as_job_for_analytical_tasks.html">Deploy as K8s <code class="docutils literal notranslate"><span class="pre">Job</span></code> for analytical tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../deploy_as_service_with_groot.html">Deploy as Service with Groot</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Operations &amp; Observability</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../how_to_find_logs.html">How to Find Logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../monitoring.html">Monitoring</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../error_codes.html">Error Codes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../how_to_report_bug.html">How to Report Bugs</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advanced Topics</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dive_into_engines.html">Dive into Engines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../supported_gremlin_steps.html">Tutorials for Gremlin Users</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../storages_and_unified_interface.html">Storage and Unified Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../performance_tuning.html">Performance Tuning</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../env_preparation.html">Development Environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../code_style_guide.html">Code Style Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../algorithm_development.html">Algorithm Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../test_code.html">How to Test</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../submit_pr.html">How to Submit Pull-requests</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Utilities</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../bulk_loader.html">Bulk Loader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../resources_estimator.html">Resources Estimator</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Community</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../how_to_contribute.html">How to Contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contact_us.html">Contact</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.session.html">graphscope.session</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.set_option.html">graphscope.set_option</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.get_option.html">graphscope.get_option</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.g.html">graphscope.g</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.gremlin.html">graphscope.gremlin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.graphlearn.html">graphscope.graphlearn</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/graph.html">Graph</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.app.load_app.html">graphscope.framework.app.load_app</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/context.html">Context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/selector.html">Selector</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.operation.Operation.__init__.html">graphscope.framework.operation.Operation.__init__</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.operation.Operation.as_op_def.html">graphscope.framework.operation.Operation.as_op_def</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.operation.Operation.key.html">graphscope.framework.operation.Operation.key</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.operation.Operation.signature.html">graphscope.framework.operation.Operation.signature</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.operation.Operation.eval.html">graphscope.framework.operation.Operation.eval</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.operation.Operation.evaluated.html">graphscope.framework.operation.Operation.evaluated</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.create_app.html">graphscope.framework.dag_utils.create_app</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.bind_app.html">graphscope.framework.dag_utils.bind_app</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.run_app.html">graphscope.framework.dag_utils.run_app</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.create_graph.html">graphscope.framework.dag_utils.create_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.create_loader.html">graphscope.framework.dag_utils.create_loader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.add_labels_to_graph.html">graphscope.framework.dag_utils.add_labels_to_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.dynamic_to_arrow.html">graphscope.framework.dag_utils.dynamic_to_arrow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.arrow_to_dynamic.html">graphscope.framework.dag_utils.arrow_to_dynamic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.modify_edges.html">graphscope.framework.dag_utils.modify_edges</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.modify_vertices.html">graphscope.framework.dag_utils.modify_vertices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.report_graph.html">graphscope.framework.dag_utils.report_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.project_arrow_property_graph.html">graphscope.framework.dag_utils.project_arrow_property_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.project_to_simple.html">graphscope.framework.dag_utils.project_to_simple</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.copy_graph.html">graphscope.framework.dag_utils.copy_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.to_directed.html">graphscope.framework.dag_utils.to_directed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.to_undirected.html">graphscope.framework.dag_utils.to_undirected</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.create_graph_view.html">graphscope.framework.dag_utils.create_graph_view</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.clear_graph.html">graphscope.framework.dag_utils.clear_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.clear_edges.html">graphscope.framework.dag_utils.clear_edges</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.create_subgraph.html">graphscope.framework.dag_utils.create_subgraph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.create_unload_op.html">graphscope.framework.dag_utils.create_unload_op</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.unload_app.html">graphscope.framework.dag_utils.unload_app</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.unload_graph.html">graphscope.framework.dag_utils.unload_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.unload_context.html">graphscope.framework.dag_utils.unload_context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.context_to_numpy.html">graphscope.framework.dag_utils.context_to_numpy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.context_to_dataframe.html">graphscope.framework.dag_utils.context_to_dataframe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.to_vineyard_tensor.html">graphscope.framework.dag_utils.to_vineyard_tensor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.to_vineyard_dataframe.html">graphscope.framework.dag_utils.to_vineyard_dataframe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.to_data_sink.html">graphscope.framework.dag_utils.to_data_sink</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.output.html">graphscope.framework.dag_utils.output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.get_context_data.html">graphscope.framework.dag_utils.get_context_data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.add_column.html">graphscope.framework.dag_utils.add_column</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.graph_to_numpy.html">graphscope.framework.dag_utils.graph_to_numpy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.graph_to_dataframe.html">graphscope.framework.dag_utils.graph_to_dataframe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.gremlin_query.html">graphscope.framework.dag_utils.gremlin_query</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.gremlin_to_subgraph.html">graphscope.framework.dag_utils.gremlin_to_subgraph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.framework.dag_utils.fetch_gremlin_result.html">graphscope.framework.dag_utils.fetch_gremlin_result</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.Vertex.html">graphscope.Vertex</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/generated/graphscope.declare.html">graphscope.declare</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/interactive.html">Interactive Query</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/learning.html">Graph Learning</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/networkx/graphs.html">Graph types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/networkx/transformation.html">Graph Transformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/networkx/builtin.html">Builtin algorithms</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.degree.html">graphscope.nx.classes.function.degree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.degree_histogram.html">graphscope.nx.classes.function.degree_histogram</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.info.html">graphscope.nx.classes.function.info</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.create_empty_copy.html">graphscope.nx.classes.function.create_empty_copy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.is_directed.html">graphscope.nx.classes.function.is_directed</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.to_directed.html">graphscope.nx.classes.function.to_directed</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.to_undirected.html">graphscope.nx.classes.function.to_undirected</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.is_empty.html">graphscope.nx.classes.function.is_empty</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.add_star.html">graphscope.nx.classes.function.add_star</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.add_path.html">graphscope.nx.classes.function.add_path</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.add_cycle.html">graphscope.nx.classes.function.add_cycle</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.subgraph.html">graphscope.nx.classes.function.subgraph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.induced_subgraph.html">graphscope.nx.classes.function.induced_subgraph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.edge_subgraph.html">graphscope.nx.classes.function.edge_subgraph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.nodes.html">graphscope.nx.classes.function.nodes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.number_of_nodes.html">graphscope.nx.classes.function.number_of_nodes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.neighbors.html">graphscope.nx.classes.function.neighbors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.all_neighbors.html">graphscope.nx.classes.function.all_neighbors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.non_neighbors.html">graphscope.nx.classes.function.non_neighbors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.common_neighbors.html">graphscope.nx.classes.function.common_neighbors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.edges.html">graphscope.nx.classes.function.edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.number_of_edges.html">graphscope.nx.classes.function.number_of_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.non_edges.html">graphscope.nx.classes.function.non_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.selfloop_edges.html">graphscope.nx.classes.function.selfloop_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.number_of_selfloops.html">graphscope.nx.classes.function.number_of_selfloops</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.nodes_with_selfloops.html">graphscope.nx.classes.function.nodes_with_selfloops</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.is_weighted.html">graphscope.nx.classes.function.is_weighted</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.is_negatively_weighted.html">graphscope.nx.classes.function.is_negatively_weighted</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.freeze.html">graphscope.nx.classes.function.freeze</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.classes.function.is_frozen.html">graphscope.nx.classes.function.is_frozen</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas.html">graphscope.nx.generators.atlas.graph_atlas</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas_g.html">graphscope.nx.generators.atlas.graph_atlas_g</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.balanced_tree.html">graphscope.nx.generators.classic.balanced_tree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.barbell_graph.html">graphscope.nx.generators.classic.barbell_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.binomial_tree.html">graphscope.nx.generators.classic.binomial_tree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.complete_graph.html">graphscope.nx.generators.classic.complete_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.complete_multipartite_graph.html">graphscope.nx.generators.classic.complete_multipartite_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.circular_ladder_graph.html">graphscope.nx.generators.classic.circular_ladder_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.circulant_graph.html">graphscope.nx.generators.classic.circulant_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.cycle_graph.html">graphscope.nx.generators.classic.cycle_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.dorogovtsev_goltsev_mendes_graph.html">graphscope.nx.generators.classic.dorogovtsev_goltsev_mendes_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.empty_graph.html">graphscope.nx.generators.classic.empty_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.path_graph.html">graphscope.nx.generators.classic.path_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.star_graph.html">graphscope.nx.generators.classic.star_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.full_rary_tree.html">graphscope.nx.generators.classic.full_rary_tree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.ladder_graph.html">graphscope.nx.generators.classic.ladder_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.lollipop_graph.html">graphscope.nx.generators.classic.lollipop_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.null_graph.html">graphscope.nx.generators.classic.null_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.trivial_graph.html">graphscope.nx.generators.classic.trivial_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.turan_graph.html">graphscope.nx.generators.classic.turan_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.classic.wheel_graph.html">graphscope.nx.generators.classic.wheel_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.expanders.margulis_gabber_galil_graph.html">graphscope.nx.generators.expanders.margulis_gabber_galil_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.expanders.chordal_cycle_graph.html">graphscope.nx.generators.expanders.chordal_cycle_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.expanders.paley_graph.html">graphscope.nx.generators.expanders.paley_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.make_small_graph.html">graphscope.nx.generators.small.make_small_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.LCF_graph.html">graphscope.nx.generators.small.LCF_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.bull_graph.html">graphscope.nx.generators.small.bull_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.chvatal_graph.html">graphscope.nx.generators.small.chvatal_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.cubical_graph.html">graphscope.nx.generators.small.cubical_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.desargues_graph.html">graphscope.nx.generators.small.desargues_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.diamond_graph.html">graphscope.nx.generators.small.diamond_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.dodecahedral_graph.html">graphscope.nx.generators.small.dodecahedral_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.frucht_graph.html">graphscope.nx.generators.small.frucht_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.heawood_graph.html">graphscope.nx.generators.small.heawood_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.house_graph.html">graphscope.nx.generators.small.house_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.house_x_graph.html">graphscope.nx.generators.small.house_x_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.icosahedral_graph.html">graphscope.nx.generators.small.icosahedral_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.krackhardt_kite_graph.html">graphscope.nx.generators.small.krackhardt_kite_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.moebius_kantor_graph.html">graphscope.nx.generators.small.moebius_kantor_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.octahedral_graph.html">graphscope.nx.generators.small.octahedral_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.pappus_graph.html">graphscope.nx.generators.small.pappus_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.petersen_graph.html">graphscope.nx.generators.small.petersen_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.sedgewick_maze_graph.html">graphscope.nx.generators.small.sedgewick_maze_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.tetrahedral_graph.html">graphscope.nx.generators.small.tetrahedral_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.truncated_cube_graph.html">graphscope.nx.generators.small.truncated_cube_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.truncated_tetrahedron_graph.html">graphscope.nx.generators.small.truncated_tetrahedron_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.small.tutte_graph.html">graphscope.nx.generators.small.tutte_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.duplication.duplication_divergence_graph.html">graphscope.nx.generators.duplication.duplication_divergence_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.duplication.partial_duplication_graph.html">graphscope.nx.generators.duplication.partial_duplication_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.degree_seq.configuration_model.html">graphscope.nx.generators.degree_seq.configuration_model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.degree_seq.directed_configuration_model.html">graphscope.nx.generators.degree_seq.directed_configuration_model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.degree_seq.expected_degree_graph.html">graphscope.nx.generators.degree_seq.expected_degree_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.degree_seq.havel_hakimi_graph.html">graphscope.nx.generators.degree_seq.havel_hakimi_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.degree_seq.directed_havel_hakimi_graph.html">graphscope.nx.generators.degree_seq.directed_havel_hakimi_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.degree_seq.degree_sequence_tree.html">graphscope.nx.generators.degree_seq.degree_sequence_tree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.degree_seq.random_degree_sequence_graph.html">graphscope.nx.generators.degree_seq.random_degree_sequence_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.directed.gn_graph.html">graphscope.nx.generators.directed.gn_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.directed.gnr_graph.html">graphscope.nx.generators.directed.gnr_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.directed.gnc_graph.html">graphscope.nx.generators.directed.gnc_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.directed.random_k_out_graph.html">graphscope.nx.generators.directed.random_k_out_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.directed.scale_free_graph.html">graphscope.nx.generators.directed.scale_free_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.geometric.random_geometric_graph.html">graphscope.nx.generators.geometric.random_geometric_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.geometric.soft_random_geometric_graph.html">graphscope.nx.generators.geometric.soft_random_geometric_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.geometric.geographical_threshold_graph.html">graphscope.nx.generators.geometric.geographical_threshold_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.geometric.waxman_graph.html">graphscope.nx.generators.geometric.waxman_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.geometric.thresholded_random_geometric_graph.html">graphscope.nx.generators.geometric.thresholded_random_geometric_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.ego.ego_graph.html">graphscope.nx.generators.ego.ego_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/networkx.generators.stochastic.stochastic_graph.html">networkx.generators.stochastic.stochastic_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/networkx.generators.internet_as_graphs.random_internet_as_graph.html">networkx.generators.internet_as_graphs.random_internet_as_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.intersection.uniform_random_intersection_graph.html">graphscope.nx.generators.intersection.uniform_random_intersection_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.intersection.k_random_intersection_graph.html">graphscope.nx.generators.intersection.k_random_intersection_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.intersection.general_random_intersection_graph.html">graphscope.nx.generators.intersection.general_random_intersection_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.social.karate_club_graph.html">graphscope.nx.generators.social.karate_club_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.social.davis_southern_women_graph.html">graphscope.nx.generators.social.davis_southern_women_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.social.florentine_families_graph.html">graphscope.nx.generators.social.florentine_families_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.social.les_miserables_graph.html">graphscope.nx.generators.social.les_miserables_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.community.caveman_graph.html">graphscope.nx.generators.community.caveman_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.community.connected_caveman_graph.html">graphscope.nx.generators.community.connected_caveman_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.community.gaussian_random_partition_graph.html">graphscope.nx.generators.community.gaussian_random_partition_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.community.LFR_benchmark_graph.html">graphscope.nx.generators.community.LFR_benchmark_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.community.planted_partition_graph.html">graphscope.nx.generators.community.planted_partition_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.community.random_partition_graph.html">graphscope.nx.generators.community.random_partition_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.community.relaxed_caveman_graph.html">graphscope.nx.generators.community.relaxed_caveman_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.community.ring_of_cliques.html">graphscope.nx.generators.community.ring_of_cliques</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.community.stochastic_block_model.html">graphscope.nx.generators.community.stochastic_block_model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.community.windmill_graph.html">graphscope.nx.generators.community.windmill_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.spectral_graph_forge.spectral_graph_forge.html">graphscope.nx.generators.spectral_graph_forge.spectral_graph_forge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.trees.random_tree.html">graphscope.nx.generators.trees.random_tree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.trees.prefix_tree.html">graphscope.nx.generators.trees.prefix_tree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.nonisomorphic_trees.nonisomorphic_trees.html">graphscope.nx.generators.nonisomorphic_trees.nonisomorphic_trees</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.nonisomorphic_trees.number_of_nonisomorphic_trees.html">graphscope.nx.generators.nonisomorphic_trees.number_of_nonisomorphic_trees</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.triads.triad_graph.html">graphscope.nx.generators.triads.triad_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.joint_degree_seq.is_valid_joint_degree.html">graphscope.nx.generators.joint_degree_seq.is_valid_joint_degree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.joint_degree_seq.joint_degree_graph.html">graphscope.nx.generators.joint_degree_seq.joint_degree_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.joint_degree_seq.is_valid_directed_joint_degree.html">graphscope.nx.generators.joint_degree_seq.is_valid_directed_joint_degree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.joint_degree_seq.directed_joint_degree_graph.html">graphscope.nx.generators.joint_degree_seq.directed_joint_degree_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.mycielski.mycielskian.html">graphscope.nx.generators.mycielski.mycielskian</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.mycielski.mycielski_graph.html">graphscope.nx.generators.mycielski.mycielski_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.harary_graph.hnm_harary_graph.html">graphscope.nx.generators.harary_graph.hnm_harary_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.harary_graph.hkn_harary_graph.html">graphscope.nx.generators.harary_graph.hkn_harary_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/networkx/generated/graphscope.nx.generators.sudoku.sudoku_graph.html">graphscope.nx.generators.sudoku.sudoku_graph</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/networkx/io.html">Reading graphs</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/analytical_engine_index.html">Analytical Engine API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
+</ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../zh/index.html">GraphScope: 一站式图计算系统</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../zh/installation.html">安装</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../zh/getting_started.html">快速上手</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../zh/deployment.html">部署</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../zh/tutorials.html">入门教程</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/01_node_classification_on_citation_network.ipynb">论文引用关系网中的节点分类任务</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/02_graph_manipulations_with_networkx_compatible_apis.ipynb">使用兼容 NetworkX 的 API 进行图操作</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/03_run_graphscope_like_networkx.ipynb">用 GraphScope 像 NetworkX 一样进行图分析</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/04_loading_graphs.ipynb">载入图数据</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/05_builtin_analytical_algorithms.ipynb">内置的图分析算法</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/06_writing_your_own_algorithms.ipynb">编写自定义图分析算法</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/07_interactive_query_with_gremlin.ipynb">使用查询语言 Gremlin 进行交互式查询</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/08_unsupervised_learning_with_graphsage.ipynb">使用 GraphSage 进行无监督图学习</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/09_unsupervised_learning_with_bipartite_graphsage.ipynb">基于 BipartiteGraphSage 的二部图无监督学习</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/10_supervised_learning_with_gcn.ipynb">使用 GCN 进行有监督图学习</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/11_revisit_classification_on_citation_network_on_k8s.ipynb">基于 Kubernetes 环境再探论文引用网络中的节点分类任务</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../zh/loading_graph.html">载图</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../zh/graph_transformation.html">图的变换操作</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../zh/analytics_engine.html">图分析引擎</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../zh/interactive_engine.html">图交互式分析引擎</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../zh/learning_engine.html">图学习引擎</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../zh/frequently_asked_questions.html">常见问题</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../zh/developer_guide.html">开发者指南</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://graphscope.io/docs/reference/python_index.html">Python API 参考</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://graphscope.io/docs/reference/analytical_engine_index.html">图分析引擎 API 参考</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../zh/index.html#id1">索引</a></li>
+</ul>
+
+</div>
+
+<div class="rst-versions rst-versions-ver" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Read the Docs</span>
+    v: v0.19.0
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Versions</dt>
+      
+        
+
+          
+            
+              <dd><a href="../../../../latest/index.html">latest</a></dd>
+            
+          
+        
+      
+        
+          
+            
+              <dd><a href="../../../../index.html">stable</a></dd>
+            
+          
+
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.19.0/index.html">v0.19.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.18.0/index.html">v0.18.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.17.0/index.html">v0.17.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.16.0/index.html">v0.16.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.15.0/index.html">v0.15.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.14.0/index.html">v0.14.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.13.0/index.html">v0.13.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.12.0/index.html">v0.12.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.11.0/index.html">v0.11.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.10.1/index.html">v0.10.1</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.10.0/index.html">v0.10.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.9.1/index.html">v0.9.1</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.9.0/index.html">v0.9.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.8.0/index.html">v0.8.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.7.0/index.html">v0.7.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.6.1/index.html">v0.6.1</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.6.0/index.html">v0.6.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.5.0/index.html">v0.5.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.4.1/index.html">v0.4.1</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.4.0/index.html">v0.4.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.3.0/index.html">v0.3.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.2.1/index.html">v0.2.1</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.2.0/index.html">v0.2.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.1.3/index.html">v0.1.3</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.1.2/index.html">v0.1.2</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.1.1/index.html">v0.1.1</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../../v0.1.0/index.html">v0.1.0</a></dd>
+            
+          
+        
+      
+      
+    </dl>
+  </div>
+</div>
+
+<div class="rst-versions rst-versions-lang shift-up" role="note" aria-label="versions">
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Languages</dt>
+      <dd><a href="../../../index.html">en</a></dd>
+      <dd><a href="../../../zh/index.html">zh_CN</a></dd>
+    </dl>
+
+    <hr />
+    <small>
+      <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+    </small>
+  </div>
+</div>
+</div>
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <h1>Source code for graphscope.framework.context</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright 2020 Alibaba Group Holding Limited. All Rights Reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">hashlib</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Mapping</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">graphscope.framework</span> <span class="kn">import</span> <span class="n">dag_utils</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework</span> <span class="kn">import</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.dag</span> <span class="kn">import</span> <span class="n">DAGNode</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.dag_utils</span> <span class="kn">import</span> <span class="n">run_app</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="kn">import</span> <span class="n">InvalidArgumentError</span>
+<span class="kn">from</span> <span class="nn">graphscope.framework.errors</span> <span class="kn">import</span> <span class="n">check_argument</span>
+
+
+<div class="viewcode-block" id="ResultDAGNode"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.ResultDAGNode">[docs]</a><span class="k">class</span> <span class="nc">ResultDAGNode</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class represents a result node in a DAG.</span>
+
+<span class="sd">    In GraphScope, result node is always a leaf node in a DAG.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dag_node</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_base_dag_node</span> <span class="o">=</span> <span class="n">dag_node</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_dag_node</span><span class="o">.</span><span class="n">session</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">op</span>
+        <span class="c1"># add op to dag</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">add_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="p">)</span></div>
+
+
+<span class="k">class</span> <span class="nc">UnloadedContext</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Unloaded context node in a DAG.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">session</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">op</span>
+        <span class="c1"># add op to dag</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">add_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="BaseContextDAGNode"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.BaseContextDAGNode">[docs]</a><span class="k">class</span> <span class="nc">BaseContextDAGNode</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class of concrete context DAG node.</span>
+
+<span class="sd">    In GraphScope, it will return a instance of concrete class `ContextDAGNode`</span>
+<span class="sd">    after evaluating an app, that will be automatically executed by :meth:`Session.run`</span>
+<span class="sd">    in eager mode and return a instance of :class:`graphscope.framework.context.Context`</span>
+
+<span class="sd">    We can further use the handle to retrieve data:</span>
+<span class="sd">        - as a numpy.ndarray( `to_numpy()` ),</span>
+<span class="sd">        - as a pandas.DataFrame( `to_dataframe()` ),</span>
+<span class="sd">        - as a vineyard tensor ( `to_vineyard_tensor()` ),</span>
+<span class="sd">        - or as a vineyard dataframe ( `to_vineyard_dataframe()` ).</span>
+
+<span class="sd">    The following example demonstrates its usage:</span>
+
+<span class="sd">    .. code:: python</span>
+
+<span class="sd">        &gt;&gt;&gt; # lazy mode</span>
+<span class="sd">        &gt;&gt;&gt; import graphscope</span>
+<span class="sd">        &gt;&gt;&gt; from graphscope.dataset import load_p2p_network</span>
+<span class="sd">        &gt;&gt;&gt; sess = graphscope.session(cluster_type=&quot;hosts&quot;, mode=&quot;lazy&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; g = load_p2p_network(sess)</span>
+<span class="sd">        &gt;&gt;&gt; sg = g.project(vertices={&quot;host&quot;: [&quot;id&quot;]}, edges={&quot;connect&quot;: [&quot;dist&quot;]})</span>
+<span class="sd">        &gt;&gt;&gt; c = graphscope.sssp(sg, 20)</span>
+<span class="sd">        &gt;&gt;&gt; print(c) # &lt;graphscope.framework.context.VertexDataContextDAGNode&gt;</span>
+<span class="sd">        &gt;&gt;&gt; r1 = c.to_numpy(&quot;r&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; print(r1) # &lt;graphscope.ramework.context.ResultDAGNode&gt;</span>
+<span class="sd">        &gt;&gt;&gt; r2 = c.to_dataframe({&quot;id&quot;: &quot;v.id&quot;, &quot;result&quot;: &quot;r&quot;})</span>
+<span class="sd">        &gt;&gt;&gt; r3 = c.to_vineyard_tensor(&quot;r&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; r4 = c.to_vineyard_dataframe({&quot;id&quot;: &quot;v.id&quot;, &quot;result&quot;: &quot;r&quot;})</span>
+<span class="sd">        &gt;&gt;&gt; r = sess.run([r1, r2, r3, r4])</span>
+<span class="sd">        &gt;&gt;&gt; r[0].shape</span>
+<span class="sd">        (62586,)</span>
+<span class="sd">        &gt;&gt;&gt; r[1].shape</span>
+<span class="sd">        (62586, 2)</span>
+<span class="sd">        &gt;&gt;&gt; r[2] # return an object id</span>
+<span class="sd">        &gt;&gt;&gt; r[3] # return an object id</span>
+
+<span class="sd">        &gt;&gt;&gt; # eager mode</span>
+<span class="sd">        &gt;&gt;&gt; import graphscope</span>
+<span class="sd">        &gt;&gt;&gt; from graphscope.dataset import load_p2p_network</span>
+<span class="sd">        &gt;&gt;&gt; sess = graphscope.session(cluster_type=&quot;hosts&quot;, mode=&quot;eager&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; g = load_p2p_network(sess)</span>
+<span class="sd">        &gt;&gt;&gt; sg = g.project(vertices={&quot;host&quot;: [&quot;id&quot;]}, edges={&quot;connect&quot;: [&quot;dist&quot;]})</span>
+<span class="sd">        &gt;&gt;&gt; c = sssp(sg, 20)</span>
+<span class="sd">        &gt;&gt;&gt; print(c) # &lt;graphscope.framework.context.Context&gt;</span>
+<span class="sd">        &gt;&gt;&gt; r1 = c.to_numpy(&quot;r&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; r1.shape</span>
+<span class="sd">        (62586,)</span>
+<span class="sd">        &gt;&gt;&gt; r2 = c.to_dataframe({&quot;id&quot;: &quot;v.id&quot;, &quot;result&quot;: &quot;r&quot;})</span>
+<span class="sd">        &gt;&gt;&gt; r2.shape</span>
+<span class="sd">        (62586, 2)</span>
+<span class="sd">        &gt;&gt;&gt; r3 = c.to_vineyard_tensor() # return an object id</span>
+<span class="sd">        &gt;&gt;&gt; r4 = c.to_vineyard_dataframe() # return an object id</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bound_app</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bound_app</span> <span class="o">=</span> <span class="n">bound_app</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="n">graph</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bound_app</span><span class="o">.</span><span class="n">session</span>
+        <span class="c1"># add op to dag</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">run_app</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_bound_app</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">add_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_check_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">context_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_build_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_properties</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+<div class="viewcode-block" id="BaseContextDAGNode.to_numpy"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.BaseContextDAGNode.to_numpy">[docs]</a>    <span class="k">def</span> <span class="nf">to_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the context data as a numpy array.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            selector (str): Describes how to select values of context.</span>
+<span class="sd">                See more details in derived context DAG node class.</span>
+<span class="sd">            vertex_range (dict): optional, default to None.</span>
+<span class="sd">                Works as slicing. The expression {&#39;begin&#39;: m, &#39;end&#39;: n} select a portion</span>
+<span class="sd">                of vertices from `m` to, but not including `n`. Type of `m`, `n` must be</span>
+<span class="sd">                identical with vertices&#39; oid type.</span>
+<span class="sd">                Omitting the first index starts the slice at the beginning of the vertices,</span>
+<span class="sd">                and omitting the second index extends the slice to the end of the vertices.</span>
+<span class="sd">                Note the comparision is not based on numeric order, but on alphabetic order.</span>
+<span class="sd">            axis (int): optional, default to 0.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            :class:`graphscope.framework.context.ResultDAGNode`:</span>
+<span class="sd">                A result holds the `numpy.ndarray`, evaluated in eager mode.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_selector</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span>
+        <span class="n">vertex_range</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">transform_vertex_range</span><span class="p">(</span><span class="n">vertex_range</span><span class="p">)</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">context_to_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ResultDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BaseContextDAGNode.to_dataframe"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.BaseContextDAGNode.to_dataframe">[docs]</a>    <span class="k">def</span> <span class="nf">to_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the context data as a pandas DataFrame.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            selector: dict</span>
+<span class="sd">                The key is column name in dataframe, and the value describes how to select</span>
+<span class="sd">                values of context. See more details in derived context DAG node class.</span>
+<span class="sd">            vertex_range: dict, optional, default to None.</span>
+<span class="sd">                Works as slicing. The expression {&#39;begin&#39;: m, &#39;end&#39;: n} select a portion</span>
+<span class="sd">                of vertices from `m` to, but not including `n`. Type of `m`, `n` must be</span>
+<span class="sd">                identical with vertices&#39; oid type.</span>
+<span class="sd">                Only the sub-ranges of vertices data will be retrieved.</span>
+<span class="sd">                Note the comparision is not based on numeric order, but on alphabetic order.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            :class:`graphscope.framework.context.ResultDAGNode`:</span>
+<span class="sd">                A result holds the `pandas.DataFrame`, evaluated in eager mode.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_argument</span><span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">),</span> <span class="s2">&quot;selector of to_dataframe must be a dict&quot;</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">selector</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_selector</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">_ensure_consistent_label</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">context_type</span><span class="p">,</span> <span class="n">selector</span><span class="p">)</span>
+        <span class="n">selector</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span>
+        <span class="n">vertex_range</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">transform_vertex_range</span><span class="p">(</span><span class="n">vertex_range</span><span class="p">)</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">context_to_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ResultDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BaseContextDAGNode.to_vineyard_tensor"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.BaseContextDAGNode.to_vineyard_tensor">[docs]</a>    <span class="k">def</span> <span class="nf">to_vineyard_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the context data as a vineyard tensor and return the vineyard object id.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            :class:`graphscope.framework.context.ResultDAGNode`:</span>
+<span class="sd">                A result hold the object id of vineyard tensor, evaluated in eager mode.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_selector</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span>
+        <span class="n">vertex_range</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">transform_vertex_range</span><span class="p">(</span><span class="n">vertex_range</span><span class="p">)</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">to_vineyard_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ResultDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BaseContextDAGNode.to_vineyard_dataframe"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.BaseContextDAGNode.to_vineyard_dataframe">[docs]</a>    <span class="k">def</span> <span class="nf">to_vineyard_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the context data as a vineyard dataframe and return the vineyard object id.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            selector:  dict</span>
+<span class="sd">                Key is used as column name of the dataframe, and the value describes how to</span>
+<span class="sd">                select values of context. See more details in derived context DAG node class.</span>
+<span class="sd">            vertex_range: dict, optional, default to None</span>
+<span class="sd">                Works as slicing. The expression {&#39;begin&#39;: m, &#39;end&#39;: n} select a portion</span>
+<span class="sd">                of vertices from `m` to, but not including `n`. Type of `m`, `n` must be</span>
+<span class="sd">                identical with vertices&#39; oid type.</span>
+<span class="sd">                Only the sub-ranges of vertices data will be retrieved.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            :class:`graphscope.framework.context.ResultDAGNode`:</span>
+<span class="sd">                A result hold the object id of vineyard dataframe, evaluated in eager mode.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">selector</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">check_argument</span><span class="p">(</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">),</span>
+                <span class="s2">&quot;selector of to_vineyard_dataframe must be a dict&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">selector</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_check_selector</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">_ensure_consistent_label</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">context_type</span><span class="p">,</span> <span class="n">selector</span><span class="p">)</span>
+            <span class="n">selector</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span>
+        <span class="n">vertex_range</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">transform_vertex_range</span><span class="p">(</span><span class="n">vertex_range</span><span class="p">)</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">to_vineyard_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ResultDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Dump results to `fd`.</span>
+<span class="sd">        Support dumps data to local (respect to pod) files, hdfs or oss.</span>
+<span class="sd">        It first write results to a vineyard dataframe, and let vineyard</span>
+<span class="sd">        do the data dumping job.</span>
+<span class="sd">        `fd` must meet specific formats, with auth information if needed. As follows:</span>
+
+<span class="sd">            - local</span>
+<span class="sd">                `file:///tmp/result_path`</span>
+<span class="sd">            - oss</span>
+<span class="sd">                `oss:///bucket/object`</span>
+<span class="sd">            - hdfs</span>
+<span class="sd">                `hdfs:///tmp/result_path`</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            fd (str): Output location.</span>
+<span class="sd">            selector (dict): Similar to `to_dataframe`.</span>
+<span class="sd">            vertex_range (dict, optional): Similar to `to_dataframe`. Defaults to None.</span>
+<span class="sd">            kwargs (dict, optional): Storage options with respect to output storage type.</span>
+<span class="sd">                    for example:</span>
+<span class="sd">                    key, secret, endpoint for oss,</span>
+<span class="sd">                    key, secret, client_kwargs for s3,</span>
+<span class="sd">                    host, port for hdfs,</span>
+<span class="sd">                    None for local.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            :class:`graphscope.framework.context.ResultDAGNode`, evaluated in eager mode.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">protocol</span> <span class="o">=</span> <span class="n">fd</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;://&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># Still use the stream to write to file,</span>
+        <span class="c1"># as the C++ adaptor in Vineyard requires arrow &gt;= 4.0.0</span>
+        <span class="k">if</span> <span class="n">protocol</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;file&quot;</span><span class="p">,</span> <span class="s2">&quot;hdfs&quot;</span><span class="p">,</span> <span class="s2">&quot;hive&quot;</span><span class="p">,</span> <span class="s2">&quot;oss&quot;</span><span class="p">,</span> <span class="s2">&quot;s3&quot;</span><span class="p">):</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_vineyard_dataframe</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">)</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">to_data_sink</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">check_argument</span><span class="p">(</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">),</span> <span class="s2">&quot;selector of to_dataframe must be a dict&quot;</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">selector</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_check_selector</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">_ensure_consistent_label</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">context_type</span><span class="p">,</span> <span class="n">selector</span><span class="p">)</span>
+            <span class="n">selector</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span>
+            <span class="n">vertex_range</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">transform_vertex_range</span><span class="p">(</span><span class="n">vertex_range</span><span class="p">)</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ResultDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_unload</span><span class="p">())</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
+            <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">_unload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">unload_context</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">UnloadedContext</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TensorContextDAGNode"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.TensorContextDAGNode">[docs]</a><span class="k">class</span> <span class="nc">TensorContextDAGNode</span><span class="p">(</span><span class="n">BaseContextDAGNode</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Tensor context DAG node holds a tensor.</span>
+<span class="sd">    Only axis is meaningful when considering a TensorContext.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">context_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;tensor&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_build_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_properties</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;axis&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_check_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="VertexDataContextDAGNode"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.VertexDataContextDAGNode">[docs]</a><span class="k">class</span> <span class="nc">VertexDataContextDAGNode</span><span class="p">(</span><span class="n">BaseContextDAGNode</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The most simple kind of context.</span>
+<span class="sd">    A vertex has a single value as results.</span>
+
+<span class="sd">    - The syntax of selector on vertex is:</span>
+<span class="sd">        - `v.id`: Get the Id of vertices</span>
+<span class="sd">        - `v.data`: Get the data of vertices</span>
+<span class="sd">                If there is any, means origin data on the graph, not results.</span>
+
+<span class="sd">    - The syntax of selector of edge is (not supported yet):</span>
+<span class="sd">        - `e.src`: Get the source Id of edges</span>
+<span class="sd">        - `e.dst`: Get the destination Id of edges</span>
+<span class="sd">        - `e.data`: Get the edge data on the edges</span>
+<span class="sd">                If there is any, means origin data on the graph</span>
+
+<span class="sd">    - The syntax of selector of results is:</span>
+<span class="sd">        - `r`: Get quering results of algorithms. e.g. Rankings of vertices after doing PageRank.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">context_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;vertex_data&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_build_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_properties</span><span class="p">):</span>
+        <span class="n">v_items</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;v&quot;</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">]]</span>
+        <span class="n">r_items</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">]]</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_tuples</span><span class="p">(</span>
+            <span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="n">v_items</span><span class="p">,</span> <span class="n">r_items</span><span class="p">),</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="s2">&quot;property&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">v_values</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">v_items</span><span class="p">]</span>
+        <span class="n">r_values</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">r_items</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">v_values</span> <span class="o">+</span> <span class="n">r_values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Context schema&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_check_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Raises:</span>
+<span class="sd">            InvalidArgumentError:</span>
+<span class="sd">                - Selector in vertex data context is None</span>
+<span class="sd">            SyntaxError:</span>
+<span class="sd">                - The syntax of selector is incorrect</span>
+<span class="sd">            NotImplementedError:</span>
+<span class="sd">                - Selector of e not supported</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">selector</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;Selector in vertex data context cannot be None&quot;</span><span class="p">)</span>
+        <span class="n">segments</span> <span class="o">=</span> <span class="n">selector</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+        <span class="n">err_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Invalid selector: `</span><span class="si">{</span><span class="n">selector</span><span class="si">}</span><span class="s2">`. &quot;</span>
+        <span class="n">err_msg</span> <span class="o">+=</span> <span class="p">(</span>
+            <span class="s2">&quot;Please inspect the result with `ret.schema` and choose a valid selector.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">segments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">selector</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;v.id&quot;</span><span class="p">,</span> <span class="s2">&quot;v.data&quot;</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">segments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;e&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Selector of e is not supported yet&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">selector</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;e.src&quot;</span><span class="p">,</span> <span class="s2">&quot;e.dst&quot;</span><span class="p">,</span> <span class="s2">&quot;e.data&quot;</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">segments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;r&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">selector</span> <span class="o">!=</span> <span class="s2">&quot;r&quot;</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="LabeledVertexDataContextDAGNode"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.LabeledVertexDataContextDAGNode">[docs]</a><span class="k">class</span> <span class="nc">LabeledVertexDataContextDAGNode</span><span class="p">(</span><span class="n">BaseContextDAGNode</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The labeled kind of context.</span>
+<span class="sd">    This context has several vertex labels and edge labels, and each label has several properties.</span>
+<span class="sd">    Selection are performed on labels first, then on properties.</span>
+
+<span class="sd">    We use `:` to filter labels, and `.` to select properties. And the results has no property,</span>
+<span class="sd">    only have labels.</span>
+
+<span class="sd">    - The syntax of selector of vertex is:</span>
+<span class="sd">        - `v:label_name.id`: Get Id that belongs to a specific vertex label.</span>
+<span class="sd">        - `v:label_name.property_name`: Get data that on a specific property of a specific vertex label.</span>
+
+<span class="sd">    - The syntax of selector of edge is (not supported yet):</span>
+<span class="sd">        - `e:label_name.src`: Get source Id of a specific edge label.</span>
+<span class="sd">        - `e:label_name.dst`: Get destination Id of a specific edge label.</span>
+<span class="sd">        - `e:label_name.property_name`: Get data on a specific property of a specific edge label.</span>
+
+<span class="sd">    - The syntax of selector of results is:</span>
+<span class="sd">        - `r:label_name`: Get results data of a vertex label.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">context_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;labeled_vertex_data&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_build_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_properties</span><span class="p">):</span>
+        <span class="n">schema</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">schema</span>
+        <span class="n">v_items</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;v&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">_get_property_v_context_schema</span><span class="p">(</span><span class="n">schema</span><span class="p">)]</span>
+        <span class="n">r_items</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;r&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">label</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">schema</span><span class="o">.</span><span class="n">vertex_labels</span><span class="p">]</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_tuples</span><span class="p">(</span>
+            <span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="n">v_items</span><span class="p">,</span> <span class="n">r_items</span><span class="p">),</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">,</span> <span class="s2">&quot;property&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">v_values</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">l</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">v_items</span><span class="p">]</span>
+        <span class="n">r_values</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">l</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">r_items</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">v_values</span> <span class="o">+</span> <span class="n">r_values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Context schema&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_check_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Raises:</span>
+<span class="sd">            InvalidArgumentError:</span>
+<span class="sd">                - Selector in labeled vertex data context is None</span>
+<span class="sd">            SyntaxError:</span>
+<span class="sd">                - The syntax of selector is incorrect</span>
+<span class="sd">            NotImplementedError:</span>
+<span class="sd">                - Selector of e not supported</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">selector</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span>
+                <span class="s2">&quot;Selector in labeled vertex data context cannot be None&quot;</span>
+            <span class="p">)</span>
+        <span class="n">segments</span> <span class="o">=</span> <span class="n">selector</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+        <span class="n">err_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Invalid selector: `</span><span class="si">{</span><span class="n">selector</span><span class="si">}</span><span class="s2">`. &quot;</span>
+        <span class="n">err_msg</span> <span class="o">+=</span> <span class="p">(</span>
+            <span class="s2">&quot;Please inspect the result with `ret.schema` and choose a valid selector.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">segments</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+        <span class="n">stype</span><span class="p">,</span> <span class="n">segments</span> <span class="o">=</span> <span class="n">segments</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">segments</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">segments</span> <span class="o">=</span> <span class="n">segments</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">stype</span> <span class="o">==</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">segments</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">stype</span> <span class="o">==</span> <span class="s2">&quot;e&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Selector of e not supported yet&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">stype</span> <span class="o">==</span> <span class="s2">&quot;r&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">segments</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="VertexPropertyContextDAGNode"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.VertexPropertyContextDAGNode">[docs]</a><span class="k">class</span> <span class="nc">VertexPropertyContextDAGNode</span><span class="p">(</span><span class="n">BaseContextDAGNode</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The simple kind of context with property.</span>
+<span class="sd">    A vertex can have multiple values (a.k.a. properties) as results.</span>
+
+<span class="sd">    - The syntax of selector on vertex is:</span>
+<span class="sd">        - `v.id`: Get the Id of vertices</span>
+<span class="sd">        - `v.data`: Get the data of vertices</span>
+<span class="sd">            If there is any, means origin data on the graph, not results</span>
+<span class="sd">        - `v.label_id`: Get the label ID of each vertex.</span>
+
+<span class="sd">    - The syntax of selector of edge is (not supported yet):</span>
+<span class="sd">        - `e.src`: Get the source Id of edges</span>
+<span class="sd">        - `e.dst`: Get the destination Id of edges</span>
+<span class="sd">        - `e.data`: Get the edge data on the edges</span>
+<span class="sd">            If there is any, means origin data on the graph</span>
+
+<span class="sd">    - The syntax of selector of results is:</span>
+<span class="sd">        - `r.column_name`: Get the property named `column_name` in results.</span>
+<span class="sd">            e.g. `r.hub` in :func:`graphscope.hits`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">context_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;vertex_property&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_build_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_properties</span><span class="p">):</span>
+        <span class="n">v_items</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;v&quot;</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">]]</span>
+        <span class="n">r_items</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">prop</span><span class="p">]</span> <span class="k">for</span> <span class="n">prop</span> <span class="ow">in</span> <span class="n">result_properties</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">prop</span><span class="p">]</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_tuples</span><span class="p">(</span>
+            <span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="n">v_items</span><span class="p">,</span> <span class="n">r_items</span><span class="p">),</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="s2">&quot;property&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">v_values</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">v_items</span><span class="p">]</span>
+        <span class="n">r_values</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">r_items</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">v_values</span> <span class="o">+</span> <span class="n">r_values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Context schema&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_check_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Raises:</span>
+<span class="sd">            InvalidArgumentError:</span>
+<span class="sd">                - Selector in labeled vertex data context is None</span>
+<span class="sd">            SyntaxError:</span>
+<span class="sd">                - The syntax of selector is incorrect</span>
+<span class="sd">            NotImplementedError:</span>
+<span class="sd">                - Selector of e not supported</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">selector</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span>
+                <span class="s2">&quot;Selector in vertex property context cannot be None&quot;</span>
+            <span class="p">)</span>
+        <span class="n">segments</span> <span class="o">=</span> <span class="n">selector</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+        <span class="n">err_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Invalid selector: `</span><span class="si">{</span><span class="n">selector</span><span class="si">}</span><span class="s2">`. &quot;</span>
+        <span class="n">err_msg</span> <span class="o">+=</span> <span class="p">(</span>
+            <span class="s2">&quot;Please inspect the result with `ret.schema` and choose a valid selector.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">segments</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">segments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">selector</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;v.id&quot;</span><span class="p">,</span> <span class="s2">&quot;v.data&quot;</span><span class="p">,</span> <span class="s2">&quot;v.label_id&quot;</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">segments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;e&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Selector of e not supported yet&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">segments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;r&quot;</span><span class="p">:</span>
+            <span class="c1"># The second part of selector or r is user defined name.</span>
+            <span class="c1"># So we will allow any str</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="LabeledVertexPropertyContextDAGNode"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.LabeledVertexPropertyContextDAGNode">[docs]</a><span class="k">class</span> <span class="nc">LabeledVertexPropertyContextDAGNode</span><span class="p">(</span><span class="n">BaseContextDAGNode</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The labeld kind of context with properties.</span>
+<span class="sd">    This context has several vertex labels and edge labels, And each label has several properties.</span>
+<span class="sd">    Selection are performed on labels first, then on properties.</span>
+
+<span class="sd">    We use `:` to filter labels, and `.` to select properties.</span>
+<span class="sd">    And the results can have several properties.</span>
+
+<span class="sd">    - The syntax of selector of vertex is:</span>
+<span class="sd">        - `v:label_name.id`: Get Id that belongs to a specific vertex label.</span>
+<span class="sd">        - `v:label_name.property_name`: Get data that on a specific property of a specific vertex label.</span>
+
+<span class="sd">    - The syntax of selector of edge is (not supported yet):</span>
+<span class="sd">        - `e:label_name.src`: Get source Id of a specific edge label.</span>
+<span class="sd">        - `e:label_name.dst`: Get destination Id of a specific edge label.</span>
+<span class="sd">        - `e:label_name.property_name`: Get data on a specific property of a specific edge label.</span>
+
+<span class="sd">    - The syntax of selector of results is:</span>
+<span class="sd">        - `r:label_name.column_name`: Get the property named `column_name` of `label_name`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">context_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;labeled_vertex_property&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_build_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result_properties</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build context schema.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            result_properties (str): Returned by c++,</span>
+<span class="sd">            example_format:</span>
+<span class="sd">                0:a,b,c,</span>
+<span class="sd">                1:e,f,g,</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: return schema as human readable string</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">schema</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">schema</span>
+        <span class="n">v_items</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;v&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">_get_property_v_context_schema</span><span class="p">(</span><span class="n">schema</span><span class="p">)]</span>
+        <span class="n">r_items</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">result_properties</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">result_properties</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span><span class="p">]</span>
+        <span class="n">label_property_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">r_props</span> <span class="ow">in</span> <span class="n">result_properties</span><span class="p">:</span>
+            <span class="n">label_id</span><span class="p">,</span> <span class="n">props</span> <span class="o">=</span> <span class="n">r_props</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+            <span class="n">label_property_dict</span><span class="p">[</span><span class="n">label_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">props</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">schema</span><span class="o">.</span><span class="n">vertex_labels</span><span class="p">:</span>
+            <span class="n">label_id</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">get_vertex_label_id</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+            <span class="n">props</span> <span class="o">=</span> <span class="n">label_property_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">label_id</span><span class="p">),</span> <span class="p">[])</span>
+            <span class="n">r_items</span><span class="o">.</span><span class="n">extend</span><span class="p">([[</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">prop</span><span class="p">]</span> <span class="k">for</span> <span class="n">prop</span> <span class="ow">in</span> <span class="n">props</span><span class="p">])</span>
+
+        <span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_tuples</span><span class="p">(</span>
+            <span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="n">v_items</span><span class="p">,</span> <span class="n">r_items</span><span class="p">),</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">,</span> <span class="s2">&quot;property&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">v_values</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">l</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">v_items</span><span class="p">]</span>
+        <span class="n">r_values</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">l</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">r_items</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">v_values</span> <span class="o">+</span> <span class="n">r_values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Context schema&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_check_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">selector</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span>
+                <span class="s2">&quot;Selector in labeled vertex property context cannot be None&quot;</span>
+            <span class="p">)</span>
+        <span class="n">segments</span> <span class="o">=</span> <span class="n">selector</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+        <span class="n">err_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Invalid selector: `</span><span class="si">{</span><span class="n">selector</span><span class="si">}</span><span class="s2">`. &quot;</span>
+        <span class="n">err_msg</span> <span class="o">+=</span> <span class="p">(</span>
+            <span class="s2">&quot;Please inspect the result with `ret.schema` and choose a valid selector.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">segments</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+        <span class="n">stype</span><span class="p">,</span> <span class="n">segments</span> <span class="o">=</span> <span class="n">segments</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">segments</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">segments</span> <span class="o">=</span> <span class="n">segments</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">stype</span> <span class="o">==</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">segments</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">stype</span> <span class="o">==</span> <span class="s2">&quot;e&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Selector of e not supported yet&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">stype</span> <span class="o">==</span> <span class="s2">&quot;r&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">segments</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="Context"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.Context">[docs]</a><span class="k">class</span> <span class="nc">Context</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Hold a handle of app querying context.</span>
+
+<span class="sd">    After evaluating an app, the context (vertex data, partial results, etc.) are preserved,</span>
+<span class="sd">    and can be referenced through a handle.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context_node</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">result_schema</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span> <span class="o">=</span> <span class="n">context_node</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">context_node</span><span class="o">.</span><span class="n">session</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="o">.</span><span class="n">_graph</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_result_schema</span> <span class="o">=</span> <span class="n">result_schema</span>
+        <span class="c1"># copy and set op evaluated</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="o">.</span><span class="n">op</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="o">.</span><span class="n">op</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="o">.</span><span class="n">evaluated</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_saved_signature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">signature</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">op</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="o">.</span><span class="n">op</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Unique identifier of a context.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">context_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="o">.</span><span class="n">context_type</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">schema</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="o">.</span><span class="n">_build_schema</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_result_schema</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">signature</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute digest by key and graph signatures.</span>
+<span class="sd">        Used to ensure the critical information of context is untouched.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">check_argument</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;Context key error, maybe it is not connected to engine.&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">()</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_key</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">,</span> <span class="n">DAGNode</span><span class="p">):</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">signature</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;graphscope.framework.context.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> from graph </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_check_unmodified</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">check_argument</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_saved_signature</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">signature</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_check_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="o">.</span><span class="n">_check_selector</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">to_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_unmodified</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">to_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_unmodified</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">to_vineyard_tensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_unmodified</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="o">.</span><span class="n">to_vineyard_tensor</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">to_vineyard_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_unmodified</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="o">.</span><span class="n">to_vineyard_dataframe</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Examples:</span>
+<span class="sd">            context.output(&#39;s3://test-bucket/res.csv&#39;, selector={&#39;id&#39;: &#39;v.id&#39;, &#39;rank&#39;: &#39;r&#39;},</span>
+<span class="sd">                           key=&#39;access-key&#39;, secret=&#39;access-secret&#39;, client_kwargs={})</span>
+<span class="sd">            context.output(&#39;hdfs:///output/res.csv&#39;, selector={&#39;id&#39;: &#39;v.id&#39;, &#39;rank&#39;: &#39;r&#39;},</span>
+<span class="sd">                           host=&#39;localhost&#39;, port=9000)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_unmodified</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">output_to_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fetch result to client side&quot;&quot;&quot;</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">)</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># cleanly ignore all exceptions, cause session may already closed / destroyed.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_unload</span><span class="p">())</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
+            <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">_unload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_context_node</span><span class="o">.</span><span class="n">_unload</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="DynamicVertexDataContext"><a class="viewcode-back" href="../../../reference/context.html#graphscope.framework.context.DynamicVertexDataContext">[docs]</a><span class="k">class</span> <span class="nc">DynamicVertexDataContext</span><span class="p">(</span><span class="n">collections</span><span class="o">.</span><span class="n">abc</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Vertex data context for complicated result store.</span>
+<span class="sd">    A vertex has a single value as results.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context_node</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="n">context_node</span><span class="o">.</span><span class="n">_graph</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">=</span> <span class="n">context_node</span><span class="o">.</span><span class="n">session_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_saved_signature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">signature</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">session_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">signature</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">check_argument</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;Context key error, maybe it is not connected to engine.&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span>
+            <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">.</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">signature</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
+                <span class="s2">&quot;utf-8&quot;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;graphscope.framework.context.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> from graph </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">number_of_nodes</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">_graph</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">get_context_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()))</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">_graph</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">create_context_node</span><span class="p">(</span><span class="n">context_type</span><span class="p">,</span> <span class="n">bound_app</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A context DAG node factory, create concrete context class by context type.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">context_type</span> <span class="o">==</span> <span class="s2">&quot;tensor&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">TensorContextDAGNode</span><span class="p">(</span><span class="n">bound_app</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">context_type</span> <span class="o">==</span> <span class="s2">&quot;vertex_data&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">VertexDataContextDAGNode</span><span class="p">(</span><span class="n">bound_app</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">context_type</span> <span class="o">==</span> <span class="s2">&quot;labeled_vertex_data&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">LabeledVertexDataContextDAGNode</span><span class="p">(</span><span class="n">bound_app</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">context_type</span> <span class="o">==</span> <span class="s2">&quot;vertex_property&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">VertexPropertyContextDAGNode</span><span class="p">(</span><span class="n">bound_app</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">context_type</span> <span class="o">==</span> <span class="s2">&quot;labeled_vertex_property&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">LabeledVertexPropertyContextDAGNode</span><span class="p">(</span><span class="n">bound_app</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># dynamic_vertex_data for networkx</span>
+        <span class="k">return</span> <span class="n">BaseContextDAGNode</span><span class="p">(</span><span class="n">bound_app</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_get_property_v_context_schema</span><span class="p">(</span><span class="n">schema</span><span class="p">):</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">schema</span><span class="o">.</span><span class="n">vertex_labels</span><span class="p">:</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">label</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">prop</span> <span class="ow">in</span> <span class="n">schema</span><span class="o">.</span><span class="n">get_vertex_properties</span><span class="p">(</span><span class="n">label</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">prop</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="s2">&quot;id&quot;</span><span class="p">:</span>  <span class="c1"># avoid property name duplicate</span>
+                <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">label</span><span class="p">,</span> <span class="n">prop</span><span class="o">.</span><span class="n">name</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">ret</span>
+
+
+<span class="k">def</span> <span class="nf">_get_property_e_context_schema</span><span class="p">(</span><span class="n">schema</span><span class="p">):</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">schema</span><span class="o">.</span><span class="n">edge_labels</span><span class="p">:</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">label</span><span class="p">,</span> <span class="s2">&quot;src&quot;</span><span class="p">])</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">label</span><span class="p">,</span> <span class="s2">&quot;dst&quot;</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">prop</span> <span class="ow">in</span> <span class="n">schema</span><span class="o">.</span><span class="n">get_edge_properties</span><span class="p">(</span><span class="n">label</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">prop</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;src&quot;</span><span class="p">,</span> <span class="s2">&quot;dst&quot;</span><span class="p">):</span>
+                <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">label</span><span class="p">,</span> <span class="n">prop</span><span class="o">.</span><span class="n">name</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">ret</span>
+
+
+<span class="k">def</span> <span class="nf">_ensure_consistent_label</span><span class="p">(</span><span class="n">context_type</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Ensure the labels in all selectors are same label.</span>
+<span class="sd">    Note this method assumes that the selector is valid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">context_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;vertex_data&quot;</span><span class="p">,</span> <span class="s2">&quot;vertex_property&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">if</span> <span class="n">context_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;labeled_vertex_data&quot;</span><span class="p">,</span> <span class="s2">&quot;labeled_vertex_property&quot;</span><span class="p">):</span>
+        <span class="n">label_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">selector</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># The format is x:y or x:y.z</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">label_set</span> <span class="ow">and</span> <span class="n">label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">label_set</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Found different labels: </span><span class="si">{</span><span class="n">label_set</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">label_set</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">True</span>
+</pre></div>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2020-2023, DAMO Academy, Alibaba Inc.
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              <a class="muted-link fa fa-solid fa-github fa-2x" href="https://github.com/alibaba/GraphScope" aria-label="GitHub"></a>
+              
+            </div>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/scripts/furo.js"></script>
+    <script src="../../../_static/js/readthedocs.js"></script>
+    <script src="../../../_static/js/readthedocs-doc-embed.js"></script>
+    </body>
+</html>

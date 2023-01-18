@@ -1,6 +1,0 @@
-﻿graphscope.framework.dag\_utils.close\_learning\_instance
-=========================================================
-
-.. currentmodule:: graphscope.framework.dag_utils
-
-.. autofunction:: close_learning_instance

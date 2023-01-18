@@ -10,10 +10,10 @@
 <meta name="description" content="This tutorial has three parts: - How to quickly try out a graph learning model using GL. - How to import data into GL, and use the graph data, graph sampling and negative sampling APIs. - How to de..." />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" />
 
-    <meta name="generator" content="sphinx-4.0.3, furo 2022.09.29"/>
+    <!-- Generated with Sphinx 4.0.3 and Furo 2022.12.07 -->
         <title>Quick Start - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=d81277517bee4d6b0349d71bb2661d4890b5617c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
@@ -77,10 +77,10 @@
 </head>
   <body>
     
-    <script>
-      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
-    </script>
-    
+  <script>
+    document.body.dataset.theme = "light";
+  </script>
+
 
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
   <symbol id="svg-toc" viewBox="0 0 24 24">
@@ -186,50 +186,82 @@
       <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../../index.html">
   
   <div class="sidebar-logo-container">
-    <img class="sidebar-logo" src="../../_static/logo-w.png" alt="Logo"/>
+    <img class="sidebar-logo" src="../../_static/logo-h.png" alt="Logo"/>
   </div>
   
   
 </a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
-  <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
   <input type="hidden" name="check_keywords" value="yes">
   <input type="hidden" name="area" value="default">
 </form>
 <div id="searchbox"></div><div class="sidebar-tree">
-  <p class="caption"><span class="caption-text">Contents</span></p>
+  <p class="caption"><span class="caption-text">What is GraphScope</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../key_features.html">Key Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../graphscope_for_data_scientists.html">GrpahScope for Data Scientists</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../graphscope_for_graph_analytics.html">GraphScope for Graph Analytics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../graphscope_for_learning.html">GraphScope for Learning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../performance_and_benchmark.html">Performance and Benchmark</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../graphscope_positioning.html">The Product Positioning of GraphScope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../frequently_asked_questions.html">Frequently Asked Questions</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../python_tutorials.html">Tutorials for Python Users</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../java_tutorials.html">Tutorials for Java Users</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cpp_tutorials.html">Tutorials for C++ Users</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../walkthrough_examples_acrossing_engines.html">Walkthrough Examples acrossing Engines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../video_tutorials.html">Video Tutorials</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Deployment and Usage</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../best_practices.html">Best Practices</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../tutorials.html">Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/01_node_classification_on_citation.ipynb">Node Classification on citation network</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/02_graph_manipulations_with_networkx_compatible_apis.ipynb">Graph Manipulations with NetowrkX Compatible APIs</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/03_run_graphscope_like_networkx.ipynb">Run GraphScope like NetworkX</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/04_loading_graphs.ipynb">Loading Graphs</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/05_builtin_analytical_algorithms.ipynb">Built-in Analytical Algorithms</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/06_writing_your_own_algorithms.ipynb">Writing Your Own Algorithms</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/07_interactive_query_with_gremlin.ipynb">Interactive Query with Gremlin</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/08_unsupervised_learning_with_graphsage.ipynb">Unsupervised Learning with GraphSage</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/09_supervised_learning_with_gcn.ipynb">Supervised Learning with GCN</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/10_revisit_classification_on_citation_network_on_k8s.ipynb">Revisit Classification on Citation Network on K8s</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/11_unsupervised_learning_with_bipartite_graphsage.ipynb">Unsupervised Learning with Bipartite GraphSage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../deploy_on_self_managed_k8s.html">Deploy on Self-managed K8s</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../deploy_on_clouds.html">Deploy on clouds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../deploy_with_helm.html">Deploy with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../deploy_as_job_for_analytical_tasks.html">Deploy as K8s <code class="docutils literal notranslate"><span class="pre">Job</span></code> for analytical tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../deploy_as_service_with_groot.html">Deploy as Service with Groot</a></li>
 </ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../../deployment.html">Deployment</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../loading_graph.html">Loading Graphs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../graph_transformation.html">Graph Transformations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../analytics_engine.html">GraphScope Analytical Engine</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../interactive_engine.html">GraphScope Interactive Engine</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../learning_engine.html">GraphScope Learning Engine</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../persistent_graph_store.html">Persistent Graph Store</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../frequently_asked_questions.html">Frequently Asked Questions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../developer_guide.html">Developer Guide</a></li>
+<p class="caption"><span class="caption-text">Operations &amp; Observability</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../how_to_find_logs.html">How to Find Logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../monitoring.html">Monitoring</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../error_codes.html">Error Codes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../how_to_report_bug.html">How to Report Bugs</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advanced Topics</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../dive_into_engines.html">Dive into Engines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../supported_gremlin_steps.html">Tutorials for Gremlin Users</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../storages_and_unified_interface.html">Storage and Unified Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../performance_tuning.html">Performance Tuning</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../env_preparation.html">Development Environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../code_style_guide.html">Code Style Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../algorithm_development.html">Algorithm Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../test_code.html">How to Test</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../submit_pr.html">How to Submit Pull-requests</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Utilities</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../bulk_loader.html">Bulk Loader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../resources_estimator.html">Resources Estimator</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Community</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../how_to_contribute.html">How to Contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contact_us.html">Contact</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Reference</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.session.html">graphscope.session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
@@ -241,13 +273,13 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../graph.html">Graph</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.app.load_app.html">graphscope.framework.app.load_app</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../context.html">Context</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../selector.html">Selector</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.operation.Operation.__init__.html">graphscope.framework.operation.Operation.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.operation.Operation.as_op_def.html">graphscope.framework.operation.Operation.as_op_def</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.operation.Operation.key.html">graphscope.framework.operation.Operation.key</a></li>
@@ -293,18 +325,18 @@
 <li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.fetch_gremlin_result.html">graphscope.framework.dag_utils.fetch_gremlin_result</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.Vertex.html">graphscope.Vertex</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.declare.html">graphscope.declare</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../interactive.html">Interactive Query</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../learning.html">Graph Learning</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../networkx/graphs.html">Graph types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../networkx/transformation.html">Graph Transformation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../networkx/builtin.html">Builtin algorithms</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.degree.html">graphscope.nx.classes.function.degree</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.degree_histogram.html">graphscope.nx.classes.function.degree_histogram</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
@@ -339,7 +371,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.is_frozen.html">graphscope.nx.classes.function.is_frozen</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.atlas.graph_atlas.html">graphscope.nx.generators.atlas.graph_atlas</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.atlas.graph_atlas_g.html">graphscope.nx.generators.atlas.graph_atlas_g</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.classic.balanced_tree.html">graphscope.nx.generators.classic.balanced_tree</a></li>
@@ -452,11 +484,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../gae_java/index.html">Analytical Engine Java API Reference</a></li>
 </ul>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../zh/index.html">GraphScope: 一站式图计算系统</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../zh/index.html">GraphScope: 一站式图计算系统</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../zh/installation.html">安装</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../zh/getting_started.html">快速上手</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../zh/deployment.html">部署</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../zh/tutorials.html">入门教程</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../zh/tutorials.html">入门教程</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/01_node_classification_on_citation_network.ipynb">论文引用关系网中的节点分类任务</a></li>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/02_graph_manipulations_with_networkx_compatible_apis.ipynb">使用兼容 NetworkX 的 API 进行图操作</a></li>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/03_run_graphscope_like_networkx.ipynb">用 GraphScope 像 NetworkX 一样进行图分析</a></li>
@@ -512,6 +544,15 @@
             
           
 
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.19.0/index.html">v0.19.0</a></dd>
+            
+          
         
       
         
@@ -821,11 +862,11 @@ try out <strong>GL</strong>, we can start with the vertex-classification task in
 <strong>core</strong> . The codes of all example models are available in <a class="reference external" href="model_examples.md">Example
 Models</a>.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Data preparation</span>
-<span class="nb">cd</span> graph-learn/examples/data/
-python cora.py
+<span class="nb">cd</span><span class="w"> </span>graph-learn/examples/data/
+python<span class="w"> </span>cora.py
 
 <span class="c1"># Training and model assessment</span>
-python train_supervised.py
+python<span class="w"> </span>train_supervised.py
 </pre></div>
 </div>
 </div>
@@ -912,31 +953,31 @@ sure all the processes have access to the data file.</p>
 <p>Once done with the deployment of the data and the codes, we start four
 processes (two worker processes and two server processes) locally to
 simulate a distributed setting.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">HERE</span><span class="o">=</span><span class="k">$(</span><span class="nb">cd</span> <span class="s2">&quot;</span><span class="k">$(</span>dirname <span class="s2">&quot;</span><span class="nv">$0</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">&quot;</span><span class="p">;</span><span class="nb">pwd</span><span class="k">)</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">HERE</span><span class="o">=</span><span class="k">$(</span><span class="nb">cd</span><span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>dirname<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$0</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">&quot;</span><span class="p">;</span><span class="nb">pwd</span><span class="k">)</span>
 
-rm -rf <span class="nv">$HERE</span>/.tmp/tracker
-mkdir -p <span class="nv">$HERE</span>/.tmp/tracker
+rm<span class="w"> </span>-rf<span class="w"> </span><span class="nv">$HERE</span>/.tmp/tracker
+mkdir<span class="w"> </span>-p<span class="w"> </span><span class="nv">$HERE</span>/.tmp/tracker
 
-<span class="k">if</span> <span class="o">[</span> ! -d <span class="s2">&quot;</span><span class="nv">$HERE</span><span class="s2">/data&quot;</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
-  mkdir -p <span class="nv">$HERE</span>/data
-  python <span class="nv">$HERE</span>/gen_test_data.py <span class="c1"># 你需要把gen_test_data.py、test.py放到shell脚本同一目录下</span>
+<span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>!<span class="w"> </span>-d<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HERE</span><span class="s2">/data&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">  </span>mkdir<span class="w"> </span>-p<span class="w"> </span><span class="nv">$HERE</span>/data
+<span class="w">  </span>python<span class="w"> </span><span class="nv">$HERE</span>/gen_test_data.py<span class="w"> </span><span class="c1"># 你需要把gen_test_data.py、test.py放到shell脚本同一目录下</span>
 <span class="k">fi</span>
 
-python <span class="nv">$HERE</span>/test.py <span class="se">\</span>
-  --cluster<span class="o">=</span><span class="s2">&quot;{\&quot;client_count\&quot;: 2, \&quot;server_count\&quot;: 2, \&quot;tracker\&quot;: \&quot;</span><span class="nv">$HERE</span><span class="s2">/.tmp/tracker\&quot;}&quot;</span> <span class="se">\</span>
-  --job_name<span class="o">=</span><span class="s2">&quot;server&quot;</span> --task_index<span class="o">=</span><span class="m">0</span> <span class="p">&amp;</span>
-sleep <span class="m">1</span>
-python <span class="nv">$HERE</span>/test.py <span class="se">\</span>
-  --cluster<span class="o">=</span><span class="s2">&quot;{\&quot;client_count\&quot;: 2, \&quot;server_count\&quot;: 2, \&quot;tracker\&quot;: \&quot;</span><span class="nv">$HERE</span><span class="s2">/.tmp/tracker\&quot;}&quot;</span> <span class="se">\</span>
-  --job_name<span class="o">=</span><span class="s2">&quot;server&quot;</span> --task_index<span class="o">=</span><span class="m">1</span> <span class="p">&amp;</span>
-sleep <span class="m">1</span>
-python <span class="nv">$HERE</span>/test.py <span class="se">\</span>
-  --cluster<span class="o">=</span><span class="s2">&quot;{\&quot;client_count\&quot;: 2, \&quot;server_count\&quot;: 2, \&quot;tracker\&quot;: \&quot;</span><span class="nv">$HERE</span><span class="s2">/.tmp/tracker\&quot;}&quot;</span> <span class="se">\</span>
-  --job_name<span class="o">=</span><span class="s2">&quot;client&quot;</span> --task_index<span class="o">=</span><span class="m">0</span> <span class="p">&amp;</span>
-sleep <span class="m">1</span>
-python <span class="nv">$HERE</span>/test.py <span class="se">\</span>
-  --cluster<span class="o">=</span><span class="s2">&quot;{\&quot;client_count\&quot;: 2, \&quot;server_count\&quot;: 2, \&quot;tracker\&quot;: \&quot;</span><span class="nv">$HERE</span><span class="s2">/.tmp/tracker\&quot;}&quot;</span> <span class="se">\</span>
-  --job_name<span class="o">=</span><span class="s2">&quot;client&quot;</span> --task_index<span class="o">=</span><span class="m">1</span>
+python<span class="w"> </span><span class="nv">$HERE</span>/test.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--cluster<span class="o">=</span><span class="s2">&quot;{\&quot;client_count\&quot;: 2, \&quot;server_count\&quot;: 2, \&quot;tracker\&quot;: \&quot;</span><span class="nv">$HERE</span><span class="s2">/.tmp/tracker\&quot;}&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--job_name<span class="o">=</span><span class="s2">&quot;server&quot;</span><span class="w"> </span>--task_index<span class="o">=</span><span class="m">0</span><span class="w"> </span><span class="p">&amp;</span>
+sleep<span class="w"> </span><span class="m">1</span>
+python<span class="w"> </span><span class="nv">$HERE</span>/test.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--cluster<span class="o">=</span><span class="s2">&quot;{\&quot;client_count\&quot;: 2, \&quot;server_count\&quot;: 2, \&quot;tracker\&quot;: \&quot;</span><span class="nv">$HERE</span><span class="s2">/.tmp/tracker\&quot;}&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--job_name<span class="o">=</span><span class="s2">&quot;server&quot;</span><span class="w"> </span>--task_index<span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="p">&amp;</span>
+sleep<span class="w"> </span><span class="m">1</span>
+python<span class="w"> </span><span class="nv">$HERE</span>/test.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--cluster<span class="o">=</span><span class="s2">&quot;{\&quot;client_count\&quot;: 2, \&quot;server_count\&quot;: 2, \&quot;tracker\&quot;: \&quot;</span><span class="nv">$HERE</span><span class="s2">/.tmp/tracker\&quot;}&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--job_name<span class="o">=</span><span class="s2">&quot;client&quot;</span><span class="w"> </span>--task_index<span class="o">=</span><span class="m">0</span><span class="w"> </span><span class="p">&amp;</span>
+sleep<span class="w"> </span><span class="m">1</span>
+python<span class="w"> </span><span class="nv">$HERE</span>/test.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--cluster<span class="o">=</span><span class="s2">&quot;{\&quot;client_count\&quot;: 2, \&quot;server_count\&quot;: 2, \&quot;tracker\&quot;: \&quot;</span><span class="nv">$HERE</span><span class="s2">/.tmp/tracker\&quot;}&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--job_name<span class="o">=</span><span class="s2">&quot;client&quot;</span><span class="w"> </span>--task_index<span class="o">=</span><span class="m">1</span>
 </pre></div>
 </div>
 </div>
@@ -968,10 +1009,10 @@ and their bag of words, attributes and labels. The attributes are
 represented using 1433 floats, and the labels have seven types, taking
 values from 0 to 6. Besides vertex ids, each edge also has a weight. The
 data format is described through <code class="docutils literal notranslate"><span class="pre">gl.Decoder</span></code>.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>src_id:int64   dst_id:int64
-<span class="m">35</span>  <span class="m">1033</span>
-<span class="m">35</span>  <span class="m">103482</span>
-<span class="m">35</span>  <span class="m">103515</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>src_id:int64<span class="w">   </span>dst_id:int64
+<span class="m">35</span><span class="w">  </span><span class="m">1033</span>
+<span class="m">35</span><span class="w">  </span><span class="m">103482</span>
+<span class="m">35</span><span class="w">  </span><span class="m">103515</span>
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">id</span><span class="p">:</span><span class="n">int64</span>  <span class="n">label</span><span class="p">:</span><span class="n">int32</span>   <span class="n">feature</span><span class="p">:</span><span class="n">string</span>

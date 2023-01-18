@@ -10,10 +10,10 @@
 <meta name="description" content="GraphScope的交互查询引擎（简称GIE）是一个分布式系统，它为不同经验的用户提供了一个易用的交互式环境，支持海量复杂图数据上的 实时分析与交互探索 。该引擎支持 Gremlin 语言表达的交互图查询，并提供了自动化和用户透明的分布式并行执行。 Apache TinkerPop: Apache TinkerPop 是基于Gremlin语言开发交互式图应用的一个开源框架和事实标准。GIE..." />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="图学习引擎" href="learning_engine.html" /><link rel="prev" title="图分析引擎" href="analytics_engine.html" />
 
-    <meta name="generator" content="sphinx-4.0.3, furo 2022.09.29"/>
+    <!-- Generated with Sphinx 4.0.3 and Furo 2022.12.07 -->
         <title>图交互式分析引擎 - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=d81277517bee4d6b0349d71bb2661d4890b5617c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
     <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
@@ -77,10 +77,10 @@
 </head>
   <body>
     
-    <script>
-      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
-    </script>
-    
+  <script>
+    document.body.dataset.theme = "light";
+  </script>
+
 
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
   <symbol id="svg-toc" viewBox="0 0 24 24">
@@ -186,50 +186,82 @@
       <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../index.html">
   
   <div class="sidebar-logo-container">
-    <img class="sidebar-logo" src="../_static/logo-w.png" alt="Logo"/>
+    <img class="sidebar-logo" src="../_static/logo-h.png" alt="Logo"/>
   </div>
   
   
 </a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
-  <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
   <input type="hidden" name="check_keywords" value="yes">
   <input type="hidden" name="area" value="default">
 </form>
 <div id="searchbox"></div><div class="sidebar-tree">
-  <p class="caption"><span class="caption-text">Contents</span></p>
+  <p class="caption"><span class="caption-text">What is GraphScope</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../key_features.html">Key Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../graphscope_for_data_scientists.html">GrpahScope for Data Scientists</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../graphscope_for_graph_analytics.html">GraphScope for Graph Analytics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../graphscope_for_learning.html">GraphScope for Learning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance_and_benchmark.html">Performance and Benchmark</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../graphscope_positioning.html">The Product Positioning of GraphScope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../frequently_asked_questions.html">Frequently Asked Questions</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../python_tutorials.html">Tutorials for Python Users</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../java_tutorials.html">Tutorials for Java Users</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cpp_tutorials.html">Tutorials for C++ Users</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../walkthrough_examples_acrossing_engines.html">Walkthrough Examples acrossing Engines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../video_tutorials.html">Video Tutorials</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Deployment and Usage</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../overview.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../best_practices.html">Best Practices</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials.html">Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/01_node_classification_on_citation.ipynb">Node Classification on citation network</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/02_graph_manipulations_with_networkx_compatible_apis.ipynb">Graph Manipulations with NetowrkX Compatible APIs</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/03_run_graphscope_like_networkx.ipynb">Run GraphScope like NetworkX</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/04_loading_graphs.ipynb">Loading Graphs</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/05_builtin_analytical_algorithms.ipynb">Built-in Analytical Algorithms</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/06_writing_your_own_algorithms.ipynb">Writing Your Own Algorithms</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/07_interactive_query_with_gremlin.ipynb">Interactive Query with Gremlin</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/08_unsupervised_learning_with_graphsage.ipynb">Unsupervised Learning with GraphSage</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/09_supervised_learning_with_gcn.ipynb">Supervised Learning with GCN</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/10_revisit_classification_on_citation_network_on_k8s.ipynb">Revisit Classification on Citation Network on K8s</a></li>
-<li class="toctree-l2"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/11_unsupervised_learning_with_bipartite_graphsage.ipynb">Unsupervised Learning with Bipartite GraphSage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deploy_on_self_managed_k8s.html">Deploy on Self-managed K8s</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deploy_on_clouds.html">Deploy on clouds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deploy_with_helm.html">Deploy with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deploy_as_job_for_analytical_tasks.html">Deploy as K8s <code class="docutils literal notranslate"><span class="pre">Job</span></code> for analytical tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../deploy_as_service_with_groot.html">Deploy as Service with Groot</a></li>
 </ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../deployment.html">Deployment</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../loading_graph.html">Loading Graphs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../graph_transformation.html">Graph Transformations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../analytics_engine.html">GraphScope Analytical Engine</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../interactive_engine.html">GraphScope Interactive Engine</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../learning_engine.html">GraphScope Learning Engine</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../persistent_graph_store.html">Persistent Graph Store</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../frequently_asked_questions.html">Frequently Asked Questions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../developer_guide.html">Developer Guide</a></li>
+<p class="caption"><span class="caption-text">Operations &amp; Observability</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../how_to_find_logs.html">How to Find Logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../monitoring.html">Monitoring</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../error_codes.html">Error Codes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../how_to_report_bug.html">How to Report Bugs</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advanced Topics</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dive_into_engines.html">Dive into Engines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../supported_gremlin_steps.html">Tutorials for Gremlin Users</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../storages_and_unified_interface.html">Storage and Unified Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance_tuning.html">Performance Tuning</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../env_preparation.html">Development Environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_style_guide.html">Code Style Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../algorithm_development.html">Algorithm Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../test_code.html">How to Test</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../submit_pr.html">How to Submit Pull-requests</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Utilities</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../bulk_loader.html">Bulk Loader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources_estimator.html">Resources Estimator</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Community</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../how_to_contribute.html">How to Contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contact_us.html">Contact</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Reference</span></p>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.session.html">graphscope.session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
@@ -241,13 +273,13 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/graph.html">Graph</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.app.load_app.html">graphscope.framework.app.load_app</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/context.html">Context</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/selector.html">Selector</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.__init__.html">graphscope.framework.operation.Operation.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.as_op_def.html">graphscope.framework.operation.Operation.as_op_def</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.operation.Operation.key.html">graphscope.framework.operation.Operation.key</a></li>
@@ -293,18 +325,18 @@
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.framework.dag_utils.fetch_gremlin_result.html">graphscope.framework.dag_utils.fetch_gremlin_result</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.Vertex.html">graphscope.Vertex</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/generated/graphscope.declare.html">graphscope.declare</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/interactive.html">Interactive Query</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/learning.html">Graph Learning</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/graphs.html">Graph types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/transformation.html">Graph Transformation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/networkx/builtin.html">Builtin algorithms</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.degree.html">graphscope.nx.classes.function.degree</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.degree_histogram.html">graphscope.nx.classes.function.degree_histogram</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
@@ -339,7 +371,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.classes.function.is_frozen.html">graphscope.nx.classes.function.is_frozen</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas.html">graphscope.nx.generators.atlas.graph_atlas</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.atlas.graph_atlas_g.html">graphscope.nx.generators.atlas.graph_atlas_g</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/networkx/generated/graphscope.nx.generators.classic.balanced_tree.html">graphscope.nx.generators.classic.balanced_tree</a></li>
@@ -452,11 +484,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../reference/gae_java/index.html">Analytical Engine Java API Reference</a></li>
 </ul>
 <ul class="current">
-<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">GraphScope: 一站式图计算系统</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">GraphScope: 一站式图计算系统</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="installation.html">安装</a></li>
 <li class="toctree-l2"><a class="reference internal" href="getting_started.html">快速上手</a></li>
 <li class="toctree-l2"><a class="reference internal" href="deployment.html">部署</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="tutorials.html">入门教程</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tutorials.html">入门教程</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/01_node_classification_on_citation_network.ipynb">论文引用关系网中的节点分类任务</a></li>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/02_graph_manipulations_with_networkx_compatible_apis.ipynb">使用兼容 NetworkX 的 API 进行图操作</a></li>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/03_run_graphscope_like_networkx.ipynb">用 GraphScope 像 NetworkX 一样进行图分析</a></li>
@@ -512,6 +544,15 @@
             
           
 
+        
+      
+        
+
+          
+            
+              <dd><a href="../../v0.19.0/zh/index.html">v0.19.0</a></dd>
+            
+          
         
       
         
@@ -849,15 +890,15 @@
 <p><a class="reference external" href="https://tinkerpop.apache.org/docs/current/tutorials/the-gremlin-console/">Gremlin Console</a> 为开发者提供了一个与GraphScope存储的图数据进行交互的控制台，也叫做REPL环境（read-evaluate-print loop）。下面描述如何利用上文获得的URL，安装和配置Gremlin Console以连接GraphScope的步骤：</p>
 <p>1.安装Gremlin Console依赖的Java运行时环境，版本需要满足[8, 12)。</p>
 <p>2.从 <a class="reference external" href="https://tinkerpop.apache.org/downloads.html">Apache TinkerPop</a> 下载适当版本的Gremlin Console。</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget https://archive.apache.org/dist/tinkerpop/3.4.8/apache-tinkerpop-gremlin-console-3.4.8-bin.zip
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget<span class="w"> </span>https://archive.apache.org/dist/tinkerpop/3.4.8/apache-tinkerpop-gremlin-console-3.4.8-bin.zip
 </pre></div>
 </div>
 <p>3.解压缩下载的文件。</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>unzip apache-tinkerpop-gremlin-console-3.4.8-bin.zip
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>unzip<span class="w"> </span>apache-tinkerpop-gremlin-console-3.4.8-bin.zip
 </pre></div>
 </div>
 <p>4.进入解压缩的目录。</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> apache-tinkerpop-gremlin-console-3.4.8
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>apache-tinkerpop-gremlin-console-3.4.8
 </pre></div>
 </div>
 <p>5.在 <cite>conf</cite> 子目录创建一个名为 <cite>graphscope-remote.yaml</cite> 的文本文件以配置URL。具体内容如下所示，其中的 <em>your-endpoint</em> 和 <em>your-port</em> 需要分别替换为从GraphScope会话得到的URL中对应的主机名（或IP）和端口。</p>
@@ -871,8 +912,8 @@
 </pre></div>
 </div>
 <p>7.在 <cite>gremlin&gt;</cite> 提示符下，输入下列命令连接到对应的GraphScope会话；第二条命令切换到远程模式，从而接下来输入的所有Gremlin查询都被自动传输到（远程）GraphScope执行。</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>:remote connect tinkerpop.server conf/graphscope-remote.yaml
-:remote console
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>:remote<span class="w"> </span>connect<span class="w"> </span>tinkerpop.server<span class="w"> </span>conf/graphscope-remote.yaml
+:remote<span class="w"> </span>console
 </pre></div>
 </div>
 <p>8.现在你可以尝试一些简单的Gremlin查询了！例如 <code class="docutils literal notranslate"><span class="pre">g.V().limit(1)</span></code> 。当你完成交互，输入下列命令可以退出Gremlin Console。</p>
@@ -915,7 +956,7 @@
 <p>GIE支持Apache TinkerPop定义的属性图模型和Gremlin遍历查询，且实现了一个与TinkerPop 3.3和3.4版本兼容的 <em>Websockets</em> 服务接口。除此之外，我们扩展了一些语法糖来进一步引入一些简洁明了的expression表示。下面我们列出当前实现和Apache TinkerPop规范的主要差一点（其中一些差异会有机会消除、另一些是目前GraphScope定位的场景差异造成的不同设计选择）。</p>
 <div class="section" id="id11">
 <h3>属性图模型约束<a class="headerlink" href="#id11" title="Permalink to this headline">#</a></h3>
-<p>目前的MaxGraph技术预览版利用了 <a class="reference external" href="https://github.com/v6d-io/v6d">Vineyard</a> 项目提供的分布式内存存储作为输入图，它支持一次载入 <em>不可修改</em> 的图模型数据，和图分片存储在分布式集群。当前设计有下面的一些限制：</p>
+<p>目前的 GAIA 技术预览版利用了 <a class="reference external" href="https://github.com/v6d-io/v6d">Vineyard</a> 项目提供的分布式内存存储作为输入图，它支持一次载入 <em>不可修改</em> 的图模型数据，和图分片存储在分布式集群。当前设计有下面的一些限制：</p>
 <ul class="simple">
 <li><p>Schema（模式）约束：每个图的数据需要满足事先定义的Schema，包括点、边的类型名称（label）和属性名及值类型。</p></li>
 <li><p>主键约束：每个顶点类型需要包含一个用户可自定义的主键（属性），同时系统会为每个点和边对象，自动分配产生一个字符串类型的唯一标识（ID）。对于点来说，ID编码了类型（label）和用户自定义主键信息。</p></li>
@@ -939,12 +980,12 @@
 <ul class="simple">
 <li><p>Source（输入图），如：</p></li>
 </ul>
-<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="c1">//V</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">()</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">(</span><span class="n">id1</span><span class="p">,</span><span class="w"> </span><span class="n">id2</span><span class="p">)</span><span class="w"></span>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="c1">//V</span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">()</span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">(</span><span class="n">id1</span><span class="p">,</span><span class="w"> </span><span class="n">id2</span><span class="p">)</span>
 
-<span class="c1">//E</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">E</span><span class="p">()</span><span class="w"></span>
+<span class="c1">//E</span>
+<span class="n">g</span><span class="p">.</span><span class="na">E</span><span class="p">()</span>
 </pre></div>
 </div>
 <ul class="simple">
@@ -1026,22 +1067,22 @@ g.V().has(&quot;attrName&quot;, TextP.notEndingWith(&quot;substr&quot;))
 <ul class="simple">
 <li><p>Map（映射），如：</p></li>
 </ul>
-<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="c1">//constant</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">contant</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">constant</span><span class="p">(</span><span class="s">&quot;aaa&quot;</span><span class="p">)</span><span class="w"></span>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="c1">//constant</span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">contant</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">constant</span><span class="p">(</span><span class="s">&quot;aaa&quot;</span><span class="p">)</span>
 
-<span class="c1">//id</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">id</span><span class="p">()</span><span class="w"></span>
+<span class="c1">//id</span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">id</span><span class="p">()</span>
 
-<span class="c1">//label</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">label</span><span class="p">()</span><span class="w"></span>
+<span class="c1">//label</span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">label</span><span class="p">()</span>
 
-<span class="c1">//otherV</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">bothE</span><span class="p">().</span><span class="na">otherV</span><span class="p">()</span><span class="w"></span>
+<span class="c1">//otherV</span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">bothE</span><span class="p">().</span><span class="na">otherV</span><span class="p">()</span>
 
-<span class="c1">//as...select</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">as</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">).</span><span class="na">out</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">select</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">)</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">as</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">).</span><span class="na">out</span><span class="p">().</span><span class="na">as</span><span class="p">(</span><span class="s">&quot;b&quot;</span><span class="p">).</span><span class="na">out</span><span class="p">().</span><span class="na">as</span><span class="p">(</span><span class="sc">&#39;c&#39;</span><span class="p">).</span><span class="na">select</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="c1">//as...select</span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">as</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">).</span><span class="na">out</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">select</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">as</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">).</span><span class="na">out</span><span class="p">().</span><span class="na">as</span><span class="p">(</span><span class="s">&quot;b&quot;</span><span class="p">).</span><span class="na">out</span><span class="p">().</span><span class="na">as</span><span class="p">(</span><span class="sc">&#39;c&#39;</span><span class="p">).</span><span class="na">select</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <ul class="simple">
@@ -1071,43 +1112,43 @@ g.V().valueMap(&quot;name&quot;, &quot;age&quot;)
 <ul class="simple">
 <li><p>Aggregate（聚合），如：</p></li>
 </ul>
-<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="c1">//global count</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">count</span><span class="p">()</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">where</span><span class="p">(</span><span class="n">out</span><span class="p">().</span><span class="na">in</span><span class="p">().</span><span class="na">count</span><span class="p">().</span><span class="na">is</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span><span class="w"></span>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="c1">//global count</span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">count</span><span class="p">()</span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">where</span><span class="p">(</span><span class="n">out</span><span class="p">().</span><span class="na">in</span><span class="p">().</span><span class="na">count</span><span class="p">().</span><span class="na">is</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
 
-<span class="c1">//fold</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">fold</span><span class="p">()</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="na">fold</span><span class="p">()</span><span class="w"></span>
+<span class="c1">//fold</span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">fold</span><span class="p">()</span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="na">fold</span><span class="p">()</span>
 
-<span class="c1">//groupCount</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">groupCount</span><span class="p">()</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="na">groupCount</span><span class="p">()</span><span class="w"></span>
+<span class="c1">//groupCount</span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">groupCount</span><span class="p">()</span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="na">groupCount</span><span class="p">()</span>
 
-<span class="c1">//groupBy</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">group</span><span class="p">()</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">group</span><span class="p">().</span><span class="na">by</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">)</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">group</span><span class="p">().</span><span class="na">by</span><span class="p">().</span><span class="na">by</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">)</span><span class="w"></span>
+<span class="c1">//groupBy</span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">group</span><span class="p">()</span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">group</span><span class="p">().</span><span class="na">by</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">group</span><span class="p">().</span><span class="na">by</span><span class="p">().</span><span class="na">by</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">)</span>
 
-<span class="c1">//groupBy多个keys，并且为每个key设置别名</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">group</span><span class="p">().</span><span class="na">by</span><span class="p">(</span><span class="n">values</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="na">as</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">values</span><span class="p">(</span><span class="s">&quot;age&quot;</span><span class="p">).</span><span class="na">as</span><span class="p">(</span><span class="s">&quot;age&quot;</span><span class="p">))</span><span class="w"></span>
-<span class="c1">//groupBy多个values，并且为每个value设置别名</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">group</span><span class="p">().</span><span class="na">by</span><span class="p">().</span><span class="na">by</span><span class="p">(</span><span class="n">min</span><span class="p">().</span><span class="na">as</span><span class="p">(</span><span class="s">&quot;min&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">max</span><span class="p">().</span><span class="na">as</span><span class="p">(</span><span class="s">&quot;max&quot;</span><span class="p">))</span><span class="w"></span>
+<span class="c1">//groupBy多个keys，并且为每个key设置别名</span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">group</span><span class="p">().</span><span class="na">by</span><span class="p">(</span><span class="n">values</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).</span><span class="na">as</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">values</span><span class="p">(</span><span class="s">&quot;age&quot;</span><span class="p">).</span><span class="na">as</span><span class="p">(</span><span class="s">&quot;age&quot;</span><span class="p">))</span>
+<span class="c1">//groupBy多个values，并且为每个value设置别名</span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">group</span><span class="p">().</span><span class="na">by</span><span class="p">().</span><span class="na">by</span><span class="p">(</span><span class="n">min</span><span class="p">().</span><span class="na">as</span><span class="p">(</span><span class="s">&quot;min&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">max</span><span class="p">().</span><span class="na">as</span><span class="p">(</span><span class="s">&quot;max&quot;</span><span class="p">))</span>
 
-<span class="c1">//global max/min</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;age&quot;</span><span class="p">).</span><span class="na">max</span><span class="p">()</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;age&quot;</span><span class="p">).</span><span class="na">min</span><span class="p">()</span><span class="w"></span>
+<span class="c1">//global max/min</span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;age&quot;</span><span class="p">).</span><span class="na">max</span><span class="p">()</span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;age&quot;</span><span class="p">).</span><span class="na">min</span><span class="p">()</span>
 
-<span class="c1">//global sum</span><span class="w"></span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;age&quot;</span><span class="p">).</span><span class="na">sum</span><span class="p">()</span><span class="w"></span>
+<span class="c1">//global sum</span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">values</span><span class="p">(</span><span class="s">&quot;age&quot;</span><span class="p">).</span><span class="na">sum</span><span class="p">()</span>
 </pre></div>
 </div>
 <ul class="simple">
 <li><p>Loop（循环），如：</p></li>
 </ul>
-<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">match</span><span class="p">(</span><span class="w"></span>
-<span class="w">    </span><span class="n">__</span><span class="p">.</span><span class="na">as</span><span class="p">(</span><span class="sc">&#39;a&#39;</span><span class="p">).</span><span class="na">out</span><span class="p">().</span><span class="na">as</span><span class="p">(</span><span class="sc">&#39;b&#39;</span><span class="p">),</span><span class="w"></span>
-<span class="w">    </span><span class="n">__</span><span class="p">.</span><span class="na">as</span><span class="p">(</span><span class="sc">&#39;b&#39;</span><span class="p">).</span><span class="na">out</span><span class="p">().</span><span class="na">as</span><span class="p">(</span><span class="sc">&#39;c&#39;</span><span class="p">)</span><span class="w"></span>
-<span class="p">).</span><span class="na">select</span><span class="p">(</span><span class="sc">&#39;a&#39;</span><span class="p">,</span><span class="w"> </span><span class="sc">&#39;c&#39;</span><span class="p">)</span><span class="w"></span>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">match</span><span class="p">(</span>
+<span class="w">    </span><span class="n">__</span><span class="p">.</span><span class="na">as</span><span class="p">(</span><span class="sc">&#39;a&#39;</span><span class="p">).</span><span class="na">out</span><span class="p">().</span><span class="na">as</span><span class="p">(</span><span class="sc">&#39;b&#39;</span><span class="p">),</span>
+<span class="w">    </span><span class="n">__</span><span class="p">.</span><span class="na">as</span><span class="p">(</span><span class="sc">&#39;b&#39;</span><span class="p">).</span><span class="na">out</span><span class="p">().</span><span class="na">as</span><span class="p">(</span><span class="sc">&#39;c&#39;</span><span class="p">)</span>
+<span class="p">).</span><span class="na">select</span><span class="p">(</span><span class="sc">&#39;a&#39;</span><span class="p">,</span><span class="w"> </span><span class="sc">&#39;c&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <ul class="simple">

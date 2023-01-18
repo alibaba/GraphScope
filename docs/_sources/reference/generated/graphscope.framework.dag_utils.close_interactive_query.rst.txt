@@ -1,6 +1,0 @@
-﻿graphscope.framework.dag\_utils.close\_interactive\_query
-=========================================================
-
-.. currentmodule:: graphscope.framework.dag_utils
-
-.. autofunction:: close_interactive_query

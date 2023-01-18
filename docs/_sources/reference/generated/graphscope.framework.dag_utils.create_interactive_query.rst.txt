@@ -1,6 +1,0 @@
-﻿graphscope.framework.dag\_utils.create\_interactive\_query
-==========================================================
-
-.. currentmodule:: graphscope.framework.dag_utils
-
-.. autofunction:: create_interactive_query
