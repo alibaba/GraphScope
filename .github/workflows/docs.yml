@@ -183,6 +183,7 @@ jobs:
         rm -rf _build/
         rm -rf ../learning_engine/ || true
         rm -rf ../python || true
+        rm -rf ../analytical_engine/java || true
 
         git add -A
         git commit --amend --no-edit -m "Generate latest docs on CI, from commit ${{ github.sha }}." --author "github-actions <github-actions@github.com>" -s --date="$(date -R)"

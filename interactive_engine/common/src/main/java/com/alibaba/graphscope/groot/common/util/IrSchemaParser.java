@@ -20,21 +20,17 @@ import com.alibaba.graphscope.compiler.api.schema.*;
 import com.alibaba.graphscope.sdkcommon.util.JSON;
 import com.google.common.collect.ImmutableMap;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 // singleton to parse ir schema in json format from GraphSchema
 public class IrSchemaParser {
     private static final Logger logger = LoggerFactory.getLogger(IrSchemaParser.class);
 
-    private static IrSchemaParser instance = new IrSchemaParser();
+    private static final IrSchemaParser instance = new IrSchemaParser();
 
     public static IrSchemaParser getInstance() {
         return instance;
@@ -47,24 +43,13 @@ public class IrSchemaParser {
         List<GraphEdge> edges = graphSchema.getEdgeList();
         List entities = new ArrayList();
         List relations = new ArrayList();
-        vertices.forEach(
-                v -> {
-                    entities.add(getVertex(graphSchema, v));
-                });
-        edges.forEach(
-                e -> {
-                    relations.add(getEdge(graphSchema, e));
-                });
-        Map<String, Object> schemaMap =
-                ImmutableMap.of(
-                        "entities",
-                        entities,
-                        "relations",
-                        relations,
-                        "is_table_id",
-                        true,
-                        "is_column_id",
-                        true);
+        vertices.forEach(v -> entities.add(getVertex(graphSchema, v)));
+        edges.forEach(e -> relations.add(getEdge(graphSchema, e)));
+        Map<String, Object> schemaMap = new HashMap<>();
+        schemaMap.put("entities", entities);
+        schemaMap.put("relations", relations);
+        schemaMap.put("is_table_id", true);
+        schemaMap.put("is_column_id", true);
         return JSON.toJson(schemaMap);
     }
 
@@ -127,7 +112,7 @@ public class IrSchemaParser {
         boolean isPrimaryKey = false;
         if (primaryKeys != null && !primaryKeys.isEmpty()) {
             for (GraphProperty key : primaryKeys) {
-                if (StringUtils.equals(propertyName, key.getName())) {
+                if (propertyName.equals(key.getName())) {
                     isPrimaryKey = true;
                     break;
                 }

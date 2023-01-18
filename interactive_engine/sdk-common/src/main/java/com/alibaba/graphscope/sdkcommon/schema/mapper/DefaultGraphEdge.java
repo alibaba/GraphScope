@@ -18,19 +18,16 @@ import com.alibaba.graphscope.compiler.api.schema.EdgeRelation;
 import com.alibaba.graphscope.compiler.api.schema.GraphEdge;
 import com.alibaba.graphscope.compiler.api.schema.GraphProperty;
 import com.alibaba.graphscope.compiler.api.schema.PrimaryKeyConstraint;
-import com.google.common.base.MoreObjects;
-
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 
 /** Default graph edge in memory for testing */
 public class DefaultGraphEdge implements GraphEdge {
-    private String label;
-    private int id;
-    private List<GraphProperty> propertyList;
-    private List<EdgeRelation> relationList;
-    private int versionId;
+    private final String label;
+    private final int id;
+    private final List<GraphProperty> propertyList;
+    private final List<EdgeRelation> relationList;
+    private final int versionId;
 
     public DefaultGraphEdge(
             String label,
@@ -80,7 +77,7 @@ public class DefaultGraphEdge implements GraphEdge {
     @Override
     public GraphProperty getProperty(String propertyName) throws GraphPropertyNotFoundException {
         for (GraphProperty property : this.propertyList) {
-            if (StringUtils.equals(property.getName(), propertyName)) {
+            if (property.getName().equals(propertyName)) {
                 return property;
             }
         }
@@ -111,11 +108,18 @@ public class DefaultGraphEdge implements GraphEdge {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("label", this.getLabel())
-                .add("id", this.getLabelId())
-                .add("propertyList", this.getPropertyList())
-                .add("relationList", this.getRelationList())
-                .toString();
+        return "DefaultGraphEdge{"
+                + "label='"
+                + label
+                + '\''
+                + ", id="
+                + id
+                + ", propertyList="
+                + propertyList
+                + ", relationList="
+                + relationList
+                + ", versionId="
+                + versionId
+                + '}';
     }
 }

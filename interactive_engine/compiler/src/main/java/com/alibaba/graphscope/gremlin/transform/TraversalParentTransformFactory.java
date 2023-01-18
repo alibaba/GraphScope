@@ -30,7 +30,6 @@ import com.alibaba.graphscope.gremlin.transform.alias.AliasArg;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasManager;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasPrefixType;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.*;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.IdentityTraversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.TraversalParent;
@@ -140,7 +139,7 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
                     applyOp.setJoinKind(new OpArg(FfiJoinKind.Inner));
                     Traversal copy = GremlinAntlrToJava.getTraversalSupplier().get();
                     // put select("") in apply
-                    if (!StringUtils.isEmpty(k)) { // dedup('a').by(out().count())
+                    if (!(k == null || k.isEmpty())) { // dedup('a').by(out().count())
                         copy.asAdmin().addStep(new SelectOneStep(copy.asAdmin(), Pop.last, k));
                     }
                     // copy steps in by(..) to apply

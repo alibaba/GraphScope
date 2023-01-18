@@ -16,12 +16,9 @@ package com.alibaba.graphscope.sdkcommon.schema.mapper;
 import com.alibaba.graphscope.compiler.api.exception.GraphElementNotFoundException;
 import com.alibaba.graphscope.compiler.api.exception.GraphPropertyNotFoundException;
 import com.alibaba.graphscope.compiler.api.schema.*;
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
-import org.apache.commons.lang3.StringUtils;
-
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -33,8 +30,8 @@ public class DefaultGraphSchema implements GraphSchema {
     private Map<String, GraphEdge> edgeList;
 
     public DefaultGraphSchema() {
-        this.vertexList = Maps.newHashMap();
-        this.edgeList = Maps.newHashMap();
+        this.vertexList = new HashMap<>();
+        this.edgeList = new HashMap<>();
     }
 
     public static DefaultGraphSchema getSchema() {
@@ -58,23 +55,21 @@ public class DefaultGraphSchema implements GraphSchema {
     }
 
     public void addProperty(String label, GraphProperty property) {
-        List<GraphProperty> propertyList =
-                (List<GraphProperty>) this.getElement(label).getPropertyList();
+        List<GraphProperty> propertyList = this.getElement(label).getPropertyList();
         propertyList.add(property);
     }
 
     public void dropProperty(String label, String property) {
-        this.getElement(label)
-                .getPropertyList()
-                .removeIf(v -> StringUtils.equals(v.getName(), property));
+        this.getElement(label).getPropertyList().removeIf(v -> v.getName().equals(property));
     }
 
     @Override
     public GraphElement getElement(String label) throws GraphElementNotFoundException {
-        Map<String, GraphElement> elementList = Maps.newHashMap(this.vertexList);
-        elementList.putAll(this.edgeList);
-        if (elementList.containsKey(label)) {
-            return elementList.get(label);
+        if (vertexList.containsKey(label)) {
+            return vertexList.get(label);
+        }
+        if (edgeList.containsKey(label)) {
+            return edgeList.get(label);
         }
         throw new GraphElementNotFoundException("cant found element for label " + label);
     }
@@ -96,17 +91,17 @@ public class DefaultGraphSchema implements GraphSchema {
 
     @Override
     public List<GraphVertex> getVertexList() {
-        return Lists.newArrayList(this.vertexList.values());
+        return new ArrayList<>(vertexList.values());
     }
 
     @Override
     public List<GraphEdge> getEdgeList() {
-        return Lists.newArrayList(this.edgeList.values());
+        return new ArrayList<>(this.edgeList.values());
     }
 
     @Override
     public Integer getPropertyId(String propertyName) throws GraphPropertyNotFoundException {
-        Map<Integer, Integer> typePropertyIds = Maps.newHashMap();
+        Map<Integer, Integer> typePropertyIds = new HashMap<>();
         for (GraphVertex graphVertex : this.vertexList.values()) {
             try {
                 GraphProperty property = graphVertex.getProperty(propertyName);
@@ -126,7 +121,7 @@ public class DefaultGraphSchema implements GraphSchema {
 
     @Override
     public String getPropertyName(int propertyId) throws GraphPropertyNotFoundException {
-        Map<String, String> labelPropertyNameList = Maps.newHashMap();
+        Map<String, String> labelPropertyNameList = new HashMap<>();
         for (GraphElement element : this.vertexList.values()) {
             try {
                 labelPropertyNameList.put(
@@ -146,11 +141,11 @@ public class DefaultGraphSchema implements GraphSchema {
 
     @Override
     public Map<GraphElement, GraphProperty> getPropertyList(String propName) {
-        Map<GraphElement, GraphProperty> elementPropertyList = Maps.newHashMap();
+        Map<GraphElement, GraphProperty> elementPropertyList = new HashMap<>();
         vertexList.forEach(
                 (key, value) -> {
                     for (GraphProperty property : value.getPropertyList()) {
-                        if (StringUtils.equals(property.getName(), propName)) {
+                        if (property.getName().equals(propName)) {
                             elementPropertyList.put(value, property);
                         }
                     }
@@ -158,7 +153,7 @@ public class DefaultGraphSchema implements GraphSchema {
         edgeList.forEach(
                 (key, value) -> {
                     for (GraphProperty property : value.getPropertyList()) {
-                        if (StringUtils.equals(property.getName(), propName)) {
+                        if (property.getName().equals(propName)) {
                             elementPropertyList.put(value, property);
                         }
                     }
@@ -172,7 +167,7 @@ public class DefaultGraphSchema implements GraphSchema {
             String propName = getPropertyName(propId);
             return getPropertyList(propName);
         } catch (Exception ignored) {
-            return Maps.newHashMap();
+            return new HashMap<>();
         }
     }
 
@@ -183,9 +178,6 @@ public class DefaultGraphSchema implements GraphSchema {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("vertexTypes", vertexList)
-                .add("edgeTypes", edgeList)
-                .toString();
+        return "DefaultGraphSchema{" + "vertexList=" + vertexList + ", edgeList=" + edgeList + '}';
     }
 }

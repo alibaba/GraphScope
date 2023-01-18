@@ -13,20 +13,21 @@
  */
 package com.alibaba.graphscope.sdkcommon.schema.mapper;
 
-import com.alibaba.fastjson.annotation.JSONField;
 import com.alibaba.graphscope.compiler.api.schema.EdgeRelation;
 import com.alibaba.graphscope.compiler.api.schema.GraphEdge;
 import com.alibaba.graphscope.compiler.api.schema.GraphProperty;
 import com.alibaba.graphscope.compiler.api.schema.GraphVertex;
 import com.alibaba.graphscope.sdkcommon.schema.TypeEnum;
-import com.google.common.collect.Lists;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class EdgeTypeMapper extends SchemaElementMapper {
-    @JSONField private List<EdgeRelationMapper> relationShips;
+    private List<EdgeRelationMapper> relationShips;
 
     public static SchemaElementMapper parseFromEdgeType(GraphEdge graphEdge) {
         EdgeTypeMapper edgeTypeMapper = new EdgeTypeMapper();
@@ -34,16 +35,16 @@ public class EdgeTypeMapper extends SchemaElementMapper {
         edgeTypeMapper.setLabel(graphEdge.getLabel());
         edgeTypeMapper.setType(TypeEnum.EDGE.toString());
 
-        List<EdgeRelationMapper> relationMapperList = Lists.newArrayList();
+        List<EdgeRelationMapper> relationMapperList = new ArrayList<>();
         for (EdgeRelation edgeRelation : graphEdge.getRelationList()) {
             relationMapperList.add(
                     EdgeRelationMapper.parseFromEdgeRelation(graphEdge.getLabel(), edgeRelation));
         }
         edgeTypeMapper.setRelationShips(relationMapperList);
 
-        List<GraphPropertyMapper> propertyMapperList = Lists.newArrayList();
+        List<GraphPropertyMapper> propertyMapperList = new ArrayList<>();
         for (GraphProperty graphProperty : graphEdge.getPropertyList()) {
-            propertyMapperList.add(GraphPropertyMapper.parseFromGrapyProperty(graphProperty));
+            propertyMapperList.add(GraphPropertyMapper.parseFromGraphProperty(graphProperty));
         }
         edgeTypeMapper.setPropertyDefList(propertyMapperList);
 
@@ -61,11 +62,11 @@ public class EdgeTypeMapper extends SchemaElementMapper {
     public GraphEdge toEdgeType(Map<String, GraphVertex> vertexTypeMap) {
         List<GraphProperty> graphPropertyList =
                 null == this.getPropertyDefList()
-                        ? Lists.newArrayList()
+                        ? new ArrayList<>()
                         : this.getPropertyDefList().stream()
                                 .map(GraphPropertyMapper::toGraphProperty)
                                 .collect(Collectors.toList());
-        List<EdgeRelation> relationList = Lists.newArrayList();
+        List<EdgeRelation> relationList = new ArrayList<>();
         if (null != this.relationShips) {
             for (EdgeRelationMapper relationMapper : this.relationShips) {
                 relationList.add(relationMapper.toEdgeRelation(vertexTypeMap));

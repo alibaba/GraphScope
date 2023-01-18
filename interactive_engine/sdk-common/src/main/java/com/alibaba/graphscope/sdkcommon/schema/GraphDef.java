@@ -23,7 +23,6 @@ import com.alibaba.graphscope.proto.groot.EdgeTableIdEntry;
 import com.alibaba.graphscope.proto.groot.GraphDefPb;
 import com.alibaba.graphscope.proto.groot.TypeDefPb;
 import com.alibaba.graphscope.proto.groot.VertexTableIdEntry;
-import com.google.common.collect.Sets;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -458,7 +457,7 @@ public class GraphDef implements GraphSchema {
         }
 
         public Builder clearUnusedPropertyName(Set<String> usingPropertyNames) {
-            Set<String> removePropertyNames = Sets.newHashSet();
+            Set<String> removePropertyNames = new HashSet<>();
             for (String k : this.propertyNameToId.keySet()) {
                 if (!usingPropertyNames.contains(k)) {
                     removePropertyNames.add(k);

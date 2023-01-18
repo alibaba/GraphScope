@@ -14,10 +14,10 @@
 package com.alibaba.graphscope.groot.servers;
 
 import com.alibaba.graphscope.compiler.api.exception.GrootException;
+import com.alibaba.graphscope.groot.CuratorUtils;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
-import com.alibaba.graphscope.groot.common.util.CuratorUtils;
 import com.alibaba.graphscope.groot.discovery.*;
 import com.alibaba.graphscope.groot.ingestor.IngestProgressFetcher;
 import com.alibaba.graphscope.groot.ingestor.IngestService;

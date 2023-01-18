@@ -15,8 +15,6 @@
  */
 package com.alibaba.graphscope.compiler.schema;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.alibaba.graphscope.compiler.api.exception.GraphElementNotFoundException;
 import com.alibaba.graphscope.compiler.api.exception.GraphPropertyNotFoundException;
 import com.alibaba.graphscope.compiler.api.schema.DataType;
@@ -26,12 +24,12 @@ import com.alibaba.graphscope.compiler.api.schema.GraphElement;
 import com.alibaba.graphscope.compiler.api.schema.GraphProperty;
 import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
 import com.alibaba.graphscope.compiler.api.schema.GraphVertex;
-import com.alibaba.graphscope.sdkcommon.exception.GrootException;
-import com.alibaba.graphscope.sdkcommon.meta.InternalDataType;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -111,7 +109,7 @@ public class DefaultGraphSchema implements GraphSchema {
         vertexList.forEach(
                 (key, value) -> {
                     for (GraphProperty property : value.getPropertyList()) {
-                        if (StringUtils.equals(property.getName(), propName)) {
+                        if (property.getName().equals(propName)) {
                             elementPropertyList.put(value, property);
                         }
                     }
@@ -119,7 +117,7 @@ public class DefaultGraphSchema implements GraphSchema {
         edgeList.forEach(
                 (key, value) -> {
                     for (GraphProperty property : value.getPropertyList()) {
-                        if (StringUtils.equals(property.getName(), propName)) {
+                        if (property.getName().equals(propName)) {
                             elementPropertyList.put(value, property);
                         }
                     }
@@ -143,103 +141,113 @@ public class DefaultGraphSchema implements GraphSchema {
     }
 
     public static GraphSchema buildSchemaFromJson(String schemaJson) {
-        JSONObject jsonObject = JSONObject.parseObject(schemaJson);
-        Map<String, GraphVertex> vertexList = Maps.newHashMap();
-        Map<String, GraphEdge> edgeList = Maps.newHashMap();
-        Map<String, Integer> propNameToIdList = Maps.newHashMap();
-        JSONArray typeList = jsonObject.getJSONArray("types");
-        if (null != typeList) {
-            int propId = 1;
-            for (int i = 0; i < typeList.size(); i++) {
-                JSONObject typeObject = typeList.getJSONObject(i);
-                int labelId = typeObject.getInteger("id");
-                String label = typeObject.getString("label");
-                String type = typeObject.getString("type");
+        ObjectMapper mapper = new ObjectMapper();
 
-                Map<String, GraphProperty> namePropertyList = Maps.newHashMap();
-                List<GraphProperty> propertyList = Lists.newArrayList();
-                JSONArray propArray = typeObject.getJSONArray("propertyDefList");
-                if (null != propArray) {
-                    for (int j = 0; j < propArray.size(); j++) {
-                        JSONObject propObject = propArray.getJSONObject(j);
-                        String propName = propObject.getString("name");
-                        Integer currPropId = propObject.getInteger("id");
-                        if (null == currPropId) {
-                            currPropId = propId++;
-                        }
-                        String propDataTypeString = propObject.getString("data_type");
-                        com.alibaba.graphscope.sdkcommon.meta.DataType dataType;
-                        if (StringUtils.startsWith(propDataTypeString, "LIST")) {
-                            dataType =
-                                    new com.alibaba.graphscope.sdkcommon.meta.DataType(
-                                            InternalDataType.LIST);
-                            try {
-                                dataType.setExpression(
-                                        StringUtils.removeEnd(
-                                                StringUtils.removeStart(
-                                                        propDataTypeString, "LIST<"),
-                                                ">"));
-                            } catch (GrootException e) {
-                                throw new RuntimeException(e);
+        try {
+            JsonNode jsonNode = mapper.readTree(schemaJson);
+            Map<String, GraphVertex> vertexList = Maps.newHashMap();
+            Map<String, GraphEdge> edgeList = Maps.newHashMap();
+            Map<String, Integer> propNameToIdList = Maps.newHashMap();
+            JsonNode typeList = jsonNode.get("types");
+            if (null != typeList) {
+                int propId = 1;
+                for (JsonNode typeObject : typeList) {
+                    int labelId = typeObject.get("id").asInt();
+                    String label = typeObject.get("label").asText();
+                    String type = typeObject.get("type").asText();
+
+                    Map<String, GraphProperty> namePropertyList = Maps.newHashMap();
+                    List<GraphProperty> propertyList = Lists.newArrayList();
+                    JsonNode propArray = typeObject.get("propertyDefList");
+                    if (null != propArray) {
+                        for (JsonNode propObject : propArray) {
+                            String propName = propObject.get("name").asText();
+                            int currPropId;
+                            if (propObject.has("id")) {
+                                currPropId = propObject.get("id").asInt();
+                            } else {
+                                currPropId = propId++;
                             }
-                        } else {
+                            String propDataTypeString = propObject.get("data_type").asText();
+                            com.alibaba.graphscope.sdkcommon.meta.DataType dataType;
                             dataType =
                                     com.alibaba.graphscope.sdkcommon.meta.DataType.valueOf(
                                             propDataTypeString);
-                        }
-                        GraphProperty property =
-                                new DefaultGraphProperty(
-                                        currPropId, propName, DataType.parseFromDataType(dataType));
-                        propertyList.add(property);
-                        namePropertyList.put(propName, property);
-                        propNameToIdList.put(propName, currPropId);
-                    }
-                } else {
-                    logger.warn("There's no property def list in " + label);
-                }
-
-                if (StringUtils.equals(type, "VERTEX")) {
-                    List<GraphProperty> primaryPropertyList = Lists.newArrayList();
-                    JSONArray indexArray = typeObject.getJSONArray("indexes");
-                    if (indexArray != null) {
-                        for (int k = 0; k < indexArray.size(); k++) {
-                            JSONObject indexObject = indexArray.getJSONObject(k);
-                            JSONArray priNameList = indexObject.getJSONArray("propertyNames");
-                            for (int j = 0; j < priNameList.size(); j++) {
-                                primaryPropertyList.add(
-                                        namePropertyList.get(priNameList.getString(j)));
-                            }
-                        }
-                    }
-                    DefaultGraphVertex graphVertex =
-                            new DefaultGraphVertex(
-                                    labelId, label, propertyList, primaryPropertyList);
-                    vertexList.put(label, graphVertex);
-                } else {
-                    List<EdgeRelation> relationList = Lists.newArrayList();
-                    JSONArray relationArray = typeObject.getJSONArray("rawRelationShips");
-                    if (null != relationArray) {
-                        for (int k = 0; k < relationArray.size(); k++) {
-                            JSONObject relationObject = relationArray.getJSONObject(k);
-                            String sourceLabel = relationObject.getString("srcVertexLabel");
-                            String targetLabel = relationObject.getString("dstVertexLabel");
-                            relationList.add(
-                                    new DefaultEdgeRelation(
-                                            vertexList.get(sourceLabel),
-                                            vertexList.get(targetLabel)));
+                            GraphProperty property =
+                                    new DefaultGraphProperty(
+                                            currPropId,
+                                            propName,
+                                            DataType.parseFromDataType(dataType));
+                            propertyList.add(property);
+                            namePropertyList.put(propName, property);
+                            propNameToIdList.put(propName, currPropId);
                         }
                     } else {
-                        logger.warn("There's no relation def in edge " + label);
+                        logger.warn("There's no property def list in " + label);
                     }
-                    DefaultGraphEdge graphEdge =
-                            new DefaultGraphEdge(labelId, label, propertyList, relationList);
-                    edgeList.put(label, graphEdge);
-                }
-            }
-        } else {
-            logger.error("Cant get types field in json[" + schemaJson + "]");
-        }
 
-        return new DefaultGraphSchema(vertexList, edgeList, propNameToIdList);
+                    if (type.equalsIgnoreCase("VERTEX")) {
+                        List<GraphProperty> primaryPropertyList = Lists.newArrayList();
+
+                        JsonNode indexArray = typeObject.get("indexes");
+                        if (indexArray != null) {
+                            for (JsonNode indexObject : indexArray) {
+                                JsonNode priNameList = indexObject.get("propertyNames");
+                                for (JsonNode pri : priNameList) {
+                                    primaryPropertyList.add(namePropertyList.get(pri.asText()));
+                                }
+                            }
+                        }
+                        DefaultGraphVertex graphVertex =
+                                new DefaultGraphVertex(
+                                        labelId, label, propertyList, primaryPropertyList);
+                        vertexList.put(label, graphVertex);
+                    } else {
+                        List<EdgeRelation> relationList = Lists.newArrayList();
+                        JsonNode relationArray = typeObject.get("rawRelationShips");
+                        if (null != relationArray) {
+                            for (JsonNode relationObject : relationArray) {
+                                String sourceLabel = relationObject.get("srcVertexLabel").asText();
+                                String targetLabel = relationObject.get("dstVertexLabel").asText();
+                                relationList.add(
+                                        new DefaultEdgeRelation(
+                                                vertexList.get(sourceLabel),
+                                                vertexList.get(targetLabel)));
+                            }
+                        } else {
+                            logger.warn("There's no relation def in edge " + label);
+                        }
+                        DefaultGraphEdge graphEdge =
+                                new DefaultGraphEdge(labelId, label, propertyList, relationList);
+                        edgeList.put(label, graphEdge);
+                    }
+                }
+            } else {
+                logger.error("Cant get types field in json[" + schemaJson + "]");
+            }
+
+            return new DefaultGraphSchema(vertexList, edgeList, propNameToIdList);
+
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void main(String[] args) throws JsonProcessingException {
+        String schemaJson =
+                "{\"partitionNum\": 2, \"types\": [{\"id\": 0, \"indexes\": [{\"propertyNames\":"
+                    + " [\"id\"]}], \"label\": \"host\", \"propertyDefList\": [{\"data_type\":"
+                    + " \"LONG\", \"id\": 6, \"name\": \"weight\"}, {\"data_type\": \"LONG\","
+                    + " \"id\": 4, \"name\": \"id\"}], \"rawRelationShips\": [], \"type\":"
+                    + " \"VERTEX\", \"valid_properties\": [1, 1]}, {\"id\": 1, \"indexes\": [],"
+                    + " \"label\": \"connect\", \"propertyDefList\": [{\"data_type\": \"LONG\","
+                    + " \"id\": 3, \"name\": \"eid\"}, {\"data_type\": \"LONG\", \"id\": 5,"
+                    + " \"name\": \"src_label_id\"}, {\"data_type\": \"LONG\", \"id\": 2, \"name\":"
+                    + " \"dst_label_id\"}, {\"data_type\": \"LONG\", \"id\": 1, \"name\":"
+                    + " \"dist\"}], \"rawRelationShips\": [{\"dstVertexLabel\": \"host\","
+                    + " \"srcVertexLabel\": \"host\"}], \"type\": \"EDGE\", \"valid_properties\":"
+                    + " [1, 1, 1, 1]}], \"valid_edges\": [1], \"valid_vertices\": [1]}";
+        GraphSchema schema = DefaultGraphSchema.buildSchemaFromJson(schemaJson);
+        System.out.println(schema.formatJson());
     }
 }
