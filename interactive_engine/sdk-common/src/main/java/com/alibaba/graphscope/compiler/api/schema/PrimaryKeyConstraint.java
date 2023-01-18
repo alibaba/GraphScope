@@ -14,15 +14,13 @@
 package com.alibaba.graphscope.compiler.api.schema;
 
 import com.alibaba.graphscope.compiler.api.exception.GraphSchemaException;
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableList;
 
 import java.util.List;
 import java.util.Objects;
 
 /** Primary key constraint for vertex type */
 public class PrimaryKeyConstraint {
-    private List<String> primaryKeyList;
+    private final List<String> primaryKeyList;
 
     public PrimaryKeyConstraint(List<String> primaryKeyList) {
         if (primaryKeyList == null || primaryKeyList.isEmpty()) {
@@ -32,12 +30,12 @@ public class PrimaryKeyConstraint {
     }
 
     public List<String> getPrimaryKeyList() {
-        return ImmutableList.copyOf(this.primaryKeyList);
+        return primaryKeyList;
     }
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).add("primaryKeyList", primaryKeyList).toString();
+        return "PrimaryKeyConstraint{" + "primaryKeyList=" + String.join(",", primaryKeyList) + '}';
     }
 
     @Override

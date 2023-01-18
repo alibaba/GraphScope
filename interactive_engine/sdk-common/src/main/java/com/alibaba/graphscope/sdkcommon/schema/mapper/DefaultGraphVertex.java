@@ -17,20 +17,17 @@ import com.alibaba.graphscope.compiler.api.exception.GraphPropertyNotFoundExcept
 import com.alibaba.graphscope.compiler.api.schema.GraphProperty;
 import com.alibaba.graphscope.compiler.api.schema.GraphVertex;
 import com.alibaba.graphscope.compiler.api.schema.PrimaryKeyConstraint;
-import com.google.common.base.MoreObjects;
-
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 
 /** Default graph vertex in memory for testing */
 public class DefaultGraphVertex implements GraphVertex {
-    private String label;
-    private int labelId;
-    private List<GraphProperty> propertyList;
-    private PrimaryKeyConstraint primaryKeyConstraint;
-    private int versionId;
-    private long tableId;
+    private final String label;
+    private final int labelId;
+    private final List<GraphProperty> propertyList;
+    private final PrimaryKeyConstraint primaryKeyConstraint;
+    private final int versionId;
+    private final long tableId;
 
     public DefaultGraphVertex(
             String label,
@@ -92,7 +89,7 @@ public class DefaultGraphVertex implements GraphVertex {
     @Override
     public GraphProperty getProperty(String propertyName) throws GraphPropertyNotFoundException {
         for (GraphProperty property : this.propertyList) {
-            if (StringUtils.equals(property.getName(), propertyName)) {
+            if (property.getName().equals(propertyName)) {
                 return property;
             }
         }
@@ -108,14 +105,21 @@ public class DefaultGraphVertex implements GraphVertex {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("label", this.getLabel())
-                .add("labelId", this.getLabelId())
-                .add("propertyList", this.getPropertyList())
-                .add("primaryKeyConstraint", this.getPrimaryKeyConstraint())
-                .add("versionId", this.getVersionId())
-                .add("tableId", this.getTableId())
-                .toString();
+        return "DefaultGraphVertex{"
+                + "label='"
+                + label
+                + '\''
+                + ", labelId="
+                + labelId
+                + ", propertyList="
+                + propertyList
+                + ", primaryKeyConstraint="
+                + primaryKeyConstraint
+                + ", versionId="
+                + versionId
+                + ", tableId="
+                + tableId
+                + '}';
     }
 
     @Override

@@ -15,10 +15,10 @@
  */
 package com.alibaba.graphscope.compiler.api.schema;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.alibaba.graphscope.compiler.api.exception.GraphElementNotFoundException;
 import com.alibaba.graphscope.compiler.api.exception.GraphPropertyNotFoundException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.List;
 import java.util.Map;
@@ -47,66 +47,8 @@ public interface GraphSchema {
      */
     int getVersion();
 
-    default String formatJson() {
-        JSONObject jsonObject = new JSONObject();
-        JSONArray typeArray = new JSONArray();
-        for (GraphVertex vertex : this.getVertexList()) {
-            JSONObject typeObject = new JSONObject();
-            typeObject.put("id", vertex.getLabelId());
-            typeObject.put("label", vertex.getLabel());
-            typeObject.put("type", "VERTEX");
-            JSONArray propArray = new JSONArray();
-            for (GraphProperty property : vertex.getPropertyList()) {
-                JSONObject propObject = new JSONObject();
-                propObject.put("name", property.getName());
-                propObject.put("id", property.getId());
-                propObject.put("data_type", property.getDataType().toString());
-                propArray.add(propObject);
-            }
-            typeObject.put("propertyDefList", propArray);
-
-            JSONArray indexArray = new JSONArray();
-            JSONObject indexObject = new JSONObject();
-            JSONArray propertyNamesArray = new JSONArray();
-            for (GraphProperty primaryKeyProp : vertex.getPrimaryKeyList()) {
-                propertyNamesArray.add(primaryKeyProp.getName());
-            }
-            indexObject.put("primaryKeyList", propertyNamesArray);
-            indexArray.add(indexObject);
-            typeObject.put("indexes", indexArray);
-
-            typeArray.add(typeObject);
-        }
-
-        for (GraphEdge edge : this.getEdgeList()) {
-            JSONObject typeObject = new JSONObject();
-            typeObject.put("id", edge.getLabelId());
-            typeObject.put("label", edge.getLabel());
-            typeObject.put("type", "EDGE");
-            JSONArray propArray = new JSONArray();
-            for (GraphProperty property : edge.getPropertyList()) {
-                JSONObject propObject = new JSONObject();
-                propObject.put("name", property.getName());
-                propObject.put("id", property.getId());
-                propObject.put("data_type", property.getDataType().toString());
-                propArray.add(propObject);
-            }
-            typeObject.put("propertyDefList", propArray);
-
-            JSONArray relationArray = new JSONArray();
-            for (EdgeRelation relation : edge.getRelationList()) {
-                JSONObject relationObject = new JSONObject();
-                relationObject.put("srcVertexLabel", relation.getSource().getLabel());
-                relationObject.put("dstVertexLabel", relation.getTarget().getLabel());
-                relationArray.add(relationObject);
-            }
-            typeObject.put("rawRelationShips", relationArray);
-
-            typeArray.add(typeObject);
-        }
-
-        jsonObject.put("types", typeArray);
-
-        return jsonObject.toJSONString();
+    default String formatJson() throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.writeValueAsString(this);
     }
 }

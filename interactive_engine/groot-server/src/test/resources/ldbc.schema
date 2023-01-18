@@ -7,49 +7,49 @@
       "propertyDefList": [
         {
           "name": "birthday",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 1
         },
         {
           "name": "firstname",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 2
         },
         {
           "name": "creationdate",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 3
         },
         {
           "name": "gender",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 4
         },
         {
           "name": "browserused",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 5
         },
         {
           "name": "locationip",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 6
         },
         {
           "name": "id",
-          "dataType": "LONG",
+          "data_type": "LONG",
           "comment": "",
           "id": 7
         },
         {
           "name": "lastname",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 8
         }
@@ -72,49 +72,49 @@
       "propertyDefList": [
         {
           "name": "creationdate",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 3
         },
         {
           "name": "imagefile",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 9
         },
         {
           "name": "length",
-          "dataType": "INT",
+          "data_type": "INT",
           "comment": "",
           "id": 10
         },
         {
           "name": "browserused",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 5
         },
         {
           "name": "locationip",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 6
         },
         {
           "name": "language",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 11
         },
         {
           "name": "id",
-          "dataType": "LONG",
+          "data_type": "LONG",
           "comment": "",
           "id": 7
         },
         {
           "name": "content",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 12
         }
@@ -137,25 +137,25 @@
       "propertyDefList": [
         {
           "name": "name",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 13
         },
         {
           "name": "id",
-          "dataType": "LONG",
+          "data_type": "LONG",
           "comment": "",
           "id": 7
         },
         {
           "name": "type",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 14
         },
         {
           "name": "url",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 15
         }
@@ -178,19 +178,19 @@
       "propertyDefList": [
         {
           "name": "name",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 13
         },
         {
           "name": "id",
-          "dataType": "LONG",
+          "data_type": "LONG",
           "comment": "",
           "id": 7
         },
         {
           "name": "url",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 15
         }
@@ -213,25 +213,25 @@
       "propertyDefList": [
         {
           "name": "name",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 13
         },
         {
           "name": "id",
-          "dataType": "LONG",
+          "data_type": "LONG",
           "comment": "",
           "id": 7
         },
         {
           "name": "type",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 14
         },
         {
           "name": "url",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 15
         }
@@ -254,19 +254,19 @@
       "propertyDefList": [
         {
           "name": "creationdate",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 3
         },
         {
           "name": "id",
-          "dataType": "LONG",
+          "data_type": "LONG",
           "comment": "",
           "id": 7
         },
         {
           "name": "title",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 16
         }
@@ -289,19 +289,19 @@
       "propertyDefList": [
         {
           "name": "name",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 13
         },
         {
           "name": "id",
-          "dataType": "LONG",
+          "data_type": "LONG",
           "comment": "",
           "id": 7
         },
         {
           "name": "url",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 15
         }
@@ -324,37 +324,37 @@
       "propertyDefList": [
         {
           "name": "creationdate",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 3
         },
         {
           "name": "length",
-          "dataType": "INT",
+          "data_type": "INT",
           "comment": "",
           "id": 10
         },
         {
           "name": "browserused",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 5
         },
         {
           "name": "locationip",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 6
         },
         {
           "name": "id",
-          "dataType": "LONG",
+          "data_type": "LONG",
           "comment": "",
           "id": 7
         },
         {
           "name": "content",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 12
         }
@@ -377,7 +377,7 @@
       "propertyDefList": [
         {
           "name": "creationdate",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 3
         }
@@ -398,7 +398,7 @@
       "propertyDefList": [
         {
           "name": "creationdate",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 3
         }
@@ -608,7 +608,7 @@
       "propertyDefList": [
         {
           "name": "classyear",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 17
         }
@@ -666,7 +666,7 @@
       "propertyDefList": [
         {
           "name": "joindate",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 18
         }
@@ -690,7 +690,7 @@
       "propertyDefList": [
         {
           "name": "workfrom",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 19
         }
@@ -731,7 +731,7 @@
       "propertyDefList": [
         {
           "name": "creationdate",
-          "dataType": "STRING",
+          "data_type": "STRING",
           "comment": "",
           "id": 3
         }

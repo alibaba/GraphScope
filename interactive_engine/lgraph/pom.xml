@@ -18,7 +18,6 @@
     <dependency>
       <groupId>com.alibaba.graphscope</groupId>
       <artifactId>executor</artifactId>
-      <version>${project.version}</version>
     </dependency>
   </dependencies>
 
@@ -33,7 +32,6 @@
           <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>exec-maven-plugin</artifactId>
-            <version>3.0.0</version>
             <executions>
               <execution>
                 <id>compile-exec-id</id>
@@ -45,7 +43,6 @@
             </executions>
             <configuration>
               <executable>sh</executable>
-              <workingDirectory></workingDirectory>
               <arguments>
                 <argument>build.sh</argument>
               </arguments>
@@ -64,7 +61,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-clean-plugin</artifactId>
-        <version>3.1.0</version>
         <configuration>
           <filesets>
             <fileset>

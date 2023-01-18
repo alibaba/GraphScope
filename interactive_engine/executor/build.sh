@@ -25,11 +25,18 @@ else
     STRIP_OPTION=""
 fi
 
+if [ -z "$FEATURE" ]; then
+  append="--features=$FEATURE"
+else
+  append=""
+fi
+
+
 cd assembly/$TARGET;
 if [ "$MODE" = "debug" ]; then
-  cargo build --features="$FEATURE"
+  cargo build $append
 elif [ "$MODE" = "release" ]; then
-  cargo build --release --features="$FEATURE"
+  cargo build --release $append
 else
   echo "Invalid mode, choose from debug or release."
   exit 1

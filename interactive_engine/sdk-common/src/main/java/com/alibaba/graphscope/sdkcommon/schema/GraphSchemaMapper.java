@@ -13,8 +13,6 @@
  */
 package com.alibaba.graphscope.sdkcommon.schema;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.alibaba.graphscope.compiler.api.schema.GraphEdge;
 import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
 import com.alibaba.graphscope.compiler.api.schema.GraphVertex;
@@ -23,12 +21,11 @@ import com.alibaba.graphscope.sdkcommon.schema.mapper.EdgeTypeMapper;
 import com.alibaba.graphscope.sdkcommon.schema.mapper.SchemaElementMapper;
 import com.alibaba.graphscope.sdkcommon.schema.mapper.VertexTypeMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
-import org.apache.commons.lang3.StringUtils;
-
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -50,7 +47,7 @@ public class GraphSchemaMapper {
 
     public GraphSchema toGraphSchema() {
         DefaultGraphSchema graphSchema = new DefaultGraphSchema();
-        Map<String, GraphVertex> vertexTypeMap = Maps.newHashMap();
+        Map<String, GraphVertex> vertexTypeMap = new HashMap<>();
         for (SchemaElementMapper elementMapper : this.types) {
             if (elementMapper instanceof VertexTypeMapper) {
                 GraphVertex graphVertex = ((VertexTypeMapper) elementMapper).toVertexType();
@@ -80,7 +77,7 @@ public class GraphSchemaMapper {
     public static GraphSchemaMapper parseFromSchema(GraphSchema schema) {
         GraphSchemaMapper schemaMapper = new GraphSchemaMapper();
         schemaMapper.version = schema.getVersion();
-        schemaMapper.types = Lists.newArrayList();
+        schemaMapper.types = new ArrayList<>();
         for (GraphVertex graphVertex : schema.getVertexList()) {
             schemaMapper.types.add(VertexTypeMapper.parseFromVertexType(graphVertex));
         }
@@ -92,29 +89,31 @@ public class GraphSchemaMapper {
     }
 
     public static GraphSchemaMapper parseFromJson(String schemaJson) {
-        JSONObject jsonObject = JSONObject.parseObject(schemaJson);
-        GraphSchemaMapper graphSchema = new GraphSchemaMapper();
-        Integer version = jsonObject.getInteger("version");
-        if (null != version) {
-            graphSchema.version = version;
-        } else {
-            graphSchema.version = 0;
-        }
-
-        graphSchema.types = Lists.newArrayList();
-        JSONArray typeArray = jsonObject.getJSONArray("types");
-        for (int i = 0; i < typeArray.size(); i++) {
-            JSONObject typeObject = typeArray.getJSONObject(i);
-            String type = typeObject.getString("type");
-            if (StringUtils.equals("VERTEX", StringUtils.upperCase(type))) {
-                VertexTypeMapper vertexTypeMapper = typeObject.toJavaObject(VertexTypeMapper.class);
-                graphSchema.types.add(vertexTypeMapper);
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            GraphSchemaMapper graphSchema = new GraphSchemaMapper();
+            JsonNode jsonNode = mapper.readTree(schemaJson);
+            if (jsonNode.has("version")) {
+                graphSchema.version = jsonNode.get("version").asInt();
             } else {
-                EdgeTypeMapper edgeTypeMapper = typeObject.toJavaObject(EdgeTypeMapper.class);
-                graphSchema.types.add(edgeTypeMapper);
+                graphSchema.version = 0;
             }
+            graphSchema.types = new ArrayList<>();
+            JsonNode typeArray = jsonNode.get("types");
+            for (JsonNode typeNode : typeArray) {
+                String type = typeNode.get("type").asText();
+                if (type.equalsIgnoreCase("VERTEX")) {
+                    VertexTypeMapper typeMapper =
+                            mapper.convertValue(typeNode, VertexTypeMapper.class);
+                    graphSchema.types.add(typeMapper);
+                } else {
+                    EdgeTypeMapper typeMapper = mapper.convertValue(typeNode, EdgeTypeMapper.class);
+                    graphSchema.types.add(typeMapper);
+                }
+            }
+            return graphSchema;
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
         }
-
-        return graphSchema;
     }
 }

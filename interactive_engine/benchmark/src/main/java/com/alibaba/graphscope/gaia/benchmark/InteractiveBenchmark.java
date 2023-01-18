@@ -20,7 +20,6 @@ import com.alibaba.graphscope.gaia.common.Configuration;
 import com.alibaba.graphscope.gaia.utils.PropertyUtil;
 import com.alibaba.graphscope.gaia.utils.QueryUtil;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.tinkerpop.gremlin.driver.Client;
 import org.apache.tinkerpop.gremlin.driver.Cluster;
 import org.apache.tinkerpop.gremlin.driver.MessageSerializer;
@@ -67,7 +66,8 @@ public class InteractiveBenchmark {
                                     .addContactPoint(address[0])
                                     .port(Integer.parseInt(address[1]))
                                     .serializer(initializeSerialize());
-                    if (StringUtils.isNotEmpty(username) && StringUtils.isNotEmpty(password)) {
+                    if (!(username == null || username.isEmpty())
+                            && !(password == null || password.isEmpty())) {
                         cluster.credentials(username, password);
                     }
                     client = cluster.create().connect();
