@@ -2,7 +2,7 @@
 
 [GraphScope](./overview.md) is an open-source, cloud-native computing framework for a variety of graph workloads,
 including analytical processing, interactive querying and graph learning. But how does GraphScope stand our
-among a bunch of graph products that offer similar functionalities? In summarize,
+among a bunch of graph products that offer similar functionalities? In summary,
 - If you are searching for a scalable system for graph analytical processing, GraphScope may be your best option,
 with the state-of-the-art performance and a range of SDKs and programming interfaces.
 - If you are searching for a graph database for graph queries, and performance and scalability are your primary concerns
