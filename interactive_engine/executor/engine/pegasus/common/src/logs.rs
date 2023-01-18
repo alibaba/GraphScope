@@ -82,6 +82,7 @@ mod log_4_rs {
 #[cfg(feature = "env_logger")]
 mod log_env {
     use std::io::Write;
+
     use env_logger::fmt::Color;
     use log::Level;
     use time::format_description;
@@ -113,7 +114,8 @@ mod log_env {
                     }
                 };
                 let dt = OffsetDateTime::now_utc();
-                let dt_fmt = format_description::parse("[year]-[month]-[day] [hour]:[minute]:[second]").unwrap();
+                let dt_fmt =
+                    format_description::parse("[year]-[month]-[day] [hour]:[minute]:[second]").unwrap();
                 writeln!(
                     buf,
                     "{},{:03} {}\t[{}] [{}:{}] {}",

@@ -17,13 +17,6 @@ package com.alibaba.graphscope.compiler.api.schema;
 
 import com.alibaba.graphscope.proto.DataTypePb;
 import com.alibaba.graphscope.sdkcommon.meta.InternalDataType;
-import com.google.common.collect.Lists;
-
-import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.RandomUtils;
-import org.apache.commons.lang3.StringUtils;
-
-import java.util.Date;
 
 public enum DataType {
     UNKNOWN(0),
@@ -64,11 +57,10 @@ public enum DataType {
     }
 
     public static DataType parseString(String type) {
-        String upperType = StringUtils.upperCase(type);
-        if (StringUtils.startsWith(upperType, "LIST<")) {
-            String typeValue =
-                    StringUtils.removeEnd(StringUtils.removeStart(upperType, "LIST<"), ">")
-                            + "_LIST";
+        String upperType = type.toUpperCase();
+        if (upperType.startsWith("LIST<")) {
+            // "LIST<value>" -> value
+            String typeValue = upperType.substring(5, upperType.length() - 1) + "_LIST";
             return DataType.valueOf(typeValue);
         } else {
             return DataType.valueOf(type);
@@ -82,8 +74,8 @@ public enum DataType {
     @Override
     public String toString() {
         String dataTypeString = this.name();
-        if (StringUtils.endsWith(dataTypeString, "_LIST")) {
-            String[] dataTypeArray = StringUtils.splitByWholeSeparator(dataTypeString, "_");
+        if (dataTypeString.endsWith("_LIST")) {
+            String[] dataTypeArray = dataTypeString.split("_");
             dataTypeString = "LIST<" + dataTypeArray[0] + ">";
         }
 
@@ -110,15 +102,12 @@ public enum DataType {
             case BOOL:
                 return 1;
             case CHAR:
-                return 2;
             case SHORT:
                 return 2;
             case INT:
-                return 4;
-            case LONG:
-                return 8;
             case FLOAT:
                 return 4;
+            case LONG:
             case DOUBLE:
                 return 8;
             default:
@@ -131,45 +120,35 @@ public enum DataType {
         InternalDataType internalDataType = dataType.getType();
         switch (internalDataType) {
             case BOOL:
-                {
-                    return DataType.BOOL;
-                }
+                return DataType.BOOL;
+
             case CHAR:
-                {
-                    return DataType.CHAR;
-                }
+                return DataType.CHAR;
+
             case SHORT:
-                {
-                    return DataType.SHORT;
-                }
+                return DataType.SHORT;
+
             case INT:
-                {
-                    return DataType.INT;
-                }
+                return DataType.INT;
+
             case LONG:
-                {
-                    return DataType.LONG;
-                }
+                return DataType.LONG;
+
             case FLOAT:
-                {
-                    return DataType.FLOAT;
-                }
+                return DataType.FLOAT;
+
             case DOUBLE:
-                {
-                    return DataType.DOUBLE;
-                }
+                return DataType.DOUBLE;
+
             case STRING:
-                {
-                    return DataType.STRING;
-                }
+                return DataType.STRING;
+
             case BYTES:
-                {
-                    return DataType.BYTES;
-                }
+                return DataType.BYTES;
+
             case DATE:
-                {
-                    return DataType.STRING;
-                }
+                return DataType.STRING;
+
             case LIST:
                 {
                     switch (InternalDataType.valueOf(dataType.getExpression())) {
@@ -196,72 +175,15 @@ public enum DataType {
                         default:
                             {
                                 throw new IllegalArgumentException(
-                                        "Unsupport property data type " + dataType.toString());
+                                        "Unsupported property data type " + dataType);
                             }
                     }
                 }
             default:
                 {
                     throw new IllegalArgumentException(
-                            "Unsupport property data type " + dataType.toString());
+                            "Unsupported property data type " + dataType);
                 }
         }
-    }
-
-    public Object getRandomValue() {
-        switch (this) {
-            case BOOL:
-                return RandomUtils.nextInt(0, 2) == 0 ? false : true;
-            case CHAR:
-                return (char) Math.abs(RandomUtils.nextInt(Integer.MIN_VALUE, Integer.MAX_VALUE))
-                        % 127;
-            case DATE:
-                return new Date().toString();
-            case SHORT:
-                return (short) RandomUtils.nextInt(Integer.MIN_VALUE, Integer.MAX_VALUE);
-            case INT:
-                return RandomUtils.nextInt(Integer.MIN_VALUE, Integer.MAX_VALUE);
-            case LONG:
-                return RandomUtils.nextLong(Long.MIN_VALUE, Long.MAX_VALUE);
-            case FLOAT:
-                return RandomUtils.nextFloat(Float.MIN_VALUE, Float.MAX_VALUE);
-            case DOUBLE:
-                return RandomUtils.nextDouble(Double.MIN_VALUE, Double.MAX_VALUE);
-            case STRING:
-                return RandomStringUtils.randomAlphanumeric(64);
-            case BYTES:
-                return RandomStringUtils.random(64).getBytes();
-            case INT_LIST:
-                return Lists.newArrayList(
-                        RandomUtils.nextInt(Integer.MIN_VALUE, Integer.MAX_VALUE),
-                        RandomUtils.nextInt(Integer.MIN_VALUE, Integer.MAX_VALUE),
-                        RandomUtils.nextInt(Integer.MIN_VALUE, Integer.MAX_VALUE));
-            case LONG_LIST:
-                return Lists.newArrayList(
-                        RandomUtils.nextLong(Long.MIN_VALUE, Long.MAX_VALUE),
-                        RandomUtils.nextLong(Long.MIN_VALUE, Long.MAX_VALUE),
-                        RandomUtils.nextLong(Long.MIN_VALUE, Long.MAX_VALUE));
-            case FLOAT_LIST:
-                return Lists.newArrayList(
-                        RandomUtils.nextFloat(Float.MIN_VALUE, Float.MAX_VALUE),
-                        RandomUtils.nextFloat(Float.MIN_VALUE, Float.MAX_VALUE),
-                        RandomUtils.nextFloat(Float.MIN_VALUE, Float.MAX_VALUE));
-            case DOUBLE_LIST:
-                return Lists.newArrayList(
-                        RandomUtils.nextDouble(Double.MIN_VALUE, Double.MAX_VALUE),
-                        RandomUtils.nextDouble(Double.MIN_VALUE, Double.MAX_VALUE),
-                        RandomUtils.nextDouble(Double.MIN_VALUE, Double.MAX_VALUE));
-            case STRING_LIST:
-                return Lists.newArrayList(
-                        RandomStringUtils.randomAlphanumeric(64),
-                        RandomStringUtils.randomAlphanumeric(64),
-                        RandomStringUtils.randomAlphanumeric(64));
-            case BYTES_LIST:
-                return Lists.newArrayList(
-                        RandomStringUtils.randomAlphanumeric(64).getBytes(),
-                        RandomStringUtils.randomAlphanumeric(64).getBytes(),
-                        RandomStringUtils.randomAlphanumeric(64).getBytes());
-        }
-        throw new IllegalArgumentException("Unknown prop data type " + this);
     }
 }

@@ -26,7 +26,7 @@ public class UnitTest {
     public void propertiesTest() throws Exception {
         Properties properties = new Properties();
         System.out.println();
-        properties.load(TestUtils.getLoadlResource("function.test.config"));
+        properties.load(TestUtils.getLoadResource("function.test.config"));
         String loadCmd = (String) properties.get("load.data.cmd");
         String[] commands = loadCmd.split("\\s+");
         // replace with absolute path

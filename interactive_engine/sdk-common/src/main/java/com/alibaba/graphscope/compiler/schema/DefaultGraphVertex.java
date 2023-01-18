@@ -48,7 +48,7 @@ public class DefaultGraphVertex implements GraphVertex {
 
     @Override
     public List<Integer> getPkPropertyIndices() {
-        throw new UnsupportedOperationException();
+        return null;
     }
 
     @Override
@@ -93,7 +93,7 @@ public class DefaultGraphVertex implements GraphVertex {
 
     @Override
     public int getVersionId() {
-        throw new UnsupportedOperationException();
+        return 0;
     }
 
     @Override
@@ -108,6 +108,6 @@ public class DefaultGraphVertex implements GraphVertex {
 
     @Override
     public long getTableId() {
-        throw new UnsupportedOperationException();
+        return 0;
     }
 }

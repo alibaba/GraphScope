@@ -19,8 +19,6 @@ package com.alibaba.graphscope.common.intermediate;
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
 import com.alibaba.graphscope.common.jna.type.*;
 
-import org.apache.commons.lang3.StringUtils;
-
 public class ArgUtils {
     public static String LABEL = "~label";
     public static String ID = "~id";
@@ -51,7 +49,7 @@ public class ArgUtils {
     // "" or null indicates NONE or HEAD
     public static FfiNameOrId.ByValue asNameOrId(String tag) {
         FfiNameOrId.ByValue ffiName = new FfiNameOrId.ByValue();
-        if (!StringUtils.isEmpty(tag)) {
+        if (!(tag == null || tag.isEmpty())) {
             ffiName.name = tag;
             ffiName.opt = FfiNameIdOpt.Name;
         }
@@ -65,7 +63,7 @@ public class ArgUtils {
     // "" or null indicates NONE
     public static FfiProperty.ByValue asKey(String property) {
         FfiProperty.ByValue ffiProperty = new FfiProperty.ByValue();
-        if (!StringUtils.isEmpty(property)) {
+        if (!(property == null || property.isEmpty())) {
             if (property.equals(LABEL)) {
                 ffiProperty.opt = FfiPropertyOpt.Label;
             } else if (property.equals(ID)) {

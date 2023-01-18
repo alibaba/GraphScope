@@ -18,8 +18,8 @@ package com.alibaba.graphscope.function.test.gremlin;
 import static org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.SINK;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
-import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import org.apache.tinkerpop.gremlin.LoadGraphWith;
 import org.apache.tinkerpop.gremlin.process.AbstractGremlinProcessTest;
@@ -48,7 +48,7 @@ public abstract class SinkProcessTest extends AbstractGremlinProcessTest {
         printTraversalForm(traversal);
         final Path path = traversal.next();
         assertThat(path, contains("loop", "loop", "loop", "loop", "loop", "loop"));
-        assertThat(traversal.hasNext(), is(false));
+        assertFalse(traversal.hasNext());
     }
 
     @Test

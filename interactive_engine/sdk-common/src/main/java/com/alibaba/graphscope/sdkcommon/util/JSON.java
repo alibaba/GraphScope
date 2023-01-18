@@ -15,8 +15,6 @@
  */
 package com.alibaba.graphscope.sdkcommon.util;
 
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-
 import com.alibaba.graphscope.sdkcommon.exception.JSONException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -51,7 +49,7 @@ public class JSON {
 
     public static <T> T fromJson(String json, TypeReference<T> typeRef) throws RuntimeException {
         try {
-            return isEmpty(json) ? null : OBJECT_MAPPER.readValue(json, typeRef);
+            return (json == null || json.isEmpty()) ? null : OBJECT_MAPPER.readValue(json, typeRef);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -74,7 +72,7 @@ public class JSON {
     }
 
     public static JsonNode parseJsonTree(String json) throws Exception {
-        return isEmpty(json) ? null : OBJECT_MAPPER.readTree(json);
+        return (json == null || json.isEmpty()) ? null : OBJECT_MAPPER.readTree(json);
     }
 
     public static <T> List<T> parseAsList(String json, Class<T> valueType) throws IOException {

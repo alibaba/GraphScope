@@ -23,7 +23,7 @@ import java.util.List;
 public interface GraphEdge extends GraphElement {
     /**
      * The edge relation list
-     * @return
+     * @return The edge relation list
      */
     List<EdgeRelation> getRelationList();
 }

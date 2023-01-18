@@ -59,7 +59,7 @@ public interface GraphElement {
 
     /**
      * Get version of given graph element
-     * @return
+     * @return The version ID
      */
     int getVersionId();
 

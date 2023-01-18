@@ -65,7 +65,7 @@ impl CSVLoadConfig {
             for v in properties.iter() {
                 let prop_name = get_string_value(v, "propertyName")?;
                 if let Some(prop_id) = schema.get_prop_id(prop_name.as_str()) {
-                    let data_type = get_string_value(v, "dataType")?;
+                    let data_type = get_string_value(v, "data_type")?;
                     let index = get_string_value(v, "index")?.parse::<usize>()?;
                     ret.properties.push((
                         index,
