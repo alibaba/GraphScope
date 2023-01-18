@@ -31,7 +31,7 @@ To support online inference on dynamic graphs, we propose Dynamic Graph Service 
 
 
 ## Cloud Native Design
-GraphScope supports run on a cluster managed by Kubernetes(k8s). On the storage layer, Vineyard works as the distributed in-memory data manager, and different execution engines of GraphScope can efficiently share data via Vineyard. On the engine layer, users can deploy execution engines of GraphScope on demand, and freely scale computation resources of each engine. 
+Cloud native is the software approach of building, deploying, and managing modern applications in cloud computing environments. GraphScope provides a set of Dockerfiles and users could easily build docker images of GraphScope. In addition, users could deploy GraphScope on a Kubernetes (k8s) cluster, or on managed Kubernetes service of cloud service providers (e.g., EKS for AWS and ACK for Alibaba Cloud). GraphScope also provides essential tools to allow users to handling situations like monitoring, failover, scaling and rolling update. 
 
 ## Across-Engine Workflow Orchestration
 
