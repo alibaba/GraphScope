@@ -296,7 +296,7 @@
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-all</artifactId>
-        <version>4.1.63.Final</version>
+        <version>4.1.79.Final</version>
       </dependency>
 
       <!-- Spark and Scala -->
