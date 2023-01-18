@@ -6,7 +6,7 @@ among a bunch of graph products that offer similar functionalities? In summary,
 - If you are searching for a scalable system for graph analytical processing, GraphScope may be your best option.
 - If you are searching for a graph database for graph queries, and performance and scalability are your primary concerns
 rather than transaction guarantees, then GraphScope is a suitable platform.
-- If you have the demand for large-scale distributed graph learning, GraphScope is just the solution.
+- If you are searching for large-scale distributed graph learning, GraphScope is just the solution.
 - If you are searching for a system that simultaneously offers various types of graph workloads, GraphScope
 is the ideal platform.
 
