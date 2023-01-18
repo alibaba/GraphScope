@@ -42,6 +42,9 @@ struct ExpandOrIntersect<E: Entry> {
     stmt: Box<dyn Statement<ID, E>>,
 }
 
+/// An optimized entry implementation for intersection, which denotes a collection of vertices;
+/// Specifically, vertex_vec records the unique vertex ids in the collection,
+/// and count_vec records the number of the corresponding vertex, since duplicated vertices are allowed.
 #[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]
 pub struct IntersectionEntry {
     vertex_vec: Vec<ID>,
