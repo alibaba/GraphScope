@@ -462,42 +462,46 @@ impl Evaluate for Operand {
                 if let Some(ctxt) = context {
                     if let Some(element) = ctxt.get(tag.as_ref()) {
                         let result = if let Some(property) = prop_key {
-                            let graph_element = element
-                                .as_graph_element()
-                                .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?;
-                            match property {
-                                PropKey::Id => graph_element.id().into(),
-                                PropKey::Label => graph_element
-                                    .label()
-                                    .map(|label| label.into())
-                                    .ok_or(ExprEvalError::GetNoneFromContext)?,
-                                PropKey::Len => graph_element.len().into(),
-                                PropKey::All => graph_element
-                                    .details()
-                                    .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?
-                                    .get_all_properties()
-                                    .map(|obj| {
-                                        obj.into_iter()
-                                            .map(|(key, value)| {
-                                                let obj_key: Object = match key {
-                                                    NameOrId::Str(str) => str.into(),
-                                                    NameOrId::Id(id) => id.into(),
-                                                };
-                                                (obj_key, value)
-                                            })
-                                            .collect::<Vec<(Object, Object)>>()
-                                            .into()
-                                    })
-                                    .ok_or(ExprEvalError::GetNoneFromContext)?,
-                                PropKey::Key(key) => graph_element
-                                    .details()
-                                    .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?
-                                    .get_property(key)
-                                    .ok_or(ExprEvalError::GetNoneFromContext)?
-                                    .try_to_owned()
-                                    .ok_or(ExprEvalError::OtherErr(
-                                        "cannot get `Object` from `BorrowObject`".to_string(),
-                                    ))?,
+                            if let PropKey::Len = property {
+                                element.len().into()
+                            } else {
+                                let graph_element = element
+                                    .as_graph_element()
+                                    .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?;
+                                match property {
+                                    PropKey::Id => graph_element.id().into(),
+                                    PropKey::Label => graph_element
+                                        .label()
+                                        .map(|label| label.into())
+                                        .ok_or(ExprEvalError::GetNoneFromContext)?,
+                                    PropKey::Len => unreachable!(),
+                                    PropKey::All => graph_element
+                                        .details()
+                                        .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?
+                                        .get_all_properties()
+                                        .map(|obj| {
+                                            obj.into_iter()
+                                                .map(|(key, value)| {
+                                                    let obj_key: Object = match key {
+                                                        NameOrId::Str(str) => str.into(),
+                                                        NameOrId::Id(id) => id.into(),
+                                                    };
+                                                    (obj_key, value)
+                                                })
+                                                .collect::<Vec<(Object, Object)>>()
+                                                .into()
+                                        })
+                                        .ok_or(ExprEvalError::GetNoneFromContext)?,
+                                    PropKey::Key(key) => graph_element
+                                        .details()
+                                        .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?
+                                        .get_property(key)
+                                        .ok_or(ExprEvalError::GetNoneFromContext)?
+                                        .try_to_owned()
+                                        .ok_or(ExprEvalError::OtherErr(
+                                            "cannot get `Object` from `BorrowObject`".to_string(),
+                                        ))?,
+                                }
                             }
                         } else {
                             element

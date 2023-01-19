@@ -23,7 +23,7 @@ use pegasus_server::job_pb as server_pb;
 use crate::error::{FnGenError, FnGenResult};
 use crate::process::functions::FoldGen;
 use crate::process::operator::accum::{AccumFactoryGen, RecordAccumulator};
-use crate::process::record::{Entry, Record};
+use crate::process::record::Record;
 
 impl FoldGen<u64, Record> for algebra_pb::GroupBy {
     fn get_accum_kind(&self) -> server_pb::AccumKind {
@@ -65,7 +65,7 @@ struct CountAlias {
 
 impl MapFunction<u64, Record> for CountAlias {
     fn exec(&self, cnt: u64) -> FnResult<Record> {
-        let cnt_entry: Entry = object!(cnt).into();
+        let cnt_entry = object!(cnt);
         Ok(Record::new(cnt_entry, self.alias.clone()))
     }
 }
@@ -79,9 +79,10 @@ mod tests {
     use pegasus::JobConf;
     use pegasus_server::job_pb as server_pb;
 
+    use crate::process::entry::Entry;
     use crate::process::functions::FoldGen;
     use crate::process::operator::tests::{init_source, TAG_A};
-    use crate::process::record::{Entry, Record};
+    use crate::process::record::Record;
 
     fn count_test(source: Vec<Record>, fold_opr_pb: pb::GroupBy) -> ResultStream<Record> {
         let conf = JobConf::new("fold_test");
@@ -118,12 +119,7 @@ mod tests {
         let mut cnt = 0;
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(None) {
-                cnt = match entry.as_ref() {
-                    Entry::OffGraph(cnt) => cnt.as_u64().unwrap(),
-                    _ => {
-                        unreachable!()
-                    }
-                };
+                cnt = entry.as_object().unwrap().as_u64().unwrap();
             }
         }
         assert_eq!(cnt, 2);
@@ -142,12 +138,7 @@ mod tests {
         let mut cnt = 0;
         if let Some(Ok(record)) = result.next() {
             if let Some(entry) = record.get(Some(TAG_A)) {
-                cnt = match entry.as_ref() {
-                    Entry::OffGraph(cnt) => cnt.as_u64().unwrap(),
-                    _ => {
-                        unreachable!()
-                    }
-                };
+                cnt = entry.as_object().unwrap().as_u64().unwrap();
             }
         }
         assert_eq!(cnt, 2);

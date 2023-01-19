@@ -14,7 +14,6 @@
 //! limitations under the License.
 
 use std::convert::TryFrom;
-use std::sync::Arc;
 
 use dyn_type::Object;
 use ir_common::generated::algebra as algebra_pb;
@@ -23,8 +22,9 @@ use ir_common::KeyId;
 use pegasus::api::function::{BinaryFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenError, FnGenResult};
+use crate::process::entry::DynEntry;
 use crate::process::functions::ApplyGen;
-use crate::process::record::{Entry, Record};
+use crate::process::record::Record;
 
 #[derive(Debug)]
 struct ApplyOperator {
@@ -59,7 +59,7 @@ impl BinaryFunction<Record, Vec<Record>, Option<Record>> for ApplyOperator {
             }
             JoinKind::LeftOuter => {
                 if sub.is_empty() {
-                    let entry: Arc<Entry> = Arc::new(Object::None.into());
+                    let entry = DynEntry::new(Object::None);
                     if let Some(alias) = self.alias.as_ref() {
                         let columns = parent.get_columns_mut();
                         columns.insert(*alias as usize, entry.clone());

@@ -19,7 +19,6 @@ mod common;
 
 #[cfg(test)]
 mod test {
-    use std::borrow::Borrow;
     use std::sync::Arc;
 
     use dyn_type::object;
@@ -33,10 +32,12 @@ mod test {
     use pegasus::api::{Map, Sink};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
+    use pegasus_common::downcast::AsAny;
+    use runtime::process::entry::Entry;
     use runtime::process::operator::flatmap::FlatMapFuncGen;
-    use runtime::process::operator::map::FilterMapFuncGen;
+    use runtime::process::operator::map::{FilterMapFuncGen, IntersectionEntry};
     use runtime::process::operator::source::SourceOperator;
-    use runtime::process::record::{Entry, Record};
+    use runtime::process::record::Record;
 
     use crate::common::test::*;
 
@@ -150,7 +151,7 @@ mod test {
         let v5: DefaultId = LDBCVertexParser::to_global_id(5, 1);
         let mut expected_ids = vec![v2, v3, v3, v3, v4, v5];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
                 result_ids.push(element.id() as usize)
             }
         }
@@ -177,7 +178,7 @@ mod test {
         let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
         let expected_edges = vec![(v1, v2), (v1, v4)];
         while let Some(Ok(record)) = result.next() {
-            if let Some(e) = record.get(None).unwrap().as_graph_edge() {
+            if let Some(e) = record.get(None).unwrap().as_edge() {
                 result_edges.push((e.src_id as usize, e.dst_id as usize));
             }
         }
@@ -207,7 +208,7 @@ mod test {
         let mut expected_edges = vec![(v1, v2), (v1, v3), (v1, v4), (v4, v3), (v4, v5), (v6, v3)];
         expected_edges.sort();
         while let Some(Ok(record)) = result.next() {
-            if let Some(e) = record.get(None).unwrap().as_graph_edge() {
+            if let Some(e) = record.get(None).unwrap().as_edge() {
                 result_edges.push((e.src_id as usize, e.dst_id as usize));
             }
         }
@@ -231,7 +232,7 @@ mod test {
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
         let expected_dst_ids_with_prop = vec![(v1, object!(0.5)), (v1, object!(1.0))];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_edge() {
+            if let Some(element) = record.get(None).unwrap().as_edge() {
                 result_ids_with_prop.push((
                     element.get_other_id() as usize,
                     element
@@ -285,11 +286,7 @@ mod test {
         let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
         let mut expected_ids = vec![v2, v4];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record
-                .get(Some(TAG_B))
-                .unwrap()
-                .as_graph_vertex()
-            {
+            if let Some(element) = record.get(Some(TAG_B)).unwrap().as_vertex() {
                 result_ids.push(element.id() as usize)
             }
         }
@@ -337,7 +334,7 @@ mod test {
         let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
         let mut expected_ids = vec![v2, v4];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
                 result_ids.push(element.id() as usize)
             }
         }
@@ -380,7 +377,7 @@ mod test {
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
         let expected_ids = vec![v2];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
                 result_ids.push(element.id() as usize)
             }
         }
@@ -404,7 +401,7 @@ mod test {
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
         let expected_ids = vec![v2];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
                 result_ids.push(element.id() as usize)
             }
         }
@@ -447,7 +444,7 @@ mod test {
         let expected_ids = vec![2, 4];
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None) {
                 result_ids.push(element.id() as usize);
                 assert!(element
                     .details()
@@ -496,7 +493,7 @@ mod test {
         let expected_ids = vec![1, 4, 4, 6];
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None) {
                 result_ids.push(element.id() as usize);
                 assert!(element
                     .details()
@@ -545,7 +542,7 @@ mod test {
         let expected_ids = vec![1, 1, 2, 4];
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None) {
                 result_ids.push(element.id() as usize);
                 assert!(element
                     .details()
@@ -594,7 +591,7 @@ mod test {
         let expected_ids = vec![1, 1, 2, 4];
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None) {
                 result_ids.push(element.id() as usize);
                 assert!(element
                     .details()
@@ -627,7 +624,7 @@ mod test {
         let v6: DefaultId = LDBCVertexParser::to_global_id(6, 0);
         let mut expected_results = vec![(v1, 3), (v2, 0), (v3, 0), (v4, 2), (v5, 0), (v6, 1)];
         while let Some(Ok(record)) = pegasus_result.next() {
-            if let Some(v) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(v) = record.get(None).unwrap().as_vertex() {
                 if let Some(degree_obj) = record.get(Some(1)).unwrap().as_object() {
                     results.push((v.id() as DefaultId, degree_obj.as_u64().unwrap()));
                 }
@@ -659,7 +656,7 @@ mod test {
         let v6: DefaultId = LDBCVertexParser::to_global_id(6, 0);
         let mut expected_results = vec![(v1, 0), (v2, 1), (v3, 3), (v4, 1), (v5, 1), (v6, 0)];
         while let Some(Ok(record)) = pegasus_result.next() {
-            if let Some(v) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(v) = record.get(None).unwrap().as_vertex() {
                 if let Some(degree_obj) = record.get(Some(1)).unwrap().as_object() {
                     results.push((v.id() as DefaultId, degree_obj.as_u64().unwrap()));
                 }
@@ -691,7 +688,7 @@ mod test {
         let v6: DefaultId = LDBCVertexParser::to_global_id(6, 0);
         let mut expected_results = vec![(v1, 3), (v2, 1), (v3, 3), (v4, 3), (v5, 1), (v6, 1)];
         while let Some(Ok(record)) = pegasus_result.next() {
-            if let Some(v) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(v) = record.get(None).unwrap().as_vertex() {
                 if let Some(degree_obj) = record.get(Some(1)).unwrap().as_object() {
                     results.push((v.id() as DefaultId, degree_obj.as_u64().unwrap()));
                 }
@@ -755,15 +752,19 @@ mod test {
             vec![expected_collection.clone(), expected_collection.clone(), expected_collection];
         let mut result_collections: Vec<Vec<usize>> = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Entry::Intersection(intersection) = record.get(Some(TAG_C)).unwrap().borrow() {
-                let mut result_collection: Vec<usize> = intersection
-                    .clone()
-                    .iter()
-                    .map(|r| r.id() as usize)
-                    .collect();
-                result_collection.sort();
-                result_collections.push(result_collection);
-            }
+            let intersection = record
+                .get(Some(TAG_C))
+                .unwrap()
+                .as_any_ref()
+                .downcast_ref::<IntersectionEntry>()
+                .unwrap();
+            let mut result_collection: Vec<usize> = intersection
+                .clone()
+                .iter()
+                .map(|r| *r as usize)
+                .collect();
+            result_collection.sort();
+            result_collections.push(result_collection);
         }
         assert_eq!(result_collections, expected_collections)
     }
@@ -828,15 +829,20 @@ mod test {
         let expected_collections = vec![vec![v4]];
         let mut result_collections = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Entry::Intersection(intersection) = record.get(Some(TAG_C)).unwrap().borrow() {
-                let mut result_collection: Vec<DefaultId> = intersection
-                    .clone()
-                    .iter()
-                    .map(|r| r.id() as DefaultId)
-                    .collect();
-                result_collection.sort();
-                result_collections.push(result_collection);
-            }
+            let intersection = record
+                .get(Some(TAG_C))
+                .unwrap()
+                .as_any_ref()
+                .downcast_ref::<IntersectionEntry>()
+                .unwrap();
+
+            let mut result_collection: Vec<DefaultId> = intersection
+                .clone()
+                .iter()
+                .map(|r| *r as DefaultId)
+                .collect();
+            result_collection.sort();
+            result_collections.push(result_collection);
         }
         assert_eq!(result_collections, expected_collections)
     }
@@ -906,7 +912,7 @@ mod test {
         let expected_ids = vec![v4];
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None) {
                 result_ids.push(element.id() as usize);
             }
         }
@@ -974,7 +980,7 @@ mod test {
         let mut expected_ids = vec![v1, v1, v3, v3, v4, v4];
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None) {
                 result_ids.push(element.id() as usize);
             }
         }
@@ -1052,7 +1058,7 @@ mod test {
         let mut expected_ids = vec![v4];
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None) {
                 result_ids.push(element.id() as usize);
             }
         }

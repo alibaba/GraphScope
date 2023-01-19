@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::any::Any;
 use std::cmp::Ordering;
 use std::convert::{TryFrom, TryInto};
 use std::hash::{Hash, Hasher};
@@ -23,6 +24,8 @@ use ir_common::error::ParsePbError;
 use ir_common::generated::results as result_pb;
 use ir_common::{LabelId, NameOrId};
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
+use pegasus_common::downcast::*;
+use pegasus_common::impl_as_any;
 
 use crate::apis::{read_id, write_id, DynDetails, Element, GraphElement, ID};
 use crate::utils::expr::eval::Context;
@@ -39,6 +42,8 @@ pub struct Edge {
     from_src: bool,
     details: DynDetails,
 }
+
+impl_as_any!(Edge);
 
 impl Element for Edge {
     fn as_graph_element(&self) -> Option<&dyn GraphElement> {

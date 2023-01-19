@@ -27,7 +27,6 @@ pub mod source;
 pub mod subtask;
 
 use std::convert::TryFrom;
-use std::sync::Arc;
 
 use dyn_type::Object;
 use graph_proxy::apis::{Details, Element, PropKey};
@@ -37,7 +36,8 @@ use ir_common::{KeyId, NameOrId};
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::error::{FnExecError, FnExecResult};
-use crate::process::record::{Entry, Record};
+use crate::process::entry::DynEntry;
+use crate::process::record::Record;
 
 #[derive(Clone, Debug, Default)]
 pub struct TagKey {
@@ -47,89 +47,83 @@ pub struct TagKey {
 
 impl TagKey {
     /// This is for key generation, which generate the key of the input Record according to the tag_key field
-    pub fn get_arc_entry(&self, input: &Record) -> FnExecResult<Arc<Entry>> {
+    pub fn get_arc_entry(&self, input: &Record) -> FnExecResult<DynEntry> {
         if let Some(entry) = input.get(self.tag) {
             if let Some(prop_key) = self.key.as_ref() {
                 let prop = self.get_key(entry, prop_key)?;
-                Ok(Arc::new(prop))
+                Ok(prop)
             } else {
                 Ok(entry.clone())
             }
         } else {
-            Ok(Arc::new((Object::None).into()))
+            Ok(DynEntry::new(Object::None))
         }
     }
 
-    /// This is for accum, which get the entry of the input Record according to the tag_key field
-    pub fn get_entry(&self, input: &Record) -> FnExecResult<Entry> {
-        if let Some(entry) = input.get(self.tag) {
-            if let Some(prop_key) = self.key.as_ref() {
-                Ok(self.get_key(entry, prop_key)?)
+    fn get_key(&self, entry: &DynEntry, prop_key: &PropKey) -> FnExecResult<DynEntry> {
+        if let PropKey::Len = prop_key {
+            let obj: Object = (entry.len() as u64).into();
+            Ok(DynEntry::new(obj))
+        } else {
+            if let Some(element) = entry.as_graph_element() {
+                let prop_obj = match prop_key {
+                    PropKey::Id => element.id().into(),
+                    PropKey::Label => element
+                        .label()
+                        .map(|label| label.into())
+                        .unwrap_or(Object::None),
+                    PropKey::Len => unreachable!(),
+                    PropKey::All => {
+                        let details = element
+                            .details()
+                            .ok_or(FnExecError::unexpected_data_error(&format!(
+                                "Get `PropKey::All` on {:?}",
+                                entry,
+                            )))?;
+
+                        if let Some(properties) = details.get_all_properties() {
+                            properties
+                                .into_iter()
+                                .map(|(key, value)| {
+                                    let obj_key: Object = match key {
+                                        NameOrId::Str(str) => str.into(),
+                                        NameOrId::Id(id) => id.into(),
+                                    };
+                                    (obj_key, value)
+                                })
+                                .collect::<Vec<(Object, Object)>>()
+                                .into()
+                        } else {
+                            Object::None
+                        }
+                    }
+                    PropKey::Key(key) => {
+                        let details = element
+                            .details()
+                            .ok_or(FnExecError::unexpected_data_error(&format!(
+                                "Get `PropKey::Key` of {:?} on {:?}",
+                                key, entry,
+                            )))?;
+                        if let Some(properties) = details.get_property(key) {
+                            properties
+                                .try_to_owned()
+                                .ok_or(FnExecError::unexpected_data_error(
+                                    "unable to own the `BorrowObject`",
+                                ))?
+                        } else {
+                            Object::None
+                        }
+                    }
+                };
+
+                Ok(DynEntry::new(prop_obj))
             } else {
-                Ok(entry.as_ref().clone())
-            }
-        } else {
-            Ok((Object::None).into())
-        }
-    }
-
-    fn get_key(&self, entry: &Arc<Entry>, prop_key: &PropKey) -> FnExecResult<Entry> {
-        if let Some(element) = entry.as_graph_element() {
-            let prop_obj = match prop_key {
-                PropKey::Id => element.id().into(),
-                PropKey::Label => element
-                    .label()
-                    .map(|label| label.into())
-                    .unwrap_or(Object::None),
-                PropKey::Len => (element.len() as u64).into(),
-                PropKey::All => {
-                    let details = element
-                        .details()
-                        .ok_or(FnExecError::unexpected_data_error(&format!(
-                            "Get `PropKey::All` on {:?}",
-                            entry,
-                        )))?;
-
-                    if let Some(properties) = details.get_all_properties() {
-                        properties
-                            .into_iter()
-                            .map(|(key, value)| {
-                                let obj_key: Object = match key {
-                                    NameOrId::Str(str) => str.into(),
-                                    NameOrId::Id(id) => id.into(),
-                                };
-                                (obj_key, value)
-                            })
-                            .collect::<Vec<(Object, Object)>>()
-                            .into()
-                    } else {
-                        Object::None
-                    }
-                }
-                PropKey::Key(key) => {
-                    let details = element
-                        .details()
-                        .ok_or(FnExecError::unexpected_data_error(&format!(
-                            "Get `PropKey::Key` of {:?} on {:?}",
-                            key, entry,
-                        )))?;
-                    if let Some(properties) = details.get_property(key) {
-                        properties
-                            .try_to_owned()
-                            .ok_or(FnExecError::unexpected_data_error("unable to own the `BorrowObject`"))?
-                    } else {
-                        Object::None
-                    }
-                }
-            };
-
-            Ok(prop_obj.into())
-        } else {
-            Err(FnExecError::unexpected_data_error(&format!(
-                "
+                Err(FnExecError::unexpected_data_error(&format!(
+                    "
                 Get key failed since get details from a none-graph element {:?} ",
-                entry
-            )))
+                    entry
+                )))
+            }
         }
     }
 }
@@ -199,6 +193,7 @@ pub(crate) mod tests {
     use ir_common::{KeyId, LabelId};
 
     use super::*;
+    use crate::process::entry::Entry;
 
     pub const TAG_A: KeyId = 0;
     pub const TAG_B: KeyId = 1;
@@ -302,9 +297,9 @@ pub(crate) mod tests {
     fn test_get_none_tag_entry() {
         let tag_key = TagKey { tag: None, key: None };
         let record = init_record();
-        let expected = object!(10).into();
+        let expected = object!(10);
         let entry = tag_key.get_arc_entry(&record).unwrap();
-        assert_eq!(entry.as_ref().clone(), expected)
+        assert_eq!(entry.as_object().unwrap().clone(), expected)
     }
 
     #[test]
@@ -313,7 +308,7 @@ pub(crate) mod tests {
         let expected = init_vertex2();
         let record = init_record();
         let entry = tag_key.get_arc_entry(&record).unwrap();
-        if let Some(element) = entry.as_graph_vertex() {
+        if let Some(element) = entry.as_vertex() {
             assert_eq!(element.id(), expected.id());
         } else {
             assert!(false);
@@ -325,14 +320,13 @@ pub(crate) mod tests {
         let tag_key = TagKey { tag: Some((0 as KeyId).into()), key: Some(PropKey::Key("age".into())) };
         let expected = 27;
         let record = init_record();
-        let entry = tag_key.get_arc_entry(&record).unwrap();
-        match entry.as_ref() {
-            Entry::OffGraph(obj) => {
-                assert_eq!(obj.clone(), object!(expected));
-            }
-            _ => {
-                assert!(false);
-            }
-        }
+        let entry = tag_key
+            .get_arc_entry(&record)
+            .unwrap()
+            .as_object()
+            .unwrap()
+            .clone();
+
+        assert_eq!(entry, object!(expected));
     }
 }

@@ -121,6 +121,8 @@ pub enum FnExecError {
     AccumError(String),
     /// Not supported error
     UnSupported(String),
+    /// Unreachable error
+    Unreachable,
 }
 
 impl FnExecError {
@@ -151,6 +153,7 @@ impl std::fmt::Display for FnExecError {
             FnExecError::UnExpectedData(e) => write!(f, "Unexpected data type in exec {}", e),
             FnExecError::AccumError(e) => write!(f, "Accum error in exec {}", e),
             FnExecError::UnSupported(e) => write!(f, "Op not supported error in exec {}", e),
+            FnExecError::Unreachable => write!(f, "Unreachable error in exec"),
         }
     }
 }

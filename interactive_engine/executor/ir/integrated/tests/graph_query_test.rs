@@ -28,7 +28,7 @@ mod test {
     use pegasus_client::builder::*;
     use pegasus_server::JobRequest;
     use prost::Message;
-    use runtime::process::record::Entry;
+    use runtime::process::entry::Entry;
 
     use crate::common::test::*;
 
@@ -75,7 +75,7 @@ mod test {
             match result {
                 Ok(res) => {
                     let entry = parse_result(res).unwrap();
-                    if let Some(vertex) = entry.get(None).unwrap().as_graph_vertex() {
+                    if let Some(vertex) = entry.get(None).unwrap().as_vertex() {
                         result_collection.push(vertex.id());
                     }
                 }
@@ -206,9 +206,8 @@ mod test {
             match result {
                 Ok(res) => {
                     let record = parse_result(res).unwrap();
-                    if let Entry::OffGraph(obj) = record.get(None).unwrap().as_ref() {
-                        result_collection.push(obj.to_string())
-                    }
+                    let obj = record.get(None).unwrap().as_object().unwrap();
+                    result_collection.push(obj.to_string())
                 }
                 Err(e) => {
                     panic!("err result {:?}", e);
@@ -238,9 +237,8 @@ mod test {
             match result {
                 Ok(res) => {
                     let record = parse_result(res).unwrap();
-                    if let Entry::OffGraph(obj) = record.get(None).unwrap().as_ref() {
-                        result_collection.push(obj.to_string())
-                    }
+                    let obj = record.get(None).unwrap().as_object().unwrap();
+                    result_collection.push(obj.to_string())
                 }
                 Err(e) => {
                     panic!("err result {:?}", e);

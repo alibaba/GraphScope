@@ -14,7 +14,6 @@
 //! limitations under the License.
 
 use std::convert::{TryFrom, TryInto};
-use std::sync::Arc;
 
 use graph_proxy::utils::expr::eval::{Evaluate, Evaluator};
 use ir_common::error::ParsePbError;
@@ -24,9 +23,10 @@ use ir_common::KeyId;
 use pegasus::api::function::{FilterMapFunction, FnResult};
 
 use crate::error::{FnExecResult, FnGenResult};
+use crate::process::entry::DynEntry;
 use crate::process::operator::map::FilterMapFuncGen;
 use crate::process::operator::TagKey;
-use crate::process::record::{Entry, Record};
+use crate::process::record::Record;
 
 /// Project entries with specified tags or further their properties.
 /// Notice that when projecting a single column, if the result is a None-Entry,
@@ -51,11 +51,11 @@ pub enum Projector {
 //    we may need to further distinguish the cases of none-exist tags (filtering case) and none-exist properties (output none-entry).
 // 2. When projecting multiple columns, even all projected columns are none-entry, the record won't be filtered for now.
 //    This seems ambiguous. But multi-column project always appears in the end of the query. Can modify this logic if necessary.
-fn exec_projector(input: &Record, projector: &Projector) -> FnExecResult<Arc<Entry>> {
+fn exec_projector(input: &Record, projector: &Projector) -> FnExecResult<DynEntry> {
     let entry = match projector {
         Projector::ExprProjector(evaluator) => {
-            let projected_result = evaluator.eval::<Entry, Record>(Some(&input))?;
-            Arc::new(projected_result.into())
+            let projected_result = evaluator.eval::<DynEntry, Record>(Some(&input))?;
+            DynEntry::new(projected_result)
         }
         Projector::GraphElementProjector(tag_key) => tag_key.get_arc_entry(input)?,
     };
@@ -161,12 +161,13 @@ mod tests {
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
 
+    use crate::process::entry::Entry;
     use crate::process::operator::map::FilterMapFuncGen;
     use crate::process::operator::tests::{
         init_source, init_source_with_multi_tags, init_source_with_tag, init_vertex1, init_vertex2,
         to_expr_var_pb, to_expr_vars_pb, PERSON_LABEL, TAG_A, TAG_B, TAG_C, TAG_D, TAG_E,
     };
-    use crate::process::record::{Entry, Record};
+    use crate::process::record::Record;
 
     fn project_test(source: Vec<Record>, project_opr_pb: pb::Project) -> ResultStream<Record> {
         let conf = JobConf::new("project_test");
@@ -198,12 +199,13 @@ mod tests {
         let mut result = project_test(init_source(), project_opr_pb);
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
-            match res.get(None).unwrap().as_ref() {
-                Entry::OffGraph(val) => {
-                    object_result.push(val.clone());
-                }
-                _ => {}
-            }
+            object_result.push(
+                res.get(None)
+                    .unwrap()
+                    .as_object()
+                    .unwrap()
+                    .clone(),
+            );
         }
         let expected_result = vec![object!(1), object!(2)];
         assert_eq!(object_result, expected_result);
@@ -225,12 +227,13 @@ mod tests {
         while let Some(Ok(res)) = result.next() {
             let a_entry = res.get(Some(TAG_A));
             assert_eq!(a_entry, None);
-            match res.get(Some(TAG_B)).unwrap().as_ref() {
-                Entry::OffGraph(val) => {
-                    object_result.push(val.clone());
-                }
-                _ => {}
-            }
+            object_result.push(
+                res.get(Some(TAG_B))
+                    .unwrap()
+                    .as_object()
+                    .unwrap()
+                    .clone(),
+            );
         }
         let expected_result = vec![object!("marko"), object!("vadas")];
         assert_eq!(object_result, expected_result);
@@ -249,12 +252,13 @@ mod tests {
         let mut result = project_test(init_source_with_tag(), project_opr_pb);
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
-            match res.get(None).unwrap().as_ref() {
-                Entry::OffGraph(val) => {
-                    object_result.push(val.clone());
-                }
-                _ => {}
-            }
+            object_result.push(
+                res.get(None)
+                    .unwrap()
+                    .as_object()
+                    .unwrap()
+                    .clone(),
+            );
         }
         let expected_result = vec![object!(1), object!(2)];
         assert_eq!(object_result, expected_result);
@@ -281,14 +285,17 @@ mod tests {
         while let Some(Ok(res)) = result.next() {
             // head should be None
             assert_eq!(res.get(None), None);
-            let age_val = res.get(Some(TAG_B)).unwrap();
-            let name_val = res.get(Some(TAG_C)).unwrap();
-            match (age_val.as_ref(), name_val.as_ref()) {
-                (Entry::OffGraph(age), Entry::OffGraph(name)) => {
-                    object_result.push((age.clone(), name.clone()));
-                }
-                _ => {}
-            }
+            let age_val = res
+                .get(Some(TAG_B))
+                .unwrap()
+                .as_object()
+                .unwrap();
+            let name_val = res
+                .get(Some(TAG_C))
+                .unwrap()
+                .as_object()
+                .unwrap();
+            object_result.push((age_val.clone(), name_val.clone()));
         }
         let expected_result = vec![(object!(29), object!("marko")), (object!(27), object!("vadas"))];
         assert_eq!(object_result, expected_result);
@@ -314,14 +321,17 @@ mod tests {
 
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
-            let age_val = res.get(Some(TAG_B)).unwrap();
-            let name_val = res.get(Some(TAG_C)).unwrap();
-            match (age_val.as_ref(), name_val.as_ref()) {
-                (Entry::OffGraph(age), Entry::OffGraph(name)) => {
-                    object_result.push((age.clone(), name.clone()));
-                }
-                _ => {}
-            }
+            let age = res
+                .get(Some(TAG_B))
+                .unwrap()
+                .as_object()
+                .unwrap();
+            let name = res
+                .get(Some(TAG_C))
+                .unwrap()
+                .as_object()
+                .unwrap();
+            object_result.push((age.clone(), name.clone()));
         }
         let expected_result = vec![(object!(29), object!("marko")), (object!(27), object!("vadas"))];
         assert_eq!(object_result, expected_result);
@@ -367,15 +377,22 @@ mod tests {
 
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
-            let a_age_val = res.get(Some(TAG_C)).unwrap();
-            let a_name_val = res.get(Some(TAG_D)).unwrap();
-            let b_name_val = res.get(Some(TAG_E)).unwrap();
-            match (a_age_val.as_ref(), a_name_val.as_ref(), b_name_val.as_ref()) {
-                (Entry::OffGraph(a_age), Entry::OffGraph(a_name), Entry::OffGraph(b_name)) => {
-                    object_result.push((a_age.clone(), a_name.clone(), b_name.clone()));
-                }
-                _ => {}
-            }
+            let a_age = res
+                .get(Some(TAG_C))
+                .unwrap()
+                .as_object()
+                .unwrap();
+            let a_name = res
+                .get(Some(TAG_D))
+                .unwrap()
+                .as_object()
+                .unwrap();
+            let b_name = res
+                .get(Some(TAG_E))
+                .unwrap()
+                .as_object()
+                .unwrap();
+            object_result.push((a_age.clone(), a_name.clone(), b_name.clone()));
         }
         let expected_result = vec![
             (object!(29), object!("marko"), object!("josh")),
@@ -401,16 +418,15 @@ mod tests {
             let v = res
                 .get(Some(TAG_A))
                 .unwrap()
-                .as_graph_vertex()
+                .as_vertex()
                 .unwrap();
-            let b_entry = res.get(Some(TAG_B)).unwrap().as_ref();
-            match b_entry {
-                Entry::OffGraph(val) => {
-                    a_results.push(v.id());
-                    b_results.push(val.clone());
-                }
-                _ => {}
-            }
+            a_results.push(v.id());
+            let b_val = res
+                .get(Some(TAG_B))
+                .unwrap()
+                .as_object()
+                .unwrap();
+            b_results.push(b_val.clone());
         }
         let expected_a_result = vec![1, 2];
         let expected_b_result = vec![object!(29), object!(27)];
@@ -437,14 +453,17 @@ mod tests {
         let mut result = project_test(init_source(), project_opr_pb);
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
-            let age_val = res.get(Some(TAG_B)).unwrap();
-            let name_val = res.get(Some(TAG_C)).unwrap();
-            match (age_val.as_ref(), name_val.as_ref()) {
-                (Entry::OffGraph(age), Entry::OffGraph(name)) => {
-                    object_result.push((age.clone(), name.clone()));
-                }
-                _ => {}
-            }
+            let age = res
+                .get(Some(TAG_B))
+                .unwrap()
+                .as_object()
+                .unwrap();
+            let name = res
+                .get(Some(TAG_C))
+                .unwrap()
+                .as_object()
+                .unwrap();
+            object_result.push((age.clone(), name.clone()));
         }
         let expected_result = vec![(object!(29), object!("marko")), (object!(27), object!("vadas"))];
         assert_eq!(object_result, expected_result);
@@ -492,12 +511,13 @@ mod tests {
         let mut result = project_test(init_source(), project_opr_pb);
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
-            match res.get(None).unwrap().as_ref() {
-                Entry::OffGraph(val) => {
-                    object_result.push(val.clone());
-                }
-                _ => {}
-            }
+            object_result.push(
+                res.get(None)
+                    .unwrap()
+                    .as_object()
+                    .unwrap()
+                    .clone(),
+            );
         }
         let expected_result = vec![
             object!(vec![object!(29), object!("marko")]),
@@ -519,12 +539,13 @@ mod tests {
         let mut result = project_test(init_source(), project_opr_pb);
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
-            match res.get(None).unwrap().as_ref() {
-                Entry::OffGraph(val) => {
-                    object_result.push(val.clone());
-                }
-                _ => {}
-            }
+            object_result.push(
+                res.get(None)
+                    .unwrap()
+                    .as_object()
+                    .unwrap()
+                    .clone(),
+            );
         }
         let expected_result = vec![
             Object::KV(
@@ -566,12 +587,13 @@ mod tests {
         let mut result = project_test(init_source_with_tag(), project_opr_pb);
         let mut object_result = vec![];
         while let Some(Ok(res)) = result.next() {
-            match res.get(None).unwrap().as_ref() {
-                Entry::OffGraph(val) => {
-                    object_result.push(val.clone());
-                }
-                _ => {}
-            }
+            object_result.push(
+                res.get(None)
+                    .unwrap()
+                    .as_object()
+                    .unwrap()
+                    .clone(),
+            );
         }
 
         let expected_result = vec![
@@ -613,10 +635,16 @@ mod tests {
         let mut result = project_test(init_source_with_multi_tags(), project_opr_pb);
         let mut results = vec![];
         while let Some(Ok(res)) = result.next() {
-            let a_entry = res.get(Some(TAG_C)).unwrap().as_ref();
-            let b_entry = res.get(Some(TAG_D)).unwrap().as_ref();
-            let v1 = a_entry.as_graph_vertex().unwrap();
-            let v2 = b_entry.as_graph_vertex().unwrap();
+            let v1 = res
+                .get(Some(TAG_C))
+                .unwrap()
+                .as_vertex()
+                .unwrap();
+            let v2 = res
+                .get(Some(TAG_D))
+                .unwrap()
+                .as_vertex()
+                .unwrap();
             results.push(v1.id());
             results.push(v2.id());
         }
@@ -682,10 +710,18 @@ mod tests {
             result_cnt += 1;
             // head should be None
             assert_eq!(res.get(None), None);
-            let c_val = res.get(Some(TAG_C)).unwrap();
-            let d_val = res.get(Some(TAG_D)).unwrap();
-            match (c_val.as_ref(), d_val.as_ref()) {
-                (Entry::OffGraph(Object::None), Entry::OffGraph(Object::None)) => {
+            let c_val = res
+                .get(Some(TAG_C))
+                .unwrap()
+                .as_object()
+                .unwrap();
+            let d_val = res
+                .get(Some(TAG_D))
+                .unwrap()
+                .as_object()
+                .unwrap();
+            match (c_val, d_val) {
+                (Object::None, Object::None) => {
                     assert!(true)
                 }
                 _ => {
@@ -718,10 +754,18 @@ mod tests {
             result_cnt += 1;
             // head should be None
             assert_eq!(res.get(None), None);
-            let c_val = res.get(Some(TAG_C)).unwrap();
-            let d_val = res.get(Some(TAG_D)).unwrap();
-            match (c_val.as_ref(), d_val.as_ref()) {
-                (Entry::OffGraph(Object::None), Entry::OffGraph(Object::None)) => {
+            let c_val = res
+                .get(Some(TAG_C))
+                .unwrap()
+                .as_object()
+                .unwrap();
+            let d_val = res
+                .get(Some(TAG_D))
+                .unwrap()
+                .as_object()
+                .unwrap();
+            match (c_val, d_val) {
+                (Object::None, Object::None) => {
                     assert!(true)
                 }
                 _ => {
