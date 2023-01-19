@@ -18,7 +18,6 @@
     <properties>
         <jackson.version>2.14.0-rc1</jackson.version>
         <jackson.databind.version>2.14.0-rc1</jackson.databind.version>
-        <commons.langs.version>3.12.0</commons.langs.version>
         <commons.io.version>2.7</commons.io.version>
         <protobuf.version>3.19.6</protobuf.version>
         <protoc.grpc.version>1.42.1</protoc.grpc.version>
@@ -36,6 +35,7 @@
         <common.io.version>2.6</common.io.version>
         <antlr4.version>4.9.1</antlr4.version>
         <calcite.version>1.32.0</calcite.version>
+        <immutables.version>2.9.3</immutables.version>
     </properties>
 
     <dependencies>
@@ -57,7 +57,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>${commons.langs.version}</version>
+            <version>${commons.lang3.version}</version>
         </dependency>
         <dependency>
             <groupId>net.java.dev.jna</groupId>
@@ -108,6 +108,17 @@
             <groupId>org.apache.calcite</groupId>
             <artifactId>calcite-core</artifactId>
             <version>${calcite.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.maxgraph</groupId>
+            <artifactId>maxgraph-sdk-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.immutables</groupId>
+            <artifactId>value</artifactId>
+            <version>${immutables.version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
