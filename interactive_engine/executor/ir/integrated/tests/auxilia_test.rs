@@ -31,6 +31,7 @@ mod test {
     use ir_common::NameOrId;
     use pegasus::api::{Map, Sink};
     use pegasus::JobConf;
+    use runtime::process::entry::Entry;
     use runtime::process::operator::flatmap::FlatMapFuncGen;
     use runtime::process::operator::map::FilterMapFuncGen;
     use runtime::process::operator::source::SourceOperator;
@@ -84,11 +85,7 @@ mod test {
         let expected_ids = vec![2, 4];
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record
-                .get(Some(TAG_A))
-                .unwrap()
-                .as_graph_vertex()
-            {
+            if let Some(element) = record.get(Some(TAG_A)).unwrap().as_vertex() {
                 result_ids.push(element.id());
             }
         }
@@ -132,7 +129,7 @@ mod test {
         let expected_ids_with_prop = vec![(2, "vadas".to_string().into()), (4, "josh".to_string().into())];
         let mut result_ids_with_prop = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
                 result_ids_with_prop.push((
                     element.id(),
                     element
@@ -185,11 +182,7 @@ mod test {
         let expected_ids_with_prop = vec![(2, "vadas".to_string().into()), (4, "josh".to_string().into())];
         let mut result_ids_with_prop = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record
-                .get(Some(TAG_A))
-                .unwrap()
-                .as_graph_vertex()
-            {
+            if let Some(element) = record.get(Some(TAG_A)).unwrap().as_vertex() {
                 result_ids_with_prop.push((
                     element.id(),
                     element
@@ -246,7 +239,7 @@ mod test {
         let expected_ids_with_prop = vec![(2, "vadas".to_string().into())];
         let mut result_ids_with_prop = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
                 result_ids_with_prop.push((
                     element.id(),
                     element
@@ -303,11 +296,7 @@ mod test {
         let expected_ids = vec![2];
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record
-                .get(Some(TAG_A))
-                .unwrap()
-                .as_graph_vertex()
-            {
+            if let Some(element) = record.get(Some(TAG_A)).unwrap().as_vertex() {
                 result_ids.push(element.id());
             }
         }
@@ -357,7 +346,7 @@ mod test {
 
         let mut results: Vec<(Object, Object)> = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
                 let details = element.details().unwrap();
                 results.push((
                     details
@@ -413,7 +402,7 @@ mod test {
 
         let mut results: Vec<Object> = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
                 let details = element.details().unwrap();
                 results.push(
                     details
@@ -471,7 +460,7 @@ mod test {
 
         let mut results: Vec<Object> = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
                 let details = element.details().unwrap();
                 results.push(
                     details

@@ -19,7 +19,7 @@ mod path_end;
 mod path_start;
 mod project;
 
-pub use expand_intersect::Intersection;
+pub use expand_intersect::IntersectionEntry;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use pegasus::api::function::{FilterMapFunction, MapFunction};

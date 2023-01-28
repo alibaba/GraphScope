@@ -96,12 +96,13 @@ mod tests {
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
 
+    use crate::process::entry::{CollectionEntry, DynEntry, Entry};
     use crate::process::functions::GroupGen;
     use crate::process::operator::accum::accumulator::Accumulator;
     use crate::process::operator::tests::{
         init_source, init_vertex1, init_vertex2, PERSON_LABEL, TAG_A, TAG_B, TAG_C,
     };
-    use crate::process::record::{Entry, Record};
+    use crate::process::record::Record;
 
     // v1: marko, 29;
     // v2: vadas, 27;
@@ -166,18 +167,18 @@ mod tests {
         let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
         let mut result = group_test(group_opr_pb);
         let mut group_result = HashSet::new();
-        let expected_result: HashSet<(Entry, Entry)> = [
-            (init_vertex1().into(), Entry::Collection(vec![(init_vertex1().into())])),
-            (init_vertex2().into(), Entry::Collection(vec![(init_vertex2().into())])),
-            (init_vertex3().into(), Entry::Collection(vec![(init_vertex3().into())])),
+        let expected_result: HashSet<(DynEntry, DynEntry)> = [
+            (init_vertex1().into(), CollectionEntry { inner: vec![init_vertex1().into()] }.into()),
+            (init_vertex2().into(), CollectionEntry { inner: vec![init_vertex2().into()] }.into()),
+            (init_vertex3().into(), CollectionEntry { inner: vec![init_vertex3().into()] }.into()),
         ]
         .iter()
         .cloned()
         .collect();
 
         while let Some(Ok(result)) = result.next() {
-            let key = result.get(Some(TAG_A)).unwrap().as_ref();
-            let val = result.get(Some(TAG_B)).unwrap().as_ref();
+            let key = result.get(Some(TAG_A)).unwrap();
+            let val = result.get(Some(TAG_B)).unwrap();
             group_result.insert((key.clone(), val.clone()));
         }
         assert_eq!(group_result, expected_result);
@@ -197,23 +198,30 @@ mod tests {
         };
         let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
         let mut result = group_test(group_opr_pb);
-        let mut group_result = HashSet::new();
-        let expected_result: HashSet<(Entry, Entry)> = [
+        let mut group_result = vec![];
+        let mut expected_result: Vec<(Object, DynEntry)> = vec![
             (
-                object!("marko").into(),
-                Entry::Collection(vec![(init_vertex1().into()), (init_vertex3().into())]),
+                object!("marko"),
+                DynEntry::new(CollectionEntry {
+                    inner: vec![DynEntry::new(init_vertex1()), DynEntry::new(init_vertex3())],
+                }),
             ),
-            (object!("vadas").into(), Entry::Collection(vec![(init_vertex2().into())])),
-        ]
-        .iter()
-        .cloned()
-        .collect();
-
+            (
+                object!("vadas"),
+                DynEntry::new(CollectionEntry { inner: vec![DynEntry::new(init_vertex2())] }),
+            ),
+        ];
         while let Some(Ok(result)) = result.next() {
-            let key = result.get(Some(TAG_A)).unwrap().as_ref();
-            let val = result.get(Some(TAG_B)).unwrap().as_ref();
-            group_result.insert((key.clone(), val.clone()));
+            let key = result
+                .get(Some(TAG_A))
+                .unwrap()
+                .as_object()
+                .unwrap();
+            let val = result.get(Some(TAG_B)).unwrap();
+            group_result.push((key.clone(), val.clone()));
         }
+        expected_result.sort_by(|o1, o2| o1.0.cmp(&o2.0));
+        group_result.sort_by(|o1, o2| o1.0.cmp(&o2.0));
         assert_eq!(group_result, expected_result);
     }
 
@@ -237,18 +245,18 @@ mod tests {
             pb::GroupBy { mappings: vec![key_alias_1, key_alias_2], functions: vec![function] };
         let mut result = group_test(group_opr_pb);
         let mut group_result = HashSet::new();
-        let expected_result: HashSet<((Entry, Entry), Entry)> = [
+        let expected_result: HashSet<((DynEntry, DynEntry), DynEntry)> = [
             (
                 (object!(1).into(), object!("marko").into()),
-                Entry::Collection(vec![(init_vertex1().into())]),
+                CollectionEntry { inner: vec![init_vertex1().into()] }.into(),
             ),
             (
                 (object!(2).into(), object!("vadas").into()),
-                Entry::Collection(vec![(init_vertex2().into())]),
+                CollectionEntry { inner: vec![init_vertex2().into()] }.into(),
             ),
             (
                 (object!(3).into(), object!("marko").into()),
-                Entry::Collection(vec![(init_vertex3().into())]),
+                CollectionEntry { inner: vec![init_vertex3().into()] }.into(),
             ),
         ]
         .iter()
@@ -256,9 +264,9 @@ mod tests {
         .collect();
 
         while let Some(Ok(result)) = result.next() {
-            let key_1 = result.get(Some(TAG_A)).unwrap().as_ref();
-            let key_2 = result.get(Some(TAG_B)).unwrap().as_ref();
-            let val = result.get(Some(TAG_C)).unwrap().as_ref();
+            let key_1 = result.get(Some(TAG_A)).unwrap();
+            let key_2 = result.get(Some(TAG_B)).unwrap();
+            let val = result.get(Some(TAG_C)).unwrap();
             group_result.insert(((key_1.clone(), key_2.clone()), val.clone()));
         }
         assert_eq!(group_result, expected_result);
@@ -285,18 +293,18 @@ mod tests {
             pb::GroupBy { mappings: vec![key_alias], functions: vec![function_1, function_2] };
         let mut result = group_test(group_opr_pb);
         let mut group_result = HashSet::new();
-        let expected_result: HashSet<(Entry, (Entry, Entry))> = [
+        let expected_result: HashSet<(DynEntry, (DynEntry, DynEntry))> = [
             (
                 init_vertex1().into(),
-                (Entry::Collection(vec![(init_vertex1().into())]), object!(1u64).into()),
+                (CollectionEntry { inner: vec![init_vertex1().into()] }.into(), object!(1u64).into()),
             ),
             (
                 init_vertex2().into(),
-                (Entry::Collection(vec![(init_vertex2().into())]), object!(1u64).into()),
+                (CollectionEntry { inner: vec![init_vertex2().into()] }.into(), object!(1u64).into()),
             ),
             (
                 init_vertex3().into(),
-                (Entry::Collection(vec![(init_vertex3().into())]), object!(1u64).into()),
+                (CollectionEntry { inner: vec![init_vertex3().into()] }.into(), object!(1u64).into()),
             ),
         ]
         .iter()
@@ -304,9 +312,9 @@ mod tests {
         .collect();
 
         while let Some(Ok(result)) = result.next() {
-            let key = result.get(Some(TAG_C)).unwrap().as_ref();
-            let val_1 = result.get(Some(TAG_A)).unwrap().as_ref();
-            let val_2 = result.get(Some(TAG_B)).unwrap().as_ref();
+            let key = result.get(Some(TAG_C)).unwrap();
+            let val_1 = result.get(Some(TAG_A)).unwrap();
+            let val_2 = result.get(Some(TAG_B)).unwrap();
             group_result.insert((key.clone(), (val_1.clone(), val_2.clone())));
         }
         assert_eq!(group_result, expected_result);
@@ -327,7 +335,7 @@ mod tests {
         let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
         let mut result = group_test(group_opr_pb);
         let mut group_result = HashSet::new();
-        let expected_result: HashSet<(Entry, Entry)> = [
+        let expected_result: HashSet<(DynEntry, DynEntry)> = [
             (init_vertex1().into(), object!(1u64).into()),
             (init_vertex2().into(), object!(1u64).into()),
             (init_vertex3().into(), object!(1u64).into()),
@@ -336,8 +344,8 @@ mod tests {
         .cloned()
         .collect();
         while let Some(Ok(result)) = result.next() {
-            let key = result.get(Some(TAG_A)).unwrap().as_ref();
-            let val = result.get(Some(TAG_B)).unwrap().as_ref();
+            let key = result.get(Some(TAG_A)).unwrap();
+            let val = result.get(Some(TAG_B)).unwrap();
             group_result.insert((key.clone(), val.clone()));
         }
         assert_eq!(group_result, expected_result);
@@ -358,7 +366,7 @@ mod tests {
         let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
         let mut result = group_test(group_opr_pb);
         let mut group_result = HashSet::new();
-        let expected_result: HashSet<(Entry, Entry)> = [
+        let expected_result: HashSet<(DynEntry, DynEntry)> = [
             (object!("marko").into(), object!(2u64).into()),
             (object!("vadas").into(), object!(1u64).into()),
         ]
@@ -366,8 +374,8 @@ mod tests {
         .cloned()
         .collect();
         while let Some(Ok(result)) = result.next() {
-            let key = result.get(Some(TAG_A)).unwrap().as_ref();
-            let val = result.get(Some(TAG_B)).unwrap().as_ref();
+            let key = result.get(Some(TAG_A)).unwrap();
+            let val = result.get(Some(TAG_B)).unwrap();
             group_result.insert((key.clone(), val.clone()));
         }
         assert_eq!(group_result, expected_result);
@@ -388,15 +396,15 @@ mod tests {
         let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
         let mut result = group_test(group_opr_pb);
         let mut group_result = HashSet::new();
-        let expected_result: HashSet<(Entry, Entry)> =
+        let expected_result: HashSet<(DynEntry, DynEntry)> =
             [(object!("vadas").into(), object!(27).into()), (object!("marko").into(), object!(27).into())]
                 .iter()
                 .cloned()
                 .collect();
 
         while let Some(Ok(result)) = result.next() {
-            let key = result.get(Some(TAG_A)).unwrap().as_ref();
-            let val = result.get(Some(TAG_B)).unwrap().as_ref();
+            let key = result.get(Some(TAG_A)).unwrap();
+            let val = result.get(Some(TAG_B)).unwrap();
             group_result.insert((key.clone(), val.clone()));
         }
         assert_eq!(group_result, expected_result);
@@ -417,15 +425,15 @@ mod tests {
         let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
         let mut result = group_test(group_opr_pb);
         let mut group_result = HashSet::new();
-        let expected_result: HashSet<(Entry, Entry)> =
+        let expected_result: HashSet<(DynEntry, DynEntry)> =
             [(object!("marko").into(), object!(29).into()), (object!("vadas").into(), object!(27).into())]
                 .iter()
                 .cloned()
                 .collect();
 
         while let Some(Ok(result)) = result.next() {
-            let key = result.get(Some(TAG_A)).unwrap().as_ref();
-            let val = result.get(Some(TAG_B)).unwrap().as_ref();
+            let key = result.get(Some(TAG_A)).unwrap();
+            let val = result.get(Some(TAG_B)).unwrap();
             group_result.insert((key.clone(), val.clone()));
         }
         assert_eq!(group_result, expected_result);

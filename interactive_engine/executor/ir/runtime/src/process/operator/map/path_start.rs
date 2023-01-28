@@ -23,6 +23,7 @@ use ir_common::KeyId;
 use pegasus::api::function::{FilterMapFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenResult};
+use crate::process::entry::Entry;
 use crate::process::operator::map::FilterMapFuncGen;
 use crate::process::record::Record;
 
@@ -37,7 +38,7 @@ impl FilterMapFunction<Record, Record> for PathStartOperator {
     fn exec(&self, mut input: Record) -> FnResult<Option<Record>> {
         if let Some(entry) = input.get(self.start_tag) {
             let v = entry
-                .as_graph_vertex()
+                .as_vertex()
                 .ok_or(FnExecError::unexpected_data_error(&format!(
                     "tag {:?} does not refer to a graph vertex element in record {:?}",
                     self.start_tag, input

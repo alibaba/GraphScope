@@ -14,6 +14,8 @@
 //! limitations under the License.
 
 use core::any::TypeId;
+use pegasus_common::downcast::*;
+use pegasus_common::impl_as_any;
 use std::any::Any;
 use std::borrow::Cow;
 use std::cmp::Ordering;
@@ -417,6 +419,8 @@ pub enum Object {
     DynOwned(Box<dyn DynType>),
     None,
 }
+
+impl_as_any!(Object);
 
 impl ToString for Object {
     fn to_string(&self) -> String {

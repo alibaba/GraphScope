@@ -14,15 +14,17 @@
 //! limitations under the License.
 
 use std::convert::TryInto;
-use std::sync::Arc;
 
+use graph_proxy::apis::{DynDetails, Element, Vertex};
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::KeyId;
 use pegasus::api::function::{DynIter, FlatMapFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenResult};
+use crate::process::entry::{CollectionEntry, EntryType};
 use crate::process::operator::flatmap::FlatMapFuncGen;
-use crate::process::record::{Entry, Record};
+use crate::process::operator::map::IntersectionEntry;
+use crate::process::record::Record;
 
 #[derive(Debug)]
 /// Unfold the Collection entry referred by a given `tag`.
@@ -48,33 +50,38 @@ impl FlatMapFunction<Record, Record> for UnfoldOperator {
         // take head in case that head entry is an arc clone of `self.tag`;
         // besides, head will be replaced by the items in collections anyway.
         input.take(None);
-        if let Some(entry) = Arc::get_mut(&mut entry) {
-            match entry {
-                Entry::Collection(collection) => {
+        if let Some(entry) = entry.get_mut() {
+            match entry.get_type() {
+                EntryType::Collection => {
+                    let collection = entry
+                        .as_any_mut()
+                        .downcast_mut::<CollectionEntry>()
+                        .unwrap();
                     let mut res = Vec::with_capacity(collection.len());
-                    for item in collection.drain(..) {
+                    for item in collection.inner.drain(..) {
                         let mut new_entry = input.clone();
                         new_entry.append(item, self.alias);
                         res.push(new_entry);
                     }
                     Ok(Box::new(res.into_iter()))
                 }
-                Entry::Intersection(intersection) => {
+                EntryType::Intersection => {
+                    let intersection = entry
+                        .as_any_mut()
+                        .downcast_mut::<IntersectionEntry>()
+                        .unwrap();
                     let mut res = Vec::with_capacity(intersection.len());
-                    for item in intersection.iter() {
+                    for item in intersection.drain() {
                         let mut new_entry = input.clone();
-                        new_entry.append(item.clone(), self.alias);
+                        new_entry.append(Vertex::new(item, None, DynDetails::default()), self.alias);
                         res.push(new_entry);
                     }
                     Ok(Box::new(res.into_iter()))
                 }
-                Entry::P(_) => {
-                    // TODO: to support path_unwinding
-                    Err(FnExecError::unsupported_error(&format!(
-                        "unfold path entry {:?} in UnfoldOperator",
-                        entry
-                    )))?
-                }
+                EntryType::Path => Err(FnExecError::unsupported_error(&format!(
+                    "unfold path entry {:?} in UnfoldOperator",
+                    entry
+                )))?,
                 _ => Err(FnExecError::unexpected_data_error(&format!(
                     "unfold entry {:?} in UnfoldOperator",
                     entry
@@ -116,6 +123,7 @@ mod tests {
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
 
+    use crate::process::entry::Entry;
     use crate::process::functions::FoldGen;
     use crate::process::operator::accum::accumulator::Accumulator;
     use crate::process::operator::flatmap::FlatMapFuncGen;
@@ -163,7 +171,7 @@ mod tests {
         let expected_result = vec![1, 2];
         let mut result_ids = vec![];
         while let Some(Ok(res)) = result.next() {
-            if let Some(v) = res.get(None).unwrap().as_graph_vertex() {
+            if let Some(v) = res.get(None).unwrap().as_vertex() {
                 result_ids.push(v.id());
             }
         }
@@ -186,7 +194,7 @@ mod tests {
         let expected_result = vec![1, 2];
         let mut result_ids = vec![];
         while let Some(Ok(res)) = result.next() {
-            if let Some(v) = res.get(None).unwrap().as_graph_vertex() {
+            if let Some(v) = res.get(None).unwrap().as_vertex() {
                 result_ids.push(v.id());
             }
         }

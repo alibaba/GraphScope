@@ -17,7 +17,6 @@ use dyn_type::{BorrowObject, Object};
 pub use edge::Edge;
 use ir_common::LabelId;
 pub use path::GraphPath;
-pub use path::VertexOrEdge;
 pub use property::{Details, DynDetails, PropKey, PropertyValue};
 pub use vertex::Vertex;
 
@@ -42,6 +41,7 @@ pub trait Element {
 }
 
 /// `GraphElement` is a special `Element` with extra properties of `id` and `label`.
+/// In common case, `GraphElement` refers to `Vertex` and `Edge`
 pub trait GraphElement: Element {
     fn id(&self) -> ID;
     fn label(&self) -> Option<LabelId>;
