@@ -22,6 +22,8 @@ option java_outer_classname = "GraphAlgebra";
 import "common.proto";
 import "expr.proto";
 import "schema.proto";
+import "type.proto";
+import "google/protobuf/wrappers.proto";
 
 // To project a relation on certain attributes or further their properties
 message Project {
@@ -227,18 +229,21 @@ message Scan {
   IndexPredicate idx_predicate = 4;
 }
 
-// It is typical to use the operator together with EdgeExpand or PathExpand, with the functionality of
-// obtaining some properties of the end vertex after the expansion.
+// It is typical to use the operator when:
+// 1. The input entry is an edge entry, and to obtain some properties (or filter) on the adjacent vertex of the input edge
+// 2. The input entry is a vertex entry, and directly obtain some properties (or filter) on the input vertex
 message GetV {
   enum VOpt {
-    // Getting the start vertex of the edge
+    // The case when getting the start vertex of the edge
     Start = 0;
-    // Getting the end vertex of the edge/path
+    // The case when getting the end vertex of the edge/path
     End = 1;
-    // Getting the other vertex of the edge. We are calibrating to Gremlin's bothE.otherV semantics
+    // The case when getting the other vertex of the edge. We are calibrating to Gremlin's bothE.otherV semantics
     Other = 2;
-    // Getting both vertices of the edge
+    // The case when getting both vertices of the edge
     Both = 3;
+    // The case when tag refers to vertices
+    Itself = 4;
   }
   // The tag that refers to the edge/path where the end vertex will be retrieved
   common.NameOrId tag = 1;
@@ -497,37 +502,9 @@ message LogicalPlan {
   repeated int32 roots = 2;
 }
 
-// The entity data type, i.e., type of vertex or edge.
-message EntityType {
-  message PropType {
-    int32 prop_id = 1;
-    common.DataType type = 2;
-  }
-  map<int32, PropType> label_prop_types = 1;
-}
-
-// The path data type.
-message PathType {
-  repeated EntityType entity_types = 1;
-}
-
-// IrDataType, which could be either basic type, entity type or path type.
-message IrDataType {
-  oneof type {
-    common.DataType data_type = 1;
-    EntityType entity_type = 2;
-    PathType path_type = 3;
-  }
-}
-
-message IrColType {
-  IrDataType type = 1;
-  int32 alias = 2;
-}
-
 message Repartition {
   message Shuffle {
-    optional int32 shuffle_key = 1;
+    google.protobuf.Int32Value shuffle_key = 1;
   }
   message Broadcast {}
   oneof Strategy {
@@ -563,9 +540,12 @@ message PhysicalApply {
     repeated common.Variable keys = 2;
     // The subtask will be perform on certain tags as keys of the input relation
     PhysicalPlan sub_plan = 3;
-    // Define the alias of output from `Apply`
-    optional int32 alias = 4;
+    // Define the alias of output from `Apply`. Optional Field.
+    google.protobuf.Int32Value alias = 4;
 }
+
+// A dummy node to delegate a source opr for multiple scan cases.
+message Dummy {}
 
 message PhysicalOpr {
   message Operator {
@@ -584,16 +564,21 @@ message PhysicalOpr {
       PhysicalUnion union = 12;
       PhysicalIntersect intersect = 13;
       Repartition repartition = 14;
+      Dummy dummy = 16;
       // Saving the room for relational operators
       GetV vertex = 30;
       EdgeExpand edge = 31;
       PathExpand path = 32;
     }
   }
+  message ColumnType {
+    common.IrDataType type = 1;
+    int32 alias = 2;
+  }
   // The node's operator
   Operator opr = 1;
   // The type of outputs of operator
-  repeated IrColType op_type = 2;
+  repeated ColumnType op_type = 2;
 }
 
 message PhysicalPlan {

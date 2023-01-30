@@ -16,16 +16,15 @@
 use std::fmt;
 use std::ops::{Deref, DerefMut};
 
-use ir_common::generated::algebra as algebra_pb;
+use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
 use pegasus::{BuildJobError, JobConf, ServerConf};
-//use pegasus_server::job_pb as pb;
 use pegasus_server::pb as pegasus_pb;
 use prost::Message;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Plan {
-    plan: Vec<algebra_pb::PhysicalOpr>,
+    plan: Vec<pb::PhysicalOpr>,
 }
 
 impl Default for Plan {
@@ -35,7 +34,7 @@ impl Default for Plan {
 }
 
 impl Deref for Plan {
-    type Target = Vec<algebra_pb::PhysicalOpr>;
+    type Target = Vec<pb::PhysicalOpr>;
 
     fn deref(&self) -> &Self::Target {
         &self.plan
@@ -48,134 +47,121 @@ impl DerefMut for Plan {
     }
 }
 
-pub type BinaryResource = Vec<u8>;
-
 impl Plan {
-    pub fn repartition(&mut self, repartition: algebra_pb::Repartition) -> &mut Self {
-        let op = algebra_pb::physical_opr::operator::OpKind::Repartition(repartition);
+    pub fn add_dummy_source(&mut self) -> &mut Self {
+        let op = pb::physical_opr::operator::OpKind::Dummy(pb::Dummy {});
+        self.plan.push(op.into());
+        self
+    }
+
+    pub fn add_scan_source(&mut self, scan: pb::Scan) -> &mut Self {
+        let op = pb::physical_opr::operator::OpKind::Scan(scan);
+        self.plan.push(op.into());
+        self
+    }
+
+    pub fn repartition(&mut self, repartition: pb::Repartition) -> &mut Self {
+        let op = pb::physical_opr::operator::OpKind::Repartition(repartition);
         self.plan.push(op.into());
         self
     }
 
     pub fn shuffle(&mut self, shuffle_key: Option<i32>) -> &mut Self {
-        let shuffle = algebra_pb::repartition::Shuffle { shuffle_key };
-        let repartition = algebra_pb::Repartition {
-            strategy: Some(algebra_pb::repartition::Strategy::ToAnother(shuffle)),
-        };
+        let shuffle = pb::repartition::Shuffle { shuffle_key };
+        let repartition = pb::Repartition { strategy: Some(pb::repartition::Strategy::ToAnother(shuffle)) };
         self.repartition(repartition)
     }
 
     pub fn broadcast(&mut self) -> &mut Self {
-        let repartition = algebra_pb::Repartition {
-            strategy: Some(algebra_pb::repartition::Strategy::ToOthers(
-                algebra_pb::repartition::Broadcast {},
-            )),
+        let repartition = pb::Repartition {
+            strategy: Some(pb::repartition::Strategy::ToOthers(pb::repartition::Broadcast {})),
         };
         self.repartition(repartition)
     }
 
-    pub fn scan(&mut self, scan: algebra_pb::Scan) -> &mut Self {
-        let op = algebra_pb::physical_opr::operator::OpKind::Scan(scan);
+    pub fn project(&mut self, project: pb::Project) -> &mut Self {
+        let op = pb::physical_opr::operator::OpKind::Project(project);
         self.plan.push(op.into());
         self
     }
 
-    pub fn project(&mut self, project: algebra_pb::Project) -> &mut Self {
-        let op = algebra_pb::physical_opr::operator::OpKind::Project(project);
+    pub fn select(&mut self, select: pb::Select) -> &mut Self {
+        let op = pb::physical_opr::operator::OpKind::Select(select);
         self.plan.push(op.into());
         self
     }
 
-    pub fn select(&mut self, select: algebra_pb::Select) -> &mut Self {
-        let op = algebra_pb::physical_opr::operator::OpKind::Select(select);
+    pub fn group(&mut self, group: pb::GroupBy) -> &mut Self {
+        let op = pb::physical_opr::operator::OpKind::GroupBy(group);
         self.plan.push(op.into());
         self
     }
 
-    pub fn group(&mut self, group: algebra_pb::GroupBy) -> &mut Self {
-        let op = algebra_pb::physical_opr::operator::OpKind::GroupBy(group);
+    pub fn order(&mut self, order: pb::OrderBy) -> &mut Self {
+        let op = pb::physical_opr::operator::OpKind::OrderBy(order);
         self.plan.push(op.into());
         self
     }
 
-    pub fn order(&mut self, order: algebra_pb::OrderBy) -> &mut Self {
-        let op = algebra_pb::physical_opr::operator::OpKind::OrderBy(order);
+    pub fn dedup(&mut self, dedup: pb::Dedup) -> &mut Self {
+        let op = pb::physical_opr::operator::OpKind::Dedup(dedup);
         self.plan.push(op.into());
         self
     }
 
-    pub fn dedup(&mut self, dedup: algebra_pb::Dedup) -> &mut Self {
-        let op = algebra_pb::physical_opr::operator::OpKind::Dedup(dedup);
+    pub fn unfold(&mut self, unfold: pb::Unfold) -> &mut Self {
+        let op = pb::physical_opr::operator::OpKind::Unfold(unfold);
         self.plan.push(op.into());
         self
     }
 
-    pub fn unfold(&mut self, unfold: algebra_pb::Unfold) -> &mut Self {
-        let op = algebra_pb::physical_opr::operator::OpKind::Unfold(unfold);
+    pub fn limit(&mut self, limit: pb::Limit) -> &mut Self {
+        let op = pb::physical_opr::operator::OpKind::Limit(limit);
         self.plan.push(op.into());
         self
     }
-
-    pub fn limit(&mut self, limit: algebra_pb::Limit) -> &mut Self {
-        let op = algebra_pb::physical_opr::operator::OpKind::Limit(limit);
-        self.plan.push(op.into());
-        self
-    }
-
-    // pub fn apply(&mut self, apply: algebra_pb::PhysicalApply) -> &mut Self {
-    //     let op = algebra_pb::physical_opr::operator::OpKind::Apply(apply);
-    //     self.plan.push(op.into());
-    //     self
-    // }
 
     pub fn apply(
-        &mut self, join_kind: algebra_pb::join::JoinKind, sub_plan: Plan, alias: Option<i32>,
+        &mut self, join_kind: pb::join::JoinKind, sub_plan: Plan, alias: Option<i32>,
     ) -> &mut Self {
-        let apply = algebra_pb::PhysicalApply {
+        let apply = pb::PhysicalApply {
             join_kind: unsafe { ::std::mem::transmute(join_kind) },
             keys: vec![],
-            sub_plan: Some(algebra_pb::PhysicalPlan { plan: sub_plan.take() }),
+            sub_plan: Some(pb::PhysicalPlan { plan: sub_plan.take() }),
             alias,
         };
-        let op = algebra_pb::physical_opr::operator::OpKind::Apply(apply);
+        let op = pb::physical_opr::operator::OpKind::Apply(apply);
         self.plan.push(op.into());
         self
     }
 
     pub fn seg_apply(
-        &mut self, join_kind: algebra_pb::join::JoinKind, sub_plan: Plan, keys: Vec<common_pb::Variable>,
+        &mut self, join_kind: pb::join::JoinKind, sub_plan: Plan, keys: Vec<common_pb::Variable>,
         alias: Option<i32>,
     ) -> &mut Self {
-        let apply = algebra_pb::PhysicalApply {
+        let apply = pb::PhysicalApply {
             join_kind: unsafe { ::std::mem::transmute(join_kind) },
             keys,
-            sub_plan: Some(algebra_pb::PhysicalPlan { plan: sub_plan.take() }),
+            sub_plan: Some(pb::PhysicalPlan { plan: sub_plan.take() }),
             alias,
         };
-        let op = algebra_pb::physical_opr::operator::OpKind::Apply(apply);
+        let op = pb::physical_opr::operator::OpKind::Apply(apply);
         self.plan.push(op.into());
         self
     }
 
-    // // TODO: like union?
-    // pub fn join(&mut self, join: algebra_pb::PhysicalJoin) -> &mut Self {
-    //     let op = algebra_pb::physical_opr::operator::OpKind::Join(join);
-    //     self.plan.push(op.into());
-    //     self
-    // }
-
     pub fn join(
-        &mut self, join_kind: algebra_pb::join::JoinKind, left_plan: Plan, right_plan: Plan,
+        &mut self, join_kind: pb::join::JoinKind, left_plan: Plan, right_plan: Plan,
         left_keys: Vec<common_pb::Variable>, right_keys: Vec<common_pb::Variable>,
     ) -> &mut Self {
-        let join = algebra_pb::PhysicalJoin {
+        let join = pb::PhysicalJoin {
             left_keys,
             right_keys,
             join_kind: unsafe { ::std::mem::transmute(join_kind) },
-            left_plan: Some(algebra_pb::PhysicalPlan { plan: left_plan.take() }),
-            right_plan: Some(algebra_pb::PhysicalPlan { plan: right_plan.take() }),
+            left_plan: Some(pb::PhysicalPlan { plan: left_plan.take() }),
+            right_plan: Some(pb::PhysicalPlan { plan: right_plan.take() }),
         };
-        let op = algebra_pb::physical_opr::operator::OpKind::Join(join);
+        let op = pb::physical_opr::operator::OpKind::Join(join);
         self.plan.push(op.into());
         self
     }
@@ -183,10 +169,10 @@ impl Plan {
     pub fn union(&mut self, mut plans: Vec<Plan>) -> &mut Self {
         let mut sub_plans = vec![];
         for plan in plans.drain(..) {
-            sub_plans.push(algebra_pb::PhysicalPlan { plan: plan.take() });
+            sub_plans.push(pb::PhysicalPlan { plan: plan.take() });
         }
-        let union = algebra_pb::PhysicalUnion { sub_plans };
-        let op = algebra_pb::physical_opr::operator::OpKind::Union(union);
+        let union = pb::PhysicalUnion { sub_plans };
+        let op = pb::physical_opr::operator::OpKind::Union(union);
         self.plan.push(op.into());
         self
     }
@@ -194,33 +180,33 @@ impl Plan {
     pub fn intersect(&mut self, mut plans: Vec<Plan>, key: i32) -> &mut Self {
         let mut sub_plans = vec![];
         for plan in plans.drain(..) {
-            sub_plans.push(algebra_pb::PhysicalPlan { plan: plan.take() });
+            sub_plans.push(pb::PhysicalPlan { plan: plan.take() });
         }
-        let intersect = algebra_pb::PhysicalIntersect { sub_plans, key };
-        let op = algebra_pb::physical_opr::operator::OpKind::Intersect(intersect);
+        let intersect = pb::PhysicalIntersect { sub_plans, key };
+        let op = pb::physical_opr::operator::OpKind::Intersect(intersect);
         self.plan.push(op.into());
         self
     }
 
-    pub fn get_v(&mut self, get_v: algebra_pb::GetV) -> &mut Self {
-        let op = algebra_pb::physical_opr::operator::OpKind::Vertex(get_v);
+    pub fn get_v(&mut self, get_v: pb::GetV) -> &mut Self {
+        let op = pb::physical_opr::operator::OpKind::Vertex(get_v);
         self.plan.push(op.into());
         self
     }
 
-    pub fn edge_expand(&mut self, edge: algebra_pb::EdgeExpand) -> &mut Self {
-        let op = algebra_pb::physical_opr::operator::OpKind::Edge(edge);
+    pub fn edge_expand(&mut self, edge: pb::EdgeExpand) -> &mut Self {
+        let op = pb::physical_opr::operator::OpKind::Edge(edge);
         self.plan.push(op.into());
         self
     }
 
-    pub fn path_expand(&mut self, path: algebra_pb::PathExpand) -> &mut Self {
-        let op = algebra_pb::physical_opr::operator::OpKind::Path(path);
+    pub fn path_expand(&mut self, path: pb::PathExpand) -> &mut Self {
+        let op = pb::physical_opr::operator::OpKind::Path(path);
         self.plan.push(op.into());
         self
     }
 
-    pub fn take(self) -> Vec<algebra_pb::PhysicalOpr> {
+    pub fn take(self) -> Vec<pb::PhysicalOpr> {
         self.plan
     }
 }
@@ -228,44 +214,43 @@ impl Plan {
 #[derive(Default)]
 pub struct JobBuilder {
     pub conf: JobConf,
-    source: BinaryResource,
     plan: Plan,
-    sink: BinaryResource,
 }
 
 impl fmt::Debug for JobBuilder {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("JobBuilder")
-            .field("source", &self.source)
             .field("plan", &self.plan)
-            .field("sink", &self.sink)
             .finish()
     }
 }
 
 impl PartialEq for JobBuilder {
     fn eq(&self, other: &JobBuilder) -> bool {
-        self.source == other.source && self.plan == other.plan && self.sink == other.sink
+        self.plan == other.plan
     }
 }
 
 impl JobBuilder {
     pub fn new(conf: JobConf) -> Self {
-        JobBuilder { conf, source: vec![], plan: Default::default(), sink: vec![] }
+        JobBuilder { conf, plan: Default::default() }
     }
 
+    /// Dummy node as the root, when the data come from multiple sources actually.
     pub fn add_dummy_source(&mut self) -> &mut Self {
-        self.source = vec![];
+        self.plan.add_dummy_source();
         self
     }
 
-    pub fn add_scan_source(&mut self, scan: algebra_pb::Scan) -> &mut Self {
-        let src = scan.encode_to_vec();
-        self.source = src;
+    /// Scan as the source, when the data come from the scan operator.
+    /// If the plan is single source, scan would be the root op;
+    /// Otherwise, the root is the dummy node, while the real sources are multiple scans.
+    pub fn add_scan_source(&mut self, scan: pb::Scan) -> &mut Self {
+        self.plan.add_scan_source(scan);
         self
     }
 
-    pub fn repartition(&mut self, route: algebra_pb::Repartition) -> &mut Self {
+    pub fn repartition(&mut self, route: pb::Repartition) -> &mut Self {
         self.plan.repartition(route);
         self
     }
@@ -280,55 +265,61 @@ impl JobBuilder {
         self
     }
 
-    pub fn scan(&mut self, scan: algebra_pb::Scan) -> &mut Self {
-        self.plan.scan(scan);
-        self
-    }
-
-    pub fn project(&mut self, project: algebra_pb::Project) -> &mut Self {
+    pub fn project(&mut self, project: pb::Project) -> &mut Self {
         self.plan.project(project);
         self
     }
 
-    pub fn select(&mut self, select: algebra_pb::Select) -> &mut Self {
+    pub fn select(&mut self, select: pb::Select) -> &mut Self {
         self.plan.select(select);
         self
     }
 
-    pub fn group(&mut self, group: algebra_pb::GroupBy) -> &mut Self {
+    pub fn group(&mut self, group: pb::GroupBy) -> &mut Self {
         self.plan.group(group);
         self
     }
 
-    pub fn order(&mut self, order: algebra_pb::OrderBy) -> &mut Self {
+    pub fn order(&mut self, order: pb::OrderBy) -> &mut Self {
         self.plan.order(order);
         self
     }
 
-    pub fn dedup(&mut self, dedup: algebra_pb::Dedup) -> &mut Self {
+    pub fn dedup(&mut self, dedup: pb::Dedup) -> &mut Self {
         self.plan.dedup(dedup);
         self
     }
 
-    pub fn unfold(&mut self, unfold: algebra_pb::Unfold) -> &mut Self {
+    pub fn unfold(&mut self, unfold: pb::Unfold) -> &mut Self {
         self.plan.unfold(unfold);
         self
     }
 
-    pub fn limit(&mut self, limit: algebra_pb::Limit) -> &mut Self {
+    pub fn limit(&mut self, limit: pb::Limit) -> &mut Self {
         self.plan.limit(limit);
         self
     }
 
     pub fn apply(
-        &mut self, join_kind: algebra_pb::join::JoinKind, sub_plan: Plan, alias: Option<i32>,
+        &mut self, join_kind: pb::join::JoinKind, sub_plan: Plan, alias: Option<i32>,
     ) -> &mut Self {
         self.plan.apply(join_kind, sub_plan, alias);
         self
     }
 
+    pub fn apply_func<F>(
+        &mut self, join_kind: pb::join::JoinKind, mut subtask: F, alias: Option<i32>,
+    ) -> &mut Self
+    where
+        F: FnMut(&mut Plan),
+    {
+        let mut sub_plan = Plan::default();
+        subtask(&mut sub_plan);
+        self.apply(join_kind, sub_plan, alias)
+    }
+
     pub fn seg_apply(
-        &mut self, join_kind: algebra_pb::join::JoinKind, sub_plan: Plan, keys: Vec<common_pb::Variable>,
+        &mut self, join_kind: pb::join::JoinKind, sub_plan: Plan, keys: Vec<common_pb::Variable>,
         alias: Option<i32>,
     ) -> &mut Self {
         self.plan
@@ -336,18 +327,42 @@ impl JobBuilder {
         self
     }
 
-    // pub fn join(&mut self, join: algebra_pb::PhysicalJoin) -> &mut Self {
-    //     self.plan.join(join);
-    //     self
-    // }
+    pub fn seg_apply_func<F>(
+        &mut self, join_kind: pb::join::JoinKind, mut subtask: F, keys: Vec<common_pb::Variable>,
+        alias: Option<i32>,
+    ) -> &mut Self
+    where
+        F: FnMut(&mut Plan),
+    {
+        let mut sub_plan = Plan::default();
+        subtask(&mut sub_plan);
+        self.plan
+            .seg_apply(join_kind, sub_plan, keys, alias);
+        self
+    }
 
     pub fn join(
-        &mut self, join_kind: algebra_pb::join::JoinKind, left_plan: Plan, right_plan: Plan,
+        &mut self, join_kind: pb::join::JoinKind, left_plan: Plan, right_plan: Plan,
         left_keys: Vec<common_pb::Variable>, right_keys: Vec<common_pb::Variable>,
     ) -> &mut Self {
         self.plan
             .join(join_kind, left_plan, right_plan, left_keys, right_keys);
         self
+    }
+
+    pub fn join_func<FL, FR>(
+        &mut self, join_kind: pb::join::JoinKind, mut left_task: FL, mut right_task: FR,
+        left_keys: Vec<common_pb::Variable>, right_keys: Vec<common_pb::Variable>,
+    ) -> &mut Self
+    where
+        FL: FnMut(&mut Plan),
+        FR: FnMut(&mut Plan),
+    {
+        let mut left_plan = Plan::default();
+        left_task(&mut left_plan);
+        let mut right_plan = Plan::default();
+        right_task(&mut right_plan);
+        self.join(join_kind, left_plan, right_plan, left_keys, right_keys)
     }
 
     pub fn union(&mut self, plans: Vec<Plan>) -> &mut Self {
@@ -360,24 +375,24 @@ impl JobBuilder {
         self
     }
 
-    pub fn get_v(&mut self, get_v: algebra_pb::GetV) -> &mut Self {
+    pub fn get_v(&mut self, get_v: pb::GetV) -> &mut Self {
         self.plan.get_v(get_v);
         self
     }
 
-    pub fn edge_expand(&mut self, edge: algebra_pb::EdgeExpand) -> &mut Self {
+    pub fn edge_expand(&mut self, edge: pb::EdgeExpand) -> &mut Self {
         self.plan.edge_expand(edge);
         self
     }
 
-    pub fn path_expand(&mut self, path: algebra_pb::PathExpand) -> &mut Self {
+    pub fn path_expand(&mut self, path: pb::PathExpand) -> &mut Self {
         self.plan.path_expand(path);
         self
     }
 
-    pub fn sink(&mut self, sink: algebra_pb::Sink) {
-        let sink = sink.encode_to_vec();
-        self.sink = sink;
+    pub fn sink(&mut self, sink: pb::Sink) {
+        let op = pb::physical_opr::operator::OpKind::Sink(sink);
+        self.plan.plan.push(op.into());
     }
 
     pub fn take_plan(self) -> Plan {
@@ -405,28 +420,14 @@ impl JobBuilder {
             },
         };
 
-        let plan = algebra_pb::PhysicalPlan { plan: self.plan.take() };
+        let plan = pb::PhysicalPlan { plan: self.plan.take() };
 
         Ok(pegasus_pb::JobRequest {
             conf: Some(conf),
-            source: self.source,
+            source: vec![],
             plan: plan.encode_to_vec(),
-            resource: self.sink,
+            resource: vec![],
         })
-    }
-}
-
-impl Deref for JobBuilder {
-    type Target = Plan;
-
-    fn deref(&self) -> &Self::Target {
-        &self.plan
-    }
-}
-
-impl DerefMut for JobBuilder {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.plan
     }
 }
 
@@ -437,67 +438,77 @@ mod test {
     #[test]
     fn test_job_build_00() {
         let mut builder = JobBuilder::new(JobConf::new("test_build_00"));
+        let source_pb = pb::Scan { scan_opt: 0, alias: None, params: None, idx_predicate: None };
+        let sink_pb = pb::Sink { tags: vec![], sink_target: None };
         builder
-            .add_scan_source(algebra_pb::Scan {
-                scan_opt: 0,
-                alias: None,
-                params: None,
-                idx_predicate: None,
-            })
-            .select(algebra_pb::Select { predicate: None })
-            .repartition(algebra_pb::Repartition { strategy: None })
-            .project(algebra_pb::Project { mappings: vec![], is_append: false })
-            .limit(algebra_pb::Limit { range: None })
-            .sink(algebra_pb::Sink { tags: vec![], sink_target: None });
+            .add_scan_source(source_pb.clone())
+            .select(pb::Select { predicate: None })
+            .repartition(pb::Repartition { strategy: None })
+            .project(pb::Project { mappings: vec![], is_append: false })
+            .limit(pb::Limit { range: None })
+            .sink(sink_pb.clone());
         let plan_len = builder.plan.len();
-        let job_req = builder.build().unwrap();
-        let source = algebra_pb::Scan { scan_opt: 0, alias: None, params: None, idx_predicate: None };
-        let sink = algebra_pb::Sink { tags: vec![], sink_target: None };
-        assert_eq!(&job_req.source, &source.encode_to_vec());
-        assert_eq!(&job_req.resource, &sink.encode_to_vec());
-        assert_eq!(&plan_len, &4);
+        // source, select, repartition, project, limit, sink
+        assert_eq!(&plan_len, &6);
     }
 
     #[test]
     fn test_job_build_01() {
         let mut builder = JobBuilder::new(JobConf::new("test_build_01"));
+        let scan1_pb = pb::Scan { scan_opt: 0, alias: None, params: None, idx_predicate: None };
+        let scan2_pb = scan1_pb.clone();
+        let project_pb = pb::Project { mappings: vec![], is_append: false };
+        let sink_pb = pb::Sink { tags: vec![], sink_target: None };
+
         builder
             .add_dummy_source()
             .join_func(
                 pb::join::JoinKind::Inner,
                 |src1| {
-                    src1.map(vec![]).join_func(
-                        pb::join::JoinKind::Inner,
-                        |src1_1| {
-                            src1_1.map(vec![]);
-                        },
-                        |src1_2| {
-                            src1_2.map(vec![]);
-                        },
-                        vec![],
-                    );
+                    src1.add_scan_source(scan1_pb.clone());
                 },
                 |src2| {
-                    src2.map(vec![]).join_func(
-                        pb::join::JoinKind::Inner,
-                        |src2_1| {
-                            src2_1.map(vec![]);
-                        },
-                        |src2_2| {
-                            src2_2.map(vec![]);
-                        },
-                        vec![],
-                    );
+                    src2.add_scan_source(scan2_pb.clone())
+                        .project(project_pb.clone());
                 },
                 vec![],
+                vec![],
             )
-            .sink(vec![6u8; 32]);
-        let plan_len = builder.plan.len();
-        let job_req = builder.build().unwrap();
-        let source = pb::Source { resource: vec![0u8; 32] };
-        let sink = pb::Sink { resource: vec![6u8; 32] };
-        assert_eq!(&job_req.source, &source.encode_to_vec());
-        assert_eq!(&job_req.resource, &sink.encode_to_vec());
-        assert_eq!(&plan_len, &1);
+            .sink(sink_pb.clone());
+        let plan = builder.plan.clone();
+        let plan_len = plan.len();
+        // dummy_source, join, sink
+        assert_eq!(&plan_len, &3);
+
+        let join_op = plan.plan[1].clone();
+        if let Some(pb::physical_opr::operator::OpKind::Join(join)) = join_op.opr.unwrap().op_kind {
+            // scan
+            assert_eq!(join.left_plan.unwrap().plan.len(), 1);
+            // scan, project
+            assert_eq!(join.right_plan.unwrap().plan.len(), 2);
+        } else {
+            assert!(false)
+        }
+
+        // another way to build `Join`
+        let mut left_builder = JobBuilder::default();
+        let mut right_builder = JobBuilder::default();
+        left_builder.add_scan_source(scan1_pb);
+        right_builder
+            .add_scan_source(scan2_pb)
+            .project(project_pb);
+        let mut builder2 = JobBuilder::default();
+        builder2
+            .add_dummy_source()
+            .join(
+                pb::join::JoinKind::Inner,
+                left_builder.take_plan(),
+                right_builder.take_plan(),
+                vec![],
+                vec![],
+            )
+            .sink(sink_pb);
+
+        assert_eq!(plan, builder2.take_plan())
     }
 }
