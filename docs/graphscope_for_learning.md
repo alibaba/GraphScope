@@ -217,7 +217,8 @@ ego and K-hop neighbors, a full-graph messaging needs to perform EgoSAGEConv
 forward operations on all adjacent neighbor pairs in the EgoGraph.
 We use ``EgoLayer`` to denote the message-passing process of such a single 
 EgoGraph that consists of multiple 1-hop neighbor aggregations' conv.
-Check [Model Layers](https://graph-learn.readthedocs.io/en/latest/en/gl/algo/tf/tf_model_layer.html) for more detailed descriptions on conv and layer.
+Check [Model Layers](https://graph-learn.readthedocs.io/en/latest/en/gl/algo/tf/tf_model_layer.html) 
+for more detailed descriptions on conv and layer.
 
 
 ```python
@@ -265,4 +266,9 @@ Next, we use ``LocalTFTrainer`` to train on a single-machine.
 In the end, the the training process is finished by calling ``g.close()``
 
 The above example concludes some key steps to build a GraphSAGE model. 
-Please refer to the [ego_sage example](https://github.com/alibaba/graph-learn/blob/master/graphlearn/examples/tf/ego_sage/train_supervised.py) for the complete code. We have implemented a rich set of popular models, including GraphSage, Bipartite GraphSage, GAT, RGCN, Ultra GCN, SEAL, etc. These models can be used as a starting point for building similar models.
+Please refer to the 
+[ego_sage example](https://github.com/alibaba/graph-learn/blob/master/graphlearn/examples/tf/ego_sage/train_supervised.py) 
+for the complete code. We have implemented a rich set of 
+popular models, including GraphSage, Bipartite GraphSage, 
+GAT, RGCN, Ultra GCN, SEAL, etc. These models can be used 
+as a starting point for building similar models.
