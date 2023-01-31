@@ -13,8 +13,8 @@
  */
 package com.alibaba.graphscope.groot.coordinator;
 
-import com.alibaba.maxgraph.proto.groot.*;
-import com.alibaba.maxgraph.sdkcommon.common.BackupInfo;
+import com.alibaba.graphscope.proto.groot.*;
+import com.alibaba.graphscope.sdkcommon.common.BackupInfo;
 
 import io.grpc.stub.StreamObserver;
 

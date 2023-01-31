@@ -291,7 +291,11 @@ vertex_data_to_arrow_array_impl(const FRAG_T& frag) {
                   "Can not transform empty type to arrow array");
 }
 
-template <typename FUNC_T>
+template <typename FUNC_T,
+          typename std::enable_if<
+              !std::is_same<typename std::result_of<FUNC_T(size_t)>::type,
+                            std::string>::value,
+              void>::type* = nullptr>
 typename std::enable_if<
     !std::is_same<typename std::result_of<FUNC_T(size_t)>::type,
                   grape::EmptyType>::value &&
@@ -310,6 +314,38 @@ build_vy_tensor_builder(vineyard::Client& client, size_t size, FUNC_T&& func,
 
   for (size_t i = 0; i < size; i++) {
     tensor_builder->data()[i] = func(i);
+  }
+
+  return std::dynamic_pointer_cast<vineyard::ITensorBuilder>(tensor_builder);
+}
+
+template <typename FUNC_T,
+          typename std::enable_if<
+              std::is_same<typename std::result_of<FUNC_T(size_t)>::type,
+                           std::string>::value,
+              void>::type* = nullptr>
+typename std::enable_if<
+    !std::is_same<typename std::result_of<FUNC_T(size_t)>::type,
+                  grape::EmptyType>::value &&
+
+        !is_dynamic<typename std::result_of<FUNC_T(size_t)>::type>::value,
+    bl::result<std::shared_ptr<vineyard::ITensorBuilder>>>::type
+build_vy_tensor_builder(vineyard::Client& client, size_t size, FUNC_T&& func,
+                        int64_t part_idx) {
+  using tensor_builder_t =
+      vineyard::TensorBuilder<typename std::result_of<FUNC_T(size_t)>::type>;
+  std::vector<int64_t> shape{static_cast<int64_t>(size)};
+  std::shared_ptr<tensor_builder_t> tensor_builder;
+
+  std::vector<int64_t> part{part_idx};
+  tensor_builder = std::make_shared<tensor_builder_t>(client, shape, part);
+
+  for (size_t i = 0; i < size; i++) {
+    std::string data = func(i);
+    tensor_builder->Append(
+        reinterpret_cast<typename tensor_builder_t::value_const_pointer_t>(
+            data.data()),
+        data.size());
   }
 
   return std::dynamic_pointer_cast<vineyard::ITensorBuilder>(tensor_builder);
@@ -376,7 +412,9 @@ build_vy_tensor(vineyard::Client& client, size_t size, FUNC_T&& func,
                   "Can not transform dynamic type");
 }
 
-template <typename FRAG_T, typename DATA_T>
+template <typename FRAG_T, typename DATA_T,
+          typename std::enable_if<
+              !std::is_same<std::string, DATA_T>::value>::type* = nullptr>
 std::shared_ptr<vineyard::TensorBuilder<DATA_T>>
 column_to_vy_tensor_builder_impl(
     vineyard::Client& client, const std::shared_ptr<IColumn>& column,
@@ -388,6 +426,29 @@ column_to_vy_tensor_builder_impl(
 
   for (size_t i = 0; i < vertices.size(); i++) {
     tensor_builder->data()[i] = col->at(vertices[i]);
+  }
+  return tensor_builder;
+}
+
+template <typename FRAG_T, typename DATA_T,
+          typename std::enable_if<
+              std::is_same<std::string, DATA_T>::value>::type* = nullptr>
+std::shared_ptr<vineyard::TensorBuilder<DATA_T>>
+column_to_vy_tensor_builder_impl(
+    vineyard::Client& client, const std::shared_ptr<IColumn>& column,
+    const std::vector<typename FRAG_T::vertex_t>& vertices) {
+  auto col = std::dynamic_pointer_cast<Column<FRAG_T, DATA_T>>(column);
+  std::vector<int64_t> shape{static_cast<int64_t>(vertices.size())};
+  auto tensor_builder =
+      std::make_unique<vineyard::TensorBuilder<DATA_T>>(client, shape);
+
+  for (size_t i = 0; i < vertices.size(); i++) {
+    const std::string data = col->at(vertices[i]);
+    tensor_builder->Append(
+        reinterpret_cast<
+            typename vineyard::TensorBuilder<DATA_T>::value_const_pointer_t>(
+            data.data()),
+        data.size());
   }
   return tensor_builder;
 }
@@ -598,6 +659,9 @@ class TransformUtils<FRAG_T,
     return std::dynamic_pointer_cast<arrow::Array>(col);
   }
 
+  template <typename oid_t,
+            typename std::enable_if<!std::is_same<oid_t, std::string>::value,
+                                    void>::type* = nullptr>
   bl::result<std::shared_ptr<vineyard::ITensorBuilder>>
   VertexIdToVYTensorBuilder(vineyard::Client& client,
                             const std::vector<vertex_t>& vertices) {
@@ -612,10 +676,28 @@ class TransformUtils<FRAG_T,
     return std::dynamic_pointer_cast<vineyard::ITensorBuilder>(tensor_builder);
   }
 
+  template <typename oid_t,
+            typename std::enable_if<std::is_same<oid_t, std::string>::value,
+                                    void>::type* = nullptr>
+  bl::result<std::shared_ptr<vineyard::ITensorBuilder>>
+  VertexIdToVYTensorBuilder(vineyard::Client& client,
+                            const std::vector<vertex_t>& vertices) {
+    std::vector<int64_t> shape{static_cast<int64_t>(vertices.size())};
+    std::vector<int64_t> part_idx{comm_spec_.fid()};
+    auto tensor_builder = std::make_shared<vineyard::TensorBuilder<oid_t>>(
+        client, shape, part_idx);
+
+    for (size_t i = 0; i < vertices.size(); i++) {
+      tensor_builder->Append(frag_.GetInternalId(vertices[i]));
+    }
+    return std::dynamic_pointer_cast<vineyard::ITensorBuilder>(tensor_builder);
+  }
+
   bl::result<vineyard::ObjectID> VertexIdToVYTensor(
       vineyard::Client& client,
       const std::vector<typename FRAG_T::vertex_t>& vertices) {
-    BOOST_LEAF_AUTO(base_builder, VertexIdToVYTensorBuilder(client, vertices));
+    BOOST_LEAF_AUTO(base_builder,
+                    VertexIdToVYTensorBuilder<oid_t>(client, vertices));
     auto builder = std::dynamic_pointer_cast<
         vineyard::TensorBuilder<typename FRAG_T::oid_t>>(base_builder);
     auto tensor = builder->Seal(client);
@@ -735,7 +817,9 @@ class TransformUtils<FRAG_T,
     }
   }
 
-  template <typename DATA_T>
+  template <typename DATA_T,
+            typename std::enable_if<!std::is_same<DATA_T, std::string>::value,
+                                    void>::type* = nullptr>
   std::shared_ptr<vineyard::ITensorBuilder>
   vertex_property_to_vy_tensor_builder_impl(
       vineyard::Client& client, typename FRAG_T::prop_id_t prop_id,
@@ -747,6 +831,29 @@ class TransformUtils<FRAG_T,
     for (size_t i = 0; i < vertices.size(); i++) {
       tensor_builder->data()[i] =
           frag_.template GetData<DATA_T>(vertices[i], prop_id);
+    }
+    return tensor_builder;
+  }
+
+  template <typename DATA_T,
+            typename std::enable_if<std::is_same<DATA_T, std::string>::value,
+                                    void>::type* = nullptr>
+  std::shared_ptr<vineyard::ITensorBuilder>
+  vertex_property_to_vy_tensor_builder_impl(
+      vineyard::Client& client, typename FRAG_T::prop_id_t prop_id,
+      const std::vector<vertex_t>& vertices) {
+    std::vector<int64_t> shape{static_cast<int64_t>(vertices.size())};
+    auto tensor_builder =
+        std::make_shared<vineyard::TensorBuilder<DATA_T>>(client, shape);
+
+    for (size_t i = 0; i < vertices.size(); i++) {
+      const std::string data =
+          frag_.template GetData<DATA_T>(vertices[i], prop_id);
+      tensor_builder->Append(
+          reinterpret_cast<
+              typename vineyard::TensorBuilder<DATA_T>::value_const_pointer_t>(
+              data.data()),
+          data.size());
     }
     return tensor_builder;
   }
@@ -829,6 +936,9 @@ class TransformUtils<
     return std::dynamic_pointer_cast<arrow::Array>(ret);
   }
 
+  template <typename oid_t,
+            typename std::enable_if<!std::is_same<std::string, oid_t>::value,
+                                    void>::type* = nullptr>
   bl::result<std::shared_ptr<vineyard::ITensorBuilder>>
   VertexIdToVYTensorBuilder(vineyard::Client& client,
                             const std::vector<vertex_t>& vertices) {
@@ -843,10 +953,28 @@ class TransformUtils<
     return std::dynamic_pointer_cast<vineyard::ITensorBuilder>(tensor_builder);
   }
 
+  template <typename oid_t,
+            typename std::enable_if<std::is_same<std::string, oid_t>::value,
+                                    void>::type* = nullptr>
+  bl::result<std::shared_ptr<vineyard::ITensorBuilder>>
+  VertexIdToVYTensorBuilder(vineyard::Client& client,
+                            const std::vector<vertex_t>& vertices) {
+    std::vector<int64_t> shape{static_cast<int64_t>(vertices.size())};
+    std::vector<int64_t> part_idx{comm_spec_.fid()};
+    auto tensor_builder = std::make_shared<vineyard::TensorBuilder<oid_t>>(
+        client, shape, part_idx);
+
+    for (size_t i = 0; i < vertices.size(); i++) {
+      tensor_builder->Append(frag_.GetInternalId(vertices[i]));
+    }
+    return std::dynamic_pointer_cast<vineyard::ITensorBuilder>(tensor_builder);
+  }
+
   bl::result<vineyard::ObjectID> VertexIdToVYTensor(
       vineyard::Client& client,
       const std::vector<typename FRAG_T::vertex_t>& vertices) {
-    BOOST_LEAF_AUTO(base_builder, VertexIdToVYTensorBuilder(client, vertices));
+    BOOST_LEAF_AUTO(base_builder,
+                    VertexIdToVYTensorBuilder<oid_t>(client, vertices));
     auto builder = std::dynamic_pointer_cast<
         vineyard::TensorBuilder<typename FRAG_T::oid_t>>(base_builder);
     auto tensor = builder->Seal(client);
@@ -936,7 +1064,9 @@ class TransformUtils<
       }
     }
 
-    if (oid_type == dynamic::Type::kInt64Type) {
+    if (oid_type == dynamic::Type::kInt32Type) {
+      return vineyard::TypeToInt<int32_t>::value;
+    } else if (oid_type == dynamic::Type::kInt64Type) {
       return vineyard::TypeToInt<int64_t>::value;
     } else if (oid_type == dynamic::Type::kStringType) {
       return vineyard::TypeToInt<std::string>::value;
@@ -974,7 +1104,16 @@ class TransformUtils<
 
     BOOST_LEAF_AUTO(oid_type, GetOidTypeId());
 
-    if (oid_type == vineyard::TypeToInt<int64_t>::value) {
+    if (oid_type == vineyard::TypeToInt<int32_t>::value) {
+      typename vineyard::ConvertToArrowType<int32_t>::BuilderType builder;
+      for (auto& v : inner_vertices) {
+        ARROW_OK_OR_RAISE(builder.Append(frag_.GetId(v).GetInt()));
+      }
+      std::shared_ptr<typename vineyard::ConvertToArrowType<int32_t>::ArrayType>
+          ret;
+      ARROW_OK_OR_RAISE(builder.Finish(&ret));
+      return std::dynamic_pointer_cast<arrow::Array>(ret);
+    } else if (oid_type == vineyard::TypeToInt<int64_t>::value) {
       typename vineyard::ConvertToArrowType<int64_t>::BuilderType builder;
       for (auto& v : inner_vertices) {
         ARROW_OK_OR_RAISE(builder.Append(frag_.GetId(v).GetInt64()));
@@ -998,6 +1137,8 @@ class TransformUtils<
                     "Unsupported oid type");
   }
 
+  template <typename oid_t>  // not used, to make the template specializations
+                             // has the same API
   bl::result<std::shared_ptr<vineyard::ITensorBuilder>>
   VertexIdToVYTensorBuilder(vineyard::Client& client,
                             const std::vector<vertex_t>& vertices) {
@@ -1006,7 +1147,15 @@ class TransformUtils<
 
     BOOST_LEAF_AUTO(oid_type, GetOidTypeId());
 
-    if (oid_type == vineyard::TypeToInt<int64_t>::value) {
+    if (oid_type == vineyard::TypeToInt<int32_t>::value) {
+      auto tensor_builder = std::make_shared<vineyard::TensorBuilder<int32_t>>(
+          client, shape, part_idx);
+      for (size_t i = 0; i < vertices.size(); i++) {
+        tensor_builder->data()[i] = frag_.GetId(vertices[i]).GetInt();
+      }
+      return std::dynamic_pointer_cast<vineyard::ITensorBuilder>(
+          tensor_builder);
+    } else if (oid_type == vineyard::TypeToInt<int64_t>::value) {
       auto tensor_builder = std::make_shared<vineyard::TensorBuilder<int64_t>>(
           client, shape, part_idx);
       for (size_t i = 0; i < vertices.size(); i++) {
@@ -1019,7 +1168,11 @@ class TransformUtils<
           std::make_shared<vineyard::TensorBuilder<std::string>>(client, shape,
                                                                  part_idx);
       for (size_t i = 0; i < vertices.size(); i++) {
-        tensor_builder->data()[i] = frag_.GetId(vertices[i]).GetString();
+        auto const value = frag_.GetId(vertices[i]);
+        tensor_builder->Append(
+            reinterpret_cast<typename vineyard::TensorBuilder<
+                std::string>::value_const_pointer_t>(value.GetString()),
+            value.GetStringLength());
       }
       return std::dynamic_pointer_cast<vineyard::ITensorBuilder>(
           tensor_builder);
@@ -1031,10 +1184,18 @@ class TransformUtils<
 
   bl::result<vineyard::ObjectID> VertexIdToVYTensor(
       vineyard::Client& client, const std::vector<vertex_t>& vertices) {
-    BOOST_LEAF_AUTO(base_builder, VertexIdToVYTensorBuilder(client, vertices));
+    BOOST_LEAF_AUTO(base_builder, VertexIdToVYTensorBuilder<void /* dummy */>(
+                                      client, vertices));
     BOOST_LEAF_AUTO(oid_type, GetOidTypeId());
 
-    if (oid_type == vineyard::TypeToInt<int64_t>::value) {
+    if (oid_type == vineyard::TypeToInt<int32_t>::value) {
+      auto builder =
+          std::dynamic_pointer_cast<vineyard::TensorBuilder<int32_t>>(
+              base_builder);
+      auto tensor = builder->Seal(client);
+      VY_OK_OR_RAISE(tensor->Persist(client));
+      return tensor->id();
+    } else if (oid_type == vineyard::TypeToInt<int64_t>::value) {
       auto builder =
           std::dynamic_pointer_cast<vineyard::TensorBuilder<int64_t>>(
               base_builder);

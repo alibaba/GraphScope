@@ -151,7 +151,9 @@ class Connection:
         if not (username and password):
             return None
         secret = username + ":" + password
-        secret = base64.b64encode(secret.encode("utf-8")).decode("utf-8")
+        secret = base64.b64encode(secret.encode("utf-8", errors="ignore")).decode(
+            "utf-8", errors="ignore"
+        )
         metadata = [("authorization", "Basic " + secret)]
         return metadata
 

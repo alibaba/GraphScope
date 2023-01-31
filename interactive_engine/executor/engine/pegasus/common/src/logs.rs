@@ -85,11 +85,12 @@ mod log_env {
 
     use env_logger::fmt::Color;
     use log::Level;
+    use time::format_description;
+    use time::OffsetDateTime;
 
     pub fn init_log() {
         env_logger::Builder::from_default_env()
             .format(|buf, record| {
-                let t = time::now();
                 let mut level_style = buf.style();
                 match record.level() {
                     Level::Error => {
@@ -112,12 +113,14 @@ mod log_env {
                         level_style.set_color(Color::Blue);
                     }
                 };
-
+                let dt = OffsetDateTime::now_utc();
+                let dt_fmt =
+                    format_description::parse("[year]-[month]-[day] [hour]:[minute]:[second]").unwrap();
                 writeln!(
                     buf,
                     "{},{:03} {}\t[{}] [{}:{}] {}",
-                    time::strftime("%Y-%m-%d %H:%M:%S", &t).unwrap(),
-                    t.tm_nsec / 1000_000,
+                    dt.format(&dt_fmt).unwrap(),
+                    dt.millisecond(),
                     level_style.value(record.level()),
                     ::std::thread::current()
                         .name()

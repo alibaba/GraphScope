@@ -119,8 +119,9 @@ def test_load_empty_jar(empty_jar, projected_graph_sssp_class, non_exist_java_cl
     reason="Java SDK is disabled, skip this test.",
 )
 @pytest.mark.timeout(3600)
-def test_load_correct_jar(projected_graph_sssp_class, demo_jar):
-    sssp = JavaApp(demo_jar, projected_graph_sssp_class)
+def test_load_correct_jar(graphscope_session, projected_graph_sssp_class, demo_jar):
+    graphscope_session.add_lib(demo_jar)
+    sssp = load_app(algo="java_pie:{}".format(projected_graph_sssp_class))
 
 
 @pytest.mark.skipif(

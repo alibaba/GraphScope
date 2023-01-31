@@ -180,6 +180,7 @@ class GraphInterface(metaclass=ABCMeta):
         config[types_pb2.ARROW_PROPERTY_DEFINITION] = attr_value_pb2.AttrValue()
         config[types_pb2.DIRECTED] = utils.b_to_attr(self._directed)
         config[types_pb2.GENERATE_EID] = utils.b_to_attr(self._generate_eid)
+        config[types_pb2.RETAIN_OID] = utils.b_to_attr(self._retain_oid)
         config[types_pb2.OID_TYPE] = utils.s_to_attr(self._oid_type)
         config[types_pb2.VID_TYPE] = utils.s_to_attr("uint64_t")
         config[types_pb2.IS_FROM_VINEYARD_ID] = utils.b_to_attr(False)
@@ -225,6 +226,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
         oid_type="int64",
         directed=True,
         generate_eid=True,
+        retain_oid=True,
         vertex_map="global",
     ):
         """Construct a :class:`GraphDAGNode` object.
@@ -242,6 +244,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
             oid_type: (str, optional): Type of vertex original id. Defaults to "int64".
             directed: (bool, optional): Directed graph or not. Defaults to True.
             generate_eid: (bool, optional): Generate id for each edge when setted True. Defaults to True.
+            retain_oid: (bool, optional): Keep original ID in vertex table when setted True. Defaults to True.
             vertex_map (str, optional): Indicate use global vertex map or local vertex map. Can be "global" or "local".
                 Defaults to global.
 
@@ -250,11 +253,12 @@ class GraphDAGNode(DAGNode, GraphInterface):
         super().__init__()
         self._session = session
         oid_type = utils.normalize_data_type_str(oid_type)
-        if oid_type not in ("int64_t", "std::string"):
-            raise ValueError("oid_type can only be int64_t or string.")
+        if oid_type not in ("int32_t", "int64_t", "std::string"):
+            raise ValueError("oid_type can only be int32_t, int64_t or string.")
         self._oid_type = oid_type
         self._directed = directed
         self._generate_eid = generate_eid
+        self._retain_oid = retain_oid
         self._graph_type = graph_def_pb2.ARROW_PROPERTY
         self._vertex_map = utils.vertex_map_type_to_enum(vertex_map)
 
@@ -316,6 +320,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
             self._oid_type,
             self._directed,
             self._generate_eid,
+            self._retain_oid,
             self._vertex_map,
         )
         graph_dag_node._base_graph = self
@@ -447,6 +452,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
             self._oid_type,
             self._directed,
             self._generate_eid,
+            self._retain_oid,
             self._vertex_map,
         )
         graph_dag_node._v_labels = v_labels
@@ -601,6 +607,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
             self._oid_type,
             self._directed,
             self._generate_eid,
+            self._retain_oid,
             self._vertex_map,
         )
         graph_dag_node._v_labels = v_labels
@@ -690,6 +697,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
             self._oid_type,
             self._directed,
             self._generate_eid,
+            self._retain_oid,
             self._vertex_map,
         )
         graph_dag_node._base_graph = self
@@ -761,6 +769,7 @@ class Graph(GraphInterface):
         self._fragments = list(vy_info.fragments)
         self._oid_type = data_type_to_cpp(vy_info.oid_type)
         self._generate_eid = vy_info.generate_eid
+        self._retain_oid = vy_info.retain_oid
 
         self._schema_path = vy_info.schema_path
         self._schema.from_graph_def(graph_def)
@@ -801,7 +810,9 @@ class Graph(GraphInterface):
     @property
     def signature(self):
         return hashlib.sha256(
-            "{}.{}".format(self._schema.signature(), self._key).encode("utf-8")
+            "{}.{}".format(self._schema.signature(), self._key).encode(
+                "utf-8", errors="ignore"
+            )
         ).hexdigest()
 
     @property

@@ -637,9 +637,9 @@ class Context(object):
             "Context key error, maybe it is not connected to engine.",
         )
         s = hashlib.sha256()
-        s.update(self._key.encode("utf-8"))
+        s.update(self._key.encode("utf-8", errors="ignore"))
         if not isinstance(self._graph, DAGNode):
-            s.update(self._graph.signature.encode("utf-8"))
+            s.update(self._graph.signature.encode("utf-8", errors="ignore"))
         return s.hexdigest()
 
     def __repr__(self):
@@ -730,7 +730,9 @@ class DynamicVertexDataContext(collections.abc.Mapping):
             "Context key error, maybe it is not connected to engine.",
         )
         return hashlib.sha256(
-            "{}.{}".format(self._key, self._graph.signature).encode("utf-8")
+            "{}.{}".format(self._key, self._graph.signature).encode(
+                "utf-8", errors="ignore"
+            )
         )
 
     def __repr__(self):

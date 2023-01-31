@@ -89,7 +89,7 @@ spec:
               export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(python3 -c "import os; import vineyard; print(os.path.dirname(vineyard.__file__))")
               export OPAL_PREFIX=$(python3 -c "import os; import graphscope; print(os.path.abspath(os.path.dirname(graphscope.__file__) + '/../graphscope.runtime/openmpi'))")
 
-              config_path=/etc/graphscope-store/config
+              config_path=/etc/groot/config
 
               [[ `hostname` =~ -([0-9]+)$ ]] || exit 1
               server_id=${BASH_REMATCH[1]}
@@ -173,7 +173,7 @@ spec:
             - name: data
               mountPath: {{ .Values.storeDataPath }}
             - name: config
-              mountPath: /etc/graphscope-store/config
+              mountPath: /etc/groot/config
       volumes:
         - name: config
           configMap:

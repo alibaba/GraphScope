@@ -113,6 +113,7 @@ jobs:
         # Install pip dependencies, build builtin gar, and generate proto stuffs.
         sudo apt update
         sudo apt install -y doxygen
+        pip3 install furo
 
         # generate a taged version
         cd ${GITHUB_WORKSPACE}
@@ -120,7 +121,7 @@ jobs:
 
         # generate a stable version
         tag=$(git describe --exact-match --tags HEAD 2>/dev/null || true)
-        if [ ! -z "tag" ];
+        if [ ! -z "$tag" ];
         then
           export TAG_VER=stable
           make graphscope-docs
@@ -140,12 +141,16 @@ jobs:
       if: steps.changes.outputs.src == 'true'
       run: echo "url => ${{ steps.preview_step.outputs.preview_url }}"
 
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      if: false
+
     - name: Upload Docs
       if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') }}
       shell: bash
       run: |
         shopt -s extglob
-        rm google-java-format-1.13.0-all-deps.jar || true
+        rm google-java-format-1.13.0-all-deps.jar* || true
 
         git config user.email github-actions@github.com
         git config user.name github-actions
@@ -156,7 +161,6 @@ jobs:
         git checkout gh-pages
 
         cd docs/
-        rm -rf !(_build|latest|stable|v*)
 
         if [ -d "_build/latest" ];
         then
@@ -172,13 +176,16 @@ jobs:
 
         if [ -d "_build/stable" ];
         then
+            rm -rf !(_build|latest|stable|v*)
             cp -R _build/stable/html/* ./
         fi
 
         rm -rf _build/
         rm -rf ../learning_engine/ || true
         rm -rf ../python || true
+        rm -rf ../analytical_engine/java || true
 
         git add -A
         git commit --amend --no-edit -m "Generate latest docs on CI, from commit ${{ github.sha }}." --author "github-actions <github-actions@github.com>" -s --date="$(date -R)"
         git push -f origin gh-pages
+

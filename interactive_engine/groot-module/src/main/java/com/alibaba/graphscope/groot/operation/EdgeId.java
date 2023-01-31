@@ -13,7 +13,7 @@
  */
 package com.alibaba.graphscope.groot.operation;
 
-import com.alibaba.maxgraph.proto.groot.EdgeIdPb;
+import com.alibaba.graphscope.proto.groot.EdgeIdPb;
 
 public class EdgeId {
 

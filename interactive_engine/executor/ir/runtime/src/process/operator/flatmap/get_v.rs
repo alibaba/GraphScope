@@ -23,6 +23,7 @@ use ir_common::KeyId;
 use pegasus::api::function::{DynIter, FlatMapFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenResult};
+use crate::process::entry::Entry;
 use crate::process::operator::flatmap::FlatMapFuncGen;
 use crate::process::record::{Record, RecordExpandIter};
 
@@ -37,7 +38,7 @@ impl FlatMapFunction<Record, Record> for GetBothVOperator {
 
     fn exec(&self, input: Record) -> FnResult<Self::Target> {
         if let Some(entry) = input.get(self.start_tag) {
-            if let Some(e) = entry.as_graph_edge() {
+            if let Some(e) = entry.as_edge() {
                 let src_vertex =
                     Vertex::new(e.src_id, e.get_src_label().map(|l| l.clone()), DynDetails::default());
                 let dst_vertex =

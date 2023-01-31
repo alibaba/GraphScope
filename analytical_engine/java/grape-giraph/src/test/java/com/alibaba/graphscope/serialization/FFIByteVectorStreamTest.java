@@ -21,13 +21,18 @@ import com.alibaba.graphscope.stdcxx.FFIByteVectorFactory;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.scijava.nativelib.NativeLoader;
 
 import java.io.IOException;
 
 public class FFIByteVectorStreamTest {
 
     static {
-        System.loadLibrary("giraph-jni");
+        try {
+            NativeLoader.loadLibrary("grape-jni");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private FFIByteVectorOutputStream outputStream;

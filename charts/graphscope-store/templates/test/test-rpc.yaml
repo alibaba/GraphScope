@@ -10,7 +10,7 @@ spec:
   {{- end }}
   containers:
     - name: python
-      image: registry.hub.docker.com/library/python:3.9.9-alpine3.14
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:python-3.9.9-alpine3.14
       env:
         - name: frontend
           value: {{ include "graphscope-store.frontend.fullname" . }}.{{ .Release.Namespace }}
@@ -36,7 +36,7 @@ spec:
   {{- end }}
   containers:
     - name: python
-      image: registry.hub.docker.com/library/python:3.9.9-alpine3.14
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:python-3.9.9-alpine3.14
       env:
         - name: frontend
           value: {{ include "graphscope-store.frontend.fullname" . }}.{{ .Release.Namespace }}

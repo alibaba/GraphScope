@@ -12,7 +12,8 @@ TARGETPLATFORM ?= $(shell arch)
 RUNNER_VERSION ?= 2.287.1
 DOCKER_VERSION ?= 20.10.12
 
-VINEYARD_VERSION ?= v0.11.0
+VINEYARD_VERSION ?= v0.11.7
+BUILDER_VERSION ?= $(VINEYARD_VERSION)
 
 # default list of platforms for which multiarch image is built
 ifeq (${PLATFORMS}, )
@@ -25,5 +26,5 @@ build:
 		--build-arg TARGETPLATFORM=${TARGETPLATFORM} \
 		--build-arg RUNNER_VERSION=${RUNNER_VERSION} \
 		--build-arg DOCKER_VERSION=${DOCKER_VERSION} \
-		--build-arg BASE_VERSION=$(VINEYARD_VERSION) \
+		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		-t ${NAME}:${TAG} .

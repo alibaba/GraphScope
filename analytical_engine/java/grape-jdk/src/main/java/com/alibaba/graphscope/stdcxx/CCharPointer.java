@@ -21,9 +21,8 @@ import com.alibaba.fastffi.CXXPointerRangeElement;
 import com.alibaba.fastffi.FFIFactory;
 import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFITypeAlias;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @FFITypeAlias("char")
 public interface CCharPointer extends CXXPointerRangeElement<CCharPointer> {
     @CXXOperator("*&")

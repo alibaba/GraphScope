@@ -43,6 +43,7 @@
 #include "core/config.h"
 #include "core/context/context_protocols.h"
 #include "core/context/i_context.h"
+#include "core/context/selector.h"
 #include "core/context/tensor_dataframe_builder.h"
 #include "core/error.h"
 #include "core/utils/mpi_utils.h"
@@ -83,7 +84,8 @@ inline InArchive& operator<<(
   size_t size = tensor.size();
   if (size > 0) {
     auto type = gs::dynamic::GetType(tensor.data()[0]);
-    CHECK(type == gs::dynamic::Type::kInt64Type ||
+    CHECK(type == gs::dynamic::Type::kInt32Type ||
+          type == gs::dynamic::Type::kInt64Type ||
           type == gs::dynamic::Type::kDoubleType ||
           type == gs::dynamic::Type::kStringType);
     for (size_t i = 0; i < tensor.size(); i++) {
@@ -530,6 +532,42 @@ class TensorContextWrapper : public ITensorContextWrapper {
     return vy_obj->id();
   }
 
+  bl::result<std::vector<std::pair<std::string, std::shared_ptr<arrow::Array>>>>
+  ToArrowArrays(
+      const grape::CommSpec& comm_spec,
+      const std::vector<std::pair<std::string, Selector>>& selectors) override {
+    auto& frag = ctx_->fragment();
+    auto& tensor = ctx_->tensor();
+    std::vector<std::pair<std::string, std::shared_ptr<arrow::Array>>>
+        arrow_arrays;
+    for (auto& pair : selectors) {
+      auto& col_name = pair.first;
+      auto& selector = pair.second;
+      std::shared_ptr<arrow::Array> arr;
+      switch (selector.type()) {
+      case SelectorType::kResult: {
+        typename vineyard::ConvertToArrowType<data_t>::BuilderType builder;
+        std::shared_ptr<
+            typename vineyard::ConvertToArrowType<data_t>::ArrayType>
+            arr_ptr;
+        for (size_t offset = 0; offset < tensor.size(); offset++) {
+          ARROW_OK_OR_RAISE(builder.Append(tensor.data()[offset]));
+        }
+        CHECK_ARROW_ERROR(builder.Finish(&arr_ptr));
+        arr = std::dynamic_pointer_cast<arrow::Array>(arr_ptr);
+        break;
+      }
+      default:
+        RETURN_GS_ERROR(vineyard::ErrorCode::kUnsupportedOperationError,
+                        "Unsupported operation, available selector type: "
+                        "result. selector: " +
+                            selector.str());
+      }
+      arrow_arrays.emplace_back(col_name, arr);
+    }
+    return arrow_arrays;
+  }
+
  private:
   std::shared_ptr<IFragmentWrapper> frag_wrapper_;
   std::shared_ptr<context_t> ctx_;
@@ -662,6 +700,34 @@ class TensorContextWrapper<FRAG_T, std::string> : public ITensorContextWrapper {
                     "Not implemented ToVineyardDataframe for string type");
   }
 
+  bl::result<std::vector<std::pair<std::string, std::shared_ptr<arrow::Array>>>>
+  ToArrowArrays(
+      const grape::CommSpec& comm_spec,
+      const std::vector<std::pair<std::string, Selector>>& selectors) override {
+    auto& frag = ctx_->fragment();
+    auto& tensor = ctx_->tensor();
+    std::vector<std::pair<std::string, std::shared_ptr<arrow::Array>>>
+        arrow_arrays;
+    for (auto& pair : selectors) {
+      auto& col_name = pair.first;
+      auto& selector = pair.second;
+      std::shared_ptr<arrow::Array> arr;
+      switch (selector.type()) {
+      case SelectorType::kResult: {
+        arr = std::dynamic_pointer_cast<arrow::Array>(tensor.data());
+        break;
+      }
+      default:
+        RETURN_GS_ERROR(vineyard::ErrorCode::kUnsupportedOperationError,
+                        "Unsupported operation, available selector type: "
+                        "result. selector: " +
+                            selector.str());
+      }
+      arrow_arrays.emplace_back(col_name, arr);
+    }
+    return arrow_arrays;
+  }
+
  private:
   std::shared_ptr<IFragmentWrapper> frag_wrapper_;
   std::shared_ptr<context_t> ctx_;
@@ -726,7 +792,9 @@ class TensorContextWrapper<
       for (auto dim_size : first_shape) {
         *arc << static_cast<int64_t>(dim_size);
       }
-      if (data_type == dynamic::Type::kInt64Type) {
+      if (data_type == dynamic::Type::kInt32Type) {
+        *arc << static_cast<int>(vineyard::TypeToInt<int32_t>::value);
+      } else if (data_type == dynamic::Type::kInt64Type) {
         *arc << static_cast<int>(vineyard::TypeToInt<int64_t>::value);
       } else if (data_type == dynamic::Type::kDoubleType) {
         *arc << static_cast<int>(vineyard::TypeToInt<double>::value);
@@ -974,6 +1042,14 @@ class TensorContextWrapper<
     builder.AddChunk(df_chunk_id);
 
     return builder.Seal(client)->id();
+  }
+
+  bl::result<std::vector<std::pair<std::string, std::shared_ptr<arrow::Array>>>>
+  ToArrowArrays(
+      const grape::CommSpec& comm_spec,
+      const std::vector<std::pair<std::string, Selector>>& selectors) override {
+    RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
+                    "Not implemented ToArrowArrays for dynamic type");
   }
 
  private:

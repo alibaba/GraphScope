@@ -411,9 +411,11 @@ def test_error_on_run_app(projected_pg_no_edge_data):
 
 def test_app_on_local_vm_graph(
     p2p_property_graph_undirected_local_vm,
-    p2p_property_graph_undirected_local_vm_str,
+    p2p_property_graph_undirected_local_vm_string,
+    p2p_property_graph_undirected_local_vm_int32,
     wcc_result,
 ):
+    # on default int64 oid
     ctx1 = graphscope.wcc(p2p_property_graph_undirected_local_vm)
     r1 = (
         ctx1.to_dataframe({"node": "v.id", "r": "r"})
@@ -422,8 +424,18 @@ def test_app_on_local_vm_graph(
     )
     # Test algorithm correctness
     assert np.all(r1 == wcc_result)
-    # Test compile
-    ctx2 = graphscope.wcc(p2p_property_graph_undirected_local_vm_str)
+
+    # Test compile, on string oid
+    ctx2 = graphscope.wcc(p2p_property_graph_undirected_local_vm_string)
+    r2 = (
+        ctx2.to_dataframe({"node": "v.id", "r": "r"})
+        .sort_values(by=["node"])
+        .to_numpy(dtype=int)
+    )
+    assert r2 is not None
+
+    # Test compile, on int32 oid
+    ctx2 = graphscope.wcc(p2p_property_graph_undirected_local_vm_int32)
     r2 = (
         ctx2.to_dataframe({"node": "v.id", "r": "r"})
         .sort_values(by=["node"])

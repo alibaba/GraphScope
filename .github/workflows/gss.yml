@@ -90,7 +90,6 @@ jobs:
         cd interactive_engine/groot-server
         mvn test -P gremlin-test
 
-
     - name: Build GraphScope Store
       run: |
         source ${HOME}/.bashrc

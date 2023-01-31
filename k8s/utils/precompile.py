@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import sys
 import hashlib
 import multiprocessing
@@ -16,7 +17,7 @@ import yaml
 
 
 def compute_sig(s):
-    return hashlib.sha256(s.encode("utf-8")).hexdigest()
+    return hashlib.sha256(s.encode("utf-8", errors="ignore")).hexdigest()
 
 
 NETWORKX = os.environ.get("NETWORKX", "ON")
@@ -26,21 +27,19 @@ try:
     COORDINATOR_HOME = Path(gscoordinator.__file__).parent.parent.absolute()
 except ModuleNotFoundError:
     COORDINATOR_HOME = Path(
-        os.path.join(os.path.dirname(__file__), "..", "..", "coordinator")
-    )
+            os.path.join(os.path.dirname(__file__), "..", "..", "coordinator")
+    ).resolve()
 
 TEMPLATE_DIR = COORDINATOR_HOME / "gscoordinator" / "template"
+CMAKELISTS_TEMPLATE = (TEMPLATE_DIR / "CMakeLists.template").resolve()
 BUILTIN_APP_RESOURCE_PATH = (
     COORDINATOR_HOME / "gscoordinator" / "builtin" / "app" / "builtin_app.gar"
-)
-CMAKELISTS_TEMPLATE = TEMPLATE_DIR / "CMakeLists.template"
+).resolve()
 GRAPHSCOPE_HOME = (
     os.environ["GRAPHSCOPE_HOME"]
     if "GRAPHSCOPE_HOME" in os.environ
     else "/opt/graphscope"
 )
-WORKSPACE = Path(os.path.join("/", tempfile.gettempprefix(), "gs", "builtin"))
-
 
 def cmake_and_make(cmake_commands):
     try:
@@ -51,7 +50,7 @@ def cmake_and_make(cmake_commands):
             encoding="utf-8",
             errors="replace",
             universal_newlines=True,
-            check=True
+            check=True,
         )
         make_process = subprocess.run(
             [shutil.which("make"), "-j4"],
@@ -67,6 +66,7 @@ def cmake_and_make(cmake_commands):
         print(e.stderr)
         raise
 
+
 def get_lib_path(app_dir, app_name):
     if sys.platform == "linux" or sys.platform == "linux2":
         return app_dir / f"lib{app_name}.so"
@@ -74,6 +74,7 @@ def get_lib_path(app_dir, app_name):
         return app_dir / f"lib{app_name}.dylib"
     else:
         raise RuntimeError(f"Unsupported platform {sys.platform}")
+
 
 def cmake_graph(graph_class):
     print("Start to compile", graph_class)
@@ -163,10 +164,12 @@ def get_app_info(algo: str):
 
     raise KeyError("Algorithm %s does not exist in the gar resource." % algo)
 
+
 def internal_type(t):  # The template of vertex map needs special care.
     if t == "std::string":
         return "vineyard::arrow_string_view"
     return t
+
 
 def compile_graph():
     property_frame_template = "vineyard::ArrowFragment<{},{},{}>"
@@ -174,8 +177,11 @@ def compile_graph():
     flattened_frame_template = "gs::ArrowFlattenedFragment<{},{},{},{}>"
     dynamic_projected_frame_template = "gs::DynamicProjectedFragment<{},{}>"
 
-    vertex_map_templates = ["vineyard::ArrowVertexMap<{},{}>", "vineyard::ArrowLocalVertexMap<{},{}>"]
-    
+    vertex_map_templates = [
+        "vineyard::ArrowVertexMap<{},{}>",
+        "vineyard::ArrowLocalVertexMap<{},{}>",
+    ]
+
     oid_types = ["int64_t", "std::string"]
     vid_types = ["uint64_t"]
     vdata_types = ["int64_t", "grape::EmptyType"]
@@ -197,10 +203,11 @@ def compile_graph():
                     graph_class = projected_frame_template.format(
                         oid, vid, vdata, edata, vertex_map
                     )
+                    graph_classes.append(graph_class)
+
                     flattend_graph_class = flattened_frame_template.format(
                         oid, vid, vdata, edata
                     )
-                    graph_classes.append(graph_class)
                     graph_classes.append(flattend_graph_class)
 
     for vdata in vdata_types:
@@ -214,7 +221,10 @@ def compile_graph():
 
 def compile_cpp_pie_app():
     targets = []
-    vertex_map_templates = ["vineyard::ArrowVertexMap<{},{}>", "vineyard::ArrowLocalVertexMap<{},{}>"]
+    vertex_map_templates = [
+        "vineyard::ArrowVertexMap<{},{}>",
+        "vineyard::ArrowLocalVertexMap<{},{}>",
+    ]
 
     lv = vertex_map_templates[0].format(internal_type("int64_t"), "uint64_t")
     sv = vertex_map_templates[0].format(internal_type("std::string"), "uint64_t")
@@ -238,6 +248,12 @@ def compile_cpp_pie_app():
         "std::string", "uint64_t", "grape::EmptyType", "double", sv
     )
     psull = project_template.format("std::string", "uint64_t", "int64_t", "int64_t", sv)
+    psusl = project_template.format(
+        "std::string", "uint64_t", "std::string", "int64_t", sv
+    )
+    psusu = project_template.format(
+        "std::string", "uint64_t", "std::string", "uint64_t", sv
+    )
 
     plull = project_template.format("int64_t", "uint64_t", "int64_t", "int64_t", lv)
     pluee = project_template.format(
@@ -246,15 +262,24 @@ def compile_cpp_pie_app():
     pluel = project_template.format(
         "int64_t", "uint64_t", "grape::EmptyType", "int64_t", lv
     )
-    plued = project_template.format("int64_t", "uint64_t", "grape::EmptyType", "double", lv)
+    plued = project_template.format(
+        "int64_t", "uint64_t", "grape::EmptyType", "double", lv
+    )
     targets.extend(
         [
             ("pagerank", psuee),
             ("pagerank", pluee),
             ("pagerank", plull),
             ("wcc", psuee, ["-DWCC_USE_GID=ON"]),
-            ("wcc", pluee),
+            ("wcc", psuel, ["-DWCC_USE_GID=ON"]),
+            ("wcc", psued, ["-DWCC_USE_GID=ON"]),
+            ("wcc", psull, ["-DWCC_USE_GID=ON"]),
+            ("wcc", psusl, ["-DWCC_USE_GID=ON"]),
+            ("wcc", psusu, ["-DWCC_USE_GID=ON"]),
             ("wcc", plull),
+            ("wcc", pluee),
+            ("wcc", pluel),
+            ("wcc", plued),
             ("sssp", psuel),
             ("sssp", psued),
             ("sssp", pluel),
@@ -411,7 +436,40 @@ def compile_cpp_pie_app():
         pool.map(cmake_app, targets)
 
 
+def parse_sys_args():
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument(
+        "--graph",
+        action='store_true',
+        help="Compile graph libraries.",
+    )
+    parser.add_argument(
+        "--app",
+        action='store_true',
+        help="Compile application libraries.",
+    )
+    parser.add_argument(
+        "--output_dir",
+        type=str,
+        default=WORKSPACE,
+        help="Output directory."
+    )
+    return parser.parse_args()
+
+WORKSPACE = Path(os.path.join("/", tempfile.gettempprefix(), "gs", "builtin")).resolve()
+
 if __name__ == "__main__":
+    args = parse_sys_args()
+    print("Launching with args", args)
+    WORKSPACE = args.output_dir
+    WORKSPACE = Path(WORKSPACE).resolve()
+    print("Will output libraries to", WORKSPACE)
     os.makedirs(WORKSPACE, exist_ok=True)
-    compile_graph()
-    compile_cpp_pie_app()
+    if args.graph:
+        print("compile graph")
+        compile_graph()
+    if args.app:
+        print("compile app")
+        compile_cpp_pie_app()

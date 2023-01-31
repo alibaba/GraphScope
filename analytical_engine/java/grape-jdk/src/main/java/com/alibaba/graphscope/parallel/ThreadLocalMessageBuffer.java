@@ -26,9 +26,8 @@ import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFINameAlias;
 import com.alibaba.fastffi.FFIPointer;
 import com.alibaba.fastffi.FFITypeAlias;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @FFITypeAlias(GRAPE_PARALLEL_THREAD_LOCAL_MESSAGE_BUFFER)
 @CXXHead({GRAPE_PARALLEL_THREAD_LOCAL_MESSAGE_BUFFER_H, GRAPE_PARALLEL_MESSAGE_MANAGER})
 public interface ThreadLocalMessageBuffer<T> extends FFIPointer {

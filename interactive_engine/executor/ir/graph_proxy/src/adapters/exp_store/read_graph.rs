@@ -31,8 +31,6 @@ use ir_common::{KeyId, LabelId, NameOrId};
 use pegasus::configure_with_default;
 use pegasus_common::downcast::*;
 use pegasus_common::impl_as_any;
-use rand::prelude::StdRng;
-use rand::{Rng, SeedableRng};
 
 use crate::apis::graph::PKV;
 use crate::apis::{

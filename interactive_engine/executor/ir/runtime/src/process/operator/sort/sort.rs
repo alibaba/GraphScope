@@ -93,6 +93,7 @@ mod tests {
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
 
+    use crate::process::entry::Entry;
     use crate::process::operator::sort::CompareFunctionGen;
     use crate::process::operator::tests::{
         init_source, init_source_with_tag, to_var_pb, PERSON_LABEL, TAG_A,
@@ -128,7 +129,7 @@ mod tests {
         let mut result = sort_test(init_source(), sort_opr);
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
                 result_ids.push(element.id());
             }
         }
@@ -149,7 +150,7 @@ mod tests {
         let mut result = sort_test(init_source(), sort_opr);
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
                 result_ids.push(element.id());
             }
         }
@@ -170,7 +171,7 @@ mod tests {
         let mut result = sort_test(init_source(), sort_opr);
         let mut result_name = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
                 result_name.push(
                     element
                         .details()
@@ -213,7 +214,7 @@ mod tests {
         let mut result = sort_test(source, sort_opr);
         let mut result_name_ages = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
                 let details = element.details().unwrap();
                 result_name_ages.push((
                     details
@@ -250,11 +251,7 @@ mod tests {
         let mut result = sort_test(init_source_with_tag(), sort_opr);
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record
-                .get(Some(TAG_A))
-                .unwrap()
-                .as_graph_vertex()
-            {
+            if let Some(element) = record.get(Some(TAG_A)).unwrap().as_vertex() {
                 result_ids.push(element.id());
             }
         }
@@ -275,11 +272,7 @@ mod tests {
         let mut result = sort_test(init_source_with_tag(), sort_opr);
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record
-                .get(Some(TAG_A))
-                .unwrap()
-                .as_graph_vertex()
-            {
+            if let Some(element) = record.get(Some(TAG_A)).unwrap().as_vertex() {
                 result_ids.push(element.id());
             }
         }

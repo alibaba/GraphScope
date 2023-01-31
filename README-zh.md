@@ -242,18 +242,18 @@ pip3 install graphscope-client
 
 使用 GraphScope 的第一步，我们需要在 Python 中创建一个会话（session）。
 
-为了方便起见，我们提供了若干示例数据集，可通过设置参数 `mount_dataset` 来挂载这些数据集到集群上，挂载路径是 Pod 中你指定的路径。如果你想使用自己的数据集，请参考 [这篇文档](docs/zh/deployment.rst)
+为了方便起见，我们提供了若干示例数据集，可通过设置参数 `with_dataset` 来挂载这些数据集到集群上，挂载路径是 Pod 中 `/dataset`。如果你想使用自己的数据集，请参考 [这篇文档](docs/zh/deployment.rst)
 
 ```python
 import graphscope
 
-sess = graphscope.session(mount_dataset="/dataset")
+sess = graphscope.session(with_dataset=True)
 ```
 
 对于 macOS，创建会话需要使用 LoadBalancer 服务类型（默认是 NodePort）。
 
 ```python
-sess = graphscope.session(mount_dataset="/dataset", k8s_service_type="LoadBalancer")
+sess = graphscope.session(with_dataset=True, k8s_service_type="LoadBalancer")
 ```
 
 会话的建立过程中，首选会在背后尝试拉起一个 `coordinator` 作为后端引擎的入口。

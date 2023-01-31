@@ -1,6 +1,10 @@
 package com.alibaba.graphscope.groot.ingestor;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
+import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.config.IngestorConfig;
+import com.alibaba.graphscope.groot.common.config.StoreConfig;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.metrics.AvgMetric;
 import com.alibaba.graphscope.groot.metrics.MetricsAgent;
@@ -9,11 +13,7 @@ import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.operation.OperationBlob;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch.Builder;
-import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.common.config.IngestorConfig;
-import com.alibaba.maxgraph.common.config.StoreConfig;
-import com.alibaba.maxgraph.sdkcommon.util.PartitionUtils;
+import com.alibaba.graphscope.sdkcommon.util.PartitionUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

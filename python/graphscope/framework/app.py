@@ -149,7 +149,7 @@ class AppAssets(DAGNode):
     Assets includes an algorithm name, and gar (for user defined algorithm),
     a context type (one of 'tensor', 'vertex_data', 'vertex_property',
     'labeled_vertex_data', 'dynamic_vertex_data', 'labeled_vertex_property'),
-    and its type (one of `cpp_pie`, `cython_pie`, `cython_pregel`),
+    and its type (one of `cpp_pie`, `cpp_pregel`, `cython_pie`, `cython_pregel`),
 
     The instance of this class can be passed to init :class:`graphscope.framework.app.AppDAGNode`
     """
@@ -246,7 +246,7 @@ class AppAssets(DAGNode):
 
     @property
     def type(self):
-        """Algorithm type, one of `cpp_pie`, `cython_pie`, `java_pie` or `cython_pregel`.
+        """Algorithm type, one of `cpp_pie`, `cpp_pregel`, `cython_pie`, `java_pie` or `cython_pregel`.
 
         Returns:
             str: Algorithm type of this asset.
@@ -287,7 +287,7 @@ class AppAssets(DAGNode):
             str: signature of this assets
         """
         s = hashlib.sha256()
-        s.update(self._algo.encode("utf-8"))
+        s.update(self._algo.encode("utf-8", errors="ignore"))
         if self._gar:
             s.update(self._gar)
         return s.hexdigest()
@@ -389,7 +389,12 @@ class AppDAGNode(DAGNode):
         if not isinstance(self._graph, DAGNode) and not self._graph.loaded():
             raise RuntimeError("The graph is not loaded")
 
-        if self._app_assets.type in ["cython_pie", "cython_pregel", "java_pie"]:
+        if self._app_assets.type in [
+            "cpp_pregel",
+            "cython_pie",
+            "cython_pregel",
+            "java_pie",
+        ]:
             # cython app support kwargs only
             check_argument(
                 not args, "Only support using keyword arguments in cython app."
@@ -449,7 +454,7 @@ class App(object):
         """Signature is computed by all critical components of the App."""
         return hashlib.sha256(
             "{}.{}".format(self._app_assets.signature, self._graph.template_str).encode(
-                "utf-8"
+                "utf-8", errors="ignore"
             )
         ).hexdigest()
 

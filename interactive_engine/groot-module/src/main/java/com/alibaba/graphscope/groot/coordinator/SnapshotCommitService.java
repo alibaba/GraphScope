@@ -13,9 +13,9 @@
  */
 package com.alibaba.graphscope.groot.coordinator;
 
-import com.alibaba.maxgraph.proto.groot.CommitSnapshotIdRequest;
-import com.alibaba.maxgraph.proto.groot.CommitSnapshotIdResponse;
-import com.alibaba.maxgraph.proto.groot.SnapshotCommitGrpc;
+import com.alibaba.graphscope.proto.groot.CommitSnapshotIdRequest;
+import com.alibaba.graphscope.proto.groot.CommitSnapshotIdResponse;
+import com.alibaba.graphscope.proto.groot.SnapshotCommitGrpc;
 
 import io.grpc.Context;
 import io.grpc.stub.StreamObserver;

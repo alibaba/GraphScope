@@ -6,7 +6,7 @@ Usage of `vineyard-htap-loader`
 
 ```bash
 $ ./vineyard_htap_loader
-usage: ./vineyard_htap_loader <e_label_num> <efiles...> <v_label_num> <vfiles...> [directed] [generate_eid]
+usage: ./vineyard_htap_loader <e_label_num> <efiles...> <v_label_num> <vfiles...> [directed] [generate_eid] [retain_oid]
 
    or: ./vineyard_htap_loader --config <config.json>
 ```

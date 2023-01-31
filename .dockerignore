@@ -5,20 +5,32 @@
 **/*.egg-info/
 **/*.eggs
 
+# artifacts, use for testing
+/google-java-format-1.13.0-all-deps.jar
+
+
 # coordinator
 coordinator/proto
 
 # python
 python/proto
+python/build
+python/*.tar.gz
+python/*.zip
 
 # Gar file
 **/*.gar
+
+# Git
+# .git
+.cache
 
 # dot file
 *.dot
 
 # Protobuf GRPC
-**/*.pb.*
+# Needed by build analytical image in CI, the COPY should copy the generated proto files
+# **/*.pb.*
 **/*_pb2.py
 **/*_pb2_grpc.py
 
@@ -61,7 +73,7 @@ interactive_engine/rust-common/src/proto/*
 
 interactive_engine/executor/store/groot/src/db/proto/*
 !interactive_engine/executor/store/groot/src/db/proto/mod.rs
-interactive_engine/data_load_tools/dependency-reduced-pom.xml
+interactive_engine/data-load-tool/dependency-reduced-pom.xml
 interactive_engine/gaia-adaptor/dependency-reduced-pom.xml
 interactive_engine/executor/Cargo.lock
 interactive_engine/executor/engine/pegasus/benchmark/src/graph/storage/clickhouse/pb_gen/*
@@ -81,7 +93,18 @@ package.lock
 # docker: ignore learning engine's build artifacts
 learning_engine/graph-learn/cmake-build
 learning_engine/graph-learn/graphlearn/cmake-build
+learning_engine/graph-learn/graphlearn/built
+learning_engine/graph-learn/graphlearn/build
+learning_engine/graph-learn/graphlearn/examples/data
+learning_engine/graph-learn/graphlearn/**/graphlearn.*.log*
+!learning_engine/graph-learn/graphlearn/examples/data/*.py
+learning_engine/graph-learn/graphlearn/pywrap_graphlearn.cpython*
+learning_engine/graph-learn/graphlearn/src/contrib/knn
+learning_engine/graph-learn/graphlearn/python/lib
 
 # docker: ignore .install_prefix
 .install_prefix
 
+# Core dump
+core.*
+*.core

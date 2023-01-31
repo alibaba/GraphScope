@@ -156,7 +156,7 @@ public class IrAuthenticationHandler extends AbstractAuthenticationHandler {
                         if (negotiator.get().isComplete()) {
                             final AuthenticatedUser user = negotiator.get().getAuthenticatedUser();
                             ctx.channel().attr(StateKey.AUTHENTICATED_USER).set(user);
-                            // User name logged with the remote socket address and authenticator
+                            // Username logged with the remote socket address and authenticator
                             // classname for audit logging
                             if (settings.enableAuditLog || settings.authentication.enableAuditLog) {
                                 String address = ctx.channel().remoteAddress().toString();

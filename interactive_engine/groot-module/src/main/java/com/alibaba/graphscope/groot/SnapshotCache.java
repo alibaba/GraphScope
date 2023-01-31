@@ -13,7 +13,7 @@
  */
 package com.alibaba.graphscope.groot;
 
-import com.alibaba.maxgraph.sdkcommon.schema.GraphDef;
+import com.alibaba.graphscope.sdkcommon.schema.GraphDef;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,7 +92,6 @@ public class SnapshotCache {
                         || graphDef.getSchemaVersion() > oldGraphDef.getVersion())) {
             newSnapshotInfoBuilder.setGraphDef(graphDef);
             logger.info("schema updated. schema version [" + graphDef.getVersion() + "]");
-            logger.info("graphDef: " + graphDef);
         }
         this.snapshotWithSchemaRef.set(newSnapshotInfoBuilder.build());
         logger.debug("snapshotId update to [" + snapshotId + "]");

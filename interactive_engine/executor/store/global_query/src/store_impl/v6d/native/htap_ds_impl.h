@@ -30,12 +30,15 @@ namespace htap_impl {
 
 using VID_TYPE = uint64_t;
 using OID_TYPE = int64_t;
+using INT32_OID_TYPE = int32_t;
 using STRING_OID_TYPE = std::string;
 
 using FRAGMENT_TYPE = ::vineyard::ArrowFragment<OID_TYPE, VID_TYPE>;
+using INT32_FRAGMENT_TYPE = ::vineyard::ArrowFragment<INT32_OID_TYPE, VID_TYPE>;
 using STRING_FRAGMENT_TYPE = ::vineyard::ArrowFragment<STRING_OID_TYPE, VID_TYPE>;
 
 using VERTEX_MAP_TYPE = ::vineyard::ArrowVertexMap<FRAGMENT_TYPE::internal_oid_t, VID_TYPE>;
+using INT32_VERTEX_MAP_TYPE = ::vineyard::ArrowVertexMap<INT32_FRAGMENT_TYPE::internal_oid_t, VID_TYPE>;
 using STRING_VERTEX_MAP_TYPE = ::vineyard::ArrowVertexMap<STRING_FRAGMENT_TYPE::internal_oid_t, VID_TYPE>;
 
 using FRAG_ID_TYPE = ::vineyard::fid_t;
@@ -47,11 +50,15 @@ struct GraphHandleImpl {
   vineyard::Client* client = nullptr;
 
   bool use_int64_oid = true;
+  bool use_int32_oid = true;
   bool use_string_oid = false;
 
   FRAGMENT_TYPE* fragments = nullptr;
+  INT32_FRAGMENT_TYPE* int32_fragments = nullptr;
   STRING_FRAGMENT_TYPE* string_fragments = nullptr;
+
   VERTEX_MAP_TYPE* vertex_map = nullptr;
+  INT32_VERTEX_MAP_TYPE* int32_vertex_map = nullptr;
   STRING_VERTEX_MAP_TYPE* string_vertex_map = nullptr;
 
   FRAG_ID_TYPE fnum;
@@ -140,6 +147,7 @@ struct AdjListUnit {
 struct EdgeIteratorImpl {
   // FRAG_ID_TYPE fid;
   FRAGMENT_TYPE* fragment = nullptr;
+  INT32_FRAGMENT_TYPE* int32_fragment = nullptr;
   STRING_FRAGMENT_TYPE* string_fragment = nullptr;
   vineyard::IdParser<EID_TYPE>* eid_parser;
 
@@ -170,6 +178,7 @@ int in_edge_next(EdgeIteratorImpl* iter, Edge* e_out);
 
 struct GetAllEdgesIteratorImpl {
   FRAGMENT_TYPE* fragment = nullptr;
+  INT32_FRAGMENT_TYPE* int32_fragment = nullptr;
   STRING_FRAGMENT_TYPE* string_fragment = nullptr;
   LabelId* e_labels;
   vineyard::IdParser<EID_TYPE>* eid_parser;

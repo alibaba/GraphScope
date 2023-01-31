@@ -1,8 +1,8 @@
 package com.alibaba.graphscope.groot.discovery;
 
-import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.common.util.CuratorUtils;
+import com.alibaba.graphscope.groot.CuratorUtils;
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
+import com.alibaba.graphscope.groot.common.config.Configs;
 
 import org.apache.curator.framework.CuratorFramework;
 

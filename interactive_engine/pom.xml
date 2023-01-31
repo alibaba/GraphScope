@@ -2,12 +2,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.alibaba.maxgraph</groupId>
-  <artifactId>maxgraph-parent</artifactId>
+  <groupId>com.alibaba.graphscope</groupId>
+  <artifactId>interactive-parent</artifactId>
   <packaging>pom</packaging>
   <version>${revision}</version>
 
-  <name>MaxGraph</name>
+  <name>InteractiveEngine</name>
   <profiles>
     <!-- DO NOT CHANGE THE *ORDER* IN WHICH THESE PROFILES ARE DEFINED! -->
     <profile>
@@ -41,7 +41,7 @@
         <module>assembly</module>
         <module>common</module>
         <module>executor</module>
-        <module>data_load_tools</module>
+        <module>data-load-tool</module>
         <module>groot-module</module>
         <module>groot-server</module>
         <module>lgraph</module>
@@ -59,7 +59,7 @@
       <modules>
         <module>assembly</module>
         <module>common</module>
-        <module>data_load_tools</module>
+        <module>data-load-tool</module>
         <module>executor</module>
         <module>frontend</module>
         <module>groot-module</module>
@@ -80,92 +80,128 @@
     <rust.compile.mode>debug</rust.compile.mode>
     <rust.compile.target>v6d</rust.compile.target>
     <rust.compile.skip.clean>true</rust.compile.skip.clean>
+    <groot.compile.feature>""</groot.compile.feature>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <log4j2.version>[2.17.1,)</log4j2.version>
     <hadoop.version>3.2.4</hadoop.version>
-    <grpc.version>1.34.1</grpc.version>
+    <!-- TODO(shirly121): upgrade to 3.6.1 -->
     <tinkerpop.version>3.5.1</tinkerpop.version>
     <slf4j.version>1.7.21</slf4j.version>
-    <groovy.version>2.5.14</groovy.version>
-    <curator.new.version>5.1.0</curator.new.version>
-    <curator.version>2.12.0</curator.version>
-    <jackson.version>2.14.0-rc1</jackson.version>
-    <jackson.databind.version>2.14.0-rc1</jackson.databind.version>
-    <maven.surefire.version>2.22.2</maven.surefire.version>
-    <os.maven.plugin.version>1.6.2</os.maven.plugin.version>
-    <protoc.version>3.18.0</protoc.version>
-    <protobuf.version>3.19.6</protobuf.version>
+    <log4j2.version>2.19.0</log4j2.version>
     <logback.version>1.2.3</logback.version>
-    <zookeeper.version>3.6.3</zookeeper.version>
+    <groovy.version>2.5.14</groovy.version>
     <kafka.version>2.7.2</kafka.version>
     <kafka.junit.version>3.2.1</kafka.junit.version>
-    <jna.version>5.5.0</jna.version>
+    <zookeeper.version>3.6.3</zookeeper.version>
+    <curator.version>5.4.0</curator.version>
+    <jackson.version>2.14.1</jackson.version>
+    <protoc.version>3.21.12</protoc.version>
+    <protobuf.version>3.21.12</protobuf.version>
+    <grpc.version>1.51.1</grpc.version>
+    <jna.version>5.7.0</jna.version>
+    <junit.version>4.13.2</junit.version>
     <junit.jupiter.version>5.6.3</junit.jupiter.version>
+    <testng.version>6.9.9</testng.version>
     <mockito.version>4.0.0</mockito.version>
     <rocksdb.version>5.15.10</rocksdb.version>
-    <maven.clean.plugin.version>3.1.0</maven.clean.plugin.version>
-    <protobuf.maven.plugin.version>0.6.1</protobuf.maven.plugin.version>
-    <commons.codec.version>1.13</commons.codec.version>
     <metrics.core.version>3.2.5</metrics.core.version>
-    <aliyun.oss.version>3.14.1</aliyun.oss.version>
     <skip.tests>true</skip.tests>
     <flatten.maven.plugin>1.1.0</flatten.maven.plugin>
+    <javax.annotation.version>1.2</javax.annotation.version>
+    <guava.version>31.1-jre</guava.version>
+    <commons.configuration.version>2.8.0</commons.configuration.version>
+    <commons.codec.version>1.15</commons.codec.version>
+    <commons.collections4.version>4.4</commons.collections4.version>
+    <commons.math3.version>3.6.1</commons.math3.version>
     <commons.lang3.version>3.12.0</commons.lang3.version>
+    <lombok.version>1.18.24</lombok.version>
+    <commons.cli.version>1.5.0</commons.cli.version>
+    <commons.io.version>2.11.0</commons.io.version>
+    <calcite.version>1.32.0</calcite.version>
+    <immutables.version>2.9.3</immutables.version>
+    <!-- OSS SDK requires httpclient version to be 4.4.1, related links: https://www.alibabacloud.com/help/zh/object-storage-service/latest/java-faq?spm=a2c63.p38356.0.0.69a63c6bXPt34F-->
+    <httpcomponents.version>4.4.1</httpcomponents.version>
+    <kryo.version>4.0.2</kryo.version>
+    <antlr4.version>4.9.1</antlr4.version>
+    <aliyun.oss.version>3.14.1</aliyun.oss.version>
+    <odps.sdk.public.version>0.36.4-public</odps.sdk.public.version>
+    <scala.version>2.12.10</scala.version>
+    <scala.binary.version>2.12</scala.binary.version>
+    <spark.version>3.1.1</spark.version>
+
+    <!-- Plugin -->
+    <maven.surefire.version>2.22.2</maven.surefire.version>
+    <maven.resource.version>3.3.0</maven.resource.version>
+    <maven.clean.version>3.2.0</maven.clean.version>
+    <maven.compile.version>3.10.0</maven.compile.version>
+    <maven.jar.version>3.0.0</maven.jar.version>
+    <maven.install.version>3.1.0</maven.install.version>
+    <maven.deploy.version>3.0.0</maven.deploy.version>
+    <maven.shade.version>3.4.1</maven.shade.version>
+    <maven.assembly.version>3.4.2</maven.assembly.version>
+    <os.maven.version>1.7.1</os.maven.version>
+    <protobuf.maven.version>0.6.1</protobuf.maven.version>
+    <build.helper.version>1.4</build.helper.version>
+    <exec.maven.version>3.0.0</exec.maven.version>
+    <scala.maven.version>3.2.2</scala.maven.version>
+    <cobertura.maven.version>2.7</cobertura.maven.version>
   </properties>
 
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>com.alibaba.maxgraph</groupId>
-        <artifactId>maxgraph-common</artifactId>
+        <groupId>com.alibaba</groupId>
+        <artifactId>fastjson</artifactId>
+        <version>2.0.20</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.alibaba.graphscope</groupId>
+        <artifactId>interactive-common</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.alibaba.maxgraph</groupId>
-        <artifactId>maxgraph-sdk-common</artifactId>
+        <groupId>com.alibaba.graphscope</groupId>
+        <artifactId>sdk-common</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-all</artifactId>
-        <version>${grpc.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-          </exclusion>
-        </exclusions>
+        <artifactId>compiler</artifactId>
+        <groupId>com.alibaba.graphscope</groupId>
+        <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-netty-shaded</artifactId>
-        <version>${grpc.version}</version>
+        <groupId>com.alibaba.pegasus</groupId>
+        <artifactId>pegasus-client</artifactId>
+        <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-protobuf</artifactId>
-        <version>${grpc.version}</version>
+        <groupId>com.alibaba.graphscope</groupId>
+        <artifactId>sdk</artifactId>
+        <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>io.grpc</groupId>
-        <artifactId>grpc-stub</artifactId>
-        <version>${grpc.version}</version>
+        <groupId>com.alibaba.graphscope</groupId>
+        <artifactId>executor</artifactId>
+        <version>${project.version}</version>
       </dependency>
+      <dependency>
+        <groupId>com.alibaba.graphscope</groupId>
+        <artifactId>groot-module</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+
       <dependency>
         <groupId>javax.annotation</groupId>
         <artifactId>javax.annotation-api</artifactId>
-        <version>1.2</version>
+        <version>${javax.annotation.version}</version>
       </dependency>
-      <dependency>
-        <groupId>junit</groupId>
-        <artifactId>junit</artifactId>
-        <version>4.13.2</version>
-      </dependency>
+
       <!-- google -->
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>[24.1.1,)</version>
+        <version>${guava.version}</version>
       </dependency>
       <dependency>
         <groupId>com.google.protobuf</groupId>
@@ -177,31 +213,50 @@
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-collections4</artifactId>
-        <version>4.1</version>
-      </dependency>
-      <dependency>
-        <groupId>commons-collections</groupId>
-        <artifactId>commons-collections</artifactId>
-        <version>3.2.2</version>
+        <version>${commons.collections4.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-math3</artifactId>
-        <version>3.6.1</version>
+        <version>${commons.math3.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-lang3</artifactId>
         <version>${commons.lang3.version}</version>
       </dependency>
+      <dependency>
+        <groupId>commons-cli</groupId>
+        <artifactId>commons-cli</artifactId>
+        <version>${commons.cli.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>${commons.io.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpclient</artifactId>
+        <version>${httpcomponents.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-configuration2</artifactId>
+        <version>${commons.configuration.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-codec</groupId>
+        <artifactId>commons-codec</artifactId>
+        <version>${commons.codec.version}</version>
+      </dependency>
 
-      <!-- common -->
+      <!-- tinkerpop -->
       <dependency>
         <groupId>org.apache.tinkerpop</groupId>
         <artifactId>tinkergraph-gremlin</artifactId>
         <version>${tinkerpop.version}</version>
       </dependency>
-
       <dependency>
         <groupId>org.apache.tinkerpop</groupId>
         <artifactId>gremlin-core</artifactId>
@@ -214,22 +269,22 @@
       </dependency>
       <dependency>
         <groupId>org.apache.tinkerpop</groupId>
-        <artifactId>gremlin-test</artifactId>
-        <version>${tinkerpop.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.tinkerpop</groupId>
         <artifactId>gremlin-groovy</artifactId>
         <version>${tinkerpop.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.tinkerpop</groupId>
-        <artifactId>gremlin-python</artifactId>
+        <artifactId>gremlin-server</artifactId>
         <version>${tinkerpop.version}</version>
       </dependency>
-
       <dependency>
+        <groupId>org.apache.tinkerpop</groupId>
+        <artifactId>gremlin-test</artifactId>
+        <version>${tinkerpop.version}</version>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <!-- TODO(siyuan): Upgrade to org.apache.groovy -->
         <groupId>org.codehaus.groovy</groupId>
         <artifactId>groovy</artifactId>
         <version>${groovy.version}</version>
@@ -239,11 +294,72 @@
         <artifactId>groovy-jsr223</artifactId>
         <version>${groovy.version}</version>
       </dependency>
+
       <dependency>
-        <groupId>com.alibaba</groupId>
-        <artifactId>fastjson</artifactId>
-        <version>1.2.83</version>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-all</artifactId>
+        <version>4.1.79.Final</version>
       </dependency>
+
+      <!-- Spark and Scala -->
+      <dependency>
+        <groupId>org.apache.spark</groupId>
+        <artifactId>spark-core_${scala.binary.version}</artifactId>
+        <version>${spark.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.spark</groupId>
+        <artifactId>spark-sql_${scala.binary.version}</artifactId>
+        <version>${spark.version}</version>
+        <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-library</artifactId>
+        <version>${scala.version}</version>
+        <scope>provided</scope>
+      </dependency>
+
+      <!-- ODPS -->
+      <dependency>
+        <groupId>com.aliyun.odps</groupId>
+        <artifactId>odps-sdk-commons</artifactId>
+        <version>${odps.sdk.public.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.aliyun.odps</groupId>
+        <artifactId>odps-sdk-mapred</artifactId>
+        <version>${odps.sdk.public.version}</version>
+      </dependency>
+
+      <!-- Bill of Materials -->
+      <dependency>
+        <groupId>com.fasterxml.jackson</groupId>
+        <artifactId>jackson-bom</artifactId>
+        <version>2.14.1</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-bom</artifactId>
+        <version>${log4j2.version}</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+
+      <dependency>
+        <groupId>io.grpc</groupId>
+        <artifactId>grpc-bom</artifactId>
+        <version>1.51.1</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
@@ -256,75 +372,6 @@
       </dependency>
 
       <dependency>
-        <groupId>org.jgrapht</groupId>
-        <artifactId>jgrapht-core</artifactId>
-        <version>1.1.0</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-core</artifactId>
-        <version>${jackson.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-databind</artifactId>
-        <version>${jackson.databind.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.fasterxml.jackson.module</groupId>
-        <artifactId>jackson-module-paranamer</artifactId>
-        <version>${jackson.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-annotations</artifactId>
-        <version>${jackson.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>jline</groupId>
-        <artifactId>jline</artifactId>
-        <version>2.14.2</version>
-      </dependency>
-      <dependency>
-        <groupId>org.testcontainers</groupId>
-        <artifactId>testcontainers</artifactId>
-        <version>1.7.1</version>
-        <scope>test</scope>
-      </dependency>
-
-      <dependency>
-        <groupId>org.testng</groupId>
-        <artifactId>testng</artifactId>
-        <version>6.9.9</version>
-        <scope>test</scope>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-api</artifactId>
-        <version>${log4j2.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-core</artifactId>
-        <version>${log4j2.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-slf4j-impl</artifactId>
-        <version>${log4j2.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-1.2-api</artifactId>
-        <version>${log4j2.version}</version>
-      </dependency>
-      <dependency>
         <groupId>ch.qos.logback</groupId>
         <artifactId>logback-classic</artifactId>
         <version>${logback.version}</version>
@@ -332,13 +379,22 @@
       <dependency>
         <groupId>org.projectlombok</groupId>
         <artifactId>lombok</artifactId>
-        <version>1.18.16</version>
+        <version>${lombok.version}</version>
         <scope>provided</scope>
       </dependency>
+
+      <!-- testing -->
       <dependency>
-        <groupId>com.squareup.okhttp3</groupId>
-        <artifactId>okhttp</artifactId>
-        <version>3.9.1</version>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>${junit.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.testng</groupId>
+        <artifactId>testng</artifactId>
+        <version>${testng.version}</version>
+        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.junit.jupiter</groupId>
@@ -353,131 +409,69 @@
         <scope>test</scope>
       </dependency>
       <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-api</artifactId>
+        <version>${junit.jupiter.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
         <version>${mockito.version}</version>
         <scope>test</scope>
       </dependency>
+
+      <!-- hadoop -->
       <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-client</artifactId>
         <version>${hadoop.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-yarn-client</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-          </exclusion>
-        </exclusions>
+        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-minicluster</artifactId>
-        <version>2.8.4</version>
-        <scope>provided</scope>
-        <exclusions>
-          <exclusion>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-          </exclusion>
-        </exclusions>
+        <version>${hadoop.version}</version>
+        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-hdfs</artifactId>
         <version>${hadoop.version}</version>
-        <scope>compile</scope>
-        <exclusions>
-          <exclusion>
-            <groupId>io.netty</groupId>
-            <artifactId>netty</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-all</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-          </exclusion>
-        </exclusions>
+        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-common</artifactId>
         <version>${hadoop.version}</version>
         <scope>compile</scope>
-        <exclusions>
-          <exclusion>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-          </exclusion>
-        </exclusions>
+      </dependency>
+
+      <!-- kafka and zookeeper -->
+      <dependency>
+        <groupId>org.apache.curator</groupId>
+        <artifactId>curator-framework</artifactId>
+        <version>${curator.version}</version>
       </dependency>
       <dependency>
-        <groupId>commons-cli</groupId>
-        <artifactId>commons-cli</artifactId>
-        <version>1.3</version>
+        <groupId>org.apache.curator</groupId>
+        <artifactId>curator-client</artifactId>
+        <version>${curator.version}</version>
       </dependency>
-      <!-- zookeeper -->
+      <dependency>
+        <groupId>org.apache.curator</groupId>
+        <artifactId>curator-recipes</artifactId>
+        <version>${curator.version}</version>
+      </dependency>
       <dependency>
         <groupId>org.apache.curator</groupId>
         <artifactId>curator-test</artifactId>
         <version>${curator.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>io.netty</groupId>
-            <artifactId>netty</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-          </exclusion>
-        </exclusions>
+        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.curator</groupId>
         <artifactId>curator-x-discovery</artifactId>
-        <version>${curator.new.version}</version>
+        <version>${curator.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.zookeeper</groupId>
@@ -504,103 +498,18 @@
         <groupId>org.apache.kafka</groupId>
         <artifactId>kafka_2.13</artifactId>
         <version>${kafka.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.apache.zookeeper</groupId>
-            <artifactId>zookeeper</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
 
       <dependency>
         <groupId>com.esotericsoftware</groupId>
         <artifactId>kryo-shaded</artifactId>
-        <version>4.0.0</version>
+        <version>${kryo.version}</version>
       </dependency>
+
       <dependency>
-        <groupId>de.javakaffee</groupId>
-        <artifactId>kryo-serializers</artifactId>
-        <version>0.38</version>
-        <exclusions>
-          <exclusion>
-            <groupId>com.esotericsoftware</groupId>
-            <artifactId>kryo</artifactId>
-          </exclusion>
-        </exclusions>
-        <optional>true</optional>
-      </dependency>
-      <dependency>
-        <groupId>commons-io</groupId>
-        <artifactId>commons-io</artifactId>
-        <version>2.7</version>
-      </dependency>
-      <dependency>
-        <groupId>org.ini4j</groupId>
-        <artifactId>ini4j</artifactId>
-        <version>0.5.4</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.tinkerpop</groupId>
-        <artifactId>gremlin-server</artifactId>
-        <version>${tinkerpop.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.hadoop</groupId>
-        <artifactId>hadoop-hdfs</artifactId>
-        <version>${hadoop.version}</version>
-        <classifier>tests</classifier>
-        <scope>test</scope>
-        <exclusions>
-          <exclusion>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.hadoop</groupId>
-        <artifactId>hadoop-common</artifactId>
-        <version>${hadoop.version}</version>
-        <classifier>tests</classifier>
-        <scope>test</scope>
-        <exclusions>
-          <exclusion>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.httpcomponents</groupId>
-        <artifactId>httpclient</artifactId>
-        <!--OSS SDK requires httpclient version to be 4.4.1, related links: https://www.alibabacloud.com/help/zh/object-storage-service/latest/java-faq?spm=a2c63.p38356.0.0.69a63c6bXPt34F-->
-        <version>4.4.1</version>
-      </dependency>
-      <dependency>
-        <groupId>org.kamranzafar</groupId>
-        <artifactId>jtar</artifactId>
-        <version>2.3</version>
-      </dependency>
-      <dependency>
-        <groupId>commons-configuration</groupId>
-        <artifactId>commons-configuration</artifactId>
-        <version>1.10</version>
+        <groupId>org.antlr</groupId>
+        <artifactId>antlr4</artifactId>
+        <version>${antlr4.version}</version>
       </dependency>
       <dependency>
         <groupId>net.java.dev.jna</groupId>
@@ -612,11 +521,7 @@
         <artifactId>rocksdbjni</artifactId>
         <version>${rocksdb.version}</version>
       </dependency>
-      <dependency>
-        <groupId>commons-codec</groupId>
-        <artifactId>commons-codec</artifactId>
-        <version>${commons.codec.version}</version>
-      </dependency>
+
       <dependency>
         <groupId>io.dropwizard.metrics</groupId>
         <artifactId>metrics-core</artifactId>
@@ -627,6 +532,17 @@
         <artifactId>aliyun-sdk-oss</artifactId>
         <version>${aliyun.oss.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.apache.calcite</groupId>
+        <artifactId>calcite-core</artifactId>
+        <version>${calcite.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.immutables</groupId>
+        <artifactId>value</artifactId>
+        <version>${immutables.version}</version>
+        <scope>provided</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -635,80 +551,43 @@
       <plugins>
         <plugin>
           <artifactId>maven-clean-plugin</artifactId>
-          <version>3.0.0</version>
+          <version>${maven.clean.version}</version>
         </plugin>
-        <!-- see http://maven.apache.org/ref/current/maven-core/default-bindings.html#Plugin_bindings_for_jar_packaging -->
         <plugin>
           <artifactId>maven-resources-plugin</artifactId>
-          <version>3.0.2</version>
+          <version>${maven.resource.version}</version>
         </plugin>
         <plugin>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.7.0</version>
+          <version>${maven.compile.version}</version>
           <configuration>
-            <source>8</source>
-            <target>8</target>
-          </configuration>
+            <source>1.8</source>
+            <target>1.8</target>
+        </configuration>
         </plugin>
         <plugin>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>${maven.surefire.version}</version>
-          <configuration>
-            <excludes>
-              <exclude>com/alibaba/maxgraph/client/gremlin/additional/*</exclude>
-              <exclude>**/GaiaAdaptor*.java</exclude>
-              <exclude>**/ClientTest.java</exclude>
-              <exclude>**/DataLoadingTest.java</exclude>
-            </excludes>
-          </configuration>
         </plugin>
         <plugin>
           <artifactId>maven-jar-plugin</artifactId>
-          <version>3.0.2</version>
+          <version>${maven.jar.version}</version>
         </plugin>
         <plugin>
           <artifactId>maven-install-plugin</artifactId>
-          <version>2.5.2</version>
+          <version>${maven.install.version}</version>
         </plugin>
         <plugin>
           <artifactId>maven-deploy-plugin</artifactId>
-          <version>2.8.2</version>
+          <version>${maven.deploy.version}</version>
         </plugin>
         <plugin>
           <artifactId>maven-shade-plugin</artifactId>
-          <version>3.1.0</version>
+          <version>${maven.shade.version}</version>
         </plugin>
         <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>build-helper-maven-plugin</artifactId>
-          <version>1.4</version>
-        </plugin>
-        <plugin>
-          <groupId>org.xolstice.maven.plugins</groupId>
-          <artifactId>protobuf-maven-plugin</artifactId>
-          <version>0.6.1</version>
-        </plugin>
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>cobertura-maven-plugin</artifactId>
-          <version>2.7</version>
-          <configuration>
-            <instrumentation>
-              <excludes>
-                <exclude>com/alibaba/maxgraph/client/gremlin/additional/*</exclude>
-                <exclude>com/alibaba/maxgraph/proto/*</exclude>
-                <exclude>com/alibaba/maxgraph/rpc/GremlinService.class</exclude>
-                <exclude>com/alibaba/maxgraph/rpc/MaxGraphServiceGrpc.class</exclude>
-                <exclude>com/alibaba/maxgraph/Message.class</exclude>
-                <exclude>com/alibaba/maxgraph/id_client/proto/*</exclude>
-              </excludes>
-            </instrumentation>
-          </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-assembly-plugin</artifactId>
-          <version>2.5.5</version>
+          <version>${maven.assembly.version}</version>
           <configuration>
             <appendAssemblyId>false</appendAssemblyId>
           </configuration>
@@ -720,6 +599,45 @@
               </goals>
             </execution>
           </executions>
+        </plugin>
+
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <version>${build.helper.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.xolstice.maven.plugins</groupId>
+          <artifactId>protobuf-maven-plugin</artifactId>
+          <version>${protobuf.maven.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>cobertura-maven-plugin</artifactId>
+          <version>${cobertura.maven.version}</version>
+          <configuration>
+            <instrumentation>
+              <excludes>
+                <exclude>com/alibaba/graphscope/proto/*</exclude>
+                <exclude>com/alibaba/graphscope/Message.class</exclude>
+              </excludes>
+            </instrumentation>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>exec-maven-plugin</artifactId>
+          <version>${exec.maven.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.antlr</groupId>
+          <artifactId>antlr4-maven-plugin</artifactId>
+          <version>${antlr4.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>net.alchim31.maven</groupId>
+          <artifactId>scala-maven-plugin</artifactId>
+          <version>${scala.maven.version}</version>
         </plugin>
       </plugins>
     </pluginManagement>

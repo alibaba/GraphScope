@@ -212,7 +212,7 @@ class GSSparkSession(sparkContext: SparkContext) extends SparkSession(sparkConte
     val executorNum  = executorInfo.values.map(_.size).sum
     //construct
     //gather the host <-> partition id info.
-    val (host2Pids, pid2Host) = GrapeUtils.extractHostInfo(
+    val (host2Pids, executorIds2Times) = GrapeUtils.extractHostInfo(
       dataShuffles.asInstanceOf[RDD[(Int, _)]],
       numPartitions
     )
@@ -251,6 +251,7 @@ class GSSparkSession(sparkContext: SparkContext) extends SparkSession(sparkConte
       numFrag,
       host2Pids,
       executorInfo,
+      executorIds2Times,
       vertexStorageLevel,
       edgeStorageLevel
     )

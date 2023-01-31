@@ -855,7 +855,7 @@ impl Property {
     fn cast_long_list(&self) -> Result<Vec<i64>, String> {
         match self {
             Property::ListInt(list) => Ok(list.iter().map(|i| *i as i64).collect()),
-            Property::ListLong(list) => (Ok(list.clone())),
+            Property::ListLong(list) => Ok(list.clone()),
             _ => Err(format!("get list fail from property=>{:?}", self)),
         }
     }

@@ -4,7 +4,6 @@ RUN yum install -y sudo java-1.8.0-openjdk-devel bind-utils \
     && yum clean all \
     && rm -rf /var/cache/yum
 
-COPY k8s/utils/ready_probe.sh /tmp/ready_probe.sh
 ADD artifacts/groot.tar.gz /usr/local
 
 RUN useradd -m graphscope -u 1001 \

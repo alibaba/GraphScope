@@ -32,7 +32,7 @@ from graphscope.nx.utils.misc import replace_with_inf
 
 
 def k3_graph(prefix, directed):
-    graph = graphscope.g(directed=directed, generate_eid=False)
+    graph = graphscope.g(directed=directed, generate_eid=False, retain_oid=False)
     graph = graph.add_vertices(
         Loader(os.path.join(prefix, "3v.csv"), delimiter="|"), "vertex"
     )
@@ -50,7 +50,7 @@ def k3_graph(prefix, directed):
 
 
 def p3_graph(prefix, directed):
-    graph = graphscope.g(directed=directed, generate_eid=False)
+    graph = graphscope.g(directed=directed, generate_eid=False, retain_oid=False)
     graph = graph.add_vertices(
         Loader(os.path.join(prefix, "3v.csv"), delimiter="|"), "vertex"
     )
@@ -62,7 +62,7 @@ def p3_graph(prefix, directed):
 
 
 def simple_label_graph(prefix, directed):
-    graph = graphscope.g(directed=directed, generate_eid=False)
+    graph = graphscope.g(directed=directed, generate_eid=False, retain_oid=False)
     graph = graph.add_vertices(Loader(os.path.join(prefix, "simple_v_0.csv")), "v-0")
     graph = graph.add_vertices(Loader(os.path.join(prefix, "simple_v_1.csv")), "v-1")
     graph = graph.add_edges(
@@ -87,7 +87,7 @@ def simple_label_graph(prefix, directed):
 
 
 def simple_label_multigraph(prefix, directed):
-    graph = graphscope.g(directed=directed, generate_eid=False)
+    graph = graphscope.g(directed=directed, generate_eid=False, retain_oid=False)
     graph = graph.add_vertices(Loader(os.path.join(prefix, "simple_v_0.csv")), "v-0")
     graph = graph.add_vertices(Loader(os.path.join(prefix, "simple_v_1.csv")), "v-1")
     graph = graph.add_edges(
@@ -112,7 +112,7 @@ def simple_label_multigraph(prefix, directed):
 
 
 def p2p_31_graph(prefix, directed):
-    graph = graphscope.g(directed=directed, generate_eid=False)
+    graph = graphscope.g(directed=directed, generate_eid=False, retain_oid=False)
     graph = graph.add_vertices(
         Loader(os.path.join(prefix, "p2p-31.v"), delimiter=" ", header_row=False),
         "vertex",

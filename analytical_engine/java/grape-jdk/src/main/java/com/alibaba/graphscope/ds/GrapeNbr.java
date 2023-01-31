@@ -28,7 +28,6 @@ import com.alibaba.fastffi.FFIFactory;
 import com.alibaba.fastffi.FFIGen;
 import com.alibaba.fastffi.FFIGetter;
 import com.alibaba.fastffi.FFITypeAlias;
-import com.alibaba.graphscope.utils.JNILibraryName;
 
 /**
  * Java wrpper for <a
@@ -38,7 +37,7 @@ import com.alibaba.graphscope.utils.JNILibraryName;
  * @param <VID_T> vertex id type.
  * @param <EDATA_T> edge data type.
  */
-@FFIGen(library = JNILibraryName.JNI_LIBRARY_NAME)
+@FFIGen
 @CXXHead(GRAPE_ADJ_LIST_H)
 @FFITypeAlias(GRAPE_NBR)
 public interface GrapeNbr<VID_T, EDATA_T>

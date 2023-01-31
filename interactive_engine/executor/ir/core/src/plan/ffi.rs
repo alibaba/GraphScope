@@ -371,7 +371,7 @@ impl TryFrom<FfiVariable> for common_pb::Variable {
 #[derive(Default)]
 pub struct FfiAlias {
     alias: FfiNameOrId,
-    is_query_given: bool,
+    is_query_given: i32,
 }
 
 impl TryFrom<FfiAlias> for Option<common_pb::NameOrId> {
@@ -942,8 +942,11 @@ mod project {
     use super::*;
     /// To initialize a project operator.
     #[no_mangle]
-    pub extern "C" fn init_project_operator(is_append: bool) -> *const c_void {
-        let project = Box::new(pb::Project { mappings: vec![], is_append });
+    pub extern "C" fn init_project_operator(is_append: i32) -> *const c_void {
+        let project = Box::new(pb::Project {
+            mappings: vec![],
+            is_append: if is_append == 0 { false } else { true },
+        });
         Box::into_raw(project) as *const c_void
     }
 

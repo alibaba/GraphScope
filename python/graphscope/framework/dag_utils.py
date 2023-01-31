@@ -196,6 +196,7 @@ def add_labels_to_graph(graph, loader_op):
         types_pb2.DIRECTED: utils.b_to_attr(graph._directed),
         types_pb2.OID_TYPE: utils.s_to_attr(graph._oid_type),
         types_pb2.GENERATE_EID: utils.b_to_attr(graph._generate_eid),
+        types_pb2.RETAIN_OID: utils.b_to_attr(graph._retain_oid),
         types_pb2.VERTEX_MAP_TYPE: utils.i_to_attr(graph._vertex_map),
         types_pb2.VID_TYPE: utils.s_to_attr("uint64_t"),
         types_pb2.IS_FROM_VINEYARD_ID: utils.b_to_attr(False),
@@ -812,7 +813,7 @@ def to_vineyard_dataframe(context, selector=None, vertex_range=None):
     return op
 
 
-def to_data_sink(result, fd, **kwargs):
+def to_data_sink(result, fd, storage_options=None, write_options=None, **kwargs):
     """Dump result to `fd` by drivers in vineyard.
 
     Parameters:
@@ -824,8 +825,15 @@ def to_data_sink(result, fd, **kwargs):
     Returns:
         An op to dump result to `fd`.
     """
+    if storage_options is None:
+        storage_options = {}
+    storage_options.update(kwargs)
+    if write_options is None:
+        write_options = {}
+    write_options.update(kwargs)
     config = {
-        types_pb2.STORAGE_OPTIONS: utils.s_to_attr(json.dumps(kwargs)),
+        types_pb2.STORAGE_OPTIONS: utils.s_to_attr(json.dumps(storage_options)),
+        types_pb2.WRITE_OPTIONS: utils.s_to_attr(json.dumps(write_options)),
         types_pb2.FD: utils.s_to_attr(str(fd)),
     }
     op = Operation(
@@ -838,7 +846,15 @@ def to_data_sink(result, fd, **kwargs):
     return op
 
 
-def output(context, fd, selector, vertex_range, **kwargs):
+def output(
+    context,
+    fd,
+    selector,
+    vertex_range,
+    storage_options=None,
+    write_options=None,
+    **kwargs,
+):
     """Output result to `fd`, this will be handled by registered vineyard C++ adaptor.
 
     Args:
@@ -849,10 +865,17 @@ def output(context, fd, selector, vertex_range, **kwargs):
     Returns:
         An op to output results to `fd`.
     """
+    if storage_options is None:
+        storage_options = {}
+    storage_options.update(kwargs)
+    if write_options is None:
+        write_options = {}
+    write_options.update(kwargs)
     config = {}
     config[types_pb2.FD] = utils.s_to_attr(fd)
     config[types_pb2.SELECTOR] = utils.s_to_attr(selector)
-    config[types_pb2.STORAGE_OPTIONS] = utils.s_to_attr(json.dumps(kwargs))
+    config[types_pb2.STORAGE_OPTIONS] = utils.s_to_attr(json.dumps(storage_options))
+    config[types_pb2.WRITE_OPTIONS] = utils.s_to_attr(json.dumps(write_options))
     if vertex_range is not None:
         config[types_pb2.VERTEX_RANGE] = utils.s_to_attr(vertex_range)
 

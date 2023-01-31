@@ -34,6 +34,7 @@ from graphscope.framework.loader import Loader
 @pytest.fixture(scope="module")
 def graphscope_session():
     graphscope.set_option(show_log=True)
+    graphscope.set_option(log_level="DEBUG")
     if os.environ.get("DEPLOYMENT", None) == "standalone":
         sess = graphscope.session(cluster_type="hosts", num_workers=1)
     else:
@@ -230,6 +231,7 @@ def arrow_property_graph(graphscope_session):
             "v1": Loader("{}/twitter_v_1".format(new_property_dir), header_row=True),
         },
         generate_eid=False,
+        retain_oid=True,
     )
     yield g
     del g
@@ -325,6 +327,7 @@ def arrow_property_graph_only_from_efile(graphscope_session):
             ],
         },
         generate_eid=False,
+        retain_oid=True,
     )
     yield g
     del g
@@ -332,7 +335,7 @@ def arrow_property_graph_only_from_efile(graphscope_session):
 
 # @pytest.fixture(scope="module")
 # def arrow_property_graph(graphscope_session):
-# g = graphscope_session.g(generate_eid=False)
+# g = graphscope_session.g(generate_eid=False, retain_oid=False)
 # g = g.add_vertices(f"{new_property_dir}/twitter_v_0", "v0")
 # g = g.add_vertices(f"{new_property_dir}/twitter_v_1", "v1")
 # g = g.add_edges(f"{new_property_dir}/twitter_e_0_0_0", "e0", ["weight"], "v0", "v0")
@@ -350,7 +353,7 @@ def arrow_property_graph_only_from_efile(graphscope_session):
 
 # @pytest.fixture(scope="module")
 # def arrow_property_graph_only_from_efile(graphscope_session):
-# g = graphscope_session.g(generate_eid=False)
+# g = graphscope_session.g(generate_eid=False, retain_oid=False)
 # g = g.add_edges(f"{new_property_dir}/twitter_e_0_0_0", "e0", ["weight"], "v0", "v0")
 # g = g.add_edges(f"{new_property_dir}/twitter_e_0_1_0", "e0", ["weight"], "v0", "v1")
 # g = g.add_edges(f"{new_property_dir}/twitter_e_1_0_0", "e0", ["weight"], "v1", "v0")
@@ -366,7 +369,7 @@ def arrow_property_graph_only_from_efile(graphscope_session):
 
 @pytest.fixture(scope="module")
 def arrow_property_graph_undirected(graphscope_session):
-    g = graphscope_session.g(directed=False, generate_eid=False)
+    g = graphscope_session.g(directed=False, generate_eid=False, retain_oid=False)
     g = g.add_vertices(f"{new_property_dir}/twitter_v_0", "v0")
     g = g.add_vertices(f"{new_property_dir}/twitter_v_1", "v1")
     g = g.add_edges(f"{new_property_dir}/twitter_e_0_0_0", "e0", ["weight"], "v0", "v0")
@@ -384,7 +387,7 @@ def arrow_property_graph_undirected(graphscope_session):
 
 @pytest.fixture(scope="module")
 def arrow_property_graph_lpa_u2i(graphscope_session):
-    g = graphscope_session.g(generate_eid=False, directed=True)
+    g = graphscope_session.g(generate_eid=False, retain_oid=False, directed=True)
     g = g.add_vertices(f"{property_dir}/lpa_dataset/lpa_3000_v_0", "v0")
     g = g.add_vertices(f"{property_dir}/lpa_dataset/lpa_3000_v_1", "v1")
     g = g.add_edges(
@@ -410,7 +413,7 @@ def arrow_project_undirected_graph(arrow_property_graph_undirected):
 
 @pytest.fixture(scope="module")
 def p2p_property_graph(graphscope_session):
-    g = graphscope_session.g(generate_eid=False, directed=True)
+    g = graphscope_session.g(generate_eid=False, retain_oid=True, directed=True)
     g = g.add_vertices(f"{property_dir}/p2p-31_property_v_0", "person")
     g = g.add_edges(
         f"{property_dir}/p2p-31_property_e_0",
@@ -428,7 +431,7 @@ def p2p_graph_from_pandas(graphscope_session):
     os.environ["GS_GRPC_CHUNK_SIZE"] = str(1024 - 1)
     df_v = pd.read_csv(f"{property_dir}/p2p-31_property_v_0", sep=",")
     df_e = pd.read_csv(f"{property_dir}/p2p-31_property_e_0", sep=",")
-    g = graphscope_session.g(generate_eid=False, directed=False)
+    g = graphscope_session.g(generate_eid=False, retain_oid=False, directed=False)
     g = g.add_vertices(df_v, "person")
     g = g.add_edges(df_e, label="knows", src_label="person", dst_label="person")
     yield g
@@ -437,7 +440,25 @@ def p2p_graph_from_pandas(graphscope_session):
 
 @pytest.fixture(scope="module")
 def p2p_property_graph_string(graphscope_session):
-    g = graphscope_session.g(oid_type="string", generate_eid=False, directed=True)
+    g = graphscope_session.g(
+        oid_type="string", generate_eid=False, retain_oid=True, directed=True
+    )
+    g = g.add_vertices(f"{property_dir}/p2p-31_property_v_0", "person")
+    g = g.add_edges(
+        f"{property_dir}/p2p-31_property_e_0",
+        label="knows",
+        src_label="person",
+        dst_label="person",
+    )
+    yield g
+    del g
+
+
+@pytest.fixture(scope="module")
+def p2p_property_graph_int32(graphscope_session):
+    g = graphscope_session.g(
+        oid_type="int32", generate_eid=False, retain_oid=True, directed=True
+    )
     g = g.add_vertices(f"{property_dir}/p2p-31_property_v_0", "person")
     g = g.add_edges(
         f"{property_dir}/p2p-31_property_e_0",
@@ -451,7 +472,7 @@ def p2p_property_graph_string(graphscope_session):
 
 @pytest.fixture(scope="module")
 def p2p_property_graph_undirected(graphscope_session):
-    g = graphscope_session.g(directed=False, generate_eid=False)
+    g = graphscope_session.g(directed=False, generate_eid=False, retain_oid=False)
     g = g.add_vertices(f"{property_dir}/p2p-31_property_v_0", "person")
     g = g.add_edges(
         f"{property_dir}/p2p-31_property_e_0",
@@ -465,7 +486,9 @@ def p2p_property_graph_undirected(graphscope_session):
 
 @pytest.fixture(scope="module")
 def p2p_property_graph_undirected_local_vm(graphscope_session):
-    g = graphscope_session.g(directed=False, generate_eid=False, vertex_map="local")
+    g = graphscope_session.g(
+        directed=False, generate_eid=False, retain_oid=True, vertex_map="local"
+    )
     g = g.add_edges(
         f"{property_dir}/p2p-31_property_e_0",
         label="knows",
@@ -477,9 +500,32 @@ def p2p_property_graph_undirected_local_vm(graphscope_session):
 
 
 @pytest.fixture(scope="module")
-def p2p_property_graph_undirected_local_vm_str(graphscope_session):
+def p2p_property_graph_undirected_local_vm_string(graphscope_session):
     g = graphscope_session.g(
-        directed=False, generate_eid=False, vertex_map="local", oid_type="str"
+        directed=False,
+        generate_eid=False,
+        retain_oid=True,
+        vertex_map="local",
+        oid_type="str",
+    )
+    g = g.add_edges(
+        f"{property_dir}/p2p-31_property_e_0",
+        label="knows",
+        src_label="person",
+        dst_label="person",
+    )
+    yield g
+    del g
+
+
+@pytest.fixture(scope="module")
+def p2p_property_graph_undirected_local_vm_int32(graphscope_session):
+    g = graphscope_session.g(
+        directed=False,
+        generate_eid=False,
+        retain_oid=True,
+        vertex_map="local",
+        oid_type="int32",
     )
     g = g.add_edges(
         f"{property_dir}/p2p-31_property_e_0",
@@ -510,6 +556,14 @@ def p2p_project_undirected_graph(p2p_property_graph_undirected):
 @pytest.fixture(scope="module")
 def p2p_project_directed_graph_string(p2p_property_graph_string):
     pg = p2p_property_graph_string.project(
+        vertices={"person": ["weight"]}, edges={"knows": ["dist"]}
+    )
+    yield pg
+
+
+@pytest.fixture(scope="module")
+def p2p_project_directed_graph_int32(p2p_property_graph_int32):
+    pg = p2p_property_graph_int32.project(
         vertices={"person": ["weight"]}, edges={"knows": ["dist"]}
     )
     yield pg

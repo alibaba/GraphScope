@@ -49,13 +49,15 @@ impl JoinKeyGen<Record, RecordKey, Record> for algebra_pb::Join {
 
 #[cfg(test)]
 mod tests {
-    use graph_proxy::apis::{DynDetails, GraphElement, Vertex, ID};
+    use graph_proxy::apis::GraphElement;
+    use graph_proxy::apis::{DynDetails, Vertex, ID};
     use ir_common::generated::algebra as pb;
     use ir_common::generated::algebra::join::JoinKind;
     use ir_common::generated::common as common_pb;
     use pegasus::api::{Join, KeyBy, Map, PartitionByKey, Sink};
     use pegasus::JobConf;
 
+    use crate::process::entry::Entry;
     use crate::process::functions::JoinKeyGen;
     use crate::process::record::Record;
 
@@ -153,7 +155,7 @@ mod tests {
 
         let mut result_ids = vec![];
         while let Some(Ok(record)) = result.next() {
-            if let Some(element) = record.get(None).unwrap().as_graph_vertex() {
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
                 result_ids.push(element.id());
             }
         }

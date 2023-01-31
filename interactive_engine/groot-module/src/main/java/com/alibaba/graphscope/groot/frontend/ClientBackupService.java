@@ -16,7 +16,7 @@
 package com.alibaba.graphscope.groot.frontend;
 
 import com.alibaba.graphscope.groot.rpc.RoleClients;
-import com.alibaba.maxgraph.proto.groot.*;
+import com.alibaba.graphscope.proto.groot.*;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;

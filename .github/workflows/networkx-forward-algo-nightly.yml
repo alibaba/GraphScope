@@ -16,7 +16,7 @@ jobs:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.11.0
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.11.7
       options:
         --shm-size 4096m
 
@@ -27,8 +27,8 @@ jobs:
       run: |
         pushd ${GITHUB_WORKSPACE}
         install_prefix=/opt/graphscope
-        mkdir -p ${install_prefix}
-        make analytical-install BUILD_TEST=OFF NUMPROC=1 INSTALL_PREFIX=${install_prefix}
+        sudo mkdir -p ${install_prefix}
+        sudo make analytical-install BUILD_TEST=OFF NUMPROC=1 INSTALL_PREFIX=${install_prefix}
         # also make coordinator and client for python test
         make coordinator && make client
         popd

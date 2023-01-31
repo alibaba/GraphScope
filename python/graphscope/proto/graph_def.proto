@@ -39,8 +39,8 @@ enum VertexMapTypePb {
     LOCAL_VERTEX_MAP = 2;
 }
 
-// Attributes that only meaningful to and will be set by maxgraph storage
-message MaxGraphInfoPb {
+// Attributes that only meaningful to and will be set by groot storage
+message GrootInfoPb {
     int32 last_label_id = 1;
     int32 last_property_id = 2;
     int64 last_table_id = 3;
@@ -53,7 +53,7 @@ message VineyardInfoPb {
     DataTypePb vdata_type = 3;
     DataTypePb edata_type = 4;
 
-    // This is for sharing graph between vineyard storage and maxgraph storage
+    // This is for sharing graph between vineyard storage and groot storage
     string schema_path = 5;
     // Whether to automatically generate unique edge id for all edges.
     bool generate_eid = 6;
@@ -65,6 +65,9 @@ message VineyardInfoPb {
     VertexMapTypePb vertex_map_type = 9;
     // Fragment ids
     repeated int64 fragments = 10;
+
+    // retain_oid
+    bool retain_oid = 11;
 }
 
 // Attributes that only meaningful to and will be set by dynamic storage
@@ -84,7 +87,7 @@ message GraphDefPb {
     repeated EdgeKindPb edge_kinds = 6;
     map<string, int32> property_name_to_id = 7;
     // current extension supported:
-    //   - MaxGraphInfoPb
+    //   - GrootInfoPb
     //   - VineyardInfoPb
     //   - MutableGraphInfoPb
     google.protobuf.Any extension = 8;

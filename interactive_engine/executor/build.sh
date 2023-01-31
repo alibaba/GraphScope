@@ -25,17 +25,24 @@ else
     STRIP_OPTION=""
 fi
 
+if [ -z "$FEATURE" ]; then
+  append="--features=$FEATURE"
+else
+  append=""
+fi
+
+
 cd assembly/$TARGET;
 if [ "$MODE" = "debug" ]; then
-  cargo build --features="$FEATURE"
+  cargo build $append
 elif [ "$MODE" = "release" ]; then
-  cargo build --release --features="$FEATURE"
+  cargo build --release $append
 else
   echo "Invalid mode, choose from debug or release."
   exit 1
 fi
 
 if [ "$TARGET" = "groot" ]; then
-  strip ${STRIP_OPTION} $(pwd)/target/${MODE}/libmaxgraph_ffi.${SUFFIX}
-  ln -sf $(pwd)/target/${MODE}/libmaxgraph_ffi.${SUFFIX} $(pwd)/target/libmaxgraph_ffi.${SUFFIX}
+  strip ${STRIP_OPTION} $(pwd)/target/${MODE}/libgroot_ffi.${SUFFIX}
+  ln -sf $(pwd)/target/${MODE}/libgroot_ffi.${SUFFIX} $(pwd)/target/libgroot_ffi.${SUFFIX}
 fi

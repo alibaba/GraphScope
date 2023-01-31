@@ -13,7 +13,7 @@
  */
 package com.alibaba.graphscope.groot.operation;
 
-import com.alibaba.maxgraph.proto.groot.OpTypePb;
+import com.alibaba.graphscope.proto.groot.OpTypePb;
 
 public enum OperationType {
     MARKER(0),

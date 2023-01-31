@@ -26,6 +26,7 @@ mod test {
     use pegasus_server::job_pb as server_pb;
     use pegasus_server::JobRequest;
     use prost::Message;
+    use runtime::process::entry::Entry;
 
     use crate::common::test::*;
 

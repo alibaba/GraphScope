@@ -15,11 +15,11 @@
  */
 syntax = "proto3";
 
-option java_package = "com.alibaba.maxgraph.proto.store";
+option java_package = "com.alibaba.graphscope.proto.store";
 option java_generate_equals_and_hash = true;
 option java_multiple_files = true;
 
-package maxgraph_store;
+package groot_store;
 
 service MetaService {
     rpc get_store_list(GetStoreListRequest) returns (GetStoreListResponse);

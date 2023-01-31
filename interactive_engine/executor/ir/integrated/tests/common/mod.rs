@@ -23,7 +23,7 @@ pub mod test {
     use std::convert::{TryFrom, TryInto};
     use std::sync::{Arc, Once};
 
-    use graph_proxy::apis::{DynDetails, Edge, Vertex, VertexOrEdge, ID};
+    use graph_proxy::apis::{DynDetails, Edge, Vertex, ID};
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
@@ -36,7 +36,8 @@ pub mod test {
     use pegasus_server::rpc::RpcSink;
     use pegasus_server::JobRequest;
     use prost::Message;
-    use runtime::process::record::{Entry, Record};
+    use runtime::process::entry::DynEntry;
+    use runtime::process::record::Record;
     use runtime::IRJobAssembly;
     use runtime_integration::{InitializeJobAssembly, QueryExpGraph};
 
@@ -116,9 +117,9 @@ pub mod test {
                 // append entry without moving head
                 if let Some(tag) = tag {
                     let columns = record.get_columns_mut();
-                    columns.insert(tag as usize, Arc::new(Entry::try_from(entry).unwrap()));
+                    columns.insert(tag as usize, DynEntry::try_from(entry).unwrap());
                 } else {
-                    record.append(Entry::try_from(entry).unwrap(), None);
+                    record.append(DynEntry::try_from(entry).unwrap(), None);
                 }
             }
             Some(record)

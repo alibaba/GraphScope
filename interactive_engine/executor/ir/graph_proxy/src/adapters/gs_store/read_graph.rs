@@ -28,8 +28,6 @@ use global_query::{
 };
 use graph_store::utils::IterList;
 use ir_common::{KeyId, LabelId, NameOrId, OneOrMany};
-use rand::prelude::StdRng;
-use rand::{Rng, SeedableRng};
 
 use super::details::{HybridEdgeDetails, HybridVertexDetails, LazyEdgeDetails, LazyVertexDetails};
 use crate::apis::graph::PKV;

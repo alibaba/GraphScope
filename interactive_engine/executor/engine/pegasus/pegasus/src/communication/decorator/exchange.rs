@@ -245,7 +245,7 @@ impl<D: Data> ExchangeByDataPush<D> {
         }
 
         if has_block {
-            if !batch.is_empty() {
+            if !batch.is_empty() || batch.is_last() {
                 trace_worker!(
                     "output[{:?}] blocking on push batch(len={}) of {:?} ;",
                     self.port,
@@ -534,9 +534,10 @@ impl<D: Data> BlockPush for ExchangeByDataPush<D> {
                                         .blocks
                                         .get_mut(tag)
                                         .expect("expect has block;");
-                                    while let Some(x) = blocks.pop_front() {
-                                        b.push_back(x);
+                                    while let Some(x) = b.pop_back() {
+                                        blocks.push_front(x);
                                     }
+                                    *b = blocks;
                                 }
                                 Ok(false)
                             } else {

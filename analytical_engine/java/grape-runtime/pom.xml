@@ -72,6 +72,10 @@
     <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-slf4j-impl</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.scijava</groupId>
+      <artifactId>native-lib-loader</artifactId>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -110,7 +114,10 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <skipTests>true</skipTests>
+          <includes>
+            <include>AppScannerTest.java</include>
+          </includes>
+<!--          <skipTests>true</skipTests>-->
         </configuration>
       </plugin>
       <plugin>

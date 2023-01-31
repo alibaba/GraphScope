@@ -4,8 +4,8 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <parent>
-    <artifactId>maxgraph-parent</artifactId>
-    <groupId>com.alibaba.maxgraph</groupId>
+    <artifactId>interactive-parent</artifactId>
+    <groupId>com.alibaba.graphscope</groupId>
     <version>${revision}</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
@@ -16,9 +16,8 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.alibaba.maxgraph</groupId>
+      <groupId>com.alibaba.graphscope</groupId>
       <artifactId>executor</artifactId>
-      <version>${project.version}</version>
     </dependency>
   </dependencies>
 
@@ -33,7 +32,6 @@
           <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>exec-maven-plugin</artifactId>
-            <version>3.0.0</version>
             <executions>
               <execution>
                 <id>compile-exec-id</id>
@@ -45,7 +43,6 @@
             </executions>
             <configuration>
               <executable>sh</executable>
-              <workingDirectory></workingDirectory>
               <arguments>
                 <argument>build.sh</argument>
               </arguments>
@@ -64,7 +61,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-clean-plugin</artifactId>
-        <version>3.1.0</version>
         <configuration>
           <filesets>
             <fileset>

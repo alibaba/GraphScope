@@ -14,8 +14,8 @@
 //! limitations under the License.
 
 extern crate alloc;
+extern crate groot_store;
 extern crate itertools;
-extern crate maxgraph_store;
 #[macro_use]
 extern crate log;
 
@@ -25,6 +25,6 @@ pub mod store_impl;
 pub use apis::global_query::{GlobalGraphQuery, PartitionLabeledVertexIds, PartitionVertexIds};
 pub use apis::graph_partition::GraphPartitionManager;
 pub use apis::graph_schema::Schema;
-pub use maxgraph_store::api as store_api;
+pub use groot_store::api as store_api;
 pub use store_impl::groot::global_graph::GlobalGraph;
 pub use store_impl::v6d::read_ffi::FFIGraphStore;

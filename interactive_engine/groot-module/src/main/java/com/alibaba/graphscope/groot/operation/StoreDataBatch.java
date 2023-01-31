@@ -13,8 +13,8 @@
  */
 package com.alibaba.graphscope.groot.operation;
 
-import com.alibaba.maxgraph.proto.groot.PartitionToBatchPb;
-import com.alibaba.maxgraph.proto.groot.StoreDataBatchPb;
+import com.alibaba.graphscope.proto.groot.PartitionToBatchPb;
+import com.alibaba.graphscope.proto.groot.StoreDataBatchPb;
 
 import java.util.ArrayList;
 import java.util.Collections;

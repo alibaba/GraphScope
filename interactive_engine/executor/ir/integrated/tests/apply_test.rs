@@ -29,7 +29,7 @@ mod test {
     use pegasus_server::job_pb as server_pb;
     use pegasus_server::JobRequest;
     use prost::Message;
-    use runtime::process::record::Entry;
+    use runtime::process::entry::Entry;
 
     use crate::common::test::*;
 
@@ -90,7 +90,7 @@ mod test {
             match result {
                 Ok(res) => {
                     let record = parse_result(res).unwrap();
-                    if let Some(vertex) = record.get(None).unwrap().as_graph_vertex() {
+                    if let Some(vertex) = record.get(None).unwrap().as_vertex() {
                         result_collection.push(vertex.id() as DefaultId);
                     }
                 }
@@ -127,7 +127,7 @@ mod test {
             match result {
                 Ok(res) => {
                     let record = parse_result(res).unwrap();
-                    if let Some(vertex) = record.get(None).unwrap().as_graph_vertex() {
+                    if let Some(vertex) = record.get(None).unwrap().as_vertex() {
                         result_collection.push(vertex.id() as DefaultId);
                     }
                 }
@@ -229,10 +229,14 @@ mod test {
             match result {
                 Ok(res) => {
                     let record = parse_result(res).unwrap();
-                    if let Some(vertex) = record.get(None).unwrap().as_graph_vertex() {
-                        if let Entry::OffGraph(cnt) = record.get(Some(TAG_A)).unwrap().as_ref() {
-                            result_collection.push((vertex.id() as DefaultId, cnt.as_u64().unwrap()));
-                        }
+                    if let Some(vertex) = record.get(None).unwrap().as_vertex() {
+                        let cnt = record
+                            .get(Some(TAG_A))
+                            .unwrap()
+                            .as_object()
+                            .unwrap();
+
+                        result_collection.push((vertex.id() as DefaultId, cnt.as_u64().unwrap()));
                     }
                 }
                 Err(e) => {
@@ -272,14 +276,17 @@ mod test {
             match result {
                 Ok(res) => {
                     let record = parse_result(res).unwrap();
-                    if let Some(vertex) = record.get(None).unwrap().as_graph_vertex() {
-                        if let Entry::OffGraph(cnt) = record.get(Some(TAG_A)).unwrap().as_ref() {
-                            result_collection
-                                .push((vertex.id() as DefaultId, Some(cnt.clone().as_u64().unwrap())));
-                        } else if let Entry::OffGraph(Object::None) =
-                            record.get(Some(TAG_A)).unwrap().as_ref()
-                        {
+                    if let Some(vertex) = record.get(None).unwrap().as_vertex() {
+                        let object = record
+                            .get(Some(TAG_A))
+                            .unwrap()
+                            .as_object()
+                            .unwrap();
+                        if object.eq(&Object::None) {
                             result_collection.push((vertex.id() as DefaultId, None));
+                        } else {
+                            result_collection
+                                .push((vertex.id() as DefaultId, Some(object.as_u64().unwrap())));
                         }
                     }
                 }

@@ -16,8 +16,8 @@ package com.alibaba.graphscope.groot.operation.dml;
 import com.alibaba.graphscope.groot.operation.Operation;
 import com.alibaba.graphscope.groot.operation.OperationType;
 import com.alibaba.graphscope.groot.operation.VertexId;
-import com.alibaba.maxgraph.proto.groot.DataOperationPb;
-import com.alibaba.maxgraph.sdkcommon.schema.LabelId;
+import com.alibaba.graphscope.proto.groot.DataOperationPb;
+import com.alibaba.graphscope.sdkcommon.schema.LabelId;
 import com.google.protobuf.ByteString;
 
 public class DeleteVertexOperation extends Operation {

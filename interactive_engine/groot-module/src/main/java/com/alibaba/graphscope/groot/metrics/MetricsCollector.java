@@ -15,8 +15,8 @@
  */
 package com.alibaba.graphscope.groot.metrics;
 
-import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.maxgraph.common.config.Configs;
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
+import com.alibaba.graphscope.groot.common.config.Configs;
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;

@@ -16,9 +16,9 @@
 
 package com.alibaba.graphscope.groot.frontend;
 
+import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
-import com.alibaba.maxgraph.common.RoleType;
 
 // wrapper to create SnapshotUpdateClient by getting channel of Coordinator
 public class SnapshotUpdateCommitter extends RoleClients<SnapshotUpdateClient> {

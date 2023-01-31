@@ -31,7 +31,7 @@ else
 endif
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.11.0
+VINEYARD_VERSION ?= v0.11.7
 PROFILE ?= release
 CI ?= false
 
@@ -69,7 +69,7 @@ graphscope-darwin-py3:
 		python3 -m pip install --upgrade setuptools && \
 		make && \
 		sudo make install INSTALL_PREFIX=/opt/graphscope && \
-		python3 $(WORKING_DIR)/../utils/precompile.py
+		python3 $(WORKING_DIR)/../utils/precompile.py --graph --app
 	# build and delocate wheel
 	cd $(WORKING_DIR)/../../coordinator && \
 		export WITH_EXTRA_DATA=ON && \
@@ -97,7 +97,7 @@ graphscope-manylinux2014-py3-nodocker:
 	cd $(WORKING_DIR)/../.. && \
 	make && \
 	sudo make install INSTALL_PREFIX=/opt/graphscope && \
-	python3 $(WORKING_DIR)/../utils/precompile.py && \
+	python3 $(WORKING_DIR)/../utils/precompile.py --graph --app && \
 	export WITH_EXTRA_DATA=ON && \
 	cd $(WORKING_DIR)/../../coordinator && \
 	rm -rf build dist/*.whl && \
@@ -127,6 +127,7 @@ graphscope-manylinux2014-py3:
 			cd /work/k8s/internal && \
 			make graphscope-manylinux2014-py3-nodocker'
 
+
 graphscope-client-manylinux2014-py3-nodocker:
 	cd $(WORKING_DIR)/../../learning_engine/graph-learn && \
 	git submodule update --init third_party/pybind11 && \
@@ -137,11 +138,17 @@ graphscope-client-manylinux2014-py3-nodocker:
 	cmake -DKNN=OFF -DWITH_VINEYARD=ON -DTESTING=OFF .. && \
 	make graphlearn_shared -j`nproc` && \
 	export LD_LIBRARY_PATH=$(WORKING_DIR)/../../learning_engine/graph-learn/graphlearn/built/lib:$$LD_LIBRARY_PATH && \
-	for py in cp37-cp37m cp38-cp38 cp39-cp39 ; do \
+	for py in cp37-cp37m cp38-cp38 cp39-cp39 cp310-cp310 cp311-cp311; do \
 		cd $(WORKING_DIR)/../../python; \
 		export PATH=/opt/python/$$py/bin:$$PATH; \
 		pip3 install -U pip; \
-		pip3 install "numpy==1.18.5" "pandas<1.5.0" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" wheel "auditwheel==5.0.0"; \
+		if [ "$$py" == "cp311-cp311" ]; then \
+			pip3 install "numpy" "pandas" "grpcio" "grpcio-tools" wheel "auditwheel==5.0.0"; \
+		elif [ "$$py" == "cp310-cp310" ]; then \
+			 pip3 install "numpy==1.21.6" "pandas" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" wheel "auditwheel==5.0.0"; \
+		else \
+			pip3 install "numpy==1.18.5" "pandas" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" wheel "auditwheel==5.0.0"; \
+		fi; \
 		rm -rf build; \
 		rm -rf dist/*.whl; \
 		python3 setup.py bdist_wheel; \
@@ -160,8 +167,15 @@ graphscope-client-darwin-py3:
 		make graphlearn_shared -j`nproc` && \
 		export DYLD_LIBRARY_PATH=$(WORKING_DIR)/../../learning_engine/graph-learn/graphlearn/built/lib:/usr/local/lib:$$DYLD_LIBRARY_PATH && \
 		cd $(WORKING_DIR)/../../python && \
+		py=$$(python3 -V 2>&1 | awk '{print $$2}' | awk -F '.' '{print $$1$$2}') && \
 		pip3 install -U pip && \
-		pip3 install "numpy==1.18.5" "pandas<1.5.0" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" delocate wheel && \
+		if [ "$$py" == "311" ]; then \
+			pip3 install "numpy" "pandas" "grpcio" "grpcio-tools" delocate wheel; \
+		elif [ "$$py" == "310" ]; then \
+			pip3 install "numpy==1.21.6" "pandas" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" delocate wheel; \
+		else \
+			pip3 install "numpy==1.18.5" "pandas" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" delocate wheel; \
+		fi; \
 		rm -rf build dist/*.whl || true && \
 		python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
 		for wheel in `ls dist/*.whl`; do \

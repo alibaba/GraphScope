@@ -68,7 +68,7 @@ def _get_extra_data():
     #
     #  For shrink the package size less than "100M", we split graphscope into
     #   1) graphscope: libs include *.so, runtime such as 'bin', and full-openmpi
-    #   2) gs-coordinator: include python releated code of gscoordinator
+    #   2) gs-coordinator: include python related code of gscoordinator
     #   3) gs-include: header files
     #   4) gs-engine: other runtime info such as 'conf', and *.jar
     #   5) gs-apps: precompiled builtin applications
@@ -81,7 +81,7 @@ def _get_extra_data():
         elif platform.system() == "Darwin":
             openmpi_prefix = (
                 subprocess.check_output([shutil.which("brew"), "--prefix", "openmpi"])
-                .decode("utf-8")
+                .decode("utf-8", errors="ignore")
                 .strip("\n")
             )
         else:
@@ -373,8 +373,6 @@ setup(
     },
     setup_requires=[
         "setuptools_scm>=5.0.0",
-        "grpcio<=1.43.0,>=1.40.0",
-        "grpcio-tools<=1.43.0,>=1.40.0",
     ],
     package_dir=parsed_package_dir(),
     packages=parsed_packages(),

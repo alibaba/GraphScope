@@ -13,15 +13,15 @@
  */
 package com.alibaba.graphscope.groot.coordinator;
 
+import com.alibaba.graphscope.compiler.api.exception.GrootException;
 import com.alibaba.graphscope.groot.SnapshotListener;
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
+import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.config.CoordinatorConfig;
+import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
 import com.alibaba.graphscope.groot.meta.MetaStore;
 import com.alibaba.graphscope.groot.wal.LogReader;
 import com.alibaba.graphscope.groot.wal.LogService;
-import com.alibaba.maxgraph.common.config.CommonConfig;
-import com.alibaba.maxgraph.common.config.Configs;
-import com.alibaba.maxgraph.common.config.CoordinatorConfig;
-import com.alibaba.maxgraph.common.util.ThreadFactoryUtils;
-import com.alibaba.maxgraph.compiler.api.exception.MaxGraphException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -58,7 +58,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * of Frontend nodes is 256, and use 256 Frontend nodes in the stress test.
  *
  * <p>The broadcast interval affects the time user have to wait for querying the data after {@link
- * com.alibaba.maxgraph.frontendservice.realtime.RealtimeWriter#writeOperations(OperationTxn)}
+ * com.alibaba.graphscope.frontendservice.realtime.RealtimeWriter#writeOperations(OperationTxn)}
  * returns successfully. Shorter broadcast interval means less time to wait, but that leads to
  * heavier load of SnapshotManager, since SnapshotManager need to broadcast writeSnapshotId /
  * querySnapshotId to all the Frontend nodes at the fixed interval.
@@ -71,7 +71,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * the syncWrite implementation below.
  *
  * <p>When RealtimeWriter receives a syncWrite call, it invokes {@link
- * com.alibaba.maxgraph.frontendservice.realtime.RealtimeWriter#writeOperations(OperationTxn)} same
+ * com.alibaba.graphscope.frontendservice.realtime.RealtimeWriter#writeOperations(OperationTxn)} same
  * as asyncWrite and get the returned snapshotId, e.g. s0. Then RealtimeWriter registers a
  * SnapshotListener with s0 to the SnapshotManager, and blocking on the listener callback.
  * SnapshotManager will cache the listener and immediately broadcast a new writeSnapshotId to the
@@ -162,7 +162,7 @@ public class SnapshotManager {
         try {
             recover();
         } catch (IOException e) {
-            throw new MaxGraphException(e);
+            throw new GrootException(e);
         }
 
         this.increaseWriteSnapshotIdScheduler =
