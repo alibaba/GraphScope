@@ -13,6 +13,7 @@
     <profile>
       <id>experimental</id>
       <modules>
+        <module>sdk-common</module>
         <module>executor/engine/pegasus/clients/java/client</module>
         <module>compiler</module>
       </modules>
