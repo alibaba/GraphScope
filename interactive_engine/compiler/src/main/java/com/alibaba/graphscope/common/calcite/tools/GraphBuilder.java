@@ -16,8 +16,8 @@
 
 package com.alibaba.graphscope.common.calcite.tools;
 
-import static com.alibaba.graphscope.common.calcite.util.Static.HEAD;
 import static com.alibaba.graphscope.common.calcite.util.Static.RESOURCE;
+import static com.alibaba.graphscope.common.calcite.util.Static.SIMPLE_NAME;
 
 import com.alibaba.graphscope.common.calcite.rel.*;
 import com.alibaba.graphscope.common.calcite.rex.RexCallBinding;
@@ -132,8 +132,7 @@ public class GraphBuilder extends RelBuilder {
      * @return
      * @throws Exception - if the given alias exist
      */
-    private int generateAliasId(String alias) {
-        Objects.requireNonNull(alias);
+    private int generateAliasId(@Nullable String alias) {
         return -1;
     }
 
@@ -189,11 +188,10 @@ public class GraphBuilder extends RelBuilder {
      * @param alias
      * @return
      */
-    public RexGraphVariable variable(String alias) {
-        Objects.requireNonNull(alias);
+    public RexGraphVariable variable(@Nullable String alias) {
+        alias = (alias == null) ? Static.Alias.DEFAULT_NAME : alias;
         RelDataTypeField aliasField = getAliasField(alias);
-        return RexGraphVariable.of(
-                aliasField.getIndex(), getAliasName(alias), aliasField.getType());
+        return RexGraphVariable.of(aliasField.getIndex(), SIMPLE_NAME(alias), aliasField.getType());
     }
 
     /**
@@ -203,8 +201,8 @@ public class GraphBuilder extends RelBuilder {
      * @param property
      * @return
      */
-    public RexGraphVariable variable(String alias, String property) {
-        Objects.requireNonNull(alias);
+    public RexGraphVariable variable(@Nullable String alias, String property) {
+        alias = (alias == null) ? Static.Alias.DEFAULT_NAME : alias;
         Objects.requireNonNull(property);
         RelDataTypeField aliasField = getAliasField(alias);
         if (!(aliasField.getType() instanceof GraphSchemaType)) {
@@ -219,7 +217,7 @@ public class GraphBuilder extends RelBuilder {
                 return RexGraphVariable.of(
                         aliasField.getIndex(),
                         pField.getIndex(),
-                        String.format("%s.%s", getAliasName(alias), property),
+                        String.format("%s.%s", SIMPLE_NAME(alias), property),
                         pField.getType());
             }
             properties.add(pField.getName());
@@ -243,23 +241,19 @@ public class GraphBuilder extends RelBuilder {
                 if (field.getName().equals(alias)) {
                     return field;
                 }
-                aliases.add(getAliasName(field.getName()));
+                aliases.add(SIMPLE_NAME(field.getName()));
             }
-            // should have found in the top node if the alias is head
-            if (alias == HEAD) break;
+            // should have found in the top node if alias name is default
+            if (alias == Static.Alias.DEFAULT_NAME) break;
             // the history before this node have been removed
             if (removeHistory(cur)) break;
         }
         throw new IllegalArgumentException(
                 "{alias="
-                        + getAliasName(alias)
+                        + SIMPLE_NAME(alias)
                         + "} "
                         + "not found; expected aliases are: "
                         + aliases);
-    }
-
-    private String getAliasName(String alias) {
-        return alias == HEAD ? "HEAD" : alias;
     }
 
     private boolean removeHistory(RelNode node) {

@@ -79,7 +79,7 @@ public class GraphOptTable implements RelOptTable {
         if (element instanceof GraphVertex) {
             LabelType labelType =
                     (new LabelType()).label(element.getLabel()).labelId(element.getLabelId());
-            return new GraphSchemaType(ScanOpt.Entity, labelType, fields);
+            return new GraphSchemaType(ScanOpt.Vertex, labelType, fields);
         } else if (element instanceof GraphEdge) {
             GraphEdge edge = (GraphEdge) element;
             List<EdgeRelation> relations = edge.getRelationList();
@@ -91,7 +91,7 @@ public class GraphOptTable implements RelOptTable {
                 GraphVertex dst = relation.getTarget();
                 labelType.srcLabel(src.getLabel()).dstLabel(dst.getLabel());
                 labelType.srcLabelId(src.getLabelId()).dstLabelId(dst.getLabelId());
-                fuzzyTypes.add(new GraphSchemaType(ScanOpt.Relation, labelType, fields));
+                fuzzyTypes.add(new GraphSchemaType(ScanOpt.Edge, labelType, fields));
             }
             ObjectUtils.requireNonEmpty(fuzzyTypes);
             return (fuzzyTypes.size() == 1)

@@ -17,6 +17,6 @@
 package com.alibaba.graphscope.common.calcite.tools.config;
 
 public enum ScanOpt {
-    Entity, // Vertex
-    Relation // Edge
+    Vertex,
+    Edge
 }

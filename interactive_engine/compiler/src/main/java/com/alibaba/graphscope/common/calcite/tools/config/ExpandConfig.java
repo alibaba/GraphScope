@@ -16,16 +16,25 @@
 
 package com.alibaba.graphscope.common.calcite.tools.config;
 
+import com.alibaba.graphscope.common.calcite.util.Static;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.util.Objects;
 
 public class ExpandConfig {
     private DirectionOpt directionOpt;
     private LabelConfig labels;
-    private String alias;
+    @Nullable private String alias;
+
+    public ExpandConfig() {
+        this.directionOpt = DirectionOpt.OUT;
+        this.labels = LabelConfig.DEFAULT;
+        this.alias = Static.Alias.DEFAULT_NAME;
+    }
 
     public ExpandConfig opt(DirectionOpt opt) {
         this.directionOpt = Objects.requireNonNull(opt);
-        ;
         return this;
     }
 
@@ -35,11 +44,11 @@ public class ExpandConfig {
     }
 
     /**
-     * @param alias can not be null, use a magic value {@code HEAD} to support `head` in gremlin
+     * @param alias generate a default inner alias if null is given
      * @return
      */
-    public ExpandConfig alias(String alias) {
-        this.alias = Objects.requireNonNull(alias);
+    public ExpandConfig alias(@Nullable String alias) {
+        this.alias = (alias == null) ? Static.Alias.DEFAULT_NAME : alias;
         return this;
     }
 

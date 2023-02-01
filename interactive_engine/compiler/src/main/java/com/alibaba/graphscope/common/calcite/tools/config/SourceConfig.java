@@ -18,16 +18,18 @@ package com.alibaba.graphscope.common.calcite.tools.config;
 
 import com.alibaba.graphscope.common.calcite.util.Static;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.util.Objects;
 
 public class SourceConfig {
     private ScanOpt opt;
     private LabelConfig labels;
-    private String alias;
+    @Nullable private String alias;
 
     public SourceConfig() {
-        this.opt = ScanOpt.Entity;
-        this.alias = Static.HEAD;
+        this.opt = ScanOpt.Vertex;
+        this.alias = Static.Alias.DEFAULT_NAME;
         this.labels = LabelConfig.DEFAULT;
     }
 
@@ -42,11 +44,11 @@ public class SourceConfig {
     }
 
     /**
-     * @param alias can not be null, use a magic value {@code HEAD} to support `head` in gremlin
+     * @param alias generate a default inner alias if null is given
      * @return
      */
-    public SourceConfig alias(String alias) {
-        this.alias = Objects.requireNonNull(alias);
+    public SourceConfig alias(@Nullable String alias) {
+        this.alias = (alias == null) ? Static.Alias.DEFAULT_NAME : alias;
         return this;
     }
 

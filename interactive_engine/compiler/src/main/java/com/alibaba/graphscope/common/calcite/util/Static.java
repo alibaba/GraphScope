@@ -47,6 +47,12 @@ public abstract class Static {
                     LESS_THAN,
                     LESS_THAN_OR_EQUAL);
 
-    public static final String HEAD = "~HEAD";
-    public static final int HEAD_ID = -1;
+    public abstract class Alias {
+        public static final String DEFAULT_NAME = "~DEFAULT";
+        public static final int DEFAULT_ID = -1;
+    }
+
+    public static final String SIMPLE_NAME(String alias) {
+        return alias == Static.Alias.DEFAULT_NAME ? "DEFAULT" : alias;
+    }
 }

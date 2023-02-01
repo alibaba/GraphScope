@@ -20,7 +20,6 @@ import com.alibaba.graphscope.common.calcite.tools.GraphBuilder;
 import com.alibaba.graphscope.common.calcite.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.calcite.tools.config.LabelConfig;
 import com.alibaba.graphscope.common.calcite.tools.config.SourceConfig;
-import com.alibaba.graphscope.common.calcite.util.Static;
 
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -50,8 +49,8 @@ public class ExpressionTest {
 
     @Test
     public void variable_1_test() {
-        RexNode node = builder.source(mockSourceConfig(Static.HEAD)).variable(Static.HEAD);
-        Assert.assertEquals(node.toString(), "HEAD");
+        RexNode node = builder.source(mockSourceConfig(null)).variable((String) null);
+        Assert.assertEquals(node.toString(), "DEFAULT");
     }
 
     @Test
@@ -63,7 +62,7 @@ public class ExpressionTest {
     @Test
     public void variable_3_test() {
         try {
-            builder.source(mockSourceConfig(Static.HEAD)).variable("a");
+            builder.source(mockSourceConfig(null)).variable("a");
         } catch (IllegalArgumentException e) {
             return;
         }
@@ -72,9 +71,9 @@ public class ExpressionTest {
 
     @Test
     public void variable_4_test() {
-        RexNode node = builder.source(mockSourceConfig(Static.HEAD)).variable(Static.HEAD, "name");
+        RexNode node = builder.source(mockSourceConfig(null)).variable(null, "name");
         Assert.assertEquals(node.getType().getSqlTypeName(), SqlTypeName.CHAR);
-        Assert.assertEquals(node.toString(), "HEAD.name");
+        Assert.assertEquals(node.toString(), "DEFAULT.name");
     }
 
     @Test

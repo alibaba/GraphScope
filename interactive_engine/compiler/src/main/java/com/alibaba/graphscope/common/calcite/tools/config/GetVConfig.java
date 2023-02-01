@@ -16,12 +16,22 @@
 
 package com.alibaba.graphscope.common.calcite.tools.config;
 
+import com.alibaba.graphscope.common.calcite.util.Static;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.util.Objects;
 
 public class GetVConfig {
     private GetVOpt getVOpt;
     private LabelConfig labels;
-    private String alias;
+    @Nullable private String alias;
+
+    public GetVConfig() {
+        this.getVOpt = GetVOpt.START;
+        this.labels = LabelConfig.DEFAULT;
+        this.alias = Static.Alias.DEFAULT_NAME;
+    }
 
     public GetVConfig opt(GetVOpt opt) {
         this.getVOpt = Objects.requireNonNull(opt);
@@ -34,11 +44,11 @@ public class GetVConfig {
     }
 
     /**
-     * @param alias can not be null, use a magic value {@code HEAD} to support `head` in gremlin
+     * @param alias generate a default inner alias if null is given
      * @return
      */
-    public GetVConfig alias(String alias) {
-        this.alias = Objects.requireNonNull(alias);
+    public GetVConfig alias(@Nullable String alias) {
+        this.alias = (alias == null) ? Static.Alias.DEFAULT_NAME : alias;
         return this;
     }
 
