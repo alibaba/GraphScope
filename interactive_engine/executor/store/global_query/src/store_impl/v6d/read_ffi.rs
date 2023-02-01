@@ -1,8 +1,6 @@
 use std::ffi::{CStr, CString};
 use std::sync::Arc;
 
-use itertools::Itertools;
-
 use crate::store_api::*;
 pub type GraphId = i64;
 type GetVertexIterator = *const ::libc::c_void;
@@ -950,7 +948,7 @@ impl GlobalGraphQuery for FFIGraphStore {
             .iter()
             .map(|v| *v as FfiLabelId)
             .collect();
-        partition_ids.iter().foreach(|partition_id| {
+        partition_ids.iter().for_each(|partition_id| {
             let label_count = labels.len() as i32;
             let iter = unsafe {
                 v6d_get_all_vertices(
