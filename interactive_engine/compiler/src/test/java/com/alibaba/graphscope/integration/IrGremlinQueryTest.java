@@ -42,7 +42,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
     public abstract Traversal<Vertex, Object> get_g_V_hasLabel_hasId_values();
 
-    public abstract Traversal<Vertex, Object> get_g_V_out_as_a_in_select_a_as_b_select_b_by_values();
+    public abstract Traversal<Vertex, Object>
+            get_g_V_out_as_a_in_select_a_as_b_select_b_by_values();
 
     @Test
     public void g_V_group_by_by_dedup_count_test() {
@@ -118,7 +119,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
     @Test
     public void g_V_out_as_a_in_select_a_as_b_select_b_by_valueMap() {
-        Traversal<Vertex, Object> traversal = this.get_g_V_out_as_a_in_select_a_as_b_select_b_by_values();
+        Traversal<Vertex, Object> traversal =
+                this.get_g_V_out_as_a_in_select_a_as_b_select_b_by_values();
         this.printTraversalForm(traversal);
         int counter = 0;
 
