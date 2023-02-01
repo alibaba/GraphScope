@@ -22,24 +22,24 @@ import static com.alibaba.graphscope.common.calcite.util.Static.SIMPLE_NAME;
 import com.alibaba.graphscope.common.calcite.rel.*;
 import com.alibaba.graphscope.common.calcite.rex.RexCallBinding;
 import com.alibaba.graphscope.common.calcite.rex.RexGraphVariable;
+import com.alibaba.graphscope.common.calcite.rex.RexVariableAliasChecker;
 import com.alibaba.graphscope.common.calcite.tools.config.*;
 import com.alibaba.graphscope.common.calcite.type.GraphSchemaType;
 import com.alibaba.graphscope.common.calcite.util.Static;
 import com.google.common.collect.ImmutableList;
 
-import org.apache.calcite.plan.Context;
-import org.apache.calcite.plan.RelOptCluster;
-import org.apache.calcite.plan.RelOptSchema;
-import org.apache.calcite.plan.RelOptTable;
+import org.apache.calcite.plan.*;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelRecordType;
-import org.apache.calcite.rex.RexBuilder;
-import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.type.BasicSqlType;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.util.Litmus;
 import org.apache.commons.lang3.ObjectUtils;
@@ -133,7 +133,8 @@ public class GraphBuilder extends RelBuilder {
      * @throws Exception - if the given alias exist
      */
     private int generateAliasId(@Nullable String alias) {
-        return -1;
+        if (alias == null || alias == Static.Alias.DEFAULT_NAME) return -1;
+        return 0;
     }
 
     /**
@@ -296,7 +297,56 @@ public class GraphBuilder extends RelBuilder {
 
     @Override
     public GraphBuilder filter(RexNode... conditions) {
-        return null;
+        ObjectUtils.requireNonEmpty(conditions);
+        for (RexNode condition : conditions) {
+            RelDataType type = condition.getType();
+            if (!(type instanceof BasicSqlType) || type.getSqlTypeName() != SqlTypeName.BOOLEAN) {
+                throw new IllegalArgumentException(
+                        "filter condition "
+                                + condition
+                                + " should return Boolean value, but is "
+                                + type);
+            }
+        }
+        GraphBuilder builder = (GraphBuilder) super.filter(conditions);
+        // fuse filter with the previous table scan if meets the conditions
+        Filter filter;
+        AbstractBindableTableScan tableScan;
+        if ((filter = topFilter()) != null && (tableScan = inputTableScan(filter)) != null) {
+            RexNode condition = filter.getCondition();
+            RexVariableAliasChecker checker =
+                    new RexVariableAliasChecker(true, tableScan.getAliasId());
+            condition.accept(checker);
+            // fuze all conditions into table scan
+            if (checker.isAll()) {
+                // pop the filter from the inner stack
+                builder.pop();
+                // add the condition in table scan
+                tableScan.setFilters(ImmutableList.of(condition));
+                push(tableScan);
+            }
+        }
+        return builder;
+    }
+
+    private Filter topFilter() {
+        if (this.size() > 0 && this.peek() instanceof Filter) {
+            return (Filter) this.peek();
+        } else {
+            return null;
+        }
+    }
+
+    private AbstractBindableTableScan inputTableScan(RelNode filter) {
+        Objects.requireNonNull(filter);
+        List<RelNode> inputs = filter.getInputs();
+        if (inputs != null
+                && inputs.size() == 1
+                && inputs.get(0) instanceof AbstractBindableTableScan) {
+            return (AbstractBindableTableScan) inputs.get(0);
+        } else {
+            return null;
+        }
     }
 
     @Override
@@ -390,5 +440,9 @@ public class GraphBuilder extends RelBuilder {
     @Override
     public RelBuilder limit(int offset, int fetch) {
         return null;
+    }
+
+    public void pop() {
+        this.build();
     }
 }

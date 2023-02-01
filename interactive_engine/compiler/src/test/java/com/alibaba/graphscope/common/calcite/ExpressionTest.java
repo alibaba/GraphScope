@@ -38,25 +38,25 @@ public class ExpressionTest {
     @Test
     public void literal_test() {
         RexNode node = builder.literal(1);
-        Assert.assertEquals(node.getType().getSqlTypeName(), SqlTypeName.INTEGER);
+        Assert.assertEquals(SqlTypeName.INTEGER, node.getType().getSqlTypeName());
         node = builder.literal("s");
-        Assert.assertEquals(node.getType().getSqlTypeName(), SqlTypeName.CHAR);
+        Assert.assertEquals(SqlTypeName.CHAR, node.getType().getSqlTypeName());
         node = builder.literal(true);
-        Assert.assertEquals(node.getType().getSqlTypeName(), SqlTypeName.BOOLEAN);
+        Assert.assertEquals(SqlTypeName.BOOLEAN, node.getType().getSqlTypeName());
         node = builder.literal(1.0);
-        Assert.assertEquals(node.getType().getSqlTypeName(), SqlTypeName.DOUBLE);
+        Assert.assertEquals(SqlTypeName.DOUBLE, node.getType().getSqlTypeName());
     }
 
     @Test
     public void variable_1_test() {
         RexNode node = builder.source(mockSourceConfig(null)).variable((String) null);
-        Assert.assertEquals(node.toString(), "DEFAULT");
+        Assert.assertEquals("DEFAULT", node.toString());
     }
 
     @Test
     public void variable_2_test() {
         RexNode node = builder.source(mockSourceConfig("a")).variable("a");
-        Assert.assertEquals(node.toString(), "a");
+        Assert.assertEquals("a", node.toString());
     }
 
     @Test
@@ -73,14 +73,14 @@ public class ExpressionTest {
     public void variable_4_test() {
         RexNode node = builder.source(mockSourceConfig(null)).variable(null, "name");
         Assert.assertEquals(node.getType().getSqlTypeName(), SqlTypeName.CHAR);
-        Assert.assertEquals(node.toString(), "DEFAULT.name");
+        Assert.assertEquals("DEFAULT.name", node.toString());
     }
 
     @Test
     public void variable_5_test() {
         RexNode node = builder.source(mockSourceConfig("a")).variable("a", "age");
         Assert.assertEquals(node.getType().getSqlTypeName(), SqlTypeName.INTEGER);
-        Assert.assertEquals(node.toString(), "a.age");
+        Assert.assertEquals("a.age", node.toString());
     }
 
     // a.age + 10
@@ -89,7 +89,7 @@ public class ExpressionTest {
         RexNode var = builder.source(mockSourceConfig("a")).variable("a", "age");
         RexNode plus = builder.call(GraphStdOperatorTable.PLUS, var, builder.literal(10));
         Assert.assertEquals(plus.getType().getSqlTypeName(), SqlTypeName.INTEGER);
-        Assert.assertEquals(plus.toString(), "+(a.age, 10)");
+        Assert.assertEquals("+(a.age, 10)", plus.toString());
     }
 
     // a.age == 10
@@ -98,7 +98,7 @@ public class ExpressionTest {
         RexNode var = builder.source(mockSourceConfig("a")).variable("a", "age");
         RexNode equal = builder.call(GraphStdOperatorTable.EQUALS, var, builder.literal(10));
         Assert.assertEquals(equal.getType().getSqlTypeName(), SqlTypeName.BOOLEAN);
-        Assert.assertEquals(equal.toString(), "=(a.age, 10)");
+        Assert.assertEquals("=(a.age, 10)", equal.toString());
     }
 
     // a.age + 10 > 30
@@ -108,7 +108,7 @@ public class ExpressionTest {
         RexNode plus = builder.call(GraphStdOperatorTable.PLUS, var, builder.literal(10));
         RexNode equal = builder.call(GraphStdOperatorTable.EQUALS, plus, builder.literal(30));
         Assert.assertEquals(equal.getType().getSqlTypeName(), SqlTypeName.BOOLEAN);
-        Assert.assertEquals(equal.toString(), "=(+(a.age, 10), 30)");
+        Assert.assertEquals("=(+(a.age, 10), 30)", equal.toString());
     }
 
     // a.age > 10 && a.name == 'x'
@@ -121,7 +121,7 @@ public class ExpressionTest {
         RexNode equal2 = builder.call(GraphStdOperatorTable.EQUALS, var2, builder.literal("x"));
         RexNode node = builder.call(GraphStdOperatorTable.AND, equal1, equal2);
         Assert.assertEquals(node.getType().getSqlTypeName(), SqlTypeName.BOOLEAN);
-        Assert.assertEquals(node.toString(), "AND(>(a.age, 10), =(a.name, 'x'))");
+        Assert.assertEquals("AND(>(a.age, 10), =(a.name, 'x'))", node.toString());
     }
 
     private SourceConfig mockSourceConfig(String alias) {

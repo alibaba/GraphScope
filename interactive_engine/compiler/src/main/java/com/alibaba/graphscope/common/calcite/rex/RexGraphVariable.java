@@ -18,12 +18,13 @@ package com.alibaba.graphscope.common.calcite.rex;
 
 import static com.alibaba.graphscope.common.calcite.util.Static.RESOURCE;
 
+import com.alibaba.graphscope.common.calcite.util.Static;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexBiVisitor;
-import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexVisitor;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -33,9 +34,8 @@ import java.util.List;
 /**
  * Denote variables, i.e. "a" or "name" or "a.name"
  */
-public class RexGraphVariable extends RexNode {
+public class RexGraphVariable extends RexInputRef {
     private List<Integer> idList;
-    private RelDataType type;
 
     protected RexGraphVariable(int aliasId, @Nullable String name, RelDataType type) {
         this(name, type);
@@ -48,8 +48,8 @@ public class RexGraphVariable extends RexNode {
     }
 
     protected RexGraphVariable(@Nullable String name, RelDataType type) {
+        super(0, type);
         this.digest = (name == null) ? StringUtils.EMPTY : name;
-        this.type = type;
     }
 
     /**
@@ -77,11 +77,6 @@ public class RexGraphVariable extends RexNode {
     }
 
     @Override
-    public RelDataType getType() {
-        return this.type;
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -96,11 +91,28 @@ public class RexGraphVariable extends RexNode {
 
     @Override
     public <R> R accept(RexVisitor<R> rexVisitor) {
-        throw RESOURCE.functionWillImplement(this.getClass()).ex();
+        if (rexVisitor instanceof RexVariableAliasChecker) {
+            return rexVisitor.visitInputRef(this);
+        } else {
+            return null;
+        }
     }
 
     @Override
     public <R, P> R accept(RexBiVisitor<R, P> rexBiVisitor, P p) {
         throw RESOURCE.functionWillImplement(this.getClass()).ex();
+    }
+
+    int getAliasId() {
+        return idList.isEmpty() ? Static.Alias.DEFAULT_ID : idList.get(0);
+    }
+
+    int getPropertyId() {
+        return idList.size() < 2 ? -1 : idList.get(1);
+    }
+
+    @Override
+    public String getName() {
+        return this.digest;
     }
 }

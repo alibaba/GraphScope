@@ -47,8 +47,8 @@ public class SourceTest {
                 new SourceConfig().labels(new LabelConfig(false).addLabel("person"));
         RelNode source = builder.source(sourceConfig).build();
         Assert.assertEquals(
-                source.toString(),
-                "rel#0:LogicalSource.(tableConfig={isAll=false, tables=[person]})");
+                "rel#0:LogicalSource.(tableConfig={isAll=false, tables=[person]})",
+                source.toString());
     }
 
     @Test
@@ -59,8 +59,8 @@ public class SourceTest {
                         .labels(new LabelConfig(false).addLabel("person").addLabel("software"));
         RelNode source = builder.source(sourceConfig).build();
         Assert.assertEquals(
-                source.toString(),
-                "rel#0:LogicalSource.(tableConfig={isAll=false, tables=[person, software]})");
+                "rel#0:LogicalSource.(tableConfig={isAll=false, tables=[person, software]})",
+                source.toString());
     }
 
     @Test

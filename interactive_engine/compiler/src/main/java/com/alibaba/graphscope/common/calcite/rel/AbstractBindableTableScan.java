@@ -94,7 +94,7 @@ public abstract class AbstractBindableTableScan extends TableScan {
         return rowType;
     }
 
-    protected String getAliasName() {
+    public String getAliasName() {
         Objects.requireNonNull(hints);
         if (hints.size() < 2) {
             throw new IllegalArgumentException(
@@ -107,7 +107,7 @@ public abstract class AbstractBindableTableScan extends TableScan {
         return aliasName;
     }
 
-    protected int getAliasId() {
+    public int getAliasId() {
         Objects.requireNonNull(hints);
         if (hints.size() < 2) {
             throw new IllegalArgumentException(
@@ -132,5 +132,9 @@ public abstract class AbstractBindableTableScan extends TableScan {
     @Override
     public String toString() {
         return "rel#" + this.innerId + ':' + getDigest();
+    }
+
+    public void setFilters(ImmutableList<RexNode> filters) {
+        this.filters = filters;
     }
 }
