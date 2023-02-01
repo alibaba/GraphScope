@@ -995,29 +995,41 @@ fn process_columns_meta(plan_meta: &mut PlanMeta, is_late_project: bool) -> IrRe
 impl AsLogical for pb::Project {
     fn preprocess(&mut self, meta: &StoreMeta, plan_meta: &mut PlanMeta) -> IrResult<()> {
         use common_pb::expr_opr::Item;
+        // Notice some special cases of Project when project tag(s) only:
+        // 1. when project("@a"), it indicates to move the `Head` to the nodes referred by the tag `a`
+        // 2. when project("@a").as("b") (or, project multiple columns with new aliases).
+        //    In this case, when we want to access the property of "b" (assuming "a"/"b" refers to a vertex), we actually need to refer to the entries of "a".
+        //    e.g., we may want to Project the 0-th and 1-th columns on r1{v0, v1, v2}, and we get r2{v0, v1};
+        //    When we want to project properties on v0, we may need to refer to the source that generates v0, rather than the Project operator
 
         let len = self.mappings.len();
         for mapping in self.mappings.iter_mut() {
-            if let Some(alias) = mapping.alias.as_mut() {
-                let tag_id = get_or_set_tag_id(alias, plan_meta)?;
-                plan_meta.set_tag_nodes(tag_id, vec![plan_meta.get_curr_node()]);
-            }
+            // the flag to indicate if the project is to project tags only, e.g., project("@a")
+            let mut is_project_tag_only = false;
+            let mut tag_nodes = vec![];
             if let Some(expr) = &mut mapping.expr {
                 let mut is_project_as_head = false;
                 let curr_node = plan_meta.get_curr_node();
                 preprocess_expression(expr, meta, plan_meta, false)?;
-                if len == 1 && expr.operators.len() == 1 {
+                if expr.operators.len() == 1 {
                     if let common_pb::ExprOpr { item: Some(Item::Var(var)) } =
                         expr.operators.get_mut(0).unwrap()
                     {
                         if let Some(tag) = var.tag.as_mut() {
                             let tag_id = get_or_set_tag_id(tag, plan_meta)?;
                             if var.property.is_none() {
-                                let nodes = plan_meta.get_tag_nodes(tag_id).to_vec();
-                                if !nodes.is_empty() {
-                                    // the case of `project("@a")`, must refer to the nodes referred by the tag,
-                                    plan_meta.refer_to_nodes(curr_node, nodes);
-                                    is_project_as_head = true;
+                                tag_nodes = plan_meta.get_tag_nodes(tag_id).to_vec();
+                                if !tag_nodes.is_empty() {
+                                    // the case of project to some tagged columns.
+                                    // if alias exists, e.g., `project("@a").as("b")`,
+                                    // when visiting "b", should actually visit the nodes referred by the tag `a`
+                                    // i.e., `rename` for the nodes from `a` to `b`
+                                    is_project_tag_only = true;
+                                    if len == 1 {
+                                        // furthermore, the case of `project("@a")`, must refer to the nodes referred by the tag,
+                                        plan_meta.refer_to_nodes(curr_node, tag_nodes.clone());
+                                        is_project_as_head = true;
+                                    }
                                 }
                             }
                         }
@@ -1027,6 +1039,15 @@ impl AsLogical for pb::Project {
                     process_columns_meta(plan_meta, false)?;
                     // projection alters the head of the record unless it is the case of project_as_head
                     plan_meta.refer_to_nodes(curr_node, vec![curr_node]);
+                }
+            }
+            if let Some(alias) = mapping.alias.as_mut() {
+                let alias_id = get_or_set_tag_id(alias, plan_meta)?;
+                if is_project_tag_only {
+                    // "rename" for the ori_tag_nodes
+                    plan_meta.set_tag_nodes(alias_id, tag_nodes);
+                } else {
+                    plan_meta.set_tag_nodes(alias_id, vec![plan_meta.get_curr_node()]);
                 }
             }
         }
@@ -2326,6 +2347,79 @@ mod test {
             .get_node_meta(0)
             .unwrap()
             .is_all_columns());
+    }
+
+    #[test]
+    fn column_maintain_case6() {
+        // Test the maintenance of columns after **rename tags**
+        let mut plan = LogicalPlan::default();
+        // g.V().out().as("a").in().select("a").as("b").select("b").by("name")
+
+        // g.V()
+        let scan = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(query_params(vec![], vec![])),
+            idx_predicate: None,
+        };
+        plan.append_operator_as_node(scan.into(), vec![])
+            .unwrap();
+        assert_eq!(plan.meta.get_curr_referred_nodes(), &vec![0]);
+
+        // .out().as("a")
+        let expand = pb::EdgeExpand {
+            v_tag: None,
+            direction: 0,
+            params: Some(query_params(vec![], vec![])),
+            expand_opt: 0,
+            alias: Some("a".into()),
+        };
+        plan.append_operator_as_node(expand.into(), vec![0])
+            .unwrap();
+        assert_eq!(plan.meta.get_curr_referred_nodes(), &vec![1]);
+
+        // .in()
+        let expand = pb::EdgeExpand {
+            v_tag: None,
+            direction: 1,
+            params: Some(query_params(vec![], vec![])),
+            expand_opt: 0,
+            alias: None,
+        };
+        plan.append_operator_as_node(expand.into(), vec![1])
+            .unwrap();
+        assert_eq!(plan.meta.get_curr_referred_nodes(), &vec![2]);
+
+        // .select("a").as("b")
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("@a".to_string()).ok(),
+                alias: Some("b".into()),
+            }],
+            is_append: true,
+        };
+        plan.append_operator_as_node(project.into(), vec![2])
+            .unwrap();
+        assert_eq!(plan.meta.get_curr_referred_nodes(), &vec![1]);
+
+        // select("b").by("name")
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("@b.name".to_string()).ok(),
+                alias: None,
+            }],
+            is_append: true,
+        };
+        plan.append_operator_as_node(project.into(), vec![3])
+            .unwrap();
+        assert_eq!(
+            plan.meta
+                .get_node_meta(1)
+                .unwrap()
+                .get_columns(),
+            vec!["name".into()]
+        );
+        assert_eq!(plan.meta.get_curr_referred_nodes(), &vec![4]);
     }
 
     #[test]

@@ -18,6 +18,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::iter::FromIterator;
 
 use ir_common::error::ParsePbError;
+use ir_common::expr_parse::str_to_expr_pb;
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
 use vec_map::VecMap;
@@ -664,23 +665,23 @@ fn build_logical_plan(
         }
     }
     // Finally, if the results contain any pattern vertices with system-given aliases,
-    // We additional remove the system-given aliases, i.e., those will not be referred later.
+    // we additional project the user-given aliases, i.e., those may be referred later.
+    // Here, origin_pattern.vertices.len() indicates total number of pattern vertices;
+    // and origin_pattern.tag_vertex_map.len() indicates the number of pattern vertices with user-given aliases
     let max_tag_id = origin_pattern.get_max_tag_id() as i32;
     let max_vertex_id = origin_pattern
         .get_max_vertex_id()
         .ok_or(IrPatternError::InvalidExtendPattern(format!("Empty pattern {:?}", origin_pattern)))?
         as i32;
     if max_vertex_id >= max_tag_id {
-        let remove_tags = (max_tag_id..max_vertex_id + 1)
-            .map(|tag_id| tag_id.into())
-            .collect();
-        let auxilia = pb::Auxilia {
-            tag: None,
-            params: Some(query_params(vec![], vec![], None)),
-            alias: None,
-            remove_tags,
-        };
-        append_opr(&mut match_plan, &mut pre_node, auxilia.into(), &mut child_offset);
+        let mut mappings = Vec::with_capacity(max_tag_id as usize);
+        for tag_id in 0..max_tag_id {
+            let expr = str_to_expr_pb(format!("@{}", tag_id)).ok();
+            let mapping = pb::project::ExprAlias { expr, alias: Some(tag_id.into()) };
+            mappings.push(mapping);
+        }
+        let project = pb::Project { mappings, is_append: false }.into();
+        append_opr(&mut match_plan, &mut pre_node, project, &mut child_offset);
     }
     // and append the final op
     pre_node.children.push(child_offset);
