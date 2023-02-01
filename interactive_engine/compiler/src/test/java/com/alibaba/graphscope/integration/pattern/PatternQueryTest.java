@@ -57,6 +57,8 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
 
     public abstract Traversal<Vertex, Long> get_pattern_15_test();
 
+    public abstract Traversal<Vertex, Long> get_pattern_16_test();
+
     @Test
     public void run_pattern_1_test() {
         Traversal<Vertex, Long> traversal = this.get_pattern_1_test();
@@ -297,6 +299,22 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
         Assert.assertEquals(1, counter);
     }
 
+    @Test
+    public void run_pattern_16_test() {
+        Traversal<Vertex, Long> traversal = this.get_pattern_16_test();
+        this.printTraversalForm(traversal);
+        int counter = 0;
+
+        String expected = "33380";
+        while (traversal.hasNext()) {
+            Long bindings = traversal.next();
+            Assert.assertTrue(bindings.toString().equals(expected));
+            ++counter;
+        }
+
+        Assert.assertEquals(1, counter);
+    }
+
     public static class Traversals extends PatternQueryTest {
 
         // PM1
@@ -499,6 +517,18 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
                             __.as("a").out("KNOWS").as("c"))
                     .select("a", "b", "c")
                     .by("firstName")
+                    .by("firstName")
+                    .by("firstName")
+                    .count();
+        }
+
+        // support project properties when project (implicitly) user-given tags after pattern match
+        @Override
+        public Traversal<Vertex, Long> get_pattern_16_test() {
+            return g.V().match(
+                            __.as("a").out("KNOWS").out("KNOWS").as("c"),
+                            __.as("a").out("KNOWS").as("c"))
+                    .select("a", "c")
                     .by("firstName")
                     .by("firstName")
                     .count();
