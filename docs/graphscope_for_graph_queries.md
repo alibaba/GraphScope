@@ -136,14 +136,11 @@ graph data that can be partitioned across multiple servers. By design, it introd
 ### Limitations
 Because of the distributed nature and practical considerations, a few features are not supported:
 - Functionalities
-  -- Graph mutations.
-  -- Lambda and Groovy expressions and functions, such as the `.map{<expression>}`, the
-  `.by{<expression>}`, and the `.filter{<expression>}` functions, 1+1, and
-  `System.currentTimeMillis()`, etc. We have provided the `expr()` syntactic sugar to handle
-  expressions.
-  -- Gremlin traversal strategies.
-  -- Transactions.
-  -- Secondary index isn’t currently available. Primary keys will be automatically indexed.
+  - Graph mutations.
+  - Lambda and Groovy expressions and functions, such as the `.map{<expression>}`, the `.by{<expression>}`, and the `.filter{<expression>}` functions, and `System.currentTimeMillis()`, etc. By the way, we have provided the `expr()` [syntactic sugar](./supported_gremlin_steps.md) to handle complex expressions.
+  - Gremlin traversal strategies.
+  - Transactions.
+  - Secondary index isn’t currently available. Primary keys will be automatically indexed.
 
 - Gremlin Steps: See [here](./supported_gremlin_steps.md) for a complete supported/unsupported list of Gremlin.
 
