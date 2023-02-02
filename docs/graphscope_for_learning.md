@@ -35,16 +35,8 @@ solution for scaling GNN training on very large graphs. Neighbor sampling
 is used to generate mini-batches, allowing sampling-based GNN models to 
 handle unseen vertices. GraphSAGE is a typical example of mini-batch 
 training. The following figure illustrates the workflow of 2-hop GraphSAGE training.
-<center>
-   <img style="border-radius: 0.3125em;
-   box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-   src="./images/graphsage.png" width="60%">
-   <br>
-   <div style="color:orange; border-bottom: 1px solid #d9d9d9;
-   display: inline-block;
-   color: #999;
-   padding: 2px;">The workflow of 2-hop GraphSAGE training.</div>
-</center>
+
+![The workflow of 2-hop GraphSAGE training.](./images/graphsage.png)
 
 <!-- The workflow of GraphSAGE training follows a vertex-centric computation 
 paradigm including the following steps: 
@@ -64,17 +56,7 @@ models. The graph engine stores the graph topology and attributes distributedly,
 and supports efficient graph sampling and query. 
 GLE can work with popular tensor engines including TensorFlow and PyTorch.
 
-
-<center>
-   <img style="border-radius: 0.3125em;
-   box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-   src="./images/gle_algo_framework.png" width="60%">
-   <br>
-   <div style="color:orange; border-bottom: 1px solid #d9d9d9;
-   display: inline-block;
-   color: #999;
-   padding: 2px;">An overview of the algorithm framework in GLE.</div>
-</center>
+![An overview of the algorithm framework in GLE.](./images/gle_algo_framework.png)
 
 ## Subgraph Sampling
 
@@ -94,12 +76,7 @@ of row index and column index of edges), generally using full neighbor. The conv
 based on SubGraph generally uses the sparse NN operator. The examples of EgoGraph and 
 SubGraph are shown in the following figure.
 
-<center>
-   <img style="border-radius: 0.3125em;
-   box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-   src="./images/ego_sub.png" width="70%">
-   <br>
-</center>
+![The examples of EgoGraph.](./images/ego_sub.png)
 
 For models using EgoGraph sampling, the message aggregation path is determined by 
 the potential relationship between the ego and its neighbors. For models using 
