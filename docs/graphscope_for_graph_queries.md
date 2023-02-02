@@ -66,8 +66,9 @@ and the result of the traversal is the collection of all halted traversers. A tr
 unit of data processed by a Gremlin engine. Each traverser maintains a location that is a reference
 to the current vertex, edge or property being visited, and (optionally) the path history with application state.
 
-![A Gremlin query for cycle detection.](./images/cycle_detection.png)
-
+<div align=center>
+<img src="./images/cycle_detection.png" width = "300" height = "200" alt="A Gremlin query for cycle detection."/>
+</div>
 
 The above figure shows a simplified anti-money-laundering scenario via cycle detection.
 Below is the corresponding Gremlin query, which tries to find cyclic paths of length
@@ -101,14 +102,15 @@ declarative way of expressing the pattern matching queries, which allows users t
 arbitrary patterns using `match()` and the engine will automatically derive the execution
 plans based on the [worst-case optimal join algorithm](https://justinjaffray.com/a-gentle-ish-introduction-to-worst-case-optimal-joins/).
 
-![An example of property graph.](./images/property_graph.png)
+<div align=center>
+<img src="./images/property_graph.png" width = "300" height = "200" alt="An example of property graph."/>
+</div>
 
 The above figure shows a property graph, which contains `user`, `product`, and `address` vertices
 connected by `order`, `deliver`, `belongs_to`, and `home_of` edges. A path following vertices `1–>2–>3`,
 shown as the dotted line, indicates that a buyer "Tom" ordered a product "gift" offered by a seller
 "Jack", with a price of "$99".
-
-Below is an example of querying the path of `1–>2–>3` in the above property graph using pattern matching.
+Below is an example of querying the path of `1–>2–>3` using pattern matching.
 
 ```groovy
 g.V().match(
