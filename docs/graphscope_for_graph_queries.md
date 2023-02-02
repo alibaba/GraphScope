@@ -66,9 +66,16 @@ and the result of the traversal is the collection of all halted traversers. A tr
 unit of data processed by a Gremlin engine. Each traverser maintains a location that is a reference
 to the current vertex, edge or property being visited, and (optionally) the path history with application state.
 
-<div align=center>
-<img src="./images/cycle_detection.png" width = "300" height = "200" alt="A Gremlin query for cycle detection."/>
-</div>
+<center>
+   <img style="border-radius: 0.3125em;
+   box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);"
+   src="./_images/cycle_detection.png" width="60%">
+   <br>
+   <div style="color:orange; border-bottom: 1px solid #d9d9d9;
+   display: inline-block;
+   color: #999;
+   padding: 2px;">A Gremlin query for cycle detection.</div>
+</center>
 
 The above figure shows a simplified anti-money-laundering scenario via cycle detection.
 Below is the corresponding Gremlin query, which tries to find cyclic paths of length
@@ -102,9 +109,16 @@ declarative way of expressing the pattern matching queries, which allows users t
 arbitrary patterns using `match()` and the engine will automatically derive the execution
 plans based on the [worst-case optimal join algorithm](https://justinjaffray.com/a-gentle-ish-introduction-to-worst-case-optimal-joins/).
 
-<div align=center>
-<img src="./images/property_graph.png" width = "300" height = "200" alt="An example of property graph."/>
-</div>
+<center>
+   <img style="border-radius: 0.3125em;
+   box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);"
+   src="./_images/property_graph.png" width="60%">
+   <br>
+   <div style="color:orange; border-bottom: 1px solid #d9d9d9;
+   display: inline-block;
+   color: #999;
+   padding: 2px;">An example of property graph.</div>
+</center>
 
 The above figure shows a property graph, which contains `user`, `product`, and `address` vertices
 connected by `order`, `deliver`, `belongs_to`, and `home_of` edges. A path following vertices `1–>2–>3`,
