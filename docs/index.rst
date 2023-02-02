@@ -6,14 +6,14 @@
 GraphScope: A One-Stop Large-Scale Graph Computing System from Alibaba
 ======================================================================
 
-GraphScope is a unified distributed graph computing platform 
-that provides a one-stop environment for performing diverse graph 
-operations on a cluster of computers through a user-friendly 
-Python interface. GraphScope makes multi-staged processing of 
-large-scale graph data on compute clusters simple by combining 
-several important pieces of Alibaba technology: including GRAPE, 
-GraphCompute, and Graph-Learn (GL) for analytics, interactive, 
-and graph neural networks (GNN) computation, respectively, 
+GraphScope is a unified distributed graph computing platform
+that provides a one-stop environment for performing diverse graph
+operations on a cluster of computers through a user-friendly
+Python interface. GraphScope makes multi-staged processing of
+large-scale graph data on compute clusters simple by combining
+several important pieces of Alibaba technology: including GRAPE,
+GraphCompute, and Graph-Learn (GL) for analytics, interactive,
+and graph neural networks (GNN) computation, respectively,
 and the vineyard store that offers efficient in-memory data transfers.
 
 
@@ -24,7 +24,7 @@ and the vineyard store that offers efficient in-memory data transfers.
    overview
    key_features
    graphscope_for_data_scientists
-   graphscope_for_traversal_queries
+   graphscope_for_graph_queries
    graphscope_for_graph_analytics
    graphscope_for_learning
    performance_and_benchmark
@@ -45,7 +45,7 @@ and the vineyard store that offers efficient in-memory data transfers.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Deployment and Usage 
+   :caption: Deployment and Usage
 
    installation
    deploy_on_self_managed_k8s
