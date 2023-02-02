@@ -52,48 +52,36 @@ With that information, we can directly query a graph using Gremlin-Python as des
 ## Programming with Gremlin
 GIE is designed to faithfully preserve the programming model of Gremlin, and as a result it can
 be used to scale existing Gremlin applications to large compute clusters with minimum modification.
-In this section, we provide a high-level view of the programming model, highlighting the key concepts
-including the data model and query language.
-See [here](./supported_gremlin_steps.md) for a complete supported list of Gremlin.
-
-### Data model
 Gremlin enables users to define ad-hoc traversals on property graphs. A property graph is a directed
 graph in which vertices and edges can have a set of properties. Every entity (vertex or edge) is
 identified by a unique identifier (`ID`), and has a (`label`) indicating its type or role.
 Each property is a key-value pair with combination of entity `ID` and property name as the key.
+There are two ways of querying with Gremlin, namely an imperative traversal query and a
+declarative pattern-matching query.
 
-<center>
-   <img style="border-radius: 0.3125em;
-   box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);"
-   src="./images/property_graph.png" width="60%">
-   <br>
-   <div style="color:orange; border-bottom: 1px solid #d9d9d9;
-   display: inline-block;
-   color: #999;
-   padding: 2px;">An example of property graph.</div>
-</center>
+### Traversal Query
 
-The above figure shows an example property graph. It contains `user`, `product`, and `address` vertices
-connected by `order`, `deliver`, `belongs_to`, and `home_of` edges. A path following vertices `1–>2–>3`,
-shown as the dotted line, indicates that a buyer "Tom" ordered a product "gift" offered by a seller
-"Jack", with a price of "$99".
-
-### Query language
-In a Gremlin traversal, a set of traversers walk a graph according to particular user-provided instructions,
+In the imperative traversal query, the execution exactly follows the steps given by the query,
+where a set of traversers walk a graph step by step according to the corresponding user-provided instructions,
 and the result of the traversal is the collection of all halted traversers. A traverser is the basic
 unit of data processed by a Gremlin engine. Each traverser maintains a location that is a reference
 to the current vertex, edge or property being visited, and (optionally) the path history with application state.
 
-The flexibility of Gremlin mainly stems from nested traversal, which allows a traversal to be embedded
-within another operator, and used as a function to be invoked by the enclosing operator for processing input.
-The role and signature of the function are determined by the type of the enclosing operator.
+<center>
+   <img style="border-radius: 0.3125em;
+   box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);"
+   src="./images/cycle_detection.png" width="60%">
+   <br>
+   <div style="color:orange; border-bottom: 1px solid #d9d9d9;
+   display: inline-block;
+   color: #999;
+   padding: 2px;">A Gremlin query for cycle detection.</div>
+</center>
 
-For example, a nested traversal within the `where` operator acts as a predicate function for
-conditional filters, while that within the `select` or `order` operator maps each traverser
-to the output or ordering key for sorting the output, respectively.
-
-Below shows a Gremlin query for cycle detection, which tries to find cyclic paths of length
+The above figure shows a simplified anti-money-laundering scenario via cycle detection.
+Below is the corresponding Gremlin query, which tries to find cyclic paths of length
 `k` starting from a given account.
+
 
 ```groovy
 g.V('account').has('id','2').as('s')
@@ -114,6 +102,41 @@ introduce for easily handling the path-related applications.
 Third, the `where` operator checks if the starting vertex s can be reached by one more step, that is,
 whether a cycle of length k is formed. Finally, the `limit` operator at the end indicates
 only one such result is needed.
+
+### Pattern Matching
+
+Different from the imperative traversal query, the `match()` step provides a
+declarative way of expressing the pattern matching queries, which allows users to express
+arbitrary patterns using `match()` and the engine will automatically derive the execution
+plans based on the [worst-case optimal join algorithm](https://justinjaffray.com/a-gentle-ish-introduction-to-worst-case-optimal-joins/).
+
+<center>
+   <img style="border-radius: 0.3125em;
+   box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);"
+   src="./images/property_graph.png" width="60%">
+   <br>
+   <div style="color:orange; border-bottom: 1px solid #d9d9d9;
+   display: inline-block;
+   color: #999;
+   padding: 2px;">An example of property graph.</div>
+</center>
+
+The above figure shows a property graph, which contains `user`, `product`, and `address` vertices
+connected by `order`, `deliver`, `belongs_to`, and `home_of` edges. A path following vertices `1–>2–>3`,
+shown as the dotted line, indicates that a buyer "Tom" ordered a product "gift" offered by a seller
+"Jack", with a price of "$99".
+
+Below is an example of matching a triangle pattern in the above property graph.
+
+```groovy
+g.V().match(
+  as('1').out('order').as('2'),
+  as('2').out('deliver').as('4'),
+  as('1').in('home_of').as('4')
+)
+```
+
+
 
 ## Compatibility with TinkerPop
 GIE supports the property graph model and Gremlin traversal language defined by Apache TinkerPop,
