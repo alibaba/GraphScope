@@ -1,4 +1,4 @@
-# GraphScope for Graph Interactive Queries
+# GraphScope for Interactive Graph Queries
 
 GraphScope Interactive Engine (GIE) is a distributed system designed specifically to make it easy
 for a variety of users to analyze large and complex graph structures in an iterative manner.
@@ -56,8 +56,7 @@ Gremlin enables users to define ad-hoc traversals on property graphs. A property
 graph in which vertices and edges can have a set of properties. Every entity (vertex or edge) is
 identified by a unique identifier (`ID`), and has a (`label`) indicating its type or role.
 Each property is a key-value pair with combination of entity `ID` and property name as the key.
-There are two ways of querying with Gremlin, namely an imperative traversal query and a
-declarative pattern-matching query.
+There are two ways of querying with Gremlin, namely the imperative traversal and declarative pattern matching.
 
 ### Traversal Query
 
@@ -67,16 +66,8 @@ and the result of the traversal is the collection of all halted traversers. A tr
 unit of data processed by a Gremlin engine. Each traverser maintains a location that is a reference
 to the current vertex, edge or property being visited, and (optionally) the path history with application state.
 
-<center>
-   <img style="border-radius: 0.3125em;
-   box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);"
-   src="./images/cycle_detection.png" width="60%">
-   <br>
-   <div style="color:orange; border-bottom: 1px solid #d9d9d9;
-   display: inline-block;
-   color: #999;
-   padding: 2px;">A Gremlin query for cycle detection.</div>
-</center>
+![A Gremlin query for cycle detection.](./images/cycle_detection.png)
+
 
 The above figure shows a simplified anti-money-laundering scenario via cycle detection.
 Below is the corresponding Gremlin query, which tries to find cyclic paths of length
@@ -110,40 +101,27 @@ declarative way of expressing the pattern matching queries, which allows users t
 arbitrary patterns using `match()` and the engine will automatically derive the execution
 plans based on the [worst-case optimal join algorithm](https://justinjaffray.com/a-gentle-ish-introduction-to-worst-case-optimal-joins/).
 
-<center>
-   <img style="border-radius: 0.3125em;
-   box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);"
-   src="./images/property_graph.png" width="60%">
-   <br>
-   <div style="color:orange; border-bottom: 1px solid #d9d9d9;
-   display: inline-block;
-   color: #999;
-   padding: 2px;">An example of property graph.</div>
-</center>
+![An example of property graph.](./images/property_graph.png)
 
 The above figure shows a property graph, which contains `user`, `product`, and `address` vertices
 connected by `order`, `deliver`, `belongs_to`, and `home_of` edges. A path following vertices `1–>2–>3`,
 shown as the dotted line, indicates that a buyer "Tom" ordered a product "gift" offered by a seller
 "Jack", with a price of "$99".
 
-Below is an example of matching a triangle pattern in the above property graph.
+Below is an example of querying the path of `1–>2–>3` in the above property graph using pattern matching.
 
 ```groovy
 g.V().match(
   as('1').out('order').as('2'),
-  as('2').out('deliver').as('4'),
-  as('1').in('home_of').as('4')
+  as('2').out('belongs_to').as('3'),
 )
 ```
 
-
-
 ## Compatibility with TinkerPop
 GIE supports the property graph model and Gremlin traversal language defined by Apache TinkerPop,
-and provides a Gremlin Websockets server that supports TinkerPop version 3.3 and 3.4.
+and provides a Gremlin Websockets server that supports TinkerPop version 3.4.
 In addition to the original Gremlin queries, we further introduce some syntactic sugars to allow
-more succinct expression. In this section, we provide an overview of the key differences
-between our implementation of Gremlin and the Apache TinkerPop specification.
+more succinct expression. However, because of the distributed nature and practical considerations, it is worth to notice the following constraints and limitations of our implementations of Gremlin.
 
 ### Property graph constraints
 The current release (MaxGraph) leverages Vineyard to supply an in-memory store for immutable
@@ -157,7 +135,6 @@ graph data that can be partitioned across multiple servers. By design, it introd
   `String`, `List<int>`, `List<long>`, and `List<String>`.
 
 ### Limitations
-Because of the distributed nature and practical considerations, a few features are not supported:
 - Functionalities
   - Graph mutations.
   - Lambda and Groovy expressions and functions, such as the `.map{<expression>}`, the `.by{<expression>}`, and the `.filter{<expression>}` functions, and `System.currentTimeMillis()`, etc. By the way, we have provided the `expr()` [syntactic sugar](./supported_gremlin_steps.md) to handle complex expressions.
