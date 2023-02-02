@@ -66,10 +66,19 @@ and the result of the traversal is the collection of all halted traversers. A tr
 unit of data processed by a Gremlin engine. Each traverser maintains a location that is a reference
 to the current vertex, edge or property being visited, and (optionally) the path history with application state.
 
-![A Gremlin query for cycle detection.](./images/cycle_detection.png)
+<center>
+   <img style="border-radius: 0.3125em;
+   box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
+   src="https://user-images.githubusercontent.com/7007589/216243774-62888d6c-84aa-4730-be20-efb4c569071c.png" width="60%">
+   <br>
+   <div style="color:orange; border-bottom: 1px solid #d9d9d9;
+   display: inline-block;
+   color: #999;
+   padding: 2px;">A traversal query for cycle detection.</div>
+</center>
 
 The above figure shows a simplified anti-money-laundering scenario via cycle detection.
-Below is the corresponding Gremlin query, which tries to find cyclic paths of length
+Below is the corresponding traversal query, which tries to find cyclic paths of length
 `k` starting from a given account.
 
 
@@ -100,9 +109,18 @@ declarative way of expressing the pattern matching queries, which allows users t
 arbitrary patterns using `match()` and the engine will automatically derive the execution
 plans based on the [worst-case optimal join algorithm](https://justinjaffray.com/a-gentle-ish-introduction-to-worst-case-optimal-joins/).
 
-![An example of property graph.](./images/property_graph.png)
+<center>
+   <img style="border-radius: 0.3125em;
+   box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
+   src="https://user-images.githubusercontent.com/7007589/216244053-79d771ee-8197-4e00-b703-cabf93df3500.png" width="60%">
+   <br>
+   <div style="color:orange; border-bottom: 1px solid #d9d9d9;
+   display: inline-block;
+   color: #999;
+   padding: 2px;">An example of pattern matching.</div>
+</center>
 
-The above figure shows a property graph, which contains `user`, `product`, and `address` vertices
+The above figure shows a property graph that contains `user`, `product`, and `address` vertices
 connected by `order`, `deliver`, `belongs_to`, and `home_of` edges. A path following vertices `1–>2–>3`,
 shown as the dotted line, indicates that a buyer "Tom" ordered a product "gift" offered by a seller
 "Jack", with a price of "$99".
