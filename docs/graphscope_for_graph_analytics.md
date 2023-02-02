@@ -5,11 +5,13 @@ Currently, there exist diverse types of graph analytics algorithms, which usuall
 
 In GraphScope, Graph Analytics Engine (GAE) is responsible for handling such graph analytics algorithms, which allows users to easily define and implement their algorithms while providing efficient execution for these algorithms.
 
-##Rich built-in graph analytics algorithms
+### Rich built-in graph analytics algorithms
+
 GAE of GraphScope provides 20 graph analytics algorithms as built-in algorithms, and users can directly invoke them. The build-in algorithms contain most commonly used algorithms, including PageRank, BFS, DFS, shortest path and LCC. In addition, GraphScope is compatible with NetworkX APIs, and thus diverse kinds of [built-in algorithms in NetworkX](https://networkx.org/documentation/stable/reference/algorithms/index.html) can also be directly invoked by users. In total, over 100 build-in graph analytical algorithms can be directly executed over GraphScope, without any developing effort.
 
 
-##Customize your own algorithms
+### Customize your own algorithms
+
 In many cases, users need to develop their customized graph analytics algorithms. To this end, GraphScope allows users to succinctly develop their own algorithms, with multiple programming models and programming languages support.
 
 On the programming model side, GraphScope supports both the vertex-centric model (Pregel) and PIE (PEval-IncEval-Assemble) programming model. Both programming models have been widely applied in existing graph processing systems, and readers can refer to [this blog](https://graphscope.io/blog/tech/2021/03/25/a-review-of-programming-models-for-parallel-graph-processing.html) for more details.
@@ -20,5 +22,6 @@ On the programming language side, GraphScope provides a multi-language SDK, and 
 - [Tutorials for Java Users](https://graphscope.io/docs/latest/java_tutorials.html)
 - [Tutorials for Python Users](https://graphscope.io/docs/latest/python_tutorials.html)
 
-##High-performance runtime
+### High-performance runtime
+
 GAE achieves high performance through a highly optimized analytical runtime. Many optimization techniques, such as pull/push dynamic switching, cache-efficient memory layout, and pipelining were employed in the runtime. We have performed a comparison with state-of-the-art graph processing systems on LDBC Graph Analytics Benchmark, and the results show GraphScope outperforms other graph systems (see more detailed results [here](https://graphscope.io/docs/latest/performance_and_benchmark.html)). 
