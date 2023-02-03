@@ -23,12 +23,12 @@ and the vineyard store that offers efficient in-memory data transfers.
 
    overview
    key_features
+   graphscope_positioning
    graphscope_for_data_scientists
    graphscope_for_graph_queries
    graphscope_for_graph_analytics
    graphscope_for_learning
    performance_and_benchmark
-   graphscope_positioning
    glossary
    release_notes
    frequently_asked_questions
@@ -37,10 +37,11 @@ and the vineyard store that offers efficient in-memory data transfers.
    :maxdepth: 2
    :caption: Getting Started
 
-   python_tutorials
+   quick_start
+   tutorials_for_interactive_tasks
+   tutorials_for_analytical_tasks
+   tutorials_for_gnn_tasks
    java_tutorials
-   cpp_tutorials
-   walkthrough_examples_acrossing_engines
    video_tutorials
 
 .. toctree::
@@ -68,6 +69,7 @@ and the vineyard store that offers efficient in-memory data transfers.
    :caption: Advanced Topics
 
    dive_into_engines
+   fragments_in_vineyard
    supported_gremlin_steps
    storages_and_unified_interface
    performance_tuning
@@ -86,6 +88,7 @@ and the vineyard store that offers efficient in-memory data transfers.
    :maxdepth: 2
    :caption: Utilities
 
+   gs_cli
    bulk_loader
    resources_estimator
 

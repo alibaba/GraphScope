@@ -1,4 +1,4 @@
-# The Product Positioning of GraphScope
+# Positioning of GraphScope
 
 [GraphScope](./overview.md) is an open-source, cloud-native computing framework for a variety of graph workloads,
 including analytical processing, interactive querying and graph learning. But how does GraphScope stand out
@@ -11,6 +11,10 @@ rather than transaction guarantees, then GraphScope is a suitable platform.
 is the ideal platform.
 
 We elaborate in details in the following.
+
+## Context and Scope
+
+## Goals and Non-Goals
 
 ## Compare with Graph Processing Systems
 Most large-scale graph processing systems, including [PowerGraph](https://github.com/jegonzal/PowerGraph)(commit a038f97
