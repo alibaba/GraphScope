@@ -1,4 +1,4 @@
-# Tutorials for Gremlin Users
+# Supported Gremlin Steps
 1. [Introduction](#introduction)
 2. [Standard Steps](#standard-steps)
    1. [Source](#source)

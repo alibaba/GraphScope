@@ -69,9 +69,9 @@ and the vineyard store that offers efficient in-memory data transfers.
    :caption: Advanced Topics
 
    dive_into_engines
-   fragments_in_vineyard
-   supported_gremlin_steps
+   fragments_in_graphscope
    storages_and_unified_interface
+   supported_gremlin_steps
    performance_tuning
 
 .. toctree::
