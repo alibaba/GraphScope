@@ -402,6 +402,8 @@ jobs:
           echo "loaded learning"
 
       - name: Helm Test
+        env:
+          GS_TEST_DIR: ${{ github.workspace }}/gstest
         run: |
           cd charts
           helm template graphscope --set image.registry="",image.tag="${SHORT_SHA}",withJupyter=false,volumes.enabled=true,volumes.items.data.field.path=${GS_TEST_DIR} \
