@@ -379,7 +379,6 @@ class KubernetesClusterLauncher(Launcher):
             str(self._saved_locals["with_mars"]),
             "--k8s_enabled_engines",
             str(self._saved_locals["enabled_engines"]),
-            "--k8s_enabled_engines",
             "--k8s_with_dataset",
             str(self._saved_locals["with_dataset"]),
             "--timeout_seconds",
