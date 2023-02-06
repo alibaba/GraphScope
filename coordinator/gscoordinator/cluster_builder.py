@@ -126,18 +126,18 @@ class EngineCluster:
 
         self._vineyard_daemonset = vineyard_daemonset
 
+        self._with_analytical = with_analytical
+        self._with_analytical_java = with_analytical_java
+        self._with_interactive = with_interactive
+        self._with_learning = with_learning
+        self._with_mars = with_mars
+
         if with_analytical and with_analytical_java:
             logger.warning(
                 "Cannot setup `with_analytical` and `with_analytical_java` at the same time"
             )
             logger.warning("Disabled `analytical`.")
             self._with_analytical = False
-
-        self._with_analytical = with_analytical
-        self._with_analytical_java = with_analytical_java
-        self._with_interactive = with_interactive
-        self._with_learning = with_learning
-        self._with_mars = with_mars
 
         self._glog_level = glog_level
         self._preemptive = preemptive

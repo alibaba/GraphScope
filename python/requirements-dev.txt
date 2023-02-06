@@ -16,6 +16,5 @@ sphinx-copybutton
 sphinx-panels
 sphinxemoji
 sphinxext-opengraph
-tomli
 docutils==0.16
 wheel
