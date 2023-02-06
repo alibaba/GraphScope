@@ -318,7 +318,7 @@ def get_addr_on_ci_env():
 
 
 @pytest.mark.skipif("GS_ADDR" not in os.environ, reason="GS_ADDR not specified")
-def test_helm_installation(data_dir):
+def test_helm_installation(data_dir, modern_graph_data_dir):
     addr = get_addr_on_ci_env()
     sess = graphscope.session(addr=addr)
     graph = load_ldbc(sess, data_dir)
