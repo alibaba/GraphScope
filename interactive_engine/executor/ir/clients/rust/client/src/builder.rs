@@ -1,5 +1,5 @@
 //
-//! Copyright 2020 Alibaba Group Holding Limited.
+//! Copyright 2022 Alibaba Group Holding Limited.
 //!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::convert::TryInto;
 use std::fmt;
 use std::ops::{Deref, DerefMut};
 
@@ -56,6 +57,7 @@ impl Plan {
     }
 
     pub fn add_scan_source(&mut self, scan: algebra_pb::Scan) -> &mut Self {
+        let scan = scan.into();
         let op = pb::physical_opr::operator::OpKind::Scan(scan);
         self.plan.push(op.into());
         self
@@ -67,8 +69,9 @@ impl Plan {
         self
     }
 
-    pub fn shuffle(&mut self, shuffle_key: Option<i32>) -> &mut Self {
-        let shuffle = pb::repartition::Shuffle { shuffle_key };
+    pub fn shuffle(&mut self, shuffle_key: Option<common_pb::NameOrId>) -> &mut Self {
+        let shuffle =
+            pb::repartition::Shuffle { shuffle_key: shuffle_key.map(|tag| tag.try_into().unwrap()) };
         let repartition = pb::Repartition { strategy: Some(pb::repartition::Strategy::ToAnother(shuffle)) };
         self.repartition(repartition)
     }
@@ -81,6 +84,7 @@ impl Plan {
     }
 
     pub fn project(&mut self, project: algebra_pb::Project) -> &mut Self {
+        let project = project.into();
         let op = pb::physical_opr::operator::OpKind::Project(project);
         self.plan.push(op.into());
         self
@@ -93,6 +97,7 @@ impl Plan {
     }
 
     pub fn group(&mut self, group: algebra_pb::GroupBy) -> &mut Self {
+        let group = group.into();
         let op = pb::physical_opr::operator::OpKind::GroupBy(group);
         self.plan.push(op.into());
         self
@@ -111,6 +116,7 @@ impl Plan {
     }
 
     pub fn unfold(&mut self, unfold: algebra_pb::Unfold) -> &mut Self {
+        let unfold = unfold.into();
         let op = pb::physical_opr::operator::OpKind::Unfold(unfold);
         self.plan.push(op.into());
         self
@@ -190,18 +196,21 @@ impl Plan {
     }
 
     pub fn get_v(&mut self, get_v: algebra_pb::GetV) -> &mut Self {
+        let get_v = get_v.into();
         let op = pb::physical_opr::operator::OpKind::Vertex(get_v);
         self.plan.push(op.into());
         self
     }
 
     pub fn edge_expand(&mut self, edge: algebra_pb::EdgeExpand) -> &mut Self {
+        let edge = edge.into();
         let op = pb::physical_opr::operator::OpKind::Edge(edge);
         self.plan.push(op.into());
         self
     }
 
     pub fn path_expand(&mut self, path: algebra_pb::PathExpand) -> &mut Self {
+        let path = path.into();
         let op = pb::physical_opr::operator::OpKind::Path(path);
         self.plan.push(op.into());
         self
@@ -256,7 +265,7 @@ impl JobBuilder {
         self
     }
 
-    pub fn shuffle(&mut self, shuffle_key: Option<i32>) -> &mut Self {
+    pub fn shuffle(&mut self, shuffle_key: Option<common_pb::NameOrId>) -> &mut Self {
         self.plan.shuffle(shuffle_key);
         self
     }
@@ -392,6 +401,7 @@ impl JobBuilder {
     }
 
     pub fn sink(&mut self, sink: algebra_pb::Sink) {
+        let sink = sink.into();
         let op = pb::physical_opr::operator::OpKind::Sink(sink);
         self.plan.plan.push(op.into());
     }
