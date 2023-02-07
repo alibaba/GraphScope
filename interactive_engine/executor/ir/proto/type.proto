@@ -56,7 +56,7 @@ message GraphDataType {
   repeated GraphElementType graph_data_type = 2;
 }
 
-// IrDataType, which could be either basic type, entity type or path type.
+// IrDataType, which could be either basic DataType or GraphDataType
 message IrDataType {
   oneof type {
     common.DataType data_type = 1;

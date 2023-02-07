@@ -1,0 +1,110 @@
+/**
+ * Copyright 2020 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+syntax = "proto3";
+package physical;
+option java_package = "com.alibaba.graphscope.gaia.proto";
+option java_outer_classname = "GraphPhysical";
+
+import "common.proto";
+import "expr.proto";
+import "schema.proto";
+import "type.proto";
+import "algebra.proto";
+import "google/protobuf/wrappers.proto";
+
+message Repartition {
+  message Shuffle {
+    google.protobuf.Int32Value shuffle_key = 1;
+  }
+  message Broadcast {}
+  oneof Strategy {
+    Shuffle to_another  = 1;
+    Broadcast to_others  = 2;
+  }
+}
+
+message Union {
+  repeated PhysicalPlan sub_plans = 1;
+}
+
+message Intersect {
+  repeated PhysicalPlan sub_plans = 1;
+  int32 key = 2;
+}
+
+message Join {
+  // The key to perferm Join (on results output by left_plan)
+  repeated common.Variable left_keys = 1;
+  // The key to perferm Join (on results output by right_plan)
+  repeated common.Variable right_keys = 2;
+  algebra.Join.JoinKind join_kind = 3;
+  PhysicalPlan left_plan = 4;
+  PhysicalPlan right_plan = 5;
+}
+
+message Apply {
+    // Define how to join the result of the subtask back to the original relation
+    algebra.Join.JoinKind join_kind = 1;
+    // The variables to perform grouping, or segmenting.
+    // If not specified, it is an Apply; otherwise, it is a SegmentApply
+    repeated common.Variable keys = 2;
+    // The subtask will be perform on certain tags as keys of the input relation
+    PhysicalPlan sub_plan = 3;
+    // Define the alias of output from `Apply`. Optional Field.
+    google.protobuf.Int32Value alias = 4;
+}
+
+// A dummy node to delegate a source opr for multiple scan cases.
+message Dummy {}
+
+message PhysicalOpr {
+  message Operator {
+    oneof op_kind {
+      algebra.Project project = 1;
+      algebra.Select select = 2;
+      algebra.GroupBy group_by = 3;
+      algebra.OrderBy order_by = 4;
+      algebra.Dedup dedup = 5;
+      algebra.Unfold unfold = 6;
+      algebra.Limit limit = 7;
+      algebra.Scan scan = 8;
+      algebra.Sink sink = 9;
+      Apply apply = 10;
+      Join join = 11;
+      Union union = 12;
+      Intersect intersect = 13;
+      Repartition repartition = 14;
+      Dummy dummy = 16;
+      // Saving the room for relational operators
+      algebra.GetV vertex = 30;
+      algebra.EdgeExpand edge = 31;
+      algebra.PathExpand path = 32;
+    }
+  }
+  message ColumnType {
+    common.IrDataType type = 1;
+    int32 alias = 2;
+  }
+  // The node's operator
+  Operator opr = 1;
+  // The type of outputs of operator
+  repeated ColumnType op_type = 2;
+}
+
+message PhysicalPlan {
+  repeated PhysicalOpr plan = 1;
+}

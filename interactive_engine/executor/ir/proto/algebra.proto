@@ -22,8 +22,6 @@ option java_outer_classname = "GraphAlgebra";
 import "common.proto";
 import "expr.proto";
 import "schema.proto";
-import "type.proto";
-import "google/protobuf/wrappers.proto";
 
 // To project a relation on certain attributes or further their properties
 message Project {
@@ -500,87 +498,4 @@ message LogicalPlan {
   repeated Node nodes = 1;
   /// The root nodes' array indices
   repeated int32 roots = 2;
-}
-
-message Repartition {
-  message Shuffle {
-    google.protobuf.Int32Value shuffle_key = 1;
-  }
-  message Broadcast {}
-  oneof Strategy {
-    Shuffle to_another  = 1;
-    Broadcast to_others  = 2;
-  }
-}
-
-message PhysicalUnion {
-  repeated PhysicalPlan sub_plans = 1;
-}
-
-message PhysicalIntersect {
-  repeated PhysicalPlan sub_plans = 1;
-  int32 key = 2;
-}
-
-message PhysicalJoin {
-  // The key to perferm Join (on results output by left_plan)
-  repeated common.Variable left_keys = 1;
-  // The key to perferm Join (on results output by right_plan)
-  repeated common.Variable right_keys = 2;
-  Join.JoinKind join_kind = 3;
-  PhysicalPlan left_plan = 4;
-  PhysicalPlan right_plan = 5;
-}
-
-message PhysicalApply {
-    // Define how to join the result of the subtask back to the original relation
-    Join.JoinKind join_kind = 1;
-    // The variables to perform grouping, or segmenting.
-    // If not specified, it is an Apply; otherwise, it is a SegmentApply
-    repeated common.Variable keys = 2;
-    // The subtask will be perform on certain tags as keys of the input relation
-    PhysicalPlan sub_plan = 3;
-    // Define the alias of output from `Apply`. Optional Field.
-    google.protobuf.Int32Value alias = 4;
-}
-
-// A dummy node to delegate a source opr for multiple scan cases.
-message Dummy {}
-
-message PhysicalOpr {
-  message Operator {
-    oneof op_kind {
-      Project project = 1;
-      Select select = 2;
-      GroupBy group_by = 3;
-      OrderBy order_by = 4;
-      Dedup dedup = 5;
-      Unfold unfold = 6;
-      Limit limit = 7;
-      Scan scan = 8;
-      Sink sink = 9;
-      PhysicalApply apply = 10;
-      PhysicalJoin join = 11;
-      PhysicalUnion union = 12;
-      PhysicalIntersect intersect = 13;
-      Repartition repartition = 14;
-      Dummy dummy = 16;
-      // Saving the room for relational operators
-      GetV vertex = 30;
-      EdgeExpand edge = 31;
-      PathExpand path = 32;
-    }
-  }
-  message ColumnType {
-    common.IrDataType type = 1;
-    int32 alias = 2;
-  }
-  // The node's operator
-  Operator opr = 1;
-  // The type of outputs of operator
-  repeated ColumnType op_type = 2;
-}
-
-message PhysicalPlan {
-  repeated PhysicalOpr plan = 1;
 }

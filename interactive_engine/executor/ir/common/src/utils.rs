@@ -23,6 +23,7 @@ use crate::error::ParsePbError;
 use crate::generated::algebra as pb;
 use crate::generated::algebra::logical_plan::operator::Opr;
 use crate::generated::common as common_pb;
+use crate::generated::physical as physical_pb;
 use crate::NameOrId;
 
 pub const SPLITTER: &'static str = ".";
@@ -666,11 +667,11 @@ impl pb::edge_expand::Direction {
     }
 }
 
-impl From<pb::physical_opr::operator::OpKind> for pb::PhysicalOpr {
-    fn from(op_kind: pb::physical_opr::operator::OpKind) -> Self {
-        let opr = pb::physical_opr::Operator { op_kind: Some(op_kind) };
+impl From<physical_pb::physical_opr::operator::OpKind> for physical_pb::PhysicalOpr {
+    fn from(op_kind: physical_pb::physical_opr::operator::OpKind) -> Self {
+        let opr = physical_pb::physical_opr::Operator { op_kind: Some(op_kind) };
         // TODO: add op_type once supported
-        pb::PhysicalOpr { opr: Some(opr), op_type: vec![] }
+        physical_pb::PhysicalOpr { opr: Some(opr), op_type: vec![] }
     }
 }
 
