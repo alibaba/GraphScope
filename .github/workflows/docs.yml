@@ -44,7 +44,6 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: 16
-        cache: 'npm'
 
     - name: Leave a marker
       if: ${{ steps.changes.outputs.src == 'true' && github.event_name == 'pull_request_target' }}
