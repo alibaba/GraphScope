@@ -59,6 +59,7 @@ GRAPHSCOPE_REQUIRED_PACKAGES = [
 GRAPHSCOPE_HOME = os.environ.get("GRAPHSCOPE_HOME", "/usr/local")
 INSTALL_PREFIX = os.environ.get("INSTALL_PREFIX", "/opt/graphscope")
 
+
 # copy any files contains in ${INSTALL_PREFIX} into site-packages/graphscope.runtime
 def _get_extra_data():
     # Copy
