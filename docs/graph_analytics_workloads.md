@@ -1,4 +1,4 @@
-# GraphScope for Graph Analytics
+# Graph Analytics Workloads
 Broadly speaking, any kind of computation over graph data can be regarded as graph analytics. We find that computation patterns of different graph analytics vary a lot: some only involve a small number of vertices/edges, while others access a large fraction of (even all) vertices/edges of a graph. In GraphScope, we call the former as *graph traversal*, whil use the term *graph analytics* to refer to the latter, unless otherwise specified. 
 
 Currently, there exist diverse types of graph analytics algorithms, which usually iteratively access a large fraction of (even all) vertices/edges of a graph to explore underlying insights hidden in graph data. Typical graph analytics algorithms include general analytics algorithms (e.g., PageRank, shortest path, and maximum flow), community detection algorithms (e.g., maximum clique/bi-clique, connected components, Louvain and label propagation), graph mining algorithms (e.g., frequent structure mining and graph pattern discovery). 

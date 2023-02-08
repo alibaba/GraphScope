@@ -1,4 +1,4 @@
-# GraphScope for Interactive Graph Queries
+# Graph Interactive Workloads
 
 GraphScope Interactive Engine (GIE) is a distributed system designed specifically to make it easy
 for a variety of users to analyze large and complex graph structures in an iterative manner.
