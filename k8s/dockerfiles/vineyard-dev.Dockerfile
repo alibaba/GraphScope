@@ -31,9 +31,6 @@ RUN chmod +x /opt/graphscope/bin/* /opt/openmpi/bin/* /opt/hadoop-3.3.0/bin/*
 RUN useradd -m graphscope -u 1001 \
     && echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
-# set the CLASSPATH for hadoop
-RUN bash -l -c 'echo export CLASSPATH="$($HADOOP_HOME/bin/hdfs classpath --glob)" >> /home/graphscope/.profile'
-
 RUN mkdir -p /var/log/graphscope
 RUN chown -R graphscope:graphscope /var/log/graphscope /opt/graphscope /opt/openmpi
 RUN mkdir /opt/vineyard && chown -R graphscope:graphscope /opt/vineyard
@@ -50,6 +47,9 @@ ARG VINEYARD_VERSION=main
 RUN ./gs install-deps dev --for-analytical --v6d-version=$VINEYARD_VERSION && \
     sudo yum clean all -y && \
     sudo rm -fr /var/cache/yum
+
+# set the CLASSPATH for hadoop, must run after install java
+RUN bash -l -c 'echo export CLASSPATH="$($HADOOP_HOME/bin/hdfs classpath --glob)" >> /home/graphscope/.profile'
 
 # Enable rh-python, devtoolsets-8 binary
 ENTRYPOINT ["/bin/bash", "-c", "source scl_source enable devtoolset-8 rh-python38 && $0 $@"]
