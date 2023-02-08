@@ -93,6 +93,7 @@ jobs:
         RUN_JAVA_TESTS: ON
         GRAPHSCOPE_HOME: /opt/graphscope
       run: |
+        source /home/graphscope/.graphscope_env
         version=$(cat ${GITHUB_WORKSPACE}/VERSION)
         export USER_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-demo/target/grape-demo-${version}-shaded.jar
 
