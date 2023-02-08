@@ -20,6 +20,7 @@ use std::ops::{Deref, DerefMut};
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common as common_pb;
 use ir_common::generated::physical as pb;
+use ir_common::KeyId;
 use pegasus::{BuildJobError, JobConf, ServerConf};
 use pegasus_server::pb as pegasus_pb;
 use prost::Message;
@@ -68,9 +69,8 @@ impl Plan {
         self
     }
 
-    pub fn shuffle(&mut self, shuffle_key: Option<common_pb::NameOrId>) -> &mut Self {
-        let shuffle =
-            pb::repartition::Shuffle { shuffle_key: shuffle_key.map(|tag| tag.try_into().unwrap()) };
+    pub fn shuffle(&mut self, shuffle_key: Option<KeyId>) -> &mut Self {
+        let shuffle = pb::repartition::Shuffle { shuffle_key };
         let repartition = pb::Repartition { strategy: Some(pb::repartition::Strategy::ToAnother(shuffle)) };
         self.repartition(repartition)
     }
@@ -264,6 +264,7 @@ impl JobBuilder {
     }
 
     pub fn shuffle(&mut self, shuffle_key: Option<common_pb::NameOrId>) -> &mut Self {
+        let shuffle_key = shuffle_key.map(|tag| tag.try_into().unwrap());
         self.plan.shuffle(shuffle_key);
         self
     }

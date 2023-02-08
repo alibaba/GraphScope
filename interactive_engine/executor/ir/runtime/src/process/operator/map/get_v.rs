@@ -82,7 +82,6 @@ impl FilterMapFuncGen for algebra_pb::GetV {
             VOpt::Both => Err(ParsePbError::from(
                 "the `GetV` operator is not a `FilterMap`, which has GetV::VOpt::Both",
             ))?,
-            VOpt::Itself => todo!(),
             VOpt::Start | VOpt::End | VOpt::Other => {}
         }
         if let VOpt::Both = opt {

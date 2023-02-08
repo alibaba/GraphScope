@@ -23,6 +23,11 @@ import "common.proto";
 import "expr.proto";
 import "schema.proto";
 
+// TODO: We have several logical operators that are similar to physical operators (e.g., Project, GroupBy etc.),
+// except for the type of operator's tags(or alias) is Option<i32> in physical, while Option<NameOrId> in logical.
+// We preserve both for compatibility temporarily.
+// Once Compiler are able translate tag's (alias') name into id, these operators would be identical with tag's (alias') type as Option<i32>.
+
 // To project a relation on certain attributes or further their properties
 message Project {
   message ExprAlias {
