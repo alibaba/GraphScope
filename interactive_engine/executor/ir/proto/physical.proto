@@ -17,7 +17,7 @@
 syntax = "proto3";
 package physical;
 option java_package = "com.alibaba.graphscope.gaia.proto";
-option java_outer_classname = "GraphPhysical";
+option java_outer_classname = "GraphAlgebraPhysical";
 
 import "common.proto";
 import "expr.proto";

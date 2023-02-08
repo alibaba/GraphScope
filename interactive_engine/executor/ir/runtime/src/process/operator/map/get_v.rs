@@ -42,7 +42,7 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                     VOpt::Start => (e.src_id, e.get_src_label()),
                     VOpt::End => (e.dst_id, e.get_dst_label()),
                     VOpt::Other => (e.get_other_id(), e.get_other_label()),
-                    _ => unreachable!(),
+                    VOpt::Both => unreachable!(),
                 };
                 let vertex = Vertex::new(id, label.map(|l| l.clone()), DynDetails::default());
                 input.append(vertex, self.alias.clone());
@@ -78,12 +78,6 @@ impl FilterMapFuncGen for algebra_pb::GetV {
             .map(|name_or_id| name_or_id.try_into())
             .transpose()?;
         let opt: VOpt = unsafe { ::std::mem::transmute(self.opt) };
-        match opt {
-            VOpt::Both => Err(ParsePbError::from(
-                "the `GetV` operator is not a `FilterMap`, which has GetV::VOpt::Both",
-            ))?,
-            VOpt::Start | VOpt::End | VOpt::Other => {}
-        }
         if let VOpt::Both = opt {
             Err(ParsePbError::from("the `GetV` operator is not a `FilterMap`, which has GetV::VOpt::Both"))?
         }

@@ -310,27 +310,32 @@ impl JobBuilder {
     }
 
     pub fn apply(
-        &mut self, join_kind: algebra_pb::join::JoinKind, sub_plan: Plan, alias: Option<i32>,
+        &mut self, join_kind: algebra_pb::join::JoinKind, sub_plan: Plan,
+        alias: Option<common_pb::NameOrId>,
     ) -> &mut Self {
+        let alias = alias.map(|tag| tag.try_into().unwrap());
         self.plan.apply(join_kind, sub_plan, alias);
         self
     }
 
     pub fn apply_func<F>(
-        &mut self, join_kind: algebra_pb::join::JoinKind, mut subtask: F, alias: Option<i32>,
+        &mut self, join_kind: algebra_pb::join::JoinKind, mut subtask: F,
+        alias: Option<common_pb::NameOrId>,
     ) -> &mut Self
     where
         F: FnMut(&mut Plan),
     {
         let mut sub_plan = Plan::default();
         subtask(&mut sub_plan);
+        let alias = alias.map(|tag| tag.try_into().unwrap());
         self.apply(join_kind, sub_plan, alias)
     }
 
     pub fn seg_apply(
         &mut self, join_kind: algebra_pb::join::JoinKind, sub_plan: Plan, keys: Vec<common_pb::Variable>,
-        alias: Option<i32>,
+        alias: Option<common_pb::NameOrId>,
     ) -> &mut Self {
+        let alias = alias.map(|tag| tag.try_into().unwrap());
         self.plan
             .seg_apply(join_kind, sub_plan, keys, alias);
         self
@@ -338,13 +343,14 @@ impl JobBuilder {
 
     pub fn seg_apply_func<F>(
         &mut self, join_kind: algebra_pb::join::JoinKind, mut subtask: F, keys: Vec<common_pb::Variable>,
-        alias: Option<i32>,
+        alias: Option<common_pb::NameOrId>,
     ) -> &mut Self
     where
         F: FnMut(&mut Plan),
     {
         let mut sub_plan = Plan::default();
         subtask(&mut sub_plan);
+        let alias = alias.map(|tag| tag.try_into().unwrap());
         self.plan
             .seg_apply(join_kind, sub_plan, keys, alias);
         self
@@ -379,7 +385,8 @@ impl JobBuilder {
         self
     }
 
-    pub fn intersect(&mut self, plans: Vec<Plan>, key: i32) -> &mut Self {
+    pub fn intersect(&mut self, plans: Vec<Plan>, key: common_pb::NameOrId) -> &mut Self {
+        let key = key.try_into().unwrap();
         self.plan.intersect(plans, key);
         self
     }
