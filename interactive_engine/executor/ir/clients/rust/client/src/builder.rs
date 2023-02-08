@@ -56,8 +56,7 @@ impl Plan {
         self
     }
 
-    pub fn add_scan_source(&mut self, scan: algebra_pb::Scan) -> &mut Self {
-        let scan = scan.into();
+    pub fn add_scan_source(&mut self, scan: pb::Scan) -> &mut Self {
         let op = pb::physical_opr::operator::OpKind::Scan(scan);
         self.plan.push(op.into());
         self
@@ -83,8 +82,7 @@ impl Plan {
         self.repartition(repartition)
     }
 
-    pub fn project(&mut self, project: algebra_pb::Project) -> &mut Self {
-        let project = project.into();
+    pub fn project(&mut self, project: pb::Project) -> &mut Self {
         let op = pb::physical_opr::operator::OpKind::Project(project);
         self.plan.push(op.into());
         self
@@ -96,8 +94,7 @@ impl Plan {
         self
     }
 
-    pub fn group(&mut self, group: algebra_pb::GroupBy) -> &mut Self {
-        let group = group.into();
+    pub fn group(&mut self, group: pb::GroupBy) -> &mut Self {
         let op = pb::physical_opr::operator::OpKind::GroupBy(group);
         self.plan.push(op.into());
         self
@@ -115,8 +112,7 @@ impl Plan {
         self
     }
 
-    pub fn unfold(&mut self, unfold: algebra_pb::Unfold) -> &mut Self {
-        let unfold = unfold.into();
+    pub fn unfold(&mut self, unfold: pb::Unfold) -> &mut Self {
         let op = pb::physical_opr::operator::OpKind::Unfold(unfold);
         self.plan.push(op.into());
         self
@@ -195,25 +191,27 @@ impl Plan {
         self
     }
 
-    pub fn get_v(&mut self, get_v: algebra_pb::GetV) -> &mut Self {
-        let get_v = get_v.into();
+    pub fn get_v(&mut self, get_v: pb::GetV) -> &mut Self {
         let op = pb::physical_opr::operator::OpKind::Vertex(get_v);
         self.plan.push(op.into());
         self
     }
 
-    pub fn edge_expand(&mut self, edge: algebra_pb::EdgeExpand) -> &mut Self {
-        let edge = edge.into();
+    pub fn edge_expand(&mut self, edge: pb::EdgeExpand) -> &mut Self {
         let op = pb::physical_opr::operator::OpKind::Edge(edge);
         self.plan.push(op.into());
         self
     }
 
-    pub fn path_expand(&mut self, path: algebra_pb::PathExpand) -> &mut Self {
-        let path = path.into();
+    pub fn path_expand(&mut self, path: pb::PathExpand) -> &mut Self {
         let op = pb::physical_opr::operator::OpKind::Path(path);
         self.plan.push(op.into());
         self
+    }
+
+    pub fn sink(&mut self, sink: pb::Sink) {
+        let op = pb::physical_opr::operator::OpKind::Sink(sink);
+        self.plan.push(op.into());
     }
 
     pub fn take(self) -> Vec<pb::PhysicalOpr> {
@@ -256,7 +254,7 @@ impl JobBuilder {
     /// If the plan is single source, scan would be the root op;
     /// Otherwise, the root is the dummy node, while the real sources are multiple scans.
     pub fn add_scan_source(&mut self, scan: algebra_pb::Scan) -> &mut Self {
-        self.plan.add_scan_source(scan);
+        self.plan.add_scan_source(scan.into());
         self
     }
 
@@ -276,7 +274,7 @@ impl JobBuilder {
     }
 
     pub fn project(&mut self, project: algebra_pb::Project) -> &mut Self {
-        self.plan.project(project);
+        self.plan.project(project.into());
         self
     }
 
@@ -286,7 +284,7 @@ impl JobBuilder {
     }
 
     pub fn group(&mut self, group: algebra_pb::GroupBy) -> &mut Self {
-        self.plan.group(group);
+        self.plan.group(group.into());
         self
     }
 
@@ -301,7 +299,7 @@ impl JobBuilder {
     }
 
     pub fn unfold(&mut self, unfold: algebra_pb::Unfold) -> &mut Self {
-        self.plan.unfold(unfold);
+        self.plan.unfold(unfold.into());
         self
     }
 
@@ -386,24 +384,22 @@ impl JobBuilder {
     }
 
     pub fn get_v(&mut self, get_v: algebra_pb::GetV) -> &mut Self {
-        self.plan.get_v(get_v);
+        self.plan.get_v(get_v.into());
         self
     }
 
     pub fn edge_expand(&mut self, edge: algebra_pb::EdgeExpand) -> &mut Self {
-        self.plan.edge_expand(edge);
+        self.plan.edge_expand(edge.into());
         self
     }
 
     pub fn path_expand(&mut self, path: algebra_pb::PathExpand) -> &mut Self {
-        self.plan.path_expand(path);
+        self.plan.path_expand(path.into());
         self
     }
 
     pub fn sink(&mut self, sink: algebra_pb::Sink) {
-        let sink = sink.into();
-        let op = pb::physical_opr::operator::OpKind::Sink(sink);
-        self.plan.plan.push(op.into());
+        self.plan.sink(sink.into());
     }
 
     pub fn take_plan(self) -> Plan {
@@ -476,11 +472,11 @@ mod test {
             .join_func(
                 algebra_pb::join::JoinKind::Inner,
                 |src1| {
-                    src1.add_scan_source(scan1_pb.clone());
+                    src1.add_scan_source(scan1_pb.clone().into());
                 },
                 |src2| {
-                    src2.add_scan_source(scan2_pb.clone())
-                        .project(project_pb.clone());
+                    src2.add_scan_source(scan2_pb.clone().into())
+                        .project(project_pb.clone().into());
                 },
                 vec![],
                 vec![],

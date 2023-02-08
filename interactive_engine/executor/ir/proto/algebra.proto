@@ -227,21 +227,18 @@ message Scan {
   IndexPredicate idx_predicate = 4;
 }
 
-// It is typical to use the operator when:
-// 1. The input entry is an edge entry, and to obtain some properties (or filter) on the adjacent vertex of the input edge
-// 2. The input entry is a vertex entry, and directly obtain some properties (or filter) on the input vertex
+// It is typical to use the operator together with EdgeExpand or PathExpand, with the functionality of
+// obtaining some properties of the end vertex after the expansion.
 message GetV {
   enum VOpt {
-    // The case when getting the start vertex of the edge
+    // Getting the start vertex of the edge
     Start = 0;
-    // The case when getting the end vertex of the edge/path
+    // Getting the end vertex of the edge/path
     End = 1;
-    // The case when getting the other vertex of the edge. We are calibrating to Gremlin's bothE.otherV semantics
+    // Getting the other vertex of the edge. We are calibrating to Gremlin's bothE.otherV semantics
     Other = 2;
-    // The case when getting both vertices of the edge
+    // Getting both vertices of the edge
     Both = 3;
-    // The case when tag refers to vertices
-    Itself = 4;
   }
   // The tag that refers to the edge/path where the end vertex will be retrieved
   common.NameOrId tag = 1;
