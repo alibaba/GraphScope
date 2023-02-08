@@ -22,9 +22,6 @@ ENV HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP
 ENV PATH=$PATH:/opt/rh/devtoolset-8/root/usr/bin:/opt/rh/rh-python38/root/usr/local/bin
 ENV PATH=$PATH:$GRAPHSCOPE_HOME/bin:$HADOOP_HOME/bin:/home/graphscope/.local/bin
 
-# set the CLASSPATH for hadoop
-RUN bash -l -c 'echo export CLASSPATH="$($HADOOP_HOME/bin/hdfs classpath --glob)" >> /home/graphscope/.profile'
-
 # Copy the thirdparty c++ dependencies, maven, and hadoop
 COPY --from=ext /opt/graphscope /opt/graphscope
 COPY --from=ext /opt/openmpi /opt/openmpi
@@ -33,6 +30,9 @@ RUN chmod +x /opt/graphscope/bin/* /opt/openmpi/bin/* /opt/hadoop-3.3.0/bin/*
 
 RUN useradd -m graphscope -u 1001 \
     && echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+# set the CLASSPATH for hadoop
+RUN bash -l -c 'echo export CLASSPATH="$($HADOOP_HOME/bin/hdfs classpath --glob)" >> /home/graphscope/.profile'
 
 RUN mkdir -p /var/log/graphscope
 RUN chown -R graphscope:graphscope /var/log/graphscope /opt/graphscope /opt/openmpi

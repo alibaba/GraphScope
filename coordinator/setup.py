@@ -119,7 +119,7 @@ def _get_extra_data():
             f"{INSTALL_PREFIX}/bin/": os.path.join(RUNTIME_ROOT, "bin"),
             f"{INSTALL_PREFIX}/lib/": os.path.join(RUNTIME_ROOT, "lib"),
             f"{INSTALL_PREFIX}/lib64/": os.path.join(RUNTIME_ROOT, "lib64"),
-            f"${GRAPHSCOPE_HOME}/lib/libvineyard_internal_registry.{__get_lib_suffix()}": os.path.join(
+            f"{GRAPHSCOPE_HOME}/lib/libvineyard_internal_registry.{__get_lib_suffix()}": os.path.join(
                 RUNTIME_ROOT, "lib"
             ),
         }
@@ -137,16 +137,16 @@ def _get_extra_data():
     elif name == "gs-include":
         data = {
             f"{INSTALL_PREFIX}/include/": os.path.join(RUNTIME_ROOT, "include"),
-            f"${GRAPHSCOPE_HOME}/include/grape": os.path.join(RUNTIME_ROOT, "include"),
-            f"${GRAPHSCOPE_HOME}/include/string_view": os.path.join(
+            f"{GRAPHSCOPE_HOME}/include/grape": os.path.join(RUNTIME_ROOT, "include"),
+            f"{GRAPHSCOPE_HOME}/include/string_view": os.path.join(
                 RUNTIME_ROOT, "include"
             ),
             "/opt/vineyard/include/": os.path.join(RUNTIME_ROOT, "include"),
-            f"${GRAPHSCOPE_HOME}/include/arrow": os.path.join(RUNTIME_ROOT, "include"),
-            f"${GRAPHSCOPE_HOME}/include/boost": os.path.join(RUNTIME_ROOT, "include"),
-            f"${GRAPHSCOPE_HOME}/include/glog": os.path.join(RUNTIME_ROOT, "include"),
-            f"${GRAPHSCOPE_HOME}/include/gflags": os.path.join(RUNTIME_ROOT, "include"),
-            f"${GRAPHSCOPE_HOME}/include/google": os.path.join(RUNTIME_ROOT, "include"),
+            f"{GRAPHSCOPE_HOME}/include/arrow": os.path.join(RUNTIME_ROOT, "include"),
+            f"{GRAPHSCOPE_HOME}/include/boost": os.path.join(RUNTIME_ROOT, "include"),
+            f"{GRAPHSCOPE_HOME}/include/glog": os.path.join(RUNTIME_ROOT, "include"),
+            f"{GRAPHSCOPE_HOME}/include/gflags": os.path.join(RUNTIME_ROOT, "include"),
+            f"{GRAPHSCOPE_HOME}/include/google": os.path.join(RUNTIME_ROOT, "include"),
         }
         if platform.system() == "Linux":
             data["/usr/include/rapidjson"] = os.path.join(RUNTIME_ROOT, "include")

@@ -72,11 +72,13 @@ graphscope-darwin-py3:
 		python3 -m pip install --upgrade setuptools && \
 		make && \
 		sudo make install INSTALL_PREFIX=${INSTALL_PREFIX} && \
-        sudo cp -rs ${INSTALL_PREFIX}/* ${GRAPHSCOPE_HOME}/
+        sudo cp -rs ${INSTALL_PREFIX}/* ${GRAPHSCOPE_HOME}/ && \
 		python3 $(WORKING_DIR)/../utils/precompile.py --graph --app
 	# build and delocate wheel
 	cd $(WORKING_DIR)/../../coordinator && \
 		export WITH_EXTRA_DATA=ON && \
+		export GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} && \
+		export INSTALL_PREFIX=${INSTALL_PREFIX} && \
 		rm -rf build dist/*.whl || true && \
 		sudo strip -s $(WORKING_DIR)/../../analytical_engine/exported_symbols_osx.lds ${INSTALL_PREFIX}/bin/grape_engine || true && \
 		sudo strip ${INSTALL_PREFIX}/bin/gaia_executor && \
@@ -101,9 +103,11 @@ graphscope-manylinux2014-py3-nodocker:
 	cd $(WORKING_DIR)/../.. && \
 	make && \
 	sudo make install INSTALL_PREFIX=${INSTALL_PREFIX} && \
-    sudo cp -rs ${INSTALL_PREFIX}/* ${GRAPHSCOPE_HOME}/
+    sudo cp -rs ${INSTALL_PREFIX}/* ${GRAPHSCOPE_HOME}/ && \
 	python3 $(WORKING_DIR)/../utils/precompile.py --graph --app && \
 	export WITH_EXTRA_DATA=ON && \
+	export GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} && \
+	export INSTALL_PREFIX=${INSTALL_PREFIX} && \
 	cd $(WORKING_DIR)/../../coordinator && \
 	rm -rf build dist/*.whl && \
 	sudo strip ${INSTALL_PREFIX}/bin/grape_engine && \

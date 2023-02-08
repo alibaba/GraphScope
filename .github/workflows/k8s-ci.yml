@@ -336,7 +336,7 @@ jobs:
   k8s-test:
     runs-on: [self-hosted, ubuntu2004]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
-    needs: [build-analytical, build-analytical-java, build-interactive, build-learning]
+    needs: [build-analytical, build-interactive, build-learning]
     steps:
       - uses: actions/checkout@v3
 
@@ -483,7 +483,7 @@ jobs:
 
   gie-test:
     runs-on: [self-hosted, ubuntu2004]
-    needs: [build-analytical, build-analytical-java, build-interactive, build-learning]
+    needs: [build-analytical, build-interactive, build-learning]
     if: ${{ needs.changes.outputs.gie-function-test == 'true' && github.repository == 'alibaba/GraphScope' }}
     steps:
       - uses: actions/checkout@v3
