@@ -16,51 +16,38 @@
 
 package com.alibaba.graphscope.common.calcite.tools.config;
 
-import com.alibaba.graphscope.common.calcite.util.Static;
-
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Objects;
 
 public class GetVConfig {
-    private GetVOpt getVOpt;
-    private LabelConfig labels;
-    @Nullable private String alias;
+    private final GetVOpt opt;
+    private final LabelConfig labels;
+    @Nullable private final String alias;
 
-    public GetVConfig() {
-        this.getVOpt = GetVOpt.START;
-        this.labels = LabelConfig.DEFAULT;
-        this.alias = Static.Alias.DEFAULT_NAME;
+    public GetVConfig(GetVOpt opt) {
+        this(opt, LabelConfig.DEFAULT, null);
     }
 
-    public GetVConfig opt(GetVOpt opt) {
-        this.getVOpt = Objects.requireNonNull(opt);
-        return this;
+    public GetVConfig(GetVOpt opt, LabelConfig labels) {
+        this(opt, labels, null);
     }
 
-    public GetVConfig labels(LabelConfig labels) {
+    public GetVConfig(GetVOpt opt, LabelConfig labels, @Nullable String alias) {
+        this.opt = Objects.requireNonNull(opt);
         this.labels = Objects.requireNonNull(labels);
-        return this;
-    }
-
-    /**
-     * @param alias generate a default inner alias if null is given
-     * @return
-     */
-    public GetVConfig alias(@Nullable String alias) {
-        this.alias = (alias == null) ? Static.Alias.DEFAULT_NAME : alias;
-        return this;
+        this.alias = alias;
     }
 
     public GetVOpt getOpt() {
-        return getVOpt;
+        return opt;
     }
 
     public LabelConfig getLabels() {
         return labels;
     }
 
-    public String getAlias() {
+    public @Nullable String getAlias() {
         return alias;
     }
 }

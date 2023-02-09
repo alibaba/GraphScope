@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.calcite.rel;
+package com.alibaba.graphscope.common.calcite.rel.type;
 
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.commons.lang3.ObjectUtils;

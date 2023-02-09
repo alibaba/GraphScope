@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.calcite.rel;
+package com.alibaba.graphscope.common.calcite.tools;
 
-import org.apache.calcite.plan.RelOptCluster;
-import org.apache.calcite.plan.RelTraitSet;
-import org.apache.calcite.rel.AbstractRelNode;
 import org.apache.calcite.rel.RelNode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class LogicalPathExpand extends AbstractRelNode {
-    // LogicalExpand with LogicalGetV
-    private RelNode expandGetV;
+import java.util.concurrent.atomic.AtomicInteger;
 
-    protected LogicalPathExpand(@Nullable RelOptCluster cluster, RelNode expandGetV) {
-        super(cluster, RelTraitSet.createEmpty());
-        this.expandGetV = expandGetV;
+/**
+ * todo: generate alias id for name
+ */
+public class AliasIdGenerator {
+    public AliasIdGenerator(AtomicInteger nextAliasId) {}
+
+    public int generate(@Nullable String aliasName, @Nullable RelNode node) {
+        return AliasInference.DEFAULT_ID;
     }
 }

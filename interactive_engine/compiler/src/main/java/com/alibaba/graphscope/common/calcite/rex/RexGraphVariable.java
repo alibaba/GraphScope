@@ -18,7 +18,7 @@ package com.alibaba.graphscope.common.calcite.rex;
 
 import static com.alibaba.graphscope.common.calcite.util.Static.RESOURCE;
 
-import com.alibaba.graphscope.common.calcite.util.Static;
+import com.alibaba.graphscope.common.calcite.tools.AliasInference;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
@@ -104,7 +104,7 @@ public class RexGraphVariable extends RexInputRef {
     }
 
     int getAliasId() {
-        return idList.isEmpty() ? Static.Alias.DEFAULT_ID : idList.get(0);
+        return idList.isEmpty() ? AliasInference.DEFAULT_ID : idList.get(0);
     }
 
     int getPropertyId() {

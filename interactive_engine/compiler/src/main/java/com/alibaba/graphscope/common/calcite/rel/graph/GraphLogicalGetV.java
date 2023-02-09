@@ -14,33 +14,46 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.calcite.rel;
+package com.alibaba.graphscope.common.calcite.rel.graph;
 
+import com.alibaba.graphscope.common.calcite.rel.type.TableConfig;
 import com.alibaba.graphscope.common.calcite.tools.config.GetVOpt;
 
-import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.GraphOptCluster;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.hint.RelHint;
 import org.apache.commons.lang3.ObjectUtils;
 
 import java.util.List;
 
-public class LogicalGetV extends AbstractBindableTableScan {
-    private GetVOpt getVOpt;
+public class GraphLogicalGetV extends AbstractBindableTableScan {
+    private GetVOpt opt;
 
-    protected LogicalGetV(RelOptCluster cluster, List<RelHint> hints, TableConfig tableConfig) {
-        super(cluster, hints, tableConfig);
-        this.getVOpt = getGetVOpt();
+    protected GraphLogicalGetV(
+            GraphOptCluster cluster, List<RelHint> hints, RelNode input, TableConfig tableConfig) {
+        super(cluster, hints, input, tableConfig);
+        this.opt = getVOpt();
     }
 
-    public static LogicalGetV create(
-            RelOptCluster cluster, List<RelHint> hints, TableConfig tableConfig) {
-        return new LogicalGetV(cluster, hints, tableConfig);
+    public static GraphLogicalGetV create(
+            GraphOptCluster cluster, List<RelHint> hints, RelNode input, TableConfig tableConfig) {
+        return new GraphLogicalGetV(cluster, hints, input, tableConfig);
     }
 
-    private GetVOpt getGetVOpt() {
+    private GetVOpt getVOpt() {
         ObjectUtils.requireNonEmpty(hints);
         RelHint optHint = hints.get(0);
         ObjectUtils.requireNonEmpty(optHint.listOptions);
         return GetVOpt.valueOf(optHint.listOptions.get(0));
+    }
+
+    public GetVOpt getOpt() {
+        return opt;
+    }
+
+    @Override
+    public RelWriter explainTerms(RelWriter pw) {
+        return super.explainTerms(pw).item("opt", opt);
     }
 }

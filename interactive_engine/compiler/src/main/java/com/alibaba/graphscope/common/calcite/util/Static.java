@@ -47,12 +47,5 @@ public abstract class Static {
                     LESS_THAN,
                     LESS_THAN_OR_EQUAL);
 
-    public abstract class Alias {
-        public static final String DEFAULT_NAME = "~DEFAULT";
-        public static final int DEFAULT_ID = -1;
-    }
-
-    public static final String SIMPLE_NAME(String alias) {
-        return alias == Static.Alias.DEFAULT_NAME ? "DEFAULT" : alias;
-    }
+    public static final String DELIMITER = ".";
 }

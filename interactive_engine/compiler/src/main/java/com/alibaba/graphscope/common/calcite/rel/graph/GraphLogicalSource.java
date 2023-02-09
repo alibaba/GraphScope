@@ -14,33 +14,45 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.calcite.rel;
+package com.alibaba.graphscope.common.calcite.rel.graph;
 
+import com.alibaba.graphscope.common.calcite.rel.type.TableConfig;
 import com.alibaba.graphscope.common.calcite.tools.config.ScanOpt;
 
-import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.GraphOptCluster;
+import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.hint.RelHint;
 import org.apache.commons.lang3.ObjectUtils;
 
 import java.util.List;
 
-public class LogicalSource extends AbstractBindableTableScan {
-    private ScanOpt scanOpt;
+public class GraphLogicalSource extends AbstractBindableTableScan {
+    private ScanOpt opt;
 
-    protected LogicalSource(RelOptCluster cluster, List<RelHint> hints, TableConfig tableConfig) {
+    protected GraphLogicalSource(
+            GraphOptCluster cluster, List<RelHint> hints, TableConfig tableConfig) {
         super(cluster, hints, tableConfig);
-        this.scanOpt = getScanOpt();
+        this.opt = scanOpt();
     }
 
-    public static LogicalSource create(
-            RelOptCluster cluster, List<RelHint> hints, TableConfig tableConfig) {
-        return new LogicalSource(cluster, hints, tableConfig);
+    public static GraphLogicalSource create(
+            GraphOptCluster cluster, List<RelHint> hints, TableConfig tableConfig) {
+        return new GraphLogicalSource(cluster, hints, tableConfig);
     }
 
-    private ScanOpt getScanOpt() {
+    private ScanOpt scanOpt() {
         ObjectUtils.requireNonEmpty(hints);
         RelHint optHint = hints.get(0);
         ObjectUtils.requireNonEmpty(optHint.listOptions);
         return ScanOpt.valueOf(optHint.listOptions.get(0));
+    }
+
+    public ScanOpt getOpt() {
+        return opt;
+    }
+
+    @Override
+    public RelWriter explainTerms(RelWriter pw) {
+        return super.explainTerms(pw).item("opt", opt);
     }
 }

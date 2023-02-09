@@ -16,40 +16,28 @@
 
 package com.alibaba.graphscope.common.calcite.tools.config;
 
-import com.alibaba.graphscope.common.calcite.util.Static;
-
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Objects;
 
 public class SourceConfig {
-    private ScanOpt opt;
-    private LabelConfig labels;
-    @Nullable private String alias;
+    private final ScanOpt opt;
+    private final LabelConfig labels;
+    @Nullable private final String alias;
 
-    public SourceConfig() {
-        this.opt = ScanOpt.Vertex;
-        this.alias = Static.Alias.DEFAULT_NAME;
-        this.labels = LabelConfig.DEFAULT;
+    public SourceConfig(ScanOpt opt) {
+        // get all labels by default
+        this(opt, LabelConfig.DEFAULT, null);
     }
 
-    public SourceConfig opt(ScanOpt opt) {
+    public SourceConfig(ScanOpt opt, LabelConfig labels) {
+        this(opt, labels, null);
+    }
+
+    public SourceConfig(ScanOpt opt, LabelConfig labels, @Nullable String alias) {
         this.opt = Objects.requireNonNull(opt);
-        return this;
-    }
-
-    public SourceConfig labels(LabelConfig labels) {
         this.labels = Objects.requireNonNull(labels);
-        return this;
-    }
-
-    /**
-     * @param alias generate a default inner alias if null is given
-     * @return
-     */
-    public SourceConfig alias(@Nullable String alias) {
-        this.alias = (alias == null) ? Static.Alias.DEFAULT_NAME : alias;
-        return this;
+        this.alias = alias;
     }
 
     public ScanOpt getOpt() {
@@ -60,7 +48,7 @@ public class SourceConfig {
         return labels;
     }
 
-    public String getAlias() {
+    public @Nullable String getAlias() {
         return alias;
     }
 }

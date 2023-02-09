@@ -16,51 +16,38 @@
 
 package com.alibaba.graphscope.common.calcite.tools.config;
 
-import com.alibaba.graphscope.common.calcite.util.Static;
-
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Objects;
 
 public class ExpandConfig {
-    private DirectionOpt directionOpt;
-    private LabelConfig labels;
-    @Nullable private String alias;
+    private final DirectionOpt opt;
+    private final LabelConfig labels;
+    @Nullable private final String alias;
 
-    public ExpandConfig() {
-        this.directionOpt = DirectionOpt.OUT;
-        this.labels = LabelConfig.DEFAULT;
-        this.alias = Static.Alias.DEFAULT_NAME;
+    public ExpandConfig(DirectionOpt opt) {
+        this(opt, LabelConfig.DEFAULT, null);
     }
 
-    public ExpandConfig opt(DirectionOpt opt) {
-        this.directionOpt = Objects.requireNonNull(opt);
-        return this;
+    public ExpandConfig(DirectionOpt opt, LabelConfig labels) {
+        this(opt, labels, null);
     }
 
-    public ExpandConfig labels(LabelConfig labels) {
+    public ExpandConfig(DirectionOpt opt, LabelConfig labels, @Nullable String alias) {
+        this.opt = Objects.requireNonNull(opt);
         this.labels = Objects.requireNonNull(labels);
-        return this;
-    }
-
-    /**
-     * @param alias generate a default inner alias if null is given
-     * @return
-     */
-    public ExpandConfig alias(@Nullable String alias) {
-        this.alias = (alias == null) ? Static.Alias.DEFAULT_NAME : alias;
-        return this;
+        this.alias = alias;
     }
 
     public DirectionOpt getOpt() {
-        return directionOpt;
+        return opt;
     }
 
     public LabelConfig getLabels() {
         return labels;
     }
 
-    public String getAlias() {
+    public @Nullable String getAlias() {
         return alias;
     }
 }

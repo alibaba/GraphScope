@@ -14,33 +14,46 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.calcite.rel;
+package com.alibaba.graphscope.common.calcite.rel.graph;
 
+import com.alibaba.graphscope.common.calcite.rel.type.TableConfig;
 import com.alibaba.graphscope.common.calcite.tools.config.DirectionOpt;
 
-import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.GraphOptCluster;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.hint.RelHint;
 import org.apache.commons.lang3.ObjectUtils;
 
 import java.util.List;
 
-public class LogicalExpand extends AbstractBindableTableScan {
-    private DirectionOpt directionOpt;
+public class GraphLogicalExpand extends AbstractBindableTableScan {
+    private DirectionOpt opt;
 
-    protected LogicalExpand(RelOptCluster cluster, List<RelHint> hints, TableConfig tableConfig) {
-        super(cluster, hints, tableConfig);
-        this.directionOpt = getDirectionOpt();
+    protected GraphLogicalExpand(
+            GraphOptCluster cluster, List<RelHint> hints, RelNode input, TableConfig tableConfig) {
+        super(cluster, hints, input, tableConfig);
+        this.opt = directionOpt();
     }
 
-    public static LogicalExpand create(
-            RelOptCluster cluster, List<RelHint> hints, TableConfig tableConfig) {
-        return new LogicalExpand(cluster, hints, tableConfig);
+    public static GraphLogicalExpand create(
+            GraphOptCluster cluster, List<RelHint> hints, RelNode input, TableConfig tableConfig) {
+        return new GraphLogicalExpand(cluster, hints, input, tableConfig);
     }
 
-    private DirectionOpt getDirectionOpt() {
+    private DirectionOpt directionOpt() {
         ObjectUtils.requireNonEmpty(hints);
         RelHint optHint = hints.get(0);
         ObjectUtils.requireNonEmpty(optHint.listOptions);
         return DirectionOpt.valueOf(optHint.listOptions.get(0));
+    }
+
+    public DirectionOpt getOpt() {
+        return opt;
+    }
+
+    @Override
+    public RelWriter explainTerms(RelWriter pw) {
+        return super.explainTerms(pw).item("opt", opt);
     }
 }

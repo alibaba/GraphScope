@@ -19,6 +19,7 @@ package com.alibaba.graphscope.common.calcite;
 import com.alibaba.graphscope.common.calcite.tools.GraphBuilder;
 import com.alibaba.graphscope.common.calcite.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.calcite.tools.config.LabelConfig;
+import com.alibaba.graphscope.common.calcite.tools.config.ScanOpt;
 import com.alibaba.graphscope.common.calcite.tools.config.SourceConfig;
 
 import org.apache.calcite.rex.RexNode;
@@ -125,6 +126,6 @@ public class ExpressionTest {
     }
 
     private SourceConfig mockSourceConfig(String alias) {
-        return new SourceConfig().labels(new LabelConfig(false).addLabel("person")).alias(alias);
+        return new SourceConfig(ScanOpt.Vertex, new LabelConfig(false).addLabel("person"), alias);
     }
 }

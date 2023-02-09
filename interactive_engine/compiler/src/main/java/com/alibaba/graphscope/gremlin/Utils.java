@@ -17,51 +17,14 @@
 package com.alibaba.graphscope.gremlin;
 
 import com.alibaba.graphscope.common.utils.ClassUtils;
-import com.google.common.base.Preconditions;
 
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 
 public class Utils extends ClassUtils {
-    /**
-     * Set private field with given value
-     *
-     * @param obj       The given instance
-     * @param fieldName The field name
-     * @param value     The field value
-     * @param <V>       The field value type
-     */
-    public static <V> void setFieldValue(Class<?> clazz, Object obj, String fieldName, V value) {
-        Preconditions.checkNotNull(obj);
-        Preconditions.checkNotNull(fieldName);
-        Preconditions.checkNotNull(value);
-
-        try {
-            Field field = clazz.getDeclaredField(fieldName);
-            field.setAccessible(true);
-            field.set(obj, value);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static <V> V getFieldValue(Class<?> clazz, Object obj, String fieldName) {
-        Preconditions.checkNotNull(obj);
-        Preconditions.checkNotNull(fieldName);
-
-        try {
-            Field field = clazz.getDeclaredField(fieldName);
-            field.setAccessible(true);
-            return (V) field.get(obj);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public static String[] removeStringEle(int i, String[] data) {
         if (data.length == 0 || i < 0 || i >= data.length) return data;
         String[] copy = new String[data.length - 1];

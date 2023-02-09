@@ -21,6 +21,7 @@ import com.alibaba.graphscope.common.calcite.schema.GraphSchemaWrapper;
 import com.alibaba.graphscope.common.calcite.schema.StatisticSchema;
 import com.alibaba.graphscope.common.calcite.tools.GraphBuilder;
 import com.alibaba.graphscope.common.calcite.tools.config.LabelConfig;
+import com.alibaba.graphscope.common.calcite.tools.config.ScanOpt;
 import com.alibaba.graphscope.common.calcite.tools.config.SourceConfig;
 import com.alibaba.graphscope.common.utils.FileUtils;
 import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
@@ -28,7 +29,6 @@ import com.alibaba.graphscope.compiler.schema.DefaultGraphSchema;
 
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.plan.GraphOptCluster;
-import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexBuilder;
@@ -44,23 +44,24 @@ public class SourceTest {
     public void single_label_test() {
         GraphBuilder builder = mockGraphBuilder();
         SourceConfig sourceConfig =
-                new SourceConfig().labels(new LabelConfig(false).addLabel("person"));
+                new SourceConfig(ScanOpt.Vertex, new LabelConfig(false).addLabel("person"));
         RelNode source = builder.source(sourceConfig).build();
         Assert.assertEquals(
-                "rel#0:LogicalSource.(tableConfig={isAll=false, tables=[person]})",
-                source.toString());
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
+                        + " opt=[Vertex])",
+                source.explain().trim());
     }
 
     @Test
     public void multiple_labels_test() {
         GraphBuilder builder = mockGraphBuilder();
         SourceConfig sourceConfig =
-                new SourceConfig()
-                        .labels(new LabelConfig(false).addLabel("person").addLabel("software"));
+                new SourceConfig(ScanOpt.Vertex, new LabelConfig(false).addLabel("person"), "a");
         RelNode source = builder.source(sourceConfig).build();
         Assert.assertEquals(
-                "rel#0:LogicalSource.(tableConfig={isAll=false, tables=[person, software]})",
-                source.toString());
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[a],"
+                        + " opt=[Vertex])",
+                source.explain().trim());
     }
 
     @Test
@@ -68,8 +69,9 @@ public class SourceTest {
         try {
             GraphBuilder builder = mockGraphBuilder();
             SourceConfig sourceConfig =
-                    new SourceConfig()
-                            .labels(new LabelConfig(false).addLabel("person").addLabel("knows"));
+                    new SourceConfig(
+                            ScanOpt.Vertex,
+                            new LabelConfig(false).addLabel("person").addLabel("knows"));
             builder.source(sourceConfig).build();
         } catch (IllegalArgumentException e) {
             // expected error
@@ -79,7 +81,7 @@ public class SourceTest {
     }
 
     public static final GraphBuilder mockGraphBuilder() {
-        RelOptCluster cluster = GraphOptCluster.create(rexBuilder);
+        GraphOptCluster cluster = GraphOptCluster.create(rexBuilder);
         return GraphBuilder.create(null, cluster, new GraphOptSchema(cluster, schema));
     }
 

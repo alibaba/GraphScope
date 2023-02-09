@@ -17,6 +17,7 @@
 package org.apache.calcite.plan;
 
 import com.alibaba.graphscope.common.calcite.planner.GraphHepPlanner;
+import com.alibaba.graphscope.common.calcite.tools.AliasIdGenerator;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -32,7 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class GraphOptCluster extends RelOptCluster {
     // to generate alias id increasingly in one query
-    private final AtomicInteger nextAliasId;
+    private final AliasIdGenerator idGenerator;
     // to generate RelNode id increasingly in one query
     private final AtomicInteger nextRelNodeId;
 
@@ -45,11 +46,11 @@ public class GraphOptCluster extends RelOptCluster {
             AtomicInteger nextAliasId,
             AtomicInteger nextRelNodeId) {
         super(planner, typeFactory, rexBuilder, nextCorrel, mapCorrelToRel);
-        this.nextAliasId = nextAliasId;
+        this.idGenerator = new AliasIdGenerator(nextAliasId);
         this.nextRelNodeId = nextRelNodeId;
     }
 
-    public static RelOptCluster create(RexBuilder rexBuilder) {
+    public static GraphOptCluster create(RexBuilder rexBuilder) {
         return new GraphOptCluster(
                 GraphHepPlanner.DEFAULT,
                 rexBuilder.getTypeFactory(),
@@ -60,8 +61,8 @@ public class GraphOptCluster extends RelOptCluster {
                 new AtomicInteger(0));
     }
 
-    public int getNextAliasId() {
-        return nextAliasId.getAndIncrement();
+    public AliasIdGenerator getIdGenerator() {
+        return idGenerator;
     }
 
     public int getNextRelNodeId() {

@@ -19,6 +19,7 @@ package com.alibaba.graphscope.common.calcite;
 import com.alibaba.graphscope.common.calcite.tools.GraphBuilder;
 import com.alibaba.graphscope.common.calcite.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.calcite.tools.config.LabelConfig;
+import com.alibaba.graphscope.common.calcite.tools.config.ScanOpt;
 import com.alibaba.graphscope.common.calcite.tools.config.SourceConfig;
 
 import org.apache.calcite.rel.RelNode;
@@ -33,7 +34,7 @@ public class FilterTest {
     public void equal_test() {
         GraphBuilder builder = SourceTest.mockGraphBuilder();
         SourceConfig sourceConfig =
-                new SourceConfig().labels(new LabelConfig(false).addLabel("person"));
+                new SourceConfig(ScanOpt.Vertex, new LabelConfig(false).addLabel("person"));
         RexNode equal =
                 builder.source(sourceConfig)
                         .call(
@@ -42,16 +43,16 @@ public class FilterTest {
                                 builder.literal(10));
         RelNode filter = builder.filter(equal).build();
         Assert.assertEquals(
-                "rel#0:LogicalSource.(tableConfig={isAll=false,"
-                        + " tables=[person]},fusedFilter=[=(DEFAULT.age, 10)])",
-                filter.toString());
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
+                        + " fusedFilter=[[=(DEFAULT.age, 10)]], opt=[Vertex])",
+                filter.explain().trim());
     }
 
     @Test
     public void greater_1_test() {
         GraphBuilder builder = SourceTest.mockGraphBuilder();
         SourceConfig sourceConfig =
-                new SourceConfig().labels(new LabelConfig(false).addLabel("person"));
+                new SourceConfig(ScanOpt.Vertex, new LabelConfig(false).addLabel("person"));
         RexNode equal =
                 builder.source(sourceConfig)
                         .call(
@@ -60,9 +61,9 @@ public class FilterTest {
                                 builder.literal(10));
         RelNode filter = builder.filter(equal).build();
         Assert.assertEquals(
-                "rel#0:LogicalSource.(tableConfig={isAll=false,"
-                        + " tables=[person]},fusedFilter=[>(DEFAULT.age, 10)])",
-                filter.toString());
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
+                        + " fusedFilter=[[>(DEFAULT.age, 10)]], opt=[Vertex])",
+                filter.explain().trim());
     }
 
     // 20 > 10 -> always returns true, ignore the condition
@@ -70,7 +71,7 @@ public class FilterTest {
     public void greater_2_test() {
         GraphBuilder builder = SourceTest.mockGraphBuilder();
         SourceConfig sourceConfig =
-                new SourceConfig().labels(new LabelConfig(false).addLabel("person"));
+                new SourceConfig(ScanOpt.Vertex, new LabelConfig(false).addLabel("person"));
         RexNode equal =
                 builder.source(sourceConfig)
                         .call(
@@ -79,8 +80,9 @@ public class FilterTest {
                                 builder.literal(10));
         RelNode filter = builder.filter(equal).build();
         Assert.assertEquals(
-                "rel#0:LogicalSource.(tableConfig={isAll=false, tables=[person]})",
-                filter.toString());
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
+                        + " opt=[Vertex])",
+                filter.explain().trim());
     }
 
     /**
@@ -90,7 +92,7 @@ public class FilterTest {
     public void greater_3_test() {
         GraphBuilder builder = SourceTest.mockGraphBuilder();
         SourceConfig sourceConfig =
-                new SourceConfig().labels(new LabelConfig(false).addLabel("person"));
+                new SourceConfig(ScanOpt.Vertex, new LabelConfig(false).addLabel("person"));
         RexNode equal =
                 builder.source(sourceConfig)
                         .call(
@@ -100,7 +102,6 @@ public class FilterTest {
         // the node before the filter
         RelNode previous = builder.peek();
         RelNode filter = builder.filter(equal).build();
-        System.out.println(filter);
         Assert.assertEquals(filter.getClass(), LogicalValues.class);
         Assert.assertEquals(filter.getRowType(), previous.getRowType());
     }
@@ -109,7 +110,7 @@ public class FilterTest {
     public void and_test() {
         GraphBuilder builder = SourceTest.mockGraphBuilder();
         SourceConfig sourceConfig =
-                new SourceConfig().labels(new LabelConfig(false).addLabel("person"));
+                new SourceConfig(ScanOpt.Vertex, new LabelConfig(false).addLabel("person"));
         RexNode condition1 =
                 builder.source(sourceConfig)
                         .call(
@@ -123,9 +124,9 @@ public class FilterTest {
                         builder.literal("marko"));
         RelNode filter = builder.filter(condition1, condition2).build();
         Assert.assertEquals(
-                "rel#0:LogicalSource.(tableConfig={isAll=false,"
-                        + " tables=[person]},fusedFilter=[AND(>(DEFAULT.age, 20), =(DEFAULT.name,"
-                        + " 'marko'))])",
-                filter.toString());
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
+                        + " fusedFilter=[[AND(>(DEFAULT.age, 20), =(DEFAULT.name, 'marko'))]],"
+                        + " opt=[Vertex])",
+                filter.explain().trim());
     }
 }

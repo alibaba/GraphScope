@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.calcite.rel;
+package com.alibaba.graphscope.common.calcite.rel.graph;
 
+import com.alibaba.graphscope.common.calcite.rel.type.TableConfig;
 import com.alibaba.graphscope.common.calcite.type.GraphSchemaType;
 import com.alibaba.graphscope.common.calcite.type.GraphSchemaTypeList;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.plan.GraphOptCluster;
-import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.hint.RelHint;
@@ -48,12 +49,15 @@ public abstract class AbstractBindableTableScan extends TableScan {
     // for field trimmer
     protected ImmutableIntList project;
 
+    protected @Nullable RelNode input;
+
     protected TableConfig tableConfig;
 
-    private int innerId;
-
     protected AbstractBindableTableScan(
-            @Nullable RelOptCluster cluster, List<RelHint> hints, TableConfig tableConfig) {
+            GraphOptCluster cluster,
+            List<RelHint> hints,
+            @Nullable RelNode input,
+            TableConfig tableConfig) {
         super(
                 cluster,
                 RelTraitSet.createEmpty(),
@@ -61,18 +65,19 @@ public abstract class AbstractBindableTableScan extends TableScan {
                 (tableConfig == null || ObjectUtils.isEmpty(tableConfig.getTables()))
                         ? null
                         : tableConfig.getTables().get(0));
-        Objects.requireNonNull(tableConfig);
-        ObjectUtils.requireNonEmpty(tableConfig.getTables());
-        this.tableConfig = tableConfig;
-        if (cluster != null && cluster instanceof GraphOptCluster) {
-            this.innerId = ((GraphOptCluster) cluster).getNextRelNodeId();
-        }
+        this.input = input;
+        this.tableConfig = Objects.requireNonNull(tableConfig);
+    }
+
+    protected AbstractBindableTableScan(
+            GraphOptCluster cluster, List<RelHint> hints, TableConfig tableConfig) {
+        this(cluster, hints, null, tableConfig);
     }
 
     @Override
     public RelDataType deriveRowType() {
         List<GraphSchemaType> tableTypes = new ArrayList<>();
-        List<RelOptTable> tables = this.tableConfig.getTables();
+        List<RelOptTable> tables = ObjectUtils.requireNonEmpty(this.tableConfig.getTables());
         for (RelOptTable table : tables) {
             GraphSchemaType type = (GraphSchemaType) table.getRowType();
             // flat fuzzy labels to the list
@@ -124,14 +129,16 @@ public abstract class AbstractBindableTableScan extends TableScan {
 
     @Override
     public RelWriter explainTerms(RelWriter pw) {
-        return pw.item("tableConfig", tableConfig)
+        return pw.itemIf("input", input, !Objects.isNull(input))
+                .item("tableConfig", tableConfig)
+                .item("alias", getAliasName())
                 .itemIf("fusedProject", project, !ObjectUtils.isEmpty(project))
                 .itemIf("fusedFilter", filters, !ObjectUtils.isEmpty(filters));
     }
 
     @Override
-    public String toString() {
-        return "rel#" + this.innerId + ':' + getDigest();
+    public List<RelNode> getInputs() {
+        return this.input == null ? ImmutableList.of() : ImmutableList.of(this.input);
     }
 
     public void setFilters(ImmutableList<RexNode> filters) {
