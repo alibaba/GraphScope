@@ -1,4 +1,4 @@
-# GraphScope for Learning
+# Graph Learning Workloads
 
 The learning engine in GraphScope (GLE) drives from 
 [Graph-Learn](https://github.com/alibaba/graph-learn), 

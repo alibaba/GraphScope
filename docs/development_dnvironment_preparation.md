@@ -1,4 +1,4 @@
-# Development Environment 
+# Development Environment Preparation
 
 TBF.
 ( this document describes how to setup development environment for GraphScope. )

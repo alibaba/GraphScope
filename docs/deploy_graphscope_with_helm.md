@@ -1,4 +1,4 @@
-# Deploy with `helm`
+# Deploy GraphScope with `helm`
 
 TBF
 
