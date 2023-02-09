@@ -37,7 +37,6 @@ gs_usage() {
   echo "  build          Build GraphScope on local."
   echo "  build-image    Build GraphScope docker images."
   echo "  dev            Open a develop environment with docker."
-  echo "  test           Run tests of graphscope"
   echo "  install-deps   Install dependencies on local machine."
   echo
 
@@ -208,44 +207,6 @@ gs_dev_usage() {
     printf "Examples:\n"
     printf "  gs dev\n"
     printf "  gs dev --local /home/bar/graphscope\n"
-    echo
-
-  fi
-}
-
-# :command.usage
-gs_test_usage() {
-  if [[ -n $long_usage ]]; then
-    printf "gs test - Run tests of graphscope\n"
-    echo
-
-  else
-    printf "gs test - Run tests of graphscope\n"
-    echo
-
-  fi
-
-  printf "Alias: t\n"
-  echo
-
-  printf "Usage:\n"
-  printf "  gs test [OPTIONS]\n"
-  printf "  gs test --help | -h\n"
-  echo
-
-  # :command.long_usage
-  if [[ -n $long_usage ]]; then
-    printf "Options:\n"
-
-    # :command.usage_fixed_flags
-    echo "  --help, -h"
-    printf "    Show this help\n"
-    echo
-
-    # :command.usage_flags
-    # :flag.usage
-    echo "  --analytical, -a"
-    printf "    Run analytical tests\n"
     echo
 
   fi
@@ -722,6 +683,7 @@ install_protobuf() {
   ./configure --prefix="${install_prefix}" --enable-shared --disable-static
   make -j$(nproc)
   make install
+  ldconfig
   popd || exit
   popd || exit
   cleanup_files "${workdir}/${directory}" "${workdir}/${file}"
@@ -910,7 +872,7 @@ install_vineyard() {
   strip "${V6D_PREFIX}"/bin/vineyard* "${V6D_PREFIX}"/lib/libvineyard*
   python3 setup.py bdist_wheel
   python3 setup_io.py bdist_wheel
-  pip3 install --no-cache dist/* --user
+  pip3 install dist/*
   cp -rs "${V6D_PREFIX}"/* "${install_prefix}"/
   popd || exit
   popd || exit
@@ -1042,20 +1004,11 @@ gs_dev_command() {
 
   #docker pull graphscope/graphscope-dev
   docker run \
+      --net=host \
       -it graphscope/graphscope-dev \
       /bin/bash
 
       # -v $local:/home/graphscope/workspace
-
-}
-
-# :command.function
-gs_test_command() {
-  # src/test_command.sh
-  echo "# this file is located in 'src/test_command.sh'"
-  echo "# code for 'gs test' goes here"
-  echo "# you can edit it freely and regenerate (it will not be overwritten)"
-  inspect_args
 
 }
 
@@ -1318,7 +1271,6 @@ gs_install_deps_command() {
     else
       if [[ "${OS_VERSION}" -eq "7" ]]; then
         _install_dependencies_analytical_centos7
-        install_java_maven_universal
       else
         _install_dependencies_analytical_centos8
       fi
@@ -1488,13 +1440,6 @@ parse_requirements() {
       action="dev"
       shift
       gs_dev_parse_requirements "$@"
-      shift $#
-      ;;
-
-    test | t)
-      action="test"
-      shift
-      gs_test_parse_requirements "$@"
       shift $#
       ;;
 
@@ -1745,57 +1690,6 @@ gs_dev_parse_requirements() {
 }
 
 # :command.parse_requirements
-gs_test_parse_requirements() {
-  # :command.fixed_flags_filter
-  while [[ $# -gt 0 ]]; do
-    case "${1:-}" in
-      --help | -h)
-        long_usage=yes
-        gs_test_usage
-        exit
-        ;;
-
-      *)
-        break
-        ;;
-
-    esac
-  done
-
-  # :command.command_filter
-  action="test"
-
-  # :command.parse_requirements_while
-  while [[ $# -gt 0 ]]; do
-    key="$1"
-    case "$key" in
-      # :flag.case
-      --analytical | -a)
-
-        # :flag.case_no_arg
-        args['--analytical']=1
-        shift
-        ;;
-
-      -?*)
-        printf "invalid option: %s\n" "$key" >&2
-        exit 1
-        ;;
-
-      *)
-        # :command.parse_requirements_case
-        # :command.parse_requirements_case_simple
-        printf "invalid argument: %s\n" "$key" >&2
-        exit 1
-
-        ;;
-
-    esac
-  done
-
-}
-
-# :command.parse_requirements
 gs_install_deps_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
@@ -2006,15 +1900,6 @@ run() {
         gs_dev_usage
       else
         gs_dev_command
-      fi
-      ;;
-
-    "test")
-      if [[ ${args['--help']:-} ]]; then
-        long_usage=yes
-        gs_test_usage
-      else
-        gs_test_command
       fi
       ;;
 

@@ -29,7 +29,6 @@ RUN cd /home/graphscope/GraphScope/ && \
 ############### RUNTIME: GLE #######################
 FROM $REGISTRY/graphscope/vineyard-runtime:$RUNTIME_VERSION AS learning
 
-
 USER root
 
 RUN yum install -y centos-release-scl-rh sudo && \

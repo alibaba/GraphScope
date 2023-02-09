@@ -54,3 +54,48 @@ These are utility images for ease of use.
 This is the image for GraphScope-Store
 
 - graphscope-store
+
+## Build multiarch image
+
+We do out best to deliver [multi-platform images](https://docs.docker.com/build/building/multi-platform)
+Most of the images contains variants for linux/amd64 and linux/arm64,
+When pulling, Docker would automatically selects the image that matches the architecture.
+
+
+
+### Setup building environment
+
+Incase you want to build a multi-platform on your own, here are steps to help you getting started.
+
+#### Setup the cross-platform enumator on x84_64 architecture
+
+Use [qemu](https://github.com/multiarch/qemu-user-static)
+
+```bash
+docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+docker buildx create --name builder --driver docker-container --bootstrap
+docker buildx use builder
+```
+
+#### Setup the cross-platform enumator on Apple M1
+
+Just use [docker-desktop](https://www.docker.com/products/docker-desktop/)
+
+```bash
+docker buildx create --name builder --driver docker-container --bootstrap
+docker buildx use builder
+```
+
+#### Verify your setup
+
+Refer to [example](https://docs.docker.com/build/building/multi-platform/#example)
+
+#### Setup on GitHub Actions
+
+Use [setup-qemu-action](https://github.com/docker/setup-qemu-action)
+
+Add this snippets
+```yaml
+- name: Set up QEMU
+  uses: docker/setup-qemu-action@v1
+```

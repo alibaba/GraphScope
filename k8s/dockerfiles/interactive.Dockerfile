@@ -11,8 +11,6 @@ ARG profile=release
 ENV profile=$profile
 COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 
-ENV PATH=$PATH:/opt/maven/apache-maven-3.8.6/bin
-
 RUN cd /home/graphscope/GraphScope/ && \
     if [ "${CI}" == "true" ]; then \
         cp -r artifacts/interactive /home/graphscope/install; \
@@ -61,7 +59,6 @@ COPY --from=builder /home/graphscope/install/bin /opt/graphscope/bin
 COPY --from=builder /home/graphscope/install/conf /opt/graphscope/conf
 
 RUN sudo chmod +x /opt/graphscope/bin/*
-
 
 USER graphscope
 WORKDIR /home/graphscope
