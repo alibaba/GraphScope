@@ -44,9 +44,9 @@ public class GroupTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalAggregate(keys=[{variables=[DEFAULT.name, DEFAULT.age], aliases=[a,"
-                    + " b]}], values=[[{operands=[], aggFunction=COUNT, alias='c'}]])\n"
-                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[~DEFAULT], opt=[Vertex])",
+                        + " b]}], values=[[{operands=[], aggFunction=COUNT, alias='c'}]])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[~DEFAULT], opt=[Vertex])",
                 aggregate.explain().trim());
     }
 }

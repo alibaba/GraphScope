@@ -40,9 +40,9 @@ public class ExpandTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[~DEFAULT],"
-                    + " opt=[OUT])\n"
-                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[~DEFAULT], opt=[Vertex])",
+                        + " opt=[OUT])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[~DEFAULT], opt=[Vertex])",
                 expand.explain().trim());
     }
 
@@ -62,9 +62,9 @@ public class ExpandTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[x],"
-                    + " opt=[OUT])\n"
-                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[~DEFAULT], opt=[Vertex])",
+                        + " opt=[OUT])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[~DEFAULT], opt=[Vertex])",
                 expand.explain().trim());
     }
 
@@ -91,13 +91,13 @@ public class ExpandTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
-                    + " tables=[knows]}], alias=[~DEFAULT], opt=[OUT])\n"
-                    + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[~DEFAULT], opt=[END])\n"
-                    + "], offset=[1], fetch=[3], path_opt=[Simple], result_opt=[AllV],"
-                    + " alias=[~DEFAULT])\n"
-                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[~DEFAULT], opt=[Vertex])",
+                        + " tables=[knows]}], alias=[~DEFAULT], opt=[OUT])\n"
+                        + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[~DEFAULT], opt=[END])\n"
+                        + "], offset=[1], fetch=[3], path_opt=[Simple], result_opt=[AllV],"
+                        + " alias=[~DEFAULT])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[~DEFAULT], opt=[Vertex])",
                 pathExpand.explain().trim());
     }
 }

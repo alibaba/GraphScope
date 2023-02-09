@@ -84,15 +84,15 @@ public class MatchTest {
         RelNode match = builder.match(expand1, ImmutableList.of(expand2)).build();
         Assert.assertEquals(
                 "GraphLogicalMultiMatch(input=[null],"
-                    + " sentences=[{s0=[GraphLogicalExpand(tableConfig=[{isAll=false,"
-                    + " tables=[knows]}], alias=[y], opt=[OUT])\n"
-                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[x], opt=[Vertex])\n"
-                    + "], s1=[GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                    + " alias=[z], opt=[OUT])\n"
-                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[x], opt=[Vertex])\n"
-                    + "]}])",
+                        + " sentences=[{s0=[GraphLogicalExpand(tableConfig=[{isAll=false,"
+                        + " tables=[knows]}], alias=[y], opt=[OUT])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[x], opt=[Vertex])\n"
+                        + "], s1=[GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                        + " alias=[z], opt=[OUT])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[x], opt=[Vertex])\n"
+                        + "]}])",
                 match.explain().trim());
     }
 }
