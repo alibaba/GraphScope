@@ -21,7 +21,6 @@ use dyn_type::{Object, Primitives};
 
 use crate::error::ParsePbError;
 use crate::generated::algebra as pb;
-use crate::generated::algebra::logical_plan::operator::Opr;
 use crate::generated::common as common_pb;
 use crate::generated::physical as physical_pb;
 use crate::NameOrId;
@@ -478,7 +477,7 @@ impl From<pb::logical_plan::Operator> for Option<pb::Scan> {
     fn from(opr: pb::logical_plan::Operator) -> Self {
         if let Some(opr) = opr.opr {
             match opr {
-                Opr::Scan(scan) => return Some(scan),
+                pb::logical_plan::operator::Opr::Scan(scan) => return Some(scan),
                 _ => (),
             }
         }
@@ -599,29 +598,29 @@ impl From<Object> for common_pb::Value {
 impl pb::logical_plan::operator::Opr {
     pub fn get_name(&self) -> String {
         let name = match self {
-            Opr::Project(_) => "Project",
-            Opr::Select(_) => "Select",
-            Opr::Join(_) => "Join",
-            Opr::Union(_) => "Union",
-            Opr::GroupBy(_) => "GroupBy",
-            Opr::OrderBy(_) => "OrderBy",
-            Opr::Dedup(_) => "Dedup",
-            Opr::Unfold(_) => "Unfold",
-            Opr::Apply(_) => "Apply",
-            Opr::SegApply(_) => "SegApply",
-            Opr::Scan(_) => "Scan",
-            Opr::Limit(_) => "Limit",
-            Opr::Auxilia(_) => "Auxilia",
-            Opr::As(_) => "As",
-            Opr::Sink(_) => "Sink",
-            Opr::Vertex(_) => "GetV",
-            Opr::Edge(_) => "EdgeExpand",
-            Opr::Path(_) => "PathExpand",
-            Opr::PathStart(_) => "PathStart",
-            Opr::PathEnd(_) => "PathEnd",
-            Opr::Pattern(_) => "Pattern",
-            Opr::Fused(_) => "Fused",
-            Opr::Intersect(_) => "Intersect",
+            pb::logical_plan::operator::Opr::Project(_) => "Project",
+            pb::logical_plan::operator::Opr::Select(_) => "Select",
+            pb::logical_plan::operator::Opr::Join(_) => "Join",
+            pb::logical_plan::operator::Opr::Union(_) => "Union",
+            pb::logical_plan::operator::Opr::GroupBy(_) => "GroupBy",
+            pb::logical_plan::operator::Opr::OrderBy(_) => "OrderBy",
+            pb::logical_plan::operator::Opr::Dedup(_) => "Dedup",
+            pb::logical_plan::operator::Opr::Unfold(_) => "Unfold",
+            pb::logical_plan::operator::Opr::Apply(_) => "Apply",
+            pb::logical_plan::operator::Opr::SegApply(_) => "SegApply",
+            pb::logical_plan::operator::Opr::Scan(_) => "Scan",
+            pb::logical_plan::operator::Opr::Limit(_) => "Limit",
+            pb::logical_plan::operator::Opr::As(_) => "As",
+            pb::logical_plan::operator::Opr::Auxilia(_) => "Auxilia",
+            pb::logical_plan::operator::Opr::Sink(_) => "Sink",
+            pb::logical_plan::operator::Opr::Vertex(_) => "GetV",
+            pb::logical_plan::operator::Opr::Edge(_) => "EdgeExpand",
+            pb::logical_plan::operator::Opr::Path(_) => "PathExpand",
+            pb::logical_plan::operator::Opr::PathStart(_) => "PathStart",
+            pb::logical_plan::operator::Opr::PathEnd(_) => "PathEnd",
+            pb::logical_plan::operator::Opr::Pattern(_) => "Pattern",
+            pb::logical_plan::operator::Opr::Fused(_) => "Fused",
+            pb::logical_plan::operator::Opr::Intersect(_) => "Intersect",
         };
         name.to_string()
     }
@@ -631,7 +630,7 @@ impl pb::logical_plan::Operator {
     pub fn is_whole_graph(&self) -> bool {
         if let Some(opr) = &self.opr {
             match opr {
-                Opr::Scan(scan) => {
+                pb::logical_plan::operator::Opr::Scan(scan) => {
                     scan.idx_predicate.is_none()
                         && scan.alias.is_none()
                         && scan

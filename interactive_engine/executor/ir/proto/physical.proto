@@ -256,7 +256,7 @@ message Repartition {
 }
 
 // A dummy node to delegate a source opr for multiple scan cases.
-message Dummy {}
+message RootScan {}
 
 message PhysicalOpr {
   message Operator {
@@ -275,7 +275,7 @@ message PhysicalOpr {
       Union union = 12;
       Intersect intersect = 13;
       Repartition repartition = 14;
-      Dummy dummy = 16;
+      RootScan root = 16;
       // Saving the room for relational operators
       GetV vertex = 30;
       EdgeExpand edge = 31;
