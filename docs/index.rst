@@ -59,7 +59,7 @@ and the vineyard store that offers efficient in-memory data transfers.
    apis_of_gae
    faqs_of_gae
 
-   .. toctree::
+.. toctree::
    :maxdepth: 2
    :caption: Graph Interactive Engine
 
@@ -68,7 +68,7 @@ and the vineyard store that offers efficient in-memory data transfers.
    user_guide_and_examples_of_gie
    faqs_of_gie
 
-   .. toctree::
+.. toctree::
    :maxdepth: 2
    :caption: Graph Learning Engine
 
