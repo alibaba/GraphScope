@@ -674,6 +674,27 @@ impl From<physical_pb::physical_opr::operator::OpKind> for physical_pb::Physical
     }
 }
 
+impl From<physical_pb::Repartition> for physical_pb::PhysicalOpr {
+    fn from(repartition: physical_pb::Repartition) -> Self {
+        let op_kind = physical_pb::physical_opr::operator::OpKind::Repartition(repartition);
+        op_kind.into()
+    }
+}
+
+impl From<physical_pb::EdgeExpand> for physical_pb::PhysicalOpr {
+    fn from(expand: physical_pb::EdgeExpand) -> Self {
+        let op_kind = physical_pb::physical_opr::operator::OpKind::Edge(expand);
+        op_kind.into()
+    }
+}
+
+impl From<physical_pb::Scan> for physical_pb::PhysicalOpr {
+    fn from(scan: physical_pb::Scan) -> Self {
+        let op_kind = physical_pb::physical_opr::operator::OpKind::Scan(scan);
+        op_kind.into()
+    }
+}
+
 impl From<pb::Project> for physical_pb::Project {
     fn from(project: pb::Project) -> Self {
         let mappings = project
