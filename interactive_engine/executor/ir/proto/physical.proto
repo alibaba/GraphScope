@@ -282,14 +282,14 @@ message PhysicalOpr {
       PathExpand path = 32;
     }
   }
-  message ColumnType {
+  message MetaData {
     common.IrDataType type = 1;
     int32 alias = 2;
   }
   // The node's operator
   Operator opr = 1;
-  // The type of outputs of operator
-  repeated ColumnType op_type = 2;
+  // The meta data of outputs of operator
+  repeated MetaData op_meta = 2;
 }
 
 message PhysicalPlan {
