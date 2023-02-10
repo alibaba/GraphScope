@@ -20,6 +20,7 @@ option java_package = "com.alibaba.graphscope.gaia.proto";
 option java_outer_classname = "DataType";
 
 import "common.proto";
+import "expr.proto";
 import "google/protobuf/wrappers.proto";
 
 
@@ -43,7 +44,7 @@ message GraphDataType {
   // GraphElementTypeField represents the definition of a field in the structured GraphElementType
   // In common, it denotes the type of properties.
   message GraphElementTypeField {
-    int32 prop_id = 1;
+    common.NameOrId prop_id = 1;
     common.DataType type = 2;
   }
   // GraphElementType represents the type of the graph element,
