@@ -25,6 +25,8 @@
 
 package com.alibaba.graphscope.gremlin.plugin.script;
 
+import com.alibaba.graphscope.grammar.GremlinGSLexer;
+import com.alibaba.graphscope.grammar.GremlinGSParser;
 import com.alibaba.graphscope.gremlin.antlr4.GremlinAntlrToJava;
 import com.alibaba.graphscope.gremlin.exception.InvalidGremlinScriptException;
 
@@ -35,8 +37,6 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngine;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngineFactory;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSLexer;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
 import org.apache.tinkerpop.gremlin.process.traversal.Bytecode;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
