@@ -1,2 +1,27 @@
 # Design of GAE
 
+In GraphScope, Graph Analytics Engine (GAE) is responsible for handling various graph analytics algorithms. GAE has three main components: graph storage, execution framework and algorithm library. Next, we give an overview to each of them below.
+
+## Graph Storage
+
+GAE as well as other execution engines of GraphScope work on top of a unified graph storage. The graph storage consists of different graph formats with different features, e.g., some support real time graph update while others treat graph data as immutable data once created; some store graph data in memory for better performance, while others support persistent storage. Although there exist diverse types of graph storage, GraphScope offers a unified interfaces for graph storage, and thus GAE does not care about how each type of graph storage is implemented.
+
+
+## Execution Framework
+
+At the core of GAE is its execution framework, which has the following features in order to handle efficient graph analytics execution over distributed and large-scale graph data.
+
+### Flexible programming models
+There exist many programming models in various graph analytics systems, and GAE supports vertex-centric model (Pregel) and PIE model. In the PIE model, users only need to provide three functions, (1) PEval, a function for given a query, computes the answer on a local graph; (2) IncEval, an incremental function, computes changes to the old output by treating incoming messages as updates; and (3) Assemble, which collects partial answers, and combines them into a complete answer. After that, GAE auto-parallelizes the graph analytics tasks across a cluster of workers.
+
+### Multi-language SDKs
+Multi-language SDKs are provided by GAE. Users choose to write their own algorithms in either C++, Java or Python. With Python, users can still expect a high performance. GAE integrated a compiler built with Cython. It can generate efficient native code from Python algorithms behind the scenes, and dispatch the code to the GraphScope cluster for execution. The SDKs further lower the total cost of ownership of graph analytics.
+
+### High-performance runtime
+
+GAE achieves high performance through a highly optimized analytical runtime based on libgrape-lite. Many optimization techniques, such as pull/push dynamic switching, cache-efficient memory layout, and pipelining were employed in the runtime. It performs well in LDBC Graph Analytics Benchmark, and outperforms other state-of-the-art graph systems. GAE is designed to be highly efficient and flexible, to cope with the scale, variety and complexity from real-life graph analytics applications.
+
+
+## Algorithm Library
+
+GAE of GraphScope provides 20 graph analytics algorithms as built-in algorithms, and users can directly invoke them. The build-in algorithms contain most commonly used algorithms, including PageRank, BFS, DFS, shortest path and LCC. In addition, GraphScope is compatible with NetworkX APIs, and thus diverse kinds of [built-in algorithms in NetworkX](https://networkx.org/documentation/stable/reference/algorithms/index.html) can also be directly invoked by users. In total, over 100 build-in graph analytical algorithms can be directly executed over GraphScope, without any developing effort.
