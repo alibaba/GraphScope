@@ -16,14 +16,10 @@
 
 package com.alibaba.graphscope.common.calcite.tools.config;
 
-import com.alibaba.graphscope.common.calcite.rel.graph.GraphLogicalExpand;
-import com.alibaba.graphscope.common.calcite.rel.graph.GraphLogicalGetV;
-import com.alibaba.graphscope.common.calcite.tools.AliasInference;
 import com.alibaba.graphscope.common.calcite.tools.GraphBuilder;
 import com.alibaba.graphscope.common.jna.type.PathOpt;
 import com.alibaba.graphscope.common.jna.type.ResultOpt;
 
-import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexNode;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -112,42 +108,18 @@ public class PathExpandConfig {
             this.resultOpt = ResultOpt.EndV;
         }
 
+        // TODO: build expand from config
         public Builder expand(ExpandConfig config) {
-            if (this.getV == null && this.expand == null) {
-                this.expand =
-                        GraphLogicalExpand.create(
-                                (GraphOptCluster) innerBuilder.getCluster(),
-                                innerBuilder.getHints(
-                                        config.getOpt().name(),
-                                        AliasInference.DEFAULT_NAME,
-                                        AliasInference.DEFAULT_ID),
-                                null,
-                                innerBuilder.getTableConfig(config.getLabels()));
-            }
             return this;
         }
 
+        // TODO: build getV from config
         public Builder getV(GetVConfig config) {
-            if (this.expand != null && this.getV == null) {
-                this.getV =
-                        GraphLogicalGetV.create(
-                                (GraphOptCluster) innerBuilder.getCluster(),
-                                innerBuilder.getHints(
-                                        config.getOpt().name(),
-                                        AliasInference.DEFAULT_NAME,
-                                        AliasInference.DEFAULT_ID),
-                                null,
-                                innerBuilder.getTableConfig(config.getLabels()));
-            }
             return this;
         }
 
+        // TODO: add filter with expand or getV
         public Builder filter(List<RexNode> conjunctions) {
-            if (this.getV != null) {
-                this.getV = innerBuilder.push(this.getV).filter(conjunctions).build();
-            } else if (this.expand != null) {
-                this.expand = innerBuilder.push(this.expand).filter(conjunctions).build();
-            }
             return this;
         }
 

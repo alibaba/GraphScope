@@ -16,16 +16,11 @@
 
 package com.alibaba.graphscope.common.calcite.rex;
 
-import static com.alibaba.graphscope.common.calcite.util.Static.RESOURCE;
-
-import com.alibaba.graphscope.common.calcite.tools.AliasInference;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rex.RexBiVisitor;
 import org.apache.calcite.rex.RexInputRef;
-import org.apache.calcite.rex.RexVisitor;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -87,28 +82,6 @@ public class RexGraphVariable extends RexInputRef {
     @Override
     public int hashCode() {
         return Objects.hashCode(idList, type);
-    }
-
-    @Override
-    public <R> R accept(RexVisitor<R> rexVisitor) {
-        if (rexVisitor instanceof RexVariableAliasChecker) {
-            return rexVisitor.visitInputRef(this);
-        } else {
-            return null;
-        }
-    }
-
-    @Override
-    public <R, P> R accept(RexBiVisitor<R, P> rexBiVisitor, P p) {
-        throw RESOURCE.functionWillImplement(this.getClass()).ex();
-    }
-
-    int getAliasId() {
-        return idList.isEmpty() ? AliasInference.DEFAULT_ID : idList.get(0);
-    }
-
-    int getPropertyId() {
-        return idList.size() < 2 ? -1 : idList.get(1);
     }
 
     @Override
