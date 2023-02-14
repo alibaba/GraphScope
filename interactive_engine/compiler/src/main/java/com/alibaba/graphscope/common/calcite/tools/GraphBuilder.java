@@ -163,26 +163,8 @@ public class GraphBuilder extends RelBuilder {
         String aliasName = AliasInference.inferDefault(config.getAlias(), uniqueNameList(input));
         RexNode offsetNode = config.getOffset() <= 0 ? null : literal(config.getOffset());
         RexNode fetchNode = config.getFetch() < 0 ? null : literal(config.getFetch());
-        ExpandConfig config1 = Objects.requireNonNull(config.getExpandConfig());
-        GetVConfig config2 = Objects.requireNonNull(config.getGetVConfig());
-        RelNode expand =
-                GraphLogicalExpand.create(
-                        (GraphOptCluster) cluster,
-                        getHints(
-                                config1.getOpt().name(),
-                                AliasInference.DEFAULT_NAME,
-                                AliasInference.DEFAULT_ID),
-                        null,
-                        getTableConfig(config1.getLabels()));
-        RelNode getV =
-                GraphLogicalGetV.create(
-                        (GraphOptCluster) cluster,
-                        getHints(
-                                config2.getOpt().name(),
-                                AliasInference.DEFAULT_NAME,
-                                AliasInference.DEFAULT_ID),
-                        null,
-                        getTableConfig(config2.getLabels()));
+        RelNode expand = Objects.requireNonNull(config.getExpand());
+        RelNode getV = Objects.requireNonNull(config.getGetV());
         RelNode pathExpand =
                 GraphLogicalPathExpand.create(
                         (GraphOptCluster) cluster,
@@ -206,7 +188,7 @@ public class GraphBuilder extends RelBuilder {
      * @param labelConfig
      * @return
      */
-    private TableConfig getTableConfig(LabelConfig labelConfig) {
+    public TableConfig getTableConfig(LabelConfig labelConfig) {
         if (!labelConfig.isAll()) {
             ObjectUtils.requireNonEmpty(labelConfig.getLabels());
             List<RelOptTable> tables = new ArrayList<>();
@@ -220,7 +202,7 @@ public class GraphBuilder extends RelBuilder {
         }
     }
 
-    private List<RelHint> getHints(String optName, String aliasName, int aliasId) {
+    public List<RelHint> getHints(String optName, String aliasName, int aliasId) {
         RelHint optHint = RelHint.builder("opt").hintOption(optName).build();
         RelHint aliasHint =
                 RelHint.builder("alias")

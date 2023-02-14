@@ -73,21 +73,23 @@ public class ExpandTest {
     @Test
     public void expand_3_test() {
         GraphBuilder builder = SourceTest.mockGraphBuilder();
+        PathExpandConfig pxdConfig =
+                PathExpandConfig.newBuilder(builder)
+                        .expand(
+                                new ExpandConfig(
+                                        DirectionOpt.OUT, new LabelConfig(false).addLabel("knows")))
+                        .getV(
+                                new GetVConfig(
+                                        GetVOpt.END, new LabelConfig(false).addLabel("person")))
+                        .range(1, 3)
+                        .pathOpt(PathOpt.Simple)
+                        .resultOpt(ResultOpt.AllV)
+                        .build();
         RelNode pathExpand =
                 builder.source(
                                 new SourceConfig(
                                         ScanOpt.Vertex, new LabelConfig(false).addLabel("person")))
-                        .pathExpand(
-                                new PathExpandConfig(
-                                                new ExpandConfig(
-                                                        DirectionOpt.OUT,
-                                                        new LabelConfig(false).addLabel("knows")),
-                                                new GetVConfig(
-                                                        GetVOpt.END,
-                                                        new LabelConfig(false).addLabel("person")))
-                                        .range(1, 3)
-                                        .pathOpt(PathOpt.Simple)
-                                        .resultOpt(ResultOpt.AllV))
+                        .pathExpand(pxdConfig)
                         .build();
         Assert.assertEquals(
                 "GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
