@@ -37,6 +37,7 @@ import com.alibaba.graphscope.common.calcite.type.GraphSchemaType;
 import com.alibaba.graphscope.common.calcite.util.Static;
 import com.alibaba.graphscope.common.utils.ClassUtils;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 import org.apache.calcite.plan.*;
@@ -58,7 +59,6 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Integrate interfaces to build algebra structures,
@@ -120,7 +120,8 @@ public class GraphBuilder extends RelBuilder {
      */
     public GraphBuilder expand(ExpandConfig config) {
         RelNode input = requireNonNull(peek(), "frame stack is empty");
-        String aliasName = AliasInference.inferDefault(config.getAlias(), uniqueNameList(input));
+        String aliasName =
+                AliasInference.inferDefault(config.getAlias(), uniqueNameList(input, false, true));
         int aliasId = generateAliasId(aliasName, input);
         RelNode expand =
                 GraphLogicalExpand.create(
@@ -140,7 +141,8 @@ public class GraphBuilder extends RelBuilder {
      */
     public GraphBuilder getV(GetVConfig config) {
         RelNode input = requireNonNull(peek(), "frame stack is empty");
-        String aliasName = AliasInference.inferDefault(config.getAlias(), uniqueNameList(input));
+        String aliasName =
+                AliasInference.inferDefault(config.getAlias(), uniqueNameList(input, false, true));
         int aliasId = generateAliasId(aliasName, input);
         RelNode getV =
                 GraphLogicalGetV.create(
@@ -160,7 +162,8 @@ public class GraphBuilder extends RelBuilder {
      */
     public GraphBuilder pathExpand(PathExpandConfig config) {
         RelNode input = requireNonNull(peek(), "frame stack is empty");
-        String aliasName = AliasInference.inferDefault(config.getAlias(), uniqueNameList(input));
+        String aliasName =
+                AliasInference.inferDefault(config.getAlias(), uniqueNameList(input, false, true));
         RexNode offsetNode = config.getOffset() <= 0 ? null : literal(config.getOffset());
         RexNode fetchNode = config.getFetch() < 0 ? null : literal(config.getFetch());
         RelNode expand = Objects.requireNonNull(config.getExpand());
@@ -227,21 +230,24 @@ public class GraphBuilder extends RelBuilder {
         return ImmutableList.of(optHint, aliasHint);
     }
 
-    private Set<String> uniqueNameList(@Nullable RelNode input) {
-        return uniqueNameList(input, true);
-    }
-
     /**
      * get all aliases stored by previous operators, to avoid duplicate alias creation
-     * @param input previous operator which contains all stored aliases
-     * @param isAppend if the current operator keep the history
+     * @param input the input operator
+     * @param containsAll if the input operator contains all stored alias
+     * @param isAppend if the current operator need to keep the history
      * @return
      */
-    private Set<String> uniqueNameList(@Nullable RelNode input, boolean isAppend) {
-        if (!isAppend || input == null) return new HashSet<>();
-        return input.getRowType().getFieldList().stream()
-                .map(k -> k.getName())
-                .collect(Collectors.toSet());
+    private Set<String> uniqueNameList(
+            @Nullable RelNode input, boolean containsAll, boolean isAppend) {
+        Set<String> uniqueNames = new HashSet<>();
+        if (!isAppend || input == null) return uniqueNames;
+        for (RelDataTypeField field : input.getRowType().getFieldList()) {
+            uniqueNames.add(field.getName());
+        }
+        if (!containsAll && ObjectUtils.isNotEmpty(input.getInputs())) {
+            uniqueNames.addAll(uniqueNameList(input.getInput(0), containsAll, isAppend));
+        }
+        return uniqueNames;
     }
 
     /**
@@ -360,6 +366,9 @@ public class GraphBuilder extends RelBuilder {
         if (size() > 0) {
             RelNode cur = peek();
             RelRecordType rowType = (RelRecordType) cur.getRowType();
+            if (alias == AliasInference.DEFAULT_NAME && rowType.getFieldList().size() == 1) {
+                return rowType.getFieldList().get(0);
+            }
             for (RelDataTypeField field : rowType.getFieldList()) {
                 if (field.getName().equals(alias)) {
                     return field;
@@ -412,6 +421,11 @@ public class GraphBuilder extends RelBuilder {
 
     @Override
     public GraphBuilder filter(RexNode... conditions) {
+        return filter(ImmutableList.copyOf(conditions));
+    }
+
+    @Override
+    public GraphBuilder filter(Iterable<? extends RexNode> conditions) {
         ObjectUtils.requireNonEmpty(conditions);
         // make sure all conditions have the Boolean return type
         for (RexNode condition : conditions) {
@@ -424,14 +438,16 @@ public class GraphBuilder extends RelBuilder {
                                 + type);
             }
         }
-        GraphBuilder builder = (GraphBuilder) super.filter(conditions);
+        GraphBuilder builder = (GraphBuilder) super.filter(ImmutableSet.of(), conditions);
         // fuse filter with the previous table scan if meets the conditions
         Filter filter;
         AbstractBindableTableScan tableScan;
         if ((filter = topFilter()) != null && (tableScan = inputTableScan(filter)) != null) {
             RexNode condition = filter.getCondition();
             RexVariableAliasChecker checker =
-                    new RexVariableAliasChecker(true, tableScan.getAliasId());
+                    new RexVariableAliasChecker(
+                            true,
+                            ImmutableList.of(tableScan.getAliasId(), AliasInference.DEFAULT_ID));
             condition.accept(checker);
             // fuze all conditions into table scan
             if (checker.isAll()) {
@@ -492,7 +508,7 @@ public class GraphBuilder extends RelBuilder {
         }
         fieldNameList =
                 AliasInference.inferProject(
-                        nodeList, fieldNameList, uniqueNameList(input, isAppend));
+                        nodeList, fieldNameList, uniqueNameList(input, true, isAppend));
         RelNode project =
                 GraphLogicalProject.create(
                         (GraphOptCluster) getCluster(),

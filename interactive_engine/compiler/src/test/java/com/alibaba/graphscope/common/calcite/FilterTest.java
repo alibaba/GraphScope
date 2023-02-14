@@ -31,7 +31,7 @@ import org.junit.Test;
 public class FilterTest {
     // source([person]).filter("XXX") are fused
     @Test
-    public void equal_test() {
+    public void equal_1_test() {
         GraphBuilder builder = SourceTest.mockGraphBuilder();
         SourceConfig sourceConfig =
                 new SourceConfig(ScanOpt.Vertex, new LabelConfig(false).addLabel("person"));
@@ -44,6 +44,25 @@ public class FilterTest {
         RelNode filter = builder.filter(equal).build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
+                        + " fusedFilter=[[=(DEFAULT.age, 10)]], opt=[Vertex])",
+                filter.explain().trim());
+    }
+
+    // source([person]).as('x').filter("XXX") are fused
+    @Test
+    public void equal_2_test() {
+        GraphBuilder builder = SourceTest.mockGraphBuilder();
+        SourceConfig sourceConfig =
+                new SourceConfig(ScanOpt.Vertex, new LabelConfig(false).addLabel("person"), "x");
+        RexNode equal =
+                builder.source(sourceConfig)
+                        .call(
+                                GraphStdOperatorTable.EQUALS,
+                                builder.variable(null, "age"),
+                                builder.literal(10));
+        RelNode filter = builder.filter(equal).build();
+        Assert.assertEquals(
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[x],"
                         + " fusedFilter=[[=(DEFAULT.age, 10)]], opt=[Vertex])",
                 filter.explain().trim());
     }
