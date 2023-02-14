@@ -19,23 +19,25 @@ package com.alibaba.graphscope.common.calcite.rex;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexVisitorImpl;
 
+import java.util.List;
+
 /**
- * check whether all variables in an expression have the same alias and its id is equal to {@code aliasId}
+ * check whether all variables in an expression have at least one alias in the{@code aliasIds}
  */
 public class RexVariableAliasChecker extends RexVisitorImpl<Boolean> {
     private boolean isAll;
-    private int aliasId;
+    private List<Integer> aliasIds;
 
-    public RexVariableAliasChecker(boolean deep, int aliasId) {
+    public RexVariableAliasChecker(boolean deep, List<Integer> aliasId) {
         super(deep);
-        this.aliasId = aliasId;
+        this.aliasIds = aliasId;
         this.isAll = true;
     }
 
     @Override
     public Boolean visitInputRef(RexInputRef inputRef) {
         if (inputRef instanceof RexGraphVariable) {
-            if (((RexGraphVariable) inputRef).getAliasId() != this.aliasId) {
+            if (!this.aliasIds.contains(((RexGraphVariable) inputRef).getAliasId())) {
                 this.isAll = false;
             }
         }
