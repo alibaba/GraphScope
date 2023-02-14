@@ -16,57 +16,55 @@
 
 package com.alibaba.graphscope.common.calcite.tools.config;
 
+import com.alibaba.graphscope.common.calcite.rel.graph.GraphLogicalExpand;
+import com.alibaba.graphscope.common.calcite.rel.graph.GraphLogicalGetV;
+import com.alibaba.graphscope.common.calcite.tools.AliasInference;
+import com.alibaba.graphscope.common.calcite.tools.GraphBuilder;
 import com.alibaba.graphscope.common.jna.type.PathOpt;
 import com.alibaba.graphscope.common.jna.type.ResultOpt;
 
+import org.apache.calcite.plan.GraphOptCluster;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rex.RexNode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.util.List;
+import java.util.Objects;
+
 public class PathExpandConfig {
-    private final ExpandConfig expandConfig;
-    private final GetVConfig getVConfig;
+    private final RelNode expand;
+    private final RelNode getV;
+
+    private final int offset;
+    private final int fetch;
+
+    private final PathOpt pathOpt;
+    private final ResultOpt resultOpt;
+
     @Nullable private final String alias;
-    private int offset;
-    private int fetch;
-    private PathOpt pathOpt;
-    private ResultOpt resultOpt;
 
-    public PathExpandConfig(ExpandConfig config1, GetVConfig config2) {
-        this(config1, config2, null);
-    }
-
-    public PathExpandConfig(ExpandConfig config1, GetVConfig config2, @Nullable String alias) {
-        this.expandConfig = config1;
-        this.getVConfig = config2;
-        this.alias = alias;
-        this.pathOpt = PathOpt.Arbitrary;
-        this.resultOpt = ResultOpt.EndV;
-    }
-
-    public PathExpandConfig pathOpt(PathOpt pathOpt) {
-        this.pathOpt = pathOpt;
-        return this;
-    }
-
-    public PathExpandConfig resultOpt(ResultOpt resultOpt) {
-        this.resultOpt = resultOpt;
-        return this;
-    }
-
-    public PathExpandConfig range(int offset, int fetch) {
+    protected PathExpandConfig(
+            RelNode expand,
+            RelNode getV,
+            int offset,
+            int fetch,
+            ResultOpt resultOpt,
+            PathOpt pathOpt,
+            @Nullable String alias) {
+        this.expand = Objects.requireNonNull(expand);
+        this.getV = Objects.requireNonNull(getV);
         this.offset = offset;
         this.fetch = fetch;
-        return this;
+        this.resultOpt = resultOpt;
+        this.pathOpt = pathOpt;
+        this.alias = alias;
     }
 
-    public ExpandConfig getExpandConfig() {
-        return expandConfig;
+    public static Builder newBuilder(GraphBuilder innerBuilder) {
+        return new Builder(innerBuilder);
     }
 
-    public GetVConfig getGetVConfig() {
-        return getVConfig;
-    }
-
-    public String getAlias() {
+    public @Nullable String getAlias() {
         return alias;
     }
 
@@ -84,5 +82,98 @@ public class PathExpandConfig {
 
     public int getFetch() {
         return fetch;
+    }
+
+    public RelNode getExpand() {
+        return expand;
+    }
+
+    public RelNode getGetV() {
+        return getV;
+    }
+
+    public static final class Builder {
+        private final GraphBuilder innerBuilder;
+
+        private RelNode expand;
+        private RelNode getV;
+
+        private int offset;
+        private int fetch;
+
+        private PathOpt pathOpt;
+        private ResultOpt resultOpt;
+
+        @Nullable private String alias;
+
+        protected Builder(GraphBuilder innerBuilder) {
+            this.innerBuilder = innerBuilder;
+            this.pathOpt = PathOpt.Arbitrary;
+            this.resultOpt = ResultOpt.EndV;
+        }
+
+        public Builder expand(ExpandConfig config) {
+            if (this.getV == null && this.expand == null) {
+                this.expand =
+                        GraphLogicalExpand.create(
+                                (GraphOptCluster) innerBuilder.getCluster(),
+                                innerBuilder.getHints(
+                                        config.getOpt().name(),
+                                        AliasInference.DEFAULT_NAME,
+                                        AliasInference.DEFAULT_ID),
+                                null,
+                                innerBuilder.getTableConfig(config.getLabels()));
+            }
+            return this;
+        }
+
+        public Builder getV(GetVConfig config) {
+            if (this.expand != null && this.getV == null) {
+                this.getV =
+                        GraphLogicalGetV.create(
+                                (GraphOptCluster) innerBuilder.getCluster(),
+                                innerBuilder.getHints(
+                                        config.getOpt().name(),
+                                        AliasInference.DEFAULT_NAME,
+                                        AliasInference.DEFAULT_ID),
+                                null,
+                                innerBuilder.getTableConfig(config.getLabels()));
+            }
+            return this;
+        }
+
+        public Builder filter(List<RexNode> conjunctions) {
+            if (this.getV != null) {
+                this.getV = innerBuilder.push(this.getV).filter(conjunctions).build();
+            } else if (this.expand != null) {
+                this.expand = innerBuilder.push(this.expand).filter(conjunctions).build();
+            }
+            return this;
+        }
+
+        public Builder range(int offset, int fetch) {
+            this.offset = offset;
+            this.fetch = fetch;
+            return this;
+        }
+
+        public Builder pathOpt(PathOpt pathOpt) {
+            this.pathOpt = pathOpt;
+            return this;
+        }
+
+        public Builder resultOpt(ResultOpt resultOpt) {
+            this.resultOpt = resultOpt;
+            return this;
+        }
+
+        public Builder alias(@Nullable String alias) {
+            this.alias = alias;
+            return this;
+        }
+
+        public PathExpandConfig build() {
+            return new PathExpandConfig(expand, getV, offset, fetch, resultOpt, pathOpt, alias);
+        }
     }
 }
