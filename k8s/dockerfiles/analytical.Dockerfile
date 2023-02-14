@@ -20,7 +20,7 @@ RUN cd /home/graphscope/GraphScope/ && \
         make analytical-install INSTALL_PREFIX=${INSTALL_DIR}; \
         strip ${INSTALL_DIR}/bin/grape_engine; \
         strip ${INSTALL_DIR}/lib/*.so; \
-        sudo cp -rs ${INSTALL_DIR}/* ${GRAPHSCOPE_HOME}/
+        sudo cp -rs ${INSTALL_DIR}/* ${GRAPHSCOPE_HOME}/; \
         python3 ./k8s/utils/precompile.py --graph --output_dir ${INSTALL_DIR}/builtin; \
         strip ${INSTALL_DIR}/builtin/*/*.so; \
     fi
@@ -56,7 +56,7 @@ RUN cd /home/graphscope/GraphScope/ && \
         make analytical-java-install INSTALL_PREFIX=${INSTALL_DIR}; \
         strip ${INSTALL_DIR}/bin/grape_engine; \
         strip ${INSTALL_DIR}/lib/*.so; \
-        sudo cp -rs ${INSTALL_DIR}/* ${GRAPHSCOPE_HOME}/
+        sudo cp -rs ${INSTALL_DIR}/* ${GRAPHSCOPE_HOME}/; \
         python3 ./k8s/utils/precompile.py --graph --output_dir ${INSTALL_DIR}/builtin; \
         strip ${INSTALL_DIR}/builtin/*/*.so; \
     fi

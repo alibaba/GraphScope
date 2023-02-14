@@ -61,6 +61,18 @@ We do out best to deliver [multi-platform images](https://docs.docker.com/build/
 Most of the images contains variants for linux/amd64 and linux/arm64,
 When pulling, Docker would automatically selects the image that matches the architecture.
 
+- Build graphscope-dev:latest
+
+     - Use buildx
+       `docker buildx build --platform linux/amd64,linux/arm64 -t graphscope/graphscope-dev:latest -f dockerfiles/graphscope-dev.Dockerfile . --push`
+     - Use `docker manifest create`
+       In x86_64 machine, do: `docker build -t graphscope/graphscope-dev:latest-amd64 -f dockerfiles/graphscope-dev.Dockerfile .`
+       In arm machine, do: `docker build -t graphscope/graphscope-dev:latest-arm64 -f dockerfiles/graphscope-dev.Dockerfile .`
+       Tag to another registry if necessary, and push.
+       Then create and push the manifest list
+       `docker manifest create graphscope/graphscope-dev:latest graphscope/graphscope-dev:latest-amd64 graphscope/graphscope-dev:latest-arm64`
+       Finally push the manifest list
+       `docker push graphscope/graphscope-dev:latest`
 
 
 ### Setup building environment
