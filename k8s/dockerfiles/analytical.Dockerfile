@@ -16,6 +16,7 @@ RUN cd /home/graphscope/GraphScope/ && \
     else \
         export GRAPHSCOPE_HOME=/home/graphscope/install; \
         mkdir ${GRAPHSCOPE_HOME}; \
+        source /home/graphscope/.graphscope_env; \
         make analytical-install INSTALL_PREFIX=${GRAPHSCOPE_HOME}; \
         strip ${GRAPHSCOPE_HOME}/bin/grape_engine; \
         strip ${GRAPHSCOPE_HOME}/lib/*.so; \
@@ -50,6 +51,7 @@ RUN cd /home/graphscope/GraphScope/ && \
     else \
         export GRAPHSCOPE_HOME=/home/graphscope/install; \
         mkdir ${GRAPHSCOPE_HOME}; \
+        source /home/graphscope/.graphscope_env; \
         make analytical-java-install INSTALL_PREFIX=${GRAPHSCOPE_HOME}; \
         strip ${GRAPHSCOPE_HOME}/bin/grape_engine; \
         strip ${GRAPHSCOPE_HOME}/lib/*.so; \

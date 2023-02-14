@@ -1,22 +1,23 @@
 name: Build GraphScope Wheels on Linux
 
-on:
-  workflow_dispatch:
-  schedule:
-    # The notifications for scheduled workflows are sent to the user who
-    # last modified the cron syntax in the workflow file.
-    # Trigger the workflow at 03:00(CST) every day.
-    - cron:  '00 19 * * *'
-  push:
-    tags:
-      - "v*"
+on: [push, pull_request]
+# on:
+#   workflow_dispatch:
+#   schedule:
+#     # The notifications for scheduled workflows are sent to the user who
+#     # last modified the cron syntax in the workflow file.
+#     # Trigger the workflow at 03:00(CST) every day.
+#     - cron:  '00 19 * * *'
+#   push:
+#     tags:
+#       - "v*"
 
 env:
   REGISTRY: registry.cn-hongkong.aliyuncs.com
 
 jobs:
   build-wheels:
-    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
+    # if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
     runs-on: ubuntu-20.04
 
     steps:
@@ -44,7 +45,7 @@ jobs:
 
         cd ${GITHUB_WORKSPACE}/k8s/internal
         # build graphscope wheels
-        sudo -E -u runner make graphscope-py3-package GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} INSTALL_PREFIX=${GITHUB_WORKSPACE}/install
+        sudo -E -u runner make graphscope-py3-package GRAPHSCOPE_HOME=/opt/graphscope INSTALL_PREFIX=${GITHUB_WORKSPACE}/install
 
         # build client wheels
         sudo -E -u runner make graphscope-client-py3-package
@@ -81,6 +82,7 @@ jobs:
         packages_dir: upload_pypi/
 
     - name: Publish distribution to PyPI
+      if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
       uses: pypa/gh-action-pypi-publish@v1.4.2
       with:
         user: __token__
