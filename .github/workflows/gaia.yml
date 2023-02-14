@@ -21,7 +21,7 @@ concurrency:
 
 jobs:
   gaia-test:
-    runs-on: [self-hosted, manylinux2014-ci-test]
+    runs-on: [self-hosted, manylinux2014]
     steps:
     - uses: actions/checkout@v3
       with:

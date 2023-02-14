@@ -34,7 +34,6 @@ COPY --from=ext /opt/graphscope /opt/graphscope
 COPY --from=ext /opt/openmpi /opt/openmpi
 RUN chmod +x /opt/graphscope/bin/* /opt/openmpi/bin/*
 
-# change user: graphscope
 RUN useradd -m graphscope -u 1001 \
     && echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 

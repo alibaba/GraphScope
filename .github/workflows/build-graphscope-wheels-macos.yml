@@ -46,7 +46,7 @@ jobs:
 
         # build graphscope server wheel
         cd ${GITHUB_WORKSPACE}/k8s/internal
-        sudo -E make graphscope-py3-package GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} INSTALL_PREFIX=${GITHUB_WORKSPACE}/install
+        sudo -E make graphscope-py3-package GRAPHSCOPE_HOME=/opt/graphscope INSTALL_PREFIX=${GITHUB_WORKSPACE}/install
 
         # package
         cd ${GITHUB_WORKSPACE}
