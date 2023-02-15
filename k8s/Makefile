@@ -40,14 +40,14 @@ graphscope: all
 manylinux2014-ext:
 	cd $(WORKING_DIR) && \
 	cp ../gs ./ && \
-	docker buildx build --platform linux/amd64,linux/arm64 \
+	docker build \
 		-t graphscope/manylinux-ext:2023-01-20 \
 		-f $(DOCKERFILES_DIR)/manylinux2014-ext.Dockerfile .
 
 graphscope-dev:
 	cd $(WORKING_DIR) && \
 	cp ../gs ./ && \
-	docker buildx build --platform linux/amd64,linux/arm64 \
+	docker build \
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg VINEYARD_VERSION=${VINEYARD_VERSION} \
 		-t graphscope/graphscope-dev:${VINEYARD_VERSION} \

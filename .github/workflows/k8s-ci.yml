@@ -189,7 +189,7 @@ jobs:
         fi
 
   build-analytical:
-    runs-on: [self-hosted, manylinux2014-ci-test]
+    runs-on: [self-hosted, manylinux2014]
     needs: [changes]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
@@ -215,7 +215,7 @@ jobs:
         retention-days: 5
 
   build-analytical-java:
-    runs-on: [self-hosted, manylinux2014-ci-test]
+    runs-on: [self-hosted, manylinux2014]
     needs: [changes]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
@@ -248,7 +248,7 @@ jobs:
         retention-days: 5
 
   build-interactive:
-    runs-on: [self-hosted, manylinux2014-ci-test]
+    runs-on: [self-hosted, manylinux2014]
     needs: [changes]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
@@ -289,7 +289,7 @@ jobs:
         retention-days: 5
 
   build-learning:
-    runs-on: [self-hosted, manylinux2014-ci-test]
+    runs-on: [self-hosted, manylinux2014]
     needs: [changes]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
@@ -543,7 +543,7 @@ jobs:
   build-gie-experimental:
     # Require the user id of the self-hosted is 1001, which may need to be
     # configured manually when a new self-hosted runner is added.
-    runs-on: [self-hosted, manylinux2014-ci-test]
+    runs-on: [self-hosted, manylinux2014]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
       - uses: actions/checkout@v3
