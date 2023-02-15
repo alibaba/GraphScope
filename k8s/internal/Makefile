@@ -144,6 +144,7 @@ graphscope-client-manylinux2014-py3-nodocker:
 	rm -rf cmake-build && \
 	mkdir -p cmake-build && \
 	cd cmake-build && \
+	export GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} && \
 	cmake -DKNN=OFF -DWITH_VINEYARD=ON -DTESTING=OFF .. && \
 	make graphlearn_shared -j`nproc` && \
 	export LD_LIBRARY_PATH=$(WORKING_DIR)/../../learning_engine/graph-learn/graphlearn/built/lib:$$LD_LIBRARY_PATH && \
@@ -168,6 +169,7 @@ graphscope-client-manylinux2014-py3-nodocker:
 graphscope-client-darwin-py3:
 	cd $(WORKING_DIR)/../../learning_engine/graph-learn && \
 		git submodule update --init third_party/pybind11 && \
+		export GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} && \
 		cd graphlearn && \
 		rm -rf cmake-build && \
 		mkdir -p cmake-build && \
@@ -195,4 +197,4 @@ graphscope-client-manylinux2014-py3:
 	docker pull ${REGISTRY}/graphscope/graphscope-dev:${VINEYARD_VERSION}
 	docker run --rm -v $(WORKING_DIR)/../..:/work \
 		${REGISTRY}/graphscope/graphscope-dev:${VINEYARD_VERSION} \
-		bash -c 'cd /work/k8s/internal && make graphscope-client-manylinux2014-py3-nodocker'
+		bash -c 'source ~/.graphscope_env && cd /work/k8s/internal && make graphscope-client-manylinux2014-py3-nodocker GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME}'

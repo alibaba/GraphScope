@@ -76,8 +76,8 @@ ENV PATH=$PATH:$GRAPHSCOPE_HOME/bin LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GRAPHSCOPE
 USER root
 COPY ./k8s/utils/kube_ssh /usr/local/bin/kube_ssh
 COPY --from=builder-java /home/graphscope/install /opt/graphscope/
-RUN mkdir -p /tmp/gs && sudo mv /opt/graphscope/builtin /tmp/gs/builtin && chown -R graphscope:graphscope /tmp/gs
-RUN sudo chmod +x /opt/graphscope/bin/*
+RUN mkdir -p /tmp/gs && mv /opt/graphscope/builtin /tmp/gs/builtin && chown -R graphscope:graphscope /tmp/gs
+RUN chmod +x /opt/graphscope/bin/*
 
 USER graphscope
 WORKDIR /home/graphscope

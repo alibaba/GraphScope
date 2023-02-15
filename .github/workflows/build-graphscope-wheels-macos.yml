@@ -97,7 +97,7 @@ jobs:
 
         # build graphscope client wheel
         cd ${GITHUB_WORKSPACE}/k8s/internal
-        make graphscope-client-py3-package
+        make graphscope-client-py3-package GRAPHSCOPE_HOME=/opt/graphscope
 
         # package
         cd ${GITHUB_WORKSPACE}

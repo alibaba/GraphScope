@@ -48,7 +48,7 @@ jobs:
         sudo -E -u runner make graphscope-py3-package GRAPHSCOPE_HOME=/opt/graphscope INSTALL_PREFIX=${GITHUB_WORKSPACE}/install
 
         # build client wheels
-        sudo -E -u runner make graphscope-client-py3-package
+        sudo -E -u runner make graphscope-client-py3-package GRAPHSCOPE_HOME=/opt/graphscope
 
         # package
         cd ${GITHUB_WORKSPACE}
