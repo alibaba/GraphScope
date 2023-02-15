@@ -1,0 +1,49 @@
+name: NetworkX Forward algorithm CI
+
+on:
+  workflow_dispatch:
+  schedule:
+    # The notifications for scheduled workflows are sent to the user who
+    # last modified the cron syntax in the workflow file.
+    # Trigger the workflow at 03:00(CST) every day.
+    - cron:  '00 19 * * *'
+
+jobs:
+  forward-algo-test:
+    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        shell: bash --noprofile --norc -eo pipefail {0}
+    container:
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.12.2
+      options:
+        --shm-size 4096m
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Build GAE and coordinator
+      run: |
+        pushd ${GITHUB_WORKSPACE}
+        install_prefix=/opt/graphscope
+        sudo mkdir -p ${install_prefix}
+        sudo make analytical-install BUILD_TEST=OFF NUMPROC=1 INSTALL_PREFIX=${install_prefix}
+        # also make coordinator and client for python test
+        make coordinator && make client
+        popd
+
+    - name: Run Forward algorithms test
+      env:
+        DEPLOYMENT: 'standalone'
+      run: |
+        cd ${GITHUB_WORKSPACE}/python
+        export GRAPHSCOPE_HOME=/opt/graphscope
+        python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
+          --cov-report=term -s -v -m "not slow" graphscope/nx/algorithms/tests/forward
+
+    - name: Upload Coverage
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./python/coverage.xml
+        fail_ci_if_error: true
