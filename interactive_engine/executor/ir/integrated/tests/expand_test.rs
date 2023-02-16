@@ -27,8 +27,8 @@ mod test {
     use graph_store::ldbc::LDBCVertexParser;
     use graph_store::prelude::DefaultId;
     use ir_common::expr_parse::str_to_expr_pb;
-    use ir_common::generated::algebra as pb;
-    use ir_common::generated::common as common_pb;
+    use ir_common::generated::physical as pb;
+    use ir_common::KeyId;
     use pegasus::api::{Map, Sink};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
@@ -42,28 +42,20 @@ mod test {
     use crate::common::test::*;
 
     // g.V()
-    fn source_gen(alias: Option<common_pb::NameOrId>) -> Box<dyn Iterator<Item = Record> + Send> {
+    fn source_gen(alias: Option<KeyId>) -> Box<dyn Iterator<Item = Record> + Send> {
         create_exp_store();
         let source_opr_pb = pb::Scan { scan_opt: 0, alias, params: None, idx_predicate: None };
-        let source = SourceOperator::new(
-            pb::logical_plan::operator::Opr::Scan(source_opr_pb),
-            1,
-            1,
-            Arc::new(SimplePartition { num_servers: 1 }),
-        )
-        .unwrap();
+        let source =
+            SourceOperator::new(source_opr_pb.into(), 1, 1, Arc::new(SimplePartition { num_servers: 1 }))
+                .unwrap();
         source.gen_source(0).unwrap()
     }
 
     fn source_gen_with_scan_opr(scan_opr_pb: pb::Scan) -> Box<dyn Iterator<Item = Record> + Send> {
         create_exp_store();
-        let source = SourceOperator::new(
-            pb::logical_plan::operator::Opr::Scan(scan_opr_pb),
-            1,
-            1,
-            Arc::new(SimplePartition { num_servers: 1 }),
-        )
-        .unwrap();
+        let source =
+            SourceOperator::new(scan_opr_pb.into(), 1, 1, Arc::new(SimplePartition { num_servers: 1 }))
+                .unwrap();
         source.gen_source(0).unwrap()
     }
 
@@ -82,36 +74,30 @@ mod test {
         result
     }
 
-    fn expand_degree_fused_test(expand: pb::EdgeExpand) -> ResultStream<Record> {
+    fn expand_degree_opt_test(expand: pb::EdgeExpand) -> ResultStream<Record> {
         let conf = JobConf::new("expand_degree_fused_test");
-        let mut fused = pb::FusedOperator { oprs: vec![] };
-        fused.oprs.push(
-            pb::Auxilia {
-                tag: None,
-                params: None,
-                alias: Some(common_pb::NameOrId { item: Some(common_pb::name_or_id::Item::Id(0)) }),
-                remove_tags: vec![],
-            }
-            .into(),
-        );
-        fused.oprs.push(expand.into());
-        fused.oprs.push(
-            pb::Project {
-                mappings: vec![pb::project::ExprAlias {
-                    expr: str_to_expr_pb("@0".to_string()).ok(),
-                    alias: None,
-                }],
-                is_append: true,
-            }
-            .into(),
-        );
+        let getv = pb::GetV { tag: None, opt: 4, params: None, alias: Some(TAG_A) };
+        let expand = expand.clone();
+        let project = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("@0".to_string()).ok(),
+                alias: None,
+            }],
+            is_append: true,
+        };
 
         let result = pegasus::run(conf, || {
-            let fused = fused.clone();
+            let getv = getv.clone();
+            let expand = expand.clone();
+            let project = project.clone();
             |input, output| {
                 let mut stream = input.input_from(source_gen(None))?;
-                let flat_map_func = fused.gen_flat_map().unwrap();
+                let filter_map_func = getv.gen_filter_map().unwrap();
+                stream = stream.filter_map(move |input| filter_map_func.exec(input))?;
+                let flat_map_func = expand.gen_flat_map().unwrap();
                 stream = stream.flat_map(move |input| flat_map_func.exec(input))?;
+                let filter_map_func = project.gen_filter_map().unwrap();
+                stream = stream.filter_map(move |input| filter_map_func.exec(input))?;
                 stream.sink_into(output)
             }
         })
@@ -120,14 +106,12 @@ mod test {
         result
     }
 
-    fn expand_test_with_source_tag(
-        source_tag: common_pb::NameOrId, expand: pb::EdgeExpand,
-    ) -> ResultStream<Record> {
+    fn expand_test_with_source_tag(source_tag: KeyId, expand: pb::EdgeExpand) -> ResultStream<Record> {
         let conf = JobConf::new("expand_test");
         let result = pegasus::run(conf, || {
             let source_tag = source_tag.clone();
             let expand = expand.clone();
-            |input, output| {
+            move |input, output| {
                 let mut stream = input.input_from(source_gen(Some(source_tag)))?;
                 let flatmap_func = expand.gen_flat_map().unwrap();
                 stream = stream.flat_map(move |input| flatmap_func.exec(input))?;
@@ -355,8 +339,7 @@ mod test {
             alias: None,
         };
         let vertex_query_param = query_params(vec![], vec![], str_to_expr_pb("@.id == 2".to_string()).ok());
-        let auxilia_opr_pb =
-            pb::Auxilia { tag: None, params: Some(vertex_query_param), alias: None, remove_tags: vec![] };
+        let auxilia_opr_pb = pb::GetV { tag: None, opt: 4, params: Some(vertex_query_param), alias: None };
 
         let conf = JobConf::new("expand_getv_test");
         let mut result = pegasus::run(conf, || {
@@ -614,7 +597,7 @@ mod test {
             expand_opt: 2,
             alias: Some(1.into()),
         };
-        let mut pegasus_result = expand_degree_fused_test(expand_opr_pb);
+        let mut pegasus_result = expand_degree_opt_test(expand_opr_pb);
         let mut results = vec![];
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
@@ -646,7 +629,7 @@ mod test {
             expand_opt: 2,
             alias: Some(1.into()),
         };
-        let mut pegasus_result = expand_degree_fused_test(expand_opr_pb);
+        let mut pegasus_result = expand_degree_opt_test(expand_opr_pb);
         let mut results = vec![];
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
@@ -678,7 +661,7 @@ mod test {
             expand_opt: 2,
             alias: Some(1.into()),
         };
-        let mut pegasus_result = expand_degree_fused_test(expand_opr_pb);
+        let mut pegasus_result = expand_degree_opt_test(expand_opr_pb);
         let mut results = vec![];
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);

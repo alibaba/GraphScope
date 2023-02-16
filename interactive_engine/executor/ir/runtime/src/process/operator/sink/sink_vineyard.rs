@@ -125,21 +125,13 @@ impl Accumulator<Record, Record> for GraphSinkEncoder {
 }
 
 pub struct SinkVineyardOp {
-    pub tags: Vec<common_pb::NameOrIdKey>,
+    pub tags: Vec<Option<KeyId>>,
     pub graph_name: String,
     pub graph_schema: Option<schema_pb::Schema>,
 }
 
 impl SinkGen for SinkVineyardOp {
     fn gen_sink(self) -> FnGenResult<Sinker> {
-        let mut sink_keys = Vec::with_capacity(self.tags.len());
-        for sink_key_pb in self.tags.into_iter() {
-            let sink_key = sink_key_pb
-                .key
-                .map(|tag| tag.try_into())
-                .transpose()?;
-            sink_keys.push(sink_key);
-        }
         if let Some(graph_schema) = self.graph_schema {
             let graph_writer = VineyardGraphWriter::new(
                 self.graph_name,
@@ -147,7 +139,7 @@ impl SinkGen for SinkVineyardOp {
                 pegasus::get_current_worker().index as i32,
             )?;
             let graph_sink_encoder =
-                GraphSinkEncoder { graph_writer: Arc::new(Mutex::new(graph_writer)), sink_keys };
+                GraphSinkEncoder { graph_writer: Arc::new(Mutex::new(graph_writer)), sink_keys: self.tags };
             if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
                 debug!("Runtime sink graph operator: {:?}", graph_sink_encoder,);
             }

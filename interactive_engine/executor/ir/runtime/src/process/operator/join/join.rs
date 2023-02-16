@@ -13,15 +13,15 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::join::JoinKind;
+use ir_common::generated::physical as pb;
 
 use crate::error::FnGenResult;
 use crate::process::functions::{JoinKeyGen, KeyFunction};
 use crate::process::operator::keyed::KeySelector;
 use crate::process::record::{Record, RecordKey};
 
-impl JoinKeyGen<Record, RecordKey, Record> for algebra_pb::Join {
+impl JoinKeyGen<Record, RecordKey, Record> for pb::Join {
     fn gen_left_kv_fn(&self) -> FnGenResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
         let left_kv_fn = KeySelector::with(self.left_keys.clone())?;
         if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
@@ -39,7 +39,7 @@ impl JoinKeyGen<Record, RecordKey, Record> for algebra_pb::Join {
     }
 
     fn get_join_kind(&self) -> JoinKind {
-        let join_kind = unsafe { ::std::mem::transmute(self.kind) };
+        let join_kind = unsafe { ::std::mem::transmute(self.join_kind) };
         if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
             debug!("Runtime join operator join_kind {:?}", join_kind);
         }
@@ -51,9 +51,9 @@ impl JoinKeyGen<Record, RecordKey, Record> for algebra_pb::Join {
 mod tests {
     use graph_proxy::apis::GraphElement;
     use graph_proxy::apis::{DynDetails, Vertex, ID};
-    use ir_common::generated::algebra as pb;
     use ir_common::generated::algebra::join::JoinKind;
     use ir_common::generated::common as common_pb;
+    use ir_common::generated::physical as pb;
     use pegasus::api::{Join, KeyBy, Map, PartitionByKey, Sink};
     use pegasus::JobConf;
 
@@ -86,7 +86,9 @@ mod tests {
                 let join_opr_pb = pb::Join {
                     left_keys: vec![common_pb::Variable::from("@.~id".to_string())],
                     right_keys: vec![common_pb::Variable::from("@.~id".to_string())],
-                    kind: join_kind,
+                    join_kind,
+                    left_plan: None,
+                    right_plan: None,
                 };
                 let left_key_selector = join_opr_pb.gen_left_kv_fn()?;
                 let right_key_selector = join_opr_pb.gen_right_kv_fn()?;

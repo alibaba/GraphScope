@@ -539,9 +539,11 @@ impl AsPhysical for LogicalPlan {
                     } else {
                         subplan.add_job_builder(&mut sub_bldr, plan_meta)?;
                         let plan = sub_bldr.take_plan();
-                        let join_kind =
-                            unsafe { std::mem::transmute::<i32, pb::join::JoinKind>(apply_opr.join_kind) };
-                        builder.apply(join_kind, plan, apply_opr.alias.clone());
+                        builder.apply(
+                            unsafe { std::mem::transmute(apply_opr.join_kind) },
+                            plan,
+                            apply_opr.alias.clone(),
+                        );
                     }
                 } else {
                     return Err(IrError::MissingData("Apply::subplan".to_string()));
@@ -584,10 +586,8 @@ impl AsPhysical for LogicalPlan {
                             let left_plan = plans.get(0).unwrap().clone();
                             let right_plan = plans.get(1).unwrap().clone();
 
-                            let join_kind =
-                                unsafe { std::mem::transmute::<i32, pb::join::JoinKind>(join_opr.kind) };
                             builder.join(
-                                join_kind,
+                                unsafe { std::mem::transmute(join_opr.kind) },
                                 left_plan,
                                 right_plan,
                                 join_opr.left_keys.clone(),
@@ -663,7 +663,7 @@ fn add_intersect_job_builder(
         let mut sub_bldr = JobBuilder::new(builder.conf.clone());
         for (idx, (_, opr)) in subplan.nodes.iter().enumerate() {
             if idx != len - 1 {
-                opr.add_job_builder(&mut sub_bldr, plan_meta)?;
+                opr.add_job_builder(builder, plan_meta)?;
             } else {
                 // the last node in subplan should be the one to intersect.
                 if let Some(Edge(edgexpd)) = opr.borrow().opr.opr.as_ref() {
@@ -1461,7 +1461,7 @@ mod test {
             .get_v(auxilia.clone());
         let apply_subplan = sub_builder.take_plan();
         expected_builder.apply(
-            pb::join::JoinKind::Semi, // 4
+            unsafe { std::mem::transmute(4) }, // SEMI
             apply_subplan,
             None,
         );
@@ -1640,7 +1640,7 @@ mod test {
         right_builder.edge_expand(expand_opr.clone());
         right_builder.edge_expand(expand_opr);
         expected_builder.join(
-            pb::join::JoinKind::Inner,
+            unsafe { std::mem::transmute(0) }, // INNER
             left_builder.take_plan(),
             right_builder.take_plan(),
             vec![],

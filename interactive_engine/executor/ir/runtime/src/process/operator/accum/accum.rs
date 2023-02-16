@@ -14,13 +14,13 @@
 //! limitations under the License.
 
 use std::collections::HashSet;
-use std::convert::{TryFrom, TryInto};
+use std::convert::TryFrom;
 use std::ops::Div;
 
 use dyn_type::{Object, Primitives};
 use ir_common::error::ParsePbError;
-use ir_common::generated::algebra as algebra_pb;
-use ir_common::generated::algebra::group_by::agg_func::Aggregate;
+use ir_common::generated::physical as pb;
+use ir_common::generated::physical::group_by::agg_func::Aggregate;
 use ir_common::KeyId;
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
@@ -165,12 +165,12 @@ impl Accumulator<DynEntry, DynEntry> for EntryAccumulator {
     }
 }
 
-impl AccumFactoryGen for algebra_pb::GroupBy {
+impl AccumFactoryGen for pb::GroupBy {
     fn gen_accum(self) -> FnGenResult<RecordAccumulator> {
         let mut accum_ops = Vec::with_capacity(self.functions.len());
         let multi_accum_flag = if self.functions.len() > 1 { true } else { false };
         for agg_func in self.functions {
-            let agg_kind: algebra_pb::group_by::agg_func::Aggregate =
+            let agg_kind: pb::group_by::agg_func::Aggregate =
                 unsafe { ::std::mem::transmute(agg_func.aggregate) };
             if agg_func.vars.len() > 1 {
                 // e.g., count_distinct((a,b));
@@ -186,11 +186,7 @@ impl AccumFactoryGen for algebra_pb::GroupBy {
                 .map(|v| TagKey::try_from(v.clone()))
                 .transpose()?
                 .unwrap_or(TagKey::default());
-            let alias = agg_func
-                .alias
-                .map(|name_or_id| name_or_id.try_into())
-                .transpose()?;
-            if multi_accum_flag && alias.is_none() {
+            if multi_accum_flag && agg_func.alias.is_none() {
                 Err(ParsePbError::from("accum value alias is missing in MultiAccum"))?
             }
             let entry_accumulator = match agg_kind {
@@ -207,7 +203,7 @@ impl AccumFactoryGen for algebra_pb::GroupBy {
                     EntryAccumulator::ToAvg(Sum { seed: None }, Count { value: 0, _ph: Default::default() })
                 }
             };
-            accum_ops.push((entry_accumulator, tag_key, alias));
+            accum_ops.push((entry_accumulator, tag_key, agg_func.alias));
         }
         if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
             debug!("Runtime accumulator operator: {:?}", accum_ops);
@@ -330,8 +326,8 @@ mod tests {
 
     use std::cmp::Ordering;
 
-    use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
+    use ir_common::generated::physical as pb;
     use pegasus::api::{Fold, Sink};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;

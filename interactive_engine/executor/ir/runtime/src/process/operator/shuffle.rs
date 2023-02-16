@@ -13,12 +13,10 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::convert::TryInto;
 use std::sync::Arc;
 
 use graph_proxy::apis::{GraphElement, Partitioner};
 use ir_common::error::ParsePbError;
-use ir_common::generated::common as common_pb;
 use ir_common::KeyId;
 use pegasus::api::function::{FnResult, RouteFunction};
 
@@ -34,12 +32,8 @@ pub struct RecordRouter {
 
 impl RecordRouter {
     pub fn new(
-        p: Arc<dyn Partitioner>, num_workers: usize, shuffle_key: common_pb::NameOrIdKey,
+        p: Arc<dyn Partitioner>, num_workers: usize, shuffle_key: Option<KeyId>,
     ) -> Result<Self, ParsePbError> {
-        let shuffle_key = shuffle_key
-            .key
-            .map(|e| e.try_into())
-            .transpose()?;
         if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
             debug!("Runtime shuffle number of worker {:?} and shuffle key {:?}", num_workers, shuffle_key);
         }
