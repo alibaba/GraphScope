@@ -6,26 +6,26 @@
 - 原始ID(OID)：原始数据集中的id，不同标签的顶点允许有相同的OID
 - 子图ID(FID)：子图的唯一编号
 - 分区器(Partitioner)：能够确定顶点oid到分区id（FID）的映射
+- 子图(Fragment): 通过切边得到的子图，存储了顶点、边、顶点数据、边数据等信息
 - 内部点(Inner vertex)：属于本Fragment的顶点
 - 外部点(Outer vertex)：不属于本Fragment的顶点
 - 本地ID(LID)，只在某个Fragment内部有意义
 - 全局ID(GID)：能够表示任意一个顶点，被Fragment共识
 - VertexMap: 用于存储GID <--> OID的映射关系
-- 子图(Fragment): 通过切边得到的子图，存储了顶点、边、顶点数据、边数据等信息
 
 GraphScope 的节点（vertex）存在以下编码方式：
-- GID编码：FID | VERTEX LABEL ID | OFFSET，其中VERTEX LABEL ID和OFFSET共同组成LID
-- OFFSET：某一类顶点在某个Fragment的顶点**序号**
-- LID编码：0填充 | VERTEX LABEL ID | OFFSET，**其中fid总是0**
+- GID编码：FID | VERTEX LABEL ID | OFFSET，其中 VERTEX LABEL ID 和 OFFSET 共同组成 LID
+- OFFSET：某一类顶点在某个 Fragment 的顶点**序号**
+- LID编码：0 填充 | VERTEX LABEL ID | OFFSET，**其中 fid 总是 0**
 
 ## 1. 载图
 
 按照执行流程编号，描述了载图的主要逻辑：
 ### 1.1 初始化partitoner
    分为HashPartitioner和SegmentedPartitoned, 初始化他们需要给出fragment的数量，SegmentedPartitioner还需给出全部的oid。
-### 1.2. 构建原始arrow table
+### 1.2 构建原始arrow table
 
-每个进程读取一部分v、e文件，得到多个vertex arrow table(vtable)和edge arrow table(etable)，其中vtable按照顶点标签(vertex label)分组，etable先按照边标签(edge label)分组，同一个边标签下面又按照src和dst的顶点标签分组
+每个进程读取一部分点、边文件，得到多个vertex arrow table(vtable)和edge arrow table(etable)，其中vtable按照顶点标签(vertex label)分组，etable先按照边标签(edge label)分组，同一个边标签下面又按照src和dst的顶点标签分组
 
 ```cpp
 // 原始的顶点表、边表，每个进程持有部分的数据
@@ -264,13 +264,14 @@ for (fid_t i = 0; i < fnum_; ++i) {
 	构建入边csr和出边同理。对于无向图，**出边和入边共用一个CSR。** 逻辑和有向图类似，但是要同时统计源顶点和目的顶点的度来构建row offset数组。访问每条边，使用row offset数组定位到源顶点的nbr填充入边的src lid和eid；同时还要使用offset数组定位到目的顶点的nbr填充dst lid和eid
       
 
-	- 封装
+	- 封装（Seal）
 	
    准备好顶点数量、CSR、ovgid和g2l_map后，将他们封装成各种VineyardObject。
 
 ### 1.6 Fragment构建
 根据Metadata从Vineyard查询和构建以下数据结构作为ArrowFragment的成员：
 也就是说，以下数据都是存储在vineyard中的
+
 ```cpp
 fid_t fid_, fnum_; // 当前fragment id，fragment总数
 bool directed_;    // 是否为有向图
@@ -288,7 +289,9 @@ std::vector<std::shared_ptr<arrow::Table>> edge_tables_; // 边属性，不包�
       ie_offsets_lists_, oe_offsets_lists_; // CSR结构的Row offset
 std::shared_ptr<vertex_map_t> vm_ptr_; // vertex map
 ```
+
 剩下的成员将根据以上信息来构建
+
 ```cpp
 std::vector<std::vector<const void*>> edge_tables_columns_; // 每一种边的属性列地址
 std::vector<const void**> flatten_edge_tables_columns_; // 同上
@@ -300,6 +303,7 @@ std::vector<std::vector<const int64_t*>> ie_offsets_ptr_lists_, oe_offsets_ptr_l
 std::vector<std::vector<std::vector<fid_t>>> idst_, odst_, iodst_;
 std::vector<std::vector<std::vector<fid_t*>>> idoffset_, odoffset_, iodoffset_;
 ```
+
 ## 2. 访问Fragment
 以下内容描述了访问顶点、边、顶点数据和边数据的API和实现
 ### 2.1 访问顶点
