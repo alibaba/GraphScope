@@ -1,28 +1,32 @@
-# 一、ArrowFragment
+# Introduction to ArrowFragment
 # 0. 术语
 
-标签(LABEL)：表示某一类顶点或者边
-属性(PROPERTY)：表示顶点或边所关联的数据
-原始ID(OID)：原始数据集中的id，不同标签的顶点允许有相同的OID
-子图ID(FID)：子图的唯一编号
-分区器(Partitioner)：能够确定顶点oid到分区id（FID）的映射
-内部点(Inner vertex)：属于本Fragment的顶点
-外部点(Outer vertex)：不属于本Fragment的顶点
-本地ID(LID)，只在某个Fragment内部有意义
-全局ID(GID)：能够表示任意一个顶点，被Fragment共识
-VertexMap: 用于存储GID <--> OID的映射关系
-子图(Fragment): 通过切边得到的子图，存储了顶点、边、顶点数据、边数据等信息
+- 标签(LABEL)：表示某一类顶点或者边
+- 属性(PROPERTY)：表示顶点或边所关联的数据
+- 原始ID(OID)：原始数据集中的id，不同标签的顶点允许有相同的OID
+- 子图ID(FID)：子图的唯一编号
+- 分区器(Partitioner)：能够确定顶点oid到分区id（FID）的映射
+- 内部点(Inner vertex)：属于本Fragment的顶点
+- 外部点(Outer vertex)：不属于本Fragment的顶点
+- 本地ID(LID)，只在某个Fragment内部有意义
+- 全局ID(GID)：能够表示任意一个顶点，被Fragment共识
+- VertexMap: 用于存储GID <--> OID的映射关系
+- 子图(Fragment): 通过切边得到的子图，存储了顶点、边、顶点数据、边数据等信息
 
-GID编码：FID   | VERTEX LABEL ID | OFFSET，其中VERTEX LABEL ID和OFFSET共同组成LID
-OFFSET：某一类顶点在某个Fragment的顶点**序号**
-LID编码：0填充 | VERTEX LABEL ID | OFFSET，**其中fid总是0**
+GraphScope 的节点（vertex）存在以下编码方式：
+- GID编码：FID | VERTEX LABEL ID | OFFSET，其中VERTEX LABEL ID和OFFSET共同组成LID
+- OFFSET：某一类顶点在某个Fragment的顶点**序号**
+- LID编码：0填充 | VERTEX LABEL ID | OFFSET，**其中fid总是0**
+
 ## 1. 载图
 
-按照执行流程编号，描述了载图的主要逻辑
+按照执行流程编号，描述了载图的主要逻辑：
 ### 1.1 初始化partitoner
    分为HashPartitioner和SegmentedPartitoned, 初始化他们需要给出fragment的数量，SegmentedPartitioner还需给出全部的oid。
 ### 1.2. 构建原始arrow table
-    每个进程读取一部分v、e文件，得到多个vertex arrow table(vtable)和edge arrow table(etable)，其中vtable按照顶点标签(vertex label)分组，etable先按照边标签(edge label)分组，同一个边标签下面又按照src和dst的顶点标签分组
+
+每个进程读取一部分v、e文件，得到多个vertex arrow table(vtable)和edge arrow table(etable)，其中vtable按照顶点标签(vertex label)分组，etable先按照边标签(edge label)分组，同一个边标签下面又按照src和dst的顶点标签分组
+
 ```cpp
 // 原始的顶点表、边表，每个进程持有部分的数据
 std::vector<std::shared_ptr<arrow::Table>> partial_v_tables;
@@ -34,14 +38,16 @@ partial_e_tables.size() == edge label num;
 partial_e_tables[vertex label id] <= vertex label num * vertex label num
 ```
 
-   vertex arrow table包含oid、属性
-   edge arrow table包括src和dst的oid、属性
+vertex arrow table包含oid、属性
+edge arrow table包括src和dst的oid、属性
 
 ### 1.3. Shuffle vtable
 访问vtable的oid列，根据oid查询partition id,将表中的记录分发给顶点的拥有者
+
 ### 1.4. 构建Vertex map(BasicArrowVertexMapBuilder)
 从shuffle后的vtable取出oid执行all gather操作，使得每个进程都能够获取的所有oid
 根据frag数量、vertex label数量和全部oid，每个进程构建vertex map
+
 ```cpp
 for (fid_t i = 0; i < fnum_; ++i) {
     for (label_id_t j = 0; j < label_num_; ++j) {
@@ -58,6 +64,7 @@ for (fid_t i = 0; i < fnum_; ++i) {
     }
 }
 ```
+
 ### 1.5. 构建Fragment准备
 #### 1.5.1. 处理edge table(BasicEVFragmentLoader)
 
@@ -66,189 +73,199 @@ for (fid_t i = 0; i < fnum_; ++i) {
 - 得到src和dst两个gid数组后，替换掉原etable的oid数组
 - **对etable执行shuffle**，将相应的行传输给正确的进程
 - 将shuffle过的vtable和etable送给BasicArrowFragmentBuilder构建CSR
+
 #### 1.5.2 FragmentBuilder数据初始化 (BasicArrowFragmentBuilder)
 
 - 处理顶点：
 
-1) 初始化id parser，初始化ivnum、ovnum和tvnum数组，按照vertex label分组
-2) 遍历每一种顶点，向vertex map查询本fragment的内部点数量，并设置对应的ivnum；将vertex table合并成一个chunk便于后续访问
-```cpp
-vid_parser_.Init(fnum_, vertex_label_num_);
+	- 初始化id parser，初始化ivnum、ovnum和tvnum数组，按照vertex label分组
+	- 遍历每一种顶点，向vertex map查询本fragment的内部点数量，并设置对应的ivnum；将vertex table合并成一个chunk便于后续访问
+	```cpp
+	vid_parser_.Init(fnum_, vertex_label_num_);
 
-vertex_tables_.resize(vertex_label_num_);
-ivnums_.resize(vertex_label_num_);
-ovnums_.resize(vertex_label_num_);
-tvnums_.resize(vertex_label_num_);
+	vertex_tables_.resize(vertex_label_num_);
+	ivnums_.resize(vertex_label_num_);
+	ovnums_.resize(vertex_label_num_);
+	tvnums_.resize(vertex_label_num_);
 
-for (size_t i = 0; i < vertex_tables.size(); ++i) {
-  vertex_tables[i]->CombineChunks(arrow::default_memory_pool(), &vertex_tables_[i]);
-  ivnums_[i] = vm_ptr_->GetInnerVertexSize(fid_, i);
-}
-```
+	for (size_t i = 0; i < vertex_tables.size(); ++i) {
+	  vertex_tables[i]->CombineChunks(arrow::default_memory_pool(), &vertex_tables_[i]);
+	  ivnums_[i] = vm_ptr_->GetInnerVertexSize(fid_, i);
+	}
+	```
 
-- 处理边：
+- 处理边包括以下5个步骤：
 
-      1) 遍历每一种边，通过src gid列和dst gid列查询出本fragment所有的外部点，并按照vertex label分组
-```cpp
-for (size_t i = 0; i < edge_tables.size(); ++i) {
-  // edge arrow table合并成一个chunk
-  edge_tables[i]->CombineChunks(arrow::default_memory_pool(), &edge_tables[i]);
-  // 找出本fragment全部外部点的gid
-  collect_outer_vertices(
-      std::dynamic_pointer_cast<
-          typename vineyard::ConvertToArrowType<vid_t>::ArrayType>(
-          edge_tables[i]->column(0)->chunk(0)));
-  collect_outer_vertices(
-      std::dynamic_pointer_cast<
-          typename vineyard::ConvertToArrowType<vid_t>::ArrayType>(
-          edge_tables[i]->column(1)->chunk(0)));
-}
-```
-      2) 根据外部点的gid，为每一种顶点构建gid到lid的映射与去重的gid数组（外部点的lid由label id和顶点序号组成，顶点序号从ivnum开始计数）；为每一种顶点填充ovnum和tvnum
-```cpp
-ovg2l_maps_.resize(vertex_label_num_);
-ovgid_lists_.resize(vertex_label_num_);
+ 	- 遍历每一种边，通过src gid列和dst gid列查询出本fragment所有的外部点，并按照vertex label分组
+ 	
+	```cpp
+	for (size_t i = 0; i < edge_tables.size(); ++i) {
+	  // edge arrow table合并成一个chunk
+	  edge_tables[i]->CombineChunks(arrow::default_memory_pool(), &edge_tables[i]);
+	  // 找出本fragment全部外部点的gid
+	  collect_outer_vertices(
+	      std::dynamic_pointer_cast<
+		  typename vineyard::ConvertToArrowType<vid_t>::ArrayType>(
+		  edge_tables[i]->column(0)->chunk(0)));
+	  collect_outer_vertices(
+	      std::dynamic_pointer_cast<
+		  typename vineyard::ConvertToArrowType<vid_t>::ArrayType>(
+		  edge_tables[i]->column(1)->chunk(0)));
+	}
+	```
 
-for (label_id_t i = 0; i < vertex_label_num_; ++i) {
-    auto& cur_list = collected_ovgids_[i];
-    // 排序gid
-    std::sort(cur_list.begin(), cur_list.end());
+	- 根据外部点的gid，为每一种顶点构建gid到lid的映射与去重的gid数组（外部点的lid由label id和顶点序号组成，顶点序号从ivnum开始计数）；为每一种顶点填充ovnum和tvnum
+		
+	
+	```cpp
+	ovg2l_maps_.resize(vertex_label_num_);
+	ovgid_lists_.resize(vertex_label_num_);
 
-    auto& cur_map = ovg2l_maps_[i];
-    typename ConvertToArrowType<vid_t>::BuilderType vec_builder;
+	for (label_id_t i = 0; i < vertex_label_num_; ++i) {
+	    auto& cur_list = collected_ovgids_[i];
+	    // 排序gid
+	    std::sort(cur_list.begin(), cur_list.end());
 
-    // 生成外部点的lid，其中fid为0，offset从ivnum开始编号
-    vid_t cur_id = vid_parser_.GenerateId(0, i, ivnums_[i]);
-    // 处理第一个元素
-    if (!cur_list.empty()) {
-        cur_map.emplace(cur_list[0], cur_id);
-        vec_builder.Append(cur_list[0]);
-        ++cur_id;
-    }
+	    auto& cur_map = ovg2l_maps_[i];
+	    typename ConvertToArrowType<vid_t>::BuilderType vec_builder;
 
-    size_t cur_list_length = cur_list.size();
-    for (size_t k = 1; k < cur_list_length; ++k) {
-        // 找到不重复的两个gid
-        if (cur_list[k] != cur_list[k - 1]) {
-            cur_map.emplace(cur_list[k], cur_id);
-            vec_builder.Append(cur_list[k]);
-            ++cur_id;
-        }
-    }
+	    // 生成外部点的lid，其中fid为0，offset从ivnum开始编号
+	    vid_t cur_id = vid_parser_.GenerateId(0, i, ivnums_[i]);
+	    // 处理第一个元素
+	    if (!cur_list.empty()) {
+		cur_map.emplace(cur_list[0], cur_id);
+		vec_builder.Append(cur_list[0]);
+		++cur_id;
+	    }
 
-	vec_builder.Finish(&ovgid_lists_[i]);
+	    size_t cur_list_length = cur_list.size();
+	    for (size_t k = 1; k < cur_list_length; ++k) {
+		// 找到不重复的两个gid
+		if (cur_list[k] != cur_list[k - 1]) {
+		    cur_map.emplace(cur_list[k], cur_id);
+		    vec_builder.Append(cur_list[k]);
+		    ++cur_id;
+		}
+	    }
 
-    ovnums_[i] = ovgid_lists_[i]->length();
-    tvnums_[i] = ivnums_[i] + ovnums_[i];
-}
-```
-      3) 根据上一步构成的gid到lid的映射，将src和dst的gid都转换成lid。删除edge table的src列和dst列
-```cpp
-// gid到lid转换函数
-std::shared_ptr<arrow::Array> generate_local_id_list(std::shared_ptr<arrow::Array> gid_list) {
-    std::shared_ptr<arrow::Array> lid_list;
-    for (int64_t i = 0; i < length; ++i) {
-        vid_t gid = vec[i];
-        if (vid_parser_.GetFid(gid) == fid_) {
-            // 生成内部点lid
-            builder.Append(vid_parser_.GenerateId(
-                0, vid_parser_.GetLabelId(gid), vid_parser_.GetOffset(gid)));
-        } else {
-            // 查询g2l map，通过gid找到外部点lid
-            builder.Append(ovg2l_maps_[vid_parser_.GetLabelId(gid)].at(gid));
-        }
-    }
-    builder.Finish(&lid_list);
-    return lid_list;
-}
+		vec_builder.Finish(&ovgid_lists_[i]);
 
-for (size_t i = 0; i < edge_tables.size(); ++i) {
-    // 根据src和dst列的gid生成lid
-    edge_src_[i] = generate_local_id_list(edge_tables[i]->column(0)->chunk(0));
-    edge_dst_[i] = generate_local_id_list(edge_tables[i]->column(1)->chunk(0));
-    // 删除edge table的src列和gid列，只保留属性
-    std::shared_ptr<arrow::Table> tmp_table0;
-    edge_tables[i]->RemoveColumn(0, &tmp_table0));
-    tmp_table0->RemoveColumn(0, &edge_tables_[i]);
-}
-```
-  4) 构建CSR
-      对于有向图，构建出边和入边两个CSR。构建出边csr：
-          统计每种源顶点的出度，构建row offset数组；访问每条边，使用row offset数组定位到目的顶点nbr的地址，填充dst lid和eid到nbr
-          按照目的顶点的lid，将每一个源顶点的目的顶点排序
-```cpp
-generate_directed_csr(
-      std::shared_ptr<vid_array_t> src_list,
-      std::shared_ptr<vid_array_t> dst_list,
-      std::vector<std::shared_ptr<arrow::FixedSizeBinaryArray>>& edges,
-      std::vector<std::shared_ptr<arrow::Int64Array>>& edge_offsets) {
-    
-    std::vector<std::vector<int>> degree(vertex_label_num_);
-    std::vector<int64_t> actual_edge_num(vertex_label_num_, 0);
-    for (label_id_t v_label = 0; v_label != vertex_label_num_; ++v_label) {
-      degree[v_label].resize(tvnums_[v_label], 0);
-    }
-    auto edge_num = src_list->length();
-    auto* src_list_ptr = src_list->raw_values();
-    auto* dst_list_ptr = dst_list->raw_values();
-	// 计算源顶点的度
-    for (int64_t i = 0; i < edge_num; ++i) {
-      vid_t src_id = src_list_ptr[i];
-      ++degree[vid_parser_.GetLabelId(src_id)][vid_parser_.GetOffset(src_id)];
-    }
-    // 为每一种顶点构建row offset数组
-    std::vector<std::vector<int64_t>> offsets(vertex_label_num_);
-    
-    for (label_id_t v_label = 0; v_label != vertex_label_num_; ++v_label) {
-      auto tvnum = tvnums_[v_label];
-      auto& offset_vec = offsets[v_label];
-      auto& degree_vec = degree[v_label];
-      arrow::Int64Builder builder;
+	    ovnums_[i] = ovgid_lists_[i]->length();
+	    tvnums_[i] = ivnums_[i] + ovnums_[i];
+	}
+	```
+	
+	- 根据上一步构成的gid到lid的映射，将src和dst的gid都转换成lid。删除edge table的src列和dst列
+	      
+	```cpp
+	// gid到lid转换函数
+	std::shared_ptr<arrow::Array> generate_local_id_list(std::shared_ptr<arrow::Array> gid_list) {
+	    std::shared_ptr<arrow::Array> lid_list;
+	    for (int64_t i = 0; i < length; ++i) {
+		vid_t gid = vec[i];
+		if (vid_parser_.GetFid(gid) == fid_) {
+		    // 生成内部点lid
+		    builder.Append(vid_parser_.GenerateId(
+			0, vid_parser_.GetLabelId(gid), vid_parser_.GetOffset(gid)));
+		} else {
+		    // 查询g2l map，通过gid找到外部点lid
+		    builder.Append(ovg2l_maps_[vid_parser_.GetLabelId(gid)].at(gid));
+		}
+	    }
+	    builder.Finish(&lid_list);
+	    return lid_list;
+	}
 
-      offset_vec.resize(tvnum + 1);
-      offset_vec[0] = 0;
+	for (size_t i = 0; i < edge_tables.size(); ++i) {
+	    // 根据src和dst列的gid生成lid
+	    edge_src_[i] = generate_local_id_list(edge_tables[i]->column(0)->chunk(0));
+	    edge_dst_[i] = generate_local_id_list(edge_tables[i]->column(1)->chunk(0));
+	    // 删除edge table的src列和gid列，只保留属性
+	    std::shared_ptr<arrow::Table> tmp_table0;
+	    edge_tables[i]->RemoveColumn(0, &tmp_table0));
+	    tmp_table0->RemoveColumn(0, &edge_tables_[i]);
+	}
+	```
+	- 构建CSR
+	
+      	对于有向图，构建出边和入边两个CSR。首先构建出边csr：统计每种源顶点的出度，构建row offset数组；访问每条边，使用row offset数组定位到目的顶点nbr的地址，填充dst lid和eid到nbr；按照目的顶点的lid，将每一个源顶点的目的顶点排序
+	  
+	```cpp
+	generate_directed_csr(
+	      std::shared_ptr<vid_array_t> src_list,
+	      std::shared_ptr<vid_array_t> dst_list,
+	      std::vector<std::shared_ptr<arrow::FixedSizeBinaryArray>>& edges,
+	      std::vector<std::shared_ptr<arrow::Int64Array>>& edge_offsets) {
 
-      for (vid_t i = 0; i < tvnum; ++i) {
-        offset_vec[i + 1] = offset_vec[i] + degree_vec[i];
-      }
-    }
-    
-    std::vector<vineyard::PodArrayBuilder<nbr_unit_t>> edge_builders(vertex_label_num_);
-    
-    for (int64_t i = 0; i < edge_num; ++i) {
-        vid_t src_id = src_list_ptr[i];
-        label_id_t v_label = vid_parser_.GetLabelId(src_id);
-        int64_t v_offset = vid_parser_.GetOffset(src_id);
-        // 获取目的顶点指针
-        nbr_unit_t* ptr =
-            edge_builders[v_label].MutablePointer(offsets[v_label][v_offset]);
-        // 填充目的顶点lid、eid，其中eid用于之后获取边上的属性
-        ptr->vid = dst_list->Value(i);
-        ptr->eid = static_cast<eid_t>(i);
-        // 更新offset，指向源顶点的下一条出边
-        ++offsets[v_label][v_offset];
-    }
-    
-    // 对临接点按照lid排序
-    for (label_id_t v_label = 0; v_label != vertex_label_num_; ++v_label) {
-      auto& builder = edge_builders[v_label];
-      auto tvnum = tvnums_[v_label];
-      const int64_t* offsets_ptr = edge_offsets[v_label]->raw_values();
-            
-      for (vid_t i = 0; i < tvnum; ++i) {
-          nbr_unit_t* begin = builder.MutablePointer(offsets_ptr[i]);
-          nbr_unit_t* end = builder.MutablePointer(offsets_ptr[i + 1]);
-          std::sort(begin, end,
-                    [](const nbr_unit_t& lhs, const nbr_unit_t& rhs) {
-                      return lhs.vid < rhs.vid;
-                    });
-        }
-    }
-}
-```
-      构建入边csr和出边同理。对于无向图，**出边和入边共用一个CSR。**逻辑和有向图类似，但是要同时统计源顶点和目的顶点的度来构建row offset数组。访问每条边，使用row offset数组定位到源顶点的nbr填充入边的src lid和eid；同时还要使用offset数组定位到目的顶点的nbr填充dst lid和eid
+	    std::vector<std::vector<int>> degree(vertex_label_num_);
+	    std::vector<int64_t> actual_edge_num(vertex_label_num_, 0);
+	    for (label_id_t v_label = 0; v_label != vertex_label_num_; ++v_label) {
+	      degree[v_label].resize(tvnums_[v_label], 0);
+	    }
+	    auto edge_num = src_list->length();
+	    auto* src_list_ptr = src_list->raw_values();
+	    auto* dst_list_ptr = dst_list->raw_values();
+		// 计算源顶点的度
+	    for (int64_t i = 0; i < edge_num; ++i) {
+	      vid_t src_id = src_list_ptr[i];
+	      ++degree[vid_parser_.GetLabelId(src_id)][vid_parser_.GetOffset(src_id)];
+	    }
+	    // 为每一种顶点构建row offset数组
+	    std::vector<std::vector<int64_t>> offsets(vertex_label_num_);
 
-5) 封装
+	    for (label_id_t v_label = 0; v_label != vertex_label_num_; ++v_label) {
+	      auto tvnum = tvnums_[v_label];
+	      auto& offset_vec = offsets[v_label];
+	      auto& degree_vec = degree[v_label];
+	      arrow::Int64Builder builder;
+
+	      offset_vec.resize(tvnum + 1);
+	      offset_vec[0] = 0;
+
+	      for (vid_t i = 0; i < tvnum; ++i) {
+		offset_vec[i + 1] = offset_vec[i] + degree_vec[i];
+	      }
+	    }
+
+	    std::vector<vineyard::PodArrayBuilder<nbr_unit_t>> edge_builders(vertex_label_num_);
+
+	    for (int64_t i = 0; i < edge_num; ++i) {
+		vid_t src_id = src_list_ptr[i];
+		label_id_t v_label = vid_parser_.GetLabelId(src_id);
+		int64_t v_offset = vid_parser_.GetOffset(src_id);
+		// 获取目的顶点指针
+		nbr_unit_t* ptr =
+		    edge_builders[v_label].MutablePointer(offsets[v_label][v_offset]);
+		// 填充目的顶点lid、eid，其中eid用于之后获取边上的属性
+		ptr->vid = dst_list->Value(i);
+		ptr->eid = static_cast<eid_t>(i);
+		// 更新offset，指向源顶点的下一条出边
+		++offsets[v_label][v_offset];
+	    }
+
+	    // 对临接点按照lid排序
+	    for (label_id_t v_label = 0; v_label != vertex_label_num_; ++v_label) {
+	      auto& builder = edge_builders[v_label];
+	      auto tvnum = tvnums_[v_label];
+	      const int64_t* offsets_ptr = edge_offsets[v_label]->raw_values();
+
+	      for (vid_t i = 0; i < tvnum; ++i) {
+		  nbr_unit_t* begin = builder.MutablePointer(offsets_ptr[i]);
+		  nbr_unit_t* end = builder.MutablePointer(offsets_ptr[i + 1]);
+		  std::sort(begin, end,
+			    [](const nbr_unit_t& lhs, const nbr_unit_t& rhs) {
+			      return lhs.vid < rhs.vid;
+			    });
+		}
+	    }
+	}
+	```
+	
+	构建入边csr和出边同理。对于无向图，**出边和入边共用一个CSR。** 逻辑和有向图类似，但是要同时统计源顶点和目的顶点的度来构建row offset数组。访问每条边，使用row offset数组定位到源顶点的nbr填充入边的src lid和eid；同时还要使用offset数组定位到目的顶点的nbr填充dst lid和eid
+      
+
+	- 封装
+	
    准备好顶点数量、CSR、ovgid和g2l_map后，将他们封装成各种VineyardObject。
 
 ### 1.6 Fragment构建
@@ -284,7 +301,7 @@ std::vector<std::vector<std::vector<fid_t>>> idst_, odst_, iodst_;
 std::vector<std::vector<std::vector<fid_t*>>> idoffset_, odoffset_, iodoffset_;
 ```
 ## 2. 访问Fragment
-描述了访问顶点、边、顶点数据和边数据的API和实现
+以下内容描述了访问顶点、边、顶点数据和边数据的API和实现
 ### 2.1 访问顶点
 #### 2.1.1 访问内部点
 内部点范围由起始lid和终止lid构成，lid的编码包含了顶点label id和顶点序号。内部点的顶点序号范围为[0, ivnum)；外部点序号范围为[ivnum, tvnum)；全部顶点序号为[0, tvnum)。
@@ -352,9 +369,10 @@ adj_list_t GetIncomingAdjList(const vertex_t& v, label_id_t e_label) const {
 }
 ```
 #### 2.2.3 访问边上的数据
-因为在AdjList中已经包含了出边属性表的起始地址，每条出边还包含了边id（对应到行号），因此再给出属性的列号就能够去得到具体的数据。
+
+因为在AdjList中已经包含了出边属性表的起始地址，每条出边还包含了边id（对应到行号），因此再给出属性的列号就能够去得到具体的数据。例如：
+
 ```cpp
-例如：
 // sssp，获取edge weight
 for (label_id_t j = 0; j < e_label_num; ++j) {
       auto es = frag.GetOutgoingAdjList(source, j);
