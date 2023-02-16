@@ -566,12 +566,16 @@ public class GraphBuilder extends RelBuilder {
         return groupKey_(ImmutableList.copyOf(variables), ImmutableList.of());
     }
 
+    public GroupKey groupKey(List<RexNode> variables, List<@Nullable String> aliases) {
+        return groupKey_(variables, aliases);
+    }
+
     /**
      * @param variables keys to group by, complex expressions (i.e. "a.age + 1") should be projected in advance
      * @param aliases
      * @return
      */
-    public GroupKey groupKey_(List<RexNode> variables, List<@Nullable String> aliases) {
+    private GroupKey groupKey_(List<RexNode> variables, List<@Nullable String> aliases) {
         return new GraphGroupKeys(ImmutableList.copyOf(variables), ImmutableList.copyOf(aliases));
     }
 

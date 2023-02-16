@@ -95,11 +95,22 @@ public class ExpressionTest {
 
     // a.age == 10
     @Test
-    public void equal_test() {
+    public void equal_1_test() {
         RexNode var = builder.source(mockSourceConfig("a")).variable("a", "age");
         RexNode equal = builder.call(GraphStdOperatorTable.EQUALS, var, builder.literal(10));
         Assert.assertEquals(equal.getType().getSqlTypeName(), SqlTypeName.BOOLEAN);
         Assert.assertEquals("=(a.age, 10)", equal.toString());
+    }
+
+    // a.age == 'X'
+    // Integer is comparable with String in Calcite standard implementation
+    // todo: maybe we need rewrite the implementation to add more constraints
+    @Test
+    public void equal_2_test() {
+        RexNode var = builder.source(mockSourceConfig("a")).variable("a", "age");
+        RexNode equal = builder.call(GraphStdOperatorTable.EQUALS, var, builder.literal("X"));
+        Assert.assertEquals(equal.getType().getSqlTypeName(), SqlTypeName.BOOLEAN);
+        Assert.assertEquals("=(a.age, 'X')", equal.toString());
     }
 
     // a.age + 10 > 30
