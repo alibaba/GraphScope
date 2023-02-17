@@ -136,6 +136,31 @@ public class ExpressionTest {
         Assert.assertEquals("AND(>(a.age, 10), =(a.name, 'x'))", node.toString());
     }
 
+    @Test
+    public void mod_test() {
+        RexNode var = builder.source(mockSourceConfig("a")).variable("a", "age");
+        RexNode node = builder.call(GraphStdOperatorTable.MOD, var, builder.literal(10));
+        Assert.assertEquals(node.getType().getSqlTypeName(), SqlTypeName.INTEGER);
+        Assert.assertEquals("MOD(a.age, 10)", node.toString());
+    }
+
+    @Test
+    public void power_test() {
+        RexNode var = builder.source(mockSourceConfig("a")).variable("a", "age");
+        RexNode node = builder.call(GraphStdOperatorTable.POWER, var, builder.literal(2));
+        // return type of power is double for the snd argument can be negative, i.e. 2^(-3)
+        Assert.assertEquals(node.getType().getSqlTypeName(), SqlTypeName.DOUBLE);
+        Assert.assertEquals("POWER(a.age, 2)", node.toString());
+    }
+
+    @Test
+    public void unary_minus_test() {
+        RexNode var = builder.source(mockSourceConfig("a")).variable("a", "age");
+        RexNode node = builder.call(GraphStdOperatorTable.UNARY_MINUS, var);
+        Assert.assertEquals(node.getType().getSqlTypeName(), SqlTypeName.INTEGER);
+        Assert.assertEquals("-(a.age)", node.toString());
+    }
+
     private SourceConfig mockSourceConfig(String alias) {
         return new SourceConfig(ScanOpt.Vertex, new LabelConfig(false).addLabel("person"), alias);
     }

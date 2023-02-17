@@ -416,7 +416,9 @@ public class GraphBuilder extends RelBuilder {
                 || sqlKind.belongsTo(Static.BINARY_COMPARISON)
                 || sqlKind == SqlKind.AND
                 || sqlKind == SqlKind.OR
-                || sqlKind == SqlKind.DESCENDING;
+                || sqlKind == SqlKind.DESCENDING
+                || (sqlKind == SqlKind.OTHER_FUNCTION && operator.getName().equals("POWER"))
+                || (sqlKind == SqlKind.MINUS_PREFIX);
     }
 
     @Override
