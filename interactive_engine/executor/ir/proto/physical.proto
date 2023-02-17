@@ -1,0 +1,297 @@
+/**
+ * Copyright 2020 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+syntax = "proto3";
+package physical;
+option java_package = "com.alibaba.graphscope.gaia.proto";
+option java_outer_classname = "GraphAlgebraPhysical";
+
+import "common.proto";
+import "expr.proto";
+import "schema.proto";
+import "type.proto";
+import "algebra.proto";
+import "google/protobuf/wrappers.proto";
+
+// To project a relation on certain attributes or further their properties
+message Project {
+  message ExprAlias {
+    // The expression to be aliased
+    common.Expression expr = 1;
+    // The alias that is either given by the query or by the system
+    google.protobuf.Int32Value alias = 2;
+  }
+  // A list of [expression -> alias] to be projected from the graph relation.
+  // e.g., project_{a.birthday / 100 % 100 as birth_month }
+  repeated ExprAlias mappings = 1;
+  // An indicator to tell the runtime whether the projected value is appending to or replacing
+  // existing relation.
+  bool is_append = 2;
+}
+
+
+message GroupBy {
+  // To define the function to be applied on each group after performing grouping. For example,
+  // GROUPBY({a, b}, COUNT_DISTINCT(c, d) as e), one shall count distinct present of the pairs
+  // (c, d), and alias the count as e.
+  message AggFunc {
+    enum Aggregate {
+      SUM = 0;
+      MIN = 1;
+      MAX = 2;
+      COUNT = 3;
+      COUNT_DISTINCT = 4;
+      TO_LIST = 5;
+      TO_SET = 6;
+      AVG = 7;
+    }
+
+    // The variables to apply this aggregation
+    repeated common.Variable vars = 1;
+    // The aggregate function
+    Aggregate aggregate = 2;
+    // The alias for the aggregated value
+    google.protobuf.Int32Value alias = 3;
+  }
+  message KeyAlias {
+    // The key to perform grouping
+    common.Variable key = 1;
+    // The alias for the key
+    google.protobuf.Int32Value alias = 2;
+  }
+  // A collection of key-alias mappings
+  repeated KeyAlias mappings = 1;
+  // The grouping functions
+  repeated AggFunc functions = 2;
+}
+
+message Unfold {
+  // The tag of a graph relation that **must** refer to a data of collection type
+  google.protobuf.Int32Value tag = 1;
+  // The alias tag for the elements that are unfolded from the collection
+  google.protobuf.Int32Value alias = 2;
+}
+
+message Union {
+  repeated PhysicalPlan sub_plans = 1;
+}
+
+message Intersect {
+  repeated PhysicalPlan sub_plans = 1;
+  int32 key = 2;
+}
+
+message Join {
+  enum JoinKind {
+    // Inner join
+    INNER = 0;
+    // Left outer join
+    LEFT_OUTER = 1;
+    // Right outer join
+    RIGHT_OUTER = 2;
+    // Full outer join
+    FULL_OUTER = 3;
+    // Left semi-join, right alternative can be naturally adapted
+    SEMI = 4;
+    // Left anti-join, right alternative can be naturally adapted
+    ANTI = 5;
+    // aka. Cartesian product
+    TIMES = 6;
+  }
+  // The key to perferm Join (on results output by left_plan)
+  repeated common.Variable left_keys = 1;
+  // The key to perferm Join (on results output by right_plan)
+  repeated common.Variable right_keys = 2;
+  JoinKind join_kind = 3;
+  PhysicalPlan left_plan = 4;
+  PhysicalPlan right_plan = 5;
+}
+
+message Apply {
+  // Define how to join the result of the subtask back to the original relation
+  Join.JoinKind join_kind = 1;
+  // The variables to perform grouping, or segmenting.
+  // If not specified, it is an Apply; otherwise, it is a SegmentApply
+  repeated common.Variable keys = 2;
+  // The subtask will be perform on certain tags as keys of the input relation
+  PhysicalPlan sub_plan = 3;
+  // Define the alias of output from `Apply`. Optional Field.
+  google.protobuf.Int32Value alias = 4;
+}
+
+// Scan is an operator that transforms the source data format (defined by the database)
+// into internal data format (defined/used by runtime)
+message Scan {
+  enum ScanOpt {
+    // Scanning the vertices
+    VERTEX = 0;
+    // Scanning the edges
+    EDGE = 1;
+    // Scanning a relational table
+    TABLE = 2;
+  }
+  ScanOpt scan_opt = 1;
+  // The alias of the item if it is a vertex or edge
+  google.protobuf.Int32Value alias = 2;
+  // The required parameters for the scan
+  algebra.QueryParams params = 3;
+  // The optional filtering predicate for the field that have been indexed
+  algebra.IndexPredicate idx_predicate = 4;
+}
+
+// It is typical to use the operator when:
+// 1. The input entry is an edge entry, and to obtain some properties (or filter) on the adjacent vertex of the input edge
+// 2. The input entry is a vertex entry, and directly obtain some properties (or filter) on the input vertex
+message GetV {
+  enum VOpt {
+    // The case when getting the start vertex of the edge
+    Start = 0;
+    // The case when getting the end vertex of the edge/path
+    End = 1;
+    // The case when getting the other vertex of the edge. We are calibrating to Gremlin's bothE.otherV semantics
+    Other = 2;
+    // The case when getting both vertices of the edge
+    Both = 3;
+    // The case when tag refers to vertices
+    Itself = 4;
+  }
+  // The tag that refers to the edge/path where the end vertex will be retrieved
+  google.protobuf.Int32Value tag = 1;
+  // Determine what vertex to get from the tagged object
+  VOpt opt = 2;
+  // The query parameters of getting vertices
+  algebra.QueryParams params = 3;
+  // The alias of this vertex
+  google.protobuf.Int32Value alias = 4;
+}
+
+message EdgeExpand {
+  enum Direction {
+    OUT = 0;
+    IN = 1;
+    BOTH = 2;
+  }
+  enum ExpandOpt {
+    Vertex = 0;
+    Edge = 1;
+    Degree = 2;
+  }
+  // The tag that refers to the starting vertex
+  google.protobuf.Int32Value v_tag = 1;
+  // The direction of the expanded edge
+  Direction direction = 2;
+  // The query parameters define the condition that the edge/end vertex must satisfy.
+  // Note that whether the query parameters apply to the edge or end vertex depends on
+  // the `is_edge` indicator, with one exception that the `tables` parameter in `EdgeExpand`
+  // **always** applies to the edge for now (may be fixed later) .
+  algebra.QueryParams params = 3;
+  // An optional alias for the object of the expansion
+  google.protobuf.Int32Value alias = 4;
+  // Expand option, i.e., expand vertices/edges/degree.
+  ExpandOpt expand_opt = 5;
+}
+
+message PathExpand {
+  enum PathOpt {
+    // an arbitrary path, in which both vertex/edge may duplicate
+    Arbitrary = 0;
+    // a path without vertex duplications
+    Simple = 1;
+  }
+  // Define what result is required for this path. We currently support `EndV` and `AllV`, while an option to
+  // include all edges and vertices may be needed in the future.
+  enum ResultOpt {
+    // only end vertex is required for this expansion
+    EndV = 0;
+    // all vertices of this path are required for this expansion.
+    AllV = 1;
+  }
+  // A path expansion has a base of edge expansion
+  EdgeExpand base = 1;
+  // The tag that refers to the starting vertex
+  google.protobuf.Int32Value start_tag = 2;
+  // An optional alias for the object of the expansion
+  google.protobuf.Int32Value alias = 3;
+  // The range that defines the minimum and maximum number of hops of the path expansion.
+  // This is optional, if not set, the minimum number is 1, and the maximum is INT_MAX
+  algebra.Range hop_range = 4;
+  // Path option, including to expand an arbitrary path or a simple path
+  PathOpt path_opt = 5;
+  // Result option, including to take end vertex (EndV), or whole path (AllV), for this expansion
+  ResultOpt result_opt = 6;
+}
+
+message Sink {
+  message OptTag {
+     google.protobuf.Int32Value tag = 1;
+  }
+  // Define the tags of columns to sink
+  repeated OptTag tags = 1;
+  // Define the target of sink, e.g., to Client as default, to Graph such as Vineyard etc.
+  algebra.Sink.SinkTarget sink_target = 2;
+}
+
+message Repartition {
+  message Shuffle {
+    google.protobuf.Int32Value shuffle_key = 1;
+  }
+  message Broadcast {}
+  oneof Strategy {
+    Shuffle to_another  = 1;
+    Broadcast to_others  = 2;
+  }
+}
+
+// A dummy node to delegate a source opr for multiple scan cases.
+message RootScan {}
+
+message PhysicalOpr {
+  message Operator {
+    oneof op_kind {
+      Project project = 1;
+      algebra.Select select = 2;
+      GroupBy group_by = 3;
+      algebra.OrderBy order_by = 4;
+      algebra.Dedup dedup = 5;
+      Unfold unfold = 6;
+      algebra.Limit limit = 7;
+      Scan scan = 8;
+      Sink sink = 9;
+      Apply apply = 10;
+      Join join = 11;
+      Union union = 12;
+      Intersect intersect = 13;
+      Repartition repartition = 14;
+      RootScan root = 16;
+      // Saving the room for relational operators
+      GetV vertex = 30;
+      EdgeExpand edge = 31;
+      PathExpand path = 32;
+    }
+  }
+  message MetaData {
+    common.IrDataType type = 1;
+    int32 alias = 2;
+  }
+  // The node's operator
+  Operator opr = 1;
+  // The meta data of outputs of operator
+  repeated MetaData op_meta = 2;
+}
+
+message PhysicalPlan {
+  repeated PhysicalOpr plan = 1;
+}

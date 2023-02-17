@@ -755,36 +755,10 @@ def parse_sys_args():
         help="The port that etcd server will beind to for accepting peer connections. Defaults to 2380.",
     )
     parser.add_argument(
-        "--k8s_with_analytical",
-        type=str2bool,
-        nargs="?",
-        const=True,
-        default=True,
-        help="Enable analytical engine or not.",
-    )
-    parser.add_argument(
-        "--k8s_with_analytical_java",
-        type=str2bool,
-        nargs="?",
-        const=True,
-        default=True,
-        help="Enable analytical engine with java or not.",
-    )
-    parser.add_argument(
-        "--k8s_with_interactive",
-        type=str2bool,
-        nargs="?",
-        const=True,
-        default=True,
-        help="Enable interactive engine or not.",
-    )
-    parser.add_argument(
-        "--k8s_with_learning",
-        type=str2bool,
-        nargs="?",
-        const=True,
-        default=True,
-        help="Enable learning engine or not.",
+        "--k8s_enabled_engines",
+        type=str,
+        default=None,
+        help="A set of engines to enable",
     )
     parser.add_argument(
         "--k8s_with_mars",
@@ -923,10 +897,7 @@ def get_launcher(args):
             volumes=args.k8s_volumes,
             waiting_for_delete=args.waiting_for_delete,
             with_mars=args.k8s_with_mars,
-            with_analytical=args.k8s_with_analytical,
-            with_analytical_java=args.k8s_with_analytical_java,
-            with_interactive=args.k8s_with_interactive,
-            with_learning=args.k8s_with_learning,
+            enabled_engines=args.k8s_enabled_engines,
         )
     elif args.cluster_type == "hosts":
         launcher = LocalLauncher(

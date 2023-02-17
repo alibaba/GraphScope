@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.11.7
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.12.2
       options:
         --shm-size 4096m
     steps:
@@ -56,6 +56,7 @@ jobs:
       env:
         RUN_JAVA_TESTS: ON
       run: |
+        source /home/graphscope/.graphscope_env
         # default install to "/opt/graphscope"
         make analytical-java BUILD_TEST=ON NUMPROC=1
         sudo make analytical-java-install
@@ -69,6 +70,8 @@ jobs:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
         RUN_JAVA_TESTS: ON
       run: |
+        source /home/graphscope/.graphscope_env
+
         # download dataset
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
 
@@ -90,6 +93,7 @@ jobs:
         RUN_JAVA_TESTS: ON
         GRAPHSCOPE_HOME: /opt/graphscope
       run: |
+        source /home/graphscope/.graphscope_env
         version=$(cat ${GITHUB_WORKSPACE}/VERSION)
         export USER_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-demo/target/grape-demo-${version}-shaded.jar
 

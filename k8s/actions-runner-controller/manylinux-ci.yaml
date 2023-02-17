@@ -1,14 +1,14 @@
 apiVersion: actions.summerwind.dev/v1alpha1
 kind: RunnerDeployment
 metadata:
-   name: graphscope-runners-manylinux2014-ci-test
+   name: graphscope-runners-manylinux2014
 spec:
   template:
     spec:
       repository: alibaba/GraphScope
-      image: registry-vpc.cn-hongkong.aliyuncs.com/graphscope/runner:manylinux2014-ci-test
+      image: registry-vpc.cn-hongkong.aliyuncs.com/graphscope/runner:manylinux2014
       labels:
-        - manylinux2014-ci-test
+        - manylinux2014
       containers:
       - name: runner
         env: []
@@ -38,7 +38,7 @@ metadata:
 spec:
   scaleDownDelaySecondsAfterScaleOut: 900
   scaleTargetRef:
-    name: graphscope-runners-manylinux2014-ci-test
+    name: graphscope-runners-manylinux2014
     # Uncomment the below in case the target is not RunnerDeployment but RunnerSet
     #kind: RunnerSet
   minReplicas: 0

@@ -113,7 +113,8 @@ def p2p_property_dir():
     return "/testingdata/property"
 
 
-@pytest.mark.skipif("HDFS_HOST" not in os.environ, reason="HDFS not specified")
+# @pytest.mark.skipif("HDFS_HOST" not in os.environ, reason="HDFS not specified")
+@pytest.mark.skip(reason="Fix pyarrow version @siyuan0322")
 def test_demo_on_hdfs(gs_session_distributed):
     graph = gs_session_distributed.g()
     graph = graph.add_vertices(
@@ -318,17 +319,60 @@ def get_addr_on_ci_env():
 
 
 @pytest.mark.skipif("GS_ADDR" not in os.environ, reason="GS_ADDR not specified")
-def test_helm_installation():
+def test_helm_installation(data_dir, modern_graph_data_dir):
     addr = get_addr_on_ci_env()
     sess = graphscope.session(addr=addr)
-    g = sess.g()
-    assert g is not None
-    sess.close()
-    sess = graphscope.session(addr=addr)
-    g = sess.g()
-    assert g is not None
-    sess.close()
-    sess = graphscope.session(addr=addr)
-    g = sess.g()
-    assert g is not None
+    graph = load_ldbc(sess, data_dir)
+
+    # Interactive engine
+    interactive = sess.gremlin(graph)
+    sub_graph = interactive.subgraph(  # noqa: F841
+        'g.V().hasLabel("person").outE("knows")'
+    )
+    person_count = interactive.execute(
+        'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
+    ).all()[0]
+    knows_count = interactive.execute(
+        'g.V().hasLabel("person").outE("knows").count()'
+    ).all()[0]
+    interactive2 = sess.gremlin(sub_graph)
+    sub_person_count = interactive2.execute("g.V().count()").all()[0]
+    sub_knows_count = interactive2.execute("g.E().count()").all()[0]
+    assert person_count == sub_person_count
+    assert knows_count == sub_knows_count
+
+    # Analytical engine
+    # project the projected graph to simple graph.
+    simple_g = sub_graph.project(vertices={"person": []}, edges={"knows": []})
+
+    pr_result = graphscope.pagerank(simple_g, delta=0.8)
+    tc_result = graphscope.triangles(simple_g)
+
+    # add the PageRank and triangle-counting results as new columns to the property graph
+    sub_graph.add_column(pr_result, {"Ranking": "r"})
+    sub_graph.add_column(tc_result, {"TC": "r"})
+
+    # test subgraph on modern graph
+    mgraph = load_modern_graph(sess, modern_graph_data_dir)
+
+    # Interactive engine
+    minteractive = sess.gremlin(mgraph)
+    msub_graph = minteractive.subgraph(  # noqa: F841
+        'g.V().hasLabel("person").outE("knows")'
+    )
+    person_count = minteractive.execute(
+        'g.V().hasLabel("person").outE("knows").bothV().dedup().count()'
+    ).all()[0]
+    msub_interactive = sess.gremlin(msub_graph)
+    sub_person_count = msub_interactive.execute("g.V().count()").all()[0]
+    assert person_count == sub_person_count
+
+
+def test_modualize():
+    sess = graphscope.session(
+        num_workers=1,
+        k8s_image_registry=get_gs_registry_on_ci_env(),
+        k8s_image_tag=get_gs_tag_on_ci_env(),
+        enabled_engines="interactive",
+    )
     sess.close()

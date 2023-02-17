@@ -226,7 +226,7 @@ jobs:
     - name: Install latest vineyard
       if: false
       run: |
-        source ~/.bashrc
+        source ${HOME}/.graphscope_env
         git clone --single-branch --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
         cd /tmp/v6d
         git submodule update --init
@@ -239,11 +239,11 @@ jobs:
         sudo make install
 
         # copy to /usr/local, keep the same logic as gsvineyard.Dockerfile
-        sudo cp -r /opt/vineyard/* /usr/local/
+        sudo cp -r /opt/vineyard/* ${GRAPHSCOPE_HOME}/
 
     - name: Build Wheels
       run: |
-        source ~/.bashrc
+        source ${HOME}/.graphscope_env
 
         export SCCACHE_DIR=~/.cache/sccache
         export RUSTC_WRAPPER=/usr/local/bin/sccache
@@ -251,7 +251,8 @@ jobs:
 
         cd ${GITHUB_WORKSPACE}/k8s/internal
         # build graphscope wheels
-        make graphscope-manylinux2014-py3-nodocker
+        # GraphScope install location. Note this may different from location of GraphScope dependencies.
+        make graphscope-manylinux2014-py3-nodocker INSTALL_PREFIX=${GITHUB_WORKSPACE}/install
         # build client wheels
         make graphscope-client-manylinux2014-py3-nodocker
 

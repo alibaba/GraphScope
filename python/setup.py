@@ -201,7 +201,8 @@ def build_learning_engine():
     libraries = []
     extra_compile_args = []
     extra_link_args = []
-
+    if "GRAPHSCOPE_HOME" in os.environ:
+        include_dirs.append(os.environ["GRAPHSCOPE_HOME"] + "/include")
     include_dirs.append("/usr/local/include")
     include_dirs.append(ROOT_PATH)
     include_dirs.append(ROOT_PATH + "/graphlearn")
