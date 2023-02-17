@@ -16,8 +16,7 @@
 
 package com.alibaba.graphscope.common.calcite.tools;
 
-import org.apache.calcite.sql.SqlBinaryOperator;
-import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.fun.SqlMonotonicBinaryOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.InferTypes;
@@ -70,6 +69,17 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
                     InferTypes.FIRST_KNOWN,
                     RexOperandTypes.DIVISION_OPERATOR);
 
+    public static final SqlFunction MOD =
+            // Return type is same as divisor (2nd operand)
+            // SQL2003 Part2 Section 6.27, Syntax Rules 9
+            new SqlFunction(
+                    "MOD",
+                    SqlKind.MOD,
+                    ReturnTypes.NULLABLE_MOD,
+                    null,
+                    RexOperandTypes.EXACT_NUMERIC_EXACT_NUMERIC,
+                    SqlFunctionCategory.NUMERIC);
+
     public static final SqlBinaryOperator AND =
             new SqlBinaryOperator(
                     "AND",
@@ -89,4 +99,22 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
                     ReturnTypes.BOOLEAN_NULLABLE_OPTIMIZED,
                     InferTypes.BOOLEAN,
                     RexOperandTypes.BOOLEAN_BOOLEAN);
+
+    public static final SqlFunction POWER =
+            new SqlFunction(
+                    "POWER",
+                    SqlKind.OTHER_FUNCTION,
+                    ReturnTypes.DOUBLE_NULLABLE,
+                    null,
+                    RexOperandTypes.NUMERIC_NUMERIC,
+                    SqlFunctionCategory.NUMERIC);
+
+    public static final SqlPrefixOperator UNARY_MINUS =
+            new SqlPrefixOperator(
+                    "-",
+                    SqlKind.MINUS_PREFIX,
+                    80,
+                    ReturnTypes.ARG0,
+                    InferTypes.RETURN_TYPE,
+                    RexOperandTypes.NUMERIC_OR_INTERVAL);
 }

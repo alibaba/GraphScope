@@ -35,7 +35,7 @@ public class GroupTest {
                                 new SourceConfig(
                                         ScanOpt.Vertex, new LabelConfig(false).addLabel("person")))
                         .aggregate(
-                                builder.groupKey_(
+                                builder.groupKey(
                                         ImmutableList.of(
                                                 builder.variable(null, "name"),
                                                 builder.variable(null, "age")),

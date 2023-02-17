@@ -27,6 +27,17 @@ public abstract class RexOperandTypes {
     public static final SqlSingleOperandTypeChecker NUMERIC_NUMERIC =
             family(SqlTypeFamily.NUMERIC, SqlTypeFamily.NUMERIC);
 
+    public static final SqlSingleOperandTypeChecker EXACT_NUMERIC_EXACT_NUMERIC =
+            family(SqlTypeFamily.EXACT_NUMERIC, SqlTypeFamily.EXACT_NUMERIC);
+
+    public static final SqlSingleOperandTypeChecker NUMERIC = family(SqlTypeFamily.NUMERIC);
+
+    public static final SqlSingleOperandTypeChecker INTERVAL =
+            family(SqlTypeFamily.DATETIME_INTERVAL);
+
+    public static final SqlSingleOperandTypeChecker NUMERIC_OR_INTERVAL =
+            OperandTypes.or(NUMERIC, INTERVAL);
+
     public static final FamilyOperandTypeChecker INTERVAL_INTERVAL =
             family(SqlTypeFamily.DATETIME_INTERVAL, SqlTypeFamily.DATETIME_INTERVAL);
 
