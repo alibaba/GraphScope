@@ -155,6 +155,20 @@ impl DynDetails {
     pub fn lazy<P: Details + 'static>(p: P) -> Self {
         DynDetails::Lazy(Arc::new(p))
     }
+
+    pub fn is_empty(&self) -> bool {
+        match self {
+            DynDetails::Empty => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_default(&self) -> bool {
+        match self {
+            DynDetails::Default(_) => true,
+            _ => false,
+        }
+    }
 }
 
 impl_as_any!(DynDetails);

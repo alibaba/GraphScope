@@ -22,7 +22,8 @@ use ir_common::expr_parse::error::{ExprError, ExprResult};
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
 
-use crate::apis::{Details, Element, PropKey};
+use crate::apis::graph::element::GraphElement;
+use crate::apis::{get_graph, Details, Element, PropKey, QueryParams};
 use crate::utils::expr::eval::{apply_logical, Context, Evaluate, Evaluator, Operand};
 use crate::utils::expr::{ExprEvalError, ExprEvalResult};
 
@@ -277,7 +278,43 @@ impl EvalPred for Operand {
                                         }
                                         PropKey::Key(key) => {
                                             if let Some(details) = graph_element.details() {
-                                                result = details.get_property(key).is_some();
+                                                if details.is_empty() {
+                                                    debug!("details should not be empty!!");
+                                                    assert!(false);
+                                                    result = get_graph()
+                                                        .unwrap()
+                                                        .get_vertex(
+                                                            &vec![graph_element.id()],
+                                                            &QueryParams::default(),
+                                                        )
+                                                        .unwrap()
+                                                        .next()
+                                                        .unwrap()
+                                                        .details()
+                                                        .unwrap()
+                                                        .get_property(key)
+                                                        .is_some();
+                                                } else if details.is_default() {
+                                                    if details.get_property(key).is_some() {
+                                                        result = true
+                                                    } else {
+                                                        result = get_graph()
+                                                            .unwrap()
+                                                            .get_vertex(
+                                                                &vec![graph_element.id()],
+                                                                &QueryParams::default(),
+                                                            )
+                                                            .unwrap()
+                                                            .next()
+                                                            .unwrap()
+                                                            .details()
+                                                            .unwrap()
+                                                            .get_property(key)
+                                                            .is_some();
+                                                    }
+                                                } else {
+                                                    result = details.get_property(key).is_some();
+                                                }
                                             }
                                         }
                                     }

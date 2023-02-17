@@ -28,7 +28,7 @@ use ir_physical_client::physical_builder::{JobBuilder, Plan};
 
 use crate::error::{IrError, IrResult};
 use crate::plan::logical::{LogicalPlan, NodeType};
-use crate::plan::meta::PlanMeta;
+use crate::plan::meta::{ColumnsOpt, PlanMeta, TagId};
 
 /// A trait for building physical plan (pegasus) from the logical plan
 pub trait AsPhysical {
@@ -41,164 +41,152 @@ pub trait AsPhysical {
     }
 }
 
-fn merge_query_param_columns(
-    merged_params: &mut pb::QueryParams, is_all_columns: bool, columns: &Vec<common_pb::NameOrId>,
-) {
-    if merged_params.is_all_columns || is_all_columns {
-        merged_params.is_all_columns = true;
-    } else {
-        for column in columns {
-            if !merged_params.columns.contains(column) {
-                merged_params.columns.push(column.clone());
-            }
-        }
+fn process_tag_columns(builder: &mut JobBuilder, tag: Option<TagId>, columns_opt: ColumnsOpt) {
+    if columns_opt.len() > 0 {
+        let tag_pb = tag.map(|tag_id| (tag_id as i32).into());
+        builder.shuffle(tag_pb.clone());
+        let params = pb::QueryParams {
+            tables: vec![],
+            columns: columns_opt
+                .get()
+                .into_iter()
+                .map(|column| column.into())
+                .collect(),
+            is_all_columns: columns_opt.is_all(),
+            limit: None,
+            predicate: None,
+            sample_ratio: 1.0,
+            extra: Default::default(),
+        };
+        let auxilia = pb::GetV { tag: tag_pb.clone(), opt: 4, params: Some(params), alias: tag_pb.clone() };
+        builder.get_v(auxilia);
     }
 }
 
-fn merge_query_params(merged_params: &mut pb::QueryParams, other_params: &mut pb::QueryParams) {
-    merge_query_param_columns(merged_params, other_params.is_all_columns, &other_params.columns);
-    other_params.columns.clear();
-    other_params.is_all_columns = false;
+// Fetch properties before used in select, order, dedup, group, join, and apply.
+fn post_process_vars(builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+    let node_meta = plan_meta.get_curr_node_meta().unwrap();
+    let tag_columns = node_meta.get_tag_columns();
+    let len = tag_columns.len();
+    // the case when head not changed
+    if len == 1 {
+        let tag = tag_columns.iter().next().unwrap().0;
+        if tag.is_none() {
+            let (tag, columns_opt) = tag_columns.into_iter().next().unwrap();
+            process_tag_columns(builder, tag, columns_opt);
+            return Ok(());
+        }
+    }
+
+    // the case when head changed
+    if len > 0 {
+        let tmp_head_alias = plan_meta.get_or_set_tag_id("~tmp_head_tag").1;
+        // preserve head first; i.e., .as("~tmp_head_tag")
+        builder.get_v(pb::GetV {
+            tag: None,
+            opt: 4,
+            params: None,
+            alias: Some((tmp_head_alias as KeyId).into()),
+        });
+        for (tag, columns_opt) in tag_columns.into_iter() {
+            let tag = if tag.is_none() { Some(tmp_head_alias) } else { tag };
+            process_tag_columns(builder, tag, columns_opt);
+        }
+        // project back to head; i.e., .select("~tmp_head_tag")
+        builder.project(pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: Some(str_to_expr_pb(format!("@{}", tmp_head_alias))?),
+                alias: None,
+            }],
+            is_append: true,
+        });
+    }
+    Ok(())
 }
 
 impl AsPhysical for pb::Project {
-    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
-        builder.project(self.clone());
+    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        let mut project = self.clone();
+        project.post_process(builder, plan_meta)?;
+        builder.project(project);
+        Ok(())
+    }
+
+    fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        if plan_meta.is_partition() {
+            let tag_columns = plan_meta
+                .get_curr_node_meta()
+                .unwrap()
+                .get_tag_columns();
+            if tag_columns.len() > 0 {
+                for (tag, columns_opt) in tag_columns.into_iter() {
+                    process_tag_columns(builder, tag, columns_opt);
+                }
+            }
+        }
         Ok(())
     }
 }
 
 impl AsPhysical for pb::Select {
     fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
-        let node_meta = plan_meta.get_curr_node_meta().unwrap();
-        let tag_columns = node_meta.get_tag_columns();
-        if tag_columns.len() == 1 {
-            let (tag, columns_opt) = tag_columns.into_iter().next().unwrap();
-            if columns_opt.len() > 0 {
-                let tag_pb = tag.map(|tag_id| (tag_id as KeyId).into());
-                if plan_meta.is_partition() {
-                    builder.shuffle(tag_pb.clone());
-                }
-                let mut params = pb::QueryParams {
-                    tables: vec![],
-                    columns: vec![],
-                    is_all_columns: columns_opt.is_all(),
-                    limit: None,
-                    predicate: None,
-                    sample_ratio: 1.0,
-                    extra: Default::default(),
-                };
-                params.predicate = self.predicate.clone();
-                let auxilia = pb::GetV { tag: tag_pb.clone(), opt: 4, params: Some(params), alias: tag_pb };
-                builder.get_v(auxilia);
-                Ok(())
-            } else {
-                Err(IrError::MissingData(format!(
-                    "The tag: {:?} refer to empty columns: {:?}",
-                    tag, columns_opt
-                )))
-            }
-        } else {
-            builder.select(self.clone());
-            Ok(())
+        let mut select = self.clone();
+        select.post_process(builder, plan_meta)?;
+        builder.select(select);
+        Ok(())
+    }
+
+    fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        // This is the case when g.V().out().has(xxx), which was like Source + EdgeExpand(ExpandV) + Filter in logical plan.
+        // This would be refined as:
+        // In Logical Plan: `Source + EdgeExpand(ExpandE) + GetV`
+        // In Physical Plan:
+        //       1. on distributed graph store, `Source + EdgeExpand(ExpandV) + Shuffle + Auxilia`
+        //    or 2. on single graph store, `Source + EdgeExpand(ExpandE) + GetV`
+        // where Auxilia means get property or filter on a vertex.
+        if plan_meta.is_partition() {
+            post_process_vars(builder, plan_meta)?;
         }
+        Ok(())
     }
 }
 
 impl AsPhysical for pb::Scan {
-    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
-        let mut scan = self.clone();
-        scan.post_process(builder, plan_meta)?;
+    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
+        let scan = self.clone();
         builder.add_scan_source(scan);
         Ok(())
-    }
-
-    fn post_process(&mut self, _builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
-        if let Some(params) = &mut self.params {
-            if let Some(node_meta) = plan_meta.get_curr_node_meta() {
-                let columns = node_meta.get_columns();
-                let is_all_columns = node_meta.is_all_columns();
-                if is_all_columns {
-                    // is_all_columns yield the settings of columns
-                    params.columns = vec![];
-                    params.is_all_columns = true;
-                } else if !columns.is_empty() {
-                    params.columns = columns
-                        .into_iter()
-                        .map(|tag| tag.into())
-                        .collect();
-                }
-            }
-            Ok(())
-        } else {
-            Err(IrError::MissingData("Scan::params".to_string()))
-        }
     }
 }
 
 impl AsPhysical for pb::EdgeExpand {
     fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         let mut xpd = self.clone();
-        xpd.post_process(builder, plan_meta)
+        xpd.post_process(builder, plan_meta)?;
+        builder.edge_expand(xpd);
+        Ok(())
     }
 
     fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         if plan_meta.is_partition() {
             builder.shuffle(self.v_tag.clone());
-        }
-        let mut is_adding_auxilia = false;
-        let mut auxilia = pb::GetV { tag: None, opt: 4, params: None, alias: None };
-        if let Some(params) = self.params.as_mut() {
-            if let Some(node_meta) = plan_meta.get_curr_node_meta() {
-                let columns = node_meta.get_columns();
-                let is_all_columns = node_meta.is_all_columns();
-                if !columns.is_empty() || is_all_columns {
-                    let expand_opt: pb::edge_expand::ExpandOpt =
-                        unsafe { ::std::mem::transmute(self.expand_opt) };
-                    match expand_opt {
-                        pb::edge_expand::ExpandOpt::Vertex => {
-                            // Expand to adjacent vertices
-                            let new_params = pb::QueryParams {
-                                tables: vec![],
-                                columns: columns
-                                    .into_iter()
-                                    .map(|tag| tag.into())
-                                    .collect(),
-                                is_all_columns,
-                                limit: None,
-                                predicate: None,
-                                sample_ratio: 1.0,
-                                extra: Default::default(),
-                            };
-                            auxilia.params = Some(new_params);
-                            auxilia.alias = self.alias.clone();
-                            self.alias = None;
-                            is_adding_auxilia = true;
-                        }
-                        pb::edge_expand::ExpandOpt::Edge => {
-                            params.columns = columns
-                                .into_iter()
-                                .map(|tag| tag.into())
-                                .collect();
-                            params.is_all_columns = is_all_columns;
-                        }
-                        _ => {}
+            // Notice that if expand edges, we need to carry its demanded properties,
+            // since query edge by eid is not supported in storage for now.
+            if self.expand_opt == pb::edge_expand::ExpandOpt::Edge as i32 {
+                if let Some(params) = self.params.as_mut() {
+                    let node_meta = plan_meta.get_curr_node_meta().unwrap();
+                    let columns = node_meta.get_columns();
+                    let is_all_columns = node_meta.is_all_columns();
+                    if !columns.is_empty() || is_all_columns {
+                        params.columns = columns
+                            .into_iter()
+                            .map(|tag| tag.into())
+                            .collect();
+                        params.is_all_columns = is_all_columns;
                     }
                 }
             }
-        } else {
-            return Err(IrError::MissingData("EdgeExpand::params".to_string()));
         }
-
-        builder.edge_expand(self.clone());
-
-        if is_adding_auxilia {
-            if plan_meta.is_partition() {
-                builder.shuffle(None);
-            }
-            builder.get_v(auxilia);
-        }
-
         Ok(())
     }
 }
@@ -206,27 +194,32 @@ impl AsPhysical for pb::EdgeExpand {
 impl AsPhysical for pb::PathExpand {
     fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         // [range.lower, range.upper)
-        if let Some(range) = &self.hop_range {
-            if range.upper <= range.lower || range.lower < 0 || range.upper <= 0 {
-                Err(IrError::InvalidRange(range.lower, range.upper))
-            } else {
-                // Currently, we assume ExpandBase in PathExpand is `EdgeExpand` with ExpandOpt = Vertex.
-                // TODO: Support ExpandBase of EdgeExpand + GetV
-                // and furthermore, fuse EdgeExpand + GetV if possible.
-                if plan_meta.is_partition() {
-                    builder.shuffle(self.start_tag.clone());
-                }
-                builder.path_expand(self.clone());
-                Ok(())
-            }
-        } else {
-            Err(IrError::MissingData("PathExpand::hop_range".to_string()))
+        let range = self
+            .hop_range
+            .as_ref()
+            .ok_or(IrError::MissingData("PathExpand::hop_range".to_string()))?;
+        if range.upper <= range.lower || range.lower < 0 || range.upper <= 0 {
+            Err(IrError::InvalidRange(range.lower, range.upper))?
         }
+        // Currently, we assume ExpandBase in PathExpand is `EdgeExpand` with ExpandOpt = Vertex.
+        // TODO: Support ExpandBase of EdgeExpand + GetV
+        // and furthermore, fuse EdgeExpand + GetV if possible.
+        let mut path = self.clone();
+        path.post_process(builder, plan_meta)?;
+        builder.path_expand(path);
+        Ok(())
+    }
+
+    fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        if plan_meta.is_partition() {
+            builder.shuffle(self.start_tag.clone());
+        }
+        Ok(())
     }
 }
 
 impl AsPhysical for pb::GetV {
-    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
         // TODO: ExpandEdge + GetV fusion rule:
         // For example,currently, the case of `g.V().out().has(xxx)` would be translated into `Source + EdgeExpand(ExpandV) + Filter` in logical plan.
         // This would be refined as:
@@ -236,57 +229,9 @@ impl AsPhysical for pb::GetV {
         //    or 2. on single graph store, `Source + EdgeExpand(ExpandE) + GetV(Self)`
         // where GetV(Self) means to get property or filter on the adj vertex itself.
         // Besides, if no properties fetching on the adj vertices, we can directly fuse `EdgeExpand(ExpandE) + GetV` into `EdgeExpand(ExpandV)`.
-        let mut getv = self.clone();
-        getv.post_process(builder, plan_meta)
-    }
-
-    fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
-        let mut is_adding_auxilia = false;
-        let mut auxilia = pb::GetV { tag: None, opt: 4, params: None, alias: None };
-        if let Some(params) = self.params.as_mut() {
-            if let Some(node_meta) = plan_meta.get_curr_node_meta() {
-                let columns = node_meta.get_columns();
-                let is_all_columns = node_meta.is_all_columns();
-                if !columns.is_empty() || is_all_columns || params.predicate.is_some() {
-                    let mut new_params = params.clone();
-                    if is_all_columns {
-                        new_params.columns = vec![];
-                        new_params.is_all_columns = is_all_columns;
-                    } else {
-                        new_params.columns = columns
-                            .into_iter()
-                            .map(|params| params.into())
-                            .collect();
-                        new_params.is_all_columns = is_all_columns;
-                    }
-
-                    auxilia.params = Some(new_params);
-
-                    *params = pb::QueryParams {
-                        tables: params.tables.clone(),
-                        columns: vec![],
-                        is_all_columns: false,
-                        limit: None,
-                        predicate: None,
-                        sample_ratio: 1.0,
-                        extra: Default::default(),
-                    };
-
-                    auxilia.alias = self.alias.clone();
-                    self.alias = None;
-                    is_adding_auxilia = true;
-                }
-            }
-        }
-        builder.get_v(self.clone());
-
-        if is_adding_auxilia {
-            if plan_meta.is_partition() {
-                builder.shuffle(None);
-            }
-            builder.get_v(auxilia);
-        }
-
+        let getv = self.clone();
+        // no need to shuffle since GetV (in logical plan) only fetches adjacent vertex ids from an edge.
+        builder.get_v(getv);
         Ok(())
     }
 }
@@ -301,41 +246,66 @@ impl AsPhysical for pb::As {
 
 impl AsPhysical for pb::Limit {
     fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
-        if let Some(range) = &self.range {
-            if range.upper <= range.lower || range.lower < 0 || range.upper <= 0 {
-                Err(IrError::InvalidRange(range.lower, range.upper))
-            } else {
-                builder.limit(self.clone());
-                Ok(())
-            }
-        } else {
-            Err(IrError::MissingData("Limit::range".to_string()))
+        let range = self
+            .range
+            .as_ref()
+            .ok_or(IrError::MissingData("Limit::range".to_string()))?;
+        if range.upper <= range.lower || range.lower < 0 || range.upper <= 0 {
+            Err(IrError::InvalidRange(range.lower, range.upper))?
         }
+        builder.limit(self.clone());
+        Ok(())
     }
 }
 
 impl AsPhysical for pb::OrderBy {
-    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
+    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         if let Some(range) = &self.limit {
             if range.upper <= range.lower || range.lower < 0 || range.upper <= 0 {
                 Err(IrError::InvalidRange(range.lower, range.upper))?
             }
         }
-        builder.order(self.clone());
+        let mut order = self.clone();
+        order.post_process(builder, plan_meta)?;
+        builder.order(order);
+        Ok(())
+    }
+
+    fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        if plan_meta.is_partition() {
+            post_process_vars(builder, plan_meta)?;
+        }
         Ok(())
     }
 }
 
 impl AsPhysical for pb::Dedup {
-    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
-        builder.dedup(self.clone());
+    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        let mut dedup = self.clone();
+        dedup.post_process(builder, plan_meta)?;
+        builder.dedup(dedup);
+        Ok(())
+    }
+
+    fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        if plan_meta.is_partition() {
+            post_process_vars(builder, plan_meta)?;
+        }
         Ok(())
     }
 }
 
 impl AsPhysical for pb::GroupBy {
-    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
-        builder.group(self.clone());
+    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        let mut group = self.clone();
+        group.post_process(builder, plan_meta)?;
+        builder.group(group);
+        Ok(())
+    }
+    fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        if plan_meta.is_partition() {
+            post_process_vars(builder, plan_meta)?;
+        }
         Ok(())
     }
 }
@@ -586,6 +556,10 @@ impl AsPhysical for LogicalPlan {
                             let left_plan = plans.get(0).unwrap().clone();
                             let right_plan = plans.get(1).unwrap().clone();
 
+                            let node_meta = plan_meta.get_curr_node_meta().unwrap();
+                            let tag_columns = node_meta.get_tag_columns();
+                            println!("notice the tag_columns in join!! {:?}", tag_columns);
+                            post_process_vars(builder, plan_meta)?;
                             builder.join(
                                 unsafe { std::mem::transmute(join_opr.kind) },
                                 left_plan,
@@ -654,9 +628,6 @@ fn add_intersect_job_builder(
         .as_ref()
         .ok_or(IrError::ParsePbError("Empty tag in `Intersect` opr".into()))?;
     let mut intersect_plans: Vec<Plan> = vec![];
-    let mut is_adding_auxilia = false;
-    let mut auxilia_param = pb::QueryParams::default();
-    auxilia_param.sample_ratio = 1.0;
     for subplan in subplans {
         // subplan would be like: 1. vec![EdgeExpand] for edge expand to intersect; 2. vec![PathExpand, GetV, EdgeExpand] for path expand to intersect
         let len = subplan.len();
@@ -667,7 +638,7 @@ fn add_intersect_job_builder(
             } else {
                 // the last node in subplan should be the one to intersect.
                 if let Some(Edge(edgexpd)) = opr.borrow().opr.opr.as_ref() {
-                    let mut edgexpd = edgexpd.clone();
+                    let edgexpd = edgexpd.clone();
                     if edgexpd.alias.is_none()
                         || !edgexpd
                             .alias
@@ -675,36 +646,10 @@ fn add_intersect_job_builder(
                             .unwrap()
                             .eq(intersect_tag)
                     {
-                        Err(IrError::InvalidPattern(format!(
-                            "Cannot intersect on different tags: expected {:?}, while actually {:?}",
-                            intersect_tag, edgexpd.alias
-                        )))?
+                        Err(IrError::InvalidPattern("Cannot intersect on different tags".to_string()))?
                     }
                     if plan_meta.is_partition() {
                         sub_bldr.shuffle(edgexpd.v_tag.clone());
-                    }
-                    if let Some(params) = edgexpd.params.as_mut() {
-                        // move columns fetch into auxilia
-                        if params.is_all_columns || !params.columns.is_empty() {
-                            is_adding_auxilia = true;
-                            merge_query_params(&mut auxilia_param, params);
-                        }
-                    }
-                    if let Some(node_meta) = plan_meta.get_curr_node_meta() {
-                        let columns = node_meta.get_columns();
-                        let is_all_columns = node_meta.is_all_columns();
-                        if !columns.is_empty() || is_all_columns {
-                            // move columns fetch into auxilia
-                            is_adding_auxilia = true;
-                            merge_query_param_columns(
-                                &mut auxilia_param,
-                                is_all_columns,
-                                &columns
-                                    .into_iter()
-                                    .map(|col| col.into())
-                                    .collect(),
-                            );
-                        }
                     }
                     sub_bldr.edge_expand(edgexpd);
                 } else {
@@ -719,19 +664,8 @@ fn add_intersect_job_builder(
         intersect_plans.push(sub_plan);
     }
     builder.intersect(intersect_plans, intersect_tag.clone());
-    // We assume that the field after unfold has the same alias with intersect_tag.
-    // Furthermore, if unfold is followed by auxilia, move the alias into the auxilia op.
-    let unfold_alias = if is_adding_auxilia { None } else { Some(intersect_tag.clone()) };
-    let unfold = pb::Unfold { tag: Some(intersect_tag.clone()), alias: unfold_alias };
+    let unfold = pb::Unfold { tag: Some(intersect_tag.clone()), alias: Some(intersect_tag.clone()) };
     unfold.add_job_builder(builder, plan_meta)?;
-    if is_adding_auxilia {
-        if plan_meta.is_partition() {
-            builder.shuffle(None);
-        }
-        let auxilia =
-            pb::GetV { tag: None, opt: 4, params: Some(auxilia_param), alias: Some(intersect_tag.clone()) };
-        builder.get_v(auxilia);
-    }
     Ok(())
 }
 

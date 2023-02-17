@@ -29,14 +29,14 @@ pub mod subtask;
 use std::convert::TryFrom;
 
 use dyn_type::Object;
-use graph_proxy::apis::{Details, Element, PropKey};
+use graph_proxy::apis::{get_graph, Details, Element, GraphElement, PropKey, QueryParams};
 use ir_common::error::ParsePbError;
 use ir_common::generated::common as common_pb;
 use ir_common::{KeyId, NameOrId};
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::error::{FnExecError, FnExecResult};
-use crate::process::entry::DynEntry;
+use crate::process::entry::{DynEntry, Entry};
 use crate::process::record::Record;
 
 #[derive(Clone, Debug, Default)]
@@ -80,8 +80,24 @@ impl TagKey {
                                 "Get `PropKey::All` on {:?}",
                                 entry,
                             )))?;
+                        let properties = if details.is_empty() {
+                            debug!("details should not be empty!!");
+                            assert!(false);
+                            // TODO: canbe edge
+                            get_graph()
+                                .unwrap()
+                                .get_vertex(&vec![element.id()], &QueryParams::default())
+                                .unwrap()
+                                .next()
+                                .unwrap()
+                                .details()
+                                .unwrap()
+                                .get_all_properties()
+                        } else {
+                            details.get_all_properties()
+                        };
 
-                        if let Some(properties) = details.get_all_properties() {
+                        if let Some(properties) = properties {
                             properties
                                 .into_iter()
                                 .map(|(key, value)| {
@@ -104,7 +120,82 @@ impl TagKey {
                                 "Get `PropKey::Key` of {:?} on {:?}",
                                 key, entry,
                             )))?;
-                        if let Some(properties) = details.get_property(key) {
+
+                        if details.is_empty() {
+                            debug!("details should not be empty!!111");
+                            assert!(false);
+                            if let Some(vertex) = entry.as_vertex() {
+                                let vertex = get_graph()
+                                    .unwrap()
+                                    .get_vertex(&vec![vertex.id()], &QueryParams::default())
+                                    .unwrap()
+                                    .next()
+                                    .ok_or(FnExecError::unexpected_data_error(&format!(
+                                        "Get Vertex failed in get_key {:?} when get property {:?}",
+                                        element.id(),
+                                        key
+                                    )))?;
+                                if let Some(properties) = vertex.details().unwrap().get_property(key) {
+                                    let prop_obj = properties.try_to_owned().ok_or(
+                                        FnExecError::unexpected_data_error(
+                                            "unable to own the `BorrowObject`",
+                                        ),
+                                    )?;
+                                    return Ok(DynEntry::new(prop_obj));
+                                } else {
+                                    Object::None
+                                }
+                            } else {
+                                let edge = get_graph()
+                                    .unwrap()
+                                    .get_edge(&vec![element.id()], &QueryParams::default())
+                                    .unwrap()
+                                    .next()
+                                    .ok_or(FnExecError::unexpected_data_error(&format!(
+                                        "Get Edge failed in get_key {:?} when get property {:?}",
+                                        element.id(),
+                                        key
+                                    )))?;
+
+                                if let Some(properties) = edge.details().unwrap().get_property(key) {
+                                    let prop_obj = properties.try_to_owned().ok_or(
+                                        FnExecError::unexpected_data_error(
+                                            "unable to own the `BorrowObject`",
+                                        ),
+                                    )?;
+                                    return Ok(DynEntry::new(prop_obj));
+                                } else {
+                                    Object::None
+                                }
+                            }
+                        } else if details.is_default() {
+                            if let Some(properties) = details.get_property(key) {
+                                properties
+                                    .try_to_owned()
+                                    .ok_or(FnExecError::unexpected_data_error(
+                                        "unable to own the `BorrowObject`",
+                                    ))?
+                            } else if let Some(properties) = get_graph()
+                                .unwrap()
+                                .get_vertex(&vec![element.id()], &QueryParams::default())
+                                .unwrap()
+                                .next()
+                                .unwrap()
+                                .details()
+                                .unwrap()
+                                .get_property(key)
+                            {
+                                let prop_obj =
+                                    properties
+                                        .try_to_owned()
+                                        .ok_or(FnExecError::unexpected_data_error(
+                                            "unable to own the `BorrowObject`",
+                                        ))?;
+                                return Ok(DynEntry::new(prop_obj));
+                            } else {
+                                Object::None
+                            }
+                        } else if let Some(properties) = details.get_property(key) {
                             properties
                                 .try_to_owned()
                                 .ok_or(FnExecError::unexpected_data_error(

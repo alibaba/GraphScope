@@ -606,7 +606,7 @@ pub extern "C" fn build_physical_plan(
     ptr_plan: *const c_void, num_workers: u32, num_servers: u32,
 ) -> FfiData {
     let mut plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
-    if num_workers > 1 || num_servers > 1 {
+    if num_servers > 1 || num_workers > 1 {
         plan.meta = plan.meta.with_partition();
     }
     let mut plan_meta = plan.meta.clone();

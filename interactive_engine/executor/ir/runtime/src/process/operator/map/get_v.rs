@@ -115,22 +115,28 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                     })
                 }
                 EntryType::Edge => {
-                    let id = entry.id();
-                    let mut result_iter = graph.get_edge(&[id], &self.query_params)?;
-                    result_iter.next().map(|mut edge| {
-                        if let Some(details) = entry
-                            .as_edge()
-                            .map(|e| e.details())
-                            .unwrap_or(None)
-                        {
-                            if let Some(properties) = details.get_all_properties() {
-                                for (key, val) in properties {
-                                    edge.get_details_mut().insert_property(key, val);
-                                }
-                            }
-                        }
-                        DynEntry::new(edge)
-                    })
+                    // let id = entry.id();
+                    // let mut result_iter = graph.get_edge(&[id], &self.query_params)?;
+                    // result_iter.next().map(|mut edge| {
+                    //     if let Some(details) = entry
+                    //         .as_edge()
+                    //         .map(|e| e.details())
+                    //         .unwrap_or(None)
+                    //     {
+                    //         if let Some(properties) = details.get_all_properties() {
+                    //             for (key, val) in properties {
+                    //                 edge.get_details_mut().insert_property(key, val);
+                    //             }
+                    //         }
+                    //     }
+                    //     DynEntry::new(edge)
+                    // })
+
+                    // TODO: This is a little bit tricky. Modify this logic to query store with eid when supported.
+                    // Currently, when getting properties from an edge,
+                    // we assume that it has already been carried in the edge (when the first time queried the edge)
+                    // since on most storages, query edges by eid is not supported yet.
+                    Some(entry.clone())
                 }
                 _ => Err(FnExecError::unexpected_data_error(&format!(
                     "neither Vertex nor Edge entry is accessed in `Auxilia` operator, the entry is {:?}",

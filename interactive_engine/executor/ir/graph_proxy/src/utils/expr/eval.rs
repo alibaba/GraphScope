@@ -26,7 +26,8 @@ use ir_common::expr_parse::to_suffix_expr;
 use ir_common::generated::common as common_pb;
 use ir_common::{NameOrId, ALL_KEY, ID_KEY, LABEL_KEY, LENGTH_KEY};
 
-use crate::apis::{Details, Element, PropKey};
+use crate::apis::graph::element::GraphElement;
+use crate::apis::{get_graph, Details, Element, PropKey, QueryParams};
 use crate::utils::expr::eval_pred::EvalPred;
 use crate::utils::expr::{ExprEvalError, ExprEvalResult};
 
@@ -475,32 +476,116 @@ impl Evaluate for Operand {
                                         .map(|label| label.into())
                                         .ok_or(ExprEvalError::GetNoneFromContext)?,
                                     PropKey::Len => unreachable!(),
-                                    PropKey::All => graph_element
-                                        .details()
-                                        .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?
-                                        .get_all_properties()
-                                        .map(|obj| {
-                                            obj.into_iter()
-                                                .map(|(key, value)| {
-                                                    let obj_key: Object = match key {
-                                                        NameOrId::Str(str) => str.into(),
-                                                        NameOrId::Id(id) => id.into(),
-                                                    };
-                                                    (obj_key, value)
-                                                })
-                                                .collect::<Vec<(Object, Object)>>()
-                                                .into()
-                                        })
-                                        .ok_or(ExprEvalError::GetNoneFromContext)?,
-                                    PropKey::Key(key) => graph_element
-                                        .details()
-                                        .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?
-                                        .get_property(key)
-                                        .ok_or(ExprEvalError::GetNoneFromContext)?
-                                        .try_to_owned()
-                                        .ok_or(ExprEvalError::OtherErr(
-                                            "cannot get `Object` from `BorrowObject`".to_string(),
-                                        ))?,
+                                    PropKey::All => {
+                                        let details = graph_element
+                                            .details()
+                                            .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?;
+                                        let properties = if details.is_empty() {
+                                            debug!("details should not be empty!!");
+                                            assert!(false);
+                                            get_graph()
+                                                .unwrap()
+                                                .get_vertex(
+                                                    &vec![graph_element.id()],
+                                                    &QueryParams::default(),
+                                                )
+                                                .unwrap()
+                                                .next()
+                                                .unwrap()
+                                                .details()
+                                                .unwrap()
+                                                .get_all_properties()
+                                        } else {
+                                            details.get_all_properties()
+                                        };
+                                        properties
+                                            .map(|obj| {
+                                                obj.into_iter()
+                                                    .map(|(key, value)| {
+                                                        let obj_key: Object = match key {
+                                                            NameOrId::Str(str) => str.into(),
+                                                            NameOrId::Id(id) => id.into(),
+                                                        };
+                                                        (obj_key, value)
+                                                    })
+                                                    .collect::<Vec<(Object, Object)>>()
+                                                    .into()
+                                            })
+                                            .ok_or(ExprEvalError::GetNoneFromContext)?
+                                    }
+                                    PropKey::Key(key) => {
+                                        let details = graph_element
+                                            .details()
+                                            .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?;
+                                        if details.is_empty() {
+                                            debug!("details should not be empty!!");
+                                            assert!(false);
+                                            if let Some(properties) = get_graph()
+                                                .unwrap()
+                                                .get_vertex(
+                                                    &vec![graph_element.id()],
+                                                    &QueryParams::default(),
+                                                )
+                                                .unwrap()
+                                                .next()
+                                                .unwrap()
+                                                .details()
+                                                .unwrap()
+                                                .get_property(key)
+                                            {
+                                                let prop_obj = properties.try_to_owned().ok_or(
+                                                    ExprEvalError::OtherErr(
+                                                        "cannot get `Object` from `BorrowObject`"
+                                                            .to_string(),
+                                                    ),
+                                                )?;
+                                                return Ok(prop_obj);
+                                            } else {
+                                                return Ok(Object::None);
+                                            }
+                                        } else if details.is_default() {
+                                            if let Some(properties) = details.get_property(key) {
+                                                properties
+                                                    .try_to_owned()
+                                                    .ok_or(ExprEvalError::OtherErr(
+                                                        "cannot get `Object` from `BorrowObject`"
+                                                            .to_string(),
+                                                    ))?
+                                            } else {
+                                                if let Some(properties) = get_graph()
+                                                    .unwrap()
+                                                    .get_vertex(
+                                                        &vec![graph_element.id()],
+                                                        &QueryParams::default(),
+                                                    )
+                                                    .unwrap()
+                                                    .next()
+                                                    .unwrap()
+                                                    .details()
+                                                    .unwrap()
+                                                    .get_property(key)
+                                                {
+                                                    let prop_obj = properties.try_to_owned().ok_or(
+                                                        ExprEvalError::OtherErr(
+                                                            "cannot get `Object` from `BorrowObject`"
+                                                                .to_string(),
+                                                        ),
+                                                    )?;
+                                                    return Ok(prop_obj);
+                                                } else {
+                                                    return Ok(Object::None);
+                                                }
+                                            }
+                                        } else {
+                                            details
+                                                .get_property(key)
+                                                .ok_or(ExprEvalError::GetNoneFromContext)?
+                                                .try_to_owned()
+                                                .ok_or(ExprEvalError::OtherErr(
+                                                    "cannot get `Object` from `BorrowObject`".to_string(),
+                                                ))?
+                                        }
+                                    }
                                 }
                             }
                         } else {
