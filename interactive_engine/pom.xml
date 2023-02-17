@@ -13,6 +13,7 @@
     <profile>
       <id>experimental</id>
       <modules>
+        <module>sdk-common</module>
         <module>executor/engine/pegasus/clients/java/client</module>
         <module>compiler</module>
       </modules>
@@ -116,6 +117,8 @@
     <lombok.version>1.18.24</lombok.version>
     <commons.cli.version>1.5.0</commons.cli.version>
     <commons.io.version>2.11.0</commons.io.version>
+    <calcite.version>1.32.0</calcite.version>
+    <immutables.version>2.9.3</immutables.version>
     <!-- OSS SDK requires httpclient version to be 4.4.1, related links: https://www.alibabacloud.com/help/zh/object-storage-service/latest/java-faq?spm=a2c63.p38356.0.0.69a63c6bXPt34F-->
     <httpcomponents.version>4.4.1</httpcomponents.version>
     <kryo.version>4.0.2</kryo.version>
@@ -529,6 +532,17 @@
         <groupId>com.aliyun.oss</groupId>
         <artifactId>aliyun-sdk-oss</artifactId>
         <version>${aliyun.oss.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.calcite</groupId>
+        <artifactId>calcite-core</artifactId>
+        <version>${calcite.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.immutables</groupId>
+        <artifactId>value</artifactId>
+        <version>${immutables.version}</version>
+        <scope>provided</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>

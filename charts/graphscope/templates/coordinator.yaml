@@ -66,10 +66,10 @@ spec:
           - "--k8s_image_repository"
           - {{ .Values.image.repository }}
           - "--k8s_image_tag"
-          {{- if .Values.image.tag | quote }}
+          {{- if .Values.image.tag }}
           - {{ .Values.image.tag | quote }}
           {{- else }}
-          - {{ .Chart.AppVersion }}
+          - {{ .Chart.AppVersion | quote }}
           {{- end }}
           - "--k8s_image_pull_policy"
           - {{ .Values.image.pullPolicy | quote }}

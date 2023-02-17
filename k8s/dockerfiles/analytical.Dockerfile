@@ -14,13 +14,15 @@ RUN cd /home/graphscope/GraphScope/ && \
     if [ "${CI}" == "true" ]; then \
         cp -r artifacts/analytical /home/graphscope/install; \
     else \
-        export GRAPHSCOPE_HOME=/home/graphscope/install; \
-        mkdir ${GRAPHSCOPE_HOME}; \
-        make analytical-install INSTALL_PREFIX=${GRAPHSCOPE_HOME}; \
-        strip ${GRAPHSCOPE_HOME}/bin/grape_engine; \
-        strip ${GRAPHSCOPE_HOME}/lib/*.so; \
-        python3 ./k8s/utils/precompile.py --graph --output_dir ${GRAPHSCOPE_HOME}/builtin; \
-        strip /home/graphscope/install/builtin/*/*.so; \
+        export INSTALL_DIR=/home/graphscope/install; \
+        mkdir ${INSTALL_DIR}; \
+        source /home/graphscope/.graphscope_env; \
+        make analytical-install INSTALL_PREFIX=${INSTALL_DIR}; \
+        strip ${INSTALL_DIR}/bin/grape_engine; \
+        strip ${INSTALL_DIR}/lib/*.so; \
+        sudo cp -rs ${INSTALL_DIR}/* ${GRAPHSCOPE_HOME}/; \
+        python3 ./k8s/utils/precompile.py --graph --output_dir ${INSTALL_DIR}/builtin; \
+        strip ${INSTALL_DIR}/builtin/*/*.so; \
     fi
 
 ############### RUNTIME: ANALYTICAL #######################
@@ -48,13 +50,15 @@ RUN cd /home/graphscope/GraphScope/ && \
     if [ "${CI}" == "true" ]; then \
         cp -r artifacts/analytical-java /home/graphscope/install; \
     else \
-        export GRAPHSCOPE_HOME=/home/graphscope/install; \
-        mkdir ${GRAPHSCOPE_HOME}; \
-        make analytical-java-install INSTALL_PREFIX=${GRAPHSCOPE_HOME}; \
-        strip ${GRAPHSCOPE_HOME}/bin/grape_engine; \
-        strip ${GRAPHSCOPE_HOME}/lib/*.so; \
-        python3 ./k8s/utils/precompile.py --graph --output_dir ${GRAPHSCOPE_HOME}/builtin; \
-        strip /home/graphscope/install/builtin/*/*.so; \
+        export INSTALL_DIR=/home/graphscope/install; \
+        mkdir ${INSTALL_DIR}; \
+        source /home/graphscope/.graphscope_env; \
+        make analytical-java-install INSTALL_PREFIX=${INSTALL_DIR}; \
+        strip ${INSTALL_DIR}/bin/grape_engine; \
+        strip ${INSTALL_DIR}/lib/*.so; \
+        sudo cp -rs ${INSTALL_DIR}/* ${GRAPHSCOPE_HOME}/; \
+        python3 ./k8s/utils/precompile.py --graph --output_dir ${INSTALL_DIR}/builtin; \
+        strip ${INSTALL_DIR}/builtin/*/*.so; \
     fi
 
 ############### RUNTIME: ANALYTICAL-JAVA #######################
@@ -72,8 +76,8 @@ ENV PATH=$PATH:$GRAPHSCOPE_HOME/bin LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GRAPHSCOPE
 USER root
 COPY ./k8s/utils/kube_ssh /usr/local/bin/kube_ssh
 COPY --from=builder-java /home/graphscope/install /opt/graphscope/
-RUN mkdir -p /tmp/gs && sudo mv /opt/graphscope/builtin /tmp/gs/builtin && chown -R graphscope:graphscope /tmp/gs
-RUN sudo chmod +x /opt/graphscope/bin/*
+RUN mkdir -p /tmp/gs && mv /opt/graphscope/builtin /tmp/gs/builtin && chown -R graphscope:graphscope /tmp/gs
+RUN chmod +x /opt/graphscope/bin/*
 
 USER graphscope
 WORKDIR /home/graphscope
