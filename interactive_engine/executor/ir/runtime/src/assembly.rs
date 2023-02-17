@@ -593,13 +593,15 @@ impl JobAssembly<Record> for IRJobAssembly {
     fn assemble(&self, plan: &JobDesc, worker: &mut Worker<Record, Vec<u8>>) -> Result<(), BuildJobError> {
         worker.dataflow(move |input, output| {
             let physical_plan = decode::<pb::PhysicalPlan>(&plan.plan)?;
-            debug!("{:#?}", physical_plan);
             let source_opr = physical_plan
                 .plan
                 .first()
                 .ok_or(FnGenError::from(ParsePbError::EmptyFieldError("empty job plan".to_string())))?;
             let source_iter = self.udf_gen.gen_source(source_opr.clone())?;
             let source = input.input_from(source_iter)?;
+            if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
+                debug!("{:#?}", physical_plan);
+            }
             let plan_len = physical_plan.plan.len();
             let stream = self.install(source, &physical_plan.plan[1..plan_len - 1])?;
             let sink_opr = physical_plan
