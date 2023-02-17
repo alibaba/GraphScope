@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.calcite.tools.config;
+package com.alibaba.graphscope.common.ir.tools.config;
 
 import java.util.ArrayList;
 import java.util.Collections;

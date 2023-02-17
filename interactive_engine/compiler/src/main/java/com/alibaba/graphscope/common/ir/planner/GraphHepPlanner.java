@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.calcite.planner;
+package com.alibaba.graphscope.common.ir.planner;
 
 import org.apache.calcite.plan.*;
 import org.apache.calcite.rel.RelNode;

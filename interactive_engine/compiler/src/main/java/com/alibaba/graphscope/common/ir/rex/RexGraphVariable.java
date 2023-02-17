@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.calcite.rex;
+package com.alibaba.graphscope.common.ir.rex;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.calcite.tools.config;
+package com.alibaba.graphscope.common.ir.tools.config;
 
-import com.alibaba.graphscope.common.calcite.tools.GraphBuilder;
+import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.jna.type.PathOpt;
 import com.alibaba.graphscope.common.jna.type.ResultOpt;
 
@@ -27,6 +27,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * build {@code PathExpandConfig} (used to build {@code PathExpandOperator}) from user given configs
+ */
 public class PathExpandConfig {
     private final RelNode expand;
     private final RelNode getV;
@@ -109,12 +112,12 @@ public class PathExpandConfig {
         }
 
         // TODO: build expand from config
-        public Builder expand(ExpandConfig config) {
+        public Builder expand(GraphConfig config) {
             return this;
         }
 
         // TODO: build getV from config
-        public Builder getV(GetVConfig config) {
+        public Builder getV(GraphConfig config) {
             return this;
         }
 

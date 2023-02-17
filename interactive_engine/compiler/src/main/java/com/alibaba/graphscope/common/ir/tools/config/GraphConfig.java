@@ -14,32 +14,35 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.calcite.tools.config;
+package com.alibaba.graphscope.common.ir.tools.config;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Objects;
 
-public class GetVConfig {
-    private final GetVOpt opt;
+/**
+ * maintain user configs for basic graph operators: Source/Expand/GetV
+ */
+public class GraphConfig {
+    private final Opt opt;
     private final LabelConfig labels;
     @Nullable private final String alias;
 
-    public GetVConfig(GetVOpt opt) {
+    public GraphConfig(Opt opt) {
         this(opt, LabelConfig.DEFAULT, null);
     }
 
-    public GetVConfig(GetVOpt opt, LabelConfig labels) {
+    public GraphConfig(Opt opt, LabelConfig labels) {
         this(opt, labels, null);
     }
 
-    public GetVConfig(GetVOpt opt, LabelConfig labels, @Nullable String alias) {
+    public GraphConfig(Opt opt, LabelConfig labels, @Nullable String alias) {
         this.opt = Objects.requireNonNull(opt);
         this.labels = Objects.requireNonNull(labels);
         this.alias = alias;
     }
 
-    public GetVOpt getOpt() {
+    public Opt getOpt() {
         return opt;
     }
 
@@ -49,5 +52,20 @@ public class GetVConfig {
 
     public @Nullable String getAlias() {
         return alias;
+    }
+
+    public enum Opt {
+        // source options
+        VERTEX,
+        EDGE,
+        // expand options
+        OUT,
+        IN,
+        EXPAND_BOTH,
+        // getV options
+        START,
+        END,
+        OTHER,
+        GET_V_BOTH
     }
 }

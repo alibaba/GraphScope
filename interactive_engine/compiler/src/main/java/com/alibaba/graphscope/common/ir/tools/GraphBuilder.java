@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.calcite.tools;
+package com.alibaba.graphscope.common.ir.tools;
 
-import com.alibaba.graphscope.common.calcite.rex.RexGraphVariable;
-import com.alibaba.graphscope.common.calcite.tools.config.*;
+import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
+import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.plan.*;
@@ -70,7 +70,7 @@ public class GraphBuilder extends RelBuilder {
      * @param config
      * @return
      */
-    public GraphBuilder source(SourceConfig config) {
+    public GraphBuilder source(GraphConfig config) {
         return this;
     }
 
@@ -80,7 +80,7 @@ public class GraphBuilder extends RelBuilder {
      * @param config
      * @return
      */
-    public GraphBuilder expand(ExpandConfig config) {
+    public GraphBuilder expand(GraphConfig config) {
         return this;
     }
 
@@ -90,7 +90,7 @@ public class GraphBuilder extends RelBuilder {
      * @param config
      * @return
      */
-    public GraphBuilder getV(GetVConfig config) {
+    public GraphBuilder getV(GraphConfig config) {
         return this;
     }
 
