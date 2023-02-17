@@ -70,7 +70,7 @@ public class GraphBuilder extends RelBuilder {
      * @param config
      * @return
      */
-    public GraphBuilder source(GraphConfig config) {
+    public GraphBuilder source(SourceConfig config) {
         return this;
     }
 
@@ -80,7 +80,7 @@ public class GraphBuilder extends RelBuilder {
      * @param config
      * @return
      */
-    public GraphBuilder expand(GraphConfig config) {
+    public GraphBuilder expand(ExpandConfig config) {
         return this;
     }
 
@@ -90,7 +90,7 @@ public class GraphBuilder extends RelBuilder {
      * @param config
      * @return
      */
-    public GraphBuilder getV(GraphConfig config) {
+    public GraphBuilder getV(GetVConfig config) {
         return this;
     }
 
@@ -117,7 +117,7 @@ public class GraphBuilder extends RelBuilder {
      * @param single single sentence
      * @param opt anti or optional
      */
-    public GraphBuilder match(RelNode single, MatchOpt opt) {
+    public GraphBuilder match(RelNode single, GraphOpt.Match opt) {
         return this;
     }
 

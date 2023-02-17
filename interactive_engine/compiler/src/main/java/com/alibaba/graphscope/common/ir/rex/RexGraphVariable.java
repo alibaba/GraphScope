@@ -16,30 +16,34 @@
 
 package com.alibaba.graphscope.common.ir.rex;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableList;
-
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.util.List;
+import java.util.Objects;
 
 /**
  * Denote variables, i.e. "a" or "name" or "a.name"
  */
 public class RexGraphVariable extends RexInputRef {
-    private List<Integer> idList;
+    // null -> 'head' in gremlin
+    private @Nullable Integer aliasId;
+    // null -> get object referred by the given alias, i.e. 'a'
+    // not null -> get object referred by the given alias and get the given property from it, i.e.
+    // 'a.name'
+    private @Nullable Integer propertyId;
 
     protected RexGraphVariable(int aliasId, @Nullable String name, RelDataType type) {
         this(name, type);
-        this.idList = ImmutableList.of(aliasId);
+        this.aliasId = aliasId;
     }
 
-    protected RexGraphVariable(int aliasId, int fieldId, @Nullable String name, RelDataType type) {
+    protected RexGraphVariable(
+            int aliasId, int propertyId, @Nullable String name, RelDataType type) {
         this(name, type);
-        this.idList = ImmutableList.of(aliasId, fieldId);
+        this.aliasId = aliasId;
+        this.propertyId = propertyId;
     }
 
     protected RexGraphVariable(@Nullable String name, RelDataType type) {
@@ -71,17 +75,26 @@ public class RexGraphVariable extends RexInputRef {
         return new RexGraphVariable(aliasId, fieldId, name, type);
     }
 
+    public @Nullable Integer getAliasId() {
+        return aliasId;
+    }
+
+    public @Nullable Integer getPropertyId() {
+        return propertyId;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
         RexGraphVariable that = (RexGraphVariable) o;
-        return Objects.equal(idList, that.idList) && Objects.equal(type, that.type);
+        return Objects.equals(aliasId, that.aliasId) && Objects.equals(propertyId, that.propertyId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(idList, type);
+        return Objects.hash(super.hashCode(), aliasId, propertyId);
     }
 
     @Override

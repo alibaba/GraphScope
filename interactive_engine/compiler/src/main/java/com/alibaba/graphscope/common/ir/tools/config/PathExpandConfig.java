@@ -112,12 +112,12 @@ public class PathExpandConfig {
         }
 
         // TODO: build expand from config
-        public Builder expand(GraphConfig config) {
+        public Builder expand(ExpandConfig config) {
             return this;
         }
 
         // TODO: build getV from config
-        public Builder getV(GraphConfig config) {
+        public Builder getV(GetVConfig config) {
             return this;
         }
 

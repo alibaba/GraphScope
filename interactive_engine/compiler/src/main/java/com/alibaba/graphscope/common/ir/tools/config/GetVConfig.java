@@ -20,29 +20,26 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Objects;
 
-/**
- * maintain user configs for basic graph operators: Source/Expand/GetV
- */
-public class GraphConfig {
-    private final Opt opt;
+public class GetVConfig {
+    private final GraphOpt.GetV opt;
     private final LabelConfig labels;
     @Nullable private final String alias;
 
-    public GraphConfig(Opt opt) {
+    public GetVConfig(GraphOpt.GetV opt) {
         this(opt, LabelConfig.DEFAULT, null);
     }
 
-    public GraphConfig(Opt opt, LabelConfig labels) {
+    public GetVConfig(GraphOpt.GetV opt, LabelConfig labels) {
         this(opt, labels, null);
     }
 
-    public GraphConfig(Opt opt, LabelConfig labels, @Nullable String alias) {
+    public GetVConfig(GraphOpt.GetV opt, LabelConfig labels, @Nullable String alias) {
         this.opt = Objects.requireNonNull(opt);
         this.labels = Objects.requireNonNull(labels);
         this.alias = alias;
     }
 
-    public Opt getOpt() {
+    public GraphOpt.GetV getOpt() {
         return opt;
     }
 
@@ -52,20 +49,5 @@ public class GraphConfig {
 
     public @Nullable String getAlias() {
         return alias;
-    }
-
-    public enum Opt {
-        // source options
-        VERTEX,
-        EDGE,
-        // expand options
-        OUT,
-        IN,
-        EXPAND_BOTH,
-        // getV options
-        START,
-        END,
-        OTHER,
-        GET_V_BOTH
     }
 }
