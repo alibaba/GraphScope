@@ -23,6 +23,7 @@ use crate::error::ParsePbError;
 use crate::generated::algebra as pb;
 use crate::generated::common as common_pb;
 use crate::generated::physical as physical_pb;
+use crate::generated::physical::PhysicalOpr;
 use crate::NameOrId;
 
 pub const SPLITTER: &'static str = ".";
@@ -491,12 +492,6 @@ impl From<pb::Limit> for pb::logical_plan::Operator {
     }
 }
 
-impl From<pb::Auxilia> for pb::logical_plan::Operator {
-    fn from(opr: pb::Auxilia) -> Self {
-        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Auxilia(opr)) }
-    }
-}
-
 impl From<pb::As> for pb::logical_plan::Operator {
     fn from(opr: pb::As) -> Self {
         pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::As(opr)) }
@@ -595,37 +590,6 @@ impl From<Object> for common_pb::Value {
     }
 }
 
-impl pb::logical_plan::operator::Opr {
-    pub fn get_name(&self) -> String {
-        let name = match self {
-            pb::logical_plan::operator::Opr::Project(_) => "Project",
-            pb::logical_plan::operator::Opr::Select(_) => "Select",
-            pb::logical_plan::operator::Opr::Join(_) => "Join",
-            pb::logical_plan::operator::Opr::Union(_) => "Union",
-            pb::logical_plan::operator::Opr::GroupBy(_) => "GroupBy",
-            pb::logical_plan::operator::Opr::OrderBy(_) => "OrderBy",
-            pb::logical_plan::operator::Opr::Dedup(_) => "Dedup",
-            pb::logical_plan::operator::Opr::Unfold(_) => "Unfold",
-            pb::logical_plan::operator::Opr::Apply(_) => "Apply",
-            pb::logical_plan::operator::Opr::SegApply(_) => "SegApply",
-            pb::logical_plan::operator::Opr::Scan(_) => "Scan",
-            pb::logical_plan::operator::Opr::Limit(_) => "Limit",
-            pb::logical_plan::operator::Opr::As(_) => "As",
-            pb::logical_plan::operator::Opr::Auxilia(_) => "Auxilia",
-            pb::logical_plan::operator::Opr::Sink(_) => "Sink",
-            pb::logical_plan::operator::Opr::Vertex(_) => "GetV",
-            pb::logical_plan::operator::Opr::Edge(_) => "EdgeExpand",
-            pb::logical_plan::operator::Opr::Path(_) => "PathExpand",
-            pb::logical_plan::operator::Opr::PathStart(_) => "PathStart",
-            pb::logical_plan::operator::Opr::PathEnd(_) => "PathEnd",
-            pb::logical_plan::operator::Opr::Pattern(_) => "Pattern",
-            pb::logical_plan::operator::Opr::Fused(_) => "Fused",
-            pb::logical_plan::operator::Opr::Intersect(_) => "Intersect",
-        };
-        name.to_string()
-    }
-}
-
 impl pb::logical_plan::Operator {
     pub fn is_whole_graph(&self) -> bool {
         if let Some(opr) = &self.opr {
@@ -671,6 +635,27 @@ impl From<physical_pb::physical_opr::operator::OpKind> for physical_pb::Physical
         let opr = physical_pb::physical_opr::Operator { op_kind: Some(op_kind) };
         // TODO: add op_meta once supported
         physical_pb::PhysicalOpr { opr: Some(opr), op_meta: vec![] }
+    }
+}
+
+impl From<physical_pb::Repartition> for physical_pb::PhysicalOpr {
+    fn from(repartition: physical_pb::Repartition) -> Self {
+        let op_kind = physical_pb::physical_opr::operator::OpKind::Repartition(repartition);
+        op_kind.into()
+    }
+}
+
+impl From<physical_pb::EdgeExpand> for physical_pb::PhysicalOpr {
+    fn from(expand: physical_pb::EdgeExpand) -> Self {
+        let op_kind = physical_pb::physical_opr::operator::OpKind::Edge(expand);
+        op_kind.into()
+    }
+}
+
+impl From<physical_pb::Scan> for physical_pb::PhysicalOpr {
+    fn from(scan: physical_pb::Scan) -> Self {
+        let op_kind = physical_pb::physical_opr::operator::OpKind::Scan(scan);
+        op_kind.into()
     }
 }
 
@@ -783,6 +768,27 @@ impl From<pb::Sink> for physical_pb::Sink {
                 .collect(),
             sink_target: sink.sink_target,
         }
+    }
+}
+
+impl TryFrom<&physical_pb::PhysicalOpr> for physical_pb::physical_opr::operator::OpKind {
+    type Error = ParsePbError;
+
+    fn try_from(op: &PhysicalOpr) -> Result<Self, Self::Error> {
+        op.clone().try_into()
+    }
+}
+
+impl TryFrom<physical_pb::PhysicalOpr> for physical_pb::physical_opr::operator::OpKind {
+    type Error = ParsePbError;
+
+    fn try_from(op: PhysicalOpr) -> Result<Self, Self::Error> {
+        let op_kind = op
+            .opr
+            .ok_or(ParsePbError::EmptyFieldError("algebra op is empty".to_string()))?
+            .op_kind
+            .ok_or(ParsePbError::EmptyFieldError("algebra op_kind is empty".to_string()))?;
+        Ok(op_kind)
     }
 }
 

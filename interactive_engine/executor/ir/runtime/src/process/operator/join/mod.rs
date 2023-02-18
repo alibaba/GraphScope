@@ -15,22 +15,10 @@
 
 mod join;
 
-use ir_common::error::ParsePbError;
-use ir_common::generated::algebra as algebra_pb;
-
 use crate::error::FnGenResult;
 use crate::process::functions::JoinKeyGen;
 use crate::process::record::{Record, RecordKey};
 
 pub trait JoinFunctionGen {
     fn gen_join(self) -> FnGenResult<Box<dyn JoinKeyGen<Record, RecordKey, Record>>>;
-}
-
-impl JoinFunctionGen for algebra_pb::logical_plan::operator::Opr {
-    fn gen_join(self) -> FnGenResult<Box<dyn JoinKeyGen<Record, RecordKey, Record>>> {
-        match self {
-            algebra_pb::logical_plan::operator::Opr::Join(join) => Ok(Box::new(join)),
-            _ => Err(ParsePbError::from(format!("the operatoris not a `Join`, it is {:?} ", self)))?,
-        }
-    }
 }

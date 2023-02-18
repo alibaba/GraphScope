@@ -22,6 +22,7 @@ use dyn_type::Object;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common as common_pb;
+use ir_common::generated::physical as pb;
 use ir_common::{LabelId, NameOrId, OneOrMany};
 use pegasus::codec::{ReadExt, WriteExt};
 
@@ -51,15 +52,15 @@ pub enum Direction {
     Both = 2,
 }
 
-impl From<algebra_pb::edge_expand::Direction> for Direction {
-    fn from(direction: algebra_pb::edge_expand::Direction) -> Self
+impl From<pb::edge_expand::Direction> for Direction {
+    fn from(direction: pb::edge_expand::Direction) -> Self
     where
         Self: Sized,
     {
         match direction {
-            algebra_pb::edge_expand::Direction::Out => Direction::Out,
-            algebra_pb::edge_expand::Direction::In => Direction::In,
-            algebra_pb::edge_expand::Direction::Both => Direction::Both,
+            pb::edge_expand::Direction::Out => Direction::Out,
+            pb::edge_expand::Direction::In => Direction::In,
+            pb::edge_expand::Direction::Both => Direction::Both,
         }
     }
 }

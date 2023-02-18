@@ -13,12 +13,10 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::convert::TryInto;
-
 use graph_proxy::apis::GraphPath;
-use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::path_expand::PathOpt;
 use ir_common::generated::algebra::path_expand::ResultOpt;
+use ir_common::generated::physical as pb;
 use ir_common::KeyId;
 use pegasus::api::function::{FilterMapFunction, FnResult};
 
@@ -52,14 +50,10 @@ impl FilterMapFunction<Record, Record> for PathStartOperator {
     }
 }
 
-impl FilterMapFuncGen for algebra_pb::PathStart {
+impl FilterMapFuncGen for pb::PathExpand {
     fn gen_filter_map(self) -> FnGenResult<Box<dyn FilterMapFunction<Record, Record>>> {
-        let start_tag = self
-            .start_tag
-            .map(|tag| tag.try_into())
-            .transpose()?;
         let path_start_operator = PathStartOperator {
-            start_tag,
+            start_tag: self.start_tag,
             path_opt: unsafe { std::mem::transmute(self.path_opt) },
             result_opt: unsafe { std::mem::transmute(self.result_opt) },
         };

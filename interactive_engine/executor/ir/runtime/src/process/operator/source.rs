@@ -14,7 +14,7 @@
 //! limitations under the License.
 
 use std::collections::HashMap;
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 use std::sync::Arc;
 
 use dyn_type::Object;
@@ -22,6 +22,7 @@ use graph_proxy::apis::graph::PKV;
 use graph_proxy::apis::{get_graph, Edge, Partitioner, QueryParams, Vertex, ID};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::generated::algebra as algebra_pb;
+use ir_common::generated::physical as pb;
 use ir_common::{KeyId, NameOrId};
 
 use crate::error::{FnGenError, FnGenResult};
@@ -32,6 +33,7 @@ pub enum SourceType {
     Vertex,
     Edge,
     Table,
+    Dummy,
 }
 
 /// Source Operator, fetching a source from the (graph) database
@@ -44,14 +46,26 @@ pub struct SourceOperator {
     source_type: SourceType,
 }
 
+impl Default for SourceOperator {
+    fn default() -> Self {
+        SourceOperator {
+            query_params: QueryParams::default(),
+            src: None,
+            primary_key_values: None,
+            alias: None,
+            source_type: SourceType::Dummy,
+        }
+    }
+}
+
 impl SourceOperator {
     pub fn new(
-        opr: algebra_pb::logical_plan::operator::Opr, job_workers: usize, worker_index: u32,
-        partitioner: Arc<dyn Partitioner>,
-    ) -> ParsePbResult<Self> {
-        match opr {
-            algebra_pb::logical_plan::operator::Opr::Scan(scan) => {
-                if let Some(index_predicate) = &scan.idx_predicate {
+        op: pb::PhysicalOpr, job_workers: usize, worker_index: u32, partitioner: Arc<dyn Partitioner>,
+    ) -> FnGenResult<Self> {
+        let op_kind = op.try_into()?;
+        match op_kind {
+            pb::physical_opr::operator::OpKind::Scan(mut scan) => {
+                if let Some(index_predicate) = scan.idx_predicate.take() {
                     let ip = index_predicate.clone();
                     let ip2 = index_predicate.clone();
                     let mut source_op = SourceOperator::try_from(scan)?;
@@ -78,6 +92,7 @@ impl SourceOperator {
                     Ok(source_op)
                 }
             }
+            pb::physical_opr::operator::OpKind::Root(_) => Ok(SourceOperator::default()),
             _ => Err(ParsePbError::from("algebra_pb op is not a source"))?,
         }
     }
@@ -176,27 +191,32 @@ impl SourceOperator {
             SourceType::Table => Err(FnGenError::unsupported_error(
                 "neither `Edge` nor `Vertex` but `Table` type `Source` opr",
             ))?,
+            SourceType::Dummy => {
+                // a dummy record to trigger the computation
+                Ok(Box::new(vec![Record::new(Object::None, None)].into_iter())
+                    as Box<dyn Iterator<Item = Record> + Send>)
+            }
         }
     }
 }
 
-impl TryFrom<algebra_pb::Scan> for SourceOperator {
+impl TryFrom<pb::Scan> for SourceOperator {
     type Error = ParsePbError;
 
-    fn try_from(scan_pb: algebra_pb::Scan) -> Result<Self, Self::Error> {
+    fn try_from(scan_pb: pb::Scan) -> Result<Self, Self::Error> {
         let scan_opt: algebra_pb::scan::ScanOpt = unsafe { ::std::mem::transmute(scan_pb.scan_opt) };
         let source_type = match scan_opt {
             algebra_pb::scan::ScanOpt::Vertex => SourceType::Vertex,
             algebra_pb::scan::ScanOpt::Edge => SourceType::Edge,
             algebra_pb::scan::ScanOpt::Table => SourceType::Table,
         };
-        let alias = scan_pb
-            .alias
-            .map(|alias| KeyId::try_from(alias))
-            .transpose()?;
-
         let query_params = QueryParams::try_from(scan_pb.params)?;
-
-        Ok(SourceOperator { query_params, src: None, primary_key_values: None, alias, source_type })
+        Ok(SourceOperator {
+            query_params,
+            src: None,
+            primary_key_values: None,
+            alias: scan_pb.alias,
+            source_type,
+        })
     }
 }

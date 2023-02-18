@@ -24,10 +24,8 @@ mod test {
     use graph_proxy::apis::GraphElement;
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
-    use ir_common::generated::common as common_pb;
-    use pegasus_client::builder::*;
+    use ir_physical_client::physical_builder::*;
     use pegasus_server::JobRequest;
-    use prost::Message;
     use runtime::process::entry::Entry;
 
     use crate::common::test::*;
@@ -48,19 +46,14 @@ mod test {
             expand_opt: 0,
             alias: None,
         };
-        let source_opr_bytes = pb::logical_plan::Operator::from(source_opr).encode_to_vec();
-        let select_opr_bytes = pb::logical_plan::Operator::from(select_opr).encode_to_vec();
-        let shuffle_opr_bytes = common_pb::NameOrIdKey { key: None }.encode_to_vec();
-        let expand_opr_bytes = pb::logical_plan::Operator::from(expand_opr).encode_to_vec();
-        let sink_opr_bytes = pb::logical_plan::Operator::from(default_sink_pb()).encode_to_vec();
 
         let mut job_builder = JobBuilder::default();
-        job_builder.add_source(source_opr_bytes.clone());
-        job_builder.filter(select_opr_bytes);
-        job_builder.repartition(shuffle_opr_bytes.clone());
-        job_builder.flat_map(expand_opr_bytes.clone());
-        job_builder.limit(10);
-        job_builder.sink(sink_opr_bytes);
+        job_builder.add_scan_source(source_opr);
+        job_builder.select(select_opr);
+        job_builder.shuffle(None);
+        job_builder.edge_expand(expand_opr);
+        job_builder.limit(pb::Limit { range: Some(pb::Range { lower: 1, upper: 11 }) });
+        job_builder.sink(default_sink_pb());
 
         job_builder.build().unwrap()
     }
@@ -115,14 +108,10 @@ mod test {
             is_append: true,
         };
 
-        let source_opr_bytes = pb::logical_plan::Operator::from(source_opr).encode_to_vec();
-        let project_opr_bytes = pb::logical_plan::Operator::from(project_opr).encode_to_vec();
-        let sink_opr_bytes = pb::logical_plan::Operator::from(default_sink_pb()).encode_to_vec();
-
         let mut job_builder = JobBuilder::default();
-        job_builder.add_source(source_opr_bytes);
-        job_builder.filter_map(project_opr_bytes);
-        job_builder.sink(sink_opr_bytes);
+        job_builder.add_scan_source(source_opr);
+        job_builder.project(project_opr);
+        job_builder.sink(default_sink_pb());
         job_builder.build().unwrap()
     }
 
@@ -151,18 +140,12 @@ mod test {
             is_append: true,
         };
 
-        let source_opr_bytes = pb::logical_plan::Operator::from(source_opr).encode_to_vec();
-        let shuffle_opr_bytes = common_pb::NameOrIdKey { key: None }.encode_to_vec();
-        let expand_opr_bytes = pb::logical_plan::Operator::from(expand_opr).encode_to_vec();
-        let project_opr_bytes = pb::logical_plan::Operator::from(project_opr).encode_to_vec();
-        let sink_opr_bytes = pb::logical_plan::Operator::from(default_sink_pb()).encode_to_vec();
-
         let mut job_builder = JobBuilder::default();
-        job_builder.add_source(source_opr_bytes);
-        job_builder.repartition(shuffle_opr_bytes);
-        job_builder.flat_map(expand_opr_bytes);
-        job_builder.filter_map(project_opr_bytes);
-        job_builder.sink(sink_opr_bytes);
+        job_builder.add_scan_source(source_opr);
+        job_builder.shuffle(None);
+        job_builder.edge_expand(expand_opr);
+        job_builder.project(project_opr);
+        job_builder.sink(default_sink_pb());
         job_builder.build().unwrap()
     }
 
