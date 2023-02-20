@@ -16,8 +16,8 @@
 
 package org.apache.calcite.plan;
 
-import com.alibaba.graphscope.common.calcite.planner.GraphHepPlanner;
-import com.alibaba.graphscope.common.calcite.tools.AliasIdGenerator;
+import com.alibaba.graphscope.common.ir.planner.GraphHepPlanner;
+import com.alibaba.graphscope.common.ir.tools.AliasIdGenerator;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataTypeFactory;

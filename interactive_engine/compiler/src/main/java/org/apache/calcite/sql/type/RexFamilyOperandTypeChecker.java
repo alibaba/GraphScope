@@ -16,9 +16,9 @@
 
 package org.apache.calcite.sql.type;
 
-import static com.alibaba.graphscope.common.calcite.util.Static.RESOURCE;
+import static com.alibaba.graphscope.common.ir.util.Static.RESOURCE;
 
-import com.alibaba.graphscope.common.calcite.rex.RexCallBinding;
+import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.linq4j.Ord;
