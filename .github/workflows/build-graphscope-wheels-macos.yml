@@ -30,7 +30,35 @@ jobs:
         # fixed protobuf version 3.17.3
         git checkout 2b411d925849478163647594b32fd237828cf720
         popd
-        ${GITHUB_WORKSPACE}/scripts/install_deps.sh --dev --vineyard_prefix /opt/vineyard --verbose
+        # This will install vineyard by homebrew
+        # But we need to install vineyard to /opt/vineyard, so install it from source again.
+        ./gs install-deps --dev
+
+    - name: Install latest libgrape-lite
+      if: false
+      run: |
+        git clone --single-branch --depth=1 https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
+        cd /tmp/libgrape-lite
+        cmake . -DCMAKE_INSTALL_PREFIX=/opt/vineyard
+        make -j4
+        sudo make install
+
+    - name: Install latest vineyard
+      if: false
+      run: |
+        git clone --single-branch --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
+        cd /tmp/v6d
+        git submodule update --init
+        cmake .  -DCMAKE_INSTALL_PREFIX=/opt/vineyard \
+                 -DCMAKE_PREFIX_PATH=/opt/vineyard \
+                 -DUSE_EXTERNAL_ETCD_LIBS=OFF \
+                 -DBUILD_SHARED_LIBS=ON \
+                 -DBUILD_VINEYARD_TESTS=OFF
+        make -j4
+        sudo make install
+
+        # copy to /usr/local
+        sudo cp -r /opt/vineyard/* /usr/local/
 
     - name: Build Server Wheel
       run: |
@@ -82,7 +110,7 @@ jobs:
         # fixed protobuf version 3.17.3
         git checkout 2b411d925849478163647594b32fd237828cf720
         popd
-        ${GITHUB_WORKSPACE}/scripts/install_deps.sh --dev --verbose
+        ./gs install-deps --dev
 
     - name: Build Client Wheels
       run: |
