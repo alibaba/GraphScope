@@ -16,8 +16,6 @@
 
 package com.alibaba.graphscope.common.ir.schema;
 
-import static com.alibaba.graphscope.common.ir.util.Static.RESOURCE;
-
 import com.alibaba.graphscope.compiler.api.exception.GraphElementNotFoundException;
 import com.alibaba.graphscope.compiler.api.exception.GraphPropertyNotFoundException;
 import com.alibaba.graphscope.compiler.api.schema.*;
@@ -25,6 +23,7 @@ import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.schema.Statistic;
 import org.apache.calcite.util.ImmutableBitSet;
+import org.apache.calcite.util.Static;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -50,7 +49,7 @@ public class GraphSchemaWrapper implements StatisticSchema {
         try {
             return new DefaultStatistic(this.graphSchema.getElement(labelName));
         } catch (GraphElementNotFoundException e) {
-            throw RESOURCE.tableNotFound(labelName).ex();
+            throw Static.RESOURCE.tableNotFound(labelName).ex();
         }
     }
 

@@ -18,7 +18,6 @@ package com.alibaba.graphscope.common.ir.rex;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexInputRef;
-import org.apache.calcite.rex.RexVisitor;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -82,15 +81,6 @@ public class RexGraphVariable extends RexInputRef {
 
     public @Nullable Integer getPropertyId() {
         return propertyId;
-    }
-
-    @Override
-    public <R> R accept(RexVisitor<R> rexVisitor) {
-        if (rexVisitor instanceof RexVariableAliasChecker) {
-            return rexVisitor.visitInputRef(this);
-        } else {
-            return null;
-        }
     }
 
     @Override

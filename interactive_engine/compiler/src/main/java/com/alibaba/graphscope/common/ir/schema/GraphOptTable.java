@@ -16,8 +16,6 @@
 
 package com.alibaba.graphscope.common.ir.schema;
 
-import static com.alibaba.graphscope.common.ir.util.Static.RESOURCE;
-
 import static java.util.Objects.requireNonNull;
 
 import com.alibaba.graphscope.common.ir.tools.config.ScanOpt;
@@ -159,43 +157,46 @@ public class GraphOptTable implements RelOptTable {
 
     @Override
     public double getRowCount() {
-        throw RESOURCE.functionWillImplement(this.getClass()).ex();
+        throw new UnsupportedOperationException("row count is unsupported yet in statistics");
     }
 
     @Override
     public @Nullable RelDistribution getDistribution() {
-        throw RESOURCE.functionWillImplement(this.getClass()).ex();
+        throw new UnsupportedOperationException("distribution is unsupported yet in statistics");
     }
 
     @Override
     public @Nullable List<RelCollation> getCollationList() {
-        throw RESOURCE.functionWillImplement(this.getClass()).ex();
+        throw new UnsupportedOperationException("collations is unsupported yet in statistics");
     }
 
     // not used currently
 
     @Override
     public RelNode toRel(ToRelContext toRelContext) {
-        throw RESOURCE.functionNotImplement(this.getClass()).ex();
+        throw new UnsupportedOperationException("toRel is unsupported for it will never be used");
     }
 
     @Override
     public @Nullable List<RelReferentialConstraint> getReferentialConstraints() {
-        throw RESOURCE.functionNotImplement(this.getClass()).ex();
+        throw new UnsupportedOperationException(
+                "referentialConstraints is unsupported for it will never be used");
     }
 
     @Override
     public @Nullable Expression getExpression(Class aClass) {
-        throw RESOURCE.functionNotImplement(this.getClass()).ex();
+        throw new UnsupportedOperationException(
+                "expression is unsupported for it will never be used");
     }
 
     @Override
     public RelOptTable extend(List<RelDataTypeField> list) {
-        throw RESOURCE.functionNotImplement(this.getClass()).ex();
+        throw new UnsupportedOperationException("extend is unsupported for it will never be used");
     }
 
     @Override
     public List<ColumnStrategy> getColumnStrategies() {
-        throw RESOURCE.functionNotImplement(this.getClass()).ex();
+        throw new UnsupportedOperationException(
+                "columnStrategies is unsupported for it will never be used");
     }
 }
