@@ -1,6 +1,8 @@
 # Design of GAE
 
-In GraphScope, Graph Analytics Engine (GAE) is responsible for handling various graph analytics algorithms. GAE has three main components: graph storage, execution framework and algorithm library. Next, we give an overview to each of them below.
+In GraphScope, Graph Analytics Engine (GAE) is responsible for handling various graph analytics algorithms. GAE in GraphScope derives from [GRAPE](https://dl.acm.org/doi/10.1145/3282488), a graph processing system proposed on SIGMOD-2017. GRAPE differs from prior systems in its ability to parallelize sequential graph algorithms as a whole. Different from other parallel graph processing systems which need to recast the entire algorithm into a new model, in GRAPE, sequential algorithms can be easily “plugged into” with only minor changes and get parallelized to handle large graphs efficiently. In addition to the ease of programming, GRAPE is designed to be highly efficient and flexible, to cope the scale, variety and complexity from real-life graph applications. 
+
+GAE has three main components: graph storage, execution framework and algorithm library. Next, we give an overview to each of them below.
 
 ## Graph Storage
 
