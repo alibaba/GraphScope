@@ -125,7 +125,8 @@ public class PathExpandConfig {
                                         AliasInference.DEFAULT_NAME,
                                         AliasInference.DEFAULT_ID),
                                 null,
-                                innerBuilder.getTableConfig(config.getLabels()));
+                                innerBuilder.getTableConfig(
+                                        config.getLabels(), GraphOpt.Source.EDGE));
             }
             return this;
         }
@@ -140,7 +141,8 @@ public class PathExpandConfig {
                                         AliasInference.DEFAULT_NAME,
                                         AliasInference.DEFAULT_ID),
                                 null,
-                                innerBuilder.getTableConfig(config.getLabels()));
+                                innerBuilder.getTableConfig(
+                                        config.getLabels(), GraphOpt.Source.VERTEX));
             }
             return this;
         }

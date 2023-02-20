@@ -87,7 +87,7 @@ public class GraphBuilder extends RelBuilder {
                 GraphLogicalSource.create(
                         (GraphOptCluster) cluster,
                         getHints(config.getOpt().name(), aliasName, aliasId),
-                        getTableConfig(config.getLabels()));
+                        getTableConfig(config.getLabels(), config.getOpt()));
         push(source);
         return this;
     }
@@ -108,7 +108,7 @@ public class GraphBuilder extends RelBuilder {
                         (GraphOptCluster) cluster,
                         getHints(config.getOpt().name(), aliasName, aliasId),
                         input,
-                        getTableConfig(config.getLabels()));
+                        getTableConfig(config.getLabels(), GraphOpt.Source.EDGE));
         replaceTop(expand);
         return this;
     }
@@ -129,7 +129,7 @@ public class GraphBuilder extends RelBuilder {
                         (GraphOptCluster) cluster,
                         getHints(config.getOpt().name(), aliasName, aliasId),
                         input,
-                        getTableConfig(config.getLabels()));
+                        getTableConfig(config.getLabels(), GraphOpt.Source.VERTEX));
         replaceTop(getV);
         return this;
     }
@@ -171,18 +171,23 @@ public class GraphBuilder extends RelBuilder {
      * @param labelConfig
      * @return
      */
-    public TableConfig getTableConfig(LabelConfig labelConfig) {
+    public TableConfig getTableConfig(LabelConfig labelConfig, GraphOpt.Source opt) {
+        List<RelOptTable> relOptTables = new ArrayList<>();
         if (!labelConfig.isAll()) {
             ObjectUtils.requireNonEmpty(labelConfig.getLabels());
-            List<RelOptTable> tables = new ArrayList<>();
             for (String label : labelConfig.getLabels()) {
-                tables.add(relOptSchema.getTableForMember(ImmutableList.of(label)));
+                relOptTables.add(relOptSchema.getTableForMember(ImmutableList.of(label)));
             }
-            return new TableConfig(tables).isAll(labelConfig.isAll());
+        } else if (relOptSchema instanceof GraphOptSchema) { // get all labels
+            List<List<String>> allLabels = ((GraphOptSchema) relOptSchema).getTableNames(opt);
+            for (List<String> label : allLabels) {
+                relOptTables.add(relOptSchema.getTableForMember(label));
+            }
         } else {
-            throw new UnsupportedOperationException(
-                    "Non specific labels in table scan not supported currently");
+            throw new IllegalArgumentException(
+                    "cannot infer label types from the query given config");
         }
+        return new TableConfig(relOptTables).isAll(labelConfig.isAll());
     }
 
     public List<RelHint> getHints(String optName, String aliasName, int aliasId) {
@@ -253,7 +258,7 @@ public class GraphBuilder extends RelBuilder {
      * @param single single sentence
      * @param opt anti or optional
      */
-    public GraphBuilder match(RelNode single, MatchOpt opt) {
+    public GraphBuilder match(RelNode single, GraphOpt.Match opt) {
         RelNode input = size() > 0 ? peek() : null;
         RelNode match =
                 GraphLogicalSingleMatch.create((GraphOptCluster) cluster, null, input, single, opt);

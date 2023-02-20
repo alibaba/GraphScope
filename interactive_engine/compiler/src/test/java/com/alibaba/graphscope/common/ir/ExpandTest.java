@@ -44,7 +44,7 @@ public class ExpandTest {
                 "GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[~DEFAULT],"
                         + " opt=[OUT])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[~DEFAULT], opt=[Vertex])",
+                        + " alias=[~DEFAULT], opt=[VERTEX])",
                 expand.explain().trim());
     }
 
@@ -67,7 +67,7 @@ public class ExpandTest {
                 "GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[x],"
                         + " opt=[OUT])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[~DEFAULT], opt=[Vertex])",
+                        + " alias=[~DEFAULT], opt=[VERTEX])",
                 expand.explain().trim());
     }
 
@@ -97,6 +97,7 @@ public class ExpandTest {
                                         new LabelConfig(false).addLabel("person")))
                         .pathExpand(pxdConfig)
                         .build();
+        System.out.println(pathExpand.explain().trim());
         Assert.assertEquals(
                 "GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
                         + " tables=[knows]}], alias=[~DEFAULT], opt=[OUT])\n"
@@ -105,7 +106,7 @@ public class ExpandTest {
                         + "], offset=[1], fetch=[3], path_opt=[Simple], result_opt=[AllV],"
                         + " alias=[~DEFAULT])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[~DEFAULT], opt=[Vertex])",
+                        + " alias=[~DEFAULT], opt=[VERTEX])",
                 pathExpand.explain().trim());
     }
 }

@@ -40,6 +40,7 @@ public class SourceTest {
     private static final RexBuilder rexBuilder = new RexBuilder(typeFactory);
     private static final StatisticSchema schema = new GraphSchemaWrapper(mockGraphSchema());
 
+    // g.V().hasLabel("person")
     @Test
     public void single_label_test() {
         GraphBuilder builder = mockGraphBuilder();
@@ -48,20 +49,23 @@ public class SourceTest {
         RelNode source = builder.source(sourceConfig).build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
-                        + " opt=[Vertex])",
+                        + " opt=[VERTEX])",
                 source.explain().trim());
     }
 
+    // g.V().hasLabel("person", "software").as("a")
     @Test
     public void multiple_labels_test() {
         GraphBuilder builder = mockGraphBuilder();
         SourceConfig sourceConfig =
                 new SourceConfig(
-                        GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"), "a");
+                        GraphOpt.Source.VERTEX,
+                        new LabelConfig(false).addLabel("person").addLabel("software"),
+                        "a");
         RelNode source = builder.source(sourceConfig).build();
         Assert.assertEquals(
-                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[a],"
-                        + " opt=[Vertex])",
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person, software]}],"
+                        + " alias=[a], opt=[VERTEX])",
                 source.explain().trim());
     }
 

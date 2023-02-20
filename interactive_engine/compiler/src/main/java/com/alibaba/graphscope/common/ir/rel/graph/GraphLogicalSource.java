@@ -17,7 +17,7 @@
 package com.alibaba.graphscope.common.ir.rel.graph;
 
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
-import com.alibaba.graphscope.common.ir.tools.config.ScanOpt;
+import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.rel.RelWriter;
@@ -27,7 +27,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import java.util.List;
 
 public class GraphLogicalSource extends AbstractBindableTableScan {
-    private ScanOpt opt;
+    private GraphOpt.Source opt;
 
     protected GraphLogicalSource(
             GraphOptCluster cluster, List<RelHint> hints, TableConfig tableConfig) {
@@ -40,14 +40,14 @@ public class GraphLogicalSource extends AbstractBindableTableScan {
         return new GraphLogicalSource(cluster, hints, tableConfig);
     }
 
-    private ScanOpt scanOpt() {
+    private GraphOpt.Source scanOpt() {
         ObjectUtils.requireNonEmpty(hints);
         RelHint optHint = hints.get(0);
         ObjectUtils.requireNonEmpty(optHint.listOptions);
-        return ScanOpt.valueOf(optHint.listOptions.get(0));
+        return GraphOpt.Source.valueOf(optHint.listOptions.get(0));
     }
 
-    public ScanOpt getOpt() {
+    public GraphOpt.Source getOpt() {
         return opt;
     }
 

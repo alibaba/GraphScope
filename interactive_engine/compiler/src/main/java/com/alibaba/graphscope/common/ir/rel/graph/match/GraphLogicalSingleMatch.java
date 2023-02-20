@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.rel.graph.match;
 
-import com.alibaba.graphscope.common.ir.tools.config.MatchOpt;
+import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptUtil;
@@ -34,14 +34,14 @@ import java.util.*;
 
 public class GraphLogicalSingleMatch extends AbstractLogicalMatch {
     private final RelNode sentence;
-    private final MatchOpt matchOpt;
+    private final GraphOpt.Match matchOpt;
 
     protected GraphLogicalSingleMatch(
             GraphOptCluster cluster,
             @Nullable List<RelHint> hints,
             @Nullable RelNode input,
             RelNode sentence,
-            MatchOpt matchOpt) {
+            GraphOpt.Match matchOpt) {
         super(cluster, hints, input);
         this.sentence = Objects.requireNonNull(sentence);
         this.matchOpt = matchOpt;
@@ -52,7 +52,7 @@ public class GraphLogicalSingleMatch extends AbstractLogicalMatch {
             @Nullable List<RelHint> hints,
             RelNode input,
             RelNode sentence,
-            MatchOpt matchOpt) {
+            GraphOpt.Match matchOpt) {
         return new GraphLogicalSingleMatch(cluster, hints, input, sentence, matchOpt);
     }
 
