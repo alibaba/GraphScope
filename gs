@@ -1402,7 +1402,9 @@ gs_install_deps_command() {
       fi
     else # for all
       install_dependencies_analytical_universal
-      install_grape_vineyard_universal
+      if [[ -z ${no_v6d} ]]; then
+        install_grape_vineyard_universal
+      fi
       install_java_maven_universal
       install_llvm_universal
       install_rust_universal
