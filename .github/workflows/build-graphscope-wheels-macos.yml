@@ -31,12 +31,11 @@ jobs:
         # fixed protobuf version 3.17.3
         git checkout 2b411d925849478163647594b32fd237828cf720
         popd
-        brew update
         brew install bash
         alias bash=$(brew --prefix)/bin/bash
         # This will install vineyard by homebrew
         # But we need to install vineyard to /opt/vineyard, so install it from source again.
-        ./gs install-deps --dev
+        ./gs install-deps dev
 
     - name: Install latest libgrape-lite
       if: true
@@ -114,10 +113,9 @@ jobs:
         # fixed protobuf version 3.17.3
         git checkout 2b411d925849478163647594b32fd237828cf720
         popd
-        brew update
         brew install bash
         alias bash=$(brew --prefix)/bin/bash
-        ./gs install-deps --dev
+        ./gs install-deps dev
 
     - name: Build Client Wheels
       run: |
