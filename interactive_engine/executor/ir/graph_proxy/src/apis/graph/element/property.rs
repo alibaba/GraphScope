@@ -125,9 +125,6 @@ pub trait Details: std::fmt::Debug + Send + Sync + AsAny {
     /// (2) if some prop_keys are provided when querying the vertex/edge which indicates that only these properties are necessary,
     /// then we can only get all pre-specified properties of the vertex/edge.
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>>;
-
-    /// Insert a property with given property key and value
-    fn insert_property(&mut self, key: NameOrId, value: Object);
 }
 
 /// Properties in Runtime, including:
@@ -155,20 +152,6 @@ impl DynDetails {
     pub fn lazy<P: Details + 'static>(p: P) -> Self {
         DynDetails::Lazy(Arc::new(p))
     }
-
-    pub fn is_empty(&self) -> bool {
-        match self {
-            DynDetails::Empty => true,
-            _ => false,
-        }
-    }
-
-    pub fn is_default(&self) -> bool {
-        match self {
-            DynDetails::Default(_) => true,
-            _ => false,
-        }
-    }
 }
 
 impl_as_any!(DynDetails);
@@ -189,22 +172,6 @@ impl Details for DynDetails {
             DynDetails::Empty => None,
             DynDetails::Default(default) => Some(default.clone()), // should be unreachable
             DynDetails::Lazy(lazy) => lazy.get_all_properties(),
-        }
-    }
-
-    fn insert_property(&mut self, key: NameOrId, value: Object) {
-        match self {
-            DynDetails::Empty => {
-                let mut default = HashMap::new();
-                default.insert(key, value);
-                *self = DynDetails::new(default);
-            }
-            DynDetails::Default(default) => {
-                default.insert(key, value);
-            }
-            DynDetails::Lazy(lazy) => {
-                Arc::get_mut(lazy).map(|e| e.insert_property(key, value));
-            }
         }
     }
 }

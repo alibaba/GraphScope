@@ -15,7 +15,6 @@
 
 use std::convert::TryInto;
 
-use graph_proxy::apis::Details;
 use graph_proxy::apis::GraphElement;
 use graph_proxy::apis::{get_graph, DynDetails, QueryParams, Vertex};
 use ir_common::error::ParsePbError;
@@ -90,29 +89,19 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
             // e.g., for g.V().out().as("a").has("name", "marko"), we should compile as:
             // g.V().out().auxilia(as("a"))... where we give alias in auxilia,
             //     then we set tag=None and alias="a" in auxilia
-            // If queryable, then turn into graph element and do the query
-            let graph = get_graph().ok_or(FnExecError::NullGraphError)?;
-            let new_entry: Option<DynEntry> = match entry.get_type() {
+            match entry.get_type() {
                 EntryType::Vertex => {
+                    let graph = get_graph().ok_or(FnExecError::NullGraphError)?;
                     let id = entry.id();
-                    let mut result_iter = graph.get_vertex(&[id], &self.query_params)?;
-                    result_iter.next().map(|mut vertex| {
-                        // TODO:confirm the update case, and avoid it if possible.
-                        if let Some(details) = entry
-                            .as_vertex()
-                            .map(|v| v.details())
-                            .unwrap_or(None)
-                        {
-                            if let Some(properties) = details.get_all_properties() {
-                                for (key, val) in properties {
-                                    vertex
-                                        .get_details_mut()
-                                        .insert_property(key, val);
-                                }
-                            }
-                        }
-                        DynEntry::new(vertex)
-                    })
+                    if let Some(vertex) = graph
+                        .get_vertex(&[id], &self.query_params)?
+                        .next()
+                        .map(|vertex| DynEntry::new(vertex))
+                    {
+                        input.append(vertex, self.alias.clone());
+                    } else {
+                        return Ok(None);
+                    }
                 }
                 EntryType::Edge => {
                     // let id = entry.id();
@@ -136,19 +125,13 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                     // Currently, when getting properties from an edge,
                     // we assume that it has already been carried in the edge (when the first time queried the edge)
                     // since on most storages, query edges by eid is not supported yet.
-                    Some(entry.clone())
+                    input.append_arc_entry(input.get(self.tag).unwrap().clone(), self.alias.clone());
                 }
                 _ => Err(FnExecError::unexpected_data_error(&format!(
                     "neither Vertex nor Edge entry is accessed in `Auxilia` operator, the entry is {:?}",
                     entry
                 )))?,
             };
-            if new_entry.is_some() {
-                input.append(new_entry.unwrap(), self.alias.clone());
-            } else {
-                return Ok(None);
-            }
-
             Ok(Some(input))
         } else {
             Ok(None)
@@ -190,17 +173,18 @@ impl FilterMapFuncGen for pb::GetV {
                 Ok(Box::new(get_vertex_operator))
             }
             VOpt::Itself => {
-                if query_params.is_queryable() {
+                // TODO: this case may better be Project?
+                if !query_params.is_queryable() && self.alias.is_some() {
+                    let auxilia_operator = SimpleAuxiliaOperator { tag: self.tag, alias: self.alias };
+                    if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
+                        debug!("Runtime SimpleAuxiliaOperator: {:?}", auxilia_operator);
+                    }
+                    Ok(Box::new(auxilia_operator))
+                } else {
                     let auxilia_operator =
                         AuxiliaOperator { tag: self.tag, query_params, alias: self.alias };
                     if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
                         debug!("Runtime AuxiliaOperator: {:?}", auxilia_operator);
-                    }
-                    Ok(Box::new(auxilia_operator))
-                } else {
-                    let auxilia_operator = SimpleAuxiliaOperator { tag: self.tag, alias: self.alias };
-                    if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
-                        debug!("Runtime SimpleAuxiliaOperator: {:?}", auxilia_operator);
                     }
                     Ok(Box::new(auxilia_operator))
                 }

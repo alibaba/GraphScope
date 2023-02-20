@@ -64,7 +64,10 @@ fn process_tag_columns(builder: &mut JobBuilder, tag: Option<TagId>, columns_opt
 }
 
 // Fetch properties before used in select, order, dedup, group, join, and apply.
-fn post_process_vars(builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+// TODO: order and group_values are not the same.
+fn post_process_vars(
+    builder: &mut JobBuilder, plan_meta: &mut PlanMeta, is_order_or_group: bool,
+) -> IrResult<()> {
     let node_meta = plan_meta.get_curr_node_meta().unwrap();
     let tag_columns = node_meta.get_tag_columns();
     let len = tag_columns.len();
@@ -73,8 +76,19 @@ fn post_process_vars(builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrRe
         let tag = tag_columns.iter().next().unwrap().0;
         if tag.is_none() {
             let (tag, columns_opt) = tag_columns.into_iter().next().unwrap();
-            process_tag_columns(builder, tag, columns_opt);
+            // this may occur bugs since, we may not use the property directly after shuffle
+            if is_order_or_group && columns_opt.len() > 0 {
+                process_tag_columns(builder, tag, columns_opt);
+            } else {
+                builder.shuffle(None);
+                // GetV without params means that, you need to query the storage and get the `Vertex`
+                let auxilia = pb::GetV { tag: None, opt: 4, params: None, alias: None };
+                builder.get_v(auxilia);
+            }
             return Ok(());
+            // let (tag, columns_opt) = tag_columns.into_iter().next().unwrap();
+            // process_tag_columns(builder, tag, columns_opt);
+            // return Ok(());
         }
     }
 
@@ -145,7 +159,7 @@ impl AsPhysical for pb::Select {
         //    or 2. on single graph store, `Source + EdgeExpand(ExpandE) + GetV`
         // where Auxilia means get property or filter on a vertex.
         if plan_meta.is_partition() {
-            post_process_vars(builder, plan_meta)?;
+            post_process_vars(builder, plan_meta, false)?;
         }
         Ok(())
     }
@@ -273,7 +287,7 @@ impl AsPhysical for pb::OrderBy {
 
     fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         if plan_meta.is_partition() {
-            post_process_vars(builder, plan_meta)?;
+            post_process_vars(builder, plan_meta, true)?;
         }
         Ok(())
     }
@@ -289,7 +303,7 @@ impl AsPhysical for pb::Dedup {
 
     fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         if plan_meta.is_partition() {
-            post_process_vars(builder, plan_meta)?;
+            post_process_vars(builder, plan_meta, false)?;
         }
         Ok(())
     }
@@ -304,7 +318,7 @@ impl AsPhysical for pb::GroupBy {
     }
     fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         if plan_meta.is_partition() {
-            post_process_vars(builder, plan_meta)?;
+            post_process_vars(builder, plan_meta, true)?;
         }
         Ok(())
     }
@@ -559,7 +573,7 @@ impl AsPhysical for LogicalPlan {
                             let node_meta = plan_meta.get_curr_node_meta().unwrap();
                             let tag_columns = node_meta.get_tag_columns();
                             println!("notice the tag_columns in join!! {:?}", tag_columns);
-                            post_process_vars(builder, plan_meta)?;
+                            post_process_vars(builder, plan_meta, false)?;
                             builder.join(
                                 unsafe { std::mem::transmute(join_opr.kind) },
                                 left_plan,
