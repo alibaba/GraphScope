@@ -47,7 +47,7 @@ public class GroupTest {
                 "GraphLogicalAggregate(keys=[{variables=[DEFAULT.name, DEFAULT.age], aliases=[a,"
                         + " b]}], values=[[{operands=[], aggFunction=COUNT, alias='c'}]])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[~DEFAULT], opt=[Vertex])",
+                        + " alias=[~DEFAULT], opt=[VERTEX])",
                 aggregate.explain().trim());
     }
 }

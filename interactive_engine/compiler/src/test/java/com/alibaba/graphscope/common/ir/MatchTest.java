@@ -41,13 +41,13 @@ public class MatchTest {
                                         new LabelConfig(false).addLabel("knows"),
                                         "y"))
                         .build();
-        RelNode match = builder.match(expand, MatchOpt.OPTIONAL).build();
+        RelNode match = builder.match(expand, GraphOpt.Match.OPTIONAL).build();
         Assert.assertEquals(
                 "GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
                     + " alias=[y], opt=[OUT])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[x], opt=[Vertex])\n"
+                    + " alias=[x], opt=[VERTEX])\n"
                     + "], matchOpt=[OPTIONAL])",
                 match.explain().trim());
     }
@@ -87,11 +87,11 @@ public class MatchTest {
                         + " sentences=[{s0=[GraphLogicalExpand(tableConfig=[{isAll=false,"
                         + " tables=[knows]}], alias=[y], opt=[OUT])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[x], opt=[Vertex])\n"
+                        + " alias=[x], opt=[VERTEX])\n"
                         + "], s1=[GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
                         + " alias=[z], opt=[OUT])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[x], opt=[Vertex])\n"
+                        + " alias=[x], opt=[VERTEX])\n"
                         + "]}])",
                 match.explain().trim());
     }

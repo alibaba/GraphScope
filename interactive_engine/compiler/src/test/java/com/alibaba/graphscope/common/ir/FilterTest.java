@@ -44,7 +44,7 @@ public class FilterTest {
         RelNode filter = builder.filter(equal).build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
-                        + " fusedFilter=[[=(DEFAULT.age, 10)]], opt=[Vertex])",
+                        + " fusedFilter=[[=(DEFAULT.age, 10)]], opt=[VERTEX])",
                 filter.explain().trim());
     }
 
@@ -64,7 +64,7 @@ public class FilterTest {
         RelNode filter = builder.filter(equal).build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[x],"
-                        + " fusedFilter=[[=(DEFAULT.age, 10)]], opt=[Vertex])",
+                        + " fusedFilter=[[=(DEFAULT.age, 10)]], opt=[VERTEX])",
                 filter.explain().trim());
     }
 
@@ -82,7 +82,7 @@ public class FilterTest {
         RelNode filter = builder.filter(equal).build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
-                        + " fusedFilter=[[>(DEFAULT.age, 10)]], opt=[Vertex])",
+                        + " fusedFilter=[[>(DEFAULT.age, 10)]], opt=[VERTEX])",
                 filter.explain().trim());
     }
 
@@ -101,7 +101,7 @@ public class FilterTest {
         RelNode filter = builder.filter(equal).build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
-                        + " opt=[Vertex])",
+                        + " opt=[VERTEX])",
                 filter.explain().trim());
     }
 
@@ -146,7 +146,7 @@ public class FilterTest {
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
                         + " fusedFilter=[[AND(>(DEFAULT.age, 20), =(DEFAULT.name, 'marko'))]],"
-                        + " opt=[Vertex])",
+                        + " opt=[VERTEX])",
                 filter.explain().trim());
     }
 }

@@ -17,7 +17,7 @@
 package com.alibaba.graphscope.common.ir.rel.graph;
 
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
-import com.alibaba.graphscope.common.ir.tools.config.DirectionOpt;
+import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.rel.RelNode;
@@ -28,7 +28,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import java.util.List;
 
 public class GraphLogicalExpand extends AbstractBindableTableScan {
-    private DirectionOpt opt;
+    private GraphOpt.Expand opt;
 
     protected GraphLogicalExpand(
             GraphOptCluster cluster, List<RelHint> hints, RelNode input, TableConfig tableConfig) {
@@ -41,14 +41,14 @@ public class GraphLogicalExpand extends AbstractBindableTableScan {
         return new GraphLogicalExpand(cluster, hints, input, tableConfig);
     }
 
-    private DirectionOpt directionOpt() {
+    private GraphOpt.Expand directionOpt() {
         ObjectUtils.requireNonEmpty(hints);
         RelHint optHint = hints.get(0);
         ObjectUtils.requireNonEmpty(optHint.listOptions);
-        return DirectionOpt.valueOf(optHint.listOptions.get(0));
+        return GraphOpt.Expand.valueOf(optHint.listOptions.get(0));
     }
 
-    public DirectionOpt getOpt() {
+    public GraphOpt.Expand getOpt() {
         return opt;
     }
 

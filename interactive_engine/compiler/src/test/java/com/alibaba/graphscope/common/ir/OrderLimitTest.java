@@ -40,7 +40,7 @@ public class OrderLimitTest {
         Assert.assertEquals(
                 "GraphLogicalSort(sort0=[DEFAULT.name], dir0=[ASC])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[~DEFAULT], opt=[Vertex])",
+                        + " alias=[~DEFAULT], opt=[VERTEX])",
                 sort.explain().trim());
     }
 
@@ -58,7 +58,7 @@ public class OrderLimitTest {
         Assert.assertEquals(
                 "GraphLogicalSort(sort0=[DEFAULT.name], dir0=[DESC])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[~DEFAULT], opt=[Vertex])",
+                        + " alias=[~DEFAULT], opt=[VERTEX])",
                 sort.explain().trim());
     }
 
@@ -77,7 +77,7 @@ public class OrderLimitTest {
         Assert.assertEquals(
                 "GraphLogicalSort(sort0=[DEFAULT.name], dir0=[DESC], offset=[1], fetch=[2])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[~DEFAULT], opt=[Vertex])",
+                        + " alias=[~DEFAULT], opt=[VERTEX])",
                 sort.explain().trim());
     }
 
@@ -95,7 +95,7 @@ public class OrderLimitTest {
         Assert.assertEquals(
                 "GraphLogicalSort(offset=[1], fetch=[2])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[~DEFAULT], opt=[Vertex])",
+                        + " alias=[~DEFAULT], opt=[VERTEX])",
                 limit.explain().trim());
     }
 }

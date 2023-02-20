@@ -17,7 +17,7 @@
 package com.alibaba.graphscope.common.ir.rel.graph;
 
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
-import com.alibaba.graphscope.common.ir.tools.config.GetVOpt;
+import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.rel.RelNode;
@@ -28,7 +28,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import java.util.List;
 
 public class GraphLogicalGetV extends AbstractBindableTableScan {
-    private GetVOpt opt;
+    private GraphOpt.GetV opt;
 
     protected GraphLogicalGetV(
             GraphOptCluster cluster, List<RelHint> hints, RelNode input, TableConfig tableConfig) {
@@ -41,14 +41,14 @@ public class GraphLogicalGetV extends AbstractBindableTableScan {
         return new GraphLogicalGetV(cluster, hints, input, tableConfig);
     }
 
-    private GetVOpt getVOpt() {
+    private GraphOpt.GetV getVOpt() {
         ObjectUtils.requireNonEmpty(hints);
         RelHint optHint = hints.get(0);
         ObjectUtils.requireNonEmpty(optHint.listOptions);
-        return GetVOpt.valueOf(optHint.listOptions.get(0));
+        return GraphOpt.GetV.valueOf(optHint.listOptions.get(0));
     }
 
-    public GetVOpt getOpt() {
+    public GraphOpt.GetV getOpt() {
         return opt;
     }
 

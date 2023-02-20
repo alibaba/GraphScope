@@ -16,27 +16,26 @@
 
 package com.alibaba.graphscope.common.ir.type;
 
-import com.alibaba.graphscope.common.ir.tools.config.ScanOpt;
+import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 
-import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.ObjectUtils;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * A list of {@code IrSchemaType}, to denote fuzzy conditions in a vertex or an edge, i.e. g.V() or g.V().hasLabel("person", "software")
  */
 public class GraphSchemaTypeList extends GraphSchemaType implements List<GraphSchemaType> {
-    protected GraphSchemaTypeList(ScanOpt scanOpt, List<RelDataTypeField> fields) {
-        super(scanOpt, fields);
+    private List<GraphSchemaType> schemaTypes;
+
+    protected GraphSchemaTypeList(GraphOpt.Source scanOpt, List<GraphSchemaType> schemaTypes) {
+        super(scanOpt);
+        this.schemaTypes = schemaTypes;
     }
 
     public static GraphSchemaTypeList create(List<GraphSchemaType> list) {
         ObjectUtils.requireNonEmpty(list);
-        ScanOpt scanOpt = list.get(0).getScanOpt();
-        List<RelDataTypeField> fields = new ArrayList<>();
+        GraphOpt.Source scanOpt = list.get(0).getScanOpt();
         List<String> labelOpts = new ArrayList<>();
         for (GraphSchemaType type : list) {
             labelOpts.add("{label=" + type.labelType.getLabel() + ", opt=" + type.scanOpt + "}");
@@ -44,129 +43,122 @@ public class GraphSchemaTypeList extends GraphSchemaType implements List<GraphSc
                 throw new IllegalArgumentException(
                         "fuzzy label types should have the same opt, but is " + labelOpts);
             }
-            fields.addAll(type.getFieldList());
         }
-        return new GraphSchemaTypeList(
-                scanOpt, fields.stream().distinct().collect(Collectors.toList()));
+        return new GraphSchemaTypeList(scanOpt, list);
     }
 
     @Override
     public int size() {
-        return 0;
+        return this.schemaTypes.size();
     }
 
     @Override
     public boolean isEmpty() {
-        return false;
+        return this.schemaTypes.isEmpty();
     }
 
     @Override
     public boolean contains(Object o) {
-        return false;
+        return this.schemaTypes.contains(o);
     }
 
     @Override
     public Iterator<GraphSchemaType> iterator() {
-        return null;
+        return this.schemaTypes.iterator();
     }
 
     @Override
     public Object[] toArray() {
-        return new Object[0];
+        return this.schemaTypes.toArray();
     }
 
     @Override
     public <T> T[] toArray(T[] a) {
-        return null;
+        return this.schemaTypes.toArray(a);
     }
 
     @Override
-    public boolean add(GraphSchemaType irSchemaType) {
-        return false;
+    public boolean add(GraphSchemaType graphSchemaType) {
+        return this.schemaTypes.add(graphSchemaType);
     }
 
     @Override
     public boolean remove(Object o) {
-        return false;
+        return this.schemaTypes.remove(o);
     }
 
     @Override
     public boolean containsAll(Collection<?> c) {
-        return false;
+        return this.schemaTypes.containsAll(c);
     }
 
     @Override
     public boolean addAll(Collection<? extends GraphSchemaType> c) {
-        return false;
+        return this.schemaTypes.addAll(c);
     }
 
     @Override
     public boolean addAll(int index, Collection<? extends GraphSchemaType> c) {
-        return false;
+        return this.schemaTypes.addAll(index, c);
     }
 
     @Override
     public boolean removeAll(Collection<?> c) {
-        return false;
+        return this.schemaTypes.removeAll(c);
     }
 
     @Override
     public boolean retainAll(Collection<?> c) {
-        return false;
+        return this.schemaTypes.retainAll(c);
     }
 
     @Override
-    public void clear() {}
+    public void clear() {
+        this.schemaTypes.clear();
+    }
 
     @Override
     public GraphSchemaType get(int index) {
-        return null;
+        return this.schemaTypes.get(index);
     }
 
     @Override
     public GraphSchemaType set(int index, GraphSchemaType element) {
-        return null;
+        return this.schemaTypes.set(index, element);
     }
 
     @Override
-    public void add(int index, GraphSchemaType element) {}
+    public void add(int index, GraphSchemaType element) {
+        this.schemaTypes.add(index, element);
+    }
 
     @Override
     public GraphSchemaType remove(int index) {
-        return null;
+        return this.schemaTypes.remove(index);
     }
 
     @Override
     public int indexOf(Object o) {
-        return 0;
+        return this.schemaTypes.indexOf(o);
     }
 
     @Override
     public int lastIndexOf(Object o) {
-        return 0;
+        return this.schemaTypes.lastIndexOf(o);
     }
 
     @Override
     public ListIterator<GraphSchemaType> listIterator() {
-        return null;
+        return this.schemaTypes.listIterator();
     }
 
     @Override
     public ListIterator<GraphSchemaType> listIterator(int index) {
-        return null;
+        return this.schemaTypes.listIterator(index);
     }
 
     @Override
     public List<GraphSchemaType> subList(int fromIndex, int toIndex) {
-        return null;
-    }
-
-    @Override
-    public LabelType getLabelType() {
-        throw new NotImplementedException("");
-    }
-
-    public List<LabelType> getLabelTypes() {
-        return null;
+        return this.schemaTypes.subList(fromIndex, toIndex);
     }
 }

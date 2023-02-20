@@ -16,7 +16,8 @@
 
 package com.alibaba.graphscope.common.ir.type;
 
-import com.alibaba.graphscope.common.ir.tools.config.ScanOpt;
+import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
+import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -31,11 +32,11 @@ import java.util.Objects;
  * Denote DataType of an entity or a relation, including opt, label and attributes
  */
 public class GraphSchemaType extends RelRecordType {
-    protected ScanOpt scanOpt;
+    protected GraphOpt.Source scanOpt;
     protected LabelType labelType;
 
-    protected GraphSchemaType(ScanOpt scanOpt, List<RelDataTypeField> fields) {
-        this(scanOpt, LabelType.DEFAULT, fields);
+    protected GraphSchemaType(GraphOpt.Source scanOpt) {
+        this(scanOpt, LabelType.DEFAULT, ImmutableList.of());
     }
 
     /**
@@ -43,13 +44,14 @@ public class GraphSchemaType extends RelRecordType {
      * @param labelType
      * @param fields    attribute fields, each field denoted by {@link RelDataTypeField} which consist of property name, property id and type
      */
-    public GraphSchemaType(ScanOpt scanOpt, LabelType labelType, List<RelDataTypeField> fields) {
+    public GraphSchemaType(
+            GraphOpt.Source scanOpt, LabelType labelType, List<RelDataTypeField> fields) {
         super(StructKind.NONE, fields, false);
         this.scanOpt = scanOpt;
         this.labelType = labelType;
     }
 
-    public ScanOpt getScanOpt() {
+    public GraphOpt.Source getScanOpt() {
         return scanOpt;
     }
 
