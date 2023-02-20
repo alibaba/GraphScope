@@ -1,4 +1,4 @@
-# How to customize algorithms with C++
+# How to Customize Algorithms with C++
 
 TBF
 

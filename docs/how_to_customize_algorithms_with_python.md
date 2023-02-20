@@ -1,4 +1,6 @@
-# How to customize algorithms with Python
+# How to Customize Algorithms with Python
+
+GraphScope provides a Python SDK to allow users to develop their customized algorithms, where both PIE and Pregel programming models are supported. In this document, we introduce how to develop algorithms with PIE and Pregel models respectively. 
 
 ## Writing Your Own Algorithms in PIE
 Users may write their own algorithms if the built-in algorithms do not meet their needs. GraphScope enables users to write algorithms in the PIE programming model in a pure Python mode.

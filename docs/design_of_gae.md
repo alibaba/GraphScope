@@ -6,7 +6,7 @@ GAE has three main components: graph storage, execution framework and algorithm 
 
 ## Graph Storage
 
-GAE as well as other execution engines of GraphScope work on top of a unified graph storage. The graph storage consists of different graph formats with different features, e.g., some support real time graph update while others treat graph data as immutable data once created; some store graph data in memory for better performance, while others support persistent storage. Although there exist diverse types of graph storage, GraphScope offers a unified interfaces for graph storage, and thus GAE does not care about how each type of graph storage is implemented.
+GAE as well as other execution engines of GraphScope work on top of a unified graph storage. The graph storage consists of different graph formats with different features, e.g., some support real time graph update while others treat graph data as immutable data once created; some store graph data in memory for better performance, while others support persistent storage. Although there exist diverse types of graph storage, GraphScope offers a unified interfaces for graph storage, and thus GAE does not care about how each type of graph storage is implemented. Please check out [our introduction for various graph storage](https://graphscope.io/docs/latest/unified_interfaces.html) for more details.
 
 
 ## Execution Framework
@@ -26,4 +26,4 @@ GAE achieves high performance through a highly optimized analytical runtime base
 
 ## Algorithm Library
 
-GAE of GraphScope provides 20 graph analytics algorithms as built-in algorithms, and users can directly invoke them. The build-in algorithms contain most commonly used algorithms, including PageRank, BFS, DFS, shortest path and LCC. In addition, GraphScope is compatible with NetworkX APIs, and thus diverse kinds of [built-in algorithms in NetworkX](https://networkx.org/documentation/stable/reference/algorithms/index.html) can also be directly invoked by users. In total, over 100 build-in graph analytical algorithms can be directly executed over GraphScope, without any developing effort.
+GAE of GraphScope provides [20 graph analytics algorithms](https://github.com/alibaba/GraphScope/tree/main/analytical_engine/apps) as built-in algorithms, and users can directly invoke them. The build-in algorithms contain most commonly used algorithms, including PageRank, BFS, DFS, shortest path and LCC. In addition, GraphScope is compatible with NetworkX APIs, and thus diverse kinds of [built-in algorithms in NetworkX](https://networkx.org/documentation/stable/reference/algorithms/index.html) can also be directly invoked by users. In total, over 100 build-in graph analytical algorithms can be directly executed over GraphScope, without any developing effort.
