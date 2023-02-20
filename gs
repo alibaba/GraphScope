@@ -1142,6 +1142,7 @@ gs_install_deps_command() {
   ANALYTICAL_CENTOS_8=("${ANALYTICAL_CENTOS_7[@]}" "boost-devel" "gflags-devel" "glog-devel" "openssl-devel")
 
   ANALYTICAL_MACOS=(
+    "apache-arrow"
     "boost"
     "gflags"
     "glog"
