@@ -66,10 +66,10 @@ spec:
           - "--k8s_image_repository"
           - {{ .Values.image.repository }}
           - "--k8s_image_tag"
-          {{- if .Values.image.tag | quote }}
+          {{- if .Values.image.tag }}
           - {{ .Values.image.tag | quote }}
           {{- else }}
-          - {{ .Chart.AppVersion }}
+          - {{ .Chart.AppVersion | quote }}
           {{- end }}
           - "--k8s_image_pull_policy"
           - {{ .Values.image.pullPolicy | quote }}
@@ -110,14 +110,8 @@ spec:
           - "False"
           - "--k8s_delete_namespace"
           - "False"
-          - "--k8s_with_analytical"
-          - {{ .Values.engines.analytical.enabled | quote }}
-          - "--k8s_with_analytical_java"
-          - {{ .Values.engines.analytical_java.enabled | quote }}
-          - "--k8s_with_interactive"
-          - {{ .Values.engines.interactive.enabled | quote }}
-          - "--k8s_with_learning"
-          - {{ .Values.engines.learning.enabled | quote }}
+          - "--k8s_enabled_engines"
+          - {{ .Values.engines.enabled_engines }}
           - "--k8s_with_dataset"
           - {{ .Values.engines.dataset.enabled | quote }}
 

@@ -18,8 +18,8 @@ use std::convert::TryInto;
 use graph_proxy::apis::{
     get_graph, Direction, DynDetails, GraphElement, QueryParams, Statement, Vertex, ID,
 };
-use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::edge_expand::ExpandOpt;
+use ir_common::generated::physical as pb;
 use ir_common::KeyId;
 use pegasus::api::function::{DynIter, FlatMapFunction, FnResult};
 
@@ -99,21 +99,14 @@ impl<E: Entry + 'static> FlatMapFunction<Record, Record> for EdgeExpandOperator<
     }
 }
 
-impl FlatMapFuncGen for algebra_pb::EdgeExpand {
+impl FlatMapFuncGen for pb::EdgeExpand {
     fn gen_flat_map(
         self,
     ) -> FnGenResult<Box<dyn FlatMapFunction<Record, Record, Target = DynIter<Record>>>> {
         let graph = get_graph().ok_or(FnGenError::NullGraphError)?;
-        let start_v_tag = self
-            .v_tag
-            .map(|v_tag| v_tag.try_into())
-            .transpose()?;
-        let edge_or_end_v_tag = self
-            .alias
-            .map(|alias| alias.try_into())
-            .transpose()?;
-        let direction_pb: algebra_pb::edge_expand::Direction =
-            unsafe { ::std::mem::transmute(self.direction) };
+        let start_v_tag = self.v_tag;
+        let edge_or_end_v_tag = self.alias;
+        let direction_pb: pb::edge_expand::Direction = unsafe { ::std::mem::transmute(self.direction) };
         let direction = Direction::from(direction_pb);
         let query_params: QueryParams = self.params.try_into()?;
         let expand_opt: ExpandOpt = unsafe { ::std::mem::transmute(self.expand_opt) };

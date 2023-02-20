@@ -4,7 +4,7 @@ grpcio;python_version>="3.11"
 grpcio<=1.43.0,>=1.40.0;python_version<"3.11"
 grpcio-tools;python_version>="3.11"
 grpcio-tools<=1.43.0,>=1.40.0;python_version<"3.11"
-kubernetes
+kubernetes>=24.2.0
 msgpack
 nest_asyncio
 networkx==2.8.0;python_version>="3.8"

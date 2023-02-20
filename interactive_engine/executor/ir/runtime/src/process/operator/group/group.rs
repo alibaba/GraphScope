@@ -13,10 +13,8 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::convert::TryInto;
-
 use ir_common::error::ParsePbError;
-use ir_common::generated::algebra as algebra_pb;
+use ir_common::generated::physical as pb;
 use ir_common::KeyId;
 use pegasus::api::function::{FnResult, MapFunction};
 
@@ -26,7 +24,7 @@ use crate::process::operator::accum::{AccumFactoryGen, RecordAccumulator};
 use crate::process::operator::keyed::KeyFunctionGen;
 use crate::process::record::{Record, RecordKey};
 
-impl GroupGen<Record, RecordKey, Record> for algebra_pb::GroupBy {
+impl GroupGen<Record, RecordKey, Record> for pb::GroupBy {
     fn gen_group_key(&self) -> FnGenResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
         self.clone().gen_key()
     }
@@ -38,14 +36,8 @@ impl GroupGen<Record, RecordKey, Record> for algebra_pb::GroupBy {
     fn gen_group_map(&self) -> FnGenResult<Box<dyn MapFunction<(RecordKey, Record), Record>>> {
         let mut key_aliases = Vec::with_capacity(self.mappings.len());
         for key_alias in self.mappings.iter() {
-            let alias: Option<KeyId> = Some(
-                key_alias
-                    .alias
-                    .clone()
-                    .ok_or(ParsePbError::from("key alias is missing in group"))?
-                    .try_into()?,
-            );
-            let alias = alias
+            let alias = key_alias
+                .alias
                 .ok_or(ParsePbError::from(format!("key alias cannot be None in group opr {:?}", self)))?;
             key_aliases.push(alias);
         }
@@ -89,8 +81,8 @@ mod tests {
     use ahash::HashMap;
     use dyn_type::Object;
     use graph_proxy::apis::{DynDetails, Vertex};
-    use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
+    use ir_common::generated::physical as pb;
     use ir_common::NameOrId;
     use pegasus::api::{FoldByKey, KeyBy, Map, Sink};
     use pegasus::result::ResultStream;

@@ -21,7 +21,7 @@ use dyn_type::BorrowObject;
 use graph_proxy::apis::graph::element::GraphElement;
 use graph_proxy::apis::{Direction, Element, QueryParams, Statement, ID};
 use ir_common::error::ParsePbError;
-use ir_common::generated::algebra as algebra_pb;
+use ir_common::generated::physical as pb;
 use ir_common::KeyId;
 use pegasus::api::function::{FilterMapFunction, FnResult};
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
@@ -202,19 +202,14 @@ impl<E: Entry + 'static> FilterMapFunction<Record, Record> for ExpandOrIntersect
     }
 }
 
-impl FilterMapFuncGen for algebra_pb::EdgeExpand {
+impl FilterMapFuncGen for pb::EdgeExpand {
     fn gen_filter_map(self) -> FnGenResult<Box<dyn FilterMapFunction<Record, Record>>> {
         let graph = graph_proxy::apis::get_graph().ok_or(FnGenError::NullGraphError)?;
-        let start_v_tag = self
-            .v_tag
-            .map(|tag| tag.try_into())
-            .transpose()?;
+        let start_v_tag = self.v_tag;
         let edge_or_end_v_tag = self
             .alias
-            .ok_or(ParsePbError::from("`EdgeExpand::alias` cannot be empty for intersection"))?
-            .try_into()?;
-        let direction_pb: algebra_pb::edge_expand::Direction =
-            unsafe { ::std::mem::transmute(self.direction) };
+            .ok_or(ParsePbError::from("`EdgeExpand::alias` cannot be empty for intersection"))?;
+        let direction_pb: pb::edge_expand::Direction = unsafe { ::std::mem::transmute(self.direction) };
         let direction = Direction::from(direction_pb);
         let query_params: QueryParams = self.params.try_into()?;
         if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
@@ -223,7 +218,7 @@ impl FilterMapFuncGen for algebra_pb::EdgeExpand {
                 start_v_tag, edge_or_end_v_tag, direction, query_params
             );
         }
-        if self.expand_opt != algebra_pb::edge_expand::ExpandOpt::Vertex as i32 {
+        if self.expand_opt != pb::edge_expand::ExpandOpt::Vertex as i32 {
             Err(FnGenError::unsupported_error("expand edges in ExpandIntersection"))
         } else {
             if query_params.filter.is_some() {

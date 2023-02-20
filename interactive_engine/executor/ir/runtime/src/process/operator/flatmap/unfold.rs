@@ -13,10 +13,8 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::convert::TryInto;
-
 use graph_proxy::apis::{DynDetails, Element, Vertex};
-use ir_common::generated::algebra as algebra_pb;
+use ir_common::generated::physical as pb;
 use ir_common::KeyId;
 use pegasus::api::function::{DynIter, FlatMapFunction, FnResult};
 
@@ -97,16 +95,11 @@ impl FlatMapFunction<Record, Record> for UnfoldOperator {
     }
 }
 
-impl FlatMapFuncGen for algebra_pb::Unfold {
+impl FlatMapFuncGen for pb::Unfold {
     fn gen_flat_map(
         self,
     ) -> FnGenResult<Box<dyn FlatMapFunction<Record, Record, Target = DynIter<Record>>>> {
-        let tag = self.tag.map(|tag| tag.try_into()).transpose()?;
-        let alias = self
-            .alias
-            .map(|alias| alias.try_into())
-            .transpose()?;
-        let unfold_operator = UnfoldOperator { tag, alias };
+        let unfold_operator = UnfoldOperator { tag: self.tag, alias: self.alias };
         if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
             debug!("Runtime unfold operator {:?}", unfold_operator);
         }
@@ -117,8 +110,8 @@ impl FlatMapFuncGen for algebra_pb::Unfold {
 #[cfg(test)]
 mod tests {
     use graph_proxy::apis::graph::element::GraphElement;
-    use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
+    use ir_common::generated::physical as pb;
     use pegasus::api::{Fold, Map, Sink};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;

@@ -197,13 +197,15 @@ jobs:
 
     - name: Build Artifact
       run: |
-        export GRAPHSCOPE_HOME=${{ github.workspace }}/install
-        mkdir ${GRAPHSCOPE_HOME}
-        make analytical-install INSTALL_PREFIX=${GRAPHSCOPE_HOME}
-        strip ${GRAPHSCOPE_HOME}/bin/grape_engine
-        strip ${GRAPHSCOPE_HOME}/lib/*.so
-        python3 ./k8s/utils/precompile.py --graph --output_dir ${GRAPHSCOPE_HOME}/builtin
-        strip ${GRAPHSCOPE_HOME}/builtin/*/*.so
+        source ${HOME}/.graphscope_env
+        export INSTALL_DIR=${{ github.workspace }}/install
+        mkdir ${INSTALL_DIR}
+        make analytical-install INSTALL_PREFIX=${INSTALL_DIR}
+        strip ${INSTALL_DIR}/bin/grape_engine
+        strip ${INSTALL_DIR}/lib/*.so
+        sudo cp -rs ${INSTALL_DIR}/* ${GRAPHSCOPE_HOME}/
+        python3 ./k8s/utils/precompile.py --graph --output_dir ${INSTALL_DIR}/builtin
+        strip ${INSTALL_DIR}/builtin/*/*.so
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v3
@@ -227,14 +229,16 @@ jobs:
 
     - name: Build Artifact
       run: |
-        export GRAPHSCOPE_HOME=${{ github.workspace }}/install
-        mkdir ${GRAPHSCOPE_HOME}
-        make analytical-java-install INSTALL_PREFIX=${GRAPHSCOPE_HOME}
-        strip ${GRAPHSCOPE_HOME}/bin/grape_engine
-        strip ${GRAPHSCOPE_HOME}/bin/graphx_runner
-        strip ${GRAPHSCOPE_HOME}/lib/*.so
-        python3 ./k8s/utils/precompile.py --graph --output_dir ${GRAPHSCOPE_HOME}/builtin
-        strip ${GRAPHSCOPE_HOME}/builtin/*/*.so
+        source ${HOME}/.graphscope_env
+        export INSTALL_DIR=${{ github.workspace }}/install
+        mkdir ${INSTALL_DIR}
+        make analytical-java-install INSTALL_PREFIX=${INSTALL_DIR}
+        strip ${INSTALL_DIR}/bin/grape_engine
+        strip ${INSTALL_DIR}/bin/graphx_runner
+        strip ${INSTALL_DIR}/lib/*.so
+        sudo cp -rs ${INSTALL_DIR}/* ${GRAPHSCOPE_HOME}/
+        python3 ./k8s/utils/precompile.py --graph --output_dir ${INSTALL_DIR}/builtin
+        strip ${INSTALL_DIR}/builtin/*/*.so
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v3
@@ -268,6 +272,7 @@ jobs:
 
     - name: Build Artifact
       run: |
+        source ${HOME}/.graphscope_env
         mkdir install
         export SCCACHE_DIR=~/.cache/sccache
         export RUSTC_WRAPPER=/usr/local/bin/sccache
@@ -301,6 +306,7 @@ jobs:
 
     - name: Build Artifact
       run: |
+        source ${HOME}/.graphscope_env
         mkdir install
         make learning-install INSTALL_PREFIX=${{ github.workspace }}/install
         python3 -m pip install "numpy==1.18.5" "pandas<1.5.0" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" wheel
@@ -330,7 +336,7 @@ jobs:
   k8s-test:
     runs-on: [self-hosted, ubuntu2004]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
-    needs: [build-analytical, build-analytical-java, build-interactive, build-learning]
+    needs: [build-analytical, build-interactive, build-learning]
     steps:
       - uses: actions/checkout@v3
 
@@ -402,11 +408,13 @@ jobs:
           echo "loaded learning"
 
       - name: Helm Test
+        env:
+          GS_TEST_DIR: ${{ github.workspace }}/gstest
         run: |
           cd charts
-          helm template graphscope --set image.registry="",image.tag="${SHORT_SHA}",withJupyter=false \
+          helm template graphscope --set image.registry="",image.tag="${SHORT_SHA}",withJupyter=false,volumes.enabled=true,volumes.items.data.field.path=${GS_TEST_DIR} \
                                   ./graphscope
-          helm install graphscope --set image.registry="",image.tag="${SHORT_SHA}",withJupyter=false \
+          helm install graphscope --set image.registry="",image.tag="${SHORT_SHA}",withJupyter=false,volumes.enabled=true,volumes.items.data.field.path=${GS_TEST_DIR} \
                                   ./graphscope
           helm test graphscope --timeout 5m0s
           export NODE_IP=$(kubectl get pod -lgraphscope.coordinator.name=coordinator-graphscope -ojsonpath="{.items[0].status.hostIP}")
@@ -475,7 +483,7 @@ jobs:
 
   gie-test:
     runs-on: [self-hosted, ubuntu2004]
-    needs: [build-analytical, build-analytical-java, build-interactive, build-learning]
+    needs: [build-analytical, build-interactive, build-learning]
     if: ${{ needs.changes.outputs.gie-function-test == 'true' && github.repository == 'alibaba/GraphScope' }}
     steps:
       - uses: actions/checkout@v3
@@ -559,7 +567,7 @@ jobs:
 
       - name: Build GIE Experimental Artifacts
         run: |
-          source ~/.bashrc
+          source ~/.graphscope_env
           export RPC_TARGET=start_rpc_server_k8s
           cd interactive_engine/compiler && make build rpc.target=${RPC_TARGET}
           cd ${GITHUB_WORKSPACE}

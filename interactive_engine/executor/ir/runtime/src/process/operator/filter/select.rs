@@ -17,7 +17,7 @@ use std::convert::TryInto;
 
 use graph_proxy::utils::expr::eval_pred::{EvalPred, PEvaluator};
 use ir_common::error::ParsePbError;
-use ir_common::generated::algebra as algebra_pb;
+use ir_common::generated::algebra as pb;
 use pegasus::api::function::{FilterFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenResult};
@@ -39,7 +39,7 @@ impl FilterFunction<Record> for SelectOperator {
     }
 }
 
-impl FilterFuncGen for algebra_pb::Select {
+impl FilterFuncGen for pb::Select {
     fn gen_filter(self) -> FnGenResult<Box<dyn FilterFunction<Record>>> {
         if let Some(predicate) = self.predicate {
             let select_operator = SelectOperator { filter: predicate.try_into()? };

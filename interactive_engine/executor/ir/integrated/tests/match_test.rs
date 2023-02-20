@@ -28,7 +28,7 @@ mod test {
     use ir_core::plan::logical::LogicalPlan;
     use ir_core::plan::meta::set_schema_from_json;
     use ir_core::plan::physical::AsPhysical;
-    use pegasus_client::builder::JobBuilder;
+    use ir_physical_client::physical_builder::JobBuilder;
     use pegasus_server::JobRequest;
     use runtime::process::entry::Entry;
 

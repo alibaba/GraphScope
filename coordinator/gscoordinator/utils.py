@@ -339,7 +339,7 @@ def _compile_on_kubernetes(commands, workdir, output_name, pod, container):
         logger.debug(delegate_command_to_pod(mkdir, pod, container))
         cp = f"kubectl cp {workdir} {pod}:{workdir} -c {container}"
         logger.debug(run_command(cp))
-        prepend = "source scl_source enable devtoolset-10 rh-python38 &&"
+        prepend = "source scl_source enable devtoolset-8 rh-python38 &&"
         for command in commands:
             command = f"{prepend} cd {workdir} && {command}"
             logger.debug(delegate_command_to_pod(command, pod, container))
