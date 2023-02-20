@@ -16,8 +16,6 @@
 
 package com.alibaba.graphscope.common.ir.planner;
 
-import static com.alibaba.graphscope.common.ir.util.Static.RESOURCE;
-
 import org.apache.calcite.plan.*;
 import org.apache.calcite.rel.RelNode;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -54,22 +52,22 @@ public class GraphHepPlanner extends AbstractRelOptPlanner {
      */
     @Override
     public RelNode findBestExp() {
-        throw RESOURCE.functionWillImplement(this.getClass()).ex();
+        return null;
     }
 
     @Override
     public boolean addRule(RelOptRule rule) {
-        throw RESOURCE.functionWillImplement(this.getClass()).ex();
+        return false;
     }
 
     @Override
     public boolean removeRule(RelOptRule rule) {
-        throw RESOURCE.functionWillImplement(this.getClass()).ex();
+        return false;
     }
 
     @Override
     public List<RelOptRule> getRules() {
-        throw RESOURCE.functionWillImplement(this.getClass()).ex();
+        return null;
     }
 
     @Override

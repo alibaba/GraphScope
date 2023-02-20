@@ -33,10 +33,12 @@ public class ExpandTest {
         RelNode expand =
                 builder.source(
                                 new SourceConfig(
-                                        ScanOpt.Vertex, new LabelConfig(false).addLabel("person")))
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person")))
                         .expand(
                                 new ExpandConfig(
-                                        DirectionOpt.OUT, new LabelConfig(false).addLabel("knows")))
+                                        GraphOpt.Expand.OUT,
+                                        new LabelConfig(false).addLabel("knows")))
                         .build();
         Assert.assertEquals(
                 "GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[~DEFAULT],"
@@ -53,10 +55,11 @@ public class ExpandTest {
         RelNode expand =
                 builder.source(
                                 new SourceConfig(
-                                        ScanOpt.Vertex, new LabelConfig(false).addLabel("person")))
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person")))
                         .expand(
                                 new ExpandConfig(
-                                        DirectionOpt.OUT,
+                                        GraphOpt.Expand.OUT,
                                         new LabelConfig(false).addLabel("knows"),
                                         "x"))
                         .build();
@@ -77,10 +80,12 @@ public class ExpandTest {
                 PathExpandConfig.newBuilder(builder)
                         .expand(
                                 new ExpandConfig(
-                                        DirectionOpt.OUT, new LabelConfig(false).addLabel("knows")))
+                                        GraphOpt.Expand.OUT,
+                                        new LabelConfig(false).addLabel("knows")))
                         .getV(
                                 new GetVConfig(
-                                        GetVOpt.END, new LabelConfig(false).addLabel("person")))
+                                        GraphOpt.GetV.END,
+                                        new LabelConfig(false).addLabel("person")))
                         .range(1, 3)
                         .pathOpt(PathOpt.Simple)
                         .resultOpt(ResultOpt.AllV)
@@ -88,7 +93,8 @@ public class ExpandTest {
         RelNode pathExpand =
                 builder.source(
                                 new SourceConfig(
-                                        ScanOpt.Vertex, new LabelConfig(false).addLabel("person")))
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person")))
                         .pathExpand(pxdConfig)
                         .build();
         Assert.assertEquals(

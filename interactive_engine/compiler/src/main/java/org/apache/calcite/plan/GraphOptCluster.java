@@ -34,8 +34,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class GraphOptCluster extends RelOptCluster {
     // to generate alias id increasingly in one query
     private final AliasIdGenerator idGenerator;
-    // to generate RelNode id increasingly in one query
-    private final AtomicInteger nextRelNodeId;
 
     protected GraphOptCluster(
             RelOptPlanner planner,
@@ -43,11 +41,9 @@ public class GraphOptCluster extends RelOptCluster {
             RexBuilder rexBuilder,
             AtomicInteger nextCorrel,
             Map<String, RelNode> mapCorrelToRel,
-            AtomicInteger nextAliasId,
-            AtomicInteger nextRelNodeId) {
+            AliasIdGenerator idGenerator) {
         super(planner, typeFactory, rexBuilder, nextCorrel, mapCorrelToRel);
-        this.idGenerator = new AliasIdGenerator(nextAliasId);
-        this.nextRelNodeId = nextRelNodeId;
+        this.idGenerator = idGenerator;
     }
 
     public static GraphOptCluster create(RexBuilder rexBuilder) {
@@ -57,15 +53,10 @@ public class GraphOptCluster extends RelOptCluster {
                 rexBuilder,
                 new AtomicInteger(0),
                 new HashMap<>(),
-                new AtomicInteger(0),
-                new AtomicInteger(0));
+                new AliasIdGenerator());
     }
 
     public AliasIdGenerator getIdGenerator() {
         return idGenerator;
-    }
-
-    public int getNextRelNodeId() {
-        return nextRelNodeId.getAndIncrement();
     }
 }

@@ -18,8 +18,8 @@ package com.alibaba.graphscope.common.ir;
 
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
+import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.tools.config.LabelConfig;
-import com.alibaba.graphscope.common.ir.tools.config.ScanOpt;
 import com.alibaba.graphscope.common.ir.tools.config.SourceConfig;
 
 import org.apache.calcite.rel.RelNode;
@@ -34,7 +34,7 @@ public class FilterTest {
     public void equal_1_test() {
         GraphBuilder builder = SourceTest.mockGraphBuilder();
         SourceConfig sourceConfig =
-                new SourceConfig(ScanOpt.Vertex, new LabelConfig(false).addLabel("person"));
+                new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"));
         RexNode equal =
                 builder.source(sourceConfig)
                         .call(
@@ -53,7 +53,8 @@ public class FilterTest {
     public void equal_2_test() {
         GraphBuilder builder = SourceTest.mockGraphBuilder();
         SourceConfig sourceConfig =
-                new SourceConfig(ScanOpt.Vertex, new LabelConfig(false).addLabel("person"), "x");
+                new SourceConfig(
+                        GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"), "x");
         RexNode equal =
                 builder.source(sourceConfig)
                         .call(
@@ -71,7 +72,7 @@ public class FilterTest {
     public void greater_1_test() {
         GraphBuilder builder = SourceTest.mockGraphBuilder();
         SourceConfig sourceConfig =
-                new SourceConfig(ScanOpt.Vertex, new LabelConfig(false).addLabel("person"));
+                new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"));
         RexNode equal =
                 builder.source(sourceConfig)
                         .call(
@@ -90,7 +91,7 @@ public class FilterTest {
     public void greater_2_test() {
         GraphBuilder builder = SourceTest.mockGraphBuilder();
         SourceConfig sourceConfig =
-                new SourceConfig(ScanOpt.Vertex, new LabelConfig(false).addLabel("person"));
+                new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"));
         RexNode equal =
                 builder.source(sourceConfig)
                         .call(
@@ -111,7 +112,7 @@ public class FilterTest {
     public void greater_3_test() {
         GraphBuilder builder = SourceTest.mockGraphBuilder();
         SourceConfig sourceConfig =
-                new SourceConfig(ScanOpt.Vertex, new LabelConfig(false).addLabel("person"));
+                new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"));
         RexNode equal =
                 builder.source(sourceConfig)
                         .call(
@@ -129,7 +130,7 @@ public class FilterTest {
     public void and_test() {
         GraphBuilder builder = SourceTest.mockGraphBuilder();
         SourceConfig sourceConfig =
-                new SourceConfig(ScanOpt.Vertex, new LabelConfig(false).addLabel("person"));
+                new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"));
         RexNode condition1 =
                 builder.source(sourceConfig)
                         .call(

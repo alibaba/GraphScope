@@ -23,6 +23,10 @@ import "common.proto";
 import "expr.proto";
 import "schema.proto";
 
+// We have several logical operators that are similar to physical operators (e.g., Project, GroupBy etc.),
+// except for the type of operator's tags(or alias) is Option<i32> in physical, while Option<NameOrId> in logical.
+// TODO: We preserve both for compatibility temporarily, but these operators would be identical with tag's (alias') type as Option<i32> soon.
+
 // To project a relation on certain attributes or further their properties
 message Project {
   message ExprAlias {
@@ -256,25 +260,6 @@ message As {
   common.NameOrId alias = 1;
 }
 
-// An operator that provides **auxiliary** functionalities for certain entity (as tagged). Functionalities include:
-// * To get certain properties/columns from the entity
-// * To filter out the entity based on the data
-// * To re-name the entity with other alias
-//
-// Note this operator is invisible the logical plan, and will only be used by the translator/optimizer
-// when processing the logical plan into the physical plan.
-message Auxilia {
-  // The tag refers to the entity upon which this operator is applied
-  common.NameOrId tag = 1;
-  // The details (columns/properties) to be retrieved
-  QueryParams params = 2;
-  // The alias to give if any, which is especially helpful when the entity now refers to the head of the record
-  common.NameOrId alias = 3;
-  // The remove_tags refers to the entities that will not be used any longer, and thus can be removed.
-  // Specifically, it will remove tags in the end of auxilia. i.e., remove `tag` where auxilia is applied is also allowed.
-  repeated common.NameOrId remove_tags = 4;
-}
-
 message EdgeExpand {
   enum Direction {
     OUT = 0;
@@ -471,7 +456,6 @@ message LogicalPlan {
       SegmentApply seg_apply = 10;
       Scan scan = 11;
       Limit limit = 12;
-      Auxilia auxilia = 13;
       As as = 14;
       Intersect intersect = 15;
       Sink sink = 16;

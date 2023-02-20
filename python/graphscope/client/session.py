@@ -317,11 +317,8 @@ class Session(object):
         k8s_waiting_for_delete=gs_config.k8s_waiting_for_delete,
         timeout_seconds=gs_config.timeout_seconds,
         dangling_timeout_seconds=gs_config.dangling_timeout_seconds,
+        enabled_engines=gs_config.enabled_engines,
         with_mars=gs_config.with_mars,
-        with_analytical=gs_config.with_analytical,
-        with_analytical_java=gs_config.with_analytical_java,
-        with_interactive=gs_config.with_interactive,
-        with_learning=gs_config.with_learning,
         with_dataset=gs_config.with_dataset,
         reconnect=False,
         hosts=["localhost"],
@@ -420,17 +417,8 @@ class Session(object):
             with_mars (bool, optional):
                 Launch graphscope with mars. Defaults to False.
 
-            with_analytical (bool, optional):
-                Launch graphscope with analytical engine. Defaults to True.
-
-            with_analytical_java (bool, optional):
-                Launch graphscope with analytical engine with java support. Defaults to False.
-
-            with_interactive (bool, optional):
-                Launch graphscope with interactive engine. Defaults to True.
-
-            with_learning (bool, optional):
-                Launch graphscope with learning engine. Defaults to True.
+            enabled_engines (str, optional):
+                Select a subset of engines to enable. Only make sense in k8s mode.
 
             with_dataset (bool, optional):
                 Create a container and mount aliyun demo dataset bucket to the path `/dataset`.
@@ -568,16 +556,13 @@ class Session(object):
             "k8s_mars_scheduler_mem",
             "k8s_coordinator_pod_node_selector",
             "k8s_engine_pod_node_selector",
-            "with_mars",
-            "with_analytical",
-            "with_analytical_java",
-            "with_interactive",
-            "with_learning",
+            "enabled_engines",
             "reconnect",
             "k8s_volumes",
             "k8s_waiting_for_delete",
             "timeout_seconds",
             "dangling_timeout_seconds",
+            "with_mars",
             "with_dataset",
             "hosts",
         )
@@ -608,16 +593,23 @@ class Session(object):
         self._dag = Dag()
 
         # mars cannot work with run-on-local mode
-        if self._cluster_type == types_pb2.HOSTS and self._config_params["with_mars"]:
-            raise NotImplementedError(
-                "Mars cluster cannot be launched along with local GraphScope deployment"
+        if self._cluster_type == types_pb2.HOSTS:
+            if self._config_params["with_mars"]:
+                logger.warning(
+                    "Mars cluster cannot be launched along with local GraphScope deployment"
+                )
+        if self._cluster_type == types_pb2.K8S:
+            engines = set([item.strip() for item in enabled_engines.split(",")])
+            valid_engines = set(
+                "analytical,analytical-java,interactive,learning,gae,gae-java,gie,gle".split(
+                    ","
+                )
             )
-        if with_analytical and with_analytical_java:
-            logger.warning(
-                "Cannot setup `with_analytical` and `with_analytical_java` at the same time"
-            )
-            logger.warning("Disabled `analytical`.")
-            self._config_params["with_analytical"] = False
+            for item in engines:
+                if item not in valid_engines:
+                    raise ValueError(
+                        f"Not a valid engine name: {item}, valid engines are {valid_engines}"
+                    )
 
         # deprecated params handle
         for param in self._deprecated_params:
@@ -1332,11 +1324,9 @@ def set_option(**kwargs):
         - k8s_mars_worker_mem
         - k8s_mars_scheduler_cpu
         - k8s_mars_scheduler_mem
+        - enabled_engines
         - with_mars
-        - with_analytical
-        - with_analytical_java
-        - with_interactive
-        - with_learning
+        - with_dataset
         - k8s_volumes
         - k8s_waiting_for_delete
         - timeout_seconds
@@ -1389,11 +1379,9 @@ def get_option(key):
         - k8s_mars_worker_mem
         - k8s_mars_scheduler_cpu
         - k8s_mars_scheduler_mem
+        - enabled_engines
         - with_mars
-        - with_analytical
-        - with_analytical_java
-        - with_interactive
-        - with_learning
+        - with_dataset
         - k8s_volumes
         - k8s_waiting_for_delete
         - timeout_seconds
@@ -1410,7 +1398,7 @@ def get_option(key):
     """
     if hasattr(gs_config, key):
         return getattr(gs_config, key)
-    raise ValueError("No such option {} exists.".format(key))
+    raise ValueError(f"No such option {key}.")
 
 
 def default_session(session):

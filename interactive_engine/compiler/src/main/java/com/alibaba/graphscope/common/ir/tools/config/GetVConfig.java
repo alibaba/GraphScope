@@ -21,25 +21,25 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.util.Objects;
 
 public class GetVConfig {
-    private final GetVOpt opt;
+    private final GraphOpt.GetV opt;
     private final LabelConfig labels;
     @Nullable private final String alias;
 
-    public GetVConfig(GetVOpt opt) {
+    public GetVConfig(GraphOpt.GetV opt) {
         this(opt, LabelConfig.DEFAULT, null);
     }
 
-    public GetVConfig(GetVOpt opt, LabelConfig labels) {
+    public GetVConfig(GraphOpt.GetV opt, LabelConfig labels) {
         this(opt, labels, null);
     }
 
-    public GetVConfig(GetVOpt opt, LabelConfig labels, @Nullable String alias) {
+    public GetVConfig(GraphOpt.GetV opt, LabelConfig labels, @Nullable String alias) {
         this.opt = Objects.requireNonNull(opt);
         this.labels = Objects.requireNonNull(labels);
         this.alias = alias;
     }
 
-    public GetVOpt getOpt() {
+    public GraphOpt.GetV getOpt() {
         return opt;
     }
 

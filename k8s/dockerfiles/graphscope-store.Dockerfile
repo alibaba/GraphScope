@@ -14,13 +14,7 @@ COPY --chown=graphscope:graphscope ./interactive_engine/assembly/src/conf/maven.
 USER graphscope
 
 RUN cd /home/graphscope/gs && \
-    echo "install cppkafka" \
-    && sudo yum update -y && sudo yum install -y librdkafka-devel \
-    && git clone -b 0.4.0 --single-branch --depth=1 https://github.com/mfontanini/cppkafka.git /tmp/cppkafka \
-    && cd /tmp/cppkafka && git submodule update --init \
-    && cmake . && make -j && sudo make install \
-    && echo "build with profile: $profile" \
-    && source ~/.cargo/env \
+    && source ~/.graphscope_env \
     && cd /home/graphscope/gs/interactive_engine \
     && mvn clean package -P groot,groot-assembly -DskipTests --quiet -Drust.compile.mode="$profile" \
     && mv /home/graphscope/gs/interactive_engine/assembly/target/groot.tar.gz /home/graphscope/gs/groot.tar.gz

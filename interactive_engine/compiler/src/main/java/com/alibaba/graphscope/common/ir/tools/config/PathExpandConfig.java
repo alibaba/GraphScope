@@ -31,6 +31,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * build {@code PathExpandConfig} (used to build {@code PathExpandOperator}) from user given configs
+ */
 public class PathExpandConfig {
     private final RelNode expand;
     private final RelNode getV;

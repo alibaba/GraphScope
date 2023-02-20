@@ -18,8 +18,8 @@ package com.alibaba.graphscope.common.ir;
 
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
+import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.tools.config.LabelConfig;
-import com.alibaba.graphscope.common.ir.tools.config.ScanOpt;
 import com.alibaba.graphscope.common.ir.tools.config.SourceConfig;
 
 import org.apache.calcite.rex.RexNode;
@@ -162,6 +162,7 @@ public class ExpressionTest {
     }
 
     private SourceConfig mockSourceConfig(String alias) {
-        return new SourceConfig(ScanOpt.Vertex, new LabelConfig(false).addLabel("person"), alias);
+        return new SourceConfig(
+                GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"), alias);
     }
 }

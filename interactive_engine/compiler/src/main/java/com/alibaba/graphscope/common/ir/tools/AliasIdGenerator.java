@@ -19,15 +19,11 @@ package com.alibaba.graphscope.common.ir.tools;
 import org.apache.calcite.rel.RelNode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
-/**
- * todo: generate alias id for name
- */
 public class AliasIdGenerator {
-    public AliasIdGenerator(AtomicInteger nextAliasId) {}
+    public AliasIdGenerator() {}
 
+    // todo: generate alias id for name
     public int generate(@Nullable String aliasName, @Nullable RelNode node) {
-        return AliasInference.DEFAULT_ID;
+        return -1;
     }
 }

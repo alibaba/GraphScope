@@ -1,4 +1,4 @@
-# Overview
+# Design of GraphScope
 
 
 ## Motivation

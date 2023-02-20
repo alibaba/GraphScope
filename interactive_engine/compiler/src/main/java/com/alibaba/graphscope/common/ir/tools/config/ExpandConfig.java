@@ -21,25 +21,25 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.util.Objects;
 
 public class ExpandConfig {
-    private final DirectionOpt opt;
+    private final GraphOpt.Expand opt;
     private final LabelConfig labels;
     @Nullable private final String alias;
 
-    public ExpandConfig(DirectionOpt opt) {
+    public ExpandConfig(GraphOpt.Expand opt) {
         this(opt, LabelConfig.DEFAULT, null);
     }
 
-    public ExpandConfig(DirectionOpt opt, LabelConfig labels) {
+    public ExpandConfig(GraphOpt.Expand opt, LabelConfig labels) {
         this(opt, labels, null);
     }
 
-    public ExpandConfig(DirectionOpt opt, LabelConfig labels, @Nullable String alias) {
+    public ExpandConfig(GraphOpt.Expand opt, LabelConfig labels, @Nullable String alias) {
         this.opt = Objects.requireNonNull(opt);
         this.labels = Objects.requireNonNull(labels);
         this.alias = alias;
     }
 
-    public DirectionOpt getOpt() {
+    public GraphOpt.Expand getOpt() {
         return opt;
     }
 

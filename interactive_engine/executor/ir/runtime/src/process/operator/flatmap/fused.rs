@@ -13,16 +13,13 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use ir_common::error::ParsePbError;
-use ir_common::generated::algebra as algebra_pb;
 use pegasus::api::function::{DynIter, FilterMapFunction, FlatMapFunction, FnResult};
 
-use crate::error::{FnExecError, FnGenError, FnGenResult};
-use crate::process::operator::flatmap::FlatMapFuncGen;
-use crate::process::operator::map::FilterMapFuncGen;
+use crate::error::FnExecError;
 use crate::process::record::Record;
 
-enum FusedFunc {
+#[allow(dead_code)]
+pub enum FusedFunc {
     FilterMap(Box<dyn FilterMapFunction<Record, Record>>),
     FlatMap(Box<dyn FlatMapFunction<Record, Record, Target = DynIter<Record>>>),
 }
@@ -47,10 +44,29 @@ impl FlatMapFunction<Record, Record> for FusedFunc {
     }
 }
 
-struct FusedOperator {
+#[derive(Default)]
+pub struct FusedOperator {
     funcs: Vec<FusedFunc>,
 }
 
+#[allow(dead_code)]
+impl FusedOperator {
+    pub fn new(funcs: Vec<FusedFunc>) -> Self {
+        FusedOperator { funcs }
+    }
+
+    pub fn with_filter_map_func(mut self, func: Box<dyn FilterMapFunction<Record, Record>>) -> Self {
+        self.funcs.push(FusedFunc::FilterMap(func));
+        self
+    }
+
+    pub fn with_flat_map_func(
+        mut self, func: Box<dyn FlatMapFunction<Record, Record, Target = DynIter<Record>>>,
+    ) -> Self {
+        self.funcs.push(FusedFunc::FlatMap(func));
+        self
+    }
+}
 impl FlatMapFunction<Record, Record> for FusedOperator {
     type Target = DynIter<Record>;
 
@@ -69,30 +85,5 @@ impl FlatMapFunction<Record, Record> for FusedOperator {
         }
 
         Ok(Box::new(results.into_iter()))
-    }
-}
-
-impl FlatMapFuncGen for algebra_pb::FusedOperator {
-    fn gen_flat_map(
-        self,
-    ) -> FnGenResult<Box<dyn FlatMapFunction<Record, Record, Target = DynIter<Record>>>> {
-        let mut funcs = vec![];
-        for op in &self.oprs {
-            let inner_op = op
-                .opr
-                .clone()
-                .ok_or(ParsePbError::EmptyFieldError("Node::opr".to_string()))?;
-            if let Ok(filter_map) = inner_op.clone().gen_filter_map() {
-                funcs.push(FusedFunc::FilterMap(filter_map));
-            } else if let Ok(flat_map) = inner_op.gen_flat_map() {
-                funcs.push(FusedFunc::FlatMap(flat_map));
-            } else {
-                return Err(FnGenError::unsupported_error(&format!(
-                    "neither `FilterMap` or `FlatMap` operator to fuse, the operator is {:?}",
-                    op
-                )));
-            }
-        }
-        Ok(Box::new(FusedOperator { funcs }))
     }
 }

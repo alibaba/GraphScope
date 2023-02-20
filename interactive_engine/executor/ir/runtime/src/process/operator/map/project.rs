@@ -13,12 +13,12 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::convert::{TryFrom, TryInto};
+use std::convert::TryFrom;
 
 use graph_proxy::utils::expr::eval::{Evaluate, Evaluator};
 use ir_common::error::ParsePbError;
-use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common as common_pb;
+use ir_common::generated::physical as pb;
 use ir_common::KeyId;
 use pegasus::api::function::{FilterMapFunction, FnResult};
 
@@ -113,15 +113,10 @@ impl FilterMapFunction<Record, Record> for ProjectOperator {
     }
 }
 
-impl FilterMapFuncGen for algebra_pb::Project {
+impl FilterMapFuncGen for pb::Project {
     fn gen_filter_map(self) -> FnGenResult<Box<dyn FilterMapFunction<Record, Record>>> {
         let mut projected_columns = Vec::with_capacity(self.mappings.len());
         for expr_alias in self.mappings.into_iter() {
-            let alias = expr_alias
-                .alias
-                .clone()
-                .map(|alias| alias.try_into())
-                .transpose()?;
             let expr = expr_alias
                 .expr
                 .ok_or(ParsePbError::from("expr eval is missing in project"))?;
@@ -139,7 +134,7 @@ impl FilterMapFuncGen for algebra_pb::Project {
                 let evaluator = Evaluator::try_from(expr)?;
                 Projector::ExprProjector(evaluator)
             };
-            projected_columns.push((projector, alias));
+            projected_columns.push((projector, expr_alias.alias));
         }
         let project_operator = ProjectOperator { is_append: self.is_append, projected_columns };
         if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
@@ -155,7 +150,7 @@ mod tests {
     use dyn_type::Object;
     use graph_proxy::apis::{DynDetails, GraphElement, Vertex};
     use ir_common::expr_parse::str_to_expr_pb;
-    use ir_common::generated::algebra as pb;
+    use ir_common::generated::physical as pb;
     use ir_common::NameOrId;
     use pegasus::api::{Map, Sink};
     use pegasus::result::ResultStream;

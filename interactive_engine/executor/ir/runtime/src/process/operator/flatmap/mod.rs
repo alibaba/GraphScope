@@ -17,8 +17,6 @@ mod fused;
 mod get_v;
 mod unfold;
 
-use ir_common::error::ParsePbError;
-use ir_common::generated::algebra as algebra_pb;
 use pegasus::api::function::{DynIter, FlatMapFunction};
 
 use crate::error::FnGenResult;
@@ -28,17 +26,4 @@ pub trait FlatMapFuncGen {
     fn gen_flat_map(
         self,
     ) -> FnGenResult<Box<dyn FlatMapFunction<Record, Record, Target = DynIter<Record>>>>;
-}
-impl FlatMapFuncGen for algebra_pb::logical_plan::operator::Opr {
-    fn gen_flat_map(
-        self,
-    ) -> FnGenResult<Box<dyn FlatMapFunction<Record, Record, Target = DynIter<Record>>>> {
-        match self {
-            algebra_pb::logical_plan::operator::Opr::Edge(edge_expand) => edge_expand.gen_flat_map(),
-            algebra_pb::logical_plan::operator::Opr::Vertex(get_vertex) => get_vertex.gen_flat_map(),
-            algebra_pb::logical_plan::operator::Opr::Unfold(unfold) => unfold.gen_flat_map(),
-            algebra_pb::logical_plan::operator::Opr::Fused(fused) => fused.gen_flat_map(),
-            _ => Err(ParsePbError::from(format!("the operator is not a `FlatMap`, it is {:?}", self)))?,
-        }
-    }
 }

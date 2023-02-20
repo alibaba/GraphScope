@@ -88,14 +88,14 @@ public class GraphBuilder extends RelBuilder {
     }
 
     /**
-     * validate and build an algebra structure of {@link GraphLogicalSource}.
+     * validate and build an algebra structure of {@code GraphLogicalSource}.
      *
      * how to validate:
      * 1. validate the existence of the given labels in config,
-     * if exist then derive the {@link GraphSchemaType} of the given labels and keep the type in {@link RelNode#getRowType()},
+     * if exist then derive the {@code GraphSchemaType} of the given labels and keep the type in {@link RelNode#getRowType()},
      * otherwise throw exceptions
      *
-     * 2. validate the existence of the given alias in config, if exist throw exceptions
+     * 2. validate the existence of the given alias in config, if exist throw duplication exceptions
      *
      * @param config
      * @return
@@ -113,7 +113,7 @@ public class GraphBuilder extends RelBuilder {
     }
 
     /**
-     * validate and build an algebra structure of {@link GraphLogicalExpand}
+     * validate and build an algebra structure of {@code GraphLogicalExpand}
      *
      * @param config
      * @return
@@ -134,7 +134,7 @@ public class GraphBuilder extends RelBuilder {
     }
 
     /**
-     * validate and build an algebra structure of {@link GraphLogicalGetV}
+     * validate and build an algebra structure of {@code GraphLogicalGetV}
      *
      * @param config
      * @return
@@ -155,7 +155,7 @@ public class GraphBuilder extends RelBuilder {
     }
 
     /**
-     * build an algebra structure of {@link GraphLogicalPathExpand}
+     * build an algebra structure of {@code GraphLogicalPathExpand}
      *
      * @param config
      * @return
@@ -263,7 +263,7 @@ public class GraphBuilder extends RelBuilder {
     }
 
     /**
-     * validate and build an algebra structure of {@link GraphLogicalSingleMatch}
+     * validate and build an algebra structure of {@code GraphLogicalSingleMatch}
      * which wrappers all graph operators in one sentence.
      *
      * how to validate:
@@ -283,7 +283,7 @@ public class GraphBuilder extends RelBuilder {
     }
 
     /**
-     * validate and build an algebra structure of {@link GraphLogicalMultiMatch}
+     * validate and build an algebra structure of {@code GraphLogicalMultiMatch}
      * which wrappers all graph operators in multiple sentences (multiple sentences are inner join).
      *
      * how to validate:

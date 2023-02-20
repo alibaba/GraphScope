@@ -68,7 +68,7 @@ class GSConfig(object):
 
     # vineyard resource configuration
     # image for vineyard container
-    k8s_vineyard_image = "vineyardcloudnative/vineyardd:v0.11.7"
+    k8s_vineyard_image = "vineyardcloudnative/vineyardd:v0.12.2"
     k8s_vineyard_daemonset = None
     k8s_vineyard_cpu = 0.5
     k8s_vineyard_mem = "512Mi"
@@ -88,12 +88,12 @@ class GSConfig(object):
     k8s_coordinator_pod_node_selector = None
     k8s_engine_pod_node_selector = None
 
+    # Enabled engines, default to all 3 engines
+    # Available options: analytical, analytical-java, interactive, learning
+    enabled_engines = "analytical,interactive,learning"
+
     # launch graphscope with mars
     with_mars = False
-    with_analytical = True
-    with_analytical_java = False
-    with_interactive = True
-    with_learning = True
     # Demo dataset related
     with_dataset = False
 

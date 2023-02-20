@@ -58,8 +58,8 @@ use std::os::raw::c_char;
 use ir_common::expr_parse::str_to_expr_pb;
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
+use ir_physical_client::physical_builder::JobBuilder;
 use pegasus::BuildJobError;
-use pegasus_client::builder::JobBuilder;
 use prost::Message;
 
 use crate::error::IrError;

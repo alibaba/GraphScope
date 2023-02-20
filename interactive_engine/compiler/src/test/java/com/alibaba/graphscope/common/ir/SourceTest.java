@@ -20,8 +20,8 @@ import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.schema.GraphSchemaWrapper;
 import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
+import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.tools.config.LabelConfig;
-import com.alibaba.graphscope.common.ir.tools.config.ScanOpt;
 import com.alibaba.graphscope.common.ir.tools.config.SourceConfig;
 import com.alibaba.graphscope.common.utils.FileUtils;
 import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
@@ -44,7 +44,7 @@ public class SourceTest {
     public void single_label_test() {
         GraphBuilder builder = mockGraphBuilder();
         SourceConfig sourceConfig =
-                new SourceConfig(ScanOpt.Vertex, new LabelConfig(false).addLabel("person"));
+                new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"));
         RelNode source = builder.source(sourceConfig).build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
@@ -56,7 +56,8 @@ public class SourceTest {
     public void multiple_labels_test() {
         GraphBuilder builder = mockGraphBuilder();
         SourceConfig sourceConfig =
-                new SourceConfig(ScanOpt.Vertex, new LabelConfig(false).addLabel("person"), "a");
+                new SourceConfig(
+                        GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"), "a");
         RelNode source = builder.source(sourceConfig).build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[a],"
@@ -70,7 +71,7 @@ public class SourceTest {
             GraphBuilder builder = mockGraphBuilder();
             SourceConfig sourceConfig =
                     new SourceConfig(
-                            ScanOpt.Vertex,
+                            GraphOpt.Source.VERTEX,
                             new LabelConfig(false).addLabel("person").addLabel("knows"));
             builder.source(sourceConfig).build();
         } catch (IllegalArgumentException e) {

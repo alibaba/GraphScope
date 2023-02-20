@@ -25,10 +25,9 @@ mod test {
     use graph_store::ldbc::LDBCVertexParser;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
-    use pegasus_client::builder::*;
-    use pegasus_server::job_pb as server_pb;
+    use ir_common::KeyId;
+    use ir_physical_client::physical_builder::*;
     use pegasus_server::JobRequest;
-    use prost::Message;
     use runtime::process::entry::Entry;
 
     use crate::common::test::*;
@@ -41,13 +40,6 @@ mod test {
             idx_predicate: None,
         };
 
-        let apply_opr = pb::Apply {
-            join_kind,
-            tags: vec![], // ignore this
-            subtask: 0,   // ignore this
-            alias: None,
-        };
-
         let expand_opr = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
@@ -56,22 +48,17 @@ mod test {
             alias: None,
         };
 
-        let source_opr_bytes = pb::logical_plan::Operator::from(source_opr).encode_to_vec();
-        let shuffle_opr_bytes = common_pb::NameOrIdKey { key: None }.encode_to_vec();
-        let apply_opr_bytes = pb::logical_plan::Operator::from(apply_opr).encode_to_vec();
-        let expand_opr_bytes = pb::logical_plan::Operator::from(expand_opr).encode_to_vec();
-        let sink_opr_bytes = pb::logical_plan::Operator::from(default_sink_pb()).encode_to_vec();
-
         let mut job_builder = JobBuilder::default();
-        job_builder.add_source(source_opr_bytes);
-        job_builder.apply_join(
+        job_builder.add_scan_source(source_opr);
+        job_builder.apply_func(
+            unsafe { ::std::mem::transmute(join_kind) },
             move |plan| {
-                plan.repartition(shuffle_opr_bytes.clone());
-                plan.flat_map(expand_opr_bytes.clone());
+                plan.shuffle(None);
+                plan.edge_expand(expand_opr.clone().into());
             },
-            apply_opr_bytes,
+            None,
         );
-        job_builder.sink(sink_opr_bytes);
+        job_builder.sink(default_sink_pb());
 
         job_builder.build().unwrap()
     }
@@ -153,19 +140,12 @@ mod test {
     }
 
     // apply with the result of subtask is a single value (count())
-    fn init_apply_count_request(join_kind: i32, alias: common_pb::NameOrId) -> JobRequest {
+    fn init_apply_count_request(join_kind: i32, alias: KeyId) -> JobRequest {
         let source_opr = pb::Scan {
             scan_opt: 0,
             alias: None,
             params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
             idx_predicate: None,
-        };
-
-        let apply_opr = pb::Apply {
-            join_kind,
-            tags: vec![], // ignore this
-            subtask: 0,   // ignore this
-            alias: Some(alias.clone()),
         };
 
         let expand_opr = pb::EdgeExpand {
@@ -185,28 +165,26 @@ mod test {
             }],
         };
 
-        let source_opr_bytes = pb::logical_plan::Operator::from(source_opr).encode_to_vec();
-        let shuffle_opr_bytes = common_pb::NameOrIdKey { key: None }.encode_to_vec();
-        let apply_opr_bytes = pb::logical_plan::Operator::from(apply_opr).encode_to_vec();
-        let expand_opr_bytes = pb::logical_plan::Operator::from(expand_opr).encode_to_vec();
-        let fold_opr_bytes = pb::logical_plan::Operator::from(fold_opr).encode_to_vec();
-        let sink_opr_bytes = pb::logical_plan::Operator::from(pb::Sink {
-            tags: vec![common_pb::NameOrIdKey { key: None }, common_pb::NameOrIdKey { key: Some(alias) }],
+        let sink_opr = pb::Sink {
+            tags: vec![
+                common_pb::NameOrIdKey { key: None },
+                common_pb::NameOrIdKey { key: Some(alias.into()) },
+            ],
             sink_target: default_sink_target(),
-        })
-        .encode_to_vec();
+        };
 
         let mut job_builder = JobBuilder::default();
-        job_builder.add_source(source_opr_bytes);
-        job_builder.apply_join(
+        job_builder.add_scan_source(source_opr);
+        job_builder.apply_func(
+            unsafe { ::std::mem::transmute(join_kind) },
             move |plan| {
-                plan.repartition(shuffle_opr_bytes.clone());
-                plan.flat_map(expand_opr_bytes.clone())
-                    .fold_custom(server_pb::AccumKind::Cnt, fold_opr_bytes.clone());
+                plan.shuffle(None)
+                    .edge_expand(expand_opr.clone().into())
+                    .group(fold_opr.clone().into());
             },
-            apply_opr_bytes,
+            Some(alias.into()),
         );
-        job_builder.sink(sink_opr_bytes);
+        job_builder.sink(sink_opr);
 
         job_builder.build().unwrap()
     }
@@ -214,7 +192,7 @@ mod test {
     fn apply_inner_join(worker_num: u32) {
         initialize();
         // join_kind: InnerJoin
-        let request = init_apply_count_request(0, TAG_A.into());
+        let request = init_apply_count_request(0, TAG_A);
         let mut results = submit_query(request, worker_num);
         let mut result_collection = vec![];
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
@@ -264,7 +242,7 @@ mod test {
     fn apply_left_out_join(worker_num: u32) {
         initialize();
         // join_kind: LeftOuterJoin
-        let request = init_apply_count_request(1, TAG_A.into());
+        let request = init_apply_count_request(1, TAG_A);
         let mut results = submit_query(request, worker_num);
         let mut result_collection = vec![];
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);

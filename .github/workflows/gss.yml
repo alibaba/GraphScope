@@ -61,22 +61,9 @@ jobs:
           ~/.cache/sccache
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-    - name: Install Dependencies
-      run: |
-        # install rdkafka
-        sudo yum install -y librdkafka-devel
-
-        # install cppkafka
-        git clone -b 0.4.0 --single-branch --depth=1 \
-            https://github.com/mfontanini/cppkafka.git /tmp/cppkafka && \
-          cd /tmp/cppkafka && git submodule update --init && \
-          mkdir -p build && cd build && \
-          cmake .. && make -j && sudo make install && \
-          rm -fr /tmp/cppkafka
-
     - name: Build GraphScope Store With Column Filter Push Down
       run: |
-        source ${HOME}/.bashrc
+        source ${HOME}/.graphscope_env
         export SCCACHE_DIR=~/.cache/sccache
         export RUSTC_WRAPPER=/usr/local/bin/sccache
         sccache --start-server
@@ -87,12 +74,13 @@ jobs:
 
     - name: Gremlin Tests with Column Filter Push Down
       run: |
+        source ${HOME}/.graphscope_env
         cd interactive_engine/groot-server
         mvn test -P gremlin-test
 
     - name: Build GraphScope Store
       run: |
-        source ${HOME}/.bashrc
+        source ${HOME}/.graphscope_env
         export SCCACHE_DIR=~/.cache/sccache
         export RUSTC_WRAPPER=/usr/local/bin/sccache
         cd ${GITHUB_WORKSPACE}/interactive_engine
@@ -102,6 +90,7 @@ jobs:
 
     - name: Gremlin Test
       run: |
+        source ${HOME}/.graphscope_env
         cd interactive_engine/groot-server
         mvn test -P gremlin-test
 

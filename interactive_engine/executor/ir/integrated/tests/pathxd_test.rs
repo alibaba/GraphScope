@@ -21,11 +21,8 @@ mod common;
 mod test {
     use graph_proxy::apis::{GraphElement, ID};
     use ir_common::generated::algebra as pb;
-    use ir_common::generated::common as common_pb;
-    use pegasus_client::builder::*;
-    use pegasus_server::job_pb as server_pb;
+    use ir_physical_client::physical_builder::*;
     use pegasus_server::JobRequest;
-    use prost::Message;
     use runtime::process::entry::Entry;
 
     use crate::common::test::*;
@@ -33,12 +30,12 @@ mod test {
     // g.V().hasLabel("person").both("1..3", "knows")
     // result_opt: 0: EndV, 1: AllV;  path_opt: 0: Arbitrary, 1: Simple
     fn init_path_expand_request(result_opt: i32, path_opt: i32) -> JobRequest {
-        let source_opr = pb::logical_plan::Operator::from(pb::Scan {
+        let source_opr = pb::Scan {
             scan_opt: 0,
             alias: None,
             params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
             idx_predicate: None,
-        });
+        };
 
         let edge_expand = pb::EdgeExpand {
             v_tag: None,
@@ -48,36 +45,32 @@ mod test {
             alias: None,
         };
 
-        let shuffle_opr = common_pb::NameOrIdKey { key: None };
-        let expand_opr = pb::logical_plan::Operator::from(edge_expand.clone());
-        let path_start_opr =
-            pb::logical_plan::Operator::from(pb::PathStart { start_tag: None, path_opt, result_opt });
-        let path_end_opr = pb::logical_plan::Operator::from(pb::PathEnd { alias: None });
-        let sink_opr_bytes = pb::logical_plan::Operator::from(default_sink_pb()).encode_to_vec();
+        let path_expand_opr = pb::PathExpand {
+            base: Some(edge_expand),
+            start_tag: None,
+            alias: None,
+            hop_range: Some(pb::Range { lower: 1, upper: 3 }),
+            path_opt,
+            result_opt,
+        };
 
         let mut job_builder = JobBuilder::default();
-        job_builder.add_source(source_opr.encode_to_vec());
-        job_builder.filter_map(path_start_opr.encode_to_vec());
-        job_builder.repartition(shuffle_opr.clone().encode_to_vec());
-        job_builder.flat_map(expand_opr.encode_to_vec());
-        job_builder.iterate_emit(server_pb::iteration_emit::EmitKind::EmitBefore, 1, |plan| {
-            plan.repartition(shuffle_opr.clone().encode_to_vec());
-            plan.flat_map(expand_opr.clone().encode_to_vec());
-        });
-        job_builder.map(path_end_opr.encode_to_vec());
-        job_builder.sink(sink_opr_bytes);
+        job_builder.add_scan_source(source_opr);
+        job_builder.shuffle(None);
+        job_builder.path_expand(path_expand_opr);
+        job_builder.sink(default_sink_pb());
 
         job_builder.build().unwrap()
     }
 
     // g.V().hasLabel("person").both("2..3", "knows")
     fn init_path_expand_exactly_request(is_whole_path: bool) -> JobRequest {
-        let source_opr = pb::logical_plan::Operator::from(pb::Scan {
+        let source_opr = pb::Scan {
             scan_opt: 0,
             alias: None,
             params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
             idx_predicate: None,
-        });
+        };
 
         let edge_expand = pb::EdgeExpand {
             v_tag: None,
@@ -87,37 +80,32 @@ mod test {
             alias: None,
         };
 
-        let shuffle_opr = common_pb::NameOrIdKey { key: None };
-        let expand_opr = pb::logical_plan::Operator::from(edge_expand.clone());
-        let path_start_opr = pb::logical_plan::Operator::from(pb::PathStart {
+        let path_expand_opr = pb::PathExpand {
+            base: Some(edge_expand),
             start_tag: None,
+            alias: None,
+            hop_range: Some(pb::Range { lower: 2, upper: 3 }),
             path_opt: 0,
             result_opt: if is_whole_path { 1 } else { 0 },
-        });
-        let path_end_opr = pb::logical_plan::Operator::from(pb::PathEnd { alias: None });
-        let sink_opr_bytes = pb::logical_plan::Operator::from(default_sink_pb()).encode_to_vec();
+        };
 
         let mut job_builder = JobBuilder::default();
-        job_builder.add_source(source_opr.encode_to_vec());
-        job_builder.filter_map(path_start_opr.encode_to_vec());
-        job_builder.repartition(shuffle_opr.clone().encode_to_vec());
-        job_builder.flat_map(expand_opr.clone().encode_to_vec());
-        job_builder.repartition(shuffle_opr.clone().encode_to_vec());
-        job_builder.flat_map(expand_opr.clone().encode_to_vec());
-        job_builder.map(path_end_opr.encode_to_vec());
-        job_builder.sink(sink_opr_bytes);
+        job_builder.add_scan_source(source_opr);
+        job_builder.shuffle(None);
+        job_builder.path_expand(path_expand_opr);
+        job_builder.sink(default_sink_pb());
 
         job_builder.build().unwrap()
     }
 
     // g.V().hasLabel("person").both("0..3", "knows")
     fn init_path_expand_range_from_zero_request(is_whole_path: bool) -> JobRequest {
-        let source_opr = pb::logical_plan::Operator::from(pb::Scan {
+        let source_opr = pb::Scan {
             scan_opt: 0,
             alias: None,
             params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
             idx_predicate: None,
-        });
+        };
 
         let edge_expand = pb::EdgeExpand {
             v_tag: None,
@@ -127,25 +115,20 @@ mod test {
             alias: None,
         };
 
-        let shuffle_opr = common_pb::NameOrIdKey { key: None };
-        let expand_opr = pb::logical_plan::Operator::from(edge_expand.clone());
-        let path_start_opr = pb::logical_plan::Operator::from(pb::PathStart {
+        let path_expand_opr = pb::PathExpand {
+            base: Some(edge_expand),
             start_tag: None,
+            alias: None,
+            hop_range: Some(pb::Range { lower: 0, upper: 3 }),
             path_opt: 0,
             result_opt: if is_whole_path { 1 } else { 0 },
-        });
-        let path_end_opr = pb::logical_plan::Operator::from(pb::PathEnd { alias: None });
-        let sink_opr_bytes = pb::logical_plan::Operator::from(default_sink_pb()).encode_to_vec();
+        };
 
         let mut job_builder = JobBuilder::default();
-        job_builder.add_source(source_opr.encode_to_vec());
-        job_builder.filter_map(path_start_opr.encode_to_vec());
-        job_builder.iterate_emit(server_pb::iteration_emit::EmitKind::EmitBefore, 2, |plan| {
-            plan.repartition(shuffle_opr.clone().encode_to_vec());
-            plan.flat_map(expand_opr.clone().encode_to_vec());
-        });
-        job_builder.map(path_end_opr.encode_to_vec());
-        job_builder.sink(sink_opr_bytes);
+        job_builder.add_scan_source(source_opr);
+        job_builder.shuffle(None);
+        job_builder.path_expand(path_expand_opr);
+        job_builder.sink(default_sink_pb());
 
         job_builder.build().unwrap()
     }

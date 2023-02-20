@@ -30,9 +30,9 @@ volumes:
       type: hostPath
       field:
         type: Directory
-        path: /testingdata
+        path: /tmp/testingdata
       mounts:
-      - mountPath: /tmp/testingdata
+      - mountPath: /testingdata
 preemptive: true
 
 
@@ -65,22 +65,7 @@ engines:
   # Available options of log_level: INFO, DEBUG
   log_level: INFO
 
-  analytical:
-    enabled: True
-    image:
-      name: analytical
-  analytical_java:
-    enabled: False
-    image:
-      name: analytical-java
-  interactive:
-    enabled: True
-    image:
-      name: interactive
-  learning:
-    enabled: True
-    image:
-      name: learning
+  enabled_engines: "analytical,interactive,learning"
   dataset:
     enabled: False
     image:
@@ -102,9 +87,9 @@ vineyard:
   # The vineyard IPC socket is placed on host at /var/run/vineyard-{namespace}-{release}.
   daemonset: ""
   image:
-    name: ghcr.io/v6d-io/v6d/vineyardd
+    name: vineyardcloudnative/vineyardd
     # Overrides the image tag whose default is the chart appVersion.
-    tag: v0.11.2
+    tag: v0.12.2
   resources:
     requests:
       cpu: 0.5
@@ -114,8 +99,6 @@ vineyard:
       memory: 512Mi
   ## Init size of vineyard shared memory.
   shared_mem: 8Gi
-
-
 
 withJupyter: true
 jupyter:

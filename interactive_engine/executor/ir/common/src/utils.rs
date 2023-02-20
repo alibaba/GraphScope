@@ -21,8 +21,9 @@ use dyn_type::{Object, Primitives};
 
 use crate::error::ParsePbError;
 use crate::generated::algebra as pb;
-use crate::generated::algebra::logical_plan::operator::Opr;
 use crate::generated::common as common_pb;
+use crate::generated::physical as physical_pb;
+use crate::generated::physical::PhysicalOpr;
 use crate::NameOrId;
 
 pub const SPLITTER: &'static str = ".";
@@ -477,7 +478,7 @@ impl From<pb::logical_plan::Operator> for Option<pb::Scan> {
     fn from(opr: pb::logical_plan::Operator) -> Self {
         if let Some(opr) = opr.opr {
             match opr {
-                Opr::Scan(scan) => return Some(scan),
+                pb::logical_plan::operator::Opr::Scan(scan) => return Some(scan),
                 _ => (),
             }
         }
@@ -488,12 +489,6 @@ impl From<pb::logical_plan::Operator> for Option<pb::Scan> {
 impl From<pb::Limit> for pb::logical_plan::Operator {
     fn from(opr: pb::Limit) -> Self {
         pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Limit(opr)) }
-    }
-}
-
-impl From<pb::Auxilia> for pb::logical_plan::Operator {
-    fn from(opr: pb::Auxilia) -> Self {
-        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Auxilia(opr)) }
     }
 }
 
@@ -595,42 +590,11 @@ impl From<Object> for common_pb::Value {
     }
 }
 
-impl pb::logical_plan::operator::Opr {
-    pub fn get_name(&self) -> String {
-        let name = match self {
-            Opr::Project(_) => "Project",
-            Opr::Select(_) => "Select",
-            Opr::Join(_) => "Join",
-            Opr::Union(_) => "Union",
-            Opr::GroupBy(_) => "GroupBy",
-            Opr::OrderBy(_) => "OrderBy",
-            Opr::Dedup(_) => "Dedup",
-            Opr::Unfold(_) => "Unfold",
-            Opr::Apply(_) => "Apply",
-            Opr::SegApply(_) => "SegApply",
-            Opr::Scan(_) => "Scan",
-            Opr::Limit(_) => "Limit",
-            Opr::Auxilia(_) => "Auxilia",
-            Opr::As(_) => "As",
-            Opr::Sink(_) => "Sink",
-            Opr::Vertex(_) => "GetV",
-            Opr::Edge(_) => "EdgeExpand",
-            Opr::Path(_) => "PathExpand",
-            Opr::PathStart(_) => "PathStart",
-            Opr::PathEnd(_) => "PathEnd",
-            Opr::Pattern(_) => "Pattern",
-            Opr::Fused(_) => "Fused",
-            Opr::Intersect(_) => "Intersect",
-        };
-        name.to_string()
-    }
-}
-
 impl pb::logical_plan::Operator {
     pub fn is_whole_graph(&self) -> bool {
         if let Some(opr) = &self.opr {
             match opr {
-                Opr::Scan(scan) => {
+                pb::logical_plan::operator::Opr::Scan(scan) => {
                     scan.idx_predicate.is_none()
                         && scan.alias.is_none()
                         && scan
@@ -663,6 +627,168 @@ impl pb::edge_expand::Direction {
             pb::edge_expand::Direction::In => pb::edge_expand::Direction::Out,
             pb::edge_expand::Direction::Both => pb::edge_expand::Direction::Both,
         }
+    }
+}
+
+impl From<physical_pb::physical_opr::operator::OpKind> for physical_pb::PhysicalOpr {
+    fn from(op_kind: physical_pb::physical_opr::operator::OpKind) -> Self {
+        let opr = physical_pb::physical_opr::Operator { op_kind: Some(op_kind) };
+        // TODO: add op_meta once supported
+        physical_pb::PhysicalOpr { opr: Some(opr), op_meta: vec![] }
+    }
+}
+
+impl From<physical_pb::Repartition> for physical_pb::PhysicalOpr {
+    fn from(repartition: physical_pb::Repartition) -> Self {
+        let op_kind = physical_pb::physical_opr::operator::OpKind::Repartition(repartition);
+        op_kind.into()
+    }
+}
+
+impl From<physical_pb::EdgeExpand> for physical_pb::PhysicalOpr {
+    fn from(expand: physical_pb::EdgeExpand) -> Self {
+        let op_kind = physical_pb::physical_opr::operator::OpKind::Edge(expand);
+        op_kind.into()
+    }
+}
+
+impl From<physical_pb::Scan> for physical_pb::PhysicalOpr {
+    fn from(scan: physical_pb::Scan) -> Self {
+        let op_kind = physical_pb::physical_opr::operator::OpKind::Scan(scan);
+        op_kind.into()
+    }
+}
+
+impl From<pb::Project> for physical_pb::Project {
+    fn from(project: pb::Project) -> Self {
+        let mappings = project
+            .mappings
+            .into_iter()
+            .map(|expr| physical_pb::project::ExprAlias {
+                expr: expr.expr,
+                alias: expr.alias.map(|tag| tag.try_into().unwrap()),
+            })
+            .collect();
+        physical_pb::Project { mappings, is_append: project.is_append }
+    }
+}
+
+impl From<pb::GroupBy> for physical_pb::GroupBy {
+    fn from(group: pb::GroupBy) -> Self {
+        let mappings = group
+            .mappings
+            .into_iter()
+            .map(|key_alias| physical_pb::group_by::KeyAlias {
+                key: key_alias.key.map(|tag| tag.try_into().unwrap()),
+                alias: key_alias
+                    .alias
+                    .map(|tag| tag.try_into().unwrap()),
+            })
+            .collect();
+        let functions = group
+            .functions
+            .into_iter()
+            .map(|agg_func| physical_pb::group_by::AggFunc {
+                vars: agg_func.vars,
+                aggregate: agg_func.aggregate,
+                alias: agg_func
+                    .alias
+                    .map(|tag| tag.try_into().unwrap()),
+            })
+            .collect();
+        physical_pb::GroupBy { mappings, functions }
+    }
+}
+
+impl From<pb::Unfold> for physical_pb::Unfold {
+    fn from(unfold: pb::Unfold) -> Self {
+        physical_pb::Unfold {
+            tag: unfold.tag.map(|tag| tag.try_into().unwrap()),
+            alias: unfold.alias.map(|tag| tag.try_into().unwrap()),
+        }
+    }
+}
+
+impl From<pb::GetV> for physical_pb::GetV {
+    fn from(get_v: pb::GetV) -> Self {
+        physical_pb::GetV {
+            tag: get_v.tag.map(|tag| tag.try_into().unwrap()),
+            opt: get_v.opt,
+            params: get_v.params,
+            alias: get_v.alias.map(|tag| tag.try_into().unwrap()),
+        }
+    }
+}
+
+impl From<pb::EdgeExpand> for physical_pb::EdgeExpand {
+    fn from(edge: pb::EdgeExpand) -> Self {
+        physical_pb::EdgeExpand {
+            v_tag: edge.v_tag.map(|tag| tag.try_into().unwrap()),
+            direction: edge.direction,
+            params: edge.params,
+            alias: edge.alias.map(|tag| tag.try_into().unwrap()),
+            expand_opt: edge.expand_opt,
+        }
+    }
+}
+
+impl From<pb::PathExpand> for physical_pb::PathExpand {
+    fn from(path: pb::PathExpand) -> Self {
+        physical_pb::PathExpand {
+            base: path.base.map(|base| base.into()),
+            start_tag: path
+                .start_tag
+                .map(|tag| tag.try_into().unwrap()),
+            alias: path.alias.map(|tag| tag.try_into().unwrap()),
+            hop_range: path.hop_range,
+            path_opt: path.path_opt,
+            result_opt: path.result_opt,
+        }
+    }
+}
+
+impl From<pb::Scan> for physical_pb::Scan {
+    fn from(scan: pb::Scan) -> Self {
+        physical_pb::Scan {
+            scan_opt: scan.scan_opt,
+            alias: scan.alias.map(|tag| tag.try_into().unwrap()),
+            params: scan.params,
+            idx_predicate: scan.idx_predicate,
+        }
+    }
+}
+
+impl From<pb::Sink> for physical_pb::Sink {
+    fn from(sink: pb::Sink) -> Self {
+        physical_pb::Sink {
+            tags: sink
+                .tags
+                .into_iter()
+                .map(|tag| physical_pb::sink::OptTag { tag: tag.key.map(|tag| tag.try_into().unwrap()) })
+                .collect(),
+            sink_target: sink.sink_target,
+        }
+    }
+}
+
+impl TryFrom<&physical_pb::PhysicalOpr> for physical_pb::physical_opr::operator::OpKind {
+    type Error = ParsePbError;
+
+    fn try_from(op: &PhysicalOpr) -> Result<Self, Self::Error> {
+        op.clone().try_into()
+    }
+}
+
+impl TryFrom<physical_pb::PhysicalOpr> for physical_pb::physical_opr::operator::OpKind {
+    type Error = ParsePbError;
+
+    fn try_from(op: PhysicalOpr) -> Result<Self, Self::Error> {
+        let op_kind = op
+            .opr
+            .ok_or(ParsePbError::EmptyFieldError("algebra op is empty".to_string()))?
+            .op_kind
+            .ok_or(ParsePbError::EmptyFieldError("algebra op_kind is empty".to_string()))?;
+        Ok(op_kind)
     }
 }
 

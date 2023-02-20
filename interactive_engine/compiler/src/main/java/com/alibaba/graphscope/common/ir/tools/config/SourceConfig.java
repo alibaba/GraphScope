@@ -21,26 +21,25 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.util.Objects;
 
 public class SourceConfig {
-    private final ScanOpt opt;
+    private final GraphOpt.Source opt;
     private final LabelConfig labels;
     @Nullable private final String alias;
 
-    public SourceConfig(ScanOpt opt) {
-        // get all labels by default
+    public SourceConfig(GraphOpt.Source opt) {
         this(opt, LabelConfig.DEFAULT, null);
     }
 
-    public SourceConfig(ScanOpt opt, LabelConfig labels) {
+    public SourceConfig(GraphOpt.Source opt, LabelConfig labels) {
         this(opt, labels, null);
     }
 
-    public SourceConfig(ScanOpt opt, LabelConfig labels, @Nullable String alias) {
+    public SourceConfig(GraphOpt.Source opt, LabelConfig labels, @Nullable String alias) {
         this.opt = Objects.requireNonNull(opt);
         this.labels = Objects.requireNonNull(labels);
         this.alias = alias;
     }
 
-    public ScanOpt getOpt() {
+    public GraphOpt.Source getOpt() {
         return opt;
     }
 

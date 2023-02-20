@@ -32,12 +32,12 @@ public class MatchTest {
         RelNode expand =
                 builder.source(
                                 new SourceConfig(
-                                        ScanOpt.Vertex,
+                                        GraphOpt.Source.VERTEX,
                                         new LabelConfig(false).addLabel("person"),
                                         "x"))
                         .expand(
                                 new ExpandConfig(
-                                        DirectionOpt.OUT,
+                                        GraphOpt.Expand.OUT,
                                         new LabelConfig(false).addLabel("knows"),
                                         "y"))
                         .build();
@@ -60,24 +60,24 @@ public class MatchTest {
         RelNode expand1 =
                 builder.source(
                                 new SourceConfig(
-                                        ScanOpt.Vertex,
+                                        GraphOpt.Source.VERTEX,
                                         new LabelConfig(false).addLabel("person"),
                                         "x"))
                         .expand(
                                 new ExpandConfig(
-                                        DirectionOpt.OUT,
+                                        GraphOpt.Expand.OUT,
                                         new LabelConfig(false).addLabel("knows"),
                                         "y"))
                         .build();
         RelNode expand2 =
                 builder.source(
                                 new SourceConfig(
-                                        ScanOpt.Vertex,
+                                        GraphOpt.Source.VERTEX,
                                         new LabelConfig(false).addLabel("person"),
                                         "x"))
                         .expand(
                                 new ExpandConfig(
-                                        DirectionOpt.OUT,
+                                        GraphOpt.Expand.OUT,
                                         new LabelConfig(false).addLabel("knows"),
                                         "z"))
                         .build();

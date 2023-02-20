@@ -30,15 +30,19 @@ public class GetVTest {
         try {
             builder.source(
                             new SourceConfig(
-                                    ScanOpt.Vertex, new LabelConfig(false).addLabel("person"), "x"))
+                                    GraphOpt.Source.VERTEX,
+                                    new LabelConfig(false).addLabel("person"),
+                                    "x"))
                     .expand(
                             new ExpandConfig(
-                                    DirectionOpt.OUT,
+                                    GraphOpt.Expand.OUT,
                                     new LabelConfig(false).addLabel("knows"),
                                     "y"))
                     .getV(
                             new GetVConfig(
-                                    GetVOpt.END, new LabelConfig(false).addLabel("person"), "x"))
+                                    GraphOpt.GetV.END,
+                                    new LabelConfig(false).addLabel("person"),
+                                    "x"))
                     .build();
         } catch (IllegalArgumentException e) {
             // expected error

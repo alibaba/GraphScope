@@ -17,8 +17,8 @@
 package com.alibaba.graphscope.common.ir;
 
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
+import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.tools.config.LabelConfig;
-import com.alibaba.graphscope.common.ir.tools.config.ScanOpt;
 import com.alibaba.graphscope.common.ir.tools.config.SourceConfig;
 
 import org.apache.calcite.rel.RelNode;
@@ -33,7 +33,8 @@ public class OrderLimitTest {
         RelNode sort =
                 builder.source(
                                 new SourceConfig(
-                                        ScanOpt.Vertex, new LabelConfig(false).addLabel("person")))
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person")))
                         .sort(builder.variable(null, "name"))
                         .build();
         Assert.assertEquals(
@@ -50,7 +51,8 @@ public class OrderLimitTest {
         RelNode sort =
                 builder.source(
                                 new SourceConfig(
-                                        ScanOpt.Vertex, new LabelConfig(false).addLabel("person")))
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person")))
                         .sort(builder.desc(builder.variable(null, "name")))
                         .build();
         Assert.assertEquals(
@@ -67,7 +69,8 @@ public class OrderLimitTest {
         RelNode sort =
                 builder.source(
                                 new SourceConfig(
-                                        ScanOpt.Vertex, new LabelConfig(false).addLabel("person")))
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person")))
                         .sort(builder.desc(builder.variable(null, "name")))
                         .limit(1, 2)
                         .build();
@@ -85,7 +88,8 @@ public class OrderLimitTest {
         RelNode limit =
                 builder.source(
                                 new SourceConfig(
-                                        ScanOpt.Vertex, new LabelConfig(false).addLabel("person")))
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person")))
                         .limit(1, 2)
                         .build();
         Assert.assertEquals(

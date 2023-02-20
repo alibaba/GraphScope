@@ -102,10 +102,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         volumes=None,
         waiting_for_delete=None,
         with_mars=False,
-        with_analytical=True,
-        with_analytical_java=False,
-        with_interactive=True,
-        with_learning=True,
+        enabled_engines="",
         **kwargs,
     ):
 
@@ -156,10 +153,31 @@ class KubernetesClusterLauncher(AbstractLauncher):
 
         self._waiting_for_delete = waiting_for_delete
 
-        self._with_analytical = with_analytical
-        self._with_analytical_java = with_analytical_java
-        self._with_interactive = with_interactive
-        self._with_learning = with_learning
+        self._with_analytical = False
+        self._with_analytical_java = False
+        self._with_interactive = False
+        self._with_learning = False
+        engines = set([item.strip() for item in enabled_engines.split(",")])
+        valid_engines = set(
+            "analytical,analytical-java,interactive,learning,gae,gae-java,gie,gle".split(
+                ","
+            )
+        )
+
+        for item in engines:
+            if item not in valid_engines:
+                raise ValueError(
+                    f"Not a valid engine name: {item}, valid engines are {valid_engines}"
+                )
+            if item == "analytical" or item == "gae":
+                self._with_analytical = True
+            if item == "interactive" or item == "gie":
+                self._with_interactive = True
+            if item == "learning" or item == "gle":
+                self._with_learning = True
+            if item == "analytical-java" or item == "gae-java":
+                self._with_analytical_java = True
+
         self._with_mars = with_mars
         self._mars_scheduler_cpu = mars_scheduler_cpu
         self._mars_scheduler_mem = mars_scheduler_mem
@@ -216,10 +234,10 @@ class KubernetesClusterLauncher(AbstractLauncher):
             vineyard_shared_mem=vineyard_shared_mem,
             volumes=volumes,
             with_mars=with_mars,
-            with_analytical=with_analytical,
-            with_analytical_java=with_analytical_java,
-            with_interactive=with_interactive,
-            with_learning=with_learning,
+            with_analytical=self._with_analytical,
+            with_analytical_java=self._with_analytical_java,
+            with_interactive=self._with_interactive,
+            with_learning=self._with_learning,
         )
 
         self._vineyard_service_endpoint = None

@@ -33,7 +33,8 @@ public class GroupTest {
         RelNode aggregate =
                 builder.source(
                                 new SourceConfig(
-                                        ScanOpt.Vertex, new LabelConfig(false).addLabel("person")))
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person")))
                         .aggregate(
                                 builder.groupKey(
                                         ImmutableList.of(

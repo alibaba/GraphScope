@@ -13,11 +13,9 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::convert::TryFrom;
-
 use dyn_type::Object;
-use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::join::JoinKind;
+use ir_common::generated::physical as pb;
 use ir_common::KeyId;
 use pegasus::api::function::{BinaryFunction, FnResult};
 
@@ -93,7 +91,7 @@ impl BinaryFunction<Record, Vec<Record>, Option<Record>> for ApplyOperator {
     }
 }
 
-impl ApplyGen<Record, Vec<Record>, Option<Record>> for algebra_pb::Apply {
+impl ApplyGen<Record, Vec<Record>, Option<Record>> for pb::Apply {
     fn get_join_kind(&self) -> JoinKind {
         unsafe { ::std::mem::transmute(self.join_kind) }
     }
@@ -102,11 +100,6 @@ impl ApplyGen<Record, Vec<Record>, Option<Record>> for algebra_pb::Apply {
         &self,
     ) -> FnGenResult<Box<dyn BinaryFunction<Record, Vec<Record>, Option<Record>>>> {
         let join_kind: JoinKind = unsafe { ::std::mem::transmute(self.join_kind) };
-        let alias = self
-            .alias
-            .as_ref()
-            .map(|tag_pb| KeyId::try_from(tag_pb.clone()))
-            .transpose()?;
         match join_kind {
             JoinKind::Inner | JoinKind::LeftOuter | JoinKind::Semi | JoinKind::Anti => {}
             JoinKind::RightOuter | JoinKind::FullOuter | JoinKind::Times => {
@@ -116,7 +109,7 @@ impl ApplyGen<Record, Vec<Record>, Option<Record>> for algebra_pb::Apply {
                 )))?
             }
         }
-        let apply_operator = ApplyOperator { join_kind, alias };
+        let apply_operator = ApplyOperator { join_kind, alias: self.alias };
         if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
             debug!("Runtime apply operator {:?}", apply_operator);
         }

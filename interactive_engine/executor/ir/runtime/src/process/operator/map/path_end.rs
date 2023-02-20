@@ -13,9 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::convert::TryInto;
-
-use ir_common::generated::algebra as algebra_pb;
+use ir_common::generated::physical as pb;
 use ir_common::KeyId;
 use pegasus::api::function::{FnResult, MapFunction};
 
@@ -44,13 +42,9 @@ impl MapFunction<Record, Record> for PathEndOperator {
     }
 }
 
-impl MapFuncGen for algebra_pb::PathEnd {
+impl MapFuncGen for pb::PathExpand {
     fn gen_map(self) -> FnGenResult<Box<dyn MapFunction<Record, Record>>> {
-        let alias = self
-            .alias
-            .map(|alias| alias.try_into())
-            .transpose()?;
-        let path_end = PathEndOperator { alias };
+        let path_end = PathEndOperator { alias: self.alias };
         if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
             debug!("Runtime path end operator: {:?}", path_end);
         }

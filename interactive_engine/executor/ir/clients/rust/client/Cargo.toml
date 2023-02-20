@@ -1,0 +1,15 @@
+[package]
+name = "ir_physical_client"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+pegasus_server = { path = "../../../../engine/pegasus/server" }
+ir_common = { path = "../../../common" }
+pegasus = { path = "../../../../engine/pegasus/pegasus" }
+tonic = "0.6"
+prost = "0.11"
+tokio = { version = "1.0", features = ["macros", "sync", "rt-multi-thread"] }
+tokio-stream = { version = "0.1.3", features = ["net"] }
