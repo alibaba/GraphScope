@@ -37,6 +37,7 @@ jobs:
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
         # This will install vineyard by homebrew
         # But we need to install vineyard to /opt/vineyard, so install it from source again.
+        brew cleanup
         ./gs install-deps dev --no-v6d
 
     - name: Install latest libgrape-lite
@@ -119,7 +120,7 @@ jobs:
         alias bash=$(brew --prefix)/bin/bash
         sudo mkdir /opt/graphscope
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
-
+        brew cleanup
         ./gs install-deps dev --no-v6d
 
     - name: Build Client Wheels
