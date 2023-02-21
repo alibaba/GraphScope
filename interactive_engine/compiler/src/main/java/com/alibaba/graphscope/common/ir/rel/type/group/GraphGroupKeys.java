@@ -16,23 +16,22 @@
 
 package com.alibaba.graphscope.common.ir.rel.type.group;
 
-import com.google.common.collect.ImmutableList;
-
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.tools.RelBuilder;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 /**
  * maintains group keys and aliases
  */
 public class GraphGroupKeys implements RelBuilder.GroupKey {
-    private final ImmutableList<RexNode> variables;
-    private final ImmutableList<@Nullable String> aliases;
+    private final List<RexNode> variables;
+    private final List<@Nullable String> aliases;
 
-    public GraphGroupKeys(
-            ImmutableList<RexNode> variables, ImmutableList<@Nullable String> aliases) {
+    public GraphGroupKeys(List<RexNode> variables, List<@Nullable String> aliases) {
         this.variables = Objects.requireNonNull(variables);
         this.aliases = Objects.requireNonNull(aliases);
     }
@@ -47,12 +46,12 @@ public class GraphGroupKeys implements RelBuilder.GroupKey {
         return 0;
     }
 
-    public ImmutableList<RexNode> getVariables() {
-        return variables;
+    public List<RexNode> getVariables() {
+        return Collections.unmodifiableList(variables);
     }
 
-    public ImmutableList<@Nullable String> getAliases() {
-        return aliases;
+    public List<@Nullable String> getAliases() {
+        return Collections.unmodifiableList(aliases);
     }
 
     @Override
