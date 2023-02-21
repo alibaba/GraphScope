@@ -78,6 +78,13 @@ and the vineyard store that offers efficient in-memory data transfers.
    apis_of_gle
    faqs_of_gle
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Graph Storage
+
+   unified_interface
+   graph_formats
+
 
 .. toctree::
    :maxdepth: 2
