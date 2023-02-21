@@ -108,15 +108,11 @@ more succinct expression. However, because of the distributed nature and practic
 
 ## Property Graph Constraints
 The current release of GIE supports two graph stores: one leverages [Vineyard](https://v6d.io/) to supply an in-memory store for immutable
-graph data, and the other, called groot, is developed on top of [RocksDB](https://rocksdb.org/) that also provides real-time write and data consistency protocol via snapshot. Both stores support graph data being partitioned across multiple servers. By design, the following constraints are introduced (on both stores):
+graph data, and the other, called groot, is developed on top of [RocksDB](https://rocksdb.org/) that also provides real-time write and data consistency via [snapshot isolation](https://en.wikipedia.org/wiki/Snapshot_isolation). Both stores support graph data being partitioned across multiple servers. By design, the following constraints are introduced (on both stores):
  - Each graph has a schema comprised of the edge labels, property keys, and vertex labels used therein.
  - Each vertex type or label has a primary key (property) defined by user. The system will automatically
   generate a String-typed unique identifier for each vertex and edge, encoding both the label information
   as well as user-defined primary keys (for vertex).
  - Each vertex or edge property can be of the following data types: `int`, `long`, `float`, `double`,
   `String`, `List<int>`, `List<long>`, and `List<String>`.
-
-
-
-
 
