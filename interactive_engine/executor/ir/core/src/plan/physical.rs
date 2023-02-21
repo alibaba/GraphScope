@@ -64,7 +64,6 @@ fn process_tag_columns(builder: &mut JobBuilder, tag: Option<TagId>, columns_opt
 }
 
 // Fetch properties before used in select, order, dedup, group, join, and apply.
-// TODO: order and group_values are not the same.
 fn post_process_vars(
     builder: &mut JobBuilder, plan_meta: &mut PlanMeta, is_order_or_group: bool,
 ) -> IrResult<()> {
@@ -76,19 +75,19 @@ fn post_process_vars(
         let tag = tag_columns.iter().next().unwrap().0;
         if tag.is_none() {
             let (tag, columns_opt) = tag_columns.into_iter().next().unwrap();
-            // this may occur bugs since, we may not use the property directly after shuffle
+            // There are minor differences between `Order`, `Group` (group_values, actually) with other operators:
+            // For `Order`, we need to carry the properties for global ordering;
+            // and for `Group` (group_values), we need to carry the properties after `Keyed` for Aggregation.
+            // While for other operators, we can shuffle to the partition where `head` locates,
+            // and directly query the properties (without saving the properties).
             if is_order_or_group && columns_opt.len() > 0 {
                 process_tag_columns(builder, tag, columns_opt);
             } else {
                 builder.shuffle(None);
-                // GetV without params means that, you need to query the storage and get the `Vertex`
                 let auxilia = pb::GetV { tag: None, opt: 4, params: None, alias: None };
                 builder.get_v(auxilia);
             }
             return Ok(());
-            // let (tag, columns_opt) = tag_columns.into_iter().next().unwrap();
-            // process_tag_columns(builder, tag, columns_opt);
-            // return Ok(());
         }
     }
 
@@ -570,10 +569,9 @@ impl AsPhysical for LogicalPlan {
                             let left_plan = plans.get(0).unwrap().clone();
                             let right_plan = plans.get(1).unwrap().clone();
 
-                            let node_meta = plan_meta.get_curr_node_meta().unwrap();
-                            let tag_columns = node_meta.get_tag_columns();
-                            println!("notice the tag_columns in join!! {:?}", tag_columns);
-                            post_process_vars(builder, plan_meta, false)?;
+                            if plan_meta.is_partition() {
+                                post_process_vars(builder, plan_meta, false)?;
+                            }
                             builder.join(
                                 unsafe { std::mem::transmute(join_opr.kind) },
                                 left_plan,

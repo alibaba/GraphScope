@@ -29,14 +29,14 @@ pub mod subtask;
 use std::convert::TryFrom;
 
 use dyn_type::Object;
-use graph_proxy::apis::{get_graph, Details, Element, GraphElement, PropKey, QueryParams};
+use graph_proxy::apis::{Details, Element, PropKey};
 use ir_common::error::ParsePbError;
 use ir_common::generated::common as common_pb;
 use ir_common::{KeyId, NameOrId};
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::error::{FnExecError, FnExecResult};
-use crate::process::entry::{DynEntry, Entry};
+use crate::process::entry::DynEntry;
 use crate::process::record::Record;
 
 #[derive(Clone, Debug, Default)]
@@ -80,8 +80,7 @@ impl TagKey {
                                 "Get `PropKey::All` on {:?}",
                                 entry,
                             )))?;
-                        let properties = details.get_all_properties();
-                        if let Some(properties) = properties {
+                        if let Some(properties) = details.get_all_properties() {
                             properties
                                 .into_iter()
                                 .map(|(key, value)| {

@@ -22,8 +22,7 @@ use ir_common::expr_parse::error::{ExprError, ExprResult};
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
 
-use crate::apis::graph::element::GraphElement;
-use crate::apis::{get_graph, Details, Element, PropKey, QueryParams};
+use crate::apis::{Details, Element, PropKey};
 use crate::utils::expr::eval::{apply_logical, Context, Evaluate, Evaluator, Operand};
 use crate::utils::expr::{ExprEvalError, ExprEvalResult};
 
