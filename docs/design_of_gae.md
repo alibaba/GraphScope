@@ -14,7 +14,9 @@ GAE as well as other execution engines of GraphScope work on top of a unified gr
 At the core of GAE is its execution framework, which has the following features in order to handle efficient graph analytics execution over distributed and large-scale graph data.
 
 ### Flexible programming models
-There exist many programming models in various graph analytics systems, and GAE supports vertex-centric model (Pregel) and PIE model. In the PIE model, users only need to provide three functions, (1) PEval, a function for given a query, computes the answer on a local graph; (2) IncEval, an incremental function, computes changes to the old output by treating incoming messages as updates; and (3) Assemble, which collects partial answers, and combines them into a complete answer. After that, GAE auto-parallelizes the graph analytics tasks across a cluster of workers.
+There exist many programming models in various graph analytics systems, and GAE supports both PIE model vertex-centric model (Pregel). Different from other programming models which need to recast the entire algorithm into a new model, in PIE, the execution of existing sequential algorithms can be automatically parallelized with only minor changes. To be more specific, as shown in the following figure, in the PIE model, users only need to provide three functions, (1) PEval, a function for given a query, computes the answer on a local graph; (2) IncEval, an incremental function, computes changes to the old output by treating incoming messages as updates; and (3) Assemble, which collects partial answers, and combines them into a complete answer. After that, GAE auto-parallelizes the graph analytics tasks across a cluster of workers. More details of the PIE model can refer to [this](https://dl.acm.org/doi/10.1145/3282488).
+
+![Workflow of PIE](./images/pie.png)
 
 ### Multi-language SDKs
 Multi-language SDKs are provided by GAE. Users choose to write their own algorithms in either C++, Java or Python. With Python, users can still expect a high performance. GAE integrated a compiler built with Cython. It can generate efficient native code from Python algorithms behind the scenes, and dispatch the code to the GraphScope cluster for execution. The SDKs further lower the total cost of ownership of graph analytics.
@@ -26,4 +28,28 @@ GAE achieves high performance through a highly optimized analytical runtime base
 
 ## Algorithm Library
 
-GAE of GraphScope provides [20 graph analytics algorithms](https://github.com/alibaba/GraphScope/tree/main/analytical_engine/apps) as built-in algorithms, and users can directly invoke them. The build-in algorithms contain most commonly used algorithms, including PageRank, BFS, DFS, shortest path and LCC. In addition, GraphScope is compatible with NetworkX APIs, and thus diverse kinds of [built-in algorithms in NetworkX](https://networkx.org/documentation/stable/reference/algorithms/index.html) can also be directly invoked by users. In total, over 100 build-in graph analytical algorithms can be directly executed over GraphScope, without any developing effort.
+GAE of GraphScope provides 20 graph analytics algorithms as built-in algorithms, and users can directly invoke them. The full lists of build-in algorithms are:
+
+- `sssp(src)`
+- `pagerank()`
+- `lpa()`
+- `kkore()`
+- `kshell()`
+- `hits()`
+- `dfs(src)`
+- `bfs(src)`
+- `voderank()`
+- `clustering()`
+- `all_pairs_shortest_path_length()`
+- `attribute_assortativity.()`
+- `average_degree_assortativity.()`
+- `degree_assortativity.()`
+- `betweenness_centrality()`
+- `closeness_centrality()`
+- `degree_centrality()`
+- `eigenvector_centrality()`
+- `katz_centrality()`
+- `sampling_path()`
+
+
+In addition, GraphScope is compatible with NetworkX APIs, and thus diverse kinds of [built-in algorithms in NetworkX](https://networkx.org/documentation/stable/reference/algorithms/index.html) can also be directly invoked by users. In total, over 100 build-in graph analytical algorithms can be directly executed over GraphScope, without any developing effort.
