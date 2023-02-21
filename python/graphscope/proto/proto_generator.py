@@ -31,9 +31,8 @@ def gather_all_proto(proto_dir, suffix="*.proto"):
 
 def create_path(path):
     """Utility function to create a path."""
-    if os.path.isdir(path):
-        return
-    os.makedirs(path, exist_ok=True)
+    if not os.path.isdir(path):
+        os.makedirs(path, exist_ok=True)
 
 
 def cpp_out(relative_dir, output_dir):
@@ -42,8 +41,8 @@ def cpp_out(relative_dir, output_dir):
         subprocess.check_call(
             [
                 shutil.which("protoc"),
-                "-I%s" % ".",
-                "--cpp_out=%s" % output_dir,
+                "-I.",
+                f"--cpp_out={output_dir}",
                 proto_file,
             ],
             stderr=subprocess.STDOUT,
@@ -52,33 +51,35 @@ def cpp_out(relative_dir, output_dir):
 
 def python_out(relative_dir, output_dir):
     files = gather_all_proto(relative_dir)
+    protoc = shutil.which("protoc")
+    if protoc is not None:
+        cmd = [protoc]
+    else:
+        cmd = [sys.executable, "-m", "grpc_tools.protoc"]
+    cmd.extend(
+        [
+            "-I.",
+            f"--python_out={output_dir}",
+        ]
+    )
     for proto_file in files:
         subprocess.check_call(
-            [
-                sys.executable,
-                "-m",
-                "grpc_tools.protoc",
-                "-I%s" % ".",
-                "--python_out=%s" % os.path.join(output_dir),
-                proto_file,
-            ],
+            cmd + [proto_file],
             stderr=subprocess.STDOUT,
         )
 
 
 def cpp_service_out(relative_dir, output_dir):
-    plugin_path = str(
-        subprocess.check_output([shutil.which("which"), "grpc_cpp_plugin"]), "utf-8"
-    ).strip()
+    plugin_path = shutil.which("grpc_cpp_plugin")
     suffix = "*_service.proto"
     files = gather_all_proto(relative_dir, suffix)
     for proto_file in files:
         subprocess.check_call(
             [
                 shutil.which("protoc"),
-                "-I%s" % ".",
-                "--grpc_out=%s" % output_dir,
-                "--plugin=protoc-gen-grpc=%s" % plugin_path,
+                "-I.",
+                f"--grpc_out={output_dir}",
+                f"--plugin=protoc-gen-grpc={plugin_path}",
                 proto_file,
             ],
             stderr=subprocess.STDOUT,
@@ -86,19 +87,28 @@ def cpp_service_out(relative_dir, output_dir):
 
 
 def python_service_out(relative_dir, output_dir):
+    protoc = shutil.which("protoc")
+    plugin_path = shutil.which("grpc_python_plugin")
+    if protoc is not None and plugin_path is not None:
+        cmd = [protoc, f"--plugin=protoc-gen-grpc_python={plugin_path}"]
+    else:
+        cmd = [
+            sys.executable,
+            "-m",
+            "grpc_tools.protoc",
+        ]
+    cmd.extend(
+        [
+            "-I.",
+            f"--python_out={output_dir}",
+            f"--grpc_python_out={output_dir}",
+        ]
+    )
     suffix = "*_service.proto"
     files = gather_all_proto(relative_dir, suffix)
     for proto_file in files:
         subprocess.check_call(
-            [
-                sys.executable,
-                "-m",
-                "grpc_tools.protoc",
-                "-I%s" % ".",
-                "--python_out=%s" % output_dir,
-                "--grpc_python_out=%s" % output_dir,
-                proto_file,
-            ],
+            cmd + [proto_file],
             stderr=subprocess.STDOUT,
         )
 
