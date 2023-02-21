@@ -14,7 +14,7 @@ g = load_ogbn_mag()
 If you need to load your own dataset, please check out our detailed [introduction to how to load graph data](https://graphscope.io/docs/latest/how_to_load_graphs.html).
 
 ## Running Built-in Graph Analytics Algorithms
-GAE of GraphScope provides [20 graph analytics algorithms](https://github.com/alibaba/GraphScope/tree/main/analytical_engine/apps) as built-in algorithms, and users can directly invoke them. The build-in algorithms contain most commonly used algorithms, including PageRank, BFS, DFS, shortest path and LCC. For example, we can run PageRank with:
+GAE of GraphScope provides [20 graph analytics algorithms](https://graphscope.io/docs/latest/design_of_gae.html#Algorithm-Library) as built-in algorithms, and users can directly invoke them. The build-in algorithms contain most commonly used algorithms, including PageRank, BFS, DFS, shortest path and LCC. For example, we can run PageRank with:
 
 ```python
 result = graphscope.pagerank(g)
