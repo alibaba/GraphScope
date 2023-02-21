@@ -96,6 +96,10 @@ public class GraphAggCall extends AbstractAggCall {
         return rexBuilder.makeCall(this.type, aggFunction, operands);
     }
 
+    public RelOptCluster getCluster() {
+        return cluster;
+    }
+
     @Override
     public String toString() {
         return "{"

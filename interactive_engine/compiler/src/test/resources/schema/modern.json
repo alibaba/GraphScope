@@ -29,22 +29,6 @@
           "hasDefaultValue": false,
           "defaultValue": null,
           "comment": "age"
-        },
-        {
-          "id": 4,
-          "name": "test",
-          "data_type": "STRING",
-          "hasDefaultValue": false,
-          "defaultValue": null,
-          "comment": "test"
-        },
-        {
-          "id": 5,
-          "name": "friendWeight",
-          "data_type": "DOUBLE",
-          "hasDefaultValue": false,
-          "defaultValue": null,
-          "comment": "friendWeight"
         }
       ],
       "indexes": [
@@ -92,20 +76,12 @@
           "comment": "name"
         },
         {
-          "id": 3,
+          "id": 4,
           "name": "lang",
           "data_type": "STRING",
           "hasDefaultValue": false,
           "defaultValue": null,
           "comment": "lang"
-        },
-        {
-          "id": 4,
-          "name": "temp",
-          "data_type": "STRING",
-          "hasDefaultValue": false,
-          "defaultValue": null,
-          "comment": "temp"
         }
       ],
       "indexes": [
@@ -131,165 +107,6 @@
     },
     {
       "id": 3,
-      "label": "dog",
-      "type": "VERTEX",
-      "isDimensionType": false,
-      "propertyDefList": [
-        {
-          "id": 1,
-          "name": "id",
-          "data_type": "LONG",
-          "hasDefaultValue": false,
-          "defaultValue": null,
-          "comment": "id"
-        }
-      ],
-      "indexes": [
-        {
-          "name": "PRIMARY_KEY",
-          "indexType": "PRIMARY_KEY",
-          "propertyNames": [
-            "id"
-          ]
-        }
-      ],
-      "comment": "",
-      "version": 1,
-      "typeOption": {
-        "storageEngine": "MEMORY"
-      },
-      "gIdToPId": {
-        "1": 1
-      }
-    },
-    {
-      "id": 4,
-      "label": "animal",
-      "type": "VERTEX",
-      "isDimensionType": false,
-      "propertyDefList": [
-        {
-          "id": 1,
-          "name": "id",
-          "data_type": "LONG",
-          "hasDefaultValue": false,
-          "defaultValue": null,
-          "comment": "id"
-        },
-        {
-          "id": 2,
-          "name": "name",
-          "data_type": "STRING",
-          "hasDefaultValue": false,
-          "defaultValue": null,
-          "comment": "name"
-        },
-        {
-          "id": 3,
-          "name": "age",
-          "data_type": "INT",
-          "hasDefaultValue": false,
-          "defaultValue": null,
-          "comment": "age"
-        }
-      ],
-      "indexes": [
-        {
-          "name": "PRIMARY_KEY",
-          "indexType": "PRIMARY_KEY",
-          "propertyNames": [
-            "id"
-          ]
-        }
-      ],
-      "comment": "animal",
-      "version": 1,
-      "typeOption": {
-        "storageEngine": "MEMORY"
-      },
-      "gIdToPId": {
-        "1": 1,
-        "2": 2,
-        "3": 3
-      }
-    },
-    {
-      "id": 5,
-      "label": "name",
-      "type": "VERTEX",
-      "isDimensionType": false,
-      "propertyDefList": [
-        {
-          "id": 1,
-          "name": "id",
-          "data_type": "LONG",
-          "hasDefaultValue": false,
-          "defaultValue": null,
-          "comment": "id"
-        }
-      ],
-      "indexes": [
-        {
-          "name": "PRIMARY_KEY",
-          "indexType": "PRIMARY_KEY",
-          "propertyNames": [
-            "id"
-          ]
-        }
-      ],
-      "comment": "name",
-      "version": 1,
-      "typeOption": {
-        "storageEngine": "MEMORY"
-      },
-      "gIdToPId": {
-        "1": 1
-      }
-    },
-    {
-      "id": 6,
-      "label": "vertex",
-      "type": "VERTEX",
-      "isDimensionType": false,
-      "propertyDefList": [
-        {
-          "id": 1,
-          "name": "id",
-          "data_type": "LONG",
-          "hasDefaultValue": false,
-          "defaultValue": null,
-          "comment": "id"
-        },
-        {
-          "id": 2,
-          "name": "name",
-          "data_type": "STRING",
-          "hasDefaultValue": false,
-          "defaultValue": null,
-          "comment": "name"
-        }
-      ],
-      "indexes": [
-        {
-          "name": "PRIMARY_KEY",
-          "indexType": "PRIMARY_KEY",
-          "propertyNames": [
-            "id"
-          ]
-        }
-      ],
-      "comment": "vertex",
-      "version": 1,
-      "typeOption": {
-        "storageEngine": "MEMORY"
-      },
-      "gIdToPId": {
-        "1": 1,
-        "2": 2
-      }
-    },
-    {
-      "id": 7,
       "label": "knows",
       "type": "EDGE",
       "isDimensionType": false,
@@ -303,7 +120,7 @@
           "comment": "id"
         },
         {
-          "id": 2,
+          "id": 5,
           "name": "weight",
           "data_type": "DOUBLE",
           "hasDefaultValue": false,
@@ -336,7 +153,7 @@
       }
     },
     {
-      "id": 8,
+      "id": 4,
       "label": "created",
       "type": "EDGE",
       "isDimensionType": false,
@@ -350,7 +167,7 @@
           "comment": "id"
         },
         {
-          "id": 2,
+          "id": 5,
           "name": "weight",
           "data_type": "DOUBLE",
           "hasDefaultValue": false,
@@ -372,11 +189,6 @@
           "srcVertexLabel": "person",
           "dstVertexLabel": "software",
           "edgeLabel": "created"
-        },
-        {
-          "srcVertexLabel": "software",
-          "dstVertexLabel": "person",
-          "edgeLabel": "created"
         }
       ],
       "typeOption": {
@@ -386,180 +198,6 @@
         "1": 1,
         "8": 2
       }
-    },
-    {
-      "id": 9,
-      "label": "createdBy",
-      "type": "EDGE",
-      "isDimensionType": false,
-      "propertyDefList": [
-        {
-          "id": 1,
-          "name": "year",
-          "data_type": "INT",
-          "hasDefaultValue": false,
-          "defaultValue": null,
-          "comment": "year"
-        },
-        {
-          "id": 2,
-          "name": "acl",
-          "data_type": "STRING",
-          "hasDefaultValue": false,
-          "defaultValue": null,
-          "comment": "acl"
-        },
-        {
-          "id": 3,
-          "name": "weight",
-          "data_type": "DOUBLE",
-          "hasDefaultValue": false,
-          "defaultValue": null,
-          "comment": "weight"
-        }
-      ],
-      "indexes": [
-        {
-          "name": "UNIQUE_WITH_EDGE",
-          "indexType": "UNIQUE_WITH_EDGE",
-          "propertyNames": []
-        }
-      ],
-      "comment": "createdBy",
-      "version": 1,
-      "rawRelationShips": [
-        {
-          "srcVertexLabel": "software",
-          "dstVertexLabel": "person",
-          "edgeLabel": "createdBy"
-        }
-      ],
-      "typeOption": {
-        "storageEngine": "MEMORY"
-      },
-      "gIdToPId": {
-        "8": 3,
-        "9": 1,
-        "10": 2
-      }
-    },
-    {
-      "id": 10,
-      "label": "existsWith",
-      "type": "EDGE",
-      "isDimensionType": false,
-      "propertyDefList": [
-        {
-          "id": 1,
-          "name": "time",
-          "data_type": "STRING",
-          "hasDefaultValue": false,
-          "defaultValue": null,
-          "comment": "time"
-        }
-      ],
-      "indexes": [
-        {
-          "name": "UNIQUE_WITH_EDGE",
-          "indexType": "UNIQUE_WITH_EDGE",
-          "propertyNames": []
-        }
-      ],
-      "comment": "existsWith",
-      "version": 1,
-      "rawRelationShips": [
-        {
-          "srcVertexLabel": "software",
-          "dstVertexLabel": "software",
-          "edgeLabel": "existsWith"
-        },
-        {
-          "srcVertexLabel": "software",
-          "dstVertexLabel": "person",
-          "edgeLabel": "existsWith"
-        },
-        {
-          "srcVertexLabel": "person",
-          "dstVertexLabel": "software",
-          "edgeLabel": "existsWith"
-        },
-        {
-          "srcVertexLabel": "person",
-          "dstVertexLabel": "person",
-          "edgeLabel": "existsWith"
-        }
-      ],
-      "typeOption": {
-        "storageEngine": "MEMORY"
-      },
-      "gIdToPId": {
-        "11": 1
-      }
-    },
-    {
-      "id": 11,
-      "label": "codeveloper",
-      "type": "EDGE",
-      "isDimensionType": false,
-      "propertyDefList": [
-        {
-          "id": 1,
-          "name": "year",
-          "data_type": "INT",
-          "hasDefaultValue": false,
-          "defaultValue": null,
-          "comment": "year"
-        }
-      ],
-      "indexes": [
-        {
-          "name": "UNIQUE_WITH_EDGE",
-          "indexType": "UNIQUE_WITH_EDGE",
-          "propertyNames": []
-        }
-      ],
-      "comment": "codeveloper",
-      "version": 1,
-      "rawRelationShips": [
-        {
-          "srcVertexLabel": "person",
-          "dstVertexLabel": "person",
-          "edgeLabel": "codeveloper"
-        }
-      ],
-      "typeOption": {
-        "storageEngine": "MEMORY"
-      },
-      "gIdToPId": {
-        "9": 1
-      }
-    },
-    {
-      "id": 12,
-      "label": "uses",
-      "type": "EDGE",
-      "isDimensionType": false,
-      "propertyDefList": [],
-      "indexes": [
-        {
-          "name": "UNIQUE_WITH_EDGE",
-          "indexType": "UNIQUE_WITH_EDGE",
-          "propertyNames": []
-        }
-      ],
-      "comment": "uses",
-      "version": 1,
-      "rawRelationShips": [
-        {
-          "srcVertexLabel": "person",
-          "dstVertexLabel": "software",
-          "edgeLabel": "uses"
-        }
-      ],
-      "typeOption": {
-        "storageEngine": "MEMORY"
-      },
-      "gIdToPId": {}
     }
   ],
   "partitionNum": 4,

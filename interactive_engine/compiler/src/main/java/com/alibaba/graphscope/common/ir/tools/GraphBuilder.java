@@ -584,7 +584,7 @@ public class GraphBuilder extends RelBuilder {
      * @return
      */
     private GroupKey groupKey_(List<RexNode> variables, List<@Nullable String> aliases) {
-        return new GraphGroupKeys(ImmutableList.copyOf(variables), ImmutableList.copyOf(aliases));
+        return new GraphGroupKeys(variables, aliases);
     }
 
     // build aggregate functions
@@ -614,7 +614,7 @@ public class GraphBuilder extends RelBuilder {
     }
 
     @Override
-    public GraphBuilder aggregate(GroupKey groupKey, AggCall... aggCalls) {
+    public GraphBuilder aggregate(GroupKey groupKey, Iterable<AggCall> aggCalls) {
         Objects.requireNonNull(groupKey);
         ObjectUtils.requireNonEmpty(aggCalls);
         List<GraphAggCall> aggCallList = new ArrayList<>();
