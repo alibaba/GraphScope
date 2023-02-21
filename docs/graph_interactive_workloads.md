@@ -71,7 +71,7 @@ plans based on both algorithmic heuristics and cost estimation.
 <center>
    <img style="border-radius: 0.3125em;
    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);"
-   src="./images/pattern-matching-example.png" width="90%">
+   src="https://user-images.githubusercontent.com/7007589/220232361-46b28ac8-c9d8-49ad-b543-53b1539c7a5e.png" width="90%">
    <br>
    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
    display: inline-block;
