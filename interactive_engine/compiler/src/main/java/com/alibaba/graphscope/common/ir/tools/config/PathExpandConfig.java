@@ -180,5 +180,9 @@ public class PathExpandConfig {
         public PathExpandConfig build() {
             return new PathExpandConfig(expand, getV, offset, fetch, resultOpt, pathOpt, alias);
         }
+
+        public GraphBuilder getInnerBuilder() {
+            return innerBuilder;
+        }
     }
 }
