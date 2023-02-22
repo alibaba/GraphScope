@@ -122,24 +122,6 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
     }
 }
 
-#[derive(Debug)]
-struct SimpleAuxiliaOperator {
-    tag: Option<KeyId>,
-    alias: Option<KeyId>,
-}
-
-impl FilterMapFunction<Record, Record> for SimpleAuxiliaOperator {
-    fn exec(&self, mut input: Record) -> FnResult<Option<Record>> {
-        if input.get(self.tag).is_none() {
-            return Ok(None);
-        }
-        if self.alias.is_some() {
-            input.append_arc_entry(input.get(self.tag).unwrap().clone(), self.alias.clone());
-        }
-        Ok(Some(input))
-    }
-}
-
 impl FilterMapFuncGen for pb::GetV {
     fn gen_filter_map(self) -> FnGenResult<Box<dyn FilterMapFunction<Record, Record>>> {
         let opt: VOpt = unsafe { ::std::mem::transmute(self.opt) };
@@ -156,21 +138,11 @@ impl FilterMapFuncGen for pb::GetV {
                 Ok(Box::new(get_vertex_operator))
             }
             VOpt::Itself => {
-                // TODO: this case may better be Project?
-                if !query_params.is_queryable() && self.alias.is_some() {
-                    let auxilia_operator = SimpleAuxiliaOperator { tag: self.tag, alias: self.alias };
-                    if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
-                        debug!("Runtime SimpleAuxiliaOperator: {:?}", auxilia_operator);
-                    }
-                    Ok(Box::new(auxilia_operator))
-                } else {
-                    let auxilia_operator =
-                        AuxiliaOperator { tag: self.tag, query_params, alias: self.alias };
-                    if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
-                        debug!("Runtime AuxiliaOperator: {:?}", auxilia_operator);
-                    }
-                    Ok(Box::new(auxilia_operator))
+                let auxilia_operator = AuxiliaOperator { tag: self.tag, query_params, alias: self.alias };
+                if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
+                    debug!("Runtime AuxiliaOperator: {:?}", auxilia_operator);
                 }
+                Ok(Box::new(auxilia_operator))
             }
         }
     }

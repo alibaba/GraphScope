@@ -95,11 +95,12 @@ fn post_process_vars(
     if len > 0 {
         let tmp_head_alias = plan_meta.get_or_set_tag_id("~tmp_head_tag").1;
         // preserve head first; i.e., .as("~tmp_head_tag")
-        builder.get_v(pb::GetV {
-            tag: None,
-            opt: 4,
-            params: None,
-            alias: Some((tmp_head_alias as KeyId).into()),
+        builder.project(pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: Some(str_to_expr_pb("@".to_string())?),
+                alias: Some((tmp_head_alias as KeyId).into()),
+            }],
+            is_append: true,
         });
         for (tag, columns_opt) in tag_columns.into_iter() {
             let tag = if tag.is_none() { Some(tmp_head_alias) } else { tag };
@@ -251,8 +252,14 @@ impl AsPhysical for pb::GetV {
 
 impl AsPhysical for pb::As {
     fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
-        let auxilia = pb::GetV { tag: None, opt: 4, params: None, alias: self.alias.clone() };
-        builder.get_v(auxilia);
+        let project_new_alias = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("@".to_string()).ok(),
+                alias: self.alias.clone(),
+            }],
+            is_append: true,
+        };
+        builder.project(project_new_alias);
         Ok(())
     }
 }
@@ -502,14 +509,13 @@ impl AsPhysical for LogicalPlan {
                         //   `Select('~expand_degree_<id>')`
                         let new_tag = plan_meta
                             .get_or_set_tag_id(&format!("~expand_degree_{:?}", curr_node_id))
-                            .1 as i32;
-                        builder.get_v(pb::GetV {
-                            tag: None,
-                            opt: 4,
-                            params: None,
-                            alias: Some(common_pb::NameOrId {
-                                item: Some(common_pb::name_or_id::Item::Id(new_tag)),
-                            }),
+                            .1 as KeyId;
+                        builder.project(pb::Project {
+                            mappings: vec![pb::project::ExprAlias {
+                                expr: str_to_expr_pb("@".to_string()).ok(),
+                                alias: Some(new_tag.into()),
+                            }],
+                            is_append: true,
                         });
                         builder.edge_expand(expand_degree);
                         builder.project(pb::Project {
