@@ -16,9 +16,8 @@
 
 package com.alibaba.graphscope.common.ir.type;
 
-import jline.internal.Nullable;
-
 import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Objects;
 
@@ -31,9 +30,9 @@ public class LabelType {
     private String label;
     private int labelId;
     @Nullable private String srcLabel;
-    @Nullable private int srcLabelId;
+    @Nullable private Integer srcLabelId;
     @Nullable private String dstLabel;
-    @Nullable private int dstLabelId;
+    @Nullable private Integer dstLabelId;
 
     public LabelType() {
         this.label = StringUtils.EMPTY;
@@ -79,19 +78,19 @@ public class LabelType {
         return labelId;
     }
 
-    public String getSrcLabel() {
+    public @Nullable String getSrcLabel() {
         return srcLabel;
     }
 
-    public int getSrcLabelId() {
+    public @Nullable Integer getSrcLabelId() {
         return srcLabelId;
     }
 
-    public String getDstLabel() {
+    public @Nullable String getDstLabel() {
         return dstLabel;
     }
 
-    public int getDstLabelId() {
+    public @Nullable Integer getDstLabelId() {
         return dstLabelId;
     }
 }
