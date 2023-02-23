@@ -98,7 +98,14 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                         .next()
                         .map(|vertex| DynEntry::new(vertex))
                     {
-                        input.append(vertex, self.alias.clone());
+                        if let Some(alias) = self.alias {
+                            // append without moving head
+                            input
+                                .get_columns_mut()
+                                .insert(alias as usize, vertex.into());
+                        } else {
+                            input.append(vertex, self.alias.clone());
+                        }
                     } else {
                         return Ok(None);
                     }
@@ -108,7 +115,19 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                     // Currently, when getting properties from an edge,
                     // we assume that it has already been carried in the edge (when the first time queried the edge)
                     // since on most storages, query edges by eid is not supported yet.
-                    input.append_arc_entry(input.get(self.tag).unwrap().clone(), self.alias.clone());
+                    if self.tag.eq(&self.alias) {
+                        // do nothing as we assume properties is already carried
+                    } else {
+                        let entry = entry.clone();
+                        if let Some(alias) = self.alias {
+                            // append without moving head
+                            input
+                                .get_columns_mut()
+                                .insert(alias as usize, entry);
+                        } else {
+                            input.append_arc_entry(entry, self.alias.clone());
+                        }
+                    }
                 }
                 _ => Err(FnExecError::unexpected_data_error(&format!(
                     "neither Vertex nor Edge entry is accessed in `Auxilia` operator, the entry is {:?}",

@@ -70,50 +70,26 @@ fn post_process_vars(
     let node_meta = plan_meta.get_curr_node_meta().unwrap();
     let tag_columns = node_meta.get_tag_columns();
     let len = tag_columns.len();
-    // the case when head not changed
-    if len == 1 {
-        let tag = tag_columns.iter().next().unwrap().0;
-        if tag.is_none() {
-            let (tag, columns_opt) = tag_columns.into_iter().next().unwrap();
-            // There are minor differences between `Order`, `Group` (group_values, actually) with other operators:
-            // For `Order`, we need to carry the properties for global ordering;
-            // and for `Group` (group_values), we need to carry the properties after `Keyed` for Aggregation.
-            // While for other operators, we can shuffle to the partition where `head` locates,
-            // and directly query the properties (without saving the properties).
-            if is_order_or_group && columns_opt.len() > 0 {
-                process_tag_columns(builder, tag, columns_opt);
-            } else {
-                builder.shuffle(None);
-                let auxilia = pb::GetV { tag: None, opt: 4, params: None, alias: None };
-                builder.get_v(auxilia);
-            }
-            return Ok(());
-        }
+    if len == 0 {
+        return Ok(());
     }
-
-    // the case when head changed
-    if len > 0 {
-        let tmp_head_alias = plan_meta.get_or_set_tag_id("~tmp_head_tag").1;
-        // preserve head first; i.e., .as("~tmp_head_tag")
-        builder.project(pb::Project {
-            mappings: vec![pb::project::ExprAlias {
-                expr: Some(str_to_expr_pb("@".to_string())?),
-                alias: Some((tmp_head_alias as KeyId).into()),
-            }],
-            is_append: true,
-        });
+    if len == 1 && !is_order_or_group {
+        // There are minor differences between `Order`, `Group` (group_values, actually) with other operators:
+        // For `Order`, we need to carry the properties for global ordering;
+        // and for `Group` (group_values), we need to carry the properties after `Keyed` for Aggregation.
+        // While for other operators, we can shuffle to the partition where the vertex locates,
+        // and directly query the properties (without saving the properties).
+        let (tag, columns_opt) = tag_columns.into_iter().next().unwrap();
+        if columns_opt.len() > 0 {
+            let tag_pb = tag.map(|tag_id| (tag_id as KeyId).into());
+            builder.shuffle(tag_pb.clone());
+            let auxilia = pb::GetV { tag: tag_pb.clone(), opt: 4, params: None, alias: tag_pb };
+            builder.get_v(auxilia);
+        }
+    } else {
         for (tag, columns_opt) in tag_columns.into_iter() {
-            let tag = if tag.is_none() { Some(tmp_head_alias) } else { tag };
             process_tag_columns(builder, tag, columns_opt);
         }
-        // project back to head; i.e., .select("~tmp_head_tag")
-        builder.project(pb::Project {
-            mappings: vec![pb::project::ExprAlias {
-                expr: Some(str_to_expr_pb(format!("@{}", tmp_head_alias))?),
-                alias: None,
-            }],
-            is_append: true,
-        });
     }
     Ok(())
 }
@@ -128,15 +104,7 @@ impl AsPhysical for pb::Project {
 
     fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         if plan_meta.is_partition() {
-            let tag_columns = plan_meta
-                .get_curr_node_meta()
-                .unwrap()
-                .get_tag_columns();
-            if tag_columns.len() > 0 {
-                for (tag, columns_opt) in tag_columns.into_iter() {
-                    process_tag_columns(builder, tag, columns_opt);
-                }
-            }
+            post_process_vars(builder, plan_meta, false)?;
         }
         Ok(())
     }
@@ -151,14 +119,37 @@ impl AsPhysical for pb::Select {
     }
 
     fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
-        // This is the case when g.V().out().has(xxx), which was like Source + EdgeExpand(ExpandV) + Filter in logical plan.
-        // This would be refined as:
-        // In Logical Plan: `Source + EdgeExpand(ExpandE) + GetV`
-        // In Physical Plan:
-        //       1. on distributed graph store, `Source + EdgeExpand(ExpandV) + Shuffle + Auxilia`
-        //    or 2. on single graph store, `Source + EdgeExpand(ExpandE) + GetV`
-        // where Auxilia means get property or filter on a vertex.
         if plan_meta.is_partition() {
+            // This is the case when g.V().out().has(xxx), which was like Source + EdgeExpand(ExpandV) + Filter in logical plan.
+            // This would be refined as:
+            // In Logical Plan: `Source + EdgeExpand(ExpandE) + GetV`
+            // In Physical Plan:
+            //       1. on distributed graph store, `Source + EdgeExpand(ExpandV) + Shuffle + Auxilia`
+            //    or 2. on single graph store, `Source + EdgeExpand(ExpandE) + GetV`
+            // where Auxilia means get property or filter on a vertex.
+            let node_meta = plan_meta.get_curr_node_meta().unwrap();
+            let tag_columns = node_meta.get_tag_columns();
+            if tag_columns.len() == 1 {
+                // Currently, we fuse `Select` into a `GetV` for tmp.
+                let (tag, columns_opt) = tag_columns.into_iter().next().unwrap();
+                if columns_opt.len() > 0 {
+                    let tag_pb = tag.map(|tag_id| (tag_id as KeyId).into());
+                    builder.shuffle(tag_pb.clone());
+                    let params = pb::QueryParams {
+                        tables: vec![],
+                        columns: vec![],
+                        is_all_columns: false,
+                        limit: None,
+                        predicate: self.predicate.clone(),
+                        sample_ratio: 1.0,
+                        extra: Default::default(),
+                    };
+                    let auxilia =
+                        pb::GetV { tag: tag_pb.clone(), opt: 4, params: Some(params), alias: tag_pb };
+                    builder.get_v(auxilia);
+                    return Ok(());
+                }
+            }
             post_process_vars(builder, plan_meta, false)?;
         }
         Ok(())
@@ -244,7 +235,7 @@ impl AsPhysical for pb::GetV {
         // where GetV(Self) means to get property or filter on the adj vertex itself.
         // Besides, if no properties fetching on the adj vertices, we can directly fuse `EdgeExpand(ExpandE) + GetV` into `EdgeExpand(ExpandV)`.
         let getv = self.clone();
-        // no need to shuffle since GetV (in logical plan) only fetches adjacent vertex ids from an edge.
+        // Currently, there's no need to shuffle since GetV (in logical plan) only fetches adjacent vertex ids from an edge.
         builder.get_v(getv);
         Ok(())
     }
