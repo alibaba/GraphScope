@@ -57,6 +57,7 @@ jobs:
       if: true
       run: |
         source ~/.graphscope_env
+        python3 -m pip install libclang
         git clone --single-branch -b v0.12.2 --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
         cd /tmp/v6d
         git submodule update --init
@@ -69,7 +70,6 @@ jobs:
         sudo make install
         # copy to /usr/local
         sudo cp -rs /opt/vineyard/* /usr/local/
-        python3 -m pip install libclang
 
     - name: Build Server Wheel
       run: |
@@ -145,6 +145,7 @@ jobs:
       if: true
       run: |
         source ~/.graphscope_env
+        python3 -m pip install libclang
         git clone --single-branch -b v0.12.2 --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
         cd /tmp/v6d
         git submodule update --init
@@ -157,7 +158,6 @@ jobs:
         sudo make install
         # copy to /usr/local
         sudo cp -rs /opt/vineyard/* /usr/local/
-        python3 -m pip install libclang
 
     - name: Build Client Wheels
       run: |
