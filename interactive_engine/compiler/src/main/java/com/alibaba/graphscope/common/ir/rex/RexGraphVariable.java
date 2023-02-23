@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.common.ir.rex;
 
 import com.alibaba.graphscope.common.ir.type.NameOrId;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexVisitor;

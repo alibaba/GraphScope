@@ -70,11 +70,17 @@ public class GraphOptTable implements RelOptTable {
     private RelDataType deriveType(GraphElement element) {
         List<GraphProperty> properties = element.getPropertyList();
         List<RelDataTypeField> fields = new ArrayList<>();
+        boolean isColumnId =
+                (this.schema instanceof GraphOptSchema)
+                        ? ((GraphOptSchema) this.schema).getRootSchema().isColumnId()
+                        : false;
         for (int i = 0; i < properties.size(); ++i) {
             GraphProperty property = properties.get(i);
             fields.add(
                     new RelDataTypeFieldImpl(
-                            property.getName(), property.getId(), deriveType(property)));
+                            property.getName(),
+                            isColumnId ? property.getId() : -1,
+                            deriveType(property)));
         }
         if (element instanceof GraphVertex) {
             LabelType labelType =

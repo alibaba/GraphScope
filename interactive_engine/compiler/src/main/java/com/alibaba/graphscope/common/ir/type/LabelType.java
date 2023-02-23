@@ -16,9 +16,8 @@
 
 package com.alibaba.graphscope.common.ir.type;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
-
 import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Objects;
 
