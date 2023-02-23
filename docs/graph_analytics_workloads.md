@@ -21,7 +21,7 @@ The [PageRank](https://en.wikipedia.org/wiki/PageRank) algorithm can measure the
 ![Community detection algorithm](./images/comm_detection.png)
 
 From the above examples, we can see that the graph analytics algorithms can analyze the properties of a set of vertices/edges in the graph.
-In real applications, many problems can be modeled as graph analytics problems. As shown in the follwing figure, Google Search treats all websites as well as links among websites as a graph, and then the PageRank algorithm can be applied to find the most important websites on the Internet. The road map of a city can also be modeled as a graph, and the shortest path algorithm can help path planning in logistics and delivery services. If we consider all users on a social media as a graph, tommunity detection techniques (e.g., Louvain) are useful to discover users with common interests and keep them tightly connected.
+In real applications, many problems can be modeled as graph analytics problems. As shown in the following figure, Google Search treats all websites as well as links among websites as a graph, and then the PageRank algorithm can be applied to find the most important websites on the Internet. The road map of a city can also be modeled as a graph, and the shortest path algorithm can help path planning in logistics and delivery services. If we consider all users on a social media as a graph, community detection techniques (e.g., Louvain) are useful to discover users with common interests and keep them tightly connected.
 
 
 ![Applications of graph analytics](./images/analytics_examples.png)
@@ -44,7 +44,7 @@ The scale and efficiency of processing large graphs is still limited. Although c
 
 ## What can GraphScope Do 
 
-In GraphScope, Graph Analytics Engine (GAE) is responsible for handling graph analytics algorithms.It addresses the abovementioned challenges in the following ways:
+In GraphScope, Graph Analytics Engine (GAE) is responsible for handling graph analytics algorithms. It addresses the abovementioned challenges in the following ways:
 
 ### Managing graph data in a distributed way 
 
@@ -61,4 +61,4 @@ Please check out [our turorials on how to develop customized algorithms](https:/
 
 ### High-performance runtime
 
-GAE achieves high performance through a highly optimized analytical runtime. Many optimization techniques, such as pull/push dynamic switching, cache-efficient memory layout, and pipelining were employed in the runtime. We have performed a comparison with state-of-the-art graph processing systems on LDBC Graph Analytics Benchmark, and the results show GraphScope outperforms other graph systems. 
+GAE achieves high performance through a highly optimized analytical runtime. Many optimization techniques, such as pull/push dynamic switching, cache-efficient memory layout, and pipelining were employed in the runtime. We have performed a comparison with state-of-the-art graph processing systems on LDBC Graph Analytics Benchmark, and the [results](https://graphscope.io/docs/latest/performance_and_benchmark.html) show GraphScope outperforms other graph systems. 
