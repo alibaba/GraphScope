@@ -16,8 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.rel.graph;
 
-import com.alibaba.graphscope.common.jna.type.PathOpt;
-import com.alibaba.graphscope.common.jna.type.ResultOpt;
+import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptUtil;
@@ -113,17 +112,17 @@ public class GraphLogicalPathExpand extends SingleRel {
         return Integer.valueOf(aliasId);
     }
 
-    private PathOpt pathOpt() {
+    private GraphOpt.PathExpandPath pathOpt() {
         ObjectUtils.requireNonEmpty(hints);
         RelHint optHint = hints.get(0);
         ObjectUtils.requireNonEmpty(optHint.kvOptions);
-        return PathOpt.valueOf(optHint.kvOptions.get("path"));
+        return GraphOpt.PathExpandPath.valueOf(optHint.kvOptions.get("path"));
     }
 
-    private ResultOpt resultOpt() {
+    private GraphOpt.PathExpandResult resultOpt() {
         ObjectUtils.requireNonEmpty(hints);
         RelHint optHint = hints.get(0);
         ObjectUtils.requireNonEmpty(optHint.kvOptions);
-        return ResultOpt.valueOf(optHint.kvOptions.get("result"));
+        return GraphOpt.PathExpandResult.valueOf(optHint.kvOptions.get("result"));
     }
 }

@@ -20,8 +20,6 @@ import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalGetV;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-import com.alibaba.graphscope.common.jna.type.PathOpt;
-import com.alibaba.graphscope.common.jna.type.ResultOpt;
 
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.rel.RelNode;
@@ -41,8 +39,8 @@ public class PathExpandConfig {
     private final int offset;
     private final int fetch;
 
-    private final PathOpt pathOpt;
-    private final ResultOpt resultOpt;
+    private final GraphOpt.PathExpandPath pathOpt;
+    private final GraphOpt.PathExpandResult resultOpt;
 
     @Nullable private final String alias;
 
@@ -51,8 +49,8 @@ public class PathExpandConfig {
             RelNode getV,
             int offset,
             int fetch,
-            ResultOpt resultOpt,
-            PathOpt pathOpt,
+            GraphOpt.PathExpandResult resultOpt,
+            GraphOpt.PathExpandPath pathOpt,
             @Nullable String alias) {
         this.expand = Objects.requireNonNull(expand);
         this.getV = Objects.requireNonNull(getV);
@@ -71,11 +69,11 @@ public class PathExpandConfig {
         return alias;
     }
 
-    public PathOpt getPathOpt() {
+    public GraphOpt.PathExpandPath getPathOpt() {
         return pathOpt;
     }
 
-    public ResultOpt getResultOpt() {
+    public GraphOpt.PathExpandResult getResultOpt() {
         return resultOpt;
     }
 
@@ -104,15 +102,15 @@ public class PathExpandConfig {
         private int offset;
         private int fetch;
 
-        private PathOpt pathOpt;
-        private ResultOpt resultOpt;
+        private GraphOpt.PathExpandPath pathOpt;
+        private GraphOpt.PathExpandResult resultOpt;
 
         @Nullable private String alias;
 
         protected Builder(GraphBuilder innerBuilder) {
             this.innerBuilder = innerBuilder;
-            this.pathOpt = PathOpt.Arbitrary;
-            this.resultOpt = ResultOpt.EndV;
+            this.pathOpt = GraphOpt.PathExpandPath.ARBITRARY;
+            this.resultOpt = GraphOpt.PathExpandResult.EndV;
         }
 
         public Builder expand(ExpandConfig config) {
@@ -158,12 +156,12 @@ public class PathExpandConfig {
             return this;
         }
 
-        public Builder pathOpt(PathOpt pathOpt) {
+        public Builder pathOpt(GraphOpt.PathExpandPath pathOpt) {
             this.pathOpt = pathOpt;
             return this;
         }
 
-        public Builder resultOpt(ResultOpt resultOpt) {
+        public Builder resultOpt(GraphOpt.PathExpandResult resultOpt) {
             this.resultOpt = resultOpt;
             return this;
         }

@@ -18,8 +18,6 @@ package com.alibaba.graphscope.common.ir;
 
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.config.*;
-import com.alibaba.graphscope.common.jna.type.PathOpt;
-import com.alibaba.graphscope.common.jna.type.ResultOpt;
 
 import org.apache.calcite.rel.RelNode;
 import org.junit.Assert;
@@ -87,8 +85,8 @@ public class ExpandTest {
                                         GraphOpt.GetV.END,
                                         new LabelConfig(false).addLabel("person")))
                         .range(1, 3)
-                        .pathOpt(PathOpt.Simple)
-                        .resultOpt(ResultOpt.AllV)
+                        .pathOpt(GraphOpt.PathExpandPath.SIMPLE)
+                        .resultOpt(GraphOpt.PathExpandResult.AllV)
                         .build();
         RelNode pathExpand =
                 builder.source(
@@ -103,7 +101,7 @@ public class ExpandTest {
                         + " tables=[knows]}], alias=[~DEFAULT], opt=[OUT])\n"
                         + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[~DEFAULT], opt=[END])\n"
-                        + "], offset=[1], fetch=[3], path_opt=[Simple], result_opt=[AllV],"
+                        + "], offset=[1], fetch=[3], path_opt=[SIMPLE], result_opt=[AllV],"
                         + " alias=[~DEFAULT])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[~DEFAULT], opt=[VERTEX])",
