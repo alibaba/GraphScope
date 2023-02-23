@@ -1,0 +1,61 @@
+[package]
+name = "mpi"
+version = "0.6.0"
+authors = [
+    "Benedikt Steinbusch <ben@rockshrub.de>",
+    "Andrew Gaspar <andrew.gaspar@outlook.com>"
+]
+description = "Message Passing Interface bindings for Rust"
+homepage = "https://github.com/bsteinb/rsmpi"
+repository = "https://github.com/bsteinb/rsmpi"
+documentation = "http://bsteinb.github.io/rsmpi/"
+readme = "README.md"
+keywords = [ "message-passing", "parallel" ]
+categories = [ "concurrency" ]
+license = "MIT/Apache-2.0"
+edition = "2018"
+
+[workspace]
+members = ["mpi-derive"]
+
+[features]
+default = ["user-operations"]
+
+user-operations = ["libffi"]
+derive = ["mpi-derive"]
+
+[dependencies]
+conv = "0.3"
+libffi = { version = "2.0.1", optional = true }
+# Public dependency ("derive" feature)
+memoffset = "0.6"
+mpi-derive = { path = "mpi-derive", optional = true }
+mpi-sys = { path = "mpi-sys", version = "0.2" }
+# Public dependency ("derive" feature)
+once_cell = "1.4"
+smallvec = "1.0.0"
+
+[build-dependencies]
+build-probe-mpi = { path = "build-probe-mpi", version = "0.1" }
+
+# The following tests depend on specific features
+
+[[example]]
+name = "struct"
+required-features = ["derive"]
+
+[[example]]
+name = "derive_multiple_thread_init"
+required-features = ["derive"]
+
+[[example]]
+name = "derive_nonthreaded_panic"
+required-features = ["derive"]
+
+[[example]]
+name = "derive_postfinalize_panic"
+required-features = ["derive"]
+
+[[example]]
+name = "derive_preinit_panic"
+required-features = ["derive"]
