@@ -44,6 +44,11 @@ jobs:
     - name: Build GraphScope
       run: |
         source ${HOME}/.graphscope_env
+        # Avoid the `InvalidVersion` error of `setuptools`
+        # ref: https://github.com/pypa/setuptools/issues/3772
+        if [ "$RUNNER_OS" == "Linux" ]; then
+            sudo apt-get remove python3-distro-info -y
+        fi
         make install INSTALL_PREFIX=/opt/graphscope
 
     - name: Run Python Test

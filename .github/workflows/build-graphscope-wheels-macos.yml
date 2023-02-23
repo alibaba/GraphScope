@@ -53,26 +53,11 @@ jobs:
         make -j4
         sudo make install
 
-    - name: Install latest vineyard
-      if: true
-      run: |
-        source ~/.graphscope_env
-        python3 -m pip install libclang
-        git clone --single-branch -b v0.12.2 --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
-        cd /tmp/v6d
-        git submodule update --init
-        cmake .  -DCMAKE_INSTALL_PREFIX=/usr/local \
-                 -DCMAKE_PREFIX_PATH=/usr/local \
-                 -DUSE_EXTERNAL_ETCD_LIBS=OFF \
-                 -DBUILD_SHARED_LIBS=ON \
-                 -DBUILD_VINEYARD_TESTS=OFF
-        make -j4
-        sudo make install
-
     - name: Build Server Wheel
       run: |
         # source environment variable
         source ~/.graphscope_env
+        python3 -m pip install libclang
         echo ${CC}
 
         # change the version for nightly release
