@@ -1,4 +1,4 @@
-# GraphScope integration with Apache GraphX
+# Tutorial: Run GraphX Applications on GraphScope
 
 [Apache Spark](https://spark.apache.org/) is a famous engine for large-scale data analytics. [Spark GraphX](https://spark.apache.org/graphx/) is Spark's graph
 computing module, which provides  flexible and efficient graph computation framework.
