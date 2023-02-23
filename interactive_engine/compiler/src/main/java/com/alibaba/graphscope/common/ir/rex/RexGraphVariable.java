@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.rex;
 
+import com.alibaba.graphscope.common.ir.type.NameOrId;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexVisitor;
@@ -28,12 +29,11 @@ import java.util.Objects;
  * Denote variables, i.e. "a" or "name" or "a.name"
  */
 public class RexGraphVariable extends RexInputRef {
-    // null -> 'head' in gremlin
-    private @Nullable Integer aliasId;
+    private int aliasId;
     // null -> get object referred by the given alias, i.e. 'a'
     // not null -> get object referred by the given alias and get the given property from it, i.e.
     // 'a.name'
-    private @Nullable Integer propertyId;
+    private @Nullable NameOrId property;
 
     protected RexGraphVariable(int aliasId, @Nullable String name, RelDataType type) {
         this(name, type);
@@ -41,10 +41,10 @@ public class RexGraphVariable extends RexInputRef {
     }
 
     protected RexGraphVariable(
-            int aliasId, int propertyId, @Nullable String name, RelDataType type) {
+            int aliasId, NameOrId property, @Nullable String name, RelDataType type) {
         this(name, type);
         this.aliasId = aliasId;
-        this.propertyId = propertyId;
+        this.property = property;
     }
 
     protected RexGraphVariable(@Nullable String name, RelDataType type) {
@@ -66,22 +66,22 @@ public class RexGraphVariable extends RexInputRef {
     /**
      * create variable from a pair of alias and fieldName, i.e. "a.name"
      * @param aliasId todo: use a MAGIC_NUM to denote `head` in gremlin
-     * @param fieldId
+     * @param property
      * @param name unique name to identify the variable, i.e. HEAD.name or a.age
      * @param type
      * @return
      */
     public static RexGraphVariable of(
-            int aliasId, int fieldId, @Nullable String name, RelDataType type) {
-        return new RexGraphVariable(aliasId, fieldId, name, type);
+            int aliasId, NameOrId property, @Nullable String name, RelDataType type) {
+        return new RexGraphVariable(aliasId, property, name, type);
     }
 
-    public @Nullable Integer getAliasId() {
+    public @Nullable int getAliasId() {
         return aliasId;
     }
 
-    public @Nullable Integer getPropertyId() {
-        return propertyId;
+    public @Nullable NameOrId getProperty() {
+        return property;
     }
 
     @Override
@@ -100,12 +100,12 @@ public class RexGraphVariable extends RexInputRef {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         RexGraphVariable that = (RexGraphVariable) o;
-        return Objects.equals(aliasId, that.aliasId) && Objects.equals(propertyId, that.propertyId);
+        return aliasId == that.aliasId && Objects.equals(property, that.property);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), aliasId, propertyId);
+        return Objects.hash(super.hashCode(), aliasId, property);
     }
 
     @Override

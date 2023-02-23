@@ -20,6 +20,7 @@ import static com.alibaba.graphscope.common.ir.util.Static.RESOURCE;
 
 import static java.util.Objects.requireNonNull;
 
+import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.rel.*;
 import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
@@ -34,8 +35,10 @@ import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.rex.RexVariableAliasChecker;
 import com.alibaba.graphscope.common.ir.rex.RexVariableConverter;
 import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
+import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
+import com.alibaba.graphscope.common.ir.type.NameOrId;
 import com.alibaba.graphscope.common.ir.util.Static;
 import com.alibaba.graphscope.common.utils.ClassUtils;
 import com.google.common.collect.ImmutableList;
@@ -204,7 +207,7 @@ public class GraphBuilder extends RelBuilder {
                 relOptTables.add(relOptSchema.getTableForMember(ImmutableList.of(label)));
             }
         } else if (relOptSchema instanceof GraphOptSchema) { // get all labels
-            List<List<String>> allLabels = ((GraphOptSchema) relOptSchema).getTableNames(opt);
+            List<List<String>> allLabels = getTableNames(opt, ((GraphOptSchema) relOptSchema).getRootSchema());
             for (List<String> label : allLabels) {
                 relOptTables.add(relOptSchema.getTableForMember(label));
             }
@@ -213,6 +216,25 @@ public class GraphBuilder extends RelBuilder {
                     "cannot infer label types from the query given config");
         }
         return new TableConfig(relOptTables).isAll(labelConfig.isAll());
+    }
+
+    /**
+     * get all table names for a specific {@code opt} to handle fuzzy conditions, i.e. g.V()
+     * @param opt
+     * @return
+     */
+    private List<List<String>> getTableNames(GraphOpt.Source opt, StatisticSchema rootSchema) {
+        switch (opt) {
+            case VERTEX:
+                return rootSchema.getVertexList().stream()
+                        .map(k -> ImmutableList.of(k.getLabel()))
+                        .collect(Collectors.toList());
+            case EDGE:
+            default:
+                return rootSchema.getEdgeList().stream()
+                        .map(k -> ImmutableList.of(k.getLabel()))
+                        .collect(Collectors.toList());
+        }
     }
 
     public List<RelHint> getHints(String optName, String aliasName, int aliasId) {
@@ -363,11 +385,12 @@ public class GraphBuilder extends RelBuilder {
         }
         GraphSchemaType graphType = (GraphSchemaType) aliasField.getType();
         List<String> properties = new ArrayList<>();
+        boolean isColumnId = (relOptSchema instanceof GraphOptSchema) ? ((GraphOptSchema) relOptSchema).getRootSchema().isColumnId() : false;
         for (RelDataTypeField pField : graphType.getFieldList()) {
             if (pField.getName().equals(property)) {
                 return RexGraphVariable.of(
                         aliasField.getIndex(),
-                        pField.getIndex(),
+                        isColumnId ? new NameOrId(pField.getIndex()) : new NameOrId(pField.getName()),
                         AliasInference.SIMPLE_NAME(alias) + Static.DELIMITER + property,
                         pField.getType());
             }
