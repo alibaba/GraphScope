@@ -15,15 +15,17 @@
 
 use std::convert::TryInto;
 
-use graph_proxy::apis::{DynDetails, Vertex};
+use graph_proxy::apis::Details;
+use graph_proxy::apis::GraphElement;
+use graph_proxy::apis::{get_graph, DynDetails, QueryParams, Vertex};
 use ir_common::error::ParsePbError;
-use ir_common::generated::algebra as algebra_pb;
-use ir_common::generated::algebra::get_v::VOpt;
+use ir_common::generated::physical as pb;
+use ir_common::generated::physical::get_v::VOpt;
 use ir_common::KeyId;
 use pegasus::api::function::{FilterMapFunction, FnResult};
 
 use crate::error::{FnExecError, FnGenResult};
-use crate::process::entry::Entry;
+use crate::process::entry::{DynEntry, Entry, EntryType};
 use crate::process::operator::map::FilterMapFuncGen;
 use crate::process::record::Record;
 
@@ -42,7 +44,7 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                     VOpt::Start => (e.src_id, e.get_src_label()),
                     VOpt::End => (e.dst_id, e.get_dst_label()),
                     VOpt::Other => (e.get_other_id(), e.get_other_label()),
-                    VOpt::Both => unreachable!(),
+                    _ => unreachable!(),
                 };
                 let vertex = Vertex::new(id, label.map(|l| l.clone()), DynDetails::default());
                 input.append(vertex, self.alias.clone());
@@ -71,24 +73,132 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
     }
 }
 
-impl FilterMapFuncGen for algebra_pb::GetV {
+/// An Auxilia operator to get extra information for the current entity.
+/// Specifically, we will update the old entity by appending the new extra information,
+/// and rename the entity, if `alias` has been set.
+#[derive(Debug)]
+struct AuxiliaOperator {
+    tag: Option<KeyId>,
+    query_params: QueryParams,
+    alias: Option<KeyId>,
+}
+
+impl FilterMapFunction<Record, Record> for AuxiliaOperator {
+    fn exec(&self, mut input: Record) -> FnResult<Option<Record>> {
+        if let Some(entry) = input.get(self.tag) {
+            // Note that we need to guarantee the requested column if it has any alias,
+            // e.g., for g.V().out().as("a").has("name", "marko"), we should compile as:
+            // g.V().out().auxilia(as("a"))... where we give alias in auxilia,
+            //     then we set tag=None and alias="a" in auxilia
+            // If queryable, then turn into graph element and do the query
+            let graph = get_graph().ok_or(FnExecError::NullGraphError)?;
+            let new_entry: Option<DynEntry> = match entry.get_type() {
+                EntryType::Vertex => {
+                    let id = entry.id();
+                    let mut result_iter = graph.get_vertex(&[id], &self.query_params)?;
+                    result_iter.next().map(|mut vertex| {
+                        // TODO:confirm the update case, and avoid it if possible.
+                        if let Some(details) = entry
+                            .as_vertex()
+                            .map(|v| v.details())
+                            .unwrap_or(None)
+                        {
+                            if let Some(properties) = details.get_all_properties() {
+                                for (key, val) in properties {
+                                    vertex
+                                        .get_details_mut()
+                                        .insert_property(key, val);
+                                }
+                            }
+                        }
+                        DynEntry::new(vertex)
+                    })
+                }
+                EntryType::Edge => {
+                    let id = entry.id();
+                    let mut result_iter = graph.get_edge(&[id], &self.query_params)?;
+                    result_iter.next().map(|mut edge| {
+                        if let Some(details) = entry
+                            .as_edge()
+                            .map(|e| e.details())
+                            .unwrap_or(None)
+                        {
+                            if let Some(properties) = details.get_all_properties() {
+                                for (key, val) in properties {
+                                    edge.get_details_mut().insert_property(key, val);
+                                }
+                            }
+                        }
+                        DynEntry::new(edge)
+                    })
+                }
+                _ => Err(FnExecError::unexpected_data_error(&format!(
+                    "neither Vertex nor Edge entry is accessed in `Auxilia` operator, the entry is {:?}",
+                    entry
+                )))?,
+            };
+            if new_entry.is_some() {
+                input.append(new_entry.unwrap(), self.alias.clone());
+            } else {
+                return Ok(None);
+            }
+
+            Ok(Some(input))
+        } else {
+            Ok(None)
+        }
+    }
+}
+
+#[derive(Debug)]
+struct SimpleAuxiliaOperator {
+    tag: Option<KeyId>,
+    alias: Option<KeyId>,
+}
+
+impl FilterMapFunction<Record, Record> for SimpleAuxiliaOperator {
+    fn exec(&self, mut input: Record) -> FnResult<Option<Record>> {
+        if input.get(self.tag).is_none() {
+            return Ok(None);
+        }
+        if self.alias.is_some() {
+            input.append_arc_entry(input.get(self.tag).unwrap().clone(), self.alias.clone());
+        }
+        Ok(Some(input))
+    }
+}
+
+impl FilterMapFuncGen for pb::GetV {
     fn gen_filter_map(self) -> FnGenResult<Box<dyn FilterMapFunction<Record, Record>>> {
-        let start_tag = self
-            .tag
-            .map(|name_or_id| name_or_id.try_into())
-            .transpose()?;
         let opt: VOpt = unsafe { ::std::mem::transmute(self.opt) };
-        if let VOpt::Both = opt {
-            Err(ParsePbError::from("the `GetV` operator is not a `FilterMap`, which has GetV::VOpt::Both"))?
+        let query_params: QueryParams = self.params.try_into()?;
+        match opt {
+            VOpt::Both => Err(ParsePbError::from(
+                "the `GetV` operator is not a `FilterMap`, which has GetV::VOpt::Both",
+            ))?,
+            VOpt::Start | VOpt::End | VOpt::Other => {
+                let get_vertex_operator = GetVertexOperator { start_tag: self.tag, opt, alias: self.alias };
+                if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
+                    debug!("Runtime get_vertex operator: {:?}", get_vertex_operator);
+                }
+                Ok(Box::new(get_vertex_operator))
+            }
+            VOpt::Itself => {
+                if query_params.is_queryable() {
+                    let auxilia_operator =
+                        AuxiliaOperator { tag: self.tag, query_params, alias: self.alias };
+                    if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
+                        debug!("Runtime AuxiliaOperator: {:?}", auxilia_operator);
+                    }
+                    Ok(Box::new(auxilia_operator))
+                } else {
+                    let auxilia_operator = SimpleAuxiliaOperator { tag: self.tag, alias: self.alias };
+                    if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
+                        debug!("Runtime SimpleAuxiliaOperator: {:?}", auxilia_operator);
+                    }
+                    Ok(Box::new(auxilia_operator))
+                }
+            }
         }
-        let alias = self
-            .alias
-            .map(|name_or_id| name_or_id.try_into())
-            .transpose()?;
-        let get_vertex_operator = GetVertexOperator { start_tag, opt, alias };
-        if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
-            debug!("Runtime get_vertex operator: {:?}", get_vertex_operator);
-        }
-        Ok(Box::new(get_vertex_operator))
     }
 }

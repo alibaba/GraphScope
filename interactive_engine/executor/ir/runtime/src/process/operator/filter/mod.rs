@@ -14,8 +14,6 @@
 //! limitations under the License.
 mod select;
 
-use ir_common::error::ParsePbError;
-use ir_common::generated::algebra as algebra_pb;
 use pegasus::api::function::FilterFunction;
 
 use crate::error::FnGenResult;
@@ -23,13 +21,4 @@ use crate::process::record::Record;
 
 pub trait FilterFuncGen {
     fn gen_filter(self) -> FnGenResult<Box<dyn FilterFunction<Record>>>;
-}
-
-impl FilterFuncGen for algebra_pb::logical_plan::operator::Opr {
-    fn gen_filter(self) -> FnGenResult<Box<dyn FilterFunction<Record>>> {
-        match self {
-            algebra_pb::logical_plan::operator::Opr::Select(select) => select.gen_filter(),
-            _ => Err(ParsePbError::from(format!("the operator is not a `Filter`, it is {:?}", self)))?,
-        }
-    }
 }

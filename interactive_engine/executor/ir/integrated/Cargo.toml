@@ -14,7 +14,7 @@ structopt = "0.3"
 tokio = { version = "1.24", features = ["macros", "sync"] }
 clap = "2.32.0"
 pegasus = { path = "../../engine/pegasus/pegasus" }
-pegasus_client = {path = "../../engine/pegasus/clients/rust/client"}
+ir_physical_client = {path = "../clients/rust/client"}
 pegasus_server = { path = "../../engine/pegasus/server" }
 pegasus_common = { path = "../../engine/pegasus/common" }
 ir_common = {path = "../common"}

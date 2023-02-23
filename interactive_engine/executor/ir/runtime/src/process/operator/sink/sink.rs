@@ -15,7 +15,6 @@
 
 use std::borrow::BorrowMut;
 use std::collections::HashMap;
-use std::convert::TryInto;
 
 use dyn_type::Object;
 use graph_proxy::apis::{Edge, Element, GraphElement, GraphPath, Vertex, ID};
@@ -237,28 +236,19 @@ impl MapFunction<Record, Vec<u8>> for RecordSinkEncoder {
 }
 
 pub struct DefaultSinkOp {
-    pub tags: Vec<common_pb::NameOrIdKey>,
+    pub tags: Vec<Option<KeyId>>,
     pub id_name_mappings: Vec<algebra_pb::sink_default::IdNameMapping>,
 }
 
 impl SinkGen for DefaultSinkOp {
     fn gen_sink(self) -> FnGenResult<Sinker> {
-        let mut sink_keys = Vec::with_capacity(self.tags.len());
-        for sink_key_pb in self.tags.into_iter() {
-            let sink_key = sink_key_pb
-                .key
-                .map(|tag| tag.try_into())
-                .transpose()?;
-            sink_keys.push(sink_key);
-        }
-
         let mut schema_map = HashMap::new();
         for id_name_mappings_pb in self.id_name_mappings {
             let meta_type = unsafe { ::std::mem::transmute(id_name_mappings_pb.meta_type) };
             schema_map.insert((meta_type, id_name_mappings_pb.id), id_name_mappings_pb.name);
         }
         let record_sinker = RecordSinkEncoder {
-            sink_keys,
+            sink_keys: self.tags,
             schema_map: if schema_map.is_empty() { None } else { Some(schema_map) },
         };
         if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {

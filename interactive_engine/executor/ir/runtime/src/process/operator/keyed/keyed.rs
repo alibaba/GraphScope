@@ -18,6 +18,7 @@ use std::convert::TryFrom;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::common as common_pb;
+use ir_common::generated::physical as pb;
 use pegasus::api::function::FnResult;
 
 use crate::error::FnGenResult;
@@ -52,7 +53,7 @@ impl KeyFunction<Record, RecordKey, Record> for KeySelector {
     }
 }
 
-impl KeyFunctionGen for algebra_pb::GroupBy {
+impl KeyFunctionGen for pb::GroupBy {
     fn gen_key(self) -> FnGenResult<Box<dyn KeyFunction<Record, RecordKey, Record>>> {
         let key_selector = KeySelector::with(
             self.mappings

@@ -223,6 +223,10 @@ def build_learning_engine():
     extra_compile_args.append("-fvisibility=hidden")
 
     libraries.append("graphlearn_shared")
+    if sys.platform == "linux" or sys.platform == "linux2":
+        extra_link_args.append("-Wl,-rpath=$ORIGIN/built/lib")
+    if sys.platform == "darwin":
+        extra_link_args.append("-Wl,-rpath,@loader_path/built/lib")
 
     sources = [
         ROOT_PATH + "/graphlearn/python/c/py_client.cc",

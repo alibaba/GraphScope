@@ -13,9 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::convert::TryInto;
-
-use ir_common::generated::algebra as algebra_pb;
+use ir_common::generated::physical as pb;
 use ir_common::KeyId;
 use pegasus::api::function::{FnResult, MapFunction};
 use pegasus_server::job_pb as server_pb;
@@ -25,14 +23,14 @@ use crate::process::functions::FoldGen;
 use crate::process::operator::accum::{AccumFactoryGen, RecordAccumulator};
 use crate::process::record::Record;
 
-impl FoldGen<u64, Record> for algebra_pb::GroupBy {
+impl FoldGen<u64, Record> for pb::GroupBy {
     fn get_accum_kind(&self) -> server_pb::AccumKind {
         let accum_functions = &self.functions;
         if accum_functions.len() == 1 {
-            let agg_kind: algebra_pb::group_by::agg_func::Aggregate =
+            let agg_kind: pb::group_by::agg_func::Aggregate =
                 unsafe { std::mem::transmute(accum_functions[0].aggregate) };
             match agg_kind {
-                algebra_pb::group_by::agg_func::Aggregate::Count => server_pb::AccumKind::Cnt,
+                pb::group_by::agg_func::Aggregate::Count => server_pb::AccumKind::Cnt,
                 _ => server_pb::AccumKind::Custom,
             }
         } else {
@@ -42,11 +40,7 @@ impl FoldGen<u64, Record> for algebra_pb::GroupBy {
 
     fn gen_fold_map(&self) -> FnGenResult<Box<dyn MapFunction<u64, Record>>> {
         if self.get_accum_kind() == server_pb::AccumKind::Cnt {
-            let count_alias = self.functions[0]
-                .alias
-                .clone()
-                .map(|alias| alias.try_into())
-                .transpose()?;
+            let count_alias = self.functions[0].alias;
             Ok(Box::new(CountAlias { alias: count_alias }))
         } else {
             Err(FnGenError::unsupported_error(&format!("fold_map in `Accum` {:?}", self)))
@@ -72,8 +66,8 @@ impl MapFunction<u64, Record> for CountAlias {
 
 #[cfg(test)]
 mod tests {
-    use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
+    use ir_common::generated::physical as pb;
     use pegasus::api::{Count, Sink};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;

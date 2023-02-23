@@ -13,12 +13,10 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::convert::TryInto;
-
 use graph_proxy::apis::{DynDetails, Vertex};
 use ir_common::error::ParsePbError;
-use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::get_v::VOpt;
+use ir_common::generated::physical as pb;
 use ir_common::KeyId;
 use pegasus::api::function::{DynIter, FlatMapFunction, FnResult};
 
@@ -60,27 +58,19 @@ impl FlatMapFunction<Record, Record> for GetBothVOperator {
     }
 }
 
-impl FlatMapFuncGen for algebra_pb::GetV {
+impl FlatMapFuncGen for pb::GetV {
     fn gen_flat_map(
         self,
     ) -> FnGenResult<Box<dyn FlatMapFunction<Record, Record, Target = DynIter<Record>>>> {
-        let start_tag = self
-            .tag
-            .map(|name_or_id| name_or_id.try_into())
-            .transpose()?;
         let opt: VOpt = unsafe { ::std::mem::transmute(self.opt) };
         match opt {
-            VOpt::Start | VOpt::End | VOpt::Other => Err(ParsePbError::from(format!(
+            VOpt::Both => {}
+            _ => Err(ParsePbError::from(format!(
                 "the `GetV` operator is not a `FlatMap`, which has GetV::VOpt: {:?}",
                 opt
             )))?,
-            VOpt::Both => {}
         }
-        let alias = self
-            .alias
-            .map(|name_or_id| name_or_id.try_into())
-            .transpose()?;
-        let get_both_v_operator = GetBothVOperator { start_tag, alias };
+        let get_both_v_operator = GetBothVOperator { start_tag: self.tag, alias: self.alias };
         if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
             debug!("Runtime get_both_v operator: {:?}", get_both_v_operator);
         }

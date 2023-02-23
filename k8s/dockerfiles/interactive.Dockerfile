@@ -16,6 +16,7 @@ RUN cd /home/graphscope/GraphScope/ && \
         cp -r artifacts/interactive /home/graphscope/install; \
     else \
         mkdir /home/graphscope/install; \
+        source /home/graphscope/.graphscope_env; \
         make interactive-install BUILD_TYPE="$profile" INSTALL_PREFIX=/home/graphscope/install; \
     fi
 

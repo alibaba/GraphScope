@@ -25,7 +25,7 @@ mod test {
     use graph_proxy::{create_exp_store, SimplePartition};
     use graph_store::common::DefaultId;
     use graph_store::ldbc::LDBCVertexParser;
-    use ir_common::generated::algebra as pb;
+    use ir_common::generated::physical as pb;
     use runtime::process::entry::Entry;
     use runtime::process::operator::source::SourceOperator;
     use runtime::process::record::Record;
@@ -35,9 +35,9 @@ mod test {
     // g.V()
     fn scan_gen(scan_opr_pb: pb::Scan) -> Box<dyn Iterator<Item = Record> + Send> {
         create_exp_store();
-        let source_opr_pb = pb::logical_plan::operator::Opr::Scan(scan_opr_pb);
         let source =
-            SourceOperator::new(source_opr_pb, 1, 1, Arc::new(SimplePartition { num_servers: 1 })).unwrap();
+            SourceOperator::new(scan_opr_pb.into(), 1, 1, Arc::new(SimplePartition { num_servers: 1 }))
+                .unwrap();
         source.gen_source(0).unwrap()
     }
 

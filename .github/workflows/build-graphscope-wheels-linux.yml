@@ -1,5 +1,6 @@
 name: Build GraphScope Wheels on Linux
 
+# on: [push, pull_request]
 on:
   workflow_dispatch:
   schedule:
@@ -44,10 +45,10 @@ jobs:
 
         cd ${GITHUB_WORKSPACE}/k8s/internal
         # build graphscope wheels
-        sudo -E -u runner make graphscope-py3-package GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} INSTALL_PREFIX=${GITHUB_WORKSPACE}/install
+        sudo -E -u runner make graphscope-py3-package GRAPHSCOPE_HOME=/opt/graphscope INSTALL_PREFIX=${GITHUB_WORKSPACE}/install
 
         # build client wheels
-        sudo -E -u runner make graphscope-client-py3-package
+        sudo -E -u runner make graphscope-client-py3-package GRAPHSCOPE_HOME=/opt/graphscope
 
         # package
         cd ${GITHUB_WORKSPACE}
@@ -81,6 +82,7 @@ jobs:
         packages_dir: upload_pypi/
 
     - name: Publish distribution to PyPI
+      if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
       uses: pypa/gh-action-pypi-publish@v1.4.2
       with:
         user: __token__

@@ -30,7 +30,7 @@ mod test {
     use ir_core::plan::meta::{set_schema, PlanMeta};
     use ir_core::plan::physical::AsPhysical;
     use ir_core::{plan::meta::Schema, JsonIO};
-    use pegasus_client::builder::JobBuilder;
+    use ir_physical_client::physical_builder::JobBuilder;
 
     use crate::common::test::*;
 

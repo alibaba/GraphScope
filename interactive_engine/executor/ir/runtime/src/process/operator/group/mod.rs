@@ -16,9 +16,6 @@
 mod fold;
 mod group;
 
-use ir_common::error::ParsePbError;
-use ir_common::generated::algebra as algebra_pb;
-
 use crate::error::FnGenResult;
 use crate::process::functions::{FoldGen, GroupGen};
 use crate::process::record::{Record, RecordKey};
@@ -29,22 +26,4 @@ pub trait GroupFunctionGen {
 
 pub trait FoldFactoryGen {
     fn gen_fold(self) -> FnGenResult<Box<dyn FoldGen<u64, Record>>>;
-}
-
-impl GroupFunctionGen for algebra_pb::logical_plan::operator::Opr {
-    fn gen_group(self) -> FnGenResult<Box<dyn GroupGen<Record, RecordKey, Record>>> {
-        match self {
-            algebra_pb::logical_plan::operator::Opr::GroupBy(group) => Ok(Box::new(group)),
-            _ => Err(ParsePbError::from(format!("the operator is not a `Group`, it is {:?}", self)))?,
-        }
-    }
-}
-
-impl FoldFactoryGen for algebra_pb::logical_plan::operator::Opr {
-    fn gen_fold(self) -> FnGenResult<Box<dyn FoldGen<u64, Record>>> {
-        match self {
-            algebra_pb::logical_plan::operator::Opr::GroupBy(non_key_group) => Ok(Box::new(non_key_group)),
-            _ => Err(ParsePbError::from(format!("the operator is not a `Fold`, it is {:?}", self)))?,
-        }
-    }
 }

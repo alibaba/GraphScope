@@ -34,7 +34,6 @@ COPY --from=ext /opt/graphscope /opt/graphscope
 COPY --from=ext /opt/openmpi /opt/openmpi
 RUN chmod +x /opt/graphscope/bin/* /opt/openmpi/bin/*
 
-# change user: graphscope
 RUN useradd -m graphscope -u 1001 \
     && echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
@@ -54,5 +53,5 @@ RUN ./gs install-deps dev --v6d-version=$VINEYARD_VERSION -j 2 && \
 
 SHELL [ "/usr/bin/scl", "enable", "rh-python38" ]
 
-RUN python3 -m pip --no-cache install yaml --user
+RUN python3 -m pip --no-cache install pyyaml --user
 ENTRYPOINT ["/bin/bash", "-c", "source scl_source enable devtoolset-8 rh-python38 && $0 $@"]

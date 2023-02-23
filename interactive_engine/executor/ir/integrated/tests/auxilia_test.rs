@@ -26,9 +26,8 @@ mod test {
     use graph_proxy::apis::{Details, GraphElement};
     use graph_proxy::{create_exp_store, SimplePartition};
     use ir_common::expr_parse::str_to_expr_pb;
-    use ir_common::generated::algebra as pb;
-    use ir_common::generated::common as common_pb;
-    use ir_common::NameOrId;
+    use ir_common::generated::physical as pb;
+    use ir_common::{KeyId, NameOrId};
     use pegasus::api::{Map, Sink};
     use pegasus::JobConf;
     use runtime::process::entry::Entry;
@@ -40,12 +39,12 @@ mod test {
     use crate::common::test::*;
 
     // g.V()
-    fn source_gen(alias: Option<common_pb::NameOrId>) -> Box<dyn Iterator<Item = Record> + Send> {
+    fn source_gen(alias: Option<KeyId>) -> Box<dyn Iterator<Item = Record> + Send> {
         create_exp_store();
         let scan_opr_pb = pb::Scan { scan_opt: 0, alias, params: None, idx_predicate: None };
-        let source_opr_pb = pb::logical_plan::operator::Opr::Scan(scan_opr_pb);
         let source =
-            SourceOperator::new(source_opr_pb, 1, 1, Arc::new(SimplePartition { num_servers: 1 })).unwrap();
+            SourceOperator::new(scan_opr_pb.into(), 1, 1, Arc::new(SimplePartition { num_servers: 1 }))
+                .unwrap();
         source.gen_source(0).unwrap()
     }
 
@@ -60,11 +59,11 @@ mod test {
             alias: None,
         };
 
-        let auxilia_opr = pb::Auxilia {
+        let auxilia_opr = pb::GetV {
             tag: None,
+            opt: 4,
             params: Some(query_params(vec![], vec![], None)),
             alias: Some(TAG_A.into()),
-            remove_tags: vec![],
         };
 
         let conf = JobConf::new("auxilia_simple_alias_test");
@@ -104,11 +103,11 @@ mod test {
             alias: None,
         };
 
-        let auxilia_opr = pb::Auxilia {
+        let auxilia_opr = pb::GetV {
             tag: None,
+            opt: 4,
             params: Some(query_params(vec![], vec!["name".into()], None)),
             alias: None,
-            remove_tags: vec![],
         };
 
         let conf = JobConf::new("auxilia_get_property_test");
@@ -157,11 +156,11 @@ mod test {
             alias: None,
         };
 
-        let auxilia_opr = pb::Auxilia {
+        let auxilia_opr = pb::GetV {
             tag: None,
+            opt: 4,
             params: Some(query_params(vec![], vec!["name".into()], None)),
             alias: Some(TAG_A.into()),
-            remove_tags: vec![],
         };
 
         let conf = JobConf::new("auxilia_get_property_with_none_tag_input_test");
@@ -210,15 +209,15 @@ mod test {
             alias: None,
         };
 
-        let auxilia_opr = pb::Auxilia {
+        let auxilia_opr = pb::GetV {
             tag: None,
+            opt: 4,
             params: Some(query_params(
                 vec![],
                 vec![],
                 str_to_expr_pb("@.name==\"vadas\"".to_string()).ok(),
             )),
             alias: None,
-            remove_tags: vec![],
         };
 
         let conf = JobConf::new("auxilia_filter_test");
@@ -267,15 +266,15 @@ mod test {
             alias: None,
         };
 
-        let auxilia_opr = pb::Auxilia {
+        let auxilia_opr = pb::GetV {
             tag: None,
+            opt: 4,
             params: Some(query_params(
                 vec![],
                 vec!["name".into()],
                 str_to_expr_pb("@.name==\"vadas\"".to_string()).ok(),
             )),
             alias: Some(TAG_A.into()),
-            remove_tags: vec![],
         };
 
         let conf = JobConf::new("auxilia_alias_test");
@@ -307,17 +306,17 @@ mod test {
     // g.V() with two auxilia ops to test updating with new properties
     #[test]
     fn auxilia_update_test() {
-        let auxilia_opr_1 = pb::Auxilia {
+        let auxilia_opr_1 = pb::GetV {
             tag: None,
+            opt: 4,
             params: Some(query_params(vec![], vec!["id".into()], None)),
             alias: None,
-            remove_tags: vec![],
         };
-        let auxilia_opr_2 = pb::Auxilia {
+        let auxilia_opr_2 = pb::GetV {
             tag: None,
+            opt: 4,
             params: Some(query_params(vec![], vec!["name".into()], None)),
             alias: None,
-            remove_tags: vec![],
         };
 
         let conf = JobConf::new("auxilia_update_test");
@@ -370,11 +369,11 @@ mod test {
     // g.V() with an auxilia to update lazy properties
     #[test]
     fn auxilia_update_on_lazy_vertex_test() {
-        let auxilia_opr = pb::Auxilia {
+        let auxilia_opr = pb::GetV {
             tag: None,
+            opt: 4,
             params: Some(query_params(vec![], vec!["name".into()], None)),
             alias: None,
-            remove_tags: vec![],
         };
 
         let conf = JobConf::new("auxilia_update_on_lazy_vertex_test");
@@ -432,11 +431,11 @@ mod test {
             alias: None,
         };
 
-        let auxilia_opr = pb::Auxilia {
+        let auxilia_opr = pb::GetV {
             tag: None,
+            opt: 4,
             params: Some(query_params(vec![], vec!["name".into()], None)),
             alias: None,
-            remove_tags: vec![],
         };
 
         let conf = JobConf::new("auxilia_update_on_empty_vertex_test");
@@ -476,35 +475,9 @@ mod test {
         assert_eq!(expected_id_names, results)
     }
 
-    // g.V().as('a').remove('a') via auxilia with remove_tag
+    // g.V().as('a').out().as('b').project('b') via project with remove tag a
     #[test]
-    fn auxilia_remove_tag_test() {
-        let auxilia_opr =
-            pb::Auxilia { tag: None, params: None, alias: None, remove_tags: vec![TAG_A.into()] };
-
-        let conf = JobConf::new("auxilia_remove_tag_test");
-        let mut result = pegasus::run(conf, || {
-            let auxilia = auxilia_opr.clone();
-            |input, output| {
-                let mut stream = input.input_from(source_gen(Some(TAG_A.into())))?;
-                let filter_map_func = auxilia.gen_filter_map().unwrap();
-                stream = stream.filter_map(move |input| filter_map_func.exec(input))?;
-                stream.sink_into(output)
-            }
-        })
-        .expect("build job failure");
-
-        let mut result_count = 0;
-        while let Some(Ok(record)) = result.next() {
-            assert!(record.get(Some(TAG_A)).is_none());
-            result_count += 1;
-        }
-        assert_eq!(result_count, 6)
-    }
-
-    // g.V().as('a').out().as('b').remove('a', 'b') via auxilia with remove_tag
-    #[test]
-    fn auxilia_remove_tags_test() {
+    fn project_to_remove_some_tag_test() {
         let expand_opr_pb = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
@@ -513,22 +486,23 @@ mod test {
             alias: Some(TAG_B.into()),
         };
 
-        let auxilia_opr = pb::Auxilia {
-            tag: None,
-            params: None,
-            alias: None,
-            remove_tags: vec![TAG_A.into(), TAG_B.into()],
+        let project_opr = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("@1".to_string()).ok(),
+                alias: Some(TAG_B.into()),
+            }],
+            is_append: false,
         };
 
-        let conf = JobConf::new("auxilia_remove_tags_test");
+        let conf = JobConf::new("project_to_remove_some_tag_test");
         let mut result = pegasus::run(conf, || {
-            let auxilia = auxilia_opr.clone();
+            let project = project_opr.clone();
             let expand = expand_opr_pb.clone();
             |input, output| {
                 let mut stream = input.input_from(source_gen(Some(TAG_A.into())))?;
                 let flatmap_func = expand.gen_flat_map().unwrap();
                 stream = stream.flat_map(move |input| flatmap_func.exec(input))?;
-                let filter_map_func = auxilia.gen_filter_map().unwrap();
+                let filter_map_func = project.gen_filter_map().unwrap();
                 stream = stream.filter_map(move |input| filter_map_func.exec(input))?;
                 stream.sink_into(output)
             }
@@ -537,75 +511,6 @@ mod test {
 
         let mut result_count = 0;
         while let Some(Ok(record)) = result.next() {
-            assert!(record.get(Some(TAG_A)).is_none());
-            assert!(record.get(Some(TAG_B)).is_none());
-            result_count += 1;
-        }
-        assert_eq!(result_count, 6)
-    }
-
-    // g.V().as('a').remove('a') via auxilia with tag='a', remove_tag='a'
-    #[test]
-    fn auxilia_tag_remove_tag_test() {
-        let auxilia_opr = pb::Auxilia {
-            tag: Some(TAG_A.into()),
-            params: None,
-            alias: None,
-            remove_tags: vec![TAG_A.into()],
-        };
-
-        let conf = JobConf::new("auxilia_tag_remove_tag_test");
-        let mut result = pegasus::run(conf, || {
-            let auxilia = auxilia_opr.clone();
-            |input, output| {
-                let mut stream = input.input_from(source_gen(Some(TAG_A.into())))?;
-                let filter_map_func = auxilia.gen_filter_map().unwrap();
-                stream = stream.filter_map(move |input| filter_map_func.exec(input))?;
-                stream.sink_into(output)
-            }
-        })
-        .expect("build job failure");
-
-        let mut result_count = 0;
-        while let Some(Ok(record)) = result.next() {
-            assert!(record.get(Some(TAG_A)).is_none());
-            result_count += 1;
-        }
-        assert_eq!(result_count, 6)
-    }
-
-    // g.V().as('a').out().as('b').remove('a') via auxilia with remove_tag
-    #[test]
-    fn auxilia_remove_some_tag_test() {
-        let expand_opr_pb = pb::EdgeExpand {
-            v_tag: None,
-            direction: 0,
-            params: None,
-            expand_opt: 0,
-            alias: Some(TAG_B.into()),
-        };
-
-        let auxilia_opr =
-            pb::Auxilia { tag: None, params: None, alias: None, remove_tags: vec![TAG_A.into()] };
-
-        let conf = JobConf::new("auxilia_remove_some_tag_test");
-        let mut result = pegasus::run(conf, || {
-            let auxilia = auxilia_opr.clone();
-            let expand = expand_opr_pb.clone();
-            |input, output| {
-                let mut stream = input.input_from(source_gen(Some(TAG_A.into())))?;
-                let flatmap_func = expand.gen_flat_map().unwrap();
-                stream = stream.flat_map(move |input| flatmap_func.exec(input))?;
-                let filter_map_func = auxilia.gen_filter_map().unwrap();
-                stream = stream.filter_map(move |input| filter_map_func.exec(input))?;
-                stream.sink_into(output)
-            }
-        })
-        .expect("build job failure");
-
-        let mut result_count = 0;
-        while let Some(Ok(record)) = result.next() {
-            println!("record {:?}", record);
             assert!(record.get(Some(TAG_A)).is_none());
             assert!(record.get(Some(TAG_B)).is_some());
             result_count += 1;

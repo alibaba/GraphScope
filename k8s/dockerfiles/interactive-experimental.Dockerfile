@@ -7,6 +7,7 @@ FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION AS builder
 COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 
 RUN cd /home/graphscope/GraphScope/interactive_engine/compiler \
+    && source /home/graphscope/.graphscope_env \
     && make build rpc.target=start_rpc_server_k8s
 
 ############### RUNTIME: frontend && executor #######################
