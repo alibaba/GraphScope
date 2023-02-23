@@ -38,7 +38,7 @@ import org.junit.Test;
 public class SourceTest {
     private static final RelDataTypeFactory typeFactory = new JavaTypeFactoryImpl();
     private static final RexBuilder rexBuilder = new RexBuilder(typeFactory);
-    private static final StatisticSchema schema = new GraphSchemaWrapper(mockGraphSchema());
+    private static final StatisticSchema schema = new GraphSchemaWrapper(mockGraphSchema(), true);
 
     // g.V().hasLabel("person")
     @Test

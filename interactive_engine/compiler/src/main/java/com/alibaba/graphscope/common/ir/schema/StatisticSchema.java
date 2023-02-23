@@ -28,4 +28,7 @@ import java.util.List;
 public interface StatisticSchema extends GraphSchema {
     // get meta for CBO
     Statistic getStatistic(List<String> tableName);
+
+    // if the property name need to be converted to id
+    boolean isColumnId();
 }

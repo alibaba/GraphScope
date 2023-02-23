@@ -16,11 +16,8 @@
 
 package com.alibaba.graphscope.common.ir.schema;
 
-import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.compiler.api.exception.GraphElementNotFoundException;
 import com.alibaba.graphscope.compiler.api.schema.GraphElement;
-import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
-import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptPlanner;
@@ -33,10 +30,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * Maintain a set of {@link RelOptTable} objects per query in compilation phase
@@ -44,31 +38,10 @@ import java.util.stream.Collectors;
 public class GraphOptSchema implements RelOptSchema {
     private RelOptCluster optCluster;
     private StatisticSchema rootSchema;
-    private Map<List<String>, RelOptTable> tableMap;
 
     public GraphOptSchema(@Nullable RelOptCluster optCluster, StatisticSchema rootSchema) {
         this.optCluster = optCluster;
         this.rootSchema = Objects.requireNonNull(rootSchema);
-        this.tableMap = new ConcurrentHashMap<>();
-    }
-
-    /**
-     * get all table names for a specific {@code opt} to handle fuzzy conditions, i.e. g.V()
-     * @param opt
-     * @return
-     */
-    public List<List<String>> getTableNames(GraphOpt.Source opt) {
-        switch (opt) {
-            case VERTEX:
-                return rootSchema.getVertexList().stream()
-                        .map(k -> ImmutableList.of(k.getLabel()))
-                        .collect(Collectors.toList());
-            case EDGE:
-            default:
-                return rootSchema.getEdgeList().stream()
-                        .map(k -> ImmutableList.of(k.getLabel()))
-                        .collect(Collectors.toList());
-        }
     }
 
     /**
@@ -105,7 +78,7 @@ public class GraphOptSchema implements RelOptSchema {
         return this.optCluster.getTypeFactory();
     }
 
-    public GraphSchema getRootSchema() {
+    public StatisticSchema getRootSchema() {
         return this.rootSchema;
     }
 

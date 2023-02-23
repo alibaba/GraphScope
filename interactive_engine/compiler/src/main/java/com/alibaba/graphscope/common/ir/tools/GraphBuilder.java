@@ -24,6 +24,7 @@ import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
+import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.google.common.collect.ImmutableList;
 
@@ -39,6 +40,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Integrate interfaces to build algebra structures,
@@ -179,7 +181,8 @@ public class GraphBuilder extends RelBuilder {
                 relOptTables.add(relOptSchema.getTableForMember(ImmutableList.of(label)));
             }
         } else if (relOptSchema instanceof GraphOptSchema) { // get all labels
-            List<List<String>> allLabels = ((GraphOptSchema) relOptSchema).getTableNames(opt);
+            List<List<String>> allLabels =
+                    getTableNames(opt, ((GraphOptSchema) relOptSchema).getRootSchema());
             for (List<String> label : allLabels) {
                 relOptTables.add(relOptSchema.getTableForMember(label));
             }
@@ -188,6 +191,25 @@ public class GraphBuilder extends RelBuilder {
                     "cannot infer label types from the query given config");
         }
         return new TableConfig(relOptTables).isAll(labelConfig.isAll());
+    }
+
+    /**
+     * get all table names for a specific {@code opt} to handle fuzzy conditions, i.e. g.V()
+     * @param opt
+     * @return
+     */
+    private List<List<String>> getTableNames(GraphOpt.Source opt, StatisticSchema rootSchema) {
+        switch (opt) {
+            case VERTEX:
+                return rootSchema.getVertexList().stream()
+                        .map(k -> ImmutableList.of(k.getLabel()))
+                        .collect(Collectors.toList());
+            case EDGE:
+            default:
+                return rootSchema.getEdgeList().stream()
+                        .map(k -> ImmutableList.of(k.getLabel()))
+                        .collect(Collectors.toList());
+        }
     }
 
     public List<RelHint> getHints(String optName, String aliasName, int aliasId) {

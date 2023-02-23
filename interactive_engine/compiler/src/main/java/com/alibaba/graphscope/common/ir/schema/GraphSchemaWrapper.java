@@ -36,10 +36,12 @@ import java.util.stream.Collectors;
  * A wrapper class for {@link GraphSchema}
  */
 public class GraphSchemaWrapper implements StatisticSchema {
-    private GraphSchema graphSchema;
+    private final GraphSchema graphSchema;
+    private final boolean isColumnId;
 
-    public GraphSchemaWrapper(GraphSchema graphSchema) {
+    public GraphSchemaWrapper(GraphSchema graphSchema, boolean isColumnId) {
         this.graphSchema = graphSchema;
+        this.isColumnId = isColumnId;
     }
 
     @Override
@@ -51,6 +53,11 @@ public class GraphSchemaWrapper implements StatisticSchema {
         } catch (GraphElementNotFoundException e) {
             throw Static.RESOURCE.tableNotFound(labelName).ex();
         }
+    }
+
+    @Override
+    public boolean isColumnId() {
+        return this.isColumnId;
     }
 
     @Override
