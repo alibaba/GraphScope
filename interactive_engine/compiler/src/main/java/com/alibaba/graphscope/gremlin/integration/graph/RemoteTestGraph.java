@@ -1466,6 +1466,22 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
                 "g_V_matchXa_0sungBy_b__a_0writtenBy_c__b_writtenBy_d__c_sungBy_d__d_hasXname_GarciaXX",
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
         reason = "unsupported")
+@Graph.OptOut(
+        method = "g_V_order_byXnameX_name",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderTest",
+        reason = "unsupoorted")
+@Graph.OptOut(
+        method = "g_V_order_byXname_ascX_name",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderTest",
+        reason = "unsupoorted")
+@Graph.OptOut(
+        method = "g_V_outE_order_byXweight_descX_weight",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderTest",
+        reason = "unsupoorted")
+@Graph.OptOut(
+        method = "g_V_both_hasLabelXpersonX_order_byXage_descX_limitX5X_name",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderTest",
+        reason = "unsupoorted")
 public class RemoteTestGraph extends DummyGraph {
     public static final String GRAPH_NAME = "test.graph.name";
     private RemoteGremlinConnection remoteGremlinConnection;
