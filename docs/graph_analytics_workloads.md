@@ -48,18 +48,17 @@ In GraphScope, Graph Analytics Engine (GAE) is responsible for handling graph an
 
 ### Managing graph data in a distributed way 
 
-In GraphScope, graph data is represented as property graph model, which can model vertices, edges and properties well. To support large-scale graph, GraphScope automatically partitions the whole graph into several subgraphs (fragments) distributed into multiple machines in a cluster. Meanwhile, GraphScope provides user-friendly interfaces for loading graphs to allow users to manage graph data easily. More detials about how to manage large-scale graphs can refer to [this](https://graphscope.io/docs/latest/design_of_gae.html#Graph-Storage).
+In GraphScope, graph data is represented as property graph model. To support large-scale graph, GraphScope automatically partitions the whole graph into several subgraphs (fragments) distributed into multiple machines in a cluster. Meanwhile, GraphScope provides user-friendly interfaces for loading graphs to allow users to manage graph data easily. More detials about how to manage large-scale graphs can refer to [this](https://graphscope.io/docs/latest/graph_formats.html).
 
 
 ### Supporting various programming models/languages
 
-On the programming model side, GraphScope supports both the vertex-centric model (Pregel) and PIE (PEval-IncEval-Assemble) programming model. Both programming models have been widely applied in existing graph processing systems, and readers can refer to [this blog](https://graphscope.io/blog/tech/2021/03/25/a-review-of-programming-models-for-parallel-graph-processing.html) for more details.
+On the programming model side, GraphScope supports both the vertex-centric model (Pregel) and PIE (PEval-IncEval-Assemble) programming model. Both programming models have been widely applied in existing graph processing systems, and readers can refer to our introduction to [Pregel](https://graphscope.io/docs/latest/analytical_engine/vertex_centric_models.html) and [PIE](https://graphscope.io/docs/latest/analytical_engine/programming_model_pie.html) models for more details.
 
 On the programming language side, GraphScope provides  SDKs for multiple languages, and users can choose to write their own algorithms in C++, Java or Python. Users can develop their own algorithms with different programming languages.
 
-Please check out [this](https://graphscope.io/docs/latest/design_of_gae.html#Execution-Framework) for more details.
-
+Please check out [our turorials on how to develop customized algorithms](https://graphscope.io/docs/latest/analytical_engine/customized_algorithms.html) for more details.
 
 ### High-performance runtime
 
-GAE achieves high performance through a highly [optimized analytical runtime](https://graphscope.io/docs/latest/design_of_gae.html#High-performance-runtime). Many optimization techniques, such as pull/push dynamic switching, cache-efficient memory layout, and pipelining were employed in the runtime. We have performed a comparison with state-of-the-art graph processing systems on LDBC Graph Analytics Benchmark, and the results show GraphScope outperforms other graph systems. 
+GAE achieves high performance through a highly optimized analytical runtime. Many optimization techniques, such as pull/push dynamic switching, cache-efficient memory layout, and pipelining were employed in the runtime. We have performed a comparison with state-of-the-art graph processing systems on LDBC Graph Analytics Benchmark, and the results show GraphScope outperforms other graph systems. 
