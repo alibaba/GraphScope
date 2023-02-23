@@ -59,7 +59,7 @@ GraphScope pre-compiled package is distributed as a python package and can be ea
 pip3 install graphscope
 ```
 
-Note that `graphscope` requires `Python` >= 3.6 and `pip` >= 19.0. The package is built for and tested on the most popular Linux (Ubuntu 18.04+ / CentOS 7+) and macOS (version 10.15+) distributions. For Windows users, you may want to install Ubuntu on WSL2 to use this package.
+Note that `graphscope` requires `Python` >= 3.8 and `pip` >= 19.3. The package is built for and tested on the most popular Linux (Ubuntu 18.04+ / CentOS 7+) and macOS (version 10.15+) distributions. For Windows users, you may want to install Ubuntu on WSL2 to use this package.
 
 Next, we will walk you through a concrete example to illustrate how GraphScope can be used by data scientists to effectively analyze large graphs.
 

@@ -83,10 +83,8 @@ class EngineCluster:
         self._interactive_frontend_prefix = "gs-interactive-frontend-"
 
         self._learning_prefix = "gs-learning-"
-        self._learning_service_name_prefix = "gs-graphlearn-service-"
 
         self._vineyard_prefix = "vineyard-"
-        self._vineyard_service_name_prefix = "gs-vineyard-service-"
 
         self._mars_scheduler_name_prefix = "mars-scheduler-"
         self._mars_service_name_prefix = "mars-"
@@ -481,7 +479,7 @@ class EngineCluster:
     def get_learning_service(self, object_id, start_port):
         service_type = self._service_type
         num_workers = self._num_workers
-        name = f"{self._learning_prefix}{object_id}"
+        name = self.get_learning_service_name(object_id)
         ports = []
         for i in range(start_port, start_port + num_workers):
             port = kube_client.V1ServicePort(name=f"{name}-{i}", port=i, protocol="TCP")
@@ -524,7 +522,7 @@ class EngineCluster:
         return endpoints[0]
 
     def get_learning_service_name(self, object_id):
-        return f"{self._learning_service_name_prefix}{object_id}"
+        return f"{self._learning_prefix}{object_id}"
 
     def get_graphlearn_service_endpoint(self, api_client, object_id, pod_host_ip_list):
         service_name = self.get_learning_service_name(object_id)
