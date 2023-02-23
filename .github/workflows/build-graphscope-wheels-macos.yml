@@ -37,12 +37,16 @@ jobs:
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
         # This will install vineyard by homebrew
         # But we need to install vineyard to /opt/vineyard, so install it from source again.
-        rm -rf /usr/local/var/homebrew/locks
+        
+        # Not sure when the first installation would fail, saying that the lock of python3.10 is taken
+        # However the second trial would success.
+        ./gs install-deps dev --no-v6d || true
         ./gs install-deps dev --no-v6d
 
     - name: Install latest libgrape-lite
       if: true
       run: |
+        source ~/.graphscope_env
         git clone --single-branch --depth=1 https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
         cd /tmp/libgrape-lite
         cmake . -DCMAKE_INSTALL_PREFIX=/opt/vineyard
@@ -52,7 +56,8 @@ jobs:
     - name: Install latest vineyard
       if: true
       run: |
-        git clone --single-branch --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
+        source ~/.graphscope_env
+        git clone --single-branch -b v0.12.2 --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
         cd /tmp/v6d
         git submodule update --init
         cmake .  -DCMAKE_INSTALL_PREFIX=/opt/vineyard \
@@ -64,7 +69,7 @@ jobs:
         sudo make install
 
         # copy to /usr/local
-        sudo cp -rf /opt/vineyard/* /usr/local/
+        sudo cp -rs /opt/vineyard/* /usr/local/
 
     - name: Build Server Wheel
       run: |
@@ -120,8 +125,39 @@ jobs:
         alias bash=$(brew --prefix)/bin/bash
         sudo mkdir /opt/graphscope
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
-        rm -rf /usr/local/var/homebrew/locks
-        ./gs install-deps dev --no-v6d
+
+        # Not sure when the first installation would fail, saying that the lock of python3.10 is taken
+        # However the second trial would success.
+        ./gs install-deps dev || true
+        ./gs install-deps dev
+
+    - name: Install latest libgrape-lite
+      if: true
+      run: |
+        source ~/.graphscope_env
+        git clone --single-branch --depth=1 https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
+        cd /tmp/libgrape-lite
+        cmake . -DCMAKE_INSTALL_PREFIX=/opt/vineyard
+        make -j4
+        sudo make install
+
+    - name: Install latest vineyard
+      if: true
+      run: |
+        source ~/.graphscope_env
+        git clone --single-branch -b v0.12.2 --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
+        cd /tmp/v6d
+        git submodule update --init
+        cmake .  -DCMAKE_INSTALL_PREFIX=/opt/vineyard \
+                 -DCMAKE_PREFIX_PATH=/opt/vineyard \
+                 -DUSE_EXTERNAL_ETCD_LIBS=OFF \
+                 -DBUILD_SHARED_LIBS=ON \
+                 -DBUILD_VINEYARD_TESTS=OFF
+        make -j4
+        sudo make install
+
+        # copy to /usr/local
+        sudo cp -rs /opt/vineyard/* /usr/local/
 
     - name: Build Client Wheels
       run: |
