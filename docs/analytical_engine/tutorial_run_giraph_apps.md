@@ -1,4 +1,4 @@
-# Graphscope integration with Apache Giraph
+# Tutorial: Run Giraph Applications on GraphScope
 
 [Apache Giraph](https://giraph.apache.org/intro.html) is one of the most famous graph computing frameworks, built on top of Apache Hadoop. Through `pregel` interface, user can write ``vertex-cetric`` graph algorithms. 
 
