@@ -44,7 +44,7 @@ jobs:
     - name: Build GraphScope
       run: |
         source ${HOME}/.graphscope_env
-        sudo make install
+        make install INSTALL_PREFIX=/opt/graphscope
 
     - name: Run Python Test
       if: matrix.os == 'ubuntu-20.04'

@@ -49,7 +49,7 @@ jobs:
         source ~/.graphscope_env
         git clone --single-branch --depth=1 https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
         cd /tmp/libgrape-lite
-        cmake . -DCMAKE_INSTALL_PREFIX=/opt/vineyard
+        cmake . -DCMAKE_INSTALL_PREFIX=/usr/local
         make -j4
         sudo make install
 
@@ -61,15 +61,13 @@ jobs:
         git clone --single-branch -b v0.12.2 --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
         cd /tmp/v6d
         git submodule update --init
-        cmake .  -DCMAKE_INSTALL_PREFIX=/opt/vineyard \
-                 -DCMAKE_PREFIX_PATH=/opt/vineyard \
+        cmake .  -DCMAKE_INSTALL_PREFIX=/usr/local \
+                 -DCMAKE_PREFIX_PATH=/usr/local \
                  -DUSE_EXTERNAL_ETCD_LIBS=OFF \
                  -DBUILD_SHARED_LIBS=ON \
                  -DBUILD_VINEYARD_TESTS=OFF
         make -j4
         sudo make install
-        # copy to /usr/local
-        sudo cp -rs /opt/vineyard/* /usr/local/
 
     - name: Build Server Wheel
       run: |
@@ -137,7 +135,7 @@ jobs:
         source ~/.graphscope_env
         git clone --single-branch --depth=1 https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
         cd /tmp/libgrape-lite
-        cmake . -DCMAKE_INSTALL_PREFIX=/opt/vineyard
+        cmake . -DCMAKE_INSTALL_PREFIX=/usr/local
         make -j4
         sudo make install
 
@@ -149,15 +147,13 @@ jobs:
         git clone --single-branch -b v0.12.2 --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
         cd /tmp/v6d
         git submodule update --init
-        cmake .  -DCMAKE_INSTALL_PREFIX=/opt/vineyard \
-                 -DCMAKE_PREFIX_PATH=/opt/vineyard \
+        cmake .  -DCMAKE_INSTALL_PREFIX=/usr/local \
+                 -DCMAKE_PREFIX_PATH=/usr/local \
                  -DUSE_EXTERNAL_ETCD_LIBS=OFF \
                  -DBUILD_SHARED_LIBS=ON \
                  -DBUILD_VINEYARD_TESTS=OFF
         make -j4
         sudo make install
-        # copy to /usr/local
-        sudo cp -rs /opt/vineyard/* /usr/local/
 
     - name: Build Client Wheels
       run: |
