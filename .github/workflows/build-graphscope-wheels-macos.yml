@@ -67,9 +67,9 @@ jobs:
                  -DBUILD_VINEYARD_TESTS=OFF
         make -j4
         sudo make install
-
         # copy to /usr/local
         sudo cp -rs /opt/vineyard/* /usr/local/
+        python3 -m pip install libclang
 
     - name: Build Server Wheel
       run: |
@@ -155,9 +155,9 @@ jobs:
                  -DBUILD_VINEYARD_TESTS=OFF
         make -j4
         sudo make install
-
         # copy to /usr/local
         sudo cp -rs /opt/vineyard/* /usr/local/
+        python3 -m pip install libclang
 
     - name: Build Client Wheels
       run: |
