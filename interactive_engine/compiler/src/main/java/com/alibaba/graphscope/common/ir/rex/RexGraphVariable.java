@@ -86,7 +86,8 @@ public class RexGraphVariable extends RexInputRef {
 
     @Override
     public <R> R accept(RexVisitor<R> rexVisitor) {
-        if (rexVisitor instanceof RexVariableAliasChecker) {
+        if (rexVisitor instanceof RexVariableAliasChecker
+                || rexVisitor instanceof RexVariableConverter) {
             return rexVisitor.visitInputRef(this);
         } else {
             return null;

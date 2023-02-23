@@ -28,6 +28,8 @@ import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.util.Litmus;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -36,7 +38,7 @@ import java.util.Objects;
 public class GraphAggCall extends AbstractAggCall {
     private final RelDataType type;
     private final boolean distinct;
-    private final ImmutableList<RexNode> operands; // may be empty
+    private final List<RexNode> operands; // may be empty
     private final SqlAggFunction aggFunction;
     private final @Nullable String alias;
     private final RelOptCluster cluster;
@@ -46,7 +48,7 @@ public class GraphAggCall extends AbstractAggCall {
             SqlAggFunction aggFunction,
             boolean distinct,
             @Nullable String alias,
-            ImmutableList<RexNode> operands) {
+            List<RexNode> operands) {
         this.cluster = Objects.requireNonNull(cluster);
         this.aggFunction = aggFunction;
         this.distinct = distinct;
@@ -55,8 +57,7 @@ public class GraphAggCall extends AbstractAggCall {
         this.type = validateThenDerive(aggFunction, operands);
     }
 
-    private RelDataType validateThenDerive(
-            SqlAggFunction aggFunction, ImmutableList<RexNode> operands) {
+    private RelDataType validateThenDerive(SqlAggFunction aggFunction, List<RexNode> operands) {
         if (cluster != null) {
             RelDataTypeFactory factory = cluster.getTypeFactory();
             RexCallBinding callBinding =
@@ -79,8 +80,8 @@ public class GraphAggCall extends AbstractAggCall {
         return distinct;
     }
 
-    public ImmutableList<RexNode> getOperands() {
-        return operands;
+    public List<RexNode> getOperands() {
+        return Collections.unmodifiableList(operands);
     }
 
     public SqlAggFunction getAggFunction() {
