@@ -128,8 +128,8 @@ jobs:
 
         # Not sure when the first installation would fail, saying that the lock of python3.10 is taken
         # However the second trial would success.
-        ./gs install-deps dev || true
-        ./gs install-deps dev
+        ./gs install-deps dev --no-v6d || true
+        ./gs install-deps dev --no-v6d
 
     - name: Install latest libgrape-lite
       if: true

@@ -13,7 +13,7 @@ COPY --chown=graphscope:graphscope ./interactive_engine/assembly/src/conf/maven.
 
 USER graphscope
 
-RUN cd /home/graphscope/graphscope && \
+RUN cd /home/graphscope/graphscope \
     && source ~/.graphscope_env \
     && cd /home/graphscope/graphscope/interactive_engine \
     && mvn clean package -P groot,groot-assembly -DskipTests --quiet -Drust.compile.mode="$profile" \
