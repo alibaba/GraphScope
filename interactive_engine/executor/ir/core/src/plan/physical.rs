@@ -112,6 +112,38 @@ impl AsPhysical for pb::Project {
 
 impl AsPhysical for pb::Select {
     fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        // This is the case when g.V().out().has(xxx), which was like Source + EdgeExpand(ExpandV) + Filter in logical plan.
+        // This would be refined as:
+        // In Logical Plan: `Source + EdgeExpand(ExpandE) + GetV`
+        // In Physical Plan:
+        //       1. on distributed graph store, `Source + EdgeExpand(ExpandV) + Shuffle + Auxilia`
+        //    or 2. on single graph store, `Source + EdgeExpand(ExpandE) + GetV`
+        // where Auxilia means get property or filter on a vertex.
+        let node_meta = plan_meta.get_curr_node_meta().unwrap();
+        let tag_columns = node_meta.get_tag_columns();
+        // Currently, we fuse `Select` into a `GetV` if possible.
+        if tag_columns.len() == 1 {
+            let (tag, columns_opt) = tag_columns.into_iter().next().unwrap();
+            if columns_opt.len() > 0 {
+                let tag_pb = tag.map(|tag_id| (tag_id as KeyId).into());
+                if plan_meta.is_partition() {
+                    builder.shuffle(tag_pb.clone());
+                }
+                let params = pb::QueryParams {
+                    tables: vec![],
+                    columns: vec![],
+                    is_all_columns: false,
+                    limit: None,
+                    predicate: self.predicate.clone(),
+                    sample_ratio: 1.0,
+                    extra: Default::default(),
+                };
+                let auxilia = pb::GetV { tag: tag_pb.clone(), opt: 4, params: Some(params), alias: tag_pb };
+                builder.get_v(auxilia);
+                return Ok(());
+            }
+        }
+
         let mut select = self.clone();
         select.post_process(builder, plan_meta)?;
         builder.select(select);
@@ -224,18 +256,35 @@ impl AsPhysical for pb::PathExpand {
 }
 
 impl AsPhysical for pb::GetV {
-    fn add_job_builder(&self, builder: &mut JobBuilder, _plan_meta: &mut PlanMeta) -> IrResult<()> {
-        // TODO: ExpandEdge + GetV fusion rule:
-        // For example,currently, the case of `g.V().out().has(xxx)` would be translated into `Source + EdgeExpand(ExpandV) + Filter` in logical plan.
+    fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        // Currently, the case of `g.V().out().has(xxx)` would be translated into `Source + EdgeExpand(ExpandV) + Filter` in logical plan.
         // This would be refined as:
-        // In Logical Plan: `Source + EdgeExpand(ExpandE) + GetV`
+        // In Logical Plan: `Source + EdgeExpand(ExpandE) + GetV(GetAdj)`
         // In Physical Plan:
-        //       1. on distributed graph store, `Source + EdgeExpand(ExpandV) + Shuffle + GetV(Self)`
-        //    or 2. on single graph store, `Source + EdgeExpand(ExpandE) + GetV(Self)`
-        // where GetV(Self) means to get property or filter on the adj vertex itself.
-        // Besides, if no properties fetching on the adj vertices, we can directly fuse `EdgeExpand(ExpandE) + GetV` into `EdgeExpand(ExpandV)`.
-        let getv = self.clone();
-        // Currently, there's no need to shuffle since GetV (in logical plan) only fetches adjacent vertex ids from an edge.
+        //       1. if GetV with filter, translate into
+        //         `Source + EdgeExpand(ExpandE) + GetV(GetAdj) + Shuffle (if on distributed storage) + GetV(Self)`
+        //          where GetV(Self) is used to filter on the adj vertex itself.
+        //    or 2. if GetV without filter, directly
+        //         `Source + EdgeExpand(ExpandE) + GetV(GetAdj)`
+        let mut getv = self.clone();
+        // If GetV(Adj) with filter, translate GetV into GetV(GetAdj) + Shuffle (if on distributed storage) + GetV(Self)
+        if let Some(params) = getv.params.as_mut() {
+            if params.predicate.is_some() {
+                let auxilia =
+                    pb::GetV { tag: None, opt: 4, params: Some(params.clone()), alias: getv.alias };
+                params.predicate.take();
+                getv.alias = None;
+                // GetV(Adj)
+                builder.get_v(getv);
+                // Suffle + GetV(Self)
+                if plan_meta.is_partition() {
+                    builder.shuffle(None);
+                }
+                builder.get_v(auxilia);
+                return Ok(());
+            }
+        }
+        // Otherwise, fetches adjacent vertex ids from an edge directly.
         builder.get_v(getv);
         Ok(())
     }
@@ -754,6 +803,19 @@ mod test {
     }
 
     #[allow(dead_code)]
+    fn build_auxilia_with_tag_alias_columns(
+        tag: Option<common_pb::NameOrId>, alias: Option<common_pb::NameOrId>,
+        columns: Vec<common_pb::NameOrId>,
+    ) -> pb::GetV {
+        if columns.is_empty() {
+            pb::GetV { tag, opt: 4, params: None, alias }
+        } else {
+            let params = query_params(vec![], columns);
+            pb::GetV { tag, opt: 4, params: Some(params), alias }
+        }
+    }
+
+    #[allow(dead_code)]
     fn build_project(expr: &str) -> pb::Project {
         pb::Project {
             mappings: vec![pb::project::ExprAlias {
@@ -888,7 +950,7 @@ mod test {
         // g.V().out().as(0).out().as(1).filter(0.age > 1.age)
         // In this case, the Select cannot be translated into an Auxilia, as it contains
         // fetching the properties from two different nodes. In this case, we need to fetch
-        // the properties using `Auxilia` right after the first and second `out()`, and can
+        // the properties using `Auxilia` twice before filter, and can
         // finally execute the selection of "0.age > 1.age".
         let mut plan = LogicalPlan::default();
         plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
@@ -908,16 +970,8 @@ mod test {
 
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_scan_source(build_scan(vec![]));
-        expected_builder.edge_expand(build_edgexpd(0, vec![], None));
-        expected_builder.get_v(build_auxilia_with_params(
-            Some(query_params(vec![], vec!["age".into()])),
-            Some(0.into()),
-        ));
-        expected_builder.edge_expand(build_edgexpd(0, vec![], None));
-        expected_builder.get_v(build_auxilia_with_params(
-            Some(query_params(vec![], vec!["age".into()])),
-            Some(1.into()),
-        ));
+        expected_builder.edge_expand(build_edgexpd(0, vec![], Some(0.into())));
+        expected_builder.edge_expand(build_edgexpd(0, vec![], Some(1.into())));
         expected_builder.select(build_select("@0.age > @1.age"));
         expected_builder.sink(build_sink());
 
@@ -932,18 +986,20 @@ mod test {
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_scan_source(build_scan(vec![]));
         expected_builder.shuffle(None);
-        expected_builder.edge_expand(build_edgexpd(0, vec![], None));
+        expected_builder.edge_expand(build_edgexpd(0, vec![], Some(0.into())));
         expected_builder.shuffle(None);
-        expected_builder.get_v(build_auxilia_with_params(
-            Some(query_params(vec![], vec!["age".into()])),
+        expected_builder.edge_expand(build_edgexpd(0, vec![], Some(1.into())));
+        expected_builder.shuffle(Some(0.into()));
+        expected_builder.get_v(build_auxilia_with_tag_alias_columns(
             Some(0.into()),
+            Some(0.into()),
+            vec!["age".into()],
         ));
-        expected_builder.shuffle(None);
-        expected_builder.edge_expand(build_edgexpd(0, vec![], None));
-        expected_builder.shuffle(None);
-        expected_builder.get_v(build_auxilia_with_params(
-            Some(query_params(vec![], vec!["age".into()])),
+        expected_builder.shuffle(Some(1.into()));
+        expected_builder.get_v(build_auxilia_with_tag_alias_columns(
             Some(1.into()),
+            Some(1.into()),
+            vec!["age".into()],
         ));
         expected_builder.select(build_select("@0.age > @1.age"));
         expected_builder.sink(build_sink());
@@ -970,11 +1026,7 @@ mod test {
 
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_scan_source(build_scan(vec![]));
-        expected_builder.edge_expand(build_edgexpd(0, vec![], None));
-        expected_builder.get_v(build_auxilia_with_params(
-            Some(query_params(vec![], vec!["age".into(), "id".into(), "name".into()])),
-            Some(0.into()),
-        ));
+        expected_builder.edge_expand(build_edgexpd(0, vec![], Some(0.into())));
         expected_builder.project(build_project("{@0.name, @0.id, @0.age}"));
         expected_builder.sink(build_sink());
 
@@ -989,12 +1041,14 @@ mod test {
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_scan_source(build_scan(vec![]));
         expected_builder.shuffle(None);
-        expected_builder.edge_expand(build_edgexpd(0, vec![], None));
-        expected_builder.shuffle(None);
-        expected_builder.get_v(build_auxilia_with_params(
-            Some(query_params(vec![], vec!["age".into(), "id".into(), "name".into()])),
-            Some(0.into()),
-        ));
+        expected_builder.edge_expand(build_edgexpd(0, vec![], Some(0.into())));
+        expected_builder.shuffle(Some(0.into()));
+        expected_builder.get_v(pb::GetV {
+            tag: Some(0.into()),
+            opt: 4,
+            params: None,
+            alias: Some(0.into()),
+        });
         expected_builder.project(build_project("{@0.name, @0.id, @0.age}"));
         expected_builder.sink(build_sink());
 
@@ -1055,13 +1109,29 @@ mod test {
             .unwrap();
 
         let mut expected_builder = JobBuilder::default();
-        expected_builder.add_scan_source(build_scan(vec!["id".into(), "name".into()]));
-
+        expected_builder.add_scan_source(build_scan(vec![]));
         expected_builder.select(build_select("@.~label == \"person\""));
         expected_builder.get_v(build_auxilia_with_predicates("@.age == 27"));
         expected_builder.project(build_project("{@.name, @.id}"));
         expected_builder.sink(build_sink());
 
+        assert_eq!(job_builder, expected_builder);
+
+        let mut job_builder = JobBuilder::default();
+        let mut plan_meta = plan.meta.clone();
+        plan_meta = plan_meta.with_partition();
+        plan.add_job_builder(&mut job_builder, &mut plan_meta)
+            .unwrap();
+
+        let mut expected_builder = JobBuilder::default();
+        expected_builder.add_scan_source(build_scan(vec![]));
+        expected_builder.select(build_select("@.~label == \"person\""));
+        expected_builder.shuffle(None);
+        expected_builder.get_v(build_auxilia_with_predicates("@.age == 27"));
+        expected_builder.shuffle(None);
+        expected_builder.get_v(build_auxilia_with_tag_alias_columns(None, None, vec![]));
+        expected_builder.project(build_project("{@.name, @.id}"));
+        expected_builder.sink(build_sink());
         assert_eq!(job_builder, expected_builder);
     }
 
@@ -1087,11 +1157,7 @@ mod test {
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_scan_source(build_scan(vec![]));
         expected_builder.edge_expand(build_edgexpd(1, vec![], None));
-        expected_builder.get_v(build_getv(None));
-        expected_builder.get_v(build_auxilia_with_params(
-            Some(query_params(vec![], vec!["age".into(), "id".into(), "name".into()])),
-            Some(0.into()),
-        ));
+        expected_builder.get_v(build_getv(Some(0.into())));
         expected_builder.project(build_project("{@0.name, @0.id, @0.age}"));
         expected_builder.sink(build_sink());
 
@@ -1107,11 +1173,12 @@ mod test {
         expected_builder.add_scan_source(build_scan(vec![]));
         expected_builder.shuffle(None);
         expected_builder.edge_expand(build_edgexpd(1, vec![], None));
-        expected_builder.get_v(build_getv(None));
-        expected_builder.shuffle(None);
-        expected_builder.get_v(build_auxilia_with_params(
-            Some(query_params(vec![], vec!["age".into(), "id".into(), "name".into()])),
+        expected_builder.get_v(build_getv(Some(0.into())));
+        expected_builder.shuffle(Some(0.into()));
+        expected_builder.get_v(build_auxilia_with_tag_alias_columns(
             Some(0.into()),
+            Some(0.into()),
+            vec![],
         ));
         expected_builder.project(build_project("{@0.name, @0.id, @0.age}"));
         expected_builder.sink(build_sink());
@@ -1346,7 +1413,7 @@ mod test {
         let scan = pb::Scan {
             scan_opt: 0,
             alias: Some(0.into()),
-            params: Some(query_params(vec![], vec!["name".into()])),
+            params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
         };
 
@@ -1408,6 +1475,12 @@ mod test {
             apply_subplan,
             None,
         );
+        expected_builder.shuffle(Some(0.into()));
+        expected_builder.get_v(build_auxilia_with_tag_alias_columns(
+            Some(0.into()),
+            Some(0.into()),
+            vec![],
+        ));
         expected_builder.project(project);
 
         assert_eq!(expected_builder, builder);
@@ -1452,10 +1525,13 @@ mod test {
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_scan_source(scan);
         expected_builder.shuffle(None);
-        expected_builder.get_v(build_auxilia_with_params(
-            None,
-            Some(common_pb::NameOrId { item: Some(common_pb::name_or_id::Item::Id(2)) }),
-        ));
+        expected_builder.project(pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("@".to_string()).ok(),
+                alias: Some(2.into()),
+            }],
+            is_append: true,
+        });
 
         expand.alias = Some(1.into()); // must carry `Apply`'s alias
         expected_builder.edge_expand(expand);
@@ -1519,10 +1595,13 @@ mod test {
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_scan_source(scan);
         expected_builder.shuffle(Some(0.into()));
-        expected_builder.get_v(build_auxilia_with_params(
-            None,
-            Some(common_pb::NameOrId { item: Some(common_pb::name_or_id::Item::Id(2)) }),
-        ));
+        expected_builder.project(pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: str_to_expr_pb("@".to_string()).ok(),
+                alias: Some(2.into()),
+            }],
+            is_append: true,
+        });
         expand.v_tag = Some(0.into());
         expand.alias = Some(1.into()); // must carry `Apply`'s alias
         expected_builder.edge_expand(expand);
@@ -1685,7 +1764,7 @@ mod test {
         };
 
         // extend 0->2, 1->2, and intersect on 2 (where 2 has required columns)
-        let mut expand_ac_opr = pb::EdgeExpand {
+        let expand_ac_opr = pb::EdgeExpand {
             v_tag: Some(0.into()),
             direction: 0,
             params: Some(query_params(vec![], vec!["id".into()])),
@@ -1693,7 +1772,7 @@ mod test {
             alias: Some(2.into()),
         };
 
-        let mut expand_bc_opr = pb::EdgeExpand {
+        let expand_bc_opr = pb::EdgeExpand {
             v_tag: Some(1.into()),
             direction: 0,
             params: Some(query_params(vec!["knows".into()], vec!["name".into()])),
@@ -1723,12 +1802,7 @@ mod test {
             .add_job_builder(&mut builder, &mut plan_meta)
             .unwrap();
 
-        let unfold_opr = pb::Unfold { tag: Some(2.into()), alias: None };
-        let mut auxilia_param = pb::QueryParams::default();
-        auxilia_param.sample_ratio = 1.0;
-        merge_query_params(&mut auxilia_param, expand_ac_opr.params.as_mut().unwrap());
-        merge_query_params(&mut auxilia_param, expand_bc_opr.params.as_mut().unwrap());
-        let auxilia_opr = build_auxilia_with_params(Some(auxilia_param), Some(2.into()));
+        let unfold_opr = pb::Unfold { tag: Some(2.into()), alias: Some(2.into()) };
 
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_scan_source(source_opr);
@@ -1739,7 +1813,6 @@ mod test {
         sub_builder_2.edge_expand(expand_bc_opr.clone());
         expected_builder.intersect(vec![sub_builder_1.take_plan(), sub_builder_2.take_plan()], 2.into());
         expected_builder.unfold(unfold_opr);
-        expected_builder.get_v(auxilia_opr);
         assert_eq!(builder, expected_builder);
     }
 }
