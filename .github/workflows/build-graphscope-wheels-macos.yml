@@ -64,7 +64,7 @@ jobs:
     runs-on: macos-10.15
     strategy:
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
+        python-version: ['3.8', '3.9', '3.10', '3.11']
 
     steps:
     - uses: actions/checkout@v3
@@ -117,7 +117,7 @@ jobs:
     needs: [build-wheels, build-client-wheels]
     strategy:
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
+        python-version: ['3.8', '3.9', '3.10', '3.11']
 
     steps:
     - uses: actions/download-artifact@v3
@@ -135,7 +135,7 @@ jobs:
         tar -zxf ./wheel-macos-${{ github.sha }}-${{ matrix.python-version }}/client.tar.gz
         mv ${GITHUB_WORKSPACE}/artifacts/python/dist/wheelhouse/*.whl ${GITHUB_WORKSPACE}/upload_pypi/
 
-        if [ "$PYTHON" == "3.7" ]; then
+        if [ "$PYTHON" == "3.8" ]; then
           tar -zxf ./wheel-macos-${{ github.sha }}/graphscope.tar.gz
           mv ${GITHUB_WORKSPACE}/artifacts/coordinator/dist/wheelhouse/*.whl ${GITHUB_WORKSPACE}/upload_pypi/
         fi
@@ -165,7 +165,7 @@ jobs:
     strategy:
       matrix:
         # The protobuf version of tenorflow and grpcio is conflicts in python 3.11
-        python-version: ['3.7', '3.8', '3.9', '3.10']
+        python-version: ['3.8', '3.9', '3.10']
 
     steps:
     - uses: actions/download-artifact@v3

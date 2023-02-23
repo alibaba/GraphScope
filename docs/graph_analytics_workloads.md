@@ -1,27 +1,51 @@
 # Graph Analytics Workloads
-Broadly speaking, any kind of computation over graph data can be regarded as graph analytics. We find that computation patterns of different graph analytics vary a lot: some only involve a small number of vertices/edges, while others access a large fraction of (even all) vertices/edges of a graph. In GraphScope, we call the former as *graph traversal*, whil use the term *graph analytics* to refer to the latter, unless otherwise specified. 
+## What is Graph Analytics
+Broadly speaking, any kind of computation over graph data can be regarded as graph analytics. We find that computation patterns of different graph analytics vary a lot: some only involve a small number of vertices/edges, while others access a large fraction of (even all) vertices/edges of a graph. In GraphScope, we call the former as *graph traversal*, while use the term *graph analytics* to refer to the latter, unless otherwise specified. 
 
-Currently, there exist diverse types of graph analytics algorithms, which usually iteratively access a large fraction of (even all) vertices/edges of a graph to explore underlying insights hidden in graph data. Typical graph analytics algorithms include general analytics algorithms (e.g., PageRank, shortest path, and maximum flow), community detection algorithms (e.g., maximum clique/bi-clique, connected components, Louvain and label propagation), graph mining algorithms (e.g., frequent structure mining and graph pattern discovery). 
+Currently, there exist diverse types of graph analytics algorithms, which usually iteratively access a large fraction of (even all) vertices/edges of a graph to explore underlying insights hidden in graph data. Typical graph analytics algorithms include general analytics algorithms (e.g., PageRank, the shortest path, and maximum flow), community detection algorithms (e.g., maximum clique/bi-clique, connected components, Louvain and label propagation), graph mining algorithms (e.g., frequent structure mining and graph pattern discovery). Next, we give several examples to show how graph analytics algorithms work.
 
-In GraphScope, Graph Analytics Engine (GAE) is responsible for handling such graph analytics algorithms, which allows users to easily define and implement their algorithms while providing efficient execution for these algorithms.
-
-### Rich built-in graph analytics algorithms
-
-GAE of GraphScope provides 20 graph analytics algorithms as built-in algorithms, and users can directly invoke them. The build-in algorithms contain most commonly used algorithms, including PageRank, BFS, DFS, shortest path and LCC. In addition, GraphScope is compatible with NetworkX APIs, and thus diverse kinds of [built-in algorithms in NetworkX](https://networkx.org/documentation/stable/reference/algorithms/index.html) can also be directly invoked by users. In total, over 100 build-in graph analytical algorithms can be directly executed over GraphScope, without any developing effort.
+The [PageRank](https://en.wikipedia.org/wiki/PageRank) algorithm can measure the importance of each vertex in a graph, by iteratively counting the number and importance of its neighbors to a vertex to determine a rough estimate of how important the vertex is. [The shortest path problem](https://en.wikipedia.org/wiki/Shortest_path_problem) aims to find a path between two vertices such that the sum of the weights of its constituent edges is minimized, and several well-known algorithms (e.g., Dijkstra's algorithm and Bellman–Ford algorithm) have been proposed to solve this problem. [The community detection algorithms](https://en.wikipedia.org/wiki/Community_structure) (e.g., Louvain) are to find groups of vertices that are, in some sense, more similar to each other than to the other vertices, based on the observation that vertices of a graph can be grouped into (potentially overlapping) sets of vertices such that each set of vertices is densely connected internally. From the above examples, we can see that the graph analytics algorithms can analyze the properties of a set of vertices/edges in the graph.
 
 
-### Customize your own algorithms
+In real applications, many problems can be modeled as graph analytics problems. As shown in the follwing figure, Google Search treats all websites as well as links among websites as a graph, and then the PageRank algorithm can be applied to find the most important websites on the Internet. The road map of a city can also be modeled as a graph, and the shortest path algorithm can help path planning in logistics and delivery services. If we consider all users on a social media as a graph, tommunity detection techniques (e.g., Louvain) are useful to discover users with common interests and keep them tightly connected.
 
-In many cases, users need to develop their customized graph analytics algorithms. To this end, GraphScope allows users to succinctly develop their own algorithms, with multiple programming models and programming languages support.
+
+![Applications of graph analytics](./images/analytics_examples.png)
+
+
+## Challenges of Graph Analytics on Large Graphs
+Based on our experience, the graph data we need to process and the frameworks (systems) used to process graph data face the following challenges:
+
+### Supporting large-scale and complex graph data
+
+We have observed that vast majority of real-world graph data is large-scale, heterogeneous, attributed. For example, nowadays e-commerce graphs often contain billions of vertices and tens of billions of edges, with various types and rich attributes. How to represent and store such graph data is nontrivial.
+
+### Various programming models/languages
+
+Currently, many graph processing systems have been developed to handle graph analytics algorithms. These systems are implemented with different programming models (e.g., vertex-centric model and PIE model) and programming languages (e.g., C++, Java and Python). As a result, users usually suffer from high learning curves.
+
+### Requirement for high performance
+
+The scale and efficiency of processing large graphs is still limited. Although current systems have largely benefited from years of work in optimizations for each individual system, they still suffer from efficiency and/or scale problems. Offering superior performance when facing large-scale graph data is highly desired.
+
+## What can GraphScope Do 
+
+In GraphScope, Graph Analytics Engine (GAE) is responsible for handling graph analytics algorithms.It addresses the abovementioned challenges in the following ways:
+
+### Managing graph data in a distributed way 
+
+In GraphScope, graph data is represented as property graph model, which can model vertices, edges and properties well. To support large-scale graph, GraphScope automatically partitions the whole graph into several subgraphs (fragments) distributed into multiple machines in a cluster. Meanwhile, GraphScope provides user-friendly interfaces for loading graphs to allow users to manage graph data easily. More detials about how to manage large-scale graphs can refer to [this](https://graphscope.io/docs/latest/design_of_gae.html#Graph-Storage).
+
+
+### Supporting various programming models/languages
 
 On the programming model side, GraphScope supports both the vertex-centric model (Pregel) and PIE (PEval-IncEval-Assemble) programming model. Both programming models have been widely applied in existing graph processing systems, and readers can refer to [this blog](https://graphscope.io/blog/tech/2021/03/25/a-review-of-programming-models-for-parallel-graph-processing.html) for more details.
 
-On the programming language side, GraphScope provides a multi-language SDK, and users can choose to write their own algorithms in C++, Java or Python. With Python, users can still expect a high performance. GAE integrated a compiler built with Cython and it can generate efficient native code from Python algorithms behind the scenes, and dispatch the code to the GraphScope cluster for efficient execution. Readers can refer to the following tutorials to see how to develop their own algorithms with different programming languages.
+On the programming language side, GraphScope provides  SDKs for multiple languages, and users can choose to write their own algorithms in C++, Java or Python. Users can develop their own algorithms with different programming languages.
 
-- [Tutorials for C++ Users](https://graphscope.io/docs/latest/cpp_tutorials.html)
-- [Tutorials for Java Users](https://graphscope.io/docs/latest/java_tutorials.html)
-- [Tutorials for Python Users](https://graphscope.io/docs/latest/python_tutorials.html)
+Please check out [this](https://graphscope.io/docs/latest/design_of_gae.html#Execution-Framework) for more details.
+
 
 ### High-performance runtime
 
-GAE achieves high performance through a highly optimized analytical runtime. Many optimization techniques, such as pull/push dynamic switching, cache-efficient memory layout, and pipelining were employed in the runtime. We have performed a comparison with state-of-the-art graph processing systems on LDBC Graph Analytics Benchmark, and the results show GraphScope outperforms other graph systems (see more detailed results [here](https://graphscope.io/docs/latest/performance_and_benchmark.html)). 
+GAE achieves high performance through a highly [optimized analytical runtime](https://graphscope.io/docs/latest/design_of_gae.html#High-performance-runtime). Many optimization techniques, such as pull/push dynamic switching, cache-efficient memory layout, and pipelining were employed in the runtime. We have performed a comparison with state-of-the-art graph processing systems on LDBC Graph Analytics Benchmark, and the results show GraphScope outperforms other graph systems. 

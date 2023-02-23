@@ -51,13 +51,14 @@ and the vineyard store that offers efficient in-memory data transfers.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Graph Analytics Engine
+   :caption: Graph Analytical Engine
 
-   getting_started_gae
-   design_of_gae
-   user_guide_and_examples_of_gae
-   apis_of_gae
-   faqs_of_gae
+   /analytical_engine/getting_started
+   /analytical_engine/design_of_gae
+   /analytical_engine/guide_and_examples
+   /analytical_engine/apis
+   /analytical_engine/faqs
+   
 
 .. toctree::
    :maxdepth: 2
@@ -77,6 +78,13 @@ and the vineyard store that offers efficient in-memory data transfers.
    user_guide_and_examples_of_gie
    apis_of_gle
    faqs_of_gle
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Graph Storage
+
+   unified_interface
+   graph_formats
 
 
 .. toctree::

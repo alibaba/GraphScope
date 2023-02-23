@@ -7,6 +7,6 @@ In addition, GraphScope GAE supports the PIE programming model, which can provid
 The following tutorials will introduce how to leverage the above features in GraphScope GAE Jave SDK.
 
 
-- [Querying graph via GraphScope JavaSDK](./java_tutorial_0_pie.md)
-- [Graphscope integration with Apache Giraph](./java_tutorial_1_giraph.md)
-- [GraphScope integration with Apache GraphX](./java_tutorial_2_graphx.md)
+- [Querying graph via GraphScope JavaSDK](https://graphscope.io/docs/latest/java_tutorial_0_pie.html)
+- [Graphscope integration with Apache Giraph](https://graphscope.io/docs/latest/java_tutorial_1_giraph.html)
+- [GraphScope integration with Apache GraphX](https://graphscope.io/docs/latest/java_tutorial_2_graphx.html)
