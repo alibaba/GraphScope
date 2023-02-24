@@ -1,5 +1,4 @@
-# Querying graph via GraphScope JavaSDK
-
+# Tutorial: Develop your Algorithm in Java with PIE Model
 GraphScope provides sufficient support for ``java programmers`` to implement graph algorithms and run it on GraphScope Analytical Engine.
 In this tutorial, you will first try to explore GraphScope JavaSDK with some example algorithms, then implement your own algorithm, finally submit to GraphScope.
 

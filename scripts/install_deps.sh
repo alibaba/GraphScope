@@ -151,8 +151,8 @@ check_dependencies_version_k8s() {
     exit 1
   fi
   ver=$(python3 -V 2>&1 | sed 's/.* \([0-9]\).\([0-9]\).*/\1\2/')
-  if [ "$ver" -lt "37" ]; then
-    err "GraphScope requires python 3.7 or greater. Current version is ${python3 -V}"
+  if [ "$ver" -lt "38" ]; then
+    err "GraphScope requires python 3.8 or greater. Current version is ${python3 -V}"
     exit 1
   fi
 }
