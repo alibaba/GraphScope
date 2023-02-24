@@ -16,8 +16,47 @@
 
 package com.alibaba.graphscope.common.utils;
 
+import com.google.common.base.Preconditions;
+
+import java.lang.reflect.Field;
+
 public class ClassUtils {
     public static <T> boolean equalClass(T t1, Class<? extends T> target) {
         return t1.getClass().equals(target);
+    }
+
+    /**
+     * Set private field with given value
+     *
+     * @param obj       The given instance
+     * @param fieldName The field name
+     * @param value     The field value
+     * @param <V>       The field value type
+     */
+    public static <V> void setFieldValue(Class<?> clazz, Object obj, String fieldName, V value) {
+        Preconditions.checkNotNull(obj);
+        Preconditions.checkNotNull(fieldName);
+        Preconditions.checkNotNull(value);
+
+        try {
+            Field field = clazz.getDeclaredField(fieldName);
+            field.setAccessible(true);
+            field.set(obj, value);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static <V> V getFieldValue(Class<?> clazz, Object obj, String fieldName) {
+        Preconditions.checkNotNull(obj);
+        Preconditions.checkNotNull(fieldName);
+
+        try {
+            Field field = clazz.getDeclaredField(fieldName);
+            field.setAccessible(true);
+            return (V) field.get(obj);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

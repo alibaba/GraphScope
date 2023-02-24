@@ -145,8 +145,12 @@ public class PathExpandConfig {
             return this;
         }
 
-        // TODO: add filter with expand or getV
         public Builder filter(List<RexNode> conjunctions) {
+            if (this.getV != null) {
+                this.getV = innerBuilder.push(this.getV).filter(conjunctions).build();
+            } else if (this.expand != null) {
+                this.expand = innerBuilder.push(this.expand).filter(conjunctions).build();
+            }
             return this;
         }
 

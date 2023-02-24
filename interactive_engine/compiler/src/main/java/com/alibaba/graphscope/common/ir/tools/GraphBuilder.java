@@ -22,11 +22,15 @@ import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
+import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
 import com.alibaba.graphscope.common.ir.tools.config.*;
+import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
+import com.alibaba.graphscope.common.ir.type.NameOrId;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 import org.apache.calcite.plan.*;
 import org.apache.calcite.rel.*;
@@ -34,8 +38,10 @@ import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rel.type.*;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlAggFunction;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.tools.RelBuilder;
+import org.apache.calcite.util.Litmus;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -77,7 +83,7 @@ public class GraphBuilder extends RelBuilder {
      * if exist then derive the {@code GraphSchemaType} of the given labels and keep the type in {@link RelNode#getRowType()},
      * otherwise throw exceptions
      *
-     * 2. validate the existence of the given alias in config, if exist throw duplication exceptions
+     * 2. validate the existence of the given alias in config, if exist throw exceptions
      *
      * @param config
      * @return
@@ -103,7 +109,7 @@ public class GraphBuilder extends RelBuilder {
     public GraphBuilder expand(ExpandConfig config) {
         RelNode input = requireNonNull(peek(), "frame stack is empty");
         String aliasName =
-                AliasInference.inferDefault(config.getAlias(), uniqueNameList(input, false, true));
+                AliasInference.inferDefault(config.getAlias(), uniqueNameList(input, true));
         int aliasId = generateAliasId(aliasName, input);
         RelNode expand =
                 GraphLogicalExpand.create(
@@ -124,7 +130,7 @@ public class GraphBuilder extends RelBuilder {
     public GraphBuilder getV(GetVConfig config) {
         RelNode input = requireNonNull(peek(), "frame stack is empty");
         String aliasName =
-                AliasInference.inferDefault(config.getAlias(), uniqueNameList(input, false, true));
+                AliasInference.inferDefault(config.getAlias(), uniqueNameList(input, true));
         int aliasId = generateAliasId(aliasName, input);
         RelNode getV =
                 GraphLogicalGetV.create(
@@ -145,7 +151,7 @@ public class GraphBuilder extends RelBuilder {
     public GraphBuilder pathExpand(PathExpandConfig config) {
         RelNode input = requireNonNull(peek(), "frame stack is empty");
         String aliasName =
-                AliasInference.inferDefault(config.getAlias(), uniqueNameList(input, false, true));
+                AliasInference.inferDefault(config.getAlias(), uniqueNameList(input, true));
         RexNode offsetNode = config.getOffset() <= 0 ? null : literal(config.getOffset());
         RexNode fetchNode = config.getFetch() < 0 ? null : literal(config.getFetch());
         RelNode expand = Objects.requireNonNull(config.getExpand());
@@ -170,6 +176,7 @@ public class GraphBuilder extends RelBuilder {
     /**
      * convert user-given config to {@code TableConfig},
      * derive all table types (labels with properties) depending on the user given labels
+     *
      * @param labelConfig
      * @return
      */
@@ -238,23 +245,38 @@ public class GraphBuilder extends RelBuilder {
     }
 
     /**
-     * get all aliases stored by previous operators, to avoid duplicated alias creation
-     * @param input the input operator
-     * @param containsAll if the input operator contains all stored alias
-     * @param isAppend if the current operator need to keep the history
+     * get all aliases stored by previous operators, to avoid duplicate alias creation
+     *
+     * @param input    the input operator
+     * @param isAppend if the current {@code RelNode} need keep the history
      * @return
      */
-    private Set<String> uniqueNameList(
-            @Nullable RelNode input, boolean containsAll, boolean isAppend) {
+    public Set<String> uniqueNameList(@Nullable RelNode input, boolean isAppend) {
         Set<String> uniqueNames = new HashSet<>();
         if (!isAppend || input == null) return uniqueNames;
-        for (RelDataTypeField field : input.getRowType().getFieldList()) {
-            uniqueNames.add(field.getName());
-        }
-        if (!containsAll && ObjectUtils.isNotEmpty(input.getInputs())) {
-            uniqueNames.addAll(uniqueNameList(input.getInput(0), containsAll, isAppend));
+        List<RelNode> inputsQueue = Lists.newArrayList(input);
+        while (!inputsQueue.isEmpty()) {
+            RelNode cur = inputsQueue.remove(0);
+            for (RelDataTypeField field : cur.getRowType().getFieldList()) {
+                uniqueNames.add(field.getName());
+            }
+            if (removeHistory(cur)) {
+                break;
+            }
+            inputsQueue.addAll(cur.getInputs());
         }
         return uniqueNames;
+    }
+
+    /**
+     * current node will remove history and generate new columns
+     *
+     * @param node
+     * @return
+     */
+    private boolean removeHistory(RelNode node) {
+        // TODO: aggregate and project(isAppend=false) will remove the history
+        return false;
     }
 
     /**
@@ -320,7 +342,10 @@ public class GraphBuilder extends RelBuilder {
      * @return
      */
     public RexGraphVariable variable(@Nullable String alias) {
-        return null;
+        alias = (alias == null) ? AliasInference.DEFAULT_NAME : alias;
+        RelDataTypeField aliasField = getAliasField(alias);
+        return RexGraphVariable.of(
+                aliasField.getIndex(), AliasInference.SIMPLE_NAME(alias), aliasField.getType());
     }
 
     /**
@@ -331,7 +356,78 @@ public class GraphBuilder extends RelBuilder {
      * @return
      */
     public RexGraphVariable variable(@Nullable String alias, String property) {
-        return null;
+        alias = (alias == null) ? AliasInference.DEFAULT_NAME : alias;
+        Objects.requireNonNull(property);
+        RelDataTypeField aliasField = getAliasField(alias);
+        if (!(aliasField.getType() instanceof GraphSchemaType)) {
+            throw new ClassCastException(
+                    "cannot get property from type class ["
+                            + aliasField.getType().getClass()
+                            + "], should be ["
+                            + GraphOptSchema.class
+                            + "]");
+        }
+        GraphSchemaType graphType = (GraphSchemaType) aliasField.getType();
+        List<String> properties = new ArrayList<>();
+        boolean isColumnId =
+                (relOptSchema instanceof GraphOptSchema)
+                        ? ((GraphOptSchema) relOptSchema).getRootSchema().isColumnId()
+                        : false;
+        for (RelDataTypeField pField : graphType.getFieldList()) {
+            if (pField.getName().equals(property)) {
+                return RexGraphVariable.of(
+                        aliasField.getIndex(),
+                        isColumnId
+                                ? new NameOrId(pField.getIndex())
+                                : new NameOrId(pField.getName()),
+                        AliasInference.SIMPLE_NAME(alias) + AliasInference.DELIMITER + property,
+                        pField.getType());
+            }
+            properties.add(pField.getName());
+        }
+        throw new IllegalArgumentException(
+                "{property="
+                        + property
+                        + "} "
+                        + "not found; expected properties are: "
+                        + properties);
+    }
+
+    /**
+     * get {@code RelDataTypeField} by the given alias, for {@code RexGraphVariable} inference
+     *
+     * @param alias
+     * @return
+     */
+    private RelDataTypeField getAliasField(String alias) {
+        Objects.requireNonNull(alias);
+        List<String> aliases = new ArrayList<>();
+        for (int inputOrdinal = 0; inputOrdinal < size(); ++inputOrdinal) {
+            List<RelNode> inputQueue = Lists.newArrayList(peek(inputOrdinal));
+            while (!inputQueue.isEmpty()) {
+                RelNode cur = inputQueue.remove(0);
+                RelRecordType rowType = (RelRecordType) cur.getRowType();
+                if (alias == AliasInference.DEFAULT_NAME && rowType.getFieldList().size() == 1) {
+                    return rowType.getFieldList().get(0);
+                }
+                for (RelDataTypeField field : rowType.getFieldList()) {
+                    if (field.getName().equals(alias)) {
+                        return field;
+                    }
+                    aliases.add(AliasInference.SIMPLE_NAME(field.getName()));
+                }
+                if (removeHistory(cur)) {
+                    break;
+                }
+                inputQueue.addAll(cur.getInputs());
+            }
+        }
+        throw new IllegalArgumentException(
+                "{alias="
+                        + AliasInference.SIMPLE_NAME(alias)
+                        + "} "
+                        + "not found; expected aliases are: "
+                        + aliases);
     }
 
     /**
@@ -343,7 +439,32 @@ public class GraphBuilder extends RelBuilder {
      */
     @Override
     public RexNode call(SqlOperator operator, RexNode... operands) {
-        return null;
+        List<RexNode> operandList = ImmutableList.copyOf(operands);
+        if (!isCurrentSupported(operator)) {
+            throw new UnsupportedOperationException(
+                    "operator " + operator.getKind().name() + " not supported");
+        }
+        RexCallBinding callBinding =
+                new RexCallBinding(getTypeFactory(), operator, operandList, ImmutableList.of());
+        // check count of operands, if fail throw exceptions
+        operator.validRexOperands(callBinding.getOperandCount(), Litmus.THROW);
+        // check type of each operand, if fail throw exceptions
+        operator.checkOperandTypes(callBinding, true);
+        // derive type
+        RelDataType type = operator.inferReturnType(callBinding);
+        final RexBuilder builder = cluster.getRexBuilder();
+        return builder.makeCall(type, operator, operandList);
+    }
+
+    private boolean isCurrentSupported(SqlOperator operator) {
+        SqlKind sqlKind = operator.getKind();
+        return sqlKind.belongsTo(SqlKind.BINARY_ARITHMETIC)
+                || sqlKind.belongsTo(SqlKind.COMPARISON)
+                || sqlKind == SqlKind.AND
+                || sqlKind == SqlKind.OR
+                || sqlKind == SqlKind.DESCENDING
+                || (sqlKind == SqlKind.OTHER_FUNCTION && operator.getName().equals("POWER"))
+                || (sqlKind == SqlKind.MINUS_PREFIX);
     }
 
     @Override
@@ -432,6 +553,7 @@ public class GraphBuilder extends RelBuilder {
 
     /**
      * build algebra structures for order or limit
+     *
      * @param offsetNode
      * @param fetchNode
      * @param nodes build limit() if empty

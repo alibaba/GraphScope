@@ -95,7 +95,6 @@ public class ExpandTest {
                                         new LabelConfig(false).addLabel("person")))
                         .pathExpand(pxdConfig)
                         .build();
-        System.out.println(pathExpand.explain().trim());
         Assert.assertEquals(
                 "GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
                         + " tables=[knows]}], alias=[~DEFAULT], opt=[OUT])\n"
