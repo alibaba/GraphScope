@@ -41,6 +41,10 @@ jobs:
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
         ./gs install-deps dev --v6d-version v0.12.2
 
+    - name: Setup tmate session
+      if: true 
+      uses: mxschmitt/action-tmate@v2
+
     - name: Build GraphScope
       run: |
         source ${HOME}/.graphscope_env

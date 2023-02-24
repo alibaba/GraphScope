@@ -21,9 +21,6 @@ jobs:
       with:
         submodules: true
 
-    - name: Setup tmate session
-      if: false 
-      uses: mxschmitt/action-tmate@v2
 
     - name: Install Dependencies
       run: |
@@ -52,6 +49,10 @@ jobs:
         cmake . -DCMAKE_INSTALL_PREFIX=/usr/local
         make -j4
         sudo make install
+
+    - name: Setup tmate session
+      if: true 
+      uses: mxschmitt/action-tmate@v2
 
     - name: Build Server Wheel
       run: |
@@ -83,6 +84,7 @@ jobs:
 
   build-client-wheels:
     # if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
+    if: false
     runs-on: macos-10.15
     strategy:
       matrix:
