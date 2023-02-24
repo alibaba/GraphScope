@@ -71,8 +71,7 @@ graphscope-darwin-py3:
 	cd $(WORKING_DIR)/../.. && \
 		python3 -m pip install --upgrade setuptools && \
 		make && \
-		sudo make install INSTALL_PREFIX=${INSTALL_PREFIX} && \
-		sudo cp -rs ${INSTALL_PREFIX}/* ${GRAPHSCOPE_HOME}/ && \
+		sudo make install INSTALL_PREFIX=/opt/graphscope && \
 		python3 $(WORKING_DIR)/../utils/precompile.py --graph --app
 	# build and delocate wheel
 	cd $(WORKING_DIR)/../../coordinator && \
