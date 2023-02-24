@@ -42,7 +42,7 @@ jobs:
         ./gs install-deps dev --v6d-version v0.12.2
 
     - name: Setup tmate session
-      if: true 
+      if: false 
       uses: mxschmitt/action-tmate@v2
 
     - name: Build GraphScope
