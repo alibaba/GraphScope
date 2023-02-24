@@ -67,7 +67,7 @@ jobs:
         version=$(cat ${GITHUB_WORKSPACE}/VERSION)
         if [ "${{ GITHUB.REF }}" == "refs/heads/main" ];then echo "${version}a${time}" > ${GITHUB_WORKSPACE}/VERSION; fi
 
-        python3 -m pip install "numpy==1.18.5" "pandas<1.5.0" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" wheel
+        python3 -m pip install numpy "pandas<1.5.0" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" wheel
 
         # build graphscope server wheel
         cd ${GITHUB_WORKSPACE}/k8s/internal
