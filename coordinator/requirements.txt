@@ -11,6 +11,8 @@ PyYAML
 vineyard>=0.11.1; sys_platform != "win32"
 vineyard-io>=0.11.1; sys_platform != "win32"
 prometheus-client>=0.14.1
-setuptools>=65.5.1
+# Avoid the `InvalidVersion` error of `setuptools`
+# ref: https://github.com/pypa/setuptools/issues/3772
+setuptools==65.7.0
 packaging
 tqdm
