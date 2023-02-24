@@ -54,6 +54,9 @@ breathe_debug_trace_qualification = True
 
 autodoc_mock_imports = ["graphlearn"]
 
+# enable figure for myst
+myst_enable_extensions = ["colon_fence"]
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 

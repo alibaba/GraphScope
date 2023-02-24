@@ -27,16 +27,15 @@ and the result of the traversal is the collection of all halted traversers. A tr
 unit of data processed by a Gremlin engine. Each traverser maintains a location that is a reference
 to the current vertex, edge or property being visited, and (optionally) the path history with application states.
 
-<center>
-   <img style="border-radius: 0.3125em;
-   box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);"
-   src="https://user-images.githubusercontent.com/7007589/216243774-62888d6c-84aa-4730-be20-efb4c569071c.png" width="60%">
-   <br>
-   <div style="color:orange; border-bottom: 1px solid #d9d9d9;
-   display: inline-block;
-   color: #999;
-   padding: 2px;">A traversal query for cycle detection.</div>
-</center>
+:::{figure-md}
+
+<img src="images/cycle_detection.png"
+     alt="Pattern matching example"
+     style="border-radius: 0.3125em; box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);"
+     width="60%">
+
+A traversal query for cycle detection.
+:::
 
 The above figure shows a simplified anti-money-laundering scenario via cycle detection.
 Below is the corresponding traversal query, which tries to find cyclic paths of length
@@ -68,16 +67,15 @@ Different from the imperative traversal query, the `match()` step provides a
 declarative way of expressing the pattern matching queries. In other words, users only need to describe what the pattern is using using `match()`, and the engine will automatically derive the best-possible execution
 plans based on both algorithmic heuristics and cost estimation.
 
-<center>
-   <img style="border-radius: 0.3125em;
-   box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);"
-   src="https://user-images.githubusercontent.com/7007589/220232361-46b28ac8-c9d8-49ad-b543-53b1539c7a5e.png" width="90%">
-   <br>
-   <div style="color:orange; border-bottom: 1px solid #d9d9d9;
-   display: inline-block;
-   color: #999;
-   padding: 2px;">An example of pattern matching.</div>
-</center>
+:::{figure-md}
+
+<img src="images/pattern-matching-example.png"
+     alt="Pattern matching example"
+     style="border-radius: 0.3125em; box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);"
+     width="90%">
+
+An example of pattern matching.
+:::
 
 The above figure shows an example of pattern matching query, where the pattern is a triangle that describes two buyers who knows each other purchase the same product. In the graph, there is a matched instance highlighted in red, in which pattern vertices `v1`, `v2` and `v3` are matched by vertices `1`, `2` and `5`, respectively.
 
