@@ -16,8 +16,6 @@
 
 package org.apache.calcite.sql.type;
 
-import static com.alibaba.graphscope.common.ir.util.Static.RESOURCE;
-
 import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
 import com.google.common.collect.ImmutableList;
 
@@ -66,7 +64,7 @@ public class RexFamilyOperandTypeChecker extends FamilyOperandTypeChecker {
             if (callBinding.isTypeCoercionEnabled()) {
                 return true;
             } else if (throwOnFailure) {
-                throw RESOURCE.illegalNull().ex();
+                throw new IllegalArgumentException("node " + node + " should not be of null value");
             } else {
                 return false;
             }
@@ -178,6 +176,8 @@ public class RexFamilyOperandTypeChecker extends FamilyOperandTypeChecker {
     @Override
     public boolean checkSingleOperandType(
             SqlCallBinding callBinding, SqlNode node, int iFormalOperand, boolean throwOnFailure) {
-        throw RESOURCE.functionNotImplement(this.getClass()).ex();
+        throw new UnsupportedOperationException(
+                "checkSingleOperandType is unsupported for we will never depend on SqlNode to check"
+                        + " type");
     }
 }

@@ -16,8 +16,6 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
-import static com.alibaba.graphscope.common.ir.util.Static.RESOURCE;
-
 import static java.util.Objects.requireNonNull;
 
 import com.alibaba.graphscope.common.ir.rel.*;
@@ -38,7 +36,6 @@ import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.common.ir.type.NameOrId;
-import com.alibaba.graphscope.common.ir.util.Static;
 import com.alibaba.graphscope.common.utils.ClassUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -379,9 +376,12 @@ public class GraphBuilder extends RelBuilder {
         Objects.requireNonNull(property);
         RelDataTypeField aliasField = getAliasField(alias);
         if (!(aliasField.getType() instanceof GraphSchemaType)) {
-            throw RESOURCE.incompatibleTypes(
-                            "Graph Element", GraphSchemaType.class, aliasField.getType().getClass())
-                    .ex();
+            throw new ClassCastException(
+                    "cannot get property from type class ["
+                            + aliasField.getType().getClass()
+                            + "], should be ["
+                            + GraphOptSchema.class
+                            + "]");
         }
         GraphSchemaType graphType = (GraphSchemaType) aliasField.getType();
         List<String> properties = new ArrayList<>();
@@ -396,7 +396,7 @@ public class GraphBuilder extends RelBuilder {
                         isColumnId
                                 ? new NameOrId(pField.getIndex())
                                 : new NameOrId(pField.getName()),
-                        AliasInference.SIMPLE_NAME(alias) + Static.DELIMITER + property,
+                        AliasInference.SIMPLE_NAME(alias) + AliasInference.DELIMITER + property,
                         pField.getType());
             }
             properties.add(pField.getName());
@@ -475,7 +475,7 @@ public class GraphBuilder extends RelBuilder {
     private boolean isCurrentSupported(SqlOperator operator) {
         SqlKind sqlKind = operator.getKind();
         return sqlKind.belongsTo(SqlKind.BINARY_ARITHMETIC)
-                || sqlKind.belongsTo(Static.BINARY_COMPARISON)
+                || sqlKind.belongsTo(SqlKind.COMPARISON)
                 || sqlKind == SqlKind.AND
                 || sqlKind == SqlKind.OR
                 || sqlKind == SqlKind.DESCENDING

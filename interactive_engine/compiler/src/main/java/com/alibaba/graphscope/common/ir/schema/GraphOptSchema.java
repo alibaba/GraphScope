@@ -16,8 +16,6 @@
 
 package com.alibaba.graphscope.common.ir.schema;
 
-import static com.alibaba.graphscope.common.ir.util.Static.RESOURCE;
-
 import com.alibaba.graphscope.compiler.api.exception.GraphElementNotFoundException;
 import com.alibaba.graphscope.compiler.api.schema.GraphElement;
 
@@ -27,6 +25,7 @@ import org.apache.calcite.plan.RelOptSchema;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.schema.Statistic;
+import org.apache.calcite.util.Static;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -60,7 +59,7 @@ public class GraphOptSchema implements RelOptSchema {
             GraphElement element = rootSchema.getElement(labelName);
             return createRelOptTable(tableName, element, rootSchema.getStatistic(tableName));
         } catch (GraphElementNotFoundException e) {
-            throw RESOURCE.tableNotFound(labelName).ex();
+            throw Static.RESOURCE.tableNotFound(labelName).ex();
         }
     }
 
@@ -87,6 +86,6 @@ public class GraphOptSchema implements RelOptSchema {
 
     @Override
     public void registerRules(RelOptPlanner relOptPlanner) {
-        throw RESOURCE.functionWillImplement(this.getClass()).ex();
+        throw new UnsupportedOperationException("registerRules is unsupported yet");
     }
 }

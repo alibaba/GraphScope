@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.rex;
 
-import com.alibaba.graphscope.common.ir.util.Static;
+import com.alibaba.graphscope.common.ir.tools.AliasInference;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexInputRef;
@@ -44,7 +44,7 @@ public class RexTmpVariable extends RexInputRef {
                 (alias == null)
                         ? StringUtils.EMPTY
                         : alias
-                                + Static.DELIMITER
+                                + AliasInference.DELIMITER
                                 + ((property == null) ? StringUtils.EMPTY : property);
         this.alias = alias;
         this.property = property;

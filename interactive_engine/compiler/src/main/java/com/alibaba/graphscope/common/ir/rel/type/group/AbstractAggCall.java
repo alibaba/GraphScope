@@ -16,8 +16,6 @@
 
 package com.alibaba.graphscope.common.ir.rel.type.group;
 
-import static com.alibaba.graphscope.common.ir.util.Static.RESOURCE;
-
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.tools.RelBuilder;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -63,6 +61,6 @@ public abstract class AbstractAggCall implements RelBuilder.AggCall {
 
     @Override
     public RelBuilder.OverCall over() {
-        throw RESOURCE.functionNotImplement(this.getClass()).ex();
+        throw new UnsupportedOperationException("over is unsupported for we will never use it");
     }
 }

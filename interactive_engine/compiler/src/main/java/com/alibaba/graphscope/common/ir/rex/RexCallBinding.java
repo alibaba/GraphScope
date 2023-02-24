@@ -16,8 +16,6 @@
 
 package com.alibaba.graphscope.common.ir.rex;
 
-import static com.alibaba.graphscope.common.ir.util.Static.RESOURCE;
-
 import org.apache.calcite.rel.RelCollation;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -94,17 +92,20 @@ public class RexCallBinding extends AbstractCallBinding {
 
     @Override
     public SqlMonotonicity getOperandMonotonicity(int ordinal) {
-        throw RESOURCE.functionWillImplement(this.getClass()).ex();
+        throw new UnsupportedOperationException(
+                "getOperandMonotonicity is unsupported for we will never use it");
     }
 
     // override SqlCallBinding
     @Override
     public CalciteException newValidationSignatureError() {
-        return RESOURCE.canNotApplyOpToOperands(
+        String message =
+                String.format(
+                        "Cannot apply %s to arguments of type %s. Supported form(s): %s",
                         getOperator().getName(),
                         getCallSignature(),
-                        getOperator().getAllowedSignatures())
-                .ex();
+                        getOperator().getAllowedSignatures());
+        return new CalciteException(message, null);
     }
 
     @Override
