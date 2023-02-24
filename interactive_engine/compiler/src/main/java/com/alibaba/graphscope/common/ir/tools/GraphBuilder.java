@@ -20,7 +20,6 @@ import static com.alibaba.graphscope.common.ir.util.Static.RESOURCE;
 
 import static java.util.Objects.requireNonNull;
 
-import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.rel.*;
 import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
@@ -207,7 +206,8 @@ public class GraphBuilder extends RelBuilder {
                 relOptTables.add(relOptSchema.getTableForMember(ImmutableList.of(label)));
             }
         } else if (relOptSchema instanceof GraphOptSchema) { // get all labels
-            List<List<String>> allLabels = getTableNames(opt, ((GraphOptSchema) relOptSchema).getRootSchema());
+            List<List<String>> allLabels =
+                    getTableNames(opt, ((GraphOptSchema) relOptSchema).getRootSchema());
             for (List<String> label : allLabels) {
                 relOptTables.add(relOptSchema.getTableForMember(label));
             }
@@ -385,12 +385,17 @@ public class GraphBuilder extends RelBuilder {
         }
         GraphSchemaType graphType = (GraphSchemaType) aliasField.getType();
         List<String> properties = new ArrayList<>();
-        boolean isColumnId = (relOptSchema instanceof GraphOptSchema) ? ((GraphOptSchema) relOptSchema).getRootSchema().isColumnId() : false;
+        boolean isColumnId =
+                (relOptSchema instanceof GraphOptSchema)
+                        ? ((GraphOptSchema) relOptSchema).getRootSchema().isColumnId()
+                        : false;
         for (RelDataTypeField pField : graphType.getFieldList()) {
             if (pField.getName().equals(property)) {
                 return RexGraphVariable.of(
                         aliasField.getIndex(),
-                        isColumnId ? new NameOrId(pField.getIndex()) : new NameOrId(pField.getName()),
+                        isColumnId
+                                ? new NameOrId(pField.getIndex())
+                                : new NameOrId(pField.getName()),
                         AliasInference.SIMPLE_NAME(alias) + Static.DELIMITER + property,
                         pField.getType());
             }
@@ -598,9 +603,11 @@ public class GraphBuilder extends RelBuilder {
         List<RelDataTypeField> fields = new ArrayList<>();
         for (int i = 0; i < aliasList.size(); ++i) {
             String aliasName = aliasList.get(i);
-            int aliasId =
-                    ((GraphOptCluster) getCluster()).getIdGenerator().generate(aliasName, input);
-            fields.add(new RelDataTypeFieldImpl(aliasName, aliasId, nodeList.get(i).getType()));
+            fields.add(
+                    new RelDataTypeFieldImpl(
+                            aliasName,
+                            generateAliasId(aliasName, input),
+                            nodeList.get(i).getType()));
         }
         return new RelRecordType(StructKind.FULLY_QUALIFIED, fields);
     }
