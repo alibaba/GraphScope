@@ -1,0 +1,205 @@
+{
+  "types": [
+    {
+      "id": 1,
+      "label": "person",
+      "type": "VERTEX",
+      "isDimensionType": false,
+      "propertyDefList": [
+        {
+          "id": 1,
+          "name": "id",
+          "data_type": "LONG",
+          "hasDefaultValue": false,
+          "defaultValue": null,
+          "comment": "id"
+        },
+        {
+          "id": 2,
+          "name": "name",
+          "data_type": "STRING",
+          "hasDefaultValue": false,
+          "defaultValue": null,
+          "comment": "name"
+        },
+        {
+          "id": 3,
+          "name": "age",
+          "data_type": "INT",
+          "hasDefaultValue": false,
+          "defaultValue": null,
+          "comment": "age"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY_KEY",
+          "indexType": "PRIMARY_KEY",
+          "propertyNames": [
+            "id"
+          ]
+        }
+      ],
+      "comment": "",
+      "version": 1,
+      "typeOption": {
+        "storageEngine": "MEMORY"
+      },
+      "gIdToPId": {
+        "1": 1,
+        "2": 2,
+        "3": 3,
+        "4": 4,
+        "5": 5
+      }
+    },
+    {
+      "id": 2,
+      "label": "software",
+      "type": "VERTEX",
+      "isDimensionType": false,
+      "propertyDefList": [
+        {
+          "id": 1,
+          "name": "id",
+          "data_type": "LONG",
+          "hasDefaultValue": false,
+          "defaultValue": null,
+          "comment": "id"
+        },
+        {
+          "id": 2,
+          "name": "name",
+          "data_type": "STRING",
+          "hasDefaultValue": false,
+          "defaultValue": null,
+          "comment": "name"
+        },
+        {
+          "id": 3,
+          "name": "lang",
+          "data_type": "STRING",
+          "hasDefaultValue": false,
+          "defaultValue": null,
+          "comment": "lang"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY_KEY",
+          "indexType": "PRIMARY_KEY",
+          "propertyNames": [
+            "id"
+          ]
+        }
+      ],
+      "comment": "",
+      "version": 1,
+      "typeOption": {
+        "storageEngine": "MEMORY"
+      },
+      "gIdToPId": {
+        "1": 1,
+        "2": 2,
+        "6": 3,
+        "7": 4
+      }
+    },
+    {
+      "id": 3,
+      "label": "knows",
+      "type": "EDGE",
+      "isDimensionType": false,
+      "propertyDefList": [
+        {
+          "id": 1,
+          "name": "id",
+          "data_type": "LONG",
+          "hasDefaultValue": false,
+          "defaultValue": null,
+          "comment": "id"
+        },
+        {
+          "id": 2,
+          "name": "weight",
+          "data_type": "DOUBLE",
+          "hasDefaultValue": false,
+          "defaultValue": null,
+          "comment": "weight"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "UNIQUE_WITH_EDGE",
+          "indexType": "UNIQUE_WITH_EDGE",
+          "propertyNames": []
+        }
+      ],
+      "comment": "",
+      "version": 1,
+      "rawRelationShips": [
+        {
+          "srcVertexLabel": "person",
+          "dstVertexLabel": "person",
+          "edgeLabel": "knows"
+        }
+      ],
+      "typeOption": {
+        "storageEngine": "MEMORY"
+      },
+      "gIdToPId": {
+        "1": 1,
+        "8": 2
+      }
+    },
+    {
+      "id": 4,
+      "label": "created",
+      "type": "EDGE",
+      "isDimensionType": false,
+      "propertyDefList": [
+        {
+          "id": 1,
+          "name": "id",
+          "data_type": "LONG",
+          "hasDefaultValue": false,
+          "defaultValue": null,
+          "comment": "id"
+        },
+        {
+          "id": 2,
+          "name": "weight",
+          "data_type": "DOUBLE",
+          "hasDefaultValue": false,
+          "defaultValue": null,
+          "comment": "weight"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "UNIQUE_WITH_EDGE",
+          "indexType": "UNIQUE_WITH_EDGE",
+          "propertyNames": []
+        }
+      ],
+      "comment": "",
+      "version": 1,
+      "rawRelationShips": [
+        {
+          "srcVertexLabel": "person",
+          "dstVertexLabel": "software",
+          "edgeLabel": "created"
+        }
+      ],
+      "typeOption": {
+        "storageEngine": "MEMORY"
+      },
+      "gIdToPId": {
+        "1": 1,
+        "8": 2
+      }
+    }
+  ],
+  "partitionNum": 4,
+  "version": 12
+}
