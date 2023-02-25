@@ -1,0 +1,271 @@
+name: Build GraphScope Wheels on Linux
+
+# on: [push, pull_request]
+on:
+  workflow_dispatch:
+  schedule:
+    # The notifications for scheduled workflows are sent to the user who
+    # last modified the cron syntax in the workflow file.
+    # Trigger the workflow at 03:00(CST) every day.
+    - cron:  '00 19 * * *'
+  push:
+    tags:
+      - "v*"
+
+env:
+  REGISTRY: registry.cn-hongkong.aliyuncs.com
+
+jobs:
+  build-wheels:
+    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+
+    - name: Setup tmate session
+      if: false
+      uses: mxschmitt/action-tmate@v2
+
+    - name: Build Wheel Package
+      run: |
+        # Due to an observation of changing hostname in github runners,
+        # append 127.0.0.1 to etc/hosts to avoid DNS lookup.
+        r=`cat /etc/hosts | grep $(hostname) || true`
+        if [ -z "${r}" ];then export hn=$(hostname); sudo -E bash -c 'echo "127.0.0.1 ${hn}" >> /etc/hosts'; fi
+        cat /etc/hosts
+
+        # change the version for nightly release
+        # 0.15.0 -> 0.15.0a20220808
+        time=$(date "+%Y%m%d")
+        version=$(cat ${GITHUB_WORKSPACE}/VERSION)
+        if [ "${{ GITHUB.REF }}" == "refs/heads/main" ];then echo "${version}a${time}" > ${GITHUB_WORKSPACE}/VERSION; fi
+
+        cd ${GITHUB_WORKSPACE}/k8s/internal
+        # build graphscope wheels
+        sudo -E -u runner make graphscope-py3-package GRAPHSCOPE_HOME=/opt/graphscope INSTALL_PREFIX=${GITHUB_WORKSPACE}/install
+
+        # build client wheels
+        sudo -E -u runner make graphscope-client-py3-package GRAPHSCOPE_HOME=/opt/graphscope
+
+        # package
+        cd ${GITHUB_WORKSPACE}
+        tar -zcf client.tar.gz python/dist/wheelhouse/*.whl
+        tar -zcf graphscope.tar.gz coordinator/dist/
+
+        # move wheels into one floder to upload to PyPI
+        mkdir ${GITHUB_WORKSPACE}/upload_pypi
+        mv ${GITHUB_WORKSPACE}/python/dist/wheelhouse/*.whl ${GITHUB_WORKSPACE}/upload_pypi/
+        mv ${GITHUB_WORKSPACE}/coordinator/dist/wheelhouse/*.whl ${GITHUB_WORKSPACE}/upload_pypi/
+        mv ${GITHUB_WORKSPACE}/coordinator/dist/*.whl ${GITHUB_WORKSPACE}/upload_pypi/
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: wheel-${{ github.sha }}
+        path: |
+          client.tar.gz
+          graphscope.tar.gz
+        retention-days: 5
+
+    # We do this, since failures on test.pypi aren't that bad
+    - name: Publish to Test PyPI
+      # the limit of graphscope package in test.pypi is still 100MB, which is not enough.
+      if: false
+      uses: pypa/gh-action-pypi-publish@v1.4.2
+      with:
+        user: __token__
+        password: ${{ secrets.TEST_PYPI_PASSWORD }}
+        repository_url: https://test.pypi.org/legacy/
+        packages_dir: upload_pypi/
+
+    - name: Publish distribution to PyPI
+      if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+      uses: pypa/gh-action-pypi-publish@v1.4.2
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_PASSWORD }}
+        packages_dir: upload_pypi/
+
+  build-image:
+    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
+    runs-on: ubuntu-20.04
+    needs: [build-wheels]
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+
+    - uses: actions/download-artifact@v3
+      with:
+        path: artifacts
+
+    - name: Add envs to GITHUB_ENV
+      run: |
+        short_sha=$(git rev-parse --short HEAD)
+        echo "SHORT_SHA=${short_sha}" >> $GITHUB_ENV
+
+    - name: Build GraphScope Image
+      run: |
+        cd ${GITHUB_WORKSPACE}/artifacts
+        tar -zxf ./wheel-${{ github.sha }}/client.tar.gz
+        tar -zxf ./wheel-${{ github.sha }}/graphscope.tar.gz
+        cd ${GITHUB_WORKSPACE}/k8s/internal
+        make graphscope
+
+        # make jupyter-image
+        cd ${GITHUB_WORKSPACE}
+        docker build --build-arg CI=${CI} -t graphscope/jupyter:${SHORT_SHA} -f ./k8s/internal/jupyter.Dockerfile .
+
+    - name: Release Nightly Image
+      if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+      env:
+        docker_password: ${{ secrets.DOCKER_PASSWORD }}
+        docker_username: ${{ secrets.DOCKER_USER }}
+      run: |
+        echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
+        # docker tag: 0.15.0 -> 0.15.0a20220808
+        time=$(date "+%Y%m%d")
+        version=$(cat ${GITHUB_WORKSPACE}/VERSION)
+        tag="${version}a${time}"
+        # jupyter image
+        sudo docker tag graphscope/jupyter:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/jupyter:${tag}
+        sudo docker push ${{ env.REGISTRY }}/graphscope/jupyter:${tag}
+
+    - name: Extract Tag Name
+      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+      id: tag
+      run: echo "TAG=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+    - name: Release Image
+      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+      env:
+        docker_password: ${{ secrets.DOCKER_PASSWORD }}
+        docker_username: ${{ secrets.DOCKER_USER }}
+      run: |
+        echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
+        # graphscope image
+        tag=${{ steps.tag.outputs.TAG }}
+        sudo docker tag graphscope/jupyter:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/jupyter:${tag}
+        sudo docker push ${{ env.REGISTRY }}/graphscope/jupyter:${tag}
+
+        tag=latest
+        sudo docker tag graphscope/jupyter:${SHORT_SHA} ${{ env.REGISTRY }}/graphscope/jupyter:${tag}
+        sudo docker push ${{ env.REGISTRY }}/graphscope/jupyter:${tag}
+
+  ubuntu-python-test:
+    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    runs-on: ubuntu-20.04
+    needs: [build-wheels]
+    strategy:
+      matrix:
+        # The protobuf version of tenorflow and grpcio is conflicts in python 3.11
+        python-version: ['3.8', '3.9', '3.10']
+
+    steps:
+    - uses: actions/download-artifact@v3
+      with:
+        path: artifacts
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Prepare Environment
+      shell: bash
+      run: |
+        echo "Python version: ${{ matrix.python-version }}"
+        # install graphscope-client
+        cd artifacts
+        tar -zxf ./wheel-${{ github.sha }}/client.tar.gz
+        pushd python/dist/wheelhouse
+        for f in * ; do python3 -m pip install $f --user || true; done
+        popd
+
+        # install graphscope
+        tar -zxf ./wheel-${{ github.sha }}/graphscope.tar.gz
+        pushd coordinator/dist
+        python3 -m pip install ./*.whl --user
+        popd
+        pushd coordinator/dist/wheelhouse
+        python3 -m pip install ./*.whl --user
+        popd
+
+        # install tensorflow
+        if [ "${{ matrix.python-version }}" == "3.10" ]; then
+          python3 -m pip install pytest "tensorflow<=2.8.4" "pandas" --user
+        else
+          python3 -m pip install pytest "tensorflow<=2.5.2" "pandas" --user
+        fi
+        # install java
+        sudo apt update -y && sudo apt install openjdk-11-jdk -y
+
+    - name: Run Minimum Test
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+      run: |
+        python3 -c "import sys; print(sys.version)"
+        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
+        python3 -m pytest -s -v $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/minitest
+
+  centos-test:
+    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    runs-on: ubuntu-20.04
+    needs: [build-wheels]
+    container:
+      image: centos:8
+      options:
+        --shm-size 4096m
+
+    steps:
+    - uses: actions/download-artifact@v3
+      with:
+        path: artifacts
+
+    - name: Prepare Environment
+      shell: bash
+      run: |
+        # fixed download metadata for repo 'appstream'
+        sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-Linux-*
+        sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-Linux-*
+
+        dnf install -y gcc gcc-c++ make cmake
+
+        # install git and python3
+        dnf install -y git python38 python38-devel
+        python3 -m pip install --upgrade pip --user
+
+        # install graphscope-client
+        cd ${GITHUB_WORKSPACE}/artifacts
+        tar -zxf ./wheel-${{ github.sha }}/client.tar.gz
+        pushd python/dist/wheelhouse
+        for f in * ; do python3 -m pip install $f --user || true; done
+        popd
+
+        # install graphscope
+        tar -zxf ./wheel-${{ github.sha }}/graphscope.tar.gz
+        pushd coordinator/dist
+        python3 -m pip install ./*.whl --user
+        popd
+        pushd coordinator/dist/wheelhouse
+        python3 -m pip install ./*.whl --user || true
+        popd
+
+        # install tensorflow
+        python3 -m pip install pytest "tensorflow<=2.5.2" "pandas<1.5.0"  --user
+        python3 -m pip install -U wrapt --user
+        # install jdk
+        dnf install -y java-11-openjdk-devel
+
+    - name: Run Minimum Test
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+      run: |
+        # python3-Cython version is too old, use cython installed by pip in $HOME/.local/bin
+        export PATH=$HOME/.local/bin:$PATH
+        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
+        python3 -m pytest -s -v $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/minitest

@@ -1,0 +1,94 @@
+name: GraphScope GAIA CI
+
+on:
+  # Trigger the workflow on push or pull request, but only for the main branch
+  push:
+    branches:
+      - main
+    paths:
+      - 'interactive_engine/**'
+      - '.github/workflows/gaia.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'interactive_engine/**'
+      - '.github/workflows/gaia.yml'
+
+concurrency:
+  group: ${{ github.repository }}-${{ github.event.number || github.head_ref || github.sha }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  gaia-test:
+    runs-on: [self-hosted, manylinux2014]
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+
+    - uses: actions/cache@v3
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+
+    - uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          ~/.cache/sccache
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Rust Format Check
+      run: |
+        source ${HOME}/.graphscope_env
+        cd ${GITHUB_WORKSPACE}/interactive_engine/executor && ./check_format.sh
+
+    - name: Build Ir on Experimental Store
+      run: |
+        source ${HOME}/.graphscope_env
+        cd ${GITHUB_WORKSPACE}/interactive_engine/compiler
+        make build
+
+    - name: Ir Unit Test
+      run: |
+        source ${HOME}/.graphscope_env
+        cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && make test
+
+    - name: CommonType Unit Test
+      run: |
+        source ${HOME}/.graphscope_env
+        cd ${GITHUB_WORKSPACE}/interactive_engine/executor/common/dyn_type && cargo test
+
+    - name: Store Unit Test
+      run: |
+        source ${HOME}/.graphscope_env
+        cd ${GITHUB_WORKSPACE}/interactive_engine/executor/store/exp_store && cargo test
+        # TODO: fix ut in groot
+        # cd ${GITHUB_WORKSPACE}/interactive_engine/executor/store/groot && cargo test
+        # TODO: add ut in global_query
+        # cd ${GITHUB_WORKSPACE}/interactive_engine/executor/store/global_query && cargo test
+
+    - name: Ir Integration Test on Experimental Store
+      run: |
+        source ${HOME}/.graphscope_env
+        cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && ./ir_exprimental_ci.sh
+
+    - name: Ir Integration Pattern Test on Experimental Store
+      run: |
+        source ${HOME}/.graphscope_env
+        cd ${GITHUB_WORKSPACE}
+        git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git
+        cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && ./ir_exprimental_pattern_ci.sh
+
+    - name: Upload GIE log
+      if: failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: gie-log
+        path: /var/log/graphscope

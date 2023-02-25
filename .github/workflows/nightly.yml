@@ -1,17 +1,17 @@
 name: GraphScope Nightly Build CI
 
-on: [push, pull_request]
-# on:
-#   workflow_dispatch:
-#   schedule:
-#     # The notifications for scheduled workflows are sent to the user who
-#     # last modified the cron syntax in the workflow file.
-#     # Trigger the workflow at 03:00(CST) every day.
-#     - cron:  '00 19 * * *'
+# on: [push, pull_request]
+on:
+  workflow_dispatch:
+  schedule:
+    # The notifications for scheduled workflows are sent to the user who
+    # last modified the cron syntax in the workflow file.
+    # Trigger the workflow at 03:00(CST) every day.
+    - cron:  '00 19 * * *'
 
 jobs:
   nightly-test:
-    # if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
+    if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -48,6 +48,11 @@ jobs:
     - name: Build GraphScope
       run: |
         source ${HOME}/.graphscope_env
+        # Known bug of building wheels with python3.11,
+        # Caused by aiohttp <= 3.8.1, whereas gremlinpython 3.6.2 requires
+        # aiohttp <= 3.8.1. They have loosen the restrict in main, but still
+        # needs to wait for them releasing a newer version
+        # https://github.com/aio-libs/aiohttp/issues/6600
         make install INSTALL_PREFIX=/opt/graphscope
 
     - name: Run Python Test
