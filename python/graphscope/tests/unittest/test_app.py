@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 
+import itertools
 import os
 
 import networkx as nx
@@ -453,3 +454,12 @@ def test_wcc_on_flatten_graph(arrow_modern_graph):
     df = ctx.to_dataframe({"node": "v.id", "r": "r"})
     # The component id is all 0
     assert sum(df.r.values) == 0
+
+
+def test_louvain_on_projected_graph(arrow_property_graph_undirected):
+    for v, e in itertools.product(["v0", "v1"], ["e0", "e1"]):
+        g = arrow_property_graph_undirected.project(
+            vertices={v: []}, edges={e: ["weight"]}
+        )
+        ctx = louvain(g)
+        ctx.to_dataframe({"node": "v.id", "r": "r"})
