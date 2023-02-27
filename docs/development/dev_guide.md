@@ -48,6 +48,7 @@ You may found the built artifacts in....
 
 TODO(yuansi): give a description about the artifacts...
 
+<<<<<<< HEAD
 ## Build Components Individually
 
 GraphScope is composed of several components, and you can build each of them separately. If you only changed some codes in one component or intend to use GraphScope in a disaggregated manner, you can build the affected components alone. 
@@ -64,4 +65,44 @@ You may find the guides for building and testing each engine as below.
 
 ### Build Python Client
 
+=======
+## Build Components
+
+GraphScope is composed of several components, and you can build each of them separately.
+If you only changed some codes in one component or intend to use GraphScope in a disaggregated manner, 
+you can build the affected components alone. 
+
+### Build Analytical Engine
+
+The source code of analytical engine is located in `analytical_engine` directory.
+It was written in C++ and orgainzed as a CMake project.
+
+You can build it with the following commands in the source root.
+
+```bash
+mkdir -p analytical_engine/build
+cd analytical_engine/build
+cmake ..
+make -j4
+```
+
+Or use the `gs` command-line utility for convenient from source root.
+
+```bash
+./gs build analytical
+```
+
+The built artifact is an executable binary named `grape_engine` in `analytical_engine/build`
+
+TODO(yuansi）: Then how to test and use it instead of the offical release?
+
+### Build Interactive Engine
+
+
+### Build Learning Engine
+
+
+### Build Coordinator
+
+>>>>>>> 20d2b5177 (update docs.)
 
