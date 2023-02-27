@@ -20,9 +20,9 @@ Pregel was first introduced in a [SIGMOD paper](https://dl.acm.org/doi/10.1145/1
 
 :::{figure-md}
 
-<img src="./images/pregel.png"
+<img src="../images/pregel.png"
      alt="The Pregel model"
-     width="30%">
+     width="100%">
 
 The Pregel model. 
 :::
