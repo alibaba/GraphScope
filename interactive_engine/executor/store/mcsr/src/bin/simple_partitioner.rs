@@ -2,16 +2,13 @@ use std::path::PathBuf;
 
 use clap::{App, Arg};
 use env_logger;
-
 // use mcsr::graph_las::GraphLAS;
 use mcsr::graph_partitioner::GraphPartitioner;
 use mcsr::schema::LDBCGraphSchema;
 use mcsr::types::*;
-use mpi::traits::*;
 
 fn main() {
     env_logger::init();
-    let universe = mpi::initialize().unwrap();
     let matches = App::new(NAME)
         .version(VERSION)
         .about("Build graph storage on single machine.")
@@ -38,18 +35,45 @@ fn main() {
                 .short("t")
                 .long_help("The number of threads")
                 .takes_value(true),
+            Arg::with_name("partition")
+                .short("p")
+                .long_help("The number of partitions")
+                .takes_value(true),
+            Arg::with_name("index")
+                .short("i")
+                .long_help("The index of partitions")
+                .takes_value(true),
             Arg::with_name("delimiter")
                 .short("t")
-                .long_help("The delimiter of the raw data [comma|semicolon|pipe]. pipe (|) is the default option")
+                .long_help(
+                    "The delimiter of the raw data [comma|semicolon|pipe]. pipe (|) is the default option",
+                )
                 .takes_value(true),
-        ]).get_matches();
+        ])
+        .get_matches();
 
-    let raw_data_dir = matches.value_of("raw_data_dir").unwrap().to_string();
-    let graph_data_dir = matches.value_of("graph_data_dir").unwrap().to_string();
-    let schema_file = matches.value_of("schema_file").unwrap().to_string();
-    let world = universe.world();
-    let partition_num = world.size() as usize;
-    let partition_index = world.rank() as usize;
+    let raw_data_dir = matches
+        .value_of("raw_data_dir")
+        .unwrap()
+        .to_string();
+    let graph_data_dir = matches
+        .value_of("graph_data_dir")
+        .unwrap()
+        .to_string();
+    let schema_file = matches
+        .value_of("schema_file")
+        .unwrap()
+        .to_string();
+    let partition_num = matches
+        .value_of("partition")
+        .unwrap_or("1")
+        .parse::<usize>()
+        .expect(&format!("Specify invalid partition number"));
+    let partition_index = matches
+        .value_of("index")
+        .unwrap_or("0")
+        .parse::<usize>()
+        .expect(&format!("Specify invalid partition number"));
     let thread_num = matches
         .value_of("thread_num")
         .unwrap_or("1")

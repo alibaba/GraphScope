@@ -25,5 +25,4 @@ clap = "2.32.0"
 chrono = "0.4"
 titlecase = "1.1.0"
 
-mpi = { path = "../../common/rsmpi" }
 fnv = "1.0.3"
