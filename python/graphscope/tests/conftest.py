@@ -137,9 +137,8 @@ def twitter_e_1_1_1():
     return "{}/twitter_e_1_1_1".format(new_property_dir)
 
 
-@pytest.fixture(scope="module")
-def arrow_property_graph(graphscope_session):
-    g = graphscope_session.load_from(
+def load_arrow_property_graph(session, directed=True):
+    return session.load_from(
         edges={
             "e0": [
                 (
@@ -232,7 +231,20 @@ def arrow_property_graph(graphscope_session):
         },
         generate_eid=False,
         retain_oid=True,
+        directed=directed,
     )
+
+
+@pytest.fixture(scope="module")
+def arrow_property_graph(graphscope_session):
+    g = load_arrow_property_graph(graphscope_session, directed=True)
+    yield g
+    del g
+
+
+@pytest.fixture(scope="module")
+def arrow_property_graph_undirected(graphscope_session):
+    g = load_arrow_property_graph(graphscope_session, directed=False)
     yield g
     del g
 
@@ -329,58 +341,6 @@ def arrow_property_graph_only_from_efile(graphscope_session):
         generate_eid=False,
         retain_oid=True,
     )
-    yield g
-    del g
-
-
-# @pytest.fixture(scope="module")
-# def arrow_property_graph(graphscope_session):
-# g = graphscope_session.g(generate_eid=False, retain_oid=False)
-# g = g.add_vertices(f"{new_property_dir}/twitter_v_0", "v0")
-# g = g.add_vertices(f"{new_property_dir}/twitter_v_1", "v1")
-# g = g.add_edges(f"{new_property_dir}/twitter_e_0_0_0", "e0", ["weight"], "v0", "v0")
-# g = g.add_edges(f"{new_property_dir}/twitter_e_0_1_0", "e0", ["weight"], "v0", "v1")
-# g = g.add_edges(f"{new_property_dir}/twitter_e_1_0_0", "e0", ["weight"], "v1", "v0")
-# g = g.add_edges(f"{new_property_dir}/twitter_e_1_1_0", "e0", ["weight"], "v1", "v1")
-# g = g.add_edges(f"{new_property_dir}/twitter_e_0_0_1", "e1", ["weight"], "v0", "v0")
-# g = g.add_edges(f"{new_property_dir}/twitter_e_0_1_1", "e1", ["weight"], "v0", "v1")
-# g = g.add_edges(f"{new_property_dir}/twitter_e_1_0_1", "e1", ["weight"], "v1", "v0")
-# g = g.add_edges(f"{new_property_dir}/twitter_e_1_1_1", "e1", ["weight"], "v1", "v1")
-
-# yield g
-# del g
-
-
-# @pytest.fixture(scope="module")
-# def arrow_property_graph_only_from_efile(graphscope_session):
-# g = graphscope_session.g(generate_eid=False, retain_oid=False)
-# g = g.add_edges(f"{new_property_dir}/twitter_e_0_0_0", "e0", ["weight"], "v0", "v0")
-# g = g.add_edges(f"{new_property_dir}/twitter_e_0_1_0", "e0", ["weight"], "v0", "v1")
-# g = g.add_edges(f"{new_property_dir}/twitter_e_1_0_0", "e0", ["weight"], "v1", "v0")
-# g = g.add_edges(f"{new_property_dir}/twitter_e_1_1_0", "e0", ["weight"], "v1", "v1")
-# g = g.add_edges(f"{new_property_dir}/twitter_e_0_0_1", "e1", ["weight"], "v0", "v0")
-# g = g.add_edges(f"{new_property_dir}/twitter_e_0_1_1", "e1", ["weight"], "v0", "v1")
-# g = g.add_edges(f"{new_property_dir}/twitter_e_1_0_1", "e1", ["weight"], "v1", "v0")
-# g = g.add_edges(f"{new_property_dir}/twitter_e_1_1_1", "e1", ["weight"], "v1", "v1")
-
-# yield g
-# del g
-
-
-@pytest.fixture(scope="module")
-def arrow_property_graph_undirected(graphscope_session):
-    g = graphscope_session.g(directed=False, generate_eid=False, retain_oid=False)
-    g = g.add_vertices(f"{new_property_dir}/twitter_v_0", "v0")
-    g = g.add_vertices(f"{new_property_dir}/twitter_v_1", "v1")
-    g = g.add_edges(f"{new_property_dir}/twitter_e_0_0_0", "e0", ["weight"], "v0", "v0")
-    g = g.add_edges(f"{new_property_dir}/twitter_e_0_1_0", "e0", ["weight"], "v0", "v1")
-    g = g.add_edges(f"{new_property_dir}/twitter_e_1_0_0", "e0", ["weight"], "v1", "v0")
-    g = g.add_edges(f"{new_property_dir}/twitter_e_1_1_0", "e0", ["weight"], "v1", "v1")
-    g = g.add_edges(f"{new_property_dir}/twitter_e_0_0_1", "e1", ["weight"], "v0", "v0")
-    g = g.add_edges(f"{new_property_dir}/twitter_e_0_1_1", "e1", ["weight"], "v0", "v1")
-    g = g.add_edges(f"{new_property_dir}/twitter_e_1_0_1", "e1", ["weight"], "v1", "v0")
-    g = g.add_edges(f"{new_property_dir}/twitter_e_1_1_1", "e1", ["weight"], "v1", "v1")
-
     yield g
     del g
 
