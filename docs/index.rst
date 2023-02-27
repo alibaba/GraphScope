@@ -77,7 +77,7 @@ and the vineyard store that offers efficient in-memory data transfers.
 
    storage_engine/getting_started
    storage_engine/grin
-   storage_engine/graph_formats
+   storage_engine/groot
 
 
 .. toctree::
@@ -86,6 +86,7 @@ and the vineyard store that offers efficient in-memory data transfers.
 
    utilities/how_to_find_logs
    utilities/monitoring
+   utilities/gs
    utilities/error_codes
    utilities/bulk_loader
 
@@ -93,7 +94,7 @@ and the vineyard store that offers efficient in-memory data transfers.
    :maxdepth: 2
    :caption: Development
 
-   development/dev_environment
+   development/dev_guide
    development/code_style_guide
    development/how_to_test
    development/how_to_contribute
