@@ -29,6 +29,8 @@ The Pregel model.
 
 The iterations terminate until no messages are sent from any vertex, indicating a halt.
 
+The vertex function can be invoked at each vertex in parallel, since individual vertices communicate via message-passing.
+
 With the Pregel model, the vertex program of single source shortest paths (SSSP) is expressed as follows.
 
 ```python
