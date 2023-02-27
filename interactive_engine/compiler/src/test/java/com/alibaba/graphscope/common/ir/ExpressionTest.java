@@ -67,7 +67,7 @@ public class ExpressionTest {
         } catch (IllegalArgumentException e) {
             return;
         }
-        Assert.fail("tag 'a' should not exist");
+        Assert.fail("tag 'a' does not exist");
     }
 
     @Test
@@ -113,7 +113,7 @@ public class ExpressionTest {
         Assert.assertEquals("=(a.age, 'X')", equal.toString());
     }
 
-    // a.age + 10 > 30
+    // a.age + 10 == 30
     @Test
     public void equal_plus_test() {
         RexNode var = builder.source(mockSourceConfig("a")).variable("a", "age");
