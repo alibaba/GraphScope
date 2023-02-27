@@ -6,7 +6,6 @@ A graph is a data structure composed of vertices (or nodes) connected by edges. 
 
 <img src="./images/graph_examples.png"
      alt="Examples of graphs"
-     style="border-radius: 0.3125em; box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);"
      width="80%">
 
 Examples of graphs. 
@@ -23,7 +22,6 @@ The [PageRank](https://en.wikipedia.org/wiki/PageRank) algorithm can measure the
 
 <img src="./images/pagerank.png"
      alt="PageRank algorithm"
-     style="border-radius: 0.3125em; box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);"
      width="40%">
 
 PageRank algorithm (https://snap-stanford.github.io/cs224w-notes/network-methods/pagerank).
@@ -36,7 +34,6 @@ PageRank algorithm (https://snap-stanford.github.io/cs224w-notes/network-methods
 
 <img src="./images/sssp.gif"
      alt="Dijkstra's algorithm"
-     style="border-radius: 0.3125em; box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);"
      width="40%">
 
 Dijkstra's algorithm (https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm).
@@ -49,8 +46,7 @@ Dijkstra's algorithm (https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm).
 
 <img src="./images/comm_detection.png"
      alt="Community detection algorithm"
-     style="border-radius: 0.3125em; box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);"
-     width="60%">
+     width="40%">
 
 Community detection algorithm (https://towardsdatascience.com/community-detection-algorithms-9bd8951e7dae).
 :::
@@ -63,7 +59,6 @@ In real applications, many problems can be modeled as graph analytics problems. 
 
 <img src="./images/analytics_examples.png"
      alt="Applications of graph analytics"
-     style="border-radius: 0.3125em; box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);"
      width="80%">
 
 Applications of graph analytics.
