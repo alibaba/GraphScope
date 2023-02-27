@@ -58,21 +58,31 @@ fn process_tag_columns(builder: &mut JobBuilder, tag: Option<TagId>, columns_opt
             sample_ratio: 1.0,
             extra: Default::default(),
         };
+        // opt = 4 denotes that to get vertex itself. The same as the followings.
         let auxilia = pb::GetV { tag: tag_pb.clone(), opt: 4, params: Some(params), alias: tag_pb.clone() };
         builder.get_v(auxilia);
     }
 }
 
-// Fetch properties before used in select, order, dedup, group, join, and apply.
+// Fetch properties before used in Project, Select, Order, Dedup, Group, Join, and Apply.
+// e.g.,
+// Case 1: For singe property (except used in Order or GroupVal), e.g., g.V().out().as("a").out().out().out().select("a").by("name"),
+//    In this case, the "name" property won't be precached when `as("a")`, which requires to carry "a.name" along with the query (across multiple `out()`).
+//    Instead, "name" would be fetched right before `select("a").by("name")`, by shuffle to where `a` locates firstly, and then fetch properties locally
+// Case 2: For multiple properties, e.g., g.V().out().as("a").out().as("b").out().out().select("a","b").by("name").by("age"),
+//    In this case, we cannot directly shuffle to where "a" or "b" locates, since we cannot fetch both "a" and "b"'s properties at the same time.
+//    Thus, before `select()...`, we would firstly shuffle to "a", and cache "a.name"; then we shuffle to "b" and cache "b.name"; and at last, we can project both "a" and "b"'s properties.
+//    Notice that "cache the property" means that we would carry the property in the computation data `GRecord`.
+// Case 3: For single/multiple properties used in Order or Group (GroupValue),
+//    e.g., g.V().out().as("a").out().out().out().order().by(select("a").by("name"))
+//    Although we only need a single property, we still need to cache it since the property would be used remotely (e.g., in global ordering).
+//    Thus, before `order()`, we shuffle to "a", and cache "a.name", and then do the ordering.
 fn post_process_vars(
     builder: &mut JobBuilder, plan_meta: &mut PlanMeta, is_order_or_group: bool,
 ) -> IrResult<()> {
     let node_meta = plan_meta.get_curr_node_meta().unwrap();
     let tag_columns = node_meta.get_tag_columns();
     let len = tag_columns.len();
-    if len == 0 {
-        return Ok(());
-    }
     if len == 1 && !is_order_or_group {
         // There are minor differences between `Order`, `Group` (group_values, actually) with other operators:
         // For `Order`, we need to carry the properties for global ordering;
@@ -86,7 +96,7 @@ fn post_process_vars(
             let auxilia = pb::GetV { tag: tag_pb.clone(), opt: 4, params: None, alias: tag_pb };
             builder.get_v(auxilia);
         }
-    } else {
+    } else if len != 0 {
         for (tag, columns_opt) in tag_columns.into_iter() {
             process_tag_columns(builder, tag, columns_opt);
         }
@@ -116,9 +126,8 @@ impl AsPhysical for pb::Select {
         // This would be refined as:
         // In Logical Plan: `Source + EdgeExpand(ExpandE) + GetV`
         // In Physical Plan:
-        //       1. on distributed graph store, `Source + EdgeExpand(ExpandV) + Shuffle + Auxilia`
+        //       1. on distributed graph store, `Source + EdgeExpand(ExpandV) + Shuffle + GetV(Itself)`
         //    or 2. on single graph store, `Source + EdgeExpand(ExpandE) + GetV`
-        // where Auxilia means get property or filter on a vertex.
         let node_meta = plan_meta.get_curr_node_meta().unwrap();
         let tag_columns = node_meta.get_tag_columns();
         // Currently, we fuse `Select` into a `GetV` if possible.
@@ -152,36 +161,6 @@ impl AsPhysical for pb::Select {
 
     fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         if plan_meta.is_partition() {
-            // This is the case when g.V().out().has(xxx), which was like Source + EdgeExpand(ExpandV) + Filter in logical plan.
-            // This would be refined as:
-            // In Logical Plan: `Source + EdgeExpand(ExpandE) + GetV`
-            // In Physical Plan:
-            //       1. on distributed graph store, `Source + EdgeExpand(ExpandV) + Shuffle + Auxilia`
-            //    or 2. on single graph store, `Source + EdgeExpand(ExpandE) + GetV`
-            // where Auxilia means get property or filter on a vertex.
-            let node_meta = plan_meta.get_curr_node_meta().unwrap();
-            let tag_columns = node_meta.get_tag_columns();
-            if tag_columns.len() == 1 {
-                // Currently, we fuse `Select` into a `GetV` for tmp.
-                let (tag, columns_opt) = tag_columns.into_iter().next().unwrap();
-                if columns_opt.len() > 0 {
-                    let tag_pb = tag.map(|tag_id| (tag_id as KeyId).into());
-                    builder.shuffle(tag_pb.clone());
-                    let params = pb::QueryParams {
-                        tables: vec![],
-                        columns: vec![],
-                        is_all_columns: false,
-                        limit: None,
-                        predicate: self.predicate.clone(),
-                        sample_ratio: 1.0,
-                        extra: Default::default(),
-                    };
-                    let auxilia =
-                        pb::GetV { tag: tag_pb.clone(), opt: 4, params: Some(params), alias: tag_pb };
-                    builder.get_v(auxilia);
-                    return Ok(());
-                }
-            }
             post_process_vars(builder, plan_meta, false)?;
         }
         Ok(())
@@ -878,7 +857,7 @@ mod test {
     #[test]
     fn post_process_edgexpd_property_filter_as_auxilia() {
         // g.V().out().has("birthday", 20220101)
-        // In this case, the Select will be translated into an Auxilia, to fetch and filter the
+        // In this case, the Select will be translated into an GetV, to fetch and filter the
         // results in one single `FilterMap` pegasus operator.
         let mut plan = LogicalPlan::default();
         plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
@@ -948,9 +927,9 @@ mod test {
     #[test]
     fn post_process_edgexpd_multi_tag_property_filter() {
         // g.V().out().as(0).out().as(1).filter(0.age > 1.age)
-        // In this case, the Select cannot be translated into an Auxilia, as it contains
+        // In this case, the Select cannot be translated into an GetV, as it contains
         // fetching the properties from two different nodes. In this case, we need to fetch
-        // the properties using `Auxilia` twice before filter, and can
+        // the properties using `GetV` twice before filter, and can
         // finally execute the selection of "0.age > 1.age".
         let mut plan = LogicalPlan::default();
         plan.append_operator_as_node(build_scan(vec![]).into(), vec![])
