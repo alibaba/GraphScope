@@ -42,38 +42,6 @@
     },
     {
       "label": {
-        "id": 11,
-        "name": "COMPANY"
-      },
-      "columns": [
-        {
-          "key": {
-            "id": 0,
-            "name": "id"
-          },
-          "data_type": 2,
-          "is_primary_key": false
-        },
-        {
-          "key": {
-            "id": 8,
-            "name": "name"
-          },
-          "data_type": 4,
-          "is_primary_key": false
-        },
-        {
-          "key": {
-            "id": 9,
-            "name": "url"
-          },
-          "data_type": 4,
-          "is_primary_key": false
-        }
-      ]
-    },
-    {
-      "label": {
         "id": 2,
         "name": "COMMENT"
       },
@@ -136,38 +104,7 @@
         }
       ]
     },
-    {
-      "label": {
-        "id": 10,
-        "name": "CONTINENT"
-      },
-      "columns": [
-        {
-          "key": {
-            "id": 0,
-            "name": "id"
-          },
-          "data_type": 2,
-          "is_primary_key": false
-        },
-        {
-          "key": {
-            "id": 8,
-            "name": "name"
-          },
-          "data_type": 4,
-          "is_primary_key": false
-        },
-        {
-          "key": {
-            "id": 9,
-            "name": "url"
-          },
-          "data_type": 4,
-          "is_primary_key": false
-        }
-      ]
-    },
+
     {
       "label": {
         "id": 0,
@@ -337,7 +274,7 @@
         {
           "key": {
             "id": 9,
-            "name": "id",
+            "name": "id"
           },
           "data_type": 4,
           "is_primary_key": false
@@ -375,108 +312,12 @@
           "is_primary_key": false
         }
       ]
-    },
-    {
-      "label": {
-        "id": 9,
-        "name": "CITY"
-      },
-      "columns": [
-        {
-          "key": {
-            "id": 0,
-            "name": "id"
-          },
-          "data_type": 2,
-          "is_primary_key": false
-        },
-        {
-          "key": {
-            "id": 8,
-            "name": "name"
-          },
-          "data_type": 4,
-          "is_primary_key": false
-        },
-        {
-          "key": {
-            "id": 9,
-            "name": "url"
-          },
-          "data_type": 4,
-          "is_primary_key": false
-        }
-      ]
-    },
-    {
-      "label": {
-        "id": 12,
-        "name": "UNIVERSITY"
-      },
-      "columns": [
-        {
-          "key": {
-            "id": 0,
-            "name": "id"
-          },
-          "data_type": 2,
-          "is_primary_key": false
-        },
-        {
-          "key": {
-            "id": 8,
-            "name": "name"
-          },
-          "data_type": 4,
-          "is_primary_key": false
-        },
-        {
-          "key": {
-            "id": 9,
-            "name": "url"
-          },
-          "data_type": 4,
-          "is_primary_key": false
-        }
-      ]
-    },
-    {
-      "label": {
-        "id": 8,
-        "name": "COUNTRY"
-      },
-      "columns": [
-        {
-          "key": {
-            "id": 0,
-            "name": "id"
-          },
-          "data_type": 2,
-          "is_primary_key": false
-        },
-        {
-          "key": {
-            "id": 8,
-            "name": "name"
-          },
-          "data_type": 4,
-          "is_primary_key": false
-        },
-        {
-          "key": {
-            "id": 9,
-            "name": "url"
-          },
-          "data_type": 4,
-          "is_primary_key": false
-        }
-      ]
     }
   ],
   "relations": [
     {
       "label": {
-        "id": 15,
+        "id": 13,
         "name": "STUDYAT"
       },
       "entity_pairs": [
@@ -504,7 +345,7 @@
     },
     {
       "label": {
-        "id": 16,
+        "id": 11,
         "name": "WORKAT"
       },
       "entity_pairs": [
@@ -532,7 +373,7 @@
     },
     {
       "label": {
-        "id": 17,
+        "id": 8,
         "name": "ISPARTOF"
       },
       "entity_pairs": [
@@ -551,7 +392,7 @@
     },
     {
       "label": {
-        "id": 22,
+        "id": 3,
         "name": "ISSUBCLASSOF"
       },
       "entity_pairs": [
@@ -570,7 +411,7 @@
     },
     {
       "label": {
-        "id": 6,
+        "id": 12,
         "name": "HASMEMBER"
       },
       "entity_pairs": [
@@ -589,7 +430,7 @@
     },
     {
       "label": {
-        "id": 3,
+        "id": 5,
         "name": "REPLYOF"
       },
       "entity_pairs": [
@@ -618,7 +459,7 @@
     },
     {
       "label": {
-        "id": 13,
+        "id": 7,
         "name": "LIKES"
       },
       "entity_pairs": [
@@ -647,7 +488,7 @@
     },
     {
       "label": {
-        "id": 10,
+        "id": 9,
         "name": "HASINTEREST"
       },
       "entity_pairs": [
@@ -666,7 +507,7 @@
     },
     {
       "label": {
-        "id": 21,
+        "id": 4,
         "name": "HASTYPE"
       },
       "entity_pairs": [
@@ -685,7 +526,7 @@
     },
     {
       "label": {
-        "id": 12,
+        "id": 1,
         "name": "KNOWS"
       },
       "entity_pairs": [
@@ -742,7 +583,7 @@
     },
     {
       "label": {
-        "id": 5,
+        "id": 10,
         "name": "CONTAINEROF"
       },
       "entity_pairs": [
@@ -761,7 +602,7 @@
     },
     {
       "label": {
-        "id": 7,
+        "id": 6,
         "name": "HASMODERATOR"
       },
       "entity_pairs": [
@@ -780,7 +621,7 @@
     },
     {
       "label": {
-        "id": 11,
+        "id": 2,
         "name": "ISLOCATEDIN"
       },
       "entity_pairs": [
@@ -819,7 +660,7 @@
     },
     {
       "label": {
-        "id": 1,
+        "id": 14,
         "name": "HASTAG"
       },
       "entity_pairs": [

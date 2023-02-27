@@ -351,7 +351,7 @@ fn to_borrow_object<'a>(ref_item: RefItem<'a>) -> BorrowObject<'a> {
 
 #[inline]
 fn encode_datetime(datetime: &DateTime) -> i64 {
-    datetime.year() as i64 * 10000000000
+    datetime.year() as i64 * 10000000000000
         + datetime.month() as i64 * 100000000000
         + datetime.day() as i64 * 1000000000
         + datetime.hour() as i64 * 10000000
