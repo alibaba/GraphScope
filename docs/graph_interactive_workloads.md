@@ -72,12 +72,12 @@ plans based on both algorithmic heuristics and cost estimation.
 <img src="images/pattern-matching-example.png"
      alt="Pattern matching example"
      style="border-radius: 0.3125em; box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);"
-     width="90%">
+     width="95%">
 
 An example of pattern matching.
 :::
 
-The above figure shows an example of pattern matching query, where the pattern is a triangle that describes two buyers who knows each other purchase the same product. In the graph, there is a matched instance highlighted in red, in which pattern vertices `v1`, `v2` and `v3` are matched by vertices `1`, `2` and `5`, respectively.
+The above figure shows an example of pattern matching query, where the pattern is a triangle that describes two buyers who knows each other purchase the same product. In the graph, there is a matched instance highlighted in bolder borders, in which pattern vertices `v1`, `v2` and `v3` are matched by vertices `1`, `2` and `5`, respectively.
 
 ```groovy
 g.V().match(
