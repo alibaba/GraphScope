@@ -275,7 +275,6 @@ public class GraphBuilder extends RelBuilder {
      * @return
      */
     private boolean removeHistory(RelNode node) {
-        // TODO: aggregate and project(isAppend=false) will remove the history
         return false;
     }
 
