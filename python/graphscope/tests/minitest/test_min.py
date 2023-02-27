@@ -155,24 +155,6 @@ def simple_flow(sess, ogbn_small_script):
     )
 
 
-def test_minimum_udf_app():
-    @pregel(vd_type="string", md_type="string")
-    class DummyClass(AppAssets):
-        @staticmethod
-        def Init(v, context):
-            pass
-
-        @staticmethod
-        def Compute(messages, v, context):
-            v.vote_to_halt()
-
-    s = graphscope.session(cluster_type="hosts", num_workers=1)
-    g = load_ogbn_mag(s)
-    a = DummyClass()
-    r = a(g)
-    s.close()
-
-
 def test_minimum_networkx():
     import graphscope.nx as nx
 
@@ -186,20 +168,6 @@ def test_minimum_networkx():
     nx_g.add_nodes_from(range(100), type="node")
     gs_g = s.g(nx_g)
     s.close()
-
-
-def test_multiple_session(ogbn_small_script):
-    s1 = graphscope.session(cluster_type="hosts", num_workers=1)
-    assert s1.info["status"] == "active"
-
-    s2 = graphscope.session(cluster_type="hosts", num_workers=2)
-    assert s2.info["status"] == "active"
-
-    simple_flow(s1, ogbn_small_script)
-    simple_flow(s2, ogbn_small_script)
-
-    s1.close()
-    s2.close()
 
 
 def test_demo_with_default_session(ogbn_small_script):
@@ -250,6 +218,20 @@ def test_demo_with_default_session(ogbn_small_script):
         class_num=349,  # output dimension
         features_num=130,  # input dimension, 128 + kcore + triangle count
     )
+
+
+def test_multiple_session(ogbn_small_script):
+    s1 = graphscope.session(cluster_type="hosts", num_workers=1)
+    assert s1.info["status"] == "active"
+
+    s2 = graphscope.session(cluster_type="hosts", num_workers=2)
+    assert s2.info["status"] == "active"
+
+    simple_flow(s1, ogbn_small_script)
+    simple_flow(s2, ogbn_small_script)
+
+    s1.close()
+    s2.close()
 
 
 def test_modern_graph():
@@ -314,3 +296,21 @@ def test_modern_graph():
                 }
             ):
                 subgraph_roundtrip(num_workers, threads_per_worker)
+
+
+def test_minimum_udf_app():
+    @pregel(vd_type="string", md_type="string")
+    class DummyClass(AppAssets):
+        @staticmethod
+        def Init(v, context):
+            pass
+
+        @staticmethod
+        def Compute(messages, v, context):
+            v.vote_to_halt()
+
+    s = graphscope.session(cluster_type="hosts", num_workers=1)
+    g = load_ogbn_mag(s)
+    a = DummyClass()
+    r = a(g)
+    s.close()
