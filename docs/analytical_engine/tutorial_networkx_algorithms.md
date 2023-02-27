@@ -31,7 +31,7 @@ G.number_of_edges()
 sorted(d for n, d in G.degree())
 ```
 
-Finally, we can call the builtin algorithms of NetworkX to analysis the graph `G`.
+Finally, we can call the builtin algorithms of NetworkX to analyze the graph `G`.
 
 ```python
 # Run 'connected components' algorithm

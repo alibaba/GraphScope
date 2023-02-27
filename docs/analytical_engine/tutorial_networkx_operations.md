@@ -13,7 +13,7 @@ G = nx.Graph()
 ```
 
 ## Adding Nodes
-The nodes of graph `G` can be added in several ways. In `graphscope.nx`, nodes can be some hashable Python object, including `int`, `str`, `float`, `tuple`, `bool` object. To get started though, we’ll look at simple manipulations and start from an empty graph. You can add one node at a time,
+The nodes of graph `G` can be added in several ways. In `graphscope.nx`, nodes can be some hashable Python objects, including `int`, `str`, `float`, `tuple`, `bool` objects. To get started though, we’ll look at simple manipulations and start from an empty graph. You can add one node at a time,
 
 ```python
 G.add_node(1)
@@ -64,7 +64,7 @@ G.add_edge(*e)  # unpack edge tuple*
 list(G.edges)
 ```
 
-by adding a list of edges,
+or by adding a list of edges,
 
 ```python
 G.add_edges_from([(1, 2), (1, 3)])
@@ -80,7 +80,7 @@ G.add_edges_from(H.edges)
 list(G.edges)
 ```
 
-or one can add new nodes and edges once with `.update(nodes, edges)`
+or by adding new nodes and edges once with `.update(nodes, edges)`
 
 ```python
 G.update(edges=[(10, 11), (11, 12)], nodes=[10, 11, 12])
@@ -113,7 +113,7 @@ G.number_of_edges()
 ```
 
 ## Examining Elements of a Graph
-Now we can examine the nodes and edges. Four basic graph properties facilitate reporting: `G.nodes`, `G.edges`, `G.adj` and `G.degree`. These are set-like views of the nodes, edges, neighbors (adjacencies), and degrees of nodes in a graph. They offer a continually updated read-only view into the graph structure. They are also dict-like in that you can look up node and edge data attributes via the views and iterate with data attributes using methods `.items()`, `.data('span')`. If you want a specific container type instead of a view, you can specify one. Here we use lists, though sets, dicts, tuples and other containers may be better in other contexts.
+Now we can examine the nodes and edges. Four basic graph properties facilitate reporting: `G.nodes`, `G.edges`, `G.adj` and `G.degree`. These are set-like views of the nodes, edges, neighbors (adjacencies), and degrees of nodes in a graph. They offer a continually updated read-only view into the graph structure. They are also dict-like in that you can look up node and edge data attributes via the views and iterate with data attributes using methods `.items()` and `.data('span')`. If you want a specific container type instead of a view, you can specify one. Here we use lists, though sets, dicts, tuples and other containers may be better in other contexts.
 
 ```python
 list(G.nodes)
@@ -184,7 +184,7 @@ for n, nbrs in FG.adj.items():
             print(f"({n}, {nbr}, {wt:.3})")
 ```
 
-Convenient access to all edges is achieved with the edges property.
+Access to all edges with edge properties is achieved with:
 
 ```python
 for (u, v, wt) in FG.edges.data("weight"):
@@ -205,7 +205,7 @@ G = nx.Graph(day="Friday")
 G.graph
 ```
 
-or one can modify attributes later
+and one can modify attributes later
 
 ```python
 G.graph["day"] = "Monday"
@@ -261,7 +261,7 @@ list(K.nodes)
 list(K.edges)
 ```
 
-Note that different with `subgraph`/`edge_subgraph` APIs in NetworkX which return a view, `graphscope.nx` returns a deepcopy of `subgraph`/`edge_subgraph`.
+Note that different from `subgraph`/`edge_subgraph` APIs in NetworkX which return a view, `graphscope.nx` returns a deepcopy of `subgraph`/`edge_subgraph`.
 
 ## Making Copies
 One can use `to_directed` to return a directed representaion of the graph.
@@ -298,7 +298,7 @@ Note that `graphscope.nx` does not support shallow copy of the graph.
 
 ## Directed Graphs
 
-The `DiGraph` class provides additional methods and properties specific to directed edges, e.g., `DiGraph.out_edges`, `DiGraph.in_degree`, `DiGraph.predecessors()` and `DiGraph.successors()`. To allow algorithms to work with both classes easily, the directed versions of `neighbors()` is equivalent to `successors()`, while `degree` reports the sum of `in_degree` and `out_degree` even though that may feel inconsistent at times.
+The `DiGraph` class provides additional methods and properties specific to directed edges, e.g., `DiGraph.out_edges`, `DiGraph.in_degree`, `DiGraph.predecessors()` and `DiGraph.successors()`. To allow algorithms to work with both directed and undirected classes easily, the directed versions of `neighbors()` is equivalent to `successors()`, while `degree` reports the sum of `in_degree` and `out_degree` even though that may feel inconsistent at times.
 
 ```python
 DG = nx.DiGraph()
@@ -321,7 +321,7 @@ H = nx.Graph(DG)  # create an undirected graph H from a directed graph G
 list(H.edges)
 ```
 
-Directed Graph also support to reverse edge using `DiGraph.reverse()`.
+Directed graph also supports to reverse edge using `DiGraph.reverse()`.
 
 ```python
 K = DG.reverse()  # retrun a "deepcopy" of reversed copy.
@@ -344,10 +344,10 @@ sorted(d for n, d in G.degree())
 nx.builtin.clustering(G)
 ```
 
-In `graphscope.nx,` we support some builtin algorithms for analyzing graph, see [builtin algorithm](https://graphscope.io/docs/reference/networkx/builtin.html) for details on graph algorithms supported.
+In `graphscope.nx,` we support some builtin algorithms for analyzing graph, see [builtin algorithm](https://graphscope.io/docs/reference/networkx/builtin.html) for more details on graph algorithms supported.
 
 ## Create graph from GraphScope Graph Object
-In addition, we can create a graph in the GraphScope way, which is created from GraphScope graph object and will be introduced in the [next tutorial](https://graphscope.io/docs/latest/analytical_engine/tutorial_networkx_algorithms.html).
+In addition, we can create a graph in the GraphScope way, which is created from GraphScope graph object.
 
 ```python
 # we load a GraphScope graph with load_ldbc
@@ -360,7 +360,7 @@ G = nx.Graph(graph)
 ```
 
 ## Transform to GraphScope Graph Object
-As `graphscope.nx` Graph can create from GraphScope graph, the `graphscope.nx` graph can also transform to GraphScope graph, e.g,
+As `graphscope.nx` graph can create from GraphScope graph, the `graphscope.nx` graph can also transform to GraphScope graph, e.g,
 
 ```python
 nodes = [(0, {"foo": 0}), (1, {"foo": 1}), (2, {"foo": 2})]
