@@ -49,6 +49,7 @@ You may found the built artifacts in....
 TODO(yuansi): give a description about the artifacts...
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 ## Build Components Individually
 
 GraphScope is composed of several components, and you can build each of them separately. If you only changed some codes in one component or intend to use GraphScope in a disaggregated manner, you can build the affected components alone. 
@@ -67,42 +68,26 @@ You may find the guides for building and testing each engine as below.
 
 =======
 ## Build Components
+=======
+## Build Components Individually
+>>>>>>> 71c2126a8 (update.)
 
-GraphScope is composed of several components, and you can build each of them separately.
-If you only changed some codes in one component or intend to use GraphScope in a disaggregated manner, 
-you can build the affected components alone. 
+GraphScope is composed of several components, and you can build each of them separately. If you only changed some codes in one component or intend to use GraphScope in a disaggregated manner, you can build the affected components alone. 
 
-### Build Analytical Engine
+### Build and Test Engines
 
-The source code of analytical engine is located in `analytical_engine` directory.
-It was written in C++ and orgainzed as a CMake project.
+You may find the guides for building and testing each engine as below.
 
-You can build it with the following commands in the source root.
-
-```bash
-mkdir -p analytical_engine/build
-cd analytical_engine/build
-cmake ..
-make -j4
-```
-
-Or use the `gs` command-line utility for convenient from source root.
-
-```bash
-./gs build analytical
-```
-
-The built artifact is an executable binary named `grape_engine` in `analytical_engine/build`
-
-TODO(yuansi）: Then how to test and use it instead of the offical release?
-
-### Build Interactive Engine
-
-
-### Build Learning Engine
-
+- [Build and test analytical engine](/analytical_engine/dev_and_test)
+- [Build and test interactive engine](https://graphscope.io)
+- [Build and test learning engine](https://graphscope.io)
 
 ### Build Coordinator
 
+<<<<<<< HEAD
 >>>>>>> 20d2b5177 (update docs.)
+=======
+### Build Python Client
+
+>>>>>>> 71c2126a8 (update.)
 
