@@ -16,7 +16,7 @@ Specifically, in the PIE model, users only need to provide three functions,
 
 <img src="../images/pie.png"
      alt="The PIE model"
-     width="100%">
+     width="80%">
 
 The PIE model. 
 :::

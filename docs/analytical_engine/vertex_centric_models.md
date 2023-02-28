@@ -14,7 +14,7 @@ have widely applied in various graph processing systems, such as Giraph, GraphX 
 
 ## Pregel Model
 
-Pregel was first introduced in a [SIGMOD paper](https://dl.acm.org/doi/10.1145/1807167.1807184) published by Google in 2010. A graph analytics algorithm with the Pregel model consists of a sequence of iterations( called *supersteps*).
+Pregel was first introduced in a [SIGMOD paper](https://dl.acm.org/doi/10.1145/1807167.1807184) published by Google in 2010. A graph analytics algorithm with the Pregel model consists of a sequence of iterations(called *supersteps*).
 
 > “During a superstep the framework invokes a user-defined function for each vertex, conceptually in parallel. The function specifies behavior at a single vertex *V* and a single superstep *S*. It can read messages sent to *V* in superstep *S − 1*, send messages to other vertices that will be received at superstep *S + 1*, and modify the state of *V* and its outgoing edges. Messages are typically sent along outgoing edges, but a message may be sent to any vertex whose identifier is known.”
 
