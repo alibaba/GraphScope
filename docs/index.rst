@@ -48,6 +48,7 @@ and the vineyard store that offers efficient in-memory data transfers.
    analytical_engine/deployment
    analytical_engine/design_of_gae
    analytical_engine/guide_and_examples
+   analytical_engine/dev_and_test
    analytical_engine/apis
    analytical_engine/faqs
    

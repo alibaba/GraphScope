@@ -1,10 +1,10 @@
-# Development Guide
+# Dev and Test
 
-This document describes how to build GraphScope from source code.
+This document describes how to build and test GraphScope Analytical Engine from source code.
 
 ## Dev Environment
 
-To build GraphScope from source code, you need to prepare a development environment with many dependencies and 
+To build analytcial engine from source code, you need to prepare a development environment with many dependencies and 
 build toolchains. You have two options to prepare the development environment, install all tools and dependencies 
 on your local machine, or build it in our provided docker image.
 
@@ -35,12 +35,12 @@ Since we are going to build GraphScope within the container, here we assign `shm
  allocated to a docker container. More options about `docker` command can be found [here](https://docs.docker.com/engine/reference/commandline/cli/).
 
 
-## Build All Targets for GraphScope
+## Build Analytical Engine
 
 With `gs` command-line utility, you can build all targets for GraphScope with a single command.
 
 ```bash
-./gs build
+./gs build analytical
 ```
 
 You may found the built artifacts in....
@@ -48,20 +48,14 @@ You may found the built artifacts in....
 
 TODO(yuansi): give a description about the artifacts...
 
-## Build Components Individually
+if you need to build the analytical engine with Java support, e.g., if you need to run Giraph/GraphX apps 
+on your built engine, or need to write your own applicalitions in Java, you may want to 
+build the engine with a option `enable_java`
 
-GraphScope is composed of several components, and you can build each of them separately. If you only changed some codes in one component or intend to use GraphScope in a disaggregated manner, you can build the affected components alone. 
+```bash
+./gs build analytcial --enable_java
+```
 
-### Build and Test Engines
-
-You may find the guides for building and testing each engine as below.
-
-- [Build and test analytical engine](/analytical_engine/dev_and_test)
-- [Build and test interactive engine](https://graphscope.io)
-- [Build and test learning engine](https://graphscope.io)
-
-### Build Coordinator
-
-### Build Python Client
+## How to Test
 
 
