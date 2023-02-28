@@ -41,32 +41,10 @@ pub trait AsPhysical {
     }
 }
 
-fn process_tag_columns(builder: &mut JobBuilder, tag: Option<TagId>, columns_opt: ColumnsOpt) {
-    if columns_opt.len() > 0 {
-        let tag_pb = tag.map(|tag_id| (tag_id as i32).into());
-        builder.shuffle(tag_pb.clone());
-        let params = pb::QueryParams {
-            tables: vec![],
-            columns: columns_opt
-                .get()
-                .into_iter()
-                .map(|column| column.into())
-                .collect(),
-            is_all_columns: columns_opt.is_all(),
-            limit: None,
-            predicate: None,
-            sample_ratio: 1.0,
-            extra: Default::default(),
-        };
-        // opt = 4 denotes that to get vertex itself. The same as the followings.
-        let auxilia = pb::GetV { tag: tag_pb.clone(), opt: 4, params: Some(params), alias: tag_pb.clone() };
-        builder.get_v(auxilia);
-    }
-}
-
 // Fetch properties before used in Project, Select, Order, Dedup, Group, Join, and Apply.
+// This is used when the storage is distributed. In case, we may not able to fetch properties of vertices directly as it may locate on a remote server.
 // e.g.,
-// Case 1: For singe property (except used in Order or GroupVal), e.g., g.V().out().as("a").out().out().out().select("a").by("name"),
+// Case 1: For single property (except used in Order or GroupVal), e.g., g.V().out().as("a").out().out().out().select("a").by("name"),
 //    In this case, the "name" property won't be precached when `as("a")`, which requires to carry "a.name" along with the query (across multiple `out()`).
 //    Instead, "name" would be fetched right before `select("a").by("name")`, by shuffle to where `a` locates firstly, and then fetch properties locally
 // Case 2: For multiple properties, e.g., g.V().out().as("a").out().as("b").out().out().select("a","b").by("name").by("age"),
@@ -80,25 +58,51 @@ fn process_tag_columns(builder: &mut JobBuilder, tag: Option<TagId>, columns_opt
 fn post_process_vars(
     builder: &mut JobBuilder, plan_meta: &mut PlanMeta, is_order_or_group: bool,
 ) -> IrResult<()> {
-    let node_meta = plan_meta.get_curr_node_meta().unwrap();
-    let tag_columns = node_meta.get_tag_columns();
-    let len = tag_columns.len();
-    if len == 1 && !is_order_or_group {
-        // There are minor differences between `Order`, `Group` (group_values, actually) with other operators:
-        // For `Order`, we need to carry the properties for global ordering;
-        // and for `Group` (group_values), we need to carry the properties after `Keyed` for Aggregation.
-        // While for other operators, we can shuffle to the partition where the vertex locates,
-        // and directly query the properties (without saving the properties).
-        let (tag, columns_opt) = tag_columns.into_iter().next().unwrap();
-        if columns_opt.len() > 0 {
-            let tag_pb = tag.map(|tag_id| (tag_id as KeyId).into());
-            builder.shuffle(tag_pb.clone());
-            let auxilia = pb::GetV { tag: tag_pb.clone(), opt: 4, params: None, alias: tag_pb };
-            builder.get_v(auxilia);
-        }
-    } else if len != 0 {
-        for (tag, columns_opt) in tag_columns.into_iter() {
-            process_tag_columns(builder, tag, columns_opt);
+    if plan_meta.is_partition() {
+        let node_meta = plan_meta.get_curr_node_meta().unwrap();
+        let tag_columns = node_meta.get_tag_columns();
+        let len = tag_columns.len();
+        if len == 1 && !is_order_or_group {
+            // There are minor differences between `Order`, `Group` (group_values, actually) with other operators:
+            // For `Order`, we need to carry the properties for global ordering;
+            // and for `Group` (group_values), we need to carry the properties after `Keyed` for Aggregation.
+            // While for other operators, we can shuffle to the partition where the vertex locates,
+            // and directly query the properties (without saving the properties).
+            let (tag, columns_opt) = tag_columns.into_iter().next().unwrap();
+            if columns_opt.len() > 0 {
+                let tag_pb = tag.map(|tag_id| (tag_id as KeyId).into());
+                builder.shuffle(tag_pb.clone());
+                let auxilia = pb::GetV { tag: tag_pb.clone(), opt: 4, params: None, alias: tag_pb };
+                builder.get_v(auxilia);
+            }
+        } else if len != 0 {
+            for (tag, columns_opt) in tag_columns.into_iter() {
+                if columns_opt.len() > 0 {
+                    let tag_pb = tag.map(|tag_id| (tag_id as i32).into());
+                    builder.shuffle(tag_pb.clone());
+                    let params = pb::QueryParams {
+                        tables: vec![],
+                        columns: columns_opt
+                            .get()
+                            .into_iter()
+                            .map(|column| column.into())
+                            .collect(),
+                        is_all_columns: columns_opt.is_all(),
+                        limit: None,
+                        predicate: None,
+                        sample_ratio: 1.0,
+                        extra: Default::default(),
+                    };
+                    // opt = 4 denotes that to get vertex itself. The same as the followings.
+                    let auxilia = pb::GetV {
+                        tag: tag_pb.clone(),
+                        opt: 4,
+                        params: Some(params),
+                        alias: tag_pb.clone(),
+                    };
+                    builder.get_v(auxilia);
+                }
+            }
         }
     }
     Ok(())
@@ -113,9 +117,7 @@ impl AsPhysical for pb::Project {
     }
 
     fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
-        if plan_meta.is_partition() {
-            post_process_vars(builder, plan_meta, false)?;
-        }
+        post_process_vars(builder, plan_meta, false)?;
         Ok(())
     }
 }
@@ -160,9 +162,7 @@ impl AsPhysical for pb::Select {
     }
 
     fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
-        if plan_meta.is_partition() {
-            post_process_vars(builder, plan_meta, false)?;
-        }
+        post_process_vars(builder, plan_meta, false)?;
         Ok(())
     }
 }
@@ -311,9 +311,7 @@ impl AsPhysical for pb::OrderBy {
     }
 
     fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
-        if plan_meta.is_partition() {
-            post_process_vars(builder, plan_meta, true)?;
-        }
+        post_process_vars(builder, plan_meta, true)?;
         Ok(())
     }
 }
@@ -327,9 +325,7 @@ impl AsPhysical for pb::Dedup {
     }
 
     fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
-        if plan_meta.is_partition() {
-            post_process_vars(builder, plan_meta, false)?;
-        }
+        post_process_vars(builder, plan_meta, false)?;
         Ok(())
     }
 }
@@ -342,9 +338,7 @@ impl AsPhysical for pb::GroupBy {
         Ok(())
     }
     fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
-        if plan_meta.is_partition() {
-            post_process_vars(builder, plan_meta, true)?;
-        }
+        post_process_vars(builder, plan_meta, true)?;
         Ok(())
     }
 }
@@ -594,9 +588,8 @@ impl AsPhysical for LogicalPlan {
                             let left_plan = plans.get(0).unwrap().clone();
                             let right_plan = plans.get(1).unwrap().clone();
 
-                            if plan_meta.is_partition() {
-                                post_process_vars(builder, plan_meta, false)?;
-                            }
+                            post_process_vars(builder, plan_meta, false)?;
+
                             builder.join(
                                 unsafe { std::mem::transmute(join_opr.kind) },
                                 left_plan,
