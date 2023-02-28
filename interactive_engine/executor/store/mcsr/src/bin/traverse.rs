@@ -1,18 +1,19 @@
+use std::collections::HashMap;
+use std::fs::File;
+use std::io::Write;
+use std::path::{Path, PathBuf};
+use std::str::FromStr;
+
 use clap::{App, Arg};
 use mcsr::columns::DataType;
 use mcsr::date::Date;
 use mcsr::graph::IndexType;
 use mcsr::graph_db::GlobalCsrTrait;
 use mcsr::graph_db_impl::CsrDB;
-use mcsr::graph_las::is_static_vertex;
+use mcsr::graph_loader::is_static_vertex;
 use mcsr::ldbc_parser::LDBCVertexParser;
 use mcsr::schema::Schema;
 use mcsr::types::{DefaultId, InternalId, LabelId, DIR_BINARY_DATA, NAME, VERSION};
-use std::collections::HashMap;
-use std::fs::File;
-use std::io::Write;
-use std::path::{Path, PathBuf};
-use std::str::FromStr;
 
 fn get_partition_num(graph_data_dir: &String) -> usize {
     let root_dir = PathBuf::from_str(graph_data_dir.as_str()).unwrap();
@@ -33,12 +34,18 @@ fn output_vertices(graph: &CsrDB, output_dir: &String, files: &mut HashMap<Label
     let vertex_label_names = graph.graph_schema.vertex_label_names();
     let output_dir_path = PathBuf::from_str(output_dir.as_str()).unwrap();
     for n in vertex_label_names.iter() {
-        if let Some(v_label) = graph.graph_schema.get_vertex_label_id(n.as_str()) {
+        if let Some(v_label) = graph
+            .graph_schema
+            .get_vertex_label_id(n.as_str())
+        {
             if is_static_vertex(v_label) && graph.partition != 0 {
                 continue;
             }
             println!("outputing vertex-{}", n);
-            let header = graph.graph_schema.get_vertex_header(v_label).unwrap();
+            let header = graph
+                .graph_schema
+                .get_vertex_header(v_label)
+                .unwrap();
             if !files.contains_key(&v_label) {
                 let file = File::create(output_dir_path.join(n.as_str())).unwrap();
                 files.insert(v_label.clone(), file);
@@ -54,7 +61,9 @@ fn output_vertices(graph: &CsrDB, output_dir: &String, files: &mut HashMap<Label
                         write!(
                             file,
                             "|\"{}\"",
-                            v.get_property(c.0.as_str()).unwrap().to_string()
+                            v.get_property(c.0.as_str())
+                                .unwrap()
+                                .to_string()
                         )
                         .unwrap();
                     }
@@ -66,13 +75,17 @@ fn output_vertices(graph: &CsrDB, output_dir: &String, files: &mut HashMap<Label
 }
 
 fn output_edges(
-    graph: &CsrDB,
-    output_dir: &String,
-    files: &mut HashMap<(LabelId, LabelId, LabelId), File>,
+    graph: &CsrDB, output_dir: &String, files: &mut HashMap<(LabelId, LabelId, LabelId), File>,
 ) {
     let output_dir_path = PathBuf::from_str(output_dir.as_str()).unwrap();
-    let study_at_e_label = graph.graph_schema.get_edge_label_id("STUDYAT").unwrap();
-    let knows_e_label = graph.graph_schema.get_edge_label_id("KNOWS").unwrap();
+    let study_at_e_label = graph
+        .graph_schema
+        .get_edge_label_id("STUDYAT")
+        .unwrap();
+    let knows_e_label = graph
+        .graph_schema
+        .get_edge_label_id("KNOWS")
+        .unwrap();
     for e in graph.get_all_edges(None) {
         let src = e.get_src_id();
         let dst = e.get_dst_id();
@@ -86,29 +99,18 @@ fn output_edges(
         let e_label = e.get_label();
         let label_tuple = (src_label, e_label, dst_label);
         if !files.contains_key(&label_tuple) {
-            let src_label_name =
-                graph.graph_schema.vertex_label_names()[src_label as usize].clone();
-            let dst_label_name =
-                graph.graph_schema.vertex_label_names()[dst_label as usize].clone();
+            let src_label_name = graph.graph_schema.vertex_label_names()[src_label as usize].clone();
+            let dst_label_name = graph.graph_schema.vertex_label_names()[dst_label as usize].clone();
             let edge_label_name = graph.graph_schema.edge_label_names()[e_label as usize].clone();
-            let filename = src_label_name.clone()
-                + "_"
-                + &*edge_label_name.clone()
-                + "_"
-                + &*dst_label_name.clone();
+            let filename =
+                src_label_name.clone() + "_" + &*edge_label_name.clone() + "_" + &*dst_label_name.clone();
             let file = File::create(output_dir_path.join(filename.as_str())).unwrap();
             files.insert(label_tuple.clone(), file);
         }
         let file = files.get_mut(&label_tuple).unwrap();
         if e_label == study_at_e_label {
-            writeln!(
-                file,
-                "\"{}\"|\"{}\"|\"{}\"",
-                src_oid,
-                dst_oid,
-                e.get_encoded_data().index(),
-            )
-            .unwrap();
+            writeln!(file, "\"{}\"|\"{}\"|\"{}\"", src_oid, dst_oid, e.get_encoded_data().index(),)
+                .unwrap();
         } else if e_label == knows_e_label {
             writeln!(
                 file,
@@ -125,10 +127,7 @@ fn output_edges(
 }
 
 fn traverse_partition(
-    graph_data_dir: &String,
-    output_dir: &String,
-    partition: usize,
-    v_files: &mut HashMap<LabelId, File>,
+    graph_data_dir: &String, output_dir: &String, partition: usize, v_files: &mut HashMap<LabelId, File>,
     e_files: &mut HashMap<(LabelId, LabelId, LabelId), File>,
 ) {
     let graph = CsrDB::<DefaultId, InternalId>::import(graph_data_dir.as_str(), partition).unwrap();
@@ -159,8 +158,14 @@ fn main() {
         ])
         .get_matches();
 
-    let graph_data_dir = matches.value_of("graph_data_dir").unwrap().to_string();
-    let output_dir = matches.value_of("output_dir").unwrap().to_string();
+    let graph_data_dir = matches
+        .value_of("graph_data_dir")
+        .unwrap()
+        .to_string();
+    let output_dir = matches
+        .value_of("output_dir")
+        .unwrap()
+        .to_string();
 
     let partition_num = get_partition_num(&graph_data_dir);
 

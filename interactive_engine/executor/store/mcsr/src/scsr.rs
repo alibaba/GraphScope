@@ -7,6 +7,8 @@ use serde::de::Error as DeError;
 use serde::ser::Error as SerError;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
+use crate::col_table::ColTable;
+use crate::columns::Item;
 use crate::graph::IndexType;
 use crate::mcsr::{Nbr, NbrIter};
 
@@ -36,12 +38,13 @@ impl<'a, I: IndexType> Iterator for SingleCsrEdgeIter<'a, I> {
 pub struct SingleCsr<I> {
     nbr_list: Vec<Nbr<I>>,
     nbr_exist: Vec<bool>,
+    edge_property: Option<ColTable>,
     edge_num: usize,
 }
 
 impl<I: IndexType> SingleCsr<I> {
     pub fn new() -> Self {
-        SingleCsr { nbr_list: vec![], nbr_exist: vec![], edge_num: 0_usize }
+        SingleCsr { nbr_list: vec![], nbr_exist: vec![], edge_property: None, edge_num: 0_usize }
     }
 
     pub fn vertex_num(&self) -> I {
@@ -66,6 +69,19 @@ impl<I: IndexType> SingleCsr<I> {
             assert!(!self.nbr_exist[src.index()]);
             self.nbr_list[src.index()] = Nbr { neighbor: dst };
             self.nbr_exist[src.index()] = true;
+            self.edge_num += 1;
+        }
+    }
+
+    pub fn put_edge_properties(&mut self, src: I, dst: I, properties: &Vec<Item>) {
+        if src.index() < self.nbr_list.len() {
+            assert!(!self.nbr_exist[src.index()]);
+            self.nbr_list[src.index()] = Nbr { neighbor: dst };
+            self.nbr_exist[src.index()] = true;
+            match self.edge_property.as_mut() {
+                Some(edge_property) => edge_property.insert(src.index(), properties),
+                None => {}
+            }
             self.edge_num += 1;
         }
     }
@@ -154,6 +170,10 @@ impl<I: IndexType> SingleCsr<I> {
         }
     }
 
+    pub fn put_col_table(&mut self, col_table: ColTable) {
+        self.edge_property = Some(col_table);
+    }
+
     pub fn is_same(&self, other: &Self) -> bool {
         if self.nbr_list.len() != other.nbr_list.len() {
             return false;
@@ -200,6 +220,16 @@ impl<I: IndexType> Encode for SingleCsr<I> {
                 self.nbr_list[i].neighbor.write_to(writer)?;
             }
         }
+
+        match self.edge_property.as_ref() {
+            Some(edge_property) => {
+                writer.write_i64(1_i64)?;
+                edge_property.write_to(writer)?;
+            }
+            None => {
+                writer.write_i64(0_i64)?;
+            }
+        }
         info!("write 1 u64, {} i64, {} nbr", vnum, self.edge_num);
 
         Ok(())
@@ -220,6 +250,10 @@ impl<I: IndexType> Decode for SingleCsr<I> {
                 let neighbor = I::read_from(reader)?;
                 ret.put_edge(I::new(i), neighbor);
             }
+        }
+
+        if reader.read_i64().unwrap() == 1 {
+            ret.put_col_table(ColTable::read_from(reader).unwrap());
         }
 
         Ok(ret)

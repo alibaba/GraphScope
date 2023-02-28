@@ -1,3 +1,13 @@
+/*use std::collections::HashSet;
+use std::fs::{create_dir_all, read_dir, File};
+use std::io::{BufReader, Read};
+use std::path::{Path, PathBuf};
+use std::str::FromStr;
+use std::sync::Arc;
+
+use csv::{Reader, ReaderBuilder};
+use rust_htslib::bgzf::Reader as GzReader;
+
 use crate::col_table::{parse_properties_beta, ColTable};
 use crate::date_time::parse_datetime;
 use crate::error::{GDBError, GDBResult};
@@ -10,14 +20,6 @@ use crate::schema::{LDBCGraphSchema, Schema};
 use crate::scsr::SingleCsr;
 use crate::types::{DefaultId, InternalId, LabelId, DIR_BINARY_DATA};
 use crate::vertex_map::VertexMap;
-use csv::{Reader, ReaderBuilder};
-use rust_htslib::bgzf::Reader as GzReader;
-use std::collections::HashSet;
-use std::fs::{create_dir_all, read_dir, File};
-use std::io::{BufReader, Read};
-use std::path::{Path, PathBuf};
-use std::str::FromStr;
-use std::sync::Arc;
 
 /// Verify if a given file is a hidden file in Unix system.
 pub fn is_hidden_file(fname: &str) -> bool {
@@ -48,11 +50,8 @@ fn get_fname_from_path(path: &PathBuf) -> GDBResult<&str> {
 }
 
 fn visit_dirs_v2(
-    vertex_files: &mut Vec<(String, PathBuf)>,
-    edge_files: &mut Vec<(String, PathBuf)>,
-    raw_data_dir: PathBuf,
-    work_id: usize,
-    peers: usize,
+    vertex_files: &mut Vec<(String, PathBuf)>, edge_files: &mut Vec<(String, PathBuf)>,
+    raw_data_dir: PathBuf, work_id: usize, peers: usize,
 ) -> GDBResult<()> {
     if raw_data_dir.is_dir() {
         for _entry in read_dir(&raw_data_dir)? {
@@ -95,19 +94,11 @@ pub(crate) fn keep_vertex<G: IndexType>(vid: G, peers: usize, work_id: usize) ->
 }
 
 pub(crate) fn split_vertex_edge_files(
-    raw_data_dir: PathBuf,
-    work_id: usize,
-    peers: usize,
+    raw_data_dir: PathBuf, work_id: usize, peers: usize,
 ) -> GDBResult<(Vec<(String, PathBuf)>, Vec<(String, PathBuf)>)> {
     let mut vertex_files = Vec::new();
     let mut edge_files = Vec::new();
-    visit_dirs_v2(
-        &mut vertex_files,
-        &mut edge_files,
-        raw_data_dir,
-        work_id,
-        peers,
-    )?;
+    visit_dirs_v2(&mut vertex_files, &mut edge_files, raw_data_dir, work_id, peers)?;
 
     vertex_files.sort_by(|x, y| x.0.cmp(&y.0));
     edge_files.sort_by(|x, y| x.0.cmp(&y.0));
@@ -144,15 +135,9 @@ fn encode_nbr_data<I: IndexType>(nbr: I, data: u32) -> I {
 
 impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> GraphLAS<G, I> {
     pub fn new<D: AsRef<Path>>(
-        input_dir: D,
-        output_path: &str,
-        schema_file: D,
-        trim_file: D,
-        work_id: usize,
-        peers: usize,
+        input_dir: D, output_path: &str, schema_file: D, trim_file: D, work_id: usize, peers: usize,
     ) -> GraphLAS<G, I> {
-        let schema =
-            LDBCGraphSchema::from_json_file(schema_file).expect("Read graph schema error!");
+        let schema = LDBCGraphSchema::from_json_file(schema_file).expect("Read graph schema error!");
         let trim = LDBCGraphSchema::from_json_file(trim_file).expect("Read trim schema error!");
         schema.desc();
 
@@ -163,7 +148,9 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
             I::new((1_usize << 32) - 1_usize),
         );
         vertex_map.set_internal_id_mask(
-            schema.get_vertex_label_id("ORGANISATION").unwrap() as usize,
+            schema
+                .get_vertex_label_id("ORGANISATION")
+                .unwrap() as usize,
             I::new((1_usize << 32) - 1_usize),
         );
 
@@ -192,14 +179,15 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
         self
     }
 
-    fn load_vertices<R: Read>(
-        &mut self,
-        vertex_type: LabelId,
-        mut rdr: Reader<R>,
-        table: &mut ColTable,
-    ) {
-        let header = self.graph_schema.get_vertex_header(vertex_type).unwrap();
-        let trim = self.trim_schema.get_vertex_header(vertex_type).unwrap();
+    fn load_vertices<R: Read>(&mut self, vertex_type: LabelId, mut rdr: Reader<R>, table: &mut ColTable) {
+        let header = self
+            .graph_schema
+            .get_vertex_header(vertex_type)
+            .unwrap();
+        let trim = self
+            .trim_schema
+            .get_vertex_header(vertex_type)
+            .unwrap();
         let mut keep_set = HashSet::new();
         for pair in trim {
             keep_set.insert(pair.0.clone());
@@ -220,14 +208,12 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
             for result in rdr.records() {
                 if let Ok(record) = result {
                     let vertex_meta = parser.parse_vertex_meta(&record);
-                    if let Ok(properties) =
-                        parse_properties_beta(&record, header, selected.as_slice())
-                    {
+                    if let Ok(properties) = parse_properties_beta(&record, header, selected.as_slice()) {
                         let vertex_index = self
                             .vertex_map
                             .add_vertex(vertex_meta.global_id, vertex_meta.label);
                         if properties.len() > 0 {
-                            table.insert(vertex_index.index(), properties);
+                            table.insert(vertex_index.index(), &properties);
                         }
                     }
                 }
@@ -237,14 +223,13 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                 if let Ok(record) = result {
                     let vertex_meta = parser.parse_vertex_meta(&record);
                     if keep_vertex(vertex_meta.global_id, self.peers, self.work_id) {
-                        if let Ok(properties) =
-                            parse_properties_beta(&record, header, selected.as_slice())
+                        if let Ok(properties) = parse_properties_beta(&record, header, selected.as_slice())
                         {
                             let vertex_index = self
                                 .vertex_map
                                 .add_vertex(vertex_meta.global_id, vertex_meta.label);
                             if properties.len() > 0 {
-                                table.insert(vertex_index.index(), properties);
+                                table.insert(vertex_index.index(), &properties);
                             }
                         }
                     }
@@ -254,17 +239,14 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
     }
 
     fn load_edges<R: Read>(
-        &mut self,
-        src_vertex_type: LabelId,
-        dst_vertex_type: LabelId,
-        edge_type: LabelId,
-        mut rdr: Reader<R>,
-        idegree: &mut Vec<i64>,
-        odegree: &mut Vec<i64>,
-        parsed_edges: &mut Vec<(I, I)>,
+        &mut self, src_vertex_type: LabelId, dst_vertex_type: LabelId, edge_type: LabelId,
+        mut rdr: Reader<R>, idegree: &mut Vec<i64>, odegree: &mut Vec<i64>, parsed_edges: &mut Vec<(I, I)>,
     ) {
         println!("loading edge-{}", edge_type);
-        let header = self.graph_schema.get_edge_header(edge_type).unwrap();
+        let header = self
+            .graph_schema
+            .get_edge_header(edge_type)
+            .unwrap();
         let mut src_col_id = 0;
         let mut dst_col_id = 1;
         for (index, (name, _)) in header.iter().enumerate() {
@@ -371,17 +353,15 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
     }
 
     fn load_edges_study_at<R: Read>(
-        &mut self,
-        src_vertex_type: LabelId,
-        dst_vertex_type: LabelId,
-        edge_type: LabelId,
-        mut rdr: Reader<R>,
-        idegree: &mut Vec<i64>,
-        odegree: &mut Vec<i64>,
+        &mut self, src_vertex_type: LabelId, dst_vertex_type: LabelId, edge_type: LabelId,
+        mut rdr: Reader<R>, idegree: &mut Vec<i64>, odegree: &mut Vec<i64>,
         parsed_edges: &mut Vec<(I, I, i32)>,
     ) {
         println!("loading edge-{}", edge_type);
-        let header = self.graph_schema.get_edge_header(edge_type).unwrap();
+        let header = self
+            .graph_schema
+            .get_edge_header(edge_type)
+            .unwrap();
         let mut src_col_id = 0;
         let mut dst_col_id = 1;
         let mut data_col_id = 2;
@@ -416,7 +396,11 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                         idegree[dst_lid.index()] += 1;
                     }
 
-                    let data = record.get(data_col_id).unwrap().parse::<i32>().unwrap();
+                    let data = record
+                        .get(data_col_id)
+                        .unwrap()
+                        .parse::<i32>()
+                        .unwrap();
                     parsed_edges.push((src_lid, dst_lid, data));
                 }
             }
@@ -424,17 +408,15 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
     }
 
     fn load_edges_knows<R: Read>(
-        &mut self,
-        src_vertex_type: LabelId,
-        dst_vertex_type: LabelId,
-        edge_type: LabelId,
-        mut rdr: Reader<R>,
-        idegree: &mut Vec<i64>,
-        odegree: &mut Vec<i64>,
+        &mut self, src_vertex_type: LabelId, dst_vertex_type: LabelId, edge_type: LabelId,
+        mut rdr: Reader<R>, idegree: &mut Vec<i64>, odegree: &mut Vec<i64>,
         parsed_edges: &mut Vec<(I, I, u32)>,
     ) {
         println!("loading edge-{}", edge_type);
-        let header = self.graph_schema.get_edge_header(edge_type).unwrap();
+        let header = self
+            .graph_schema
+            .get_edge_header(edge_type)
+            .unwrap();
         let mut src_col_id = 0;
         let mut dst_col_id = 1;
         let mut data_col_id = 2;
@@ -489,7 +471,10 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
             self.vertex_map.import_native(vm_native_path)?;
         } else {
             for v_label_i in 0..v_label_num {
-                let cols = self.trim_schema.get_vertex_header(v_label_i).unwrap();
+                let cols = self
+                    .trim_schema
+                    .get_vertex_header(v_label_i)
+                    .unwrap();
                 let mut header = vec![];
                 for pair in cols.iter() {
                     header.push((pair.1.clone(), pair.0.clone()));
@@ -497,11 +482,17 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                 let mut table = ColTable::new(header);
 
                 for (vertex_type, vertex_file) in vertex_files.iter() {
-                    if let Some(vertex_type_id) =
-                        self.graph_schema.get_vertex_label_id(&vertex_type)
+                    if let Some(vertex_type_id) = self
+                        .graph_schema
+                        .get_vertex_label_id(&vertex_type)
                     {
                         if vertex_type_id == v_label_i {
-                            if vertex_file.clone().to_str().unwrap().ends_with(".csv") {
+                            if vertex_file
+                                .clone()
+                                .to_str()
+                                .unwrap()
+                                .ends_with(".csv")
+                            {
                                 let rdr = ReaderBuilder::new()
                                     .delimiter(self.delim)
                                     .buffer_capacity(4096)
@@ -510,7 +501,12 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                                     .has_headers(false)
                                     .from_reader(BufReader::new(File::open(&vertex_file).unwrap()));
                                 self.load_vertices(vertex_type_id, rdr, &mut table);
-                            } else if vertex_file.clone().to_str().unwrap().ends_with(".csv.gz") {
+                            } else if vertex_file
+                                .clone()
+                                .to_str()
+                                .unwrap()
+                                .ends_with(".csv.gz")
+                            {
                                 let rdr = ReaderBuilder::new()
                                     .delimiter(self.delim)
                                     .buffer_capacity(4096)
@@ -526,10 +522,10 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                     }
                 }
 
-                table.export(self.partition_dir.join(format!(
-                    "vp_{}",
-                    self.graph_schema.vertex_label_names()[v_label_i as usize]
-                )))?;
+                table.export(
+                    self.partition_dir
+                        .join(format!("vp_{}", self.graph_schema.vertex_label_names()[v_label_i as usize])),
+                )?;
             }
             self.vertex_map.export_native(vm_native_path)?;
         }
@@ -546,27 +542,28 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                         let mut odegree = vec![0_i64; src_num as usize];
                         let mut parsed_edges = vec![];
                         for (edge_type, edge_file) in edge_files.iter() {
-                            if let Some(label_tuple) =
-                                self.graph_schema.get_edge_label_tuple(&edge_type)
+                            if let Some(label_tuple) = self
+                                .graph_schema
+                                .get_edge_label_tuple(&edge_type)
                             {
                                 if label_tuple.edge_label == e_label_i
                                     && label_tuple.src_vertex_label == src_label_i
                                     && label_tuple.dst_vertex_label == dst_label_i
                                 {
-                                    println!(
-                                        "reading from file: {}",
-                                        edge_file.clone().to_str().unwrap()
-                                    );
-                                    if edge_file.clone().to_str().unwrap().ends_with(".csv") {
+                                    println!("reading from file: {}", edge_file.clone().to_str().unwrap());
+                                    if edge_file
+                                        .clone()
+                                        .to_str()
+                                        .unwrap()
+                                        .ends_with(".csv")
+                                    {
                                         let rdr = ReaderBuilder::new()
                                             .delimiter(self.delim)
                                             .buffer_capacity(4096)
                                             .comment(Some(b'#'))
                                             .flexible(true)
                                             .has_headers(false)
-                                            .from_reader(BufReader::new(
-                                                File::open(&edge_file).unwrap(),
-                                            ));
+                                            .from_reader(BufReader::new(File::open(&edge_file).unwrap()));
                                         self.load_edges_study_at(
                                             label_tuple.src_vertex_label,
                                             label_tuple.dst_vertex_label,
@@ -760,27 +757,28 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                         let mut odegree = vec![0_i64; src_num as usize];
                         let mut parsed_edges = vec![];
                         for (edge_type, edge_file) in edge_files.iter() {
-                            if let Some(label_tuple) =
-                                self.graph_schema.get_edge_label_tuple(&edge_type)
+                            if let Some(label_tuple) = self
+                                .graph_schema
+                                .get_edge_label_tuple(&edge_type)
                             {
                                 if label_tuple.edge_label == e_label_i
                                     && label_tuple.src_vertex_label == src_label_i
                                     && label_tuple.dst_vertex_label == dst_label_i
                                 {
-                                    println!(
-                                        "reading from file: {}",
-                                        edge_file.clone().to_str().unwrap()
-                                    );
-                                    if edge_file.clone().to_str().unwrap().ends_with(".csv") {
+                                    println!("reading from file: {}", edge_file.clone().to_str().unwrap());
+                                    if edge_file
+                                        .clone()
+                                        .to_str()
+                                        .unwrap()
+                                        .ends_with(".csv")
+                                    {
                                         let rdr = ReaderBuilder::new()
                                             .delimiter(self.delim)
                                             .buffer_capacity(4096)
                                             .comment(Some(b'#'))
                                             .flexible(true)
                                             .has_headers(false)
-                                            .from_reader(BufReader::new(
-                                                File::open(&edge_file).unwrap(),
-                                            ));
+                                            .from_reader(BufReader::new(File::open(&edge_file).unwrap()));
                                         self.load_edges_knows(
                                             label_tuple.src_vertex_label,
                                             label_tuple.dst_vertex_label,
@@ -882,27 +880,28 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                         let mut odegree = vec![0_i64; src_num as usize];
                         let mut parsed_edges = vec![];
                         for (edge_type, edge_file) in edge_files.iter() {
-                            if let Some(label_tuple) =
-                                self.graph_schema.get_edge_label_tuple(&edge_type)
+                            if let Some(label_tuple) = self
+                                .graph_schema
+                                .get_edge_label_tuple(&edge_type)
                             {
                                 if label_tuple.edge_label == e_label_i
                                     && label_tuple.src_vertex_label == src_label_i
                                     && label_tuple.dst_vertex_label == dst_label_i
                                 {
-                                    println!(
-                                        "reading from file: {}",
-                                        edge_file.clone().to_str().unwrap()
-                                    );
-                                    if edge_file.clone().to_str().unwrap().ends_with(".csv") {
+                                    println!("reading from file: {}", edge_file.clone().to_str().unwrap());
+                                    if edge_file
+                                        .clone()
+                                        .to_str()
+                                        .unwrap()
+                                        .ends_with(".csv")
+                                    {
                                         let rdr = ReaderBuilder::new()
                                             .delimiter(self.delim)
                                             .buffer_capacity(4096)
                                             .comment(Some(b'#'))
                                             .flexible(true)
                                             .has_headers(false)
-                                            .from_reader(BufReader::new(
-                                                File::open(&edge_file).unwrap(),
-                                            ));
+                                            .from_reader(BufReader::new(File::open(&edge_file).unwrap()));
                                         self.load_edges(
                                             label_tuple.src_vertex_label,
                                             label_tuple.dst_vertex_label,
@@ -1102,7 +1101,10 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
 
         let v_label_num = self.graph_schema.vertex_type_to_id.len() as LabelId;
         for v_label_i in 0..v_label_num {
-            let cols = self.trim_schema.get_vertex_header(v_label_i).unwrap();
+            let cols = self
+                .trim_schema
+                .get_vertex_header(v_label_i)
+                .unwrap();
             let mut header = vec![];
             for pair in cols.iter() {
                 header.push((pair.1.clone(), pair.0.clone()));
@@ -1110,9 +1112,17 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
             let mut table = ColTable::new(header);
 
             for (vertex_type, vertex_file) in vertex_files.iter() {
-                if let Some(vertex_type_id) = self.graph_schema.get_vertex_label_id(&vertex_type) {
+                if let Some(vertex_type_id) = self
+                    .graph_schema
+                    .get_vertex_label_id(&vertex_type)
+                {
                     if vertex_type_id == v_label_i {
-                        if vertex_file.clone().to_str().unwrap().ends_with(".csv") {
+                        if vertex_file
+                            .clone()
+                            .to_str()
+                            .unwrap()
+                            .ends_with(".csv")
+                        {
                             let rdr = ReaderBuilder::new()
                                 .delimiter(self.delim)
                                 .buffer_capacity(4096)
@@ -1121,26 +1131,28 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                                 .has_headers(false)
                                 .from_reader(BufReader::new(File::open(&vertex_file).unwrap()));
                             self.load_vertices(vertex_type_id, rdr, &mut table);
-                        } else if vertex_file.clone().to_str().unwrap().ends_with(".csv.gz") {
+                        } else if vertex_file
+                            .clone()
+                            .to_str()
+                            .unwrap()
+                            .ends_with(".csv.gz")
+                        {
                             let rdr = ReaderBuilder::new()
                                 .delimiter(self.delim)
                                 .buffer_capacity(4096)
                                 .comment(Some(b'#'))
                                 .flexible(true)
                                 .has_headers(false)
-                                .from_reader(BufReader::new(
-                                    GzReader::from_path(&vertex_file).unwrap(),
-                                ));
+                                .from_reader(BufReader::new(GzReader::from_path(&vertex_file).unwrap()));
                             self.load_vertices(vertex_type_id, rdr, &mut table);
                         }
                     }
                 }
             }
 
-            let table_path = self.partition_dir.join(format!(
-                "vp_{}",
-                self.graph_schema.vertex_label_names()[v_label_i as usize]
-            ));
+            let table_path = self
+                .partition_dir
+                .join(format!("vp_{}", self.graph_schema.vertex_label_names()[v_label_i as usize]));
             let table_path_str = table_path.to_str().unwrap().to_string();
             table.serialize_table(&table_path_str);
         }
@@ -1157,27 +1169,28 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                         let mut odegree = vec![0_i64; src_num as usize];
                         let mut parsed_edges = vec![];
                         for (edge_type, edge_file) in edge_files.iter() {
-                            if let Some(label_tuple) =
-                                self.graph_schema.get_edge_label_tuple(&edge_type)
+                            if let Some(label_tuple) = self
+                                .graph_schema
+                                .get_edge_label_tuple(&edge_type)
                             {
                                 if label_tuple.edge_label == e_label_i
                                     && label_tuple.src_vertex_label == src_label_i
                                     && label_tuple.dst_vertex_label == dst_label_i
                                 {
-                                    println!(
-                                        "reading from file: {}",
-                                        edge_file.clone().to_str().unwrap()
-                                    );
-                                    if edge_file.clone().to_str().unwrap().ends_with(".csv") {
+                                    println!("reading from file: {}", edge_file.clone().to_str().unwrap());
+                                    if edge_file
+                                        .clone()
+                                        .to_str()
+                                        .unwrap()
+                                        .ends_with(".csv")
+                                    {
                                         let rdr = ReaderBuilder::new()
                                             .delimiter(self.delim)
                                             .buffer_capacity(4096)
                                             .comment(Some(b'#'))
                                             .flexible(true)
                                             .has_headers(false)
-                                            .from_reader(BufReader::new(
-                                                File::open(&edge_file).unwrap(),
-                                            ));
+                                            .from_reader(BufReader::new(File::open(&edge_file).unwrap()));
                                         self.load_edges_study_at(
                                             label_tuple.src_vertex_label,
                                             label_tuple.dst_vertex_label,
@@ -1365,27 +1378,28 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                         let mut odegree = vec![0_i64; src_num as usize];
                         let mut parsed_edges = vec![];
                         for (edge_type, edge_file) in edge_files.iter() {
-                            if let Some(label_tuple) =
-                                self.graph_schema.get_edge_label_tuple(&edge_type)
+                            if let Some(label_tuple) = self
+                                .graph_schema
+                                .get_edge_label_tuple(&edge_type)
                             {
                                 if label_tuple.edge_label == e_label_i
                                     && label_tuple.src_vertex_label == src_label_i
                                     && label_tuple.dst_vertex_label == dst_label_i
                                 {
-                                    println!(
-                                        "reading from file: {}",
-                                        edge_file.clone().to_str().unwrap()
-                                    );
-                                    if edge_file.clone().to_str().unwrap().ends_with(".csv") {
+                                    println!("reading from file: {}", edge_file.clone().to_str().unwrap());
+                                    if edge_file
+                                        .clone()
+                                        .to_str()
+                                        .unwrap()
+                                        .ends_with(".csv")
+                                    {
                                         let rdr = ReaderBuilder::new()
                                             .delimiter(self.delim)
                                             .buffer_capacity(4096)
                                             .comment(Some(b'#'))
                                             .flexible(true)
                                             .has_headers(false)
-                                            .from_reader(BufReader::new(
-                                                File::open(&edge_file).unwrap(),
-                                            ));
+                                            .from_reader(BufReader::new(File::open(&edge_file).unwrap()));
                                         self.load_edges_knows(
                                             label_tuple.src_vertex_label,
                                             label_tuple.dst_vertex_label,
@@ -1460,17 +1474,15 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                         }
 
                         info!("start export ie");
-                        let ie_path = self.partition_dir.join(format!(
-                            "ie_{}_{}_{}",
-                            src_label_name, edge_label_name, dst_label_name
-                        ));
+                        let ie_path = self
+                            .partition_dir
+                            .join(format!("ie_{}_{}_{}", src_label_name, edge_label_name, dst_label_name));
                         let ie_path_str = ie_path.to_str().unwrap().to_string();
                         ie_csr.serialize(&ie_path_str);
                         info!("start export oe");
-                        let oe_path = self.partition_dir.join(format!(
-                            "oe_{}_{}_{}",
-                            src_label_name, edge_label_name, dst_label_name
-                        ));
+                        let oe_path = self
+                            .partition_dir
+                            .join(format!("oe_{}_{}_{}", src_label_name, edge_label_name, dst_label_name));
                         let oe_path_str = oe_path.to_str().unwrap().to_string();
                         oe_csr.serialize(&oe_path_str);
                         info!("finished export");
@@ -1485,27 +1497,28 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                         let mut odegree = vec![0_i64; src_num as usize];
                         let mut parsed_edges = vec![];
                         for (edge_type, edge_file) in edge_files.iter() {
-                            if let Some(label_tuple) =
-                                self.graph_schema.get_edge_label_tuple(&edge_type)
+                            if let Some(label_tuple) = self
+                                .graph_schema
+                                .get_edge_label_tuple(&edge_type)
                             {
                                 if label_tuple.edge_label == e_label_i
                                     && label_tuple.src_vertex_label == src_label_i
                                     && label_tuple.dst_vertex_label == dst_label_i
                                 {
-                                    println!(
-                                        "reading from file: {}",
-                                        edge_file.clone().to_str().unwrap()
-                                    );
-                                    if edge_file.clone().to_str().unwrap().ends_with(".csv") {
+                                    println!("reading from file: {}", edge_file.clone().to_str().unwrap());
+                                    if edge_file
+                                        .clone()
+                                        .to_str()
+                                        .unwrap()
+                                        .ends_with(".csv")
+                                    {
                                         let rdr = ReaderBuilder::new()
                                             .delimiter(self.delim)
                                             .buffer_capacity(4096)
                                             .comment(Some(b'#'))
                                             .flexible(true)
                                             .has_headers(false)
-                                            .from_reader(BufReader::new(
-                                                File::open(&edge_file).unwrap(),
-                                            ));
+                                            .from_reader(BufReader::new(File::open(&edge_file).unwrap()));
                                         self.load_edges(
                                             label_tuple.src_vertex_label,
                                             label_tuple.dst_vertex_label,
@@ -1693,3 +1706,4 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
         Ok(())
     }
 }
+*/

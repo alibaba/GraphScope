@@ -236,7 +236,7 @@ impl ColTable {
         self.row_num
     }
 
-    pub fn push(&mut self, row: Vec<Item>) {
+    pub fn push(&mut self, row: &Vec<Item>) {
         let col_num = self.columns.len();
         if row.len() < col_num {
             println!("schema not match when push, row_len = {}, col num = {}", row.len(), col_num);
@@ -248,7 +248,7 @@ impl ColTable {
         self.row_num += 1;
     }
 
-    pub fn insert(&mut self, index: usize, row: Vec<Item>) {
+    pub fn insert(&mut self, index: usize, row: &Vec<Item>) {
         let col_num = self.columns.len();
         if index < self.row_num {
             println!("insert to overwrite a record, index = {}, row_num = {}", index, self.row_num);

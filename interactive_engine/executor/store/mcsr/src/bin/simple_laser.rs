@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use clap::{App, Arg};
 use env_logger;
-use mcsr::graph_las::GraphLAS;
+use mcsr::graph_loader::GraphLoader;
 use mcsr::schema::LDBCGraphSchema;
 use mcsr::types::*;
 
@@ -110,8 +110,14 @@ fn main() {
     let cur_out_dir = graph_data_dir.clone();
 
     let handle = std::thread::spawn(move || {
-        let mut laser: GraphLAS =
-            GraphLAS::new(raw_dir, cur_out_dir.as_str(), schema_f, trim_f, partition_index, partition_num);
+        let mut laser: GraphLoader = GraphLoader::new(
+            raw_dir,
+            cur_out_dir.as_str(),
+            schema_f,
+            trim_f,
+            partition_index,
+            partition_num,
+        );
         laser = laser.with_delimiter(delimiter);
 
         laser.load_beta().expect("Load error");

@@ -11,6 +11,8 @@ use serde::de::Error as DeError;
 use serde::ser::Error as SerError;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
+use crate::col_table::ColTable;
+use crate::columns::{Column, Item};
 use crate::graph::IndexType;
 
 pub struct Nbr<I> {
@@ -142,6 +144,8 @@ unsafe impl<I: IndexType> Sync for AdjList<I> {}
 pub struct MutableCsr<I> {
     buffers: Vec<(*mut u8, usize)>,
     adj_lists: Vec<AdjList<I>>,
+    adj_offsets: Vec<usize>,
+    edge_property: Option<ColTable>,
     prev: Vec<I>,
     next: Vec<I>,
     edge_num: usize,
@@ -186,7 +190,15 @@ impl<'a, I: IndexType> Iterator for MutableCsrEdgeIter<'a, I> {
 
 impl<I: IndexType> MutableCsr<I> {
     pub fn new() -> Self {
-        MutableCsr { buffers: vec![], adj_lists: vec![], prev: vec![], next: vec![], edge_num: 0_usize }
+        MutableCsr {
+            buffers: vec![],
+            adj_lists: vec![],
+            adj_offsets: vec![],
+            edge_property: None,
+            prev: vec![],
+            next: vec![],
+            edge_num: 0_usize,
+        }
     }
 
     pub fn vertex_num(&self) -> I {
@@ -203,6 +215,7 @@ impl<I: IndexType> MutableCsr<I> {
         }
         self.adj_lists
             .resize(vnum.index(), AdjList::<I>::new());
+        self.adj_offsets.resize(vnum.index(), 0);
         self.prev
             .resize(vnum.index(), <I as IndexType>::max());
         self.next
@@ -260,6 +273,30 @@ impl<I: IndexType> MutableCsr<I> {
             self.edge_num += 1;
             self.adj_lists[src.index()].put_edge(dst);
         }
+    }
+
+    pub fn put_edge_properties(&mut self, src: I, dst: I, properties: &Vec<Item>) {
+        if src.index() < self.adj_lists.len() {
+            let property_index = self.adj_offsets[src.index()] + self.adj_lists[src.index()].deg as usize;
+            match self.edge_property.as_mut() {
+                Some(edge_property) => edge_property.insert(src.index(), properties),
+                None => {}
+            }
+            self.edge_num += 1;
+            self.adj_lists[src.index()].put_edge(dst);
+        }
+    }
+
+    pub fn update_degree(&mut self) {
+        let vnum = self.adj_lists.len();
+        self.adj_offsets.resize(vnum, 0);
+        for i in 1..vnum {
+            self.adj_offsets[i] = self.adj_offsets[i - 1] + self.adj_lists[i - 1].degree() as usize;
+        }
+    }
+
+    pub fn put_col_table(&mut self, col_table: ColTable) {
+        self.edge_property = Some(col_table);
     }
 
     fn remove_node(&mut self, v: I) {
@@ -433,6 +470,15 @@ impl<I: IndexType> Encode for MutableCsr<I> {
                 }
             }
         }
+        match self.edge_property.as_ref() {
+            Some(edge_property) => {
+                writer.write_i64(1_i64)?;
+                edge_property.write_to(writer)?;
+            }
+            None => {
+                writer.write_i64(0_i64)?;
+            }
+        }
         info!("write 1 u64, {} i64, {} nbr", vnum, nbr_num);
         Ok(())
     }
@@ -453,6 +499,12 @@ impl<I: IndexType> Decode for MutableCsr<I> {
                 let neighbor = I::read_from(reader)?;
                 ret.put_edge(I::new(i), neighbor);
             }
+        }
+
+        ret.update_degree();
+
+        if reader.read_i64().unwrap() == 1 {
+            ret.put_col_table(ColTable::read_from(reader).unwrap());
         }
 
         Ok(ret)

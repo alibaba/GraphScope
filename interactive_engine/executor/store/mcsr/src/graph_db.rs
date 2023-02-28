@@ -91,6 +91,10 @@ pub struct LocalEdge<'a, G: IndexType + Sync + Send, I: IndexType + Sync + Send>
     src_label: LabelId,
     dst_label: LabelId,
 
+    /// A property reference maintains a `Row` view of the properties, which is either
+    /// a reference or an owned structure, depending on the form of storage.
+    table: Option<&'a ColTable>,
+
     vertex_map: &'a VertexMap<G, I>,
 }
 
@@ -99,7 +103,7 @@ impl<'a, G: IndexType + Sync + Send, I: IndexType + Sync + Send> LocalEdge<'a, G
         start: I, end: I, label: LabelId, src_label: LabelId, dst_label: LabelId,
         vertex_map: &'a VertexMap<G, I>,
     ) -> Self {
-        LocalEdge { start, end, label, src_label, dst_label, vertex_map }
+        LocalEdge { start, end, label, src_label, dst_label, table: None, vertex_map }
     }
 
     pub fn get_src_id(&self) -> G {
@@ -129,6 +133,26 @@ impl<'a, G: IndexType + Sync + Send, I: IndexType + Sync + Send> LocalEdge<'a, G
     pub fn get_encoded_data(&self) -> I {
         self.start.hi().bw_or(self.end.hi())
     }
+
+    /*    pub fn get_property(&self, key: &str) -> Option<RefItem> {
+        if let Some(prop) = self.table {
+            prop.get_item(key, self.index.index())
+        } else {
+            None
+        }
+    }
+
+    pub fn get_all_properties(&self) -> Option<HashMap<String, RefItem>> {
+        if let Some(prop) = self.table {
+            let mut property_table = HashMap::new();
+            for head in prop.header.keys() {
+                property_table.insert(head.clone(), prop.get_item(head, self.index.index()).unwrap());
+            }
+            Some(property_table)
+        } else {
+            None
+        }
+    }*/
 }
 
 pub trait GlobalCsrTrait<G: IndexType + Sync + Send, I: IndexType + Sync + Send> {
