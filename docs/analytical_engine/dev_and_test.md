@@ -58,4 +58,6 @@ build the engine with a option `enable_java`
 
 ## How to Test
 
+Test with the new artifacts.
+
 
