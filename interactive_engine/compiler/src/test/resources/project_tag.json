@@ -16,7 +16,8 @@
                               "Name": "a"
                             }
                           },
-                          "property": null
+                          "property": null,
+                          "node_type": null
                         }
                       }
                     }
@@ -29,7 +30,8 @@
                 }
               }
             ],
-            "is_append": true
+            "is_append": true,
+            "op_meta": []
           }
         }
       },

@@ -19,7 +19,8 @@
               "sample_ratio": 1.0,
               "extra": {}
             },
-            "idx_predicate": null
+            "idx_predicate": null,
+            "type": null
           }
         }
       },

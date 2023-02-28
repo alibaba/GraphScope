@@ -15,7 +15,8 @@
               "sample_ratio": 1.0,
               "extra": {}
             },
-            "idx_predicate": null
+            "idx_predicate": null,
+            "type": null
           }
         }
       },
@@ -37,6 +38,7 @@
               "predicate": {
                 "operators": [
                   {
+                    "node_type": null,
                     "item": {
                       "Var": {
                         "tag": null,
@@ -48,16 +50,19 @@
                               }
                             }
                           }
-                        }
+                        },
+                        "node_type": null
                       }
                     }
                   },
                   {
+                    "node_type": null,
                     "item": {
                       "Logical": 0
                     }
                   },
                   {
+                    "node_type": null,
                     "item": {
                       "Const": {
                         "item": {
@@ -72,7 +77,8 @@
               "extra": {}
             },
             "alias": null,
-            "expand_opt": 2
+            "expand_opt": 2,
+            "type": null
           }
         }
       },
@@ -109,7 +115,8 @@
                       "Id": 0
                     }
                   },
-                  "property": null
+                  "property": null,
+                  "node_type": null
                 },
                 "alias": {
                   "item": {
@@ -123,7 +130,8 @@
                 "vars": [
                   {
                     "tag": null,
-                    "property": null
+                    "property": null,
+                    "node_type": null
                   }
                 ],
                 "aggregate": 5,
@@ -133,7 +141,8 @@
                   }
                 }
               }
-            ]
+            ],
+            "op_meta": []
           }
         }
       },

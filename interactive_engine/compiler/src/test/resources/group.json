@@ -8,7 +8,8 @@
               {
                 "key": {
                   "tag": null,
-                  "property": null
+                  "property": null,
+                  "node_type": null
                 },
                 "alias": {
                   "item": {
@@ -22,7 +23,8 @@
                 "vars": [
                   {
                     "tag": null,
-                    "property": null
+                    "property": null,
+                    "node_type": null
                   }
                 ],
                 "aggregate": 5,
@@ -32,7 +34,8 @@
                   }
                 }
               }
-            ]
+            ],
+            "op_meta": []
           }
         }
       },

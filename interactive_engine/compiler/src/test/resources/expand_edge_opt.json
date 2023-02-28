@@ -16,7 +16,8 @@
               "extra": {}
             },
             "alias": null,
-            "expand_opt": 1
+            "expand_opt": 1,
+            "type": null
           }
         }
       },

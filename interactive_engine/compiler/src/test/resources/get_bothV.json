@@ -15,7 +15,8 @@
               "sample_ratio": 1.0,
               "extra": {}
             },
-            "alias": null
+            "alias": null,
+            "type": null
           }
         }
       },
