@@ -22,7 +22,7 @@ Pregel was first introduced in a [SIGMOD paper](https://dl.acm.org/doi/10.1145/1
 
 <img src="../images/pregel.png"
      alt="The Pregel model"
-     width="100%">
+     width="50%">
 
 The Pregel model. 
 :::
@@ -56,7 +56,7 @@ However, the performance of Pregel drops dramatically when facing natural graphs
 
 <img src="../images/gas.png"
      alt="The GAS model"
-     width="100%">
+     width="50%">
 
 The GAS model. 
 :::
