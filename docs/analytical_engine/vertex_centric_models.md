@@ -2,7 +2,7 @@
 
 In a single machine environment, developers can easily implement graph analytics algorithms as they have a global view of the graph and can freely iterate through all vertices and edges. When the size of graph data grows beyond the memory capacity of a single machine, graph data must be partitioned to distributed memory, leading to the indivisibility of the whole graph structure. 
 
-To allow developers to succinctly express graph analytics algorithms under such environment, the *vertex-centric programming model* have been developed. Specifically, a graph analytics algorithm iteratively executes a user-defined program over vertices of a graph. The user-defined vertex program
+To allow developers to succinctly express graph analytics algorithms under such environment, the *vertex-centric programming model* have been developed, with the philosophy of "think like a vertex". Specifically, a graph analytics algorithm iteratively executes a user-defined program over vertices of a graph. The user-defined vertex program
 typically takes data from other vertices as input, and the
 resultant output of a vertex is sent to other vertices. Vertex programs are
 executed iteratively for a certain number of rounds, or until a convergence condition is
@@ -33,21 +33,33 @@ The vertex function can be invoked at each vertex in parallel, since individual 
 
 With the Pregel model, the vertex program of single source shortest paths (SSSP) is expressed as follows.
 
-```python
-def VertexProgramForSSSP():
-    # receive and merge incoming messages
-    incoming_msgs = ReceiveMessages()
-    merged_msg = Reduce(incoming_msgs, MIN)
-    
-    # update vertex property
-    if dist > merged_msg:
-        dist = merged_msg
-    
-    # send messages to neighbors
-    for neighbor in neighbors:
-        if dist + edge_weight < neighbor_dist:
-            SendMessage(neighbor, dist + edge_weight)
+```c++
+void Compute(MessageIterator* msgs) {
+    int mindist = IsSource(vertex_id()) ? 0 : INF;
+    for (; !msgs->Done(); msgs->Next())
+        mindist = min(mindist, msgs->Value());
+    if (mindist < GetValue()) {
+        *MutableValue() = mindist;
+        OutEdgeIterator iter = GetOutEdgeIterator();
+        for (; !iter.Done(); iter.Next())
+            SendMessageTo(iter.Target(), mindist + iter.GetValue());
+}
+    VoteToHalt();
+}
 ```
+
+## GAS Model
+
+However, the performance of Pregel drops dramatically when facing natural graphs which follow a power-law distribution. To solve this problem, [PowerGraph](https://www.usenix.org/conference/osdi12/technical-sessions/presentation/gonzalez) proposed the GAS (Gather-Apply-Scatter) programming model for the vertex-cut graph partitioning strategy. The *Gather* function runs locally on each partition and then one accumulator is sent from each mirror to the master. The master runs the *Apply* function and then sends the updated vertex data to all mirrors. Finally, the *Scatter* phase is run in parallel on mirrors to update the data on adjacent edges.
+
+:::{figure-md}
+
+<img src="../images/gas.png"
+     alt="The GAS model"
+     width="100%">
+
+The GAS model. 
+:::
 
 ## Simulation of Pregel Model in Analytical Engine
 
