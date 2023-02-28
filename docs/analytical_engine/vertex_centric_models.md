@@ -6,7 +6,7 @@ To allow developers to succinctly express graph analytics algorithms under such 
 typically takes data from other vertices as input, and the
 resultant output of a vertex is sent to other vertices. Vertex programs are
 executed iteratively for a certain number of rounds, or until a convergence condition is
-satiisfied. As opposed to *global* perspective of the graph, vertex-centric models
+satisfied. As opposed to *global* perspective of the graph, vertex-centric models
 employ a local, vertex-oriented perspective.
 
 The philosophy of vertex-centric model encourages many programming models, including the [Pregel model](https://research.google/pubs/pub37252/) proposed by Google and the [GAS model](https://www.usenix.org/conference/osdi12/technical-sessions/presentation/gonzalez). These programming models
