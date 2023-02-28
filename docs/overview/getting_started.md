@@ -10,7 +10,26 @@ pip3 install graphscope
 
 ## One-stop Graph Processing
 
-this a 
+We will use a walking-through example to show you how to use GraphScope to 
+process various graph computation tasks in a one-stop manner.
+
+The example is targeting node classification on a citation network.
+
+ogbn-mag is a heterogeneous network composed of a subset of the Microsoft Academic Graph. It contains 4 types of entities(i.e., papers, authors, institutions, and fields of study), as well as four types of directed relations connecting two entities.
+
+Given the heterogeneous ogbn-mag data, the task is to predict the class of each paper. Node classification can identify papers in multiple venues, which represent different groups of scientific work on different topics. We apply both the attribute and structural information to classify papers. In the graph, each paper node contains a 128-dimensional word2vec vector representing its content, which is obtained by averaging the embeddings of words in its title and abstract. The embeddings of individual words are pre-trained. The structural information is computed on-the-fly.
+
+GraphScope models graph data as property graph, in which the edges/vertices are labeled and have many properties. Taking ogbn-mag as example, the figure below shows the model of the property graph.
+
+<p align="center">
+<img src="../images/sample_pg.png"
+     alt="Sample of property graph"
+     width="80%" />
+</p>
+
+This graph has four kinds of vertices, labeled as paper, author, institution and field_of_study. There are four kinds of edges connecting them, each kind of edges has a label and specifies the vertex labels for its two ends. For example, cites edges connect two vertices labeled paper. Another example is writes, it requires the source vertex is labeled author and the destination is a paper vertex. All the vertices and edges may have properties. e.g., paper vertices have properties like features, publish year, subject label, etc.
+
+To load this graph to GraphScope with our retrieval module, please use these code.
 
 ````{dropdown} Import GraphScope and load a graph
 
@@ -21,6 +40,10 @@ from graphscope.dataset import load_ogbn_mag
 g = load_ogbn_mag()
 ```
 ````
+
+Interactive queries allow users to directly explore, examine, and present graph data in an exploratory manner in order to locate specific or in-depth information in time. GraphScope adopts a high-level language called Gremlin for graph traversal, and provides efficient execution at scale.
+
+In this example, we use graph traversal to count the number of papers two given authors have co-authored. To simplify the query, we assume the authors can be uniquely identified by ID 2 and 4307, respectively.
 
 
 ````{dropdown} Run interactive queries with Gremlin
@@ -34,6 +57,11 @@ papers = interactive.execute("g.V().has('author', 'id', 2).out('writes').where(_
 ```
 ````
 
+Graph analytics is widely used in real world. Many algorithms, like community detection, paths and connectivity, centrality are proven to be very useful in various businesses. GraphScope ships with a set of built-in algorithms, enables users easily analysis their graph data.
+
+Continuing our example, below we first derive a subgraph by extracting publications in specific time out of the entire graph (using Gremlin!), and then run k-core decomposition and triangle counting to generate the structural features of each paper node.
+
+Please note that many algorithms may only work on homogeneous graphs, and therefore, to evaluate these algorithms over a property graph, we need to project it into a simple graph at first.
 
 ````{dropdown} Run analytical algorithms over graph
 
@@ -53,6 +81,9 @@ sub_graph = sub_graph.add_column(ret2, {"tc": "r"})
 ```
 ````
 
+Graph neural networks (GNNs) combines superiority of both graph analytics and machine learning. GNN algorithms can compress both structural and attribute information in a graph into low-dimensional embedding vectors on each node. These embeddings can be further fed into downstream machine learning tasks.
+
+In our example, we train a GCN model to classify the nodes (papers) into 349 categories, each of which represents a venue (e.g. pre-print and conference). To achieve this, first we launch a learning engine and build a graph with features following the last step.
 
 ````{dropdown} Prepare data and engine for learning
 
@@ -75,6 +106,7 @@ lg = graphscope.graphlearn(sub_graph, nodes=[("paper", paper_features)],
                   ])
 ```
 ````
+Then we define the training process, and run it.
 
 
 ````{dropdown} Define the training process and run it
