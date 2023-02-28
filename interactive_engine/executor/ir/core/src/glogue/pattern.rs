@@ -564,7 +564,7 @@ fn build_logical_plan(
         params: Some(query_param),
         idx_predicate: None,
         // TODO: fill in the meta info.
-        r#type: None,
+        op_meta: None,
     };
     let mut pre_node = pb::logical_plan::Node { opr: Some(source_opr.into()), children: vec![] };
     for exact_extend_step in exact_extend_steps.into_iter().rev() {

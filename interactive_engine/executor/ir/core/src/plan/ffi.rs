@@ -574,6 +574,18 @@ pub extern "C" fn get_key_name(key_id: i32, key_type: FfiKeyType) -> FfiResult {
     }
 }
 
+/// an FfiPbPointer that point to a pb structure
+#[repr(C)]
+pub struct FfiPbPointer {
+    ptr: *const u8,
+    len: i64,
+}
+
+fn ptr_to_pb<T: Message + Default>(pb_ptr: FfiPbPointer) -> Result<T, FfiResult> {
+    let buf = unsafe { std::slice::from_raw_parts(pb_ptr.ptr, pb_ptr.len as usize) };
+    Ok(T::decode(buf).map_err(|e| IrError::PbDecodeError(e))?)
+}
+
 /// Initialize a logical plan, which expose a pointer for c-like program to access the
 /// entry of the logical plan. This pointer, however, is owned by Rust, and the caller
 /// **must not** process any operation, which includes but not limited to deallocate it.
@@ -697,6 +709,7 @@ enum InnerOpt {
     Apply = 8,
     Sink = 9,
     Params = 10,
+    Unfold = 11,
 }
 
 /// Set the size range limitation for certain operators
@@ -778,9 +791,66 @@ fn set_alias(ptr: *const c_void, alias: FfiAlias, opt: InnerOpt) -> FfiResult {
     }
 }
 
+/// To set an operator's op_meta.
+fn set_meta(ptr: *const c_void, meta_data: FfiPbPointer, opt: InnerOpt) -> FfiResult {
+    let meta_pb = ptr_to_pb::<pb::MetaData>(meta_data);
+    match meta_pb {
+        Ok(pb) => {
+            match opt {
+                InnerOpt::Scan => {
+                    let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
+                    scan.op_meta = Some(pb);
+                    std::mem::forget(scan);
+                }
+                InnerOpt::EdgeExpand => {
+                    let mut edgexpd = unsafe { Box::from_raw(ptr as *mut pb::EdgeExpand) };
+                    edgexpd.op_meta = Some(pb);
+                    std::mem::forget(edgexpd);
+                }
+                InnerOpt::GetV => {
+                    let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
+                    getv.op_meta = Some(pb);
+                    std::mem::forget(getv);
+                }
+                InnerOpt::Unfold => {
+                    let mut unfold = unsafe { Box::from_raw(ptr as *mut pb::Unfold) };
+                    unfold.op_meta = Some(pb);
+                    std::mem::forget(unfold);
+                }
+                _ => unreachable!(),
+            }
+            FfiResult::success()
+        }
+        Err(e) => e,
+    }
+}
+
 /// To set an operator's predicate.
 fn set_predicate(ptr: *const c_void, cstr_predicate: *const c_char, opt: InnerOpt) -> FfiResult {
     let predicate_pb = cstr_to_expr_pb(cstr_predicate);
+    if predicate_pb.is_ok() {
+        match opt {
+            InnerOpt::Select => {
+                let mut select = unsafe { Box::from_raw(ptr as *mut pb::Select) };
+                select.predicate = predicate_pb.ok();
+                std::mem::forget(select);
+            }
+            InnerOpt::Params => {
+                let mut params = unsafe { Box::from_raw(ptr as *mut pb::QueryParams) };
+                params.predicate = predicate_pb.ok();
+                std::mem::forget(params);
+            }
+            _ => unreachable!(),
+        }
+        FfiResult::success()
+    } else {
+        predicate_pb.err().unwrap()
+    }
+}
+
+/// To set an operator's predicate from a pb predicate pointer
+fn set_predicate_with_pb(ptr: *const c_void, ptr_predicate_pb: FfiPbPointer, opt: InnerOpt) -> FfiResult {
+    let predicate_pb = ptr_to_pb::<common_pb::Expression>(ptr_predicate_pb);
     if predicate_pb.is_ok() {
         match opt {
             InnerOpt::Select => {
@@ -896,6 +966,13 @@ mod params {
         set_predicate(ptr_params, cstr_pred, InnerOpt::Params)
     }
 
+    #[no_mangle]
+    pub extern "C" fn set_params_predicate_with_pb(
+        ptr_params: *const c_void, ptr_str_pred_pb: FfiPbPointer,
+    ) -> FfiResult {
+        set_predicate_with_pb(ptr_params, ptr_str_pred_pb, InnerOpt::Params)
+    }
+
     /// Set getting all columns
     #[no_mangle]
     pub extern "C" fn set_params_is_all_columns(ptr_params: *const c_void) -> FfiResult {
@@ -976,6 +1053,46 @@ mod project {
         result
     }
 
+    /// To add a mapping for the project operator, which maps a pb pointer to represent an
+    /// expression, and a `NameOrId` parameter that represents an alias.
+    #[no_mangle]
+    pub extern "C" fn add_project_expr_alias_with_pb(
+        ptr_project: *const c_void, pb_expr: FfiPbPointer, alias: FfiAlias,
+    ) -> FfiResult {
+        let mut result = FfiResult::success();
+        let mut project = unsafe { Box::from_raw(ptr_project as *mut pb::Project) };
+        let expr_pb = ptr_to_pb::<common_pb::Expression>(pb_expr);
+        let alias_pb = Option::<common_pb::NameOrId>::try_from(alias);
+
+        if !expr_pb.is_ok() {
+            result = expr_pb.err().unwrap();
+        } else if !alias_pb.is_ok() {
+            result = alias_pb.err().unwrap();
+        } else {
+            let attribute = pb::project::ExprAlias { expr: expr_pb.ok(), alias: alias_pb.unwrap() };
+            project.mappings.push(attribute);
+        }
+        std::mem::forget(project);
+
+        result
+    }
+
+    /// To add the column's meta for the project operator
+    #[no_mangle]
+    pub extern "C" fn add_project_meta(ptr_project: *const c_void, ptr_meta: FfiPbPointer) -> FfiResult {
+        let mut result = FfiResult::success();
+        let mut project = unsafe { Box::from_raw(ptr_project as *mut pb::Project) };
+        let type_pb = ptr_to_pb::<pb::MetaData>(ptr_meta);
+        if !type_pb.is_ok() {
+            result = type_pb.err().unwrap();
+        } else {
+            project.op_meta.push(type_pb.unwrap());
+        }
+        std::mem::forget(project);
+
+        result
+    }
+
     /// Append a project operator to the logical plan. To do so, one specifies the following arguments:
     /// * `ptr_plan`: A rust-owned pointer created by `init_logical_plan()`.
     /// * `ptr_project`: A rust-owned pointer created by `init_project_operator()`.
@@ -1024,6 +1141,14 @@ mod select {
         ptr_select: *const c_void, cstr_predicate: *const c_char,
     ) -> FfiResult {
         set_predicate(ptr_select, cstr_predicate, InnerOpt::Select)
+    }
+
+    /// To set a select operator's metadata, which is a predicate represented as a pb pointer.
+    #[no_mangle]
+    pub extern "C" fn set_select_predicate_with_pb(
+        ptr_select: *const c_void, ptr_predicate_pb: FfiPbPointer,
+    ) -> FfiResult {
+        set_predicate_with_pb(ptr_select, ptr_predicate_pb, InnerOpt::Select)
     }
 
     /// Append a select operator to the logical plan
@@ -1083,6 +1208,29 @@ mod join {
         let mut join = unsafe { Box::from_raw(ptr_join as *mut pb::Join) };
         let left_key_pb = left_key.try_into();
         let right_key_pb = right_key.try_into();
+        if left_key_pb.is_err() {
+            result = left_key_pb.err().unwrap();
+        } else if right_key_pb.is_err() {
+            result = right_key_pb.err().unwrap();
+        } else {
+            join.left_keys.push(left_key_pb.unwrap());
+            join.right_keys.push(right_key_pb.unwrap());
+        }
+        std::mem::forget(join);
+
+        result
+    }
+
+    /// To add a join operator's metadata, which is a pair of left and right keys.
+    /// The left and right keys are represented as a pb pointer.
+    #[no_mangle]
+    pub extern "C" fn add_join_key_pair_with_pb(
+        ptr_join: *const c_void, left_key: FfiPbPointer, right_key: FfiPbPointer,
+    ) -> FfiResult {
+        let mut result = FfiResult::success();
+        let mut join = unsafe { Box::from_raw(ptr_join as *mut pb::Join) };
+        let left_key_pb = ptr_to_pb::<common_pb::Variable>(left_key);
+        let right_key_pb = ptr_to_pb::<common_pb::Variable>(right_key);
         if left_key_pb.is_err() {
             result = left_key_pb.err().unwrap();
         } else if right_key_pb.is_err() {
@@ -1246,6 +1394,31 @@ mod groupby {
         result
     }
 
+    /// Add the key (and its alias if any) according to which the grouping is conducted.
+    /// The key is represented as a pb pointer.
+    #[no_mangle]
+    pub extern "C" fn add_groupby_key_alias_with_pb(
+        ptr_groupby: *const c_void, key: FfiPbPointer, alias: FfiAlias,
+    ) -> FfiResult {
+        let mut result = FfiResult::success();
+        let mut group = unsafe { Box::from_raw(ptr_groupby as *mut pb::GroupBy) };
+        let key_pb = ptr_to_pb::<common_pb::Variable>(key);
+        let alias_pb = alias.try_into();
+
+        if key_pb.is_ok() && alias_pb.is_ok() {
+            group
+                .mappings
+                .push(pb::group_by::KeyAlias { key: key_pb.ok(), alias: alias_pb.unwrap() });
+        } else if key_pb.is_err() {
+            result = key_pb.err().unwrap();
+        } else {
+            result = alias_pb.err().unwrap();
+        }
+        std::mem::forget(group);
+
+        result
+    }
+
     /// Add the aggregate function for each group.
     #[no_mangle]
     pub extern "C" fn add_groupby_agg_fn(
@@ -1266,6 +1439,52 @@ mod groupby {
             result = val_pb.err().unwrap();
         } else {
             result = alias_pb.err().unwrap();
+        }
+        std::mem::forget(group);
+
+        result
+    }
+
+    /// Add the aggregate function for each group.
+    /// The aggregation function is represented as a pb pointer.
+    #[no_mangle]
+    pub extern "C" fn add_groupby_agg_fn_with_pb(
+        ptr_groupby: *const c_void, agg_val: FfiPbPointer, agg_opt: FfiAggOpt, alias: FfiAlias,
+    ) -> FfiResult {
+        let mut result = FfiResult::success();
+        let mut group = unsafe { Box::from_raw(ptr_groupby as *mut pb::GroupBy) };
+        let val_pb = ptr_to_pb::<common_pb::Variable>(agg_val);
+        let aggregate = unsafe { std::mem::transmute::<FfiAggOpt, i32>(agg_opt) };
+        let alias_pb = alias.try_into();
+        if val_pb.is_ok() && alias_pb.is_ok() {
+            group.functions.push(pb::group_by::AggFunc {
+                vars: vec![val_pb.unwrap()],
+                aggregate,
+                alias: alias_pb.unwrap(),
+            });
+        } else if val_pb.is_err() {
+            result = val_pb.err().unwrap();
+        } else {
+            result = alias_pb.err().unwrap();
+        }
+        std::mem::forget(group);
+
+        result
+    }
+
+    /// Add the op_type for group keys or values.
+    #[no_mangle]
+    pub extern "C" fn add_groupby_key_value_meta(
+        ptr_groupby: *const c_void, ptr_meta: FfiPbPointer,
+    ) -> FfiResult {
+        let mut result = FfiResult::success();
+        let mut group = unsafe { Box::from_raw(ptr_groupby as *mut pb::GroupBy) };
+        let meta_pb = ptr_to_pb::<pb::MetaData>(ptr_meta);
+
+        if !meta_pb.is_ok() {
+            result = meta_pb.err().unwrap();
+        } else {
+            group.op_meta.push(meta_pb.unwrap());
         }
         std::mem::forget(group);
 
@@ -1331,6 +1550,32 @@ mod orderby {
         result
     }
 
+    /// Add the pair for conducting ordering.
+    /// The pair is represented as a pb pointer.
+    #[no_mangle]
+    pub extern "C" fn add_orderby_pair_with_pb(
+        ptr_orderby: *const c_void, ptr_var_pb: FfiPbPointer, order_opt: FfiOrderOpt,
+    ) -> FfiResult {
+        let mut result = FfiResult::success();
+        let mut orderby = unsafe { Box::from_raw(ptr_orderby as *mut pb::OrderBy) };
+        let key_result = ptr_to_pb::<common_pb::Variable>(ptr_var_pb);
+        if key_result.is_ok() {
+            let order = match order_opt {
+                FfiOrderOpt::Shuffle => 0,
+                FfiOrderOpt::Asc => 1,
+                FfiOrderOpt::Desc => 2,
+            };
+            orderby
+                .pairs
+                .push(pb::order_by::OrderingPair { key: key_result.ok(), order });
+        } else {
+            result = key_result.err().unwrap();
+        }
+        std::mem::forget(orderby);
+
+        result
+    }
+
     /// Set the size limit of the orderby operator, which will turn it into topk
     #[no_mangle]
     pub extern "C" fn set_orderby_limit(ptr_orderby: *const c_void, lower: i32, upper: i32) -> FfiResult {
@@ -1377,6 +1622,24 @@ mod dedup {
         result
     }
 
+    /// Add a key for de-duplicating.
+    /// The key is represented as a pb pointer.
+    #[no_mangle]
+    pub extern "C" fn add_dedup_key_with_pb(
+        ptr_dedup: *const c_void, ptr_var_pb: FfiPbPointer,
+    ) -> FfiResult {
+        let mut result = FfiResult::success();
+        let mut dedup = unsafe { Box::from_raw(ptr_dedup as *mut pb::Dedup) };
+        let key_result = ptr_to_pb::<common_pb::Variable>(ptr_var_pb);
+        match key_result {
+            Ok(key) => dedup.keys.push(key),
+            Err(e) => result = e,
+        }
+        std::mem::forget(dedup);
+
+        result
+    }
+
     /// Append a dedup operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_dedup_operator(
@@ -1398,7 +1661,7 @@ mod unfold {
     /// To initialize an unfold operator
     #[no_mangle]
     pub extern "C" fn init_unfold_operator() -> *const c_void {
-        let unfold = Box::new(pb::Unfold { tag: None, alias: None, r#type: None });
+        let unfold = Box::new(pb::Unfold { tag: None, alias: None, op_meta: None });
         Box::into_raw(unfold) as *const c_void
     }
 
@@ -1424,6 +1687,12 @@ mod unfold {
         std::mem::forget(unfold);
 
         result
+    }
+
+    /// To set the op_meta for the unfold operator
+    #[no_mangle]
+    pub extern "C" fn set_unfold_meta(ptr_unfold: *const c_void, ptr_meta: FfiPbPointer) -> FfiResult {
+        set_meta(ptr_unfold, ptr_meta, InnerOpt::Unfold)
     }
 
     /// Append an unfold operator to the logical plan
@@ -1470,7 +1739,7 @@ mod scan {
                 extra: HashMap::new(),
             }),
             idx_predicate: None,
-            r#type: None,
+            op_meta: None,
         });
         Box::into_raw(scan) as *const c_void
     }
@@ -1559,6 +1828,12 @@ mod scan {
         std::mem::forget(scan);
 
         result
+    }
+
+    /// Set the op_meta for the scan operator
+    #[no_mangle]
+    pub extern "C" fn set_scan_meta(ptr_scan: *const c_void, ptr_meta: FfiPbPointer) -> FfiResult {
+        set_meta(ptr_scan, ptr_meta, InnerOpt::Scan)
     }
 
     /// Set an alias for the data if it is a vertex/edge
@@ -1751,7 +2026,7 @@ mod graph {
             }),
             alias: None,
             expand_opt: unsafe { std::mem::transmute::<FfiExpandOpt, i32>(expand_opt) },
-            r#type: None,
+            op_meta: None,
         });
 
         Box::into_raw(edgexpd) as *const c_void
@@ -1784,6 +2059,12 @@ mod graph {
     #[no_mangle]
     pub extern "C" fn set_edgexpd_alias(ptr_edgexpd: *const c_void, alias: FfiAlias) -> FfiResult {
         set_alias(ptr_edgexpd, alias, InnerOpt::EdgeExpand)
+    }
+
+    /// Set the op_meta for the edge expansion operator
+    #[no_mangle]
+    pub extern "C" fn set_edgexpd_meta(ptr_edgexpd: *const c_void, ptr_meta: FfiPbPointer) -> FfiResult {
+        set_meta(ptr_edgexpd, ptr_meta, InnerOpt::EdgeExpand)
     }
 
     /// Append an edge expand operator to the logical plan
@@ -1825,7 +2106,7 @@ mod graph {
                 extra: HashMap::new(),
             }),
             alias: None,
-            r#type: None,
+            op_meta: None,
         });
         Box::into_raw(getv) as *const c_void
     }
@@ -1855,6 +2136,12 @@ mod graph {
     #[no_mangle]
     pub extern "C" fn set_getv_alias(ptr_getv: *const c_void, alias: FfiAlias) -> FfiResult {
         set_alias(ptr_getv, alias, InnerOpt::GetV)
+    }
+
+    /// Set the op_meta for the getv operator
+    #[no_mangle]
+    pub extern "C" fn set_getv_meta(ptr_getv: *const c_void, ptr_meta: FfiPbPointer) -> FfiResult {
+        set_meta(ptr_getv, ptr_meta, InnerOpt::GetV)
     }
 
     /// Append the operator to the logical plan
@@ -2041,6 +2328,22 @@ mod graph {
         std::mem::forget(sentence);
 
         FfiResult::success()
+    }
+
+    #[no_mangle]
+    pub extern "C" fn add_pattern_meta(ptr_pattern: *const c_void, ptr_meta: FfiPbPointer) -> FfiResult {
+        let mut result = FfiResult::success();
+        let mut pattern = unsafe { Box::from_raw(ptr_pattern as *mut pb::Pattern) };
+        let meta_data = ptr_to_pb::<pb::MetaData>(ptr_meta);
+
+        if !meta_data.is_ok() {
+            result = meta_data.err().unwrap();
+        } else {
+            pattern.op_meta.push(meta_data.unwrap());
+        }
+        std::mem::forget(pattern);
+
+        result
     }
 
     /// Append a pattern operator to the logical plan

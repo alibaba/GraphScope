@@ -170,7 +170,7 @@ message Unfold {
   // The alias tag for the elements that are unfolded from the collection
   common.NameOrId alias = 2;
   // The type for the unfold value
-  MetaData type = 3;
+  MetaData op_meta = 3;
 }
 
 message Range {
@@ -241,7 +241,7 @@ message Scan {
   QueryParams params = 3;
   // The optional filtering predicate for the field that have been indexed
   IndexPredicate idx_predicate = 4;
-  MetaData type = 5;
+  MetaData op_meta = 5;
 }
 
 // It is typical to use the operator together with EdgeExpand or PathExpand, with the functionality of
@@ -265,7 +265,7 @@ message GetV {
   QueryParams params = 3;
   // The alias of this vertex
   common.NameOrId alias = 4;
-  MetaData type = 5;
+  MetaData op_meta = 5;
 }
 
 // To tag the current data with an alias
@@ -298,7 +298,7 @@ message EdgeExpand {
   common.NameOrId alias = 4;
   // Expand option, i.e., expand vertices/edges/degree.
   ExpandOpt expand_opt = 5;
-  MetaData type = 6;
+  MetaData op_meta = 6;
 }
 
 message PathExpand {
