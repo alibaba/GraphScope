@@ -153,6 +153,7 @@ impl From<IrError> for FfiResult {
             IrError::InvalidPattern(s) => FfiResult::new(ResultCode::Others, s),
             IrError::InvalidExtendPattern(err) => FfiResult::new(ResultCode::Others, err.to_string()),
             IrError::PbEncodeError(err) => FfiResult::new(ResultCode::Others, err.to_string()),
+            IrError::PbDecodeError(err) => FfiResult::new(ResultCode::Others, err.to_string()),
             IrError::MissingData(d) => {
                 FfiResult::new(ResultCode::MissingDataError, format!("required data {:?} is missing", d))
             }
@@ -363,7 +364,7 @@ impl TryFrom<FfiVariable> for common_pb::Variable {
 
     fn try_from(ffi: FfiVariable) -> Result<Self, Self::Error> {
         let (tag, property) = (ffi.tag.try_into()?, ffi.property.try_into()?);
-        Ok(Self { tag, property })
+        Ok(Self { tag, property, node_type: None })
     }
 }
 
@@ -946,6 +947,7 @@ mod project {
         let project = Box::new(pb::Project {
             mappings: vec![],
             is_append: if is_append == 0 { false } else { true },
+            op_meta: vec![],
         });
         Box::into_raw(project) as *const c_void
     }
@@ -1158,7 +1160,7 @@ mod groupby {
     /// To initialize a groupby operator
     #[no_mangle]
     pub extern "C" fn init_groupby_operator() -> *const c_void {
-        let group = Box::new(pb::GroupBy { mappings: vec![], functions: vec![] });
+        let group = Box::new(pb::GroupBy { mappings: vec![], functions: vec![], op_meta: vec![] });
         Box::into_raw(group) as *const c_void
     }
 
@@ -1396,7 +1398,7 @@ mod unfold {
     /// To initialize an unfold operator
     #[no_mangle]
     pub extern "C" fn init_unfold_operator() -> *const c_void {
-        let unfold = Box::new(pb::Unfold { tag: None, alias: None });
+        let unfold = Box::new(pb::Unfold { tag: None, alias: None, r#type: None });
         Box::into_raw(unfold) as *const c_void
     }
 
@@ -1468,6 +1470,7 @@ mod scan {
                 extra: HashMap::new(),
             }),
             idx_predicate: None,
+            r#type: None,
         });
         Box::into_raw(scan) as *const c_void
     }
@@ -1748,6 +1751,7 @@ mod graph {
             }),
             alias: None,
             expand_opt: unsafe { std::mem::transmute::<FfiExpandOpt, i32>(expand_opt) },
+            r#type: None,
         });
 
         Box::into_raw(edgexpd) as *const c_void
@@ -1821,6 +1825,7 @@ mod graph {
                 extra: HashMap::new(),
             }),
             alias: None,
+            r#type: None,
         });
         Box::into_raw(getv) as *const c_void
     }
@@ -1932,7 +1937,7 @@ mod graph {
 
     #[no_mangle]
     pub extern "C" fn init_pattern_operator() -> *const c_void {
-        let pattern = Box::new(pb::Pattern { sentences: vec![] });
+        let pattern = Box::new(pb::Pattern { sentences: vec![], op_meta: vec![] });
 
         Box::into_raw(pattern) as *const c_void
     }

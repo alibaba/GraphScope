@@ -90,6 +90,7 @@ impl<T> From<Vec<T>> for OneOrMany<T> {
 impl From<common_pb::Arithmetic> for common_pb::ExprOpr {
     fn from(arith: common_pb::Arithmetic) -> Self {
         common_pb::ExprOpr {
+            node_type: None,
             item: Some(common_pb::expr_opr::Item::Arith(unsafe {
                 std::mem::transmute::<common_pb::Arithmetic, i32>(arith)
             })),
@@ -100,6 +101,7 @@ impl From<common_pb::Arithmetic> for common_pb::ExprOpr {
 impl From<common_pb::Logical> for common_pb::ExprOpr {
     fn from(logical: common_pb::Logical) -> Self {
         common_pb::ExprOpr {
+            node_type: None,
             item: Some(common_pb::expr_opr::Item::Logical(unsafe {
                 std::mem::transmute::<common_pb::Logical, i32>(logical)
             })),
@@ -109,13 +111,13 @@ impl From<common_pb::Logical> for common_pb::ExprOpr {
 
 impl From<common_pb::Value> for common_pb::ExprOpr {
     fn from(const_val: common_pb::Value) -> Self {
-        common_pb::ExprOpr { item: Some(common_pb::expr_opr::Item::Const(const_val)) }
+        common_pb::ExprOpr { node_type: None, item: Some(common_pb::expr_opr::Item::Const(const_val)) }
     }
 }
 
 impl From<common_pb::Variable> for common_pb::ExprOpr {
     fn from(var: common_pb::Variable) -> Self {
-        common_pb::ExprOpr { item: Some(common_pb::expr_opr::Item::Var(var)) }
+        common_pb::ExprOpr { node_type: None, item: Some(common_pb::expr_opr::Item::Var(var)) }
     }
 }
 
@@ -124,10 +126,10 @@ impl From<(common_pb::VariableKeys, bool)> for common_pb::ExprOpr {
     fn from(vars: (common_pb::VariableKeys, bool)) -> Self {
         if !vars.1 {
             // not a map
-            common_pb::ExprOpr { item: Some(common_pb::expr_opr::Item::Vars(vars.0)) }
+            common_pb::ExprOpr { node_type: None, item: Some(common_pb::expr_opr::Item::Vars(vars.0)) }
         } else {
             // is a map
-            common_pb::ExprOpr { item: Some(common_pb::expr_opr::Item::VarMap(vars.0)) }
+            common_pb::ExprOpr { node_type: None, item: Some(common_pb::expr_opr::Item::VarMap(vars.0)) }
         }
     }
 }
@@ -237,6 +239,8 @@ impl From<String> for common_pb::Variable {
                 // If the tag is represented as an integer
                 tag: str_as_tag(str),
                 property: None,
+                // TODO: this is a little bit tricky. When String to Variable, the type is not considered.
+                node_type: None,
             }
         } else {
             let mut splitter = str.split(SPLITTER);
@@ -244,7 +248,7 @@ impl From<String> for common_pb::Variable {
                 if let Some(first) = splitter.next() { str_as_tag(first.to_string()) } else { None };
             let property: Option<common_pb::Property> =
                 if let Some(second) = splitter.next() { Some(second.to_string().into()) } else { None };
-            common_pb::Variable { tag, property }
+            common_pb::Variable { tag, property, node_type: None }
         }
     }
 }
@@ -507,24 +511,6 @@ impl From<pb::EdgeExpand> for pb::logical_plan::Operator {
 impl From<pb::PathExpand> for pb::logical_plan::Operator {
     fn from(opr: pb::PathExpand) -> Self {
         pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Path(opr)) }
-    }
-}
-
-impl From<pb::PathStart> for pb::logical_plan::Operator {
-    fn from(opr: pb::PathStart) -> Self {
-        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::PathStart(opr)) }
-    }
-}
-
-impl From<pb::PathEnd> for pb::logical_plan::Operator {
-    fn from(opr: pb::PathEnd) -> Self {
-        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::PathEnd(opr)) }
-    }
-}
-
-impl From<pb::FusedOperator> for pb::logical_plan::Operator {
-    fn from(opr: pb::FusedOperator) -> Self {
-        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Fused(opr)) }
     }
 }
 

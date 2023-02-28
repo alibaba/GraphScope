@@ -1012,7 +1012,7 @@ impl AsLogical for pb::Project {
                 let curr_node = plan_meta.get_curr_node();
                 preprocess_expression(expr, meta, plan_meta, false)?;
                 if expr.operators.len() == 1 {
-                    if let common_pb::ExprOpr { item: Some(Item::Var(var)) } =
+                    if let common_pb::ExprOpr { item: Some(Item::Var(var)), .. } =
                         expr.operators.get_mut(0).unwrap()
                     {
                         if let Some(tag) = var.tag.as_mut() {

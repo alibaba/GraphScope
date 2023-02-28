@@ -137,6 +137,7 @@ impl ExactExtendStep {
             opt: pb::get_v::VOpt::End as i32,
             params: Some(query_params(vec![], vec![], None)),
             alias: alias.clone(),
+            r#type: None,
         };
         if !is_intersect {
             // if not intersect, build as path_expand + endV()

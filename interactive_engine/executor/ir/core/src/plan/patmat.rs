@@ -649,6 +649,7 @@ impl MatchingStrategy for CompoSentence {
                                 alias: None,
                             }],
                             is_append: true,
+                            op_meta: vec![],
                         })),
                     }),
                     children: vec![],
@@ -850,7 +851,11 @@ impl MatchingStrategy for JoinSentence {
                 .common_tags
                 .iter()
                 .cloned()
-                .map(|tag| common_pb::Variable { tag: tag.try_into().ok(), property: None })
+                .map(|tag| common_pb::Variable {
+                    tag: tag.try_into().ok(),
+                    property: None,
+                    node_type: None,
+                })
                 .collect::<Vec<_>>();
             plan.nodes.push(pb::logical_plan::Node {
                 opr: Some(

@@ -28,7 +28,7 @@ use ir_physical_client::physical_builder::{JobBuilder, Plan};
 
 use crate::error::{IrError, IrResult};
 use crate::plan::logical::{LogicalPlan, NodeType};
-use crate::plan::meta::{ColumnsOpt, PlanMeta, TagId};
+use crate::plan::meta::PlanMeta;
 
 /// A trait for building physical plan (pegasus) from the logical plan
 pub trait AsPhysical {
@@ -149,7 +149,13 @@ impl AsPhysical for pb::Select {
                     sample_ratio: 1.0,
                     extra: Default::default(),
                 };
-                let auxilia = pb::GetV { tag: tag_pb.clone(), opt: 4, params: Some(params), alias: tag_pb };
+                let auxilia = pb::GetV {
+                    tag: tag_pb.clone(),
+                    opt: 4,
+                    params: Some(params),
+                    alias: tag_pb,
+                    r#type: None,
+                };
                 builder.get_v(auxilia);
                 return Ok(());
             }
@@ -529,6 +535,7 @@ impl AsPhysical for LogicalPlan {
                                 alias: Some(new_tag.into()),
                             }],
                             is_append: true,
+                            op_meta: vec![],
                         });
                         builder.edge_expand(expand_degree);
                         builder.project(pb::Project {
@@ -537,6 +544,7 @@ impl AsPhysical for LogicalPlan {
                                 alias: None,
                             }],
                             is_append: true,
+                            op_meta: vec![],
                         });
                     } else {
                         subplan.add_job_builder(&mut sub_bldr, plan_meta)?;

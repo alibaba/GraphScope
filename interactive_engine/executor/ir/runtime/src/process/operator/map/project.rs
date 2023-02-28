@@ -121,8 +121,9 @@ impl FilterMapFuncGen for pb::Project {
                 .expr
                 .ok_or(ParsePbError::from("expr eval is missing in project"))?;
             let projector = if expr.operators.len() == 1 {
-                if let Some(common_pb::ExprOpr { item: Some(common_pb::expr_opr::Item::Var(var)) }) =
-                    expr.operators.get(0)
+                if let Some(common_pb::ExprOpr {
+                    item: Some(common_pb::expr_opr::Item::Var(var)), ..
+                }) = expr.operators.get(0)
                 {
                     let tag_key = TagKey::try_from(var.clone())?;
                     Projector::GraphElementProjector(tag_key)
