@@ -34,8 +34,9 @@ import com.alibaba.graphscope.common.ir.rex.RexVariableConverter;
 import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
 import com.alibaba.graphscope.common.ir.tools.config.*;
+import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
-import com.alibaba.graphscope.common.ir.type.NameOrId;
+import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.utils.ClassUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -53,6 +54,7 @@ import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.calcite.sql.type.BasicSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.tools.RelBuilder;
@@ -374,14 +376,50 @@ public class GraphBuilder extends RelBuilder {
     public RexGraphVariable variable(@Nullable String alias, String property) {
         alias = (alias == null) ? AliasInference.DEFAULT_NAME : alias;
         Objects.requireNonNull(property);
+        String varName = AliasInference.SIMPLE_NAME(alias) + AliasInference.DELIMITER + property;
         RelDataTypeField aliasField = getAliasField(alias);
+        if (property.equals(GraphProperty.LEN_KEY)) {
+            if (!(aliasField.getType() instanceof ArraySqlType)) {
+                throw new ClassCastException(
+                        "cannot get property='len' from type class ["
+                                + aliasField.getType().getClass()
+                                + "], should be ["
+                                + ArraySqlType.class
+                                + "]");
+            } else {
+                return RexGraphVariable.of(
+                        aliasField.getIndex(),
+                        new GraphProperty(GraphProperty.Opt.LEN),
+                        varName,
+                        getTypeFactory().createSqlType(SqlTypeName.INTEGER));
+            }
+        }
         if (!(aliasField.getType() instanceof GraphSchemaType)) {
             throw new ClassCastException(
-                    "cannot get property from type class ["
+                    "cannot get property=['id', 'label', 'all', 'key'] from type class ["
                             + aliasField.getType().getClass()
                             + "], should be ["
                             + GraphOptSchema.class
                             + "]");
+        }
+        if (property.equals(GraphProperty.LABEL_KEY)) {
+            return RexGraphVariable.of(
+                    aliasField.getIndex(),
+                    new GraphProperty(GraphProperty.Opt.LABEL),
+                    varName,
+                    getTypeFactory().createSqlType(SqlTypeName.CHAR));
+        } else if (property.equals(GraphProperty.ID_KEY)) {
+            return RexGraphVariable.of(
+                    aliasField.getIndex(),
+                    new GraphProperty(GraphProperty.Opt.ID),
+                    varName,
+                    getTypeFactory().createSqlType(SqlTypeName.BIGINT));
+        } else if (property.equals(GraphProperty.ALL_KEY)) {
+            return RexGraphVariable.of(
+                    aliasField.getIndex(),
+                    new GraphProperty(GraphProperty.Opt.ALL),
+                    varName,
+                    getTypeFactory().createSqlType(SqlTypeName.ANY));
         }
         GraphSchemaType graphType = (GraphSchemaType) aliasField.getType();
         List<String> properties = new ArrayList<>();
@@ -394,9 +432,9 @@ public class GraphBuilder extends RelBuilder {
                 return RexGraphVariable.of(
                         aliasField.getIndex(),
                         isColumnId
-                                ? new NameOrId(pField.getIndex())
-                                : new NameOrId(pField.getName()),
-                        AliasInference.SIMPLE_NAME(alias) + AliasInference.DELIMITER + property,
+                                ? new GraphProperty(new GraphNameOrId(pField.getIndex()))
+                                : new GraphProperty(new GraphNameOrId(pField.getName())),
+                        varName,
                         pField.getType());
             }
             properties.add(pField.getName());

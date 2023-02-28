@@ -33,10 +33,10 @@ import java.util.Objects;
  */
 public class GraphSchemaType extends RelRecordType {
     protected GraphOpt.Source scanOpt;
-    protected LabelType labelType;
+    protected GraphLabelType labelType;
 
     protected GraphSchemaType(GraphOpt.Source scanOpt) {
-        this(scanOpt, LabelType.DEFAULT, ImmutableList.of());
+        this(scanOpt, GraphLabelType.DEFAULT, ImmutableList.of());
     }
 
     /**
@@ -45,7 +45,7 @@ public class GraphSchemaType extends RelRecordType {
      * @param fields    attribute fields, each field denoted by {@link RelDataTypeField} which consist of property name, property id and type
      */
     public GraphSchemaType(
-            GraphOpt.Source scanOpt, LabelType labelType, List<RelDataTypeField> fields) {
+            GraphOpt.Source scanOpt, GraphLabelType labelType, List<RelDataTypeField> fields) {
         super(StructKind.NONE, fields, false);
         this.scanOpt = scanOpt;
         this.labelType = labelType;
@@ -55,7 +55,7 @@ public class GraphSchemaType extends RelRecordType {
         return scanOpt;
     }
 
-    public LabelType getLabelType() {
+    public GraphLabelType getLabelType() {
         return labelType;
     }
 
