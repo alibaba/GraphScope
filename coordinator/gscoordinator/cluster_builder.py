@@ -315,6 +315,9 @@ class EngineCluster:
             self._learning_requests,
             self._learning_requests,
         )
+        container.ports = [
+            kube_client.V1ContainerPort(container_port=p) for p in range(8000, 9000)
+        ]
         return container
 
     def get_vineyard_container(self, volume_mounts):
