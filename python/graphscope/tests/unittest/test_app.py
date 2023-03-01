@@ -463,3 +463,39 @@ def test_louvain_on_projected_graph(arrow_property_graph_undirected):
         )
         ctx = louvain(g)
         ctx.to_dataframe({"node": "v.id", "r": "r"})
+
+
+def test_pagerank_on_projected_projected(ldbc_graph):
+    pg1 = ldbc_graph.project(
+        vertices={"post": [], "tag": [], "tagclass": []},
+        edges={"hasTag": [], "isSubclassOf": []},
+    )
+    pg2 = pg1.project(vertices={"tagclass": []}, edges={"isSubclassOf": []})
+    pr_context = graphscope.pagerank_nx(pg2, alpha=0.85, max_iter=100, tol=1e-06)
+    df = pr_context.to_dataframe(selector={"id": "v.id", "dist": "r"})
+    assert df.shape == (71, 2)  # V(tagclass)
+
+    # check existence of OIDs
+    for oid in [349, 211, 239, 0, 98, 233, 41, 243, 242, 67]:
+        assert oid in df["id"].values
+
+
+def test_pagerank_on_flatten(ldbc_graph):
+    pg = ldbc_graph.project(vertices={"post": [], "tag": []}, edges={"hasTag": []})
+    pr_context = graphscope.pagerank_nx(pg, alpha=0.85, max_iter=100, tol=1e-06)
+    df = pr_context.to_dataframe(selector={"id": "v.id", "dist": "r"})
+    assert df.shape == (95056, 2)  # V(post) + V(tag)
+
+    # check existence of OIDs
+    for oid in [
+        618475290624,
+        3,
+        412316860420,
+        412316860421,
+        412316860422,
+        16075,
+        16076,
+        16077,
+        16078,
+    ]:
+        assert oid in df["id"].values
