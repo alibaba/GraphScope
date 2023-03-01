@@ -6,6 +6,7 @@ caption: TOC
 maxdepth: 1 
 ---
 overview_and_architecture
+key_concepts
 vertex_centric_models
 programming_model_pie
 ingress

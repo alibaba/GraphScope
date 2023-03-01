@@ -41,6 +41,7 @@ extensions = [
     'sphinx_panels',
     'sphinxemoji.sphinxemoji',
     "sphinxext.opengraph",
+    "sphinx_copybutton",
     'sphinx_ext',
 ]
 

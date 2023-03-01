@@ -76,7 +76,7 @@
           "comment": "name"
         },
         {
-          "id": 3,
+          "id": 4,
           "name": "lang",
           "data_type": "STRING",
           "hasDefaultValue": false,
@@ -120,7 +120,7 @@
           "comment": "id"
         },
         {
-          "id": 2,
+          "id": 5,
           "name": "weight",
           "data_type": "DOUBLE",
           "hasDefaultValue": false,
@@ -167,7 +167,7 @@
           "comment": "id"
         },
         {
-          "id": 2,
+          "id": 5,
           "name": "weight",
           "data_type": "DOUBLE",
           "hasDefaultValue": false,
