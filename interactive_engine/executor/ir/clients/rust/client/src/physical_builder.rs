@@ -209,6 +209,15 @@ impl Plan {
         self
     }
 
+    // notice that this is used for the meta_data of the **Last Appended OP**
+    pub fn set_op_meta_data(&mut self, meta_data: Option<Vec<pb::physical_opr::MetaData>>) {
+        if let Some(op) = self.plan.last_mut() {
+            if let Some(meta_data) = meta_data {
+                op.op_meta = meta_data;
+            }
+        }
+    }
+
     pub fn sink(&mut self, sink: pb::Sink) {
         let op = pb::physical_opr::operator::OpKind::Sink(sink);
         self.plan.push(op.into());
@@ -253,8 +262,11 @@ impl JobBuilder {
     /// Scan as the source, when the data come from the scan operator.
     /// If the plan is single source, scan would be the root op;
     /// Otherwise, the root is the dummy node, while the real sources are multiple scans.
-    pub fn add_scan_source(&mut self, scan: algebra_pb::Scan) -> &mut Self {
-        self.plan.add_scan_source(scan.into());
+    pub fn add_scan_source(&mut self, mut scan: algebra_pb::Scan) -> &mut Self {
+        let op_meta = scan.op_meta.take();
+        self.plan
+            .add_scan_source(scan.into())
+            .set_op_meta_data(op_meta.map(|meta| vec![meta.into()]));
         self
     }
 
@@ -275,7 +287,15 @@ impl JobBuilder {
     }
 
     pub fn project(&mut self, project: algebra_pb::Project) -> &mut Self {
-        self.plan.project(project.into());
+        let op_meta = project.op_meta.clone();
+        self.plan
+            .project(project.into())
+            .set_op_meta_data(Some(
+                op_meta
+                    .into_iter()
+                    .map(|meta| meta.into())
+                    .collect(),
+            ));
         self
     }
 
@@ -285,7 +305,15 @@ impl JobBuilder {
     }
 
     pub fn group(&mut self, group: algebra_pb::GroupBy) -> &mut Self {
-        self.plan.group(group.into());
+        let op_meta = group.op_meta.clone();
+        self.plan
+            .group(group.into())
+            .set_op_meta_data(Some(
+                op_meta
+                    .into_iter()
+                    .map(|meta| meta.into())
+                    .collect(),
+            ));
         self
     }
 
@@ -299,8 +327,11 @@ impl JobBuilder {
         self
     }
 
-    pub fn unfold(&mut self, unfold: algebra_pb::Unfold) -> &mut Self {
-        self.plan.unfold(unfold.into());
+    pub fn unfold(&mut self, mut unfold: algebra_pb::Unfold) -> &mut Self {
+        let op_meta = unfold.op_meta.take();
+        self.plan
+            .unfold(unfold.into())
+            .set_op_meta_data(op_meta.map(|meta| vec![meta.into()]));
         self
     }
 
@@ -391,13 +422,19 @@ impl JobBuilder {
         self
     }
 
-    pub fn get_v(&mut self, get_v: algebra_pb::GetV) -> &mut Self {
-        self.plan.get_v(get_v.into());
+    pub fn get_v(&mut self, mut get_v: algebra_pb::GetV) -> &mut Self {
+        let op_meta = get_v.op_meta.take();
+        self.plan
+            .get_v(get_v.into())
+            .set_op_meta_data(op_meta.map(|meta| vec![meta.into()]));
         self
     }
 
-    pub fn edge_expand(&mut self, edge: algebra_pb::EdgeExpand) -> &mut Self {
-        self.plan.edge_expand(edge.into());
+    pub fn edge_expand(&mut self, mut edge: algebra_pb::EdgeExpand) -> &mut Self {
+        let op_meta = edge.op_meta.take();
+        self.plan
+            .edge_expand(edge.into())
+            .set_op_meta_data(op_meta.map(|meta| vec![meta.into()]));
         self
     }
 
