@@ -22,12 +22,12 @@ and the vineyard store that offers efficient in-memory data transfers.
    :caption: Overview
    
    graphscope_positioning
-   getting_started_overview
-   graph_analytics_workloads
-   graph_interactive_workloads
-   graph_learning_workloads
-   design_of_graphscope
-   glossary
+   overview/getting_started
+   overview/graph_analytics_workloads
+   overview/graph_interactive_workloads
+   overview/graph_learning_workloads
+   overview/design_of_graphscope
+   overview/glossary
    release_notes
    frequently_asked_questions
 
@@ -42,22 +42,15 @@ and the vineyard store that offers efficient in-memory data transfers.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Tutorials
-
-   how_to_load_graphs
-   try_graphscope_on_jupyter_notebook
-   how_to_run_built_in_apps
-   how_to_develop_customized_apps
-
-.. toctree::
-   :maxdepth: 2
    :caption: Graph Analytical Engine
-
-   /analytical_engine/getting_started
-   /analytical_engine/design_of_gae
-   /analytical_engine/guide_and_examples
-   /analytical_engine/apis
-   /analytical_engine/faqs
+   
+   analytical_engine/getting_started
+   analytical_engine/deployment
+   analytical_engine/design_of_gae
+   analytical_engine/guide_and_examples
+   analytical_engine/dev_and_test
+   analytical_engine/apis
+   analytical_engine/faqs
    
 
 .. toctree::
@@ -81,45 +74,31 @@ and the vineyard store that offers efficient in-memory data transfers.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Graph Storage
+   :caption: Storage Engine
 
-   unified_interface
-   graph_formats
+   storage_engine/getting_started
+   storage_engine/grin
+   storage_engine/groot
 
 
 .. toctree::
    :maxdepth: 2
-   :caption: Monitoring & Debugging
+   :caption: troubleshooting & utilities
 
-   how_to_find_logs
-   monitoring
-   error_codes
+   utilities/how_to_find_logs
+   utilities/monitoring
+   utilities/gs
+   utilities/error_codes
+   utilities/bulk_loader
 
 .. toctree::
    :maxdepth: 2
    :caption: Development
 
-   development_dnvironment_preparation
-   code_style_guide
-   algorithm_development
-   how_to_test
-   how_to_submit_pr
-   how_to_report_bugs
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Utilities
-
-   bulk_loader
-   resources_estimator
-
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Community
-
-   how_to_contribute
-   contact_us
+   development/dev_guide
+   development/code_style_guide
+   development/how_to_test
+   development/how_to_contribute
 
 .. toctree::
    :maxdepth: 2
