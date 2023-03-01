@@ -91,6 +91,7 @@ pub struct LocalEdge<'a, G: IndexType + Sync + Send, I: IndexType + Sync + Send>
     src_label: LabelId,
     dst_label: LabelId,
 
+    offset: usize,
     /// A property reference maintains a `Row` view of the properties, which is either
     /// a reference or an owned structure, depending on the form of storage.
     table: Option<&'a ColTable>,
@@ -101,9 +102,9 @@ pub struct LocalEdge<'a, G: IndexType + Sync + Send, I: IndexType + Sync + Send>
 impl<'a, G: IndexType + Sync + Send, I: IndexType + Sync + Send> LocalEdge<'a, G, I> {
     pub fn new(
         start: I, end: I, label: LabelId, src_label: LabelId, dst_label: LabelId,
-        vertex_map: &'a VertexMap<G, I>,
+        vertex_map: &'a VertexMap<G, I>, offset: usize, properties: Option<&'a ColTable>,
     ) -> Self {
-        LocalEdge { start, end, label, src_label, dst_label, table: None, vertex_map }
+        LocalEdge { start, end, label, src_label, dst_label, offset, table: properties, vertex_map }
     }
 
     pub fn get_src_id(&self) -> G {
@@ -134,9 +135,9 @@ impl<'a, G: IndexType + Sync + Send, I: IndexType + Sync + Send> LocalEdge<'a, G
         self.start.hi().bw_or(self.end.hi())
     }
 
-    /*    pub fn get_property(&self, key: &str) -> Option<RefItem> {
+    pub fn get_property(&self, key: &str) -> Option<RefItem> {
         if let Some(prop) = self.table {
-            prop.get_item(key, self.index.index())
+            prop.get_item(key, self.offset)
         } else {
             None
         }
@@ -146,13 +147,13 @@ impl<'a, G: IndexType + Sync + Send, I: IndexType + Sync + Send> LocalEdge<'a, G
         if let Some(prop) = self.table {
             let mut property_table = HashMap::new();
             for head in prop.header.keys() {
-                property_table.insert(head.clone(), prop.get_item(head, self.index.index()).unwrap());
+                property_table.insert(head.clone(), prop.get_item(head, self.offset).unwrap());
             }
             Some(property_table)
         } else {
             None
         }
-    }*/
+    }
 }
 
 pub trait GlobalCsrTrait<G: IndexType + Sync + Send, I: IndexType + Sync + Send> {

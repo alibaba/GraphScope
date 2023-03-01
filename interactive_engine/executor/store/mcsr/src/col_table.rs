@@ -250,11 +250,11 @@ impl ColTable {
 
     pub fn insert(&mut self, index: usize, row: &Vec<Item>) {
         let col_num = self.columns.len();
-        if index < self.row_num {
-            println!("insert to overwrite a record, index = {}, row_num = {}", index, self.row_num);
-        } else if index > self.row_num {
-            println!("insert will append nulls, index = {}, row_num = {}", index, self.row_num);
-        }
+        // if index < self.row_num {
+        //     println!("insert to overwrite a record, index = {}, row_num = {}", index, self.row_num);
+        // } else if index > self.row_num {
+        //     println!("insert will append nulls, index = {}, row_num = {}", index, self.row_num);
+        // }
         if self.row_num <= index {
             let null_num = index - self.row_num;
             for i in 0..col_num {

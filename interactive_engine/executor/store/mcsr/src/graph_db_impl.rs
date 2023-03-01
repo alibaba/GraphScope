@@ -82,6 +82,10 @@ where
     pub fn get_vertex(&self, id: G) -> I {
         self.vm.get_internal_id(id).unwrap().1
     }
+
+    pub fn get_properties(&self) -> Option<&ColTable> {
+        self.csr.get_properties()
+    }
 }
 
 pub struct SingleSubGraph<
@@ -157,6 +161,10 @@ where
     pub fn desc(&self) {
         self.csr.desc();
     }
+
+    pub fn get_properties(&self) -> Option<&ColTable> {
+        self.csr.get_properties()
+    }
 }
 
 pub struct CsrDB<G: Send + Sync + IndexType = DefaultId, I: Send + Sync + IndexType = InternalId> {
@@ -185,7 +193,7 @@ pub trait BasicOps<G: IndexType + Sync + Send, I: IndexType + Sync + Send> {
     fn index_to_local_vertex(&self, label: LabelId, index: I, with_property: bool) -> LocalVertex<G, I>;
     fn edge_ref_to_local_edge(
         &self, src_label: LabelId, src_lid: I, dst_label: LabelId, dst_lid: I, label: LabelId,
-        dir: Direction,
+        dir: Direction, offset: usize,
     ) -> LocalEdge<G, I>;
 }
 
@@ -284,15 +292,46 @@ where
 
     fn edge_ref_to_local_edge(
         &self, src_label: LabelId, src_lid: I, dst_label: LabelId, dst_lid: I, label: LabelId,
-        dir: Direction,
+        dir: Direction, offset: usize,
     ) -> LocalEdge<G, I> {
-        match dir {
+        let index = self.edge_label_to_index(src_label, dst_label, label, dir);
+        let properties = match dir {
             Direction::Incoming => {
-                LocalEdge::new(dst_lid, src_lid, label, dst_label, src_label, &self.vertex_map)
+                if is_single_ie_csr(src_label, dst_label, label) {
+                    self.single_ie[index].get_properties()
+                } else {
+                    self.ie[index].get_properties()
+                }
             }
             Direction::Outgoing => {
-                LocalEdge::new(src_lid, dst_lid, label, src_label, dst_label, &self.vertex_map)
+                if is_single_oe_csr(src_label, dst_label, label) {
+                    self.single_oe[index].get_properties()
+                } else {
+                    self.oe[index].get_properties()
+                }
             }
+        };
+        match dir {
+            Direction::Incoming => LocalEdge::new(
+                dst_lid,
+                src_lid,
+                label,
+                dst_label,
+                src_label,
+                &self.vertex_map,
+                offset,
+                properties,
+            ),
+            Direction::Outgoing => LocalEdge::new(
+                src_lid,
+                dst_lid,
+                label,
+                src_label,
+                dst_label,
+                &self.vertex_map,
+                offset,
+                properties,
+            ),
         }
     }
 }
@@ -508,6 +547,7 @@ where
                         ) {
                             single_ie[index] = import::<SingleCsr<I>, _>(ie_path).unwrap();
                         } else {
+                            println!("ie path is {:?}", ie_path);
                             ie[index] = import::<MutableCsr<I>, _>(ie_path).unwrap();
                         }
                     }
@@ -904,7 +944,9 @@ where
         if let Some(src_lid) = self.vertex_map.get_internal_id(src_id) {
             let (labels, iters) = self._get_adj_lists_edges(src_lid.0, src_lid.1, edge_labels, dir);
             Iter::from_iter(LabeledIterator::new(labels, iters).map(move |((dst_label, edge_label), e)| {
-                self.edge_ref_to_local_edge(src_lid.0, src_lid.1, dst_label, e.neighbor, edge_label, dir)
+                self.edge_ref_to_local_edge(
+                    src_lid.0, src_lid.1, dst_label, e.neighbor, edge_label, dir, e.offset,
+                )
             }))
         } else {
             Iter::from_iter(vec![].into_iter())
@@ -1028,6 +1070,7 @@ where
                     e.neighbor,
                     edge_label,
                     Direction::Outgoing,
+                    e.offset,
                 )
             },
         ))

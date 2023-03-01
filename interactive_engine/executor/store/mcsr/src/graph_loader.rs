@@ -124,7 +124,7 @@ pub struct GraphLoader<
 }
 
 pub fn is_static_vertex(vertex_type: LabelId) -> bool {
-    false
+    vertex_type == 0 || vertex_type == 5 || vertex_type == 6 || vertex_type == 7
 }
 
 fn encode_nbr_data<I: IndexType>(nbr: I, data: u32) -> I {
@@ -298,12 +298,14 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                 }
             }
         } else if is_static_vertex(src_vertex_type) && !is_static_vertex(dst_vertex_type) {
-            parser.with_endpoint_col_id(src_col_id, dst_col_id);
+            parser.with_endpoint_col_id(src_col_id - 1, dst_col_id - 1);
             for result in rdr.records() {
                 if let Ok(record) = result {
                     let edge_meta = parser.parse_edge_meta(&record);
                     if let Ok(properties) = parse_properties_beta(&record, header, selected.as_slice()) {
-                        if keep_vertex(edge_meta.dst_global_id, self.peers, self.work_id) {
+                        if keep_vertex(edge_meta.src_global_id, self.peers, self.work_id)
+                            || keep_vertex(edge_meta.dst_global_id, self.peers, self.work_id)
+                        {
                             let src_lid = self
                                 .vertex_map
                                 .add_corner_vertex(edge_meta.src_global_id, src_vertex_type);
@@ -321,30 +323,30 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                     }
                 }
             }
-        } else if !is_static_vertex(src_vertex_type) && is_static_vertex(dst_vertex_type) {
-            parser.with_endpoint_col_id(src_col_id, dst_col_id);
-            for result in rdr.records() {
-                if let Ok(record) = result {
-                    let edge_meta = parser.parse_edge_meta(&record);
-                    if let Ok(properties) = parse_properties_beta(&record, header, selected.as_slice()) {
-                        if keep_vertex(edge_meta.src_global_id, self.peers, self.work_id) {
-                            let src_lid = self
-                                .vertex_map
-                                .add_corner_vertex(edge_meta.src_global_id, src_vertex_type);
-                            if src_lid.index() < src_num {
-                                odegree[src_lid.index()] += 1;
-                            }
-                            let dst_lid = self
-                                .vertex_map
-                                .add_corner_vertex(edge_meta.dst_global_id, dst_vertex_type);
-                            if dst_lid.index() < dst_num {
-                                idegree[dst_lid.index()] += 1;
-                            }
-                            parsed_edges.push((src_lid, dst_lid, properties));
-                        }
-                    }
-                }
-            }
+        // } else if !is_static_vertex(src_vertex_type) && is_static_vertex(dst_vertex_type) {
+        //     parser.with_endpoint_col_id(src_col_id, dst_col_id);
+        //     for result in rdr.records() {
+        //         if let Ok(record) = result {
+        //             let edge_meta = parser.parse_edge_meta(&record);
+        //             if let Ok(properties) = parse_properties_beta(&record, header, selected.as_slice()) {
+        //                 if keep_vertex(edge_meta.src_global_id, self.peers, self.work_id) {
+        //                     let src_lid = self
+        //                         .vertex_map
+        //                         .add_corner_vertex(edge_meta.src_global_id, src_vertex_type);
+        //                     if src_lid.index() < src_num {
+        //                         odegree[src_lid.index()] += 1;
+        //                     }
+        //                     let dst_lid = self
+        //                         .vertex_map
+        //                         .add_corner_vertex(edge_meta.dst_global_id, dst_vertex_type);
+        //                     if dst_lid.index() < dst_num {
+        //                         idegree[dst_lid.index()] += 1;
+        //                     }
+        //                     parsed_edges.push((src_lid, dst_lid, properties));
+        //                 }
+        //             }
+        //         }
+        //     }
         } else {
             parser.with_endpoint_col_id(src_col_id, dst_col_id);
             for result in rdr.records() {
@@ -434,6 +436,11 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                 .partition_dir
                 .join(format!("vp_{}", self.graph_schema.vertex_label_names()[v_label_i as usize]));
             let table_path_str = table_path.to_str().unwrap().to_string();
+            println!(
+                "vertex {}, size: {}",
+                self.graph_schema.vertex_label_names()[v_label_i as usize],
+                table.row_num()
+            );
             table.serialize_table(&table_path_str);
         }
 
@@ -523,8 +530,8 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                     for pair in cols.iter() {
                         header.push((pair.1.clone(), pair.0.clone()));
                     }
-                    let mut ie_table = ColTable::new(header.clone());
-                    let mut oe_table = ColTable::new(header.clone());
+                    let ie_table = ColTable::new(header.clone());
+                    let oe_table = ColTable::new(header.clone());
                     if is_single_ie_csr(src_label_i, dst_label_i, e_label_i) {
                         let mut ie_csr = SingleCsr::<I>::new();
                         let mut oe_csr = MutableCsr::<I>::new();

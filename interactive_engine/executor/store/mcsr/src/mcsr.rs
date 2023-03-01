@@ -17,11 +17,12 @@ use crate::graph::IndexType;
 
 pub struct Nbr<I> {
     pub neighbor: I,
+    pub offset: usize,
 }
 
 impl<I: IndexType> Clone for Nbr<I> {
     fn clone(&self) -> Self {
-        Nbr { neighbor: I::new(self.neighbor.index()) }
+        Nbr { neighbor: I::new(self.neighbor.index()), offset: self.offset }
     }
 }
 
@@ -81,11 +82,12 @@ pub struct AdjList<I> {
     ptr: *mut Nbr<I>,
     pub(crate) deg: i64,
     pub(crate) cap: i64,
+    pub(crate) offset: usize,
 }
 
 impl<I: IndexType> AdjList<I> {
     pub fn new() -> Self {
-        AdjList { ptr: ptr::null_mut(), deg: 0, cap: 0 }
+        AdjList { ptr: ptr::null_mut(), deg: 0, cap: 0, offset: 0 }
     }
 
     pub fn set(&mut self, ptr: *mut Nbr<I>, degree: i64, capacity: i64) {
@@ -117,7 +119,10 @@ impl<I: IndexType> AdjList<I> {
     pub fn put_edge(&mut self, id: I) {
         assert!(self.deg < self.cap);
         unsafe {
-            ptr::write(self.ptr.add(self.deg as usize), Nbr::<I> { neighbor: id });
+            ptr::write(
+                self.ptr.add(self.deg as usize),
+                Nbr::<I> { neighbor: id, offset: self.offset + self.deg as usize },
+            );
         }
         self.deg += 1;
     }
@@ -133,7 +138,7 @@ impl<I: IndexType> AdjList<I> {
 
 impl<I> Clone for AdjList<I> {
     fn clone(&self) -> Self {
-        AdjList { ptr: self.ptr, deg: self.deg, cap: self.cap }
+        AdjList { ptr: self.ptr, deg: self.deg, cap: self.cap, offset: self.offset }
     }
 }
 
@@ -158,7 +163,9 @@ pub struct MutableCsrEdgeIter<'a, I: IndexType> {
 }
 
 impl<'a, I: IndexType> MutableCsrEdgeIter<'a, I> {
-    pub fn new(adj_list: &'a Vec<AdjList<I>>, cur_vertex: usize) -> Self {
+    pub fn new(
+        adj_list: &'a Vec<AdjList<I>>, cur_vertex: usize, edge_property: &'a Option<ColTable>,
+    ) -> Self {
         let mut adj_list_iter = adj_list.iter();
         if let Some(adj_list) = adj_list_iter.next() {
             Self { cur_vertex, adj_list_iter, nbr_iter: adj_list.iter() }
@@ -279,7 +286,7 @@ impl<I: IndexType> MutableCsr<I> {
         if src.index() < self.adj_lists.len() {
             let property_index = self.adj_offsets[src.index()] + self.adj_lists[src.index()].deg as usize;
             match self.edge_property.as_mut() {
-                Some(edge_property) => edge_property.insert(src.index(), properties),
+                Some(edge_property) => edge_property.insert(property_index, properties),
                 None => {}
             }
             self.edge_num += 1;
@@ -332,11 +339,16 @@ impl<I: IndexType> MutableCsr<I> {
     }
 
     pub fn get_all_edges(&self) -> MutableCsrEdgeIter<'_, I> {
-        MutableCsrEdgeIter::new(&self.adj_lists, 0_usize)
+        MutableCsrEdgeIter::new(&self.adj_lists, 0_usize, &self.edge_property)
+    }
+
+    pub fn get_properties(&self) -> Option<&ColTable> {
+        self.edge_property.as_ref()
     }
 
     pub fn serialize(&self, path: &String) {
         assert_eq!(self.buffers.len(), 1_usize);
+
         let mut f = File::create(path).unwrap();
         let vnum = self.adj_lists.len();
         f.write_u64(vnum as u64).unwrap();
@@ -371,10 +383,21 @@ impl<I: IndexType> MutableCsr<I> {
             f.write_all(buffer_slice).unwrap();
         }
 
+        if self.edge_property.is_some() {
+            f.write_u64(1).unwrap();
+            let property_path = path.clone() + "_PROPERTIES";
+            self.edge_property
+                .as_ref()
+                .unwrap()
+                .serialize_table(&property_path);
+        } else {
+            f.write_u64(0).unwrap();
+        }
         f.flush().unwrap();
     }
 
     pub fn deserialize(&mut self, path: &String) {
+        println!("Start to open file {}", path);
         let mut f = File::open(path).unwrap();
         let vnum = f.read_u64().unwrap() as usize;
         let total_capacity = f.read_u64().unwrap() as usize;
@@ -382,6 +405,7 @@ impl<I: IndexType> MutableCsr<I> {
 
         let mut degree_vec = vec![0_i64; vnum];
         let mut capacity_vec = vec![0_i64; vnum];
+        self.adj_offsets = vec![0; vnum];
 
         let buf_layout = Layout::array::<Nbr<I>>(total_capacity).unwrap();
         unsafe {
@@ -411,6 +435,16 @@ impl<I: IndexType> MutableCsr<I> {
         for i in 0..vnum {
             self.adj_lists[i].set(begin, degree_vec[i], capacity_vec[i]);
             begin = unsafe { begin.add(capacity_vec[i] as usize) };
+        }
+
+        self.update_degree();
+
+        let have_properties = f.read_u64().unwrap();
+        if have_properties == 1 {
+            let property_path = path.clone() + "_PROPERTIES";
+            let mut col_table = ColTable::new(vec![]);
+            col_table.deserialize_table(&property_path);
+            self.edge_property = Some(col_table);
         }
     }
 

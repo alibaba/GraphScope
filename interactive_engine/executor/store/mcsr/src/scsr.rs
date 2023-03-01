@@ -60,14 +60,14 @@ impl<I: IndexType> SingleCsr<I> {
             return;
         }
         self.nbr_list
-            .resize(vnum.index(), Nbr { neighbor: I::new(0_usize) });
+            .resize(vnum.index(), Nbr { neighbor: I::new(0_usize), offset: 0 });
         self.nbr_exist.resize(vnum.index(), false);
     }
 
     pub fn put_edge(&mut self, src: I, dst: I) {
         if src.index() < self.nbr_list.len() {
             assert!(!self.nbr_exist[src.index()]);
-            self.nbr_list[src.index()] = Nbr { neighbor: dst };
+            self.nbr_list[src.index()] = Nbr { neighbor: dst, offset: src.index() };
             self.nbr_exist[src.index()] = true;
             self.edge_num += 1;
         }
@@ -76,7 +76,7 @@ impl<I: IndexType> SingleCsr<I> {
     pub fn put_edge_properties(&mut self, src: I, dst: I, properties: &Vec<Item>) {
         if src.index() < self.nbr_list.len() {
             assert!(!self.nbr_exist[src.index()]);
-            self.nbr_list[src.index()] = Nbr { neighbor: dst };
+            self.nbr_list[src.index()] = Nbr { neighbor: dst, offset: src.index() };
             self.nbr_exist[src.index()] = true;
             match self.edge_property.as_mut() {
                 Some(edge_property) => edge_property.insert(src.index(), properties),
@@ -115,6 +115,10 @@ impl<I: IndexType> SingleCsr<I> {
         SingleCsrEdgeIter { cur_vertex: 0, exist_list: &self.nbr_exist, nbr_list: &self.nbr_list }
     }
 
+    pub fn get_properties(&self) -> Option<&ColTable> {
+        self.edge_property.as_ref()
+    }
+
     pub fn desc(&self) {
         let num = self.nbr_list.len();
         let mut empty_num = 0;
@@ -145,6 +149,17 @@ impl<I: IndexType> SingleCsr<I> {
             f.write_all(nbr_exist_slice).unwrap();
         }
 
+        if self.edge_property.is_some() {
+            f.write_u64(1).unwrap();
+            let property_path = path.clone() + "_PROPERTIES";
+            self.edge_property
+                .as_ref()
+                .unwrap()
+                .serialize_table(&property_path);
+        } else {
+            f.write_u64(0).unwrap();
+        }
+
         f.flush().unwrap();
     }
 
@@ -154,7 +169,7 @@ impl<I: IndexType> SingleCsr<I> {
         self.edge_num = f.read_u64().unwrap() as usize;
 
         self.nbr_list
-            .resize(vnum, Nbr { neighbor: I::new(0_usize) });
+            .resize(vnum, Nbr { neighbor: I::new(0_usize), offset: 0 });
         self.nbr_exist.resize(vnum, false);
 
         let nbr_list_size = vnum * std::mem::size_of::<Nbr<I>>();
@@ -167,6 +182,14 @@ impl<I: IndexType> SingleCsr<I> {
             let nbr_exist_slice =
                 slice::from_raw_parts_mut(self.nbr_exist.as_mut_ptr() as *mut u8, nbr_exist_size);
             f.read_exact(nbr_exist_slice).unwrap();
+        }
+
+        let have_properties = f.read_u64().unwrap();
+        if have_properties == 1 {
+            let property_path = path.clone() + "_PROPERTIES";
+            let mut col_table = ColTable::new(vec![]);
+            col_table.deserialize_table(&property_path);
+            self.edge_property = Some(col_table);
         }
     }
 

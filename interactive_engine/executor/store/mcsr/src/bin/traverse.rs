@@ -91,13 +91,14 @@ fn output_edges(
         let dst = e.get_dst_id();
         let src_label = LDBCVertexParser::<DefaultId>::get_label_id(src);
         let dst_label = LDBCVertexParser::<DefaultId>::get_label_id(dst);
-        if is_static_vertex(src_label) && is_static_vertex(dst_label) && graph.partition != 0 {
-            continue;
-        }
         let src_oid = LDBCVertexParser::<DefaultId>::get_original_id(src);
         let dst_oid = LDBCVertexParser::<DefaultId>::get_original_id(dst);
         let e_label = e.get_label();
         let label_tuple = (src_label, e_label, dst_label);
+        let header = graph
+            .graph_schema
+            .get_edge_header(e_label)
+            .unwrap();
         if !files.contains_key(&label_tuple) {
             let src_label_name = graph.graph_schema.vertex_label_names()[src_label as usize].clone();
             let dst_label_name = graph.graph_schema.vertex_label_names()[dst_label as usize].clone();
@@ -108,21 +109,20 @@ fn output_edges(
             files.insert(label_tuple.clone(), file);
         }
         let file = files.get_mut(&label_tuple).unwrap();
-        if e_label == study_at_e_label {
-            writeln!(file, "\"{}\"|\"{}\"|\"{}\"", src_oid, dst_oid, e.get_encoded_data().index(),)
+        write!(file, "\"{}\"|\"{}\"", src_oid, dst_oid).unwrap();
+        for c in header {
+            if c.1 != DataType::ID {
+                write!(
+                    file,
+                    "|\"{}\"",
+                    e.get_property(c.0.as_str())
+                        .unwrap()
+                        .to_string()
+                )
                 .unwrap();
-        } else if e_label == knows_e_label {
-            writeln!(
-                file,
-                "\"{}\"|\"{}\"|\"{}\"",
-                Date::from_u32(e.get_encoded_data().index() as u32),
-                src_oid,
-                dst_oid,
-            )
-            .unwrap();
-        } else {
-            writeln!(file, "\"{}\"|\"{}\"", src_oid, dst_oid).unwrap();
+            }
         }
+        writeln!(file).unwrap();
     }
 }
 
@@ -130,7 +130,7 @@ fn traverse_partition(
     graph_data_dir: &String, output_dir: &String, partition: usize, v_files: &mut HashMap<LabelId, File>,
     e_files: &mut HashMap<(LabelId, LabelId, LabelId), File>,
 ) {
-    let graph = CsrDB::<DefaultId, InternalId>::import(graph_data_dir.as_str(), partition).unwrap();
+    let graph = CsrDB::deserialize(graph_data_dir.as_str(), "", partition).unwrap();
 
     output_vertices(&graph, output_dir, v_files);
     println!("start output edges");
