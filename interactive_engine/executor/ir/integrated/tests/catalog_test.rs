@@ -53,6 +53,7 @@ mod test {
             params: Some(query_params(vec![12.into()], vec![], None)), // KNOWS
             expand_opt: 0,
             alias: None,
+            op_meta: None,
         };
         let select_person =
             pb::Select { predicate: Some(str_to_expr_pb("@.~label == 1".to_string()).unwrap()) };
@@ -96,6 +97,7 @@ mod test {
                     join_kind: 0,
                 },
             ],
+            op_meta: vec![],
         };
         Pattern::from_pb_pattern(&pattern, &mut PlanMeta::default())
     }
@@ -113,6 +115,7 @@ mod test {
             params: Some(query_params(vec![15.into()], vec![], None)), //STUDYAT
             expand_opt: 0,
             alias: None,
+            op_meta: None,
         };
         let expand_opr2 = pb::EdgeExpand {
             v_tag: None,
@@ -120,6 +123,7 @@ mod test {
             params: Some(query_params(vec![15.into()], vec![], None)), //STUDYAT
             expand_opt: 0,
             alias: None,
+            op_meta: None,
         };
         let expand_opr3 = pb::EdgeExpand {
             v_tag: None,
@@ -127,6 +131,7 @@ mod test {
             params: Some(query_params(vec![12.into()], vec![], None)), //KNOWS
             expand_opt: 0,
             alias: None,
+            op_meta: None,
         };
         let select_person =
             pb::Select { predicate: Some(str_to_expr_pb("@.~label == 1".to_string()).unwrap()) };
@@ -163,6 +168,7 @@ mod test {
                     join_kind: 0,
                 },
             ],
+            op_meta: vec![],
         };
         Pattern::from_pb_pattern(&pattern, &mut PlanMeta::default())
     }
@@ -178,6 +184,7 @@ mod test {
             params: Some(query_params(vec![12.into()], vec![], None)), //KNOWS
             expand_opt: 0,
             alias: None,
+            op_meta: None,
         };
         let pattern = pb::Pattern {
             sentences: vec![
@@ -230,6 +237,7 @@ mod test {
                     join_kind: 0,
                 },
             ],
+            op_meta: vec![],
         };
         Pattern::from_pb_pattern(&pattern, &mut PlanMeta::default())
     }
@@ -249,6 +257,7 @@ mod test {
             params: Some(query_params(vec![11.into()], vec![], None)), //ISLOCATEDIN
             expand_opt: 0,
             alias: None,
+            op_meta: None,
         };
         let expand_opr2 = pb::EdgeExpand {
             v_tag: None,
@@ -256,6 +265,7 @@ mod test {
             params: Some(query_params(vec![11.into()], vec![], None)), //ISLOCATEDIN
             expand_opt: 0,
             alias: None,
+            op_meta: None,
         };
         let expand_opr3 = pb::EdgeExpand {
             v_tag: None,
@@ -263,6 +273,7 @@ mod test {
             params: Some(query_params(vec![13.into()], vec![], None)), //LIKES
             expand_opt: 0,
             alias: None,
+            op_meta: None,
         };
         let expand_opr4 = pb::EdgeExpand {
             v_tag: None,
@@ -270,6 +281,7 @@ mod test {
             params: Some(query_params(vec![0.into()], vec![], None)), //HASCREATOR
             expand_opt: 0,
             alias: None,
+            op_meta: None,
         };
         let pattern = pb::Pattern {
             sentences: vec![
@@ -306,6 +318,7 @@ mod test {
                     join_kind: 0,
                 },
             ],
+            op_meta: vec![],
         };
         Pattern::from_pb_pattern(&pattern, &mut PlanMeta::default())
     }
@@ -319,6 +332,7 @@ mod test {
             params: Some(query_params(vec![12.into()], vec![], None)), //KNOWS
             expand_opt: 0,
             alias: None,
+            op_meta: None,
         };
         let expand_opr1 = pb::EdgeExpand {
             v_tag: None,
@@ -326,6 +340,7 @@ mod test {
             params: Some(query_params(vec![11.into()], vec![], None)), //ISLOCATEDIN
             expand_opt: 0,
             alias: None,
+            op_meta: None,
         };
         let expand_opr2 = pb::EdgeExpand {
             v_tag: None,
@@ -333,6 +348,7 @@ mod test {
             params: Some(query_params(vec![17.into()], vec![], None)), //ISPARTOF
             expand_opt: 0,
             alias: None,
+            op_meta: None,
         };
         let pattern = pb::Pattern {
             sentences: vec![
@@ -409,6 +425,7 @@ mod test {
                     join_kind: 0,
                 },
             ],
+            op_meta: vec![],
         };
         Pattern::from_pb_pattern(&pattern, &mut PlanMeta::default())
     }
@@ -419,6 +436,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![], None)),
             idx_predicate: None,
+            op_meta: None,
         }
     }
 

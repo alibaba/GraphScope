@@ -223,6 +223,12 @@ impl Plan {
         self.plan.push(op.into());
     }
 
+    pub fn with_op_meta(&mut self, meta: Vec<pb::physical_opr::MetaData>) {
+        if let Some(op) = self.plan.last_mut() {
+            op.op_meta = meta;
+        }
+    }
+
     pub fn take(self) -> Vec<pb::PhysicalOpr> {
         self.plan
     }
@@ -490,13 +496,14 @@ mod test {
     #[test]
     fn test_job_build_00() {
         let mut builder = JobBuilder::new(JobConf::new("test_build_00"));
-        let source_pb = algebra_pb::Scan { scan_opt: 0, alias: None, params: None, idx_predicate: None };
+        let source_pb =
+            algebra_pb::Scan { scan_opt: 0, alias: None, params: None, idx_predicate: None, op_meta: None };
         let sink_pb = algebra_pb::Sink { tags: vec![], sink_target: None };
         builder
             .add_scan_source(source_pb.clone())
             .select(algebra_pb::Select { predicate: None })
             .repartition(pb::Repartition { strategy: None })
-            .project(algebra_pb::Project { mappings: vec![], is_append: false })
+            .project(algebra_pb::Project { mappings: vec![], is_append: false, op_meta: vec![] })
             .limit(algebra_pb::Limit { range: None })
             .sink(sink_pb.clone());
         let plan_len = builder.plan.len();
@@ -507,9 +514,10 @@ mod test {
     #[test]
     fn test_job_build_01() {
         let mut builder = JobBuilder::new(JobConf::new("test_build_01"));
-        let scan1_pb = algebra_pb::Scan { scan_opt: 0, alias: None, params: None, idx_predicate: None };
+        let scan1_pb =
+            algebra_pb::Scan { scan_opt: 0, alias: None, params: None, idx_predicate: None, op_meta: None };
         let scan2_pb = scan1_pb.clone();
-        let project_pb = algebra_pb::Project { mappings: vec![], is_append: false };
+        let project_pb = algebra_pb::Project { mappings: vec![], is_append: false, op_meta: vec![] };
         let sink_pb = algebra_pb::Sink { tags: vec![], sink_target: None };
 
         builder

@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::convert::TryInto;
 use std::sync::Arc;
 
 use graph_proxy::apis::Partitioner;
@@ -31,7 +32,6 @@ use pegasus::{BuildJobError, Worker};
 use pegasus_server::job::{JobAssembly, JobDesc};
 use pegasus_server::job_pb as server_pb;
 use prost::Message;
-use std::convert::TryInto;
 
 use crate::error::{FnExecError, FnGenError, FnGenResult};
 use crate::process::functions::{ApplyGen, CompareFunction, FoldGen, GroupGen, JoinKeyGen, KeyFunction};

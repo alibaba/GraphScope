@@ -38,6 +38,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
             idx_predicate: None,
+            op_meta: None,
         };
 
         let expand_opr = pb::EdgeExpand {
@@ -46,6 +47,7 @@ mod test {
             params: Some(query_params(vec![], vec![], None)),
             expand_opt: 0,
             alias: None,
+            op_meta: None,
         };
 
         let mut job_builder = JobBuilder::default();
@@ -146,6 +148,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
             idx_predicate: None,
+            op_meta: None,
         };
 
         let expand_opr = pb::EdgeExpand {
@@ -154,6 +157,7 @@ mod test {
             params: Some(query_params(vec![], vec![], None)),
             expand_opt: 0,
             alias: None,
+            op_meta: None,
         };
 
         let fold_opr = pb::GroupBy {
@@ -163,6 +167,7 @@ mod test {
                 aggregate: 3, // count
                 alias: None,
             }],
+            op_meta: vec![],
         };
 
         let sink_opr = pb::Sink {

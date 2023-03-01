@@ -791,13 +791,21 @@ mod test {
     fn test_str_to_variable() {
         let case1 = "@1";
         assert_eq!(
-            common_pb::Variable { tag: Some(common_pb::NameOrId::from(1)), property: None },
+            common_pb::Variable {
+                tag: Some(common_pb::NameOrId::from(1)),
+                property: None,
+                node_type: None
+            },
             common_pb::Variable::from(case1.to_string())
         );
 
         let case2 = "@a";
         assert_eq!(
-            common_pb::Variable { tag: Some(common_pb::NameOrId::from("a".to_string())), property: None },
+            common_pb::Variable {
+                tag: Some(common_pb::NameOrId::from("a".to_string())),
+                property: None,
+                node_type: None
+            },
             common_pb::Variable::from(case2.to_string())
         );
 
@@ -807,7 +815,8 @@ mod test {
                 tag: Some(common_pb::NameOrId::from(1)),
                 property: Some(common_pb::Property {
                     item: Some(common_pb::property::Item::Id(common_pb::IdKey {}))
-                })
+                }),
+                node_type: None
             },
             common_pb::Variable::from(case3.to_string())
         );
@@ -818,7 +827,8 @@ mod test {
                 tag: Some(common_pb::NameOrId::from(1)),
                 property: Some(common_pb::Property {
                     item: Some(common_pb::property::Item::Label(common_pb::LabelKey {}))
-                })
+                }),
+                node_type: None
             },
             common_pb::Variable::from(case4.to_string())
         );
@@ -829,7 +839,8 @@ mod test {
                 tag: Some(common_pb::NameOrId::from(1)),
                 property: Some(common_pb::Property {
                     item: Some(common_pb::property::Item::Key("name".to_string().into()))
-                })
+                }),
+                node_type: None
             },
             common_pb::Variable::from(case5.to_string())
         );
@@ -840,14 +851,15 @@ mod test {
                 tag: None,
                 property: Some(common_pb::Property {
                     item: Some(common_pb::property::Item::Key("name".to_string().into()))
-                })
+                }),
+                node_type: None
             },
             common_pb::Variable::from(case6.to_string())
         );
 
         let case7 = "@";
         assert_eq!(
-            common_pb::Variable { tag: None, property: None },
+            common_pb::Variable { tag: None, property: None, node_type: None },
             common_pb::Variable::from(case7.to_string())
         );
     }
