@@ -20,7 +20,7 @@
               "extra": {}
             },
             "idx_predicate": null,
-            "type": null
+            "op_meta": null
           }
         }
       },

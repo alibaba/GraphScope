@@ -23,7 +23,7 @@
             },
             "alias": null,
             "expand_opt": 1,
-            "type": null
+            "op_meta": null
           }
         }
       },

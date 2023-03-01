@@ -53,7 +53,7 @@
                 }
               ]
             },
-            "type": null
+            "op_meta": null
           }
         }
       },
