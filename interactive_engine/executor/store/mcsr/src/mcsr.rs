@@ -112,6 +112,10 @@ impl<I: IndexType> AdjList<I> {
         self.cap = capacity;
     }
 
+    pub fn set_offset(&mut self, offset: usize) {
+        self.offset = offset;
+    }
+
     pub fn extend(&mut self, delta_capacity: i64) {
         self.cap += delta_capacity;
     }
@@ -232,8 +236,12 @@ impl<I: IndexType> MutableCsr<I> {
     pub fn reserve_edges_dense(&mut self, degree_to_add: &Vec<i64>) {
         let vnum = self.vertex_num().index();
         assert_eq!(degree_to_add.len(), vnum);
+        self.adj_offsets.resize(vnum, 0);
         let mut new_buf_size: usize = 0;
         for i in 0..vnum {
+            if i > 0 {
+                self.adj_offsets[i] = self.adj_offsets[i - 1] + degree_to_add[i - 1] as usize;
+            }
             if degree_to_add[i] == 0 {
                 continue;
             }
@@ -243,6 +251,7 @@ impl<I: IndexType> MutableCsr<I> {
                 // requirement += (requirement + 1) / 2;
                 new_buf_size += requirement as usize;
                 self.adj_lists[i].set_capacity(-requirement);
+                self.adj_lists[i].set_offset(self.adj_offsets[i]);
             }
         }
         if new_buf_size != 0 {
@@ -534,8 +543,6 @@ impl<I: IndexType> Decode for MutableCsr<I> {
                 ret.put_edge(I::new(i), neighbor);
             }
         }
-
-        ret.update_degree();
 
         if reader.read_i64().unwrap() == 1 {
             ret.put_col_table(ColTable::read_from(reader).unwrap());

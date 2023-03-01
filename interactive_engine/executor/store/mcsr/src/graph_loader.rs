@@ -561,7 +561,6 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                             ie_csr.put_edge_properties(e.1, e.0, &e.2);
                             oe_csr.put_edge_properties(e.0, e.1, &e.2);
                         }
-                        oe_csr.update_degree();
 
                         info!("start export ie");
                         let ie_path = self
@@ -605,7 +604,6 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                             ie_csr.put_edge_properties(e.1, e.0, &e.2);
                             oe_csr.put_edge_properties(e.0, e.1, &e.2);
                         }
-                        ie_csr.update_degree();
 
                         info!("start export ie");
                         let ie_path = self
@@ -650,8 +648,6 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                             ie_csr.put_edge_properties(e.1, e.0, &e.2);
                             oe_csr.put_edge_properties(e.0, e.1, &e.2);
                         }
-                        ie_csr.update_degree();
-                        oe_csr.update_degree();
 
                         info!("start export ie");
                         let ie_path = self

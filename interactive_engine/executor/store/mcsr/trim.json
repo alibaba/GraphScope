@@ -158,10 +158,25 @@
     "HASMEMBER": [],
     "HASCREATOR": [],
     "ISLOCATEDIN": [],
-    "STUDYAT": [],
-    "REPLYOF": [],
+    "STUDYAT": [
+      [
+        "classYear",
+        "Int32"
+      ]
+    ],
+    "REPLYOF": [
+      [
+        "creationDate",
+        "DateTime"
+      ]
+    ],
     "ISPARTOF": [],
-    "KNOWS": [],
+    "KNOWS": [
+      [
+        "creationDate",
+        "Date"
+      ]
+    ],
     "HASMODERATOR": [],
     "HASTYPE": []
   }
