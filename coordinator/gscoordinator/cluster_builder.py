@@ -61,6 +61,7 @@ class EngineCluster:
         image_repository,
         image_tag,
         instance_id,
+        learning_start_port,
         namespace,
         num_workers,
         preemptive,
@@ -90,6 +91,8 @@ class EngineCluster:
         self._mars_service_name_prefix = "mars-"
 
         self._instance_id = instance_id
+
+        self._learning_start_port = learning_start_port
 
         self._namespace = namespace
         self._engine_labels = {
@@ -316,7 +319,8 @@ class EngineCluster:
             self._learning_requests,
         )
         container.ports = [
-            kube_client.V1ContainerPort(container_port=p) for p in range(8000, 9000)
+            kube_client.V1ContainerPort(container_port=p)
+            for p in range(self._learning_start_port, self._learning_start_port + 1000)
         ]
         return container
 

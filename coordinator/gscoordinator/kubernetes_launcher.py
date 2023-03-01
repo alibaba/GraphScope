@@ -222,6 +222,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
             image_repository=image_repository,
             image_tag=image_tag,
             instance_id=instance_id,
+            learning_start_port=self._learning_start_port,
             with_dataset=with_dataset,
             namespace=namespace,
             num_workers=num_workers,
