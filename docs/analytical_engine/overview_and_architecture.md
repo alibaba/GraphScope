@@ -40,6 +40,20 @@ The graph storage consists of multiple types of graph formats, and each format i
 
 ## Execution Runtime
 
+There are three major components in execution framework runtime of GAE, which offers easy-to-use interfaces for algorithm library.
+
+### Programming Model Component 
+
+Currently, GAE has supported three programming models: Pregel, PIE and FLASH. [Pregel](https://graphscope.io/docs/latest/analytical_engine/vertex_centric_models.html#pregel-model) is a widely-applied vertex-centric programming model in existing popular graph processing systems, such as GraphX and Giraph. [PIE](https://graphscope.io/docs/latest/analytical_engine/programming_model_pie.html) is proposed in GRAPE, and it can automatically parallelize existing sequential graph algorithms with some minor changes. [FLASH](https://graphscope.io/docs/latest/analytical_engine/flash.html) is a flexible programming model which can help users to implement complex graph algorithms easily.
+
+### Multi-language SDKs
+
+Multi-language SDKs are provided by GAE. Users choose to write their own algorithms in either C++, Java or Python. With Python, users can still expect a high performance. GAE integrated a compiler built with Cython. It can generate efficient native code from Python algorithms behind the scenes, and dispatch the code to the GraphScope cluster for execution. The SDKs further lower the total cost of ownership of graph analytics.
+
+### Application Compatibility Component
+
+The execution runtime of GAE is also compatible with other popular graph processing systems. Specifically, it is compatible with the graph manipulation APIs and graph algorithms, and thus a program written with NetworkX can directly run on GAE with only some small changes. In addition, we have implemented the support for Pregel model. As a result, you can run your graph applications implemented in Giraph or GraphX on GAE directly.
+
 ## Algorithm Library
 
 GAE of GraphScope provides [20 graph analytics algorithms](https://graphscope.io/docs/latest/analytical_engine/builtin_algorithms.html) as built-in algorithms, and users can directly invoke them. GraphScope is compatible with NetworkX APIs, and thus diverse kinds of [built-in algorithms in NetworkX](https://networkx.org/documentation/stable/reference/algorithms/index.html) can also be directly invoked by users. In total, over 100 build-in graph analytical algorithms can be directly executed over GraphScope, without any developing effort. In addition, we have implemented the support for Pregel model in GAE, and graph aglorithms implemented in Giraph or GraphX can also be directly run on GAE.
