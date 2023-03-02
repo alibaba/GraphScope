@@ -297,16 +297,6 @@ impl Details for LazyVertexDetails {
         }
         Some(all_props)
     }
-
-    fn insert_property(&mut self, key: NameOrId, _value: Object) {
-        if let Some(prop_keys) = self.prop_keys.as_mut() {
-            if !prop_keys.is_empty() {
-                prop_keys.push(key);
-            }
-        } else {
-            self.prop_keys = Some(vec![key]);
-        }
-    }
 }
 
 impl Drop for LazyVertexDetails {
@@ -409,16 +399,6 @@ impl Details for LazyEdgeDetails {
             }
         }
         Some(all_props)
-    }
-
-    fn insert_property(&mut self, key: NameOrId, _value: Object) {
-        if let Some(prop_keys) = self.prop_keys.as_mut() {
-            if !prop_keys.is_empty() {
-                prop_keys.push(key);
-            }
-        } else {
-            self.prop_keys = Some(vec![key]);
-        }
     }
 }
 
