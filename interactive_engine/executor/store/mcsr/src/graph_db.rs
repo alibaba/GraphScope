@@ -91,10 +91,10 @@ pub struct LocalEdge<'a, G: IndexType + Sync + Send, I: IndexType + Sync + Send>
     src_label: LabelId,
     dst_label: LabelId,
 
-    offset: usize,
+    pub offset: usize,
     /// A property reference maintains a `Row` view of the properties, which is either
     /// a reference or an owned structure, depending on the form of storage.
-    table: Option<&'a ColTable>,
+    pub table: Option<&'a ColTable>,
 
     vertex_map: &'a VertexMap<G, I>,
 }

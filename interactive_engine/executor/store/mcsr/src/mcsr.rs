@@ -118,10 +118,7 @@ impl<I: IndexType> AdjList<I> {
     pub fn put_edge(&mut self, id: I, offset: usize) {
         assert!(self.deg < self.cap);
         unsafe {
-            ptr::write(
-                self.ptr.add(self.deg as usize),
-                Nbr::<I> { neighbor: id, offset: offset + self.deg as usize },
-            );
+            ptr::write(self.ptr.add(self.deg as usize), Nbr::<I> { neighbor: id, offset });
         }
         self.deg += 1;
     }
@@ -148,7 +145,6 @@ unsafe impl<I: IndexType> Sync for AdjList<I> {}
 pub struct MutableCsr<I> {
     buffers: Vec<(*mut u8, usize)>,
     adj_lists: Vec<AdjList<I>>,
-    edge_property: Option<ColTable>,
     prev: Vec<I>,
     next: Vec<I>,
     edge_num: usize,
@@ -161,9 +157,7 @@ pub struct MutableCsrEdgeIter<'a, I: IndexType> {
 }
 
 impl<'a, I: IndexType> MutableCsrEdgeIter<'a, I> {
-    pub fn new(
-        adj_list: &'a Vec<AdjList<I>>, cur_vertex: usize, edge_property: &'a Option<ColTable>,
-    ) -> Self {
+    pub fn new(adj_list: &'a Vec<AdjList<I>>, cur_vertex: usize) -> Self {
         let mut adj_list_iter = adj_list.iter();
         if let Some(adj_list) = adj_list_iter.next() {
             Self { cur_vertex, adj_list_iter, nbr_iter: adj_list.iter() }
@@ -195,14 +189,7 @@ impl<'a, I: IndexType> Iterator for MutableCsrEdgeIter<'a, I> {
 
 impl<I: IndexType> MutableCsr<I> {
     pub fn new() -> Self {
-        MutableCsr {
-            buffers: vec![],
-            adj_lists: vec![],
-            edge_property: None,
-            prev: vec![],
-            next: vec![],
-            edge_num: 0_usize,
-        }
+        MutableCsr { buffers: vec![], adj_lists: vec![], prev: vec![], next: vec![], edge_num: 0_usize }
     }
 
     pub fn vertex_num(&self) -> I {
@@ -271,26 +258,11 @@ impl<I: IndexType> MutableCsr<I> {
         }
     }
 
-    pub fn put_edge(&mut self, src: I, dst: I) {
+    pub fn put_edge(&mut self, src: I, dst: I, offset: usize) {
         if src.index() < self.adj_lists.len() {
-            self.adj_lists[src.index()].put_edge(dst, self.edge_num);
+            self.adj_lists[src.index()].put_edge(dst, offset);
             self.edge_num += 1;
         }
-    }
-
-    pub fn put_edge_properties(&mut self, src: I, dst: I, properties: &Vec<Item>) {
-        if src.index() < self.adj_lists.len() {
-            match self.edge_property.as_mut() {
-                Some(edge_property) => edge_property.insert(self.edge_num, properties),
-                None => {}
-            }
-            self.adj_lists[src.index()].put_edge(dst, self.edge_num);
-            self.edge_num += 1;
-        }
-    }
-
-    pub fn put_col_table(&mut self, col_table: ColTable) {
-        self.edge_property = Some(col_table);
     }
 
     fn remove_node(&mut self, v: I) {
@@ -326,11 +298,7 @@ impl<I: IndexType> MutableCsr<I> {
     }
 
     pub fn get_all_edges(&self) -> MutableCsrEdgeIter<'_, I> {
-        MutableCsrEdgeIter::new(&self.adj_lists, 0_usize, &self.edge_property)
-    }
-
-    pub fn get_properties(&self) -> Option<&ColTable> {
-        self.edge_property.as_ref()
+        MutableCsrEdgeIter::new(&self.adj_lists, 0_usize)
     }
 
     pub fn serialize(&self, path: &String) {
@@ -370,16 +338,6 @@ impl<I: IndexType> MutableCsr<I> {
             f.write_all(buffer_slice).unwrap();
         }
 
-        if self.edge_property.is_some() {
-            f.write_u64(1).unwrap();
-            let property_path = path.clone() + "_PROPERTIES";
-            self.edge_property
-                .as_ref()
-                .unwrap()
-                .serialize_table(&property_path);
-        } else {
-            f.write_u64(0).unwrap();
-        }
         f.flush().unwrap();
     }
 
@@ -421,14 +379,6 @@ impl<I: IndexType> MutableCsr<I> {
         for i in 0..vnum {
             self.adj_lists[i].set(begin, degree_vec[i], capacity_vec[i]);
             begin = unsafe { begin.add(capacity_vec[i] as usize) };
-        }
-
-        let have_properties = f.read_u64().unwrap();
-        if have_properties == 1 {
-            let property_path = path.clone() + "_PROPERTIES";
-            let mut col_table = ColTable::new(vec![]);
-            col_table.deserialize_table(&property_path);
-            self.edge_property = Some(col_table);
         }
     }
 
@@ -484,17 +434,9 @@ impl<I: IndexType> Encode for MutableCsr<I> {
             if let Some(edges) = self.get_edges(I::new(i)) {
                 for e in edges {
                     e.neighbor.write_to(writer)?;
+                    e.offset.write_to(writer)?;
                     nbr_num += 1;
                 }
-            }
-        }
-        match self.edge_property.as_ref() {
-            Some(edge_property) => {
-                writer.write_i64(1_i64)?;
-                edge_property.write_to(writer)?;
-            }
-            None => {
-                writer.write_i64(0_i64)?;
             }
         }
         info!("write 1 u64, {} i64, {} nbr", vnum, nbr_num);
@@ -515,12 +457,9 @@ impl<I: IndexType> Decode for MutableCsr<I> {
         for i in 0..vnum {
             for _ in 0..degree_vec[i] {
                 let neighbor = I::read_from(reader)?;
-                ret.put_edge(I::new(i), neighbor);
+                let offset = usize::read_from(reader)?;
+                ret.put_edge(I::new(i), neighbor, offset);
             }
-        }
-
-        if reader.read_i64().unwrap() == 1 {
-            ret.put_col_table(ColTable::read_from(reader).unwrap());
         }
 
         Ok(ret)

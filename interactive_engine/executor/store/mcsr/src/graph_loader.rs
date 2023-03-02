@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fs::{create_dir_all, read_dir, File};
 use std::io::{BufReader, Read};
 use std::path::{Path, PathBuf};
@@ -530,8 +530,8 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                     for pair in cols.iter() {
                         header.push((pair.1.clone(), pair.0.clone()));
                     }
-                    let ie_table = ColTable::new(header.clone());
-                    let oe_table = ColTable::new(header.clone());
+                    let mut edge_properties = ColTable::new(header.clone());
+                    let mut property_offset = 0usize;
                     if is_single_ie_csr(src_label_i, dst_label_i, e_label_i) {
                         let mut ie_csr = SingleCsr::<I>::new();
                         let mut oe_csr = MutableCsr::<I>::new();
@@ -544,7 +544,6 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                             parsed_edges.len()
                         );
                         ie_csr.resize_vertices(I::new(dst_num));
-                        ie_csr.put_col_table(ie_table);
                         info!(
                             "oe_{}_{}_{}: resize: {} vertices, {} edges",
                             src_label_name,
@@ -555,11 +554,14 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                         );
                         oe_csr.resize_vertices(I::new(src_num));
                         oe_csr.reserve_edges_dense(&odegree);
-                        oe_csr.put_col_table(oe_table);
                         info!("start put edges");
                         for e in parsed_edges.iter() {
-                            ie_csr.put_edge_properties(e.1, e.0, &e.2);
-                            oe_csr.put_edge_properties(e.0, e.1, &e.2);
+                            ie_csr.put_edge(e.1, e.0, property_offset);
+                            oe_csr.put_edge(e.0, e.1, property_offset);
+                            if e.2.len() > 0 {
+                                edge_properties.push(&e.2);
+                                property_offset += 1;
+                            }
                         }
 
                         info!("start export ie");
@@ -588,7 +590,6 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                         );
                         ie_csr.resize_vertices(I::new(dst_num));
                         ie_csr.reserve_edges_dense(&idegree);
-                        ie_csr.put_col_table(ie_table);
                         info!(
                             "oe_{}_{}_{}: resize: {} vertices, {} edges",
                             src_label_name,
@@ -598,11 +599,14 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                             parsed_edges.len()
                         );
                         oe_csr.resize_vertices(I::new(src_num));
-                        oe_csr.put_col_table(oe_table);
                         info!("start put edges");
                         for e in parsed_edges.iter() {
-                            ie_csr.put_edge_properties(e.1, e.0, &e.2);
-                            oe_csr.put_edge_properties(e.0, e.1, &e.2);
+                            ie_csr.put_edge(e.1, e.0, property_offset);
+                            oe_csr.put_edge(e.0, e.1, property_offset);
+                            if e.2.len() > 0 {
+                                edge_properties.push(&e.2);
+                                property_offset += 1;
+                            }
                         }
 
                         info!("start export ie");
@@ -631,7 +635,6 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                         );
                         ie_csr.resize_vertices(I::new(dst_num));
                         ie_csr.reserve_edges_dense(&idegree);
-                        ie_csr.put_col_table(ie_table);
                         info!(
                             "oe_{}_{}_{}: resize: {} vertices, {} edges",
                             src_label_name,
@@ -642,11 +645,14 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                         );
                         oe_csr.resize_vertices(I::new(src_num));
                         oe_csr.reserve_edges_dense(&odegree);
-                        oe_csr.put_col_table(oe_table);
                         info!("start put edges");
                         for e in parsed_edges.iter() {
-                            ie_csr.put_edge_properties(e.1, e.0, &e.2);
-                            oe_csr.put_edge_properties(e.0, e.1, &e.2);
+                            ie_csr.put_edge(e.1, e.0, property_offset);
+                            oe_csr.put_edge(e.0, e.1, property_offset);
+                            if e.2.len() > 0 {
+                                edge_properties.push(&e.2);
+                                property_offset += 1;
+                            }
                         }
 
                         info!("start export ie");
@@ -662,6 +668,16 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                         let oe_path_str = oe_path.to_str().unwrap().to_string();
                         oe_csr.serialize(&oe_path_str);
                         info!("finished export");
+                    }
+                    if edge_properties.row_num() > 0 {
+                        let edge_property_path = self.partition_dir.join(format!(
+                            "ep_{}_{}_{}",
+                            self.graph_schema.vertex_label_names()[src_label_i as usize],
+                            self.graph_schema.edge_label_names()[e_label_i as usize],
+                            self.graph_schema.vertex_label_names()[dst_label_i as usize]
+                        ));
+                        let edge_property_path_str = edge_property_path.to_str().unwrap().to_string();
+                        edge_properties.serialize_table(&edge_property_path_str);
                     }
                 }
             }

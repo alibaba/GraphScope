@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fs::{create_dir_all, File};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -25,6 +25,7 @@ pub struct SubGraph<'a, G: Send + Sync + IndexType = DefaultId, I: Send + Sync +
     pub e_label: LabelId,
 
     pub vertex_data: &'a ColTable,
+    pub edge_data: Option<&'a ColTable>,
 }
 
 impl<'a, G, I> SubGraph<'a, G, I>
@@ -34,9 +35,9 @@ where
 {
     pub fn new(
         csr: &'a MutableCsr<I>, vm: &'a VertexMap<G, I>, src_label: LabelId, dst_label: LabelId,
-        e_label: LabelId, vertex_data: &'a ColTable,
+        e_label: LabelId, vertex_data: &'a ColTable, edge_data: Option<&'a ColTable>,
     ) -> Self {
-        Self { csr, vm, src_label, dst_label, e_label, vertex_data }
+        Self { csr, vm, src_label, dst_label, e_label, vertex_data, edge_data }
     }
 
     pub fn get_src_label(&self) -> LabelId {
@@ -84,7 +85,7 @@ where
     }
 
     pub fn get_properties(&self) -> Option<&ColTable> {
-        self.csr.get_properties()
+        self.edge_data
     }
 }
 
@@ -100,6 +101,7 @@ pub struct SingleSubGraph<
     pub e_label: LabelId,
 
     pub vertex_data: &'a ColTable,
+    pub edge_data: Option<&'a ColTable>,
 }
 
 impl<'a, G, I> SingleSubGraph<'a, G, I>
@@ -109,9 +111,9 @@ where
 {
     pub fn new(
         csr: &'a SingleCsr<I>, vm: &'a VertexMap<G, I>, src_label: LabelId, dst_label: LabelId,
-        e_label: LabelId, vertex_data: &'a ColTable,
+        e_label: LabelId, vertex_data: &'a ColTable, edge_data: Option<&'a ColTable>,
     ) -> Self {
-        Self { csr, vm, src_label, dst_label, e_label, vertex_data }
+        Self { csr, vm, src_label, dst_label, e_label, vertex_data, edge_data }
     }
 
     pub fn get_src_label(&self) -> LabelId {
@@ -163,7 +165,7 @@ where
     }
 
     pub fn get_properties(&self) -> Option<&ColTable> {
-        self.csr.get_properties()
+        self.edge_data
     }
 }
 
@@ -178,6 +180,8 @@ pub struct CsrDB<G: Send + Sync + IndexType = DefaultId, I: Send + Sync + IndexT
     pub graph_schema: Arc<LDBCGraphSchema>,
     pub vertex_prop_table: Vec<ColTable>,
     pub vertex_map: VertexMap<G, I>,
+
+    pub edge_prop_table: HashMap<usize, ColTable>,
 
     pub vertex_label_num: usize,
     pub edge_label_num: usize,
@@ -295,22 +299,7 @@ where
         dir: Direction, offset: usize,
     ) -> LocalEdge<G, I> {
         let index = self.edge_label_to_index(src_label, dst_label, label, dir);
-        let properties = match dir {
-            Direction::Incoming => {
-                if is_single_ie_csr(src_label, dst_label, label) {
-                    self.single_ie[index].get_properties()
-                } else {
-                    self.ie[index].get_properties()
-                }
-            }
-            Direction::Outgoing => {
-                if is_single_oe_csr(src_label, dst_label, label) {
-                    self.single_oe[index].get_properties()
-                } else {
-                    self.oe[index].get_properties()
-                }
-            }
-        };
+        let properties = self.edge_prop_table.get(&index);
         match dir {
             Direction::Incoming => LocalEdge::new(
                 dst_lid,
@@ -588,6 +577,30 @@ where
         vertex_map.desc();
         info!("finish import corner vertex map");
 
+        info!("start import edge properties");
+        let mut edge_prop_table = HashMap::new();
+        for e_label_i in 0..edge_label_num {
+            for src_label_i in 0..vertex_label_num {
+                for dst_label_i in 0..vertex_label_num {
+                    let edge_index = src_label_i * vertex_label_num * edge_label_num
+                        + dst_label_i as usize * edge_label_num
+                        + e_label_i as usize;
+                    let src_label_name = graph_schema.vertex_label_names()[src_label_i].clone();
+                    let dst_label_name = graph_schema.vertex_label_names()[dst_label_i].clone();
+                    let edge_label_name = graph_schema.edge_label_names()[e_label_i].clone();
+                    let edge_property_path = &partition_dir
+                        .join(format!("ep_{}_{}_{}", src_label_name, edge_label_name, dst_label_name));
+                    let edge_property_path_str = edge_property_path.to_str().unwrap().to_string();
+
+                    if Path::new(&edge_property_path_str).exists() {
+                        edge_prop_table
+                            .insert(edge_index, ColTable::import(&edge_property_path_str).unwrap());
+                    }
+                }
+            }
+        }
+        info!("finished import edge properties");
+
         Ok(Self {
             partition,
             ie,
@@ -597,6 +610,7 @@ where
             graph_schema: Arc::new(graph_schema),
             vertex_prop_table,
             vertex_map,
+            edge_prop_table,
             vertex_label_num,
             edge_label_num,
         })
@@ -765,6 +779,35 @@ where
         }
         info!("finished import vertex properties");
 
+        info!("start import edge properties");
+        let mut edge_prop_table = HashMap::new();
+        for e_label_i in 0..edge_label_num {
+            for src_label_i in 0..vertex_label_num {
+                for dst_label_i in 0..vertex_label_num {
+                    let edge_index = src_label_i * vertex_label_num * edge_label_num
+                        + dst_label_i * edge_label_num
+                        + e_label_i;
+                    let src_label_name = graph_schema.vertex_label_names()[src_label_i].clone();
+                    let dst_label_name = graph_schema.vertex_label_names()[dst_label_i].clone();
+                    let edge_label_name = graph_schema.edge_label_names()[e_label_i].clone();
+                    let edge_property_path = &partition_dir
+                        .join(format!("ep_{}_{}_{}", src_label_name, edge_label_name, dst_label_name));
+                    let edge_property_path_str = edge_property_path.to_str().unwrap().to_string();
+
+                    if Path::new(&edge_property_path_str).exists() {
+                        let mut table = ColTable::new(vec![]);
+                        info!(
+                            "importing edge property: {}_{}_{}, {}",
+                            src_label_name, edge_label_name, dst_label_name, edge_property_path_str
+                        );
+                        table.deserialize_table(&edge_property_path_str);
+                        edge_prop_table.insert(edge_index, table);
+                    }
+                }
+            }
+        }
+        info!("finished import edge properties");
+
         let mut vertex_map = VertexMap::new(vertex_label_num);
         info!("start import native vertex map");
         let vm_path = &partition_dir.join("vm");
@@ -781,6 +824,7 @@ where
             graph_schema: Arc::new(graph_schema),
             vertex_prop_table,
             vertex_map,
+            edge_prop_table,
             vertex_label_num,
             edge_label_num,
         })
@@ -798,6 +842,7 @@ where
                 dst_label,
                 edge_label,
                 &self.vertex_prop_table[src_label as usize],
+                self.edge_prop_table.get(&index),
             ),
             Direction::Incoming => SubGraph::new(
                 &self.ie[index],
@@ -806,6 +851,7 @@ where
                 dst_label,
                 edge_label,
                 &self.vertex_prop_table[src_label as usize],
+                self.edge_prop_table.get(&index),
             ),
         }
     }
@@ -822,6 +868,7 @@ where
                 dst_label,
                 edge_label,
                 &self.vertex_prop_table[src_label as usize],
+                self.edge_prop_table.get(&index),
             ),
             Direction::Incoming => SingleSubGraph::new(
                 &self.single_ie[index],
@@ -830,6 +877,7 @@ where
                 dst_label,
                 edge_label,
                 &self.vertex_prop_table[src_label as usize],
+                self.edge_prop_table.get(&index),
             ),
         }
     }

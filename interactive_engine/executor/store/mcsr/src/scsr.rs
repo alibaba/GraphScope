@@ -1,5 +1,5 @@
 use core::slice;
-use std::fs::File;
+use std::fs::{read, File};
 use std::io::{Read, Write};
 
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
@@ -38,13 +38,12 @@ impl<'a, I: IndexType> Iterator for SingleCsrEdgeIter<'a, I> {
 pub struct SingleCsr<I> {
     nbr_list: Vec<Nbr<I>>,
     nbr_exist: Vec<bool>,
-    edge_property: Option<ColTable>,
     edge_num: usize,
 }
 
 impl<I: IndexType> SingleCsr<I> {
     pub fn new() -> Self {
-        SingleCsr { nbr_list: vec![], nbr_exist: vec![], edge_property: None, edge_num: 0_usize }
+        SingleCsr { nbr_list: vec![], nbr_exist: vec![], edge_num: 0_usize }
     }
 
     pub fn vertex_num(&self) -> I {
@@ -64,24 +63,11 @@ impl<I: IndexType> SingleCsr<I> {
         self.nbr_exist.resize(vnum.index(), false);
     }
 
-    pub fn put_edge(&mut self, src: I, dst: I) {
+    pub fn put_edge(&mut self, src: I, dst: I, offset: usize) {
         if src.index() < self.nbr_list.len() {
             assert!(!self.nbr_exist[src.index()]);
-            self.nbr_list[src.index()] = Nbr { neighbor: dst, offset: src.index() };
+            self.nbr_list[src.index()] = Nbr { neighbor: dst, offset };
             self.nbr_exist[src.index()] = true;
-            self.edge_num += 1;
-        }
-    }
-
-    pub fn put_edge_properties(&mut self, src: I, dst: I, properties: &Vec<Item>) {
-        if src.index() < self.nbr_list.len() {
-            assert!(!self.nbr_exist[src.index()]);
-            self.nbr_list[src.index()] = Nbr { neighbor: dst, offset: src.index() };
-            self.nbr_exist[src.index()] = true;
-            match self.edge_property.as_mut() {
-                Some(edge_property) => edge_property.insert(src.index(), properties),
-                None => {}
-            }
             self.edge_num += 1;
         }
     }
@@ -115,10 +101,6 @@ impl<I: IndexType> SingleCsr<I> {
         SingleCsrEdgeIter { cur_vertex: 0, exist_list: &self.nbr_exist, nbr_list: &self.nbr_list }
     }
 
-    pub fn get_properties(&self) -> Option<&ColTable> {
-        self.edge_property.as_ref()
-    }
-
     pub fn desc(&self) {
         let num = self.nbr_list.len();
         let mut empty_num = 0;
@@ -149,17 +131,6 @@ impl<I: IndexType> SingleCsr<I> {
             f.write_all(nbr_exist_slice).unwrap();
         }
 
-        if self.edge_property.is_some() {
-            f.write_u64(1).unwrap();
-            let property_path = path.clone() + "_PROPERTIES";
-            self.edge_property
-                .as_ref()
-                .unwrap()
-                .serialize_table(&property_path);
-        } else {
-            f.write_u64(0).unwrap();
-        }
-
         f.flush().unwrap();
     }
 
@@ -183,18 +154,6 @@ impl<I: IndexType> SingleCsr<I> {
                 slice::from_raw_parts_mut(self.nbr_exist.as_mut_ptr() as *mut u8, nbr_exist_size);
             f.read_exact(nbr_exist_slice).unwrap();
         }
-
-        let have_properties = f.read_u64().unwrap();
-        if have_properties == 1 {
-            let property_path = path.clone() + "_PROPERTIES";
-            let mut col_table = ColTable::new(vec![]);
-            col_table.deserialize_table(&property_path);
-            self.edge_property = Some(col_table);
-        }
-    }
-
-    pub fn put_col_table(&mut self, col_table: ColTable) {
-        self.edge_property = Some(col_table);
     }
 
     pub fn is_same(&self, other: &Self) -> bool {
@@ -241,18 +200,10 @@ impl<I: IndexType> Encode for SingleCsr<I> {
         for i in 0..vnum {
             if self.nbr_exist[i] {
                 self.nbr_list[i].neighbor.write_to(writer)?;
+                self.nbr_list[i].offset.write_to(writer)?;
             }
         }
 
-        match self.edge_property.as_ref() {
-            Some(edge_property) => {
-                writer.write_i64(1_i64)?;
-                edge_property.write_to(writer)?;
-            }
-            None => {
-                writer.write_i64(0_i64)?;
-            }
-        }
         info!("write 1 u64, {} i64, {} nbr", vnum, self.edge_num);
 
         Ok(())
@@ -271,12 +222,9 @@ impl<I: IndexType> Decode for SingleCsr<I> {
         for i in 0..vnum {
             if degree_vec[i] == 1_i64 {
                 let neighbor = I::read_from(reader)?;
-                ret.put_edge(I::new(i), neighbor);
+                let offset = usize::read_from(reader)?;
+                ret.put_edge(I::new(i), neighbor, offset);
             }
-        }
-
-        if reader.read_i64().unwrap() == 1 {
-            ret.put_col_table(ColTable::read_from(reader).unwrap());
         }
 
         Ok(ret)
