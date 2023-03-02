@@ -1880,14 +1880,18 @@ mod graph {
         AllV = 1,
     }
 
-    /// To initialize an path expand operator from an expand base
+    /// To initialize an path expand operator from an edge_expand base
+    // TODO: this function would be removed.
     #[no_mangle]
     pub extern "C" fn init_pathxpd_operator(
         ptr_expand: *const c_void, path_opt: PathOpt, result_opt: PathResultOpt,
     ) -> *const c_void {
         let expand = unsafe { Box::from_raw(ptr_expand as *mut pb::EdgeExpand) };
-        let edgexpd = Box::new(pb::PathExpand {
-            base: Some(expand.as_ref().clone()),
+        let pathxpd = Box::new(pb::PathExpand {
+            base: Some(pb::path_expand::ExpandBase {
+                edge_expand: Some(expand.as_ref().clone()),
+                get_v: None,
+            }),
             start_tag: None,
             alias: None,
             hop_range: None,
@@ -1895,7 +1899,29 @@ mod graph {
             result_opt: unsafe { std::mem::transmute::<PathResultOpt, i32>(result_opt) },
         });
 
-        Box::into_raw(edgexpd) as *const c_void
+        Box::into_raw(pathxpd) as *const c_void
+    }
+
+    /// To initialize an path expand operator from an expand base
+    #[no_mangle]
+    pub extern "C" fn init_pathxpd_operator_with_expand_base(
+        ptr_expand: *const c_void, ptr_getv: *const c_void, path_opt: PathOpt, result_opt: PathResultOpt,
+    ) -> *const c_void {
+        let expand = unsafe { Box::from_raw(ptr_expand as *mut pb::EdgeExpand) };
+        let getv = unsafe { Box::from_raw(ptr_getv as *mut pb::GetV) };
+        let pathxpd = Box::new(pb::PathExpand {
+            base: Some(pb::path_expand::ExpandBase {
+                edge_expand: Some(expand.as_ref().clone()),
+                get_v: Some(getv.as_ref().clone()),
+            }),
+            start_tag: None,
+            alias: None,
+            hop_range: None,
+            path_opt: unsafe { std::mem::transmute::<PathOpt, i32>(path_opt) },
+            result_opt: unsafe { std::mem::transmute::<PathResultOpt, i32>(result_opt) },
+        });
+
+        Box::into_raw(pathxpd) as *const c_void
     }
 
     /// Set path alias of this path expansion
