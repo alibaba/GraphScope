@@ -82,12 +82,11 @@ pub struct AdjList<I> {
     ptr: *mut Nbr<I>,
     pub(crate) deg: i64,
     pub(crate) cap: i64,
-    pub(crate) offset: usize,
 }
 
 impl<I: IndexType> AdjList<I> {
     pub fn new() -> Self {
-        AdjList { ptr: ptr::null_mut(), deg: 0, cap: 0, offset: 0 }
+        AdjList { ptr: ptr::null_mut(), deg: 0, cap: 0 }
     }
 
     pub fn set(&mut self, ptr: *mut Nbr<I>, degree: i64, capacity: i64) {
@@ -112,20 +111,16 @@ impl<I: IndexType> AdjList<I> {
         self.cap = capacity;
     }
 
-    pub fn set_offset(&mut self, offset: usize) {
-        self.offset = offset;
-    }
-
     pub fn extend(&mut self, delta_capacity: i64) {
         self.cap += delta_capacity;
     }
 
-    pub fn put_edge(&mut self, id: I) {
+    pub fn put_edge(&mut self, id: I, offset: usize) {
         assert!(self.deg < self.cap);
         unsafe {
             ptr::write(
                 self.ptr.add(self.deg as usize),
-                Nbr::<I> { neighbor: id, offset: self.offset + self.deg as usize },
+                Nbr::<I> { neighbor: id, offset: offset + self.deg as usize },
             );
         }
         self.deg += 1;
@@ -142,7 +137,7 @@ impl<I: IndexType> AdjList<I> {
 
 impl<I> Clone for AdjList<I> {
     fn clone(&self) -> Self {
-        AdjList { ptr: self.ptr, deg: self.deg, cap: self.cap, offset: self.offset }
+        AdjList { ptr: self.ptr, deg: self.deg, cap: self.cap }
     }
 }
 
@@ -251,7 +246,6 @@ impl<I: IndexType> MutableCsr<I> {
                 // requirement += (requirement + 1) / 2;
                 new_buf_size += requirement as usize;
                 self.adj_lists[i].set_capacity(-requirement);
-                self.adj_lists[i].set_offset(self.adj_offsets[i]);
             }
         }
         if new_buf_size != 0 {
@@ -287,7 +281,7 @@ impl<I: IndexType> MutableCsr<I> {
     pub fn put_edge(&mut self, src: I, dst: I) {
         if src.index() < self.adj_lists.len() {
             self.edge_num += 1;
-            self.adj_lists[src.index()].put_edge(dst);
+            self.adj_lists[src.index()].put_edge(dst, self.adj_offsets[src.index()]);
         }
     }
 
@@ -299,7 +293,7 @@ impl<I: IndexType> MutableCsr<I> {
                 None => {}
             }
             self.edge_num += 1;
-            self.adj_lists[src.index()].put_edge(dst);
+            self.adj_lists[src.index()].put_edge(dst, self.adj_offsets[src.index()]);
         }
     }
 
