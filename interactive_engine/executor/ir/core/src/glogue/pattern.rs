@@ -810,12 +810,15 @@ impl PatternWeightTrait<f64> for Pattern {
 }
 
 fn has_expr_eq(expr: &common_pb::Expression) -> bool {
-    // TODO confirm
-    let equal_opr = common_pb::ExprOpr {
-        node_type: None,
-        item: Some(common_pb::expr_opr::Item::Logical(0)), // eq
-    };
-    expr.operators.contains(&equal_opr)
+    for opr in &expr.operators {
+        if opr
+            .item
+            .eq(&Some(common_pb::expr_opr::Item::Logical(common_pb::Logical::Eq as i32)))
+        {
+            return true;
+        }
+    }
+    false
 }
 
 /// check if the pattern is still connected by removing `vertex_to_remove`

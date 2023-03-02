@@ -209,8 +209,8 @@ impl Plan {
         self
     }
 
-    // notice that this is used for the meta_data of the **Last Appended OP**
-    pub fn set_op_meta_data(&mut self, meta_data: Option<Vec<pb::physical_opr::MetaData>>) {
+    // Notice that this is used to set the meta_data of the **Last Appended OP**
+    pub fn with_meta_data(&mut self, meta_data: Option<Vec<pb::physical_opr::MetaData>>) {
         if let Some(op) = self.plan.last_mut() {
             if let Some(meta_data) = meta_data {
                 op.op_meta = meta_data;
@@ -221,12 +221,6 @@ impl Plan {
     pub fn sink(&mut self, sink: pb::Sink) {
         let op = pb::physical_opr::operator::OpKind::Sink(sink);
         self.plan.push(op.into());
-    }
-
-    pub fn with_op_meta(&mut self, meta: Vec<pb::physical_opr::MetaData>) {
-        if let Some(op) = self.plan.last_mut() {
-            op.op_meta = meta;
-        }
     }
 
     pub fn take(self) -> Vec<pb::PhysicalOpr> {
@@ -272,7 +266,7 @@ impl JobBuilder {
         let op_meta = scan.op_meta.take();
         self.plan
             .add_scan_source(scan.into())
-            .set_op_meta_data(op_meta.map(|meta| vec![meta.into()]));
+            .with_meta_data(op_meta.map(|meta| vec![meta.into()]));
         self
     }
 
@@ -296,7 +290,7 @@ impl JobBuilder {
         let op_meta = project.op_meta.clone();
         self.plan
             .project(project.into())
-            .set_op_meta_data(Some(
+            .with_meta_data(Some(
                 op_meta
                     .into_iter()
                     .map(|meta| meta.into())
@@ -314,7 +308,7 @@ impl JobBuilder {
         let op_meta = group.op_meta.clone();
         self.plan
             .group(group.into())
-            .set_op_meta_data(Some(
+            .with_meta_data(Some(
                 op_meta
                     .into_iter()
                     .map(|meta| meta.into())
@@ -337,7 +331,7 @@ impl JobBuilder {
         let op_meta = unfold.op_meta.take();
         self.plan
             .unfold(unfold.into())
-            .set_op_meta_data(op_meta.map(|meta| vec![meta.into()]));
+            .with_meta_data(op_meta.map(|meta| vec![meta.into()]));
         self
     }
 
@@ -432,7 +426,7 @@ impl JobBuilder {
         let op_meta = get_v.op_meta.take();
         self.plan
             .get_v(get_v.into())
-            .set_op_meta_data(op_meta.map(|meta| vec![meta.into()]));
+            .with_meta_data(op_meta.map(|meta| vec![meta.into()]));
         self
     }
 
@@ -440,7 +434,7 @@ impl JobBuilder {
         let op_meta = edge.op_meta.take();
         self.plan
             .edge_expand(edge.into())
-            .set_op_meta_data(op_meta.map(|meta| vec![meta.into()]));
+            .with_meta_data(op_meta.map(|meta| vec![meta.into()]));
         self
     }
 

@@ -229,6 +229,7 @@ fn str_as_tag(str: String) -> Option<common_pb::NameOrId> {
     }
 }
 
+// When translate String to Variable, the type is not considered.
 impl From<String> for common_pb::Variable {
     fn from(str: String) -> Self {
         assert!(str.starts_with(VAR_PREFIX));
@@ -239,7 +240,6 @@ impl From<String> for common_pb::Variable {
                 // If the tag is represented as an integer
                 tag: str_as_tag(str),
                 property: None,
-                // TODO: this is a little bit tricky. When String to Variable, the type is not considered.
                 node_type: None,
             }
         } else {
