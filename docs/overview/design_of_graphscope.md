@@ -13,7 +13,12 @@ In practice, all the users and transactions can be organized as a large-scale gr
 which contains vertices such as buyers, sellers, and items, and edges representing 
 buying, selling, or reviewing relationships.
 
-![An example in e-commerce](./images/gs-example.png)
+<p align="center">
+<img src="../images/gs-example.png"
+     alt="An example in e-commerce"
+     width="80%" />
+
+</p>
 
 Various techniques can be applied to identify suspicious users and transactions on this transaction graph. 
 For example, an anti-fraud workflow may consist of the following five steps. 
@@ -55,7 +60,13 @@ Achieving this goal requires a wide variety of components to interact,
 including cluster management(deployment) software, graph store (as input, output and to hold intermediate results), 
 distributed execution engines, language constructs, and development tools.
 
-![GraphScope workflow](./images/gs-workflow.png)
+
+<p align="center">
+<img src="../images/gs-workflow.png"
+     alt="GraphScope workflow"
+     width="80%" />
+
+</p>
 
 ### Application layer
 

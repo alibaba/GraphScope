@@ -1501,6 +1501,22 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ValueMapTest",
         method = "g_V_valueMapXname_ageX",
         reason = "unsupported")
+@Graph.OptOut(
+        method = "g_V_order_byXnameX_name",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderTest",
+        reason = "Projection may introduce additional shuffling that can break the order.")
+@Graph.OptOut(
+        method = "g_V_order_byXname_ascX_name",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderTest",
+        reason = "Projection may introduce additional shuffling that can break the order.")
+@Graph.OptOut(
+        method = "g_V_outE_order_byXweight_descX_weight",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderTest",
+        reason = "Projection may introduce additional shuffling that can break the order.")
+@Graph.OptOut(
+        method = "g_V_both_hasLabelXpersonX_order_byXage_descX_limitX5X_name",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderTest",
+        reason = "Projection may introduce additional shuffling that can break the order.")
 public class RemoteTestGraph extends DummyGraph {
     public static final String GRAPH_NAME = "test.graph.name";
     private RemoteGremlinConnection remoteGremlinConnection;

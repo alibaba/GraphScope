@@ -50,13 +50,6 @@ impl Record {
         self.append_arc_entry(entry, alias)
     }
 
-    // this is a test for alias necessary opt: move current into columns with head_alias, and append new entry as current
-    pub fn append_with_head_alias<E: Entry + 'static>(&mut self, entry: E, head_alias: Option<KeyId>) {
-        self.columns
-            .insert(head_alias.unwrap() as usize, self.curr.clone().unwrap());
-        self.curr = Some(DynEntry::new(entry));
-    }
-
     pub fn append_arc_entry(&mut self, entry: DynEntry, alias: Option<KeyId>) {
         if let Some(alias) = alias {
             self.columns

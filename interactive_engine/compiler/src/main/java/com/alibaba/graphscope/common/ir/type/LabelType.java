@@ -28,7 +28,7 @@ public class LabelType {
     public static LabelType DEFAULT = new LabelType();
 
     private String label;
-    private int labelId;
+    private Integer labelId;
     @Nullable private String srcLabel;
     @Nullable private Integer srcLabelId;
     @Nullable private String dstLabel;
@@ -74,7 +74,7 @@ public class LabelType {
         return label;
     }
 
-    public int getLabelId() {
+    public Integer getLabelId() {
         return labelId;
     }
 
