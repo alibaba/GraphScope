@@ -199,16 +199,13 @@ fn to_runtime_edge(e: LocalEdge<'static, DefaultId, DefaultId>, prop_keys: Optio
     let src_id = e.get_src_id() as u64;
     let dst_id = e.get_dst_id() as u64;
     let label = e.get_label();
-    if let Some(prop_key) = prop_keys {
-        let mut prop_map = HashMap::new();
-        let prop_value = Object::Primitive(Primitives::Integer(e.get_encoded_data() as i32));
-        for i in prop_key {
-            prop_map.insert(i, prop_value.clone());
-        }
-        Edge::new(0, Some(encode_runtime_label(label)), src_id, dst_id, DynDetails::Default(prop_map))
-    } else {
-        Edge::new(0, Some(encode_runtime_label(label)), src_id, dst_id, DynDetails::Empty)
-    }
+    Edge::new(
+        0,
+        Some(encode_runtime_label(label)),
+        src_id,
+        dst_id,
+        DynDetails::lazy(LazyEdgeDetails::new(e, prop_keys)),
+    )
 }
 
 /// LazyVertexDetails is used for local property fetching optimization.
@@ -313,6 +310,119 @@ impl Details for LazyVertexDetails {
 }
 
 impl Drop for LazyVertexDetails {
+    fn drop(&mut self) {
+        let ptr = self.inner.load(Ordering::SeqCst);
+        if !ptr.is_null() {
+            unsafe {
+                std::ptr::drop_in_place(ptr);
+            }
+        }
+    }
+}
+
+/// LazyEdgeDetails is used for local property fetching optimization.
+/// That is, the required properties will not be materialized until LazyEdgeDetails need to be shuffled.
+#[allow(dead_code)]
+struct LazyEdgeDetails {
+    // prop_keys specify the properties we would save for later queries after shuffle,
+    // excluding the ones used only when local property fetching.
+    // Specifically, Some(vec![]) indicates we need all properties
+    // and None indicates we do not need any property,
+    prop_keys: Option<Vec<NameOrId>>,
+    inner: AtomicPtr<LocalEdge<'static, DefaultId, DefaultId>>,
+}
+
+impl_as_any!(LazyEdgeDetails);
+
+impl LazyEdgeDetails {
+    pub fn new(e: LocalEdge<'static, DefaultId, DefaultId>, prop_keys: Option<Vec<NameOrId>>) -> Self {
+        let ptr = Box::into_raw(Box::new(e));
+        LazyEdgeDetails { prop_keys, inner: AtomicPtr::new(ptr) }
+    }
+
+    fn get_edge_ptr(&self) -> Option<*mut LocalEdge<'static, DefaultId, DefaultId>> {
+        let ptr = self.inner.load(Ordering::SeqCst);
+        if ptr.is_null() {
+            None
+        } else {
+            Some(ptr)
+        }
+    }
+}
+
+impl fmt::Debug for LazyEdgeDetails {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("LazyEdgeDetails")
+            .field("prop_keys", &self.prop_keys)
+            .field("inner", &self.inner)
+            .finish()
+    }
+}
+
+impl Details for LazyEdgeDetails {
+    fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
+        if let NameOrId::Str(key) = key {
+            let ptr = self.get_edge_ptr();
+            if let Some(ptr) = ptr {
+                unsafe {
+                    (*ptr)
+                        .get_property(key)
+                        .map(|prop| PropertyValue::Borrowed(to_borrow_object(prop)))
+                }
+            } else {
+                None
+            }
+        } else {
+            info!("Have not support getting property by prop_id in experiments store yet");
+            None
+        }
+    }
+
+    fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
+        let mut all_props = HashMap::new();
+        if let Some(prop_keys) = self.prop_keys.as_ref() {
+            // the case of get_all_properties from vertex;
+            if prop_keys.is_empty() {
+                if let Some(ptr) = self.get_edge_ptr() {
+                    unsafe {
+                        if let Some(prop_key_vals) = (*ptr).get_all_properties() {
+                            all_props = prop_key_vals
+                                .into_iter()
+                                .map(|(prop_key, prop_val)| (prop_key.into(), to_object(prop_val)))
+                                .collect();
+                        } else {
+                            return None;
+                        }
+                    }
+                } else {
+                    return None;
+                }
+            } else {
+                // the case of get_all_properties with prop_keys pre-specified
+                for key in prop_keys.iter() {
+                    if let Some(prop) = self.get_property(&key) {
+                        all_props.insert(key.clone(), prop.try_to_owned().unwrap());
+                    } else {
+                        all_props.insert(key.clone(), Object::None);
+                    }
+                }
+            }
+        }
+        Some(all_props)
+    }
+
+    fn insert_property(&mut self, key: NameOrId, _value: Object) {
+        if let Some(prop_keys) = self.prop_keys.as_mut() {
+            if !prop_keys.is_empty() {
+                prop_keys.push(key);
+            }
+        } else {
+            self.prop_keys = Some(vec![key]);
+        }
+    }
+}
+
+impl Drop for LazyEdgeDetails {
     fn drop(&mut self) {
         let ptr = self.inner.load(Ordering::SeqCst);
         if !ptr.is_null() {
