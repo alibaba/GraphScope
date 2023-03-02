@@ -148,7 +148,6 @@ unsafe impl<I: IndexType> Sync for AdjList<I> {}
 pub struct MutableCsr<I> {
     buffers: Vec<(*mut u8, usize)>,
     adj_lists: Vec<AdjList<I>>,
-    adj_offsets: Vec<usize>,
     edge_property: Option<ColTable>,
     prev: Vec<I>,
     next: Vec<I>,
@@ -199,7 +198,6 @@ impl<I: IndexType> MutableCsr<I> {
         MutableCsr {
             buffers: vec![],
             adj_lists: vec![],
-            adj_offsets: vec![],
             edge_property: None,
             prev: vec![],
             next: vec![],
@@ -221,7 +219,6 @@ impl<I: IndexType> MutableCsr<I> {
         }
         self.adj_lists
             .resize(vnum.index(), AdjList::<I>::new());
-        self.adj_offsets.resize(vnum.index(), 0);
         self.prev
             .resize(vnum.index(), <I as IndexType>::max());
         self.next
@@ -231,12 +228,8 @@ impl<I: IndexType> MutableCsr<I> {
     pub fn reserve_edges_dense(&mut self, degree_to_add: &Vec<i64>) {
         let vnum = self.vertex_num().index();
         assert_eq!(degree_to_add.len(), vnum);
-        self.adj_offsets.resize(vnum, 0);
         let mut new_buf_size: usize = 0;
         for i in 0..vnum {
-            if i > 0 {
-                self.adj_offsets[i] = self.adj_offsets[i - 1] + degree_to_add[i - 1] as usize;
-            }
             if degree_to_add[i] == 0 {
                 continue;
             }
@@ -280,28 +273,19 @@ impl<I: IndexType> MutableCsr<I> {
 
     pub fn put_edge(&mut self, src: I, dst: I) {
         if src.index() < self.adj_lists.len() {
+            self.adj_lists[src.index()].put_edge(dst, self.edge_num);
             self.edge_num += 1;
-            self.adj_lists[src.index()].put_edge(dst, self.adj_offsets[src.index()]);
         }
     }
 
     pub fn put_edge_properties(&mut self, src: I, dst: I, properties: &Vec<Item>) {
         if src.index() < self.adj_lists.len() {
-            let property_index = self.adj_offsets[src.index()] + self.adj_lists[src.index()].deg as usize;
             match self.edge_property.as_mut() {
-                Some(edge_property) => edge_property.insert(property_index, properties),
+                Some(edge_property) => edge_property.insert(self.edge_num, properties),
                 None => {}
             }
+            self.adj_lists[src.index()].put_edge(dst, self.edge_num);
             self.edge_num += 1;
-            self.adj_lists[src.index()].put_edge(dst, self.adj_offsets[src.index()]);
-        }
-    }
-
-    pub fn update_degree(&mut self) {
-        let vnum = self.adj_lists.len();
-        self.adj_offsets.resize(vnum, 0);
-        for i in 1..vnum {
-            self.adj_offsets[i] = self.adj_offsets[i - 1] + self.adj_lists[i - 1].degree() as usize;
         }
     }
 
@@ -408,7 +392,6 @@ impl<I: IndexType> MutableCsr<I> {
 
         let mut degree_vec = vec![0_i64; vnum];
         let mut capacity_vec = vec![0_i64; vnum];
-        self.adj_offsets = vec![0; vnum];
 
         let buf_layout = Layout::array::<Nbr<I>>(total_capacity).unwrap();
         unsafe {
@@ -439,8 +422,6 @@ impl<I: IndexType> MutableCsr<I> {
             self.adj_lists[i].set(begin, degree_vec[i], capacity_vec[i]);
             begin = unsafe { begin.add(capacity_vec[i] as usize) };
         }
-
-        self.update_degree();
 
         let have_properties = f.read_u64().unwrap();
         if have_properties == 1 {
