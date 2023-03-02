@@ -18,7 +18,7 @@ The graph data is represented with the [property graph model](https://www.datave
 
 <img src="../images/property_graph.png"
      alt="An example of property graph."
-     width="80%">
+     width="40%">
 
 An example of property graph. 
 :::
@@ -31,7 +31,7 @@ To support large scale graph data, GraphScope applies *edge-cut* partitioning st
 
 <img src="../images/ecut.png"
      alt="An example of edge-cut partitioning."
-     width="80%">
+     width="40%">
 
 An example of edge-cut partitioning. 
 :::
@@ -41,3 +41,5 @@ The graph storage consists of multiple types of graph formats, and each format i
 ## Execution Runtime
 
 ## Algorithm Library
+
+GAE of GraphScope provides [20 graph analytics algorithms](https://graphscope.io/docs/latest/analytical_engine/builtin_algorithms.html) as built-in algorithms, and users can directly invoke them. GraphScope is compatible with NetworkX APIs, and thus diverse kinds of [built-in algorithms in NetworkX](https://networkx.org/documentation/stable/reference/algorithms/index.html) can also be directly invoked by users. In total, over 100 build-in graph analytical algorithms can be directly executed over GraphScope, without any developing effort. In addition, we have implemented the support for Pregel model in GAE, and graph aglorithms implemented in Giraph or GraphX can also be directly run on GAE.
