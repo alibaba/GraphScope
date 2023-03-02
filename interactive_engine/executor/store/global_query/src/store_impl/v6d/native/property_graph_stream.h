@@ -207,7 +207,7 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
       std::unordered_map<std::string, std::string> params{
           {"kind", "vertex"}, {"graph_name", graph_name}
       };
-      auto stream_id = RecordBatchStream::Make<RecordBatchStream>(client, params);
+      auto stream_id = StreamBuilder<RecordBatchStream>::Make(client, params);
       s->vertex_stream_ = client.GetObject<RecordBatchStream>(stream_id);
 
       client.Persist(s->vertex_stream_->id());
@@ -218,7 +218,7 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
       std::unordered_map<std::string, std::string> params{
           {"kind", "edge"}, {"graph_name", graph_name}
       };
-      auto stream_id = RecordBatchStream::Make<RecordBatchStream>(client, params);
+      auto stream_id = StreamBuilder<RecordBatchStream>::Make(client, params);
       s->edge_stream_ = client.GetObject<RecordBatchStream>(stream_id);
 
       client.Persist(s->edge_stream_->id());
@@ -413,7 +413,7 @@ class GlobalPGStreamBuilder : public ObjectBuilder {
     return Status::OK();
   }
 
-  std::shared_ptr<Object> _Seal(Client& client);
+  Status _Seal(Client& client, std::shared_ptr<Object>&object);
 
  private:
   std::vector<ObjectID> stream_chunks_;
