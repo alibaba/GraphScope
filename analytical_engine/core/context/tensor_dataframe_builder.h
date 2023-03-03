@@ -55,16 +55,18 @@ class MPIGlobalTensorBuilder : public vineyard::GlobalTensorBuilder,
 
   void AddChunks(std::vector<vineyard::ObjectID> const& chunk_ids) {
     for (auto& chunk_id : chunk_ids) {
-      this->local_chunk_ids_.emplace_back(chunk_id);
+      this->AddChunk(chunk_id);
     }
   }
 
   vineyard::Status _Seal(vineyard::Client& client,
                          std::shared_ptr<vineyard::Object>& object) override {
     vineyard::ObjectID id = vineyard::InvalidObjectID();
+    this->SetGlobal();
     if (comm_spec_.worker_id() == 0) {
       RETURN_ON_ERROR(vineyard::GlobalTensorBuilder::_Seal(client, object));
       id = object->id();
+      RETURN_ON_ERROR(client_.Persist(id));
     } else {
       RETURN_ON_ERROR(this->Build(client));
     }
@@ -114,16 +116,18 @@ class MPIGlobalDataFrameBuilder : public vineyard::GlobalDataFrameBuilder,
 
   void AddChunks(std::vector<vineyard::ObjectID> const& chunk_ids) {
     for (auto& chunk_id : chunk_ids) {
-      this->local_chunk_ids_.emplace_back(chunk_id);
+      this->AddChunk(chunk_id);
     }
   }
 
   vineyard::Status _Seal(vineyard::Client& client,
                          std::shared_ptr<vineyard::Object>& object) override {
     vineyard::ObjectID id = vineyard::InvalidObjectID();
+    this->SetGlobal();
     if (comm_spec_.worker_id() == 0) {
       RETURN_ON_ERROR(vineyard::GlobalDataFrameBuilder::_Seal(client, object));
       id = object->id();
+      RETURN_ON_ERROR(client_.Persist(id));
     } else {
       RETURN_ON_ERROR(this->Build(client));
     }
