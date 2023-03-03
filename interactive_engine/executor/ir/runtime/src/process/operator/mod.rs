@@ -80,7 +80,6 @@ impl TagKey {
                                 "Get `PropKey::All` on {:?}",
                                 entry,
                             )))?;
-
                         if let Some(properties) = details.get_all_properties() {
                             properties
                                 .into_iter()

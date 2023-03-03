@@ -269,7 +269,6 @@ create_gremlin_instance_on_k8s() {
       ${GRAPHSCOPE_RUNTIME} ${object_id} ${schema_path} ${pegasus_hosts} ${frontend_port}"
   kubectl cp ${schema_path} ${frontend_name}:${schema_path}
   kubectl exec ${frontend_name} -- /bin/bash -c "${launch_frontend_cmd}"
-  
 
   network_servers=""
   for pod in ${pod_ips}; do
@@ -288,6 +287,7 @@ create_gremlin_instance_on_k8s() {
   done
 
   log "Expose gremlin server."
+  timeout_seconds=60
   # random from range [50001, 51000) for interactive engine
   frontend_external_port=$(( ((RANDOM<<15)|RANDOM) % 1000 + 50000 ))
   frontend_deployment_name=$(kubectl get deployment -lapp.kubernetes.io/component=frontend,app.kubernetes.io/instance=${instance_id} -o jsonpath='{.items[*].metadata.name}')
@@ -298,7 +298,7 @@ create_gremlin_instance_on_k8s() {
     wait_period_seconds=0
     while true
     do
-      external_ip=$(kubectl describe service gremlin-${object_id} | grep "LoadBalancer Ingress" | awk -F'[ :]+' '{print $3}')
+      external_ip=$(kubectl get service gremlin-${object_id} -ojsonpath='{.status.loadBalancer.ingress[0].ip}') || true
       if [ -n "${external_ip}" ]; then
         break
       fi
@@ -348,6 +348,7 @@ create_gremlin_instance_on_k8s() {
   frontend_ip=$(kubectl get pod -lapp.kubernetes.io/component=frontend,app.kubernetes.io/instance=${instance_id} -o jsonpath='{.items[*].status.podIP}')
   log "FRONTEND_ENDPOINT:${frontend_ip}:${frontend_port}"
   log "FRONTEND_EXTERNAL_ENDPOINT:${external_ip}:${frontend_external_port}"
+  exit 0
 }
 
 ##########################

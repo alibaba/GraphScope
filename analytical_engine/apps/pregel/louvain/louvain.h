@@ -122,6 +122,7 @@ class PregelLouvain
     if (current_super_step == phase_one_start_step && v.edge_size() == 0) {
       // isolated nodes send themselves a message on the phase_1 start step
       md_t message;
+      message.dst_id = v.get_gid();
       v.send_by_gid(v.get_gid(), message);
       v.vote_to_halt();
       return;
@@ -376,7 +377,7 @@ class PregelLouvain
     md_t message;
     message.internal_weight = state.internal_weight;
     std::map<vid_t, edata_t> edges;
-    assert(vertex.use_fake_edges());
+    assert((vertex.edge_size() == 0) || vertex.use_fake_edges());
     edges = vertex.fake_edges();
     message.edges = std::move(edges);
     if (vertex.get_gid() != state.community) {

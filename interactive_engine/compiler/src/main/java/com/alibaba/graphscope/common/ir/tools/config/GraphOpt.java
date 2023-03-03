@@ -42,4 +42,14 @@ public abstract class GraphOpt {
         // by
         // any others
     }
+
+    public enum PathExpandPath {
+        ARBITRARY,
+        SIMPLE
+    }
+
+    public enum PathExpandResult {
+        EndV,
+        AllV
+    }
 }

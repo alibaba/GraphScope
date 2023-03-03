@@ -154,16 +154,6 @@ where
         }
         Some(all_props)
     }
-
-    fn insert_property(&mut self, key: NameOrId, _value: Object) {
-        if let NameOrId::Id(key) = key {
-            if let Some(prop_keys) = self.prop_keys.as_mut() {
-                prop_keys.push(key as PropId);
-            }
-        } else {
-            info!("Have not support insert property by prop_name in gs_store yet");
-        }
-    }
 }
 
 impl<V> AsAny for LazyVertexDetails<V>
@@ -311,20 +301,6 @@ where
         };
         lazy_props
     }
-
-    fn insert_property(&mut self, key: NameOrId, value: Object) {
-        if let NameOrId::Id(key) = key {
-            if let Some(ref mut cached) = self.cached {
-                cached.insert(key as PropId, value);
-            } else {
-                let mut props = HashMap::new();
-                props.insert(key as PropId, value);
-                self.cached = Some(props);
-            }
-        } else {
-            info!("Have not support insert property by prop_name in gs_store yet");
-        }
-    }
 }
 
 /// LazyEdgeDetails is used for local property fetching optimization.
@@ -423,16 +399,6 @@ where
             }
         }
         Some(all_props)
-    }
-
-    fn insert_property(&mut self, key: NameOrId, _value: Object) {
-        if let NameOrId::Id(key) = key {
-            if let Some(prop_keys) = self.prop_keys.as_mut() {
-                prop_keys.push(key as PropId);
-            }
-        } else {
-            info!("Have not support insert property by prop_name in gs_store yet");
-        }
     }
 }
 
@@ -580,19 +546,5 @@ where
             });
         };
         lazy_props
-    }
-
-    fn insert_property(&mut self, key: NameOrId, value: Object) {
-        if let NameOrId::Id(key) = key {
-            if let Some(ref mut cached) = self.cached {
-                cached.insert(key as PropId, value);
-            } else {
-                let mut props = HashMap::new();
-                props.insert(key as PropId, value);
-                self.cached = Some(props);
-            }
-        } else {
-            info!("Have not support insert property by prop_name in gs_store yet");
-        }
     }
 }

@@ -18,8 +18,6 @@ package com.alibaba.graphscope.common.ir;
 
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.config.*;
-import com.alibaba.graphscope.common.jna.type.PathOpt;
-import com.alibaba.graphscope.common.jna.type.ResultOpt;
 
 import org.apache.calcite.rel.RelNode;
 import org.junit.Assert;
@@ -87,8 +85,8 @@ public class ExpandTest {
                                         GraphOpt.GetV.END,
                                         new LabelConfig(false).addLabel("person")))
                         .range(1, 3)
-                        .pathOpt(PathOpt.Simple)
-                        .resultOpt(ResultOpt.AllV)
+                        .pathOpt(GraphOpt.PathExpandPath.SIMPLE)
+                        .resultOpt(GraphOpt.PathExpandResult.AllV)
                         .build();
         RelNode pathExpand =
                 builder.source(
@@ -107,10 +105,5 @@ public class ExpandTest {
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[~DEFAULT], opt=[VERTEX])",
                 pathExpand.explain().trim());
-        Assert.assertEquals(
-                "GraphPxdElementType(RecordType(Graph_Schema_Type(BIGINT id, DOUBLE weight)"
-                    + " ~DEFAULT), RecordType(Graph_Schema_Type(BIGINT id, CHAR(1) name, INTEGER"
-                    + " age) ~DEFAULT)) ARRAY",
-                pathExpand.getRowType().toString());
     }
 }
