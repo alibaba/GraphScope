@@ -6,6 +6,15 @@ In GraphScope, Graph Analytics Engine (GAE) is responsible for handling various 
 
 GAE is a full-fledged, in-production system for graph analytics over large scale graph data. As shown in the following figure, there exist three major layers in GAE, namely graph storage, execution runtime and algorithm library. Next, we give an overview to each of them below.
 
+:::{figure-md}
+
+<img src="../images/gae_arch.png"
+     alt="Architecture of GAE."
+     width="40%">
+
+Architecture of GAE. 
+:::
+
 - Graph storage: Graph data in real-life is extremely large scale, and thus graph storage stores graph data in a distributed fashion. The graph storage consists of different graph formats with different features. Although there exist diverse types of graph storage, unified interfaces for graph storage are provided for GAE as well as other computation engines of GraphScope, and thus GAE does not care about how each type of graph storage is implemented.
 - Execution runtime: At the core of GAE is its execution runtime. It offers user-friendly interfaces for graph library, supporting various programming models and programming languages, so that users can develop their algorithms freely. GAE implements many optimization techniques in its execution runtime, such as pull/push dynamic switching, cache-efficient memory layout, and pipelining, to achieve better performance.
 - Algorithm library: While graph analytics algorithms can be directly written using the interfaces offered by graph storage and execution runtime, we have built an algorithm library consisting of common algorithms for various application domains, to ease the development of new graph applications. In addition, GAE has implemented the support for NetworkX, Giraph and GraphX, and existing algorithms developed for NetworkX, Giraph and GraphX can directly run on GAE directly with no or some small changes.
@@ -50,7 +59,7 @@ Currently, GAE has supported three programming models: Pregel, PIE and FLASH. [P
 
 Multi-language SDKs are provided by GAE. Users choose to write their own algorithms in either C++, Java or Python. With Python, users can still expect a high performance. GAE integrated a compiler built with Cython. It can generate efficient native code from Python algorithms behind the scenes, and dispatch the code to the GraphScope cluster for execution. The SDKs further lower the total cost of ownership of graph analytics.
 
-### Application Compatibility Component
+###  Component
 
 The execution runtime of GAE is also compatible with other popular graph processing systems. Specifically, it is compatible with the graph manipulation APIs and graph algorithms, and thus a program written with NetworkX can directly run on GAE with only some small changes. In addition, we have implemented the support for Pregel model. As a result, you can run your graph applications implemented in Giraph or GraphX on GAE directly.
 
