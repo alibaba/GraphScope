@@ -21,11 +21,14 @@ Given the heterogeneous ogbn-mag data, the task is to predict the class of each 
 
 GraphScope models graph data as property graph, in which the edges/vertices are labeled and have many properties. Taking ogbn-mag as example, the figure below shows the model of the property graph.
 
-<p align="center">
+:::{figure-md}
+
 <img src="../images/sample_pg.png"
-     alt="Sample of property graph"
-     width="80%" />
-</p>
+     alt="Sample of property graph."
+     width="80%">
+
+Sample of property graph 
+:::
 
 This graph has four kinds of vertices, labeled as paper, author, institution and field_of_study. There are four kinds of edges connecting them, each kind of edges has a label and specifies the vertex labels for its two ends. For example, cites edges connect two vertices labeled paper. Another example is writes, it requires the source vertex is labeled author and the destination is a paper vertex. All the vertices and edges may have properties. e.g., paper vertices have properties like features, publish year, subject label, etc.
 
