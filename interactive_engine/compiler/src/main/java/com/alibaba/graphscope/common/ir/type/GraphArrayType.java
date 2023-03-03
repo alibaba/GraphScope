@@ -25,6 +25,9 @@ import org.apache.calcite.rel.type.RelDataTypeFamily;
 import org.apache.calcite.sql.type.AbstractSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
 
+/**
+ * collection type, i.e. type of path expand
+ */
 public class GraphArrayType extends AbstractSqlType {
     private final RelDataType elementType;
 
@@ -34,7 +37,11 @@ public class GraphArrayType extends AbstractSqlType {
         computeDigest();
     }
 
-    // implement RelDataTypeImpl
+    @Override
+    public RelDataType getComponentType() {
+        return elementType;
+    }
+
     @Override
     protected void generateTypeString(StringBuilder sb, boolean withDetail) {
         if (withDetail) {
@@ -45,13 +52,6 @@ public class GraphArrayType extends AbstractSqlType {
         sb.append(" ARRAY");
     }
 
-    // implement RelDataType
-    @Override
-    public RelDataType getComponentType() {
-        return elementType;
-    }
-
-    // implement RelDataType
     @Override
     public RelDataTypeFamily getFamily() {
         return this;

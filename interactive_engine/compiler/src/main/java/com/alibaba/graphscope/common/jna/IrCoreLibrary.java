@@ -80,8 +80,6 @@ public interface IrCoreLibrary extends Library {
 
     FfiResult.ByValue setSelectPredicate(Pointer select, String predicate);
 
-    FfiResult.ByValue setSelectPredicateWithPb(Pointer select, FfiPbPointer.ByValue pbPointer);
-
     FfiResult.ByValue appendSelectOperator(
             Pointer plan, Pointer select, int parent, IntByReference oprIdx);
 
@@ -89,9 +87,6 @@ public interface IrCoreLibrary extends Library {
 
     FfiResult.ByValue addOrderbyPair(
             Pointer orderBy, FfiVariable.ByValue variable, FfiOrderOpt orderOpt);
-
-    FfiResult.ByValue addOrderbyPairWithPb(
-            Pointer orderBy, FfiPbPointer.ByValue pbPointer, FfiOrderOpt orderOpt);
 
     FfiResult.ByValue setOrderbyLimit(Pointer orderBy, int lower, int upper);
 
@@ -101,9 +96,6 @@ public interface IrCoreLibrary extends Library {
     Pointer initProjectOperator(boolean isAppend);
 
     FfiResult.ByValue addProjectExprAlias(Pointer project, String expr, FfiAlias.ByValue alias);
-
-    FfiResult.ByValue addProjectExprAliasWithPb(
-            Pointer project, FfiPbPointer.ByValue pbPointer, FfiAlias.ByValue alias);
 
     FfiResult.ByValue appendProjectOperator(
             Pointer plan, Pointer project, int parent, IntByReference oprIdx);
@@ -122,17 +114,8 @@ public interface IrCoreLibrary extends Library {
     FfiResult.ByValue addGroupbyKeyAlias(
             Pointer groupBy, FfiVariable.ByValue key, FfiAlias.ByValue alias);
 
-    FfiResult.ByValue addGroupbyKeyAliasWithPb(
-            Pointer groupBy, FfiPbPointer.ByValue pbPointer, FfiAlias.ByValue alias);
-
     FfiResult.ByValue addGroupbyAggFn(
             Pointer group, FfiVariable.ByValue aggVal, FfiAggOpt aggOpt, FfiAlias.ByValue alias);
-
-    FfiResult.ByValue addGroupbyAggFnWithPb(
-            Pointer group,
-            FfiPbPointer.ByValue pbPointer,
-            FfiAggOpt aggOpt,
-            FfiAlias.ByValue alias);
 
     FfiResult.ByValue appendGroupbyOperator(
             Pointer plan, Pointer groupBy, int parent, IntByReference oprIdx);
@@ -168,9 +151,6 @@ public interface IrCoreLibrary extends Library {
             Pointer plan, Pointer apply, int parent, IntByReference oprIdx);
 
     Pointer initPathxpdOperator(Pointer expand, PathOpt pathOpt, ResultOpt resultOpt);
-
-    Pointer initPathxpdOperatorWithExpandBase(
-            Pointer expand, Pointer getV, PathOpt pathOpt, ResultOpt resultOpt);
 
     FfiResult.ByValue setPathxpdAlias(Pointer pathXpd, FfiAlias.ByValue alias);
 
@@ -214,8 +194,6 @@ public interface IrCoreLibrary extends Library {
 
     FfiResult.ByValue setParamsPredicate(Pointer params, String predicate);
 
-    FfiResult.ByValue setParamsPredicateWithPb(Pointer params, FfiPbPointer.ByValue exprPb);
-
     FfiResult.ByValue setParamsIsAllColumns(Pointer params);
 
     FfiResult.ByValue setParamsSampleRatio(Pointer params, double sampleRatio);
@@ -225,6 +203,4 @@ public interface IrCoreLibrary extends Library {
     FfiResult.ByValue addParamsExtra(Pointer params, String key, String value);
 
     Pointer initSinkGraphOperator(String graphName);
-
-    FfiResult.ByValue setExpr(FfiPbPointer.ByValue pb);
 }

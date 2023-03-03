@@ -80,8 +80,8 @@ public class GraphLogicalPathExpand extends SingleRel {
                 .item("getV", RelOptUtil.toString(getV))
                 .itemIf("offset", offset, offset != null)
                 .itemIf("fetch", fetch, fetch != null)
-                .item("path_opt", pathOpt())
-                .item("result_opt", resultOpt())
+                .item("path_opt", getPathOpt())
+                .item("result_opt", getResultOpt())
                 .item("alias", getAliasName());
     }
 
@@ -111,14 +111,14 @@ public class GraphLogicalPathExpand extends SingleRel {
         return Integer.valueOf(aliasId);
     }
 
-    public GraphOpt.PathExpandPath pathOpt() {
+    public GraphOpt.PathExpandPath getPathOpt() {
         ObjectUtils.requireNonEmpty(hints);
         RelHint optHint = hints.get(0);
         ObjectUtils.requireNonEmpty(optHint.kvOptions);
         return GraphOpt.PathExpandPath.valueOf(optHint.kvOptions.get("path"));
     }
 
-    public GraphOpt.PathExpandResult resultOpt() {
+    public GraphOpt.PathExpandResult getResultOpt() {
         ObjectUtils.requireNonEmpty(hints);
         RelHint optHint = hints.get(0);
         ObjectUtils.requireNonEmpty(optHint.kvOptions);

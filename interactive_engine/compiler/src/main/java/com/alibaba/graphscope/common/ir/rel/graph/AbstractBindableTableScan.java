@@ -41,7 +41,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * A basic structure of graph operators
+ * A basic structure of graph operators : Source / Expand / GetV
  */
 public abstract class AbstractBindableTableScan extends TableScan {
     // for filter fusion

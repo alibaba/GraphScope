@@ -27,12 +27,10 @@ import org.apache.commons.lang3.ObjectUtils;
 import java.util.List;
 
 public class GraphLogicalSource extends AbstractBindableTableScan {
-    private GraphOpt.Source opt;
 
     protected GraphLogicalSource(
             GraphOptCluster cluster, List<RelHint> hints, TableConfig tableConfig) {
         super(cluster, hints, tableConfig);
-        this.opt = scanOpt();
     }
 
     public static GraphLogicalSource create(
@@ -40,19 +38,15 @@ public class GraphLogicalSource extends AbstractBindableTableScan {
         return new GraphLogicalSource(cluster, hints, tableConfig);
     }
 
-    private GraphOpt.Source scanOpt() {
+    public GraphOpt.Source getOpt() {
         ObjectUtils.requireNonEmpty(hints);
         RelHint optHint = hints.get(0);
         ObjectUtils.requireNonEmpty(optHint.listOptions);
         return GraphOpt.Source.valueOf(optHint.listOptions.get(0));
     }
 
-    public GraphOpt.Source getOpt() {
-        return opt;
-    }
-
     @Override
     public RelWriter explainTerms(RelWriter pw) {
-        return super.explainTerms(pw).item("opt", opt);
+        return super.explainTerms(pw).item("opt", getOpt());
     }
 }

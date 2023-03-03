@@ -28,12 +28,10 @@ import org.apache.commons.lang3.ObjectUtils;
 import java.util.List;
 
 public class GraphLogicalGetV extends AbstractBindableTableScan {
-    private GraphOpt.GetV opt;
 
     protected GraphLogicalGetV(
             GraphOptCluster cluster, List<RelHint> hints, RelNode input, TableConfig tableConfig) {
         super(cluster, hints, input, tableConfig);
-        this.opt = getVOpt();
     }
 
     public static GraphLogicalGetV create(
@@ -41,19 +39,15 @@ public class GraphLogicalGetV extends AbstractBindableTableScan {
         return new GraphLogicalGetV(cluster, hints, input, tableConfig);
     }
 
-    private GraphOpt.GetV getVOpt() {
+    public GraphOpt.GetV getOpt() {
         ObjectUtils.requireNonEmpty(hints);
         RelHint optHint = hints.get(0);
         ObjectUtils.requireNonEmpty(optHint.listOptions);
         return GraphOpt.GetV.valueOf(optHint.listOptions.get(0));
     }
 
-    public GraphOpt.GetV getOpt() {
-        return opt;
-    }
-
     @Override
     public RelWriter explainTerms(RelWriter pw) {
-        return super.explainTerms(pw).item("opt", opt);
+        return super.explainTerms(pw).item("opt", getOpt());
     }
 }
