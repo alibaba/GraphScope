@@ -39,7 +39,6 @@ import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rel.logical.LogicalFilter;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
 
@@ -53,7 +52,7 @@ public class FfiLogicalPlan extends LogicalPlan<Pointer, FfiData.ByValue> {
     public FfiLogicalPlan(RelOptCluster cluster, List<RelHint> hints) {
         super(cluster, hints);
         this.ptrPlan = LIB.initLogicalPlan();
-        this.lastIdx = 0;
+        this.lastIdx = -1;
     }
 
     @Override
@@ -99,11 +98,12 @@ public class FfiLogicalPlan extends LogicalPlan<Pointer, FfiData.ByValue> {
     }
 
     @Override
-    public void explain(@Nullable StringBuilder sb) {
+    public String explain() {
         FfiResult res = LIB.printPlanAsJson(this.ptrPlan);
         if (res == null || res.code != ResultCode.Success) {
-            throw new IllegalStateException("illegal ffi results " + res, null);
+            throw new IllegalStateException("print plan in ir core fail, msg : %s" + res, null);
         }
+        return res.msg;
     }
 
     @Override

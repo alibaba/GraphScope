@@ -16,12 +16,15 @@
 
 package com.alibaba.graphscope.common.ir.runtime;
 
+import com.alibaba.graphscope.common.ir.runtime.type.LogicalNode;
 import com.alibaba.graphscope.common.ir.runtime.type.LogicalPlan;
 
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelVisitor;
-import org.apache.calcite.rex.RexShuttle;
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import java.util.Objects;
 
 /**
  * convert logical plan in calcite to the structures in ir_core
@@ -29,13 +32,18 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @param <R> type of physical plan (i.e. {@link com.alibaba.graphscope.common.jna.type.FfiData for FFI interfaces})
  */
 public class LogicalPlanConverter<T, R> extends RelVisitor {
-    private LogicalPlan<T, R> logicalPlan;
-    private RexShuttle rexShuttle;
+    private final LogicalPlan<T, R> logicalPlan;
+    private final RelShuttle rexShuttle;
+
+    public LogicalPlanConverter(RelShuttle relShuttle, LogicalPlan logicalPlan) {
+        this.rexShuttle = Objects.requireNonNull(relShuttle);
+        this.logicalPlan = Objects.requireNonNull(logicalPlan);
+    }
 
     @Override
     public void visit(RelNode node, int ordinal, @Nullable RelNode parent) {
         super.visit(node, ordinal, parent);
-        node.accept(rexShuttle);
+        this.logicalPlan.appendNode((LogicalNode) node.accept(rexShuttle));
     }
 
     @Override

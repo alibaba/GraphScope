@@ -19,6 +19,7 @@ package com.alibaba.graphscope.common.ir.runtime.proto;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.gaia.proto.Common;
+import com.alibaba.graphscope.gaia.proto.DataType;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
 
 import org.apache.calcite.rex.*;
@@ -110,10 +111,12 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
             if (var.getProperty() != null) {
                 varBuilder.setProperty(Utils.protoProperty(var.getProperty()));
             }
+            DataType.IrDataType varDataType = Utils.protoIrDataType(inputRef.getType(), isColumnId);
+            varBuilder.setNodeType(varDataType);
             builder.addOperators(
                     OuterExpression.ExprOpr.newBuilder()
                             .setVar(varBuilder.build())
-                            .setNodeType(Utils.protoIrDataType(inputRef.getType(), isColumnId))
+                            .setNodeType(varDataType)
                             .build());
         }
         return builder.build();

@@ -45,9 +45,9 @@ import java.util.Objects;
  */
 public abstract class AbstractBindableTableScan extends TableScan {
     // for filter fusion
-    protected ImmutableList<RexNode> filters;
+    protected @Nullable ImmutableList<RexNode> filters;
     // for field trimmer
-    protected ImmutableIntList project;
+    protected @Nullable ImmutableIntList project;
 
     protected final @Nullable RelNode input;
 
@@ -142,10 +142,10 @@ public abstract class AbstractBindableTableScan extends TableScan {
     }
 
     public void setFilters(ImmutableList<RexNode> filters) {
-        this.filters = filters;
+        this.filters = Objects.requireNonNull(filters);
     }
 
-    public ImmutableList<RexNode> getFilters() {
+    public @Nullable ImmutableList<RexNode> getFilters() {
         return filters;
     }
 }

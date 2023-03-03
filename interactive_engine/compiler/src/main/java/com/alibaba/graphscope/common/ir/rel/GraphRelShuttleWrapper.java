@@ -16,10 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.rel;
 
-import com.alibaba.graphscope.common.ir.rel.graph.AbstractBindableTableScan;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalGetV;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
+import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
 import com.google.common.base.Preconditions;
@@ -29,10 +26,10 @@ import org.apache.calcite.rel.RelShuttleImpl;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.logical.LogicalFilter;
 
-public abstract class GraphRelShuttleWrapper extends RelShuttleImpl {
+public class GraphRelShuttleWrapper extends RelShuttleImpl {
     protected final GraphRelShuttle relShuttle;
 
-    protected GraphRelShuttleWrapper(GraphRelShuttle relShuttle) {
+    public GraphRelShuttleWrapper(GraphRelShuttle relShuttle) {
         this.relShuttle = relShuttle;
     }
 
@@ -67,6 +64,8 @@ public abstract class GraphRelShuttleWrapper extends RelShuttleImpl {
             return relShuttle.visit((GraphLogicalSingleMatch) relNode);
         } else if (relNode instanceof GraphLogicalMultiMatch) {
             return relShuttle.visit((GraphLogicalMultiMatch) relNode);
+        } else if (relNode instanceof GraphLogicalPathExpand) {
+            return relShuttle.visit((GraphLogicalPathExpand) relNode);
         } else {
             throw new UnsupportedOperationException(
                     "relNode " + relNode.getClass() + " can not be visited in shuttle");

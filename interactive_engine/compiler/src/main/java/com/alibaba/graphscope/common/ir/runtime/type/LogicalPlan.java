@@ -20,7 +20,6 @@ import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.AbstractRelNode;
 import org.apache.calcite.rel.hint.RelHint;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
 
@@ -40,9 +39,8 @@ public abstract class LogicalPlan<T, R> extends AbstractRelNode implements AutoC
 
     /**
      * output logical plan
-     * @param sb print logical plan directly if is null
      */
-    public abstract void explain(@Nullable StringBuilder sb);
+    public abstract String explain();
 
     /**
      * convert logical plan to physical plan

@@ -46,12 +46,12 @@ import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.*;
-import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlKind;
+import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.ArrayList;
@@ -105,7 +105,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
 
     @Override
     public RelNode visit(GraphLogicalPathExpand pxd) {
-        LogicalNode expand = (LogicalNode) visit((GraphLogicalPathExpand) pxd.getExpand());
+        LogicalNode expand = (LogicalNode) visit((GraphLogicalExpand) pxd.getExpand());
         LogicalNode getV = (LogicalNode) visit((GraphLogicalGetV) pxd.getGetV());
         Pointer ptrPxd =
                 LIB.initPathxpdOperatorWithExpandBase(
@@ -285,26 +285,27 @@ public class RelToFfiConverter implements GraphRelShuttle {
     }
 
     private Pointer ffiQueryParams(AbstractBindableTableScan tableScan) {
-        RelDataType rowType = tableScan.getRowType();
+        List<RelDataTypeField> fields = tableScan.getRowType().getFieldList();
         Preconditions.checkArgument(
-                rowType instanceof GraphSchemaType,
-                "data type of graph operators should be %s",
+                !fields.isEmpty() && fields.get(0).getType() instanceof GraphSchemaType,
+                "data type of graph operators should be %s ",
                 GraphSchemaType.class);
+        GraphSchemaType schemaType = (GraphSchemaType) fields.get(0).getType();
         List<GraphLabelType> labelTypes = new ArrayList<>();
-        if (rowType instanceof GraphSchemaTypeList) {
-            ((GraphSchemaTypeList) rowType)
+        if (schemaType instanceof GraphSchemaTypeList) {
+            ((GraphSchemaTypeList) schemaType)
                     .forEach(
                             k -> {
                                 labelTypes.add(k.getLabelType());
                             });
         } else {
-            labelTypes.add(((GraphSchemaType) rowType).getLabelType());
+            labelTypes.add(schemaType.getLabelType());
         }
         Pointer params = LIB.initQueryParams();
         for (GraphLabelType type : labelTypes) {
             checkFfiResult(LIB.addParamsColumn(params, ArgUtils.asNameOrId(type.getLabelId())));
         }
-        if (!tableScan.getFilters().isEmpty()) {
+        if (ObjectUtils.isNotEmpty(tableScan.getFilters())) {
             OuterExpression.Expression expression =
                     tableScan.getFilters().get(0).accept(new RexToProtoConverter(true, isColumnId));
             checkFfiResult(
@@ -316,7 +317,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
 
     private @Nullable Pointer ffiIndexPredicates(GraphLogicalSource source) {
         ImmutableList<RexNode> filters = source.getFilters();
-        if (filters.isEmpty()) return null;
+        if (ObjectUtils.isEmpty(filters)) return null;
         // decomposed by OR
         List<RexNode> disJunctions = RelOptUtil.disjunctions(filters.get(0));
         List<RexNode> literals = new ArrayList<>();
@@ -359,7 +360,8 @@ public class RelToFfiConverter implements GraphRelShuttle {
 
     private List<Integer> range(RexNode offset, RexNode fetch) {
         // offset or fetch can be a dynamic params to support prepared statement
-        if (!(offset instanceof RexLiteral) || !(fetch instanceof RexLiteral)) {
+        if (offset != null && !(offset instanceof RexLiteral)
+                || fetch != null && !(fetch instanceof RexLiteral)) {
             throw new IllegalArgumentException(
                     "can not get INTEGER hops from types instead of RexLiteral");
         }
