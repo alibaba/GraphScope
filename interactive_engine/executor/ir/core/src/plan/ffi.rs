@@ -2157,23 +2157,3 @@ mod subtask {
         destroy_ptr::<pb::SegmentApply>(ptr)
     }
 }
-
-#[repr(C)]
-pub struct FfiPbPointer {
-    ptr: *const u8,
-    len: i64,
-}
-
-#[no_mangle]
-pub extern "C" fn set_expr(pb_ptr: FfiPbPointer) -> FfiResult {
-    let buf = unsafe { std::slice::from_raw_parts(pb_ptr.ptr, pb_ptr.len as usize) };
-    let expr = decode::<common_pb::Expression>(buf).unwrap();
-    println!("expression pb {:?}", expr);
-    FfiResult::success()
-}
-
-#[inline]
-fn decode<T: Message + Default>(binary: &[u8]) -> Result<T, FfiResult> {
-    let result = T::decode(binary).unwrap();
-    Ok(result)
-}
