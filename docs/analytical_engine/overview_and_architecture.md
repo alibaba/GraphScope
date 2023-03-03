@@ -61,7 +61,7 @@ Multi-language SDKs are provided by GAE. Users choose to write their own algorit
 
 ### Application Compatibility Component
 
-The execution runtime of GAE is also compatible with other popular graph processing systems. Specifically, it is compatible with the graph manipulation APIs and graph algorithms, and thus a program written with NetworkX can directly run on GAE with only some small changes. In addition, we have implemented the support for Pregel model. As a result, you can run your graph applications implemented in (Giraph)[https://graphscope.io/docs/latest/analytical_engine/tutorial_run_giraph_apps.html] or (GraphX)[https://graphscope.io/docs/latest/analytical_engine/tutorial_run_graphx_apps.html] on GAE directly.
+The execution runtime of GAE is also compatible with other popular graph processing systems. Specifically, it is compatible with the graph manipulation APIs and graph algorithms, and thus a program written with NetworkX can directly run on GAE with only some small changes. In addition, we have implemented the support for Pregel model. As a result, you can run your graph applications implemented in [Giraph](https://graphscope.io/docs/latest/analytical_engine/tutorial_run_giraph_apps.html) or [GraphX](https://graphscope.io/docs/latest/analytical_engine/tutorial_run_graphx_apps.html) on GAE directly.
 
 ## Algorithm Library
 
