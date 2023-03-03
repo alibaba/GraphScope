@@ -169,7 +169,7 @@ message Range {
 }
 
 message Limit {
-  // The limit range
+  // The limit range, e.g., limit(10) will be represented by Range {lower = 0, upper = 10}
   Range range = 1;
 }
 
