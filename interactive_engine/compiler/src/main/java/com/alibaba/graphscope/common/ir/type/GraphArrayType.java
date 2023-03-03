@@ -16,13 +16,14 @@
 
 package com.alibaba.graphscope.common.ir.type;
 
+import static java.util.Objects.requireNonNull;
+
 import com.google.common.collect.ImmutableList;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFamily;
 import org.apache.calcite.sql.type.AbstractSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
-
-import static java.util.Objects.requireNonNull;
 
 public class GraphArrayType extends AbstractSqlType {
     private final RelDataType elementType;
@@ -34,7 +35,8 @@ public class GraphArrayType extends AbstractSqlType {
     }
 
     // implement RelDataTypeImpl
-    @Override protected void generateTypeString(StringBuilder sb, boolean withDetail) {
+    @Override
+    protected void generateTypeString(StringBuilder sb, boolean withDetail) {
         if (withDetail) {
             sb.append(elementType.getFullTypeString());
         } else {
@@ -44,12 +46,14 @@ public class GraphArrayType extends AbstractSqlType {
     }
 
     // implement RelDataType
-    @Override public RelDataType getComponentType() {
+    @Override
+    public RelDataType getComponentType() {
         return elementType;
     }
 
     // implement RelDataType
-    @Override public RelDataTypeFamily getFamily() {
+    @Override
+    public RelDataTypeFamily getFamily() {
         return this;
     }
 }

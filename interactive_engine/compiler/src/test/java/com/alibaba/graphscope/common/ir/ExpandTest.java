@@ -102,11 +102,15 @@ public class ExpandTest {
                         + " tables=[knows]}], alias=[~DEFAULT], opt=[OUT])\n"
                         + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[~DEFAULT], opt=[END])\n"
-                        + "], offset=[1], fetch=[3], path_opt=[Simple], result_opt=[AllV],"
+                        + "], offset=[1], fetch=[3], path_opt=[SIMPLE], result_opt=[AllV],"
                         + " alias=[~DEFAULT])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[~DEFAULT], opt=[VERTEX])",
                 pathExpand.explain().trim());
-        Assert.assertEquals("GraphPxdElementType(RecordType(Graph_Schema_Type(BIGINT id, DOUBLE weight) ~DEFAULT), RecordType(Graph_Schema_Type(BIGINT id, CHAR(1) name, INTEGER age) ~DEFAULT)) ARRAY", pathExpand.getRowType().toString());
+        Assert.assertEquals(
+                "GraphPxdElementType(RecordType(Graph_Schema_Type(BIGINT id, DOUBLE weight)"
+                    + " ~DEFAULT), RecordType(Graph_Schema_Type(BIGINT id, CHAR(1) name, INTEGER"
+                    + " age) ~DEFAULT)) ARRAY",
+                pathExpand.getRowType().toString());
     }
 }

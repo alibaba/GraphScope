@@ -17,10 +17,11 @@
 package com.alibaba.graphscope.common.ir.runtime;
 
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
-import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
-import com.alibaba.graphscope.common.ir.type.GraphProperty;
+import com.alibaba.graphscope.common.ir.type.*;
 import com.alibaba.graphscope.gaia.proto.Common;
+import com.alibaba.graphscope.gaia.proto.DataType;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -88,7 +89,7 @@ public class RexToLogicPBConverter extends RexVisitorImpl<Boolean> {
             RexGraphVariable var = (RexGraphVariable) inputRef;
             exprBuilder.addOperators(OuterExpression.ExprOpr.newBuilder()
                     .setVar(OuterExpression.Variable.newBuilder()
-                                    .setTag(OuterExpression.NameOrId.newBuilder().setId(var.getAliasId()).build())
+                                    .setTag(Common.NameOrId.newBuilder().setId(var.getAliasId()).build())
                                     .setProperty(protoProperty(var.getProperty()))
                                     .build()).build());
         }
@@ -97,7 +98,9 @@ public class RexToLogicPBConverter extends RexVisitorImpl<Boolean> {
 
     @Override
     public Boolean visitLiteral(RexLiteral literal) {
-        exprBuilder.addOperators(OuterExpression.ExprOpr.newBuilder().setConst(protoValue(literal)).build());
+        exprBuilder.addOperators(OuterExpression.ExprOpr.newBuilder().setConst(protoValue(literal)).setNodeType(
+                DataType.IrDataType.newBuilder().build()
+        ).build());
         return true;
     }
 
@@ -145,13 +148,13 @@ public class RexToLogicPBConverter extends RexVisitorImpl<Boolean> {
         }
     }
 
-    private OuterExpression.NameOrId protoNameOrId(GraphNameOrId nameOrId) {
+    private Common.NameOrId protoNameOrId(GraphNameOrId nameOrId) {
         switch (nameOrId.getOpt()) {
             case NAME:
-                return OuterExpression.NameOrId.newBuilder().setName(nameOrId.getName()).build();
+                return Common.NameOrId.newBuilder().setName(nameOrId.getName()).build();
             case ID :
             default:
-                return OuterExpression.NameOrId.newBuilder().setId(nameOrId.getId()).build();
+                return Common.NameOrId.newBuilder().setId(nameOrId.getId()).build();
         }
     }
 
@@ -190,6 +193,31 @@ public class RexToLogicPBConverter extends RexVisitorImpl<Boolean> {
             default:
                 // TODO: support IN and NOT_IN
                 throw new UnsupportedOperationException("operator type=" + operator.getKind() + ", name=" + operator.getName() + " is unsupported yet");
+        }
+    }
+
+    private DataType.IrDataType protoDataType(RelDataType type) {
+        switch (type.getSqlTypeName()) {
+            case BOOLEAN:
+                return DataType.IrDataType.newBuilder().setDataType(Common.DataType.BOOLEAN).build();
+            case INTEGER:
+                return DataType.IrDataType.newBuilder().setDataType(Common.DataType.INT32).build();
+            case BIGINT:
+            case DECIMAL:
+                return DataType.IrDataType.newBuilder().setDataType(Common.DataType.INT64).build();
+            case CHAR:
+                return DataType.IrDataType.newBuilder().setDataType(Common.DataType.STRING).build();
+            case FLOAT:
+            case DOUBLE:
+                return DataType.IrDataType.newBuilder().setDataType(Common.DataType.DOUBLE).build();
+            case ROW:
+                if (type instanceof GraphSchemaTypeList) {
+                    GraphSchemaTypeList typeList = (GraphSchemaTypeList) type;
+                } else if (type instanceof GraphSchemaType) {
+                }
+            case ARRAY:
+                // TODO: support int/double/string/graph-element array
+            default:
         }
     }
 }

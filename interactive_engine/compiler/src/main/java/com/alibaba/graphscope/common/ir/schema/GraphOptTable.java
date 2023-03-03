@@ -19,9 +19,9 @@ package com.alibaba.graphscope.common.ir.schema;
 import static java.util.Objects.requireNonNull;
 
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
+import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaTypeList;
-import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.compiler.api.schema.*;
 
 import org.apache.calcite.linq4j.tree.Expression;
@@ -90,7 +90,9 @@ public class GraphOptTable implements RelOptTable {
             List<GraphSchemaType> fuzzyTypes = new ArrayList<>();
             for (EdgeRelation relation : relations) {
                 GraphLabelType labelType =
-                        (new GraphLabelType()).label(element.getLabel()).labelId(element.getLabelId());
+                        (new GraphLabelType())
+                                .label(element.getLabel())
+                                .labelId(element.getLabelId());
                 GraphVertex src = relation.getSource();
                 GraphVertex dst = relation.getTarget();
                 labelType.srcLabel(src.getLabel()).dstLabel(dst.getLabel());

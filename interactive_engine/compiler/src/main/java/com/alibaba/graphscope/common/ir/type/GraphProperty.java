@@ -67,5 +67,4 @@ public class GraphProperty {
         ALL,
         KEY
     }
-
 }

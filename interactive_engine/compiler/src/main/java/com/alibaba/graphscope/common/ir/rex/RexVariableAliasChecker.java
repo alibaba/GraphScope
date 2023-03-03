@@ -16,35 +16,46 @@
 
 package com.alibaba.graphscope.common.ir.rex;
 
-import org.apache.calcite.rex.RexInputRef;
-import org.apache.calcite.rex.RexVisitorImpl;
+import org.apache.calcite.rex.*;
 
 import java.util.List;
 
 /**
- * check whether all variables in an expression have at least one alias in the{@code aliasIds}
+ * check whether all variables in an expression have at least one alias in the {@code aliasIds}
  */
 public class RexVariableAliasChecker extends RexVisitorImpl<Boolean> {
-    private boolean isAll;
     private List<Integer> aliasIds;
 
     public RexVariableAliasChecker(boolean deep, List<Integer> aliasId) {
         super(deep);
         this.aliasIds = aliasId;
-        this.isAll = true;
+    }
+
+    @Override
+    public Boolean visitCall(RexCall call) {
+        if (this.deep) {
+            for (RexNode operand : call.getOperands()) {
+                if (!operand.accept(this)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public Boolean visitLiteral(RexLiteral literal) {
+        return true;
     }
 
     @Override
     public Boolean visitInputRef(RexInputRef inputRef) {
-        if (inputRef instanceof RexGraphVariable) {
-            if (!this.aliasIds.contains(((RexGraphVariable) inputRef).getAliasId())) {
-                this.isAll = false;
-            }
-        }
-        return null;
+        return (inputRef instanceof RexGraphVariable)
+                ? visitGraphVariable((RexGraphVariable) inputRef)
+                : true;
     }
 
-    public boolean isAll() {
-        return isAll;
+    public Boolean visitGraphVariable(RexGraphVariable variable) {
+        return this.aliasIds.contains(variable.getAliasId());
     }
 }

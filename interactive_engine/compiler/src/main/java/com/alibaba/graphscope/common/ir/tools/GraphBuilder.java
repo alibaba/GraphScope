@@ -35,8 +35,8 @@ import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
-import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.common.ir.type.GraphProperty;
+import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.common.utils.ClassUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -162,23 +162,30 @@ public class GraphBuilder extends RelBuilder {
     /**
      * build an algebra structure of {@code GraphLogicalPathExpand}
      *
-     * @param config
+     * @param pxdConfig
      * @return
      */
-    public GraphBuilder pathExpand(PathExpandConfig config) {
+    public GraphBuilder pathExpand(PathExpandConfig pxdConfig) {
         RelNode input = requireNonNull(peek(), "frame stack is empty");
         String aliasName =
-                AliasInference.inferDefault(config.getAlias(), uniqueNameList(input, true));
-        RexNode offsetNode = config.getOffset() <= 0 ? null : literal(config.getOffset());
-        RexNode fetchNode = config.getFetch() < 0 ? null : literal(config.getFetch());
-        RelNode expand = Objects.requireNonNull(config.getExpand());
-        RelNode getV = Objects.requireNonNull(config.getGetV());
+                AliasInference.inferDefault(pxdConfig.getAlias(), uniqueNameList(input, true));
+        RexNode offsetNode = pxdConfig.getOffset() <= 0 ? null : literal(pxdConfig.getOffset());
+        RexNode fetchNode = pxdConfig.getFetch() < 0 ? null : literal(pxdConfig.getFetch());
+
+        Config config = ClassUtils.getFieldValue(RelBuilder.class, this, "config");
+        // fetch == 0 -> return empty value
+        if ((fetchNode != null && RexLiteral.intValue(fetchNode) == 0) && config.simplifyLimit()) {
+            return (GraphBuilder) empty();
+        }
+
+        RelNode expand = Objects.requireNonNull(pxdConfig.getExpand());
+        RelNode getV = Objects.requireNonNull(pxdConfig.getGetV());
         RelNode pathExpand =
                 GraphLogicalPathExpand.create(
                         (GraphOptCluster) cluster,
                         getHints(
-                                config.getPathOpt().name(),
-                                config.getResultOpt().name(),
+                                pxdConfig.getPathOpt().name(),
+                                pxdConfig.getResultOpt().name(),
                                 aliasName,
                                 generateAliasId(aliasName, input)),
                         input,
@@ -550,9 +557,8 @@ public class GraphBuilder extends RelBuilder {
                     new RexVariableAliasChecker(
                             true,
                             ImmutableList.of(tableScan.getAliasId(), AliasInference.DEFAULT_ID));
-            condition.accept(checker);
             // fuze all conditions into table scan
-            if (checker.isAll()) {
+            if (condition.accept(checker)) {
                 // pop the filter from the inner stack
                 builder.pop();
                 // add the condition in table scan
@@ -774,7 +780,7 @@ public class GraphBuilder extends RelBuilder {
      * @return
      */
     @Override
-    public RelBuilder sortLimit(
+    public GraphBuilder sortLimit(
             @Nullable RexNode offsetNode,
             @Nullable RexNode fetchNode,
             Iterable<? extends RexNode> nodes) {
@@ -808,7 +814,7 @@ public class GraphBuilder extends RelBuilder {
 
         // limit 0 -> return empty value
         if ((fetchNode != null && RexLiteral.intValue(fetchNode) == 0) && config.simplifyLimit()) {
-            return empty();
+            return (GraphBuilder) empty();
         }
 
         // output all results without any order -> skip

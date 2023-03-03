@@ -49,9 +49,9 @@ public abstract class AbstractBindableTableScan extends TableScan {
     // for field trimmer
     protected ImmutableIntList project;
 
-    protected @Nullable RelNode input;
+    protected final @Nullable RelNode input;
 
-    protected TableConfig tableConfig;
+    protected final TableConfig tableConfig;
 
     protected AbstractBindableTableScan(
             GraphOptCluster cluster,
@@ -143,5 +143,9 @@ public abstract class AbstractBindableTableScan extends TableScan {
 
     public void setFilters(ImmutableList<RexNode> filters) {
         this.filters = filters;
+    }
+
+    public ImmutableList<RexNode> getFilters() {
+        return filters;
     }
 }

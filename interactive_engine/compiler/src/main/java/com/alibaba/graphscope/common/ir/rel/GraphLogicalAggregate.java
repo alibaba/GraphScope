@@ -35,10 +35,7 @@ import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class GraphLogicalAggregate extends Aggregate {
     private GraphGroupKeys groupKey;
@@ -130,5 +127,13 @@ public class GraphLogicalAggregate extends Aggregate {
     @Override
     public RelWriter explainTerms(RelWriter pw) {
         return pw.item("input", input).item("keys", groupKey).item("values", aggCalls);
+    }
+
+    public GraphGroupKeys getGroupKey() {
+        return groupKey;
+    }
+
+    public List<GraphAggCall> getAggCalls() {
+        return Collections.unmodifiableList(aggCalls);
     }
 }

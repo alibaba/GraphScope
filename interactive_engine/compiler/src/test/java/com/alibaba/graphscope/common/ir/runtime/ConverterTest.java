@@ -17,64 +17,67 @@
 package com.alibaba.graphscope.common.ir.runtime;
 
 import com.alibaba.graphscope.common.ir.SourceTest;
+import com.alibaba.graphscope.common.ir.runtime.proto.RexToProtoConverter;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.config.*;
-import com.alibaba.graphscope.common.jna.IrCoreLibrary;
-import com.alibaba.graphscope.common.jna.type.FfiPbPointer;
-import com.alibaba.graphscope.common.jna.type.FfiResult;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
+
 import org.apache.calcite.rex.RexNode;
 import org.junit.Test;
 
 public class ConverterTest {
     @Test
     public void expression_test() {
-        RexToLogicPBConverter converter = new RexToLogicPBConverter(true);
+        RexToProtoConverter converter = new RexToProtoConverter(true, true);
 
         GraphBuilder graphBuilder = SourceTest.mockGraphBuilder();
-        graphBuilder.source(
+        graphBuilder
+                .source(
                         new SourceConfig(
                                 GraphOpt.Source.VERTEX,
                                 new LabelConfig(false).addLabel("person"),
                                 "x"))
                 .expand(
                         new ExpandConfig(
-                                GraphOpt.Expand.OUT,
-                                new LabelConfig(false).addLabel("knows"),
-                                "y"))
+                                GraphOpt.Expand.OUT, new LabelConfig(false).addLabel("knows"), "y"))
                 .getV(
                         new GetVConfig(
-                                GraphOpt.GetV.END,
-                                new LabelConfig(false).addLabel("person"),
-                                "z"));
-//        RexNode rexNode = graphBuilder.call(
-//                GraphStdOperatorTable.GREATER_THAN,
-//                graphBuilder.call(
-//                        GraphStdOperatorTable.MULTIPLY,
-//                        graphBuilder.call(
-//                                GraphStdOperatorTable.PLUS,
-//                                graphBuilder.variable("x", "age"),
-//                                graphBuilder.variable("y", "weight")), graphBuilder.variable("z", "age")),
-//                graphBuilder.call(
-//                        GraphStdOperatorTable.PLUS,
-//                        graphBuilder.variable("z", "age"),
-//                        graphBuilder.literal(10)));
+                                GraphOpt.GetV.END, new LabelConfig(false).addLabel("person"), "z"));
+        //        RexNode rexNode =
+        //                graphBuilder.call(
+        //                        GraphStdOperatorTable.GREATER_THAN,
+        //                        graphBuilder.call(
+        //                                GraphStdOperatorTable.MULTIPLY,
+        //                                graphBuilder.call(
+        //                                        GraphStdOperatorTable.PLUS,
+        //                                        graphBuilder.variable("x", "age"),
+        //                                        graphBuilder.variable("y", "weight")),
+        //                                graphBuilder.variable("z", "age")),
+        //                        graphBuilder.call(
+        //                                GraphStdOperatorTable.PLUS,
+        //                                graphBuilder.variable("z", "age"),
+        //                                graphBuilder.literal(10)));
 
-        RexNode var1 = graphBuilder.variable("x", "age");
-        RexNode var2 = graphBuilder.variable("y", "weight");
-        RexNode var3 = graphBuilder.variable("z", "age");
-        RexNode gt_1 = graphBuilder.call(GraphStdOperatorTable.GREATER_THAN, var1, var2);
-        RexNode lt_1 = graphBuilder.call(GraphStdOperatorTable.LESS_THAN, var2, var3);
-        RexNode eq_1 = graphBuilder.call(GraphStdOperatorTable.EQUALS, var1, var3);
-        RexNode rexNode = graphBuilder.call(
-                GraphStdOperatorTable.AND,
-                graphBuilder.call(GraphStdOperatorTable.OR, gt_1, lt_1),
-                eq_1);
-        rexNode.accept(converter);
-        OuterExpression.Expression.Builder exprBuilder = converter.getExprBuilder();
-        System.out.println(exprBuilder.build().getOperatorsList());
+        //                RexNode var1 = graphBuilder.variable("x", "age");
+        //                RexNode var2 = graphBuilder.variable("y", "weight");
+        //                RexNode var3 = graphBuilder.variable("z", "age");
+        //                RexNode gt_1 = graphBuilder.call(GraphStdOperatorTable.GREATER_THAN, var1,
+        // var2);
+        //                RexNode lt_1 = graphBuilder.call(GraphStdOperatorTable.LESS_THAN, var2,
+        // var3);
+        //                RexNode eq_1 = graphBuilder.call(GraphStdOperatorTable.EQUALS, var1,
+        // var3);
+        //                RexNode rexNode = graphBuilder.call(
+        //                        GraphStdOperatorTable.AND,
+        //                        graphBuilder.call(GraphStdOperatorTable.OR, gt_1, lt_1),
+        //
+        //                        eq_1);
+        //                RexNode rexNode = graphBuilder.literal(1);
+        RexNode rexNode = graphBuilder.variable("x");
+        OuterExpression.Expression expression = rexNode.accept(converter);
+        System.out.println(expression.getOperatorsList());
 
-        FfiResult.ByValue res = IrCoreLibrary.INSTANCE.setExpr(new FfiPbPointer.ByValue(exprBuilder.build().toByteArray()));
+        //        FfiResult.ByValue res = IrCoreLibrary.INSTANCE.setExpr(new
+        // FfiPbPointer.ByValue(exprBuilder.build().toByteArray()));
     }
 }

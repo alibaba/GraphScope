@@ -16,10 +16,9 @@
 
 package com.alibaba.graphscope.common.ir.rel.graph;
 
+import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphArrayType;
 import com.alibaba.graphscope.common.ir.type.GraphPxdElementType;
-import com.alibaba.graphscope.common.jna.type.PathOpt;
-import com.alibaba.graphscope.common.jna.type.ResultOpt;
 
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptUtil;
@@ -39,8 +38,8 @@ public class GraphLogicalPathExpand extends SingleRel {
     private final RelNode expand;
     private final RelNode getV;
 
-    public final @Nullable RexNode offset;
-    public final @Nullable RexNode fetch;
+    private final @Nullable RexNode offset;
+    private final @Nullable RexNode fetch;
 
     private final List<RelHint> hints;
 
@@ -58,7 +57,9 @@ public class GraphLogicalPathExpand extends SingleRel {
         this.getV = Objects.requireNonNull(getV);
         this.offset = offset;
         this.fetch = fetch;
-        this.rowType = new GraphArrayType(new GraphPxdElementType(this.expand.getRowType(), this.getV.getRowType()));
+        this.rowType =
+                new GraphArrayType(
+                        new GraphPxdElementType(this.expand.getRowType(), this.getV.getRowType()));
     }
 
     public static GraphLogicalPathExpand create(
@@ -110,17 +111,33 @@ public class GraphLogicalPathExpand extends SingleRel {
         return Integer.valueOf(aliasId);
     }
 
-    private PathOpt pathOpt() {
+    public GraphOpt.PathExpandPath pathOpt() {
         ObjectUtils.requireNonEmpty(hints);
         RelHint optHint = hints.get(0);
         ObjectUtils.requireNonEmpty(optHint.kvOptions);
-        return PathOpt.valueOf(optHint.kvOptions.get("path"));
+        return GraphOpt.PathExpandPath.valueOf(optHint.kvOptions.get("path"));
     }
 
-    private ResultOpt resultOpt() {
+    public GraphOpt.PathExpandResult resultOpt() {
         ObjectUtils.requireNonEmpty(hints);
         RelHint optHint = hints.get(0);
         ObjectUtils.requireNonEmpty(optHint.kvOptions);
-        return ResultOpt.valueOf(optHint.kvOptions.get("result"));
+        return GraphOpt.PathExpandResult.valueOf(optHint.kvOptions.get("result"));
+    }
+
+    public RelNode getExpand() {
+        return expand;
+    }
+
+    public RelNode getGetV() {
+        return getV;
+    }
+
+    public RexNode getOffset() {
+        return offset;
+    }
+
+    public RexNode getFetch() {
+        return fetch;
     }
 }

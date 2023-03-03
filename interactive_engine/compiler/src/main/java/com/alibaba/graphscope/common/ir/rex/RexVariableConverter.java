@@ -52,13 +52,14 @@ public class RexVariableConverter extends RexVisitorImpl<RexNode> {
 
     @Override
     public RexNode visitInputRef(RexInputRef inputRef) {
-        if (inputRef instanceof RexTmpVariable) {
-            RexTmpVariable tmpVar = (RexTmpVariable) inputRef;
-            return (tmpVar.getProperty() == null)
-                    ? builder.variable(tmpVar.getAlias())
-                    : builder.variable(tmpVar.getAlias(), tmpVar.getProperty());
-        } else {
-            return inputRef;
-        }
+        return (inputRef instanceof RexTmpVariable)
+                ? visitTmpVariable((RexTmpVariable) inputRef)
+                : inputRef;
+    }
+
+    public RexNode visitTmpVariable(RexTmpVariable tmpVar) {
+        return (tmpVar.getProperty() == null)
+                ? builder.variable(tmpVar.getAlias())
+                : builder.variable(tmpVar.getAlias(), tmpVar.getProperty());
     }
 }

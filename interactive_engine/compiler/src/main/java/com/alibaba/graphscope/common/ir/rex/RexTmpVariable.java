@@ -66,11 +66,7 @@ public class RexTmpVariable extends RexInputRef {
 
     @Override
     public <R> R accept(RexVisitor<R> rexVisitor) {
-        if (rexVisitor instanceof RexVariableConverter) {
-            return rexVisitor.visitInputRef(this);
-        } else {
-            return null;
-        }
+        return (rexVisitor instanceof RexVariableConverter) ? rexVisitor.visitInputRef(this) : null;
     }
 
     @Override
