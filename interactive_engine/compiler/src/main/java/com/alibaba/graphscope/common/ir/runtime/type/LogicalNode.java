@@ -28,6 +28,7 @@ import org.apache.calcite.rel.RelNode;
 public class LogicalNode<T> extends AbstractRelNode {
     private final RelNode original;
     private final T node;
+
     protected LogicalNode(RelOptCluster cluster, RelTraitSet traitSet, RelNode original, T node) {
         super(cluster, traitSet);
         this.original = original;

@@ -258,7 +258,9 @@ public class RelToFfiConverter implements GraphRelShuttle {
             for (int i = 0; i < collations.size(); ++i) {
                 RexGraphVariable expr = ((GraphFieldCollation) collations.get(i)).getVariable();
                 OuterExpression.Variable var =
-                        expr.accept(new RexToProtoConverter(true, isColumnId)).getOperators(0).getVar();
+                        expr.accept(new RexToProtoConverter(true, isColumnId))
+                                .getOperators(0)
+                                .getVar();
                 checkFfiResult(
                         LIB.addOrderbyPairWithPb(
                                 ptrNode,

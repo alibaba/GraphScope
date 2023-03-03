@@ -111,14 +111,14 @@ public class GraphLogicalPathExpand extends SingleRel {
         return Integer.valueOf(aliasId);
     }
 
-    private GraphOpt.PathExpandPath pathOpt() {
+    public GraphOpt.PathExpandPath pathOpt() {
         ObjectUtils.requireNonEmpty(hints);
         RelHint optHint = hints.get(0);
         ObjectUtils.requireNonEmpty(optHint.kvOptions);
         return GraphOpt.PathExpandPath.valueOf(optHint.kvOptions.get("path"));
     }
 
-    private GraphOpt.PathExpandResult resultOpt() {
+    public GraphOpt.PathExpandResult resultOpt() {
         ObjectUtils.requireNonEmpty(hints);
         RelHint optHint = hints.get(0);
         ObjectUtils.requireNonEmpty(optHint.kvOptions);

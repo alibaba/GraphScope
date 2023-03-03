@@ -33,8 +33,8 @@ import com.alibaba.graphscope.common.jna.type.FfiData;
 import com.alibaba.graphscope.common.jna.type.FfiResult;
 import com.alibaba.graphscope.common.jna.type.ResultCode;
 import com.sun.jna.Pointer;
-
 import com.sun.jna.ptr.IntByReference;
+
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.hint.RelHint;
@@ -68,7 +68,8 @@ public class FfiLogicalPlan extends LogicalPlan<Pointer, FfiData.ByValue> {
             checkFfiResult(LIB.appendGetvOperator(ptrPlan, node.getNode(), lastIdx, oprIdx));
         } else if (original instanceof GraphLogicalPathExpand) {
             checkFfiResult(LIB.appendPathxpdOperator(ptrPlan, node.getNode(), lastIdx, oprIdx));
-        } else if (original instanceof GraphLogicalSingleMatch || original instanceof GraphLogicalMultiMatch) {
+        } else if (original instanceof GraphLogicalSingleMatch
+                || original instanceof GraphLogicalMultiMatch) {
             appendGlobalSource(GraphOpt.Source.VERTEX);
             checkFfiResult(LIB.appendPatternOperator(ptrPlan, node.getNode(), lastIdx, oprIdx));
         } else if (original instanceof GraphLogicalProject) {
@@ -84,7 +85,8 @@ public class FfiLogicalPlan extends LogicalPlan<Pointer, FfiData.ByValue> {
                 checkFfiResult(LIB.appendOrderbyOperator(ptrPlan, node.getNode(), lastIdx, oprIdx));
             }
         } else {
-            throw new UnsupportedOperationException("node type " + original.getClass() + " can not be appended to the ffi plan");
+            throw new UnsupportedOperationException(
+                    "node type " + original.getClass() + " can not be appended to the ffi plan");
         }
         this.lastIdx = oprIdx.getValue();
     }
@@ -118,7 +120,8 @@ public class FfiLogicalPlan extends LogicalPlan<Pointer, FfiData.ByValue> {
 
     private void checkFfiResult(FfiResult res) {
         if (res == null || res.code != ResultCode.Success) {
-            throw new IllegalStateException("build logical plan, unexpected ffi results from ir_core, msg : %s" + res);
+            throw new IllegalStateException(
+                    "build logical plan, unexpected ffi results from ir_core, msg : %s" + res);
         }
     }
 }
