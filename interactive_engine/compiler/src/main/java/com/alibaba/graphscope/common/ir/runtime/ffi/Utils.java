@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.jna.type.*;
 
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rex.RexLiteral;
+import org.apache.calcite.util.NlsString;
 
 /**
  * convert {@code RexNode} to data types in ffi
@@ -77,13 +78,19 @@ public abstract class Utils {
             case BIGINT:
                 ffiConst.dataType = FfiDataType.I64;
                 ffiConst.int64 = ((Number) literal.getValue()).longValue();
+                break;
             case FLOAT:
             case DOUBLE:
                 ffiConst.dataType = FfiDataType.F64;
                 ffiConst.float64 = ((Number) literal.getValue()).doubleValue();
+                break;
             case CHAR:
                 ffiConst.dataType = FfiDataType.Str;
-                ffiConst.cstr = (String) literal.getValue();
+                ffiConst.cstr =
+                        (literal.getValue() instanceof NlsString)
+                                ? ((NlsString) literal.getValue()).getValue()
+                                : (String) literal.getValue();
+                break;
             default:
                 throw new UnsupportedOperationException(
                         "convert type "

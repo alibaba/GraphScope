@@ -467,11 +467,11 @@ public class GraphBuilder extends RelBuilder {
             List<RelNode> inputQueue = Lists.newArrayList(peek(inputOrdinal));
             while (!inputQueue.isEmpty()) {
                 RelNode cur = inputQueue.remove(0);
-                RelRecordType rowType = (RelRecordType) cur.getRowType();
-                if (alias == AliasInference.DEFAULT_NAME && rowType.getFieldList().size() == 1) {
-                    return rowType.getFieldList().get(0);
+                List<RelDataTypeField> fields = cur.getRowType().getFieldList();
+                if (alias == AliasInference.DEFAULT_NAME && fields.size() == 1) {
+                    return fields.get(0);
                 }
-                for (RelDataTypeField field : rowType.getFieldList()) {
+                for (RelDataTypeField field : fields) {
                     if (field.getName().equals(alias)) {
                         return field;
                     }

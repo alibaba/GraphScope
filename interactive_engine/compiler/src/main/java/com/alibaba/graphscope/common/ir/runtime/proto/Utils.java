@@ -27,6 +27,7 @@ import com.google.protobuf.Int32Value;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.util.NlsString;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -48,7 +49,11 @@ public abstract class Utils {
                         .setI64(((Number) literal.getValue()).longValue())
                         .build();
             case CHAR:
-                return Common.Value.newBuilder().setStr((String) literal.getValue()).build();
+                String valueStr =
+                        (literal.getValue() instanceof NlsString)
+                                ? ((NlsString) literal.getValue()).getValue()
+                                : (String) literal.getValue();
+                return Common.Value.newBuilder().setStr(valueStr).build();
             case DECIMAL:
             case FLOAT:
             case DOUBLE:
