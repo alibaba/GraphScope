@@ -29,14 +29,14 @@ jobs:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.12.2
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.13.0
       options:
         --shm-size 4096m
     steps:
     - uses: actions/checkout@v3
 
     - name: Install latest vineyard
-      if: true
+      if: false
       run: |
         source /home/graphscope/.graphscope_env
         sudo pip3 install libclang

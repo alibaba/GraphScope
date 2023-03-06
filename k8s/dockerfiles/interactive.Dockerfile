@@ -60,6 +60,7 @@ COPY --from=builder /home/graphscope/install/bin /opt/graphscope/bin
 COPY --from=builder /home/graphscope/install/conf /opt/graphscope/conf
 
 RUN sudo chmod +x /opt/graphscope/bin/*
+RUN sudo chmod a+wrx /tmp
 
 USER graphscope
 WORKDIR /home/graphscope

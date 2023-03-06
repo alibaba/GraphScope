@@ -224,7 +224,7 @@ jobs:
           ${{ runner.os }}-pip-
 
     - name: Install latest vineyard
-      if: true
+      if: false
       run: |
         source ${HOME}/.graphscope_env
         git clone --single-branch --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d

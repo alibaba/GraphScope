@@ -57,7 +57,7 @@ find_package(Threads REQUIRED)
 #  we need edge src/dst ids in etable.
 add_definitions(-DENDPOINT_LISTS)
 
-find_package(vineyard 0.12.2 REQUIRED)
+find_package(vineyard 0.13.0 REQUIRED)
 add_library(v6d_native_store global_store_ffi.cc
                          htap_ds_impl.cc
                          graph_builder_ffi.cc
