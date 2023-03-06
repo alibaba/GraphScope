@@ -4,7 +4,7 @@ use clap::{App, Arg};
 use env_logger;
 // use mcsr::graph_las::GraphLAS;
 use mcsr::graph_partitioner::GraphPartitioner;
-use mcsr::schema::LDBCGraphSchema;
+use mcsr::schema::CsrGraphSchema;
 use mcsr::types::*;
 
 fn main() {
@@ -98,7 +98,7 @@ fn main() {
     if !out_dir.exists() {
         std::fs::create_dir_all(&out_dir).expect("Create graph schema directory error");
     }
-    let schema = LDBCGraphSchema::from_json_file(&schema_file).expect("Read graph schema error!");
+    let schema = CsrGraphSchema::from_json_file(&schema_file).expect("Read graph schema error!");
     schema
         .to_json_file(&out_dir.join(FILE_SCHEMA))
         .expect("Write graph schema error!");

@@ -1,5 +1,5 @@
 use core::slice;
-use std::fs::{read, File};
+use std::fs::File;
 use std::io::{Read, Write};
 
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
@@ -7,8 +7,6 @@ use serde::de::Error as DeError;
 use serde::ser::Error as SerError;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-use crate::col_table::ColTable;
-use crate::columns::Item;
 use crate::graph::IndexType;
 use crate::mcsr::{Nbr, NbrIter};
 

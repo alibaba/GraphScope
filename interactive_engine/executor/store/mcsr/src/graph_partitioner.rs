@@ -13,7 +13,7 @@ use crate::error::{GDBError, GDBResult};
 use crate::graph::IndexType;
 use crate::graph_loader::{keep_vertex, split_vertex_edge_files};
 use crate::ldbc_parser::{LDBCEdgeParser, LDBCVertexParser};
-use crate::schema::{LDBCGraphSchema, Schema, END_ID_FIELD, START_ID_FIELD};
+use crate::schema::{CsrGraphSchema, Schema, END_ID_FIELD, START_ID_FIELD};
 use crate::types::{DefaultId, LabelId, DIR_SPLIT_RAW_DATA};
 
 pub struct GraphPartitioner<G: FromStr + Send + Sync + IndexType = DefaultId> {
@@ -23,7 +23,7 @@ pub struct GraphPartitioner<G: FromStr + Send + Sync + IndexType = DefaultId> {
     work_id: usize,
     peers: usize,
     delim: u8,
-    graph_schema: Arc<LDBCGraphSchema>,
+    graph_schema: Arc<CsrGraphSchema>,
 
     thread_id: usize,
     thread_num: usize,
@@ -40,7 +40,7 @@ impl<G: FromStr + Send + Sync + IndexType + Eq> GraphPartitioner<G> {
         input_dir: D, output_path: &str, schema_file: D, work_id: usize, peers: usize, thread_id: usize,
         thread_num: usize,
     ) -> GraphPartitioner<G> {
-        let schema = LDBCGraphSchema::from_json_file(schema_file).expect("Read graph schema error!");
+        let schema = CsrGraphSchema::from_json_file(schema_file).expect("Read graph schema error!");
         schema.desc();
 
         let output_dir = PathBuf::from_str(output_path).unwrap();
@@ -109,7 +109,7 @@ impl<G: FromStr + Send + Sync + IndexType + Eq> GraphPartitioner<G> {
         println!("loading edge-{}", edge_type);
         let header = self
             .graph_schema
-            .get_edge_schema(edge_type)
+            .get_edge_schema((src_vertex_type, edge_type, dst_vertex_type))
             .ok_or(GDBError::InvalidTypeError)
             .unwrap();
         let mut parser = LDBCEdgeParser::<G>::new(src_vertex_type, dst_vertex_type, edge_type);
@@ -266,20 +266,20 @@ impl<G: FromStr + Send + Sync + IndexType + Eq> GraphPartitioner<G> {
         index = 0;
         let e_label_num = self.graph_schema.edge_type_to_id.len() as LabelId;
         for e_label_i in 0..e_label_num {
-            let cols = self
-                .graph_schema
-                .get_edge_header(e_label_i)
-                .unwrap();
-            let mut header = vec![];
-            for pair in cols.iter() {
-                if pair.1 == DataType::ID {
-                    if pair.0 != START_ID_FIELD && pair.0 != END_ID_FIELD {
-                        header.push((pair.1.clone(), pair.0.clone()));
-                    }
-                } else {
-                    header.push((pair.1.clone(), pair.0.clone()));
-                }
-            }
+            // let cols = self
+            //     .graph_schema
+            //     .get_edge_header(e_label_i)
+            //     .unwrap();
+            // let mut header = vec![];
+            // for pair in cols.iter() {
+            //     if pair.1 == DataType::ID {
+            //         if pair.0 != START_ID_FIELD && pair.0 != END_ID_FIELD {
+            //             header.push((pair.1.clone(), pair.0.clone()));
+            //         }
+            //     } else {
+            //         header.push((pair.1.clone(), pair.0.clone()));
+            //     }
+            // }
 
             for src_label_i in 0..v_label_num {
                 for dst_label_i in 0..v_label_num {

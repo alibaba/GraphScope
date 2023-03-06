@@ -6,14 +6,12 @@ use std::str::FromStr;
 
 use clap::{App, Arg};
 use mcsr::columns::DataType;
-use mcsr::date::Date;
-use mcsr::graph::IndexType;
 use mcsr::graph_db::GlobalCsrTrait;
 use mcsr::graph_db_impl::CsrDB;
 use mcsr::graph_loader::is_static_vertex;
 use mcsr::ldbc_parser::LDBCVertexParser;
 use mcsr::schema::Schema;
-use mcsr::types::{DefaultId, InternalId, LabelId, DIR_BINARY_DATA, NAME, VERSION};
+use mcsr::types::{DefaultId, LabelId, DIR_BINARY_DATA, NAME, VERSION};
 
 fn get_partition_num(graph_data_dir: &String) -> usize {
     let root_dir = PathBuf::from_str(graph_data_dir.as_str()).unwrap();
@@ -78,14 +76,6 @@ fn output_edges(
     graph: &CsrDB, output_dir: &String, files: &mut HashMap<(LabelId, LabelId, LabelId), File>,
 ) {
     let output_dir_path = PathBuf::from_str(output_dir.as_str()).unwrap();
-    let study_at_e_label = graph
-        .graph_schema
-        .get_edge_label_id("STUDYAT")
-        .unwrap();
-    let knows_e_label = graph
-        .graph_schema
-        .get_edge_label_id("KNOWS")
-        .unwrap();
     for e in graph.get_all_edges(None) {
         let src = e.get_src_id();
         let dst = e.get_dst_id();
@@ -97,7 +87,7 @@ fn output_edges(
         let label_tuple = (src_label, e_label, dst_label);
         let header = graph
             .graph_schema
-            .get_edge_header(e_label)
+            .get_edge_header(src_label, e_label, dst_label)
             .unwrap();
         if !files.contains_key(&label_tuple) {
             let src_label_name = graph.graph_schema.vertex_label_names()[src_label as usize].clone();
@@ -130,7 +120,7 @@ fn traverse_partition(
     graph_data_dir: &String, output_dir: &String, partition: usize, v_files: &mut HashMap<LabelId, File>,
     e_files: &mut HashMap<(LabelId, LabelId, LabelId), File>,
 ) {
-    let graph = CsrDB::deserialize(graph_data_dir.as_str(), "", partition).unwrap();
+    let graph = CsrDB::deserialize(graph_data_dir.as_str(), partition).unwrap();
 
     output_vertices(&graph, output_dir, v_files);
     println!("start output edges");

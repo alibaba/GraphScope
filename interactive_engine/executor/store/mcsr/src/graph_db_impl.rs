@@ -5,13 +5,12 @@ use std::str::FromStr;
 use std::sync::Arc;
 
 use crate::col_table::ColTable;
-use crate::edge_trim::EdgeTrimJson;
 use crate::error::GDBResult;
 use crate::graph::{Direction, IndexType};
 use crate::graph_db::{GlobalCsrTrait, LocalEdge, LocalVertex};
 use crate::io::{export, import};
 use crate::mcsr::{MutableCsr, Nbr, NbrIter};
-use crate::schema::{LDBCGraphSchema, Schema};
+use crate::schema::{CsrGraphSchema, Schema};
 use crate::scsr::SingleCsr;
 use crate::types::*;
 use crate::utils::{Iter, LabeledIterator, LabeledRangeIterator, Range};
@@ -177,7 +176,7 @@ pub struct CsrDB<G: Send + Sync + IndexType = DefaultId, I: Send + Sync + IndexT
     pub single_ie: Vec<SingleCsr<I>>,
     pub single_oe: Vec<SingleCsr<I>>,
 
-    pub graph_schema: Arc<LDBCGraphSchema>,
+    pub graph_schema: Arc<CsrGraphSchema>,
     pub vertex_prop_table: Vec<ColTable>,
     pub vertex_map: VertexMap<G, I>,
 
@@ -495,7 +494,7 @@ where
         let schema_path = root_dir
             .join(DIR_GRAPH_SCHEMA)
             .join(FILE_SCHEMA);
-        let graph_schema = LDBCGraphSchema::from_json_file(schema_path)?;
+        let graph_schema = CsrGraphSchema::from_json_file(schema_path)?;
         let partition_dir = root_dir
             .join(DIR_BINARY_DATA)
             .join(format!("partition_{}", partition));
@@ -686,25 +685,15 @@ where
         Ok(())
     }
 
-    pub fn deserialize(dir: &str, edge_trim_file: &str, partition: usize) -> GDBResult<Self> {
+    pub fn deserialize(dir: &str, partition: usize) -> GDBResult<Self> {
         let root_dir = PathBuf::from_str(dir).unwrap();
         let schema_path = root_dir
             .join(DIR_GRAPH_SCHEMA)
             .join(FILE_SCHEMA);
-        let graph_schema = LDBCGraphSchema::from_json_file(schema_path)?;
+        let graph_schema = CsrGraphSchema::from_json_file(schema_path)?;
         let partition_dir = root_dir
             .join(DIR_BINARY_DATA)
             .join(format!("partition_{}", partition));
-
-        let (ie_enable, oe_enable) = if !edge_trim_file.is_empty() {
-            let edge_trim_path = PathBuf::from_str(edge_trim_file).unwrap();
-            let file = File::open(edge_trim_path)?;
-            let trim_json =
-                serde_json::from_reader::<File, EdgeTrimJson>(file).map_err(std::io::Error::from)?;
-            trim_json.get_enable_indexs(&graph_schema)
-        } else {
-            (HashSet::<usize>::new(), HashSet::<usize>::new())
-        };
 
         let vertex_label_num = graph_schema.vertex_type_to_id.len();
         let edge_label_num = graph_schema.edge_type_to_id.len();
@@ -733,7 +722,7 @@ where
 
                     let ie_path = &partition_dir
                         .join(format!("ie_{}_{}_{}", src_label_name, edge_label_name, dst_label_name));
-                    if Path::exists(ie_path) && (edge_trim_file.is_empty() || ie_enable.contains(&index)) {
+                    if Path::exists(ie_path) {
                         info!("importing {}", ie_path.as_os_str().to_str().unwrap());
                         let path_str = ie_path.to_str().unwrap().to_string();
                         if is_single_ie_csr(
@@ -749,7 +738,7 @@ where
 
                     let oe_path = &partition_dir
                         .join(format!("oe_{}_{}_{}", src_label_name, edge_label_name, dst_label_name));
-                    if Path::exists(oe_path) && (edge_trim_file.is_empty() || oe_enable.contains(&index)) {
+                    if Path::exists(oe_path) {
                         info!("importing {}", oe_path.as_os_str().to_str().unwrap());
                         let path_str = oe_path.to_str().unwrap().to_string();
                         if is_single_oe_csr(

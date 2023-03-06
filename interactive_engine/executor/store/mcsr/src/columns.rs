@@ -1,13 +1,4 @@
-use crate::browser::Browser;
-use crate::date::Date;
-use crate::date_time::DateTime;
-use crate::ip_addr::IpAddr;
-use crate::types::DefaultId;
 use core::slice;
-use dyn_type::object::RawType;
-use dyn_type::CastError;
-use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
-use serde::{Deserialize, Serialize};
 use std::any::Any;
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -15,6 +6,15 @@ use std::fmt::{Debug, Formatter};
 use std::fs::File;
 use std::io::{Read, Write};
 use std::mem;
+
+use dyn_type::object::RawType;
+use dyn_type::CastError;
+use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
+use serde::{Deserialize, Serialize};
+
+use crate::date::Date;
+use crate::date_time::DateTime;
+use crate::types::DefaultId;
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize)]
 pub enum DataType {
@@ -27,8 +27,6 @@ pub enum DataType {
     Date,
     DateTime,
     ID,
-    IpAddr,
-    Browser,
     LCString,
     NULL,
 }
@@ -52,10 +50,6 @@ impl<'a> From<&'a str> for DataType {
             DataType::DateTime
         } else if token == "ID" {
             DataType::ID
-        } else if token == "IPADDR" {
-            DataType::IpAddr
-        } else if token == "BROWSER" {
-            DataType::Browser
         } else if token == "LCString" {
             DataType::LCString
         } else {
@@ -76,8 +70,6 @@ pub enum Item {
     Date(Date),
     DateTime(DateTime),
     ID(DefaultId),
-    IpAddr(IpAddr),
-    Browser(Browser),
     Null,
 }
 
@@ -92,8 +84,6 @@ pub enum RefItem<'a> {
     DateTime(&'a DateTime),
     ID(&'a DefaultId),
     String(&'a String),
-    IpAddr(&'a IpAddr),
-    Browser(&'a Browser),
     Null,
 }
 
@@ -109,8 +99,6 @@ impl<'a> RefItem<'a> {
             RefItem::DateTime(v) => Item::DateTime(*v),
             RefItem::ID(v) => Item::ID(*v),
             RefItem::String(v) => Item::String(v.clone()),
-            RefItem::IpAddr(v) => Item::IpAddr(*v),
-            RefItem::Browser(v) => Item::Browser(*v),
             RefItem::Null => Item::Null,
         }
     }
@@ -187,12 +175,6 @@ impl Debug for Item {
             Item::String(v) => {
                 write!(f, "string[{}]", v)
             }
-            Item::IpAddr(v) => {
-                write!(f, "ip_addr[{}]", v.to_string())
-            }
-            Item::Browser(v) => {
-                write!(f, "browser[{}]", v.to_string())
-            }
             _ => {
                 write!(f, "")
             }
@@ -212,8 +194,6 @@ impl ToString for Item {
             Item::DateTime(v) => v.to_string(),
             Item::ID(v) => v.to_string(),
             Item::String(v) => v.to_string(),
-            Item::IpAddr(v) => v.to_string(),
-            Item::Browser(v) => v.to_string(),
             _ => "".to_string(),
         }
     }
@@ -249,12 +229,6 @@ impl<'a> Debug for RefItem<'a> {
             RefItem::String(v) => {
                 write!(f, "string[{}]", v)
             }
-            RefItem::IpAddr(v) => {
-                write!(f, "ip_addr[{}]", v.to_string())
-            }
-            RefItem::Browser(v) => {
-                write!(f, "browser[{}]", v.to_string())
-            }
             _ => {
                 write!(f, "")
             }
@@ -274,8 +248,6 @@ impl<'a> ToString for RefItem<'a> {
             RefItem::DateTime(v) => v.to_string(),
             RefItem::ID(v) => v.to_string(),
             RefItem::String(v) => v.to_string(),
-            RefItem::IpAddr(v) => v.to_string(),
-            RefItem::Browser(v) => v.to_string(),
             _ => "".to_string(),
         }
     }
@@ -292,10 +264,8 @@ impl<'a> RefItem<'a> {
             RefItem::Double(v) => Ok(**v as u64),
             RefItem::Date(_) => Ok(0_u64),
             RefItem::DateTime(v) => Ok(v.to_u64()),
-            RefItem::IpAddr(_) => Ok(0_u64),
             RefItem::ID(v) => Ok(**v as u64),
             RefItem::String(_) => Err(CastError::new::<u64>(RawType::String)),
-            RefItem::Browser(_) => Ok(0_u64),
             _ => Ok(0_u64),
         }
     }
@@ -310,10 +280,8 @@ impl<'a> RefItem<'a> {
             RefItem::Double(v) => Ok(**v as i32),
             RefItem::Date(_) => Ok(0),
             RefItem::DateTime(_) => Ok(0),
-            RefItem::IpAddr(_) => Ok(0),
             RefItem::ID(v) => Ok(**v as i32),
             RefItem::String(_) => Err(CastError::new::<i32>(RawType::String)),
-            RefItem::Browser(_) => Ok(0),
             _ => Ok(0),
         }
     }
@@ -336,10 +304,8 @@ impl<'a> RefItem<'a> {
             RefItem::Double(_) => Err(CastError::new::<u64>(RawType::Float)),
             RefItem::Date(_) => Err(CastError::new::<u64>(RawType::Unknown)),
             RefItem::DateTime(v) => Ok(**v),
-            RefItem::IpAddr(_) => Err(CastError::new::<u64>(RawType::Unknown)),
             RefItem::ID(_) => Err(CastError::new::<u64>(RawType::Long)),
             RefItem::String(_) => Err(CastError::new::<u64>(RawType::String)),
-            RefItem::Browser(_) => Err(CastError::new::<u64>(RawType::String)),
             _ => Err(CastError::new::<u64>(RawType::Unknown)),
         }
     }
@@ -902,16 +868,14 @@ pub struct LCStringColumn {
 
 impl LCStringColumn {
     pub fn new() -> Self {
-        Self {
-            data: Vec::new(),
-            table: HashMap::new(),
-            list: Vec::new(),
-        }
+        Self { data: Vec::new(), table: HashMap::new(), list: Vec::new() }
     }
 
     pub fn serialize(&self, f: &mut File) {
         let mut table_bytes = Vec::new();
-        table_bytes.write_u64(self.list.len() as u64).unwrap();
+        table_bytes
+            .write_u64(self.list.len() as u64)
+            .unwrap();
         for v in self.list.iter() {
             v.write_to(&mut table_bytes).unwrap();
         }
@@ -973,11 +937,7 @@ impl LCStringColumn {
 
 impl Debug for LCStringColumn {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "LCStringColumn: {:?},{:?},{:?}",
-            self.data, self.table, self.list
-        )
+        write!(f, "LCStringColumn: {:?},{:?},{:?}", self.data, self.table, self.list)
     }
 }
 
@@ -1223,10 +1183,7 @@ impl Encode for DateTimeColumn {
 impl Decode for DateTimeColumn {
     fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
         let vec = Vec::<DateTime>::read_from(reader)?;
-        info!(
-            "datetime column: {}",
-            vec.capacity() * mem::size_of::<DateTime>()
-        );
+        info!("datetime column: {}", vec.capacity() * mem::size_of::<DateTime>());
         Ok(Self { data: vec })
     }
 }
@@ -1237,7 +1194,9 @@ impl Column for DateTimeColumn {
     }
 
     fn get(&self, index: usize) -> Option<RefItem> {
-        self.data.get(index).map(|x| RefItem::DateTime(x))
+        self.data
+            .get(index)
+            .map(|x| RefItem::DateTime(x))
     }
 
     fn set(&mut self, index: usize, val: Item) {
@@ -1258,245 +1217,6 @@ impl Column for DateTimeColumn {
             }
             _ => {
                 self.data.push(DateTime::empty());
-            }
-        }
-    }
-
-    fn len(&self) -> usize {
-        self.data.len()
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-}
-
-pub struct IpAddrColumn {
-    pub data: Vec<IpAddr>,
-}
-
-impl IpAddrColumn {
-    pub fn new() -> Self {
-        Self { data: Vec::new() }
-    }
-
-    pub fn serialize(&self, f: &mut File) {
-        let row_num = self.data.len();
-        f.write_u64(row_num as u64).unwrap();
-        unsafe {
-            let data_slice = slice::from_raw_parts(
-                self.data.as_ptr() as *const u8,
-                row_num * std::mem::size_of::<IpAddr>(),
-            );
-            f.write_all(data_slice).unwrap();
-        }
-        f.flush().unwrap();
-    }
-
-    pub fn deserialize(&mut self, f: &mut File) {
-        let row_num = f.read_u64().unwrap() as usize;
-        self.data.resize(
-            row_num,
-            IpAddr {
-                a: 0,
-                b: 0,
-                c: 0,
-                d: 0,
-            },
-        );
-        unsafe {
-            let data_slice = slice::from_raw_parts_mut(
-                self.data.as_mut_ptr() as *mut u8,
-                row_num * std::mem::size_of::<IpAddr>(),
-            );
-            f.read_exact(data_slice).unwrap();
-        }
-    }
-
-    pub fn is_same(&self, other: &Self) -> bool {
-        if self.data.len() != other.data.len() {
-            return false;
-        }
-        let num = self.data.len();
-        for k in 0..num {
-            if self.data[k].a != other.data[k].a {
-                return false;
-            }
-            if self.data[k].b != other.data[k].b {
-                return false;
-            }
-            if self.data[k].c != other.data[k].c {
-                return false;
-            }
-            if self.data[k].d != other.data[k].d {
-                return false;
-            }
-        }
-        return true;
-    }
-}
-
-impl Debug for IpAddrColumn {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "IpAddrColumn: {:?}", self.data)
-    }
-}
-
-impl Encode for IpAddrColumn {
-    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
-        self.data.write_to(writer)
-    }
-}
-
-impl Decode for IpAddrColumn {
-    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
-        let vec = Vec::<IpAddr>::read_from(reader)?;
-        info!(
-            "ipaddr column: {}",
-            vec.capacity() * mem::size_of::<IpAddr>()
-        );
-        Ok(Self { data: vec })
-    }
-}
-
-impl Column for IpAddrColumn {
-    fn get_type(&self) -> DataType {
-        DataType::IpAddr
-    }
-
-    fn get(&self, index: usize) -> Option<RefItem> {
-        self.data.get(index).map(|x| RefItem::IpAddr(x))
-    }
-
-    fn set(&mut self, index: usize, val: Item) {
-        match val {
-            Item::IpAddr(v) => {
-                self.data[index] = v;
-            }
-            _ => {
-                self.data[index] = IpAddr::new();
-            }
-        }
-    }
-
-    fn push(&mut self, val: Item) {
-        match val {
-            Item::IpAddr(v) => {
-                self.data.push(v);
-            }
-            _ => {
-                self.data.push(IpAddr::new());
-            }
-        }
-    }
-
-    fn len(&self) -> usize {
-        self.data.len()
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-}
-
-pub struct BrowserColumn {
-    pub data: Vec<Browser>,
-}
-
-impl BrowserColumn {
-    pub fn new() -> Self {
-        Self { data: Vec::new() }
-    }
-
-    pub fn serialize(&self, f: &mut File) {
-        let row_num = self.data.len();
-        f.write_u64(row_num as u64).unwrap();
-        unsafe {
-            let data_slice = slice::from_raw_parts(
-                self.data.as_ptr() as *const u8,
-                row_num * std::mem::size_of::<Browser>(),
-            );
-            f.write_all(data_slice).unwrap();
-        }
-        f.flush().unwrap();
-    }
-
-    pub fn deserialize(&mut self, f: &mut File) {
-        let row_num = f.read_u64().unwrap() as usize;
-        self.data.resize(row_num, Browser::UNKNOWN);
-        unsafe {
-            let data_slice = slice::from_raw_parts_mut(
-                self.data.as_mut_ptr() as *mut u8,
-                row_num * std::mem::size_of::<Browser>(),
-            );
-            f.read_exact(data_slice).unwrap();
-        }
-    }
-
-    pub fn is_same(&self, other: &Self) -> bool {
-        if self.data.len() != other.data.len() {
-            return false;
-        }
-        let num = self.data.len();
-        for k in 0..num {
-            if self.data[k] as u8 != other.data[k] as u8 {
-                return false;
-            }
-        }
-        return true;
-    }
-}
-
-impl Debug for BrowserColumn {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "BrowserColumn: {:?}", self.data)
-    }
-}
-
-impl Encode for BrowserColumn {
-    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
-        self.data.write_to(writer)
-    }
-}
-
-impl Decode for BrowserColumn {
-    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
-        let vec = Vec::<Browser>::read_from(reader)?;
-        info!(
-            "browser column: {}",
-            vec.capacity() * mem::size_of::<Browser>()
-        );
-        Ok(Self { data: vec })
-    }
-}
-
-impl Column for BrowserColumn {
-    fn get_type(&self) -> DataType {
-        DataType::Browser
-    }
-
-    fn get(&self, index: usize) -> Option<RefItem> {
-        self.data.get(index).map(|x| RefItem::Browser(x))
-    }
-
-    fn set(&mut self, index: usize, val: Item) {
-        match val {
-            Item::Browser(v) => {
-                self.data[index] = v;
-            }
-            _ => {
-                self.data[index] = Browser::UNKNOWN;
-            }
-        }
-    }
-
-    fn push(&mut self, val: Item) {
-        match val {
-            Item::Browser(v) => {
-                self.data.push(v);
-            }
-            _ => {
-                self.data.push(Browser::UNKNOWN);
             }
         }
     }

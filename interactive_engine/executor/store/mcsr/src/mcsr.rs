@@ -12,7 +12,6 @@ use serde::ser::Error as SerError;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::col_table::ColTable;
-use crate::columns::{Column, Item};
 use crate::graph::IndexType;
 
 pub struct Nbr<I> {

@@ -10,12 +10,10 @@ use serde::de::Error as DeError;
 use serde::ser::Error as SerError;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-use crate::browser::parse_browser;
 use crate::columns::*;
 use crate::date::parse_date;
 use crate::date_time::parse_datetime;
 use crate::error::GDBResult;
-use crate::ip_addr::parse_ip_addr;
 
 #[derive(Debug)]
 pub struct ColTable {
@@ -108,20 +106,6 @@ impl Encode for ColTable {
                         .unwrap()
                         .write_to(writer)?;
                 }
-                DataType::IpAddr => {
-                    writer.write_u8(9)?;
-                    col.as_any()
-                        .downcast_ref::<IpAddrColumn>()
-                        .unwrap()
-                        .write_to(writer)?;
-                }
-                DataType::Browser => {
-                    writer.write_u8(10)?;
-                    col.as_any()
-                        .downcast_ref::<BrowserColumn>()
-                        .unwrap()
-                        .write_to(writer)?;
-                }
             };
         }
         Ok(())
@@ -164,10 +148,6 @@ impl Decode for ColTable {
                 columns.push(Box::new(IDColumn::read_from(reader)?));
             } else if t == 8 {
                 columns.push(Box::new(DateColumn::read_from(reader)?));
-            } else if t == 9 {
-                columns.push(Box::new(IpAddrColumn::read_from(reader)?));
-            } else if t == 10 {
-                columns.push(Box::new(BrowserColumn::read_from(reader)?));
             } else {
                 println!("Invalid type {}", t);
             }
@@ -216,12 +196,6 @@ impl ColTable {
                 }
                 DataType::NULL => {
                     error!("Unexpected column type");
-                }
-                DataType::IpAddr => {
-                    columns.push(Box::new(IpAddrColumn::new()));
-                }
-                DataType::Browser => {
-                    columns.push(Box::new(BrowserColumn::new()));
                 }
             }
         }
@@ -372,20 +346,6 @@ impl ColTable {
                         .unwrap()
                         .serialize(&mut f);
                 }
-                DataType::IpAddr => {
-                    f.write_u8(9).unwrap();
-                    col.as_any()
-                        .downcast_ref::<IpAddrColumn>()
-                        .unwrap()
-                        .serialize(&mut f);
-                }
-                DataType::Browser => {
-                    f.write_u8(10).unwrap();
-                    col.as_any()
-                        .downcast_ref::<BrowserColumn>()
-                        .unwrap()
-                        .serialize(&mut f);
-                }
                 _ => {
                     println!("unexpected type...");
                 }
@@ -437,14 +397,6 @@ impl ColTable {
                 self.columns.push(Box::new(col));
             } else if t == 8 {
                 let mut col = DateColumn::new();
-                col.deserialize(&mut f);
-                self.columns.push(Box::new(col));
-            } else if t == 9 {
-                let mut col = IpAddrColumn::new();
-                col.deserialize(&mut f);
-                self.columns.push(Box::new(col));
-            } else if t == 10 {
-                let mut col = BrowserColumn::new();
                 col.deserialize(&mut f);
                 self.columns.push(Box::new(col));
             } else {
@@ -556,38 +508,6 @@ impl ColTable {
                         return false;
                     }
                 }
-                DataType::IpAddr => {
-                    if !self.columns[i]
-                        .as_any()
-                        .downcast_ref::<IpAddrColumn>()
-                        .unwrap()
-                        .is_same(
-                            other.columns[i]
-                                .as_any()
-                                .downcast_ref::<IpAddrColumn>()
-                                .unwrap(),
-                        )
-                    {
-                        println!("column-{} data not same", i);
-                        return false;
-                    }
-                }
-                DataType::Browser => {
-                    if !self.columns[i]
-                        .as_any()
-                        .downcast_ref::<BrowserColumn>()
-                        .unwrap()
-                        .is_same(
-                            other.columns[i]
-                                .as_any()
-                                .downcast_ref::<BrowserColumn>()
-                                .unwrap(),
-                        )
-                    {
-                        println!("column-{} data not same", i);
-                        return false;
-                    }
-                }
                 _ => {
                     println!("unexpected type");
                     return false;
@@ -660,12 +580,6 @@ pub fn parse_properties_beta(
                     error!("Unexpected field type");
                 }
                 DataType::ID => {}
-                DataType::IpAddr => {
-                    properties.push(Item::IpAddr(parse_ip_addr(val)?));
-                }
-                DataType::Browser => {
-                    properties.push(Item::Browser(parse_browser(val)?));
-                }
                 DataType::LCString => {
                     properties.push(Item::String(val.to_string()));
                 }
@@ -727,12 +641,6 @@ pub fn parse_properties<'a, Iter: Clone + Iterator<Item = &'a str>>(
                     error!("Unexpected field type");
                 }
                 DataType::ID => {}
-                DataType::IpAddr => {
-                    properties.push(Item::IpAddr(parse_ip_addr(val)?));
-                }
-                DataType::Browser => {
-                    properties.push(Item::Browser(parse_browser(val)?));
-                }
                 DataType::LCString => {
                     properties.push(Item::String(val.to_string()));
                 }

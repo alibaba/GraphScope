@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use clap::{App, Arg};
 use env_logger;
 use mcsr::graph_loader::GraphLoader;
-use mcsr::schema::LDBCGraphSchema;
+use mcsr::schema::CsrGraphSchema;
 use mcsr::types::*;
 
 fn main() {
@@ -24,25 +24,19 @@ fn main() {
                 .required(true)
                 .takes_value(true)
                 .index(2),
-            Arg::with_name("schema_file")
-                .short("s")
-                .long_help("The schema file")
+            Arg::with_name("input_schema_file")
+                .long_help("The input schema file")
                 .required(true)
                 .takes_value(true)
                 .index(3),
-            Arg::with_name("trimed_schema_file")
-                .short("m")
-                .long_help("The trimed schema file")
+            Arg::with_name("graph_schema_file")
+                .long_help("The graph schema file")
                 .required(true)
                 .takes_value(true)
                 .index(4),
             Arg::with_name("partition")
                 .short("p")
                 .long_help("The number of partitions")
-                .takes_value(true),
-            Arg::with_name("index")
-                .short("i")
-                .long_help("The index of partitions")
                 .takes_value(true),
             Arg::with_name("delimiter")
                 .short("t")
@@ -61,22 +55,17 @@ fn main() {
         .value_of("graph_data_dir")
         .unwrap()
         .to_string();
-    let schema_file = matches
-        .value_of("schema_file")
+    let input_schema_file = matches
+        .value_of("input_schema_file")
         .unwrap()
         .to_string();
-    let trimed_schema_file = matches
-        .value_of("trimed_schema_file")
+    let graph_schema_file = matches
+        .value_of("graph_schema_file")
         .unwrap()
         .to_string();
     let partition_num = matches
         .value_of("partition")
         .unwrap_or("1")
-        .parse::<usize>()
-        .expect(&format!("Specify invalid partition number"));
-    let partition_index = matches
-        .value_of("index")
-        .unwrap_or("0")
         .parse::<usize>()
         .expect(&format!("Specify invalid partition number"));
     let delimiter_str = matches
@@ -97,33 +86,38 @@ fn main() {
     if !out_dir.exists() {
         std::fs::create_dir_all(&out_dir).expect("Create graph schema directory error");
     }
-    let trim = LDBCGraphSchema::from_json_file(&trimed_schema_file).expect("Read trimed schema error!");
-    trim.to_json_file(&out_dir.join(FILE_SCHEMA))
+
+    let graph_schema =
+        CsrGraphSchema::from_json_file(&graph_schema_file).expect("Read trimed schema error!");
+    graph_schema
+        .to_json_file(&out_dir.join(FILE_SCHEMA))
         .expect("Write graph schema error!");
 
     let mut handles = Vec::with_capacity(partition_num);
-    let raw_dir = raw_data_dir.clone();
-    // let graph_dir = graph_data_dir.clone();
-    let schema_f = schema_file.clone();
-    let trim_f = trimed_schema_file.clone();
 
-    let cur_out_dir = graph_data_dir.clone();
+    for i in 0..partition_num {
+        let raw_dir = raw_data_dir.clone();
+        // let graph_dir = graph_data_dir.clone();
+        let graph_schema_f = graph_schema_file.clone();
+        let input_schema_f = input_schema_file.clone();
 
-    let handle = std::thread::spawn(move || {
-        let mut laser: GraphLoader = GraphLoader::new(
-            raw_dir,
-            cur_out_dir.as_str(),
-            schema_f,
-            trim_f,
-            partition_index,
-            partition_num,
-        );
-        laser = laser.with_delimiter(delimiter);
+        let cur_out_dir = graph_data_dir.clone();
+        let handle = std::thread::spawn(move || {
+            let mut laser: GraphLoader = GraphLoader::new(
+                raw_dir,
+                cur_out_dir.as_str(),
+                input_schema_f,
+                graph_schema_f,
+                i,
+                partition_num,
+            );
+            laser = laser.with_delimiter(delimiter);
 
-        laser.load_beta().expect("Load error");
-    });
+            laser.load_beta().expect("Load error");
+        });
 
-    handles.push(handle);
+        handles.push(handle);
+    }
 
     for handle in handles {
         handle.join().unwrap();

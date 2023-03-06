@@ -2,10 +2,9 @@ use std::path::PathBuf;
 
 use clap::{App, Arg};
 use env_logger;
-
 // use mcsr::graph_las::GraphLAS;
 use mcsr::graph_partitioner::GraphPartitioner;
-use mcsr::schema::LDBCGraphSchema;
+use mcsr::schema::CsrGraphSchema;
 use mcsr::types::*;
 
 fn main() {
@@ -42,13 +41,25 @@ fn main() {
                 .takes_value(true),
             Arg::with_name("delimiter")
                 .short("t")
-                .long_help("The delimiter of the raw data [comma|semicolon|pipe]. pipe (|) is the default option")
+                .long_help(
+                    "The delimiter of the raw data [comma|semicolon|pipe]. pipe (|) is the default option",
+                )
                 .takes_value(true),
-        ]).get_matches();
+        ])
+        .get_matches();
 
-    let raw_data_dir = matches.value_of("raw_data_dir").unwrap().to_string();
-    let graph_data_dir = matches.value_of("graph_data_dir").unwrap().to_string();
-    let schema_file = matches.value_of("schema_file").unwrap().to_string();
+    let raw_data_dir = matches
+        .value_of("raw_data_dir")
+        .unwrap()
+        .to_string();
+    let graph_data_dir = matches
+        .value_of("graph_data_dir")
+        .unwrap()
+        .to_string();
+    let schema_file = matches
+        .value_of("schema_file")
+        .unwrap()
+        .to_string();
     let partition_num = matches
         .value_of("partition")
         .unwrap_or("1")
@@ -78,7 +89,7 @@ fn main() {
     if !out_dir.exists() {
         std::fs::create_dir_all(&out_dir).expect("Create graph schema directory error");
     }
-    let schema = LDBCGraphSchema::from_json_file(&schema_file).expect("Read graph schema error!");
+    let schema = CsrGraphSchema::from_json_file(&schema_file).expect("Read graph schema error!");
     schema
         .to_json_file(&out_dir.join(FILE_SCHEMA))
         .expect("Write graph schema error!");
