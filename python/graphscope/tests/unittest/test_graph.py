@@ -438,7 +438,7 @@ def test_project_subgraph(arrow_modern_graph):
         RuntimeError,
         match="Failed to project to simple graph as no vertex exists in this graph",
     ):
-        graphscope.wcc(sub_graph)
+        graphscope.pagerank(sub_graph)
 
     # project a sub_graph only contain person nodes
     sub_graph = graph.project(vertices={"person": None}, edges={})
@@ -448,7 +448,7 @@ def test_project_subgraph(arrow_modern_graph):
         RuntimeError,
         match="Failed to project to simple graph as no edge exists in this graph",
     ):
-        graphscope.wcc(sub_graph)
+        graphscope.pagerank(sub_graph)
 
     graph = graph.project(
         vertices={"person": None, "software": ["name", "id"]},
@@ -475,10 +475,10 @@ def test_project_subgraph(arrow_modern_graph):
     assert not graph.schema.get_vertex_properties("person")
     assert not graph.schema.get_edge_properties("knows")
 
-    ret = graphscope.wcc(graph)
-    graph = graph.add_column(ret, {"cc": "r"})
+    ret = graphscope.pagerank(graph)
+    graph = graph.add_column(ret, {"pr": "r"})
     assert len(graph.schema.get_vertex_properties("person")) == 1
-    assert graph.schema.get_vertex_properties("person")[0].name == "cc"
+    assert graph.schema.get_vertex_properties("person")[0].name == "pr"
 
 
 def test_error_on_project(arrow_property_graph, ldbc_graph):
@@ -536,27 +536,27 @@ def test_add_column(ldbc_graph, arrow_modern_graph):
     )
     sub_graph_4 = modern.project(vertices={"person": []}, edges={"knows": ["eid"]})
 
-    ret = graphscope.wcc(sub_graph_1)
+    ret = graphscope.pagerank(sub_graph_1)
 
     # the ret can add to the graph queried on
-    g1 = sub_graph_1.add_column(ret, selector={"cc": "r"})
+    g1 = sub_graph_1.add_column(ret, selector={"pr": "r"})
     assert g1.schema.get_vertex_properties("person")[0].id == 8
-    assert g1.schema.get_vertex_properties("person")[0].name == "cc"
+    assert g1.schema.get_vertex_properties("person")[0].name == "pr"
     # the ret can add to the origin graph
-    g2 = ldbc.add_column(ret, selector={"cc": "r"})
+    g2 = ldbc.add_column(ret, selector={"pr": "r"})
     assert g2.schema.get_vertex_properties("person")[8].id == 8
-    assert g2.schema.get_vertex_properties("person")[8].name == "cc"
+    assert g2.schema.get_vertex_properties("person")[8].name == "pr"
     # the ret can add to the graph tha contain the same vertex label with sub_graph_1
-    g3 = sub_graph_2.add_column(ret, selector={"cc": "r"})
+    g3 = sub_graph_2.add_column(ret, selector={"pr": "r"})
     assert g3.schema.get_vertex_properties("person")[8].id == 8
-    assert g3.schema.get_vertex_properties("person")[8].name == "cc"
+    assert g3.schema.get_vertex_properties("person")[8].name == "pr"
     # the ret can not add to sub_graph_3
     with pytest.raises(AnalyticalEngineInternalError):
-        g4 = sub_graph_3.add_column(ret, selector={"cc": "r"})
+        g4 = sub_graph_3.add_column(ret, selector={"pr": "r"})
         print(g4.schema)
     # the ret can not add to sub_graph_4
     with pytest.raises(AnalyticalEngineInternalError):
-        g5 = sub_graph_4.add_column(ret, selector={"cc": "r"})
+        g5 = sub_graph_4.add_column(ret, selector={"pr": "r"})
         print(g4.schema)
 
 
