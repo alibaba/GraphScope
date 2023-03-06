@@ -818,7 +818,7 @@ public class GraphBuilder extends RelBuilder {
         }
 
         List<RelFieldCollation> fieldCollations = fieldCollations(registerNodes);
-        Config config = ClassUtils.getFieldValue(RelBuilder.class, this, "config");
+        Config config = Utils.getFieldValue(RelBuilder.class, this, "config");
 
         // limit 0 -> return empty value
         if ((fetchNode != null && RexLiteral.intValue(fetchNode) == 0) && config.simplifyLimit()) {

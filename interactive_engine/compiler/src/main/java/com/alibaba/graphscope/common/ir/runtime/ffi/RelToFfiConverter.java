@@ -167,11 +167,15 @@ public class RelToFfiConverter implements GraphRelShuttle {
             OuterExpression.Expression expression =
                     project.getProjects().get(i).accept(new RexToProtoConverter(true, isColumnId));
             int aliasId = fields.get(i).getIndex();
+            FfiAlias.ByValue ffiAlias =
+                    (aliasId == AliasInference.DEFAULT_ID)
+                            ? ArgUtils.asNoneAlias()
+                            : ArgUtils.asAlias(aliasId);
             checkFfiResult(
                     LIB.addProjectExprAliasWithPb(
                             ptrProject,
                             new FfiPbPointer.ByValue(expression.toByteArray()),
-                            ArgUtils.asAlias(aliasId)));
+                            ffiAlias));
         }
         return new LogicalNode(project, ptrProject);
     }
@@ -181,14 +185,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
         Pointer ptrGroup = LIB.initGroupbyOperator();
         List<RelDataTypeField> fields = aggregate.getRowType().getFieldList();
         List<RexNode> groupKeys = aggregate.getGroupKey().getVariables();
-        if (groupKeys.isEmpty()) {
-            // to support 'group().by()' in gremlin query
-            checkFfiResult(
-                    LIB.addGroupbyKeyAliasWithPb(
-                            ptrGroup,
-                            new FfiPbPointer.ByValue(empty().toByteArray()),
-                            ArgUtils.asNoneAlias()));
-        }
+        // if groupKeys is empty -> calculate the global aggregated values, i.e. g.V().count()
         for (int i = 0; i < groupKeys.size(); ++i) {
             Preconditions.checkArgument(
                     groupKeys.get(i) instanceof RexGraphVariable,
@@ -201,11 +198,14 @@ public class RelToFfiConverter implements GraphRelShuttle {
                             .accept(new RexToProtoConverter(true, isColumnId))
                             .getOperators(0)
                             .getVar();
+            int aliasId = fields.get(i).getIndex();
+            FfiAlias.ByValue ffiAlias =
+                    (aliasId == AliasInference.DEFAULT_ID)
+                            ? ArgUtils.asNoneAlias()
+                            : ArgUtils.asAlias(aliasId);
             checkFfiResult(
                     LIB.addGroupbyKeyAliasWithPb(
-                            ptrGroup,
-                            new FfiPbPointer.ByValue(var.toByteArray()),
-                            ArgUtils.asAlias(fields.get(i).getIndex())));
+                            ptrGroup, new FfiPbPointer.ByValue(var.toByteArray()), ffiAlias));
         }
         List<GraphAggCall> groupCalls = aggregate.getAggCalls();
         if (groupCalls.isEmpty()) { // dedup
@@ -220,13 +220,17 @@ public class RelToFfiConverter implements GraphRelShuttle {
             }
             FfiAggOpt ffiAggOpt = Utils.ffiAggOpt(groupCalls.get(i));
             int aliasId = fields.get(i + groupKeys.size()).getIndex();
+            FfiAlias.ByValue ffiAlias =
+                    (aliasId == AliasInference.DEFAULT_ID)
+                            ? ArgUtils.asNoneAlias()
+                            : ArgUtils.asAlias(aliasId);
             if (operands.isEmpty()) {
                 checkFfiResult(
                         LIB.addGroupbyAggFnWithPb(
                                 ptrGroup,
                                 new FfiPbPointer.ByValue(empty().toByteArray()),
                                 ffiAggOpt,
-                                ArgUtils.asAlias(aliasId)));
+                                ffiAlias));
             } else {
                 Preconditions.checkArgument(
                         operands.get(0) instanceof RexGraphVariable,
@@ -243,7 +247,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
                                 ptrGroup,
                                 new FfiPbPointer.ByValue(var.toByteArray()),
                                 ffiAggOpt,
-                                ArgUtils.asAlias(aliasId)));
+                                ffiAlias));
             }
         }
         return new LogicalNode(aggregate, ptrGroup);
