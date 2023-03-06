@@ -22,7 +22,7 @@ use ir_common::expr_parse::error::{ExprError, ExprResult};
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
 
-use crate::apis::{Details, Element, PropKey};
+use crate::apis::{Element, PropKey};
 use crate::utils::expr::eval::{apply_logical, Context, Evaluate, Evaluator, Operand};
 use crate::utils::expr::{ExprEvalError, ExprEvalResult};
 
@@ -273,12 +273,10 @@ impl EvalPred for Operand {
                                         PropKey::Len => unreachable!(),
                                         PropKey::All => {
                                             // TODO(longbin) Do we need to look into the properties?
-                                            result = graph_element.details().is_some()
+                                            result = graph_element.get_all_properties().is_some()
                                         }
                                         PropKey::Key(key) => {
-                                            if let Some(details) = graph_element.details() {
-                                                result = details.get_property(key).is_some();
-                                            }
+                                            result = graph_element.get_property(key).is_some()
                                         }
                                     }
                                 } else {

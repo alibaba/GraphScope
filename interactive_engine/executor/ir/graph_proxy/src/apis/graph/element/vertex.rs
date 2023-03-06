@@ -13,22 +13,24 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::any::Any;
-use std::cmp::Ordering;
-use std::convert::{TryFrom, TryInto};
-use std::hash::{Hash, Hasher};
-use std::io;
-
-use dyn_type::BorrowObject;
+use crate::apis::{
+    get_graph, read_id, write_id, Details, DynDetails, Element, GraphElement, PropertyValue, QueryParams,
+    ID,
+};
+use crate::utils::expr::eval::Context;
+use ahash::HashMap;
+use dyn_type::{BorrowObject, Object};
 use ir_common::error::ParsePbError;
 use ir_common::generated::results as result_pb;
 use ir_common::{LabelId, NameOrId};
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 use pegasus_common::downcast::*;
 use pegasus_common::impl_as_any;
-
-use crate::apis::{read_id, write_id, DynDetails, Element, GraphElement, ID};
-use crate::utils::expr::eval::Context;
+use std::any::Any;
+use std::cmp::Ordering;
+use std::convert::{TryFrom, TryInto};
+use std::hash::{Hash, Hasher};
+use std::io;
 
 #[derive(Clone, Debug, Default)]
 pub struct Vertex {
@@ -66,8 +68,41 @@ impl GraphElement for Vertex {
     fn label(&self) -> Option<LabelId> {
         self.label
     }
-    fn details(&self) -> Option<&DynDetails> {
-        Some(&self.details)
+
+    fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
+        match self.details {
+            DynDetails::Empty => {
+                let mut prop = None;
+                if let Some(graph) = get_graph() {
+                    if let Ok(mut iter) = graph.get_vertex(&[self.id], &QueryParams::default()) {
+                        if let Some(v) = iter.next() {
+                            prop = v
+                                .get_property(key)
+                                .map(|prop| PropertyValue::Owned(prop.try_to_owned().unwrap()));
+                        }
+                    }
+                }
+                prop
+            }
+            DynDetails::Default(_) | DynDetails::Lazy(_) => self.details.get_property(key),
+        }
+    }
+
+    fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
+        match self.details {
+            DynDetails::Empty => {
+                let mut prop = None;
+                if let Some(graph) = get_graph() {
+                    if let Ok(mut iter) = graph.get_vertex(&[self.id], &QueryParams::default()) {
+                        if let Some(v) = iter.next() {
+                            prop = v.get_all_properties();
+                        }
+                    }
+                }
+                prop
+            }
+            DynDetails::Default(_) | DynDetails::Lazy(_) => self.details.get_all_properties(),
+        }
     }
 }
 

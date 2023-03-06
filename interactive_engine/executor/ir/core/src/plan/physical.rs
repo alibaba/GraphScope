@@ -59,48 +59,49 @@ fn post_process_vars(
     builder: &mut JobBuilder, plan_meta: &mut PlanMeta, is_order_or_group: bool,
 ) -> IrResult<()> {
     if plan_meta.is_partition() {
-        let node_meta = plan_meta.get_curr_node_meta().unwrap();
-        let tag_columns = node_meta.get_tag_columns();
-        let len = tag_columns.len();
-        if len == 1 && !is_order_or_group {
-            // There are minor differences between `Order`, `Group` (group_values, actually) with other operators:
-            // For `Order`, we need to carry the properties for global ordering;
-            // and for `Group` (group_values), we need to carry the properties after `Keyed` for Aggregation.
-            // While for other operators, we can shuffle to the partition where the vertex locates,
-            // and directly query the properties (without saving the properties).
-            let (tag, columns_opt) = tag_columns.into_iter().next().unwrap();
-            if columns_opt.len() > 0 {
-                let tag_pb = tag.map(|tag_id| (tag_id as KeyId).into());
-                builder.shuffle(tag_pb.clone());
-                let auxilia = pb::GetV { tag: tag_pb.clone(), opt: 4, params: None, alias: tag_pb };
-                builder.get_v(auxilia);
-            }
-        } else if len != 0 {
-            for (tag, columns_opt) in tag_columns.into_iter() {
+        if let Some(node_meta) = plan_meta.get_curr_node_meta() {
+            let tag_columns = node_meta.get_tag_columns();
+            let len = tag_columns.len();
+            if len == 1 && !is_order_or_group {
+                // There are minor differences between `Order`, `Group` (group_values, actually) with other operators:
+                // For `Order`, we need to carry the properties for global ordering;
+                // and for `Group` (group_values), we need to carry the properties after `Keyed` for Aggregation.
+                // While for other operators, we can shuffle to the partition where the vertex locates,
+                // and directly query the properties (without saving the properties).
+                let (tag, columns_opt) = tag_columns.into_iter().next().unwrap();
                 if columns_opt.len() > 0 {
-                    let tag_pb = tag.map(|tag_id| (tag_id as i32).into());
+                    let tag_pb = tag.map(|tag_id| (tag_id as KeyId).into());
                     builder.shuffle(tag_pb.clone());
-                    let params = pb::QueryParams {
-                        tables: vec![],
-                        columns: columns_opt
-                            .get()
-                            .into_iter()
-                            .map(|column| column.into())
-                            .collect(),
-                        is_all_columns: columns_opt.is_all(),
-                        limit: None,
-                        predicate: None,
-                        sample_ratio: 1.0,
-                        extra: Default::default(),
-                    };
-                    // opt = 4 denotes that to get vertex itself. The same as the followings.
-                    let auxilia = pb::GetV {
-                        tag: tag_pb.clone(),
-                        opt: 4,
-                        params: Some(params),
-                        alias: tag_pb.clone(),
-                    };
+                    let auxilia = pb::GetV { tag: tag_pb.clone(), opt: 4, params: None, alias: tag_pb };
                     builder.get_v(auxilia);
+                }
+            } else if len != 0 {
+                for (tag, columns_opt) in tag_columns.into_iter() {
+                    if columns_opt.len() > 0 {
+                        let tag_pb = tag.map(|tag_id| (tag_id as i32).into());
+                        builder.shuffle(tag_pb.clone());
+                        let params = pb::QueryParams {
+                            tables: vec![],
+                            columns: columns_opt
+                                .get()
+                                .into_iter()
+                                .map(|column| column.into())
+                                .collect(),
+                            is_all_columns: columns_opt.is_all(),
+                            limit: None,
+                            predicate: None,
+                            sample_ratio: 1.0,
+                            extra: Default::default(),
+                        };
+                        // opt = 4 denotes that to get vertex itself. The same as the followings.
+                        let auxilia = pb::GetV {
+                            tag: tag_pb.clone(),
+                            opt: 4,
+                            params: Some(params),
+                            alias: tag_pb.clone(),
+                        };
+                        builder.get_v(auxilia);
+                    }
                 }
             }
         }
@@ -230,6 +231,7 @@ impl AsPhysical for pb::PathExpand {
         if plan_meta.is_partition() {
             builder.shuffle(self.start_tag.clone());
         }
+        post_process_vars(builder, plan_meta, false)?;
         Ok(())
     }
 }
@@ -1015,12 +1017,6 @@ mod test {
         expected_builder.shuffle(None);
         expected_builder.edge_expand(build_edgexpd(0, vec![], Some(0.into())));
         expected_builder.shuffle(Some(0.into()));
-        expected_builder.get_v(pb::GetV {
-            tag: Some(0.into()),
-            opt: 4,
-            params: None,
-            alias: Some(0.into()),
-        });
         expected_builder.project(build_project("{@0.name, @0.id, @0.age}"));
         expected_builder.sink(build_sink());
 
@@ -1101,7 +1097,6 @@ mod test {
         expected_builder.shuffle(None);
         expected_builder.get_v(build_auxilia_with_predicates("@.age == 27"));
         expected_builder.shuffle(None);
-        expected_builder.get_v(build_auxilia_with_tag_alias_columns(None, None, vec![]));
         expected_builder.project(build_project("{@.name, @.id}"));
         expected_builder.sink(build_sink());
         assert_eq!(job_builder, expected_builder);
@@ -1147,11 +1142,6 @@ mod test {
         expected_builder.edge_expand(build_edgexpd(1, vec![], None));
         expected_builder.get_v(build_getv(Some(0.into())));
         expected_builder.shuffle(Some(0.into()));
-        expected_builder.get_v(build_auxilia_with_tag_alias_columns(
-            Some(0.into()),
-            Some(0.into()),
-            vec![],
-        ));
         expected_builder.project(build_project("{@0.name, @0.id, @0.age}"));
         expected_builder.sink(build_sink());
 
@@ -1313,6 +1303,7 @@ mod test {
             hop_range: Some(pb::Range { lower: 1, upper: 4 }),
             path_opt: 0,
             result_opt: 0,
+            condition: None,
         };
 
         let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr.clone().into()));
@@ -1448,11 +1439,6 @@ mod test {
             None,
         );
         expected_builder.shuffle(Some(0.into()));
-        expected_builder.get_v(build_auxilia_with_tag_alias_columns(
-            Some(0.into()),
-            Some(0.into()),
-            vec![],
-        ));
         expected_builder.project(project);
 
         assert_eq!(expected_builder, builder);

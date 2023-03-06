@@ -52,6 +52,7 @@ mod test {
             hop_range: Some(pb::Range { lower: 1, upper: 3 }),
             path_opt,
             result_opt,
+            condition: None,
         };
 
         let mut job_builder = JobBuilder::default();
@@ -87,6 +88,7 @@ mod test {
             hop_range: Some(pb::Range { lower: 2, upper: 3 }),
             path_opt: 0,
             result_opt: if is_whole_path { 1 } else { 0 },
+            condition: None,
         };
 
         let mut job_builder = JobBuilder::default();
@@ -122,6 +124,7 @@ mod test {
             hop_range: Some(pb::Range { lower: 0, upper: 3 }),
             path_opt: 0,
             result_opt: if is_whole_path { 1 } else { 0 },
+            condition: None,
         };
 
         let mut job_builder = JobBuilder::default();

@@ -539,25 +539,28 @@ impl IRJobAssembly {
                         .filter_map_with_name("PathStart", move |input| path_start_func.exec(input))?;
                     // path base expand
                     let mut base_expand_plan = vec![];
+                    base_expand_plan.push(base.clone().into());
+                    let repartition = pb::Repartition {
+                        strategy: Some(pb::repartition::Strategy::ToAnother(pb::repartition::Shuffle {
+                            shuffle_key: None,
+                        })),
+                    };
                     if let OpKind::Repartition(_) = &prev_op_kind {
                         // the case when base expand needs repartition
-                        base_expand_plan.push(
-                            pb::Repartition {
-                                strategy: Some(pb::repartition::Strategy::ToAnother(
-                                    pb::repartition::Shuffle { shuffle_key: None },
-                                )),
-                            }
-                            .into(),
-                        );
+                        base_expand_plan.push(repartition.clone().into());
                     }
-                    base_expand_plan.push(base.clone().into());
-
                     for _ in 0..range.lower {
                         stream = self.install(stream, &base_expand_plan)?;
                     }
                     let times = range.upper - range.lower - 1;
                     if times > 0 {
-                        let until = IterCondition::max_iters(times as u32);
+                        let mut until = IterCondition::max_iters(times as u32);
+                        if let Some(condition) = path.condition.as_ref() {
+                            let func = self
+                                .udf_gen
+                                .gen_filter(algebra_pb::Select { predicate: Some(condition.clone()) })?;
+                            until.set_until(func);
+                        }
                         stream = stream.iterate_emit_until(until, EmitKind::Before, |start| {
                             self.install(start, &base_expand_plan[..])
                         })?;
