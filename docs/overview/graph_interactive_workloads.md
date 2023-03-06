@@ -29,7 +29,7 @@ to the current vertex, edge or property being visited, and (optionally) the path
 
 :::{figure-md}
 
-<img src="images/cycle_detection.png"
+<img src="../images/cycle_detection.png"
      alt="Pattern matching example"
      style="border-radius: 0.3125em; box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);"
      width="60%">
@@ -69,7 +69,7 @@ plans based on both algorithmic heuristics and cost estimation.
 
 :::{figure-md}
 
-<img src="images/pattern-matching-example.png"
+<img src="../images/pattern-matching-example.png"
      alt="Pattern matching example"
      style="border-radius: 0.3125em; box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);"
      width="95%">
