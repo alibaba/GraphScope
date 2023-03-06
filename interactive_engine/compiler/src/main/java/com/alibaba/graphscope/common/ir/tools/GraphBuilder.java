@@ -32,7 +32,7 @@ import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
 import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
-import com.alibaba.graphscope.common.utils.ClassUtils;
+import com.alibaba.graphscope.gremlin.Utils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -165,7 +165,7 @@ public class GraphBuilder extends RelBuilder {
         RexNode offsetNode = pxdConfig.getOffset() <= 0 ? null : literal(pxdConfig.getOffset());
         RexNode fetchNode = pxdConfig.getFetch() < 0 ? null : literal(pxdConfig.getFetch());
 
-        Config config = ClassUtils.getFieldValue(RelBuilder.class, this, "config");
+        Config config = Utils.getFieldValue(RelBuilder.class, this, "config");
         // fetch == 0 -> return empty value
         if ((fetchNode != null && RexLiteral.intValue(fetchNode) == 0) && config.simplifyLimit()) {
             return (GraphBuilder) empty();
@@ -493,7 +493,15 @@ public class GraphBuilder extends RelBuilder {
      */
     @Override
     public RexNode call(SqlOperator operator, RexNode... operands) {
-        List<RexNode> operandList = ImmutableList.copyOf(operands);
+        return call_(operator, ImmutableList.copyOf(operands));
+    }
+
+    @Override
+    public RexNode call(SqlOperator operator, Iterable<? extends RexNode> operands) {
+        return call_(operator, ImmutableList.copyOf(operands));
+    }
+
+    private RexNode call_(SqlOperator operator, List<RexNode> operandList) {
         if (!isCurrentSupported(operator)) {
             throw new UnsupportedOperationException(
                     "operator " + operator.getKind().name() + " not supported");
@@ -595,8 +603,8 @@ public class GraphBuilder extends RelBuilder {
             Iterable<? extends @Nullable String> aliases,
             boolean isAppend) {
         RelNode input = requireNonNull(peek(), "frame stack is empty");
-        Config config = ClassUtils.getFieldValue(RelBuilder.class, this, "config");
-        RexSimplify simplifier = ClassUtils.getFieldValue(RelBuilder.class, this, "simplifier");
+        Config config = Utils.getFieldValue(RelBuilder.class, this, "config");
+        RexSimplify simplifier = Utils.getFieldValue(RelBuilder.class, this, "simplifier");
 
         List<RexNode> nodeList = Lists.newArrayList(nodes);
         List<@Nullable String> fieldNameList = Lists.newArrayList(aliases);
