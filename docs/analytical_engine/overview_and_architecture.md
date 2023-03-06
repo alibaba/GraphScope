@@ -63,7 +63,7 @@ Currently, GAE has supported APIs of three programming models: Pregel, PIE and F
 
 The GRAPE engine is written with C++ for better performance, and GAE also provides Python and Java interfaces through FFI (Foreign Function Interface). With Python, it is natural and easy for GraphScope to inter-operate with other Python data processing systems such as Pandas and Mars. Based on an efficient FFI for Java and C++ [fastFFI](https://github.com/alibaba/fastFFI), GAE allows users to write Java applications and run these applications on GAE directly. Please check out our tutorials on how to develop algorithms with Python and Java.
 
-- [Tutorial: Develop algorithms in Python](https://graphscope.io/docs/latest/analytical_engine/tutorial_dev_algo_python.html)
+- [Tutorial: Develop Algorithms in Python](https://graphscope.io/docs/latest/analytical_engine/tutorial_dev_algo_python.html)
 - [Tutorial: Develop your Algorithm in Java with PIE Model](https://graphscope.io/docs/latest/analytical_engine/tutorial_dev_algo_java.html)
 
 ### Incremental Computation Engine 
@@ -78,4 +78,4 @@ GAE provides C++, Python and Java SDKs for graph applications, where users can f
 - [Tutorial: Graph Operations with NetowrkX APIs](https://graphscope.io/docs/latest/analytical_engine/tutorial_networkx_operations.html)
 - [Tutorial: Graph Algorithms with NetowrkX APIs](https://graphscope.io/docs/latest/analytical_engine/tutorial_networkx_algorithms.html)
 - [Tutorial: Run Giraph Applications on GraphScope](https://graphscope.io/docs/latest/analytical_engine/tutorial_run_giraph_apps.html)
--[Tutorial: Run GraphX Applications on GraphScope](https://graphscope.io/docs/latest/analytical_engine/tutorial_run_graphx_apps.html)
+- [Tutorial: Run GraphX Applications on GraphScope](https://graphscope.io/docs/latest/analytical_engine/tutorial_run_graphx_apps.html)
