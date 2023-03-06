@@ -55,7 +55,7 @@ def test_compatible_with_dynamic_graph(dynamic_property_graph):
     # bfs
     with pytest.raises(
         InvalidArgumentError,
-        match="Not compatible for arrow_property dynamic_property type",
+        match="isn't compatible for",
     ):
         bfs(dynamic_property_graph, src=4)
 
