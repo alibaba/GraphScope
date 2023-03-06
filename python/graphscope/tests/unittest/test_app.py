@@ -395,11 +395,11 @@ def test_app_on_undirected_graph(
     assert is_simple_path(p2p_project_undirected_graph, [1, 10])
 
 
-def test_run_app_on_string_oid_graph(p2p_project_directed_graph_string):
-    ctx = sssp(p2p_project_directed_graph_string, src="6")
+def test_run_app_on_string_oid_graph(p2p_project_undirected_graph_string):
+    ctx = sssp(p2p_project_undirected_graph_string, src="6")
     r1 = ctx.to_dataframe({"node": "v.id", "r": "r"})
     assert r1[r1["node"] == "6"].r.values[0] == 0.0
-    ctx = wcc(p2p_project_directed_graph_string)
+    ctx = wcc(p2p_project_undirected_graph_string)
     r1 = ctx.to_dataframe({"node": "v.id", "r": "r"})
 
 
@@ -445,12 +445,12 @@ def test_app_on_local_vm_graph(
     assert r2 is not None
 
 
-def test_wcc_on_flatten_graph(arrow_modern_graph):
-    ctx = graphscope.wcc_auto(arrow_modern_graph)
+def test_wcc_on_flatten_graph(arrow_modern_graph_undirected):
+    ctx = graphscope.wcc_auto(arrow_modern_graph_undirected)
     df = ctx.to_dataframe({"node": "v.id", "r": "r"})
     # The component id is all 1
     assert sum(df.r.values) == 6
-    ctx = graphscope.wcc_projected(arrow_modern_graph)
+    ctx = graphscope.wcc_projected(arrow_modern_graph_undirected)
     df = ctx.to_dataframe({"node": "v.id", "r": "r"})
     # The component id is all 0
     assert sum(df.r.values) == 0

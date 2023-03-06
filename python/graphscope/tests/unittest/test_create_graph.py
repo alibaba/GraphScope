@@ -568,7 +568,7 @@ def test_Load_complex_graph_variants(
 
 
 def test_local_vertex_map_e_file(graphscope_session, student_group_e):
-    graph = graphscope_session.g(vertex_map="local")
+    graph = graphscope_session.g(vertex_map="local", directed=False)
     graph = graph.add_edges(student_group_e)
     assert graph.schema is not None
     ret = graphscope.wcc(graph)
@@ -600,6 +600,7 @@ def test_local_vertex_map_complete_form_loader(
             )
         },
         vertex_map="local",
+        directed=False,
     )
     assert graph.schema is not None
     ret = graphscope.wcc(graph)
@@ -608,7 +609,7 @@ def test_local_vertex_map_complete_form_loader(
 
 
 def test_local_vertex_map_e_file_str(graphscope_session, student_group_e):
-    graph = graphscope_session.g(oid_type="str", vertex_map="local")
+    graph = graphscope_session.g(oid_type="str", vertex_map="local", directed=False)
     graph = graph.add_edges(student_group_e)
     assert graph.schema is not None
     ret = graphscope.wcc(graph)
