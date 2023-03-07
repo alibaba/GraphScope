@@ -33,7 +33,7 @@ public class ExpressionTest {
 
     @Before
     public void before() {
-        this.builder = SourceTest.mockGraphBuilder();
+        this.builder = IrUtils.mockGraphBuilder();
     }
 
     @Test

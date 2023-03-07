@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.runtime;
 
-import com.alibaba.graphscope.common.ir.SourceTest;
+import com.alibaba.graphscope.common.ir.IrUtils;
 import com.alibaba.graphscope.common.ir.runtime.proto.RexToProtoConverter;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.config.*;
@@ -30,7 +30,7 @@ public class ConverterTest {
     public void expression_test() {
         RexToProtoConverter converter = new RexToProtoConverter(true, true);
 
-        GraphBuilder graphBuilder = SourceTest.mockGraphBuilder();
+        GraphBuilder graphBuilder = IrUtils.mockGraphBuilder();
         graphBuilder
                 .source(
                         new SourceConfig(

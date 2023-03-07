@@ -28,7 +28,7 @@ public class ExpandTest {
     // g.V().hasLabel("person").outE("knows")
     @Test
     public void expand_1_test() {
-        GraphBuilder builder = SourceTest.mockGraphBuilder();
+        GraphBuilder builder = IrUtils.mockGraphBuilder();
         RelNode expand =
                 builder.source(
                                 new SourceConfig(
@@ -50,7 +50,7 @@ public class ExpandTest {
     // g.V().hasLabel("person").outE("knows").as("x")
     @Test
     public void expand_2_test() {
-        GraphBuilder builder = SourceTest.mockGraphBuilder();
+        GraphBuilder builder = IrUtils.mockGraphBuilder();
         RelNode expand =
                 builder.source(
                                 new SourceConfig(
@@ -74,7 +74,7 @@ public class ExpandTest {
     // SIMPLE).with('RESULT_OPT', ALL_V)
     @Test
     public void expand_3_test() {
-        GraphBuilder builder = SourceTest.mockGraphBuilder();
+        GraphBuilder builder = IrUtils.mockGraphBuilder();
         PathExpandConfig.Builder pxdBuilder = PathExpandConfig.newBuilder(builder);
         PathExpandConfig pxdConfig =
                 pxdBuilder

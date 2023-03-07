@@ -35,7 +35,7 @@ public class LogicalPlanConverter<T, R> extends RelVisitor {
     private final LogicalPlan<T, R> logicalPlan;
     private final RelShuttle rexShuttle;
 
-    public LogicalPlanConverter(RelShuttle relShuttle, LogicalPlan logicalPlan) {
+    public LogicalPlanConverter(RelShuttle relShuttle, LogicalPlan<T, R> logicalPlan) {
         this.rexShuttle = Objects.requireNonNull(relShuttle);
         this.logicalPlan = Objects.requireNonNull(logicalPlan);
     }

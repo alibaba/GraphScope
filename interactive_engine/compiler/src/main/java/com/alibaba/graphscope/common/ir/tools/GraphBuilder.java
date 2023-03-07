@@ -329,10 +329,18 @@ public class GraphBuilder extends RelBuilder {
      */
     public GraphBuilder match(RelNode single, GraphOpt.Match opt) {
         RelNode input = size() > 0 ? peek() : null;
-        RelNode match =
-                GraphLogicalSingleMatch.create((GraphOptCluster) cluster, null, input, single, opt);
-        if (size() > 0) pop();
-        push(match);
+        // there is only one source operator in the sentence -> skip match
+        if (input == null && single.getInputs().isEmpty()) {
+            push(single);
+        } else {
+            RelNode match =
+                    GraphLogicalSingleMatch.create(
+                            (GraphOptCluster) cluster, null, input, single, opt);
+            if (size() > 0) {
+                pop();
+            }
+            push(match);
+        }
         return this;
     }
 
@@ -355,7 +363,9 @@ public class GraphBuilder extends RelBuilder {
                         input,
                         first,
                         ImmutableList.copyOf(others));
-        if (size() > 0) pop();
+        if (size() > 0) {
+            pop();
+        }
         push(match);
         return this;
     }
@@ -567,11 +577,10 @@ public class GraphBuilder extends RelBuilder {
                             ImmutableList.of(tableScan.getAliasId(), AliasInference.DEFAULT_ID));
             // fuze all conditions into table scan
             if (condition.accept(checker)) {
-                // pop the filter from the inner stack
-                builder.pop();
                 // add the condition in table scan
                 tableScan.setFilters(ImmutableList.of(condition));
-                push(tableScan);
+                // pop the filter from the inner stack
+                replaceTop(tableScan);
             }
         }
         return builder;

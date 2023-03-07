@@ -32,6 +32,7 @@ import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.FfiData;
 import com.alibaba.graphscope.common.jna.type.FfiResult;
 import com.alibaba.graphscope.common.jna.type.ResultCode;
+import com.alibaba.graphscope.common.store.IrMeta;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
@@ -42,15 +43,16 @@ import org.apache.calcite.rel.logical.LogicalFilter;
 
 import java.util.List;
 
-public class FfiLogicalPlan extends LogicalPlan<Pointer, FfiData.ByValue> {
+public class FfiLogicalPlan extends LogicalPlan<Pointer, byte[]> {
     private static final IrCoreLibrary LIB = IrCoreLibrary.INSTANCE;
 
     private final Pointer ptrPlan;
 
     private int lastIdx;
 
-    public FfiLogicalPlan(RelOptCluster cluster, List<RelHint> hints) {
+    public FfiLogicalPlan(RelOptCluster cluster, IrMeta irMeta, List<RelHint> hints) {
         super(cluster, hints);
+        checkFfiResult(LIB.setSchema(irMeta.getSchemaJson()));
         this.ptrPlan = LIB.initLogicalPlan();
         this.lastIdx = -1;
     }
@@ -97,6 +99,11 @@ public class FfiLogicalPlan extends LogicalPlan<Pointer, FfiData.ByValue> {
         this.lastIdx = oprIdx.getValue();
     }
 
+    private void appendSink() {
+        Pointer ptrSink = LIB.initSinkOperator();
+        checkFfiResult(LIB.appendSinkOperator(ptrPlan, ptrSink, lastIdx, new IntByReference()));
+    }
+
     @Override
     public String explain() {
         FfiResult res = LIB.printPlanAsJson(this.ptrPlan);
@@ -107,8 +114,15 @@ public class FfiLogicalPlan extends LogicalPlan<Pointer, FfiData.ByValue> {
     }
 
     @Override
-    public FfiData.ByValue toPhysical() {
-        return null;
+    public byte[] toPhysical() {
+        appendSink();
+        int servers = Integer.valueOf(hints.get(0).kvOptions.get("servers"));
+        int workers = Integer.valueOf(hints.get(0).kvOptions.get("workers"));
+        FfiData.ByValue ffiData = LIB.buildPhysicalPlan(ptrPlan, workers, servers);
+        checkFfiResult(ffiData.error);
+        byte[] bytes = ffiData.getBytes();
+        ffiData.close();
+        return bytes;
     }
 
     @Override
@@ -121,7 +135,7 @@ public class FfiLogicalPlan extends LogicalPlan<Pointer, FfiData.ByValue> {
     private void checkFfiResult(FfiResult res) {
         if (res == null || res.code != ResultCode.Success) {
             throw new IllegalStateException(
-                    "build logical plan, unexpected ffi results from ir_core, msg : %s" + res);
+                    "build logical plan, unexpected ffi results from ir_core, msg : " + res);
         }
     }
 }

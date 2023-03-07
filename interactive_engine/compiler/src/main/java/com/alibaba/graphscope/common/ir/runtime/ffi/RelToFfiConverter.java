@@ -393,7 +393,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
             }
             checkFfiResult(LIB.setSentenceStart(ptrSentence, ArgUtils.asNameOrId(aliasId)));
             List<RexNode> filters = source.getFilters();
-            if (!filters.isEmpty()) {
+            if (ObjectUtils.isNotEmpty(filters)) {
                 OuterExpression.Expression exprProto =
                         filters.get(0).accept(new RexToProtoConverter(true, isColumnId));
                 Pointer ptrFilter = LIB.initSelectOperator();
