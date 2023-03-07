@@ -23,6 +23,7 @@ COPY --from=builder /home/graphscope/GraphScope/interactive_engine/executor/ir/t
 RUN yum install -y sudo java-1.8.0-openjdk \
     && yum clean all \
     && rm -rf /var/cache/yum
+RUN sudo chmod a+wrx /tmp
 
 RUN useradd -m graphscope -u 1001 \
     && echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers

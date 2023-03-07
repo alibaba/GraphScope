@@ -115,7 +115,8 @@ ObjectId v6d_build_global_graph_stream(const char *graph_name, size_t size,
     builder.AddStream(idx, static_cast<vineyard::ObjectID>(object_ids[idx]),
                       instance_ids[idx]);
   }
-  auto gs = builder.Seal(client);
+  std::shared_ptr<Object> gs;
+  VINEYARD_CHECK_OK(builder.Seal(client, gs));
   VINEYARD_CHECK_OK(client.Persist(gs->id()));
   LOG(INFO) << "start build_global_graph_stream create name: name = "
             << graph_name;

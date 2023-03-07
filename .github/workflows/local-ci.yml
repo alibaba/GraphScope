@@ -232,6 +232,8 @@ jobs:
         git submodule update --init
         mkdir -p build && cd build
         cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard \
+                 -DCMAKE_PREFIX_PATH=/opt/graphscope \
+                 -DOPENSSL_ROOT_DIR=/opt/graphscope \
                  -DUSE_EXTERNAL_ETCD_LIBS=OFF \
                  -DBUILD_SHARED_LIBS=ON \
                  -DBUILD_VINEYARD_TESTS=OFF
@@ -239,7 +241,7 @@ jobs:
         sudo make install
 
         # copy to /usr/local, keep the same logic as gsvineyard.Dockerfile
-        sudo cp -r /opt/vineyard/* ${GRAPHSCOPE_HOME}/
+        sudo rsync -av /opt/vineyard/ ${GRAPHSCOPE_HOME}/
 
     - name: Build Wheels
       run: |
