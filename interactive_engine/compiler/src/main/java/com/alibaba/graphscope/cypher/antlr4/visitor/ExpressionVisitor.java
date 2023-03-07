@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.calcite.antlr4.visitor;
+package com.alibaba.graphscope.cypher.antlr4.visitor;
 
-import com.alibaba.graphscope.calcite.antlr4.VisitorUtils;
-import com.alibaba.graphscope.calcite.antlr4.type.ExprVisitorResult;
-import com.alibaba.graphscope.calcite.antlr4.type.RexTmpVariable;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
+import com.alibaba.graphscope.common.ir.rex.RexTmpVariable;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
+import com.alibaba.graphscope.cypher.antlr4.VisitorUtils;
+import com.alibaba.graphscope.cypher.antlr4.type.ExprVisitorResult;
 import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
 import com.alibaba.graphscope.grammar.CypherGSParser;
 import com.google.common.collect.ImmutableList;

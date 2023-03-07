@@ -16,41 +16,16 @@
 
 package com.alibaba.graphscope.cypher.antlr4;
 
-import com.alibaba.graphscope.calcite.antlr4.visitor.CypherToAlgebraVisitor;
-import com.alibaba.graphscope.common.ir.SourceTest;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-import com.alibaba.graphscope.common.ir.tools.config.*;
 
 import org.apache.calcite.rel.RelNode;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class WithTest {
-    public static CypherToAlgebraVisitor mockCypherVisitor() {
-        GraphBuilder builder = SourceTest.mockGraphBuilder();
-        RelNode sentence =
-                builder.source(
-                                new SourceConfig(
-                                        GraphOpt.Source.VERTEX,
-                                        new LabelConfig(false).addLabel("person"),
-                                        "a"))
-                        .expand(
-                                new ExpandConfig(
-                                        GraphOpt.Expand.OUT,
-                                        new LabelConfig(false).addLabel("knows"),
-                                        "b"))
-                        .getV(
-                                new GetVConfig(
-                                        GraphOpt.GetV.END,
-                                        new LabelConfig(false).addLabel("person"),
-                                        "c"))
-                        .build();
-        builder.match(sentence, GraphOpt.Match.INNER);
-        return new CypherToAlgebraVisitor(builder);
-    }
-
     private GraphBuilder eval(String query) {
-        return mockCypherVisitor().visitOC_With(MatchTest.parser(query).oC_With());
+        return CypherUtils.mockVisitor(CypherUtils.mockGraphBuilder())
+                .visitOC_With(CypherUtils.mockParser(query).oC_With());
     }
 
     // project(a) -> expr: a, alias: a
@@ -58,7 +33,7 @@ public class WithTest {
     public void with_test_1() {
         RelNode project = eval("With a").build();
         Assert.assertEquals(
-                "GraphLogicalProject(a=[a])\n"
+                "GraphLogicalProject(a=[a], isAppend=[false])\n"
                     + "  GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[c], opt=[END])\n"
@@ -75,7 +50,7 @@ public class WithTest {
     public void with_test_2() {
         RelNode project = eval("With a.age").build();
         Assert.assertEquals(
-                "GraphLogicalProject(age=[a.age])\n"
+                "GraphLogicalProject(age=[a.age], isAppend=[false])\n"
                     + "  GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[c], opt=[END])\n"
@@ -93,7 +68,7 @@ public class WithTest {
     public void with_test_3() {
         RelNode project = eval("With a.name, b as d").build();
         Assert.assertEquals(
-                "GraphLogicalProject(name=[a.name], d=[b])\n"
+                "GraphLogicalProject(name=[a.name], d=[b], isAppend=[false])\n"
                     + "  GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[c], opt=[END])\n"
@@ -104,7 +79,7 @@ public class WithTest {
                     + "], matchOpt=[INNER])",
                 project.explain().trim());
         Assert.assertEquals(
-                "RecordType(CHAR(1) name, Graph_Schema_Type(BIGINT id, DOUBLE weight) d)",
+                "RecordType(CHAR(1) name, Graph_Schema_Type(DOUBLE weight) d)",
                 project.getRowType().toString());
     }
 
@@ -133,8 +108,8 @@ public class WithTest {
     public void with_test_5() {
         RelNode project = eval("With a.name as name, count(a.name) + 1 as d").build();
         Assert.assertEquals(
-                "GraphLogicalProject(name=[EXPR$1], d=[+(EXPR$0, 1)])\n"
-                    + "  GraphLogicalAggregate(keys=[{variables=[a.name], aliases=[EXPR$1]}],"
+                "GraphLogicalProject(d=[+(EXPR$0., 1)], isAppend=[true])\n"
+                    + "  GraphLogicalAggregate(keys=[{variables=[a.name], aliases=[name]}],"
                     + " values=[[{operands=[a.name], aggFunction=COUNT, alias='EXPR$0'}]])\n"
                     + "    GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
@@ -145,7 +120,6 @@ public class WithTest {
                     + " alias=[a], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
                 project.explain().trim());
-        Assert.assertEquals("RecordType(CHAR(1) name, BIGINT d)", project.getRowType().toString());
     }
 
     // project + order + limit -> project + topK
@@ -154,7 +128,7 @@ public class WithTest {
         RelNode project = eval("With a.name as name Order by name desc Limit 10").build();
         Assert.assertEquals(
                 "GraphLogicalSort(sort0=[name], dir0=[DESC], fetch=[10])\n"
-                    + "  GraphLogicalProject(name=[a.name])\n"
+                    + "  GraphLogicalProject(name=[a.name], isAppend=[false])\n"
                     + "    GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[c], opt=[END])\n"

@@ -19,11 +19,12 @@ package com.alibaba.graphscope.gremlin.integration.processor;
 import com.alibaba.graphscope.common.client.RpcChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
+import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.gremlin.integration.result.GraphProperties;
 import com.alibaba.graphscope.gremlin.integration.result.GremlinTestResultProcessor;
 import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
-import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngine;
+import com.alibaba.graphscope.gremlin.plugin.script.AntlrGremlinScriptEngine;
 import com.alibaba.graphscope.gremlin.result.GremlinResultAnalyzer;
 
 import org.apache.tinkerpop.gremlin.driver.Tokens;
@@ -51,7 +52,7 @@ import javax.script.SimpleScriptContext;
 
 public class IrTestOpProcessor extends IrStandardOpProcessor {
     private static final Logger logger = LoggerFactory.getLogger(TraversalOpProcessor.class);
-    private AntlrToJavaScriptEngine scriptEngine;
+    private AntlrGremlinScriptEngine scriptEngine;
     private ScriptContext context;
     private GraphProperties testGraph;
 
@@ -68,7 +69,7 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
         Bindings globalBindings = new SimpleBindings();
         globalBindings.put("g", g);
         this.context.setBindings(globalBindings, ScriptContext.ENGINE_SCOPE);
-        this.scriptEngine = new AntlrToJavaScriptEngine();
+        this.scriptEngine = new AntlrGremlinScriptEngine();
         this.testGraph = testGraph;
     }
 
@@ -94,6 +95,7 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                             applyStrategies(traversal);
 
                             long jobId = JOB_ID_COUNTER.incrementAndGet();
+                            IrMeta irMeta = metaQueryCallback.beforeExec();
                             processTraversal(
                                     traversal,
                                     new GremlinTestResultProcessor(
@@ -101,7 +103,9 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                                             GremlinResultAnalyzer.analyze(traversal),
                                             testGraph),
                                     jobId,
-                                    script);
+                                    script,
+                                    irMeta);
+                            metaQueryCallback.afterExec(irMeta);
                         });
                 return op;
             default:

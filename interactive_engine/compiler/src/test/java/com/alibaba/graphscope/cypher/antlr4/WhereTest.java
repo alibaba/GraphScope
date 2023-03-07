@@ -24,7 +24,8 @@ import org.junit.Test;
 
 public class WhereTest {
     private GraphBuilder eval(String query) {
-        return WithTest.mockCypherVisitor().visitOC_Where(MatchTest.parser(query).oC_Where());
+        return CypherUtils.mockVisitor(CypherUtils.mockGraphBuilder())
+                .visitOC_Where(CypherUtils.mockParser(query).oC_Where());
     }
 
     @Test

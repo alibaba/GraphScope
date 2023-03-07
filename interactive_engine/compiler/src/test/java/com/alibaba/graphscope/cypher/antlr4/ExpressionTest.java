@@ -16,45 +16,17 @@
 
 package com.alibaba.graphscope.cypher.antlr4;
 
-import com.alibaba.graphscope.calcite.antlr4.visitor.CypherToAlgebraVisitor;
-import com.alibaba.graphscope.calcite.antlr4.visitor.ExpressionVisitor;
-import com.alibaba.graphscope.common.ir.SourceTest;
-import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-import com.alibaba.graphscope.common.ir.tools.config.*;
+import com.alibaba.graphscope.cypher.antlr4.visitor.ExpressionVisitor;
 
-import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class ExpressionTest {
-    private ExpressionVisitor mockExpressionVisitor() {
-        GraphBuilder builder = SourceTest.mockGraphBuilder();
-        RelNode sentence =
-                builder.source(
-                                new SourceConfig(
-                                        GraphOpt.Source.VERTEX,
-                                        new LabelConfig(false).addLabel("person"),
-                                        "a"))
-                        .expand(
-                                new ExpandConfig(
-                                        GraphOpt.Expand.OUT,
-                                        new LabelConfig(false).addLabel("knows"),
-                                        "b"))
-                        .getV(
-                                new GetVConfig(
-                                        GraphOpt.GetV.END,
-                                        new LabelConfig(false).addLabel("person"),
-                                        "c"))
-                        .build();
-        builder.match(sentence, GraphOpt.Match.INNER);
-        return new ExpressionVisitor(new CypherToAlgebraVisitor(builder));
-    }
-
     private RexNode eval(String query) {
-        return mockExpressionVisitor()
-                .visitOC_Expression(MatchTest.parser(query).oC_Expression())
+        return new ExpressionVisitor(CypherUtils.mockVisitor(CypherUtils.mockGraphBuilder()))
+                .visitOC_Expression(CypherUtils.mockParser(query).oC_Expression())
                 .getExpr();
     }
 

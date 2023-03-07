@@ -16,59 +16,25 @@
 
 package com.alibaba.graphscope.cypher.antlr4;
 
-import com.alibaba.graphscope.calcite.antlr4.visitor.CypherToAlgebraVisitor;
-import com.alibaba.graphscope.common.ir.SourceTest;
+import com.alibaba.graphscope.common.ir.IrUtils;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-import com.alibaba.graphscope.grammar.CypherGSLexer;
-import com.alibaba.graphscope.grammar.CypherGSParser;
 
-import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.atn.PredictionMode;
-import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.apache.calcite.rel.RelNode;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class MatchTest {
-    public static CypherGSParser parser(String query) {
-        CypherGSLexer lexer = new CypherGSLexer(CharStreams.fromString(query));
-        lexer.removeErrorListeners();
-        lexer.addErrorListener(
-                new BaseErrorListener() {
-                    @Override
-                    public void syntaxError(
-                            final Recognizer<?, ?> recognizer,
-                            final Object offendingSymbol,
-                            final int line,
-                            final int charPositionInLine,
-                            final String msg,
-                            final RecognitionException e) {
-                        throw new ParseCancellationException();
-                    }
-                });
-        CypherGSParser parser = new CypherGSParser(new CommonTokenStream(lexer));
-        // setup error handler on parser
-        parser.setErrorHandler(new BailErrorStrategy());
-        parser.getInterpreter().setPredictionMode(PredictionMode.LL);
-        return parser;
-    }
-
-    private CypherToAlgebraVisitor mockCypherVisitor() {
-        return new CypherToAlgebraVisitor(SourceTest.mockGraphBuilder());
-    }
-
     private GraphBuilder eval(String query) {
-        return mockCypherVisitor().visitOC_Match(parser(query).oC_Match());
+        return CypherUtils.mockVisitor(IrUtils.mockGraphBuilder())
+                .visitOC_Match(CypherUtils.mockParser(query).oC_Match());
     }
 
     @Test
     public void match_test_1() {
-        RelNode source = eval("Match (n:person {name: \"marko\"})").build();
+        RelNode source = eval("Match (n)").build();
         Assert.assertEquals(
-                "GraphLogicalSingleMatch(input=[null],"
-                    + " sentence=[GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[n], fusedFilter=[[=(DEFAULT.name, 'marko')]], opt=[VERTEX])\n"
-                    + "], matchOpt=[INNER])",
+                "GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                        + " alias=[n], opt=[VERTEX])",
                 source.explain().trim());
     }
 

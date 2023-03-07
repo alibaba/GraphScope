@@ -32,14 +32,14 @@ import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngine;
 import java.util.Collections;
 import java.util.List;
 
-public class AntlrToJavaScriptEngineFactory extends AbstractGremlinScriptEngineFactory {
-    public static final String ENGINE_NAME = "antlr-to-java";
-    private static final String LANGUAGE_NAME = "antlr-to-java";
+public class AntlrGremlinScriptEngineFactory extends AbstractGremlinScriptEngineFactory {
     private static final String PLAIN = "plain";
     private static final List<String> EXTENSIONS = Collections.singletonList("gremlin");
 
-    public AntlrToJavaScriptEngineFactory() {
-        super(ENGINE_NAME, LANGUAGE_NAME, EXTENSIONS, Collections.singletonList(PLAIN));
+    public static final String LANGUAGE_NAME = "antlr_gremlin";
+
+    public AntlrGremlinScriptEngineFactory() {
+        super(LANGUAGE_NAME, LANGUAGE_NAME, EXTENSIONS, Collections.singletonList(PLAIN));
     }
 
     @Override
@@ -54,6 +54,6 @@ public class AntlrToJavaScriptEngineFactory extends AbstractGremlinScriptEngineF
 
     @Override
     public GremlinScriptEngine getScriptEngine() {
-        return new AntlrToJavaScriptEngine();
+        return new AntlrGremlinScriptEngine();
     }
 }

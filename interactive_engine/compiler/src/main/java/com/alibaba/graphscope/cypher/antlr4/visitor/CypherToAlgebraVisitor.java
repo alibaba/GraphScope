@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.calcite.antlr4.visitor;
+package com.alibaba.graphscope.cypher.antlr4.visitor;
 
-import com.alibaba.graphscope.calcite.antlr4.VisitorUtils;
-import com.alibaba.graphscope.calcite.antlr4.type.ExprVisitorResult;
-import com.alibaba.graphscope.calcite.antlr4.type.RexVariableConverter;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.config.*;
+import com.alibaba.graphscope.cypher.antlr4.VisitorUtils;
+import com.alibaba.graphscope.cypher.antlr4.type.ExprVisitorResult;
 import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
 import com.alibaba.graphscope.grammar.CypherGSParser;
 
@@ -33,11 +32,10 @@ import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.tools.RelBuilder;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class CypherToAlgebraVisitor extends CypherGSBaseVisitor<GraphBuilder> {
-    private final Set<String> uniqueNameList;
     private final GraphBuilder builder;
+    private final Set<String> uniqueNameList;
     private final ExpressionVisitor expressionVisitor;
 
     public CypherToAlgebraVisitor(GraphBuilder builder) {
@@ -128,32 +126,13 @@ public class CypherToAlgebraVisitor extends CypherGSBaseVisitor<GraphBuilder> {
         List<RexNode> extraExprs = new ArrayList<>();
         List<String> extraAliases = new ArrayList<>();
         if (isGroupPattern(ctx, keyExprs, keyAliases, aggCalls, extraExprs, extraAliases)) {
-            RelBuilder.GroupKey groupKey;
-            List<String> newAliases = new ArrayList<>();
-            if (keyExprs.isEmpty()) {
-                groupKey = builder.groupKey();
-            } else {
-                if (!extraExprs.isEmpty()) {
-                    for (int i = 0; i < keyExprs.size(); ++i) {
-                        newAliases.add(inferAlias());
-                    }
-                    groupKey = builder.groupKey(keyExprs, newAliases);
-                } else {
-                    groupKey = builder.groupKey(keyExprs, keyAliases);
-                }
-            }
+            RelBuilder.GroupKey groupKey =
+                    (keyExprs.isEmpty())
+                            ? builder.groupKey()
+                            : builder.groupKey(keyExprs, keyAliases);
             builder.aggregate(groupKey, aggCalls);
             if (!extraExprs.isEmpty()) {
-                RexVariableConverter converter = new RexVariableConverter(true, builder);
-                extraExprs =
-                        extraExprs.stream()
-                                .map(k -> k.accept(converter))
-                                .collect(Collectors.toList());
-                for (int i = 0; i < newAliases.size(); ++i) {
-                    extraExprs.add(i, builder.variable(newAliases.get(i)));
-                    extraAliases.add(i, (i < keyAliases.size()) ? keyAliases.get(i) : null);
-                }
-                builder.project(extraExprs, extraAliases, false);
+                builder.project(extraExprs, extraAliases, true);
             }
         } else {
             builder.project(keyExprs, keyAliases, false);

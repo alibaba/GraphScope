@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.gremlin.antlr4;
 
-import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngine;
+import com.alibaba.graphscope.gremlin.plugin.script.AntlrGremlinScriptEngine;
 import com.alibaba.graphscope.gremlin.plugin.step.GroupStep;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
@@ -45,7 +45,7 @@ import javax.script.SimpleScriptContext;
 public class PositiveEvalTest {
     private Graph graph;
     private IrCustomizedTraversalSource g;
-    private AntlrToJavaScriptEngine scriptEngine;
+    private AntlrGremlinScriptEngine scriptEngine;
     private ScriptContext context;
 
     @Before
@@ -56,7 +56,7 @@ public class PositiveEvalTest {
         globalBindings.put("g", g);
         context = new SimpleScriptContext();
         context.setBindings(globalBindings, ScriptContext.ENGINE_SCOPE);
-        scriptEngine = new AntlrToJavaScriptEngine();
+        scriptEngine = new AntlrGremlinScriptEngine();
     }
 
     private Object eval(String query) {

@@ -24,7 +24,8 @@ import org.junit.Test;
 
 public class OrderTest {
     private GraphBuilder eval(String query) {
-        return WithTest.mockCypherVisitor().visitOC_Order(MatchTest.parser(query).oC_Order());
+        return CypherUtils.mockVisitor(CypherUtils.mockGraphBuilder())
+                .visitOC_Order(CypherUtils.mockParser(query).oC_Order());
     }
 
     @Test
