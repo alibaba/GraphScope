@@ -516,11 +516,16 @@ class ArrowFlattenedFragment {
                                   prop_id_t e_prop_id)
       : fragment_(frag), v_prop_id_(v_prop_id), e_prop_id_(e_prop_id) {
     ivnum_ = ovnum_ = tvnum_ = 0;
-    label_id_t vertex_label_num = fragment_->vertex_label_num();
+    auto& schema = fragment_->schema();
+    label_id_t vertex_label_num =
+        static_cast<label_id_t>(schema.AllVertexEntries().size());
     for (label_id_t v_label = 0; v_label < vertex_label_num; v_label++) {
-      vid_t ivnum = fragment_->GetInnerVerticesNum(v_label);
-      vid_t ovnum = fragment_->GetOuterVerticesNum(v_label);
-      vid_t tvnum = fragment_->GetVerticesNum(v_label);
+      vid_t ivnum = 0, ovnum = 0, tvnum = 0;
+      if (schema.IsVertexValid(v_label)) {
+        ivnum = fragment_->GetInnerVerticesNum(v_label);
+        ovnum = fragment_->GetOuterVerticesNum(v_label);
+        tvnum = fragment_->GetVerticesNum(v_label);
+      }
       ivnums_.push_back(ivnum);
       ovnums_.push_back(ovnum);
       tvnums_.push_back(tvnum);
@@ -535,13 +540,19 @@ class ArrowFlattenedFragment {
     union_vertex_range_offset_.resize(2 * vertex_label_num + 1, 0);
     for (label_id_t v_label = 0; v_label < vertex_label_num; v_label++) {
       union_vertex_range_offset_[v_label + 1] =
-          union_vertex_range_offset_[v_label] +
-          fragment_->GetInnerVerticesNum(v_label);
+          union_vertex_range_offset_[v_label];
+      if (schema.IsVertexValid(v_label)) {
+        union_vertex_range_offset_[v_label + 1] +=
+            fragment_->GetInnerVerticesNum(v_label);
+      }
     }
     for (label_id_t v_label = 0; v_label < vertex_label_num; v_label++) {
       union_vertex_range_offset_[v_label + vertex_label_num + 1] =
-          union_vertex_range_offset_[v_label + vertex_label_num] +
-          fragment_->GetOuterVerticesNum(v_label);
+          union_vertex_range_offset_[v_label + vertex_label_num];
+      if (schema.IsVertexValid(v_label)) {
+        union_vertex_range_offset_[v_label + vertex_label_num + 1] +=
+            fragment_->GetOuterVerticesNum(v_label);
+      }
     }
     // init id parser
     union_id_parser_.Init(fragment_->fnum(), vertex_label_num,
@@ -730,8 +741,13 @@ class ArrowFlattenedFragment {
     std::vector<vineyard::property_graph_utils::AdjList<vid_t, eid_t>>
         adj_lists;
     adj_lists.reserve(fragment_->edge_label_num());
-    for (label_id_t e_label = 0; e_label < fragment_->edge_label_num();
-         e_label++) {
+    auto& schema = fragment_->schema();
+    label_id_t edge_label_num =
+        static_cast<label_id_t>(schema.AllEdgeEntries().size());
+    for (label_id_t e_label = 0; e_label < edge_label_num; e_label++) {
+      if (!schema.IsEdgeValid(e_label)) {
+        continue;
+      }
       auto adj_list = fragment_->GetOutgoingAdjList(v_, e_label);
       if (adj_list.NotEmpty()) {
         adj_lists.push_back(adj_list);
@@ -745,8 +761,13 @@ class ArrowFlattenedFragment {
     std::vector<vineyard::property_graph_utils::AdjList<vid_t, eid_t>>
         adj_lists;
     adj_lists.reserve(fragment_->edge_label_num());
-    for (label_id_t e_label = 0; e_label < fragment_->edge_label_num();
-         e_label++) {
+    auto& schema = fragment_->schema();
+    label_id_t edge_label_num =
+        static_cast<label_id_t>(schema.AllEdgeEntries().size());
+    for (label_id_t e_label = 0; e_label < edge_label_num; e_label++) {
+      if (!schema.IsEdgeValid(e_label)) {
+        continue;
+      }
       auto adj_list = fragment_->GetIncomingAdjList(v_, e_label);
       if (adj_list.NotEmpty()) {
         adj_lists.push_back(adj_list);
@@ -758,8 +779,13 @@ class ArrowFlattenedFragment {
   inline int GetLocalOutDegree(const vertex_t& v) const {
     vertex_t v_(union_id_parser_.ParseContinuousLid(v.GetValue()));
     int local_out_degree = 0;
-    for (label_id_t e_label = 0; e_label < fragment_->edge_label_num();
-         e_label++) {
+    auto& schema = fragment_->schema();
+    label_id_t edge_label_num =
+        static_cast<label_id_t>(schema.AllEdgeEntries().size());
+    for (label_id_t e_label = 0; e_label < edge_label_num; e_label++) {
+      if (!schema.IsEdgeValid(e_label)) {
+        continue;
+      }
       local_out_degree += fragment_->GetLocalOutDegree(v_, e_label);
     }
     return local_out_degree;
@@ -768,8 +794,13 @@ class ArrowFlattenedFragment {
   inline int GetLocalInDegree(const vertex_t& v) const {
     vertex_t v_(union_id_parser_.ParseContinuousLid(v.GetValue()));
     int local_in_degree = 0;
-    for (label_id_t e_label = 0; e_label < fragment_->edge_label_num();
-         e_label++) {
+    auto& schema = fragment_->schema();
+    label_id_t edge_label_num =
+        static_cast<label_id_t>(schema.AllEdgeEntries().size());
+    for (label_id_t e_label = 0; e_label < edge_label_num; e_label++) {
+      if (!schema.IsEdgeValid(e_label)) {
+        continue;
+      }
       local_in_degree += fragment_->GetLocalInDegree(v_, e_label);
     }
     return local_in_degree;
@@ -779,8 +810,13 @@ class ArrowFlattenedFragment {
     vertex_t v_(union_id_parser_.ParseContinuousLid(v.GetValue()));
     std::vector<grape::DestList> dest_lists;
     dest_lists.reserve(fragment_->edge_label_num());
-    for (label_id_t e_label = 0; e_label < fragment_->edge_label_num();
-         e_label++) {
+    auto& schema = fragment_->schema();
+    label_id_t edge_label_num =
+        static_cast<label_id_t>(schema.AllEdgeEntries().size());
+    for (label_id_t e_label = 0; e_label < edge_label_num; e_label++) {
+      if (!schema.IsEdgeValid(e_label)) {
+        continue;
+      }
       dest_lists.push_back(fragment_->IEDests(v_, e_label));
     }
     return dest_list_t(dest_lists);
@@ -790,8 +826,13 @@ class ArrowFlattenedFragment {
     vertex_t v_(union_id_parser_.ParseContinuousLid(v.GetValue()));
     std::vector<grape::DestList> dest_lists;
     dest_lists.reserve(fragment_->edge_label_num());
-    for (label_id_t e_label = 0; e_label < fragment_->edge_label_num();
-         e_label++) {
+    auto& schema = fragment_->schema();
+    label_id_t edge_label_num =
+        static_cast<label_id_t>(schema.AllEdgeEntries().size());
+    for (label_id_t e_label = 0; e_label < edge_label_num; e_label++) {
+      if (!schema.IsEdgeValid(e_label)) {
+        continue;
+      }
       dest_lists.push_back(fragment_->OEDests(v_, e_label));
     }
     return dest_list_t(dest_lists);
@@ -801,8 +842,13 @@ class ArrowFlattenedFragment {
     vertex_t v_(union_id_parser_.ParseContinuousLid(v.GetValue()));
     std::vector<grape::DestList> dest_lists;
     dest_lists.reserve(fragment_->edge_label_num());
-    for (label_id_t e_label = 0; e_label < fragment_->edge_label_num();
-         e_label++) {
+    auto& schema = fragment_->schema();
+    label_id_t edge_label_num =
+        static_cast<label_id_t>(schema.AllEdgeEntries().size());
+    for (label_id_t e_label = 0; e_label < edge_label_num; e_label++) {
+      if (!schema.IsEdgeValid(e_label)) {
+        continue;
+      }
       dest_lists.push_back(fragment_->IOEDests(v_, e_label));
     }
     return dest_list_t(dest_lists);

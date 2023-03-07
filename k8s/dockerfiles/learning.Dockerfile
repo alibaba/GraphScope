@@ -38,6 +38,7 @@ RUN yum install -y centos-release-scl-rh sudo && \
     rpm -V $INSTALL_PKGS && \
     yum -y clean all --enablerepo='*' && \
     rm -rf /var/cache/yum
+RUN sudo chmod a+wrx /tmp
 
 SHELL [ "/usr/bin/scl", "enable", "rh-python38" ]
 
