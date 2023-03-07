@@ -16,14 +16,12 @@
 
 package com.alibaba.graphscope.common.ir.schema;
 
-import static com.alibaba.graphscope.common.ir.util.Static.RESOURCE;
-
 import static java.util.Objects.requireNonNull;
 
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
+import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaTypeList;
-import com.alibaba.graphscope.common.ir.type.LabelType;
 import com.alibaba.graphscope.compiler.api.schema.*;
 
 import org.apache.calcite.linq4j.tree.Expression;
@@ -70,23 +68,31 @@ public class GraphOptTable implements RelOptTable {
     private RelDataType deriveType(GraphElement element) {
         List<GraphProperty> properties = element.getPropertyList();
         List<RelDataTypeField> fields = new ArrayList<>();
+        boolean isColumnId =
+                (this.schema instanceof GraphOptSchema)
+                        ? ((GraphOptSchema) this.schema).getRootSchema().isColumnId()
+                        : false;
         for (int i = 0; i < properties.size(); ++i) {
             GraphProperty property = properties.get(i);
             fields.add(
                     new RelDataTypeFieldImpl(
-                            property.getName(), property.getId(), deriveType(property)));
+                            property.getName(),
+                            isColumnId ? property.getId() : -1,
+                            deriveType(property)));
         }
         if (element instanceof GraphVertex) {
-            LabelType labelType =
-                    (new LabelType()).label(element.getLabel()).labelId(element.getLabelId());
+            GraphLabelType labelType =
+                    (new GraphLabelType()).label(element.getLabel()).labelId(element.getLabelId());
             return new GraphSchemaType(GraphOpt.Source.VERTEX, labelType, fields);
         } else if (element instanceof GraphEdge) {
             GraphEdge edge = (GraphEdge) element;
             List<EdgeRelation> relations = edge.getRelationList();
             List<GraphSchemaType> fuzzyTypes = new ArrayList<>();
             for (EdgeRelation relation : relations) {
-                LabelType labelType =
-                        (new LabelType()).label(element.getLabel()).labelId(element.getLabelId());
+                GraphLabelType labelType =
+                        (new GraphLabelType())
+                                .label(element.getLabel())
+                                .labelId(element.getLabelId());
                 GraphVertex src = relation.getSource();
                 GraphVertex dst = relation.getTarget();
                 labelType.srcLabel(src.getLabel()).dstLabel(dst.getLabel());
@@ -159,43 +165,46 @@ public class GraphOptTable implements RelOptTable {
 
     @Override
     public double getRowCount() {
-        throw RESOURCE.functionWillImplement(this.getClass()).ex();
+        throw new UnsupportedOperationException("row count is unsupported yet in statistics");
     }
 
     @Override
     public @Nullable RelDistribution getDistribution() {
-        throw RESOURCE.functionWillImplement(this.getClass()).ex();
+        throw new UnsupportedOperationException("distribution is unsupported yet in statistics");
     }
 
     @Override
     public @Nullable List<RelCollation> getCollationList() {
-        throw RESOURCE.functionWillImplement(this.getClass()).ex();
+        throw new UnsupportedOperationException("collations is unsupported yet in statistics");
     }
 
     // not used currently
 
     @Override
     public RelNode toRel(ToRelContext toRelContext) {
-        throw RESOURCE.functionNotImplement(this.getClass()).ex();
+        throw new UnsupportedOperationException("toRel is unsupported for it will never be used");
     }
 
     @Override
     public @Nullable List<RelReferentialConstraint> getReferentialConstraints() {
-        throw RESOURCE.functionNotImplement(this.getClass()).ex();
+        throw new UnsupportedOperationException(
+                "referentialConstraints is unsupported for it will never be used");
     }
 
     @Override
     public @Nullable Expression getExpression(Class aClass) {
-        throw RESOURCE.functionNotImplement(this.getClass()).ex();
+        throw new UnsupportedOperationException(
+                "expression is unsupported for it will never be used");
     }
 
     @Override
     public RelOptTable extend(List<RelDataTypeField> list) {
-        throw RESOURCE.functionNotImplement(this.getClass()).ex();
+        throw new UnsupportedOperationException("extend is unsupported for it will never be used");
     }
 
     @Override
     public List<ColumnStrategy> getColumnStrategies() {
-        throw RESOURCE.functionNotImplement(this.getClass()).ex();
+        throw new UnsupportedOperationException(
+                "columnStrategies is unsupported for it will never be used");
     }
 }

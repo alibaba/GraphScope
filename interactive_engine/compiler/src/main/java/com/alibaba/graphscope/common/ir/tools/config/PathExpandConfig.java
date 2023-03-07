@@ -18,14 +18,16 @@ package com.alibaba.graphscope.common.ir.tools.config;
 
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalGetV;
+import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-import com.alibaba.graphscope.common.jna.type.PathOpt;
-import com.alibaba.graphscope.common.jna.type.ResultOpt;
+import com.google.common.base.Preconditions;
 
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlOperator;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
@@ -41,8 +43,8 @@ public class PathExpandConfig {
     private final int offset;
     private final int fetch;
 
-    private final PathOpt pathOpt;
-    private final ResultOpt resultOpt;
+    private final GraphOpt.PathExpandPath pathOpt;
+    private final GraphOpt.PathExpandResult resultOpt;
 
     @Nullable private final String alias;
 
@@ -51,8 +53,8 @@ public class PathExpandConfig {
             RelNode getV,
             int offset,
             int fetch,
-            ResultOpt resultOpt,
-            PathOpt pathOpt,
+            GraphOpt.PathExpandResult resultOpt,
+            GraphOpt.PathExpandPath pathOpt,
             @Nullable String alias) {
         this.expand = Objects.requireNonNull(expand);
         this.getV = Objects.requireNonNull(getV);
@@ -71,11 +73,11 @@ public class PathExpandConfig {
         return alias;
     }
 
-    public PathOpt getPathOpt() {
+    public GraphOpt.PathExpandPath getPathOpt() {
         return pathOpt;
     }
 
-    public ResultOpt getResultOpt() {
+    public GraphOpt.PathExpandResult getResultOpt() {
         return resultOpt;
     }
 
@@ -95,6 +97,27 @@ public class PathExpandConfig {
         return getV;
     }
 
+    @Override
+    public String toString() {
+        return "PathExpandConfig{"
+                + "expand="
+                + expand.explain()
+                + ", getV="
+                + getV.explain()
+                + ", offset="
+                + offset
+                + ", fetch="
+                + fetch
+                + ", pathOpt="
+                + pathOpt
+                + ", resultOpt="
+                + resultOpt
+                + ", alias='"
+                + alias
+                + '\''
+                + '}';
+    }
+
     public static final class Builder {
         private final GraphBuilder innerBuilder;
 
@@ -104,15 +127,19 @@ public class PathExpandConfig {
         private int offset;
         private int fetch;
 
-        private PathOpt pathOpt;
-        private ResultOpt resultOpt;
+        private GraphOpt.PathExpandPath pathOpt;
+        private GraphOpt.PathExpandResult resultOpt;
 
         @Nullable private String alias;
 
         protected Builder(GraphBuilder innerBuilder) {
-            this.innerBuilder = innerBuilder;
-            this.pathOpt = PathOpt.Arbitrary;
-            this.resultOpt = ResultOpt.EndV;
+            this.innerBuilder =
+                    GraphBuilder.create(
+                            null,
+                            (GraphOptCluster) innerBuilder.getCluster(),
+                            innerBuilder.getRelOptSchema());
+            this.pathOpt = GraphOpt.PathExpandPath.ARBITRARY;
+            this.resultOpt = GraphOpt.PathExpandResult.EndV;
         }
 
         public Builder expand(ExpandConfig config) {
@@ -127,6 +154,7 @@ public class PathExpandConfig {
                                 null,
                                 innerBuilder.getTableConfig(
                                         config.getLabels(), GraphOpt.Source.EDGE));
+                innerBuilder.push(this.expand);
             }
             return this;
         }
@@ -143,17 +171,45 @@ public class PathExpandConfig {
                                 null,
                                 innerBuilder.getTableConfig(
                                         config.getLabels(), GraphOpt.Source.VERTEX));
+                innerBuilder.push(this.getV);
             }
             return this;
         }
 
-        public Builder filter(List<RexNode> conjunctions) {
-            if (this.getV != null) {
-                this.getV = innerBuilder.push(this.getV).filter(conjunctions).build();
-            } else if (this.expand != null) {
-                this.expand = innerBuilder.push(this.expand).filter(conjunctions).build();
-            }
+        public Builder filter(RexNode... conjunctions) {
+            Preconditions.checkArgument(
+                    this.getV != null || this.expand != null,
+                    "expand and getV are all null in path_expand");
+            innerBuilder.filter(conjunctions);
             return this;
+        }
+
+        public Builder filter(List<RexNode> conjunctions) {
+            Preconditions.checkArgument(
+                    this.getV != null || this.expand != null,
+                    "expand and getV are all null in path_expand");
+            innerBuilder.filter(conjunctions);
+            return this;
+        }
+
+        public RexGraphVariable variable(@Nullable String alias) {
+            return innerBuilder.variable(alias);
+        }
+
+        public RexGraphVariable variable(@Nullable String alias, String property) {
+            return innerBuilder.variable(alias, property);
+        }
+
+        public RexLiteral literal(@Nullable Object value) {
+            return innerBuilder.literal(value);
+        }
+
+        public RexNode call(SqlOperator operator, RexNode... operands) {
+            return innerBuilder.call(operator, operands);
+        }
+
+        public RexNode call(SqlOperator operator, Iterable<? extends RexNode> operands) {
+            return innerBuilder.call(operator, operands);
         }
 
         public Builder range(int offset, int fetch) {
@@ -162,12 +218,12 @@ public class PathExpandConfig {
             return this;
         }
 
-        public Builder pathOpt(PathOpt pathOpt) {
+        public Builder pathOpt(GraphOpt.PathExpandPath pathOpt) {
             this.pathOpt = pathOpt;
             return this;
         }
 
-        public Builder resultOpt(ResultOpt resultOpt) {
+        public Builder resultOpt(GraphOpt.PathExpandResult resultOpt) {
             this.resultOpt = resultOpt;
             return this;
         }

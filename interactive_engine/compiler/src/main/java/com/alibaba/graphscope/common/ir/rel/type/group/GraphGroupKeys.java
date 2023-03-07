@@ -43,7 +43,7 @@ public class GraphGroupKeys implements RelBuilder.GroupKey {
 
     @Override
     public int groupKeyCount() {
-        return 0;
+        return this.variables.size();
     }
 
     public List<RexNode> getVariables() {

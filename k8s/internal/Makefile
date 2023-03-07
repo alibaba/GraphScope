@@ -71,8 +71,7 @@ graphscope-darwin-py3:
 	cd $(WORKING_DIR)/../.. && \
 		python3 -m pip install --upgrade setuptools && \
 		make && \
-		sudo make install INSTALL_PREFIX=${INSTALL_PREFIX} && \
-		sudo cp -rs ${INSTALL_PREFIX}/* ${GRAPHSCOPE_HOME}/ && \
+		sudo make install INSTALL_PREFIX=/opt/graphscope && \
 		python3 $(WORKING_DIR)/../utils/precompile.py --graph --app
 	# build and delocate wheel
 	cd $(WORKING_DIR)/../../coordinator && \
@@ -138,6 +137,7 @@ graphscope-manylinux2014-py3:
 
 
 graphscope-client-manylinux2014-py3-nodocker:
+	set -euxo pipefail && \
 	cd $(WORKING_DIR)/../../learning_engine/graph-learn && \
 	git submodule update --init third_party/pybind11 && \
 	cd graphlearn && \
@@ -148,19 +148,21 @@ graphscope-client-manylinux2014-py3-nodocker:
 	cmake -DKNN=OFF -DWITH_VINEYARD=ON -DTESTING=OFF .. && \
 	make graphlearn_shared -j`nproc` && \
 	export LD_LIBRARY_PATH=$(WORKING_DIR)/../../learning_engine/graph-learn/graphlearn/built/lib:$$LD_LIBRARY_PATH && \
-	for py in cp37-cp37m cp38-cp38 cp39-cp39 cp310-cp310 cp311-cp311; do \
+	for py in cp38-cp38 cp39-cp39 cp310-cp310 cp311-cp311; do \
 		cd $(WORKING_DIR)/../../python; \
 		export PATH=/opt/python/$$py/bin:$$PATH; \
-		pip3 install -U pip; \
+		python3 -m pip install -U pip; \
 		if [ "$$py" == "cp311-cp311" ]; then \
-			pip3 install "numpy" "pandas" "grpcio" "grpcio-tools" wheel "auditwheel==5.0.0"; \
+			python3 -m pip install "numpy" "pandas" "grpcio" "grpcio-tools" wheel "auditwheel==5.0.0"; \
 		elif [ "$$py" == "cp310-cp310" ]; then \
-			 pip3 install "numpy==1.21.6" "pandas" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" wheel "auditwheel==5.0.0"; \
+			 python3 -m pip install "numpy==1.21.6" "pandas" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" wheel "auditwheel==5.0.0"; \
+		elif [ "$$py" == "cp39-cp39" ]; then \
+			python3 -m pip install "numpy==1.19.3" "pandas" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" wheel "auditwheel==5.0.0"; \
 		else \
-			pip3 install "numpy==1.18.5" "pandas" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" wheel "auditwheel==5.0.0"; \
+			python3 -m pip install "numpy==1.18.5" "pandas" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" wheel "auditwheel==5.0.0"; \
 		fi; \
-		rm -rf build; \
-		rm -rf dist/*.whl; \
+		sudo rm -rf build; \
+		sudo rm -rf dist/*.whl; \
 		python3 setup.py bdist_wheel; \
 		cd dist; \
 		auditwheel repair ./*.whl; \

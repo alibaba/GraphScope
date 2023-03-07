@@ -16,8 +16,9 @@
 
 package com.alibaba.graphscope.common.ir.rel.graph;
 
-import com.alibaba.graphscope.common.jna.type.PathOpt;
-import com.alibaba.graphscope.common.jna.type.ResultOpt;
+import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
+import com.alibaba.graphscope.common.ir.type.GraphArrayType;
+import com.alibaba.graphscope.common.ir.type.GraphPxdElementType;
 
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptUtil;
@@ -26,7 +27,6 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.hint.RelHint;
-import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -38,8 +38,8 @@ public class GraphLogicalPathExpand extends SingleRel {
     private final RelNode expand;
     private final RelNode getV;
 
-    public final @Nullable RexNode offset;
-    public final @Nullable RexNode fetch;
+    private final @Nullable RexNode offset;
+    private final @Nullable RexNode fetch;
 
     private final List<RelHint> hints;
 
@@ -57,6 +57,9 @@ public class GraphLogicalPathExpand extends SingleRel {
         this.getV = Objects.requireNonNull(getV);
         this.offset = offset;
         this.fetch = fetch;
+        this.rowType =
+                new GraphArrayType(
+                        new GraphPxdElementType(this.expand.getRowType(), this.getV.getRowType()));
     }
 
     public static GraphLogicalPathExpand create(
@@ -68,11 +71,6 @@ public class GraphLogicalPathExpand extends SingleRel {
             @Nullable RexNode offset,
             @Nullable RexNode fetch) {
         return new GraphLogicalPathExpand(cluster, hints, input, expand, getV, offset, fetch);
-    }
-
-    @Override
-    public RelDataType deriveRowType() {
-        return getV.getRowType();
     }
 
     @Override
@@ -113,17 +111,33 @@ public class GraphLogicalPathExpand extends SingleRel {
         return Integer.valueOf(aliasId);
     }
 
-    private PathOpt pathOpt() {
+    public GraphOpt.PathExpandPath pathOpt() {
         ObjectUtils.requireNonEmpty(hints);
         RelHint optHint = hints.get(0);
         ObjectUtils.requireNonEmpty(optHint.kvOptions);
-        return PathOpt.valueOf(optHint.kvOptions.get("path"));
+        return GraphOpt.PathExpandPath.valueOf(optHint.kvOptions.get("path"));
     }
 
-    private ResultOpt resultOpt() {
+    public GraphOpt.PathExpandResult resultOpt() {
         ObjectUtils.requireNonEmpty(hints);
         RelHint optHint = hints.get(0);
         ObjectUtils.requireNonEmpty(optHint.kvOptions);
-        return ResultOpt.valueOf(optHint.kvOptions.get("result"));
+        return GraphOpt.PathExpandResult.valueOf(optHint.kvOptions.get("result"));
+    }
+
+    public RelNode getExpand() {
+        return expand;
+    }
+
+    public RelNode getGetV() {
+        return getV;
+    }
+
+    public @Nullable RexNode getOffset() {
+        return offset;
+    }
+
+    public @Nullable RexNode getFetch() {
+        return fetch;
     }
 }

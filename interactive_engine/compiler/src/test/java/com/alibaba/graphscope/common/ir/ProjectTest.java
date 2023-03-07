@@ -32,7 +32,7 @@ public class ProjectTest {
     // project("a") -> expr: "a", alias: "a"
     @Test
     public void project_1_test() {
-        GraphBuilder builder = SourceTest.mockGraphBuilder();
+        GraphBuilder builder = IrUtils.mockGraphBuilder();
         RexNode variable =
                 builder.source(
                                 new SourceConfig(
@@ -50,7 +50,7 @@ public class ProjectTest {
     // project("a.age") -> expr: "a.age", alias: "age"
     @Test
     public void project_2_test() {
-        GraphBuilder builder = SourceTest.mockGraphBuilder();
+        GraphBuilder builder = IrUtils.mockGraphBuilder();
         RexNode variable =
                 builder.source(
                                 new SourceConfig(
@@ -66,7 +66,7 @@ public class ProjectTest {
     // project("a.age+1") -> expr: "a.age+1", alias: "$f0"
     @Test
     public void project_3_test() {
-        GraphBuilder builder = SourceTest.mockGraphBuilder();
+        GraphBuilder builder = IrUtils.mockGraphBuilder();
         RexNode plus =
                 builder.source(
                                 new SourceConfig(
@@ -85,7 +85,7 @@ public class ProjectTest {
     // project("a.age+1", "b") -> expr: "a.age+1", alias: "b"
     @Test
     public void project_4_test() {
-        GraphBuilder builder = SourceTest.mockGraphBuilder();
+        GraphBuilder builder = IrUtils.mockGraphBuilder();
         RexNode plus =
                 builder.source(
                                 new SourceConfig(
@@ -102,5 +102,32 @@ public class ProjectTest {
                                 .build();
         Assert.assertEquals("[+(a.age, 1)]", project.getProjects().toString());
         Assert.assertEquals("RecordType(INTEGER b)", project.getRowType().toString());
+    }
+
+    // project is true
+    @Test
+    public void project_5_test() {
+        GraphBuilder builder = IrUtils.mockGraphBuilder();
+        RexNode variable =
+                builder.source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person"),
+                                        "a"))
+                        .project(
+                                ImmutableList.of(
+                                        builder.call(
+                                                GraphStdOperatorTable.PLUS,
+                                                builder.variable("a", "age"),
+                                                builder.literal(1))),
+                                ImmutableList.of("b"),
+                                true)
+                        .variable(
+                                "a",
+                                "name"); // can refer to the alias before the project if append is
+        // true
+        Assert.assertEquals("a.name", variable.toString());
+        // only contain the new appended columns in project data type
+        Assert.assertEquals("RecordType(INTEGER b)", builder.build().getRowType().toString());
     }
 }

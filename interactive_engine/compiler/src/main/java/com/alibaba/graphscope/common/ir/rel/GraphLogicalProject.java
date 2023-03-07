@@ -22,6 +22,7 @@ import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rel.type.*;
@@ -72,5 +73,10 @@ public class GraphLogicalProject extends Project {
             RelTraitSet traitSet, RelNode input, List<RexNode> projects, RelDataType rowType) {
         return new GraphLogicalProject(
                 getCluster(), traitSet, ImmutableList.of(), input, projects, rowType);
+    }
+
+    @Override
+    public RelWriter explainTerms(RelWriter pw) {
+        return super.explainTerms(pw).item("isAppend", isAppend);
     }
 }

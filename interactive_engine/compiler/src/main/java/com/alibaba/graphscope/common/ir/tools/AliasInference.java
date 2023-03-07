@@ -19,7 +19,6 @@ package com.alibaba.graphscope.common.ir.tools;
 import static org.apache.calcite.linq4j.Nullness.castNonNull;
 
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
-import com.alibaba.graphscope.common.ir.util.Static;
 
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexLiteral;
@@ -41,6 +40,8 @@ import java.util.regex.Pattern;
 public abstract class AliasInference {
     public static final String DEFAULT_NAME = "~DEFAULT";
     public static final int DEFAULT_ID = -1;
+
+    public static final String DELIMITER = ".";
 
     public static final String SIMPLE_NAME(String alias) {
         return alias == DEFAULT_NAME ? "DEFAULT" : alias;
@@ -127,7 +128,7 @@ public abstract class AliasInference {
     private static @Nullable String innerInfer(List<RexNode> exprList, RexNode expr, int i) {
         if (expr instanceof RexGraphVariable) {
             String name = ((RexGraphVariable) expr).getName();
-            String[] nameArray = name.split(Pattern.quote(Static.DELIMITER));
+            String[] nameArray = name.split(Pattern.quote(DELIMITER));
             if (ObjectUtils.isEmpty(nameArray)) {
                 return null;
             } else if (nameArray.length == 1) {

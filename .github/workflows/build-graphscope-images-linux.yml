@@ -68,6 +68,13 @@ jobs:
         sudo docker push ${{ env.REGISTRY }}/graphscope/interactive-executor:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/learning:${tag}
 
+        # dataset image
+        # Note! dataset image are built mannually just use the latest one.
+        sudo docker pull ${{ env.REGISTRY }}/graphscope/dataset:latest
+        sudo docker tag ${{ env.REGISTRY }}/graphscope/dataset:latest ${{ env.REGISTRY }}/graphscope/dataset:${tag}
+        sudo docker push ${{ env.REGISTRY }}/graphscope/dataset:${tag}
+
+
     - name: Extract Tag Name
       if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
       id: tag

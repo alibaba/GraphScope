@@ -45,13 +45,13 @@ import java.util.Objects;
  */
 public abstract class AbstractBindableTableScan extends TableScan {
     // for filter fusion
-    protected ImmutableList<RexNode> filters;
+    protected @Nullable ImmutableList<RexNode> filters;
     // for field trimmer
-    protected ImmutableIntList project;
+    protected @Nullable ImmutableIntList project;
 
-    protected @Nullable RelNode input;
+    protected final @Nullable RelNode input;
 
-    protected TableConfig tableConfig;
+    protected final TableConfig tableConfig;
 
     protected AbstractBindableTableScan(
             GraphOptCluster cluster,
@@ -142,6 +142,10 @@ public abstract class AbstractBindableTableScan extends TableScan {
     }
 
     public void setFilters(ImmutableList<RexNode> filters) {
-        this.filters = filters;
+        this.filters = Objects.requireNonNull(filters);
+    }
+
+    public @Nullable ImmutableList<RexNode> getFilters() {
+        return filters;
     }
 }

@@ -222,6 +222,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
             image_repository=image_repository,
             image_tag=image_tag,
             instance_id=instance_id,
+            learning_start_port=self._learning_start_port,
             with_dataset=with_dataset,
             namespace=namespace,
             num_workers=num_workers,
@@ -798,11 +799,10 @@ class KubernetesClusterLauncher(AbstractLauncher):
             setattr(proc, "stdout_watcher", stdout_watcher)
             self._learning_instance_processes[object_id].append(proc)
 
-        # update the port usage record
-        self._learning_start_port += len(self._pod_name_list)
         # Create Service
         self._create_learning_service(object_id)
-
+        # update the port usage record
+        self._learning_start_port += len(self._pod_name_list)
         # parse the service hosts and ports
         return self._engine_cluster.get_graphlearn_service_endpoint(
             self._api_client, object_id, self._pod_host_ip_list

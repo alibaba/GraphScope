@@ -17,13 +17,37 @@
 package com.alibaba.graphscope.common.ir.tools;
 
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.type.RelDataTypeField;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class AliasIdGenerator {
-    public AliasIdGenerator() {}
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
-    // todo: generate alias id for name
-    public int generate(@Nullable String aliasName, @Nullable RelNode node) {
-        return -1;
+public class AliasIdGenerator {
+    private final AtomicInteger idGenerator;
+
+    public AliasIdGenerator() {
+        this.idGenerator = new AtomicInteger();
+    }
+
+    public int generate(@Nullable String aliasName, @Nullable RelNode input) {
+        if (aliasName == null || aliasName == AliasInference.DEFAULT_NAME) {
+            return AliasInference.DEFAULT_ID;
+        }
+        List<RelNode> inputsQueue = new ArrayList<>();
+        if (input != null) {
+            inputsQueue.add(input);
+        }
+        while (!inputsQueue.isEmpty()) {
+            RelNode cur = inputsQueue.remove(0);
+            for (RelDataTypeField field : cur.getRowType().getFieldList()) {
+                if (aliasName.equals(field.getName())) {
+                    return field.getIndex();
+                }
+            }
+            inputsQueue.addAll(cur.getInputs());
+        }
+        return idGenerator.getAndIncrement();
     }
 }

@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.common.ir;
 
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
+import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.google.common.collect.ImmutableList;
 
@@ -29,7 +30,7 @@ public class GroupTest {
     // values("age").as("b")).by(count().as("c"))
     @Test
     public void group_1_test() {
-        GraphBuilder builder = SourceTest.mockGraphBuilder();
+        GraphBuilder builder = IrUtils.mockGraphBuilder();
         RelNode aggregate =
                 builder.source(
                                 new SourceConfig(
@@ -47,6 +48,35 @@ public class GroupTest {
                 "GraphLogicalAggregate(keys=[{variables=[DEFAULT.name, DEFAULT.age], aliases=[a,"
                         + " b]}], values=[[{operands=[], aggFunction=COUNT, alias='c'}]])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[~DEFAULT], opt=[VERTEX])",
+                aggregate.explain().trim());
+    }
+
+    // group by HEAD.name, count(HEAD.age+1, 'x') -> project({HEAD.age+1 as '$f0'}, isAppend = true)
+    // + aggregate(keys={HEAD.name}, calls=[count($f0) as 'x'])
+    @Test
+    public void group_2_test() {
+        GraphBuilder builder = IrUtils.mockGraphBuilder();
+        RelNode aggregate =
+                builder.source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person")))
+                        .aggregate(
+                                builder.groupKey(builder.variable(null, "name")),
+                                builder.count(
+                                        true,
+                                        "x",
+                                        builder.call(
+                                                GraphStdOperatorTable.PLUS,
+                                                builder.variable(null, "age"),
+                                                builder.literal(1))))
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalAggregate(keys=[{variables=[DEFAULT.name], aliases=[]}],"
+                        + " values=[[{operands=[$f0], aggFunction=COUNT, alias='x'}]])\n"
+                        + "  GraphLogicalProject($f0=[+(DEFAULT.age, 1)], isAppend=[true])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[~DEFAULT], opt=[VERTEX])",
                 aggregate.explain().trim());
     }

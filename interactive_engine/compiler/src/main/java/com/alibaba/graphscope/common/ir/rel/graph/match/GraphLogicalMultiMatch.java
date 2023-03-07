@@ -84,4 +84,8 @@ public class GraphLogicalMultiMatch extends AbstractLogicalMatch {
         List<RelDataTypeField> dedup = fields.stream().distinct().collect(Collectors.toList());
         return new RelRecordType(StructKind.FULLY_QUALIFIED, dedup);
     }
+
+    public List<RelNode> getSentences() {
+        return sentences;
+    }
 }

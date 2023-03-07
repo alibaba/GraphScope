@@ -1,5 +1,6 @@
 name: GraphScope Nightly Build CI
 
+# on: [push, pull_request]
 on:
   workflow_dispatch:
   schedule:
@@ -17,7 +18,7 @@ jobs:
         shell: bash --noprofile --norc -eo pipefail {0}
     strategy:
       matrix:
-        os: [ubuntu-20.04, macos-10.15]
+        os: [ubuntu-22.04, macos-latest]
     steps:
     - uses: actions/checkout@v3
       with:
@@ -31,12 +32,28 @@ jobs:
         if [ -z "${r}" ];then export hn=$(hostname); sudo -E bash -c 'echo "127.0.0.1 ${hn}" >> /etc/hosts'; fi
         cat /etc/hosts
 
-        /bin/bash ${GITHUB_WORKSPACE}/scripts/install_deps.sh --dev --grape-jdk --verbose
+        if [ "$RUNNER_OS" == "macOS" ]; then
+            brew update
+            brew install bash
+            alias bash=$(brew --prefix)/bin/bash
+        fi
+        sudo mkdir /opt/graphscope
+        sudo chown -R $(id -u):$(id -g) /opt/graphscope
+        ./gs install-deps dev --v6d-version v0.12.2
+
+    - name: Setup tmate session
+      if: false 
+      uses: mxschmitt/action-tmate@v2
 
     - name: Build GraphScope
       run: |
         source ${HOME}/.graphscope_env
-        make BUILD_TYPE=debug
+        # Known bug of building wheels with python3.11,
+        # Caused by aiohttp <= 3.8.1, whereas gremlinpython 3.6.2 requires
+        # aiohttp <= 3.8.1. They have loosen the restrict in main, but still
+        # needs to wait for them releasing a newer version
+        # https://github.com/aio-libs/aiohttp/issues/6600
+        make install INSTALL_PREFIX=/opt/graphscope
 
     - name: Run Python Test
       if: matrix.os == 'ubuntu-20.04'
@@ -47,6 +64,7 @@ jobs:
         # download dataset
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
         # run test
+        source ${HOME}/.graphscope_env
         make unittest
 
     - name: Upload Coverage

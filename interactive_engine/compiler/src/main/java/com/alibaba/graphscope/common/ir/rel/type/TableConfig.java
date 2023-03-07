@@ -34,7 +34,6 @@ public class TableConfig {
 
     public TableConfig(List<RelOptTable> tables) {
         this.tables = ObjectUtils.requireNonEmpty(tables);
-        ;
         this.isAll = false;
     }
 

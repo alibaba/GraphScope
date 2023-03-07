@@ -16,8 +16,6 @@
 
 package org.apache.calcite.sql.type;
 
-import static com.alibaba.graphscope.common.ir.util.Static.RESOURCE;
-
 import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
 import com.google.common.collect.ImmutableList;
 
@@ -40,65 +38,6 @@ public class RexFamilyOperandTypeChecker extends FamilyOperandTypeChecker {
     protected RexFamilyOperandTypeChecker(
             List<SqlTypeFamily> families, Predicate<Integer> optional) {
         super(families, optional);
-    }
-
-    private boolean checkSingleOperandType(
-            SqlCallBinding callBinding, RexNode node, int iFormalOperand, boolean throwOnFailure) {
-        final SqlTypeFamily family = families.get(iFormalOperand);
-        switch (family) {
-            case ANY:
-                SqlTypeName typeName = node.getType().getSqlTypeName();
-                if (typeName == SqlTypeName.CURSOR) {
-                    // We do not allow CURSOR operands, even for ANY
-                    if (throwOnFailure) {
-                        throw callBinding.newValidationSignatureError();
-                    }
-                    return false;
-                }
-                // fall through
-            case IGNORE:
-                // no need to check
-                return true;
-            default:
-                break;
-        }
-        if (isNullLiteral(node)) {
-            if (callBinding.isTypeCoercionEnabled()) {
-                return true;
-            } else if (throwOnFailure) {
-                throw RESOURCE.illegalNull().ex();
-            } else {
-                return false;
-            }
-        }
-        RelDataType type = node.getType();
-        SqlTypeName typeName = type.getSqlTypeName();
-
-        // Pass type checking for operators if it's of type 'ANY'.
-        if (typeName.getFamily() == SqlTypeFamily.ANY) {
-            return true;
-        }
-
-        if (!family.getTypeNames().contains(typeName)) {
-            if (throwOnFailure) {
-                throw callBinding.newValidationSignatureError();
-            }
-            return false;
-        }
-        return true;
-    }
-
-    private boolean isNullLiteral(RexNode node) {
-        if (node instanceof RexLiteral) {
-            RexLiteral literal = (RexLiteral) node;
-            if (literal.getTypeName() == SqlTypeName.NULL) {
-                assert null == literal.getValue();
-                return true;
-            } else {
-                return false;
-            }
-        }
-        return false;
     }
 
     @Override
@@ -178,6 +117,67 @@ public class RexFamilyOperandTypeChecker extends FamilyOperandTypeChecker {
     @Override
     public boolean checkSingleOperandType(
             SqlCallBinding callBinding, SqlNode node, int iFormalOperand, boolean throwOnFailure) {
-        throw RESOURCE.functionNotImplement(this.getClass()).ex();
+        throw new UnsupportedOperationException(
+                "checkSingleOperandType is unsupported for we will never depend on SqlNode to check"
+                        + " type");
+    }
+
+    private boolean checkSingleOperandType(
+            SqlCallBinding callBinding, RexNode node, int iFormalOperand, boolean throwOnFailure) {
+        final SqlTypeFamily family = families.get(iFormalOperand);
+        switch (family) {
+            case ANY:
+                SqlTypeName typeName = node.getType().getSqlTypeName();
+                if (typeName == SqlTypeName.CURSOR) {
+                    // We do not allow CURSOR operands, even for ANY
+                    if (throwOnFailure) {
+                        throw callBinding.newValidationSignatureError();
+                    }
+                    return false;
+                }
+                // fall through
+            case IGNORE:
+                // no need to check
+                return true;
+            default:
+                break;
+        }
+        if (isNullLiteral(node)) {
+            if (callBinding.isTypeCoercionEnabled()) {
+                return true;
+            } else if (throwOnFailure) {
+                throw new IllegalArgumentException("node " + node + " should not be of null value");
+            } else {
+                return false;
+            }
+        }
+        RelDataType type = node.getType();
+        SqlTypeName typeName = type.getSqlTypeName();
+
+        // Pass type checking for operators if it's of type 'ANY'.
+        if (typeName.getFamily() == SqlTypeFamily.ANY) {
+            return true;
+        }
+
+        if (!family.getTypeNames().contains(typeName)) {
+            if (throwOnFailure) {
+                throw callBinding.newValidationSignatureError();
+            }
+            return false;
+        }
+        return true;
+    }
+
+    private boolean isNullLiteral(RexNode node) {
+        if (node instanceof RexLiteral) {
+            RexLiteral literal = (RexLiteral) node;
+            if (literal.getTypeName() == SqlTypeName.NULL) {
+                assert null == literal.getValue();
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
     }
 }

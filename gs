@@ -1142,6 +1142,7 @@ gs_install_deps_command() {
   ANALYTICAL_CENTOS_8=("${ANALYTICAL_CENTOS_7[@]}" "boost-devel" "gflags-devel" "glog-devel" "openssl-devel")
 
   ANALYTICAL_MACOS=(
+    "apache-arrow"
     "boost"
     "gflags"
     "glog"
@@ -1402,7 +1403,9 @@ gs_install_deps_command() {
       fi
     else # for all
       install_dependencies_analytical_universal
-      install_grape_vineyard_universal
+      if [[ -z ${no_v6d} ]]; then
+        install_grape_vineyard_universal
+      fi
       install_java_maven_universal
       install_llvm_universal
       install_rust_universal
