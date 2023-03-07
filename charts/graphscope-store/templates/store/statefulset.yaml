@@ -119,9 +119,6 @@ spec:
             - name: config
               mountPath: /etc/groot/setup.sh
               subPath: setup.sh
-            - name: config
-              mountPath: /etc/groot/ready_probe.sh
-              subPath: ready_probe.sh
 
       securityContext:
         runAsUser: 1001

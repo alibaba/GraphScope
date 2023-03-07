@@ -13,11 +13,15 @@
  */
 package com.alibaba.graphscope.groot.rpc;
 
+import com.alibaba.graphscope.groot.coordinator.SnapshotManager;
 import io.grpc.ManagedChannel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
 public abstract class RpcClient implements AutoCloseable {
+    private static final Logger logger = LoggerFactory.getLogger(RpcClient.class);
 
     protected ManagedChannel channel;
 
@@ -25,7 +29,11 @@ public abstract class RpcClient implements AutoCloseable {
         this.channel = channel;
     }
 
+    public void ensureConnected() {
+        logger.info("Channel State: " + channel.getState(true));
+    }
     public void close() {
+        channel.resetConnectBackoff();
         this.channel.shutdown();
         try {
             this.channel.awaitTermination(3000, TimeUnit.MILLISECONDS);

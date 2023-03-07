@@ -57,6 +57,7 @@ public class RoleClients<T extends RpcClient> {
                 }
             }
         }
+        client.ensureConnected();
         return client;
     }
 }
