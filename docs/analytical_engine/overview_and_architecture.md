@@ -15,7 +15,7 @@ GAE is a full-fledged, in-production system for graph analytics algorithms over 
 Architecture of GAE. 
 :::
 
-- Storage layer: Graph data in real-life is extremely large scale, and thus graph storage stores graph data in a distributed fashion. The graph storage consists of different graph formats with different features. Although there exist diverse types of graph storage, unified interfaces for graph storage are provided for GAE as well as other computation engines of GraphScope, and thus GAE does not care about how each type of graph storage is implemented.
+- Storage layer: Graph data in real-life is extremely large scale, and thus graph storage stores graph data in a distributed fashion. The graph storage consists of different graph formats with different features. Although there exist diverse types of graph storages, unified interfaces for graph storage are provided for GAE as well as other computation engines of GraphScope, and thus GAE does not care about how each type of graph storage is implemented.
 - Engine layer: At the core of GAE is its engine layer. It offers user-friendly interfaces for graph algorithms, supporting various programming models, programming languages and computation patterns, so that users can develop their algorithms freely. GAE implements many optimization techniques in its engine layer, such as pull/push dynamic switching, cache-efficient memory layout, and pipelining, to achieve better performance.
 - Application layer: The application layer offers an application SDK which provides user-friendly interfaces of accessing graph structural/property data, and communication between different sub-graphs (fragments), so that users can develop their own algorithms easily. While graph analytics algorithms can be directly written using the application SDK, we have built a built-in algorithm library consisting of common algorithms for various application domains, to ease the development of new graph applications.
 
@@ -45,7 +45,7 @@ To support large scale graph data, GraphScope applies *edge-cut* partitioning st
 An example of edge-cut partitioning. 
 :::
 
-The graph storage consists of multiple types of graph formats, and each format is dedicated to a specific scenario: some support real time graph update while others treat graph data as immutable data once created; some store graph data in memory for better performance, while others support persistent storage. Fortunately, all these storages are integrated with GRIN, a unified graph storage interface defined by GraphScope. Therefore, the computation engines are not aware of the implementation differences of different storages. Please check out [our introduction to GRIN](https://graphscope.io/docs/latest/storage_engine/grin.html) for more details about graph storage interface.
+The graph storage consists of multiple types of graph formats, and each format is dedicated to a specific scenario: some support real time graph update while others treat graph data as immutable data once created; some store graph data in memory for better performance, while others support persistent storage. Fortunately, all these storages are integrated with GRIN, a unified graph storage interface defined by GraphScope. Therefore, the computation engines are not aware of the implementation differences of each storage. Please check out [our introduction to GRIN](https://graphscope.io/docs/latest/storage_engine/grin.html) for more details about graph storage interface.
 
 ## Engine Layer
 
@@ -53,7 +53,7 @@ There are four major components in the engine layer of GAE, which offers easy-to
 
 ### GRAPE Engine
 
-The foundation of the engine layer is GRAPE, which offers core functions for graph analytics, including accessing to vertices/edges of a sub-graph (fragment), visiting property data of vertices/edges, state synchronization between different fragments, and intermediate data management.  Meanwhile, GRAPE applies many graph-level optimizations, such as indexing, compression, dynamic push/push switch, pipelining, and load balancing, to achieve better performance. Please refer to [this](https://dl.acm.org/doi/10.1145/3282488) for more details about these optimizations.
+The foundation of the engine layer is GRAPE, which offers core functions for graph analytics, including accessing to vertices/edges of a sub-graph (fragment), visiting property data of vertices/edges, state synchronization between different fragments, and intermediate data management.  Meanwhile, GRAPE applies many graph-level optimizations, such as indexing, compression, dynamic push/push switching, pipelining, and load balancing, to achieve better performance. Please refer to [this](https://dl.acm.org/doi/10.1145/3282488) for more details about these optimizations.
 
 ### Programming Model APIs 
 
@@ -68,7 +68,7 @@ The GRAPE engine is written with C++ for better performance, and GAE also provid
 
 ### Incremental Computation Engine 
 
-GAE also supports incremental computation over graph data via the [Ingress](http://vldb.org/pvldb/vol14/p1613-gong.pdf) engine, where we apply a batch algorithm to compute the result over the original graph *G* once, followed by employing an incremental algorithm to adjust the old result in response to the input changes *$\Delta$**G* to *G*. To achieve this , based on the dynamic graph storage, we have implemented an Ingress fragment which can capture the changes between original and new graphs. Please check out [our detailed introduction to the Ingress engine](https://graphscope.io/docs/latest/analytical_engine/ingress.html) for more details.
+GAE also supports incremental computation over graph data via the [Ingress](http://vldb.org/pvldb/vol14/p1613-gong.pdf) engine, where we apply a batch algorithm to compute the result over the original graph *G* once, followed by employing an incremental algorithm to adjust the old result in response to the input changes $\Delta$*G* to *G*. To achieve this , based on the dynamic graph storage, we have implemented an Ingress fragment which can capture the changes between original and new graphs. Please check out [our detailed introduction to the Ingress engine](https://graphscope.io/docs/latest/analytical_engine/ingress.html) for more details.
 
 
 ## Application Layer
