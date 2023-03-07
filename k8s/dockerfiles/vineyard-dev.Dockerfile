@@ -44,7 +44,8 @@ WORKDIR /home/graphscope
 
 COPY ./gs ./gs
 ARG VINEYARD_VERSION=main
-RUN ./gs install-deps dev --for-analytical --v6d-version=$VINEYARD_VERSION && \
+RUN sudo chmod a+wrx /tmp && \
+    ./gs install-deps dev --for-analytical --v6d-version=$VINEYARD_VERSION && \
     sudo yum clean all -y && \
     sudo rm -fr /var/cache/yum
 

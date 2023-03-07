@@ -481,6 +481,19 @@ def test_project_subgraph(arrow_modern_graph):
     assert graph.schema.get_vertex_properties("person")[0].name == "pr"
 
 
+def test_project_project(ldbc_graph):
+    pg1 = ldbc_graph.project(
+        vertices={"post": [], "tag": [], "tagclass": []},
+        edges={"hasTag": [], "isSubclassOf": []},
+    )
+    assert pg1.schema.vertex_labels == ["post", "tag", "tagclass"]
+    assert pg1.schema.edge_labels == ["isSubclassOf", "hasTag"]
+
+    pg2 = pg1.project(vertices={"tagclass": []}, edges={"isSubclassOf": []})
+    assert pg2.schema.vertex_labels == ["tagclass"]
+    assert pg2.schema.edge_labels == ["isSubclassOf"]
+
+
 def test_error_on_project(arrow_property_graph, ldbc_graph):
     graph = arrow_property_graph
     g2 = graph.project(vertices={"v0": []}, edges={"e0": []})

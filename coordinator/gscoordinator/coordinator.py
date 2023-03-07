@@ -107,8 +107,11 @@ def config_logging(log_level):
     """
     logging.basicConfig(level=logging.CRITICAL)
 
-    if log_level:
-        log_level = log_level.upper()
+    # `NOTSET` is special as it doesn't show log in Python
+    if isinstance(log_level, str):
+        log_level = getattr(logging, log_level.upper())
+    if log_level == logging.NOTSET:
+        log_level = logging.DEBUG
 
     logger = logging.getLogger("graphscope")
     logger.setLevel(log_level)
