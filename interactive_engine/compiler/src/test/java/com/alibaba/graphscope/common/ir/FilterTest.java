@@ -129,8 +129,7 @@ public class FilterTest {
     @Test
     public void greater_4_test() {
         GraphBuilder builder = IrUtils.mockGraphBuilder();
-        SourceConfig sourceConfig =
-                new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(true));
+        SourceConfig sourceConfig = new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(true));
         RexNode greater =
                 builder.source(sourceConfig)
                         .call(
@@ -139,7 +138,8 @@ public class FilterTest {
                                 builder.literal(10));
         RelNode filter = builder.filter(greater).build();
         Assert.assertEquals(
-                "GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}], alias=[~DEFAULT], fusedFilter=[[>(DEFAULT.age, 10)]], opt=[VERTEX])",
+                "GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                        + " alias=[~DEFAULT], fusedFilter=[[>(DEFAULT.age, 10)]], opt=[VERTEX])",
                 filter.explain().trim());
     }
 

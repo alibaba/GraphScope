@@ -215,7 +215,8 @@ public class RelToFfiConverter implements GraphRelShuttle {
         for (int i = 0; i < groupCalls.size(); ++i) {
             List<RexNode> operands = groupCalls.get(i).getOperands();
             if (operands.isEmpty()) {
-                throw new IllegalArgumentException("operands in aggregate call should not be empty");
+                throw new IllegalArgumentException(
+                        "operands in aggregate call should not be empty");
             } else if (operands.size() > 1) {
                 throw new UnsupportedOperationException(
                         "aggregate on multiple variables is unsupported yet");

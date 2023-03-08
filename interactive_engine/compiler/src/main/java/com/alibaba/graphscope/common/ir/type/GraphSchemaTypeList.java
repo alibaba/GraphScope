@@ -30,7 +30,10 @@ import java.util.stream.Collectors;
 public class GraphSchemaTypeList extends GraphSchemaType implements List<GraphSchemaType> {
     private List<GraphSchemaType> schemaTypes;
 
-    protected GraphSchemaTypeList(GraphOpt.Source scanOpt, List<GraphSchemaType> schemaTypes, List<RelDataTypeField> fields) {
+    protected GraphSchemaTypeList(
+            GraphOpt.Source scanOpt,
+            List<GraphSchemaType> schemaTypes,
+            List<RelDataTypeField> fields) {
         super(scanOpt, fields);
         this.schemaTypes = schemaTypes;
     }
@@ -48,7 +51,8 @@ public class GraphSchemaTypeList extends GraphSchemaType implements List<GraphSc
             }
             fields.addAll(type.getFieldList());
         }
-        return new GraphSchemaTypeList(scanOpt, list, fields.stream().distinct().collect(Collectors.toList()));
+        return new GraphSchemaTypeList(
+                scanOpt, list, fields.stream().distinct().collect(Collectors.toList()));
     }
 
     @Override

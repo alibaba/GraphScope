@@ -18,8 +18,8 @@ package com.alibaba.graphscope.common.ir.rel.graph;
 
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphPxdElementType;
-
 import com.google.common.collect.ImmutableList;
+
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitSet;
@@ -144,9 +144,14 @@ public class GraphLogicalPathExpand extends SingleRel {
 
     @Override
     protected RelDataType deriveRowType() {
-        return
-                new RelRecordType(
-                        ImmutableList.of(
-                                new RelDataTypeFieldImpl(getAliasName(), getAliasId(), new ArraySqlType(new GraphPxdElementType(this.expand.getRowType(), this.getV.getRowType()), false))));
+        return new RelRecordType(
+                ImmutableList.of(
+                        new RelDataTypeFieldImpl(
+                                getAliasName(),
+                                getAliasId(),
+                                new ArraySqlType(
+                                        new GraphPxdElementType(
+                                                this.expand.getRowType(), this.getV.getRowType()),
+                                        false))));
     }
 }

@@ -1,4 +1,4 @@
-///*
+/// *
 // * Copyright 2020 Alibaba Group Holding Limited.
 // *
 // * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,18 +14,18 @@
 // * limitations under the License.
 // */
 //
-//package com.alibaba.graphscope.common.ir.runtime;
+// package com.alibaba.graphscope.common.ir.runtime;
 //
-//import com.alibaba.graphscope.common.ir.IrUtils;
-//import com.alibaba.graphscope.common.ir.runtime.proto.RexToProtoConverter;
-//import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-//import com.alibaba.graphscope.common.ir.tools.config.*;
-//import com.alibaba.graphscope.gaia.proto.OuterExpression;
+// import com.alibaba.graphscope.common.ir.IrUtils;
+// import com.alibaba.graphscope.common.ir.runtime.proto.RexToProtoConverter;
+// import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
+// import com.alibaba.graphscope.common.ir.tools.config.*;
+// import com.alibaba.graphscope.gaia.proto.OuterExpression;
 //
-//import org.apache.calcite.rex.RexNode;
-//import org.junit.Test;
+// import org.apache.calcite.rex.RexNode;
+// import org.junit.Test;
 //
-//public class ConverterTest {
+// public class ConverterTest {
 //    @Test
 //    public void expression_test() {
 //        RexToProtoConverter converter = new RexToProtoConverter(true, true);
@@ -39,10 +39,12 @@
 //                                "x"))
 //                .expand(
 //                        new ExpandConfig(
-//                                GraphOpt.Expand.OUT, new LabelConfig(false).addLabel("knows"), "y"))
+//                                GraphOpt.Expand.OUT, new LabelConfig(false).addLabel("knows"),
+// "y"))
 //                .getV(
 //                        new GetVConfig(
-//                                GraphOpt.GetV.END, new LabelConfig(false).addLabel("person"), "z"));
+//                                GraphOpt.GetV.END, new LabelConfig(false).addLabel("person"),
+// "z"));
 //        //        RexNode rexNode =
 //        //                graphBuilder.call(
 //        //                        GraphStdOperatorTable.GREATER_THAN,
@@ -61,7 +63,8 @@
 //        //                RexNode var1 = graphBuilder.variable("x", "age");
 //        //                RexNode var2 = graphBuilder.variable("y", "weight");
 //        //                RexNode var3 = graphBuilder.variable("z", "age");
-//        //                RexNode gt_1 = graphBuilder.call(GraphStdOperatorTable.GREATER_THAN, var1,
+//        //                RexNode gt_1 = graphBuilder.call(GraphStdOperatorTable.GREATER_THAN,
+// var1,
 //        // var2);
 //        //                RexNode lt_1 = graphBuilder.call(GraphStdOperatorTable.LESS_THAN, var2,
 //        // var3);
@@ -80,4 +83,4 @@
 //        //        FfiResult.ByValue res = IrCoreLibrary.INSTANCE.setExpr(new
 //        // FfiPbPointer.ByValue(exprBuilder.build().toByteArray()));
 //    }
-//}
+// }

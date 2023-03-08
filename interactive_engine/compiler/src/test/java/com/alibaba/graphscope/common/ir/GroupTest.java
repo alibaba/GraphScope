@@ -98,8 +98,10 @@ public class GroupTest {
                                 builder.collect(false, "c", ImmutableList.of()))
                         .build();
         Assert.assertEquals(
-                "GraphLogicalAggregate(keys=[{variables=[DEFAULT.name, DEFAULT.age], aliases=[a, b]}], values=[[{operands=[DEFAULT], aggFunction=COLLECT, alias='c'}]])\n" +
-                        "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT], opt=[VERTEX])",
+                "GraphLogicalAggregate(keys=[{variables=[DEFAULT.name, DEFAULT.age], aliases=[a,"
+                    + " b]}], values=[[{operands=[DEFAULT], aggFunction=COLLECT, alias='c'}]])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[~DEFAULT], opt=[VERTEX])",
                 aggregate.explain().trim());
     }
 }

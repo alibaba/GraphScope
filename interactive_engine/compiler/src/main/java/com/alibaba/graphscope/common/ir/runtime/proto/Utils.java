@@ -204,7 +204,9 @@ public abstract class Utils {
                         return Common.DataType.DOUBLE_ARRAY;
                     default:
                         throw new UnsupportedOperationException(
-                                "array of element type " + elementType.getSqlTypeName() + " is unsupported yet");
+                                "array of element type "
+                                        + elementType.getSqlTypeName()
+                                        + " is unsupported yet");
                 }
             default:
                 throw new UnsupportedOperationException(
@@ -239,8 +241,10 @@ public abstract class Utils {
                                 + " to IrDataType is unsupported yet");
             case ARRAY:
                 RelDataType elementType = ((ArraySqlType) dataType).getComponentType();
-                if (elementType instanceof GraphPxdElementType || elementType instanceof GraphSchemaType) {
-                    throw new UnsupportedOperationException("cannot convert array of graph elements type to IrDataType");
+                if (elementType instanceof GraphPxdElementType
+                        || elementType instanceof GraphSchemaType) {
+                    throw new UnsupportedOperationException(
+                            "cannot convert array of graph elements type to IrDataType");
                 }
             default:
                 return DataType.IrDataType.newBuilder()

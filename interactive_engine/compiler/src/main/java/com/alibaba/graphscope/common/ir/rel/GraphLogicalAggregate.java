@@ -110,7 +110,10 @@ public class GraphLogicalAggregate extends Aggregate {
                 fields.add(new RelDataTypeFieldImpl(aliasName, aliasId, rexNodes.get(i).getType()));
             }
             // update aliases in groupKey
-            this.groupKey = new GraphGroupKeys(this.groupKey.getVariables(), aliasList.subList(0, this.groupKey.groupKeyCount()));
+            this.groupKey =
+                    new GraphGroupKeys(
+                            this.groupKey.getVariables(),
+                            aliasList.subList(0, this.groupKey.groupKeyCount()));
             // update alias in each groupValue
             List<GraphAggCall> copyCalls = new ArrayList<>();
             int offset = this.groupKey.groupKeyCount();

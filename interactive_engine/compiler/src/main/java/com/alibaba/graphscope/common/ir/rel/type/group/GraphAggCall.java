@@ -103,7 +103,12 @@ public class GraphAggCall extends AbstractAggCall {
     }
 
     public GraphAggCall copy(String alias) {
-        return new GraphAggCall(this.cluster, this.aggFunction, this.distinct, Objects.requireNonNull(alias), this.operands);
+        return new GraphAggCall(
+                this.cluster,
+                this.aggFunction,
+                this.distinct,
+                Objects.requireNonNull(alias),
+                this.operands);
     }
 
     @Override
