@@ -1,14 +1,12 @@
 use core::slice;
+use std::any::Any;
 use std::fs::File;
 use std::io::{Read, Write};
 
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
-use serde::de::Error as DeError;
-use serde::ser::Error as SerError;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::graph::IndexType;
-use crate::mcsr::{Nbr, NbrIter};
+use crate::graph_db::{CsrTrait, Nbr, NbrIter};
 
 pub struct SingleCsrEdgeIter<'a, I: IndexType> {
     cur_vertex: usize,
@@ -33,6 +31,10 @@ impl<'a, I: IndexType> Iterator for SingleCsrEdgeIter<'a, I> {
     }
 }
 
+unsafe impl<I: IndexType> Send for SingleCsrEdgeIter<'_, I> {}
+
+unsafe impl<I: IndexType> Sync for SingleCsrEdgeIter<'_, I> {}
+
 pub struct SingleCsr<I> {
     nbr_list: Vec<Nbr<I>>,
     nbr_exist: Vec<bool>,
@@ -42,10 +44,6 @@ pub struct SingleCsr<I> {
 impl<I: IndexType> SingleCsr<I> {
     pub fn new() -> Self {
         SingleCsr { nbr_list: vec![], nbr_exist: vec![], edge_num: 0_usize }
-    }
-
-    pub fn vertex_num(&self) -> I {
-        I::new(self.nbr_list.len())
     }
 
     pub fn edge_num(&self) -> usize {
@@ -70,35 +68,6 @@ impl<I: IndexType> SingleCsr<I> {
         }
     }
 
-    pub fn get_edges(&self, src: I) -> Option<NbrIter<'_, I>> {
-        if src.index() < self.nbr_list.len() {
-            if !self.nbr_exist[src.index()] {
-                Some(NbrIter::new_empty())
-            } else {
-                Some(NbrIter::new_single(unsafe { self.nbr_list.as_ptr().add(src.index()) }))
-            }
-        } else {
-            None
-        }
-    }
-
-    pub fn get_edge(&self, src: I) -> Option<Nbr<I>> {
-        let index = src.index();
-        if index < self.nbr_list.len() {
-            if self.nbr_exist[index] {
-                Some(self.nbr_list[index].clone())
-            } else {
-                None
-            }
-        } else {
-            None
-        }
-    }
-
-    pub fn get_all_edges(&self) -> SingleCsrEdgeIter<'_, I> {
-        SingleCsrEdgeIter { cur_vertex: 0, exist_list: &self.nbr_exist, nbr_list: &self.nbr_list }
-    }
-
     pub fn desc(&self) {
         let num = self.nbr_list.len();
         let mut empty_num = 0;
@@ -109,27 +78,6 @@ impl<I: IndexType> SingleCsr<I> {
         }
 
         println!("vertex-num = {}, edge_num = {}, empty_nbr_num = {}", num, self.edge_num, empty_num);
-    }
-
-    pub fn serialize(&self, path: &String) {
-        let mut f = File::create(path).unwrap();
-        let vnum = self.nbr_list.len();
-        f.write_u64(vnum as u64).unwrap();
-        f.write_u64(self.edge_num as u64).unwrap();
-
-        let nbr_list_size = vnum * std::mem::size_of::<Nbr<I>>();
-        let nbr_exist_size = vnum * std::mem::size_of::<bool>();
-
-        unsafe {
-            let nbr_list_slice = slice::from_raw_parts(self.nbr_list.as_ptr() as *const u8, nbr_list_size);
-            f.write_all(nbr_list_slice).unwrap();
-
-            let nbr_exist_slice =
-                slice::from_raw_parts(self.nbr_exist.as_ptr() as *const u8, nbr_exist_size);
-            f.write_all(nbr_exist_slice).unwrap();
-        }
-
-        f.flush().unwrap();
     }
 
     pub fn deserialize(&mut self, path: &String) {
@@ -176,6 +124,65 @@ impl<I: IndexType> SingleCsr<I> {
         }
 
         return true;
+    }
+}
+
+impl<I: IndexType> CsrTrait<I> for SingleCsr<I> {
+    fn vertex_num(&self) -> I {
+        I::new(self.nbr_list.len())
+    }
+
+    fn edge_num(&self) -> usize {
+        self.edge_num
+    }
+
+    fn degree(&self, src: I) -> i64 {
+        if self.nbr_exist[src.index()] {
+            1
+        } else {
+            0
+        }
+    }
+
+    fn get_edges(&self, src: I) -> Option<NbrIter<'_, I>> {
+        if src.index() < self.nbr_list.len() {
+            if !self.nbr_exist[src.index()] {
+                Some(NbrIter::new_empty())
+            } else {
+                Some(NbrIter::new_single(unsafe { self.nbr_list.as_ptr().add(src.index()) }))
+            }
+        } else {
+            None
+        }
+    }
+
+    fn get_all_edges<'a>(&'a self) -> Box<dyn Iterator<Item = (I, &'a Nbr<I>)> + 'a + Send> {
+        Box::new(SingleCsrEdgeIter { cur_vertex: 0, exist_list: &self.nbr_exist, nbr_list: &self.nbr_list })
+    }
+
+    fn serialize(&self, path: &String) {
+        let mut f = File::create(path).unwrap();
+        let vnum = self.nbr_list.len();
+        f.write_u64(vnum as u64).unwrap();
+        f.write_u64(self.edge_num as u64).unwrap();
+
+        let nbr_list_size = vnum * std::mem::size_of::<Nbr<I>>();
+        let nbr_exist_size = vnum * std::mem::size_of::<bool>();
+
+        unsafe {
+            let nbr_list_slice = slice::from_raw_parts(self.nbr_list.as_ptr() as *const u8, nbr_list_size);
+            f.write_all(nbr_list_slice).unwrap();
+
+            let nbr_exist_slice =
+                slice::from_raw_parts(self.nbr_exist.as_ptr() as *const u8, nbr_exist_size);
+            f.write_all(nbr_exist_slice).unwrap();
+        }
+
+        f.flush().unwrap();
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
 
@@ -226,34 +233,5 @@ impl<I: IndexType> Decode for SingleCsr<I> {
         }
 
         Ok(ret)
-    }
-}
-impl<I: IndexType> Serialize for SingleCsr<I> {
-    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
-    where
-        S: Serializer,
-    {
-        let mut bytes = Vec::new();
-        if self.write_to(&mut bytes).is_ok() {
-            info!("writing {} bytes...", bytes.len());
-            bytes.serialize(serializer)
-        } else {
-            Result::Err(S::Error::custom("Serialize mutable csr failed!"))
-        }
-    }
-}
-
-impl<'de, I> Deserialize<'de> for SingleCsr<I>
-where
-    I: IndexType,
-{
-    fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let vec = Vec::<u8>::deserialize(deserializer)?;
-        let mut bytes = vec.as_slice();
-        SingleCsr::<I>::read_from(&mut bytes)
-            .map_err(|_| D::Error::custom("Deserialize mutable csr failed!"))
     }
 }

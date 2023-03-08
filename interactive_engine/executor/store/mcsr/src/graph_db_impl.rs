@@ -1,5 +1,5 @@
-use std::collections::{HashMap, HashSet};
-use std::fs::{create_dir_all, File};
+use std::collections::HashMap;
+use std::fs::create_dir_all;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::Arc;
@@ -7,9 +7,8 @@ use std::sync::Arc;
 use crate::col_table::ColTable;
 use crate::error::GDBResult;
 use crate::graph::{Direction, IndexType};
-use crate::graph_db::{GlobalCsrTrait, LocalEdge, LocalVertex};
-use crate::io::{export, import};
-use crate::mcsr::{MutableCsr, Nbr, NbrIter};
+use crate::graph_db::{CsrTrait, GlobalCsrTrait, LocalEdge, LocalVertex, NbrIter};
+use crate::mcsr::MutableCsr;
 use crate::schema::{CsrGraphSchema, Schema};
 use crate::scsr::SingleCsr;
 use crate::types::*;
@@ -139,10 +138,6 @@ where
         self.csr.get_edges(src_id)
     }
 
-    pub fn get_edge(&self, src_id: I) -> Option<Nbr<I>> {
-        self.csr.get_edge(src_id)
-    }
-
     pub fn get_internal_id(&self, id: G) -> Option<(LabelId, I)> {
         self.vm.get_internal_id(id)
     }
@@ -170,11 +165,8 @@ where
 
 pub struct CsrDB<G: Send + Sync + IndexType = DefaultId, I: Send + Sync + IndexType = InternalId> {
     pub partition: usize,
-    pub ie: Vec<MutableCsr<I>>,
-    pub oe: Vec<MutableCsr<I>>,
-
-    pub single_ie: Vec<SingleCsr<I>>,
-    pub single_oe: Vec<SingleCsr<I>>,
+    pub ie: Vec<Box<dyn CsrTrait<I>>>,
+    pub oe: Vec<Box<dyn CsrTrait<I>>>,
 
     pub graph_schema: Arc<CsrGraphSchema>,
     pub vertex_prop_table: Vec<ColTable>,
@@ -198,36 +190,6 @@ pub trait BasicOps<G: IndexType + Sync + Send, I: IndexType + Sync + Send> {
         &self, src_label: LabelId, src_lid: I, dst_label: LabelId, dst_lid: I, label: LabelId,
         dir: Direction, offset: usize,
     ) -> LocalEdge<G, I>;
-}
-
-pub fn is_single_oe_csr(src_label: LabelId, dst_label: LabelId, edge_label: LabelId) -> bool {
-    if src_label == 2 && dst_label == 1 && edge_label == 0 {
-        true
-    } else if src_label == 3 && dst_label == 1 && edge_label == 0 {
-        true
-    } else if src_label == 2 && dst_label == 2 && edge_label == 5 {
-        true
-    } else if src_label == 2 && dst_label == 3 && edge_label == 5 {
-        true
-    } else if src_label == 2 && dst_label == 0 && edge_label == 2 {
-        true
-    } else if src_label == 3 && dst_label == 0 && edge_label == 2 {
-        true
-    } else if src_label == 1 && dst_label == 0 && edge_label == 2 {
-        true
-    } else if src_label == 4 && dst_label == 1 && edge_label == 6 {
-        true
-    } else {
-        false
-    }
-}
-
-pub fn is_single_ie_csr(src_label: LabelId, dst_label: LabelId, edge_label: LabelId) -> bool {
-    if src_label == 4 && dst_label == 3 && edge_label == 10 {
-        true
-    } else {
-        false
-    }
 }
 
 impl<G, I> BasicOps<G, I> for CsrDB<G, I>
@@ -257,20 +219,8 @@ where
     ) -> Option<NbrIter<I>> {
         let index = self.edge_label_to_index(src_label, dst_label, edge_label, dir);
         match dir {
-            Direction::Incoming => {
-                if is_single_ie_csr(src_label, dst_label, edge_label) {
-                    self.single_ie[index].get_edges(src_index)
-                } else {
-                    self.ie[index].get_edges(src_index)
-                }
-            }
-            Direction::Outgoing => {
-                if is_single_oe_csr(src_label, dst_label, edge_label) {
-                    self.single_oe[index].get_edges(src_index)
-                } else {
-                    self.oe[index].get_edges(src_index)
-                }
-            }
+            Direction::Incoming => self.ie[index].get_edges(src_index),
+            Direction::Outgoing => self.oe[index].get_edges(src_index),
         }
     }
 
@@ -403,218 +353,6 @@ where
         (labels, iters)
     }
 
-    pub fn export(&self, path: &str) -> GDBResult<()> {
-        let root_dir = PathBuf::from_str(path).unwrap();
-        let partition_dir = root_dir
-            .join(DIR_BINARY_DATA)
-            .join(format!("partition_{}", self.partition));
-        create_dir_all(&partition_dir)?;
-
-        for e_label_i in 0..self.edge_label_num {
-            let edge_label_name = self.graph_schema.edge_label_names()[e_label_i].clone();
-            for src_label_i in 0..self.vertex_label_num {
-                let src_label_name = self.graph_schema.vertex_label_names()[src_label_i].clone();
-                for dst_label_i in 0..self.vertex_label_num {
-                    let dst_label_name = self.graph_schema.vertex_label_names()[dst_label_i].clone();
-                    let index: usize = src_label_i * self.vertex_label_num * self.edge_label_num
-                        + dst_label_i * self.edge_label_num
-                        + e_label_i;
-                    if is_single_ie_csr(
-                        src_label_i as LabelId,
-                        dst_label_i as LabelId,
-                        e_label_i as LabelId,
-                    ) {
-                        let ie_csr = &self.single_ie[index];
-                        if ie_csr.edge_num() != 0 {
-                            export(
-                                ie_csr,
-                                &partition_dir.join(format!(
-                                    "ie_{}_{}_{}",
-                                    src_label_name, edge_label_name, dst_label_name
-                                )),
-                            )?;
-                        }
-                    } else {
-                        let ie_csr = &self.ie[index];
-                        if ie_csr.edge_num() != 0 {
-                            export(
-                                ie_csr,
-                                &partition_dir.join(format!(
-                                    "ie_{}_{}_{}",
-                                    src_label_name, edge_label_name, dst_label_name
-                                )),
-                            )?;
-                        }
-                    }
-                    if is_single_oe_csr(
-                        src_label_i as LabelId,
-                        dst_label_i as LabelId,
-                        e_label_i as LabelId,
-                    ) {
-                        let oe_csr = &self.single_oe[index];
-                        if oe_csr.edge_num() != 0 {
-                            export(
-                                oe_csr,
-                                &partition_dir.join(format!(
-                                    "oe_{}_{}_{}",
-                                    src_label_name, edge_label_name, dst_label_name
-                                )),
-                            )?;
-                        }
-                    } else {
-                        let oe_csr = &self.oe[index];
-                        if oe_csr.edge_num() != 0 {
-                            export(
-                                oe_csr,
-                                &partition_dir.join(format!(
-                                    "oe_{}_{}_{}",
-                                    src_label_name, edge_label_name, dst_label_name
-                                )),
-                            )?;
-                        }
-                    }
-                }
-            }
-        }
-        for (i, table) in self.vertex_prop_table.iter().enumerate() {
-            let v_label_name = self.graph_schema.vertex_label_names()[i].clone();
-            table.export(&partition_dir.join(format!("vp_{}", v_label_name)))?;
-        }
-
-        self.vertex_map
-            .export_native(&partition_dir.join("vm.native"))?;
-        self.vertex_map
-            .export_corner(&partition_dir.join("vm.corner"))?;
-
-        Ok(())
-    }
-
-    pub fn import(dir: &str, partition: usize) -> GDBResult<Self> {
-        let root_dir = PathBuf::from_str(dir).unwrap();
-        let schema_path = root_dir
-            .join(DIR_GRAPH_SCHEMA)
-            .join(FILE_SCHEMA);
-        let graph_schema = CsrGraphSchema::from_json_file(schema_path)?;
-        let partition_dir = root_dir
-            .join(DIR_BINARY_DATA)
-            .join(format!("partition_{}", partition));
-
-        let vertex_label_num = graph_schema.vertex_type_to_id.len();
-        let edge_label_num = graph_schema.edge_type_to_id.len();
-
-        let csr_num = vertex_label_num * vertex_label_num * edge_label_num;
-        let mut ie = vec![];
-        let mut oe = vec![];
-        let mut single_ie = vec![];
-        let mut single_oe = vec![];
-        for _ in 0..csr_num {
-            ie.push(MutableCsr::<I>::new());
-            oe.push(MutableCsr::<I>::new());
-            single_ie.push(SingleCsr::<I>::new());
-            single_oe.push(SingleCsr::<I>::new());
-        }
-        info!("start import csrs");
-        for e_label_i in 0..edge_label_num {
-            let edge_label_name = graph_schema.edge_label_names()[e_label_i].clone();
-            for src_label_i in 0..vertex_label_num {
-                let src_label_name = graph_schema.vertex_label_names()[src_label_i].clone();
-                for dst_label_i in 0..vertex_label_num {
-                    let dst_label_name = graph_schema.vertex_label_names()[dst_label_i].clone();
-                    let index: usize = src_label_i * vertex_label_num * edge_label_num
-                        + dst_label_i * edge_label_num
-                        + e_label_i;
-
-                    let ie_path = &partition_dir
-                        .join(format!("ie_{}_{}_{}", src_label_name, edge_label_name, dst_label_name));
-                    if Path::exists(ie_path) {
-                        info!("importing {}", ie_path.as_os_str().to_str().unwrap());
-                        if is_single_ie_csr(
-                            src_label_i as LabelId,
-                            dst_label_i as LabelId,
-                            e_label_i as LabelId,
-                        ) {
-                            single_ie[index] = import::<SingleCsr<I>, _>(ie_path).unwrap();
-                        } else {
-                            println!("ie path is {:?}", ie_path);
-                            ie[index] = import::<MutableCsr<I>, _>(ie_path).unwrap();
-                        }
-                    }
-
-                    let oe_path = &partition_dir
-                        .join(format!("oe_{}_{}_{}", src_label_name, edge_label_name, dst_label_name));
-                    if Path::exists(oe_path) {
-                        info!("importing {}", oe_path.as_os_str().to_str().unwrap());
-                        if is_single_oe_csr(
-                            src_label_i as LabelId,
-                            dst_label_i as LabelId,
-                            e_label_i as LabelId,
-                        ) {
-                            single_oe[index] = import::<SingleCsr<I>, _>(oe_path).unwrap();
-                        } else {
-                            oe[index] = import::<MutableCsr<I>, _>(oe_path).unwrap();
-                        }
-                    }
-                }
-            }
-        }
-        info!("finished import csrs");
-        info!("start import vertex properties");
-        let mut vertex_prop_table = vec![];
-        for i in 0..vertex_label_num {
-            let v_label_name = graph_schema.vertex_label_names()[i].clone();
-            info!("importing vertex property: {}", v_label_name);
-            vertex_prop_table
-                .push(ColTable::import(&partition_dir.join(format!("vp_{}", v_label_name))).unwrap());
-        }
-        info!("finished import vertex properties");
-
-        let mut vertex_map = VertexMap::new(vertex_label_num);
-        info!("start import native vertex map");
-        vertex_map.import_native(&partition_dir.join("vm.native"))?;
-        info!("start import corner vertex map");
-        vertex_map.import_corner(&partition_dir.join("vm.corner"))?;
-        vertex_map.desc();
-        info!("finish import corner vertex map");
-
-        info!("start import edge properties");
-        let mut edge_prop_table = HashMap::new();
-        for e_label_i in 0..edge_label_num {
-            for src_label_i in 0..vertex_label_num {
-                for dst_label_i in 0..vertex_label_num {
-                    let edge_index = src_label_i * vertex_label_num * edge_label_num
-                        + dst_label_i as usize * edge_label_num
-                        + e_label_i as usize;
-                    let src_label_name = graph_schema.vertex_label_names()[src_label_i].clone();
-                    let dst_label_name = graph_schema.vertex_label_names()[dst_label_i].clone();
-                    let edge_label_name = graph_schema.edge_label_names()[e_label_i].clone();
-                    let edge_property_path = &partition_dir
-                        .join(format!("ep_{}_{}_{}", src_label_name, edge_label_name, dst_label_name));
-                    let edge_property_path_str = edge_property_path.to_str().unwrap().to_string();
-
-                    if Path::new(&edge_property_path_str).exists() {
-                        edge_prop_table
-                            .insert(edge_index, ColTable::import(&edge_property_path_str).unwrap());
-                    }
-                }
-            }
-        }
-        info!("finished import edge properties");
-
-        Ok(Self {
-            partition,
-            ie,
-            oe,
-            single_ie,
-            single_oe,
-            graph_schema: Arc::new(graph_schema),
-            vertex_prop_table,
-            vertex_map,
-            edge_prop_table,
-            vertex_label_num,
-            edge_label_num,
-        })
-    }
-
     pub fn serialize(&self, path: &str) -> GDBResult<()> {
         let root_dir = PathBuf::from_str(path).unwrap();
         let partition_dir = root_dir
@@ -634,39 +372,16 @@ where
                     let ie_path = &partition_dir
                         .join(format!("ie_{}_{}_{}", src_label_name, edge_label_name, dst_label_name));
                     let ie_path_str = ie_path.to_str().unwrap().to_string();
-                    if is_single_ie_csr(
-                        src_label_i as LabelId,
-                        dst_label_i as LabelId,
-                        e_label_i as LabelId,
-                    ) {
-                        let ie_csr = &self.single_ie[index];
-
-                        if ie_csr.edge_num() != 0 {
-                            ie_csr.serialize(&ie_path_str);
-                        }
-                    } else {
-                        let ie_csr = &self.ie[index];
-                        if ie_csr.edge_num() != 0 {
-                            ie_csr.serialize(&ie_path_str);
-                        }
+                    let ie_csr = &self.ie[index];
+                    if ie_csr.edge_num() != 0 {
+                        ie_csr.serialize(&ie_path_str);
                     }
                     let oe_path = &partition_dir
                         .join(format!("oe_{}_{}_{}", src_label_name, edge_label_name, dst_label_name));
                     let oe_path_str = oe_path.to_str().unwrap().to_string();
-                    if is_single_oe_csr(
-                        src_label_i as LabelId,
-                        dst_label_i as LabelId,
-                        e_label_i as LabelId,
-                    ) {
-                        let oe_csr = &self.single_oe[index];
-                        if oe_csr.edge_num() != 0 {
-                            oe_csr.serialize(&oe_path_str);
-                        }
-                    } else {
-                        let oe_csr = &self.oe[index];
-                        if oe_csr.edge_num() != 0 {
-                            oe_csr.serialize(&oe_path_str);
-                        }
+                    let oe_csr = &self.oe[index];
+                    if oe_csr.edge_num() != 0 {
+                        oe_csr.serialize(&oe_path_str);
                     }
                 }
             }
@@ -699,15 +414,11 @@ where
         let edge_label_num = graph_schema.edge_type_to_id.len();
 
         let csr_num = vertex_label_num * vertex_label_num * edge_label_num;
-        let mut ie = vec![];
-        let mut oe = vec![];
-        let mut single_ie = vec![];
-        let mut single_oe = vec![];
+        let mut ie: Vec<Box<dyn CsrTrait<I>>> = vec![];
+        let mut oe: Vec<Box<dyn CsrTrait<I>>> = vec![];
         for _ in 0..csr_num {
-            ie.push(MutableCsr::<I>::new());
-            oe.push(MutableCsr::<I>::new());
-            single_ie.push(SingleCsr::<I>::new());
-            single_oe.push(SingleCsr::<I>::new());
+            ie.push(Box::new(SingleCsr::<I>::new()));
+            oe.push(Box::new(SingleCsr::<I>::new()));
         }
 
         for e_label_i in 0..edge_label_num {
@@ -725,14 +436,18 @@ where
                     if Path::exists(ie_path) {
                         info!("importing {}", ie_path.as_os_str().to_str().unwrap());
                         let path_str = ie_path.to_str().unwrap().to_string();
-                        if is_single_ie_csr(
+                        if graph_schema.is_single_ie(
                             src_label_i as LabelId,
-                            dst_label_i as LabelId,
                             e_label_i as LabelId,
+                            dst_label_i as LabelId,
                         ) {
-                            single_ie[index].deserialize(&path_str);
+                            let mut ie_csr = SingleCsr::<I>::new();
+                            ie_csr.deserialize(&path_str);
+                            ie[index] = Box::new(ie_csr);
                         } else {
-                            ie[index].deserialize(&path_str);
+                            let mut ie_csr = MutableCsr::<I>::new();
+                            ie_csr.deserialize(&path_str);
+                            ie[index] = Box::new(ie_csr);
                         }
                     }
 
@@ -741,14 +456,18 @@ where
                     if Path::exists(oe_path) {
                         info!("importing {}", oe_path.as_os_str().to_str().unwrap());
                         let path_str = oe_path.to_str().unwrap().to_string();
-                        if is_single_oe_csr(
+                        if graph_schema.is_single_oe(
                             src_label_i as LabelId,
-                            dst_label_i as LabelId,
                             e_label_i as LabelId,
+                            dst_label_i as LabelId,
                         ) {
-                            single_oe[index].deserialize(&path_str);
+                            let mut oe_csr = SingleCsr::<I>::new();
+                            oe_csr.deserialize(&path_str);
+                            oe[index] = Box::new(oe_csr);
                         } else {
-                            oe[index].deserialize(&path_str);
+                            let mut oe_csr = MutableCsr::<I>::new();
+                            oe_csr.deserialize(&path_str);
+                            oe[index] = Box::new(oe_csr);
                         }
                     }
                 }
@@ -808,8 +527,6 @@ where
             partition,
             ie,
             oe,
-            single_ie,
-            single_oe,
             graph_schema: Arc::new(graph_schema),
             vertex_prop_table,
             vertex_map,
@@ -825,7 +542,10 @@ where
         let index = self.edge_label_to_index(src_label, dst_label, edge_label, dir);
         match dir {
             Direction::Outgoing => SubGraph::new(
-                &self.oe[index],
+                &self.oe[index]
+                    .as_any()
+                    .downcast_ref::<MutableCsr<I>>()
+                    .unwrap(),
                 &self.vertex_map,
                 src_label,
                 dst_label,
@@ -834,7 +554,10 @@ where
                 self.edge_prop_table.get(&index),
             ),
             Direction::Incoming => SubGraph::new(
-                &self.ie[index],
+                &self.ie[index]
+                    .as_any()
+                    .downcast_ref::<MutableCsr<I>>()
+                    .unwrap(),
                 &self.vertex_map,
                 src_label,
                 dst_label,
@@ -851,7 +574,10 @@ where
         let index = self.edge_label_to_index(src_label, dst_label, edge_label, dir);
         match dir {
             Direction::Outgoing => SingleSubGraph::new(
-                &self.single_oe[index],
+                &self.oe[index]
+                    .as_any()
+                    .downcast_ref::<SingleCsr<I>>()
+                    .unwrap(),
                 &self.vertex_map,
                 src_label,
                 dst_label,
@@ -860,7 +586,10 @@ where
                 self.edge_prop_table.get(&index),
             ),
             Direction::Incoming => SingleSubGraph::new(
-                &self.single_ie[index],
+                &self.ie[index]
+                    .as_any()
+                    .downcast_ref::<SingleCsr<I>>()
+                    .unwrap(),
                 &self.vertex_map,
                 src_label,
                 dst_label,
@@ -953,6 +682,16 @@ where
                     .map(move |(label, v)| self.index_to_local_vertex(label, v, true)),
             )
         }
+    }
+
+    pub fn is_single_oe_csr(&self, src_label: LabelId, dst_label: LabelId, edge_label: LabelId) -> bool {
+        self.graph_schema
+            .is_single_oe(src_label, edge_label, dst_label)
+    }
+
+    pub fn is_single_ie_csr(&self, src_label: LabelId, dst_label: LabelId, edge_label: LabelId) -> bool {
+        self.graph_schema
+            .is_single_ie(src_label, edge_label, dst_label)
     }
 }
 
@@ -1047,28 +786,14 @@ where
                             edge_label as LabelId,
                             Direction::Outgoing,
                         );
-                        if is_single_oe_csr(
-                            src_label as LabelId,
-                            dst_label as LabelId,
-                            edge_label as LabelId,
-                        ) {
-                            if self.single_oe[index].edge_num() != 0 {
-                                iters.push(Iter::from_iter(self.single_oe[index].get_all_edges()));
-                                got_labels.push((
-                                    src_label as LabelId,
-                                    dst_label as LabelId,
-                                    edge_label as LabelId,
-                                ));
-                            }
-                        } else {
-                            if self.oe[index].edge_num() != 0 {
-                                iters.push(Iter::from_iter(self.oe[index].get_all_edges()));
-                                got_labels.push((
-                                    src_label as LabelId,
-                                    dst_label as LabelId,
-                                    edge_label as LabelId,
-                                ));
-                            }
+
+                        if self.oe[index].edge_num() != 0 {
+                            iters.push(Iter::from_iter_box(self.oe[index].get_all_edges()));
+                            got_labels.push((
+                                src_label as LabelId,
+                                dst_label as LabelId,
+                                edge_label as LabelId,
+                            ));
                         }
                     }
                 }
@@ -1083,16 +808,10 @@ where
                             *edge_label,
                             Direction::Outgoing,
                         );
-                        if is_single_oe_csr(src_label as LabelId, dst_label as LabelId, *edge_label) {
-                            if self.single_oe[index].edge_num() != 0 {
-                                iters.push(Iter::from_iter(self.single_oe[index].get_all_edges()));
-                                got_labels.push((src_label as LabelId, dst_label as LabelId, *edge_label));
-                            }
-                        } else {
-                            if self.oe[index].edge_num() != 0 {
-                                iters.push(Iter::from_iter(self.oe[index].get_all_edges()));
-                                got_labels.push((src_label as LabelId, dst_label as LabelId, *edge_label));
-                            }
+
+                        if self.oe[index].edge_num() != 0 {
+                            iters.push(Iter::from_iter_box(self.oe[index].get_all_edges()));
+                            got_labels.push((src_label as LabelId, dst_label as LabelId, *edge_label));
                         }
                     }
                 }

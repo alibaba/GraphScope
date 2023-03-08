@@ -1,81 +1,15 @@
 use core::slice;
 use std::alloc::Layout;
+use std::any::Any;
 use std::fs::File;
 use std::io::{Read, Write};
-use std::marker::PhantomData;
 use std::slice::Iter;
 use std::{alloc, ptr};
 
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
-use serde::de::Error as DeError;
-use serde::ser::Error as SerError;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-use crate::col_table::ColTable;
 use crate::graph::IndexType;
-
-pub struct Nbr<I> {
-    pub neighbor: I,
-    pub offset: usize,
-}
-
-impl<I: IndexType> Clone for Nbr<I> {
-    fn clone(&self) -> Self {
-        Nbr { neighbor: I::new(self.neighbor.index()), offset: self.offset }
-    }
-}
-
-pub struct NbrIter<'a, I> {
-    begin: *const Nbr<I>,
-    end: *const Nbr<I>,
-    _marker: PhantomData<&'a Nbr<I>>,
-}
-
-impl<'a, I: IndexType> NbrIter<'a, I> {
-    pub fn new_empty() -> Self {
-        Self { begin: ptr::null(), end: ptr::null(), _marker: PhantomData }
-    }
-
-    #[inline]
-    pub fn empty(&self) -> bool {
-        self.begin == self.end
-    }
-
-    pub fn new_single(begin: *const Nbr<I>) -> Self {
-        Self { begin, end: unsafe { begin.add(1) }, _marker: PhantomData }
-    }
-
-    pub fn slice(self, from: usize, to: usize) -> Self {
-        let begin = unsafe { self.begin.offset(from as isize) };
-        let end = unsafe { self.begin.offset(to as isize) };
-        Self { begin, end, _marker: PhantomData }
-    }
-}
-
-impl<'a, I: IndexType> Iterator for NbrIter<'a, I> {
-    type Item = &'a Nbr<I>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.begin == self.end {
-            None
-        } else {
-            unsafe {
-                let cur = self.begin;
-                self.begin = self.begin.offset(1);
-                Some(&*cur)
-            }
-        }
-    }
-
-    fn nth(&mut self, n: usize) -> Option<Self::Item> {
-        self.begin = unsafe { self.begin.offset(n as isize) };
-        self.next()
-    }
-}
-
-unsafe impl<'a, I: IndexType> Send for NbrIter<'a, I> {}
-
-unsafe impl<'a, I: IndexType> Sync for NbrIter<'a, I> {}
+use crate::graph_db::{CsrTrait, Nbr, NbrIter};
 
 pub struct AdjList<I> {
     ptr: *mut Nbr<I>,
@@ -123,11 +57,9 @@ impl<I: IndexType> AdjList<I> {
     }
 
     pub fn iter(&self) -> NbrIter<'_, I> {
-        NbrIter {
-            begin: self.ptr as *const Nbr<I>,
-            end: unsafe { (self.ptr as *const Nbr<I>).add(self.deg as usize) },
-            _marker: PhantomData,
-        }
+        NbrIter::new(self.ptr as *const Nbr<I>, unsafe {
+            (self.ptr as *const Nbr<I>).add(self.deg as usize)
+        })
     }
 }
 
@@ -186,17 +118,13 @@ impl<'a, I: IndexType> Iterator for MutableCsrEdgeIter<'a, I> {
     }
 }
 
+unsafe impl<I: IndexType> Send for MutableCsrEdgeIter<'_, I> {}
+
+unsafe impl<I: IndexType> Sync for MutableCsrEdgeIter<'_, I> {}
+
 impl<I: IndexType> MutableCsr<I> {
     pub fn new() -> Self {
         MutableCsr { buffers: vec![], adj_lists: vec![], prev: vec![], next: vec![], edge_num: 0_usize }
-    }
-
-    pub fn vertex_num(&self) -> I {
-        I::new(self.adj_lists.len())
-    }
-
-    pub fn edge_num(&self) -> usize {
-        self.edge_num
     }
 
     pub fn resize_vertices(&mut self, vnum: I) {
@@ -280,66 +208,6 @@ impl<I: IndexType> MutableCsr<I> {
         }
     }
 
-    pub fn degree(&self, src: I) -> i64 {
-        if src.index() < self.adj_lists.len() {
-            self.adj_lists[src.index()].degree()
-        } else {
-            0_i64
-        }
-    }
-
-    pub fn get_edges(&self, src: I) -> Option<NbrIter<'_, I>> {
-        if src.index() < self.adj_lists.len() {
-            Some(self.adj_lists[src.index()].iter())
-        } else {
-            None
-        }
-    }
-
-    pub fn get_all_edges(&self) -> MutableCsrEdgeIter<'_, I> {
-        MutableCsrEdgeIter::new(&self.adj_lists, 0_usize)
-    }
-
-    pub fn serialize(&self, path: &String) {
-        assert_eq!(self.buffers.len(), 1_usize);
-
-        let mut f = File::create(path).unwrap();
-        let vnum = self.adj_lists.len();
-        f.write_u64(vnum as u64).unwrap();
-
-        let mut degree_vec = vec![0_i64; vnum];
-        let mut capacity_vec = vec![0_i64; vnum];
-
-        let mut total_capacity = 0_usize;
-        for i in 0..vnum {
-            degree_vec[i] = self.adj_lists[i].degree();
-            capacity_vec[i] = self.adj_lists[i].capacity();
-            total_capacity += capacity_vec[i] as usize;
-        }
-
-        f.write_u64(total_capacity as u64).unwrap();
-        f.write_u64(self.edge_num as u64).unwrap();
-
-        unsafe {
-            let degree_vec_slice =
-                slice::from_raw_parts(degree_vec.as_ptr() as *const u8, vnum * std::mem::size_of::<i64>());
-            f.write_all(degree_vec_slice).unwrap();
-
-            let capacity_vec_slice = slice::from_raw_parts(
-                capacity_vec.as_ptr() as *const u8,
-                vnum * std::mem::size_of::<i64>(),
-            );
-            f.write_all(capacity_vec_slice).unwrap();
-
-            assert_eq!(total_capacity, self.buffers[0].1);
-            let buffer_slice =
-                slice::from_raw_parts(self.buffers[0].0, self.buffers[0].1 * std::mem::size_of::<Nbr<I>>());
-            f.write_all(buffer_slice).unwrap();
-        }
-
-        f.flush().unwrap();
-    }
-
     pub fn deserialize(&mut self, path: &String) {
         println!("Start to open file {}", path);
         let mut f = File::open(path).unwrap();
@@ -405,6 +273,80 @@ impl<I: IndexType> MutableCsr<I> {
     }
 }
 
+impl<I: IndexType> CsrTrait<I> for MutableCsr<I> {
+    fn vertex_num(&self) -> I {
+        I::new(self.adj_lists.len())
+    }
+
+    fn edge_num(&self) -> usize {
+        self.edge_num
+    }
+
+    fn degree(&self, src: I) -> i64 {
+        if src.index() < self.adj_lists.len() {
+            self.adj_lists[src.index()].degree()
+        } else {
+            0_i64
+        }
+    }
+
+    fn get_edges(&self, src: I) -> Option<NbrIter<'_, I>> {
+        if src.index() < self.adj_lists.len() {
+            Some(self.adj_lists[src.index()].iter())
+        } else {
+            None
+        }
+    }
+
+    fn get_all_edges<'a>(&'a self) -> Box<dyn Iterator<Item = (I, &'a Nbr<I>)> + 'a + Send> {
+        Box::new(MutableCsrEdgeIter::new(&self.adj_lists, 0_usize))
+    }
+
+    fn serialize(&self, path: &String) {
+        assert_eq!(self.buffers.len(), 1_usize);
+
+        let mut f = File::create(path).unwrap();
+        let vnum = self.adj_lists.len();
+        f.write_u64(vnum as u64).unwrap();
+
+        let mut degree_vec = vec![0_i64; vnum];
+        let mut capacity_vec = vec![0_i64; vnum];
+
+        let mut total_capacity = 0_usize;
+        for i in 0..vnum {
+            degree_vec[i] = self.adj_lists[i].degree();
+            capacity_vec[i] = self.adj_lists[i].capacity();
+            total_capacity += capacity_vec[i] as usize;
+        }
+
+        f.write_u64(total_capacity as u64).unwrap();
+        f.write_u64(self.edge_num as u64).unwrap();
+
+        unsafe {
+            let degree_vec_slice =
+                slice::from_raw_parts(degree_vec.as_ptr() as *const u8, vnum * std::mem::size_of::<i64>());
+            f.write_all(degree_vec_slice).unwrap();
+
+            let capacity_vec_slice = slice::from_raw_parts(
+                capacity_vec.as_ptr() as *const u8,
+                vnum * std::mem::size_of::<i64>(),
+            );
+            f.write_all(capacity_vec_slice).unwrap();
+
+            assert_eq!(total_capacity, self.buffers[0].1);
+            let buffer_slice =
+                slice::from_raw_parts(self.buffers[0].0, self.buffers[0].1 * std::mem::size_of::<Nbr<I>>());
+            f.write_all(buffer_slice).unwrap();
+        }
+
+        f.flush().unwrap();
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
 impl<I> Drop for MutableCsr<I> {
     fn drop(&mut self) {
         for (ptr, buf_size) in self.buffers.iter() {
@@ -462,35 +404,5 @@ impl<I: IndexType> Decode for MutableCsr<I> {
         }
 
         Ok(ret)
-    }
-}
-
-impl<I: IndexType> Serialize for MutableCsr<I> {
-    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
-    where
-        S: Serializer,
-    {
-        let mut bytes = Vec::new();
-        if self.write_to(&mut bytes).is_ok() {
-            info!("writing {} bytes...", bytes.len());
-            bytes.serialize(serializer)
-        } else {
-            Result::Err(S::Error::custom("Serialize mutable csr failed!"))
-        }
-    }
-}
-
-impl<'de, I> Deserialize<'de> for MutableCsr<I>
-where
-    I: IndexType,
-{
-    fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let vec = Vec::<u8>::deserialize(deserializer)?;
-        let mut bytes = vec.as_slice();
-        MutableCsr::<I>::read_from(&mut bytes)
-            .map_err(|_| D::Error::custom("Deserialize mutable csr failed!"))
     }
 }

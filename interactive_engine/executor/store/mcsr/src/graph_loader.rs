@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::fs::{create_dir_all, read_dir, File};
 use std::io::{BufReader, Read};
 use std::path::{Path, PathBuf};
@@ -11,11 +11,9 @@ use rust_htslib::bgzf::Reader as GzReader;
 
 use crate::col_table::{parse_properties_beta, ColTable};
 use crate::columns::Item;
-use crate::date_time::parse_datetime;
 use crate::error::{GDBError, GDBResult};
 use crate::graph::IndexType;
-use crate::graph_db_impl::{is_single_ie_csr, is_single_oe_csr};
-use crate::io::export;
+use crate::graph_db::CsrTrait;
 use crate::ldbc_parser::{LDBCEdgeParser, LDBCVertexParser};
 use crate::mcsr::MutableCsr;
 use crate::schema::{CsrGraphSchema, InputSchema, Schema};
@@ -161,6 +159,7 @@ pub fn is_static_vertex(_vertex_type: LabelId) -> bool {
     false
 }
 
+#[allow(dead_code)]
 fn encode_nbr_data<I: IndexType>(nbr: I, data: u32) -> I {
     let mut hi = data as u64;
     assert!(nbr.index() <= (u32::MAX as usize));
@@ -577,7 +576,10 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                     }
                     let mut edge_properties = ColTable::new(header.clone());
                     let mut property_offset = 0usize;
-                    if is_single_ie_csr(src_label_i, dst_label_i, e_label_i) {
+                    if self
+                        .graph_schema
+                        .is_single_ie(src_label_i, e_label_i, dst_label_i)
+                    {
                         let mut ie_csr = SingleCsr::<I>::new();
                         let mut oe_csr = MutableCsr::<I>::new();
                         info!(
@@ -622,7 +624,10 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                         let oe_path_str = oe_path.to_str().unwrap().to_string();
                         oe_csr.serialize(&oe_path_str);
                         info!("finished export");
-                    } else if is_single_oe_csr(src_label_i, dst_label_i, e_label_i) {
+                    } else if self
+                        .graph_schema
+                        .is_single_oe(src_label_i, e_label_i, dst_label_i)
+                    {
                         let mut ie_csr = MutableCsr::<I>::new();
                         let mut oe_csr = SingleCsr::<I>::new();
                         info!(

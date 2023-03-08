@@ -136,21 +136,26 @@ impl CsrGraphSchema {
         ret
     }
 
-    pub fn get_edge_data_type(&self, e_label: (LabelId, LabelId, LabelId)) -> Option<DataType> {
-        let header = self.get_edge_header(e_label.0, e_label.1, e_label.2);
-        if header.is_some() {
-            let header = header.unwrap();
-            let mut ret = DataType::NULL;
-            for (_, v) in header {
-                if *v != DataType::ID {
-                    ret = v.clone();
-                }
-            }
-            if ret != DataType::NULL {
-                return Some(ret);
-            }
+    pub fn is_single_ie(&self, src_label: LabelId, edge_label: LabelId, dst_label: LabelId) -> bool {
+        if self
+            .edge_single_ie
+            .contains(&(src_label, edge_label, dst_label))
+        {
+            true
+        } else {
+            false
         }
-        None
+    }
+
+    pub fn is_single_oe(&self, src_label: LabelId, edge_label: LabelId, dst_label: LabelId) -> bool {
+        if self
+            .edge_single_oe
+            .contains(&(src_label, edge_label, dst_label))
+        {
+            true
+        } else {
+            false
+        }
     }
 
     pub fn desc(&self) {

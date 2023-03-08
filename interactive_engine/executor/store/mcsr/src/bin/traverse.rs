@@ -39,7 +39,7 @@ fn output_vertices(graph: &CsrDB, output_dir: &String, files: &mut HashMap<Label
             if is_static_vertex(v_label) && graph.partition != 0 {
                 continue;
             }
-            println!("outputing vertex-{}", n);
+            println!("outputing vertex-{}, size {}", n, graph.get_vertices_num(v_label));
             let header = graph
                 .graph_schema
                 .get_vertex_header(v_label)

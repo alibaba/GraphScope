@@ -8,12 +8,11 @@ use std::sync::Arc;
 use csv::{Reader, ReaderBuilder, Writer, WriterBuilder};
 use rust_htslib::bgzf::Reader as GzReader;
 
-use crate::columns::DataType;
 use crate::error::{GDBError, GDBResult};
 use crate::graph::IndexType;
 use crate::graph_loader::{keep_vertex, split_vertex_edge_files};
 use crate::ldbc_parser::{LDBCEdgeParser, LDBCVertexParser};
-use crate::schema::{CsrGraphSchema, Schema, END_ID_FIELD, START_ID_FIELD};
+use crate::schema::{CsrGraphSchema, Schema};
 use crate::types::{DefaultId, LabelId, DIR_SPLIT_RAW_DATA};
 
 pub struct GraphPartitioner<G: FromStr + Send + Sync + IndexType = DefaultId> {
