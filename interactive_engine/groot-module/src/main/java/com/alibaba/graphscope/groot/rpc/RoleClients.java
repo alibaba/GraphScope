@@ -57,7 +57,7 @@ public class RoleClients<T extends RpcClient> {
                 }
             }
         }
-        client.ensureConnected();
+        client.checkChannelState();
         return client;
     }
 }
