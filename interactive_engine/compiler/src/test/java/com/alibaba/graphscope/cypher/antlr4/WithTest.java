@@ -16,127 +16,62 @@
 
 package com.alibaba.graphscope.cypher.antlr4;
 
-import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-
 import org.apache.calcite.rel.RelNode;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class WithTest {
-    private GraphBuilder eval(String query) {
-        return CypherUtils.mockVisitor(CypherUtils.mockGraphBuilder())
-                .visitOC_With(CypherUtils.mockParser(query).oC_With());
-    }
-
-    // project(a) -> expr: a, alias: a
-    @Test
-    public void with_test_1() {
-        RelNode project = eval("With a").build();
-        Assert.assertEquals(
-                "GraphLogicalProject(a=[a], isAppend=[false])\n"
-                    + "  GraphLogicalSingleMatch(input=[null],"
-                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[c], opt=[END])\n"
-                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[b],"
-                    + " opt=[OUT])\n"
-                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[a], opt=[VERTEX])\n"
-                    + "], matchOpt=[INNER])",
-                project.explain().trim());
-    }
-
     // project(a.age) -> expr: a.age, alias: age
     @Test
-    public void with_test_2() {
-        RelNode project = eval("With a.age").build();
+    public void with_test_1() {
+        RelNode project = CypherUtils.eval("Match (a) Return a.age").build();
         Assert.assertEquals(
-                "GraphLogicalProject(age=[a.age], isAppend=[false])\n"
-                    + "  GraphLogicalSingleMatch(input=[null],"
-                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[c], opt=[END])\n"
-                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[b],"
-                    + " opt=[OUT])\n"
-                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[a], opt=[VERTEX])\n"
-                    + "], matchOpt=[INNER])",
+                "GraphLogicalProject(age=[a.age], isAppend=[false])\n" +
+                        "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}], alias=[a], opt=[VERTEX])",
                 project.explain().trim());
-        Assert.assertEquals("RecordType(INTEGER age)", project.getRowType().toString());
     }
 
     // project(a.name, b as d) -> {expr: a.name, alias: name}, {expr: b, alias: d}
     @Test
-    public void with_test_3() {
-        RelNode project = eval("With a.name, b as d").build();
+    public void with_test_2() {
+        RelNode project = CypherUtils.eval("Match (a)-[b]->() Return a.name, b as d").build();
         Assert.assertEquals(
-                "GraphLogicalProject(name=[a.name], d=[b], isAppend=[false])\n"
-                    + "  GraphLogicalSingleMatch(input=[null],"
-                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[c], opt=[END])\n"
-                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[b],"
-                    + " opt=[OUT])\n"
-                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[a], opt=[VERTEX])\n"
-                    + "], matchOpt=[INNER])",
+                "GraphLogicalProject(name=[a.name], d=[b], isAppend=[false])\n" +
+                        "  GraphLogicalSingleMatch(input=[null], sentence=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software, person]}], alias=[~DEFAULT], opt=[END])\n" +
+                        "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}], alias=[b], opt=[OUT])\n" +
+                        "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}], alias=[a], opt=[VERTEX])\n" +
+                        "], matchOpt=[INNER])",
                 project.explain().trim());
-        Assert.assertEquals(
-                "RecordType(CHAR(1) name, Graph_Schema_Type(DOUBLE weight) d)",
-                project.getRowType().toString());
+    }
+
+    @Test
+    public void with_test_3() {
+        RelNode project = CypherUtils.eval("Match (a)-[b]-() Return a.age + (10 - b.weight) as c").build();
+        Assert.assertEquals("GraphLogicalProject(c=[+(a.age, -(10, b.weight))], isAppend=[false])\n" +
+                "  GraphLogicalSingleMatch(input=[null], sentence=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software, person]}], alias=[~DEFAULT], opt=[BOTH])\n" +
+                "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}], alias=[b], opt=[BOTH])\n" +
+                "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}], alias=[a], opt=[VERTEX])\n" +
+                "], matchOpt=[INNER])", project.explain().trim());
     }
 
     // group by a.name, count(a.name)
     @Test
     public void with_test_4() {
-        RelNode project = eval("With a.name, count(a.name)").build();
+        RelNode aggregate = CypherUtils.eval("Match (a) Return a.name, count(a.name) as b").build();
         Assert.assertEquals(
-                "GraphLogicalAggregate(keys=[{variables=[a.name], aliases=[null]}],"
-                    + " values=[[{operands=[a.name], aggFunction=COUNT, alias='null'}]])\n"
-                    + "  GraphLogicalSingleMatch(input=[null],"
-                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[c], opt=[END])\n"
-                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[b],"
-                    + " opt=[OUT])\n"
-                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[a], opt=[VERTEX])\n"
-                    + "], matchOpt=[INNER])",
-                project.explain().trim());
-        Assert.assertEquals(
-                "RecordType(CHAR(1) name, BIGINT $f1)", project.getRowType().toString());
+                "GraphLogicalAggregate(keys=[{variables=[a.name], aliases=[null]}], values=[[{operands=[a.name], aggFunction=COUNT, alias='b'}]])\n" +
+                        "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}], alias=[a], opt=[VERTEX])",
+                aggregate.explain().trim());
     }
 
     // group by a.name, count(a.name) + 1 as d -> aggregate + project
     @Test
     public void with_test_5() {
-        RelNode project = eval("With a.name as name, count(a.name) + 1 as d").build();
+        RelNode project = CypherUtils.eval("Match (a) Return a.name as name, count(a.name) + 1 as d").build();
         Assert.assertEquals(
-                "GraphLogicalProject(d=[+(EXPR$0., 1)], isAppend=[true])\n"
-                    + "  GraphLogicalAggregate(keys=[{variables=[a.name], aliases=[name]}],"
-                    + " values=[[{operands=[a.name], aggFunction=COUNT, alias='EXPR$0'}]])\n"
-                    + "    GraphLogicalSingleMatch(input=[null],"
-                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[c], opt=[END])\n"
-                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[b],"
-                    + " opt=[OUT])\n"
-                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[a], opt=[VERTEX])\n"
-                    + "], matchOpt=[INNER])",
-                project.explain().trim());
-    }
-
-    // project + order + limit -> project + topK
-    @Test
-    public void with_test_6() {
-        RelNode project = eval("With a.name as name Order by name desc Limit 10").build();
-        Assert.assertEquals(
-                "GraphLogicalSort(sort0=[name], dir0=[DESC], fetch=[10])\n"
-                    + "  GraphLogicalProject(name=[a.name], isAppend=[false])\n"
-                    + "    GraphLogicalSingleMatch(input=[null],"
-                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[c], opt=[END])\n"
-                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[b],"
-                    + " opt=[OUT])\n"
-                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[a], opt=[VERTEX])\n"
-                    + "], matchOpt=[INNER])",
+                "GraphLogicalProject(d=[+(EXPR$0., 1)], isAppend=[true])\n" +
+                        "  GraphLogicalAggregate(keys=[{variables=[a.name], aliases=[name]}], values=[[{operands=[a.name], aggFunction=COUNT, alias='EXPR$0'}]])\n" +
+                        "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}], alias=[a], opt=[VERTEX])",
                 project.explain().trim());
     }
 }

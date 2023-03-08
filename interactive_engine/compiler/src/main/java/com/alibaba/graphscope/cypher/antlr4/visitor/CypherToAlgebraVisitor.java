@@ -62,12 +62,13 @@ public class CypherToAlgebraVisitor extends CypherGSBaseVisitor<GraphBuilder> {
                             .build());
         }
         if (sentences.size() == 1) {
-            return builder.match(sentences.get(0), GraphOpt.Match.INNER);
+            builder.match(sentences.get(0), GraphOpt.Match.INNER);
         } else if (sentences.size() > 1) {
-            return builder.match(sentences.get(0), sentences.subList(1, sentences.size()));
+            builder.match(sentences.get(0), sentences.subList(1, sentences.size()));
         } else {
             throw new IllegalArgumentException("sentences in match should not be empty");
         }
+        return (ctx.oC_Where() != null) ? visitOC_Where(ctx.oC_Where()) : builder;
     }
 
     @Override
@@ -116,6 +117,12 @@ public class CypherToAlgebraVisitor extends CypherGSBaseVisitor<GraphBuilder> {
                     "aggregate functions should not exist in filter expression");
         }
         return builder.filter(res.getExpr());
+    }
+
+    @Override
+    public GraphBuilder visitOC_With(CypherGSParser.OC_WithContext ctx) {
+        visitOC_ProjectionBody(ctx.oC_ProjectionBody());
+        return (ctx.oC_Where() != null) ? visitOC_Where(ctx.oC_Where()) : builder;
     }
 
     @Override
