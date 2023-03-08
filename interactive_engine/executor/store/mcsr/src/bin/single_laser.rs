@@ -97,7 +97,7 @@ fn main() {
         std::fs::create_dir_all(&out_dir).expect("Create graph schema directory error");
     }
     let graph_schema =
-        CsrGraphSchema::from_json_file(&graph_schema_file).expect("Read trimed schema error!");
+        CsrGraphSchema::from_json_file(&graph_schema_file).expect("Read graph schema error!");
     graph_schema
         .to_json_file(&out_dir.join(FILE_SCHEMA))
         .expect("Write graph schema error!");

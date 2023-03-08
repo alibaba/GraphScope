@@ -1,19 +1,19 @@
-use pegasus_common::codec::ReadExt;
-use pegasus_common::io::WriteExt;
 use std::fmt;
 use std::hash::Hash;
 use std::ops::AddAssign;
+
+use pegasus_common::codec::ReadExt;
+use pegasus_common::io::WriteExt;
 
 /// Trait for the unsigned integer type used for node and edge indices.
 ///
 /// Marked `unsafe` because: the trait must faithfully preserve
 /// and convert index values.
-pub unsafe trait IndexType:
-    Copy + Default + Hash + Ord + fmt::Debug + 'static + AddAssign
-{
+pub unsafe trait IndexType: Copy + Default + Hash + Ord + fmt::Debug + 'static + AddAssign {
     fn new(x: usize) -> Self;
     fn index(&self) -> usize;
     fn max() -> Self;
+
     fn add_assign(&mut self, other: Self);
 
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()>;

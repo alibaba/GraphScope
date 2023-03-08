@@ -1,6 +1,7 @@
-use csv::StringRecord;
 use std::marker::PhantomData;
 use std::str::FromStr;
+
+use csv::StringRecord;
 
 use crate::graph::IndexType;
 use crate::types::*;
@@ -30,8 +31,7 @@ pub struct LDBCVertexParser<G = DefaultId> {
     ph: PhantomData<G>,
 }
 
-pub const LABEL_SHIFT_BITS: usize =
-    8 * (std::mem::size_of::<DefaultId>() - std::mem::size_of::<LabelId>());
+pub const LABEL_SHIFT_BITS: usize = 8 * (std::mem::size_of::<DefaultId>() - std::mem::size_of::<LabelId>());
 
 impl<G: IndexType> LDBCVertexParser<G> {
     pub fn to_global_id(ldbc_id: usize, label_id: LabelId) -> G {
@@ -51,22 +51,19 @@ impl<G: IndexType> LDBCVertexParser<G> {
 
 impl<G: FromStr + PartialEq + Default + IndexType> LDBCVertexParser<G> {
     pub fn new(vertex_type: LabelId, id_index: usize) -> Self {
-        Self {
-            vertex_type,
-            id_index,
-            ph: PhantomData,
-        }
+        Self { vertex_type, id_index, ph: PhantomData }
     }
 
     pub fn parse_vertex_meta(&self, record: &StringRecord) -> VertexMeta<G> {
         let global_id = Self::to_global_id(
-            record.get(self.id_index).unwrap().parse::<usize>().unwrap(),
+            record
+                .get(self.id_index)
+                .unwrap()
+                .parse::<usize>()
+                .unwrap(),
             self.vertex_type,
         );
-        VertexMeta {
-            global_id,
-            label: self.vertex_type,
-        }
+        VertexMeta { global_id, label: self.vertex_type }
     }
 }
 
@@ -83,14 +80,7 @@ pub struct LDBCEdgeParser<G = DefaultId> {
 
 impl<G: FromStr + PartialEq + Default + IndexType> LDBCEdgeParser<G> {
     pub fn new(src_vertex_type: LabelId, dst_vertex_type: LabelId, edge_type: LabelId) -> Self {
-        Self {
-            src_vertex_type,
-            dst_vertex_type,
-            edge_type,
-            src_col_id: 0,
-            dst_col_id: 1,
-            ph: PhantomData,
-        }
+        Self { src_vertex_type, dst_vertex_type, edge_type, src_col_id: 0, dst_col_id: 1, ph: PhantomData }
     }
 
     pub fn with_endpoint_col_id(&mut self, src_col_id: usize, dst_col_id: usize) {
