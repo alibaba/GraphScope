@@ -46,7 +46,7 @@ public class GroupTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalAggregate(keys=[{variables=[DEFAULT.name, DEFAULT.age], aliases=[a,"
-                        + " b]}], values=[[{operands=[], aggFunction=COUNT, alias='c'}]])\n"
+                        + " b]}], values=[[{operands=[DEFAULT], aggFunction=COUNT, alias='c'}]])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[~DEFAULT], opt=[VERTEX])",
                 aggregate.explain().trim());
@@ -73,11 +73,35 @@ public class GroupTest {
                                                 builder.literal(1))))
                         .build();
         Assert.assertEquals(
-                "GraphLogicalAggregate(keys=[{variables=[DEFAULT.name], aliases=[]}],"
+                "GraphLogicalAggregate(keys=[{variables=[DEFAULT.name], aliases=[name]}],"
                         + " values=[[{operands=[$f0], aggFunction=COUNT, alias='x'}]])\n"
                         + "  GraphLogicalProject($f0=[+(DEFAULT.age, 1)], isAppend=[true])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[~DEFAULT], opt=[VERTEX])",
+                aggregate.explain().trim());
+    }
+
+    @Test
+    public void group_3_test() {
+        GraphBuilder builder = IrUtils.mockGraphBuilder();
+        RelNode aggregate =
+                builder.source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person")))
+                        .aggregate(
+                                builder.groupKey(
+                                        ImmutableList.of(
+                                                builder.variable(null, "name"),
+                                                builder.variable(null, "age")),
+                                        ImmutableList.of("a", "b")),
+                                builder.collect(false, "c", ImmutableList.of()))
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalAggregate(keys=[{variables=[DEFAULT.name, DEFAULT.age], aliases=[a,"
+                    + " b]}], values=[[{operands=[DEFAULT], aggFunction=COLLECT, alias='c'}]])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[~DEFAULT], opt=[VERTEX])",
                 aggregate.explain().trim());
     }
 }

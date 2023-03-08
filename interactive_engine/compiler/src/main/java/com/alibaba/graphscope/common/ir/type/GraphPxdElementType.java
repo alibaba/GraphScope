@@ -28,7 +28,7 @@ public class GraphPxdElementType extends AbstractSqlType {
     private final RelDataType getVType;
 
     public GraphPxdElementType(RelDataType expandType, RelDataType getVType) {
-        super(SqlTypeName.OTHER, false, null);
+        super(SqlTypeName.ARRAY, false, null);
         this.expandType = expandType;
         this.getVType = getVType;
         computeDigest();

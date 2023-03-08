@@ -26,6 +26,7 @@ import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.util.Litmus;
+import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Collections;
@@ -53,7 +54,7 @@ public class GraphAggCall extends AbstractAggCall {
         this.aggFunction = aggFunction;
         this.distinct = distinct;
         this.alias = alias;
-        this.operands = operands;
+        this.operands = ObjectUtils.requireNonEmpty(operands);
         this.type = validateThenDerive(aggFunction, operands);
     }
 
@@ -88,7 +89,7 @@ public class GraphAggCall extends AbstractAggCall {
         return aggFunction;
     }
 
-    public String getAlias() {
+    public @Nullable String getAlias() {
         return alias;
     }
 
@@ -99,6 +100,15 @@ public class GraphAggCall extends AbstractAggCall {
 
     public RelOptCluster getCluster() {
         return cluster;
+    }
+
+    public GraphAggCall copy(String alias) {
+        return new GraphAggCall(
+                this.cluster,
+                this.aggFunction,
+                this.distinct,
+                Objects.requireNonNull(alias),
+                this.operands);
     }
 
     @Override

@@ -109,6 +109,18 @@ public class GraphLogicalAggregate extends Aggregate {
                                 .generate(aliasName, this.getInput(0));
                 fields.add(new RelDataTypeFieldImpl(aliasName, aliasId, rexNodes.get(i).getType()));
             }
+            // update aliases in groupKey
+            this.groupKey =
+                    new GraphGroupKeys(
+                            this.groupKey.getVariables(),
+                            aliasList.subList(0, this.groupKey.groupKeyCount()));
+            // update alias in each groupValue
+            List<GraphAggCall> copyCalls = new ArrayList<>();
+            int offset = this.groupKey.groupKeyCount();
+            for (int i = 0; i < aggCalls.size(); ++i) {
+                copyCalls.add(aggCalls.get(i).copy(aliasList.get(offset + i)));
+            }
+            this.aggCalls = copyCalls;
         }
         return new RelRecordType(StructKind.FULLY_QUALIFIED, fields);
     }

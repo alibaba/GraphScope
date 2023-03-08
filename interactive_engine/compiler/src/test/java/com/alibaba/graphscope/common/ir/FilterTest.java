@@ -73,13 +73,13 @@ public class FilterTest {
         GraphBuilder builder = IrUtils.mockGraphBuilder();
         SourceConfig sourceConfig =
                 new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"));
-        RexNode equal =
+        RexNode greater =
                 builder.source(sourceConfig)
                         .call(
                                 GraphStdOperatorTable.GREATER_THAN,
                                 builder.variable(null, "age"),
                                 builder.literal(10));
-        RelNode filter = builder.filter(equal).build();
+        RelNode filter = builder.filter(greater).build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
                         + " fusedFilter=[[>(DEFAULT.age, 10)]], opt=[VERTEX])",
@@ -92,13 +92,13 @@ public class FilterTest {
         GraphBuilder builder = IrUtils.mockGraphBuilder();
         SourceConfig sourceConfig =
                 new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"));
-        RexNode equal =
+        RexNode greater =
                 builder.source(sourceConfig)
                         .call(
                                 GraphStdOperatorTable.GREATER_THAN,
                                 builder.literal(20),
                                 builder.literal(10));
-        RelNode filter = builder.filter(equal).build();
+        RelNode filter = builder.filter(greater).build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
                         + " opt=[VERTEX])",
@@ -113,7 +113,7 @@ public class FilterTest {
         GraphBuilder builder = IrUtils.mockGraphBuilder();
         SourceConfig sourceConfig =
                 new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"));
-        RexNode equal =
+        RexNode greater =
                 builder.source(sourceConfig)
                         .call(
                                 GraphStdOperatorTable.GREATER_THAN,
@@ -121,9 +121,26 @@ public class FilterTest {
                                 builder.literal(20));
         // the node before the filter
         RelNode previous = builder.peek();
-        RelNode filter = builder.filter(equal).build();
+        RelNode filter = builder.filter(greater).build();
         Assert.assertEquals(filter.getClass(), LogicalValues.class);
         Assert.assertEquals(filter.getRowType(), previous.getRowType());
+    }
+
+    @Test
+    public void greater_4_test() {
+        GraphBuilder builder = IrUtils.mockGraphBuilder();
+        SourceConfig sourceConfig = new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(true));
+        RexNode greater =
+                builder.source(sourceConfig)
+                        .call(
+                                GraphStdOperatorTable.GREATER_THAN,
+                                builder.variable(null, "age"),
+                                builder.literal(10));
+        RelNode filter = builder.filter(greater).build();
+        Assert.assertEquals(
+                "GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                        + " alias=[~DEFAULT], fusedFilter=[[>(DEFAULT.age, 10)]], opt=[VERTEX])",
+                filter.explain().trim());
     }
 
     @Test
