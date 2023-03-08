@@ -17,9 +17,9 @@
 package com.alibaba.graphscope.common.ir.rel.graph;
 
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
-import com.alibaba.graphscope.common.ir.type.GraphArrayType;
 import com.alibaba.graphscope.common.ir.type.GraphPxdElementType;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitSet;
@@ -27,7 +27,11 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.hint.RelHint;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
+import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -57,9 +61,6 @@ public class GraphLogicalPathExpand extends SingleRel {
         this.getV = Objects.requireNonNull(getV);
         this.offset = offset;
         this.fetch = fetch;
-        this.rowType =
-                new GraphArrayType(
-                        new GraphPxdElementType(this.expand.getRowType(), this.getV.getRowType()));
     }
 
     public static GraphLogicalPathExpand create(
@@ -139,5 +140,13 @@ public class GraphLogicalPathExpand extends SingleRel {
 
     public @Nullable RexNode getFetch() {
         return fetch;
+    }
+
+    @Override
+    protected RelDataType deriveRowType() {
+        return
+                new RelRecordType(
+                        ImmutableList.of(
+                                new RelDataTypeFieldImpl(getAliasName(), getAliasId(), new ArraySqlType(new GraphPxdElementType(this.expand.getRowType(), this.getV.getRowType()), false))));
     }
 }

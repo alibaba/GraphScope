@@ -214,7 +214,9 @@ public class RelToFfiConverter implements GraphRelShuttle {
         }
         for (int i = 0; i < groupCalls.size(); ++i) {
             List<RexNode> operands = groupCalls.get(i).getOperands();
-            if (operands.size() > 1) {
+            if (operands.isEmpty()) {
+                throw new IllegalArgumentException("operands in aggregate call should not be empty");
+            } else if (operands.size() > 1) {
                 throw new UnsupportedOperationException(
                         "aggregate on multiple variables is unsupported yet");
             }
@@ -224,31 +226,22 @@ public class RelToFfiConverter implements GraphRelShuttle {
                     (aliasId == AliasInference.DEFAULT_ID)
                             ? ArgUtils.asNoneAlias()
                             : ArgUtils.asAlias(aliasId);
-            if (operands.isEmpty()) {
-                checkFfiResult(
-                        LIB.addGroupbyAggFnWithPb(
-                                ptrGroup,
-                                new FfiPbPointer.ByValue(empty().toByteArray()),
-                                ffiAggOpt,
-                                ffiAlias));
-            } else {
-                Preconditions.checkArgument(
-                        operands.get(0) instanceof RexGraphVariable,
-                        "each expression in aggregate call should be type %s, but is %s",
-                        RexGraphVariable.class,
-                        operands.get(0).getClass());
-                OuterExpression.Variable var =
-                        operands.get(0)
-                                .accept(new RexToProtoConverter(true, isColumnId))
-                                .getOperators(0)
-                                .getVar();
-                checkFfiResult(
-                        LIB.addGroupbyAggFnWithPb(
-                                ptrGroup,
-                                new FfiPbPointer.ByValue(var.toByteArray()),
-                                ffiAggOpt,
-                                ffiAlias));
-            }
+            Preconditions.checkArgument(
+                    operands.get(0) instanceof RexGraphVariable,
+                    "each expression in aggregate call should be type %s, but is %s",
+                    RexGraphVariable.class,
+                    operands.get(0).getClass());
+            OuterExpression.Variable var =
+                    operands.get(0)
+                            .accept(new RexToProtoConverter(true, isColumnId))
+                            .getOperators(0)
+                            .getVar();
+            checkFfiResult(
+                    LIB.addGroupbyAggFnWithPb(
+                            ptrGroup,
+                            new FfiPbPointer.ByValue(var.toByteArray()),
+                            ffiAggOpt,
+                            ffiAlias));
         }
         return new LogicalNode(aggregate, ptrGroup);
     }

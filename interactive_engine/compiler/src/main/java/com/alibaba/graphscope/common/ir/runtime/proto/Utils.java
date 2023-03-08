@@ -27,6 +27,7 @@ import com.google.protobuf.Int32Value;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.calcite.util.NlsString;
 
 import java.util.List;
@@ -188,6 +189,23 @@ public abstract class Utils {
             case FLOAT:
             case DOUBLE:
                 return Common.DataType.DOUBLE;
+            case ARRAY:
+                RelDataType elementType = ((ArraySqlType) basicType).getComponentType();
+                switch (elementType.getSqlTypeName()) {
+                    case INTEGER:
+                        return Common.DataType.INT32_ARRAY;
+                    case BIGINT:
+                        return Common.DataType.INT64_ARRAY;
+                    case CHAR:
+                        return Common.DataType.STRING_ARRAY;
+                    case DECIMAL:
+                    case FLOAT:
+                    case DOUBLE:
+                        return Common.DataType.DOUBLE_ARRAY;
+                    default:
+                        throw new UnsupportedOperationException(
+                                "array of element type " + elementType.getSqlTypeName() + " is unsupported yet");
+                }
             default:
                 throw new UnsupportedOperationException(
                         "basic type " + basicType.getSqlTypeName() + " is unsupported yet");
@@ -219,6 +237,11 @@ public abstract class Utils {
                         "convert row type "
                                 + dataType.getSqlTypeName()
                                 + " to IrDataType is unsupported yet");
+            case ARRAY:
+                RelDataType elementType = ((ArraySqlType) dataType).getComponentType();
+                if (elementType instanceof GraphPxdElementType || elementType instanceof GraphSchemaType) {
+                    throw new UnsupportedOperationException("cannot convert array of graph elements type to IrDataType");
+                }
             default:
                 return DataType.IrDataType.newBuilder()
                         .setDataType(protoBasicDataType(dataType))

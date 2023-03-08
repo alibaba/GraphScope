@@ -123,7 +123,9 @@ public abstract class Utils {
     public static final FfiAggOpt ffiAggOpt(GraphAggCall aggCall) {
         switch (aggCall.getAggFunction().kind) {
             case COUNT:
-                return FfiAggOpt.Count;
+                return aggCall.isDistinct() ? FfiAggOpt.CountDistinct : FfiAggOpt.Count;
+            case COLLECT:
+                return aggCall.isDistinct() ? FfiAggOpt.ToSet : FfiAggOpt.ToList;
             case SUM:
                 return FfiAggOpt.Sum;
             case AVG:

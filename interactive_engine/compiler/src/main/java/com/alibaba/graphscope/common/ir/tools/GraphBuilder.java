@@ -712,7 +712,22 @@ public class GraphBuilder extends RelBuilder {
      * @return
      */
     public AggCall collect(boolean distinct, @Nullable String alias, RexNode... operands) {
-        return null;
+        return aggregateCall(GraphStdOperatorTable.COLLECT, distinct, false, false, null,
+                null, ImmutableList.of(), alias, ImmutableList.copyOf(operands));
+    }
+
+    public AggCall collect(boolean distinct, @Nullable String alias,
+                         Iterable<? extends RexNode> operands) {
+        return aggregateCall(GraphStdOperatorTable.COLLECT, distinct, false, false, null,
+                null, ImmutableList.of(), alias, ImmutableList.copyOf(operands));
+    }
+
+    public AggCall collect(RexNode... operands) {
+        return collect(false, null, operands);
+    }
+
+    public AggCall collect(Iterable<? extends RexNode> operands) {
+        return collect(false, null, operands);
     }
 
     @Override
@@ -726,7 +741,8 @@ public class GraphBuilder extends RelBuilder {
             ImmutableList<RexNode> orderKeys,
             @Nullable String alias,
             ImmutableList<RexNode> operands) {
-        return new GraphAggCall(getCluster(), aggFunction, distinct, alias, operands);
+        // if operands of the aggregate call is empty, set a variable with (alias = null) by default
+        return new GraphAggCall(getCluster(), aggFunction, distinct, alias, ObjectUtils.isNotEmpty(operands) ? operands : ImmutableList.of(this.variable((String) null)));
     }
 
     @Override
