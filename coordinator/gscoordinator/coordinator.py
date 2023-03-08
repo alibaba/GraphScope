@@ -335,7 +335,9 @@ class CoordinatorServiceServicer(
             except grpc.RpcError as exc:
                 # Not raised by graphscope, maybe socket closed, etc.
                 context.set_code(exc.code())
-                context.set_details(exc.details())
+                context.set_details(
+                    f"{exc.details()}. The traceback is: {traceback.format_exc()}"
+                )
 
                 # stop yield to raise the grpc errors to the client, as the
                 # client may consume nothing if error happens
@@ -344,7 +346,7 @@ class CoordinatorServiceServicer(
             except GremlinServerError as exc:
                 response_head = responses[0]
                 response_head.head.code = error_code
-                response_head.head.error_msg = f"Error occurred during RunStep, The traceback is: {traceback.format_exc()}"
+                response_head.head.error_msg = f"Error occurred during RunStep. The traceback is: {traceback.format_exc()}"
                 response_head.head.full_exception = pickle.dumps(
                     (
                         GremlinServerError,
@@ -381,7 +383,10 @@ class CoordinatorServiceServicer(
             except queue.Empty:
                 info_message, error_message = "", ""
             except Exception as e:
-                info_message, error_message = f"WARNING: failed to read log: {e}", ""
+                info_message, error_message = (
+                    f"WARNING: failed to read log: {e}. The traceback is: {traceback.format_exc()}",
+                    "",
+                )
 
             if info_message or error_message:
                 if self._streaming_logs:
@@ -409,10 +414,15 @@ class CoordinatorServiceServicer(
             logger.warning("Analytical engine is not enabled.")
         except grpc.RpcError as e:
             context.set_code(e.code())
-            context.set_details("Get engine config failed: " + e.details())
+            context.set_details(
+                f"Get engine config failed: {e.details()}. The traceback is: {traceback.format_exc()}"
+            )
             return message_pb2.CreateAnalyticalInstanceResponse()
         except Exception as e:
-            context.abort(grpc.StatusCode.ABORTED, str(e))
+            context.abort(
+                grpc.StatusCode.ABORTED,
+                f"${e}. The traceback is: {traceback.format_exc()}",
+            )
             return message_pb2.CreateAnalyticalInstanceResponse()
         return message_pb2.CreateAnalyticalInstanceResponse(
             engine_config=json.dumps(engine_config),
@@ -458,7 +468,9 @@ class CoordinatorServiceServicer(
                 )
         except Exception as e:
             context.set_code(grpc.StatusCode.ABORTED)
-            context.set_details("Create interactive instance failed: " + str(e))
+            context.set_details(
+                f"Create interactive instance failed: ${e}. The traceback is: {traceback.format_exc()}"
+            )
             self._launcher.close_interactive_instance(object_id)
             self._object_manager.pop(object_id)
             return message_pb2.CreateInteractiveInstanceResponse()
@@ -480,7 +492,9 @@ class CoordinatorServiceServicer(
             self._object_manager.put(object_id, LearningInstanceManager(object_id))
         except Exception as e:
             context.set_code(grpc.StatusCode.ABORTED)
-            context.set_details("Create learning instance failed: " + str(e))
+            context.set_details(
+                f"Create learning instance failed: ${e}. The traceback is: {traceback.format_exc()}"
+            )
             self._launcher.close_learning_instance(object_id)
             self._object_manager.pop(object_id)
             return message_pb2.CreateLearningInstanceResponse()
@@ -501,7 +515,9 @@ class CoordinatorServiceServicer(
                 self._launcher.close_interactive_instance(object_id)
             except Exception as e:
                 context.set_code(grpc.StatusCode.ABORTED)
-                context.set_details("Close interactive instance failed: " + str(e))
+                context.set_details(
+                    f"Close interactive instance failed: ${e}. The traceback is: {traceback.format_exc()}"
+                )
         return message_pb2.CloseInteractiveInstanceResponse()
 
     def CloseLearningInstance(self, request, context):
@@ -513,7 +529,9 @@ class CoordinatorServiceServicer(
                 self._launcher.close_learning_instance(object_id)
             except Exception as e:
                 context.set_code(grpc.StatusCode.ABORTED)
-                context.set_details("Close learning instance failed: " + str(e))
+                context.set_details(
+                    f"Close learning instance failed: ${e}. The traceback is: {traceback.format_exc()}"
+                )
         return message_pb2.CloseLearningInstanceResponse()
 
     @Monitor.cleanup
@@ -546,9 +564,10 @@ class CoordinatorServiceServicer(
                     self._operation_executor.run_step(dag_def, [])
                 except grpc.RpcError as e:
                     logger.error(
-                        "Cleanup failed, code: %s, details: %s",
+                        "Cleanup failed, code: %s, details: %s. The traceback is: %s",
                         e.code().name,
                         e.details(),
+                        traceback.format_exc(),
                     )
 
         self._object_manager.clear()
