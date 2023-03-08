@@ -33,14 +33,13 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ParserUtils {
     private static final Logger logger = LoggerFactory.getLogger(ParserUtils.class);
     private static final IrCoreLibrary irCoreLib = IrCoreLibrary.INSTANCE;
 
-    public static Object parseElement(IrResult.Element element, Function<Object[], String> columnName) {
+    public static Object parseElement(IrResult.Element element) {
         switch (element.getInnerCase()) {
             case VERTEX:
                 return parseVertex(element.getVertex());
@@ -70,9 +69,9 @@ public class ParserUtils {
         }
     }
 
-    public static List<Object> parseCollection(IrResult.Collection collection, Function<Object[], String> columnName) {
+    public static List<Object> parseCollection(IrResult.Collection collection) {
         return collection.getCollectionList().stream()
-                .map(k -> parseElement(k, columnName))
+                .map(k -> parseElement(k))
                 .collect(Collectors.toList());
     }
 
@@ -112,22 +111,22 @@ public class ParserUtils {
         }
     }
 
-    private static Vertex parseVertex(IrResult.Vertex vertex, Function<Object[], String> columnName) {
+    private static Vertex parseVertex(IrResult.Vertex vertex) {
         Map<String, Object> properties = parseProperties(vertex.getPropertiesList());
         return new DetachedVertex(
-                vertex.getId(), columnName.apply(new Object[]{vertex.getLabel(), FfiKeyType.Entity}), properties);
+                vertex.getId(), getKeyName(vertex.getLabel(), FfiKeyType.Entity), properties);
     }
 
-    private static Edge parseEdge(IrResult.Edge edge, Function<Object[], String> columnName) {
+    private static Edge parseEdge(IrResult.Edge edge) {
         Map<String, Object> edgeProperties = parseProperties(edge.getPropertiesList());
         return new DetachedEdge(
                 edge.getId(),
-                columnName.apply(new Object[]{edge.getLabel(), FfiKeyType.Relation}),
+                getKeyName(edge.getLabel(), FfiKeyType.Relation),
                 edgeProperties,
                 edge.getSrcId(),
-                columnName.apply(new Object[]{edge.getSrcLabel(), FfiKeyType.Entity}),
+                getKeyName(edge.getSrcLabel(), FfiKeyType.Entity),
                 edge.getDstId(),
-                columnName.apply(new Object[]{edge.getDstLabel(), FfiKeyType.Entity}));
+                getKeyName(edge.getDstLabel(), FfiKeyType.Entity));
     }
 
     private static Map<String, Object> parseProperties(List<IrResult.Property> properties) {
@@ -156,12 +155,12 @@ public class ParserUtils {
         }
     }
 
-    public static Object parseEntry(IrResult.Entry entry, Function<Object[], String> columnName) {
+    public static Object parseEntry(IrResult.Entry entry) {
         switch (entry.getInnerCase()) {
             case ELEMENT:
-                return ParserUtils.parseElement(entry.getElement(), columnName);
+                return ParserUtils.parseElement(entry.getElement());
             case COLLECTION:
-                List elements = ParserUtils.parseCollection(entry.getCollection(), columnName);
+                List elements = ParserUtils.parseCollection(entry.getCollection());
                 List notNull =
                         (List)
                                 elements.stream()
