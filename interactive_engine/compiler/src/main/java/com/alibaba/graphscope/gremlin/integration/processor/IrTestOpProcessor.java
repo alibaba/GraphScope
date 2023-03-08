@@ -25,7 +25,6 @@ import com.alibaba.graphscope.gremlin.integration.result.GraphProperties;
 import com.alibaba.graphscope.gremlin.integration.result.GremlinTestResultProcessor;
 import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrGremlinScriptEngine;
-import com.alibaba.graphscope.gremlin.result.GremlinResultAnalyzer;
 
 import org.apache.tinkerpop.gremlin.driver.Tokens;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
@@ -100,7 +99,7 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                                     traversal,
                                     new GremlinTestResultProcessor(
                                             ctx,
-                                            GremlinResultAnalyzer.analyze(traversal),
+                                            traversal,
                                             testGraph),
                                     jobId,
                                     script,

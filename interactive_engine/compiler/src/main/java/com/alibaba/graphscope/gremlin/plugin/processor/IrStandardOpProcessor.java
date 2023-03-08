@@ -48,9 +48,8 @@ import com.alibaba.graphscope.gremlin.plugin.script.AntlrGremlinScriptEngineFact
 import com.alibaba.graphscope.gremlin.plugin.strategy.ExpandFusionStepStrategy;
 import com.alibaba.graphscope.gremlin.plugin.strategy.RemoveUselessStepStrategy;
 import com.alibaba.graphscope.gremlin.plugin.strategy.ScanFusionStepStrategy;
-import com.alibaba.graphscope.gremlin.result.CypherResultProcessor;
-import com.alibaba.graphscope.gremlin.result.GremlinResultAnalyzer;
-import com.alibaba.graphscope.gremlin.result.GremlinResultProcessor;
+import com.alibaba.graphscope.gremlin.result.processor.CypherResultProcessor;
+import com.alibaba.graphscope.gremlin.result.processor.GremlinResultProcessor;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 import com.google.common.collect.ImmutableList;
@@ -347,7 +346,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                     processTraversal(
                                             traversal,
                                             new GremlinResultProcessor(
-                                                    ctx, GremlinResultAnalyzer.analyze(traversal)),
+                                                    ctx, traversal),
                                             jobId,
                                             script,
                                             irMeta);

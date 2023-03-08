@@ -59,7 +59,7 @@ public class WithTest {
     public void with_test_4() {
         RelNode aggregate = CypherUtils.eval("Match (a) Return a.name, count(a.name) as b").build();
         Assert.assertEquals(
-                "GraphLogicalAggregate(keys=[{variables=[a.name], aliases=[null]}], values=[[{operands=[a.name], aggFunction=COUNT, alias='b'}]])\n" +
+                "GraphLogicalAggregate(keys=[{variables=[a.name], aliases=[name]}], values=[[{operands=[a.name], aggFunction=COUNT, alias='b'}]])\n" +
                         "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}], alias=[a], opt=[VERTEX])",
                 aggregate.explain().trim());
     }

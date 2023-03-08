@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.gremlin.result;
+package com.alibaba.graphscope.gremlin.result.processor;
 
 import com.alibaba.graphscope.common.client.ResultParser;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
-
 import io.grpc.Status;
 import io.netty.channel.ChannelHandlerContext;
-
 import org.apache.tinkerpop.gremlin.driver.MessageSerializer;
 import org.apache.tinkerpop.gremlin.driver.Tokens;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
@@ -39,15 +37,18 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-public class GremlinResultProcessor extends StandardOpProcessor implements ResultProcessor {
-    private static Logger logger = LoggerFactory.getLogger(GremlinResultProcessor.class);
-    protected Context writeResult;
-    protected List<Object> resultCollectors;
-    protected int resultCollectorsBatchSize;
-    protected boolean locked = false;
-    protected ResultParser resultParser;
+public abstract class AbstractResultProcessor extends StandardOpProcessor implements ResultProcessor {
+    private static Logger logger = LoggerFactory.getLogger(AbstractResultProcessor.class);
 
-    public GremlinResultProcessor(Context writeResult, ResultParser resultParser) {
+    protected final Context writeResult;
+    protected final ResultParser resultParser;
+
+    protected final List<Object> resultCollectors;
+    protected final int resultCollectorsBatchSize;
+
+    protected boolean locked;
+
+    protected AbstractResultProcessor(Context writeResult, ResultParser resultParser) {
         this.writeResult = writeResult;
         this.resultParser = resultParser;
         RequestMessage msg = writeResult.getRequestMessage();
@@ -69,10 +70,9 @@ public class GremlinResultProcessor extends StandardOpProcessor implements Resul
                     // send back a page of results if batch size is met and then reset the
                     // resultCollectors
                     if (this.resultCollectors.size() >= this.resultCollectorsBatchSize) {
-                        formatResultIfNeed();
                         writeResultList(
                                 writeResult, resultCollectors, ResponseStatusCode.PARTIAL_CONTENT);
-                        this.resultCollectors = new ArrayList<>(this.resultCollectorsBatchSize);
+                        this.resultCollectors.clear();
                     }
                     resultCollectors.addAll(resultParser.parseFrom(response));
                 }
@@ -92,23 +92,10 @@ public class GremlinResultProcessor extends StandardOpProcessor implements Resul
     public void finish() {
         synchronized (this) {
             if (!locked) {
-                formatResultIfNeed();
+                aggregateResults();
                 writeResultList(writeResult, resultCollectors, ResponseStatusCode.SUCCESS);
                 locked = true;
             }
-        }
-    }
-
-    // format group result as a single map
-    protected void formatResultIfNeed() {
-        if (resultParser instanceof GroupResultParser) {
-            Map groupResult = new LinkedHashMap();
-            resultCollectors.forEach(
-                    k -> {
-                        groupResult.putAll((Map) k);
-                    });
-            resultCollectors.clear();
-            resultCollectors.add(groupResult);
         }
     }
 
@@ -124,6 +111,8 @@ public class GremlinResultProcessor extends StandardOpProcessor implements Resul
             }
         }
     }
+
+    protected abstract void aggregateResults();
 
     protected void writeResultList(
             final Context context,
