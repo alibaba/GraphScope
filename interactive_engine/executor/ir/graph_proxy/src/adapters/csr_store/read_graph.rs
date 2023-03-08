@@ -41,8 +41,6 @@ use crate::{filter_limit, filter_sample_limit, limit_n, sample_limit};
 
 lazy_static! {
     pub static ref CSR_PATH: String = configure_with_default!(String, "CSR_PATH", "".to_string());
-    pub static ref EDGE_TRIM_PATH: String =
-        configure_with_default!(String, "EDGE_TRIM_PATH", "".to_string());
     pub static ref PARTITION_ID: usize = configure_with_default!(usize, "PARTITION_ID", 0);
     pub static ref CSR: CsrDB<usize, usize> = _init_csr();
     static ref GRAPH_PROXY: Arc<CSRStore> = initialize();
@@ -62,7 +60,7 @@ fn initialize() -> Arc<CSRStore> {
 }
 
 fn _init_csr() -> CsrDB<usize, usize> {
-    CsrDB::deserialize(&*(CSR_PATH), &*(EDGE_TRIM_PATH), *PARTITION_ID).unwrap()
+    CsrDB::deserialize(&*(CSR_PATH), *PARTITION_ID).unwrap()
 }
 
 impl ReadGraph for CSRStore {
