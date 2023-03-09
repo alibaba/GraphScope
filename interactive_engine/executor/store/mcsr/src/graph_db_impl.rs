@@ -646,7 +646,7 @@ where
             let start_index = if local_id as usize * partial_count > vertex_count {
                 vertex_count
             } else {
-                local_idlocal_id as usize * partial_count
+                local_id as usize * partial_count
             };
             let end_index = if (local_id + 1) as usize * partial_count > vertex_count {
                 vertex_count
