@@ -122,6 +122,18 @@ impl<'a, G: IndexType + Sync + Send, I: IndexType + Sync + Send> LocalEdge<'a, G
             .unwrap()
     }
 
+    pub fn get_src_label(&self) -> LabelId {
+        self.src_label
+    }
+
+    pub fn get_offset(&self) -> usize {
+        self.offset
+    }
+
+    pub fn get_dst_label(&self) -> LabelId {
+        self.dst_label
+    }
+
     pub fn get_label(&self) -> LabelId {
         self.label
     }

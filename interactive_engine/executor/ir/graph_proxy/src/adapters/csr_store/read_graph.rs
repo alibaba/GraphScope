@@ -150,12 +150,13 @@ impl ReadGraph for CSRStore {
 
         let stmt = from_fn(move |v: ID| {
             let props = props.clone();
+            let partition_id = graph.partition as u8;
             let iter = match direction {
                 Direction::Out => graph.get_out_edges(v as DefaultId, edge_label_ids.as_ref()),
                 Direction::In => graph.get_in_edges(v as DefaultId, edge_label_ids.as_ref()),
                 Direction::Both => graph.get_both_edges(v as DefaultId, edge_label_ids.as_ref()),
             }
-            .map(move |e| to_runtime_edge(e, props.clone()));
+            .map(move |e| to_runtime_edge(e, props.clone(), partition_id));
             Ok(filter_limit!(iter, filter, limit))
         });
         Ok(stmt)
@@ -193,12 +194,22 @@ fn to_empty_vertex(v: LocalVertex<'static, DefaultId, DefaultId>) -> Vertex {
 }
 
 #[inline]
-fn to_runtime_edge(e: LocalEdge<'static, DefaultId, DefaultId>, prop_keys: Option<Vec<NameOrId>>) -> Edge {
+fn to_runtime_edge(
+    e: LocalEdge<'static, DefaultId, DefaultId>, prop_keys: Option<Vec<NameOrId>>, partition_id: u8,
+) -> Edge {
     let src_id = e.get_src_id() as u64;
     let dst_id = e.get_dst_id() as u64;
+    let src_label = e.get_src_label() as u64;
+    let dst_label = e.get_dst_label() as u64;
     let label = e.get_label();
+    let offset = e.get_offset() as u64;
+    let edge_id = ((partition_id as u64) << 56)
+        + (src_label << 48)
+        + ((label as u64) << 40)
+        + (dst_label << 32)
+        + offset;
     Edge::new(
-        0,
+        edge_id,
         Some(encode_runtime_label(label)),
         src_id,
         dst_id,
