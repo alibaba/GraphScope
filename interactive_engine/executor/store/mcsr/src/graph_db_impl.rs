@@ -622,15 +622,15 @@ where
             for v in 0..self.vertex_label_num {
                 let vertex_count = self.vertex_map.vertex_num(v as LabelId);
                 let partial_count = (vertex_count + worker_num as usize - 1) / worker_num as usize;
-                let start_index = if worker_id as usize * partial_count > vertex_count {
+                let start_index = if local_id as usize * partial_count > vertex_count {
                     vertex_count
                 } else {
-                    worker_id as usize * partial_count
+                    local_id as usize * partial_count
                 };
-                let end_index = if (worker_id + 1) as usize * partial_count > vertex_count {
+                let end_index = if (local_id + 1) as usize * partial_count > vertex_count {
                     vertex_count
                 } else {
-                    (worker_id + 1) as usize * partial_count
+                    (local_id + 1) as usize * partial_count
                 };
                 iters.push(Range::new(I::new(start_index), I::new(end_index)).into_iter());
                 got_labels.push(v as LabelId);
@@ -643,15 +643,15 @@ where
             let label = labels.unwrap()[0];
             let vertex_count = self.vertex_map.vertex_num(label);
             let partial_count = (vertex_count + worker_num as usize - 1) / worker_num as usize;
-            let start_index = if worker_id as usize * partial_count > vertex_count {
+            let start_index = if local_id as usize * partial_count > vertex_count {
                 vertex_count
             } else {
-                worker_id as usize * partial_count
+                local_idlocal_id as usize * partial_count
             };
-            let end_index = if (worker_id + 1) as usize * partial_count > vertex_count {
+            let end_index = if (local_id + 1) as usize * partial_count > vertex_count {
                 vertex_count
             } else {
-                (worker_id + 1) as usize * partial_count
+                (local_id + 1) as usize * partial_count
             };
             let range = Range::<I>::new(I::new(start_index), I::new(end_index));
             Iter::from_iter(
@@ -665,15 +665,15 @@ where
             for v in labels.unwrap() {
                 let vertex_count = self.vertex_map.vertex_num(*v);
                 let partial_count = (vertex_count + worker_num as usize - 1) / worker_num as usize;
-                let start_index = if worker_id as usize * partial_count > vertex_count {
+                let start_index = if local_id as usize * partial_count > vertex_count {
                     vertex_count
                 } else {
-                    worker_id as usize * partial_count
+                    local_id as usize * partial_count
                 };
-                let end_index = if (worker_id + 1) as usize * partial_count > vertex_count {
+                let end_index = if (local_id + 1) as usize * partial_count > vertex_count {
                     vertex_count
                 } else {
-                    (worker_id + 1) as usize * partial_count
+                    (local_id + 1) as usize * partial_count
                 };
                 iters.push(Range::new(I::new(start_index), I::new(end_index)).into_iter());
                 got_labels.push(*v);
