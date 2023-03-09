@@ -19,7 +19,7 @@ package com.alibaba.graphscope.common.intermediate.operator;
 import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
-import com.alibaba.graphscope.common.ir.IrUtils;
+import com.alibaba.graphscope.common.ir.Utils;
 import com.alibaba.graphscope.common.jna.type.FfiVariable;
 import com.alibaba.graphscope.common.utils.FileUtils;
 
@@ -59,6 +59,6 @@ public class DedupOpTest {
                 opCollection.appendInterOp(op1);
             }
         }
-        return new IrPlan(IrUtils.schemaMeta, opCollection);
+        return new IrPlan(Utils.schemaMeta, opCollection);
     }
 }

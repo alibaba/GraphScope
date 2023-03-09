@@ -32,7 +32,7 @@ public class FilterTest {
     // source([person]).filter("XXX") are fused
     @Test
     public void equal_1_test() {
-        GraphBuilder builder = IrUtils.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         SourceConfig sourceConfig =
                 new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"));
         RexNode equal =
@@ -51,7 +51,7 @@ public class FilterTest {
     // source([person]).as('x').filter("XXX") are fused
     @Test
     public void equal_2_test() {
-        GraphBuilder builder = IrUtils.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         SourceConfig sourceConfig =
                 new SourceConfig(
                         GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"), "x");
@@ -70,7 +70,7 @@ public class FilterTest {
 
     @Test
     public void greater_1_test() {
-        GraphBuilder builder = IrUtils.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         SourceConfig sourceConfig =
                 new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"));
         RexNode greater =
@@ -89,7 +89,7 @@ public class FilterTest {
     // 20 > 10 -> always returns true, ignore the condition
     @Test
     public void greater_2_test() {
-        GraphBuilder builder = IrUtils.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         SourceConfig sourceConfig =
                 new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"));
         RexNode greater =
@@ -110,7 +110,7 @@ public class FilterTest {
      */
     @Test
     public void greater_3_test() {
-        GraphBuilder builder = IrUtils.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         SourceConfig sourceConfig =
                 new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"));
         RexNode greater =
@@ -128,7 +128,7 @@ public class FilterTest {
 
     @Test
     public void greater_4_test() {
-        GraphBuilder builder = IrUtils.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         SourceConfig sourceConfig = new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(true));
         RexNode greater =
                 builder.source(sourceConfig)
@@ -145,7 +145,7 @@ public class FilterTest {
 
     @Test
     public void and_1_test() {
-        GraphBuilder builder = IrUtils.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         SourceConfig sourceConfig =
                 new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"));
         RexNode condition1 =
@@ -169,7 +169,7 @@ public class FilterTest {
 
     @Test
     public void and_2_test() {
-        GraphBuilder builder = IrUtils.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         SourceConfig sourceConfig =
                 new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"));
         RexNode condition1 =
