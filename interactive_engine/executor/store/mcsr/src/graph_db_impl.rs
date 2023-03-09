@@ -615,6 +615,7 @@ where
     pub fn get_partitioned_vertices(
         &self, labels: Option<&Vec<LabelId>>, worker_id: u32, worker_num: u32,
     ) -> Iter<LocalVertex<G, I>> {
+        let local_id = worker_id % worker_num;
         if labels.is_none() {
             let mut iters = vec![];
             let mut got_labels = vec![];
