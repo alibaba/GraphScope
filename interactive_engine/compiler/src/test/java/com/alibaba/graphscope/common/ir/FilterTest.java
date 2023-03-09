@@ -144,7 +144,7 @@ public class FilterTest {
     }
 
     @Test
-    public void and_test() {
+    public void and_1_test() {
         GraphBuilder builder = IrUtils.mockGraphBuilder();
         SourceConfig sourceConfig =
                 new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"));
@@ -160,6 +160,30 @@ public class FilterTest {
                         builder.variable(null, "name"),
                         builder.literal("marko"));
         RelNode filter = builder.filter(condition1, condition2).build();
+        Assert.assertEquals(
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
+                        + " fusedFilter=[[AND(>(DEFAULT.age, 20), =(DEFAULT.name, 'marko'))]],"
+                        + " opt=[VERTEX])",
+                filter.explain().trim());
+    }
+
+    @Test
+    public void and_2_test() {
+        GraphBuilder builder = IrUtils.mockGraphBuilder();
+        SourceConfig sourceConfig =
+                new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"));
+        RexNode condition1 =
+                builder.source(sourceConfig)
+                        .call(
+                                GraphStdOperatorTable.GREATER_THAN,
+                                builder.variable(null, "age"),
+                                builder.literal(20));
+        RexNode condition2 =
+                builder.call(
+                        GraphStdOperatorTable.LESS_THAN,
+                        builder.variable(null, "age"),
+                        builder.literal(30));
+        RelNode filter = builder.filter(builder.call(GraphStdOperatorTable.AND, condition1, condition2)).build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
                         + " fusedFilter=[[AND(>(DEFAULT.age, 20), =(DEFAULT.name, 'marko'))]],"

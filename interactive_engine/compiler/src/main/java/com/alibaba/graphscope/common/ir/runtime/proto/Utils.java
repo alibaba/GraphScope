@@ -27,7 +27,6 @@ import com.google.protobuf.Int32Value;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.calcite.util.NlsString;
 
 import java.util.List;
@@ -189,8 +188,9 @@ public abstract class Utils {
             case FLOAT:
             case DOUBLE:
                 return Common.DataType.DOUBLE;
+            case MULTISET:
             case ARRAY:
-                RelDataType elementType = ((ArraySqlType) basicType).getComponentType();
+                RelDataType elementType = basicType.getComponentType();
                 switch (elementType.getSqlTypeName()) {
                     case INTEGER:
                         return Common.DataType.INT32_ARRAY;
@@ -239,12 +239,13 @@ public abstract class Utils {
                         "convert row type "
                                 + dataType.getSqlTypeName()
                                 + " to IrDataType is unsupported yet");
+            case MULTISET:
             case ARRAY:
-                RelDataType elementType = ((ArraySqlType) dataType).getComponentType();
+                RelDataType elementType = dataType.getComponentType();
                 if (elementType instanceof GraphPxdElementType
                         || elementType instanceof GraphSchemaType) {
-                    throw new UnsupportedOperationException(
-                            "cannot convert array of graph elements type to IrDataType");
+                    // todo: support array of graph element types in pb
+                    return DataType.IrDataType.newBuilder().build();
                 }
             default:
                 return DataType.IrDataType.newBuilder()

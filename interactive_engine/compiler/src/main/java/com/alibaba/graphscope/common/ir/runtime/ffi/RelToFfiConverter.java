@@ -278,10 +278,6 @@ public class RelToFfiConverter implements GraphRelShuttle {
         return new LogicalNode(sort, ptrNode);
     }
 
-    private OuterExpression.Variable empty() {
-        return OuterExpression.Variable.newBuilder().build();
-    }
-
     private Pointer ffiQueryParams(AbstractBindableTableScan tableScan) {
         List<RelDataTypeField> fields = tableScan.getRowType().getFieldList();
         Preconditions.checkArgument(
@@ -301,7 +297,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
         }
         Pointer params = LIB.initQueryParams();
         for (GraphLabelType type : labelTypes) {
-            checkFfiResult(LIB.addParamsColumn(params, ArgUtils.asNameOrId(type.getLabelId())));
+            checkFfiResult(LIB.addParamsTable(params, ArgUtils.asNameOrId(type.getLabelId())));
         }
         if (ObjectUtils.isNotEmpty(tableScan.getFilters())) {
             OuterExpression.Expression expression =
