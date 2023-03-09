@@ -79,6 +79,12 @@ public class GraphBuilder extends RelBuilder {
     protected GraphBuilder(
             @Nullable Context context, GraphOptCluster cluster, RelOptSchema relOptSchema) {
         super(context, cluster, relOptSchema);
+        Utils.setFieldValue(
+                RelBuilder.class,
+                this,
+                "simplifier",
+                new GraphRexSimplify(
+                        cluster.getRexBuilder(), RelOptPredicateList.EMPTY, RexUtil.EXECUTOR));
     }
 
     /**
