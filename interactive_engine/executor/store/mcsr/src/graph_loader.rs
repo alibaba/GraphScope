@@ -607,8 +607,8 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                             oe_csr.put_edge(e.0, e.1, property_offset);
                             if e.2.len() > 0 {
                                 edge_properties.push(&e.2);
-                                property_offset += 1;
                             }
+                            property_offset += 1;
                         }
 
                         info!("start export ie");
@@ -655,8 +655,8 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                             oe_csr.put_edge(e.0, e.1, property_offset);
                             if e.2.len() > 0 {
                                 edge_properties.push(&e.2);
-                                property_offset += 1;
                             }
+                            property_offset += 1;
                         }
 
                         info!("start export ie");
@@ -701,8 +701,8 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                             oe_csr.put_edge(e.0, e.1, property_offset);
                             if e.2.len() > 0 {
                                 edge_properties.push(&e.2);
-                                property_offset += 1;
                             }
+                            property_offset += 1;
                         }
 
                         info!("start export ie");
