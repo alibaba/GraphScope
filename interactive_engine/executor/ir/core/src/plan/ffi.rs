@@ -1925,9 +1925,9 @@ mod graph {
     /// To set a path expand operator's condition, which is a predicate represented as a c-string.
     #[no_mangle]
     pub extern "C" fn set_pathxpd_condition(
-        ptr_select: *const c_void, cstr_predicate: *const c_char,
+        ptr_pathxpd: *const c_void, cstr_predicate: *const c_char,
     ) -> FfiResult {
-        set_predicate(ptr_select, cstr_predicate, InnerOpt::PathExpand)
+        set_predicate(ptr_pathxpd, cstr_predicate, InnerOpt::PathExpand)
     }
 
     /// Append an path-expand operator to the logical plan
