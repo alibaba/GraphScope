@@ -30,7 +30,7 @@ public class OrderLimitTest {
     // g.V().order().by("name")
     @Test
     public void order_1_test() {
-        GraphBuilder builder = IrUtils.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         RelNode sort =
                 builder.source(
                                 new SourceConfig(
@@ -48,7 +48,7 @@ public class OrderLimitTest {
     // g.V().order().by("name", desc)
     @Test
     public void order_2_test() {
-        GraphBuilder builder = IrUtils.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         RelNode sort =
                 builder.source(
                                 new SourceConfig(
@@ -66,7 +66,7 @@ public class OrderLimitTest {
     // g.V().order().by("name").limit(1, 2) -> topK
     @Test
     public void order_3_test() {
-        GraphBuilder builder = IrUtils.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         RelNode sort =
                 builder.source(
                                 new SourceConfig(
@@ -85,7 +85,7 @@ public class OrderLimitTest {
     // g.V().limit(1, 2)
     @Test
     public void order_4_test() {
-        GraphBuilder builder = IrUtils.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         RelNode limit =
                 builder.source(
                                 new SourceConfig(
@@ -104,7 +104,7 @@ public class OrderLimitTest {
     // desc + project(original, isAppend = false)
     @Test
     public void order_5_test() {
-        GraphBuilder builder = IrUtils.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         RelNode sort =
                 builder.source(
                                 new SourceConfig(

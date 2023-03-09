@@ -30,7 +30,7 @@ public class SourceTest {
     // g.V().hasLabel("person")
     @Test
     public void single_label_test() {
-        GraphBuilder builder = IrUtils.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         SourceConfig sourceConfig =
                 new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"));
         RelNode source = builder.source(sourceConfig).build();
@@ -43,7 +43,7 @@ public class SourceTest {
     // g.V().hasLabel("person", "software").as("a")
     @Test
     public void multiple_labels_test() {
-        GraphBuilder builder = IrUtils.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         SourceConfig sourceConfig =
                 new SourceConfig(
                         GraphOpt.Source.VERTEX,
@@ -59,7 +59,7 @@ public class SourceTest {
     @Test
     public void multiple_labels_opt_test() {
         try {
-            GraphBuilder builder = IrUtils.mockGraphBuilder();
+            GraphBuilder builder = Utils.mockGraphBuilder();
             SourceConfig sourceConfig =
                     new SourceConfig(
                             GraphOpt.Source.VERTEX,

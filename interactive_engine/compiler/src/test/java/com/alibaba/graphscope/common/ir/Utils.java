@@ -31,7 +31,7 @@ import org.apache.calcite.rex.RexBuilder;
 
 import java.net.URL;
 
-public class IrUtils {
+public class Utils {
     public static final RelDataTypeFactory typeFactory = new JavaTypeFactoryImpl();
     public static final RexBuilder rexBuilder = new RexBuilder(typeFactory);
     public static final IrMeta schemaMeta = mockSchemaMeta();

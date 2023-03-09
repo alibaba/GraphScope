@@ -30,7 +30,7 @@ public class GroupTest {
     // values("age").as("b")).by(count().as("c"))
     @Test
     public void group_1_test() {
-        GraphBuilder builder = IrUtils.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         RelNode aggregate =
                 builder.source(
                                 new SourceConfig(
@@ -56,7 +56,7 @@ public class GroupTest {
     // + aggregate(keys={HEAD.name}, calls=[count($f0) as 'x'])
     @Test
     public void group_2_test() {
-        GraphBuilder builder = IrUtils.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         RelNode aggregate =
                 builder.source(
                                 new SourceConfig(
@@ -83,7 +83,7 @@ public class GroupTest {
 
     @Test
     public void group_3_test() {
-        GraphBuilder builder = IrUtils.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         RelNode aggregate =
                 builder.source(
                                 new SourceConfig(
