@@ -32,7 +32,7 @@ public class FilterTest {
     // source([person]).filter("XXX") are fused
     @Test
     public void equal_1_test() {
-        GraphBuilder builder = SourceTest.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         SourceConfig sourceConfig =
                 new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"));
         RexNode equal =
@@ -51,7 +51,7 @@ public class FilterTest {
     // source([person]).as('x').filter("XXX") are fused
     @Test
     public void equal_2_test() {
-        GraphBuilder builder = SourceTest.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         SourceConfig sourceConfig =
                 new SourceConfig(
                         GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"), "x");
@@ -68,18 +68,19 @@ public class FilterTest {
                 filter.explain().trim());
     }
 
+    // g.V().hasLabel("person").where(expr("@.age > 10"))
     @Test
     public void greater_1_test() {
-        GraphBuilder builder = SourceTest.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         SourceConfig sourceConfig =
                 new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"));
-        RexNode equal =
+        RexNode greater =
                 builder.source(sourceConfig)
                         .call(
                                 GraphStdOperatorTable.GREATER_THAN,
                                 builder.variable(null, "age"),
                                 builder.literal(10));
-        RelNode filter = builder.filter(equal).build();
+        RelNode filter = builder.filter(greater).build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
                         + " fusedFilter=[[>(DEFAULT.age, 10)]], opt=[VERTEX])",
@@ -89,16 +90,16 @@ public class FilterTest {
     // 20 > 10 -> always returns true, ignore the condition
     @Test
     public void greater_2_test() {
-        GraphBuilder builder = SourceTest.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         SourceConfig sourceConfig =
                 new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"));
-        RexNode equal =
+        RexNode greater =
                 builder.source(sourceConfig)
                         .call(
                                 GraphStdOperatorTable.GREATER_THAN,
                                 builder.literal(20),
                                 builder.literal(10));
-        RelNode filter = builder.filter(equal).build();
+        RelNode filter = builder.filter(greater).build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
                         + " opt=[VERTEX])",
@@ -110,10 +111,10 @@ public class FilterTest {
      */
     @Test
     public void greater_3_test() {
-        GraphBuilder builder = SourceTest.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         SourceConfig sourceConfig =
                 new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"));
-        RexNode equal =
+        RexNode greater =
                 builder.source(sourceConfig)
                         .call(
                                 GraphStdOperatorTable.GREATER_THAN,
@@ -121,14 +122,15 @@ public class FilterTest {
                                 builder.literal(20));
         // the node before the filter
         RelNode previous = builder.peek();
-        RelNode filter = builder.filter(equal).build();
+        RelNode filter = builder.filter(greater).build();
         Assert.assertEquals(filter.getClass(), LogicalValues.class);
         Assert.assertEquals(filter.getRowType(), previous.getRowType());
     }
 
+    // g.V().hasLabel("person").where(expr("@.age > 20 and @.name == marko"))
     @Test
-    public void and_test() {
-        GraphBuilder builder = SourceTest.mockGraphBuilder();
+    public void and_1_test() {
+        GraphBuilder builder = Utils.mockGraphBuilder();
         SourceConfig sourceConfig =
                 new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"));
         RexNode condition1 =

@@ -32,7 +32,7 @@ public class ProjectTest {
     // project("a") -> expr: "a", alias: "a"
     @Test
     public void project_1_test() {
-        GraphBuilder builder = SourceTest.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         RexNode variable =
                 builder.source(
                                 new SourceConfig(
@@ -50,7 +50,7 @@ public class ProjectTest {
     // project("a.age") -> expr: "a.age", alias: "age"
     @Test
     public void project_2_test() {
-        GraphBuilder builder = SourceTest.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         RexNode variable =
                 builder.source(
                                 new SourceConfig(
@@ -66,7 +66,7 @@ public class ProjectTest {
     // project("a.age+1") -> expr: "a.age+1", alias: "$f0"
     @Test
     public void project_3_test() {
-        GraphBuilder builder = SourceTest.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         RexNode plus =
                 builder.source(
                                 new SourceConfig(
@@ -85,7 +85,7 @@ public class ProjectTest {
     // project("a.age+1", "b") -> expr: "a.age+1", alias: "b"
     @Test
     public void project_4_test() {
-        GraphBuilder builder = SourceTest.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         RexNode plus =
                 builder.source(
                                 new SourceConfig(
@@ -104,10 +104,10 @@ public class ProjectTest {
         Assert.assertEquals("RecordType(INTEGER b)", project.getRowType().toString());
     }
 
-    // project is true
+    // append is true
     @Test
     public void project_5_test() {
-        GraphBuilder builder = SourceTest.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         RexNode variable =
                 builder.source(
                                 new SourceConfig(

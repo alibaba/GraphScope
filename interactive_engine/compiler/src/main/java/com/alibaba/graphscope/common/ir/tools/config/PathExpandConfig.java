@@ -99,23 +99,17 @@ public class PathExpandConfig {
 
     @Override
     public String toString() {
-        return "PathExpandConfig{"
-                + "expand="
-                + expand.explain()
-                + ", getV="
-                + getV.explain()
-                + ", offset="
-                + offset
-                + ", fetch="
-                + fetch
-                + ", pathOpt="
-                + pathOpt
-                + ", resultOpt="
-                + resultOpt
-                + ", alias='"
-                + alias
-                + '\''
-                + '}';
+        StringBuilder builder = new StringBuilder();
+        builder.append("PathExpandConfig{");
+        builder.append("expand=" + expand.explain());
+        builder.append(", getV=" + getV.explain());
+        builder.append(", offset=" + offset);
+        builder.append(", fetch=" + fetch);
+        builder.append(", pathOpt=" + pathOpt);
+        builder.append(", resultOpt=" + resultOpt);
+        builder.append(", alias='" + alias + '\'');
+        builder.append("}");
+        return builder.toString();
     }
 
     public static final class Builder {
