@@ -44,7 +44,9 @@ public class RexTmpVariable extends RexInputRef {
                 (alias == null)
                         ? StringUtils.EMPTY
                         : alias
-                                + ((property == null) ? StringUtils.EMPTY : AliasInference.DELIMITER + property);
+                                + ((property == null)
+                                        ? StringUtils.EMPTY
+                                        : AliasInference.DELIMITER + property);
         this.alias = alias;
         this.property = property;
         this.type = type;

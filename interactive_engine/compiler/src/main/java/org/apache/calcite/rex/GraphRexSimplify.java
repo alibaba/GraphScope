@@ -20,7 +20,8 @@ import org.apache.calcite.plan.RelOptPredicateList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class GraphRexSimplify extends RexSimplify {
-    public GraphRexSimplify(RexBuilder rexBuilder, RelOptPredicateList predicates, RexExecutor executor) {
+    public GraphRexSimplify(
+            RexBuilder rexBuilder, RelOptPredicateList predicates, RexExecutor executor) {
         super(rexBuilder, predicates, executor);
     }
 
@@ -39,7 +40,8 @@ public class GraphRexSimplify extends RexSimplify {
 
     @Override
     public @Nullable RexNode simplifyFilterPredicates(Iterable<? extends RexNode> predicates) {
-        RexNode simplifiedAnds = simplifyUnknownAsFalse(RexUtil.composeConjunction(this.rexBuilder, predicates));
+        RexNode simplifiedAnds =
+                simplifyUnknownAsFalse(RexUtil.composeConjunction(this.rexBuilder, predicates));
         return simplifiedAnds.isAlwaysFalse() ? null : this.removeNullabilityCast(simplifiedAnds);
     }
 }

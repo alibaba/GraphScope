@@ -144,8 +144,12 @@ public class GraphLogicalPathExpand extends SingleRel {
 
     @Override
     protected RelDataType deriveRowType() {
-        ObjectUtils.requireNonEmpty(this.expand.getRowType().getFieldList(), "data type of expand operator should have at least one column field");
-        ObjectUtils.requireNonEmpty(this.getV.getRowType().getFieldList(), "data type of getV operator should have at least one column field");
+        ObjectUtils.requireNonEmpty(
+                this.expand.getRowType().getFieldList(),
+                "data type of expand operator should have at least one column field");
+        ObjectUtils.requireNonEmpty(
+                this.getV.getRowType().getFieldList(),
+                "data type of getV operator should have at least one column field");
         return new RelRecordType(
                 ImmutableList.of(
                         new RelDataTypeFieldImpl(
@@ -153,7 +157,16 @@ public class GraphLogicalPathExpand extends SingleRel {
                                 getAliasId(),
                                 new ArraySqlType(
                                         new GraphPxdElementType(
-                                                this.expand.getRowType().getFieldList().get(0).getType(), this.getV.getRowType().getFieldList().get(0).getType()),
+                                                this.expand
+                                                        .getRowType()
+                                                        .getFieldList()
+                                                        .get(0)
+                                                        .getType(),
+                                                this.getV
+                                                        .getRowType()
+                                                        .getFieldList()
+                                                        .get(0)
+                                                        .getType()),
                                         false))));
     }
 }

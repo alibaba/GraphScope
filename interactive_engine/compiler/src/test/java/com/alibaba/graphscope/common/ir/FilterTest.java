@@ -183,7 +183,9 @@ public class FilterTest {
                         GraphStdOperatorTable.LESS_THAN,
                         builder.variable(null, "age"),
                         builder.literal(30));
-        RelNode filter = builder.filter(builder.call(GraphStdOperatorTable.AND, condition1, condition2)).build();
+        RelNode filter =
+                builder.filter(builder.call(GraphStdOperatorTable.AND, condition1, condition2))
+                        .build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
                         + " fusedFilter=[[AND(>(DEFAULT.age, 20), =(DEFAULT.name, 'marko'))]],"
