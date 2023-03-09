@@ -84,7 +84,7 @@ public class CypherToAlgebraVisitor extends CypherGSBaseVisitor<GraphBuilder> {
                     new PathExpandBuilderVisitor(this).visitOC_PatternElementChain(ctx).build());
             // extract the end vertex from path_expand results
             if (ctx.oC_NodePattern() != null) {
-                GetVConfig getVConfig = VisitorUtils.getVConfig(ctx.oC_NodePattern());
+                GetVConfig getVConfig = Utils.getVConfig(ctx.oC_NodePattern());
                 return builder.getV(
                         new GetVConfig(
                                 GraphOpt.GetV.END, getVConfig.getLabels(), getVConfig.getAlias()));
@@ -100,9 +100,9 @@ public class CypherToAlgebraVisitor extends CypherGSBaseVisitor<GraphBuilder> {
     public GraphBuilder visitOC_NodePattern(CypherGSParser.OC_NodePatternContext ctx) {
         // source
         if (ctx.parent instanceof CypherGSParser.OC_PatternElementContext) {
-            builder.source(VisitorUtils.sourceConfig(ctx));
+            builder.source(Utils.sourceConfig(ctx));
         } else { // getV
-            builder.getV(VisitorUtils.getVConfig(ctx));
+            builder.getV(Utils.getVConfig(ctx));
         }
         return visitOC_Properties(ctx.oC_Properties());
     }
@@ -110,7 +110,7 @@ public class CypherToAlgebraVisitor extends CypherGSBaseVisitor<GraphBuilder> {
     @Override
     public GraphBuilder visitOC_RelationshipPattern(
             CypherGSParser.OC_RelationshipPatternContext ctx) {
-        builder.expand(VisitorUtils.expandConfig(ctx));
+        builder.expand(Utils.expandConfig(ctx));
         return visitOC_Properties(ctx.oC_RelationshipDetail().oC_Properties());
     }
 

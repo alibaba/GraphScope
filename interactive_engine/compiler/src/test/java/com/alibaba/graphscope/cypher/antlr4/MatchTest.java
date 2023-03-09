@@ -23,7 +23,7 @@ import org.junit.Test;
 public class MatchTest {
     @Test
     public void match_1_test() {
-        RelNode source = CypherUtils.eval("Match (n) Return n").build();
+        RelNode source = Utils.eval("Match (n) Return n").build();
         Assert.assertEquals(
                 "GraphLogicalProject(n=[n], isAppend=[false])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
@@ -34,7 +34,7 @@ public class MatchTest {
     @Test
     public void match_2_test() {
         RelNode source =
-                CypherUtils.eval("Match (n:person)-[x:knows]->(y:person) Return n, x, y").build();
+                Utils.eval("Match (n:person)-[x:knows]->(y:person) Return n, x, y").build();
         Assert.assertEquals(
                 "GraphLogicalProject(n=[n], x=[x], y=[y], isAppend=[false])\n"
                     + "  GraphLogicalSingleMatch(input=[null],"

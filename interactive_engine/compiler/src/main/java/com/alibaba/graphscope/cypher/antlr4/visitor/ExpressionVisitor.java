@@ -80,7 +80,7 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
                     visitOC_StringListNullPredicateExpression(
                             partialCtx.oC_StringListNullPredicateExpression()));
             operators.addAll(
-                    VisitorUtils.getOperators(
+                    Utils.getOperators(
                             partialCtx.children,
                             ImmutableList.of("=", "<>", "<", ">", "<=", ">="),
                             false));
@@ -95,7 +95,7 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
             throw new IllegalArgumentException("multiply or divide expression should not be empty");
         }
         List<SqlOperator> operators =
-                VisitorUtils.getOperators(ctx.children, ImmutableList.of("+", "-"), false);
+                Utils.getOperators(ctx.children, ImmutableList.of("+", "-"), false);
         return binaryCall(
                 operators,
                 ctx.oC_MultiplyDivideModuloExpression().stream()
@@ -110,7 +110,7 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
             throw new IllegalArgumentException("power expression should not be empty");
         }
         List<SqlOperator> operators =
-                VisitorUtils.getOperators(ctx.children, ImmutableList.of("*", "/", "%"), false);
+                Utils.getOperators(ctx.children, ImmutableList.of("*", "/", "%"), false);
         return binaryCall(
                 operators,
                 ctx.oC_PowerOfExpression().stream()
@@ -126,7 +126,7 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
                     "unary add or unary sub expression should not be empty");
         }
         List<SqlOperator> operators =
-                VisitorUtils.getOperators(ctx.children, ImmutableList.of("^"), false);
+                Utils.getOperators(ctx.children, ImmutableList.of("^"), false);
         return binaryCall(
                 operators,
                 ctx.oC_UnaryAddOrSubtractExpression().stream()
@@ -139,7 +139,7 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
             CypherGSParser.OC_UnaryAddOrSubtractExpressionContext ctx) {
         ExprVisitorResult operand = visitOC_ListOperatorExpression(ctx.oC_ListOperatorExpression());
         List<SqlOperator> operators =
-                VisitorUtils.getOperators(ctx.children, ImmutableList.of("-", "+"), true);
+                Utils.getOperators(ctx.children, ImmutableList.of("-", "+"), true);
         return (operators.isEmpty()) ? operand : unaryCall(operators.get(0), operand);
     }
 

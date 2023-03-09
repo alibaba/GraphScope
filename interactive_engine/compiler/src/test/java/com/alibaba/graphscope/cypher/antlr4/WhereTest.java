@@ -25,7 +25,7 @@ public class WhereTest {
     @Test
     public void where_1_test() {
         RelNode where =
-                CypherUtils.eval(
+                Utils.eval(
                                 "Match (a)-[b]->(c) Where a.name = \"marko\" and b.weight < 2.0 or"
                                         + " c.age + 10 < a.age Return a, b, c")
                         .build();
@@ -47,7 +47,7 @@ public class WhereTest {
     @Test
     public void where_2_test() {
         RelNode where =
-                CypherUtils.eval(
+                Utils.eval(
                                 "Match (a) Where a.name = 'kli' and (a.age + 1 = 29 or a.name ="
                                         + " 'marko') Return a")
                         .build();

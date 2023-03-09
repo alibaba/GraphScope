@@ -27,7 +27,7 @@ import org.apache.calcite.sql.SqlOperator;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class VisitorUtils {
+public abstract class Utils {
     public static SourceConfig sourceConfig(CypherGSParser.OC_NodePatternContext ctx) {
         String alias = (ctx.oC_Variable() != null) ? ctx.oC_Variable().getText() : null;
         LabelConfig config = labelConfig(ctx.oC_NodeLabels());

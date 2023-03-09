@@ -36,7 +36,7 @@ public class PathExpandBuilderVisitor extends CypherGSBaseVisitor<PathExpandConf
     @Override
     public PathExpandConfig.Builder visitOC_RelationshipPattern(
             CypherGSParser.OC_RelationshipPatternContext ctx) {
-        ExpandConfig expandConfig = VisitorUtils.expandConfig(ctx);
+        ExpandConfig expandConfig = Utils.expandConfig(ctx);
         // set expand base in path_expand
         builder.expand(expandConfig);
         // fuse filters with expand base in path_expand
@@ -52,7 +52,7 @@ public class PathExpandBuilderVisitor extends CypherGSBaseVisitor<PathExpandConf
     @Override
     public PathExpandConfig.Builder visitOC_NodePattern(CypherGSParser.OC_NodePatternContext ctx) {
         // set getV base in path_expand
-        builder.getV(VisitorUtils.getVConfig(ctx));
+        builder.getV(Utils.getVConfig(ctx));
         // fuse filters with getV base in path_expand
         return visitOC_Properties(ctx.oC_Properties());
     }

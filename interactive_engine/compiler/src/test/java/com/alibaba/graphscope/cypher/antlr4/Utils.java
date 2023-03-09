@@ -16,7 +16,6 @@
 
 package com.alibaba.graphscope.cypher.antlr4;
 
-import com.alibaba.graphscope.common.ir.IrUtils;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrCypherScriptEngine;
 
@@ -25,11 +24,12 @@ import javax.script.ScriptContext;
 import javax.script.SimpleBindings;
 import javax.script.SimpleScriptContext;
 
-public abstract class CypherUtils {
+public abstract class Utils {
     public static final GraphBuilder eval(String query) {
         AntlrCypherScriptEngine scriptEngine = new AntlrCypherScriptEngine();
         Bindings globalBindings = new SimpleBindings();
-        globalBindings.put("graph.builder", IrUtils.mockGraphBuilder());
+        globalBindings.put(
+                "graph.builder", com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder());
         ScriptContext context = new SimpleScriptContext();
         context.setBindings(globalBindings, ScriptContext.ENGINE_SCOPE);
         return (GraphBuilder) scriptEngine.eval(query, context);

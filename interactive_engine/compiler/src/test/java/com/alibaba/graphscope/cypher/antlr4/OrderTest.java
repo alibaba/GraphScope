@@ -24,7 +24,7 @@ public class OrderTest {
 
     @Test
     public void order_1_test() {
-        RelNode order = CypherUtils.eval("Match (a) Return a Order By a.name desc").build();
+        RelNode order = Utils.eval("Match (a) Return a Order By a.name desc").build();
         Assert.assertEquals(
                 "GraphLogicalSort(sort0=[a.name], dir0=[DESC])\n"
                         + "  GraphLogicalProject(a=[a], isAppend=[false])\n"
@@ -36,7 +36,7 @@ public class OrderTest {
     @Test
     public void order_2_test() {
         RelNode order =
-                CypherUtils.eval("Match (a)-[b]-() Return a, b Order By a.name desc, b.weight asc")
+                Utils.eval("Match (a)-[b]-() Return a, b Order By a.name desc, b.weight asc")
                         .build();
         Assert.assertEquals(
                 "GraphLogicalSort(sort0=[a.name], sort1=[b.weight], dir0=[DESC], dir1=[ASC])\n"
@@ -56,7 +56,7 @@ public class OrderTest {
     @Test
     public void order_3_test() {
         RelNode project =
-                CypherUtils.eval("Match (a) Return a.name as b Order by b desc Limit 10").build();
+                Utils.eval("Match (a) Return a.name as b Order by b desc Limit 10").build();
         Assert.assertEquals(
                 "GraphLogicalSort(sort0=[b], dir0=[DESC], fetch=[10])\n"
                         + "  GraphLogicalProject(b=[a.name], isAppend=[false])\n"
