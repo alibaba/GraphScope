@@ -164,8 +164,11 @@ impl CsrGraphSchema {
             self.vertex_type_to_id.len(),
             self.edge_type_to_id.len()
         );
+        for pair in self.vertex_type_to_id.iter() {
+            println!("vertex label: {}, id: {}", pair.0.clone(), pair.1);
+        }
         for pair in self.edge_type_to_id.iter() {
-            println!("label: {}, id: {}", pair.0.clone(), pair.1);
+            println!("edge label: {}, id: {}", pair.0.clone(), pair.1);
         }
     }
 

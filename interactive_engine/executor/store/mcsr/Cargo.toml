@@ -20,10 +20,8 @@ abomonation_derive = "0.5"
 flate2 = "0.2.19"
 rust-htslib = "0.39.5"
 regex = "1.7.1"
-
 env_logger = "0.7.1"
 clap = "2.32.0"
 chrono = "0.4"
 titlecase = "1.1.0"
-
 fnv = "1.0.3"
