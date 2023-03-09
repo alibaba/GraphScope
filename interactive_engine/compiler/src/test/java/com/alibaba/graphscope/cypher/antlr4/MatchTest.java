@@ -22,23 +22,29 @@ import org.junit.Test;
 
 public class MatchTest {
     @Test
-    public void match_test_1() {
+    public void match_1_test() {
         RelNode source = CypherUtils.eval("Match (n) Return n").build();
         Assert.assertEquals(
-                "GraphLogicalProject(n=[n], isAppend=[false])\n" +
-                        "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}], alias=[n], opt=[VERTEX])",
+                "GraphLogicalProject(n=[n], isAppend=[false])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[n], opt=[VERTEX])",
                 source.explain().trim());
     }
 
     @Test
-    public void match_test_2() {
-        RelNode source = CypherUtils.eval("Match (n:person)-[x:knows]->(y:person) Return n, x, y").build();
+    public void match_2_test() {
+        RelNode source =
+                CypherUtils.eval("Match (n:person)-[x:knows]->(y:person) Return n, x, y").build();
         Assert.assertEquals(
-                "GraphLogicalProject(n=[n], x=[x], y=[y], isAppend=[false])\n" +
-                        "  GraphLogicalSingleMatch(input=[null], sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[y], opt=[END])\n" +
-                        "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[x], opt=[OUT])\n" +
-                        "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[n], opt=[VERTEX])\n" +
-                        "], matchOpt=[INNER])",
+                "GraphLogicalProject(n=[n], x=[x], y=[y], isAppend=[false])\n"
+                    + "  GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[y], opt=[END])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[x],"
+                    + " opt=[OUT])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[n], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
                 source.explain().trim());
     }
 }

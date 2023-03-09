@@ -23,26 +23,39 @@ import org.junit.Test;
 public class WhereTest {
 
     @Test
-    public void where_test_1() {
+    public void where_1_test() {
         RelNode where =
-                CypherUtils.eval("Match (a)-[b]->(c) Where a.name = \"marko\" and b.weight < 2.0 or c.age + 10 < a.age Return a, b, c").build();
+                CypherUtils.eval(
+                                "Match (a)-[b]->(c) Where a.name = \"marko\" and b.weight < 2.0 or"
+                                        + " c.age + 10 < a.age Return a, b, c")
+                        .build();
         Assert.assertEquals(
-                "GraphLogicalProject(a=[a], b=[b], c=[c], isAppend=[false])\n" +
-                        "  LogicalFilter(condition=[OR(AND(=(a.name, 'marko'), <(b.weight, 2.0E0)), <(+(c.age, 10), a.age))])\n" +
-                        "    GraphLogicalSingleMatch(input=[null], sentence=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software, person]}], alias=[c], opt=[END])\n" +
-                        "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}], alias=[b], opt=[OUT])\n" +
-                        "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}], alias=[a], opt=[VERTEX])\n" +
-                        "], matchOpt=[INNER])",
+                "GraphLogicalProject(a=[a], b=[b], c=[c], isAppend=[false])\n"
+                    + "  LogicalFilter(condition=[OR(AND(=(a.name, 'marko'), <(b.weight, 2.0E0)),"
+                    + " <(+(c.age, 10), a.age))])\n"
+                    + "    GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[c], opt=[END])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[b], opt=[OUT])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[a], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
                 where.explain().trim());
     }
 
     @Test
-    public void where_test_2() {
+    public void where_2_test() {
         RelNode where =
-                CypherUtils.eval("Match (a) Where a.name = 'kli' and (a.age + 1 = 29 or a.name = 'marko') Return a").build();
+                CypherUtils.eval(
+                                "Match (a) Where a.name = 'kli' and (a.age + 1 = 29 or a.name ="
+                                        + " 'marko') Return a")
+                        .build();
         Assert.assertEquals(
-                "GraphLogicalProject(a=[a], isAppend=[false])\n" +
-                        "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}], alias=[a], fusedFilter=[[AND(=(a.name, 'kli'), OR(=(+(a.age, 1), 29), =(a.name, 'marko')))]], opt=[VERTEX])",
+                "GraphLogicalProject(a=[a], isAppend=[false])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[a], fusedFilter=[[AND(=(a.name, 'kli'), OR(=(+(a.age, 1), 29),"
+                    + " =(a.name, 'marko')))]], opt=[VERTEX])",
                 where.explain().trim());
     }
 }

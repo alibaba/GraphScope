@@ -23,36 +23,45 @@ import org.junit.Test;
 public class OrderTest {
 
     @Test
-    public void order_test_1() {
+    public void order_1_test() {
         RelNode order = CypherUtils.eval("Match (a) Return a Order By a.name desc").build();
         Assert.assertEquals(
-                "GraphLogicalSort(sort0=[a.name], dir0=[DESC])\n" +
-                        "  GraphLogicalProject(a=[a], isAppend=[false])\n" +
-                        "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}], alias=[a], opt=[VERTEX])",
+                "GraphLogicalSort(sort0=[a.name], dir0=[DESC])\n"
+                        + "  GraphLogicalProject(a=[a], isAppend=[false])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                        + " person]}], alias=[a], opt=[VERTEX])",
                 order.explain().trim());
     }
 
     @Test
-    public void order_test_2() {
-        RelNode order = CypherUtils.eval("Match (a)-[b]-() Return a, b Order By a.name desc, b.weight asc").build();
+    public void order_2_test() {
+        RelNode order =
+                CypherUtils.eval("Match (a)-[b]-() Return a, b Order By a.name desc, b.weight asc")
+                        .build();
         Assert.assertEquals(
-                "GraphLogicalSort(sort0=[a.name], sort1=[b.weight], dir0=[DESC], dir1=[ASC])\n" +
-                        "  GraphLogicalProject(a=[a], b=[b], isAppend=[false])\n" +
-                        "    GraphLogicalSingleMatch(input=[null], sentence=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software, person]}], alias=[~DEFAULT], opt=[BOTH])\n" +
-                        "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}], alias=[b], opt=[BOTH])\n" +
-                        "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}], alias=[a], opt=[VERTEX])\n" +
-                        "], matchOpt=[INNER])",
+                "GraphLogicalSort(sort0=[a.name], sort1=[b.weight], dir0=[DESC], dir1=[ASC])\n"
+                    + "  GraphLogicalProject(a=[a], b=[b], isAppend=[false])\n"
+                    + "    GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[~DEFAULT], opt=[BOTH])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[b], opt=[BOTH])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[a], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
                 order.explain().trim());
     }
 
     // order + limit -> topK
     @Test
-    public void order_test_3() {
-        RelNode project = CypherUtils.eval("Match (a) Return a.name as b Order by b desc Limit 10").build();
+    public void order_3_test() {
+        RelNode project =
+                CypherUtils.eval("Match (a) Return a.name as b Order by b desc Limit 10").build();
         Assert.assertEquals(
-                "GraphLogicalSort(sort0=[b], dir0=[DESC], fetch=[10])\n" +
-                        "  GraphLogicalProject(b=[a.name], isAppend=[false])\n" +
-                        "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}], alias=[a], opt=[VERTEX])",
+                "GraphLogicalSort(sort0=[b], dir0=[DESC], fetch=[10])\n"
+                        + "  GraphLogicalProject(b=[a.name], isAppend=[false])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                        + " person]}], alias=[a], opt=[VERTEX])",
                 project.explain().trim());
     }
 }

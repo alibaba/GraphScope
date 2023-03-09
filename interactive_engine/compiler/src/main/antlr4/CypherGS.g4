@@ -160,6 +160,8 @@ oC_FunctionName
     |  SUM
     ;
 
+DISTINCT : ( 'D' | 'd' ) ( 'I' | 'i' ) ( 'S' | 's' ) ( 'T' | 't' ) ( 'I' | 'i' ) ( 'N' | 'n' ) ( 'C' | 'c' ) ( 'T' | 't' ) ;
+
 COUNT : ( 'C' | 'c' ) ( 'O' | 'o' ) ( 'U' | 'u' ) ( 'N' | 'n' ) ( 'T' | 't' ) ;
 
 AVG : ( 'A' | 'a' ) ( 'V' | 'v' ) ( 'G' | 'g' ) ;
@@ -243,7 +245,12 @@ oC_Atom
         | oC_ParenthesizedExpression
         | oC_Variable
         | oC_FunctionInvocation
+        | oC_CountAny
         ;
+
+oC_CountAny
+    : ( COUNT SP? '(' SP? '*' SP? ')' )
+    ;
 
 oC_ParenthesizedExpression
     :  '(' SP? oC_Expression SP? ')' ;

@@ -17,10 +17,10 @@
 package com.alibaba.graphscope.cypher.antlr4.visitor;
 
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
+import com.alibaba.graphscope.common.ir.rex.RexVariableConverter;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.config.*;
-import com.alibaba.graphscope.cypher.antlr4.VisitorUtils;
 import com.alibaba.graphscope.cypher.antlr4.type.ExprVisitorResult;
 import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
 import com.alibaba.graphscope.grammar.CypherGSParser;
@@ -32,6 +32,7 @@ import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.tools.RelBuilder;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class CypherToAlgebraVisitor extends CypherGSBaseVisitor<GraphBuilder> {
     private final GraphBuilder builder;
@@ -79,8 +80,17 @@ public class CypherToAlgebraVisitor extends CypherGSBaseVisitor<GraphBuilder> {
                 relationCtx.oC_RelationshipDetail().oC_RangeLiteral();
         // path_expand
         if (literalCtx != null && literalCtx.oC_IntegerLiteral().size() > 1) {
-            return builder.pathExpand(
+            builder.pathExpand(
                     new PathExpandBuilderVisitor(this).visitOC_PatternElementChain(ctx).build());
+            // extract the end vertex from path_expand results
+            if (ctx.oC_NodePattern() != null) {
+                GetVConfig getVConfig = VisitorUtils.getVConfig(ctx.oC_NodePattern());
+                return builder.getV(
+                        new GetVConfig(
+                                GraphOpt.GetV.END, getVConfig.getLabels(), getVConfig.getAlias()));
+            } else {
+                return builder;
+            }
         } else { // expand + getV
             return super.visitOC_PatternElementChain(ctx);
         }
@@ -133,13 +143,32 @@ public class CypherToAlgebraVisitor extends CypherGSBaseVisitor<GraphBuilder> {
         List<RexNode> extraExprs = new ArrayList<>();
         List<String> extraAliases = new ArrayList<>();
         if (isGroupPattern(ctx, keyExprs, keyAliases, aggCalls, extraExprs, extraAliases)) {
-            RelBuilder.GroupKey groupKey =
-                    (keyExprs.isEmpty())
-                            ? builder.groupKey()
-                            : builder.groupKey(keyExprs, keyAliases);
+            RelBuilder.GroupKey groupKey;
+            List<String> newAliases = new ArrayList<>();
+            if (keyExprs.isEmpty()) {
+                groupKey = builder.groupKey();
+            } else {
+                if (!extraExprs.isEmpty()) {
+                    for (int i = 0; i < keyExprs.size(); ++i) {
+                        newAliases.add(inferAlias());
+                    }
+                    groupKey = builder.groupKey(keyExprs, newAliases);
+                } else {
+                    groupKey = builder.groupKey(keyExprs, keyAliases);
+                }
+            }
             builder.aggregate(groupKey, aggCalls);
             if (!extraExprs.isEmpty()) {
-                builder.project(extraExprs, extraAliases, true);
+                RexVariableConverter converter = new RexVariableConverter(true, builder);
+                extraExprs =
+                        extraExprs.stream()
+                                .map(k -> k.accept(converter))
+                                .collect(Collectors.toList());
+                for (int i = 0; i < newAliases.size(); ++i) {
+                    extraExprs.add(i, builder.variable(newAliases.get(i)));
+                    extraAliases.add(i, (i < keyAliases.size()) ? keyAliases.get(i) : null);
+                }
+                builder.project(extraExprs, extraAliases, false);
             }
         } else {
             builder.project(keyExprs, keyAliases, false);

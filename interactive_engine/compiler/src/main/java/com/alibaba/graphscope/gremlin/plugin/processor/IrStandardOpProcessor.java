@@ -282,10 +282,11 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                 return (String) bindings.get("language");
             }
         }
-        // hack ways to get language opt from gremlin console, for this is the only remote configurations can be set in the console
+        // hack ways to get language opt from gremlin console, for this is the only remote
+        // configurations can be set in the console
         if (args.containsKey("aliases")) {
             Map<String, String> aliases = (Map<String, String>) args.get("aliases");
-            for(Map.Entry<String, String> alias : aliases.entrySet()) {
+            for (Map.Entry<String, String> alias : aliases.entrySet()) {
                 if (alias.getValue().equals("graph")) {
                     return alias.getKey();
                 }
@@ -345,8 +346,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                     Traversal traversal = (Traversal) o;
                                     processTraversal(
                                             traversal,
-                                            new GremlinResultProcessor(
-                                                    ctx, traversal),
+                                            new GremlinResultProcessor(ctx, traversal),
                                             jobId,
                                             script,
                                             irMeta);

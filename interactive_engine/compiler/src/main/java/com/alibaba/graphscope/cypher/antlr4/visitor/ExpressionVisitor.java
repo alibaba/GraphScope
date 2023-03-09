@@ -20,7 +20,6 @@ import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rex.RexTmpVariable;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
-import com.alibaba.graphscope.cypher.antlr4.VisitorUtils;
 import com.alibaba.graphscope.cypher.antlr4.type.ExprVisitorResult;
 import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
 import com.alibaba.graphscope.grammar.CypherGSParser;
@@ -222,10 +221,21 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
             aggCall = builder.min(alias, variables.get(0));
         } else if (ctx.oC_FunctionName().MAX() != null) {
             aggCall = builder.max(alias, variables.get(0));
+        } else if (ctx.oC_FunctionName().COLLECT() != null) {
+            aggCall = builder.collect((ctx.DISTINCT() != null), alias, variables);
         } else {
             throw new UnsupportedOperationException(
                     "agg function " + ctx.oC_FunctionName().getText() + " is unsupported yet");
         }
+        return new ExprVisitorResult(
+                ImmutableList.of(aggCall),
+                RexTmpVariable.of(alias, ((GraphAggCall) aggCall).getType()));
+    }
+
+    @Override
+    public ExprVisitorResult visitOC_CountAny(CypherGSParser.OC_CountAnyContext ctx) {
+        String alias = parent.inferAlias();
+        RelBuilder.AggCall aggCall = builder.count();
         return new ExprVisitorResult(
                 ImmutableList.of(aggCall),
                 RexTmpVariable.of(alias, ((GraphAggCall) aggCall).getType()));

@@ -144,7 +144,7 @@ public class FilterTest {
     }
 
     @Test
-    public void and_1_test() {
+    public void and_test() {
         GraphBuilder builder = IrUtils.mockGraphBuilder();
         SourceConfig sourceConfig =
                 new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"));
@@ -188,8 +188,7 @@ public class FilterTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
-                        + " fusedFilter=[[AND(>(DEFAULT.age, 20), =(DEFAULT.name, 'marko'))]],"
-                        + " opt=[VERTEX])",
+                    + " fusedFilter=[[AND(>(DEFAULT.age, 20), <(DEFAULT.age, 30))]], opt=[VERTEX])",
                 filter.explain().trim());
     }
 }

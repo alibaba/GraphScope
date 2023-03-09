@@ -29,6 +29,7 @@ import com.alibaba.pegasus.service.protocol.PegasusClient;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.sql.type.ArraySqlType;
@@ -39,11 +40,14 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.util.detached.DetachedEdge;
 import org.apache.tinkerpop.gremlin.structure.util.detached.DetachedVertex;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class CypherResultParser implements ResultParser {
+    private static final Logger logger = LoggerFactory.getLogger(CypherResultParser.class);
     private RelDataType outputType;
 
     public CypherResultParser(RelDataType outputType) {
@@ -55,23 +59,17 @@ public class CypherResultParser implements ResultParser {
         try {
             IrResult.Results results = IrResult.Results.parseFrom(response.getResp());
             Map<String, Object> columns = new LinkedHashMap<>();
-            results.getRecord().getColumnsList().forEach(k -> {
-                Common.NameOrId nameOrId = k.getNameOrId();
-                RelDataTypeField columnField = null;
-                List<Integer> columnIds = new ArrayList<>();
-                for (RelDataTypeField field : outputType.getFieldList()) {
-                    if (nameOrId.getItemCase() == Common.NameOrId.ItemCase.NAME && nameOrId.getName().equals(field.getName())
-                            || nameOrId.getItemCase() == Common.NameOrId.ItemCase.ID && nameOrId.getId() == field.getIndex()) {
-                        columnField = field;
-                        break;
-                    }
-                    columnIds.add(field.getIndex());
-                }
-                if (columnField == null) {
-                    throw new IllegalArgumentException("column " + nameOrId + " not found, expected column ids " + columnIds);
-                }
-                columns.put(columnField.getName(), parseEntry(k.getEntry(), columnField.getType()));
-            });
+            outputType
+                    .getFieldList()
+                    .forEach(
+                            k -> {
+                                IrResult.Column column =
+                                        getIrColumn(k, results.getRecord().getColumnsList());
+                                Object entryValue = parseEntry(column.getEntry(), k.getType());
+                                columns.put(
+                                        k.getName(),
+                                        (entryValue == EmptyValue.INSTANCE) ? null : entryValue);
+                            });
             return ImmutableList.of(columns);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -79,12 +77,19 @@ public class CypherResultParser implements ResultParser {
     }
 
     protected Vertex parseVertex(IrResult.Vertex vertex, @Nullable RelDataType dataType) {
-        Preconditions.checkArgument(dataType instanceof GraphSchemaType);
-        return new DetachedVertex(vertex.getId(), getLabelName(vertex.getLabel(), getLabelTypes((GraphSchemaType) dataType)), ImmutableMap.of());
+        Preconditions.checkArgument(
+                dataType instanceof GraphSchemaType,
+                "data type of vertex should be " + GraphSchemaType.class);
+        return new DetachedVertex(
+                vertex.getId(),
+                getLabelName(vertex.getLabel(), getLabelTypes((GraphSchemaType) dataType)),
+                ImmutableMap.of());
     }
 
     protected Edge parseEdge(IrResult.Edge edge, @Nullable RelDataType dataType) {
-        Preconditions.checkArgument(dataType instanceof GraphSchemaType);
+        Preconditions.checkArgument(
+                dataType instanceof GraphSchemaType,
+                "data type of edge should be " + GraphSchemaType.class);
         List<GraphLabelType> labelTypes = getLabelTypes((GraphSchemaType) dataType);
         return new DetachedEdge(
                 edge.getId(),
@@ -96,20 +101,24 @@ public class CypherResultParser implements ResultParser {
                 getDstLabelName(edge.getDstLabel(), labelTypes));
     }
 
-    protected List<Element> parseGraphPath(IrResult.GraphPath path, @Nullable RelDataType dataType) {
+    protected List<Element> parseGraphPath(
+            IrResult.GraphPath path, @Nullable RelDataType dataType) {
         Preconditions.checkArgument(dataType.getSqlTypeName() == SqlTypeName.ARRAY);
         ArraySqlType arrayType = (ArraySqlType) dataType;
         Preconditions.checkArgument(arrayType.getComponentType() instanceof GraphPxdElementType);
         GraphPxdElementType elementType = (GraphPxdElementType) arrayType.getComponentType();
-        return path.getPathList().stream().map(k -> {
-            switch (k.getInnerCase()) {
-                case VERTEX:
-                    return parseVertex(k.getVertex(), elementType.getGetVType());
-                case EDGE:
-                default:
-                    return parseEdge(k.getEdge(), elementType.getExpandType());
-            }
-        }).collect(Collectors.toList());
+        return path.getPathList().stream()
+                .map(
+                        k -> {
+                            switch (k.getInnerCase()) {
+                                case VERTEX:
+                                    return parseVertex(k.getVertex(), elementType.getGetVType());
+                                case EDGE:
+                                default:
+                                    return parseEdge(k.getEdge(), elementType.getExpandType());
+                            }
+                        })
+                .collect(Collectors.toList());
     }
 
     protected Object parseValue(Common.Value value, @Nullable RelDataType dataType) {
@@ -145,11 +154,15 @@ public class CypherResultParser implements ResultParser {
         }
     }
 
-    protected List<Object> parseCollection(IrResult.Collection collection, @Nullable RelDataType dataType) {
-        Preconditions.checkArgument(dataType.getSqlTypeName() == SqlTypeName.ARRAY);
-        ArraySqlType arrayType = (ArraySqlType) dataType;
+    protected List<Object> parseCollection(
+            IrResult.Collection collection, @Nullable RelDataType dataType) {
+        // multiset is the data type of aggregate function collect
+        // array is the data type of path collection
+        Preconditions.checkArgument(
+                dataType.getSqlTypeName() == SqlTypeName.MULTISET
+                        || dataType.getSqlTypeName() == SqlTypeName.ARRAY);
         return collection.getCollectionList().stream()
-                .map(k -> parseElement(k, arrayType.getComponentType()))
+                .map(k -> parseElement(k, dataType.getComponentType()))
                 .collect(Collectors.toList());
     }
 
@@ -159,7 +172,12 @@ public class CypherResultParser implements ResultParser {
                 return parseElement(entry.getElement(), dataType);
             case COLLECTION:
             default:
-                return parseCollection(entry.getCollection(), dataType);
+                List<Object> elements = parseCollection(entry.getCollection(), dataType);
+                List notNull =
+                        elements.stream()
+                                .filter(k -> !(k instanceof EmptyValue))
+                                .collect(Collectors.toList());
+                return notNull.isEmpty() ? EmptyValue.INSTANCE : notNull;
         }
     }
 
@@ -180,9 +198,11 @@ public class CypherResultParser implements ResultParser {
     private List<GraphLabelType> getLabelTypes(GraphSchemaType dataType) {
         List<GraphLabelType> labelTypes = new ArrayList<>();
         if (dataType instanceof GraphSchemaTypeList) {
-            ((GraphSchemaTypeList) dataType).forEach(k -> {
-                labelTypes.add(k.getLabelType());
-            });
+            ((GraphSchemaTypeList) dataType)
+                    .forEach(
+                            k -> {
+                                labelTypes.add(k.getLabelType());
+                            });
         } else {
             labelTypes.add(dataType.getLabelType());
         }
@@ -200,8 +220,13 @@ public class CypherResultParser implements ResultParser {
                     if (labelType.getLabelId() == nameOrId.getId()) {
                         return labelType.getLabel();
                     }
+                    labelIds.add(labelType.getLabelId());
                 }
-                throw new IllegalArgumentException("label id=" + nameOrId.getId() + " not found, expected ids are " + labelIds);
+                throw new IllegalArgumentException(
+                        "label id="
+                                + nameOrId.getId()
+                                + " not found, expected ids are "
+                                + labelIds);
         }
     }
 
@@ -217,7 +242,11 @@ public class CypherResultParser implements ResultParser {
                         return labelType.getSrcLabel();
                     }
                 }
-                throw new IllegalArgumentException("src label id=" + nameOrId.getId() + " not found, expected ids are " + labelIds);
+                throw new IllegalArgumentException(
+                        "src label id="
+                                + nameOrId.getId()
+                                + " not found, expected ids are "
+                                + labelIds);
         }
     }
 
@@ -233,7 +262,43 @@ public class CypherResultParser implements ResultParser {
                         return labelType.getDstLabel();
                     }
                 }
-                throw new IllegalArgumentException("dst label id=" + nameOrId.getId() + " not found, expected ids are " + labelIds);
+                throw new IllegalArgumentException(
+                        "dst label id="
+                                + nameOrId.getId()
+                                + " not found, expected ids are "
+                                + labelIds);
         }
+    }
+
+    private IrResult.Column getIrColumn(RelDataTypeField field, List<IrResult.Column> columnList) {
+        List<Object> existColumns = new ArrayList<>();
+        for (IrResult.Column column : columnList) {
+            Common.NameOrId nameOrId = column.getNameOrId();
+            switch (nameOrId.getItemCase()) {
+                case ID:
+                    if (field.getIndex() == nameOrId.getId()) {
+                        return column;
+                    }
+                    existColumns.add(nameOrId.getId());
+                    break;
+                case NAME:
+                default:
+                    // hack: column id is in string format
+                    if (nameOrId.getName().matches("^[0-9]+$")) {
+                        int nameId = Integer.valueOf(nameOrId.getName());
+                        if (field.getIndex() == nameId) {
+                            return column;
+                        }
+                        existColumns.add(nameId);
+                    } else {
+                        if (field.getName().equals(nameOrId.getName())) {
+                            return column;
+                        }
+                        existColumns.add(nameOrId.getName());
+                    }
+            }
+        }
+        throw new IllegalArgumentException(
+                "field " + field + " not found, expected columns are" + existColumns);
     }
 }

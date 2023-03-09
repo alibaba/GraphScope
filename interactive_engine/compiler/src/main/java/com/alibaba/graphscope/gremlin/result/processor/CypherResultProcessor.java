@@ -18,8 +18,8 @@ package com.alibaba.graphscope.gremlin.result.processor;
 
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
 import com.alibaba.graphscope.gremlin.result.parser.CypherResultParser;
-import com.alibaba.graphscope.gremlin.result.processor.AbstractResultProcessor;
 import com.google.common.collect.Lists;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.type.RelDataType;
@@ -59,6 +59,6 @@ public class CypherResultProcessor extends AbstractResultProcessor {
     private static boolean removeHistory(RelNode node) {
         return (node instanceof Aggregate)
                 || (node instanceof GraphLogicalProject)
-                && ((GraphLogicalProject) node).isAppend() == false;
+                        && ((GraphLogicalProject) node).isAppend() == false;
     }
 }

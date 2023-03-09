@@ -19,8 +19,10 @@ package com.alibaba.graphscope.gremlin.result.processor;
 import com.alibaba.graphscope.common.client.ResultParser;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
+
 import io.grpc.Status;
 import io.netty.channel.ChannelHandlerContext;
+
 import org.apache.tinkerpop.gremlin.driver.MessageSerializer;
 import org.apache.tinkerpop.gremlin.driver.Tokens;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
@@ -37,7 +39,8 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-public abstract class AbstractResultProcessor extends StandardOpProcessor implements ResultProcessor {
+public abstract class AbstractResultProcessor extends StandardOpProcessor
+        implements ResultProcessor {
     private static Logger logger = LoggerFactory.getLogger(AbstractResultProcessor.class);
 
     protected final Context writeResult;

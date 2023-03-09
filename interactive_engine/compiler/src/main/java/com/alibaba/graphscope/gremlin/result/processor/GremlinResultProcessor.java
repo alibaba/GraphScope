@@ -18,6 +18,7 @@ package com.alibaba.graphscope.gremlin.result.processor;
 
 import com.alibaba.graphscope.gremlin.result.GremlinResultAnalyzer;
 import com.alibaba.graphscope.gremlin.result.GroupResultParser;
+
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.server.Context;
 import org.slf4j.Logger;

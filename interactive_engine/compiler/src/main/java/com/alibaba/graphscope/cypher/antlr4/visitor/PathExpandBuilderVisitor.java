@@ -16,8 +16,8 @@
 
 package com.alibaba.graphscope.cypher.antlr4.visitor;
 
+import com.alibaba.graphscope.common.ir.tools.config.ExpandConfig;
 import com.alibaba.graphscope.common.ir.tools.config.PathExpandConfig;
-import com.alibaba.graphscope.cypher.antlr4.VisitorUtils;
 import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
 import com.alibaba.graphscope.grammar.CypherGSParser;
 
@@ -29,19 +29,31 @@ public class PathExpandBuilderVisitor extends CypherGSBaseVisitor<PathExpandConf
 
     public PathExpandBuilderVisitor(CypherToAlgebraVisitor parent) {
         this.parent = Objects.requireNonNull(parent);
+        // PATH_OPT = ARBITRARY and RESULT_OPT = END_V are set by default
         this.builder = PathExpandConfig.newBuilder(parent.getBuilder());
     }
 
     @Override
     public PathExpandConfig.Builder visitOC_RelationshipPattern(
             CypherGSParser.OC_RelationshipPatternContext ctx) {
-        builder.expand(VisitorUtils.expandConfig(ctx));
-        return visitOC_Properties(ctx.oC_RelationshipDetail().oC_Properties());
+        ExpandConfig expandConfig = VisitorUtils.expandConfig(ctx);
+        // set expand base in path_expand
+        builder.expand(expandConfig);
+        // fuse filters with expand base in path_expand
+        visitOC_Properties(ctx.oC_RelationshipDetail().oC_Properties());
+        // set path expand alias
+        if (expandConfig.getAlias() != null) {
+            builder.alias(expandConfig.getAlias());
+        }
+        // set path expand hops
+        return visitOC_RangeLiteral(ctx.oC_RelationshipDetail().oC_RangeLiteral());
     }
 
     @Override
     public PathExpandConfig.Builder visitOC_NodePattern(CypherGSParser.OC_NodePatternContext ctx) {
+        // set getV base in path_expand
         builder.getV(VisitorUtils.getVConfig(ctx));
+        // fuse filters with getV base in path_expand
         return visitOC_Properties(ctx.oC_Properties());
     }
 
@@ -56,7 +68,7 @@ public class PathExpandBuilderVisitor extends CypherGSBaseVisitor<PathExpandConf
         if (ctx != null && ctx.oC_IntegerLiteral().size() > 1) {
             int val1 = Integer.valueOf(ctx.oC_IntegerLiteral(0).getText());
             int val2 = Integer.valueOf(ctx.oC_IntegerLiteral(1).getText());
-            return builder.range(val1, val2 - val1 + 1);
+            return builder.range(val1, val2 - val1);
         } else {
             return builder;
         }

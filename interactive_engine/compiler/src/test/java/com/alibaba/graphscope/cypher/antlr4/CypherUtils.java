@@ -18,8 +18,8 @@ package com.alibaba.graphscope.cypher.antlr4;
 
 import com.alibaba.graphscope.common.ir.IrUtils;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrCypherScriptEngine;
+
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.SimpleBindings;

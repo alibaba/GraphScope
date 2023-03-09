@@ -23,55 +23,72 @@ import org.junit.Test;
 public class WithTest {
     // project(a.age) -> expr: a.age, alias: age
     @Test
-    public void with_test_1() {
+    public void with_1_test() {
         RelNode project = CypherUtils.eval("Match (a) Return a.age").build();
         Assert.assertEquals(
-                "GraphLogicalProject(age=[a.age], isAppend=[false])\n" +
-                        "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}], alias=[a], opt=[VERTEX])",
+                "GraphLogicalProject(age=[a.age], isAppend=[false])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[a], opt=[VERTEX])",
                 project.explain().trim());
     }
 
     // project(a.name, b as d) -> {expr: a.name, alias: name}, {expr: b, alias: d}
     @Test
-    public void with_test_2() {
+    public void with_2_test() {
         RelNode project = CypherUtils.eval("Match (a)-[b]->() Return a.name, b as d").build();
         Assert.assertEquals(
-                "GraphLogicalProject(name=[a.name], d=[b], isAppend=[false])\n" +
-                        "  GraphLogicalSingleMatch(input=[null], sentence=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software, person]}], alias=[~DEFAULT], opt=[END])\n" +
-                        "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}], alias=[b], opt=[OUT])\n" +
-                        "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}], alias=[a], opt=[VERTEX])\n" +
-                        "], matchOpt=[INNER])",
+                "GraphLogicalProject(name=[a.name], d=[b], isAppend=[false])\n"
+                    + "  GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[~DEFAULT], opt=[END])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[b], opt=[OUT])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[a], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
                 project.explain().trim());
     }
 
     @Test
-    public void with_test_3() {
-        RelNode project = CypherUtils.eval("Match (a)-[b]-() Return a.age + (10 - b.weight) as c").build();
-        Assert.assertEquals("GraphLogicalProject(c=[+(a.age, -(10, b.weight))], isAppend=[false])\n" +
-                "  GraphLogicalSingleMatch(input=[null], sentence=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software, person]}], alias=[~DEFAULT], opt=[BOTH])\n" +
-                "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}], alias=[b], opt=[BOTH])\n" +
-                "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}], alias=[a], opt=[VERTEX])\n" +
-                "], matchOpt=[INNER])", project.explain().trim());
+    public void with_3_test() {
+        RelNode project =
+                CypherUtils.eval("Match (a)-[b]-() Return a.age + (10 - b.weight) as c").build();
+        Assert.assertEquals(
+                "GraphLogicalProject(c=[+(a.age, -(10, b.weight))], isAppend=[false])\n"
+                    + "  GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[~DEFAULT], opt=[BOTH])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[b], opt=[BOTH])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[a], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
+                project.explain().trim());
     }
 
     // group by a.name, count(a.name)
     @Test
-    public void with_test_4() {
+    public void with_4_test() {
         RelNode aggregate = CypherUtils.eval("Match (a) Return a.name, count(a.name) as b").build();
         Assert.assertEquals(
-                "GraphLogicalAggregate(keys=[{variables=[a.name], aliases=[name]}], values=[[{operands=[a.name], aggFunction=COUNT, alias='b'}]])\n" +
-                        "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}], alias=[a], opt=[VERTEX])",
+                "GraphLogicalAggregate(keys=[{variables=[a.name], aliases=[name]}],"
+                    + " values=[[{operands=[a.name], aggFunction=COUNT, alias='b'}]])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[a], opt=[VERTEX])",
                 aggregate.explain().trim());
     }
 
     // group by a.name, count(a.name) + 1 as d -> aggregate + project
     @Test
-    public void with_test_5() {
-        RelNode project = CypherUtils.eval("Match (a) Return a.name as name, count(a.name) + 1 as d").build();
+    public void with_5_test() {
+        RelNode project =
+                CypherUtils.eval("Match (a) Return a.name as name, count(a.name) + 1 as d").build();
         Assert.assertEquals(
-                "GraphLogicalProject(d=[+(EXPR$0., 1)], isAppend=[true])\n" +
-                        "  GraphLogicalAggregate(keys=[{variables=[a.name], aliases=[name]}], values=[[{operands=[a.name], aggFunction=COUNT, alias='EXPR$0'}]])\n" +
-                        "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}], alias=[a], opt=[VERTEX])",
+                "GraphLogicalProject(name=[EXPR$1], d=[+(EXPR$0, 1)], isAppend=[false])\n"
+                        + "  GraphLogicalAggregate(keys=[{variables=[a.name], aliases=[EXPR$1]}],"
+                        + " values=[[{operands=[a.name], aggFunction=COUNT, alias='EXPR$0'}]])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                        + " person]}], alias=[a], opt=[VERTEX])",
                 project.explain().trim());
     }
 }
