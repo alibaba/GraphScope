@@ -34,10 +34,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
-    private final CypherToAlgebraVisitor parent;
+    private final GraphBuilderVisitor parent;
     private final GraphBuilder builder;
 
-    public ExpressionVisitor(CypherToAlgebraVisitor parent) {
+    public ExpressionVisitor(GraphBuilderVisitor parent) {
         this.parent = parent;
         this.builder = Objects.requireNonNull(parent).getBuilder();
     }

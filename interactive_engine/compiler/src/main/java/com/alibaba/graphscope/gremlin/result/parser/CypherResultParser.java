@@ -58,6 +58,7 @@ public class CypherResultParser implements ResultParser {
     public List<Object> parseFrom(PegasusClient.JobResponse response) {
         try {
             IrResult.Results results = IrResult.Results.parseFrom(response.getResp());
+            logger.info("results {}", results);
             Map<String, Object> columns = new LinkedHashMap<>();
             outputType
                     .getFieldList()

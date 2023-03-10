@@ -17,7 +17,7 @@
 package com.alibaba.graphscope.gremlin.plugin.script;
 
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-import com.alibaba.graphscope.cypher.antlr4.visitor.CypherToAlgebraVisitor;
+import com.alibaba.graphscope.cypher.antlr4.visitor.GraphBuilderVisitor;
 import com.alibaba.graphscope.grammar.CypherGSLexer;
 import com.alibaba.graphscope.grammar.CypherGSParser;
 import com.alibaba.graphscope.gremlin.exception.InvalidGremlinScriptException;
@@ -54,7 +54,7 @@ public class AntlrCypherScriptEngine extends AbstractScriptEngine implements Gre
         Bindings globalBindings = ctx.getBindings(ScriptContext.ENGINE_SCOPE);
         GraphBuilder graphBuilder =
                 Objects.requireNonNull((GraphBuilder) globalBindings.get("graph.builder"));
-        CypherToAlgebraVisitor visitor = new CypherToAlgebraVisitor(graphBuilder);
+        GraphBuilderVisitor visitor = new GraphBuilderVisitor(graphBuilder);
         try {
             CypherGSLexer lexer = new CypherGSLexer(CharStreams.fromString(script));
             lexer.removeErrorListeners();

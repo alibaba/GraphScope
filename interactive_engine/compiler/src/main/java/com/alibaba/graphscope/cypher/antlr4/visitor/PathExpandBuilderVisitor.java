@@ -24,10 +24,10 @@ import com.alibaba.graphscope.grammar.CypherGSParser;
 import java.util.Objects;
 
 public class PathExpandBuilderVisitor extends CypherGSBaseVisitor<PathExpandConfig.Builder> {
-    private final CypherToAlgebraVisitor parent;
+    private final GraphBuilderVisitor parent;
     private final PathExpandConfig.Builder builder;
 
-    public PathExpandBuilderVisitor(CypherToAlgebraVisitor parent) {
+    public PathExpandBuilderVisitor(GraphBuilderVisitor parent) {
         this.parent = Objects.requireNonNull(parent);
         // PATH_OPT = ARBITRARY and RESULT_OPT = END_V are set by default
         this.builder = PathExpandConfig.newBuilder(parent.getBuilder());

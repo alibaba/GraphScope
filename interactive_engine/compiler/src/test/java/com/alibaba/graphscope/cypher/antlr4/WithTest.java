@@ -91,4 +91,16 @@ public class WithTest {
                         + " person]}], alias=[a], opt=[VERTEX])",
                 project.explain().trim());
     }
+
+    // distinct keys
+    @Test
+    public void with_6_test() {
+        RelNode project = Utils.eval("Match (a) Return distinct a.name, a.age").build();
+        Assert.assertEquals(
+                "GraphLogicalAggregate(keys=[{variables=[a.name, a.age], aliases=[name, age]}],"
+                    + " values=[[]])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[a], opt=[VERTEX])",
+                project.explain().trim());
+    }
 }

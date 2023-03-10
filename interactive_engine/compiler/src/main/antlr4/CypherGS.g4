@@ -107,7 +107,7 @@ oC_Return
 RETURN : ( 'R' | 'r' ) ( 'E' | 'e' ) ( 'T' | 't' ) ( 'U' | 'u' ) ( 'R' | 'r' ) ( 'N' | 'n' ) ;
 
 oC_ProjectionBody
-    :  SP oC_ProjectionItems ( SP oC_Order )? ( SP oC_Limit )? ;
+    :  ( SP? DISTINCT )? SP oC_ProjectionItems ( SP oC_Order )? ( SP oC_Limit )? ;
 
 oC_ProjectionItems
     :  ( oC_ProjectionItem ( SP? ',' SP? oC_ProjectionItem )* )

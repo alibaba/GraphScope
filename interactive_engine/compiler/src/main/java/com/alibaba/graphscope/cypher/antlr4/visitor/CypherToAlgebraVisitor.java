@@ -34,12 +34,12 @@ import org.apache.calcite.tools.RelBuilder;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class CypherToAlgebraVisitor extends CypherGSBaseVisitor<GraphBuilder> {
+public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
     private final GraphBuilder builder;
     private final Set<String> uniqueNameList;
     private final ExpressionVisitor expressionVisitor;
 
-    public CypherToAlgebraVisitor(GraphBuilder builder) {
+    public GraphBuilderVisitor(GraphBuilder builder) {
         this.builder = Objects.requireNonNull(builder);
         this.expressionVisitor = new ExpressionVisitor(this);
         this.uniqueNameList = new HashSet<>();
@@ -137,6 +137,7 @@ public class CypherToAlgebraVisitor extends CypherGSBaseVisitor<GraphBuilder> {
 
     @Override
     public GraphBuilder visitOC_ProjectionBody(CypherGSParser.OC_ProjectionBodyContext ctx) {
+        boolean isDistinct = (ctx.DISTINCT() != null);
         List<RexNode> keyExprs = new ArrayList<>();
         List<String> keyAliases = new ArrayList<>();
         List<RelBuilder.AggCall> aggCalls = new ArrayList<>();
@@ -170,6 +171,8 @@ public class CypherToAlgebraVisitor extends CypherGSBaseVisitor<GraphBuilder> {
                 }
                 builder.project(extraExprs, extraAliases, false);
             }
+        } else if (isDistinct) {
+            builder.aggregate(builder.groupKey(keyExprs, keyAliases));
         } else {
             builder.project(keyExprs, keyAliases, false);
         }
