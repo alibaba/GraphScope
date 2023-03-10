@@ -67,7 +67,7 @@ class EngineCluster:
         preemptive,
         service_type,
         vineyard_cpu,
-        vineyard_daemonset,
+        k8s_vineyard_deployment,
         vineyard_image,
         vineyard_mem,
         vineyard_shared_mem,
@@ -126,7 +126,7 @@ class EngineCluster:
         self._image_pull_policy = image_pull_policy
         self._image_pull_secrets = image_pull_secrets
 
-        self._vineyard_daemonset = vineyard_daemonset
+        self._k8s_vineyard_deployment = k8s_vineyard_deployment
 
         self._with_analytical = with_analytical
         self._with_analytical_java = with_analytical_java
@@ -216,11 +216,11 @@ class EngineCluster:
     def get_vineyard_socket_volume(self):
         name = "vineyard-ipc-socket"
         volume = kube_client.V1Volume(name=name)
-        if self._vineyard_daemonset is None:
+        if self._k8s_vineyard_deployment is None:
             empty_dir = kube_client.V1EmptyDirVolumeSource()
             volume.empty_dir = empty_dir
         else:
-            path = f"/var/run/vineyard-{self._namespace}-{self._vineyard_daemonset}"
+            path = f"/var/run/vineyard-kubernetes/{self._namespace}/{self._k8s_vineyard_deployment}"
             host_path = kube_client.V1HostPathVolumeSource(path=path)
             host_path.type = "Directory"
             volume.host_path = host_path
@@ -396,6 +396,7 @@ class EngineCluster:
         socket_volume = self.get_vineyard_socket_volume()
         shm_volume = self.get_shm_volume()
         volumes.extend([socket_volume[0], shm_volume[0]])
+
         engine_volume_mounts = [socket_volume[2], shm_volume[2]]
 
         if self._volumes and self._volumes is not None:
@@ -424,12 +425,13 @@ class EngineCluster:
                 self.get_learning_container(volume_mounts=engine_volume_mounts)
             )
 
-        if self._vineyard_daemonset is None:
+        if self._k8s_vineyard_deployment is None:
             containers.append(
                 self.get_vineyard_container(
                     volume_mounts=[socket_volume[1], shm_volume[1]]
                 )
             )
+
         if self._with_dataset:
             dataset_volume = self.get_dataset_volume()
             volumes.append(dataset_volume[0])
@@ -529,8 +531,11 @@ class EngineCluster:
 
     def get_vineyard_service_endpoint(self, api_client):
         # return f"{self.vineyard_service_name}:{self._vineyard_service_port}"
-        service_type = self._service_type
         service_name = self.vineyard_service_name
+        service_type = self._service_type
+        if self._k8s_vineyard_deployment is not None:
+            service_name = self._k8s_vineyard_deployment + "-rpc"
+            service_type = "ClusterIP"
         endpoints = get_service_endpoints(
             api_client=api_client,
             namespace=self._namespace,
@@ -581,12 +586,22 @@ class EngineCluster:
         container.resources = ResourceBuilder.get_resources(
             self._frontend_requests, None
         )
+        if self._k8s_vineyard_deployment is not None:
+            socket_volume = self.get_vineyard_socket_volume()
+            container.volume_mounts = [socket_volume[2]]
         return container
 
     def get_interactive_frontend_deployment(self, replicas=1):
         name = self.frontend_deployment_name
+        vineyard_volumes = []
+        if self._k8s_vineyard_deployment is not None:
+            socket_volume = self.get_vineyard_socket_volume()
+            vineyard_volumes = [socket_volume[0]]
+
         container = self.get_interactive_frontend_container()
-        pod_spec = ResourceBuilder.get_pod_spec(containers=[container])
+        pod_spec = ResourceBuilder.get_pod_spec(
+            containers=[container], volumes=vineyard_volumes
+        )
         template_spec = ResourceBuilder.get_pod_template_spec(
             pod_spec, self._frontend_labels
         )

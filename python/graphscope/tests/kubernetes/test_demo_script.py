@@ -24,6 +24,8 @@ import tempfile
 
 import numpy as np
 import pytest
+from kubernetes import client
+from kubernetes import config
 
 import graphscope
 from graphscope import Graph
@@ -99,6 +101,82 @@ def gs_session_distributed():
 
 
 @pytest.fixture
+def create_vineyard_deployment_on_single_node():
+    try:
+        import vineyard
+    except ImportError:
+        logger.error("vineyard is not installed, please install vineyard first.")
+    # create vineyard deployment on single node
+    # set the replicas of vineyard and etcd to 1 as there is only one node in the cluster
+    vineyard.deploy.vineyardctl.deploy.vineyard_deployment(
+        vineyard_replicas=1,
+        vineyard_etcd_replicas=1,
+        namespace="graphscope-system",
+        create_namespace=True,
+    )
+
+
+@pytest.fixture
+def gs_session_with_vineyard_deployment(create_vineyard_deployment_on_single_node):
+    sess = graphscope.session(
+        num_workers=2,
+        k8s_namespace="graphscope-system",
+        k8s_image_registry=get_gs_registry_on_ci_env(),
+        k8s_image_tag=get_gs_tag_on_ci_env(),
+        k8s_coordinator_cpu=2,
+        k8s_coordinator_mem="4Gi",
+        k8s_vineyard_cpu=2,
+        k8s_vineyard_mem="1Gi",
+        k8s_engine_cpu=2,
+        k8s_engine_mem="4Gi",
+        vineyard_shared_mem="4Gi",
+        k8s_vineyard_deployment="vineyardd-sample",
+        k8s_volumes=get_k8s_volumes(),
+    )
+    yield sess
+    sess.close()
+
+
+@pytest.fixture
+def create_vineyard_deployment_on_multiple_nodes(create_graphscope_namesapce):
+    try:
+        import vineyard
+    except ImportError:
+        logger.error("vineyard is not installed, please install vineyard first.")
+    # create vineyard deployment on multiple nodes
+    # set the replicas of vineyard and etcd to 2 as there are 2 nodes in the kubernetes cluster
+    vineyard.deploy.vineyardctl.deploy.vineyard_deployment(
+        vineyard_replicas=2,
+        vineyard_etcd_replicas=2,
+        namespace="graphscope-system",
+        create_namespace=True,
+    )
+
+
+@pytest.fixture
+def gs_session_distributed_with_vineyard_deployment(
+    create_vineyard_deployment_on_multiple_nodes,
+):
+    sess = graphscope.session(
+        num_workers=2,
+        k8s_namespace="graphscope-system",
+        k8s_image_registry=get_gs_registry_on_ci_env(),
+        k8s_image_tag=get_gs_tag_on_ci_env(),
+        k8s_coordinator_cpu=2,
+        k8s_coordinator_mem="4Gi",
+        k8s_vineyard_cpu=2,
+        k8s_vineyard_mem="1Gi",
+        k8s_engine_cpu=2,
+        k8s_engine_mem="4Gi",
+        vineyard_shared_mem="4Gi",
+        k8s_vineyard_deployment="vineyardd-sample",
+        k8s_volumes=get_k8s_volumes(),
+    )
+    yield sess
+    sess.close()
+
+
+@pytest.fixture
 def data_dir():
     return "/testingdata/ldbc_sample"
 
@@ -166,6 +244,22 @@ def test_demo_on_hdfs(gs_session_distributed):
         selector={"id": "v.id", "rank": "r"},
         host=os.environ["HDFS_HOST"],
         port=9000,
+    )
+
+
+def test_vineyard_deployment_on_single_node(
+    gs_session_with_vineyard_deployment, data_dir, modern_graph_data_dir
+):
+    test_demo_distribute(
+        gs_session_with_vineyard_deployment, data_dir, modern_graph_data_dir
+    )
+
+
+def test_vineyard_deployment_on_multiple_nodes(
+    gs_session_distributed_with_vineyard_deployment, data_dir, modern_graph_data_dir
+):
+    test_demo_distribute(
+        gs_session_distributed_with_vineyard_deployment, data_dir, modern_graph_data_dir
     )
 
 
