@@ -74,4 +74,12 @@ public class GraphLogicalSingleMatch extends AbstractLogicalMatch {
         }
         return new RelRecordType(StructKind.FULLY_QUALIFIED, fields);
     }
+
+    public RelNode getSentence() {
+        return sentence;
+    }
+
+    public GraphOpt.Match getMatchOpt() {
+        return matchOpt;
+    }
 }
