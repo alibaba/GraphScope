@@ -50,8 +50,8 @@ RUN sudo mkdir -p /var/log/graphscope \
   && sudo chown -R graphscope:graphscope /var/log/graphscope
 
 # kubectl v1.19.2
-RUN curl -L -o /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.19.2/bin/linux/amd64/kubectl
-RUN chmod +x /usr/local/bin/kubectl
+RUN curl -L -o /usr/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.19.2/bin/linux/amd64/kubectl
+RUN chmod +x /usr/bin/kubectl
 
 COPY --from=builder /home/graphscope/install /opt/graphscope/
 RUN python3 -m pip install --no-cache-dir /opt/graphscope/*.whl && rm -rf /opt/graphscope/
@@ -59,6 +59,7 @@ COPY --from=builder /opt/openmpi /opt/openmpi
 
 COPY ./interactive_engine/assembly/src/bin/graphscope/giectl /opt/graphscope/bin/giectl
 COPY ./k8s/utils/kube_ssh /usr/local/bin/kube_ssh
+RUN sudo chmod a+wrx /tmp
 
 USER graphscope
 WORKDIR /home/graphscope

@@ -43,6 +43,7 @@ RUN useradd -m graphscope -u 1001 \
 
 RUN sudo mkdir -p /var/log/graphscope \
   && sudo chown -R graphscope:graphscope /var/log/graphscope
+RUN sudo chmod a+wrx /tmp
 
 USER graphscope
 WORKDIR /home/graphscope
@@ -60,6 +61,7 @@ COPY --from=builder /home/graphscope/install/bin /opt/graphscope/bin
 COPY --from=builder /home/graphscope/install/conf /opt/graphscope/conf
 
 RUN sudo chmod +x /opt/graphscope/bin/*
+RUN sudo chmod a+wrx /tmp
 
 USER graphscope
 WORKDIR /home/graphscope

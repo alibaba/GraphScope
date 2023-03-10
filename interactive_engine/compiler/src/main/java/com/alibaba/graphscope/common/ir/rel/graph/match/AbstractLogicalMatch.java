@@ -39,7 +39,7 @@ public abstract class AbstractLogicalMatch extends SingleRel {
         super(cluster, RelTraitSet.createEmpty(), input);
     }
 
-    // Join or FlatMap
+    // Join or FlatMap or Intersect
     public RelNode toPhysical() {
         throw new UnsupportedOperationException("will implement in physical layer");
     }

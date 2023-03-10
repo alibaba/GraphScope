@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.common.ir;
 
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
+import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 
 import org.apache.calcite.rel.RelNode;
@@ -27,7 +28,7 @@ public class ExpandTest {
     // g.V().hasLabel("person").outE("knows")
     @Test
     public void expand_1_test() {
-        GraphBuilder builder = SourceTest.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         RelNode expand =
                 builder.source(
                                 new SourceConfig(
@@ -49,7 +50,7 @@ public class ExpandTest {
     // g.V().hasLabel("person").outE("knows").as("x")
     @Test
     public void expand_2_test() {
-        GraphBuilder builder = SourceTest.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         RelNode expand =
                 builder.source(
                                 new SourceConfig(
@@ -69,13 +70,15 @@ public class ExpandTest {
                 expand.explain().trim());
     }
 
-    // path expand: g.V().hasLabel("person").out('1..3', "knows").with('PATH_OPT',
+    // path expand: g.V().hasLabel("person").out('1..3', "knows").has("age",
+    // eq(10)).with('PATH_OPT',
     // SIMPLE).with('RESULT_OPT', ALL_V)
     @Test
     public void expand_3_test() {
-        GraphBuilder builder = SourceTest.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
+        PathExpandConfig.Builder pxdBuilder = PathExpandConfig.newBuilder(builder);
         PathExpandConfig pxdConfig =
-                PathExpandConfig.newBuilder(builder)
+                pxdBuilder
                         .expand(
                                 new ExpandConfig(
                                         GraphOpt.Expand.OUT,
@@ -84,6 +87,11 @@ public class ExpandTest {
                                 new GetVConfig(
                                         GraphOpt.GetV.END,
                                         new LabelConfig(false).addLabel("person")))
+                        .filter(
+                                pxdBuilder.call(
+                                        GraphStdOperatorTable.EQUALS,
+                                        pxdBuilder.variable(null, "age"),
+                                        pxdBuilder.literal(10)))
                         .range(1, 3)
                         .pathOpt(GraphOpt.PathExpandPath.SIMPLE)
                         .resultOpt(GraphOpt.PathExpandResult.AllV)
@@ -99,7 +107,7 @@ public class ExpandTest {
                 "GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
                         + " tables=[knows]}], alias=[~DEFAULT], opt=[OUT])\n"
                         + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[~DEFAULT], opt=[END])\n"
+                        + " alias=[~DEFAULT], fusedFilter=[[=(DEFAULT.age, 10)]], opt=[END])\n"
                         + "], offset=[1], fetch=[3], path_opt=[SIMPLE], result_opt=[AllV],"
                         + " alias=[~DEFAULT])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"

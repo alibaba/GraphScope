@@ -20,48 +20,51 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Objects;
 
-public class NameOrId {
-    private @Nullable String name;
-    private int id;
+public class GraphProperty {
+    public static final String LEN_KEY = "~len";
+    public static final String ALL_KEY = "~all";
+    public static final String ID_KEY = "~id";
+    public static final String LABEL_KEY = "~label";
+
     private final Opt opt;
+    private final @Nullable GraphNameOrId key;
 
-    public NameOrId(String name) {
-        this.name = Objects.requireNonNull(name);
-        this.opt = Opt.NAME;
+    public GraphProperty(Opt opt) {
+        this.opt = opt;
+        this.key = null;
     }
 
-    public NameOrId(int id) {
-        this.id = id;
-        this.opt = Opt.ID;
-    }
-
-    public @Nullable String getName() {
-        return name;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public Opt getOpt() {
-        return opt;
+    public GraphProperty(GraphNameOrId key) {
+        this.key = Objects.requireNonNull(key);
+        this.opt = Opt.KEY;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        NameOrId nameOrId = (NameOrId) o;
-        return id == nameOrId.id && Objects.equals(name, nameOrId.name) && opt == nameOrId.opt;
+        GraphProperty that = (GraphProperty) o;
+        return opt == that.opt && Objects.equals(key, that.key);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, id, opt);
+        return Objects.hash(opt, key);
+    }
+
+    public Opt getOpt() {
+        return opt;
+    }
+
+    public @Nullable GraphNameOrId getKey() {
+        return key;
     }
 
     public enum Opt {
-        NAME,
-        ID
+        ID,
+        LABEL,
+        LEN,
+        ALL,
+        KEY
     }
 }
