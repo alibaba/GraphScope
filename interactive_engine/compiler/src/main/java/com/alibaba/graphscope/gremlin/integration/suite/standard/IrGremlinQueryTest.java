@@ -21,6 +21,7 @@ import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.outE;
 
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 
+import org.apache.tinkerpop.gremlin.LoadGraphWith;
 import org.apache.tinkerpop.gremlin.process.AbstractGremlinProcessTest;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
@@ -45,6 +46,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     public abstract Traversal<Vertex, Object>
             get_g_V_out_as_a_in_select_a_as_b_select_b_by_values();
 
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_group_by_by_dedup_count_test() {
         Traversal<Vertex, Map<Object, Long>> traversal =
@@ -59,6 +61,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         Assert.assertFalse(traversal.hasNext());
     }
 
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_group_by_outE_count_test() {
         Traversal<Vertex, Map<Object, List>> traversal =
@@ -83,6 +86,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         Assert.assertFalse(traversal.hasNext());
     }
 
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_VX4X_bothE_as_otherV() {
         Traversal<Vertex, Object> traversal = this.get_g_VX4X_bothE_as_otherV();
@@ -100,6 +104,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         Assert.assertEquals(expected.size(), counter);
     }
 
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_hasLabel_hasId_values() {
         Traversal<Vertex, Object> traversal = this.get_g_V_hasLabel_hasId_values();
@@ -117,6 +122,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         Assert.assertEquals(1, counter);
     }
 
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_out_as_a_in_select_a_as_b_select_b_by_valueMap() {
         Traversal<Vertex, Object> traversal =
