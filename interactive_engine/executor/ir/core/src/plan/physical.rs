@@ -1017,6 +1017,12 @@ mod test {
         expected_builder.shuffle(None);
         expected_builder.edge_expand(build_edgexpd(0, vec![], Some(0.into())));
         expected_builder.shuffle(Some(0.into()));
+        expected_builder.get_v(pb::GetV {
+            tag: Some(0.into()),
+            opt: 4,
+            params: None,
+            alias: Some(0.into()),
+        });
         expected_builder.project(build_project("{@0.name, @0.id, @0.age}"));
         expected_builder.sink(build_sink());
 
@@ -1097,6 +1103,7 @@ mod test {
         expected_builder.shuffle(None);
         expected_builder.get_v(build_auxilia_with_predicates("@.age == 27"));
         expected_builder.shuffle(None);
+        expected_builder.get_v(build_auxilia_with_tag_alias_columns(None, None, vec![]));
         expected_builder.project(build_project("{@.name, @.id}"));
         expected_builder.sink(build_sink());
         assert_eq!(job_builder, expected_builder);
@@ -1142,6 +1149,11 @@ mod test {
         expected_builder.edge_expand(build_edgexpd(1, vec![], None));
         expected_builder.get_v(build_getv(Some(0.into())));
         expected_builder.shuffle(Some(0.into()));
+        expected_builder.get_v(build_auxilia_with_tag_alias_columns(
+            Some(0.into()),
+            Some(0.into()),
+            vec![],
+        ));
         expected_builder.project(build_project("{@0.name, @0.id, @0.age}"));
         expected_builder.sink(build_sink());
 
@@ -1439,6 +1451,12 @@ mod test {
             None,
         );
         expected_builder.shuffle(Some(0.into()));
+        expected_builder.get_v(pb::GetV {
+            tag: Some(0.into()),
+            opt: 4,
+            params: None,
+            alias: Some(0.into()),
+        });
         expected_builder.project(project);
 
         assert_eq!(expected_builder, builder);
