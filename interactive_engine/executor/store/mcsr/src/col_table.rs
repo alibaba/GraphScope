@@ -259,8 +259,6 @@ impl ColTable {
         if let Some(col_i) = self.header.get(col_name) {
             self.columns[*col_i].get(row_i)
         } else {
-            println!("{:?}", self.header);
-            println!("col-{} not in table", col_name);
             None
         }
     }
