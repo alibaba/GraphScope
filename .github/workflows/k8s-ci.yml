@@ -401,7 +401,7 @@ jobs:
           git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
 
           # create a kubernetes cluster with 2 nodes
-          minikube start --nodes 2 --cpus='12' --memory='32000mb' --disk-size='40000mb' \
+          minikube start --nodes 2 --cpus='6' --memory='32000mb' --disk-size='40000mb' \
                          --mount=true --mount-string="${GS_TEST_DIR}:${GS_TEST_DIR}"
 
           export GS_REGISTRY=""

@@ -24,8 +24,6 @@ import tempfile
 
 import numpy as np
 import pytest
-from kubernetes import client
-from kubernetes import config
 
 import graphscope
 from graphscope import Graph
