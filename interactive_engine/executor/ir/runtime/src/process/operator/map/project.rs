@@ -123,7 +123,7 @@ impl FilterMapFuncGen for pb::Project {
             let projector = if expr.operators.len() == 1 {
                 if let Some(common_pb::ExprOpr {
                     item: Some(common_pb::expr_opr::Item::Var(var)), ..
-                }) = expr.operators.get(0)
+                }) = expr.operators.first()
                 {
                     let tag_key = TagKey::try_from(var.clone())?;
                     Projector::GraphElementProjector(tag_key)

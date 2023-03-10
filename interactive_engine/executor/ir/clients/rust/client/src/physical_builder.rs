@@ -210,11 +210,9 @@ impl Plan {
     }
 
     // Notice that this is used to set the meta_data of the **Last Appended OP**
-    pub fn with_meta_data(&mut self, meta_data: Option<Vec<pb::physical_opr::MetaData>>) {
+    pub fn with_meta_data(&mut self, meta_data: Vec<pb::physical_opr::MetaData>) {
         if let Some(op) = self.plan.last_mut() {
-            if let Some(meta_data) = meta_data {
-                op.op_meta = meta_data;
-            }
+            op.meta_data = meta_data;
         }
     }
 
@@ -263,10 +261,14 @@ impl JobBuilder {
     /// If the plan is single source, scan would be the root op;
     /// Otherwise, the root is the dummy node, while the real sources are multiple scans.
     pub fn add_scan_source(&mut self, mut scan: algebra_pb::Scan) -> &mut Self {
-        let op_meta = scan.op_meta.take();
+        let meta_data = scan.meta_data.take();
         self.plan
             .add_scan_source(scan.into())
-            .with_meta_data(op_meta.map(|meta| vec![meta.into()]));
+            .with_meta_data(
+                meta_data
+                    .map(|meta| vec![meta.into()])
+                    .unwrap_or(vec![]),
+            );
         self
     }
 
@@ -287,15 +289,15 @@ impl JobBuilder {
     }
 
     pub fn project(&mut self, project: algebra_pb::Project) -> &mut Self {
-        let op_meta = project.op_meta.clone();
+        let meta_data = project.meta_data.clone();
         self.plan
             .project(project.into())
-            .with_meta_data(Some(
-                op_meta
+            .with_meta_data(
+                meta_data
                     .into_iter()
                     .map(|meta| meta.into())
                     .collect(),
-            ));
+            );
         self
     }
 
@@ -305,15 +307,13 @@ impl JobBuilder {
     }
 
     pub fn group(&mut self, group: algebra_pb::GroupBy) -> &mut Self {
-        let op_meta = group.op_meta.clone();
-        self.plan
-            .group(group.into())
-            .with_meta_data(Some(
-                op_meta
-                    .into_iter()
-                    .map(|meta| meta.into())
-                    .collect(),
-            ));
+        let meta_data = group.meta_data.clone();
+        self.plan.group(group.into()).with_meta_data(
+            meta_data
+                .into_iter()
+                .map(|meta| meta.into())
+                .collect(),
+        );
         self
     }
 
@@ -328,10 +328,12 @@ impl JobBuilder {
     }
 
     pub fn unfold(&mut self, mut unfold: algebra_pb::Unfold) -> &mut Self {
-        let op_meta = unfold.op_meta.take();
-        self.plan
-            .unfold(unfold.into())
-            .with_meta_data(op_meta.map(|meta| vec![meta.into()]));
+        let meta_data = unfold.meta_data.take();
+        self.plan.unfold(unfold.into()).with_meta_data(
+            meta_data
+                .map(|meta| vec![meta.into()])
+                .unwrap_or(vec![]),
+        );
         self
     }
 
@@ -423,18 +425,24 @@ impl JobBuilder {
     }
 
     pub fn get_v(&mut self, mut get_v: algebra_pb::GetV) -> &mut Self {
-        let op_meta = get_v.op_meta.take();
-        self.plan
-            .get_v(get_v.into())
-            .with_meta_data(op_meta.map(|meta| vec![meta.into()]));
+        let meta_data = get_v.meta_data.take();
+        self.plan.get_v(get_v.into()).with_meta_data(
+            meta_data
+                .map(|meta| vec![meta.into()])
+                .unwrap_or(vec![]),
+        );
         self
     }
 
     pub fn edge_expand(&mut self, mut edge: algebra_pb::EdgeExpand) -> &mut Self {
-        let op_meta = edge.op_meta.take();
+        let meta_data = edge.meta_data.take();
         self.plan
             .edge_expand(edge.into())
-            .with_meta_data(op_meta.map(|meta| vec![meta.into()]));
+            .with_meta_data(
+                meta_data
+                    .map(|meta| vec![meta.into()])
+                    .unwrap_or(vec![]),
+            );
         self
     }
 
@@ -490,14 +498,19 @@ mod test {
     #[test]
     fn test_job_build_00() {
         let mut builder = JobBuilder::new(JobConf::new("test_build_00"));
-        let source_pb =
-            algebra_pb::Scan { scan_opt: 0, alias: None, params: None, idx_predicate: None, op_meta: None };
+        let source_pb = algebra_pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: None,
+            idx_predicate: None,
+            meta_data: None,
+        };
         let sink_pb = algebra_pb::Sink { tags: vec![], sink_target: None };
         builder
             .add_scan_source(source_pb.clone())
             .select(algebra_pb::Select { predicate: None })
             .repartition(pb::Repartition { strategy: None })
-            .project(algebra_pb::Project { mappings: vec![], is_append: false, op_meta: vec![] })
+            .project(algebra_pb::Project { mappings: vec![], is_append: false, meta_data: vec![] })
             .limit(algebra_pb::Limit { range: None })
             .sink(sink_pb.clone());
         let plan_len = builder.plan.len();
@@ -508,10 +521,15 @@ mod test {
     #[test]
     fn test_job_build_01() {
         let mut builder = JobBuilder::new(JobConf::new("test_build_01"));
-        let scan1_pb =
-            algebra_pb::Scan { scan_opt: 0, alias: None, params: None, idx_predicate: None, op_meta: None };
+        let scan1_pb = algebra_pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: None,
+            idx_predicate: None,
+            meta_data: None,
+        };
         let scan2_pb = scan1_pb.clone();
-        let project_pb = algebra_pb::Project { mappings: vec![], is_append: false, op_meta: vec![] };
+        let project_pb = algebra_pb::Project { mappings: vec![], is_append: false, meta_data: vec![] };
         let sink_pb = algebra_pb::Sink { tags: vec![], sink_target: None };
 
         builder

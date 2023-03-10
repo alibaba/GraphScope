@@ -619,7 +619,7 @@ impl pb::edge_expand::Direction {
 impl From<physical_pb::physical_opr::operator::OpKind> for physical_pb::PhysicalOpr {
     fn from(op_kind: physical_pb::physical_opr::operator::OpKind) -> Self {
         let opr = physical_pb::physical_opr::Operator { op_kind: Some(op_kind) };
-        physical_pb::PhysicalOpr { opr: Some(opr), op_meta: vec![] }
+        physical_pb::PhysicalOpr { opr: Some(opr), meta_data: vec![] }
     }
 }
 

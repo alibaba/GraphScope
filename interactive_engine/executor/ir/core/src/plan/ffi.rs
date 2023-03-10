@@ -152,8 +152,8 @@ impl From<IrError> for FfiResult {
             IrError::ParseExprError(err) => FfiResult::new(ResultCode::ParseExprError, err.to_string()),
             IrError::InvalidPattern(s) => FfiResult::new(ResultCode::Others, s),
             IrError::InvalidExtendPattern(err) => FfiResult::new(ResultCode::Others, err.to_string()),
-            IrError::PbEncodeError(err) => FfiResult::new(ResultCode::Others, err.to_string()),
-            IrError::PbDecodeError(err) => FfiResult::new(ResultCode::Others, err.to_string()),
+            IrError::PbEncodeError(err) => FfiResult::new(ResultCode::ParsePbError, err.to_string()),
+            IrError::PbDecodeError(err) => FfiResult::new(ResultCode::ParsePbError, err.to_string()),
             IrError::MissingData(d) => {
                 FfiResult::new(ResultCode::MissingDataError, format!("required data {:?} is missing", d))
             }
@@ -791,7 +791,7 @@ fn set_alias(ptr: *const c_void, alias: FfiAlias, opt: InnerOpt) -> FfiResult {
     }
 }
 
-/// To set an operator's op_meta.
+/// To set an operator's meta_data.
 fn set_meta(ptr: *const c_void, meta_data: FfiPbPointer, opt: InnerOpt) -> FfiResult {
     let meta_pb = ptr_to_pb::<pb::MetaData>(meta_data);
     match meta_pb {
@@ -799,22 +799,22 @@ fn set_meta(ptr: *const c_void, meta_data: FfiPbPointer, opt: InnerOpt) -> FfiRe
             match opt {
                 InnerOpt::Scan => {
                     let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
-                    scan.op_meta = Some(pb);
+                    scan.meta_data = Some(pb);
                     std::mem::forget(scan);
                 }
                 InnerOpt::EdgeExpand => {
                     let mut edgexpd = unsafe { Box::from_raw(ptr as *mut pb::EdgeExpand) };
-                    edgexpd.op_meta = Some(pb);
+                    edgexpd.meta_data = Some(pb);
                     std::mem::forget(edgexpd);
                 }
                 InnerOpt::GetV => {
                     let mut getv = unsafe { Box::from_raw(ptr as *mut pb::GetV) };
-                    getv.op_meta = Some(pb);
+                    getv.meta_data = Some(pb);
                     std::mem::forget(getv);
                 }
                 InnerOpt::Unfold => {
                     let mut unfold = unsafe { Box::from_raw(ptr as *mut pb::Unfold) };
-                    unfold.op_meta = Some(pb);
+                    unfold.meta_data = Some(pb);
                     std::mem::forget(unfold);
                 }
                 _ => unreachable!(),
@@ -849,7 +849,9 @@ fn set_predicate(ptr: *const c_void, cstr_predicate: *const c_char, opt: InnerOp
 }
 
 /// To set an operator's predicate from a pb predicate pointer
-fn set_predicate_with_pb(ptr: *const c_void, ptr_predicate_pb: FfiPbPointer, opt: InnerOpt) -> FfiResult {
+/// In the following functions, we can set expression directly from a pb pointer,
+/// which is parsed by the compiler instead of ffi function.
+fn set_predicate_pb(ptr: *const c_void, ptr_predicate_pb: FfiPbPointer, opt: InnerOpt) -> FfiResult {
     let predicate_pb = ptr_to_pb::<common_pb::Expression>(ptr_predicate_pb);
     if predicate_pb.is_ok() {
         match opt {
@@ -967,10 +969,10 @@ mod params {
     }
 
     #[no_mangle]
-    pub extern "C" fn set_params_predicate_with_pb(
+    pub extern "C" fn set_params_predicate_pb(
         ptr_params: *const c_void, ptr_str_pred_pb: FfiPbPointer,
     ) -> FfiResult {
-        set_predicate_with_pb(ptr_params, ptr_str_pred_pb, InnerOpt::Params)
+        set_predicate_pb(ptr_params, ptr_str_pred_pb, InnerOpt::Params)
     }
 
     /// Set getting all columns
@@ -1024,7 +1026,7 @@ mod project {
         let project = Box::new(pb::Project {
             mappings: vec![],
             is_append: if is_append == 0 { false } else { true },
-            op_meta: vec![],
+            meta_data: vec![],
         });
         Box::into_raw(project) as *const c_void
     }
@@ -1056,7 +1058,7 @@ mod project {
     /// To add a mapping for the project operator, which maps a pb pointer to represent an
     /// expression, and a `NameOrId` parameter that represents an alias.
     #[no_mangle]
-    pub extern "C" fn add_project_expr_alias_with_pb(
+    pub extern "C" fn add_project_expr_pb_alia(
         ptr_project: *const c_void, pb_expr: FfiPbPointer, alias: FfiAlias,
     ) -> FfiResult {
         let mut result = FfiResult::success();
@@ -1086,7 +1088,7 @@ mod project {
         if !type_pb.is_ok() {
             result = type_pb.err().unwrap();
         } else {
-            project.op_meta.push(type_pb.unwrap());
+            project.meta_data.push(type_pb.unwrap());
         }
         std::mem::forget(project);
 
@@ -1145,10 +1147,10 @@ mod select {
 
     /// To set a select operator's metadata, which is a predicate represented as a pb pointer.
     #[no_mangle]
-    pub extern "C" fn set_select_predicate_with_pb(
+    pub extern "C" fn set_select_predicate_pb(
         ptr_select: *const c_void, ptr_predicate_pb: FfiPbPointer,
     ) -> FfiResult {
-        set_predicate_with_pb(ptr_select, ptr_predicate_pb, InnerOpt::Select)
+        set_predicate_pb(ptr_select, ptr_predicate_pb, InnerOpt::Select)
     }
 
     /// Append a select operator to the logical plan
@@ -1224,7 +1226,7 @@ mod join {
     /// To add a join operator's metadata, which is a pair of left and right keys.
     /// The left and right keys are represented as a pb pointer.
     #[no_mangle]
-    pub extern "C" fn add_join_key_pair_with_pb(
+    pub extern "C" fn add_join_key_pair_pb(
         ptr_join: *const c_void, left_key: FfiPbPointer, right_key: FfiPbPointer,
     ) -> FfiResult {
         let mut result = FfiResult::success();
@@ -1308,7 +1310,7 @@ mod groupby {
     /// To initialize a groupby operator
     #[no_mangle]
     pub extern "C" fn init_groupby_operator() -> *const c_void {
-        let group = Box::new(pb::GroupBy { mappings: vec![], functions: vec![], op_meta: vec![] });
+        let group = Box::new(pb::GroupBy { mappings: vec![], functions: vec![], meta_data: vec![] });
         Box::into_raw(group) as *const c_void
     }
 
@@ -1397,7 +1399,7 @@ mod groupby {
     /// Add the key (and its alias if any) according to which the grouping is conducted.
     /// The key is represented as a pb pointer.
     #[no_mangle]
-    pub extern "C" fn add_groupby_key_alias_with_pb(
+    pub extern "C" fn add_groupby_key_pb_alias(
         ptr_groupby: *const c_void, key: FfiPbPointer, alias: FfiAlias,
     ) -> FfiResult {
         let mut result = FfiResult::success();
@@ -1448,7 +1450,7 @@ mod groupby {
     /// Add the aggregate function for each group.
     /// The aggregation function is represented as a pb pointer.
     #[no_mangle]
-    pub extern "C" fn add_groupby_agg_fn_with_pb(
+    pub extern "C" fn add_groupby_agg_fn_pb(
         ptr_groupby: *const c_void, agg_val: FfiPbPointer, agg_opt: FfiAggOpt, alias: FfiAlias,
     ) -> FfiResult {
         let mut result = FfiResult::success();
@@ -1484,7 +1486,7 @@ mod groupby {
         if !meta_pb.is_ok() {
             result = meta_pb.err().unwrap();
         } else {
-            group.op_meta.push(meta_pb.unwrap());
+            group.meta_data.push(meta_pb.unwrap());
         }
         std::mem::forget(group);
 
@@ -1553,7 +1555,7 @@ mod orderby {
     /// Add the pair for conducting ordering.
     /// The pair is represented as a pb pointer.
     #[no_mangle]
-    pub extern "C" fn add_orderby_pair_with_pb(
+    pub extern "C" fn add_orderby_pair_pb(
         ptr_orderby: *const c_void, ptr_var_pb: FfiPbPointer, order_opt: FfiOrderOpt,
     ) -> FfiResult {
         let mut result = FfiResult::success();
@@ -1625,9 +1627,7 @@ mod dedup {
     /// Add a key for de-duplicating.
     /// The key is represented as a pb pointer.
     #[no_mangle]
-    pub extern "C" fn add_dedup_key_with_pb(
-        ptr_dedup: *const c_void, ptr_var_pb: FfiPbPointer,
-    ) -> FfiResult {
+    pub extern "C" fn add_dedup_key_pb(ptr_dedup: *const c_void, ptr_var_pb: FfiPbPointer) -> FfiResult {
         let mut result = FfiResult::success();
         let mut dedup = unsafe { Box::from_raw(ptr_dedup as *mut pb::Dedup) };
         let key_result = ptr_to_pb::<common_pb::Variable>(ptr_var_pb);
@@ -1661,7 +1661,7 @@ mod unfold {
     /// To initialize an unfold operator
     #[no_mangle]
     pub extern "C" fn init_unfold_operator() -> *const c_void {
-        let unfold = Box::new(pb::Unfold { tag: None, alias: None, op_meta: None });
+        let unfold = Box::new(pb::Unfold { tag: None, alias: None, meta_data: None });
         Box::into_raw(unfold) as *const c_void
     }
 
@@ -1689,7 +1689,7 @@ mod unfold {
         result
     }
 
-    /// To set the op_meta for the unfold operator
+    /// To set the meta_data for the unfold operator
     #[no_mangle]
     pub extern "C" fn set_unfold_meta(ptr_unfold: *const c_void, ptr_meta: FfiPbPointer) -> FfiResult {
         set_meta(ptr_unfold, ptr_meta, InnerOpt::Unfold)
@@ -1739,7 +1739,7 @@ mod scan {
                 extra: HashMap::new(),
             }),
             idx_predicate: None,
-            op_meta: None,
+            meta_data: None,
         });
         Box::into_raw(scan) as *const c_void
     }
@@ -1830,7 +1830,7 @@ mod scan {
         result
     }
 
-    /// Set the op_meta for the scan operator
+    /// Set the meta_data for the scan operator
     #[no_mangle]
     pub extern "C" fn set_scan_meta(ptr_scan: *const c_void, ptr_meta: FfiPbPointer) -> FfiResult {
         set_meta(ptr_scan, ptr_meta, InnerOpt::Scan)
@@ -2026,7 +2026,7 @@ mod graph {
             }),
             alias: None,
             expand_opt: unsafe { std::mem::transmute::<FfiExpandOpt, i32>(expand_opt) },
-            op_meta: None,
+            meta_data: None,
         });
 
         Box::into_raw(edgexpd) as *const c_void
@@ -2061,7 +2061,7 @@ mod graph {
         set_alias(ptr_edgexpd, alias, InnerOpt::EdgeExpand)
     }
 
-    /// Set the op_meta for the edge expansion operator
+    /// Set the meta_data for the edge expansion operator
     #[no_mangle]
     pub extern "C" fn set_edgexpd_meta(ptr_edgexpd: *const c_void, ptr_meta: FfiPbPointer) -> FfiResult {
         set_meta(ptr_edgexpd, ptr_meta, InnerOpt::EdgeExpand)
@@ -2106,7 +2106,7 @@ mod graph {
                 extra: HashMap::new(),
             }),
             alias: None,
-            op_meta: None,
+            meta_data: None,
         });
         Box::into_raw(getv) as *const c_void
     }
@@ -2138,7 +2138,7 @@ mod graph {
         set_alias(ptr_getv, alias, InnerOpt::GetV)
     }
 
-    /// Set the op_meta for the getv operator
+    /// Set the meta_data for the getv operator
     #[no_mangle]
     pub extern "C" fn set_getv_meta(ptr_getv: *const c_void, ptr_meta: FfiPbPointer) -> FfiResult {
         set_meta(ptr_getv, ptr_meta, InnerOpt::GetV)
@@ -2224,7 +2224,7 @@ mod graph {
 
     #[no_mangle]
     pub extern "C" fn init_pattern_operator() -> *const c_void {
-        let pattern = Box::new(pb::Pattern { sentences: vec![], op_meta: vec![] });
+        let pattern = Box::new(pb::Pattern { sentences: vec![], meta_data: vec![] });
 
         Box::into_raw(pattern) as *const c_void
     }
@@ -2339,7 +2339,7 @@ mod graph {
         if !meta_data.is_ok() {
             result = meta_data.err().unwrap();
         } else {
-            pattern.op_meta.push(meta_data.unwrap());
+            pattern.meta_data.push(meta_data.unwrap());
         }
         std::mem::forget(pattern);
 

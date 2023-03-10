@@ -649,7 +649,7 @@ impl MatchingStrategy for CompoSentence {
                                 alias: None,
                             }],
                             is_append: true,
-                            op_meta: vec![],
+                            meta_data: vec![],
                         })),
                     }),
                     children: vec![],
@@ -1211,7 +1211,7 @@ mod test {
                     params: Some(query_params()),
                     alias: None,
                     expand_opt: if is_edge { 1 } else { 0 },
-                    op_meta: None,
+                    meta_data: None,
                 })),
             }],
             end: y.and_then(|s| s.try_into().ok()),
@@ -1234,7 +1234,7 @@ mod test {
                     params: Some(params),
                     expand_opt: 0,
                     alias: None,
-                    op_meta: None,
+                    meta_data: None,
                 })),
             }],
             end: y.and_then(|s| s.try_into().ok()),
@@ -1254,7 +1254,7 @@ mod test {
                     opt: 0,
                     params: Some(query_params()),
                     alias: None,
-                    op_meta: None,
+                    meta_data: None,
                 })),
             }],
             end: y.and_then(|s| s.try_into().ok()),
@@ -1537,7 +1537,7 @@ mod test {
                 params: Some(query_params()),
                 expand_opt: 0,
                 alias: None,
-                op_meta: None
+                meta_data: None
             }
             .into()
         );
