@@ -149,8 +149,8 @@ impl RecordSinkEncoder {
                 return NameOrId::Str(meta_name.clone());
             }
         }
-        // if we can not find mapped meta_name, we return meta_id.to_string() instead.
-        NameOrId::Str(meta_id.to_string())
+        // if we can not find mapped meta_name, we return meta_id directly.
+        NameOrId::Id(meta_id)
     }
 
     fn vid_to_pb(&self, vid: &ID) -> result_pb::Vertex {
