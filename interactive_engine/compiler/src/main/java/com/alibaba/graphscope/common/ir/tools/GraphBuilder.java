@@ -777,7 +777,7 @@ public class GraphBuilder extends RelBuilder {
     @Override
     public GraphBuilder aggregate(GroupKey groupKey, Iterable<AggCall> aggCalls) {
         Objects.requireNonNull(groupKey);
-        ObjectUtils.requireNonEmpty(aggCalls);
+        Objects.requireNonNull(aggCalls);
 
         RelNode input = requireNonNull(peek(), "frame stack is empty");
 
