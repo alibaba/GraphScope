@@ -34,7 +34,7 @@ GRAPHSCOPE_HOME ?= /usr/local
 INSTALL_PREFIX ?= /opt/graphscope
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.12.2
+VINEYARD_VERSION ?= v0.13.0
 PROFILE ?= release
 CI ?= false
 

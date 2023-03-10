@@ -30,6 +30,8 @@ RUN tar -zxf /tmp/groot.tar.gz -C /usr/local && rm /tmp/groot.tar.gz
 
 RUN useradd -m graphscope -u 1001 \
     && echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+RUN sudo chmod a+wrx /tmp
+
 USER graphscope
 WORKDIR /home/graphscope
 

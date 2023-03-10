@@ -20,6 +20,7 @@ pyarrow;python_version>="3.11"
 pyarrow<=6.0.0;python_version<"3.11"
 pysimdjson
 PyYAML
+rich
 scipy
 tqdm
 vineyard>=0.11.1; sys_platform != "win32"
