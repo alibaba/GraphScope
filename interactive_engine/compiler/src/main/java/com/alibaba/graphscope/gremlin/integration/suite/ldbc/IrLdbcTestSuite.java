@@ -14,31 +14,31 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.integration.pattern;
+package com.alibaba.graphscope.gremlin.integration.suite.ldbc;
 
 import org.apache.tinkerpop.gremlin.AbstractGremlinSuite;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalEngine;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
 
-public class IrPatternTestSuite extends AbstractGremlinSuite {
+public class IrLdbcTestSuite extends AbstractGremlinSuite {
 
     private static final Class<?>[] allTests =
             new Class<?>[] {
-                PatternQueryTest.Traversals.class,
+                LdbcQueryTest.Traversals.class,
             };
 
     private static final Class<?>[] testsToEnforce =
             new Class<?>[] {
-                PatternQueryTest.Traversals.class,
+                LdbcQueryTest.Traversals.class,
             };
 
-    public IrPatternTestSuite(final Class<?> klass, final RunnerBuilder builder)
+    public IrLdbcTestSuite(final Class<?> klass, final RunnerBuilder builder)
             throws InitializationError {
         super(klass, builder, allTests, testsToEnforce, false, TraversalEngine.Type.STANDARD);
     }
 
-    public IrPatternTestSuite(
+    public IrLdbcTestSuite(
             final Class<?> klass, final RunnerBuilder builder, final Class<?>[] testsToExecute)
             throws InitializationError {
         super(klass, builder, testsToExecute, testsToEnforce, true, TraversalEngine.Type.STANDARD);

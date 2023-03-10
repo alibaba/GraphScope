@@ -35,7 +35,7 @@ test:
 # start rpc server
 # make run
 gremlin_test:
-	mvn test -Dtest=com.alibaba.graphscope.integration.IrGremlinTest
+	mvn test -Dtest=com.alibaba.graphscope.integration.standard.IrGremlinTest
 
 submit:
 	cd $(CUR_DIR) && $(java) \

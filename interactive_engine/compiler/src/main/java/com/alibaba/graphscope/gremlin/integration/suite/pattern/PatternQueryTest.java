@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Alibaba Group Holding Limited.
+ * Copyright 2020 Alibaba Group Holding Limited.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.integration.pattern;
+package com.alibaba.graphscope.gremlin.integration.suite.pattern;
 
-import com.alibaba.graphscope.gremlin.antlr4.__;
+import com.alibaba.graphscope.gremlin.integration.suite.utils.__;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 
 import org.apache.tinkerpop.gremlin.process.AbstractGremlinProcessTest;

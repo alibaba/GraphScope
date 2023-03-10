@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.integration;
+package com.alibaba.graphscope.integration.standard;
 
 import com.alibaba.graphscope.gremlin.integration.graph.RemoteTestGraph;
 import com.alibaba.graphscope.gremlin.integration.graph.RemoteTestGraphProvider;
+import com.alibaba.graphscope.gremlin.integration.suite.standard.IrGremlinTestSuite;
 
 import org.apache.tinkerpop.gremlin.GraphProviderClass;
 import org.junit.runner.RunWith;
