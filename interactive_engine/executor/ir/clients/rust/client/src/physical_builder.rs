@@ -267,7 +267,7 @@ impl JobBuilder {
             .with_meta_data(
                 meta_data
                     .map(|meta| vec![meta.into()])
-                    .unwrap_or(vec![]),
+                    .unwrap_or_default(),
             );
         self
     }
@@ -332,7 +332,7 @@ impl JobBuilder {
         self.plan.unfold(unfold.into()).with_meta_data(
             meta_data
                 .map(|meta| vec![meta.into()])
-                .unwrap_or(vec![]),
+                .unwrap_or_default(),
         );
         self
     }
@@ -429,7 +429,7 @@ impl JobBuilder {
         self.plan.get_v(get_v.into()).with_meta_data(
             meta_data
                 .map(|meta| vec![meta.into()])
-                .unwrap_or(vec![]),
+                .unwrap_or_default(),
         );
         self
     }
@@ -441,7 +441,7 @@ impl JobBuilder {
             .with_meta_data(
                 meta_data
                     .map(|meta| vec![meta.into()])
-                    .unwrap_or(vec![]),
+                    .unwrap_or_default(),
             );
         self
     }
