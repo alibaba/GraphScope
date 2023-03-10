@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::cmp::max_by_key;
 use std::convert::TryFrom;
 use std::fmt;
 use std::sync::atomic::{AtomicPtr, Ordering};
@@ -261,9 +262,15 @@ impl Details for LazyVertexDetails {
         if let NameOrId::Str(key) = key {
             if let Some(ptr) = self.get_vertex_ptr() {
                 unsafe {
-                    (*ptr)
-                        .get_property(key)
-                        .map(|prop| PropertyValue::Borrowed(to_borrow_object(prop)))
+                    if key == "id" {
+                        let mask = (1_usize << LABEL_SHIFT_BITS) - 1;
+                        let original_id = ((*ptr).get_global_id() & mask) as i64;
+                        Some(PropertyValue::Owned(Object::Primitive(Primitives::Long(original_id))))
+                    } else {
+                        (*ptr)
+                            .get_property(key)
+                            .map(|prop| PropertyValue::Borrowed(to_borrow_object(prop)))
+                    }
                 }
             } else {
                 None
@@ -289,6 +296,12 @@ impl Details for LazyVertexDetails {
                         } else {
                             return None;
                         }
+                        let mask = (1_usize << LABEL_SHIFT_BITS) - 1;
+                        let original_id = ((*ptr).get_global_id() & mask) as i64;
+                        all_props.insert(
+                            NameOrId::Str("id".to_string()),
+                            Object::Primitive(Primitives::Long(original_id)),
+                        );
                     }
                 } else {
                     return None;

@@ -57,6 +57,10 @@ impl<'a, G: IndexType + Sync + Send, I: IndexType + Sync + Send> LocalVertex<'a,
         }
     }
 
+    pub fn get_global_id(&self) -> I {
+        self.index
+    }
+
     pub fn get_label(&self) -> LabelId {
         self.label
     }
