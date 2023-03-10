@@ -23,27 +23,36 @@ import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.hint.RelHint;
-import org.apache.commons.lang3.ObjectUtils;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
 
 public class GraphLogicalGetV extends AbstractBindableTableScan {
+    private final GraphOpt.GetV opt;
 
     protected GraphLogicalGetV(
-            GraphOptCluster cluster, List<RelHint> hints, RelNode input, TableConfig tableConfig) {
-        super(cluster, hints, input, tableConfig);
+            GraphOptCluster cluster,
+            List<RelHint> hints,
+            RelNode input,
+            GraphOpt.GetV opt,
+            TableConfig tableConfig,
+            @Nullable String alias) {
+        super(cluster, hints, input, tableConfig, alias);
+        this.opt = opt;
     }
 
     public static GraphLogicalGetV create(
-            GraphOptCluster cluster, List<RelHint> hints, RelNode input, TableConfig tableConfig) {
-        return new GraphLogicalGetV(cluster, hints, input, tableConfig);
+            GraphOptCluster cluster,
+            List<RelHint> hints,
+            RelNode input,
+            GraphOpt.GetV opt,
+            TableConfig tableConfig,
+            @Nullable String alias) {
+        return new GraphLogicalGetV(cluster, hints, input, opt, tableConfig, alias);
     }
 
     public GraphOpt.GetV getOpt() {
-        ObjectUtils.requireNonEmpty(hints);
-        RelHint optHint = hints.get(0);
-        ObjectUtils.requireNonEmpty(optHint.listOptions);
-        return GraphOpt.GetV.valueOf(optHint.listOptions.get(0));
+        return this.opt;
     }
 
     @Override

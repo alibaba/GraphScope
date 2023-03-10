@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.rel.graph;
 
+import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphArrayType;
 import com.alibaba.graphscope.common.ir.type.GraphPxdElementType;
@@ -28,7 +29,6 @@ import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rex.RexNode;
-import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
@@ -41,7 +41,12 @@ public class GraphLogicalPathExpand extends SingleRel {
     private final @Nullable RexNode offset;
     private final @Nullable RexNode fetch;
 
-    private final List<RelHint> hints;
+    private final GraphOpt.PathExpandResult resultOpt;
+    private final GraphOpt.PathExpandPath pathOpt;
+
+    private final String aliasName;
+
+    private final int aliasId;
 
     protected GraphLogicalPathExpand(
             GraphOptCluster cluster,
@@ -50,9 +55,11 @@ public class GraphLogicalPathExpand extends SingleRel {
             RelNode expand,
             RelNode getV,
             @Nullable RexNode offset,
-            @Nullable RexNode fetch) {
+            @Nullable RexNode fetch,
+            GraphOpt.PathExpandResult resultOpt,
+            GraphOpt.PathExpandPath pathOpt,
+            @Nullable String aliasName) {
         super(cluster, RelTraitSet.createEmpty(), input);
-        this.hints = hints;
         this.expand = Objects.requireNonNull(expand);
         this.getV = Objects.requireNonNull(getV);
         this.offset = offset;
@@ -60,6 +67,12 @@ public class GraphLogicalPathExpand extends SingleRel {
         this.rowType =
                 new GraphArrayType(
                         new GraphPxdElementType(this.expand.getRowType(), this.getV.getRowType()));
+        this.resultOpt = resultOpt;
+        this.pathOpt = pathOpt;
+        this.aliasName =
+                AliasInference.inferDefault(
+                        aliasName, AliasInference.getUniqueAliasList(input, true));
+        this.aliasId = cluster.getIdGenerator().generate(this.aliasName, input);
     }
 
     public static GraphLogicalPathExpand create(
@@ -69,8 +82,12 @@ public class GraphLogicalPathExpand extends SingleRel {
             RelNode expand,
             RelNode getV,
             @Nullable RexNode offset,
-            @Nullable RexNode fetch) {
-        return new GraphLogicalPathExpand(cluster, hints, input, expand, getV, offset, fetch);
+            @Nullable RexNode fetch,
+            GraphOpt.PathExpandResult resultOpt,
+            GraphOpt.PathExpandPath pathOpt,
+            String aliasName) {
+        return new GraphLogicalPathExpand(
+                cluster, hints, input, expand, getV, offset, fetch, resultOpt, pathOpt, aliasName);
     }
 
     @Override
@@ -86,43 +103,19 @@ public class GraphLogicalPathExpand extends SingleRel {
     }
 
     public String getAliasName() {
-        Objects.requireNonNull(hints);
-        if (hints.size() < 2) {
-            throw new IllegalArgumentException(
-                    "should have put alias config in the index 1 of the hints list");
-        }
-        RelHint aliasHint = hints.get(1);
-        Objects.requireNonNull(aliasHint.kvOptions);
-        String aliasName = aliasHint.kvOptions.get("name");
-        Objects.requireNonNull(aliasName);
-        return aliasName;
+        return this.aliasName;
     }
 
     public int getAliasId() {
-        Objects.requireNonNull(hints);
-        if (hints.size() < 2) {
-            throw new IllegalArgumentException(
-                    "should have put alias config in the index 1 of the hints list");
-        }
-        RelHint aliasHint = hints.get(1);
-        Objects.requireNonNull(aliasHint.kvOptions);
-        String aliasId = aliasHint.kvOptions.get("id");
-        Objects.requireNonNull(aliasId);
-        return Integer.valueOf(aliasId);
+        return this.aliasId;
     }
 
     public GraphOpt.PathExpandPath getPathOpt() {
-        ObjectUtils.requireNonEmpty(hints);
-        RelHint optHint = hints.get(0);
-        ObjectUtils.requireNonEmpty(optHint.kvOptions);
-        return GraphOpt.PathExpandPath.valueOf(optHint.kvOptions.get("path"));
+        return this.pathOpt;
     }
 
     public GraphOpt.PathExpandResult getResultOpt() {
-        ObjectUtils.requireNonEmpty(hints);
-        RelHint optHint = hints.get(0);
-        ObjectUtils.requireNonEmpty(optHint.kvOptions);
-        return GraphOpt.PathExpandResult.valueOf(optHint.kvOptions.get("result"));
+        return this.resultOpt;
     }
 
     public RelNode getExpand() {

@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.rel.RelNode;
@@ -141,13 +142,12 @@ public class PathExpandConfig {
                 this.expand =
                         GraphLogicalExpand.create(
                                 (GraphOptCluster) innerBuilder.getCluster(),
-                                innerBuilder.getHints(
-                                        config.getOpt().name(),
-                                        AliasInference.DEFAULT_NAME,
-                                        AliasInference.DEFAULT_ID),
+                                ImmutableList.of(),
                                 null,
+                                config.getOpt(),
                                 innerBuilder.getTableConfig(
-                                        config.getLabels(), GraphOpt.Source.EDGE));
+                                        config.getLabels(), GraphOpt.Source.EDGE),
+                                AliasInference.DEFAULT_NAME);
                 innerBuilder.push(this.expand);
             }
             return this;
@@ -158,13 +158,12 @@ public class PathExpandConfig {
                 this.getV =
                         GraphLogicalGetV.create(
                                 (GraphOptCluster) innerBuilder.getCluster(),
-                                innerBuilder.getHints(
-                                        config.getOpt().name(),
-                                        AliasInference.DEFAULT_NAME,
-                                        AliasInference.DEFAULT_ID),
+                                ImmutableList.of(),
                                 null,
+                                config.getOpt(),
                                 innerBuilder.getTableConfig(
-                                        config.getLabels(), GraphOpt.Source.VERTEX));
+                                        config.getLabels(), GraphOpt.Source.VERTEX),
+                                AliasInference.DEFAULT_NAME);
                 innerBuilder.push(this.getV);
             }
             return this;

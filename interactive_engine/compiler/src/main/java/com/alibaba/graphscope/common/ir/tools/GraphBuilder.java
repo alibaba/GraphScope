@@ -39,9 +39,7 @@ import com.google.common.collect.Lists;
 
 import org.apache.calcite.plan.*;
 import org.apache.calcite.rel.*;
-import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.Filter;
-import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rel.type.*;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlAggFunction;
@@ -100,12 +98,13 @@ public class GraphBuilder extends RelBuilder {
      */
     public GraphBuilder source(SourceConfig config) {
         String aliasName = AliasInference.inferDefault(config.getAlias(), new HashSet<>());
-        int aliasId = generateAliasId(aliasName, null);
         RelNode source =
                 GraphLogicalSource.create(
                         (GraphOptCluster) cluster,
-                        getHints(config.getOpt().name(), aliasName, aliasId),
-                        getTableConfig(config.getLabels(), config.getOpt()));
+                        ImmutableList.of(),
+                        config.getOpt(),
+                        getTableConfig(config.getLabels(), config.getOpt()),
+                        aliasName);
         push(source);
         return this;
     }
@@ -118,15 +117,14 @@ public class GraphBuilder extends RelBuilder {
      */
     public GraphBuilder expand(ExpandConfig config) {
         RelNode input = requireNonNull(peek(), "frame stack is empty");
-        String aliasName =
-                AliasInference.inferDefault(config.getAlias(), uniqueNameList(input, true));
-        int aliasId = generateAliasId(aliasName, input);
         RelNode expand =
                 GraphLogicalExpand.create(
                         (GraphOptCluster) cluster,
-                        getHints(config.getOpt().name(), aliasName, aliasId),
+                        ImmutableList.of(),
                         input,
-                        getTableConfig(config.getLabels(), GraphOpt.Source.EDGE));
+                        config.getOpt(),
+                        getTableConfig(config.getLabels(), GraphOpt.Source.EDGE),
+                        config.getAlias());
         replaceTop(expand);
         return this;
     }
@@ -139,15 +137,14 @@ public class GraphBuilder extends RelBuilder {
      */
     public GraphBuilder getV(GetVConfig config) {
         RelNode input = requireNonNull(peek(), "frame stack is empty");
-        String aliasName =
-                AliasInference.inferDefault(config.getAlias(), uniqueNameList(input, true));
-        int aliasId = generateAliasId(aliasName, input);
         RelNode getV =
                 GraphLogicalGetV.create(
                         (GraphOptCluster) cluster,
-                        getHints(config.getOpt().name(), aliasName, aliasId),
+                        ImmutableList.of(),
                         input,
-                        getTableConfig(config.getLabels(), GraphOpt.Source.VERTEX));
+                        config.getOpt(),
+                        getTableConfig(config.getLabels(), GraphOpt.Source.VERTEX),
+                        config.getAlias());
         replaceTop(getV);
         return this;
     }
@@ -160,8 +157,7 @@ public class GraphBuilder extends RelBuilder {
      */
     public GraphBuilder pathExpand(PathExpandConfig pxdConfig) {
         RelNode input = requireNonNull(peek(), "frame stack is empty");
-        String aliasName =
-                AliasInference.inferDefault(pxdConfig.getAlias(), uniqueNameList(input, true));
+
         RexNode offsetNode = pxdConfig.getOffset() <= 0 ? null : literal(pxdConfig.getOffset());
         RexNode fetchNode = pxdConfig.getFetch() < 0 ? null : literal(pxdConfig.getFetch());
 
@@ -176,16 +172,15 @@ public class GraphBuilder extends RelBuilder {
         RelNode pathExpand =
                 GraphLogicalPathExpand.create(
                         (GraphOptCluster) cluster,
-                        getHints(
-                                pxdConfig.getPathOpt().name(),
-                                pxdConfig.getResultOpt().name(),
-                                aliasName,
-                                generateAliasId(aliasName, input)),
+                        ImmutableList.of(),
                         input,
                         expand,
                         getV,
                         offsetNode,
-                        fetchNode);
+                        fetchNode,
+                        pxdConfig.getResultOpt(),
+                        pxdConfig.getPathOpt(),
+                        pxdConfig.getAlias());
         replaceTop(pathExpand);
         return this;
     }
@@ -234,67 +229,6 @@ public class GraphBuilder extends RelBuilder {
                         .map(k -> ImmutableList.of(k.getLabel()))
                         .collect(Collectors.toList());
         }
-    }
-
-    public List<RelHint> getHints(String optName, String aliasName, int aliasId) {
-        RelHint optHint = RelHint.builder("opt").hintOption(optName).build();
-        RelHint aliasHint =
-                RelHint.builder("alias")
-                        .hintOption("name", Objects.requireNonNull(aliasName))
-                        .hintOption("id", String.valueOf(aliasId))
-                        .build();
-        return ImmutableList.of(optHint, aliasHint);
-    }
-
-    private List<RelHint> getHints(
-            String pathOptName, String resultOptName, String aliasName, int aliasId) {
-        RelHint optHint =
-                RelHint.builder("opt")
-                        .hintOption("path", pathOptName)
-                        .hintOption("result", resultOptName)
-                        .build();
-        RelHint aliasHint =
-                RelHint.builder("alias")
-                        .hintOption("name", aliasName)
-                        .hintOption("id", String.valueOf(aliasId))
-                        .build();
-        return ImmutableList.of(optHint, aliasHint);
-    }
-
-    /**
-     * get all aliases stored by previous operators, to avoid duplicate alias creation
-     *
-     * @param input    the input operator
-     * @param isAppend if the current {@code RelNode} need keep the history
-     * @return
-     */
-    public Set<String> uniqueNameList(@Nullable RelNode input, boolean isAppend) {
-        Set<String> uniqueNames = new HashSet<>();
-        if (!isAppend || input == null) return uniqueNames;
-        List<RelNode> inputsQueue = Lists.newArrayList(input);
-        while (!inputsQueue.isEmpty()) {
-            RelNode cur = inputsQueue.remove(0);
-            for (RelDataTypeField field : cur.getRowType().getFieldList()) {
-                uniqueNames.add(field.getName());
-            }
-            if (removeHistory(cur)) {
-                break;
-            }
-            inputsQueue.addAll(cur.getInputs());
-        }
-        return uniqueNames;
-    }
-
-    /**
-     * current node will remove history and generate new columns
-     *
-     * @param node
-     * @return
-     */
-    private boolean removeHistory(RelNode node) {
-        return (node instanceof Aggregate)
-                || (node instanceof GraphLogicalProject)
-                        && ((GraphLogicalProject) node).isAppend() == false;
     }
 
     /**
@@ -470,7 +404,7 @@ public class GraphBuilder extends RelBuilder {
                     }
                     aliases.add(AliasInference.SIMPLE_NAME(field.getName()));
                 }
-                if (removeHistory(cur)) {
+                if (AliasInference.removeAlias(cur)) {
                     break;
                 }
                 inputQueue.addAll(cur.getInputs());
@@ -617,7 +551,9 @@ public class GraphBuilder extends RelBuilder {
         }
         fieldNameList =
                 AliasInference.inferProject(
-                        nodeList, fieldNameList, uniqueNameList(input, isAppend));
+                        nodeList,
+                        fieldNameList,
+                        AliasInference.getUniqueAliasList(input, isAppend));
         RelNode project =
                 GraphLogicalProject.create(
                         (GraphOptCluster) getCluster(),

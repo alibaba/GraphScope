@@ -18,8 +18,13 @@ package com.alibaba.graphscope.common.ir.tools;
 
 import static org.apache.calcite.linq4j.Nullness.castNonNull;
 
+import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
+import com.google.common.collect.Lists;
 
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Aggregate;
+import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
@@ -29,6 +34,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -152,5 +158,41 @@ public abstract class AliasInference {
                     return null;
             }
         }
+    }
+
+    /**
+     * get all aliases stored by previous operators, to avoid duplicate alias creation
+     *
+     * @param input    the input operator
+     * @param isAppend if the current {@code RelNode} need keep the history
+     * @return
+     */
+    public static final Set<String> getUniqueAliasList(@Nullable RelNode input, boolean isAppend) {
+        Set<String> uniqueNames = new HashSet<>();
+        if (!isAppend || input == null) return uniqueNames;
+        List<RelNode> inputsQueue = Lists.newArrayList(input);
+        while (!inputsQueue.isEmpty()) {
+            RelNode cur = inputsQueue.remove(0);
+            for (RelDataTypeField field : cur.getRowType().getFieldList()) {
+                uniqueNames.add(field.getName());
+            }
+            if (removeAlias(cur)) {
+                break;
+            }
+            inputsQueue.addAll(cur.getInputs());
+        }
+        return uniqueNames;
+    }
+
+    /**
+     * current node will remove history and generate new columns
+     *
+     * @param node
+     * @return
+     */
+    public static final boolean removeAlias(RelNode node) {
+        return (node instanceof Aggregate)
+                || (node instanceof GraphLogicalProject)
+                        && ((GraphLogicalProject) node).isAppend() == false;
     }
 }
