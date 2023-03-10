@@ -17,7 +17,8 @@
                 "SID": "1"
               }
             },
-            "idx_predicate": null
+            "idx_predicate": null,
+            "meta_data": null
           }
         }
       },

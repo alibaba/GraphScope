@@ -20,7 +20,8 @@
                                 }
                               }
                             }
-                          }
+                          },
+                          "node_type": null
                         }
                       }
                     }
@@ -33,7 +34,8 @@
                 }
               }
             ],
-            "is_append": true
+            "is_append": true,
+            "meta_data": []
           }
         }
       },
