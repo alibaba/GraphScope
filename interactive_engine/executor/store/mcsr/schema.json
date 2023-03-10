@@ -241,7 +241,14 @@
     {
       "src_label": "PERSON",
       "dst_label": "PERSON",
-      "label": "KNOWS"
+      "label": "KNOWS",
+      "label": "KNOWS",
+      "properties": [
+        {
+          "name": "creationDate",
+          "data_type": "DateTime"
+        }
+      ]
     },
     {
       "src_label": "PERSON",
