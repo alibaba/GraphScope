@@ -157,7 +157,7 @@ impl ReadGraph for CSRStore {
                 Direction::In => graph.get_in_edges(v as DefaultId, edge_label_ids.as_ref()),
                 Direction::Both => graph.get_both_edges(v as DefaultId, edge_label_ids.as_ref()),
             }
-            .map(move |e| to_runtime_edge(e, props.clone(), partition_id));
+            .map(move |e| to_runtime_edge(e, v, props.clone(), partition_id));
             Ok(filter_limit!(iter, filter, limit))
         });
         Ok(stmt)
@@ -196,7 +196,7 @@ fn to_empty_vertex(v: LocalVertex<'static, DefaultId, DefaultId>) -> Vertex {
 
 #[inline]
 fn to_runtime_edge(
-    e: LocalEdge<'static, DefaultId, DefaultId>, prop_keys: Option<Vec<NameOrId>>, partition_id: u8,
+    e: LocalEdge<'static, DefaultId, DefaultId>, v: ID, prop_keys: Option<Vec<NameOrId>>, partition_id: u8,
 ) -> Edge {
     let src_id = e.get_src_id() as u64;
     let dst_id = e.get_dst_id() as u64;
@@ -209,13 +209,24 @@ fn to_runtime_edge(
         + ((label as u64) << 40)
         + (dst_label << 32)
         + offset;
-    Edge::new(
-        edge_id,
-        Some(encode_runtime_label(label)),
-        src_id,
-        dst_id,
-        DynDetails::lazy(LazyEdgeDetails::new(e, prop_keys)),
-    )
+    if v == src_id {
+        Edge::new(
+            edge_id,
+            Some(encode_runtime_label(label)),
+            src_id,
+            dst_id,
+            DynDetails::lazy(LazyEdgeDetails::new(e, prop_keys)),
+        )
+    } else {
+        Edge::with_from_src(
+            edge_id,
+            Some(encode_runtime_label(label)),
+            src_id,
+            dst_id,
+            false,
+            DynDetails::lazy(LazyEdgeDetails::new(e, prop_keys)),
+        )
+    }
 }
 
 /// LazyVertexDetails is used for local property fetching optimization.
