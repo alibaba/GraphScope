@@ -680,7 +680,7 @@ class OperationExecutor:
             vineyard_rpc_endpoint = engine_config["vineyard_rpc_endpoint"]
         else:
             vineyard_rpc_endpoint = self._launcher.vineyard_internal_endpoint
-            if self._launcher._k8s_vineyard_deployment is not None:
+            if self._launcher.vineyard_deployment_exists():
                 vineyard_rpc_endpoint = self._launcher._vineyard_service_endpoint
             else:
                 vineyard_rpc_endpoint = self._launcher._vineyard_internal_endpoint
@@ -852,7 +852,7 @@ class OperationExecutor:
         if self._launcher.type() == types_pb2.HOSTS:
             vineyard_endpoint = engine_config["vineyard_rpc_endpoint"]
         else:
-            if self._launcher._k8s_vineyard_deployment is not None:
+            if self._launcher.vineyard_deployment_exists():
                 vineyard_endpoint = self._launcher._vineyard_service_endpoint
             else:
                 vineyard_endpoint = self._launcher._vineyard_internal_endpoint

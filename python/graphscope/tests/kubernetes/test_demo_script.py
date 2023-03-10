@@ -100,10 +100,6 @@ def gs_session_distributed():
 
 @pytest.fixture
 def create_vineyard_deployment_on_single_node():
-    try:
-        import vineyard
-    except ImportError:
-        logger.error("vineyard is not installed, please install vineyard first.")
     # create vineyard deployment on single node
     # set the replicas of vineyard and etcd to 1 as there is only one node in the cluster
     vineyard.deploy.vineyardctl.deploy.vineyard_deployment(
@@ -137,10 +133,6 @@ def gs_session_with_vineyard_deployment(create_vineyard_deployment_on_single_nod
 
 @pytest.fixture
 def create_vineyard_deployment_on_multiple_nodes(create_graphscope_namesapce):
-    try:
-        import vineyard
-    except ImportError:
-        logger.error("vineyard is not installed, please install vineyard first.")
     # create vineyard deployment on multiple nodes
     # set the replicas of vineyard and etcd to 2 as there are 2 nodes in the kubernetes cluster
     vineyard.deploy.vineyardctl.deploy.vineyard_deployment(

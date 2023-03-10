@@ -925,7 +925,7 @@ def get_launcher(args):
             service_type=args.k8s_service_type,
             timeout_seconds=args.timeout_seconds,
             vineyard_cpu=args.k8s_vineyard_cpu,
-            k8s_vineyard_deployment=args.k8s_vineyard_deployment,
+            vineyard_deployment=args.vineyard_deployment,
             vineyard_image=args.k8s_vineyard_image,
             vineyard_mem=args.k8s_vineyard_mem,
             vineyard_shared_mem=args.vineyard_shared_mem,

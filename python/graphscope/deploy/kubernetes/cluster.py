@@ -525,12 +525,12 @@ class KubernetesClusterLauncher(Launcher):
         try:
             self._create_namespace()
             self._create_role_and_binding()
-            logger.info("Creating services...")
+
             self._create_services()
             time.sleep(1)
-            logger.info("Waiting for coordinator service ready ...")
+
             self._waiting_for_services_ready()
-            logger.info("coordinator service ready haha")
+
             self._coordinator_endpoint = self._get_coordinator_endpoint()
             logger.info(
                 "Coordinator pod start successful with address %s, connecting to service ...",

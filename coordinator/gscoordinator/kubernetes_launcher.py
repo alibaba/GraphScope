@@ -102,7 +102,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         service_type=None,
         timeout_seconds=None,
         vineyard_cpu=None,
-        k8s_vineyard_deployment=None,
+        vineyard_deployment=None,
         vineyard_image=None,
         vineyard_mem=None,
         vineyard_shared_mem=None,
@@ -138,18 +138,18 @@ class KubernetesClusterLauncher(AbstractLauncher):
 
         self._num_workers = num_workers
 
-        self._k8s_vineyard_deployment = k8s_vineyard_deployment
+        self._vineyard_deployment = vineyard_deployment
 
-        if k8s_vineyard_deployment is not None:
+        if self.vineyard_deployment_exists():
             try:
                 self._apps_api.read_namespaced_deployment(
-                    k8s_vineyard_deployment, self._namespace
+                    vineyard_deployment, self._namespace
                 )
             except K8SApiException:
                 logger.exception(
-                    f"Vineyard deployment {self._namespace}/{k8s_vineyard_deployment} not found"
+                    f"Vineyard deployment {self._namespace}/{vineyard_deployment} not found"
                 )
-                self._k8s_vineyard_deployment = None
+                self._vineyard_deployment = None
 
         self._engine_cpu = engine_cpu
         self._engine_mem = engine_mem
@@ -240,7 +240,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
             preemptive=preemptive,
             service_type=service_type,
             vineyard_cpu=vineyard_cpu,
-            k8s_vineyard_deployment=k8s_vineyard_deployment,
+            vineyard_deployment=vineyard_deployment,
             vineyard_image=vineyard_image,
             vineyard_mem=vineyard_mem,
             vineyard_shared_mem=vineyard_shared_mem,
@@ -266,6 +266,11 @@ class KubernetesClusterLauncher(AbstractLauncher):
 
     def type(self):
         return types_pb2.K8S
+
+    def vineyard_deployment_exists(self):
+        if self._vineyard_deployment is not None:
+            return True
+        return False
 
     def get_coordinator_owner_references(self):
         owner_references = []
@@ -441,7 +446,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         logger.info("Creating engine pods...")
 
         stateful_set = self._engine_cluster.get_engine_stateful_set()
-        if self._k8s_vineyard_deployment is not None:
+        if self.vineyard_deployment_exists():
             # schedule engine statefulset to the same node with vineyard deployment
             stateful_set = self._add_podAffinity_for_vineyard_deployment(
                 workload=stateful_set
@@ -456,7 +461,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
     def _create_frontend_deployment(self):
         logger.info("Creating frontend pods...")
         deployment = self._engine_cluster.get_interactive_frontend_deployment()
-        if self._k8s_vineyard_deployment is not None:
+        if self.vineyard_deployment_exists():
             # schedule frontend deployment to the same node with vineyard deployment
             deployment = self._add_podAffinity_for_vineyard_deployment(
                 workload=deployment
@@ -508,7 +513,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         if self._with_mars:
             # scheduler used by Mars
             self._create_mars_scheduler()
-        if self._k8s_vineyard_deployment is None:
+        if self._vineyard_deployment is None:
             self._create_vineyard_service()
 
     def _waiting_for_services_ready(self):
@@ -601,14 +606,16 @@ class KubernetesClusterLauncher(AbstractLauncher):
         try:
             import vineyard
         except ImportError:
-            logger.error("vineyard is not installed, please install vineyard first.")
+            raise RuntimeError(
+                "vineyard is not installed, please install vineyard first."
+            )
 
         workload_json = json.dumps(
             self._api_client.sanitize_for_serialization(workload)
         )
         new_workload_json = vineyard.deploy.vineyardctl.schedule.workload(
             resource=workload_json,
-            vineyardd_name=self._k8s_vineyard_deployment,
+            vineyardd_name=self._vineyard_deployment,
             vineyardd_namespace=self._namespace,
             capture=True,
         )
