@@ -68,7 +68,8 @@ public class GraphLogicalAggregate extends Aggregate {
                 ImmutableList.of());
         Objects.requireNonNull(input);
         this.groupKey = Objects.requireNonNull(groupKey);
-        this.aggCalls = ObjectUtils.requireNonEmpty(aggCalls);
+        // if empty -> the aggregate operator is a dedup
+        this.aggCalls = Objects.requireNonNull(aggCalls);
     }
 
     public static GraphLogicalAggregate create(
