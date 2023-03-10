@@ -20,7 +20,7 @@
               "extra": {}
             },
             "idx_predicate": null,
-            "op_meta": null
+            "meta_data": null
           }
         }
       },
@@ -89,7 +89,7 @@
               }
             ],
             "is_append": true,
-            "op_meta": []
+            "meta_data": []
           }
         }
       },

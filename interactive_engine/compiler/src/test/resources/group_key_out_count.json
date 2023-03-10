@@ -16,7 +16,7 @@
               "extra": {}
             },
             "idx_predicate": null,
-            "op_meta": null
+            "meta_data": null
           }
         }
       },
@@ -41,7 +41,7 @@
             },
             "alias": null,
             "expand_opt": 2,
-            "op_meta": null
+            "meta_data": null
           }
         }
       },
@@ -105,7 +105,7 @@
                 }
               }
             ],
-            "op_meta": []
+            "meta_data": []
           }
         }
       },
