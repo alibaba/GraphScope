@@ -76,8 +76,8 @@ impl TryFrom<Token> for pb::ExprOpr {
             Token::IntArray(v) => Ok(pb::Value::from(v).into()),
             Token::FloatArray(v) => Ok(pb::Value::from(v).into()),
             Token::StrArray(v) => Ok(pb::Value::from(v).into()),
-            Token::LBrace => Ok(pb::ExprOpr { item: Some(pb::expr_opr::Item::Brace(0)) }),
-            Token::RBrace => Ok(pb::ExprOpr { item: Some(pb::expr_opr::Item::Brace(1)) }),
+            Token::LBrace => Ok(pb::ExprOpr { node_type: None, item: Some(pb::expr_opr::Item::Brace(0)) }),
+            Token::RBrace => Ok(pb::ExprOpr { node_type: None, item: Some(pb::expr_opr::Item::Brace(1)) }),
             Token::Identifier(ident) => {
                 if !ident.starts_with(VAR_PREFIX) {
                     Err(format!("invalid variable token: {:?}, a variable must start with \"@\"", ident)

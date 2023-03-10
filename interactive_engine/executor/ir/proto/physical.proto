@@ -289,7 +289,7 @@ message PhysicalOpr {
   // The node's operator
   Operator opr = 1;
   // The meta data of outputs of operator
-  repeated MetaData op_meta = 2;
+  repeated MetaData meta_data = 2;
 }
 
 message PhysicalPlan {

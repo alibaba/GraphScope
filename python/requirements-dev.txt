@@ -10,7 +10,7 @@ pytest
 pytest-cov
 pytest-timeout
 Pygments>=2.4.1
-myst-parser
+myst-parser>=0.13.0
 sphinx>=4.1.0,<6
 sphinx-copybutton
 sphinx-panels

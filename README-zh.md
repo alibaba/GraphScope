@@ -296,10 +296,10 @@ sess.close()
 为了构建 graphscope Python 包以及引擎，你需要安装一些依赖和构建工具。
 
 ```bash
-./scripts/install_deps.sh --dev
+./gs install_deps dev
 
 # 如果在中国，加入参数 `--cn` 来加速下载
-./scripts/install_deps.sh --dev --cn
+./gs install_deps dev --cn
 ```
 
 现在你可以使用 `make` 来构建 GraphScope

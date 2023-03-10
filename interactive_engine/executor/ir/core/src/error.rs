@@ -19,13 +19,17 @@ use std::fmt;
 use ir_common::error::ParsePbError;
 use ir_common::expr_parse::error::ExprError;
 use ir_common::NameOrId;
-use prost::EncodeError;
+use prost::{DecodeError, EncodeError};
 
 use crate::glogue::error::IrPatternError;
 
 /// Record any error while transforming ir to a pegasus physical plan
 #[derive(Debug, Clone)]
 pub enum IrError {
+    // Pb Decode/Encode Errors
+    PbEncodeError(EncodeError),
+    PbDecodeError(DecodeError),
+
     // Logical Errors
     TableNotExist(NameOrId),
     ColumnNotExist(NameOrId),
@@ -37,7 +41,6 @@ pub enum IrError {
     InvalidExtendPattern(IrPatternError),
 
     // Physical Errors
-    PbEncodeError(EncodeError),
     MissingData(String),
     InvalidRange(i32, i32),
 
@@ -67,6 +70,7 @@ impl fmt::Display for IrError {
                 write!(f, "invalid pattern with ExtendStrategy: {:?}", err)
             }
             IrError::PbEncodeError(err) => write!(f, "encoding protobuf error: {:?}", err),
+            IrError::PbDecodeError(err) => write!(f, "decoding protobuf error: {:?}", err),
             IrError::MissingData(s) => write!(f, "missing required data: {:?}", s),
             IrError::InvalidRange(lo, up) => {
                 write!(f, "invalid range ({:?}, {:?})", lo, up)
@@ -87,6 +91,12 @@ impl From<ParsePbError> for IrError {
 impl From<EncodeError> for IrError {
     fn from(err: EncodeError) -> Self {
         Self::PbEncodeError(err)
+    }
+}
+
+impl From<DecodeError> for IrError {
+    fn from(err: DecodeError) -> Self {
+        Self::PbDecodeError(err)
     }
 }
 

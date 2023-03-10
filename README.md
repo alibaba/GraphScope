@@ -329,10 +329,10 @@ Please note that we have not hardened this release for production use and it lac
 To build graphscope Python package and the engine binaries, you need to install some dependencies and build tools.
 
 ```bash
-./scripts/install_deps.sh --dev
+./gs install_deps dev
 
 # With argument --cn to speed up the download if you are in China.
-./scripts/install_deps.sh --dev --cn
+./gs install_deps dev --cn
 ```
 
 Then you can build GraphScope with pre-configured `make` commands.
