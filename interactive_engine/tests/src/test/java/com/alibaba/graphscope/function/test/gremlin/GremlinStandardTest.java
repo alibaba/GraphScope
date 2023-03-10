@@ -17,10 +17,11 @@ package com.alibaba.graphscope.function.test.gremlin;
 
 import com.alibaba.graphscope.function.test.RemoteTestGraphProvider;
 import com.alibaba.graphscope.gremlin.integration.graph.RemoteTestGraph;
+import com.alibaba.graphscope.gremlin.integration.suite.standard.IrGremlinTestSuite;
 
 import org.apache.tinkerpop.gremlin.GraphProviderClass;
 import org.junit.runner.RunWith;
 
-@RunWith(GremlinStandardTestSuite.class)
+@RunWith(IrGremlinTestSuite.class)
 @GraphProviderClass(provider = RemoteTestGraphProvider.class, graph = RemoteTestGraph.class)
 public class GremlinStandardTest {}
