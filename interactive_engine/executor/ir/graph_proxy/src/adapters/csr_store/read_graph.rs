@@ -13,7 +13,6 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::cmp::max_by_key;
 use std::convert::TryFrom;
 use std::fmt;
 use std::sync::atomic::{AtomicPtr, Ordering};
