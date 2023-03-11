@@ -61,12 +61,9 @@ impl RouteFunction<Record> for RecordRouter {
                     let p = entry
                         .as_graph_path()
                         .ok_or(FnExecError::Unreachable)?;
-                    let path_end = p
-                        .get_path_end()
-                        .ok_or(FnExecError::unexpected_data_error("get path_end failed in shuffle"))?;
                     Ok(self
                         .p
-                        .get_partition(&path_end.id(), self.num_workers)?)
+                        .get_partition(&p.get_path_end().id(), self.num_workers)?)
                 }
                 // TODO:
                 _ => Ok(0),
