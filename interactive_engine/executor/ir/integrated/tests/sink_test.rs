@@ -41,6 +41,7 @@ mod test {
             alias: source_alias.map(|tag| tag.into()),
             params: Some(query_params(vec![], vec![], None)),
             idx_predicate: None,
+            meta_data: None,
         };
 
         let sink_opr = pb::Sink { tags: sink_keys, sink_target: default_sink_target() };
