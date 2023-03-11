@@ -18,18 +18,18 @@ use std::cmp::Ordering;
 use std::convert::{TryFrom, TryInto};
 use std::hash::{Hash, Hasher};
 
+use ahash::HashMap;
 use dyn_type::{BorrowObject, Object};
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra::path_expand::PathOpt;
 use ir_common::generated::algebra::path_expand::ResultOpt;
 use ir_common::generated::results as result_pb;
+use ir_common::{LabelId, NameOrId};
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 use pegasus_common::downcast::*;
 use pegasus_common::impl_as_any;
 
 use crate::apis::{Element, GraphElement, PropertyValue, Vertex, ID};
-use ahash::HashMap;
-use ir_common::{LabelId, NameOrId};
 
 #[derive(Clone, Debug)]
 pub enum GraphPath {

@@ -16,6 +16,8 @@ mod sink;
 #[cfg(feature = "with_v6d")]
 mod sink_vineyard;
 
+use std::convert::TryInto;
+
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::physical as pb;
@@ -24,7 +26,6 @@ use crate::error::FnGenResult;
 use crate::process::operator::sink::sink::{DefaultSinkOp, RecordSinkEncoder};
 #[cfg(feature = "with_v6d")]
 use crate::process::operator::sink::sink_vineyard::{GraphSinkEncoder, SinkVineyardOp};
-use std::convert::TryInto;
 
 pub enum Sinker {
     DefaultSinker(RecordSinkEncoder),

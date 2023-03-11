@@ -231,6 +231,7 @@ impl AsPhysical for pb::PathExpand {
         if plan_meta.is_partition() {
             builder.shuffle(self.start_tag.clone());
         }
+        // TODO: for path expand, if condition is to filter on HEAD, no need to save head as it is not the truely head.
         post_process_vars(builder, plan_meta, false)?;
         Ok(())
     }
