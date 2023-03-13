@@ -111,8 +111,8 @@ public class RelToFfiConverter implements GraphRelShuttle {
                 LIB.initPathxpdOperatorWithExpandBase(
                         (Pointer) expand.getNode(),
                         (Pointer) getV.getNode(),
-                        Utils.ffiPathOpt(pxd.pathOpt()),
-                        Utils.ffiResultOpt(pxd.resultOpt()));
+                        Utils.ffiPathOpt(pxd.getPathOpt()),
+                        Utils.ffiResultOpt(pxd.getResultOpt()));
         List<Integer> hops = range(pxd.getOffset(), pxd.getFetch());
         checkFfiResult(LIB.setPathxpdHops(ptrPxd, hops.get(0), hops.get(1)));
         if (pxd.getAliasId() != AliasInference.DEFAULT_ID) {

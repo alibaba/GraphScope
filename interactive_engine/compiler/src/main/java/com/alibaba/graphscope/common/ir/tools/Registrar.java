@@ -47,7 +47,7 @@ public class Registrar {
         this.extraNodes = new ArrayList<>();
         this.extraAliases = new ArrayList<>();
         this.isAppend = isAppend;
-        this.uniqueNames = builder.uniqueNameList(input, isAppend);
+        this.uniqueNames = AliasInference.getUniqueAliasList(input, isAppend);
     }
 
     public List<RexNode> registerExpressions(List<RexNode> nodes) {
