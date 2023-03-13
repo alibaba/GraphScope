@@ -29,9 +29,4 @@ public class FfiResult extends Structure {
 
     public ResultCode code;
     public String msg;
-
-    @Override
-    public String toString() {
-        return "FfiResult{" + "code=" + code + ", msg='" + msg + '\'' + '}';
-    }
 }

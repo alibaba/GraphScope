@@ -81,6 +81,8 @@ public class GroupTest {
                 aggregate.explain().trim());
     }
 
+    // g.V().hasLabel("person").group().by(values("name").as("a"),
+    // values("age").as("b")).by(fold().as("c"))
     @Test
     public void group_3_test() {
         GraphBuilder builder = Utils.mockGraphBuilder();

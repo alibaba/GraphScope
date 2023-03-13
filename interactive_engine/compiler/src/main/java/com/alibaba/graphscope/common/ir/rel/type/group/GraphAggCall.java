@@ -113,14 +113,18 @@ public class GraphAggCall extends AbstractAggCall {
 
     @Override
     public String toString() {
-        return "{"
-                + "operands="
-                + operands
-                + ", aggFunction="
-                + aggFunction
-                + ", alias='"
-                + alias
-                + '\''
-                + '}';
+        StringBuilder builder = new StringBuilder();
+        return builder.append("{")
+                .append("operands=")
+                .append(operands)
+                .append(", aggFunction=")
+                .append(aggFunction)
+                .append(", alias='")
+                .append(alias)
+                .append('\'')
+                .append(", distinct=")
+                .append(distinct)
+                .append('}')
+                .toString();
     }
 }

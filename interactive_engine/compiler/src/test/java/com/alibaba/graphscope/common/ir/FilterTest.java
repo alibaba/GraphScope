@@ -127,6 +127,7 @@ public class FilterTest {
         Assert.assertEquals(filter.getRowType(), previous.getRowType());
     }
 
+    // test fuzzy conditions: g.V().has("age", gt(10))
     @Test
     public void greater_4_test() {
         GraphBuilder builder = Utils.mockGraphBuilder();
