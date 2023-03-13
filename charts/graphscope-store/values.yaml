@@ -44,7 +44,7 @@ test:
   image:
     registry: registry.cn-hongkong.aliyuncs.com
     repository: graphscope/graphscope-store
-    tag: python-3.9.9-alpine3.14
+    tag: python-3.9.9-alpine3.14-gremlin
 
 ## GraphScope Store parameters
 ##
