@@ -92,14 +92,21 @@ pub struct VineyardMultiPartition {
     graph_partition_manager: Arc<dyn GraphPartitionManager>,
     // mapping of partition id -> server_index
     partition_server_index_mapping: HashMap<u32, u32>,
+    // computed partition ids after split fragments on same vineyard instance to multiple
+    // worker processes
+    computed_process_partition_list: Vec<u32>,
 }
 
 impl VineyardMultiPartition {
     pub fn new(
         graph_partition_manager: Arc<dyn GraphPartitionManager>,
-        partition_server_index_mapping: HashMap<u32, u32>,
+        partition_server_index_mapping: HashMap<u32, u32>, computed_process_partition_list: Vec<u32>,
     ) -> VineyardMultiPartition {
-        VineyardMultiPartition { graph_partition_manager, partition_server_index_mapping }
+        VineyardMultiPartition {
+            graph_partition_manager,
+            partition_server_index_mapping,
+            computed_process_partition_list,
+        }
     }
 }
 
@@ -138,12 +145,9 @@ impl Partitioner for VineyardMultiPartition {
         // 2. 'pid % job_workers' picks one worker to do the computation.
         // and 'pid % job_workers == worker_id % job_workers' checks if current worker is the picked worker
         let mut worker_partition_list = vec![];
-        let process_partition_list = self
-            .graph_partition_manager
-            .get_process_partition_list();
-        for pid in process_partition_list {
+        for pid in self.computed_process_partition_list.iter() {
             if pid % (job_workers as u32) == worker_id % (job_workers as u32) {
-                worker_partition_list.push(pid as u64)
+                worker_partition_list.push((*pid) as u64)
             }
         }
         info!(

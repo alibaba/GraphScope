@@ -347,12 +347,16 @@ class CoordinatorServiceServicer(
                 response_head = responses[0]
                 response_head.head.code = error_code
                 response_head.head.error_msg = f"Error occurred during RunStep. The traceback is: {traceback.format_exc()}"
+                if hasattr(exc, "status_message"):
+                    exc_message = exc.status_message
+                else:
+                    exc_message = str(exc)
                 response_head.head.full_exception = pickle.dumps(
                     (
                         GremlinServerError,
                         {
                             "code": exc.status_code,
-                            "message": exc.status_message,
+                            "message": exc_message,
                             "attributes": exc.status_attributes,
                         },
                     )
