@@ -46,9 +46,10 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexVariable;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class FfiLogicalPlan extends LogicalPlan<Pointer, byte[]> {
     private static final IrCoreLibrary LIB = IrCoreLibrary.INSTANCE;
@@ -121,22 +122,17 @@ public class FfiLogicalPlan extends LogicalPlan<Pointer, byte[]> {
         Preconditions.checkArgument(
                 keys.groupKeyCount() > 0 && aggregate.getAggCalls().isEmpty(),
                 "group keys should not be empty while group calls should be empty if need dedup");
-        List<OuterExpression.Expression> exprs =
-                keys.getVariables().stream()
-                        .map(
-                                k -> {
-                                    Preconditions.checkArgument(
-                                            k instanceof RexGraphVariable,
-                                            "each group key should be type %s, but is %s",
-                                            RexGraphVariable.class,
-                                            k.getClass());
-                                    return k.accept(new RexToProtoConverter(true, isColumnId()));
-                                })
-                        .collect(Collectors.toList());
         List<RelDataTypeField> fields = aggregate.getRowType().getFieldList();
         Pointer ptrProject = LIB.initProjectOperator(false);
-        for (int i = 0; i < exprs.size(); ++i) {
-            OuterExpression.Expression expr = exprs.get(i);
+        for (int i = 0; i < keys.groupKeyCount(); ++i) {
+            RexNode var = keys.getVariables().get(i);
+            Preconditions.checkArgument(
+                    var instanceof RexGraphVariable,
+                    "each group key should be type %s, but is %s",
+                    RexGraphVariable.class,
+                    var.getClass());
+            OuterExpression.Expression expr =
+                    var.accept(new RexToProtoConverter(true, isColumnId()));
             int aliasId;
             if (i >= fields.size()
                     || (aliasId = fields.get(i).getIndex()) == AliasInference.DEFAULT_ID) {
@@ -150,13 +146,18 @@ public class FfiLogicalPlan extends LogicalPlan<Pointer, byte[]> {
                             ArgUtils.asAlias(aliasId)));
         }
         Pointer ptrDedup = LIB.initDedupOperator();
-        exprs.forEach(
-                k -> {
-                    OuterExpression.Variable var = k.getOperators(0).getVar();
-                    checkFfiResult(
-                            LIB.addDedupKeyWithPb(
-                                    ptrDedup, new FfiPbPointer.ByValue(var.toByteArray())));
-                });
+        for (int i = 0; i < keys.groupKeyCount(); ++i) {
+            RelDataTypeField field = fields.get(i);
+            RexVariable rexVar =
+                    RexGraphVariable.of(field.getIndex(), field.getName(), field.getType());
+            OuterExpression.Variable exprVar =
+                    rexVar.accept(new RexToProtoConverter(true, isColumnId()))
+                            .getOperators(0)
+                            .getVar();
+            checkFfiResult(
+                    LIB.addDedupKeyWithPb(
+                            ptrDedup, new FfiPbPointer.ByValue(exprVar.toByteArray())));
+        }
         IntByReference oprIdx = new IntByReference();
         checkFfiResult(LIB.appendProjectOperator(ptrPlan, ptrProject, lastIdx, oprIdx));
         this.lastIdx = oprIdx.getValue();
