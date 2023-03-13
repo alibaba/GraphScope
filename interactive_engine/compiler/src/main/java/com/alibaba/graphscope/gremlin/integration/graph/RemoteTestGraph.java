@@ -27,6 +27,8 @@ import org.apache.tinkerpop.gremlin.process.traversal.strategy.optimization.Filt
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+@Graph.OptIn(
+        "com.alibaba.graphscope.gremlin.integration.suite.standard.additional.IrAdditionalGraphTestSuite")
 @Graph.OptIn("com.alibaba.graphscope.gremlin.integration.suite.standard.IrGremlinTestSuite")
 @Graph.OptIn("com.alibaba.graphscope.gremlin.integration.suite.ldbc.IrLdbcTestSuite")
 @Graph.OptIn("com.alibaba.graphscope.gremlin.integration.suite.pattern.IrPatternTestSuite")
