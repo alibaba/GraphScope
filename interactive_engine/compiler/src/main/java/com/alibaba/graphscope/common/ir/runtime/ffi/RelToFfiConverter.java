@@ -182,6 +182,10 @@ public class RelToFfiConverter implements GraphRelShuttle {
 
     @Override
     public LogicalNode visit(GraphLogicalAggregate aggregate) {
+        List<GraphAggCall> groupCalls = aggregate.getAggCalls();
+        if (groupCalls.isEmpty()) { // transform to project + dedup by keys
+            return new LogicalNode(aggregate, null);
+        }
         Pointer ptrGroup = LIB.initGroupbyOperator();
         List<RelDataTypeField> fields = aggregate.getRowType().getFieldList();
         List<RexNode> groupKeys = aggregate.getGroupKey().getVariables();
@@ -206,11 +210,6 @@ public class RelToFfiConverter implements GraphRelShuttle {
             checkFfiResult(
                     LIB.addGroupbyKeyAliasWithPb(
                             ptrGroup, new FfiPbPointer.ByValue(var.toByteArray()), ffiAlias));
-        }
-        List<GraphAggCall> groupCalls = aggregate.getAggCalls();
-        if (groupCalls.isEmpty()) { // dedup
-            throw new UnsupportedOperationException(
-                    "empty aggregate calls = dedup is unsupported yet");
         }
         for (int i = 0; i < groupCalls.size(); ++i) {
             List<RexNode> operands = groupCalls.get(i).getOperands();

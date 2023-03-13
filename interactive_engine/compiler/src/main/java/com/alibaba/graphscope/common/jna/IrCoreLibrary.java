@@ -141,6 +141,8 @@ public interface IrCoreLibrary extends Library {
 
     FfiResult.ByValue addDedupKey(Pointer dedup, FfiVariable.ByValue var);
 
+    FfiResult.ByValue addDedupKeyWithPb(Pointer dedup, FfiPbPointer.ByValue pbPointer);
+
     FfiResult.ByValue appendDedupOperator(
             Pointer plan, Pointer dedup, int parent, IntByReference oprIdx);
 
