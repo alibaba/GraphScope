@@ -1,3 +1,18 @@
+//
+//! Copyright 2020 Alibaba Group Holding Limited.
+//!
+//! Licensed under the Apache License, Version 2.0 (the "License");
+//! you may not use this file except in compliance with the License.
+//! You may obtain a copy of the License at
+//!
+//! http://www.apache.org/licenses/LICENSE-2.0
+//!
+//! Unless required by applicable law or agreed to in writing, software
+//! distributed under the License is distributed on an "AS IS" BASIS,
+//! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//! See the License for the specific language governing permissions and
+//! limitations under the License.
+
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::fs::File;
@@ -159,16 +174,16 @@ impl CsrGraphSchema {
     }
 
     pub fn desc(&self) {
-        println!(
+        info!(
             "vertex label num: {}, edge label num: {}",
             self.vertex_type_to_id.len(),
             self.edge_type_to_id.len()
         );
         for pair in self.vertex_type_to_id.iter() {
-            println!("vertex label: {}, id: {}", pair.0.clone(), pair.1);
+            info!("vertex label: {}, id: {}", pair.0.clone(), pair.1);
         }
         for pair in self.edge_type_to_id.iter() {
-            println!("edge label: {}, id: {}", pair.0.clone(), pair.1);
+            info!("edge label: {}, id: {}", pair.0.clone(), pair.1);
         }
     }
 

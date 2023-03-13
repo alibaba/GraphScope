@@ -1,3 +1,18 @@
+//
+//! Copyright 2020 Alibaba Group Holding Limited.
+//!
+//! Licensed under the Apache License, Version 2.0 (the "License");
+//! you may not use this file except in compliance with the License.
+//! You may obtain a copy of the License at
+//!
+//! http://www.apache.org/licenses/LICENSE-2.0
+//!
+//! Unless required by applicable law or agreed to in writing, software
+//! distributed under the License is distributed on an "AS IS" BASIS,
+//! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//! See the License for the specific language governing permissions and
+//! limitations under the License.
+
 use std::collections::HashSet;
 use std::fs::{create_dir_all, read_dir, File};
 use std::io::{BufReader, Read};
@@ -243,7 +258,7 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
             }
         }
         let parser = LDBCVertexParser::new(vertex_type, id_col_id);
-        println!("loading vertex-{}", vertex_type);
+        info!("loading vertex-{}", vertex_type);
         if is_static_vertex(vertex_type) {
             for result in rdr.records() {
                 if let Ok(record) = result {
@@ -286,7 +301,7 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
         mut rdr: Reader<R>, idegree: &mut Vec<i64>, odegree: &mut Vec<i64>,
         parsed_edges: &mut Vec<(I, I, Vec<Item>)>,
     ) {
-        println!("loading edge-{}-{}-{}", src_vertex_type, edge_type, dst_vertex_type);
+        info!("loading edge-{}-{}-{}", src_vertex_type, edge_type, dst_vertex_type);
         let input_header = self
             .input_schema
             .get_edge_header(src_vertex_type, edge_type, dst_vertex_type)
@@ -482,7 +497,7 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                 .partition_dir
                 .join(format!("vp_{}", self.graph_schema.vertex_label_names()[v_label_i as usize]));
             let table_path_str = table_path.to_str().unwrap().to_string();
-            println!(
+            info!(
                 "vertex {}, size: {}",
                 self.graph_schema.vertex_label_names()[v_label_i as usize],
                 table.row_num()
@@ -507,11 +522,11 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                             .get_edge_file(src_label_i, e_label_i, dst_label_i)
                     {
                         for i in edge_file_strings {
-                            println!("{}", i);
+                            info!("{}", i);
                         }
                         let edge_files = get_files_list(&self.input_dir, edge_file_strings).unwrap();
                         for edge_file in edge_files.iter() {
-                            println!("reading from file: {}", edge_file.clone().to_str().unwrap());
+                            info!("reading from file: {}", edge_file.clone().to_str().unwrap());
                             if edge_file
                                 .clone()
                                 .to_str()

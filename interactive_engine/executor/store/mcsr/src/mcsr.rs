@@ -1,3 +1,18 @@
+//
+//! Copyright 2020 Alibaba Group Holding Limited.
+//!
+//! Licensed under the Apache License, Version 2.0 (the "License");
+//! you may not use this file except in compliance with the License.
+//! You may obtain a copy of the License at
+//!
+//! http://www.apache.org/licenses/LICENSE-2.0
+//!
+//! Unless required by applicable law or agreed to in writing, software
+//! distributed under the License is distributed on an "AS IS" BASIS,
+//! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//! See the License for the specific language governing permissions and
+//! limitations under the License.
+
 use core::slice;
 use std::alloc::Layout;
 use std::any::Any;
@@ -209,7 +224,7 @@ impl<I: IndexType> MutableCsr<I> {
     }
 
     pub fn deserialize(&mut self, path: &String) {
-        println!("Start to open file {}", path);
+        info!("Start to open file {}", path);
         let mut f = File::open(path).unwrap();
         let vnum = f.read_u64().unwrap() as usize;
         let total_capacity = f.read_u64().unwrap() as usize;

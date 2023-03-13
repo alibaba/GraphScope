@@ -1,3 +1,18 @@
+//
+//! Copyright 2020 Alibaba Group Holding Limited.
+//!
+//! Licensed under the Apache License, Version 2.0 (the "License");
+//! you may not use this file except in compliance with the License.
+//! You may obtain a copy of the License at
+//!
+//! http://www.apache.org/licenses/LICENSE-2.0
+//!
+//! Unless required by applicable law or agreed to in writing, software
+//! distributed under the License is distributed on an "AS IS" BASIS,
+//! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//! See the License for the specific language governing permissions and
+//! limitations under the License.
+
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::fs::File;
@@ -149,7 +164,7 @@ impl Decode for ColTable {
             } else if t == 8 {
                 columns.push(Box::new(DateColumn::read_from(reader)?));
             } else {
-                println!("Invalid type {}", t);
+                info!("Invalid type {}", t);
             }
         }
 
@@ -213,7 +228,7 @@ impl ColTable {
     pub fn push(&mut self, row: &Vec<Item>) {
         let col_num = self.columns.len();
         if row.len() < col_num {
-            println!("schema not match when push, row_len = {}, col num = {}", row.len(), col_num);
+            info!("schema not match when push, row_len = {}, col num = {}", row.len(), col_num);
             return;
         }
         for i in 0..col_num {
@@ -345,7 +360,7 @@ impl ColTable {
                         .serialize(&mut f);
                 }
                 _ => {
-                    println!("unexpected type...");
+                    info!("unexpected type...");
                 }
             }
         }
@@ -398,24 +413,24 @@ impl ColTable {
                 col.deserialize(&mut f);
                 self.columns.push(Box::new(col));
             } else {
-                println!("unexpected type...");
+                info!("unexpected type...");
             }
         }
     }
 
     pub fn is_same(&self, other: &Self) -> bool {
         if self.header != other.header {
-            println!("header not same");
+            info!("header not same");
             return false;
         }
         if self.columns.len() != other.columns.len() {
-            println!("columns num not same");
+            info!("columns num not same");
             return false;
         }
         let col_num = self.columns.len();
         for i in 0..col_num {
             if self.columns[i].get_type() != other.columns[i].get_type() {
-                println!("column-{} type not same", i);
+                info!("column-{} type not same", i);
                 return false;
             }
             match self.columns[i].get_type() {
@@ -431,7 +446,7 @@ impl ColTable {
                                 .unwrap(),
                         )
                     {
-                        println!("column-{} data not same", i);
+                        info!("column-{} data not same", i);
                         return false;
                     }
                 }
@@ -447,7 +462,7 @@ impl ColTable {
                                 .unwrap(),
                         )
                     {
-                        println!("column-{} data not same", i);
+                        info!("column-{} data not same", i);
                         return false;
                     }
                 }
@@ -463,13 +478,13 @@ impl ColTable {
                         .unwrap()
                         .data;
                     if lhs.len() != rhs.len() {
-                        println!("column-{} data not same", i);
+                        info!("column-{} data not same", i);
                         return false;
                     }
                     let num = lhs.len();
                     for i in 0..num {
                         if lhs[i] != rhs[i] {
-                            println!("column-{} data not same", i);
+                            info!("column-{} data not same", i);
                             return false;
                         }
                     }
@@ -486,7 +501,7 @@ impl ColTable {
                                 .unwrap(),
                         )
                     {
-                        println!("column-{} data not same", i);
+                        info!("column-{} data not same", i);
                         return false;
                     }
                 }
@@ -502,12 +517,12 @@ impl ColTable {
                                 .unwrap(),
                         )
                     {
-                        println!("column-{} data not same", i);
+                        info!("column-{} data not same", i);
                         return false;
                     }
                 }
                 _ => {
-                    println!("unexpected type");
+                    info!("unexpected type");
                     return false;
                 }
             }

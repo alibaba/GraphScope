@@ -1,3 +1,18 @@
+//
+//! Copyright 2020 Alibaba Group Holding Limited.
+//!
+//! Licensed under the Apache License, Version 2.0 (the "License");
+//! you may not use this file except in compliance with the License.
+//! You may obtain a copy of the License at
+//!
+//! http://www.apache.org/licenses/LICENSE-2.0
+//!
+//! Unless required by applicable law or agreed to in writing, software
+//! distributed under the License is distributed on an "AS IS" BASIS,
+//! WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//! See the License for the specific language governing permissions and
+//! limitations under the License.
+
 use std::fs::{create_dir_all, File};
 use std::io::{BufReader, BufWriter, Read, Write};
 use std::marker::PhantomData;
@@ -82,7 +97,7 @@ impl<G: FromStr + Send + Sync + IndexType + Eq> GraphPartitioner<G> {
             .ok_or(GDBError::FieldNotExistError)
             .unwrap();
         let parser = LDBCVertexParser::<G>::new(vertex_type, id_field.1);
-        println!("loading vertex-{}", vertex_type);
+        info!("loading vertex-{}", vertex_type);
         if is_static_vertex(vertex_type) {
             for result in rdr.records() {
                 if let Ok(record) = result {
@@ -105,7 +120,7 @@ impl<G: FromStr + Send + Sync + IndexType + Eq> GraphPartitioner<G> {
         &mut self, src_vertex_type: LabelId, dst_vertex_type: LabelId, edge_type: LabelId,
         mut rdr: Reader<R>, mut wtr: Writer<W>,
     ) {
-        println!("loading edge-{}", edge_type);
+        info!("loading edge-{}", edge_type);
         let header = self
             .graph_schema
             .get_edge_schema((src_vertex_type, edge_type, dst_vertex_type))
@@ -296,14 +311,14 @@ impl<G: FromStr + Send + Sync + IndexType + Eq> GraphPartitioner<G> {
                                     continue;
                                 }
                                 index += 1;
-                                println!("reading from file: {}", edge_file.clone().to_str().unwrap());
+                                info!("reading from file: {}", edge_file.clone().to_str().unwrap());
                                 if edge_file
                                     .clone()
                                     .to_str()
                                     .unwrap()
                                     .ends_with(".csv")
                                 {
-                                    println!("{}", edge_file.as_os_str().clone().to_str().unwrap());
+                                    info!("{}", edge_file.as_os_str().clone().to_str().unwrap());
                                     let input_path = edge_file.as_os_str().clone().to_str().unwrap();
                                     let output_path = if let Some(pos) = input_path.find("static") {
                                         self.partition_dir

@@ -1,7 +1,12 @@
 #!/bin/bash
 
-WORKER_ID=$1
+INPUT_PATH=$1
+OUTPUT_PATH=$2
+INPUT_SCHEMA_PATH=$3
+GRAPH_SCHEMA_PATH=$4
+PARTITION_NUM=$5
+WORKER_ID=$6
 
-cmd="./target/release/single_laser /home/admin/nas/neng/sf3000/initial_snapshot/ /home/admin/nas/luoxiaojian/csr_3k_p8 ./schema.json -p 8 -i $WORKER_ID"
+cmd="./target/release/single_laser $INPUT_PATH $OUTPUT_PATH $INPUT_SCHEMA_PATH $GRAPH_SCHEMA_PATH -p $PARTITION_NUM -i $WORKER_ID"
 echo $cmd
 eval $cmd
