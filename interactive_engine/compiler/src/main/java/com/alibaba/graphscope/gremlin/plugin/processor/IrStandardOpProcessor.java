@@ -428,7 +428,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                 new LogicalPlanConverter<>(
                                 new GraphRelShuttleWrapper(
                                         new RelToFfiConverter(irMeta.getSchema().isColumnId())),
-                                new FfiLogicalPlan(optCluster, irMeta, getPlanHints()))
+                                new FfiLogicalPlan(optCluster, irMeta, getPlanHints(irMeta)))
                         .go(topNode)) {
             String jobName = "ir_plan_" + jobId;
             // print script and jobName with ir plan
@@ -457,13 +457,14 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         }
     }
 
-    protected List<RelHint> getPlanHints() {
+    protected List<RelHint> getPlanHints(IrMeta irMeta) {
         int servers = PegasusConfig.PEGASUS_HOSTS.get(configs).split(",").length;
         int workers = PegasusConfig.PEGASUS_WORKER_NUM.get(configs);
         return ImmutableList.of(
                 RelHint.builder("plan")
                         .hintOption("servers", String.valueOf(servers))
                         .hintOption("workers", String.valueOf(workers))
+                        .hintOption("isColumnId", String.valueOf(irMeta.getSchema().isColumnId()))
                         .build());
     }
 
