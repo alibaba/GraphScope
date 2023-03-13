@@ -758,7 +758,7 @@ public class GraphBuilder extends RelBuilder {
      *
      * @param offsetNode
      * @param fetchNode
-     * @param nodes      build limit() if empty
+     * @param nodes build limit() if empty
      * @return
      */
     @Override

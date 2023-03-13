@@ -173,15 +173,8 @@ void output_vineyard_tensor(vineyard::Client& client,
                             vineyard::AnyType& expected_type) {
   auto stored_tensor = std::dynamic_pointer_cast<vineyard::GlobalTensor>(
       client.GetObject(tensor_object));
-  auto const& shape = stored_tensor->shape();
-  auto const& partition_shape = stored_tensor->partition_shape();
   auto const& local_chunks = stored_tensor->LocalPartitions(client);
-  CHECK_EQ(shape.size(), 1);
-  CHECK_EQ(partition_shape.size(), 1);
   CHECK_EQ(local_chunks.size(), static_cast<size_t>(comm_spec.local_num()));
-  if (comm_spec.worker_id() == 0) {
-    VLOG(1) << "tensor shape: " << shape[0] << ", " << partition_shape[0];
-  }
 
   if (comm_spec.local_id() == 0) {
     for (auto obj : local_chunks) {

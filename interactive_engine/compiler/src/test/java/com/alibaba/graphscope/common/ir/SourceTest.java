@@ -56,6 +56,7 @@ public class SourceTest {
                 source.explain().trim());
     }
 
+    // g.V().hasLabel("person", "knows") -> person and knows have different opt type, throw errors
     @Test
     public void multiple_labels_opt_test() {
         try {

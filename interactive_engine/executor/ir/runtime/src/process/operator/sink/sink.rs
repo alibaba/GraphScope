@@ -149,8 +149,8 @@ impl RecordSinkEncoder {
                 return NameOrId::Str(meta_name.clone());
             }
         }
-        // if we can not find mapped meta_name, we return meta_id.to_string() instead.
-        NameOrId::Str(meta_id.to_string())
+        // if we can not find mapped meta_name, we return meta_id directly.
+        NameOrId::Id(meta_id)
     }
 
     fn vid_to_pb(&self, vid: &ID) -> result_pb::Vertex {
@@ -214,18 +214,31 @@ impl RecordSinkEncoder {
 }
 
 impl MapFunction<Record, Vec<u8>> for RecordSinkEncoder {
-    fn exec(&self, input: Record) -> FnResult<Vec<u8>> {
+    fn exec(&self, mut input: Record) -> FnResult<Vec<u8>> {
         let mut sink_columns = Vec::with_capacity(self.sink_keys.len());
-        for sink_key in self.sink_keys.iter() {
-            if let Some(entry) = input.get(sink_key.clone()) {
+        if self.sink_keys.is_empty() {
+            // the case of sink all **tagged** columns by default.
+            let columns = input.get_columns_mut();
+            for (sink_key, entry) in columns.into_iter() {
                 let entry_pb = self.entry_to_pb(entry);
                 let column_pb = result_pb::Column {
-                    name_or_id: sink_key
-                        .clone()
-                        .map(|sink_key| self.meta_to_pb(NameOrId::Id(sink_key), MetaType::Tag)),
+                    name_or_id: Some(self.meta_to_pb(NameOrId::Id(sink_key as KeyId), MetaType::Tag)),
                     entry: Some(entry_pb),
                 };
                 sink_columns.push(column_pb);
+            }
+        } else {
+            for sink_key in self.sink_keys.iter() {
+                if let Some(entry) = input.get(sink_key.clone()) {
+                    let entry_pb = self.entry_to_pb(entry);
+                    let column_pb = result_pb::Column {
+                        name_or_id: sink_key
+                            .clone()
+                            .map(|sink_key| self.meta_to_pb(NameOrId::Id(sink_key), MetaType::Tag)),
+                        entry: Some(entry_pb),
+                    };
+                    sink_columns.push(column_pb);
+                }
             }
         }
 

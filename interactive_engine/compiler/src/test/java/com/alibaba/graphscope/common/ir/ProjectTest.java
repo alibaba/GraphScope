@@ -104,7 +104,7 @@ public class ProjectTest {
         Assert.assertEquals("RecordType(INTEGER b)", project.getRowType().toString());
     }
 
-    // project is true
+    // append is true
     @Test
     public void project_5_test() {
         GraphBuilder builder = Utils.mockGraphBuilder();

@@ -25,6 +25,7 @@ ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:/usr/local/lib64
 RUN yum install -y sudo libunwind-devel libgomp && \
     yum clean all -y --enablerepo='*' && \
     rm -rf /var/cache/yum
+RUN sudo chmod a+wrx /tmp
 
 RUN useradd -m graphscope -u 1001 \
     && echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers

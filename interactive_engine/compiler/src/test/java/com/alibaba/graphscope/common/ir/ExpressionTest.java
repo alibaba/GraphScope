@@ -48,18 +48,21 @@ public class ExpressionTest {
         Assert.assertEquals(SqlTypeName.DOUBLE, node.getType().getSqlTypeName());
     }
 
+    // head
     @Test
     public void variable_1_test() {
         RexNode node = builder.source(mockSourceConfig(null)).variable((String) null);
         Assert.assertEquals("DEFAULT", node.toString());
     }
 
+    // a
     @Test
     public void variable_2_test() {
         RexNode node = builder.source(mockSourceConfig("a")).variable("a");
         Assert.assertEquals("a", node.toString());
     }
 
+    // non-exist tag -> throw errors
     @Test
     public void variable_3_test() {
         try {
@@ -70,6 +73,7 @@ public class ExpressionTest {
         Assert.fail("tag 'a' does not exist");
     }
 
+    // head.name
     @Test
     public void variable_4_test() {
         RexNode node = builder.source(mockSourceConfig(null)).variable(null, "name");
@@ -77,6 +81,7 @@ public class ExpressionTest {
         Assert.assertEquals("DEFAULT.name", node.toString());
     }
 
+    // a.age
     @Test
     public void variable_5_test() {
         RexNode node = builder.source(mockSourceConfig("a")).variable("a", "age");
@@ -136,6 +141,7 @@ public class ExpressionTest {
         Assert.assertEquals("AND(>(a.age, 10), =(a.name, 'x'))", node.toString());
     }
 
+    // a.age % 10
     @Test
     public void mod_test() {
         RexNode var = builder.source(mockSourceConfig("a")).variable("a", "age");
@@ -144,6 +150,7 @@ public class ExpressionTest {
         Assert.assertEquals("MOD(a.age, 10)", node.toString());
     }
 
+    // a.age ^ 2
     @Test
     public void power_test() {
         RexNode var = builder.source(mockSourceConfig("a")).variable("a", "age");
@@ -153,6 +160,7 @@ public class ExpressionTest {
         Assert.assertEquals("POWER(a.age, 2)", node.toString());
     }
 
+    // -a.age
     @Test
     public void unary_minus_test() {
         RexNode var = builder.source(mockSourceConfig("a")).variable("a", "age");

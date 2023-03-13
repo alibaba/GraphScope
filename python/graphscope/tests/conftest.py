@@ -58,6 +58,17 @@ def arrow_modern_graph(graphscope_session):
 
 
 @pytest.fixture(scope="module")
+def arrow_modern_graph_undirected(graphscope_session):
+    graph = load_modern_graph(
+        graphscope_session,
+        prefix="{}/modern_graph".format(test_repo_dir),
+        directed=False,
+    )
+    yield graph
+    del graph
+
+
+@pytest.fixture(scope="module")
 def modern_person():
     return "{}/modern_graph/person.csv".format(test_repo_dir)
 
@@ -445,6 +456,22 @@ def p2p_property_graph_undirected(graphscope_session):
 
 
 @pytest.fixture(scope="module")
+def p2p_property_graph_undirected_string(graphscope_session):
+    g = graphscope_session.g(
+        oid_type="string", directed=False, generate_eid=False, retain_oid=False
+    )
+    g = g.add_vertices(f"{property_dir}/p2p-31_property_v_0", "person")
+    g = g.add_edges(
+        f"{property_dir}/p2p-31_property_e_0",
+        label="knows",
+        src_label="person",
+        dst_label="person",
+    )
+    yield g
+    del g
+
+
+@pytest.fixture(scope="module")
 def p2p_property_graph_undirected_local_vm(graphscope_session):
     g = graphscope_session.g(
         directed=False, generate_eid=False, retain_oid=True, vertex_map="local"
@@ -516,6 +543,14 @@ def p2p_project_undirected_graph(p2p_property_graph_undirected):
 @pytest.fixture(scope="module")
 def p2p_project_directed_graph_string(p2p_property_graph_string):
     pg = p2p_property_graph_string.project(
+        vertices={"person": ["weight"]}, edges={"knows": ["dist"]}
+    )
+    yield pg
+
+
+@pytest.fixture(scope="module")
+def p2p_project_undirected_graph_string(p2p_property_graph_undirected_string):
+    pg = p2p_property_graph_undirected_string.project(
         vertices={"person": ["weight"]}, edges={"knows": ["dist"]}
     )
     yield pg

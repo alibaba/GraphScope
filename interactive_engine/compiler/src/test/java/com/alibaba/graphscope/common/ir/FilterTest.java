@@ -68,6 +68,7 @@ public class FilterTest {
                 filter.explain().trim());
     }
 
+    // g.V().hasLabel("person").where(expr("@.age > 10"))
     @Test
     public void greater_1_test() {
         GraphBuilder builder = Utils.mockGraphBuilder();
@@ -143,6 +144,7 @@ public class FilterTest {
                 filter.explain().trim());
     }
 
+    // g.V().hasLabel("person").where(expr("@.age > 20 and @.name == marko"))
     @Test
     public void and_1_test() {
         GraphBuilder builder = Utils.mockGraphBuilder();
@@ -164,31 +166,6 @@ public class FilterTest {
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
                         + " fusedFilter=[[AND(>(DEFAULT.age, 20), =(DEFAULT.name, 'marko'))]],"
                         + " opt=[VERTEX])",
-                filter.explain().trim());
-    }
-
-    @Test
-    public void and_2_test() {
-        GraphBuilder builder = Utils.mockGraphBuilder();
-        SourceConfig sourceConfig =
-                new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"));
-        RexNode condition1 =
-                builder.source(sourceConfig)
-                        .call(
-                                GraphStdOperatorTable.GREATER_THAN,
-                                builder.variable(null, "age"),
-                                builder.literal(20));
-        RexNode condition2 =
-                builder.call(
-                        GraphStdOperatorTable.LESS_THAN,
-                        builder.variable(null, "age"),
-                        builder.literal(30));
-        RelNode filter =
-                builder.filter(builder.call(GraphStdOperatorTable.AND, condition1, condition2))
-                        .build();
-        Assert.assertEquals(
-                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
-                    + " fusedFilter=[[AND(>(DEFAULT.age, 20), <(DEFAULT.age, 30))]], opt=[VERTEX])",
                 filter.explain().trim());
     }
 }

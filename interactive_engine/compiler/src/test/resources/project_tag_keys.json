@@ -19,7 +19,8 @@
               "sample_ratio": 1.0,
               "extra": {}
             },
-            "idx_predicate": null
+            "idx_predicate": null,
+            "meta_data": null
           }
         }
       },
@@ -36,6 +37,7 @@
                 "expr": {
                   "operators": [
                     {
+                      "node_type": null,
                       "item": {
                         "VarMap": {
                           "keys": [
@@ -53,7 +55,8 @@
                                     }
                                   }
                                 }
-                              }
+                              },
+                              "node_type": null
                             },
                             {
                               "tag": {
@@ -69,7 +72,8 @@
                                     }
                                   }
                                 }
-                              }
+                              },
+                              "node_type": null
                             }
                           ]
                         }
@@ -84,7 +88,8 @@
                 }
               }
             ],
-            "is_append": true
+            "is_append": true,
+            "meta_data": []
           }
         }
       },

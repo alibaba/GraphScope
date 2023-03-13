@@ -70,7 +70,8 @@ public class ExpandTest {
                 expand.explain().trim());
     }
 
-    // path expand: g.V().hasLabel("person").out('1..3', "knows").with('PATH_OPT',
+    // path expand: g.V().hasLabel("person").out('1..3', "knows").has("age",
+    // eq(10)).with('PATH_OPT',
     // SIMPLE).with('RESULT_OPT', ALL_V)
     @Test
     public void expand_3_test() {
