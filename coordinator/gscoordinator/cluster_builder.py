@@ -589,9 +589,6 @@ class EngineCluster:
         container.resources = ResourceBuilder.get_resources(
             self._frontend_requests, None
         )
-        if self.vineyard_deployment_exists():
-            socket_volume = self.get_vineyard_socket_volume()
-            container.volume_mounts = [socket_volume[2]]
         return container
 
     def get_interactive_frontend_deployment(self, replicas=1):
