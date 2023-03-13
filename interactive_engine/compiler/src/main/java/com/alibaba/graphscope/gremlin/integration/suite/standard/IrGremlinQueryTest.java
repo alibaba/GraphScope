@@ -42,7 +42,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     public abstract Traversal<Vertex, Map<Object, Long>>
             get_g_V_group_by_by_dedup_count_order_by_key();
 
-    public abstract Traversal<Vertex, Map<Object, List>> get_g_V_group_by_outE_count_order_by_key();
+    public abstract Traversal<Vertex, Map<Object, Long>>
+            get_g_V_groupCount_by_outE_count_order_by_key();
 
     public abstract Traversal<Vertex, Object> get_g_VX4X_bothE_as_otherV();
 
@@ -69,11 +70,11 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
-    public void g_V_group_by_outE_count_test() {
-        Traversal<Vertex, Map<Object, List>> traversal =
-                this.get_g_V_group_by_outE_count_order_by_key();
+    public void g_V_groupCount_by_outE_count_test() {
+        Traversal<Vertex, Map<Object, Long>> traversal =
+                this.get_g_V_groupCount_by_outE_count_order_by_key();
         this.printTraversalForm(traversal);
-        Map<Object, List> result = traversal.next();
+        Map<Object, Long> result = traversal.next();
         Assert.assertEquals(4, result.size());
         result.forEach(
                 (k, v) -> {
@@ -185,9 +186,9 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         }
 
         @Override
-        public Traversal<Vertex, Map<Object, List>> get_g_V_group_by_outE_count_order_by_key() {
-            return (IrCustomizedTraversal)
-                    g.V().groupCount().by(outE().count()).order().by(__.select(Column.keys));
+        public Traversal<Vertex, Map<Object, Long>>
+                get_g_V_groupCount_by_outE_count_order_by_key() {
+            return g.V().groupCount().by(outE().count()).order().by(__.select(Column.keys));
         }
 
         @Override
