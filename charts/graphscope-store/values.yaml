@@ -153,7 +153,7 @@ frontend:
 ## GraphScope Ingestor parameters
 ##
 ingestor:
-  replicaCount: 2
+  replicaCount: 1
   ## GraphScope store container's resource requests and limits
   ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
   ##

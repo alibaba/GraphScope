@@ -17,7 +17,7 @@ RUN cd /home/graphscope/graphscope \
     && source ~/.graphscope_env \
     && cd /home/graphscope/graphscope/interactive_engine \
     && mvn clean package -P groot,groot-assembly -DskipTests --quiet -Drust.compile.mode="$profile" \
-    && tar /home/graphscope/graphscope/interactive_engine/assembly/target/groot.tar.gz -C /home/graphscope/
+    && tar xzf /home/graphscope/graphscope/interactive_engine/assembly/target/groot.tar.gz -C /home/graphscope/
 
 FROM centos:7.9.2009
 
