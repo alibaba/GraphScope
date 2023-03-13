@@ -111,8 +111,8 @@ public class RelToFfiConverter implements GraphRelShuttle {
                 LIB.initPathxpdOperatorWithExpandBase(
                         (Pointer) expand.getNode(),
                         (Pointer) getV.getNode(),
-                        Utils.ffiPathOpt(pxd.pathOpt()),
-                        Utils.ffiResultOpt(pxd.resultOpt()));
+                        Utils.ffiPathOpt(pxd.getPathOpt()),
+                        Utils.ffiResultOpt(pxd.getResultOpt()));
         List<Integer> hops = range(pxd.getOffset(), pxd.getFetch());
         checkFfiResult(LIB.setPathxpdHops(ptrPxd, hops.get(0), hops.get(1)));
         if (pxd.getAliasId() != AliasInference.DEFAULT_ID) {
@@ -182,6 +182,10 @@ public class RelToFfiConverter implements GraphRelShuttle {
 
     @Override
     public LogicalNode visit(GraphLogicalAggregate aggregate) {
+        List<GraphAggCall> groupCalls = aggregate.getAggCalls();
+        if (groupCalls.isEmpty()) { // transform to project + dedup by keys
+            return new LogicalNode(aggregate, null);
+        }
         Pointer ptrGroup = LIB.initGroupbyOperator();
         List<RelDataTypeField> fields = aggregate.getRowType().getFieldList();
         List<RexNode> groupKeys = aggregate.getGroupKey().getVariables();
@@ -206,11 +210,6 @@ public class RelToFfiConverter implements GraphRelShuttle {
             checkFfiResult(
                     LIB.addGroupbyKeyAliasWithPb(
                             ptrGroup, new FfiPbPointer.ByValue(var.toByteArray()), ffiAlias));
-        }
-        List<GraphAggCall> groupCalls = aggregate.getAggCalls();
-        if (groupCalls.isEmpty()) { // dedup
-            throw new UnsupportedOperationException(
-                    "empty aggregate calls = dedup is unsupported yet");
         }
         for (int i = 0; i < groupCalls.size(); ++i) {
             List<RexNode> operands = groupCalls.get(i).getOperands();
