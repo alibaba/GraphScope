@@ -28,7 +28,7 @@ use ir_physical_client::physical_builder::{JobBuilder, Plan};
 
 use crate::error::{IrError, IrResult};
 use crate::plan::logical::{LogicalPlan, NodeType};
-use crate::plan::meta::{ColumnsOpt, PlanMeta, TagId};
+use crate::plan::meta::PlanMeta;
 
 /// A trait for building physical plan (pegasus) from the logical plan
 pub trait AsPhysical {
