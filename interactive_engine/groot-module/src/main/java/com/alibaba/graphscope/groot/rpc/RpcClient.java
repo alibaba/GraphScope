@@ -13,9 +13,9 @@
  */
 package com.alibaba.graphscope.groot.rpc;
 
-import com.alibaba.graphscope.groot.coordinator.SnapshotManager;
 import io.grpc.ConnectivityState;
 import io.grpc.ManagedChannel;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +35,7 @@ public abstract class RpcClient implements AutoCloseable {
             logger.warn("Current channel State: " + channel.getState(true));
         }
     }
+
     public void close() {
         channel.resetConnectBackoff();
         this.channel.shutdown();
