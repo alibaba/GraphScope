@@ -32,6 +32,7 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.List;
 import java.util.Map;
 
 @RunWith(GremlinProcessRunner.class)
@@ -59,7 +60,7 @@ public abstract class GratefulProcessTest extends AbstractGremlinProcessTest {
 
     @Test
     @LoadGraphWith(GraphData.GRATEFUL)
-    public void g_V_repeatXoutX_timesX3X_count() {
+    public void g_V_path_expand_outX_timesX3X_count() {
         final Traversal<Vertex, Long> traversal = get_g_V_path_expand_outX_timesX3X_count();
         printTraversalForm(traversal);
         assertEquals(new Long(14465066L), traversal.next());
@@ -68,7 +69,7 @@ public abstract class GratefulProcessTest extends AbstractGremlinProcessTest {
 
     @Test
     @LoadGraphWith(GraphData.GRATEFUL)
-    public void g_V_repeatXoutX_timesX8X_count() {
+    public void g_V_path_expand_outX_timesX8X_count() {
         final Traversal<Vertex, Long> traversal = get_g_V_path_expand_outX_timesX8X_count();
         printTraversalForm(traversal);
         assertEquals(new Long(2505037961767380L), traversal.next());
@@ -87,8 +88,8 @@ public abstract class GratefulProcessTest extends AbstractGremlinProcessTest {
         int lastPerformances = Integer.MIN_VALUE;
         while (traversal.hasNext()) {
             final Map<Object, Object> valueMap = traversal.next();
-            final String currentSongType = (String) valueMap.get("songType");
-            final int currentPerformances = (Integer) valueMap.get("performances");
+            final String currentSongType = (String) ((List) valueMap.get("songType")).get(0);
+            final int currentPerformances = (Integer) ((List) valueMap.get("performances")).get(0);
             assertTrue(
                     currentPerformances == lastPerformances
                             || currentPerformances > lastPerformances);
