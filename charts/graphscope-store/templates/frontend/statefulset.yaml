@@ -142,17 +142,17 @@ spec:
           {{- if .Values.livenessProbe.enabled }}
           livenessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.livenessProbe "enabled") "context" $) | nindent 12 }}
             tcpSocket:
-              port: port
+              port: gremlin
           {{- end }}
           {{- if .Values.readinessProbe.enabled }}
           readinessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.readinessProbe "enabled") "context" $) | nindent 12 }}
             tcpSocket:
-              port: port
+              port: gremlin
           {{- end }}
           {{- if .Values.startupProbe.enabled }}
           startupProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.startupProbe "enabled") "context" $) | nindent 12 }}
             tcpSocket:
-              port: port
+              port: gremlin
           {{- end }}
           {{- if .Values.frontend.resources }}
           resources: {{- toYaml .Values.frontend.resources | nindent 12 }}

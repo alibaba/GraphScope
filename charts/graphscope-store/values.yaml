@@ -40,6 +40,11 @@ image:
   ##
   pullSecrets: []
 
+test:
+  image:
+    registry: registry.cn-hongkong.aliyuncs.com
+    repository: graphscope/graphscope-store
+    tag: python-3.9.9-alpine3.14
 
 ## GraphScope Store parameters
 ##
@@ -282,7 +287,7 @@ containerSecurityContext:
   enabled: true
   runAsUser: 1001
   runAsNonRoot: true
-  allowPrivilegeEscalation: false
+  # allowPrivilegeEscalation: false
 ## @param hostAliases Kafka pods host aliases
 ## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
 ##

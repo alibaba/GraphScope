@@ -6,11 +6,11 @@ metadata:
     "helm.sh/hook": test
 spec:
   {{- if .Values.tolerations }}
-  tolerations: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.tolerations "context" $) | nindent 4 }}
+  tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.tolerations "context" $) | nindent 4 }}
   {{- end }}
   containers:
     - name: python
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:python-3.9.9-alpine3.14
+      image: {{ include "graphscope-store.test.image" . }}
       env:
         - name: frontend
           value: {{ include "graphscope-store.frontend.fullname" . }}.{{ .Release.Namespace }}
@@ -32,11 +32,11 @@ metadata:
     "helm.sh/hook": test
 spec:
   {{- if .Values.tolerations }}
-  tolerations: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.tolerations "context" $) | nindent 4 }}
+  tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.tolerations "context" $) | nindent 4 }}
   {{- end }}
   containers:
     - name: python
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:python-3.9.9-alpine3.14
+      image: {{ include "graphscope-store.test.image" . }}
       env:
         - name: frontend
           value: {{ include "graphscope-store.frontend.fullname" . }}.{{ .Release.Namespace }}

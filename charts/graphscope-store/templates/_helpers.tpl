@@ -55,6 +55,13 @@ Return the proper graphscope-store image name
 {{- end -}}
 
 {{/*
+Return the proper graphscope-store test image name
+*/}}
+{{- define "graphscope-store.test.image" -}}
+{{ include "common.images.image" (dict "imageRoot" .Values.test.image "global" .Values.global ) }}
+{{- end -}}
+
+{{/*
 Return the proper Docker Image Registry Secret Names
 */}}
 {{- define "graphscope-store.imagePullSecrets" -}}
