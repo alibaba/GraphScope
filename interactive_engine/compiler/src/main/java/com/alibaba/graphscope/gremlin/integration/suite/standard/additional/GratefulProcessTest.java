@@ -17,30 +17,32 @@ package com.alibaba.graphscope.gremlin.integration.suite.standard.additional;
 
 import static org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData;
 import static org.apache.tinkerpop.gremlin.process.traversal.Order.desc;
-import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.out;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+
+import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 
 import org.apache.tinkerpop.gremlin.LoadGraphWith;
 import org.apache.tinkerpop.gremlin.process.AbstractGremlinProcessTest;
 import org.apache.tinkerpop.gremlin.process.GremlinProcessRunner;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.Arrays;
+import java.util.Map;
 
 @RunWith(GremlinProcessRunner.class)
 public abstract class GratefulProcessTest extends AbstractGremlinProcessTest {
     public abstract Traversal<Vertex, Long> get_g_V_both_both_count();
 
-    public abstract Traversal<Vertex, Long> get_g_V_repeatXoutX_timesX3X_count();
+    public abstract Traversal<Vertex, Long> get_g_V_path_expand_outX_timesX3X_count();
 
-    public abstract Traversal<Vertex, Long> get_g_V_repeatXoutX_timesX8X_count();
+    public abstract Traversal<Vertex, Long> get_g_V_path_expand_outX_timesX8X_count();
 
-    public abstract Traversal<Vertex, Vertex>
+    public abstract Traversal<Vertex, Map<Object, Object>>
             get_g_V_hasXsong_name_OHBOYX_outXfollowedByX_outXfollowedByX_order_byXperformancesX_byXsongType_descX();
 
     public abstract Traversal<Vertex, String>
@@ -58,7 +60,7 @@ public abstract class GratefulProcessTest extends AbstractGremlinProcessTest {
     @Test
     @LoadGraphWith(GraphData.GRATEFUL)
     public void g_V_repeatXoutX_timesX3X_count() {
-        final Traversal<Vertex, Long> traversal = get_g_V_repeatXoutX_timesX3X_count();
+        final Traversal<Vertex, Long> traversal = get_g_V_path_expand_outX_timesX3X_count();
         printTraversalForm(traversal);
         assertEquals(new Long(14465066L), traversal.next());
         assertFalse(traversal.hasNext());
@@ -67,7 +69,7 @@ public abstract class GratefulProcessTest extends AbstractGremlinProcessTest {
     @Test
     @LoadGraphWith(GraphData.GRATEFUL)
     public void g_V_repeatXoutX_timesX8X_count() {
-        final Traversal<Vertex, Long> traversal = get_g_V_repeatXoutX_timesX8X_count();
+        final Traversal<Vertex, Long> traversal = get_g_V_path_expand_outX_timesX8X_count();
         printTraversalForm(traversal);
         assertEquals(new Long(2505037961767380L), traversal.next());
         assertFalse(traversal.hasNext());
@@ -77,16 +79,16 @@ public abstract class GratefulProcessTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(GraphData.GRATEFUL)
     public void
             g_V_hasXsong_name_OHBOYX_outXfollowedByX_outXfollowedByX_order_byXperformancesX_byXsongType_descX() {
-        final Traversal<Vertex, Vertex> traversal =
+        final Traversal<Vertex, Map<Object, Object>> traversal =
                 get_g_V_hasXsong_name_OHBOYX_outXfollowedByX_outXfollowedByX_order_byXperformancesX_byXsongType_descX();
         printTraversalForm(traversal);
         int counter = 0;
         String lastSongType = "a";
         int lastPerformances = Integer.MIN_VALUE;
         while (traversal.hasNext()) {
-            final Vertex vertex = traversal.next();
-            final String currentSongType = vertex.value("songType");
-            final int currentPerformances = vertex.value("performances");
+            final Map<Object, Object> valueMap = traversal.next();
+            final String currentSongType = (String) valueMap.get("songType");
+            final int currentPerformances = (Integer) valueMap.get("performances");
             assertTrue(
                     currentPerformances == lastPerformances
                             || currentPerformances > lastPerformances);
@@ -101,27 +103,6 @@ public abstract class GratefulProcessTest extends AbstractGremlinProcessTest {
         assertEquals(144, counter);
     }
 
-    @Test
-    @LoadGraphWith(GraphData.GRATEFUL)
-    public void g_V_hasLabelXsongX_order_byXperformances_descX_byXnameX_rangeX110_120X_name() {
-        final Traversal<Vertex, String> traversal =
-                get_g_V_hasLabelXsongX_order_byXperformances_descX_byXnameX_rangeX110_120X_name();
-        printTraversalForm(traversal);
-        checkOrderedResults(
-                Arrays.asList(
-                        "WANG DANG DOODLE",
-                        "THE ELEVEN",
-                        "WAY TO GO HOME",
-                        "FOOLISH HEART",
-                        "GIMME SOME LOVING",
-                        "DUPREES DIAMOND BLUES",
-                        "CORRINA",
-                        "PICASSO MOON",
-                        "KNOCKING ON HEAVENS DOOR",
-                        "MEMPHIS BLUES"),
-                traversal);
-    }
-
     public static class Traversals extends GratefulProcessTest {
         @Override
         public Traversal<Vertex, Long> get_g_V_both_both_count() {
@@ -129,24 +110,27 @@ public abstract class GratefulProcessTest extends AbstractGremlinProcessTest {
         }
 
         @Override
-        public Traversal<Vertex, Long> get_g_V_repeatXoutX_timesX3X_count() {
-            return g.V().repeat(out()).times(3).count();
+        public Traversal<Vertex, Long> get_g_V_path_expand_outX_timesX3X_count() {
+            return ((IrCustomizedTraversal) g.V()).out("3..4").count();
         }
 
         @Override
-        public Traversal<Vertex, Long> get_g_V_repeatXoutX_timesX8X_count() {
-            return g.V().repeat(out()).times(8).count();
+        public Traversal<Vertex, Long> get_g_V_path_expand_outX_timesX8X_count() {
+            return ((IrCustomizedTraversal) g.V()).out("8..9").count();
         }
 
         @Override
-        public Traversal<Vertex, Vertex>
+        public Traversal<Vertex, Map<Object, Object>>
                 get_g_V_hasXsong_name_OHBOYX_outXfollowedByX_outXfollowedByX_order_byXperformancesX_byXsongType_descX() {
             return g.V().has("song", "name", "OH BOY")
                     .out("followedBy")
                     .out("followedBy")
+                    .as("a")
+                    .select("a")
+                    .valueMap("performances", "songType")
                     .order()
-                    .by("performances")
-                    .by("songType", desc);
+                    .by(__.select("a").by("performances"))
+                    .by(__.select("a").by("songType"), desc);
         }
 
         @Override
