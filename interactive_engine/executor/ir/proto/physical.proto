@@ -238,7 +238,7 @@ message Sink {
   message OptTag {
      google.protobuf.Int32Value tag = 1;
   }
-  // Define the tags of columns to sink
+  // Define the tags of columns to sink. If no tags given, sink all **tagged** columns by default.
   repeated OptTag tags = 1;
   // Define the target of sink, e.g., to Client as default, to Graph such as Vineyard etc.
   algebra.Sink.SinkTarget sink_target = 2;

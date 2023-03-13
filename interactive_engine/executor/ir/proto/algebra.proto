@@ -408,7 +408,7 @@ message Sink {
       SinkVineyard sink_vineyard = 2;
     }
   }
-  // Define the tags of columns to sink
+  // Define the tags of columns to sink. If no tags given, sink all **tagged** columns by default.
   repeated common.NameOrIdKey tags = 1;
   // Define the target of sink, e.g., to Client as default, to Graph such as Vineyard etc.
   SinkTarget sink_target = 2;
