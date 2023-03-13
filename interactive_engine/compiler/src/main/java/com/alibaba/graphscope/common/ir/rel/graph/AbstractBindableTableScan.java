@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.common.ir.rel.graph;
 
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
+import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaTypeList;
 import com.google.common.collect.ImmutableList;
@@ -41,7 +42,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * A basic structure of graph operators
+ * A basic structure of graph operators : Source / Expand / GetV
  */
 public abstract class AbstractBindableTableScan extends TableScan {
     // for filter fusion
@@ -53,11 +54,16 @@ public abstract class AbstractBindableTableScan extends TableScan {
 
     protected final TableConfig tableConfig;
 
+    protected final String aliasName;
+
+    protected final int aliasId;
+
     protected AbstractBindableTableScan(
             GraphOptCluster cluster,
             List<RelHint> hints,
             @Nullable RelNode input,
-            TableConfig tableConfig) {
+            TableConfig tableConfig,
+            @Nullable String aliasName) {
         super(
                 cluster,
                 RelTraitSet.createEmpty(),
@@ -67,11 +73,18 @@ public abstract class AbstractBindableTableScan extends TableScan {
                         : tableConfig.getTables().get(0));
         this.input = input;
         this.tableConfig = Objects.requireNonNull(tableConfig);
+        this.aliasName =
+                AliasInference.inferDefault(
+                        aliasName, AliasInference.getUniqueAliasList(input, true));
+        this.aliasId = cluster.getIdGenerator().generate(this.aliasName, input);
     }
 
     protected AbstractBindableTableScan(
-            GraphOptCluster cluster, List<RelHint> hints, TableConfig tableConfig) {
-        this(cluster, hints, null, tableConfig);
+            GraphOptCluster cluster,
+            List<RelHint> hints,
+            TableConfig tableConfig,
+            String aliasName) {
+        this(cluster, hints, null, tableConfig, aliasName);
     }
 
     @Override
@@ -100,29 +113,11 @@ public abstract class AbstractBindableTableScan extends TableScan {
     }
 
     public String getAliasName() {
-        Objects.requireNonNull(hints);
-        if (hints.size() < 2) {
-            throw new IllegalArgumentException(
-                    "should have put alias config in the index 1 of the hints list");
-        }
-        RelHint aliasHint = hints.get(1);
-        Objects.requireNonNull(aliasHint.kvOptions);
-        String aliasName = aliasHint.kvOptions.get("name");
-        Objects.requireNonNull(aliasName);
-        return aliasName;
+        return this.aliasName;
     }
 
     public int getAliasId() {
-        Objects.requireNonNull(hints);
-        if (hints.size() < 2) {
-            throw new IllegalArgumentException(
-                    "should have put alias config in the index 1 of the hints list");
-        }
-        RelHint aliasHint = hints.get(1);
-        Objects.requireNonNull(aliasHint.kvOptions);
-        String aliasId = aliasHint.kvOptions.get("id");
-        Objects.requireNonNull(aliasId);
-        return Integer.valueOf(aliasId);
+        return this.aliasId;
     }
 
     // toString
