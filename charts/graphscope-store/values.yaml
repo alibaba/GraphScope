@@ -2,11 +2,31 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+## @section Global parameters
+## Global Docker image parameters
+## Please, note that this will override the image parameters, including dependencies, configured to use the global value
+## Current available global Docker image parameters: imageRegistry, imagePullSecrets and storageClass
+##
+
+## @param global.imageRegistry Global Docker image registry
+## @param global.imagePullSecrets Global Docker registry secret names as an array
+## @param global.storageClass Global StorageClass for Persistent Volume(s)
+##
+global:
+  imageRegistry: ""
+  ## E.g.
+  ## imagePullSecrets:
+  ##   - myRegistryKeySecretName
+  ##
+  imagePullSecrets: []
+  storageClass: ""
+
 image:
   registry: registry.cn-hongkong.aliyuncs.com
   repository: graphscope/graphscope-store
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: "0.20.0"
+  digest: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
   ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -20,20 +40,379 @@ image:
   ##
   pullSecrets: []
 
-nameOverride: ""
-fullnameOverride: ""
 
-## Cluster domain
+## GraphScope Store parameters
+##
+store:
+  replicaCount: 2
+
+  ## GraphScope store container's resource requests and limits
+  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+  ##
+  resources: {}
+
+  ## Enable persistence using Persistent Volume Claims
+  ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
+  ##
+  persistence:
+    ## If true, use a Persistent Volume Claim, If false, use emptyDir
+    ##
+    enabled: true
+    ## Name of existing PVC to hold GraphScope store data
+    ## @param persistence.existingClaim A manually managed Persistent Volume and Claim
+    ## If defined, PVC must be created manually before volume will be bound
+    ## The value is evaluated as a template
+    ##
+    existingClaim: ""
+    ## Persistent Volume size
+    ##
+    size: 1Gi
+    selector: {}
+
+  ## GraphScope store Service parameters
+  ##
+  service:
+    ## Service type
+    ##
+    type: ClusterIP
+    ## Service port
+    ##
+    port: 55555
+    graph: 55556
+    query: 55557
+    engine: 55558
+    gaiaRpc: 60000
+    gaiaEngine: 60001
+
+    annotations: {}
+
+## GraphScope Frontend parameters
+##
+frontend:
+  replicaCount: 1
+  ## GraphScope store container's resource requests and limits
+  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+  ##
+  resources: {}
+
+  ## GraphScope frontend Service parameters
+  ##
+  service:
+    ## Service type
+    ##
+    type: NodePort
+    ## Service port
+    ##
+    servicePort: 55556
+
+    gremlinPort: 12312
+
+    ## Internal port for communication between components.
+    ##
+    port: 55555
+
+    gaiaRpc: 60000
+
+    gaiaEngine: 60001
+
+    ## Specify the nodePort value for the LoadBalancer and NodePort service types.
+    ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport
+    ##
+    nodePorts:
+      service: ""
+      gremlin: ""
+    ## Service clusterIP
+    ##
+    # clusterIP: None
+    clusterIP: ""
+    ## Set the LoadBalancer service type to internal only.
+    ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
+    ##
+    loadBalancerIP: ""
+    ## Enable client source IP preservation
+    ## ref http://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
+    ##
+    externalTrafficPolicy: Cluster
+    ## Load Balancer sources
+    ## https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/#restrict-access-for-loadbalancer-service
+    ## E.g.
+    ## loadBalancerSourceRanges:
+    ##   - 10.10.10.0/24
+    ##
+    loadBalancerSourceRanges: []
+    ## Provide any additional annotations which may be required
+    ##
+    annotations: {}
+
+
+## GraphScope Ingestor parameters
+##
+ingestor:
+  replicaCount: 2
+  ## GraphScope store container's resource requests and limits
+  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+  ##
+  resources: {}
+
+  ## GraphScope store Service parameters
+  ##
+  service:
+    type: ClusterIP
+    port: 55555
+    gaiaRpc: 60000
+    gaiaEngine: 60001
+    annotations: {}
+
+## GraphScope Coordinator parameters
+##
+coordinator:
+  replicaCount: 1
+
+  ## GraphScope store container's resource requests and limits
+  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+  ##
+  resources: {}
+
+  ## Enable persistence using Persistent Volume Claims
+  ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
+  ##
+  persistence:
+    ## If true, use a Persistent Volume Claim, If false, use emptyDir
+    ##
+    enabled: true
+    ## Name of existing PVC to hold GraphScope coordinator meta
+    ## @param persistence.existingClaim A manually managed Persistent Volume and Claim
+    ## If defined, PVC must be created manually before volume will be bound
+    ## The value is evaluated as a template
+    ##
+    existingClaim: ""
+    ## Persistent Volume size
+    ##
+    size: 100Mi
+    selector: {}
+
+
+  ## Coordinator Service parameters
+  ##
+  service:
+    type: ClusterIP
+    port: 55555
+    gaiaRpc: 60000
+    gaiaEngine: 60001
+    annotations: {}
+
+## @section Common parameters
+##
+
+## @param kubeVersion Override Kubernetes version
+##
+kubeVersion: ""
+## @param nameOverride String to partially override common.names.fullname
+##
+nameOverride: ""
+## @param fullnameOverride String to fully override common.names.fullname
+##
+fullnameOverride: ""
+## @param clusterDomain Default Kubernetes cluster domain
 ##
 clusterDomain: cluster.local
-
-## Common annotations to add to all GraphScope resources (sub-charts are not considered). Evaluated as a template
-##
-commonAnnotations: {}
-
-## Common labels to add to all GraphScope resources (sub-charts are not considered). Evaluated as a template
+## @param commonLabels Labels to add to all deployed objects
 ##
 commonLabels: {}
+## @param commonAnnotations Annotations to add to all deployed objects
+##
+commonAnnotations: {}
+## @param extraDeploy Array of extra objects to deploy with the release
+##
+
+## Configure extra options for containers' liveness, readiness and startup probes
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+  periodSeconds: 10
+  successThreshold: 1
+
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 5
+  failureThreshold: 6
+  timeoutSeconds: 5
+  periodSeconds: 10
+  successThreshold: 1
+
+startupProbe:
+  enabled: false
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 1
+  failureThreshold: 15
+  successThreshold: 1
+
+command:
+- /etc/groot/setup.sh
+
+args: []
+
+initContainers: []
+
+persistence:
+  ## @param persistence.storageClass PVC Storage Class
+  ## If defined, storageClassName: <storageClass>
+  ## If set to "-", storageClassName: "", which disables dynamic provisioning
+  ## If undefined (the default) or set to null, no storageClassName spec is
+  ## set, choosing the default provisioner.
+  ##
+  storageClass: ""
+  accessModes:
+  - ReadWriteOnce
+  annotations: {}
+  ## @param persistence.labels Labels for the PVC
+  ##
+  labels: {}
+
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
+podSecurityContext:
+  enabled: true
+  fsGroup: 1001
+
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
+containerSecurityContext:
+  enabled: true
+  runAsUser: 1001
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+## @param hostAliases Kafka pods host aliases
+## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
+##
+hostAliases: []
+## @param hostNetwork Specify if host network should be enabled for Kafka pods
+##
+hostNetwork: false
+## @param hostIPC Specify if host IPC should be enabled for Kafka pods
+##
+hostIPC: false
+## @param podLabels Extra labels for Kafka pods
+## Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+##
+podLabels: {}
+## @param podAnnotations Extra annotations for Kafka pods
+## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+##
+podAnnotations: {}
+## @param podAffinityPreset Pod affinity preset. Ignored if `affinity` is set. Allowed values: `soft` or `hard`
+## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
+##
+podAffinityPreset: ""
+## @param podAntiAffinityPreset Pod anti-affinity preset. Ignored if `affinity` is set. Allowed values: `soft` or `hard`
+## Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
+##
+podAntiAffinityPreset: soft
+## Node affinity preset
+## Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity
+##
+nodeAffinityPreset:
+  ## @param nodeAffinityPreset.type Node affinity preset type. Ignored if `affinity` is set. Allowed values: `soft` or `hard`
+  ##
+  type: ""
+  ## @param nodeAffinityPreset.key Node label key to match Ignored if `affinity` is set.
+  ## E.g.
+  ## key: "kubernetes.io/e2e-az-name"
+  ##
+  key: ""
+  ## @param nodeAffinityPreset.values Node label values to match. Ignored if `affinity` is set.
+  ## E.g.
+  ## values:
+  ##   - e2e-az1
+  ##   - e2e-az2
+  ##
+  values: []
+## @param affinity Affinity for pod assignment
+## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+## Note: podAffinityPreset, podAntiAffinityPreset, and  nodeAffinityPreset will be ignored when it's set
+##
+affinity: {}
+## @param nodeSelector Node labels for pod assignment
+## Ref: https://kubernetes.io/docs/user-guide/node-selection/
+##
+nodeSelector: {}
+## @param tolerations Tolerations for pod assignment
+## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+##
+tolerations: []
+## @param topologySpreadConstraints Topology Spread Constraints for pod assignment spread across your cluster among failure-domains. Evaluated as a template
+## Ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/#spread-constraints-for-pods
+##
+topologySpreadConstraints: []
+## @param terminationGracePeriodSeconds Seconds the pod needs to gracefully terminate
+## ref: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#hook-handler-execution
+##
+terminationGracePeriodSeconds: ""
+## @param podManagementPolicy StatefulSet controller supports relax its ordering guarantees while preserving its uniqueness and identity guarantees. There are two valid pod management policies: OrderedReady and Parallel
+## ref: https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#pod-management-policy
+##
+podManagementPolicy: Parallel
+## @param priorityClassName Name of the existing priority class to be used by kafka pods
+## Ref: https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/
+##
+priorityClassName: ""
+## ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
+##
+schedulerName: ""
+## ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
+##
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate: {}
+
+## ref: https://kubernetes.io/docs/concepts/workloads/pods/disruptions/
+pdb:
+  create: false
+  minAvailable: ""
+  maxUnavailable: 1
+
+dnsPolicy: ""
+dnsConfig: {}
+
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+##
+serviceAccount:
+  ## @param serviceAccount.create Enable creation of ServiceAccount
+  ##
+  create: true
+  ## @param serviceAccount.name The name of the service account to use. If not set and `create` is `true`, a name is generated
+  ## If not set and create is true, a name is generated using the kafka.serviceAccountName template
+  ##
+  name: ""
+  ## @param serviceAccount.automountServiceAccountToken Allows auto mount of ServiceAccountToken on the serviceAccount created
+  ## Can be set to false if pods using this serviceAccount do not need to use K8s API
+  ##
+  automountServiceAccountToken: true
+  ## @param serviceAccount.annotations Additional custom annotations for the ServiceAccount
+  ##
+  annotations: {}
+
+##
+## Kafka chart configuration
+##
+## https://github.com/bitnami/charts/blob/master/bitnami/kafka/values.yaml
+##
+kafka:
+  enabled: true
+  replicaCount: 1
+  service:
+    ## Kafka port for client connections
+    ##
+    port: 9092
+
+## This value is only used when kafka.enabled is set to false
+##
+externalKafka:
+  ## Server or list of external kafka servers to use.
+  ##
+  servers: []
+
 
 ## Configure GraphScope Components with a custom groot.config file
 ##
@@ -84,600 +463,3 @@ pegasus:
   worker:
     num: 1
   timeout: 240000
-
-## Role Based Access
-## ref: https://kubernetes.io/docs/admin/authorization/rbac/
-##
-rbac:
-  ## Specifies whether RBAC rules should be created
-  ##
-  create: false
-
-serviceAccount:
-  # Specifies whether a service account should be created
-  create: false
-  # Annotations to add to the service account
-  annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: ""
-
-persistence:
-    ## Persistent Volume Storage Class
-    ## If defined, storageClassName: <storageClass>
-    ## If set to "-", storageClassName: "", which disables dynamic provisioning
-    ## If undefined (the default) or set to null, no storageClassName spec is
-    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
-    ##   GKE, AWS & OpenStack)
-    ##
-    storageClass: ""
-
-## Tolerations for GraphScope store pods assignment
-## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
-##
-tolerations: []
-
-## Name of existing ConfigMap with GraphScope configuration.
-## NOTE: When it's set the 'configuration' parameter is ignored
-##
-# existingConfiguration:
-
-## GraphScope Store parameters
-##
-store:
-  replicaCount: 2
-
-  ## updateStrategy for GraphScope Store statefulset
-  ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
-  ##
-  updateStrategy: RollingUpdate
-
-  ## GraphScope Store pod annotations
-  ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
-  ##
-  podAnnotations: {}
-
-  ## GraphScope Store pod affinity preset
-  ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
-  ## Allowed values: soft, hard
-  ##
-  podAffinityPreset: ""
-
-  ## GraphScope Store pod anti-affinity preset
-  ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
-  ## Allowed values: soft, hard
-  ##
-  podAntiAffinityPreset: soft
-
-  ## Affinity for Graphscope store pods assignment
-  ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
-  ## Note: podAffinityPreset, podAntiAffinityPreset, and  nodeAffinityPreset will be ignored when it's set
-  ##
-  affinity: {}
-
-  ## Node labels for GraphScope store pods assignment
-  ## ref: https://kubernetes.io/docs/user-guide/node-selection/
-  ##
-  nodeSelector: {}
-
-  ## GraphScope store Pod security context
-  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
-  ##
-  podSecurityContext:
-    enabled: false
-    fsGroup: 1001
-
-  ## GraphScope store container security context
-  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
-  ##
-  containerSecurityContext:
-    enabled: false
-    runAsUser: 1001
-
-  ## GraphScope store container's resource requests and limits
-  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
-  ##
-  resources: {}
-    # We usually recommend not to specify default resources and to leave this as a conscious
-    # choice for the user. This also increases chances charts run on environments with little
-    # resources, such as Minikube. If you do want to specify resources, uncomment the following
-    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-    # limits:
-    #   cpu: 100m
-    #   memory: 128Mi
-    # requests:
-    #   cpu: 100m
-    #   memory: 128Mi
-
-  ## GraphScope store container's liveness and readiness probes
-  ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
-  ##
-  livenessProbe:
-    enabled: false
-    initialDelaySeconds: 120
-    periodSeconds: 10
-    timeoutSeconds: 1
-    failureThreshold: 3
-    successThreshold: 1
-  readinessProbe:
-    enabled: false
-    initialDelaySeconds: 30
-    periodSeconds: 10
-    timeoutSeconds: 1
-    failureThreshold: 3
-    successThreshold: 1
-
-  ## Enable persistence using Persistent Volume Claims
-  ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
-  ##
-  persistence:
-    ## If true, use a Persistent Volume Claim, If false, use emptyDir
-    ##
-    enabled: true
-    ## Name of existing PVC to hold GraphScope store data
-    ## NOTE: When it's set the rest of persistence parameters are ignored
-    ##
-    # existingClaim:
-    ## Persistent Volume Claim annotations
-    ##
-    annotations: {}
-    ## Persistent Volume Access Mode
-    ##
-    accessModes:
-      - ReadWriteOnce
-    ## Persistent Volume size
-    ##
-    size: 1Gi
-    ## selector can be used to match an existing PersistentVolume
-    ## selector:
-    ##   matchLabels:
-    ##     app: my-app
-    ##
-    selector: {}
-
-  initContainers: []
-
-
-  ## GraphScope store Service parameters
-  ##
-  service:
-    ## Service type
-    ##
-    type: ClusterIP
-    ## Service port
-    ##
-    port: 55555
-    graph: 55556
-    query: 55557
-    engine: 55558
-    gaiaRpc: 60000
-    gaiaEngine: 60001
-
-    annotations: {}
-
-  ## GraphScope store Pod Disruption Budget configuration
-  ## ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
-  ##
-  pdb:
-    enabled: false
-    ## Min number of pods that must still be available after the eviction
-    ##
-    minAvailable: 1
-    ## Max number of pods that can be unavailable after the eviction
-    ##
-    # maxUnavailable: 1
-
-  ## GraphScope store pod label. If labels are same as commonLabels , this will take precedence.
-  ##
-  podLabels: {}
-
-## GraphScope Frontend parameters
-##
-frontend:
-  replicaCount: 1
-
-  ## updateStrategy for GraphScope Store statefulset
-  ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
-  ##
-  updateStrategy: RollingUpdate
-
-  ## GraphScope Store pod annotations
-  ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
-  ##
-  podAnnotations: {}
-
-  ## GraphScope Store pod affinity preset
-  ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
-  ## Allowed values: soft, hard
-  ##
-  podAffinityPreset: ""
-
-  ## GraphScope Store pod anti-affinity preset
-  ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
-  ## Allowed values: soft, hard
-  ##
-  podAntiAffinityPreset: soft
-
-  ## Affinity for Graphscope store pods assignment
-  ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
-  ## Note: podAffinityPreset, podAntiAffinityPreset, and  nodeAffinityPreset will be ignored when it's set
-  ##
-  affinity: {}
-
-  ## Node labels for GraphScope store pods assignment
-  ## ref: https://kubernetes.io/docs/user-guide/node-selection/
-  ##
-  nodeSelector: {}
-
-  ## GraphScope store container's resource requests and limits
-  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
-  ##
-  resources: {}
-    # We usually recommend not to specify default resources and to leave this as a conscious
-    # choice for the user. This also increases chances charts run on environments with little
-    # resources, such as Minikube. If you do want to specify resources, uncomment the following
-    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-    # limits:
-    #   cpu: 100m
-    #   memory: 128Mi
-    # requests:
-    #   cpu: 100m
-    #   memory: 128Mi
-
-  ## GraphScope store container's liveness and readiness probes
-  ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
-  ##
-  livenessProbe:
-    enabled: false
-    initialDelaySeconds: 120
-    periodSeconds: 10
-    timeoutSeconds: 1
-    failureThreshold: 3
-    successThreshold: 1
-  readinessProbe:
-    enabled: true
-    initialDelaySeconds: 30
-    periodSeconds: 30
-    timeoutSeconds: 1
-    failureThreshold: 10
-    successThreshold: 1
-
-  initContainers: []
-
-  ## GraphScope frontend Service parameters
-  ##
-  service:
-    ## Service type
-    ##
-    type: NodePort
-    ## Service port
-    ##
-    servicePort: 55556
-
-    ## Gremlin console port
-    ##
-    gremlinPort: 12312
-
-    ## Internal port for communication between components.
-    ##
-    port: 55555
-
-    ## Gaia rpc port
-    ##
-    gaiaRpc: 60000
-    ## Gaia engine port
-    ##
-    gaiaEngine: 60001
-
-    ## Specify the nodePort value for the LoadBalancer and NodePort service types.
-    ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport
-    ##
-    nodePorts:
-      service: ""
-      gremlin: ""
-    ## Service clusterIP
-    ##
-    # clusterIP: None
-    clusterIP: ""
-    ## Set the LoadBalancer service type to internal only.
-    ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
-    ##
-    loadBalancerIP: ""
-    ## Enable client source IP preservation
-    ## ref http://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
-    ##
-    externalTrafficPolicy: Cluster
-    ## Load Balancer sources
-    ## https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/#restrict-access-for-loadbalancer-service
-    ## E.g.
-    ## loadBalancerSourceRanges:
-    ##   - 10.10.10.0/24
-    ##
-    loadBalancerSourceRanges: []
-    ## Provide any additional annotations which may be required
-    ##
-    annotations: {}
-
-  ## GraphScope store Pod Disruption Budget configuration
-  ## ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
-  ##
-  pdb:
-    enabled: false
-    ## Min number of pods that must still be available after the eviction
-    ##
-    minAvailable: 1
-    ## Max number of pods that can be unavailable after the eviction
-    ##
-    # maxUnavailable: 1
-
-  ## GraphScope store pod label. If labels are same as commonLabels , this will take precedence.
-  ##
-  podLabels: {}
-
-
-## GraphScope Ingestor parameters
-##
-ingestor:
-  replicaCount: 2
-
-  ## updateStrategy for GraphScope Store statefulset
-  ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
-  ##
-  updateStrategy: RollingUpdate
-
-  ## GraphScope Store pod annotations
-  ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
-  ##
-  podAnnotations: {}
-
-  ## GraphScope Store pod affinity preset
-  ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
-  ## Allowed values: soft, hard
-  ##
-  podAffinityPreset: ""
-
-  ## GraphScope Store pod anti-affinity preset
-  ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
-  ## Allowed values: soft, hard
-  ##
-  podAntiAffinityPreset: soft
-
-  ## Affinity for Graphscope store pods assignment
-  ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
-  ## Note: podAffinityPreset, podAntiAffinityPreset, and  nodeAffinityPreset will be ignored when it's set
-  ##
-  affinity: {}
-
-  ## Node labels for GraphScope store pods assignment
-  ## ref: https://kubernetes.io/docs/user-guide/node-selection/
-  ##
-  nodeSelector: {}
-
-  ## GraphScope store container's resource requests and limits
-  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
-  ##
-  resources: {}
-    # We usually recommend not to specify default resources and to leave this as a conscious
-    # choice for the user. This also increases chances charts run on environments with little
-    # resources, such as Minikube. If you do want to specify resources, uncomment the following
-    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-    # limits:
-    #   cpu: 100m
-    #   memory: 128Mi
-    # requests:
-    #   cpu: 100m
-    #   memory: 128Mi
-
-  ## GraphScope store container's liveness and readiness probes
-  ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
-  ##
-  livenessProbe:
-    enabled: false
-    initialDelaySeconds: 120
-    periodSeconds: 10
-    timeoutSeconds: 1
-    failureThreshold: 3
-    successThreshold: 1
-  readinessProbe:
-    enabled: false
-    initialDelaySeconds: 30
-    periodSeconds: 10
-    timeoutSeconds: 1
-    failureThreshold: 3
-    successThreshold: 1
-
-  initContainers: []
-
-  ## GraphScope store Service parameters
-  ##
-  service:
-    ## Service type
-    ##
-    type: ClusterIP
-    ## Service port
-    ##
-    port: 55555
-    ## Gaia rpc port
-    ##
-    gaiaRpc: 60000
-    ## Gaia engine port
-    ##
-    gaiaEngine: 60001
-    annotations: {}
-
-  ## GraphScope store Pod Disruption Budget configuration
-  ## ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
-  ##
-  pdb:
-    enabled: false
-    ## Min number of pods that must still be available after the eviction
-    ##
-    minAvailable: 1
-    ## Max number of pods that can be unavailable after the eviction
-    ##
-    # maxUnavailable: 1
-
-  ## GraphScope store pod label. If labels are same as commonLabels , this will take precedence.
-  ##
-  podLabels: {}
-
-
-## GraphScope Coordinator parameters
-##
-coordinator:
-  replicaCount: 1
-
-  ## updateStrategy for GraphScope Store statefulset
-  ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
-  ##
-  updateStrategy: RollingUpdate
-
-  ## GraphScope Store pod annotations
-  ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
-  ##
-  podAnnotations: {}
-
-  ## GraphScope Store pod affinity preset
-  ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
-  ## Allowed values: soft, hard
-  ##
-  podAffinityPreset: ""
-
-  ## GraphScope Store pod anti-affinity preset
-  ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
-  ## Allowed values: soft, hard
-  ##
-  podAntiAffinityPreset: soft
-
-  ## Affinity for Graphscope store pods assignment
-  ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
-  ## Note: podAffinityPreset, podAntiAffinityPreset, and  nodeAffinityPreset will be ignored when it's set
-  ##
-  affinity: {}
-
-  ## Node labels for GraphScope store pods assignment
-  ## ref: https://kubernetes.io/docs/user-guide/node-selection/
-  ##
-  nodeSelector: {}
-
-  ## GraphScope store container's resource requests and limits
-  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
-  ##
-  resources: {}
-    # We usually recommend not to specify default resources and to leave this as a conscious
-    # choice for the user. This also increases chances charts run on environments with little
-    # resources, such as Minikube. If you do want to specify resources, uncomment the following
-    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-    # limits:
-    #   cpu: 100m
-    #   memory: 128Mi
-    # requests:
-    #   cpu: 100m
-    #   memory: 128Mi
-
-  ## GraphScope store container's liveness and readiness probes
-  ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
-  ##
-  livenessProbe:
-    enabled: false
-    initialDelaySeconds: 120
-    periodSeconds: 10
-    timeoutSeconds: 1
-    failureThreshold: 3
-    successThreshold: 1
-  readinessProbe:
-    enabled: false
-    initialDelaySeconds: 30
-    periodSeconds: 10
-    timeoutSeconds: 1
-    failureThreshold: 3
-    successThreshold: 1
-
-  initContainers: []
-
-  ## Enable persistence using Persistent Volume Claims
-  ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
-  ##
-  persistence:
-    ## If true, use a Persistent Volume Claim, If false, use emptyDir
-    ##
-    enabled: true
-    ## Name of existing PVC to hold GraphScope coordinator meta
-    ## NOTE: When it's set the rest of persistence parameters are ignored
-    ##
-    # existingClaim:
-    ## Persistent Volume Claim annotations
-    ##
-    annotations: {}
-    ## Persistent Volume Access Mode
-    ##
-    accessModes:
-      - ReadWriteOnce
-    ## Persistent Volume size
-    ##
-    size: 100Mi
-    ## selector can be used to match an existing PersistentVolume
-    ## selector:
-    ##   matchLabels:
-    ##     app: my-app
-    ##
-    selector: {}
-
-  ## GraphScope store Service parameters
-  ##
-  service:
-    ## Service type
-    ##
-    type: ClusterIP
-    ## Service port
-    ##
-    port: 55555
-    ## Gaia rpc port
-    ##
-    gaiaRpc: 60000
-    ## Gaia engine port
-    ##
-    gaiaEngine: 60001
-    annotations: {}
-
-  ## GraphScope store Pod Disruption Budget configuration
-  ## ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
-  ##
-  pdb:
-    enabled: false
-    ## Min number of pods that must still be available after the eviction
-    ##
-    minAvailable: 1
-    ## Max number of pods that can be unavailable after the eviction
-    ##
-    # maxUnavailable: 1
-
-  ## GraphScope store pod label. If labels are same as commonLabels , this will take precedence.
-  ##
-  podLabels: {}
-
-##
-## Kafka chart configuration
-##
-## https://github.com/bitnami/charts/blob/master/bitnami/kafka/values.yaml
-##
-kafka:
-  enabled: true
-
-  replicaCount: 1
-
-  service:
-    ## Kafka port for client connections
-    ##
-    port: 9092
-
-## This value is only used when kafka.enabled is set to false
-##
-externalKafka:
-  ## Server or list of external kafka servers to use.
-  ##
-  servers: []
-
-global:
-  imageRegistry: ""
-  storageClass: ""

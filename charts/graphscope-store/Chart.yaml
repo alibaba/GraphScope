@@ -1,20 +1,31 @@
 annotations:
   category: Database
+  licenses: Apache-2.0
 apiVersion: v2
-appVersion: 0.20.0
-description: Chart to create a GraphScope Store cluster
+appVersion: 3.4.0
+description: GraphScope Store is a disk-based row-oriented multi-versioned persistent graph store
+  and can be used to as a graph database service. GraphScope Store supports the popular 
+  graph query language -- Apache TinkerPop Gremlin. It's also named groot.
 home: https://graphscope.io
+icon: https://graphscope.io/assets/images/graphscope-logo.svg
 keywords:
   - GraphScope
+  - Groot
   - database
   - cluster
 name: graphscope-store
 sources:
-  - https://github.com/alibaba/GraphScope/tree/main/interactive_engine/src/v2/src/main
+  - https://github.com/alibaba/GraphScope/tree/main/interactive_engine
+maintainers:
+- name: GraphScope
+  url: https://github.com/alibaba/graphscope
 version: 0.20.0
 
 dependencies:
-  - condition: kafka.enabled
-    name: kafka
-    version: "20.*.*"
-    repository: https://charts.bitnami.com/bitnami
+- condition: kafka.enabled
+  name: kafka
+  repository: https://charts.bitnami.com/bitnami
+  version: "20.0.6"
+- name: common
+  repository: https://charts.bitnami.com/bitnami
+  version: 2.x.x

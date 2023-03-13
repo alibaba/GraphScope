@@ -4,7 +4,7 @@ kind: ConfigMap
 metadata:
   name: {{ include "graphscope-store.fullname" . }}
   namespace: {{ .Release.Namespace }}
-  labels: {{- include "graphscope-store.labels" . | nindent 4 }}
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
     app.kubernetes.io/component: configmap
     {{- if .Values.commonLabels }}
     {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}

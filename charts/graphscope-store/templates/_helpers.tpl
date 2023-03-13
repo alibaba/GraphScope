@@ -46,58 +46,19 @@ Create chart name and version as used by the chart label.
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
-{{/*
-Common labels
-*/}}
-{{- define "graphscope-store.labels" -}}
-helm.sh/chart: {{ include "graphscope-store.chart" . }}
-{{ include "graphscope-store.selectorLabels" . }}
-{{- if .Chart.AppVersion }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-{{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- end }}
-
-{{/*
-Selector labels
-*/}}
-{{- define "graphscope-store.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "graphscope-store.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
-{{- end }}
 
 {{/*
 Return the proper graphscope-store image name
 */}}
 {{- define "graphscope-store.image" -}}
-{{ include "graphscope-store.images.image" (dict "imageRoot" .Values.image "global" .Values.global "DefaultTag" .Chart.AppVersion ) }}
+{{ include "common.images.image" (dict "imageRoot" .Values.image "global" .Values.global "DefaultTag" .Chart.AppVersion ) }}
 {{- end -}}
 
 {{/*
-Return the proper image name
-{{ include "graphscope-store.images.image" ( dict "imageRoot" .Values.path.to.the.image "global" $ "DefaultTag" .DefaultTag ) }}
+Return the proper Docker Image Registry Secret Names
 */}}
-{{- define "graphscope-store.images.image" -}}
-{{- $registryName := .imageRoot.registry -}}
-{{- $repositoryName := .imageRoot.repository -}}
-{{- $tag := .imageRoot.tag | toString -}}
-{{- if .global }}
-    {{- if .global.imageRegistry }}
-     {{- $registryName = .global.imageRegistry -}}
-    {{- end -}}
-{{- end -}}
-{{- if not $tag }}
-{{- if .DefaultTag }}
-{{- $tag = .DefaultTag -}}
-{{- else -}}
-{{- $tag = "latest" -}}
-{{- end -}}
-{{- end -}}
-{{- if $registryName }}
-{{- printf "%s/%s:%s" $registryName $repositoryName $tag -}}
-{{- else -}}
-{{- printf "%s:%s" $repositoryName $tag -}}
-{{- end -}}
+{{- define "graphscope-store.imagePullSecrets" -}}
+{{ include "common.images.pullSecrets" (dict "images" (list .Values.image) "global" .Values.global) }}
 {{- end -}}
 
 {{/*
@@ -131,22 +92,6 @@ Return true if a configmap object should be created for graphscope-service
 {{- else -}}
 {{- end -}}
 {{- end -}}
-
-
-{{/*
-Renders a value that contains template.
-Usage:
-{{ include "graphscope-store.tplvalues.render" ( dict "value" .Values.path.to.the.Value "context" $) }}
-*/}}
-{{- define "graphscope-store.tplvalues.render" -}}
-    {{- if typeIs "string" .value }}
-        {{- tpl .value .context }}
-    {{- else }}
-        {{- tpl (.value | toYaml) .context }}
-    {{- end }}
-{{- end -}}
-
-
 
 
 {{/*

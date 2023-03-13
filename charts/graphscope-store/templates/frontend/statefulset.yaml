@@ -11,63 +11,97 @@ kind: StatefulSet
 metadata:
   name: {{ include "graphscope-store.frontend.fullname" . }}
   namespace: {{ .Release.Namespace }}
-  labels: {{- include "graphscope-store.labels" . | nindent 4 }}
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
     app.kubernetes.io/component: frontend
     {{- if .Values.commonLabels }}
-    {{- include "graphscope-store.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
     {{- end }}
   {{- if .Values.commonAnnotations }}
-  annotations: {{- include "graphscope-store.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
   {{- end }}
 spec:
+  podManagementPolicy: {{ .Values.podManagementPolicy }}
   replicas: {{ .Values.frontend.replicaCount }}
   selector:
-    matchLabels: {{ include "graphscope-store.selectorLabels" . | nindent 6 }}
+    matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
       app.kubernetes.io/component: frontend
-  serviceName: {{ include "graphscope-store.frontend.fullname" . }}-headless
-  updateStrategy:
-    type: {{ .Values.frontend.updateStrategy }}
-    {{- if (eq "Recreate" .Values.frontend.updateStrategy) }}
-    rollingUpdate: null
-    {{- end }}
+  serviceName: {{ printf "%s-frontend-headless" (include "common.names.fullname" .) | trunc 63 | trimSuffix "-" }}
+  updateStrategy: {{- include "common.tplvalues.render" (dict "value" .Values.updateStrategy "context" $ ) | nindent 4 }}
   template:
     metadata:
+      labels: {{- include "common.labels.standard" . | nindent 8 }}
+        app.kubernetes.io/component: frontend
+        {{- if .Values.podLabels }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.podLabels "context" $) | nindent 8 }}
+        {{- end }}
       annotations:
         {{- if (include "graphscope-store.createConfigmap" .) }}
         checksum/configuration: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
         {{- end }}
-        {{- if .Values.frontend.podAnnotations }}
-        {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.frontend.podAnnotations "context" $) | nindent 8 }}
-        {{- end }}
-      labels: {{- include "graphscope-store.labels" . | nindent 8 }}
-        app.kubernetes.io/component: frontend
-        {{- if .Values.commonLabels }}
-        {{- include "graphscope-store.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 8 }}
+        {{- if .Values.podAnnotations }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.podAnnotations "context" $) | nindent 8 }}
         {{- end }}
     spec:
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets: {{- toYaml . | nindent 8 }}
+      {{- include "graphscope-store.imagePullSecrets" . | nindent 6 }}
+      {{- if .Values.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.hostAliases "context" $) | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "graphscope-store.serviceAccountName" . }}
-      {{- if .Values.frontend.affinity }}
-      affinity: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.frontend.affinity "context" $) | nindent 8 }}
+      hostNetwork: {{ .Values.hostNetwork }}
+      hostIPC: {{ .Values.hostIPC }}
+      {{- if .Values.schedulerName }}
+      schedulerName: {{ .Values.schedulerName | quote }}
+      {{- end }}
+      {{- if .Values.affinity }}
+      affinity: {{- include "common.tplvalues.render" (dict "value" .Values.affinity "context" $) | nindent 8 }}
+      {{- else }}
+      affinity:
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.podAffinityPreset "component" "frontend" "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.podAntiAffinityPreset "component" "frontend" "context" $) | nindent 10 }}
+        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.nodeAffinityPreset.type "key" .Values.nodeAffinityPreset.key "values" .Values.nodeAffinityPreset.values) | nindent 10 }}
+      {{- end }}
+      {{- if .Values.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" (dict "value" .Values.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.dnsPolicy }}
+      dnsPolicy: {{ .Values.dnsPolicy | quote }}
+      {{- end }}
+      {{- if .Values.dnsConfig }}
+      dnsConfig: {{- include "common.tplvalues.render" (dict "value" .Values.dnsConfig "context" $) | nindent 8 }}
       {{- end }}
       {{- if .Values.tolerations }}
-      tolerations: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.tolerations "context" $) | nindent 8 }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.tolerations "context" $) | nindent 8 }}
       {{- end }}
+      {{- if .Values.topologySpreadConstraints }}
+      topologySpreadConstraints: {{- include "common.tplvalues.render" (dict "value" .Values.topologySpreadConstraints "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      {{- end }}
+      {{- if .Values.priorityClassName }}
+      priorityClassName: {{ .Values.priorityClassName }}
+      {{- end }}
+      {{- if .Values.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "graphscope-store.serviceAccountName" . }}
+      {{- if .Values.initContainers }}
       initContainers:
-        {{- if .Values.frontend.initContainers }}
-        {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.frontend.initContainers "context" $) | nindent 8 }}
+        {{- if .Values.initContainers }}
+        {{- include "common.tplvalues.render" ( dict "value" .Values.initContainers "context" $ ) | nindent 8 }}
         {{- end }}
+      {{- end }}
       containers:
         - name: frontend
           image: {{ include "graphscope-store.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
-          command:
-            - /etc/groot/setup.sh
+          {{- if .Values.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          command: {{- include "common.tplvalues.render" (dict "value" .Values.command "context" $) | nindent 12 }}
+          {{- if .Values.args }}
+          args: {{- include "common.tplvalues.render" (dict "value" .Values.args "context" $) | nindent 12 }}
+          {{- end }}
           env:
-            - name: DEBUG
-              value: "false"
             - name: GRAPH_NAME
               value: {{ .Values.graphName | quote }}
             - name: GROOT_JAVA_OPTS
@@ -83,15 +117,15 @@ spec:
             - name: STORE_COUNT
               value: {{ .Values.store.replicaCount | quote }}
             - name: DNS_NAME_PREFIX_FRONTEND
-              value: {{ $frontendFullname }}-{}.{{ $frontendFullname }}-headless.{{ $releaseNamespace }}.svc.{{ $clusterDomain }}
+              value: {{ $frontendFullname }}-{}.{{ $frontendFullname }}-headless
             - name: DNS_NAME_PREFIX_INGESTOR
-              value: {{ $ingestorFullname }}-{}.{{ $ingestorFullname }}-headless.{{ $releaseNamespace }}.svc.{{ $clusterDomain }}
+              value: {{ $ingestorFullname }}-{}.{{ $ingestorFullname }}-headless
             - name: DNS_NAME_PREFIX_COORDINATOR
-              value: {{ $coordinatorFullname }}-{}.{{ $coordinatorFullname }}-headless.{{ $releaseNamespace }}.svc.{{ $clusterDomain }}
+              value: {{ $coordinatorFullname }}-{}.{{ $coordinatorFullname }}-headless
             - name: DNS_NAME_PREFIX_STORE
-              value: {{ $storeFullname }}-{}.{{ $storeFullname }}-headless.{{ $releaseNamespace }}.svc.{{ $clusterDomain }}
+              value: {{ $storeFullname }}-{}.{{ $storeFullname }}-headless
             - name: DNS_NAME_SERVICE_KAFKA
-              value: {{ $kafkaFullname}}-headless.{{ $releaseNamespace }}.svc.{{ $clusterDomain }}
+              value: {{ $kafkaFullname}}-headless.{{ $releaseNamespace }}
             - name: KAFKA_SERVERS
               value: {{ include "graphscope-store.kafka.brokerlist" . }}
           ports:
@@ -105,15 +139,20 @@ spec:
               containerPort: 60000
             - name: gaia-engine
               containerPort: 60001
-          {{- if .Values.frontend.readinessProbe.enabled }}
-          readinessProbe:
+          {{- if .Values.livenessProbe.enabled }}
+          livenessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.livenessProbe "enabled") "context" $) | nindent 12 }}
             tcpSocket:
               port: port
-            initialDelaySeconds: {{ .Values.frontend.readinessProbe.initialDelaySeconds }}
-            timeoutSeconds: {{ .Values.frontend.readinessProbe.timeoutSeconds }}
-            failureThreshold: {{ .Values.frontend.readinessProbe.failureThreshold }}
-            periodSeconds: {{ .Values.frontend.readinessProbe.periodSeconds }}
-            successThreshold: {{ .Values.frontend.readinessProbe.successThreshold }}
+          {{- end }}
+          {{- if .Values.readinessProbe.enabled }}
+          readinessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.readinessProbe "enabled") "context" $) | nindent 12 }}
+            tcpSocket:
+              port: port
+          {{- end }}
+          {{- if .Values.startupProbe.enabled }}
+          startupProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.startupProbe "enabled") "context" $) | nindent 12 }}
+            tcpSocket:
+              port: port
           {{- end }}
           {{- if .Values.frontend.resources }}
           resources: {{- toYaml .Values.frontend.resources | nindent 12 }}
@@ -125,13 +164,8 @@ spec:
             - name: config
               mountPath: /etc/groot/setup.sh
               subPath: setup.sh
-            - name: config
-              mountPath: /etc/groot/ready_probe.sh
-              subPath: ready_probe.sh
-
       volumes:
         - name: config
           configMap:
             name: {{ include "graphscope-store.configmapName" . }}
             defaultMode: 0755
-
