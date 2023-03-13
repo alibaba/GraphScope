@@ -183,9 +183,7 @@ class EngineCluster:
         return self._sock
 
     def vineyard_deployment_exists(self):
-        if self._vineyard_deployment is not None:
-            return True
-        return False
+        return self._vineyard_deployment is not None
 
     def base64_decode(self, string):
         return base64.b64decode(string).decode("utf-8", errors="ignore")
@@ -591,21 +589,17 @@ class EngineCluster:
         container.resources = ResourceBuilder.get_resources(
             self._frontend_requests, None
         )
-        if self.self.vineyard_deployment_exists():
+        if self.vineyard_deployment_exists():
             socket_volume = self.get_vineyard_socket_volume()
             container.volume_mounts = [socket_volume[2]]
         return container
 
     def get_interactive_frontend_deployment(self, replicas=1):
         name = self.frontend_deployment_name
-        vineyard_volumes = []
-        if self.vineyard_deployment_exists():
-            socket_volume = self.get_vineyard_socket_volume()
-            vineyard_volumes = [socket_volume[0]]
 
         container = self.get_interactive_frontend_container()
         pod_spec = ResourceBuilder.get_pod_spec(
-            containers=[container], volumes=vineyard_volumes
+            containers=[container],
         )
         template_spec = ResourceBuilder.get_pod_template_spec(
             pod_spec, self._frontend_labels

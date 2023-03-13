@@ -70,8 +70,6 @@ logger = logging.getLogger("graphscope")
 
 class FakeKubeResponse:
     def __init__(self, obj):
-        import json
-
         self.data = json.dumps(obj)
 
 
@@ -268,9 +266,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         return types_pb2.K8S
 
     def vineyard_deployment_exists(self):
-        if self._vineyard_deployment is not None:
-            return True
-        return False
+        return self._vineyard_deployment is not None
 
     def get_coordinator_owner_references(self):
         owner_references = []
@@ -461,11 +457,6 @@ class KubernetesClusterLauncher(AbstractLauncher):
     def _create_frontend_deployment(self):
         logger.info("Creating frontend pods...")
         deployment = self._engine_cluster.get_interactive_frontend_deployment()
-        if self.vineyard_deployment_exists():
-            # schedule frontend deployment to the same node with vineyard deployment
-            deployment = self._add_podAffinity_for_vineyard_deployment(
-                workload=deployment
-            )
         deployment.metadata.owner_references = self._owner_references
         response = self._apps_api.create_namespaced_deployment(
             self._namespace, deployment
