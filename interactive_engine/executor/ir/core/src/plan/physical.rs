@@ -241,10 +241,10 @@ impl AsPhysical for pb::PathExpand {
     }
 
     fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        post_process_vars(builder, plan_meta, false)?;
         if plan_meta.is_partition() {
             builder.shuffle(self.start_tag.clone());
         }
-        post_process_vars(builder, plan_meta, false)?;
         Ok(())
     }
 }

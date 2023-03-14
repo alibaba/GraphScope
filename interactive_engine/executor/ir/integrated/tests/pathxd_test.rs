@@ -26,6 +26,7 @@ mod test {
     use runtime::process::entry::Entry;
 
     use crate::common::test::*;
+    use ir_common::expr_parse::str_to_expr_pb;
 
     // g.V().hasLabel("person").both("1..3", "knows")
     // result_opt: 0: EndV, 1: AllV;  path_opt: 0: Arbitrary, 1: Simple
@@ -131,6 +132,44 @@ mod test {
             path_opt: 0,
             result_opt: if is_whole_path { 1 } else { 0 },
             condition: None,
+        };
+
+        let mut job_builder = JobBuilder::default();
+        job_builder.add_scan_source(source_opr);
+        job_builder.shuffle(None);
+        job_builder.path_expand(path_expand_opr);
+        job_builder.sink(default_sink_pb());
+
+        job_builder.build().unwrap()
+    }
+
+    // g.V().hasLabel("person").both("1..3", "knows").with("UNTIL", "@.name == \"marko\"")
+    fn init_path_expand_with_until_request() -> JobRequest {
+        let source_opr = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
+            idx_predicate: None,
+            meta_data: None,
+        };
+
+        let edge_expand = pb::EdgeExpand {
+            v_tag: None,
+            direction: 2,
+            params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
+            expand_opt: 0,
+            alias: None,
+            meta_data: None,
+        };
+
+        let path_expand_opr = pb::PathExpand {
+            base: Some(edge_expand),
+            start_tag: None,
+            alias: None,
+            hop_range: Some(pb::Range { lower: 1, upper: 3 }),
+            path_opt: 0,
+            result_opt: 1,
+            condition: str_to_expr_pb("@.name == \"marko\"".to_string()).ok(),
         };
 
         let mut job_builder = JobBuilder::default();
@@ -432,5 +471,46 @@ mod test {
     #[test]
     fn simple_path_expand_end_query_w2_test() {
         simple_path_expand_end_query(2)
+    }
+
+    fn path_expand_whole_with_until_query(worker_num: u32) {
+        initialize();
+        let request = init_path_expand_with_until_request();
+        let mut results = submit_query(request, worker_num);
+        let mut result_collection: Vec<Vec<ID>> = vec![];
+        let mut expected_result_paths = vec![vec![2, 1], vec![4, 1], vec![1, 2, 1], vec![1, 4, 1]];
+        while let Some(result) = results.next() {
+            match result {
+                Ok(res) => {
+                    let entry = parse_result(res).unwrap();
+                    if let Some(path) = entry.get(None).unwrap().as_graph_path() {
+                        result_collection.push(
+                            path.clone()
+                                .take_path()
+                                .unwrap()
+                                .into_iter()
+                                .map(|v| v.id())
+                                .collect(),
+                        );
+                    }
+                }
+                Err(e) => {
+                    panic!("err result {:?}", e);
+                }
+            }
+        }
+        expected_result_paths.sort();
+        result_collection.sort();
+        assert_eq!(result_collection, expected_result_paths)
+    }
+
+    #[test]
+    fn path_expand_whole_with_until_query_test() {
+        path_expand_whole_with_until_query(1)
+    }
+
+    #[test]
+    fn path_expand_whole_with_until_query_w2_test() {
+        path_expand_whole_with_until_query(2)
     }
 }
