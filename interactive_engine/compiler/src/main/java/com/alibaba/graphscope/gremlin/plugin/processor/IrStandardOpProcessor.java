@@ -431,14 +431,13 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                 new FfiLogicalPlan(optCluster, irMeta, getPlanHints(irMeta)))
                         .go(topNode)) {
             String jobName = "ir_plan_" + jobId;
+            byte[] physicalPlanBytes = logicalPlan.toPhysical();
             // print script and jobName with ir plan
             logger.info(
                     "gremlin query \"{}\", job conf name \"{}\", ir plan {}",
                     script,
                     jobName,
                     logicalPlan.explain());
-            byte[] physicalPlanBytes = logicalPlan.toPhysical();
-
             PegasusClient.JobRequest request =
                     PegasusClient.JobRequest.parseFrom(physicalPlanBytes);
             PegasusClient.JobConfig jobConfig =
