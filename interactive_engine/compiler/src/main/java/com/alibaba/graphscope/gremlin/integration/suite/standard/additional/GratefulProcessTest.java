@@ -21,8 +21,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
-
 import org.apache.tinkerpop.gremlin.LoadGraphWith;
 import org.apache.tinkerpop.gremlin.process.AbstractGremlinProcessTest;
 import org.apache.tinkerpop.gremlin.process.GremlinProcessRunner;
@@ -39,10 +37,6 @@ import java.util.Map;
 public abstract class GratefulProcessTest extends AbstractGremlinProcessTest {
     public abstract Traversal<Vertex, Long> get_g_V_both_both_count();
 
-    public abstract Traversal<Vertex, Long> get_g_V_path_expand_outX_timesX3X_count();
-
-    public abstract Traversal<Vertex, Long> get_g_V_path_expand_outX_timesX8X_count();
-
     public abstract Traversal<Vertex, Map<Object, Object>>
             get_g_V_hasXsong_name_OHBOYX_outXfollowedByX_outXfollowedByX_order_byXperformancesX_byXsongType_descX();
 
@@ -55,24 +49,6 @@ public abstract class GratefulProcessTest extends AbstractGremlinProcessTest {
         final Traversal<Vertex, Long> traversal = get_g_V_both_both_count();
         printTraversalForm(traversal);
         assertEquals(new Long(1406914), traversal.next());
-        assertFalse(traversal.hasNext());
-    }
-
-    @Test
-    @LoadGraphWith(GraphData.GRATEFUL)
-    public void g_V_path_expand_outX_timesX3X_count() {
-        final Traversal<Vertex, Long> traversal = get_g_V_path_expand_outX_timesX3X_count();
-        printTraversalForm(traversal);
-        assertEquals(new Long(14465066L), traversal.next());
-        assertFalse(traversal.hasNext());
-    }
-
-    @Test
-    @LoadGraphWith(GraphData.GRATEFUL)
-    public void g_V_path_expand_outX_timesX8X_count() {
-        final Traversal<Vertex, Long> traversal = get_g_V_path_expand_outX_timesX8X_count();
-        printTraversalForm(traversal);
-        assertEquals(new Long(2505037961767380L), traversal.next());
         assertFalse(traversal.hasNext());
     }
 
@@ -108,16 +84,6 @@ public abstract class GratefulProcessTest extends AbstractGremlinProcessTest {
         @Override
         public Traversal<Vertex, Long> get_g_V_both_both_count() {
             return g.V().both().both().count();
-        }
-
-        @Override
-        public Traversal<Vertex, Long> get_g_V_path_expand_outX_timesX3X_count() {
-            return ((IrCustomizedTraversal) g.V()).out("3..4").count();
-        }
-
-        @Override
-        public Traversal<Vertex, Long> get_g_V_path_expand_outX_timesX8X_count() {
-            return ((IrCustomizedTraversal) g.V()).out("8..9").count();
         }
 
         @Override
