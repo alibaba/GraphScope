@@ -240,7 +240,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
             with_analytical_java=self._with_analytical_java,
             with_interactive=self._with_interactive,
             with_learning=self._with_learning,
-            dataset_proxy=json.loads(dataset_proxy)
+            dataset_proxy=json.loads(dataset_proxy),
         )
 
         self._vineyard_service_endpoint = None

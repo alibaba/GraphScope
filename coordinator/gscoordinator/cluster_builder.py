@@ -78,7 +78,7 @@ class EngineCluster:
         with_interactive,
         with_learning,
         with_mars,
-        dataset_proxy
+        dataset_proxy,
     ):
         self._gs_prefix = "gs-engine-"
         self._analytical_prefix = "gs-analytical-"
@@ -200,7 +200,10 @@ class EngineCluster:
         return env
 
     def get_dataset_proxy_env(self):
-        return [kube_client.V1EnvVar(name=k, value=v) for k, v in self._dataset_proxy.items()]
+        return [
+            kube_client.V1EnvVar(name=k, value=v)
+            for k, v in self._dataset_proxy.items()
+        ]
 
     def get_base_machine_env(self):
         env = [
@@ -379,7 +382,6 @@ class EngineCluster:
         )
 
         container.volume_mounts = volume_mounts
-        container.env = self.get_dataset_proxy_env()
 
         container.security_context = kube_client.V1SecurityContext(privileged=True)
         return container
