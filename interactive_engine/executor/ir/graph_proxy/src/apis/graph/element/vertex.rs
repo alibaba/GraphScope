@@ -49,6 +49,10 @@ impl Vertex {
     pub fn get_details_mut(&mut self) -> &mut DynDetails {
         &mut self.details
     }
+
+    pub fn get_details(&self) -> &DynDetails {
+        &self.details
+    }
 }
 
 impl Element for Vertex {
