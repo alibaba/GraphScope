@@ -19,6 +19,7 @@ ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:$GRAPHSCOPE_HOME/lib:$GRAPHSCOPE_HOME/lib
 
 ENV JAVA_HOME=/usr/lib/jvm/java HADOOP_HOME=/opt/hadoop-3.3.0 
 ENV HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_HOME/lib/native
+ENV HADOOP_YARN_HOME=$HADOOP_HOME HADOOP_MAPRED_HOME=$HADOOP_HOME
 ENV PATH=$PATH:/opt/rh/devtoolset-8/root/usr/bin:/opt/rh/rh-python38/root/usr/local/bin
 ENV PATH=$PATH:$GRAPHSCOPE_HOME/bin:$HADOOP_HOME/bin:/home/graphscope/.local/bin
 

@@ -70,6 +70,10 @@ engines:
     enabled: False
     image:
       name: dataset
+  # Running Behind a Forward Proxy
+  # Environment variables that get added to the dataset container
+  # Available options of proxy: http_proxy, https_proxy, no_proxy
+    proxy:
 
   resources:
     requests:
@@ -89,7 +93,7 @@ vineyard:
   image:
     name: vineyardcloudnative/vineyardd
     # Overrides the image tag whose default is the chart appVersion.
-    tag: v0.13.0
+    tag: v0.13.3
   resources:
     requests:
       cpu: 0.5

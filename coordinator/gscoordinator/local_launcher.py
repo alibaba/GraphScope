@@ -185,12 +185,18 @@ class LocalLauncher(AbstractLauncher):
                 os.path.dirname(INTERACTIVE_ENGINE_SCRIPT)
             )
 
-        # only one GIE/GAIA executor will be launched locally, even there are
-        # multiple GAE engines
-        threads_per_worker = int(
-            os.environ.get("THREADS_PER_WORKER", INTERACTIVE_ENGINE_THREADS_PER_WORKER)
-        )
-        env["THREADS_PER_WORKER"] = str(threads_per_worker * self._num_workers)
+        if os.environ.get("PARALLEL_INTERACTIVE_EXECUTOR_ON_VINEYARD", "OFF") != "ON":
+            # only one GIE/GAIA executor will be launched locally, even there are
+            # multiple GAE engines
+            num_workers = 1
+            threads_per_worker = int(
+                os.environ.get(
+                    "THREADS_PER_WORKER", INTERACTIVE_ENGINE_THREADS_PER_WORKER
+                )
+            )
+            env["THREADS_PER_WORKER"] = str(threads_per_worker * self._num_workers)
+        else:
+            num_workers = self._num_workers
 
         cmd = [
             INTERACTIVE_ENGINE_SCRIPT,
@@ -198,10 +204,10 @@ class LocalLauncher(AbstractLauncher):
             self._session_workspace,
             str(object_id),
             schema_path,
-            "0",  # server id
+            str(num_workers),  # server size
             str(self._interactive_port),  # executor port
             str(self._interactive_port + 1),  # executor rpc port
-            str(self._interactive_port + 2),  # frontend port
+            str(self._interactive_port + 2 * num_workers),  # frontend port
             self.vineyard_socket,
         ]
         logger.info("Create GIE instance with command: %s", " ".join(cmd))

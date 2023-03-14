@@ -78,6 +78,7 @@ class EngineCluster:
         with_interactive,
         with_learning,
         with_mars,
+        dataset_proxy,
     ):
         self._gs_prefix = "gs-engine-"
         self._analytical_prefix = "gs-analytical-"
@@ -151,6 +152,9 @@ class EngineCluster:
         )
         self._num_workers = num_workers
         self._volumes = json.loads(self.base64_decode(volumes)) if volumes else None
+        self._dataset_proxy = (
+            json.loads(self.base64_decode(dataset_proxy)) if dataset_proxy else None
+        )
 
         self._sock = "/tmp/vineyard_workspace/vineyard.sock"
 
@@ -195,6 +199,12 @@ class EngineCluster:
         put_if_exists(env, "OPAL_BINDIR")
         env = [kube_client.V1EnvVar(name=k, value=v) for k, v in env.items()]
         return env
+
+    def get_dataset_proxy_env(self):
+        return [
+            kube_client.V1EnvVar(name=k, value=v)
+            for k, v in self._dataset_proxy.items()
+        ]
 
     def get_base_machine_env(self):
         env = [
