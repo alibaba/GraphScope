@@ -210,7 +210,7 @@ Compute the k-core of the graph.
 
 The k-shell is the subgraph induced by vertices with core number *k*. That is, vertices in the k-core that are not in the (k+1)-core. 
 
-```{py:function} kkore(k)
+```{py:function} kshell(k)
 
 Compute the k-shell of the graph.
 
@@ -277,7 +277,7 @@ Compute shortest paths from a source vertex in the graph.
 
 VoteRank is to measure a ranking of the vertices in a graph based on a voting scheme. With VoteRank, all vertices vote for each of its in-neighbours and the vertices with the top highest votes is elected iteratively. 
 
-```{py:function} voderank(num_of_nodes)
+```{py:function} voterank(num_of_nodes)
 
 Select a list of influential vertices in a graph using VoteRank algorithm.
 
