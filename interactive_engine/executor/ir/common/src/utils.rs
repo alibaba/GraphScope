@@ -90,6 +90,7 @@ impl<T> From<Vec<T>> for OneOrMany<T> {
 impl From<common_pb::Arithmetic> for common_pb::ExprOpr {
     fn from(arith: common_pb::Arithmetic) -> Self {
         common_pb::ExprOpr {
+            node_type: None,
             item: Some(common_pb::expr_opr::Item::Arith(unsafe {
                 std::mem::transmute::<common_pb::Arithmetic, i32>(arith)
             })),
@@ -100,6 +101,7 @@ impl From<common_pb::Arithmetic> for common_pb::ExprOpr {
 impl From<common_pb::Logical> for common_pb::ExprOpr {
     fn from(logical: common_pb::Logical) -> Self {
         common_pb::ExprOpr {
+            node_type: None,
             item: Some(common_pb::expr_opr::Item::Logical(unsafe {
                 std::mem::transmute::<common_pb::Logical, i32>(logical)
             })),
@@ -109,13 +111,13 @@ impl From<common_pb::Logical> for common_pb::ExprOpr {
 
 impl From<common_pb::Value> for common_pb::ExprOpr {
     fn from(const_val: common_pb::Value) -> Self {
-        common_pb::ExprOpr { item: Some(common_pb::expr_opr::Item::Const(const_val)) }
+        common_pb::ExprOpr { node_type: None, item: Some(common_pb::expr_opr::Item::Const(const_val)) }
     }
 }
 
 impl From<common_pb::Variable> for common_pb::ExprOpr {
     fn from(var: common_pb::Variable) -> Self {
-        common_pb::ExprOpr { item: Some(common_pb::expr_opr::Item::Var(var)) }
+        common_pb::ExprOpr { node_type: None, item: Some(common_pb::expr_opr::Item::Var(var)) }
     }
 }
 
@@ -124,10 +126,10 @@ impl From<(common_pb::VariableKeys, bool)> for common_pb::ExprOpr {
     fn from(vars: (common_pb::VariableKeys, bool)) -> Self {
         if !vars.1 {
             // not a map
-            common_pb::ExprOpr { item: Some(common_pb::expr_opr::Item::Vars(vars.0)) }
+            common_pb::ExprOpr { node_type: None, item: Some(common_pb::expr_opr::Item::Vars(vars.0)) }
         } else {
             // is a map
-            common_pb::ExprOpr { item: Some(common_pb::expr_opr::Item::VarMap(vars.0)) }
+            common_pb::ExprOpr { node_type: None, item: Some(common_pb::expr_opr::Item::VarMap(vars.0)) }
         }
     }
 }
@@ -227,6 +229,7 @@ fn str_as_tag(str: String) -> Option<common_pb::NameOrId> {
     }
 }
 
+// When translate String to Variable, the type is not considered.
 impl From<String> for common_pb::Variable {
     fn from(str: String) -> Self {
         assert!(str.starts_with(VAR_PREFIX));
@@ -237,6 +240,7 @@ impl From<String> for common_pb::Variable {
                 // If the tag is represented as an integer
                 tag: str_as_tag(str),
                 property: None,
+                node_type: None,
             }
         } else {
             let mut splitter = str.split(SPLITTER);
@@ -244,7 +248,7 @@ impl From<String> for common_pb::Variable {
                 if let Some(first) = splitter.next() { str_as_tag(first.to_string()) } else { None };
             let property: Option<common_pb::Property> =
                 if let Some(second) = splitter.next() { Some(second.to_string().into()) } else { None };
-            common_pb::Variable { tag, property }
+            common_pb::Variable { tag, property, node_type: None }
         }
     }
 }
@@ -510,24 +514,6 @@ impl From<pb::PathExpand> for pb::logical_plan::Operator {
     }
 }
 
-impl From<pb::PathStart> for pb::logical_plan::Operator {
-    fn from(opr: pb::PathStart) -> Self {
-        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::PathStart(opr)) }
-    }
-}
-
-impl From<pb::PathEnd> for pb::logical_plan::Operator {
-    fn from(opr: pb::PathEnd) -> Self {
-        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::PathEnd(opr)) }
-    }
-}
-
-impl From<pb::FusedOperator> for pb::logical_plan::Operator {
-    fn from(opr: pb::FusedOperator) -> Self {
-        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Fused(opr)) }
-    }
-}
-
 /*
 impl From<pb::ShortestPathExpand> for pb::logical_plan::Operator {
     fn from(opr: pb::ShortestPathExpand) -> Self {
@@ -633,8 +619,13 @@ impl pb::edge_expand::Direction {
 impl From<physical_pb::physical_opr::operator::OpKind> for physical_pb::PhysicalOpr {
     fn from(op_kind: physical_pb::physical_opr::operator::OpKind) -> Self {
         let opr = physical_pb::physical_opr::Operator { op_kind: Some(op_kind) };
-        // TODO: add op_meta once supported
-        physical_pb::PhysicalOpr { opr: Some(opr), op_meta: vec![] }
+        physical_pb::PhysicalOpr { opr: Some(opr), meta_data: vec![] }
+    }
+}
+
+impl From<pb::MetaData> for physical_pb::physical_opr::MetaData {
+    fn from(meta_data: pb::MetaData) -> Self {
+        physical_pb::physical_opr::MetaData { r#type: meta_data.r#type, alias: meta_data.alias }
     }
 }
 
@@ -801,13 +792,21 @@ mod test {
     fn test_str_to_variable() {
         let case1 = "@1";
         assert_eq!(
-            common_pb::Variable { tag: Some(common_pb::NameOrId::from(1)), property: None },
+            common_pb::Variable {
+                tag: Some(common_pb::NameOrId::from(1)),
+                property: None,
+                node_type: None
+            },
             common_pb::Variable::from(case1.to_string())
         );
 
         let case2 = "@a";
         assert_eq!(
-            common_pb::Variable { tag: Some(common_pb::NameOrId::from("a".to_string())), property: None },
+            common_pb::Variable {
+                tag: Some(common_pb::NameOrId::from("a".to_string())),
+                property: None,
+                node_type: None
+            },
             common_pb::Variable::from(case2.to_string())
         );
 
@@ -817,7 +816,8 @@ mod test {
                 tag: Some(common_pb::NameOrId::from(1)),
                 property: Some(common_pb::Property {
                     item: Some(common_pb::property::Item::Id(common_pb::IdKey {}))
-                })
+                }),
+                node_type: None
             },
             common_pb::Variable::from(case3.to_string())
         );
@@ -828,7 +828,8 @@ mod test {
                 tag: Some(common_pb::NameOrId::from(1)),
                 property: Some(common_pb::Property {
                     item: Some(common_pb::property::Item::Label(common_pb::LabelKey {}))
-                })
+                }),
+                node_type: None
             },
             common_pb::Variable::from(case4.to_string())
         );
@@ -839,7 +840,8 @@ mod test {
                 tag: Some(common_pb::NameOrId::from(1)),
                 property: Some(common_pb::Property {
                     item: Some(common_pb::property::Item::Key("name".to_string().into()))
-                })
+                }),
+                node_type: None
             },
             common_pb::Variable::from(case5.to_string())
         );
@@ -850,14 +852,15 @@ mod test {
                 tag: None,
                 property: Some(common_pb::Property {
                     item: Some(common_pb::property::Item::Key("name".to_string().into()))
-                })
+                }),
+                node_type: None
             },
             common_pb::Variable::from(case6.to_string())
         );
 
         let case7 = "@";
         assert_eq!(
-            common_pb::Variable { tag: None, property: None },
+            common_pb::Variable { tag: None, property: None, node_type: None },
             common_pb::Variable::from(case7.to_string())
         );
     }

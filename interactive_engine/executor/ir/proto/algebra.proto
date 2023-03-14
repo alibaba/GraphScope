@@ -22,6 +22,12 @@ option java_outer_classname = "GraphAlgebra";
 import "common.proto";
 import "expr.proto";
 import "schema.proto";
+import "type.proto";
+
+message MetaData {
+  common.IrDataType type = 1;
+  int32 alias = 2;
+}
 
 // We have several logical operators that are similar to physical operators (e.g., Project, GroupBy etc.),
 // except for the type of operator's tags(or alias) is Option<i32> in physical, while Option<NameOrId> in logical.
@@ -41,6 +47,8 @@ message Project {
   // An indicator to tell the runtime whether the projected value is appending to or replacing
   // existing relation.
   bool is_append = 2;
+  // The datatype of output results
+  repeated MetaData meta_data = 3;
 }
 
 // To filter a relation based on a given predicate
@@ -128,6 +136,8 @@ message GroupBy {
   repeated KeyAlias mappings = 1;
   // The grouping functions
   repeated AggFunc functions = 2;
+  // The datatype of output results
+  repeated MetaData meta_data = 3;
 }
 
 message OrderBy {
@@ -159,6 +169,8 @@ message Unfold {
   common.NameOrId tag = 1;
   // The alias tag for the elements that are unfolded from the collection
   common.NameOrId alias = 2;
+  // The type for the unfold value
+  MetaData meta_data = 3;
 }
 
 message Range {
@@ -229,6 +241,7 @@ message Scan {
   QueryParams params = 3;
   // The optional filtering predicate for the field that have been indexed
   IndexPredicate idx_predicate = 4;
+  MetaData meta_data = 5;
 }
 
 // It is typical to use the operator together with EdgeExpand or PathExpand, with the functionality of
@@ -252,6 +265,7 @@ message GetV {
   QueryParams params = 3;
   // The alias of this vertex
   common.NameOrId alias = 4;
+  MetaData meta_data = 5;
 }
 
 // To tag the current data with an alias
@@ -284,20 +298,7 @@ message EdgeExpand {
   common.NameOrId alias = 4;
   // Expand option, i.e., expand vertices/edges/degree.
   ExpandOpt expand_opt = 5;
-}
-
-message PathStart {
-  // The tag that refers to the starting vertex
-  common.NameOrId start_tag = 1;
-  // Path option, including to expand an arbitrary path or a simple path
-  PathExpand.PathOpt path_opt = 2;
-  // Result option, including to take end vertex (EndV), or whole path (AllV), for this expansion
-  PathExpand.ResultOpt result_opt = 3;
-}
-
-message PathEnd {
-  // An optional alias for the object of the path expansion
-  common.NameOrId alias = 1;
+  MetaData meta_data = 6;
 }
 
 message PathExpand {
@@ -399,6 +400,7 @@ message Pattern {
     Join.JoinKind join_kind = 4;
   }
   repeated Sentence sentences = 1;
+  repeated MetaData meta_data = 2;
 }
 
 message Sink {
@@ -408,7 +410,7 @@ message Sink {
       SinkVineyard sink_vineyard = 2;
     }
   }
-  // Define the tags of columns to sink
+  // Define the tags of columns to sink. If no tags given, sink all **tagged** columns by default.
   repeated common.NameOrIdKey tags = 1;
   // Define the target of sink, e.g., to Client as default, to Graph such as Vineyard etc.
   SinkTarget sink_target = 2;
@@ -435,12 +437,6 @@ message SinkVineyard {
   schema.Schema graph_schema = 2;
 }
 
-// Fusing multiple operators as one single operator if possible.
-// Noticed that we only fused for map or filter related operators.
-message FusedOperator {
-  repeated LogicalPlan.Operator oprs = 1;
-}
-
 // A logical plan of graph relation algebra forms a DAG, where each node is an operator and the
 // edge indicates the execution flow.
 message LogicalPlan {
@@ -461,13 +457,10 @@ message LogicalPlan {
       As as = 14;
       Intersect intersect = 15;
       Sink sink = 16;
-      FusedOperator fused = 17;
       // Saving the room for relational operators
       GetV vertex = 30;
       EdgeExpand edge = 31;
       PathExpand path = 32;
-      PathStart path_start = 33;
-      PathEnd path_end = 34;
       Pattern pattern = 35;
     }
   }

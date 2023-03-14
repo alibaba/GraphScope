@@ -18,12 +18,17 @@ package com.alibaba.graphscope.common.ir.tools.config;
 
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalGetV;
+import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlOperator;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
@@ -93,6 +98,21 @@ public class PathExpandConfig {
         return getV;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("PathExpandConfig{");
+        builder.append("expand=" + expand.explain());
+        builder.append(", getV=" + getV.explain());
+        builder.append(", offset=" + offset);
+        builder.append(", fetch=" + fetch);
+        builder.append(", pathOpt=" + pathOpt);
+        builder.append(", resultOpt=" + resultOpt);
+        builder.append(", alias='" + alias + '\'');
+        builder.append("}");
+        return builder.toString();
+    }
+
     public static final class Builder {
         private final GraphBuilder innerBuilder;
 
@@ -108,7 +128,11 @@ public class PathExpandConfig {
         @Nullable private String alias;
 
         protected Builder(GraphBuilder innerBuilder) {
-            this.innerBuilder = innerBuilder;
+            this.innerBuilder =
+                    GraphBuilder.create(
+                            null,
+                            (GraphOptCluster) innerBuilder.getCluster(),
+                            innerBuilder.getRelOptSchema());
             this.pathOpt = GraphOpt.PathExpandPath.ARBITRARY;
             this.resultOpt = GraphOpt.PathExpandResult.EndV;
         }
@@ -118,13 +142,13 @@ public class PathExpandConfig {
                 this.expand =
                         GraphLogicalExpand.create(
                                 (GraphOptCluster) innerBuilder.getCluster(),
-                                innerBuilder.getHints(
-                                        config.getOpt().name(),
-                                        AliasInference.DEFAULT_NAME,
-                                        AliasInference.DEFAULT_ID),
+                                ImmutableList.of(),
                                 null,
+                                config.getOpt(),
                                 innerBuilder.getTableConfig(
-                                        config.getLabels(), GraphOpt.Source.EDGE));
+                                        config.getLabels(), GraphOpt.Source.EDGE),
+                                AliasInference.DEFAULT_NAME);
+                innerBuilder.push(this.expand);
             }
             return this;
         }
@@ -134,20 +158,51 @@ public class PathExpandConfig {
                 this.getV =
                         GraphLogicalGetV.create(
                                 (GraphOptCluster) innerBuilder.getCluster(),
-                                innerBuilder.getHints(
-                                        config.getOpt().name(),
-                                        AliasInference.DEFAULT_NAME,
-                                        AliasInference.DEFAULT_ID),
+                                ImmutableList.of(),
                                 null,
+                                config.getOpt(),
                                 innerBuilder.getTableConfig(
-                                        config.getLabels(), GraphOpt.Source.VERTEX));
+                                        config.getLabels(), GraphOpt.Source.VERTEX),
+                                AliasInference.DEFAULT_NAME);
+                innerBuilder.push(this.getV);
             }
             return this;
         }
 
-        // TODO: add filter with expand or getV
-        public Builder filter(List<RexNode> conjunctions) {
+        public Builder filter(RexNode... conjunctions) {
+            Preconditions.checkArgument(
+                    this.getV != null || this.expand != null,
+                    "expand and getV are all null in path_expand");
+            innerBuilder.filter(conjunctions);
             return this;
+        }
+
+        public Builder filter(List<RexNode> conjunctions) {
+            Preconditions.checkArgument(
+                    this.getV != null || this.expand != null,
+                    "expand and getV are all null in path_expand");
+            innerBuilder.filter(conjunctions);
+            return this;
+        }
+
+        public RexGraphVariable variable(@Nullable String alias) {
+            return innerBuilder.variable(alias);
+        }
+
+        public RexGraphVariable variable(@Nullable String alias, String property) {
+            return innerBuilder.variable(alias, property);
+        }
+
+        public RexLiteral literal(@Nullable Object value) {
+            return innerBuilder.literal(value);
+        }
+
+        public RexNode call(SqlOperator operator, RexNode... operands) {
+            return innerBuilder.call(operator, operands);
+        }
+
+        public RexNode call(SqlOperator operator, Iterable<? extends RexNode> operands) {
+            return innerBuilder.call(operator, operands);
         }
 
         public Builder range(int offset, int fetch) {

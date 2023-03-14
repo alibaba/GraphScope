@@ -250,12 +250,14 @@ pub(crate) mod tests {
             tag: tag.map(|t| t.into()),
             property: key
                 .map(|k| common_pb::Property { item: Some(common_pb::property::Item::Key(k.into())) }),
+            node_type: None,
         }
     }
 
     pub fn to_expr_var_pb(tag: Option<NameOrId>, key: Option<NameOrId>) -> common_pb::Expression {
         common_pb::Expression {
             operators: vec![common_pb::ExprOpr {
+                node_type: None,
                 item: Some(common_pb::expr_opr::Item::Var(to_var_pb(tag, key))),
             }],
         }
@@ -270,6 +272,7 @@ pub(crate) mod tests {
             .collect();
         common_pb::Expression {
             operators: vec![common_pb::ExprOpr {
+                node_type: None,
                 item: if is_map {
                     Some(common_pb::expr_opr::Item::VarMap(common_pb::VariableKeys { keys: vars }))
                 } else {

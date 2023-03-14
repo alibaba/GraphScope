@@ -28,7 +28,7 @@ logger = logging.getLogger("graphscope")
 
 
 @project_to_simple
-@not_compatible_for("arrow_property", "dynamic_property")
+@not_compatible_for("arrow_property", "dynamic_property", "directed")
 def wcc(graph):
     """Evaluate weakly connected components on the `graph`.
     This is an optimized version of WCC.
@@ -66,7 +66,7 @@ def wcc(graph):
 
 
 @project_to_simple
-@not_compatible_for("arrow_property", "dynamic_property")
+@not_compatible_for("arrow_property", "dynamic_property", "directed")
 def wcc_projected(graph):
     """Evaluate weakly connected components on the `graph`.
     This is a naive version of WCC.
@@ -95,7 +95,7 @@ def wcc_projected(graph):
 
 
 @project_to_simple
-@not_compatible_for("arrow_property", "dynamic_property")
+@not_compatible_for("arrow_property", "dynamic_property", "directed")
 def wcc_auto(graph):
     """Evaluate weakly connected components on the `graph`.
     This is an auto parallel version of WCC.

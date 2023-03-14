@@ -262,8 +262,8 @@ PartitionId v6d_get_partition_id(GraphHandle graph, VertexId v);
 // key是\0结束的字符串，如果 key 不存在，返回 -1
 // 否则返回0，结果存在 internal_id 和 partition_id 中
 int v6d_get_vertex_id_from_primary_key(GraphHandle graph, LabelId label_id,
-                                   const char* key, VertexId* internal_id,
-                                   PartitionId* partition_id);
+                                       const char* key, VertexId* internal_id,
+                                       PartitionId* partition_id);
 
 // 返回本地的partition列表。
 //
@@ -273,8 +273,9 @@ int v6d_get_vertex_id_from_primary_key(GraphHandle graph, LabelId label_id,
 // 接收返回值，调用者（GIE）负责使用free_partition_list释放内存
 // partition_id_size: partition_ids的长度
 //
-void v6d_get_process_partition_list(GraphHandle graph, PartitionId** partition_ids,
-                                int* partition_id_size);
+void v6d_get_process_partition_list(GraphHandle graph,
+                                    PartitionId** partition_ids,
+                                    int* partition_id_size);
 
 // 释放partition_ids对应的内存
 void v6d_free_partition_list(PartitionId* partition_ids);

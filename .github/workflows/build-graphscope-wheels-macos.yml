@@ -21,14 +21,14 @@ jobs:
       with:
         submodules: true
 
-
     - name: Install Dependencies
       run: |
-        pushd $(brew --repo homebrew/core)
         # fixed protobuf version 3.17.3
+        # in order to address the dependency conflict between graphlearn and tensorflow
+        pushd $(brew --repo homebrew/core)
         git checkout 2b411d925849478163647594b32fd237828cf720
         popd
-        brew install bash
+        brew install bash coreutils
         alias bash=$(brew --prefix)/bin/bash
         sudo mkdir /opt/graphscope
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
@@ -39,6 +39,18 @@ jobs:
         # However the second trial would success.
         ./gs install-deps dev --no-v6d || true
         ./gs install-deps dev --no-v6d
+        echo "export PATH=/usr/local/opt/coreutils/libexec/gnubin:\$PATH" >> ~/.graphscope_env
+
+    - name: Reinstall glog
+      run: |
+        # Essential cause glog installed by brew is broken and produce corrupted messages
+        brew uninstall --ignore-dependencies glog
+        source ~/.graphscope_env
+        git clone https://github.com/google/glog.git
+        cd glog
+        cmake . -DWITH_TLS=OFF -DWITH_SYMBOLIZE=OFF -DWITH_UNWIND=OFF
+        make -j
+        sudo make install
 
     - name: Install latest libgrape-lite
       if: true
@@ -58,7 +70,7 @@ jobs:
         echo ${CC}
 
         # change the version for nightly release
-        # 0.15.0 -> 0.15.0a20220808
+        # e.g. 0.15.0 -> 0.15.0a20220808
         time=$(date "+%Y%m%d")
         version=$(cat ${GITHUB_WORKSPACE}/VERSION)
         if [ "${{ GITHUB.REF }}" == "refs/heads/main" ];then echo "${version}a${time}" > ${GITHUB_WORKSPACE}/VERSION; fi
@@ -67,14 +79,14 @@ jobs:
 
         # build graphscope server wheel
         cd ${GITHUB_WORKSPACE}/k8s/internal
-        sudo -E make graphscope-py3-package GRAPHSCOPE_HOME=/opt/graphscope
+        sudo -E make graphscope-py3-package GRAPHSCOPE_HOME=/usr/local
 
         # package
         cd ${GITHUB_WORKSPACE}
         tar -zcf graphscope.tar.gz coordinator/dist/wheelhouse/*.whl
 
     - name: Setup tmate session
-      if: failure()
+      if: false
       uses: mxschmitt/action-tmate@v2
 
     - name: Upload Artifact
@@ -107,7 +119,7 @@ jobs:
         # fixed protobuf version 3.17.3
         git checkout 2b411d925849478163647594b32fd237828cf720
         popd
-        brew install bash
+        brew install bash coreutils
         alias bash=$(brew --prefix)/bin/bash
         sudo mkdir /opt/graphscope
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
@@ -132,7 +144,7 @@ jobs:
       run: |
         source ~/.graphscope_env
         python3 -m pip install libclang
-        git clone --single-branch -b v0.12.2 --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
+        git clone --single-branch -b v0.13.0 --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
         cd /tmp/v6d
         git submodule update --init
         cmake .  -DCMAKE_INSTALL_PREFIX=/usr/local \
@@ -156,7 +168,7 @@ jobs:
 
         # build graphscope client wheel
         cd ${GITHUB_WORKSPACE}/k8s/internal
-        make graphscope-client-py3-package GRAPHSCOPE_HOME=/opt/graphscope
+        make graphscope-client-py3-package GRAPHSCOPE_HOME=/usr/local
 
         # package
         cd ${GITHUB_WORKSPACE}
@@ -219,7 +231,7 @@ jobs:
 
   python-test:
     if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
-    runs-on: macos-10.15
+    runs-on: macos-latest
     needs: [build-wheels, build-client-wheels]
     strategy:
       matrix:
@@ -266,3 +278,7 @@ jobs:
         python3 -c "import sys; print(sys.version)"
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
         python3 -m pytest -s -v $(dirname $(python3 -c "import graphscope; print(graphscope.__file__)"))/tests/minitest
+
+    - name: Setup tmate session
+      if: false
+      uses: mxschmitt/action-tmate@v2

@@ -22,37 +22,38 @@ import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.hint.RelHint;
-import org.apache.commons.lang3.ObjectUtils;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
 
 public class GraphLogicalSource extends AbstractBindableTableScan {
-    private GraphOpt.Source opt;
+    private final GraphOpt.Source opt;
 
     protected GraphLogicalSource(
-            GraphOptCluster cluster, List<RelHint> hints, TableConfig tableConfig) {
-        super(cluster, hints, tableConfig);
-        this.opt = scanOpt();
+            GraphOptCluster cluster,
+            List<RelHint> hints,
+            GraphOpt.Source opt,
+            TableConfig tableConfig,
+            @Nullable String alias) {
+        super(cluster, hints, tableConfig, alias);
+        this.opt = opt;
     }
 
     public static GraphLogicalSource create(
-            GraphOptCluster cluster, List<RelHint> hints, TableConfig tableConfig) {
-        return new GraphLogicalSource(cluster, hints, tableConfig);
-    }
-
-    private GraphOpt.Source scanOpt() {
-        ObjectUtils.requireNonEmpty(hints);
-        RelHint optHint = hints.get(0);
-        ObjectUtils.requireNonEmpty(optHint.listOptions);
-        return GraphOpt.Source.valueOf(optHint.listOptions.get(0));
+            GraphOptCluster cluster,
+            List<RelHint> hints,
+            GraphOpt.Source opt,
+            TableConfig tableConfig,
+            @Nullable String alias) {
+        return new GraphLogicalSource(cluster, hints, opt, tableConfig, alias);
     }
 
     public GraphOpt.Source getOpt() {
-        return opt;
+        return this.opt;
     }
 
     @Override
     public RelWriter explainTerms(RelWriter pw) {
-        return super.explainTerms(pw).item("opt", opt);
+        return super.explainTerms(pw).item("opt", getOpt());
     }
 }

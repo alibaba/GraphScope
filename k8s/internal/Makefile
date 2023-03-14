@@ -34,7 +34,7 @@ GRAPHSCOPE_HOME ?= /usr/local
 INSTALL_PREFIX ?= /opt/graphscope
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.12.2
+VINEYARD_VERSION ?= v0.13.0
 PROFILE ?= release
 CI ?= false
 
@@ -71,18 +71,19 @@ graphscope-darwin-py3:
 	cd $(WORKING_DIR)/../.. && \
 		python3 -m pip install --upgrade setuptools && \
 		make && \
-		sudo make install INSTALL_PREFIX=/opt/graphscope && \
+		export INSTALL_PREFIX=/opt/graphscope && \
+		sudo make install INSTALL_PREFIX=${INSTALL_PREFIX} && \
+		sudo cp -rs ${INSTALL_PREFIX}/* /usr/local/ && \
 		python3 $(WORKING_DIR)/../utils/precompile.py --graph --app
 	# build and delocate wheel
 	cd $(WORKING_DIR)/../../coordinator && \
 		export WITH_EXTRA_DATA=ON && \
-		export GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} && \
-		export INSTALL_PREFIX=${INSTALL_PREFIX} && \
+		export GRAPHSCOPE_HOME=/usr/local && \
 		rm -rf build dist/*.whl || true && \
 		sudo strip -s $(WORKING_DIR)/../../analytical_engine/exported_symbols_osx.lds ${INSTALL_PREFIX}/bin/grape_engine || true && \
 		sudo strip ${INSTALL_PREFIX}/bin/gaia_executor && \
-		export DYLD_LIBRARY_PATH=${GRAPHSCOPE_HOME}/lib:$$DYLD_LIBRARY_PATH && \
-		install_name_tool -add_rpath ${GRAPHSCOPE_HOME}/lib ${INSTALL_PREFIX}/bin/gaia_executor && \
+		export DYLD_LIBRARY_PATH=/usr/local/lib:$$DYLD_LIBRARY_PATH && \
+		install_name_tool -add_rpath /usr/local/lib ${INSTALL_PREFIX}/bin/gaia_executor && \
 		package_name=gs-include python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
 		rm -rf build && \
 		package_name=gs-apps python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \

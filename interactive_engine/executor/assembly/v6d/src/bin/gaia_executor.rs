@@ -93,70 +93,97 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     pegasus::startup(server_config)?;
     wait_servers_ready(&ServerConf::All);
-    let partition_server_index_map = get_global_partition_server_mapping(process_partition_list)?;
+
+    let (server_index, process_partition_lists) =
+        sync_global_process_partition_lists(process_partition_list)?;
+    let computed_process_partition_list = process_partition_lists
+        .get(&server_index)
+        .unwrap_or(&Vec::new())
+        .clone();
+    let partition_server_index_map = compute_partition_server_mapping(process_partition_lists)?;
+    info!("server_index: {:?}, partition_server_index_map: {:?}", server_index, partition_server_index_map);
 
     let query_vineyard = QueryVineyard::new(
         Arc::new(ffi_store).clone(),
         Arc::new(partition_manager),
         partition_server_index_map,
+        computed_process_partition_list,
     );
     let job_assembly = query_vineyard.initialize_job_assembly();
     start_rpc_server(server_id, rpc_config, job_assembly, GaiaServiceListener).await?;
     Ok(())
 }
 
-fn get_global_partition_server_mapping(
+fn sync_global_process_partition_lists(
     local_server_partition_list: Vec<u32>,
-) -> StartServerResult<HashMap<u32, u32>> {
+) -> StartServerResult<(u32, HashMap<u32, Vec<u32>>)> {
     // sync global mapping of server_index(process) -> partition_list via pegasus
-    let mut conf = JobConf::new("get_partition_server_index_map");
+    let mut conf = JobConf::new("query_current_worker_id");
+    conf.reset_servers(ServerConf::All);
+    let mut results = pegasus::run(conf, || {
+        move |input, output| {
+            input
+                .input_from(vec![pegasus::get_current_worker().server_index])?
+                .sink_into(output)
+        }
+    })
+    .map_err(|e| StartServerError::other_error(&format!("build job failed: {:?}", e)))?;
+
+    let server_index_value: u32;
+    if let Some(Ok(v)) = results.next() {
+        server_index_value = v;
+    } else {
+        return Err(StartServerError::other_error("pull result failed for "));
+    }
+
+    let mut conf = JobConf::new("sync_global_process_partition_lists");
     conf.reset_servers(ServerConf::All);
     let mut results = pegasus::run(conf, || {
         let server_index = pegasus::get_current_worker().server_index;
-        let local_server_partition_list: Vec<(u32, u32)> = local_server_partition_list
-            .clone()
-            .into_iter()
-            .map(|pid| (server_index, pid))
-            .collect();
+        let local_server_partition_list = local_server_partition_list.clone();
         move |input, output| {
-            let local_server_partition_list = local_server_partition_list.clone();
             input
-                .input_from(local_server_partition_list)?
-                .fold(HashMap::new(), || {
-                    |mut mapping, server_partition_id| {
-                        mapping
-                            .entry(server_partition_id.0)
-                            .or_insert_with(Vec::new)
-                            .push(server_partition_id.1);
-                        Ok(mapping)
-                    }
-                })?
-                .map(|mut mapping| {
-                    let mut server_partition_list = vec![];
-                    for (server_index, partition_list) in mapping.drain() {
-                        for pid in partition_list.into_iter() {
-                            server_partition_list.push((server_index, pid));
-                        }
-                    }
-                    Ok(server_partition_list)
-                })?
-                .into_stream()?
+                .input_from(vec![(server_index, local_server_partition_list)])?
                 .broadcast()
                 .sink_into(output)
         }
     })
     .map_err(|e| StartServerError::other_error(&format!("build job failed: {:?}", e)))?;
 
-    if let Some(Ok(server_partition_list)) = results.next() {
-        let mut partition_server_index_map = HashMap::new();
-        for (server_index, partition_id) in server_partition_list {
-            partition_server_index_map.insert(partition_id, server_index);
-        }
-        info!("partition_server_index_map {:?}", partition_server_index_map);
-        Ok(partition_server_index_map)
-    } else {
-        Err(StartServerError::other_error("pull result failed for server_partition_list"))
+    let mut partition_lists: HashMap<u32, Vec<u32>> = HashMap::new();
+    let mut partition_list_on_processes: HashMap<Vec<u32>, Vec<u32>> = HashMap::new();
+    while let Some(Ok((server_index, partitions))) = results.next() {
+        partition_lists.insert(server_index, partitions.clone());
+        partition_list_on_processes
+            .entry(partitions)
+            .or_insert_with(Vec::new)
+            .push(server_index)
     }
+    info!("partition_lists before dedup = {:?}", &partition_lists);
+    for (partitions, servers) in partition_list_on_processes.iter() {
+        if servers.len() > 1 {
+            assert_eq!(partitions.len() % servers.len(), 0);
+            let nchunk = partitions.len() / servers.len();
+            for (index, server) in servers.iter().enumerate() {
+                partition_lists.insert(*server, partitions[index * nchunk..(index + 1) * nchunk].to_vec());
+            }
+        }
+    }
+    info!("partition_lists = {:?}", &partition_lists);
+    Ok((server_index_value, partition_lists))
+}
+
+fn compute_partition_server_mapping(
+    process_partition_lists: HashMap<u32, Vec<u32>>,
+) -> StartServerResult<HashMap<u32, u32>> {
+    let mut partition_server_index_map = HashMap::new();
+    for (server_index, partitions) in process_partition_lists.iter() {
+        for partition in partitions.iter() {
+            partition_server_index_map.insert(*partition, *server_index);
+        }
+    }
+    info!("partition_server_index_map = {:?}", &partition_server_index_map);
+    Ok(partition_server_index_map)
 }
 
 struct GaiaServiceListener;

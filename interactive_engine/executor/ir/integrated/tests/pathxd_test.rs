@@ -35,6 +35,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
             idx_predicate: None,
+            meta_data: None,
         };
 
         let edge_expand = pb::EdgeExpand {
@@ -43,6 +44,7 @@ mod test {
             params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: None,
+            meta_data: None,
         };
 
         let path_expand_opr = pb::PathExpand {
@@ -71,6 +73,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
             idx_predicate: None,
+            meta_data: None,
         };
 
         let edge_expand = pb::EdgeExpand {
@@ -79,6 +82,7 @@ mod test {
             params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: None,
+            meta_data: None,
         };
 
         let path_expand_opr = pb::PathExpand {
@@ -107,6 +111,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
             idx_predicate: None,
+            meta_data: None,
         };
 
         let edge_expand = pb::EdgeExpand {
@@ -115,6 +120,7 @@ mod test {
             params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: None,
+            meta_data: None,
         };
 
         let path_expand_opr = pb::PathExpand {
