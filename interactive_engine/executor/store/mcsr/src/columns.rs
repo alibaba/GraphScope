@@ -1067,7 +1067,7 @@ impl DateColumn {
         }
         let num = self.data.len();
         for k in 0..num {
-            if self.data[k].to_u32() != other.data[k].to_u32() {
+            if self.data[k].to_i32() != other.data[k].to_i32() {
                 return false;
             }
         }

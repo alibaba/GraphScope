@@ -242,7 +242,6 @@
       "src_label": "PERSON",
       "dst_label": "PERSON",
       "label": "KNOWS",
-      "label": "KNOWS",
       "properties": [
         {
           "name": "creationDate",

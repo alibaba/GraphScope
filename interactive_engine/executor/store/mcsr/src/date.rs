@@ -22,7 +22,7 @@ use crate::error::GDBResult;
 
 #[derive(Copy, Clone)]
 pub struct Date {
-    inner: u32,
+    inner: i32,
 }
 
 impl Date {
@@ -30,43 +30,45 @@ impl Date {
         Date { inner: 0 }
     }
 
-    pub fn from_u32(inner: u32) -> Self {
+    pub fn from_i32(inner: i32) -> Self {
         Self { inner }
     }
 
     pub fn new(year: i32, month: u32, day: u32) -> Self {
-        let mut ret = year as u32;
-        ret = (ret << 4) | month;
-        ret = (ret << 5) | day;
-        Date { inner: ret }
+        Date {
+            inner: chrono::NaiveDate::from_ymd_opt(year as i32, month as u32, day as u32)
+                .unwrap()
+                .num_days_from_ce(),
+        }
     }
 
     pub fn year(&self) -> i32 {
-        ((self.inner >> 9) & 0b11_1111_1111_1111) as i32
+        chrono::NaiveDate::from_num_days_from_ce_opt(self.inner)
+            .unwrap()
+            .year()
     }
 
     pub fn month(&self) -> u32 {
-        (self.inner >> 5) & 0b1111
+        chrono::NaiveDate::from_num_days_from_ce_opt(self.inner)
+            .unwrap()
+            .month()
     }
 
     pub fn day(&self) -> u32 {
-        self.inner & 0b1_1111
+        chrono::NaiveDate::from_num_days_from_ce_opt(self.inner)
+            .unwrap()
+            .day()
     }
 
-    pub fn to_u32(&self) -> u32 {
+    pub fn to_i32(&self) -> i32 {
         self.inner
     }
 
-    pub fn datetime_to_u64(&self) -> u64 {
-        let v = self.to_u32() as u64;
-        v << 27
-    }
-
-    pub fn add_days(&self, days: u32) -> Self {
-        let din = NaiveDate::from_ymd_opt(self.year(), self.month(), self.day()).unwrap();
+    pub fn add_days(&self, days: i32) -> Self {
+        let din = NaiveDate::from_num_days_from_ce_opt(self.inner).unwrap();
         let duration = Duration::days(days as i64);
         let dout = din + duration;
-        Self::new(dout.year(), dout.month(), dout.day())
+        Self::from_i32(dout.num_days_from_ce())
     }
 }
 
@@ -78,14 +80,14 @@ impl Display for Date {
 
 impl Encode for Date {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
-        writer.write_u32(self.inner).unwrap();
+        writer.write_i32(self.inner).unwrap();
         Ok(())
     }
 }
 
 impl Decode for Date {
     fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
-        let ret = reader.read_u32().unwrap();
+        let ret = reader.read_i32().unwrap();
         Ok(Self { inner: ret })
     }
 }
