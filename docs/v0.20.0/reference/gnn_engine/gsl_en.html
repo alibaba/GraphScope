@@ -1,0 +1,1433 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta property="og:title" content="Graph Sampling Language（GSL)" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="reference/gnn_engine/gsl_en.html" />
+<meta property="og:site_name" content="GraphScope" />
+<meta property="og:description" content="# 1. Introduction There has been a well-developed programming paradigm since Graph Neural Network (GNN) was introduced. Developing a GNN model contains two parts: graph data processing and neural n..." />
+<meta property="og:image" content="/_images/social_previews/summary_reference_gnn_engine_gsl_en_8f121d45.png" />
+<meta property="og:image:alt" content="# 1. Introduction There has been a well-developed programming paradigm since Graph Neural Network (GNN) was introduced. Developing a GNN model contains two p..." />
+<meta name="description" content="# 1. Introduction There has been a well-developed programming paradigm since Graph Neural Network (GNN) was introduced. Developing a GNN model contains two parts: graph data processing and neural n..." />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" />
+
+    <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
+        <title>Graph Sampling Language（GSL) - GraphScope documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/brands.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/regular.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/solid.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/fontawesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/panels.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/rst-versions.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/theme-toggle.css" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style>
+
+
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4TMYCGJ0X2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-4TMYCGJ0X2');
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+
+</head>
+  <body>
+    
+  <script>
+    document.body.dataset.theme = "light";
+  </script>
+
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">GraphScope  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><div class="sidebar-scroll"><a class="sidebar-brand centered" href="../../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/logo-h.png" alt="Logo"/>
+  </div>
+  
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../graphscope_positioning.html">The Product Positioning of GraphScope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/graph_analytics_workloads.html">Graph Analytics Workloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/graph_interactive_workloads.html">Graph Interactive Workloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/graph_learning_workloads.html">Graph Learning Workloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/design_of_graphscope.html">Design of GraphScope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../frequently_asked_questions.html">Frequently Asked Questions</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Installation &amp; Deployment</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../deploy_graphscope_on_local.html">Deploy GraphScope on Local</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../deploy_graphscope_on_self_managed_k8s.html">Deploy GraphScope on Self-managed K8s</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../deploy_graphscope_on_clouds.html">Deploy GraphScope on Clouds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../deploy_graphscope_with_helm.html">Deploy GraphScope with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Graph Analytical Engine</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../analytical_engine/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analytical_engine/deployment.html">Deployment for GAE</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../analytical_engine/design_of_gae.html">Design of Analytical Engine</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/overview_and_architecture.html">Overview and Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/key_concepts.html">Key Concepts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/vertex_centric_models.html">Vertex-Centric Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/programming_model_pie.html">Programming Model: PIE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/ingress.html">Ingress: Incrementalize Graph Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/flash.html">Programming Model: FLASH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/networkx_compatibility.html">NetworkX Compatibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/builtin_algorithms.html">Built-in Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/customized_algorithms.html">Customized Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/performance_tuning.html">Performance Tuning</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../analytical_engine/guide_and_examples.html">Guide and Examples</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/tutorial_run_builtin_algo.html">Tutorial: Running Builtin Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/tutorial_networkx_operations.html">Tutorial: Graph Operations with NetowrkX APIs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/tutorial_run_builtin_algo.html">Tutorial: Running Builtin Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/tutorial_dev_algo_cpp_pie.html">Tutorial: Develop your Algorithm in C++ with PIE Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/tutorial_dev_algo_cpp_flash.html">Tutorial: Develop your Algorithm in C++ with FLASH Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/tutorial_dev_algo_python.html">Tutorial: Develop algorithms in Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/tutorial_dev_algo_java.html">Tutorial: Develop your Algorithm in Java with PIE Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/tutorial_run_giraph_apps.html">Tutorial: Run Giraph Applications on GraphScope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/tutorial_run_graphx_apps.html">Tutorial: Run GraphX Applications on GraphScope</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../analytical_engine/dev_and_test.html">Dev and Test</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analytical_engine/faqs.html">FAQs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Graph Interactive Engine</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started_gie.html">Getting Started for GIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../design_of_gie.html">Design of GIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide_and_examples_of_gie.html">User Guide and Examples of GIE</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Graph Learning Engine</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started_gle.html">Getting Started for GLE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../design_of_gle.html">Design of GLE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide_and_examples_of_gie.html">User Guide and Examples of GIE</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Storage Engine</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../storage_engine/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../storage_engine/grin.html">GRIN: Unified Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../storage_engine/groot.html">Groot</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">troubleshooting &amp; utilities</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities/how_to_find_logs.html">How to Find Logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities/monitoring.html">Monitoring</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities/gs.html">Command-line Utility <code class="docutils literal notranslate"><span class="pre">gs</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities/error_codes.html">Error Codes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities/bulk_loader.html">Bulk Loader</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../development/dev_guide.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/code_style_guide.html">Code Style Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/how_to_test.html">How to Test</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/how_to_contribute.html">How to Contribute</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../python_index.html">Python API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.session.html">graphscope.session</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.set_option.html">graphscope.set_option</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.get_option.html">graphscope.get_option</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.g.html">graphscope.g</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.gremlin.html">graphscope.gremlin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.graphlearn.html">graphscope.graphlearn</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../graph.html">Graph</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.app.load_app.html">graphscope.framework.app.load_app</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../context.html">Context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../selector.html">Selector</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.operation.Operation.__init__.html">graphscope.framework.operation.Operation.__init__</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.operation.Operation.as_op_def.html">graphscope.framework.operation.Operation.as_op_def</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.operation.Operation.key.html">graphscope.framework.operation.Operation.key</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.operation.Operation.signature.html">graphscope.framework.operation.Operation.signature</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.operation.Operation.eval.html">graphscope.framework.operation.Operation.eval</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.operation.Operation.evaluated.html">graphscope.framework.operation.Operation.evaluated</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.create_app.html">graphscope.framework.dag_utils.create_app</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.bind_app.html">graphscope.framework.dag_utils.bind_app</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.run_app.html">graphscope.framework.dag_utils.run_app</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.create_graph.html">graphscope.framework.dag_utils.create_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.create_loader.html">graphscope.framework.dag_utils.create_loader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.add_labels_to_graph.html">graphscope.framework.dag_utils.add_labels_to_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.dynamic_to_arrow.html">graphscope.framework.dag_utils.dynamic_to_arrow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.arrow_to_dynamic.html">graphscope.framework.dag_utils.arrow_to_dynamic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.modify_edges.html">graphscope.framework.dag_utils.modify_edges</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.modify_vertices.html">graphscope.framework.dag_utils.modify_vertices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.report_graph.html">graphscope.framework.dag_utils.report_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.project_arrow_property_graph.html">graphscope.framework.dag_utils.project_arrow_property_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.project_to_simple.html">graphscope.framework.dag_utils.project_to_simple</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.copy_graph.html">graphscope.framework.dag_utils.copy_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.to_directed.html">graphscope.framework.dag_utils.to_directed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.to_undirected.html">graphscope.framework.dag_utils.to_undirected</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.create_graph_view.html">graphscope.framework.dag_utils.create_graph_view</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.clear_graph.html">graphscope.framework.dag_utils.clear_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.clear_edges.html">graphscope.framework.dag_utils.clear_edges</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.create_subgraph.html">graphscope.framework.dag_utils.create_subgraph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.create_unload_op.html">graphscope.framework.dag_utils.create_unload_op</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.unload_app.html">graphscope.framework.dag_utils.unload_app</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.unload_graph.html">graphscope.framework.dag_utils.unload_graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.unload_context.html">graphscope.framework.dag_utils.unload_context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.context_to_numpy.html">graphscope.framework.dag_utils.context_to_numpy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.context_to_dataframe.html">graphscope.framework.dag_utils.context_to_dataframe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.to_vineyard_tensor.html">graphscope.framework.dag_utils.to_vineyard_tensor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.to_vineyard_dataframe.html">graphscope.framework.dag_utils.to_vineyard_dataframe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.to_data_sink.html">graphscope.framework.dag_utils.to_data_sink</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.output.html">graphscope.framework.dag_utils.output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.get_context_data.html">graphscope.framework.dag_utils.get_context_data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.add_column.html">graphscope.framework.dag_utils.add_column</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.graph_to_numpy.html">graphscope.framework.dag_utils.graph_to_numpy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.graph_to_dataframe.html">graphscope.framework.dag_utils.graph_to_dataframe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.gremlin_query.html">graphscope.framework.dag_utils.gremlin_query</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.gremlin_to_subgraph.html">graphscope.framework.dag_utils.gremlin_to_subgraph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.fetch_gremlin_result.html">graphscope.framework.dag_utils.fetch_gremlin_result</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.Vertex.html">graphscope.Vertex</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.declare.html">graphscope.declare</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../interactive.html">Interactive Query</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../learning.html">Graph Learning</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../networkx/index.html">NetworkX-style API</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../networkx/graphs.html">Graph types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../networkx/transformation.html">Graph Transformation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../networkx/builtin.html">Builtin algorithms</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../networkx/functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.degree.html">graphscope.nx.classes.function.degree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.degree_histogram.html">graphscope.nx.classes.function.degree_histogram</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.info.html">graphscope.nx.classes.function.info</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.create_empty_copy.html">graphscope.nx.classes.function.create_empty_copy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.is_directed.html">graphscope.nx.classes.function.is_directed</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.to_directed.html">graphscope.nx.classes.function.to_directed</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.to_undirected.html">graphscope.nx.classes.function.to_undirected</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.is_empty.html">graphscope.nx.classes.function.is_empty</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.add_star.html">graphscope.nx.classes.function.add_star</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.add_path.html">graphscope.nx.classes.function.add_path</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.add_cycle.html">graphscope.nx.classes.function.add_cycle</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.subgraph.html">graphscope.nx.classes.function.subgraph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.induced_subgraph.html">graphscope.nx.classes.function.induced_subgraph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.edge_subgraph.html">graphscope.nx.classes.function.edge_subgraph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.nodes.html">graphscope.nx.classes.function.nodes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.number_of_nodes.html">graphscope.nx.classes.function.number_of_nodes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.neighbors.html">graphscope.nx.classes.function.neighbors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.all_neighbors.html">graphscope.nx.classes.function.all_neighbors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.non_neighbors.html">graphscope.nx.classes.function.non_neighbors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.common_neighbors.html">graphscope.nx.classes.function.common_neighbors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.edges.html">graphscope.nx.classes.function.edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.number_of_edges.html">graphscope.nx.classes.function.number_of_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.non_edges.html">graphscope.nx.classes.function.non_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.selfloop_edges.html">graphscope.nx.classes.function.selfloop_edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.number_of_selfloops.html">graphscope.nx.classes.function.number_of_selfloops</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.nodes_with_selfloops.html">graphscope.nx.classes.function.nodes_with_selfloops</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.is_weighted.html">graphscope.nx.classes.function.is_weighted</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.is_negatively_weighted.html">graphscope.nx.classes.function.is_negatively_weighted</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.freeze.html">graphscope.nx.classes.function.freeze</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.classes.function.is_frozen.html">graphscope.nx.classes.function.is_frozen</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../networkx/generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.atlas.graph_atlas.html">graphscope.nx.generators.atlas.graph_atlas</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.atlas.graph_atlas_g.html">graphscope.nx.generators.atlas.graph_atlas_g</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.classic.balanced_tree.html">graphscope.nx.generators.classic.balanced_tree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.classic.barbell_graph.html">graphscope.nx.generators.classic.barbell_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.classic.binomial_tree.html">graphscope.nx.generators.classic.binomial_tree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.classic.complete_graph.html">graphscope.nx.generators.classic.complete_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.classic.complete_multipartite_graph.html">graphscope.nx.generators.classic.complete_multipartite_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.classic.circular_ladder_graph.html">graphscope.nx.generators.classic.circular_ladder_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.classic.circulant_graph.html">graphscope.nx.generators.classic.circulant_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.classic.cycle_graph.html">graphscope.nx.generators.classic.cycle_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.classic.dorogovtsev_goltsev_mendes_graph.html">graphscope.nx.generators.classic.dorogovtsev_goltsev_mendes_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.classic.empty_graph.html">graphscope.nx.generators.classic.empty_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.classic.path_graph.html">graphscope.nx.generators.classic.path_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.classic.star_graph.html">graphscope.nx.generators.classic.star_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.classic.full_rary_tree.html">graphscope.nx.generators.classic.full_rary_tree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.classic.ladder_graph.html">graphscope.nx.generators.classic.ladder_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.classic.lollipop_graph.html">graphscope.nx.generators.classic.lollipop_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.classic.null_graph.html">graphscope.nx.generators.classic.null_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.classic.trivial_graph.html">graphscope.nx.generators.classic.trivial_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.classic.turan_graph.html">graphscope.nx.generators.classic.turan_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.classic.wheel_graph.html">graphscope.nx.generators.classic.wheel_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.expanders.margulis_gabber_galil_graph.html">graphscope.nx.generators.expanders.margulis_gabber_galil_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.expanders.chordal_cycle_graph.html">graphscope.nx.generators.expanders.chordal_cycle_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.expanders.paley_graph.html">graphscope.nx.generators.expanders.paley_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.small.make_small_graph.html">graphscope.nx.generators.small.make_small_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.small.LCF_graph.html">graphscope.nx.generators.small.LCF_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.small.bull_graph.html">graphscope.nx.generators.small.bull_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.small.chvatal_graph.html">graphscope.nx.generators.small.chvatal_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.small.cubical_graph.html">graphscope.nx.generators.small.cubical_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.small.desargues_graph.html">graphscope.nx.generators.small.desargues_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.small.diamond_graph.html">graphscope.nx.generators.small.diamond_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.small.dodecahedral_graph.html">graphscope.nx.generators.small.dodecahedral_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.small.frucht_graph.html">graphscope.nx.generators.small.frucht_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.small.heawood_graph.html">graphscope.nx.generators.small.heawood_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.small.house_graph.html">graphscope.nx.generators.small.house_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.small.house_x_graph.html">graphscope.nx.generators.small.house_x_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.small.icosahedral_graph.html">graphscope.nx.generators.small.icosahedral_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.small.krackhardt_kite_graph.html">graphscope.nx.generators.small.krackhardt_kite_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.small.moebius_kantor_graph.html">graphscope.nx.generators.small.moebius_kantor_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.small.octahedral_graph.html">graphscope.nx.generators.small.octahedral_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.small.pappus_graph.html">graphscope.nx.generators.small.pappus_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.small.petersen_graph.html">graphscope.nx.generators.small.petersen_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.small.sedgewick_maze_graph.html">graphscope.nx.generators.small.sedgewick_maze_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.small.tetrahedral_graph.html">graphscope.nx.generators.small.tetrahedral_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.small.truncated_cube_graph.html">graphscope.nx.generators.small.truncated_cube_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.small.truncated_tetrahedron_graph.html">graphscope.nx.generators.small.truncated_tetrahedron_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.small.tutte_graph.html">graphscope.nx.generators.small.tutte_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.duplication.duplication_divergence_graph.html">graphscope.nx.generators.duplication.duplication_divergence_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.duplication.partial_duplication_graph.html">graphscope.nx.generators.duplication.partial_duplication_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.degree_seq.configuration_model.html">graphscope.nx.generators.degree_seq.configuration_model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.degree_seq.directed_configuration_model.html">graphscope.nx.generators.degree_seq.directed_configuration_model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.degree_seq.expected_degree_graph.html">graphscope.nx.generators.degree_seq.expected_degree_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.degree_seq.havel_hakimi_graph.html">graphscope.nx.generators.degree_seq.havel_hakimi_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.degree_seq.directed_havel_hakimi_graph.html">graphscope.nx.generators.degree_seq.directed_havel_hakimi_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.degree_seq.degree_sequence_tree.html">graphscope.nx.generators.degree_seq.degree_sequence_tree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.degree_seq.random_degree_sequence_graph.html">graphscope.nx.generators.degree_seq.random_degree_sequence_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.directed.gn_graph.html">graphscope.nx.generators.directed.gn_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.directed.gnr_graph.html">graphscope.nx.generators.directed.gnr_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.directed.gnc_graph.html">graphscope.nx.generators.directed.gnc_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.directed.random_k_out_graph.html">graphscope.nx.generators.directed.random_k_out_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.directed.scale_free_graph.html">graphscope.nx.generators.directed.scale_free_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.geometric.random_geometric_graph.html">graphscope.nx.generators.geometric.random_geometric_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.geometric.soft_random_geometric_graph.html">graphscope.nx.generators.geometric.soft_random_geometric_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.geometric.geographical_threshold_graph.html">graphscope.nx.generators.geometric.geographical_threshold_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.geometric.waxman_graph.html">graphscope.nx.generators.geometric.waxman_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.geometric.thresholded_random_geometric_graph.html">graphscope.nx.generators.geometric.thresholded_random_geometric_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.ego.ego_graph.html">graphscope.nx.generators.ego.ego_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/networkx.generators.stochastic.stochastic_graph.html">networkx.generators.stochastic.stochastic_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/networkx.generators.internet_as_graphs.random_internet_as_graph.html">networkx.generators.internet_as_graphs.random_internet_as_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.intersection.uniform_random_intersection_graph.html">graphscope.nx.generators.intersection.uniform_random_intersection_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.intersection.k_random_intersection_graph.html">graphscope.nx.generators.intersection.k_random_intersection_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.intersection.general_random_intersection_graph.html">graphscope.nx.generators.intersection.general_random_intersection_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.social.karate_club_graph.html">graphscope.nx.generators.social.karate_club_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.social.davis_southern_women_graph.html">graphscope.nx.generators.social.davis_southern_women_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.social.florentine_families_graph.html">graphscope.nx.generators.social.florentine_families_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.social.les_miserables_graph.html">graphscope.nx.generators.social.les_miserables_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.community.caveman_graph.html">graphscope.nx.generators.community.caveman_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.community.connected_caveman_graph.html">graphscope.nx.generators.community.connected_caveman_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.community.gaussian_random_partition_graph.html">graphscope.nx.generators.community.gaussian_random_partition_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.community.LFR_benchmark_graph.html">graphscope.nx.generators.community.LFR_benchmark_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.community.planted_partition_graph.html">graphscope.nx.generators.community.planted_partition_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.community.random_partition_graph.html">graphscope.nx.generators.community.random_partition_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.community.relaxed_caveman_graph.html">graphscope.nx.generators.community.relaxed_caveman_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.community.ring_of_cliques.html">graphscope.nx.generators.community.ring_of_cliques</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.community.stochastic_block_model.html">graphscope.nx.generators.community.stochastic_block_model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.community.windmill_graph.html">graphscope.nx.generators.community.windmill_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.spectral_graph_forge.spectral_graph_forge.html">graphscope.nx.generators.spectral_graph_forge.spectral_graph_forge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.trees.random_tree.html">graphscope.nx.generators.trees.random_tree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.trees.prefix_tree.html">graphscope.nx.generators.trees.prefix_tree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.nonisomorphic_trees.nonisomorphic_trees.html">graphscope.nx.generators.nonisomorphic_trees.nonisomorphic_trees</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.nonisomorphic_trees.number_of_nonisomorphic_trees.html">graphscope.nx.generators.nonisomorphic_trees.number_of_nonisomorphic_trees</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.triads.triad_graph.html">graphscope.nx.generators.triads.triad_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.joint_degree_seq.is_valid_joint_degree.html">graphscope.nx.generators.joint_degree_seq.is_valid_joint_degree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.joint_degree_seq.joint_degree_graph.html">graphscope.nx.generators.joint_degree_seq.joint_degree_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.joint_degree_seq.is_valid_directed_joint_degree.html">graphscope.nx.generators.joint_degree_seq.is_valid_directed_joint_degree</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.joint_degree_seq.directed_joint_degree_graph.html">graphscope.nx.generators.joint_degree_seq.directed_joint_degree_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.mycielski.mycielskian.html">graphscope.nx.generators.mycielski.mycielskian</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.mycielski.mycielski_graph.html">graphscope.nx.generators.mycielski.mycielski_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.harary_graph.hnm_harary_graph.html">graphscope.nx.generators.harary_graph.hnm_harary_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.harary_graph.hkn_harary_graph.html">graphscope.nx.generators.harary_graph.hkn_harary_graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../networkx/generated/graphscope.nx.generators.sudoku.sudoku_graph.html">graphscope.nx.generators.sudoku.sudoku_graph</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../networkx/io.html">Reading graphs</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../analytical_engine_index.html">Analytical Engine API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gae_java/index.html">Analytical Engine Java API Reference</a></li>
+</ul>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../zh/index.html">GraphScope: 一站式图计算系统</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../zh/installation.html">安装</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../zh/getting_started.html">快速上手</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../zh/deployment.html">部署</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../zh/tutorials.html">入门教程</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/01_node_classification_on_citation_network.ipynb">论文引用关系网中的节点分类任务</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/02_graph_manipulations_with_networkx_compatible_apis.ipynb">使用兼容 NetworkX 的 API 进行图操作</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/03_run_graphscope_like_networkx.ipynb">用 GraphScope 像 NetworkX 一样进行图分析</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/04_loading_graphs.ipynb">载入图数据</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/05_builtin_analytical_algorithms.ipynb">内置的图分析算法</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/06_writing_your_own_algorithms.ipynb">编写自定义图分析算法</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/07_interactive_query_with_gremlin.ipynb">使用查询语言 Gremlin 进行交互式查询</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/08_unsupervised_learning_with_graphsage.ipynb">使用 GraphSage 进行无监督图学习</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/09_unsupervised_learning_with_bipartite_graphsage.ipynb">基于 BipartiteGraphSage 的二部图无监督学习</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/10_supervised_learning_with_gcn.ipynb">使用 GCN 进行有监督图学习</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/11_revisit_classification_on_citation_network_on_k8s.ipynb">基于 Kubernetes 环境再探论文引用网络中的节点分类任务</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../zh/loading_graph.html">载图</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../zh/graph_transformation.html">图的变换操作</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../zh/analytics_engine.html">图分析引擎</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../zh/interactive_engine.html">图交互式分析引擎</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../zh/learning_engine.html">图学习引擎</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../zh/frequently_asked_questions.html">常见问题</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../zh/developer_guide.html">开发者指南</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://graphscope.io/docs/reference/python_index.html">Python API 参考</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://graphscope.io/docs/reference/analytical_engine_index.html">图分析引擎 API 参考</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../zh/index.html#id1">索引</a></li>
+</ul>
+
+</div>
+
+<div class="rst-versions rst-versions-ver" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Read the Docs</span>
+    v: v0.20.0
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Versions</dt>
+      
+        
+
+          
+            
+              <dd><a href="../../../latest/index.html">latest</a></dd>
+            
+          
+        
+      
+        
+          
+            
+              <dd><a href="../../../index.html">stable</a></dd>
+            
+          
+
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.20.0/index.html">v0.20.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.19.0/index.html">v0.19.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.18.0/index.html">v0.18.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.17.0/index.html">v0.17.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.16.0/index.html">v0.16.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.15.0/index.html">v0.15.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.14.0/index.html">v0.14.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.13.0/index.html">v0.13.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.12.0/index.html">v0.12.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.11.0/index.html">v0.11.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.10.1/index.html">v0.10.1</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.10.0/index.html">v0.10.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.9.1/index.html">v0.9.1</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.9.0/index.html">v0.9.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.8.0/index.html">v0.8.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.7.0/index.html">v0.7.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.6.1/index.html">v0.6.1</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.6.0/index.html">v0.6.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.5.0/index.html">v0.5.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.4.1/index.html">v0.4.1</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.4.0/index.html">v0.4.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.3.0/index.html">v0.3.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.2.1/index.html">v0.2.1</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.2.0/index.html">v0.2.0</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.1.3/index.html">v0.1.3</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.1.2/index.html">v0.1.2</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.1.1/index.html">v0.1.1</a></dd>
+            
+          
+        
+      
+        
+
+          
+            
+              <dd><a href="../../../v0.1.0/index.html">v0.1.0</a></dd>
+            
+          
+        
+      
+      
+    </dl>
+  </div>
+</div>
+
+<div class="rst-versions rst-versions-lang shift-up" role="note" aria-label="versions">
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Languages</dt>
+      <dd><a href="../../index.html">en</a></dd>
+      <dd><a href="../../zh/index.html">zh_CN</a></dd>
+    </dl>
+
+    <hr />
+    <small>
+      <span>Hosted by <a href="https://pages.github.com/">Github Pages</a>.</span>
+    </small>
+  </div>
+</div>
+</div>
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/alibaba/GraphScope/edit/main/docs/reference/gnn_engine/gsl_en.rst" title="Edit this page">
+    <svg aria-hidden="true" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <div class="section" id="graph-sampling-language-gsl">
+<h1>Graph Sampling Language（GSL)<a class="headerlink" href="#graph-sampling-language-gsl" title="Permalink to this heading">#</a></h1>
+<p># 1. Introduction There has been a well-developed programming paradigm
+since Graph Neural Network (GNN) was introduced. Developing a GNN model
+contains two parts: graph data processing and neural network training.
+There are matured Deep Learning framework such as Tensorflow and Pytorch
+for neural network training. Therefore, how to express and implement
+graph data processing easily and efficiently, and how to work with the
+DL frameworks are the focuses of Graphlearn. In reality, sampling is
+necessary due to the sheer scale of graphs. There are several graph
+sampling techniques:</p>
+<ul class="simple">
+<li><p><strong>Traversal based sampling</strong> randomly selects a batch of vertices or
+edges from a graph.</p></li>
+<li><p><strong>Neighborhood/subgraph sampling</strong> samples vertices or edges within a
+n-hop neighborhood, or generates a subgraph from the vertices
+generated by traversal.</p></li>
+<li><p><strong>Negative sampling</strong> is the opposite of neighborhood sampling, which
+is usually used to generate negative samples in unsupervised
+learning.</p></li>
+</ul>
+<p>So we created the Graph Sampling Language (GSL) which is an interface of
+above sampling techniques. Developers can describe the GNN data stream
+by using GSL. For example, in the “customer clicks a product” use case,
+developers can sample 64 users randomly and sample 10 relative products
+for each user based on the weight of the edge.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span><span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;edge_weight&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>GSL supports super large graph, heterogeneous graph and property graph
+and has similar syntax like
+<a class="reference external" href="http://tinkerpop.apache.org/docs/current/reference/#_tinkerpop_documentation">Gremlin</a>
+which is easy to understand.</p>
+<p># 2 GSL Syntax</p>
+<p>We call a GSL statement a query, which consists of three types of
+operations: SOURCE, STEP and SINK. SOURCE is the entrance of a query,
+indicating which data to start from; STEP is the path to walk through
+and sample data during the query process, and SINK is the encapsulation
+of execution results. In GSL, a query must have a SOURCE and SINK.</p>
+<p>## 2.1 SOURCE #### 2.1.1 V/E</p>
+<p>SOURCE is the entrance of a GSL query, supporting <code class="docutils literal notranslate"><span class="pre">V()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">E()</span></code>
+APIs, which represent querying from vertices and edges respectively.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">V</span><span class="p">(</span><span class="n">node_type</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Args:</span>
+<span class="sd">  node_type(string): vertex type, the following operations are based on the vertex type;</span>
+<span class="sd">  feed(None | numpy.ndarray | types.GeneratorType):</span>
+<span class="sd">      None means to get the vertex id from the graph;</span>
+<span class="sd">      Otherwise, it allows users to define the data source, for example numpy array or Generator;</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">E</span><span class="p">(</span><span class="n">edge_type</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Args:</span>
+<span class="sd">  edge_type(string): Edge type, the following operations are based on the vertex type;</span>
+<span class="sd">  feed(None | (numpy.ndarray, numpy.ndarray) | types.GeneratorType):</span>
+<span class="sd">      None means to get the edge&#39;s src_id and dst_id from the graph;</span>
+<span class="sd">      Otherwise, it allows users to define the data source, for example numpy array or Generator;</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>### 2.1.2 shuffle</p>
+<p><code class="docutils literal notranslate"><span class="pre">V()</span></code> and <code class="docutils literal notranslate"><span class="pre">E()</span></code> can be followed by <code class="docutils literal notranslate"><span class="pre">shuffle()</span></code>. <code class="docutils literal notranslate"><span class="pre">shuffle()</span></code> is
+an optional API，which provides options to sample the data randomly when
+retrieving data from graphs (<code class="docutils literal notranslate"><span class="pre">feed</span> <span class="pre">=</span> <span class="pre">None</span></code>).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">shuffle</span><span class="p">(</span><span class="n">traverse</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Args:</span>
+<span class="sd">  traverse(boolean): if traverse the data source，default is False。</span>
+<span class="sd">      True means traverse and raises OutOfRangeError at the end. False won&#39;t raise OutOfRangeError.</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>### 2.1.3 batch</p>
+<p>When retrieving data from graphs (<code class="docutils literal notranslate"><span class="pre">feed</span> <span class="pre">=</span> <span class="pre">None</span></code>), <code class="docutils literal notranslate"><span class="pre">batch()</span></code>
+determines how much data <code class="docutils literal notranslate"><span class="pre">V()</span></code> and<code class="docutils literal notranslate"><span class="pre">E()</span></code> query each time. If you
+need to use <code class="docutils literal notranslate"><span class="pre">shuffle</span></code>, make sure you use it before <code class="docutils literal notranslate"><span class="pre">batch()</span></code>. When
+<code class="docutils literal notranslate"><span class="pre">shuffle(traverse=True)</span></code> but the remaining data is less than the
+<code class="docutils literal notranslate"><span class="pre">batch_size</span></code>, it will simply return the remaining data if it is not 0,
+and otherwise <code class="docutils literal notranslate"><span class="pre">OutOfRangeError</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">batch</span><span class="p">(</span><span class="n">batch_size</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Args:</span>
+<span class="sd">  batch_size(int): the amount of data of each batch</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>### 2.1.4 examples</p>
+<p>Randomly sample 64 user type vertices.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shuffle</span><span class="p">()</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Provide ids for the user type vertices.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]))</span>
+</pre></div>
+</div>
+<p>Get user type vertices from a generator.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">gen</span><span class="p">():</span>
+  <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+    <span class="k">yield</span>  <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+
+<span class="n">generator</span> <span class="o">=</span> <span class="n">gen</span><span class="p">()</span>
+<span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="n">generator</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Get 64 buy type edges in order.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">E</span><span class="p">(</span><span class="s2">&quot;buy&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Provide src_id and dst_ids for buy type edges.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">E</span><span class="p">(</span><span class="s2">&quot;buy&quot;</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">]))</span>
+</pre></div>
+</div>
+<p>Get buy type edges from a generator.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">gen</span><span class="p">():</span>
+  <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+    <span class="k">yield</span>  <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">]))</span>
+
+<span class="n">generator</span> <span class="o">=</span> <span class="n">gen</span><span class="p">()</span>
+<span class="n">g</span><span class="o">.</span><span class="n">E</span><span class="p">(</span><span class="s2">&quot;buy&quot;</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="n">generator</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>## 2.2 STEP</p>
+<p>STEP is the path to walk through and sample data during the query
+process. A query can have zero or more steps. There are two types of
+steps, which are path steps and sampling steps. A path step describes
+the movement of the current object. For example, with <code class="docutils literal notranslate"><span class="pre">g.V()</span></code>, the
+cursor starts at all the vertices in the graph. One can move the cursor
+to the outgoing edges of the vertices by <code class="docutils literal notranslate"><span class="pre">outE()</span></code> and the following
+operations will be on these edges. When the operations on the outgoing
+edges complete, the cursor moves to the target/source vertices by
+<code class="docutils literal notranslate"><span class="pre">inV()</span></code>/<code class="docutils literal notranslate"><span class="pre">outV()</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">inV</span><span class="p">():</span>
+<span class="sd">&quot;&quot;&quot; followed by edges and the following operations are edge operations. inV() represents a destination vertex.</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">outV</span><span class="p">():</span>
+<span class="sd">&quot;&quot;&quot; followed by edges and the following operations are edge operations. inV() represents a source vertex.</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">inE</span><span class="p">(</span><span class="n">edge_type</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; followed by vertices and the following operations are vertex operations.inE() represents an ingoing edge.</span>
+<span class="sd">Args:</span>
+<span class="sd">  edge_type(string): edge type, it returns an error when the edge is a directed edge.</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">outE</span><span class="p">(</span><span class="n">edge_type</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; followed by vertices and the following operations are vertex operations.inE() represents an outgoing edge.</span>
+<span class="sd">Args:</span>
+<span class="sd">  edge_type(string): edge type</span>
+<span class="sd">Return:</span>
+<span class="sd">  Query对象</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">inV</span><span class="p">(</span><span class="n">edge_type</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; followed by vertices and the following operations are vertex operations. inV(edge_type) represents an upstream vertex.</span>
+<span class="sd">Args:</span>
+<span class="sd">  edge_type(string): edge type，it returns an error when the edge is a directed edge.</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">outV</span><span class="p">(</span><span class="n">edge_type</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; followed by vertices and the following operations are vertex operations. inV(edge_type) represents the downstream vertex.</span>
+<span class="sd">Args:</span>
+<span class="sd">  edge_type(string): edge type</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">outNeg</span><span class="p">(</span><span class="n">edge_type</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; followed by vertices and the following operations are vertex operations. outNeg(edge_type) represents the downstream vertex from negative sampling of the edge.</span>
+<span class="sd">Args:</span>
+<span class="sd">  edge_type(string): edge type</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">inNeg</span><span class="p">(</span><span class="n">edge_type</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; followed by vertices and the following operations are vertex operations. inNeg(edge_type) represents the upstream vertex from negative sampling of the edge.</span>
+<span class="sd">Args:</span>
+<span class="sd">  edge_type(string): edge type，it returns an error when the edge is a directed edge.</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">Neg</span><span class="p">(</span><span class="n">node_type</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; followed by vertices and the following operations are vertex operations. Neg(node_type) represents the negative samples of the vertex candidates.</span>
+<span class="sd">Args:</span>
+<span class="sd">  node_type(string): vertex type</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">each</span><span class="p">():</span>
+<span class="sd">&quot;&quot;&quot; used in multi-branch path, a query has one each() at most and each branch doesn&#39;t support merging.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">alias</span><span class="p">():</span>
+<span class="sd">&quot;&quot;&quot; Give sampling path an alias.</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>A sampling step must follow a vertex step. It specifies how to sample
+the node as the neighbors of the previous nodes generated by previous
+steps, including the sample size and strategy. To learn more about the
+sampling strategy, please read <a class="reference external" href="graph_sampling_cn.md">graph sampling</a>
+and <a class="reference external" href="negative_sampling_cn.md">negative sampling</a>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; follows a vertex step，specifying the number of samples at this step</span>
+<span class="sd">Args:</span>
+<span class="sd">  N(int): sampling size</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">by</span><span class="p">(</span><span class="n">strategy</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot; follow sample()，sampling strategy</span>
+<span class="sd">Args:</span>
+<span class="sd">  strategy(string): sampling strategy</span>
+<span class="sd">      if the previous step is sampling, the supported strategies are</span>
+<span class="sd">      if the previous step is sampling, the supported strategies are “edge_weight”, &quot;in_degree&quot;, &quot;topk&quot;, &quot;random&quot;, &quot;full&quot;;</span>
+<span class="sd">      f the previous step is negative sampling, the supported strategies are &quot;in_degree&quot;, &quot;random&quot;, &quot;node_weight&quot;</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>### 2.2.1 out<em>, in</em></p>
+<p><code class="docutils literal notranslate"><span class="pre">out*()</span></code> and <code class="docutils literal notranslate"><span class="pre">in*()</span></code> are used to describe forward and backward
+propagation while traversing.</p>
+<p>For example, in the heterogeneous graph shown below, start from a ‘user’
+vertex, sample its one-hop neighbors along the ‘u2i’ edge, and then
+sample its two-hop neighbors along the ‘i2i’ edge.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>                       <span class="c1"># (1) randomly get 64 &#39;user&#39; vertices</span>
+ <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;edge_weight&quot;</span><span class="p">)</span>  <span class="c1"># (2) sample 10 neighbors of each &#39;user&#39; vertices</span>
+ <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span>       <span class="c1"># (3) for each neighbor, sample 15 neighbors</span>
+</pre></div>
+</div>
+<p>If the data source is edges, you can operate on their endpoints. In
+general, this kind of sampling is often used for unsupervised learning,
+which uses the edges as positive samples, and then samples the source
+vertices of the edges as negative samples.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">E</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>                     <span class="c1"># (1) randomly get 64 &#39;u2i&#39; edges</span>
+ <span class="o">.</span><span class="n">ouV</span><span class="p">()</span>                                  <span class="c1"># (2) get the source vertex that is user</span>
+ <span class="o">.</span><span class="n">outNeg</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span>  <span class="c1"># (3) for each user vertex, sample 10 negative neighbors</span>
+</pre></div>
+</div>
+<p>When the edge is undirected, one can conduct circular sampling by
+<code class="docutils literal notranslate"><span class="pre">outV()</span></code> and <code class="docutils literal notranslate"><span class="pre">inV()</span></code>. The source and destination vertices are
+neighbors of each other.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>                   <span class="c1"># (1) randomly get 64 &#39;user&#39; vertex</span>
+ <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span>   <span class="c1"># (2) for each &#39;user&#39; vertex, sample 10 neighbors (item)</span>
+ <span class="o">.</span><span class="n">inV</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span>     <span class="c1"># (3) for each &#39;item&#39; vertex, sample 10 neighbors (user)</span>
+</pre></div>
+</div>
+<p>### 2.2.2 each</p>
+<p>A typical GNN algorithm often has multiple sampling branches. The
+<code class="docutils literal notranslate"><span class="pre">each()</span></code> interface can be used to express multiple branches of
+sampling. When a certain stage is reached, different operations are
+performed on the previous results (there may be multiple). A query can
+contain at most one <code class="docutils literal notranslate"><span class="pre">each()</span></code>, and it has to be the last operation of
+the query.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">each</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Args:</span>
+<span class="sd">  func(lambda): the lambda function to build the sub-query. The input of the function is the output of the immediately upstream operation.</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>For example, in the user-item-item GraphSAGE algorithm, in order to
+learn the similarity between user and item in the same space, we first
+randomly obtain the u2i edges from the graph as the positive sample for
+training. Then, we sample the negative neighbors (item) of the source
+vertex (user) as negative samples. The user vertex is encoded by its
+one-hop neighbors (aggregating neighborhood information to the central
+node). The item vertex is encoded in a similar way. An example is shown
+below.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">E</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shuffle</span><span class="p">()</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">512</span><span class="p">)</span>                            <span class="c1"># (1) randomly get 512 u2i edegs</span>
+ <span class="o">.</span><span class="n">each</span><span class="p">(</span><span class="k">lambda</span> <span class="n">edge</span><span class="p">:</span>                                        <span class="c1"># edges from upstream</span>
+    <span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">outV</span><span class="p">()</span><span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;edge_weight&quot;</span><span class="p">),</span> <span class="c1"># (2) sample 10 neighbors of the source vertex (user)</span>
+     <span class="n">edge</span><span class="o">.</span><span class="n">inV</span><span class="p">()</span><span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">),</span>       <span class="c1"># (3) sample 10 neighbors of the destination vertex (item)</span>
+     <span class="n">edge</span><span class="o">.</span><span class="n">outV</span><span class="p">()</span><span class="o">.</span><span class="n">outNeg</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;in_degree&quot;</span><span class="p">)</span> \ <span class="c1"># (4) sample 5 negative neighbors of user vertex</span>
+         <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)))</span>            <span class="c1"># (5) sample 10 neighbors of the negative neighbor of user vertex</span>
+</pre></div>
+</div>
+<p>Please note that the result from different sampling branches are not in
+order. Therefore, we strongly recommend to use <code class="docutils literal notranslate"><span class="pre">each()</span></code> together with
+<code class="docutils literal notranslate"><span class="pre">alias()</span></code> introduced in the next section.</p>
+<p>### 2.2.3 alias</p>
+<p><code class="docutils literal notranslate"><span class="pre">alias()</span></code> is used to label the name of the current SOURCE or STEP,
+which makes accessing the output results easier. In particular, when the
+query is long and we need to keep the results of each step, <code class="docutils literal notranslate"><span class="pre">alias()</span></code>
+is convenient to access these results.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">alias</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Args:</span>
+<span class="sd">  name(string): the alias of the operation。</span>
+<span class="sd">Return:</span>
+<span class="sd">  a Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>If we use <code class="docutils literal notranslate"><span class="pre">each()</span></code> in the query, we can give alias for each step.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">g</span><span class="o">.</span><span class="n">E</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shuffle</span><span class="p">()</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">512</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;edges&quot;</span><span class="p">)</span>
+ <span class="o">.</span><span class="n">each</span><span class="p">(</span><span class="k">lambda</span> <span class="n">edge</span><span class="p">:</span>
+    <span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">outV</span><span class="p">()</span><span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;edge_weight&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;src_1hop&quot;</span><span class="p">),</span>
+     <span class="n">edge</span><span class="o">.</span><span class="n">inV</span><span class="p">()</span><span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;dst_1hop&quot;</span><span class="p">),</span>
+     <span class="n">edge</span><span class="o">.</span><span class="n">outV</span><span class="p">()</span><span class="o">.</span><span class="n">outNeg</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;in_degree&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;neg_i&quot;</span><span class="p">)</span> \
+     <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;neg_i_1hop&quot;</span><span class="p">)))</span>
+</pre></div>
+</div>
+<p>### 2.2.4 repeat When the query is relatively long and the operation is
+repeated, you can use <code class="docutils literal notranslate"><span class="pre">repeat()</span></code> to simplify the writing. For example,
+in a certain isomorphic undirected graph, we would like to sample a
+vertex’s 10-hop neighbors. <code class="docutils literal notranslate"><span class="pre">repeat()</span></code> takes in a function, similar to
+the one in <code class="docutils literal notranslate"><span class="pre">each()</span></code>, which means that the operation represented by
+that function is repeated <code class="docutils literal notranslate"><span class="pre">times</span></code> times.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">repeat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">times</span><span class="p">,</span> <span class="n">parmas_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Args:</span>
+<span class="sd">  func(function): The function body to be expanded; the first parameter is the object to be executed.</span>
+<span class="sd">  times(int): the number of times func is repeated.</span>
+<span class="sd">  params_list(list): The input parameter of func, if it is not None. The signature of func must be func(x, params=None)</span>
+<span class="sd">      Each item in params_list will be used as a parameter every time func is called, so the size of params_list must be times.</span>
+<span class="sd">Return:</span>
+<span class="sd">  Query object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>The first parameter of <code class="docutils literal notranslate"><span class="pre">func</span></code> takes the upstream output, which can be
+Node or Edge. The operations in func need to comply with the syntax
+specifications of Node and Edge. For example, the following Query
+obtains vertices on the undirected graph i-i, and then expands to 3-hop
+neighbors.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">func</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="n">v</span><span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i-i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span>
+<span class="n">q</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;item&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+<span class="n">g</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="c1"># return a list of Nodes,</span>
+         <span class="c1"># shapes are [[64], [64, 5], [64*5, 5], [64*5*5, 5]]</span>
+</pre></div>
+</div>
+<p>The aforementioned Query is equivalent to:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">q</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;item&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>                \
+     <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i-i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span> \
+     <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i-i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span> \
+     <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i-i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Example for func with parameter as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">v</span><span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i-i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+<span class="n">q</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;u-i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span> \
+     <span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">params_list</span><span class="o">=</span><span class="p">[(</span><span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;edge_weight&quot;</span><span class="p">),</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;random&quot;</span><span class="p">)])</span> \
+     <span class="o">.</span><span class="n">values</span><span class="p">()</span>
+<span class="n">g</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>## 2.3 SINK Each Query must end with a <strong>SINK</strong> operation, which means
+that the current Query is completed and can be used to analyze execution
+or return results. <strong>SINK</strong> operation has two interfaces, <code class="docutils literal notranslate"><span class="pre">values()</span></code>
+and <code class="docutils literal notranslate"><span class="pre">emit()</span></code>. The <strong>SINK</strong> operation can only be called once in a
+Query. -<code class="docutils literal notranslate"><span class="pre">values</span></code> returns the entire query, which can be executed
+multiple times. It is generally used when <strong>SOURCE</strong> is graph traversal.
+-<code class="docutils literal notranslate"><span class="pre">Emit</span></code> directly gets the execution result of this query. It is
+generally used when <strong>SOURCE</strong> is a vertex or edge with a given id.</p>
+<p>The <strong>SINK</strong> operation can receive a func parameter, which is used to
+post-process the returned result. Each <strong>SOURCE</strong> and <strong>STEP</strong> operation
+will return a <strong>``Nodes``</strong> object or <strong>``Edges``</strong> object (the sampling
+STEP with <code class="docutils literal notranslate"><span class="pre">full</span></code> as its sampling strategy returns <strong>SparseNodes</strong> or
+<strong>SparseEdges</strong> object). The returned object is related to the object of
+this operation. For example, the <strong>SOURCE</strong> or <strong>STEP</strong> of the <code class="docutils literal notranslate"><span class="pre">*V()</span></code>
+and <code class="docutils literal notranslate"><span class="pre">*Neg()</span></code> series corresponds to the <code class="docutils literal notranslate"><span class="pre">Nodes</span></code> object (the sampling
+STEP with <code class="docutils literal notranslate"><span class="pre">full</span></code> as its sampling strategy returns <strong>SparseNodes</strong>).
+The <strong>SOURCE</strong> or <strong>STEP</strong> of the <code class="docutils literal notranslate"><span class="pre">*E()</span></code> series corresponds to the
+<code class="docutils literal notranslate"><span class="pre">Edges</span></code> object (the sampling STEP with <code class="docutils literal notranslate"><span class="pre">full</span></code> as its sampling
+strategy returns <strong>SparseNodes</strong>). For instruction on how to get the
+value of <code class="docutils literal notranslate"><span class="pre">Nodes</span></code>/<code class="docutils literal notranslate"><span class="pre">Edges</span></code>/<code class="docutils literal notranslate"><span class="pre">SparseNodes</span></code>/<code class="docutils literal notranslate"><span class="pre">SparseEdges</span></code> object,
+please refer to <a class="reference external" href="graph_query_cn.md#FPU74">API</a>. Before <strong>SINK</strong>,
+Query describs multiple operations. These operations may have
+<code class="docutils literal notranslate"><span class="pre">alias()</span></code>. -For Query without <code class="docutils literal notranslate"><span class="pre">alias()</span></code>, the results of all
+operations will be returned, arranged in a list object according to the
+order in the Query. Each element in this returned list is either
+<code class="docutils literal notranslate"><span class="pre">Nodes</span></code> or <code class="docutils literal notranslate"><span class="pre">Edges</span></code>. One thing needs to pay attention is that the
+order here does not include cases where branches exist. If there exist
+branches, please use <code class="docutils literal notranslate"><span class="pre">alias()</span></code>. -When there is <code class="docutils literal notranslate"><span class="pre">alias()</span></code>, the return
+result is a dict, where the key is the name passed in <code class="docutils literal notranslate"><span class="pre">alias()</span></code> and
+the value is the corresponding <code class="docutils literal notranslate"><span class="pre">Nodes</span></code> or <code class="docutils literal notranslate"><span class="pre">Edges</span></code>.</p>
+<p>### 2.3.1 values The generator that returns the execution result of the
+query can be executed by <code class="docutils literal notranslate"><span class="pre">g.run()</span></code>, which is suitable for recursive
+training settings.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Args:</span>
+<span class="sd">  func(function): Post-processing function that processes the result</span>
+<span class="sd">Return:</span>
+<span class="sd">  Generator that returns the execution result</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>func can be an anonymous function or defined by <code class="docutils literal notranslate"><span class="pre">def</span></code>. The input of
+func is a dict or list, depending on whether there exists <code class="docutils literal notranslate"><span class="pre">alias()</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; x refers to {&#39;a&#39;:Nodes, &#39;b&#39;:Nodes, &#39;c&#39;:Edges, &#39;d&#39;:Nodes}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">src_ids</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">ids</span>
+    <span class="n">src_attrs</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span>
+    <span class="n">neg_attrs</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span>
+    <span class="n">edge_weights</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">weights</span>
+    <span class="o">...</span>
+    <span class="k">return</span> <span class="n">encode_fn</span><span class="p">(</span><span class="n">src_atrs</span><span class="p">,</span> <span class="n">neg_attrs</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+
+<span class="n">q</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shuffle</span><span class="p">()</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">512</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">)</span>             \
+     <span class="o">.</span><span class="n">outNegV</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;in_degree&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">)</span>   \
+     <span class="o">.</span><span class="n">outE</span><span class="p">(</span><span class="s2">&quot;i2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;topK&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;c&#39;</span><span class="p">)</span>           \
+     <span class="o">.</span><span class="n">inV</span><span class="p">()</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">)</span>
+
+<span class="n">gen1</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+<span class="n">gen2</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">ids</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="s1">&#39;d&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gen</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;u-i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>                  \ <span class="c1"># (0)</span>
+       <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i-i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span> \ <span class="c1"># (1)</span>
+       <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i-i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span> \ <span class="c1"># (2)</span>
+       <span class="o">.</span><span class="n">values</span><span class="p">()</span>
+
+<span class="n">res</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>  <span class="c1"># res = [Nodes, Nodes, Nodes]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">ids</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>### 2.3.2 emit <code class="docutils literal notranslate"><span class="pre">Emit()</span></code> is equivalent to the combination of
+<code class="docutils literal notranslate"><span class="pre">values()</span></code> and a <code class="docutils literal notranslate"><span class="pre">g.run()</span></code>, which means that the current Query is
+executed once and its result is returned. The result is a dict or a list
+depending on whether there exists <code class="docutils literal notranslate"><span class="pre">alias()</span></code>. Under normal
+circumstances, <code class="docutils literal notranslate"><span class="pre">emit()</span></code> is used in the debugging phase to verify the
+correctness of the code and data.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">emit</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Args:</span>
+<span class="sd">  func(function): Post-processing function that returns the result</span>
+<span class="sd">Return:</span>
+<span class="sd">  dict or list object, where each element is Nodes or Edges</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">res</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">V</span><span class="p">(</span><span class="s2">&quot;item&quot;</span><span class="p">,</span> <span class="n">feed</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]))</span> \ <span class="c1"># (0)</span>
+       <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i-i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span>  \ <span class="c1"># (1)</span>
+       <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i-i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span>  \ <span class="c1"># (2)</span>
+       <span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+
+<span class="c1"># res = [Nodes, Nodes, Nodes]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">ids</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Worth noticing that when the query only contains Soure (<code class="docutils literal notranslate"><span class="pre">g.V()</span></code> /
+<code class="docutils literal notranslate"><span class="pre">g.E()</span></code>), <code class="docutils literal notranslate"><span class="pre">emit()</span></code> directly returns the data of list[0].</p>
+<p># 3 Query execution ## 3.1 run <code class="docutils literal notranslate"><span class="pre">run()</span></code> interface is used to execute
+Query and get the final result. The result form is defined by the func
+function of the <code class="docutils literal notranslate"><span class="pre">values()</span></code> interface. You can refer to the example in
+the <code class="docutils literal notranslate"><span class="pre">`values</span></code> &lt;#FOeWa&gt;`__ section.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">generator</span><span class="p">):</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Args:</span>
+<span class="sd">  generator: Query&#39;s generator</span>
+<span class="sd">Return:</span>
+<span class="sd">  Query result, whose format is determined by the values() interface</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>## 3.2 Combining with TensorFlow <code class="docutils literal notranslate"><span class="pre">values(func)</span></code> returns a generator
+whose returned data type is defined by <code class="docutils literal notranslate"><span class="pre">func</span></code>. This generator can be
+directly connected to TensorFlow’s
+<a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/data/Dataset">tf.data.Dataset</a>。</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">E</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">shuffle</span><span class="p">()</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">512</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;edges&quot;</span><span class="p">)</span>
+         <span class="o">.</span><span class="n">each</span><span class="p">(</span><span class="k">lambda</span> <span class="n">edge</span><span class="p">:</span>
+               <span class="p">(</span><span class="n">edge</span><span class="o">.</span><span class="n">outV</span><span class="p">()</span><span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;edge_weight&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;src_1hop&quot;</span><span class="p">),</span>
+                <span class="n">edge</span><span class="o">.</span><span class="n">inV</span><span class="p">()</span><span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;dst_1hop&quot;</span><span class="p">),</span>
+                <span class="n">edge</span><span class="o">.</span><span class="n">outV</span><span class="p">()</span><span class="o">.</span><span class="n">outNeg</span><span class="p">(</span><span class="s2">&quot;u2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;in_degree&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;neg_i&quot;</span><span class="p">)</span> \
+                  <span class="o">.</span><span class="n">outV</span><span class="p">(</span><span class="s2">&quot;i2i&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">by</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;neg_i_1hop&quot;</span><span class="p">)))</span> \
+         <span class="o">.</span><span class="n">values</span><span class="p">()</span>
+
+<span class="n">ds</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_generator</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+<span class="n">value</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">make_one_shot_iterator</span><span class="p">()</span><span class="o">.</span><span class="n">get_next</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2020-2023, DAMO Academy, Alibaba Inc.
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              <a class="muted-link fa fa-solid fa-github fa-2x" href="https://github.com/alibaba/GraphScope" aria-label="GitHub"></a>
+              
+            </div>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/scripts/furo.js"></script>
+    <script src="../../_static/clipboard.min.js"></script>
+    <script src="../../_static/copybutton.js"></script>
+    <script src="../../_static/js/readthedocs.js"></script>
+    <script src="../../_static/js/readthedocs-doc-embed.js"></script>
+    </body>
+</html>

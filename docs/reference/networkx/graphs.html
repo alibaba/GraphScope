@@ -1,5 +1,5 @@
 <!doctype html>
-<html class="no-js">
+<html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta property="og:title" content="Graph types" />
@@ -7,13 +7,16 @@
 <meta property="og:url" content="reference/networkx/graphs.html" />
 <meta property="og:site_name" content="GraphScope" />
 <meta property="og:description" content=",,,, Class, Type, Self-loops allowed, Parallel edges allowed,,, Graph, undirected, Yes, No,, DiGraph, directed, Yes, No,,,, Notice that graphscope.nx not support MultiGraph and MultiDiGraph. Graph:..." />
+<meta property="og:image" content="/_images/social_previews/summary_reference_networkx_graphs_09c530d4.png" />
+<meta property="og:image:alt" content=",,,, Class, Type, Self-loops allowed, Parallel edges allowed,,, Graph, undirected, Yes, No,, DiGraph, directed, Yes, No,,,, Notice that graphscope.nx not sup..." />
 <meta name="description" content=",,,, Class, Type, Self-loops allowed, Parallel edges allowed,,, Graph, undirected, Yes, No,, DiGraph, directed, Yes, No,,,, Notice that graphscope.nx not support MultiGraph and MultiDiGraph. Graph:..." />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Graph Transformation" href="transformation.html" /><link rel="prev" title="NetworkX-style API" href="index.html" />
 
-    <!-- Generated with Sphinx 4.0.3 and Furo 2022.12.07 -->
+    <!-- Generated with Sphinx 5.3.0 and Furo 2022.12.07 -->
         <title>Graph types - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=91d0f0d1c444bdcb17a68e833c7a53903343c195" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
@@ -196,73 +199,93 @@
   <input type="hidden" name="area" value="default">
 </form>
 <div id="searchbox"></div><div class="sidebar-tree">
-  <p class="caption"><span class="caption-text">What is GraphScope</span></p>
+  <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../key_features.html">Key Features</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../graphscope_for_data_scientists.html">GrpahScope for Data Scientists</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../graphscope_for_traversal_queries.html">GraphScope for Traversal Queries</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../graphscope_for_graph_analytics.html">GraphScope for Graph Analytics</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../graphscope_for_learning.html">GraphScope for Learning</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../performance_and_benchmark.html">Performance and Benchmark</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../graphscope_positioning.html">GraphScope positioning</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../glossary.html">Glossary</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../graphscope_positioning.html">The Product Positioning of GraphScope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/graph_analytics_workloads.html">Graph Analytics Workloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/graph_interactive_workloads.html">Graph Interactive Workloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/graph_learning_workloads.html">Graph Learning Workloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/design_of_graphscope.html">Design of GraphScope</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../frequently_asked_questions.html">Frequently Asked Questions</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Getting Started</span></p>
+<p class="caption" role="heading"><span class="caption-text">Installation &amp; Deployment</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../python_tutorials.html">Tutorials for Python Users</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../java_tutorials.html">Tutorials for Java Users</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../cpp_tutorials.html">Tutorials for C++ Users</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../walkthrough_examples_acrossing_engines.html">Walkthrough Examples acrossing Engines</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../video_tutorials.html">Video Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../deploy_graphscope_on_local.html">Deploy GraphScope on Local</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../deploy_graphscope_on_self_managed_k8s.html">Deploy GraphScope on Self-managed K8s</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../deploy_graphscope_on_clouds.html">Deploy GraphScope on Clouds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../deploy_graphscope_with_helm.html">Deploy GraphScope with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
 </ul>
-<p class="caption"><span class="caption-text">Deployment and Usage</span></p>
+<p class="caption" role="heading"><span class="caption-text">Graph Analytical Engine</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../deploy_on_self_managed_k8s.html">Deploy on Self-managed K8s</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../deploy_on_clouds.html">Deploy on clouds</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../deploy_with_helm.html">Deploy with <code class="docutils literal notranslate"><span class="pre">helm</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../deploy_as_job_for_analytical_tasks.html">Deploy as K8s <code class="docutils literal notranslate"><span class="pre">Job</span></code> for analytical tasks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../deploy_as_service_with_groot.html">Deploy as Service with Groot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analytical_engine/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analytical_engine/deployment.html">Deployment for GAE</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../analytical_engine/design_of_gae.html">Design of Analytical Engine</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/overview_and_architecture.html">Overview and Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/key_concepts.html">Key Concepts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/vertex_centric_models.html">Vertex-Centric Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/programming_model_pie.html">Programming Model: PIE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/ingress.html">Ingress: Incrementalize Graph Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/flash.html">Programming Model: FLASH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/networkx_compatibility.html">NetworkX Compatibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/builtin_algorithms.html">Built-in Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/customized_algorithms.html">Customized Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/performance_tuning.html">Performance Tuning</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Operations &amp; Observability</span></p>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../analytical_engine/guide_and_examples.html">Guide and Examples</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/tutorial_run_builtin_algo.html">Tutorial: Running Builtin Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/tutorial_networkx_operations.html">Tutorial: Graph Operations with NetowrkX APIs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/tutorial_run_builtin_algo.html">Tutorial: Running Builtin Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/tutorial_dev_algo_cpp_pie.html">Tutorial: Develop your Algorithm in C++ with PIE Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/tutorial_dev_algo_cpp_flash.html">Tutorial: Develop your Algorithm in C++ with FLASH Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/tutorial_dev_algo_python.html">Tutorial: Develop algorithms in Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/tutorial_dev_algo_java.html">Tutorial: Develop your Algorithm in Java with PIE Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/tutorial_run_giraph_apps.html">Tutorial: Run Giraph Applications on GraphScope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../analytical_engine/tutorial_run_graphx_apps.html">Tutorial: Run GraphX Applications on GraphScope</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../analytical_engine/dev_and_test.html">Dev and Test</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analytical_engine/faqs.html">FAQs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Graph Interactive Engine</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../how_to_find_logs.html">How to Find Logs</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../monitoring.html">Monitoring</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../error_codes.html">Error Codes</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../how_to_report_bug.html">How to Report Bugs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started_gie.html">Getting Started for GIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../design_of_gie.html">Design of GIE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide_and_examples_of_gie.html">User Guide and Examples of GIE</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Advanced Topics</span></p>
+<p class="caption" role="heading"><span class="caption-text">Graph Learning Engine</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../dive_into_engines.html">Dive into Engines</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../supported_gremlin_steps.html">Tutorials for Gremlin Users</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../storages_and_unified_interface.html">Storage and Unified Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../performance_tuning.html">Performance Tuning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started_gle.html">Getting Started for GLE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../design_of_gle.html">Design of GLE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide_and_examples_of_gie.html">User Guide and Examples of GIE</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Development</span></p>
+<p class="caption" role="heading"><span class="caption-text">Storage Engine</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../env_preparation.html">Development Environment</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../code_style_guide.html">Code Style Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../algorithm_development.html">Algorithm Development</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../test_code.html">How to Test</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../submit_pr.html">How to Submit Pull-requests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../storage_engine/getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../storage_engine/grin.html">GRIN: Unified Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../storage_engine/groot.html">Groot</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Utilities</span></p>
+<p class="caption" role="heading"><span class="caption-text">troubleshooting &amp; utilities</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../bulk_loader.html">Bulk Loader</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../resources_estimator.html">Resources Estimator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities/how_to_find_logs.html">How to Find Logs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities/monitoring.html">Monitoring</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities/gs.html">Command-line Utility <code class="docutils literal notranslate"><span class="pre">gs</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities/error_codes.html">Error Codes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities/bulk_loader.html">Bulk Loader</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Community</span></p>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../how_to_contribute.html">How to Contribute</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../contact_us.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/dev_guide.html">Development Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/code_style_guide.html">Code Style Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/how_to_test.html">How to Test</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/how_to_contribute.html">How to Contribute</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="current">
-<li class="toctree-l1 current has-children"><a class="reference internal" href="../python_index.html">Python API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2 has-children"><a class="reference internal" href="../session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../python_index.html">Python API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../session.html">Session</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.session.html">graphscope.session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.get_default_session.html">graphscope.get_default_session</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.has_default_session.html">graphscope.has_default_session</a></li>
@@ -274,13 +297,13 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../graph.html">Graph</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../app.html">Analytical App</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.app.load_app.html">graphscope.framework.app.load_app</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../context.html">Context</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../selector.html">Selector</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../operation.html">Operation</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.operation.Operation.__init__.html">graphscope.framework.operation.Operation.__init__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.operation.Operation.as_op_def.html">graphscope.framework.operation.Operation.as_op_def</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.operation.Operation.key.html">graphscope.framework.operation.Operation.key</a></li>
@@ -326,18 +349,18 @@
 <li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.framework.dag_utils.fetch_gremlin_result.html">graphscope.framework.dag_utils.fetch_gremlin_result</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../cython_sdk.html">Cython SDK API</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.Vertex.html">graphscope.Vertex</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../generated/graphscope.declare.html">graphscope.declare</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../interactive.html">Interactive Query</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../learning.html">Graph Learning</a></li>
-<li class="toctree-l2 current has-children"><a class="reference internal" href="index.html">NetworkX-style API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 current has-children"><a class="reference internal" href="index.html">NetworkX-style API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l3 current current-page"><a class="current reference internal" href="#">Graph types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="transformation.html">Graph Transformation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="builtin.html">Builtin algorithms</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="functions.html">Functions</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.degree.html">graphscope.nx.classes.function.degree</a></li>
 <li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.degree_histogram.html">graphscope.nx.classes.function.degree_histogram</a></li>
 <li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.density.html">graphscope.nx.classes.function.density</a></li>
@@ -372,7 +395,7 @@
 <li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.classes.function.is_frozen.html">graphscope.nx.classes.function.is_frozen</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="generators.html">Graph generators</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.atlas.graph_atlas.html">graphscope.nx.generators.atlas.graph_atlas</a></li>
 <li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.atlas.graph_atlas_g.html">graphscope.nx.generators.atlas.graph_atlas_g</a></li>
 <li class="toctree-l4"><a class="reference internal" href="generated/graphscope.nx.generators.classic.balanced_tree.html">graphscope.nx.generators.classic.balanced_tree</a></li>
@@ -485,11 +508,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../gae_java/index.html">Analytical Engine Java API Reference</a></li>
 </ul>
 <ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../zh/index.html">GraphScope: 一站式图计算系统</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../zh/index.html">GraphScope: 一站式图计算系统</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../zh/installation.html">安装</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../zh/getting_started.html">快速上手</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../zh/deployment.html">部署</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../../zh/tutorials.html">入门教程</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../zh/tutorials.html">入门教程</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle child pages in navigation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/01_node_classification_on_citation_network.ipynb">论文引用关系网中的节点分类任务</a></li>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/02_graph_manipulations_with_networkx_compatible_apis.ipynb">使用兼容 NetworkX 的 API 进行图操作</a></li>
 <li class="toctree-l3"><a class="reference external" href="https://nbviewer.jupyter.org/github/alibaba/GraphScope/blob/main/tutorials/zh/03_run_graphscope_like_networkx.ipynb">用 GraphScope 像 NetworkX 一样进行图分析</a></li>
@@ -545,6 +568,15 @@
             
           
 
+        
+      
+        
+
+          
+            
+              <dd><a href="../../v0.20.0/index.html">v0.20.0</a></dd>
+            
+          
         
       
         
@@ -848,7 +880,7 @@
         </div>
         <article role="main">
           <div class="section" id="graph-types">
-<span id="graphs"></span><h1>Graph types<a class="headerlink" href="#graph-types" title="Permalink to this headline">#</a></h1>
+<span id="graphs"></span><h1>Graph types<a class="headerlink" href="#graph-types" title="Permalink to this heading">#</a></h1>
 <div class="table-wrapper docutils container">
 <table class="docutils align-default">
 <colgroup>
@@ -880,11 +912,11 @@
 </div>
 <p>Notice that graphscope.nx not support MultiGraph and MultiDiGraph.</p>
 <div class="section" id="graph">
-<h2>Graph<a class="headerlink" href="#graph" title="Permalink to this headline">#</a></h2>
+<h2>Graph<a class="headerlink" href="#graph" title="Permalink to this heading">#</a></h2>
 <p>Undirected graphs with self loops</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="graphscope.nx.Graph">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">graphscope.nx.</span></span><span class="sig-name descname"><span class="pre">Graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">incoming_graph_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">graphscope.nx.</span></span><span class="sig-name descname"><span class="pre">Graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">incoming_graph_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/graph.html#Graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.Graph" title="Permalink to this definition">#</a></dt>
 <dd><p>Base class for undirected graphs.</p>
 <p>A Graph that holds the metadata of a graph, and provides NetworkX-like Graph APIs.</p>
 <p>It is worth noticing that the graph is actually stored by the Analytical Engine backend.
@@ -1243,7 +1275,7 @@ an edge attribute (by default <cite>weight</cite>) to hold a numerical value.</p
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ebunch_to_add</strong> (<em>container of edges</em>) – Each edge given in the container will be added to the
+<li><p><strong>ebunch_to_add</strong> (<em>container</em><em> of </em><em>edges</em>) – Each edge given in the container will be added to the
 graph. The edges must be given as as 2-tuples (u, v) or
 3-tuples (u, v, d) where d is a dictionary containing edge data.</p></li>
 <li><p><strong>attr</strong> (<em>keyword arguments</em><em>, </em><em>optional</em>) – Edge data can be assigned using
@@ -1366,7 +1398,7 @@ precedence over attributes specified via keyword arguments.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ebunch_to_add</strong> (<em>container of edges</em>) – Each edge given in the list or container will be added
+<li><p><strong>ebunch_to_add</strong> (<em>container</em><em> of </em><em>edges</em>) – Each edge given in the list or container will be added
 to the graph. The edges must be given as 3-tuples (u, v, w)
 where w is a number.</p></li>
 <li><p><strong>weight</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default= 'weight'</em><em>)</em>) – The attribute name for the edge weights to be added.</p></li>
@@ -1395,7 +1427,7 @@ the edge data.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.Graph.adj">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">adj</span></span><a class="headerlink" href="#graphscope.nx.Graph.adj" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">adj</span></span><a class="headerlink" href="#graphscope.nx.Graph.adj" title="Permalink to this definition">#</a></dt>
 <dd><p>Graph adjacency object holding the neighbors of each node.</p>
 <p>This object is a read-only dict-like structure with node keys
 and neighbor-dict values.  The neighbor-dict is keyed by neighbor
@@ -1433,13 +1465,13 @@ the graph.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="graphscope.nx.Graph.adjlist_inner_dict_factory">
 <span class="sig-name descname"><span class="pre">adjlist_inner_dict_factory</span></span><a class="headerlink" href="#graphscope.nx.Graph.adjlist_inner_dict_factory" title="Permalink to this definition">#</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.nx.classes.dict_factory.NeighborDict</span></code></p>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">NeighborDict</span></code></p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="graphscope.nx.Graph.adjlist_outer_dict_factory">
 <span class="sig-name descname"><span class="pre">adjlist_outer_dict_factory</span></span><a class="headerlink" href="#graphscope.nx.Graph.adjlist_outer_dict_factory" title="Permalink to this definition">#</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.nx.classes.dict_factory.AdjListDict</span></code></p>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">AdjListDict</span></code></p>
 </dd></dl>
 
 <dl class="py method">
@@ -1528,7 +1560,7 @@ of the original graph without actually copying any data.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.Graph.degree">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">degree</span></span><a class="headerlink" href="#graphscope.nx.Graph.degree" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">degree</span></span><a class="headerlink" href="#graphscope.nx.Graph.degree" title="Permalink to this definition">#</a></dt>
 <dd><p>A DegreeView for the Graph as G.degree or G.degree().</p>
 <p>The node degree is the number of edges adjacent to the node.
 The weighted node degree is the sum of the edge weights for
@@ -1567,7 +1599,7 @@ The degree is the sum of the edge weights adjacent to the node.</p></li>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="graphscope.nx.Graph.edge_attr_dict_factory">
 <span class="sig-name descname"><span class="pre">edge_attr_dict_factory</span></span><a class="headerlink" href="#graphscope.nx.Graph.edge_attr_dict_factory" title="Permalink to this definition">#</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.nx.classes.dict_factory.NeighborAttrDict</span></code></p>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">NeighborAttrDict</span></code></p>
 </dd></dl>
 
 <dl class="py method">
@@ -1603,7 +1635,7 @@ attributes.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.Graph.edges">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">edges</span></span><a class="headerlink" href="#graphscope.nx.Graph.edges" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">edges</span></span><a class="headerlink" href="#graphscope.nx.Graph.edges" title="Permalink to this definition">#</a></dt>
 <dd><p>An EdgeView of the Graph as G.edges or G.edges().</p>
 <p>edges(self, nbunch=None, data=False, default=None)</p>
 <p>The EdgeView provides set-like operations on the edge-tuples
@@ -1712,12 +1744,12 @@ But it is safe to assign attributes <cite>G[u][v][‘foo’]</cite></p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="graphscope.nx.Graph.graph_cache_factory">
 <span class="sig-name descname"><span class="pre">graph_cache_factory</span></span><a class="headerlink" href="#graphscope.nx.Graph.graph_cache_factory" title="Permalink to this definition">#</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.nx.classes.cache.Cache</span></code></p>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">Cache</span></code></p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.Graph.graph_type">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">graph_type</span></span><a class="headerlink" href="#graphscope.nx.Graph.graph_type" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">graph_type</span></span><a class="headerlink" href="#graphscope.nx.Graph.graph_type" title="Permalink to this definition">#</a></dt>
 <dd><p>The type of the graph object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -1808,13 +1840,13 @@ Nodes must be int, str, float, tuple, bool  hashable Python objects.</p></li>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.Graph.key">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">key</span></span><a class="headerlink" href="#graphscope.nx.Graph.key" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">key</span></span><a class="headerlink" href="#graphscope.nx.Graph.key" title="Permalink to this definition">#</a></dt>
 <dd><p>Key of the coresponding engine graph.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.Graph.name">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#graphscope.nx.Graph.name" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#graphscope.nx.Graph.name" title="Permalink to this definition">#</a></dt>
 <dd><p>String identifier of the graph.</p>
 <p>This graph attribute appears in the attribute dict G.graph
 keyed by the string <cite>“name”</cite>. as well as an attribute (technically
@@ -1899,18 +1931,18 @@ nbunch is not hashable, a <code class="xref py py-exc docutils literal notransla
 <dl class="py attribute">
 <dt class="sig sig-object py" id="graphscope.nx.Graph.node_attr_dict_factory">
 <span class="sig-name descname"><span class="pre">node_attr_dict_factory</span></span><a class="headerlink" href="#graphscope.nx.Graph.node_attr_dict_factory" title="Permalink to this definition">#</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.nx.classes.dict_factory.NodeAttrDict</span></code></p>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">NodeAttrDict</span></code></p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="graphscope.nx.Graph.node_dict_factory">
 <span class="sig-name descname"><span class="pre">node_dict_factory</span></span><a class="headerlink" href="#graphscope.nx.Graph.node_dict_factory" title="Permalink to this definition">#</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.nx.classes.dict_factory.NodeDict</span></code></p>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">NodeDict</span></code></p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.Graph.nodes">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">nodes</span></span><a class="headerlink" href="#graphscope.nx.Graph.nodes" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nodes</span></span><a class="headerlink" href="#graphscope.nx.Graph.nodes" title="Permalink to this definition">#</a></dt>
 <dd><p>A NodeView of the Graph as G.nodes or G.nodes().</p>
 <p>Can be used as <cite>G.nodes</cite> for data lookup and for set-like operations.
 Can also be used as <cite>G.nodes(data=’color’, default=None)</cite> to return a
@@ -2078,7 +2110,7 @@ directed edges from <cite>u</cite> to <cite>v</cite>:</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.Graph.op">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">op</span></span><a class="headerlink" href="#graphscope.nx.Graph.op" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">op</span></span><a class="headerlink" href="#graphscope.nx.Graph.op" title="Permalink to this definition">#</a></dt>
 <dd><p>The DAG op of this graph.</p>
 </dd></dl>
 
@@ -2145,7 +2177,7 @@ directed edges from <cite>u</cite> to <cite>v</cite>:</p>
 <dd><p>Remove all edges specified in ebunch.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>ebunch</strong> (<em>list</em><em> or </em><em>container of edge tuples</em>) – <p>Each edge given in the list or container will be removed
+<dd class="field-odd"><p><strong>ebunch</strong> (<em>list</em><em> or </em><em>container</em><em> of </em><em>edge tuples</em>) – <p>Each edge given in the list or container will be removed
 from the graph. The edges can be:</p>
 <blockquote>
 <div><ul class="simple">
@@ -2231,7 +2263,7 @@ ignored.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.Graph.schema">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">schema</span></span><a class="headerlink" href="#graphscope.nx.Graph.schema" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">schema</span></span><a class="headerlink" href="#graphscope.nx.Graph.schema" title="Permalink to this definition">#</a></dt>
 <dd><p>Schema of the graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -2245,7 +2277,7 @@ ignored.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.Graph.session">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">session</span></span><a class="headerlink" href="#graphscope.nx.Graph.session" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">session</span></span><a class="headerlink" href="#graphscope.nx.Graph.session" title="Permalink to this definition">#</a></dt>
 <dd><p>Get the session of graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -2256,7 +2288,7 @@ ignored.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.Graph.session_id">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">session_id</span></span><a class="headerlink" href="#graphscope.nx.Graph.session_id" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">session_id</span></span><a class="headerlink" href="#graphscope.nx.Graph.session_id" title="Permalink to this definition">#</a></dt>
 <dd><p>Get session’s id of graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -2335,7 +2367,7 @@ ignored.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.Graph.signature">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">signature</span></span><a class="headerlink" href="#graphscope.nx.Graph.signature" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">signature</span></span><a class="headerlink" href="#graphscope.nx.Graph.signature" title="Permalink to this definition">#</a></dt>
 <dd><p>Generate a signature of the current graph</p>
 </dd></dl>
 
@@ -2504,14 +2536,14 @@ should yield 2-tuples (u, v) or 3-tuples (u, v, datadict).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>edges</strong> (<em>Graph object</em><em>, </em><em>collection of edges</em><em>, or </em><em>None</em>) – The first parameter can be a graph or some edges. If it has
+<li><p><strong>edges</strong> (<em>Graph object</em><em>, </em><em>collection</em><em> of </em><em>edges</em><em>, or </em><em>None</em>) – The first parameter can be a graph or some edges. If it has
 attributes <cite>nodes</cite> and <cite>edges</cite>, then it is taken to be a
 Graph-like object and those attributes are used as collections
 of nodes and edges to be added to the graph.
 If the first parameter does not have those attributes, it is
 treated as a collection of edges and added to the graph.
 If the first argument is None, no edges are added.</p></li>
-<li><p><strong>nodes</strong> (<em>collection of nodes</em><em>, or </em><em>None</em>) – The second parameter is treated as a collection of nodes
+<li><p><strong>nodes</strong> (<em>collection</em><em> of </em><em>nodes</em><em>, or </em><em>None</em>) – The second parameter is treated as a collection of nodes
 to be added to the graph unless it is None.
 If <cite>edges is None</cite> and <cite>nodes is None</cite> an exception is raised.
 If the first parameter is a Graph, then <cite>nodes</cite> is ignored.</p></li>
@@ -2546,11 +2578,11 @@ If the first parameter is a Graph, then <cite>nodes</cite> is ignored.</p></li>
 
 </div>
 <div class="section" id="digraph">
-<h2>DiGraph<a class="headerlink" href="#digraph" title="Permalink to this headline">#</a></h2>
+<h2>DiGraph<a class="headerlink" href="#digraph" title="Permalink to this heading">#</a></h2>
 <p>Directed graphs with self loops</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="graphscope.nx.DiGraph">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">graphscope.nx.</span></span><span class="sig-name descname"><span class="pre">DiGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">incoming_graph_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/digraph.html#DiGraph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.DiGraph" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">graphscope.nx.</span></span><span class="sig-name descname"><span class="pre">DiGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">incoming_graph_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/graphscope/nx/classes/digraph.html#DiGraph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.nx.DiGraph" title="Permalink to this definition">#</a></dt>
 <dd><p>Base class for directed graphs.</p>
 <p>A DiGraph that holds the metadata of a graph, and provides NetworkX-like DiGraph APIs.</p>
 <p>It is worth noticing that the graph is actually stored by the Analytical Engine backend.
@@ -2909,7 +2941,7 @@ an edge attribute (by default <cite>weight</cite>) to hold a numerical value.</p
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ebunch_to_add</strong> (<em>container of edges</em>) – Each edge given in the container will be added to the
+<li><p><strong>ebunch_to_add</strong> (<em>container</em><em> of </em><em>edges</em>) – Each edge given in the container will be added to the
 graph. The edges must be given as as 2-tuples (u, v) or
 3-tuples (u, v, d) where d is a dictionary containing edge data.</p></li>
 <li><p><strong>attr</strong> (<em>keyword arguments</em><em>, </em><em>optional</em>) – Edge data can be assigned using
@@ -3032,7 +3064,7 @@ precedence over attributes specified via keyword arguments.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ebunch_to_add</strong> (<em>container of edges</em>) – Each edge given in the list or container will be added
+<li><p><strong>ebunch_to_add</strong> (<em>container</em><em> of </em><em>edges</em>) – Each edge given in the list or container will be added
 to the graph. The edges must be given as 3-tuples (u, v, w)
 where w is a number.</p></li>
 <li><p><strong>weight</strong> (<em>string</em><em>, </em><em>optional</em><em> (</em><em>default= 'weight'</em><em>)</em>) – The attribute name for the edge weights to be added.</p></li>
@@ -3061,7 +3093,7 @@ the edge data.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.DiGraph.adj">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">adj</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.adj" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">adj</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.adj" title="Permalink to this definition">#</a></dt>
 <dd><p>Graph adjacency object holding the neighbors of each node.</p>
 <p>This object is a read-only dict-like structure with node keys
 and neighbor-dict values.  The neighbor-dict is keyed by neighbor
@@ -3099,13 +3131,13 @@ the graph.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="graphscope.nx.DiGraph.adjlist_inner_dict_factory">
 <span class="sig-name descname"><span class="pre">adjlist_inner_dict_factory</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.adjlist_inner_dict_factory" title="Permalink to this definition">#</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.nx.classes.dict_factory.NeighborDict</span></code></p>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">NeighborDict</span></code></p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="graphscope.nx.DiGraph.adjlist_outer_dict_factory">
 <span class="sig-name descname"><span class="pre">adjlist_outer_dict_factory</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.adjlist_outer_dict_factory" title="Permalink to this definition">#</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.nx.classes.dict_factory.AdjListDict</span></code></p>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">AdjListDict</span></code></p>
 </dd></dl>
 
 <dl class="py method">
@@ -3194,7 +3226,7 @@ of the original graph without actually copying any data.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.DiGraph.degree">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">degree</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.degree" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">degree</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.degree" title="Permalink to this definition">#</a></dt>
 <dd><p>A DegreeView for the Graph as G.degree or G.degree().</p>
 <p>The node degree is the number of edges adjacent to the node.
 The weighted node degree is the sum of the edge weights for
@@ -3238,7 +3270,7 @@ The degree is the sum of the edge weights adjacent to the node.</p></li>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="graphscope.nx.DiGraph.edge_attr_dict_factory">
 <span class="sig-name descname"><span class="pre">edge_attr_dict_factory</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.edge_attr_dict_factory" title="Permalink to this definition">#</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.nx.classes.dict_factory.NeighborAttrDict</span></code></p>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">NeighborAttrDict</span></code></p>
 </dd></dl>
 
 <dl class="py method">
@@ -3274,7 +3306,7 @@ attributes.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.DiGraph.edges">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">edges</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.edges" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">edges</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.edges" title="Permalink to this definition">#</a></dt>
 <dd><p>An OutEdgeView of the DiGraph as G.edges or G.edges().</p>
 <p>edges(self, nbunch=None, data=False, default=None)</p>
 <p>The OutEdgeView provides set-like operations on the edge-tuples
@@ -3388,12 +3420,12 @@ But it is safe to assign attributes <cite>G[u][v][‘foo’]</cite></p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="graphscope.nx.DiGraph.graph_cache_factory">
 <span class="sig-name descname"><span class="pre">graph_cache_factory</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.graph_cache_factory" title="Permalink to this definition">#</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.nx.classes.cache.Cache</span></code></p>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">Cache</span></code></p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.DiGraph.graph_type">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">graph_type</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.graph_type" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">graph_type</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.graph_type" title="Permalink to this definition">#</a></dt>
 <dd><p>The type of the graph object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -3486,7 +3518,7 @@ Nodes must be int, str, float, tuple, bool  hashable Python objects.</p></li>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.DiGraph.in_degree">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">in_degree</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.in_degree" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">in_degree</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.in_degree" title="Permalink to this definition">#</a></dt>
 <dd><p>An InDegreeView for (node, in_degree) or in_degree for single node.</p>
 <p>The node in_degree is the number of edges pointing to the node.
 The weighted node degree is the sum of the edge weights for
@@ -3529,7 +3561,7 @@ The degree is the sum of the edge weights adjacent to the node.</p></li>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.DiGraph.in_edges">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">in_edges</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.in_edges" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">in_edges</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.in_edges" title="Permalink to this definition">#</a></dt>
 <dd><p>An InEdgeView of the Graph as G.in_edges or G.in_edges().</p>
 <p>in_edges(self, nbunch=None, data=False, default=None):</p>
 <dl class="field-list simple">
@@ -3572,13 +3604,13 @@ attribute lookup as <cite>edges[u, v][‘foo’]</cite>.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.DiGraph.key">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">key</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.key" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">key</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.key" title="Permalink to this definition">#</a></dt>
 <dd><p>Key of the coresponding engine graph.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.DiGraph.name">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.name" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.name" title="Permalink to this definition">#</a></dt>
 <dd><p>String identifier of the graph.</p>
 <p>This graph attribute appears in the attribute dict G.graph
 keyed by the string <cite>“name”</cite>. as well as an attribute (technically
@@ -3647,18 +3679,18 @@ edge from n to m.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="graphscope.nx.DiGraph.node_attr_dict_factory">
 <span class="sig-name descname"><span class="pre">node_attr_dict_factory</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.node_attr_dict_factory" title="Permalink to this definition">#</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.nx.classes.dict_factory.NodeAttrDict</span></code></p>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">NodeAttrDict</span></code></p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="graphscope.nx.DiGraph.node_dict_factory">
 <span class="sig-name descname"><span class="pre">node_dict_factory</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.node_dict_factory" title="Permalink to this definition">#</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.nx.classes.dict_factory.NodeDict</span></code></p>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">NodeDict</span></code></p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.DiGraph.nodes">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">nodes</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.nodes" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nodes</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.nodes" title="Permalink to this definition">#</a></dt>
 <dd><p>A NodeView of the Graph as G.nodes or G.nodes().</p>
 <p>Can be used as <cite>G.nodes</cite> for data lookup and for set-like operations.
 Can also be used as <cite>G.nodes(data=’color’, default=None)</cite> to return a
@@ -3826,7 +3858,7 @@ directed edges from <cite>u</cite> to <cite>v</cite>:</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.DiGraph.op">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">op</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.op" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">op</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.op" title="Permalink to this definition">#</a></dt>
 <dd><p>The DAG op of this graph.</p>
 </dd></dl>
 
@@ -3856,7 +3888,7 @@ directed edges from <cite>u</cite> to <cite>v</cite>:</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.DiGraph.out_degree">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">out_degree</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.out_degree" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">out_degree</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.out_degree" title="Permalink to this definition">#</a></dt>
 <dd><p>An OutDegreeView for (node, out_degree)</p>
 <p>The node out_degree is the number of edges pointing out of the node.
 The weighted node degree is the sum of the edge weights for
@@ -3899,7 +3931,7 @@ The degree is the sum of the edge weights adjacent to the node.</p></li>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.DiGraph.out_edges">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">out_edges</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.out_edges" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">out_edges</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.out_edges" title="Permalink to this definition">#</a></dt>
 <dd><p>An OutEdgeView of the DiGraph as G.edges or G.edges().</p>
 <p>edges(self, nbunch=None, data=False, default=None)</p>
 <p>The OutEdgeView provides set-like operations on the edge-tuples
@@ -3958,7 +3990,7 @@ For directed graphs this returns the out-edges.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.DiGraph.pred">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">pred</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.pred" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pred</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.pred" title="Permalink to this definition">#</a></dt>
 <dd><p>Graph adjacency object holding the predecessors of each node.</p>
 <p>This object is a read-only dict-like structure with node keys
 and neighbor-dict values.  The neighbor-dict is keyed by neighbor
@@ -4029,7 +4061,7 @@ edge from m to n.</p>
 <dd><p>Remove all edges specified in ebunch.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>ebunch</strong> (<em>list</em><em> or </em><em>container of edge tuples</em>) – <p>Each edge given in the list or container will be removed
+<dd class="field-odd"><p><strong>ebunch</strong> (<em>list</em><em> or </em><em>container</em><em> of </em><em>edge tuples</em>) – <p>Each edge given in the list or container will be removed
 from the graph. The edges can be:</p>
 <blockquote>
 <div><ul class="simple">
@@ -4130,7 +4162,7 @@ the original graph.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.DiGraph.schema">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">schema</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.schema" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">schema</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.schema" title="Permalink to this definition">#</a></dt>
 <dd><p>Schema of the graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -4144,7 +4176,7 @@ the original graph.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.DiGraph.session">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">session</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.session" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">session</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.session" title="Permalink to this definition">#</a></dt>
 <dd><p>Get the session of graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -4155,7 +4187,7 @@ the original graph.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.DiGraph.session_id">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">session_id</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.session_id" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">session_id</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.session_id" title="Permalink to this definition">#</a></dt>
 <dd><p>Get session’s id of graph.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -4234,7 +4266,7 @@ the original graph.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.DiGraph.signature">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">signature</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.signature" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">signature</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.signature" title="Permalink to this definition">#</a></dt>
 <dd><p>Generate a signature of the current graph</p>
 </dd></dl>
 
@@ -4309,7 +4341,7 @@ and the edges between those nodes.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.nx.DiGraph.succ">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">succ</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.succ" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">succ</span></span><a class="headerlink" href="#graphscope.nx.DiGraph.succ" title="Permalink to this definition">#</a></dt>
 <dd><p>Graph adjacency object holding the neighbors of each node.</p>
 <p>This object is a read-only dict-like structure with node keys
 and neighbor-dict values.  The neighbor-dict is keyed by neighbor
@@ -4440,14 +4472,14 @@ should yield 2-tuples (u, v) or 3-tuples (u, v, datadict).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>edges</strong> (<em>Graph object</em><em>, </em><em>collection of edges</em><em>, or </em><em>None</em>) – The first parameter can be a graph or some edges. If it has
+<li><p><strong>edges</strong> (<em>Graph object</em><em>, </em><em>collection</em><em> of </em><em>edges</em><em>, or </em><em>None</em>) – The first parameter can be a graph or some edges. If it has
 attributes <cite>nodes</cite> and <cite>edges</cite>, then it is taken to be a
 Graph-like object and those attributes are used as collections
 of nodes and edges to be added to the graph.
 If the first parameter does not have those attributes, it is
 treated as a collection of edges and added to the graph.
 If the first argument is None, no edges are added.</p></li>
-<li><p><strong>nodes</strong> (<em>collection of nodes</em><em>, or </em><em>None</em>) – The second parameter is treated as a collection of nodes
+<li><p><strong>nodes</strong> (<em>collection</em><em> of </em><em>nodes</em><em>, or </em><em>None</em>) – The second parameter is treated as a collection of nodes
 to be added to the graph unless it is None.
 If <cite>edges is None</cite> and <cite>nodes is None</cite> an exception is raised.
 If the first parameter is a Graph, then <cite>nodes</cite> is ignored.</p></li>
@@ -4542,8 +4574,141 @@ If the first parameter is a Graph, then <cite>nodes</cite> is ignored.</p></li>
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Graph types</a><ul>
-<li><a class="reference internal" href="#graph">Graph</a></li>
-<li><a class="reference internal" href="#digraph">DiGraph</a></li>
+<li><a class="reference internal" href="#graph">Graph</a><ul>
+<li><a class="reference internal" href="#graphscope.nx.Graph"><code class="docutils literal notranslate"><span class="pre">Graph</span></code></a><ul>
+<li><a class="reference internal" href="#graphscope.nx.Graph.__contains__"><code class="docutils literal notranslate"><span class="pre">Graph.__contains__()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.__getitem__"><code class="docutils literal notranslate"><span class="pre">Graph.__getitem__()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.__init__"><code class="docutils literal notranslate"><span class="pre">Graph.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.__iter__"><code class="docutils literal notranslate"><span class="pre">Graph.__iter__()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.__len__"><code class="docutils literal notranslate"><span class="pre">Graph.__len__()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.add_edge"><code class="docutils literal notranslate"><span class="pre">Graph.add_edge()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.add_edges_from"><code class="docutils literal notranslate"><span class="pre">Graph.add_edges_from()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.add_node"><code class="docutils literal notranslate"><span class="pre">Graph.add_node()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.add_nodes_from"><code class="docutils literal notranslate"><span class="pre">Graph.add_nodes_from()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.add_weighted_edges_from"><code class="docutils literal notranslate"><span class="pre">Graph.add_weighted_edges_from()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.adj"><code class="docutils literal notranslate"><span class="pre">Graph.adj</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.adjacency"><code class="docutils literal notranslate"><span class="pre">Graph.adjacency()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.adjlist_inner_dict_factory"><code class="docutils literal notranslate"><span class="pre">Graph.adjlist_inner_dict_factory</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.adjlist_outer_dict_factory"><code class="docutils literal notranslate"><span class="pre">Graph.adjlist_outer_dict_factory</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.clear"><code class="docutils literal notranslate"><span class="pre">Graph.clear()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.clear_edges"><code class="docutils literal notranslate"><span class="pre">Graph.clear_edges()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.copy"><code class="docutils literal notranslate"><span class="pre">Graph.copy()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.degree"><code class="docutils literal notranslate"><span class="pre">Graph.degree</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.edge_attr_dict_factory"><code class="docutils literal notranslate"><span class="pre">Graph.edge_attr_dict_factory</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.edge_subgraph"><code class="docutils literal notranslate"><span class="pre">Graph.edge_subgraph()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.edges"><code class="docutils literal notranslate"><span class="pre">Graph.edges</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.get_edge_data"><code class="docutils literal notranslate"><span class="pre">Graph.get_edge_data()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.graph_attr_dict_factory"><code class="docutils literal notranslate"><span class="pre">Graph.graph_attr_dict_factory</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.graph_cache_factory"><code class="docutils literal notranslate"><span class="pre">Graph.graph_cache_factory</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.graph_type"><code class="docutils literal notranslate"><span class="pre">Graph.graph_type</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.has_edge"><code class="docutils literal notranslate"><span class="pre">Graph.has_edge()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.has_node"><code class="docutils literal notranslate"><span class="pre">Graph.has_node()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.is_directed"><code class="docutils literal notranslate"><span class="pre">Graph.is_directed()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.is_multigraph"><code class="docutils literal notranslate"><span class="pre">Graph.is_multigraph()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.key"><code class="docutils literal notranslate"><span class="pre">Graph.key</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.name"><code class="docutils literal notranslate"><span class="pre">Graph.name</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.nbunch_iter"><code class="docutils literal notranslate"><span class="pre">Graph.nbunch_iter()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.neighbors"><code class="docutils literal notranslate"><span class="pre">Graph.neighbors()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.node_attr_dict_factory"><code class="docutils literal notranslate"><span class="pre">Graph.node_attr_dict_factory</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.node_dict_factory"><code class="docutils literal notranslate"><span class="pre">Graph.node_dict_factory</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.nodes"><code class="docutils literal notranslate"><span class="pre">Graph.nodes</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.number_of_edges"><code class="docutils literal notranslate"><span class="pre">Graph.number_of_edges()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.number_of_nodes"><code class="docutils literal notranslate"><span class="pre">Graph.number_of_nodes()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.op"><code class="docutils literal notranslate"><span class="pre">Graph.op</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.order"><code class="docutils literal notranslate"><span class="pre">Graph.order()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.remove_edge"><code class="docutils literal notranslate"><span class="pre">Graph.remove_edge()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.remove_edges_from"><code class="docutils literal notranslate"><span class="pre">Graph.remove_edges_from()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.remove_node"><code class="docutils literal notranslate"><span class="pre">Graph.remove_node()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.remove_nodes_from"><code class="docutils literal notranslate"><span class="pre">Graph.remove_nodes_from()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.schema"><code class="docutils literal notranslate"><span class="pre">Graph.schema</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.session"><code class="docutils literal notranslate"><span class="pre">Graph.session</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.session_id"><code class="docutils literal notranslate"><span class="pre">Graph.session_id</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.set_edge_data"><code class="docutils literal notranslate"><span class="pre">Graph.set_edge_data()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.set_node_data"><code class="docutils literal notranslate"><span class="pre">Graph.set_node_data()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.signature"><code class="docutils literal notranslate"><span class="pre">Graph.signature</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.size"><code class="docutils literal notranslate"><span class="pre">Graph.size()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.subgraph"><code class="docutils literal notranslate"><span class="pre">Graph.subgraph()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.to_directed"><code class="docutils literal notranslate"><span class="pre">Graph.to_directed()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.to_undirected"><code class="docutils literal notranslate"><span class="pre">Graph.to_undirected()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.to_undirected_class"><code class="docutils literal notranslate"><span class="pre">Graph.to_undirected_class()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.Graph.update"><code class="docutils literal notranslate"><span class="pre">Graph.update()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#digraph">DiGraph</a><ul>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph"><code class="docutils literal notranslate"><span class="pre">DiGraph</span></code></a><ul>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.__contains__"><code class="docutils literal notranslate"><span class="pre">DiGraph.__contains__()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.__getitem__"><code class="docutils literal notranslate"><span class="pre">DiGraph.__getitem__()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.__init__"><code class="docutils literal notranslate"><span class="pre">DiGraph.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.__iter__"><code class="docutils literal notranslate"><span class="pre">DiGraph.__iter__()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.__len__"><code class="docutils literal notranslate"><span class="pre">DiGraph.__len__()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.add_edge"><code class="docutils literal notranslate"><span class="pre">DiGraph.add_edge()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.add_edges_from"><code class="docutils literal notranslate"><span class="pre">DiGraph.add_edges_from()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.add_node"><code class="docutils literal notranslate"><span class="pre">DiGraph.add_node()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.add_nodes_from"><code class="docutils literal notranslate"><span class="pre">DiGraph.add_nodes_from()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.add_weighted_edges_from"><code class="docutils literal notranslate"><span class="pre">DiGraph.add_weighted_edges_from()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.adj"><code class="docutils literal notranslate"><span class="pre">DiGraph.adj</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.adjacency"><code class="docutils literal notranslate"><span class="pre">DiGraph.adjacency()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.adjlist_inner_dict_factory"><code class="docutils literal notranslate"><span class="pre">DiGraph.adjlist_inner_dict_factory</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.adjlist_outer_dict_factory"><code class="docutils literal notranslate"><span class="pre">DiGraph.adjlist_outer_dict_factory</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.clear"><code class="docutils literal notranslate"><span class="pre">DiGraph.clear()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.clear_edges"><code class="docutils literal notranslate"><span class="pre">DiGraph.clear_edges()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.copy"><code class="docutils literal notranslate"><span class="pre">DiGraph.copy()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.degree"><code class="docutils literal notranslate"><span class="pre">DiGraph.degree</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.edge_attr_dict_factory"><code class="docutils literal notranslate"><span class="pre">DiGraph.edge_attr_dict_factory</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.edge_subgraph"><code class="docutils literal notranslate"><span class="pre">DiGraph.edge_subgraph()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.edges"><code class="docutils literal notranslate"><span class="pre">DiGraph.edges</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.get_edge_data"><code class="docutils literal notranslate"><span class="pre">DiGraph.get_edge_data()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.graph_attr_dict_factory"><code class="docutils literal notranslate"><span class="pre">DiGraph.graph_attr_dict_factory</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.graph_cache_factory"><code class="docutils literal notranslate"><span class="pre">DiGraph.graph_cache_factory</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.graph_type"><code class="docutils literal notranslate"><span class="pre">DiGraph.graph_type</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.has_edge"><code class="docutils literal notranslate"><span class="pre">DiGraph.has_edge()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.has_node"><code class="docutils literal notranslate"><span class="pre">DiGraph.has_node()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.has_predecessor"><code class="docutils literal notranslate"><span class="pre">DiGraph.has_predecessor()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.has_successor"><code class="docutils literal notranslate"><span class="pre">DiGraph.has_successor()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.in_degree"><code class="docutils literal notranslate"><span class="pre">DiGraph.in_degree</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.in_edges"><code class="docutils literal notranslate"><span class="pre">DiGraph.in_edges</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.is_directed"><code class="docutils literal notranslate"><span class="pre">DiGraph.is_directed()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.is_multigraph"><code class="docutils literal notranslate"><span class="pre">DiGraph.is_multigraph()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.key"><code class="docutils literal notranslate"><span class="pre">DiGraph.key</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.name"><code class="docutils literal notranslate"><span class="pre">DiGraph.name</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.nbunch_iter"><code class="docutils literal notranslate"><span class="pre">DiGraph.nbunch_iter()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.neighbors"><code class="docutils literal notranslate"><span class="pre">DiGraph.neighbors()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.node_attr_dict_factory"><code class="docutils literal notranslate"><span class="pre">DiGraph.node_attr_dict_factory</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.node_dict_factory"><code class="docutils literal notranslate"><span class="pre">DiGraph.node_dict_factory</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.nodes"><code class="docutils literal notranslate"><span class="pre">DiGraph.nodes</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.number_of_edges"><code class="docutils literal notranslate"><span class="pre">DiGraph.number_of_edges()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.number_of_nodes"><code class="docutils literal notranslate"><span class="pre">DiGraph.number_of_nodes()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.op"><code class="docutils literal notranslate"><span class="pre">DiGraph.op</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.order"><code class="docutils literal notranslate"><span class="pre">DiGraph.order()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.out_degree"><code class="docutils literal notranslate"><span class="pre">DiGraph.out_degree</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.out_edges"><code class="docutils literal notranslate"><span class="pre">DiGraph.out_edges</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.pred"><code class="docutils literal notranslate"><span class="pre">DiGraph.pred</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.predecessors"><code class="docutils literal notranslate"><span class="pre">DiGraph.predecessors()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.remove_edge"><code class="docutils literal notranslate"><span class="pre">DiGraph.remove_edge()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.remove_edges_from"><code class="docutils literal notranslate"><span class="pre">DiGraph.remove_edges_from()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.remove_node"><code class="docutils literal notranslate"><span class="pre">DiGraph.remove_node()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.remove_nodes_from"><code class="docutils literal notranslate"><span class="pre">DiGraph.remove_nodes_from()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.reverse"><code class="docutils literal notranslate"><span class="pre">DiGraph.reverse()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.schema"><code class="docutils literal notranslate"><span class="pre">DiGraph.schema</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.session"><code class="docutils literal notranslate"><span class="pre">DiGraph.session</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.session_id"><code class="docutils literal notranslate"><span class="pre">DiGraph.session_id</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.set_edge_data"><code class="docutils literal notranslate"><span class="pre">DiGraph.set_edge_data()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.set_node_data"><code class="docutils literal notranslate"><span class="pre">DiGraph.set_node_data()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.signature"><code class="docutils literal notranslate"><span class="pre">DiGraph.signature</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.size"><code class="docutils literal notranslate"><span class="pre">DiGraph.size()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.subgraph"><code class="docutils literal notranslate"><span class="pre">DiGraph.subgraph()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.succ"><code class="docutils literal notranslate"><span class="pre">DiGraph.succ</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.successors"><code class="docutils literal notranslate"><span class="pre">DiGraph.successors()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.to_directed"><code class="docutils literal notranslate"><span class="pre">DiGraph.to_directed()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.to_undirected"><code class="docutils literal notranslate"><span class="pre">DiGraph.to_undirected()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.to_undirected_class"><code class="docutils literal notranslate"><span class="pre">DiGraph.to_undirected_class()</span></code></a></li>
+<li><a class="reference internal" href="#graphscope.nx.DiGraph.update"><code class="docutils literal notranslate"><span class="pre">DiGraph.update()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -4558,8 +4723,12 @@ If the first parameter is a Graph, then <cite>nodes</cite> is ignored.</p></li>
 </div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/scripts/furo.js"></script>
+    <script src="../../_static/clipboard.min.js"></script>
+    <script src="../../_static/copybutton.js"></script>
     <script src="../../_static/js/readthedocs.js"></script>
     <script src="../../_static/js/readthedocs-doc-embed.js"></script>
     </body>

@@ -759,10 +759,17 @@ The following steps will remain unsupported.
 * repeat().times() </br>
 In graph pattern scenarios, `repeat().times()` can be replaced equivalently by the `PathExpand`-step.
     ```bash
-    # = g.V().out("1..3", "knows").endV()
+    # = g.V().out("2..3", "knows").endV()
     g.V().repeat(out("knows")).times(2)
-    # = g.V().out("1..3", "knows").with('PATH_OPT', 'SIMPLE').endV()
+  
+    # = g.V().out("1..3", "knows").endV()
+    g.V().repeat(out("knows")).emit().times(2)
+  
+    # = g.V().out("2..3", "knows").with('PATH_OPT', 'SIMPLE').endV()
     g.V().repeat(out("knows").simplePath()).times(2)
+  
+    # = g.V().out("1..3", "knows").with('PATH_OPT', 'SIMPLE').endV()
+    g.V().repeat(out("knows").simplePath()).emit().times(2)
     ```
 * repeat().until() </br>
 It is a imperative syntax, not declarative.
