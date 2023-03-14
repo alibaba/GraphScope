@@ -199,7 +199,7 @@ mod test {
                 Ok(res) => {
                     let entry = parse_result(res).unwrap();
                     if let Some(path) = entry.get(None).unwrap().as_graph_path() {
-                        result_collection.push(path.get_path_end().unwrap().id());
+                        result_collection.push(path.get_path_end().id());
                     }
                 }
                 Err(e) => {
@@ -274,7 +274,7 @@ mod test {
                 Ok(res) => {
                     let entry = parse_result(res).unwrap();
                     if let Some(path) = entry.get(None).unwrap().as_graph_path() {
-                        result_collection.push(path.get_path_end().unwrap().id());
+                        result_collection.push(path.get_path_end().id());
                     }
                 }
                 Err(e) => {
@@ -405,7 +405,7 @@ mod test {
                 Ok(res) => {
                     let entry = parse_result(res).unwrap();
                     if let Some(path) = entry.get(None).unwrap().as_graph_path() {
-                        result_collection.push(path.get_path_end().unwrap().id());
+                        result_collection.push(path.get_path_end().id());
                     }
                 }
                 Err(e) => {

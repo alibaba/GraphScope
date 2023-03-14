@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::convert::TryInto;
 use std::sync::Arc;
 
 use graph_proxy::apis::Partitioner;
@@ -31,7 +32,6 @@ use pegasus::{BuildJobError, Worker};
 use pegasus_server::job::{JobAssembly, JobDesc};
 use pegasus_server::job_pb as server_pb;
 use prost::Message;
-use std::convert::TryInto;
 
 use crate::error::{FnExecError, FnGenError, FnGenResult};
 use crate::process::functions::{ApplyGen, CompareFunction, FoldGen, GroupGen, JoinKeyGen, KeyFunction};
@@ -533,6 +533,9 @@ impl IRJobAssembly {
                             range
                         ))))?;
                     }
+                    if path.condition.is_some() && range.lower != 0 {
+                        Err(FnGenError::unsupported_error("PathExpand with UNTIL when lower!=0"))?
+                    }
                     // path start
                     let path_start_func = self.udf_gen.gen_path_start(path.clone())?;
                     stream = stream
@@ -560,10 +563,13 @@ impl IRJobAssembly {
                                 .udf_gen
                                 .gen_filter(algebra_pb::Select { predicate: Some(condition.clone()) })?;
                             until.set_until(func);
+                            stream = stream
+                                .iterate_until(until, |start| self.install(start, &base_expand_plan[..]))?;
+                        } else {
+                            stream = stream.iterate_emit_until(until, EmitKind::Before, |start| {
+                                self.install(start, &base_expand_plan[..])
+                            })?;
                         }
-                        stream = stream.iterate_emit_until(until, EmitKind::Before, |start| {
-                            self.install(start, &base_expand_plan[..])
-                        })?;
                     }
                     // path end
                     let path_end_func = self.udf_gen.gen_path_end(path)?;
