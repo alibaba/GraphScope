@@ -28,7 +28,7 @@ public class MatchTest {
     // g.V().optional(match(as("x").hasLabel("person").ouE("knows").as("y")))
     @Test
     public void match_1_test() {
-        GraphBuilder builder = SourceTest.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         RelNode expand =
                 builder.source(
                                 new SourceConfig(
@@ -56,7 +56,7 @@ public class MatchTest {
     // as("x").hasLabel("person").outE("knows").as("z"))
     @Test
     public void match_2_test() {
-        GraphBuilder builder = SourceTest.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         RelNode expand1 =
                 builder.source(
                                 new SourceConfig(

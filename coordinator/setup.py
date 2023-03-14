@@ -141,7 +141,9 @@ def _get_extra_data():
             f"{GRAPHSCOPE_HOME}/include/string_view": os.path.join(
                 RUNTIME_ROOT, "include"
             ),
-            "/opt/vineyard/include/": os.path.join(RUNTIME_ROOT, "include"),
+            f"{GRAPHSCOPE_HOME}/include/vineyard": os.path.join(
+                RUNTIME_ROOT, "include"
+            ),
             f"{GRAPHSCOPE_HOME}/include/arrow": os.path.join(RUNTIME_ROOT, "include"),
             f"{GRAPHSCOPE_HOME}/include/boost": os.path.join(RUNTIME_ROOT, "include"),
             f"{GRAPHSCOPE_HOME}/include/glog": os.path.join(RUNTIME_ROOT, "include"),

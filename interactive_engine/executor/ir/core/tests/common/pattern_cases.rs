@@ -442,6 +442,7 @@ pub fn build_ldbc_pattern_from_pb_case0() -> IrPatternResult<Pattern> {
             end: Some(TAG_A.into()),
             join_kind: 0,
         }],
+        meta_data: vec![],
     };
     let plan_meta = gen_plan_meta(&pattern);
     Pattern::from_pb_pattern(&pattern, &plan_meta)
@@ -465,6 +466,7 @@ pub fn build_ldbc_pattern_from_pb_case1() -> IrPatternResult<Pattern> {
         params: Some(query_params(vec![12.into()], vec![], None)), // KNOWS
         expand_opt: 0,
         alias: None,
+        meta_data: None,
     };
     let pattern = pb::Pattern {
         sentences: vec![
@@ -493,6 +495,7 @@ pub fn build_ldbc_pattern_from_pb_case1() -> IrPatternResult<Pattern> {
                 join_kind: 0,
             },
         ],
+        meta_data: vec![],
     };
     let plan_meta = gen_plan_meta(&pattern);
     Pattern::from_pb_pattern(&pattern, &plan_meta)
@@ -513,6 +516,7 @@ pub fn build_ldbc_pattern_from_pb_case2() -> IrPatternResult<Pattern> {
         params: Some(query_params(vec![15.into()], vec![], None)), //STUDYAT
         expand_opt: 0,
         alias: None,
+        meta_data: None,
     };
     let expand_opr2 = pb::EdgeExpand {
         v_tag: None,
@@ -520,6 +524,7 @@ pub fn build_ldbc_pattern_from_pb_case2() -> IrPatternResult<Pattern> {
         params: Some(query_params(vec![15.into()], vec![], None)), //STUDYAT
         expand_opt: 0,
         alias: None,
+        meta_data: None,
     };
     let expand_opr3 = pb::EdgeExpand {
         v_tag: None,
@@ -527,6 +532,7 @@ pub fn build_ldbc_pattern_from_pb_case2() -> IrPatternResult<Pattern> {
         params: Some(query_params(vec![12.into()], vec![], None)), //KNOWS
         expand_opt: 0,
         alias: None,
+        meta_data: None,
     };
     let pattern = pb::Pattern {
         sentences: vec![
@@ -555,6 +561,7 @@ pub fn build_ldbc_pattern_from_pb_case2() -> IrPatternResult<Pattern> {
                 join_kind: 0,
             },
         ],
+        meta_data: vec![],
     };
     let plan_meta = gen_plan_meta(&pattern);
     Pattern::from_pb_pattern(&pattern, &plan_meta)
@@ -571,6 +578,7 @@ pub fn build_ldbc_pattern_from_pb_case3() -> IrPatternResult<Pattern> {
         params: Some(query_params(vec![12.into()], vec![], None)), //KNOWS
         expand_opt: 0,
         alias: None,
+        meta_data: None,
     };
     let pattern = pb::Pattern {
         sentences: vec![
@@ -623,6 +631,7 @@ pub fn build_ldbc_pattern_from_pb_case3() -> IrPatternResult<Pattern> {
                 join_kind: 0,
             },
         ],
+        meta_data: vec![],
     };
     let plan_meta = gen_plan_meta(&pattern);
     Pattern::from_pb_pattern(&pattern, &plan_meta)
@@ -645,6 +654,7 @@ pub fn build_ldbc_pattern_from_pb_case4() -> IrPatternResult<Pattern> {
         params: Some(query_params(vec![11.into()], vec![], None)), //ISLOCATEDIN
         expand_opt: 0,
         alias: None,
+        meta_data: None,
     };
     let expand_opr2 = pb::EdgeExpand {
         v_tag: None,
@@ -652,6 +662,7 @@ pub fn build_ldbc_pattern_from_pb_case4() -> IrPatternResult<Pattern> {
         params: Some(query_params(vec![11.into()], vec![], None)), //ISLOCATEDIN
         expand_opt: 0,
         alias: None,
+        meta_data: None,
     };
     let expand_opr3 = pb::EdgeExpand {
         v_tag: None,
@@ -659,6 +670,7 @@ pub fn build_ldbc_pattern_from_pb_case4() -> IrPatternResult<Pattern> {
         params: Some(query_params(vec![13.into()], vec![], None)), //LIKES
         expand_opt: 0,
         alias: None,
+        meta_data: None,
     };
     let expand_opr4 = pb::EdgeExpand {
         v_tag: None,
@@ -666,6 +678,7 @@ pub fn build_ldbc_pattern_from_pb_case4() -> IrPatternResult<Pattern> {
         params: Some(query_params(vec![0.into()], vec![], None)), //HASCREATOR
         expand_opt: 0,
         alias: None,
+        meta_data: None,
     };
     let pattern = pb::Pattern {
         sentences: vec![
@@ -702,6 +715,7 @@ pub fn build_ldbc_pattern_from_pb_case4() -> IrPatternResult<Pattern> {
                 join_kind: 0,
             },
         ],
+        meta_data: vec![],
     };
     let plan_meta = gen_plan_meta(&pattern);
     Pattern::from_pb_pattern(&pattern, &plan_meta)
@@ -724,6 +738,7 @@ pub fn build_ldbc_pattern_from_pb_case5() -> IrPatternResult<Pattern> {
         params: Some(query_params(vec![12.into()], vec![], None)), //KNOWS
         expand_opt: 0,
         alias: None,
+        meta_data: None,
     };
     let expand_opr1 = pb::EdgeExpand {
         v_tag: None,
@@ -731,6 +746,7 @@ pub fn build_ldbc_pattern_from_pb_case5() -> IrPatternResult<Pattern> {
         params: Some(query_params(vec![12.into()], vec![], None)), //KNOWS
         expand_opt: 0,
         alias: None,
+        meta_data: None,
     };
     let pattern = pb::Pattern {
         sentences: vec![
@@ -774,6 +790,7 @@ pub fn build_ldbc_pattern_from_pb_case5() -> IrPatternResult<Pattern> {
                 join_kind: 0,
             },
         ],
+        meta_data: vec![],
     };
     let plan_meta = gen_plan_meta(&pattern);
     Pattern::from_pb_pattern(&pattern, &plan_meta)
@@ -788,6 +805,7 @@ pub fn build_ldbc_pattern_from_pb_case6() -> IrPatternResult<Pattern> {
         params: Some(query_params(vec![11.into()], vec![], None)), //ISLOCATEDIN
         expand_opt: 0,
         alias: None,
+        meta_data: None,
     };
     let expand_opr1 = pb::EdgeExpand {
         v_tag: None,
@@ -795,6 +813,7 @@ pub fn build_ldbc_pattern_from_pb_case6() -> IrPatternResult<Pattern> {
         params: Some(query_params(vec![11.into()], vec![], None)), //ISLOCATEDIN
         expand_opt: 0,
         alias: None,
+        meta_data: None,
     };
     let expand_opr2 = pb::EdgeExpand {
         v_tag: None,
@@ -802,6 +821,7 @@ pub fn build_ldbc_pattern_from_pb_case6() -> IrPatternResult<Pattern> {
         params: Some(query_params(vec![12.into()], vec![], None)), //KNOWS
         expand_opt: 0,
         alias: None,
+        meta_data: None,
     };
     let expand_opr3 = pb::EdgeExpand {
         v_tag: None,
@@ -809,6 +829,7 @@ pub fn build_ldbc_pattern_from_pb_case6() -> IrPatternResult<Pattern> {
         params: Some(query_params(vec![13.into()], vec![], None)), //LIKES
         expand_opt: 0,
         alias: None,
+        meta_data: None,
     };
     let expand_opr4 = pb::EdgeExpand {
         v_tag: None,
@@ -816,6 +837,7 @@ pub fn build_ldbc_pattern_from_pb_case6() -> IrPatternResult<Pattern> {
         params: Some(query_params(vec![0.into()], vec![], None)), //HASCREATOR
         expand_opt: 0,
         alias: None,
+        meta_data: None,
     };
     let pattern = pb::Pattern {
         sentences: vec![
@@ -857,6 +879,7 @@ pub fn build_ldbc_pattern_from_pb_case6() -> IrPatternResult<Pattern> {
                 join_kind: 0,
             },
         ],
+        meta_data: vec![],
     };
     let plan_meta = gen_plan_meta(&pattern);
     Pattern::from_pb_pattern(&pattern, &plan_meta)

@@ -252,7 +252,20 @@ def test_demo_with_default_session(ogbn_small_script):
     )
 
 
-def test_modern_graph():
+@pytest.mark.parametrize(
+    "parallel_executors",
+    ["ON", "OFF"],
+)
+@pytest.mark.parametrize(
+    "num_workers,threads_per_worker",
+    [
+        (1, 1),
+        (1, 2),
+        (2, 1),
+        (2, 2),
+    ],
+)
+def test_modern_graph(parallel_executors, num_workers, threads_per_worker):
     import vineyard
 
     def make_nodes_set(nodes):
@@ -282,6 +295,8 @@ def test_modern_graph():
 
         logger.info("nodes = %s", nodes)
         logger.info("edges = %s", edges)
+        assert len(nodes) == 6
+        assert len(edges) == 6
 
         g1 = interactive0.subgraph("g.E()")
         interactive0.close()
@@ -296,21 +311,11 @@ def test_modern_graph():
         assert make_edges_set(edges) == make_edges_set(subgraph_edges)
         session.close()
 
-    num_workers_options = (
-        1,
-        2,
-    )
-    threads_per_worker_options = (
-        1,
-        2,
-    )
-
-    for num_workers in num_workers_options:
-        for threads_per_worker in threads_per_worker_options:
-            with vineyard.envvars(
-                {
-                    "RUST_LOG": "debug",
-                    "THREADS_PER_WORKER": "%d" % (threads_per_worker,),
-                }
-            ):
-                subgraph_roundtrip(num_workers, threads_per_worker)
+    with vineyard.envvars(
+        {
+            "RUST_LOG": "debug",
+            "THREADS_PER_WORKER": "%d" % (threads_per_worker,),
+            "PARALLEL_INTERACTIVE_EXECUTOR_ON_VINEYARD": parallel_executors,
+        }
+    ):
+        subgraph_roundtrip(num_workers, threads_per_worker)

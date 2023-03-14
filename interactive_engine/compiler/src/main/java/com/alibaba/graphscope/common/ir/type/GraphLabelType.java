@@ -24,8 +24,8 @@ import java.util.Objects;
 /**
  * Maintain label for each Entity or Relation: Entity(label), Relation(Label, srcLabel, dstLabel).
  */
-public class LabelType {
-    public static LabelType DEFAULT = new LabelType();
+public class GraphLabelType {
+    public static GraphLabelType DEFAULT = new GraphLabelType();
 
     private String label;
     private Integer labelId;
@@ -34,38 +34,38 @@ public class LabelType {
     @Nullable private String dstLabel;
     @Nullable private Integer dstLabelId;
 
-    public LabelType() {
+    public GraphLabelType() {
         this.label = StringUtils.EMPTY;
         this.labelId = -1;
     }
 
-    public LabelType label(String label) {
+    public GraphLabelType label(String label) {
         Objects.requireNonNull(label);
         this.label = label;
         return this;
     }
 
-    public LabelType labelId(int labelId) {
+    public GraphLabelType labelId(int labelId) {
         this.labelId = labelId;
         return this;
     }
 
-    public LabelType srcLabel(String srcLabel) {
+    public GraphLabelType srcLabel(String srcLabel) {
         this.srcLabel = srcLabel;
         return this;
     }
 
-    public LabelType srcLabelId(int srcLabelId) {
+    public GraphLabelType srcLabelId(int srcLabelId) {
         this.srcLabelId = srcLabelId;
         return this;
     }
 
-    public LabelType dstLabel(String dstLabel) {
+    public GraphLabelType dstLabel(String dstLabel) {
         this.dstLabel = dstLabel;
         return this;
     }
 
-    public LabelType dstLabelId(int dstLabelId) {
+    public GraphLabelType dstLabelId(int dstLabelId) {
         this.dstLabelId = dstLabelId;
         return this;
     }
