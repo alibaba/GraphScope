@@ -189,6 +189,7 @@ jobs:
         python3 -m pytest -s -vvv graphscope/tests/kubernetes/test_store_service.py -k test_demo_fresh
         # restart helm and run demo with the PersistentVolume
         helm uninstall ci
+        sleep 10
         cd ${GITHUB_WORKSPACE}/charts
         helm install ci --set image.tag=${SHORT_SHA} ./graphscope-store
         # helm test and python test on the restarted store
