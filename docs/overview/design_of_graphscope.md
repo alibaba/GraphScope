@@ -13,12 +13,14 @@ In practice, all the users and transactions can be organized as a large-scale gr
 which contains vertices such as buyers, sellers, and items, and edges representing 
 buying, selling, or reviewing relationships.
 
-<p align="center">
-<img src="../images/gs-example.png"
-     alt="An example in e-commerce"
-     width="80%" />
+:::{figure-md}
 
-</p>
+<img src="../images/gs-example.png"
+     alt="An example in e-commerce."
+     width="80%">
+
+An example in e-commerce
+:::
 
 Various techniques can be applied to identify suspicious users and transactions on this transaction graph. 
 For example, an anti-fraud workflow may consist of the following five steps. 

@@ -21,6 +21,8 @@ project = 'GraphScope'
 copyright = '2020-2023, DAMO Academy, Alibaba Inc.'
 author = 'DAMO Academy, Alibaba Inc.'
 
+__current__ = os.path.abspath(os.path.dirname(__file__))
+
 master_doc = 'index'
 html_context = {}  # Dict[str, Any]
 
@@ -56,7 +58,22 @@ breathe_debug_trace_qualification = True
 autodoc_mock_imports = ["graphlearn"]
 
 # enable figure for myst
-myst_enable_extensions = ["colon_fence"]
+myst_enable_extensions = [
+    "amsmath",
+    "attrs_inline",
+    "colon_fence",
+    "deflist",
+    "dollarmath",
+    "fieldlist",
+    "html_admonition",
+    "html_image",
+    "linkify",
+    "replacements",
+    "smartquotes",
+    "strikethrough",
+    "substitution",
+    "tasklist",
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -137,4 +154,8 @@ html_css_files = [
 # generate autosummary pages
 autosummary_generate = True
 
-html_extra_path = ['./CNAME', './.nojekyll']
+html_extra_path = []
+if os.path.exists(os.path.join(__current__, 'CNAME')):
+    html_extra_path.append('./CNAME')
+if os.path.exists(os.path.join(__current__, '.nojekyll')):
+    html_extra_path.append('./.nojekyll')
