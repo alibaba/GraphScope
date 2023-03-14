@@ -54,4 +54,7 @@ RUN ./gs install-deps dev --v6d-version=$VINEYARD_VERSION -j 2 && \
 SHELL [ "/usr/bin/scl", "enable", "rh-python38" ]
 
 RUN python3 -m pip --no-cache install pyyaml --user
-ENTRYPOINT ["/bin/bash", "-c", "source scl_source enable devtoolset-8 rh-python38 && $0 $@"]
+# Uncomment this line will results in a weird error when using the image together with commands, like
+# docker run --rm graphscope/graphscope-dev:latest bash -c 'echo xxx && ls -la'
+# The output of `ls -la` would not be shown.
+# ENTRYPOINT ["/bin/bash", "-c", "source scl_source enable devtoolset-8 rh-python38 && $0 $@"]

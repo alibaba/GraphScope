@@ -34,6 +34,10 @@ jobs:
 
         if [ "$RUNNER_OS" == "macOS" ]; then
             brew update
+            # pushd $(brew --repo homebrew/core)
+            # # fixed openmpi version 4.1.4
+            # git checkout d2d8d2251eb3ce044993a79e5ad816ed3356bc36
+            # popd
             brew install bash
             alias bash=$(brew --prefix)/bin/bash
         fi

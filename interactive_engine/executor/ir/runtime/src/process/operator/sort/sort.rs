@@ -121,7 +121,7 @@ mod tests {
     fn sort_simple_ascending_test() {
         let sort_opr = pb::OrderBy {
             pairs: vec![pb::order_by::OrderingPair {
-                key: Some(common_pb::Variable { tag: None, property: None }),
+                key: Some(common_pb::Variable { tag: None, property: None, node_type: None }),
                 order: 1, // ascending
             }],
             limit: None,
@@ -142,7 +142,7 @@ mod tests {
     fn sort_simple_descending_test() {
         let sort_opr = pb::OrderBy {
             pairs: vec![pb::order_by::OrderingPair {
-                key: Some(common_pb::Variable { tag: None, property: None }),
+                key: Some(common_pb::Variable { tag: None, property: None, node_type: None }),
                 order: 2, // descending
             }],
             limit: None,

@@ -46,6 +46,15 @@ message PairArray {
   repeated Pair item = 1;
 }
 
+// A indicator of an attribute or further its properties, which may present as a string-type name
+// or be encoded as a name identifier
+message NameOrId {
+  oneof item {
+    string name = 1;
+    int32 id = 2;
+  }
+}
+
 message Value {
   oneof item {
     bool  boolean     = 2;
