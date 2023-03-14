@@ -23,13 +23,13 @@ use crate::GraphProxyResult;
 pub trait WriteGraphProxy: Send + Sync {
     /// Add a vertex
     fn add_vertex(
-        &mut self, label: LabelId, vertex_pk: PKV, properties: Option<DynDetails>,
+        &mut self, label: LabelId, vertex_pk: PKV, properties: DynDetails,
     ) -> GraphProxyResult<()>;
 
     /// Add an edge
     fn add_edge(
         &mut self, label: LabelId, src_vertex_label: LabelId, src_vertex_pk: PKV,
-        dst_vertex_label: LabelId, dst_vertex_pk: PKV, properties: Option<DynDetails>,
+        dst_vertex_label: LabelId, dst_vertex_pk: PKV, properties: DynDetails,
     ) -> GraphProxyResult<()>;
 
     /// A hint of all vertices/edges are added.
