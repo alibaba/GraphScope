@@ -29,14 +29,14 @@ use pegasus::codec::{ReadExt, WriteExt};
 use crate::utils::expr::eval_pred::PEvaluator;
 
 pub mod element;
-pub type ID = i64;
+pub type ID = u64;
 
 pub fn read_id<R: ReadExt>(reader: &mut R) -> io::Result<ID> {
-    reader.read_i64()
+    reader.read_u64()
 }
 
 pub fn write_id<W: WriteExt>(writer: &mut W, id: ID) -> io::Result<()> {
-    writer.write_i64(id)
+    writer.write_u64(id)
 }
 
 /// The number of bits in an `ID`

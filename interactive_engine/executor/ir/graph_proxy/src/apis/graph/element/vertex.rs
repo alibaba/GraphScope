@@ -162,7 +162,7 @@ impl Ord for Vertex {
 }
 
 impl From<ID> for Vertex {
-    fn from(id: ID) -> Self {
+    fn from(id: u64) -> Self {
         Vertex::new(id, None, DynDetails::default())
     }
 }
