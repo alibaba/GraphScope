@@ -114,6 +114,10 @@ spec:
           - {{ .Values.engines.enabled_engines }}
           - "--k8s_with_dataset"
           - {{ .Values.engines.dataset.enabled | quote }}
+          {{- if .Values.engines.dataset.proxy }}
+          - "--dataset_proxy"
+          - {{ .Values.engines.dataset.proxy | toJson | squote }}
+          {{- end }}
 
       {{- if .Values.withJupyter }}
       - name: jupyter

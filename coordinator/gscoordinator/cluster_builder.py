@@ -78,6 +78,7 @@ class EngineCluster:
         with_interactive,
         with_learning,
         with_mars,
+        dataset_proxy
     ):
         self._gs_prefix = "gs-engine-"
         self._analytical_prefix = "gs-analytical-"
@@ -144,6 +145,8 @@ class EngineCluster:
         self._preemptive = preemptive
         self._vineyard_shared_mem = vineyard_shared_mem
 
+        self._dataset_proxy = dataset_proxy
+
         self._node_selector = (
             json.loads(self.base64_decode(engine_pod_node_selector))
             if engine_pod_node_selector
@@ -195,6 +198,9 @@ class EngineCluster:
         put_if_exists(env, "OPAL_BINDIR")
         env = [kube_client.V1EnvVar(name=k, value=v) for k, v in env.items()]
         return env
+
+    def get_dataset_proxy_env(self):
+        return [kube_client.V1EnvVar(name=k, value=v) for k, v in self._dataset_proxy.items()]
 
     def get_base_machine_env(self):
         env = [
@@ -373,6 +379,7 @@ class EngineCluster:
         )
 
         container.volume_mounts = volume_mounts
+        container.env = self.get_dataset_proxy_env()
 
         container.security_context = kube_client.V1SecurityContext(privileged=True)
         return container
