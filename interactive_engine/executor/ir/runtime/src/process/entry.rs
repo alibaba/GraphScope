@@ -218,37 +218,41 @@ impl Element for DynEntry {
 impl GraphElement for DynEntry {
     fn id(&self) -> ID {
         match self.get_type() {
-            EntryType::Vertex | EntryType::Edge => self.inner.as_graph_element().unwrap().id(),
+            EntryType::Vertex | EntryType::Edge | EntryType::Path => {
+                self.inner.as_graph_element().unwrap().id()
+            }
             _ => unreachable!(),
         }
     }
 
     fn label(&self) -> Option<i32> {
         match self.get_type() {
-            EntryType::Vertex | EntryType::Edge => self.inner.as_graph_element().unwrap().label(),
+            EntryType::Vertex | EntryType::Edge | EntryType::Path => {
+                self.inner.as_graph_element().unwrap().label()
+            }
             _ => None,
         }
     }
 
     fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
         match self.get_type() {
-            EntryType::Vertex | EntryType::Edge => self
+            EntryType::Vertex | EntryType::Edge | EntryType::Path => self
                 .inner
                 .as_graph_element()
                 .unwrap()
                 .get_property(key),
-            _ => unreachable!(),
+            _ => None,
         }
     }
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
         match self.get_type() {
-            EntryType::Vertex | EntryType::Edge => self
+            EntryType::Vertex | EntryType::Edge | EntryType::Path => self
                 .inner
                 .as_graph_element()
                 .unwrap()
                 .get_all_properties(),
-            _ => unreachable!(),
+            _ => None,
         }
     }
 }

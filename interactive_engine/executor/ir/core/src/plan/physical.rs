@@ -231,7 +231,6 @@ impl AsPhysical for pb::PathExpand {
         if plan_meta.is_partition() {
             builder.shuffle(self.start_tag.clone());
         }
-        // TODO: for path expand, if condition is to filter on HEAD, no need to save head as it is not the truely head.
         post_process_vars(builder, plan_meta, false)?;
         Ok(())
     }
@@ -1452,12 +1451,11 @@ mod test {
             None,
         );
         expected_builder.shuffle(Some(0.into()));
-        expected_builder.get_v(pb::GetV {
-            tag: Some(0.into()),
-            opt: 4,
-            params: None,
-            alias: Some(0.into()),
-        });
+        expected_builder.get_v(build_auxilia_with_tag_alias_columns(
+            Some(0.into()),
+            Some(0.into()),
+            vec![],
+        ));
         expected_builder.project(project);
 
         assert_eq!(expected_builder, builder);

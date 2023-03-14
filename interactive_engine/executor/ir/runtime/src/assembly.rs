@@ -543,14 +543,16 @@ impl IRJobAssembly {
                     // path base expand
                     let mut base_expand_plan = vec![];
                     base_expand_plan.push(base.clone().into());
-                    let repartition = pb::Repartition {
-                        strategy: Some(pb::repartition::Strategy::ToAnother(pb::repartition::Shuffle {
-                            shuffle_key: None,
-                        })),
-                    };
                     if let OpKind::Repartition(_) = &prev_op_kind {
                         // the case when base expand needs repartition
-                        base_expand_plan.push(repartition.clone().into());
+                        base_expand_plan.push(
+                            pb::Repartition {
+                                strategy: Some(pb::repartition::Strategy::ToAnother(
+                                    pb::repartition::Shuffle { shuffle_key: None },
+                                )),
+                            }
+                            .into(),
+                        );
                     }
                     for _ in 0..range.lower {
                         stream = self.install(stream, &base_expand_plan)?;
@@ -563,6 +565,7 @@ impl IRJobAssembly {
                                 .udf_gen
                                 .gen_filter(algebra_pb::Select { predicate: Some(condition.clone()) })?;
                             until.set_until(func);
+                            // Notice that if UNTIL condition set, we expand path without `Emit`
                             stream = stream
                                 .iterate_until(until, |start| self.install(start, &base_expand_plan[..]))?;
                         } else {
