@@ -1487,30 +1487,30 @@ import org.checkerframework.checker.nullness.qual.Nullable;
         reason = "Projection may introduce additional shuffling that can break the order.")
 
 // cases unsupported in groot
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
-        method = "g_VX1X_out_hasXid_2_3X",
-        reason = "unsupported")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
-        method = "g_V_hasXp_neqXvXX",
-        reason = "unsupported")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
-        method = "g_V_hasXblahX",
-        reason = "unsupported")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
-        method = "g_VX1X_hasXcircumferenceX",
-        reason = "unsupported")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
-        method = "g_EX11X",
-        reason = "unsupported")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ValueMapTest",
-        method = "g_V_valueMapXname_ageX",
-        reason = "unsupported")
+// @Graph.OptOut(
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+//        method = "g_VX1X_out_hasXid_2_3X",
+//        reason = "unsupported")
+// @Graph.OptOut(
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+//        method = "g_V_hasXp_neqXvXX",
+//        reason = "unsupported")
+// @Graph.OptOut(
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+//        method = "g_V_hasXblahX",
+//        reason = "unsupported")
+// @Graph.OptOut(
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+//        method = "g_VX1X_hasXcircumferenceX",
+//        reason = "unsupported")
+// @Graph.OptOut(
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
+//        method = "g_EX11X",
+//        reason = "unsupported")
+// @Graph.OptOut(
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ValueMapTest",
+//        method = "g_V_valueMapXname_ageX",
+//        reason = "unsupported")
 public class RemoteTestGraph extends DummyGraph {
     public static final String GRAPH_NAME = "test.graph.name";
     private RemoteGremlinConnection remoteGremlinConnection;
