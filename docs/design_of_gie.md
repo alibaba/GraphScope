@@ -38,7 +38,6 @@ role in massive data analysis. However, in practice, applying graph queries also
 
 <img src="images/states_of_gie.png"
      alt="The current states of graph queries"
-     style="border-radius: 0.3125em; box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);"
      width="65%">
 
 Figure 1. The current states of graph queries.
@@ -66,7 +65,6 @@ languages and N sets of code generation for N engines.
 
 <img src="images/design_of_gie.png"
      alt="The architecture of GIE"
-     style="border-radius: 0.3125em; box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);"
      width="85%">
 
 Figure 2. The architecture of GIE.
