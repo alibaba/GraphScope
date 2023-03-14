@@ -884,9 +884,10 @@ def parse_sys_args():
         "--dataset_proxy",
         type=str,
         nargs="?",
-        const="{}",
-        default="{}",
-        help="Proxy for worker dataset.",
+        const="",
+        default="",
+        help="A json string specifies the dataset proxy info."
+             "Available options of proxy: http_proxy, https_proxy, no_proxy.",
     )
     return parser.parse_args()
 

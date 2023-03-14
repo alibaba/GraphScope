@@ -70,9 +70,10 @@ engines:
     enabled: False
     image:
       name: dataset
-#    proxy:
-#      http_proxy: "http://*.*.*.*:*"
-#      https_proxy: "http://*.*.*.*:*"
+  # Running Behind a Forward Proxy
+  # Environment variables that get added to the dataset container
+  # Available options of proxy: http_proxy, https_proxy, no_proxy
+    proxy:
 
   resources:
     requests:

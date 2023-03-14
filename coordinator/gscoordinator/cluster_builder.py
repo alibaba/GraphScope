@@ -145,8 +145,6 @@ class EngineCluster:
         self._preemptive = preemptive
         self._vineyard_shared_mem = vineyard_shared_mem
 
-        self._dataset_proxy = dataset_proxy
-
         self._node_selector = (
             json.loads(self.base64_decode(engine_pod_node_selector))
             if engine_pod_node_selector
@@ -154,6 +152,7 @@ class EngineCluster:
         )
         self._num_workers = num_workers
         self._volumes = json.loads(self.base64_decode(volumes)) if volumes else None
+        self._dataset_proxy = json.loads(self.base64_decode(dataset_proxy)) if dataset_proxy else None
 
         self._sock = "/tmp/vineyard_workspace/vineyard.sock"
 
