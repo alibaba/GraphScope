@@ -76,7 +76,7 @@ jobs:
       run: |
         source ${HOME}/.graphscope_env
         cd interactive_engine/groot-server
-        mvn test -P gremlin-test
+        mvn test -Dtest=com.alibaba.graphscope.groot.tests.gremlin.GremlinStandardTest
 
     - name: Build GraphScope Store
       run: |
