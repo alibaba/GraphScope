@@ -887,7 +887,7 @@ def parse_sys_args():
         const="",
         default="",
         help="A json string specifies the dataset proxy info."
-             "Available options of proxy: http_proxy, https_proxy, no_proxy.",
+        "Available options of proxy: http_proxy, https_proxy, no_proxy.",
     )
     return parser.parse_args()
 

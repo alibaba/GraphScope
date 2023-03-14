@@ -152,7 +152,9 @@ class EngineCluster:
         )
         self._num_workers = num_workers
         self._volumes = json.loads(self.base64_decode(volumes)) if volumes else None
-        self._dataset_proxy = json.loads(self.base64_decode(dataset_proxy)) if dataset_proxy else None
+        self._dataset_proxy = (
+            json.loads(self.base64_decode(dataset_proxy)) if dataset_proxy else None
+        )
 
         self._sock = "/tmp/vineyard_workspace/vineyard.sock"
 
