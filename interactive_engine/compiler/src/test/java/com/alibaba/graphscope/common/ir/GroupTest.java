@@ -46,9 +46,10 @@ public class GroupTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalAggregate(keys=[{variables=[DEFAULT.name, DEFAULT.age], aliases=[a,"
-                        + " b]}], values=[[{operands=[DEFAULT], aggFunction=COUNT, alias='c'}]])\n"
-                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[~DEFAULT], opt=[VERTEX])",
+                    + " b]}], values=[[{operands=[DEFAULT], aggFunction=COUNT, alias='c',"
+                    + " distinct=false}]])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[~DEFAULT], opt=[VERTEX])",
                 aggregate.explain().trim());
     }
 
@@ -74,10 +75,10 @@ public class GroupTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalAggregate(keys=[{variables=[DEFAULT.name], aliases=[name]}],"
-                        + " values=[[{operands=[$f0], aggFunction=COUNT, alias='x'}]])\n"
-                        + "  GraphLogicalProject($f0=[+(DEFAULT.age, 1)], isAppend=[true])\n"
-                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[~DEFAULT], opt=[VERTEX])",
+                    + " values=[[{operands=[$f0], aggFunction=COUNT, alias='x', distinct=true}]])\n"
+                    + "  GraphLogicalProject($f0=[+(DEFAULT.age, 1)], isAppend=[true])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[~DEFAULT], opt=[VERTEX])",
                 aggregate.explain().trim());
     }
 
@@ -101,7 +102,8 @@ public class GroupTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalAggregate(keys=[{variables=[DEFAULT.name, DEFAULT.age], aliases=[a,"
-                    + " b]}], values=[[{operands=[DEFAULT], aggFunction=COLLECT, alias='c'}]])\n"
+                    + " b]}], values=[[{operands=[DEFAULT], aggFunction=COLLECT, alias='c',"
+                    + " distinct=false}]])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[~DEFAULT], opt=[VERTEX])",
                 aggregate.explain().trim());
