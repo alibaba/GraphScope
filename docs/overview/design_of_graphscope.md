@@ -63,12 +63,15 @@ including cluster management(deployment) software, graph store (as input, output
 distributed execution engines, language constructs, and development tools.
 
 
-<p align="center">
-<img src="../images/gs-workflow.png"
-     alt="GraphScope workflow"
-     width="80%" />
+:::{figure-md}
 
-</p>
+<img src="../images/gs-workflow.png"
+     alt="GraphScope workflow."
+     width="80%">
+
+GraphScope workflow
+:::
+
 
 ### Application layer
 
