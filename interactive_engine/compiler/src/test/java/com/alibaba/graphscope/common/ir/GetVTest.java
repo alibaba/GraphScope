@@ -26,7 +26,7 @@ public class GetVTest {
     // source("person").as("x").expand("knows").as("y").getV("person").as("x") -> invalid
     @Test
     public void getV_1_test() {
-        GraphBuilder builder = SourceTest.mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         try {
             builder.source(
                             new SourceConfig(

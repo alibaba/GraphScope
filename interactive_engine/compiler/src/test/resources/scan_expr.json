@@ -14,6 +14,7 @@
               "predicate": {
                 "operators": [
                   {
+                    "node_type": null,
                     "item": {
                       "Var": {
                         "tag": null,
@@ -25,16 +26,19 @@
                               }
                             }
                           }
-                        }
+                        },
+                        "node_type": null
                       }
                     }
                   },
                   {
+                    "node_type": null,
                     "item": {
                       "Logical": 0
                     }
                   },
                   {
+                    "node_type": null,
                     "item": {
                       "Const": {
                         "item": {
@@ -48,7 +52,8 @@
               "sample_ratio": 1.0,
               "extra": {}
             },
-            "idx_predicate": null
+            "idx_predicate": null,
+            "meta_data": null
           }
         }
       },

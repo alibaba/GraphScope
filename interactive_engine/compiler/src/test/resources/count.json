@@ -10,7 +10,8 @@
                 "vars": [
                   {
                     "tag": null,
-                    "property": null
+                    "property": null,
+                    "node_type": null
                   }
                 ],
                 "aggregate": 3,
@@ -20,7 +21,8 @@
                   }
                 }
               }
-            ]
+            ],
+            "meta_data": []
           }
         }
       },
