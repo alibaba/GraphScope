@@ -37,7 +37,6 @@ public abstract class RpcClient implements AutoCloseable {
     }
 
     public void close() {
-        channel.resetConnectBackoff();
         this.channel.shutdown();
         try {
             this.channel.awaitTermination(3000, TimeUnit.MILLISECONDS);

@@ -30,8 +30,8 @@ COPY --from=builder /home/graphscope/groot/conf /usr/local/groot/conf
 COPY --from=builder /home/graphscope/groot/lib /usr/local/groot/lib
 COPY --from=builder /home/graphscope/groot/native /usr/local/groot/native
 
-RUN curl -L -o /usr/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.19.2/bin/linux/amd64/kubectl
-RUN chmod +x /usr/bin/kubectl
+# RUN curl -L -o /usr/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.19.2/bin/linux/amd64/kubectl
+# RUN chmod +x /usr/bin/kubectl
 
 RUN useradd -m graphscope -u 1001 \
     && echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers

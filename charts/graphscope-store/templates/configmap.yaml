@@ -93,8 +93,8 @@ data:
   setup.sh: |-
     #!/bin/bash
 
-    sudo chown -R graphscope:graphscope {{ .Values.storeDataPath }}
-    sudo chown -R graphscope:graphscope /etc/groot
+    sudo chown -R graphscope:graphscope {{ .Values.storeDataPath }} || true
+    sudo chown -R graphscope:graphscope /etc/groot || true
 
     [[ `hostname` =~ -([0-9]+)$ ]] || exit 1
     ordinal=${BASH_REMATCH[1]}
