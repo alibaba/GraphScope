@@ -278,7 +278,7 @@ impl<'a> RefItem<'a> {
             RefItem::UInt64(v) => Ok(**v),
             RefItem::Double(v) => Ok(**v as u64),
             RefItem::Date(_) => Ok(0_u64),
-            RefItem::DateTime(v) => Ok(v.to_u64()),
+            RefItem::DateTime(v) => Ok(v.to_i64() as u64),
             RefItem::ID(v) => Ok(**v as u64),
             RefItem::String(_) => Err(CastError::new::<u64>(RawType::String)),
             _ => Ok(0_u64),
@@ -1175,7 +1175,7 @@ impl DateTimeColumn {
         }
         let num = self.data.len();
         for k in 0..num {
-            if self.data[k].to_u64() != other.data[k].to_u64() {
+            if self.data[k].to_i64() != other.data[k].to_i64() {
                 return false;
             }
         }
