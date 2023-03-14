@@ -33,13 +33,6 @@ pub unsafe trait IndexType: Copy + Default + Hash + Ord + fmt::Debug + 'static +
 
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()>;
     fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self>;
-
-    fn hi(&self) -> Self;
-    fn lo(&self) -> Self;
-
-    fn bw_or(&self, other: Self) -> Self;
-
-    fn bw_and(&self, other: Self) -> Self;
 }
 
 unsafe impl IndexType for usize {
@@ -68,26 +61,6 @@ unsafe impl IndexType for usize {
 
     fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
         Ok(reader.read_u64()? as Self)
-    }
-
-    #[inline(always)]
-    fn hi(&self) -> Self {
-        self >> 32
-    }
-
-    #[inline(always)]
-    fn lo(&self) -> Self {
-        self & 0b1111_1111_1111_1111_1111_1111_1111_1111
-    }
-
-    #[inline(always)]
-    fn bw_or(&self, other: Self) -> Self {
-        self | other
-    }
-
-    #[inline(always)]
-    fn bw_and(&self, other: Self) -> Self {
-        self & other
     }
 }
 

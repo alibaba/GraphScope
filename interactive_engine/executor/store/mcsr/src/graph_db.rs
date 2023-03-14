@@ -165,10 +165,6 @@ impl<'a, G: IndexType + Sync + Send, I: IndexType + Sync + Send> LocalEdge<'a, G
         self.end
     }
 
-    pub fn get_encoded_data(&self) -> I {
-        self.start.hi().bw_or(self.end.hi())
-    }
-
     pub fn get_property(&self, key: &str) -> Option<RefItem> {
         if let Some(prop) = self.table {
             prop.get_item(key, self.offset)

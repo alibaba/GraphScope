@@ -37,7 +37,6 @@ pub struct VertexMap<G: Send + Sync + IndexType, I: Send + Sync + IndexType> {
     labeled_corner_num: Vec<usize>,
     pub index_to_corner_global_id: Vec<Vec<G>>,
     label_num: LabelId,
-    internal_id_mask: Vec<I>,
 }
 
 impl<G, I> VertexMap<G, I>
@@ -50,13 +49,11 @@ where
         let mut index_to_global_id = Vec::with_capacity(num_labels);
         let mut labeled_corner_num = Vec::with_capacity(num_labels);
         let mut index_to_corner_global_id = Vec::with_capacity(num_labels);
-        let mut internal_id_mask = Vec::with_capacity(num_labels);
         for _ in 0..num_labels {
             labeled_num.push(0_usize);
             index_to_global_id.push(Vec::new());
             labeled_corner_num.push(0_usize);
             index_to_corner_global_id.push(Vec::new());
-            internal_id_mask.push(<I as IndexType>::max());
         }
         Self {
             global_id_to_index: FnvHashMap::default(),
@@ -65,12 +62,7 @@ where
             labeled_corner_num,
             index_to_corner_global_id,
             label_num: num_labels as LabelId,
-            internal_id_mask,
         }
-    }
-
-    pub fn set_internal_id_mask(&mut self, label_id: usize, mask: I) {
-        self.internal_id_mask[label_id] = mask;
     }
 
     pub fn add_vertex(&mut self, global_id: G, label: LabelId) -> I {
@@ -101,9 +93,7 @@ where
         if let Some(vertex) = self.global_id_to_index.get(&global_id) {
             vertex.clone()
         } else {
-            let v = I::new(
-                self.internal_id_mask[label as usize].index() - self.labeled_corner_num[label as usize] - 1,
-            );
+            let v = I::new(<I as IndexType>::max().index() - self.labeled_corner_num[label as usize] - 1);
             self.labeled_corner_num[label as usize] += 1;
             self.index_to_corner_global_id[label as usize].push(global_id);
             self.global_id_to_index.insert(global_id, v);
@@ -126,21 +116,15 @@ where
         }
     }
 
-    pub fn get_masked_internal_id(&self, label: LabelId, internal_id: I) -> I {
-        internal_id.bw_and(self.internal_id_mask[label as usize])
-    }
-
     pub fn get_global_id(&self, label: LabelId, internal_id: I) -> Option<G> {
-        let masked_internal_id = internal_id
-            .bw_and(self.internal_id_mask[label as usize])
-            .index();
-        if masked_internal_id < self.labeled_num[label as usize] {
+        let internal_id = internal_id.index();
+        if internal_id < self.labeled_num[label as usize] {
             self.index_to_global_id[label as usize]
-                .get(masked_internal_id)
+                .get(internal_id)
                 .cloned()
         } else {
             self.index_to_corner_global_id[label as usize]
-                .get(self.internal_id_mask[label as usize].index() - masked_internal_id - 1)
+                .get(<I as IndexType>::max().index() - internal_id - 1)
                 .cloned()
         }
     }
@@ -173,9 +157,6 @@ where
 
     pub fn export_native<P: AsRef<Path>>(&self, path: P) -> GDBResult<()> {
         let mut writer = File::create(path)?;
-        for v in self.internal_id_mask.iter() {
-            writer.write_u64(v.index() as u64)?;
-        }
         for v in self.labeled_num.iter() {
             writer.write_u64(*v as u64)?;
         }
@@ -205,11 +186,6 @@ where
     pub fn import_native<P: AsRef<Path>>(&mut self, path: P) -> GDBResult<()> {
         let mut reader = File::open(path)?;
         let mut labeled_num = vec![];
-        self.internal_id_mask.clear();
-        for _ in 0..self.label_num {
-            self.internal_id_mask
-                .push(I::new(reader.read_u64()? as usize));
-        }
         for _ in 0..self.label_num {
             labeled_num.push(reader.read_u64()? as usize);
         }
@@ -247,9 +223,6 @@ where
         for n in self.labeled_corner_num.iter() {
             f.write_u64(*n as u64).unwrap();
         }
-        for n in self.internal_id_mask.iter() {
-            f.write_u64(n.index() as u64).unwrap();
-        }
 
         for i in 0..self.label_num {
             assert_eq!(self.index_to_global_id[i as usize].len(), self.labeled_num[i as usize]);
@@ -281,7 +254,6 @@ where
 
         self.labeled_num.clear();
         self.labeled_corner_num.clear();
-        self.internal_id_mask.clear();
         for _ in 0..self.label_num {
             self.labeled_num
                 .push(f.read_u64().unwrap() as usize);
@@ -289,10 +261,6 @@ where
         for _ in 0..self.label_num {
             self.labeled_corner_num
                 .push(f.read_u64().unwrap() as usize);
-        }
-        for _ in 0..self.label_num {
-            self.internal_id_mask
-                .push(I::new(f.read_u64().unwrap() as usize));
         }
 
         self.index_to_global_id.clear();
@@ -363,9 +331,6 @@ where
         if self.label_num != other.label_num {
             return false;
         }
-        if self.internal_id_mask != other.internal_id_mask {
-            return false;
-        }
 
         return true;
     }
@@ -381,9 +346,6 @@ impl<G: Send + Sync + IndexType, I: Send + Sync + IndexType> Encode for VertexMa
         assert_eq!(self.labeled_corner_num.len(), self.label_num as usize);
         for v in self.labeled_corner_num.iter() {
             writer.write_u64(*v as u64)?;
-        }
-        for v in self.internal_id_mask.iter() {
-            writer.write_u64(v.index() as u64)?;
         }
         for (label, vec) in self.index_to_global_id.iter().enumerate() {
             assert_eq!(vec.len(), self.labeled_num[label]);
@@ -417,11 +379,6 @@ impl<G: Send + Sync + IndexType, I: Send + Sync + IndexType> Decode for VertexMa
         }
         for _ in 0..label_num {
             labeled_corner_num.push(reader.read_u64()? as usize);
-        }
-        ret.internal_id_mask.clear();
-        for _ in 0..label_num {
-            ret.internal_id_mask
-                .push(I::new(reader.read_u64()? as usize));
         }
 
         for i in 0..label_num {
