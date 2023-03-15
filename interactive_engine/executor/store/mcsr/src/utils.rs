@@ -84,40 +84,6 @@ impl<I: IndexType> Range<I> {
     }
 }
 
-/*
-pub struct MultipleIterator<I: Iterator> {
-    iterators: Vec<I>,
-    cur: usize,
-}
-
-impl<I: Iterator> MultipleIterator<I> {
-    pub fn new(iterators: Vec<I>) -> Self {
-        MultipleIterator {
-            iterators,
-            cur: 0,
-        }
-    }
-}
-
-impl<I: Iterator> Iterator for MultipleIterator<I> {
-    type Item = I::Item;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        loop {
-            if self.cur == self.iterators.len() {
-                return None;
-            }
-            let item = self.iterators[self.cur].next();
-            if item.is_some() {
-                return item;
-            } else {
-                self.cur += 1;
-            }
-        }
-    }
-}
- */
-
 pub struct LabeledIterator<L: Copy + Send, I: Iterator + Send> {
     labels: Vec<L>,
     iterators: Vec<I>,

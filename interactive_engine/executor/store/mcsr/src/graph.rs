@@ -47,7 +47,6 @@ unsafe impl IndexType for usize {
     #[inline(always)]
     fn max() -> Self {
         ::std::usize::MAX
-        // 1_usize << 48
     }
 
     #[inline(always)]
@@ -63,71 +62,6 @@ unsafe impl IndexType for usize {
         Ok(reader.read_u64()? as Self)
     }
 }
-
-// unsafe impl IndexType for u32 {
-//     #[inline(always)]
-//     fn new(x: usize) -> Self {
-//         x as u32
-//     }
-//     #[inline(always)]
-//     fn index(&self) -> usize {
-//         *self as usize
-//     }
-//     #[inline(always)]
-//     fn max() -> Self {
-//         ::std::u32::MAX
-//     }
-//     #[inline(always)]
-//     fn add_assign(&mut self, other: Self) {
-//         *self += other;
-//     }
-//
-//     fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
-//         writer.write_u32(*self)
-//     }
-//
-//     fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
-//         Ok(reader.read_u32()?)
-//     }
-// }
-
-// unsafe impl IndexType for u16 {
-//     #[inline(always)]
-//     fn new(x: usize) -> Self {
-//         x as u16
-//     }
-//     #[inline(always)]
-//     fn index(&self) -> usize {
-//         *self as usize
-//     }
-//     #[inline(always)]
-//     fn max() -> Self {
-//         ::std::u16::MAX
-//     }
-//     #[inline(always)]
-//     fn add_assign(&mut self, other: Self) {
-//         *self += other;
-//     }
-// }
-//
-// unsafe impl IndexType for u8 {
-//     #[inline(always)]
-//     fn new(x: usize) -> Self {
-//         x as u8
-//     }
-//     #[inline(always)]
-//     fn index(&self) -> usize {
-//         *self as usize
-//     }
-//     #[inline(always)]
-//     fn max() -> Self {
-//         ::std::u8::MAX
-//     }
-//     #[inline(always)]
-//     fn add_assign(&mut self, other: Self) {
-//         *self += other;
-//     }
-// }
 
 // Index into the NodeIndex and EdgeIndex arrays
 /// Edge direction.
