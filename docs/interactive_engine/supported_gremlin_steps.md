@@ -1,4 +1,4 @@
-# Tutorials for Gremlin Users
+# Supported Gremlin Steps
 1. [Introduction](#introduction)
 2. [Standard Steps](#standard-steps)
    1. [Source](#source)
@@ -121,7 +121,7 @@ g.V().outE().bothV() # both endpoints of the outgoing edges
 The hasId()-step is meant to filter graph elements based on their identifiers.
 
 Parameters: </br>
-elementIds - identifiers of the elements. 
+elementIds - identifiers of the elements.
 ```bash
 g.V().hasId(1) # = g.V(1)
 g.V().hasId(1,2,3) # = g.V(1,2,3)
@@ -130,7 +130,7 @@ g.V().hasId(1,2,3) # = g.V(1,2,3)
 The hasLabel()-step is meant to filter graph elements based on their labels.
 
 Parameters: </br>
-labels - labels of the elements. 
+labels - labels of the elements.
 ```bash
 g.V().hasLabel("person")
 g.V().hasLabel("person", "software")
@@ -139,17 +139,17 @@ g.V().hasLabel("person", "software")
 The has()-step is meant to filter graph elements by applying predicates on their properties.
 
 Parameters: </br>
-* propertyKey - the key of the property to filter on for existence. 
+* propertyKey - the key of the property to filter on for existence.
     ```bash
     g.V().has("name") # find vertices containing property `name`
     ```
-* propertyKey - the key of the property to filter on, </br> value - the value to compare the accessor value to for equality. 
+* propertyKey - the key of the property to filter on, </br> value - the value to compare the accessor value to for equality.
     ```bash
     g.V().has("age", 10)
     g.V().has("name", "marko")
-    g.E().has("weight", 1.0)    
+    g.E().has("weight", 1.0)
     ```
-* propertyKey - the key of the property to filter on, </br> predicate - the filter to apply to the key's value. 
+* propertyKey - the key of the property to filter on, </br> predicate - the filter to apply to the key's value.
     ```bash
     g.V().has("age", P.eq(10))
     g.V().has("age", P.neq(10))
@@ -169,11 +169,11 @@ Parameters: </br>
     g.V().has("name", TextP.notEndingWith("rko"))
     g.V().has("name", TextP.notContaining("ark"))
     ```
-* label - the label of the Element, </br> propertyKey - the key of the property to filter on, </br> value - the value to compare the accessor value to for equality. 
+* label - the label of the Element, </br> propertyKey - the key of the property to filter on, </br> value - the value to compare the accessor value to for equality.
     ```bash
     g.V().has("person", "id", 1) # = g.V().hasLabel("person").has("id", 1)
     ```
-* label - the label of the Element, </br> propertyKey - the key of the property to filter on, </br> predicate - the filter to apply to the key's value. 
+* label - the label of the Element, </br> propertyKey - the key of the property to filter on, </br> predicate - the filter to apply to the key's value.
     ```bash
     g.V().has("person", "age", P.eq(10)) # = g.V().hasLabel("person").has("age", P.eq(10))
     ```
@@ -329,7 +329,7 @@ Usages of the modulated by()-step: </br>
 * empty - an identity() modulation.
     ```bash
     # = g.V().as("a").select("a")
-    g.V().as("a").select("a").by() 
+    g.V().as("a").select("a").by()
     # = g.V().as("a").out().as("b").select("a", "b")
     g.V().as("a").out().as("b").select("a", "b").by().by()
     ```
@@ -504,7 +504,7 @@ g.V().union(out(), out().out())
 The match()-step provides a declarative form of graph patterns to match with. With match(), the user provides a collection of "sentences," called patterns, that have variables defined that must hold true throughout the duration of the match(). For most of the complex graph patterns, it is usually much easier to express via match() than with single-path traversals.
 
 Parameters: </br>
-matchSentences - define a collection of patterns. Each pattern consists of a start tag, a serials of gremlin steps (binders) and an end tag. 
+matchSentences - define a collection of patterns. Each pattern consists of a start tag, a serials of gremlin steps (binders) and an end tag.
 
 Supported binders within a pattern: </br>
 * Expand: in()/out()/both(), inE()/outE()/bothE(), inV()/outV()/otherV/bothV
@@ -523,7 +523,7 @@ An edge-induced subgraph extracted from the original graph.
 Parameters: </br>
 graphName - the name of the side-effect key that will hold the subgraph.
 ```bash
-g.E().subgraph("all") 
+g.E().subgraph("all")
 g.V().has('name', "marko").outE("knows").subgraph("partial")
 ```
 ## Syntactic Sugars
@@ -537,7 +537,7 @@ Expand a multiple-hops path along the outgoing edges, which length is within the
 Parameters: </br>
 lengthRange - the lower and the upper bounds of the path length, </br> edgeLabels - the edge labels to traverse.
 
-Usages of the with()-step: </br> 
+Usages of the with()-step: </br>
 keyValuePair - the options to configure the corresponding behaviors of the `PathExpand`-step.
 ```bash
 # expand hops within the range of [1, 10) along the outgoing edges,
@@ -554,7 +554,7 @@ g.V().out("1..10", "knows")
 # expand hops within the range of [1, 10) along the outgoing edges which label is `knows` or `created`,
 # vertices can be duplicated and only the end vertex should be kept
 g.V().out("1..10", "knows", "created")
-``` 
+```
 Running Example:
 ```bash
 gremlin> g.V().out("1..3", "knows").with('RESULT_OPT', 'ALL_V')
@@ -656,7 +656,7 @@ And related operations can be performed based on these entries, including:
     ```
 * exponentiation
     ```bash
-    @.num ^^ 3 
+    @.num ^^ 3
     @.num ^^ -3
     ```
 
@@ -761,13 +761,13 @@ In graph pattern scenarios, `repeat().times()` can be replaced equivalently by t
     ```bash
     # = g.V().out("2..3", "knows").endV()
     g.V().repeat(out("knows")).times(2)
-  
+
     # = g.V().out("1..3", "knows").endV()
     g.V().repeat(out("knows")).emit().times(2)
-  
+
     # = g.V().out("2..3", "knows").with('PATH_OPT', 'SIMPLE').endV()
     g.V().repeat(out("knows").simplePath()).times(2)
-  
+
     # = g.V().out("1..3", "knows").with('PATH_OPT', 'SIMPLE').endV()
     g.V().repeat(out("knows").simplePath()).emit().times(2)
     ```
