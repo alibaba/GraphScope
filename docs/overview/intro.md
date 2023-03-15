@@ -40,4 +40,7 @@ GraphScope can be used for various purposes:
 
 ## What are the Next
 
-- Design of GraphScope 
+You may want to
+
+- [Get Started](overview/getting_started.md) with GraphScope;
+- Learn more about the [Design of GraphScope](overview/design_of_graphscope.md);
