@@ -274,7 +274,7 @@ impl Details for LazyVertexDetails {
                 unsafe {
                     if key == "id" {
                         let mask = (1_usize << LABEL_SHIFT_BITS) - 1;
-                        let original_id = ((*ptr).get_global_id() & mask) as i64;
+                        let original_id = ((*ptr).get_id() & mask) as i64;
                         Some(PropertyValue::Owned(Object::Primitive(Primitives::Long(original_id))))
                     } else {
                         (*ptr)
@@ -307,7 +307,7 @@ impl Details for LazyVertexDetails {
                             return None;
                         }
                         let mask = (1_usize << LABEL_SHIFT_BITS) - 1;
-                        let original_id = ((*ptr).get_global_id() & mask) as i64;
+                        let original_id = ((*ptr).get_id() & mask) as i64;
                         all_props.insert(
                             NameOrId::Str("id".to_string()),
                             Object::Primitive(Primitives::Long(original_id)),
