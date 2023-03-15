@@ -533,9 +533,6 @@ impl IRJobAssembly {
                             range
                         ))))?;
                     }
-                    if path.condition.is_some() && range.lower != 0 {
-                        Err(FnGenError::unsupported_error("PathExpand with UNTIL when lower!=0"))?
-                    }
                     // path start
                     let path_start_func = self.udf_gen.gen_path_start(path.clone())?;
                     stream = stream
