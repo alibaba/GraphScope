@@ -48,8 +48,6 @@ You may found the built artifacts in....
 
 TODO(yuansi): give a description about the artifacts...
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 ## Build Components Individually
 
 GraphScope is composed of several components, and you can build each of them separately. If you only changed some codes in one component or intend to use GraphScope in a disaggregated manner, you can build the affected components alone. 
@@ -67,33 +65,3 @@ You may find the guides for building and testing each engine as below.
 TODO(yuansi):
 
 ### Build Python Client
-
-<<<<<<< HEAD
-=======
-## Build Components
-=======
-## Build Components Individually
->>>>>>> 71c2126a8 (update.)
-
-GraphScope is composed of several components, and you can build each of them separately. If you only changed some codes in one component or intend to use GraphScope in a disaggregated manner, you can build the affected components alone. 
-
-### Build and Test Engines
-
-You may find the guides for building and testing each engine as below.
-
-- [Build and test analytical engine](/analytical_engine/dev_and_test)
-- [Build and test interactive engine](https://graphscope.io)
-- [Build and test learning engine](https://graphscope.io)
-
-### Build Coordinator
-
-<<<<<<< HEAD
->>>>>>> 20d2b5177 (update docs.)
-=======
-### Build Python Client
-
->>>>>>> 71c2126a8 (update.)
-=======
-TODO(yuansi):
->>>>>>> 332ac00fb (add intro.)
-
