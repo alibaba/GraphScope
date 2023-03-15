@@ -452,7 +452,7 @@ class OperationExecutor:
         return message_pb2.RunStepResponse(head=response_head), []
 
     def _execute_gremlin_query(self, op: op_def_pb2.OpDef):
-        logger.info("execute gremlin query")
+        logger.debug("execute gremlin query")
         message = op.attr[types_pb2.GIE_GREMLIN_QUERY_MESSAGE].s.decode()
         request_options = None
         if types_pb2.GIE_GREMLIN_REQUEST_OPTIONS in op.attr:
@@ -462,7 +462,7 @@ class OperationExecutor:
         object_id = op.attr[types_pb2.VINEYARD_ID].i
         gremlin_client = self._object_manager.get(object_id)
         rlt = gremlin_client.submit(message, request_options=request_options)
-        logger.info("put %s, client %s", op.key, gremlin_client)
+        logger.debug("put %s, client %s", op.key, gremlin_client)
         self._object_manager.put(op.key, GremlinResultSet(op.key, rlt))
         return op_def_pb2.OpResult(code=OK, key=op.key)
 

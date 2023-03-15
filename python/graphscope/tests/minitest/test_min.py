@@ -131,9 +131,7 @@ def simple_flow(sess, ogbn_small_script):
         return
 
     # GLE on ogbn_mag_small graph
-    paper_features = []
-    for i in range(128):
-        paper_features.append("feat_" + str(i))
+    paper_features = [f"feat_{i}" for i in range(128)]
     lg = sess.graphlearn(
         graph,
         nodes=[("paper", paper_features)],
