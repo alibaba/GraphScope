@@ -22,6 +22,7 @@ use ahash::{HashMap, HashMapExt};
 use dyn_type::{BorrowObject, Object, Primitives};
 use ir_common::{KeyId, LabelId, NameOrId};
 use mcsr::columns::RefItem;
+use mcsr::date::Date;
 use mcsr::date_time::DateTime;
 use mcsr::graph_db::{GlobalCsrTrait, LocalEdge, LocalVertex};
 use mcsr::graph_db_impl::CsrDB;
@@ -452,6 +453,7 @@ fn to_object<'a>(ref_item: RefItem<'a>) -> Object {
         RefItem::UInt32(v) => Object::Primitive(Primitives::Integer(i32::try_from(*v).unwrap())),
         RefItem::Int64(v) => Object::Primitive(Primitives::Long(*v)),
         RefItem::UInt64(v) => Object::Primitive(Primitives::Long(i64::try_from(*v).unwrap())),
+        RefItem::Date(v) => Object::Primitive(Primitives::Long(encode_date(v))),
         RefItem::DateTime(v) => Object::Primitive(Primitives::Long(encode_datetime(v))),
         RefItem::String(v) => Object::String(v.clone()),
         _ => Object::None,
@@ -465,10 +467,18 @@ fn to_borrow_object<'a>(ref_item: RefItem<'a>) -> BorrowObject<'a> {
         RefItem::UInt32(v) => BorrowObject::Primitive(Primitives::Integer(i32::try_from(*v).unwrap())),
         RefItem::Int64(v) => BorrowObject::Primitive(Primitives::Long(*v)),
         RefItem::UInt64(v) => BorrowObject::Primitive(Primitives::Long(i64::try_from(*v).unwrap())),
+        RefItem::Date(v) => BorrowObject::Primitive(Primitives::Long(encode_date(v))),
         RefItem::DateTime(v) => BorrowObject::Primitive(Primitives::Long(encode_datetime(v))),
         RefItem::String(v) => BorrowObject::String(v),
         _ => BorrowObject::None,
     }
+}
+
+#[inline]
+fn encode_date(date: &Date) -> i64 {
+    date.year() as i64 * 10000000000000
+        + date.month() as i64 * 100000000000
+        + date.day() as i64 * 1000000000
 }
 
 #[inline]
