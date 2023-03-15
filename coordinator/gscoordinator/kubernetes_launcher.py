@@ -593,6 +593,21 @@ class KubernetesClusterLauncher(AbstractLauncher):
             )
             logger.info("Mars service endpoint: %s", self._mars_service_endpoint)
 
+    # the function will add the podAffinity to the engine workload so that the workload
+    # will be scheduled to the same node with vineyard deployment.
+    # e.g. the vineyard deployment is named "vineyard-deployment" and the namespace is "graphscope-system",
+    # the podAffinity will be added to the engine workload as below:
+    # spec:
+    #   affinity:
+    #     podAffinity:
+    #       requiredDuringSchedulingIgnoredDuringExecution:
+    #       - labelSelector:
+    #           matchExpressions:
+    #           - key: app.kubernetes.io/instance
+    #             operator: In
+    #             values:
+    #             - graphscope-system-vineyard-deployment # [vineyard deployment namespace]-[vineyard deployment name]
+    #         topologyKey: kubernetes.io/hostname
     def _add_podAffinity_for_vineyard_deployment(self, workload):
         try:
             import vineyard
