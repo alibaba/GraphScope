@@ -86,71 +86,8 @@ pub fn get_files_list(prefix: &PathBuf, file_strings: &Vec<String>) -> GDBResult
     Ok(path_lists)
 }
 
-fn get_fname_from_path(path: &PathBuf) -> GDBResult<&str> {
-    let fname = path
-        .file_name()
-        .ok_or(GDBError::UnknownError)?
-        .to_str()
-        .ok_or(GDBError::UnknownError)?;
-
-    Ok(fname)
-}
-
-fn visit_dirs_v2(
-    vertex_files: &mut Vec<(String, PathBuf)>, edge_files: &mut Vec<(String, PathBuf)>,
-    raw_data_dir: PathBuf, work_id: usize, peers: usize,
-) -> GDBResult<()> {
-    if raw_data_dir.is_dir() {
-        for _entry in read_dir(&raw_data_dir)? {
-            let entry = _entry?;
-            let path = entry.path();
-            if path.is_dir() {
-                visit_dirs_v2(vertex_files, edge_files, path, work_id, peers)?
-            } else {
-                let fname = get_fname_from_path(&path)?;
-                if is_hidden_file(fname) {
-                    continue;
-                }
-                if !(fname.ends_with(".csv") || fname.ends_with(".csv.gz")) {
-                    continue;
-                }
-                let mut ancestors = path.ancestors();
-                ancestors.next();
-                let dir_name = ancestors
-                    .next()
-                    .unwrap()
-                    .file_name()
-                    .ok_or(GDBError::UnknownError)?
-                    .to_str()
-                    .ok_or(GDBError::UnknownError)?;
-
-                let dir_name = replace_special_tag(dir_name.to_string());
-                if is_vertex_file(&dir_name) {
-                    vertex_files.push((dir_name.to_uppercase(), path));
-                } else {
-                    edge_files.push((dir_name.to_uppercase(), path));
-                }
-            }
-        }
-    }
-    Ok(())
-}
-
 pub(crate) fn keep_vertex<G: IndexType>(vid: G, peers: usize, work_id: usize) -> bool {
     vid.index() % peers == work_id
-}
-
-pub(crate) fn split_vertex_edge_files(
-    raw_data_dir: PathBuf, work_id: usize, peers: usize,
-) -> GDBResult<(Vec<(String, PathBuf)>, Vec<(String, PathBuf)>)> {
-    let mut vertex_files = Vec::new();
-    let mut edge_files = Vec::new();
-    visit_dirs_v2(&mut vertex_files, &mut edge_files, raw_data_dir, work_id, peers)?;
-
-    vertex_files.sort_by(|x, y| x.0.cmp(&y.0));
-    edge_files.sort_by(|x, y| x.0.cmp(&y.0));
-
-    Ok((vertex_files, edge_files))
 }
 
 pub struct GraphLoader<
@@ -170,7 +107,6 @@ pub struct GraphLoader<
 }
 
 pub fn is_static_vertex(_vertex_type: LabelId) -> bool {
-    // vertex_type == 0 || vertex_type == 5 || vertex_type == 6 || vertex_type == 7
     false
 }
 

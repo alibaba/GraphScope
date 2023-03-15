@@ -2,7 +2,7 @@
   "vertex": [
     {
       "label": "PLACE",
-      "partition_type": "Static",
+      "partition_type": "Dynamic",
       "properties": [
         {
           "name": "name",
@@ -108,7 +108,7 @@
     },
     {
       "label": "ORGANISATION",
-      "partition_type": "Static",
+      "partition_type": "Dynamic",
       "properties": [
         {
           "name": "type",
@@ -126,7 +126,7 @@
     },
     {
       "label": "TAGCLASS",
-      "partition_type": "Static",
+      "partition_type": "Dynamic",
       "properties": [
         {
           "name": "name",
@@ -140,7 +140,7 @@
     },
     {
       "label": "TAG",
-      "partition_type": "Static",
+      "partition_type": "Dynamic",
       "properties": [
         {
           "name": "name",
