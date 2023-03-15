@@ -151,6 +151,14 @@ impl CsrGraphSchema {
         ret
     }
 
+    pub fn is_static_vertex(&self, vertex_label: LabelId) -> bool {
+        *self
+            .vertex_partition_type
+            .get(&vertex_label)
+            .unwrap()
+            == PartitionType::Static
+    }
+
     pub fn is_single_ie(&self, src_label: LabelId, edge_label: LabelId, dst_label: LabelId) -> bool {
         if self
             .edge_single_ie

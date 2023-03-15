@@ -23,7 +23,6 @@ use clap::{App, Arg};
 use mcsr::columns::DataType;
 use mcsr::graph_db::GlobalCsrTrait;
 use mcsr::graph_db_impl::CsrDB;
-use mcsr::graph_loader::is_static_vertex;
 use mcsr::ldbc_parser::LDBCVertexParser;
 use mcsr::schema::Schema;
 use mcsr::types::{DefaultId, LabelId, DIR_BINARY_DATA, NAME, VERSION};
@@ -51,9 +50,6 @@ fn output_vertices(graph: &CsrDB, output_dir: &String, files: &mut HashMap<Label
             .graph_schema
             .get_vertex_label_id(n.as_str())
         {
-            if is_static_vertex(v_label) && graph.partition != 0 {
-                continue;
-            }
             println!("outputing vertex-{}, size {}", n, graph.get_vertices_num(v_label));
             let header = graph
                 .graph_schema

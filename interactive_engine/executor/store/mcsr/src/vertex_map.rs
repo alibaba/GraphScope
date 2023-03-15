@@ -16,16 +16,10 @@
 use core::slice;
 use std::fs::File;
 use std::io::{Read, Write};
-use std::path::Path;
 
 use fnv::FnvHashMap;
-use pegasus_common::codec::{Decode, Encode};
 use pegasus_common::io::{ReadExt, WriteExt};
-use serde::de::Error as DeError;
-use serde::ser::Error as SerError;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-use crate::error::GDBResult;
 use crate::graph::IndexType;
 use crate::ldbc_parser::LDBCVertexParser;
 use crate::types::*;
@@ -80,13 +74,6 @@ where
         }
     }
 
-    pub fn add_native_vertex_beta(&mut self, global_id: G, label: LabelId) {
-        let v = I::new(self.labeled_num[label as usize]);
-        self.labeled_num[label as usize] += 1;
-        self.index_to_global_id[label as usize].push(global_id);
-        self.global_id_to_index.insert(global_id, v);
-    }
-
     pub fn add_corner_vertex(&mut self, global_id: G, label: LabelId) -> I {
         assert_eq!(label, LDBCVertexParser::get_label_id(global_id));
 
@@ -99,13 +86,6 @@ where
             self.global_id_to_index.insert(global_id, v);
             v
         }
-    }
-
-    pub fn add_corner_vertex_beta(&mut self, global_id: G, label: LabelId) {
-        assert_eq!(label, LDBCVertexParser::get_label_id(global_id));
-
-        self.labeled_corner_num[label as usize] += 1;
-        self.index_to_corner_global_id[label as usize].push(global_id);
     }
 
     pub fn get_internal_id(&self, global_id: G) -> Option<(LabelId, I)> {
@@ -153,64 +133,6 @@ where
 
     pub fn total_vertex_num(&self) -> usize {
         self.labeled_num.iter().sum()
-    }
-
-    pub fn export_native<P: AsRef<Path>>(&self, path: P) -> GDBResult<()> {
-        let mut writer = File::create(path)?;
-        for v in self.labeled_num.iter() {
-            writer.write_u64(*v as u64)?;
-        }
-        for vec in self.index_to_global_id.iter() {
-            for v in vec.iter() {
-                writer.write_u64(v.index() as u64)?;
-            }
-        }
-        writer.flush()?;
-        Ok(())
-    }
-
-    pub fn export_corner<P: AsRef<Path>>(&self, path: P) -> GDBResult<()> {
-        let mut writer = File::create(path)?;
-        for v in self.labeled_corner_num.iter() {
-            writer.write_u64(*v as u64)?;
-        }
-        for vec in self.index_to_corner_global_id.iter() {
-            for v in vec.iter() {
-                writer.write_u64(v.index() as u64)?;
-            }
-        }
-        writer.flush()?;
-        Ok(())
-    }
-
-    pub fn import_native<P: AsRef<Path>>(&mut self, path: P) -> GDBResult<()> {
-        let mut reader = File::open(path)?;
-        let mut labeled_num = vec![];
-        for _ in 0..self.label_num {
-            labeled_num.push(reader.read_u64()? as usize);
-        }
-        for i in 0..self.label_num {
-            for _ in 0..labeled_num[i as usize] {
-                // self.add_vertex(G::new(reader.read_u64()? as usize), i);
-                self.add_native_vertex_beta(G::new(reader.read_u64().unwrap() as usize), i);
-            }
-        }
-
-        Ok(())
-    }
-
-    pub fn import_corner<P: AsRef<Path>>(&mut self, path: P) -> GDBResult<()> {
-        let mut reader = File::open(path)?;
-        let mut labeled_num = vec![];
-        for _ in 0..self.label_num {
-            labeled_num.push(reader.read_u64()? as usize);
-        }
-        for i in 0..self.label_num {
-            for _ in 0..labeled_num[i as usize] {
-                self.add_corner_vertex_beta(G::new(reader.read_u64()? as usize), i);
-            }
-        }
-        Ok(())
     }
 
     pub fn serialize(&self, path: &String) {
@@ -333,95 +255,5 @@ where
         }
 
         return true;
-    }
-}
-
-impl<G: Send + Sync + IndexType, I: Send + Sync + IndexType> Encode for VertexMap<G, I> {
-    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
-        writer.write_u64(self.label_num as u64)?;
-        assert_eq!(self.labeled_num.len(), self.label_num as usize);
-        for v in self.labeled_num.iter() {
-            writer.write_u64(*v as u64)?;
-        }
-        assert_eq!(self.labeled_corner_num.len(), self.label_num as usize);
-        for v in self.labeled_corner_num.iter() {
-            writer.write_u64(*v as u64)?;
-        }
-        for (label, vec) in self.index_to_global_id.iter().enumerate() {
-            assert_eq!(vec.len(), self.labeled_num[label]);
-            for v in vec.iter() {
-                writer.write_u64(v.index() as u64)?;
-            }
-        }
-        for (label, vec) in self
-            .index_to_corner_global_id
-            .iter()
-            .enumerate()
-        {
-            assert_eq!(vec.len(), self.labeled_corner_num[label]);
-            for v in vec.iter() {
-                writer.write_u64(v.index() as u64)?;
-            }
-        }
-
-        Ok(())
-    }
-}
-
-impl<G: Send + Sync + IndexType, I: Send + Sync + IndexType> Decode for VertexMap<G, I> {
-    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
-        let label_num = reader.read_u64()? as usize;
-        let mut ret = Self::new(label_num);
-        let mut labeled_num = vec![];
-        let mut labeled_corner_num = vec![];
-        for _ in 0..label_num {
-            labeled_num.push(reader.read_u64()? as usize);
-        }
-        for _ in 0..label_num {
-            labeled_corner_num.push(reader.read_u64()? as usize);
-        }
-
-        for i in 0..label_num {
-            for _ in 0..labeled_num[i] {
-                ret.add_vertex(G::new(reader.read_u64()? as usize), i as LabelId);
-            }
-        }
-        for i in 0..label_num {
-            for _ in 0..labeled_corner_num[i] {
-                ret.add_corner_vertex_beta(G::new(reader.read_u64()? as usize), i as LabelId);
-            }
-        }
-
-        Ok(ret)
-    }
-}
-
-impl<G: Send + Sync + IndexType, I: Send + Sync + IndexType> Serialize for VertexMap<G, I> {
-    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
-    where
-        S: Serializer,
-    {
-        let mut bytes = Vec::new();
-        if self.write_to(&mut bytes).is_ok() {
-            bytes.serialize(serializer)
-        } else {
-            Result::Err(S::Error::custom("Serialize vertex map failed!"))
-        }
-    }
-}
-
-impl<'de, G, I> Deserialize<'de> for VertexMap<G, I>
-where
-    G: Send + Sync + IndexType,
-    I: Send + Sync + IndexType,
-{
-    fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let vec = Vec::<u8>::deserialize(deserializer)?;
-        let mut bytes = vec.as_slice();
-        VertexMap::<G, I>::read_from(&mut bytes)
-            .map_err(|_| D::Error::custom("Deserialize vertex map failed!"))
     }
 }

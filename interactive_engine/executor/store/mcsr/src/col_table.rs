@@ -17,13 +17,9 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::fs::File;
 use std::io::{Read, Write};
-use std::path::Path;
 
 use csv::StringRecord;
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
-use serde::de::Error as DeError;
-use serde::ser::Error as SerError;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::columns::*;
 use crate::date::parse_date;
@@ -35,141 +31,6 @@ pub struct ColTable {
     columns: Vec<Box<dyn Column>>,
     pub header: HashMap<String, usize>,
     row_num: usize,
-}
-
-impl Encode for ColTable {
-    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
-        writer.write_u64(self.row_num as u64)?;
-        writer.write_u64(self.header.len() as u64)?;
-        for pair in self.header.iter() {
-            pair.0.write_to(writer)?;
-            writer.write_u64(*pair.1 as u64)?;
-        }
-        writer.write_u64(self.columns.len() as u64)?;
-        for col in self.columns.iter() {
-            match col.get_type() {
-                DataType::Int32 => {
-                    writer.write_u8(0)?;
-                    col.as_any()
-                        .downcast_ref::<Int32Column>()
-                        .unwrap()
-                        .write_to(writer)?;
-                }
-                DataType::UInt32 => {
-                    writer.write_u8(1)?;
-                    col.as_any()
-                        .downcast_ref::<UInt32Column>()
-                        .unwrap()
-                        .write_to(writer)?;
-                }
-                DataType::Int64 => {
-                    writer.write_u8(2)?;
-                    col.as_any()
-                        .downcast_ref::<Int64Column>()
-                        .unwrap()
-                        .write_to(writer)?;
-                }
-                DataType::UInt64 => {
-                    writer.write_u8(3)?;
-                    col.as_any()
-                        .downcast_ref::<UInt64Column>()
-                        .unwrap()
-                        .write_to(writer)?;
-                }
-                DataType::String => {
-                    writer.write_u8(4)?;
-                    col.as_any()
-                        .downcast_ref::<StringColumn>()
-                        .unwrap()
-                        .write_to(writer)?;
-                }
-                DataType::LCString => {
-                    writer.write_u8(11)?;
-                    col.as_any()
-                        .downcast_ref::<LCStringColumn>()
-                        .unwrap()
-                        .write_to(writer)?;
-                }
-                DataType::Double => {
-                    writer.write_u8(5)?;
-                    col.as_any()
-                        .downcast_ref::<DoubleColumn>()
-                        .unwrap()
-                        .write_to(writer)?;
-                }
-                DataType::Date => {
-                    writer.write_u8(8)?;
-                    col.as_any()
-                        .downcast_ref::<DateColumn>()
-                        .unwrap()
-                        .write_to(writer)?;
-                }
-                DataType::DateTime => {
-                    writer.write_u8(6)?;
-                    col.as_any()
-                        .downcast_ref::<DateTimeColumn>()
-                        .unwrap()
-                        .write_to(writer)?;
-                }
-                DataType::NULL => {
-                    error!("Unexpected column type");
-                }
-                DataType::ID => {
-                    writer.write_u8(7)?;
-                    col.as_any()
-                        .downcast_ref::<IDColumn>()
-                        .unwrap()
-                        .write_to(writer)?;
-                }
-            };
-        }
-        Ok(())
-    }
-}
-
-impl Decode for ColTable {
-    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
-        let row_num = reader.read_u64()? as usize;
-        let header_len = reader.read_u64()? as usize;
-        let mut header = HashMap::new();
-        for _ in 0..header_len {
-            let str = String::read_from(reader)?;
-            let index = reader.read_u64()? as usize;
-            info!("\tcolumn-{}: {}", index, str);
-            header.insert(str, index);
-        }
-
-        let mut columns: Vec<Box<dyn Column>> = vec![];
-        let column_len = reader.read_u64()? as usize;
-        for _ in 0..column_len {
-            let t = reader.read_u8()?;
-            if t == 0 {
-                columns.push(Box::new(Int32Column::read_from(reader)?));
-            } else if t == 1 {
-                columns.push(Box::new(UInt32Column::read_from(reader)?));
-            } else if t == 2 {
-                columns.push(Box::new(Int64Column::read_from(reader)?));
-            } else if t == 3 {
-                columns.push(Box::new(UInt64Column::read_from(reader)?));
-            } else if t == 4 {
-                columns.push(Box::new(StringColumn::read_from(reader)?));
-            } else if t == 11 {
-                columns.push(Box::new(LCStringColumn::read_from(reader)?));
-            } else if t == 5 {
-                columns.push(Box::new(DoubleColumn::read_from(reader)?));
-            } else if t == 6 {
-                columns.push(Box::new(DateTimeColumn::read_from(reader)?));
-            } else if t == 7 {
-                columns.push(Box::new(IDColumn::read_from(reader)?));
-            } else if t == 8 {
-                columns.push(Box::new(DateColumn::read_from(reader)?));
-            } else {
-                info!("Invalid type {}", t);
-            }
-        }
-
-        Ok(Self { columns, header, row_num })
-    }
 }
 
 impl ColTable {
@@ -239,11 +100,6 @@ impl ColTable {
 
     pub fn insert(&mut self, index: usize, row: &Vec<Item>) {
         let col_num = self.columns.len();
-        // if index < self.row_num {
-        //     println!("insert to overwrite a record, index = {}, row_num = {}", index, self.row_num);
-        // } else if index > self.row_num {
-        //     println!("insert will append nulls, index = {}, row_num = {}", index, self.row_num);
-        // }
         if self.row_num <= index {
             let null_num = index - self.row_num;
             for i in 0..col_num {
@@ -284,16 +140,6 @@ impl ColTable {
         } else {
             None
         }
-    }
-
-    pub fn export<P: AsRef<Path>>(&self, path: P) -> GDBResult<()> {
-        crate::io::export(&self, path)?;
-        Ok(())
-    }
-
-    pub fn import<P: AsRef<Path>>(path: P) -> GDBResult<Self> {
-        let table = crate::io::import::<Self, _>(path)?;
-        Ok(table)
     }
 
     pub fn serialize_table(&self, path: &String) {
@@ -531,34 +377,9 @@ impl ColTable {
     }
 }
 
-impl Serialize for ColTable {
-    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
-    where
-        S: Serializer,
-    {
-        let mut bytes = Vec::new();
-        if self.write_to(&mut bytes).is_ok() {
-            bytes.serialize(serializer)
-        } else {
-            Result::Err(S::Error::custom("Serialize table failed!"))
-        }
-    }
-}
-
-impl<'de> Deserialize<'de> for ColTable {
-    fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let vec = Vec::<u8>::deserialize(deserializer)?;
-        let mut bytes = vec.as_slice();
-        Self::read_from(&mut bytes).map_err(|_| D::Error::custom("Deserialize table failed!"))
-    }
-}
-
 unsafe impl Sync for ColTable {}
 
-pub fn parse_properties_beta(
+pub fn parse_properties(
     record: &StringRecord, header: &[(String, DataType)], selected: &[bool],
 ) -> GDBResult<Vec<Item>> {
     let mut properties = Vec::new();
@@ -599,67 +420,5 @@ pub fn parse_properties_beta(
             }
         }
     }
-    Ok(properties)
-}
-
-pub fn parse_properties<'a, Iter: Clone + Iterator<Item = &'a str>>(
-    mut record_iter: Iter, _header: Option<&[(String, DataType)]>,
-) -> GDBResult<Vec<Item>> {
-    let mut properties = Vec::new();
-    if _header.is_none() {
-        return Ok(properties);
-    }
-    let header = _header.unwrap();
-    let mut header_iter = header.iter();
-
-    let header_count = header_iter.clone().count();
-    let record_count = record_iter.clone().count();
-    let mut skip = false;
-    if record_count > header_count {
-        skip = true;
-    }
-
-    while let Some(val) = record_iter.next() {
-        if skip {
-            skip = false;
-            continue;
-        }
-        if let Some((_, ty)) = header_iter.next() {
-            match ty {
-                DataType::Int32 => {
-                    properties.push(Item::Int32(val.parse::<i32>()?));
-                }
-                DataType::UInt32 => {
-                    properties.push(Item::UInt32(val.parse::<u32>()?));
-                }
-                DataType::Int64 => {
-                    properties.push(Item::Int64(val.parse::<i64>()?));
-                }
-                DataType::UInt64 => {
-                    properties.push(Item::UInt64(val.parse::<u64>()?));
-                }
-                DataType::String => {
-                    properties.push(Item::String(val.to_string()));
-                }
-                DataType::Date => {
-                    properties.push(Item::Date(parse_date(val)?));
-                }
-                DataType::DateTime => {
-                    properties.push(Item::DateTime(parse_datetime(val)));
-                }
-                DataType::Double => {
-                    properties.push(Item::Double(val.parse::<f64>()?));
-                }
-                DataType::NULL => {
-                    error!("Unexpected field type");
-                }
-                DataType::ID => {}
-                DataType::LCString => {
-                    properties.push(Item::String(val.to_string()));
-                }
-            }
-        }
-    }
-
     Ok(properties)
 }

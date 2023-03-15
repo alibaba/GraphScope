@@ -130,7 +130,7 @@
         {
           "key": {
             "id": 2,
-            "name": "type"
+            "name": "type"t
           },
           "data_type": 4,
           "is_primary_key": false

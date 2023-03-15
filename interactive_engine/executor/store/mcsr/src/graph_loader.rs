@@ -24,7 +24,7 @@ use csv::{Reader, ReaderBuilder};
 use regex::Regex;
 use rust_htslib::bgzf::Reader as GzReader;
 
-use crate::col_table::{parse_properties_beta, ColTable};
+use crate::col_table::{parse_properties, ColTable};
 use crate::columns::Item;
 use crate::error::{GDBError, GDBResult};
 use crate::graph::IndexType;
@@ -35,24 +35,6 @@ use crate::schema::{CsrGraphSchema, InputSchema, Schema};
 use crate::scsr::SingleCsr;
 use crate::types::{DefaultId, InternalId, LabelId, DIR_BINARY_DATA};
 use crate::vertex_map::VertexMap;
-
-/// Verify if a given file is a hidden file in Unix system.
-pub fn is_hidden_file(fname: &str) -> bool {
-    fname.starts_with('.')
-}
-
-/// Verify if a given folder stores vertex or edge
-pub fn is_vertex_file(fname: &str) -> bool {
-    fname.find('_').is_none()
-}
-
-pub fn replace_special_tag(dir_name: String) -> String {
-    dir_name
-        .replace("City", "Place")
-        .replace("Country", "Place")
-        .replace("University", "Organisation")
-        .replace("Company", "Organisation")
-}
 
 pub fn get_files_list(prefix: &PathBuf, file_strings: &Vec<String>) -> GDBResult<Vec<PathBuf>> {
     let mut path_lists = vec![];
@@ -106,18 +88,6 @@ pub struct GraphLoader<
     vertex_map: VertexMap<G, I>,
 }
 
-pub fn is_static_vertex(_vertex_type: LabelId) -> bool {
-    false
-}
-
-#[allow(dead_code)]
-fn encode_nbr_data<I: IndexType>(nbr: I, data: u32) -> I {
-    let mut hi = data as u64;
-    assert!(nbr.index() <= (u32::MAX as usize));
-    hi = (hi << 32) | (nbr.index() as u64);
-    I::new(hi as usize)
-}
-
 impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> GraphLoader<G, I> {
     pub fn new<D: AsRef<Path>>(
         input_dir: D, output_path: &str, input_schema_file: D, graph_schema_file: D, work_id: usize,
@@ -131,19 +101,6 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
 
         let vertex_label_num = graph_schema.vertex_type_to_id.len();
         let vertex_map = VertexMap::<G, I>::new(vertex_label_num);
-        // TODO: support simple property on Nbr id
-        // vertex_map.set_internal_id_mask(
-        //     graph_schema
-        //         .get_vertex_label_id("PERSON")
-        //         .unwrap() as usize,
-        //     I::new((1_usize << 32) - 1_usize),
-        // );
-        // vertex_map.set_internal_id_mask(
-        //     graph_schema
-        //         .get_vertex_label_id("ORGANISATION")
-        //         .unwrap() as usize,
-        //     I::new((1_usize << 32) - 1_usize),
-        // );
 
         let output_dir = PathBuf::from_str(output_path).unwrap();
         let partition_dir = output_dir
@@ -170,7 +127,9 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
         self
     }
 
-    fn load_vertices<R: Read>(&mut self, vertex_type: LabelId, mut rdr: Reader<R>, table: &mut ColTable) {
+    fn load_vertices<R: Read>(
+        &mut self, vertex_type: LabelId, mut rdr: Reader<R>, table: &mut ColTable, is_static: bool,
+    ) {
         let input_header = self
             .input_schema
             .get_vertex_header(vertex_type)
@@ -195,13 +154,11 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
         }
         let parser = LDBCVertexParser::new(vertex_type, id_col_id);
         info!("loading vertex-{}", vertex_type);
-        if is_static_vertex(vertex_type) {
+        if is_static {
             for result in rdr.records() {
                 if let Ok(record) = result {
                     let vertex_meta = parser.parse_vertex_meta(&record);
-                    if let Ok(properties) =
-                        parse_properties_beta(&record, input_header, selected.as_slice())
-                    {
+                    if let Ok(properties) = parse_properties(&record, input_header, selected.as_slice()) {
                         let vertex_index = self
                             .vertex_map
                             .add_vertex(vertex_meta.global_id, vertex_meta.label);
@@ -216,8 +173,7 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                 if let Ok(record) = result {
                     let vertex_meta = parser.parse_vertex_meta(&record);
                     if keep_vertex(vertex_meta.global_id, self.peers, self.work_id) {
-                        if let Ok(properties) =
-                            parse_properties_beta(&record, input_header, selected.as_slice())
+                        if let Ok(properties) = parse_properties(&record, input_header, selected.as_slice())
                         {
                             let vertex_index = self
                                 .vertex_map
@@ -234,8 +190,8 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
 
     fn load_edges<R: Read>(
         &mut self, src_vertex_type: LabelId, dst_vertex_type: LabelId, edge_type: LabelId,
-        mut rdr: Reader<R>, idegree: &mut Vec<i64>, odegree: &mut Vec<i64>,
-        parsed_edges: &mut Vec<(I, I, Vec<Item>)>,
+        is_src_static: bool, is_dst_static: bool, mut rdr: Reader<R>, idegree: &mut Vec<i64>,
+        odegree: &mut Vec<i64>, parsed_edges: &mut Vec<(I, I, Vec<Item>)>,
     ) {
         info!("loading edge-{}-{}-{}", src_vertex_type, edge_type, dst_vertex_type);
         let input_header = self
@@ -267,15 +223,13 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
         let src_num = self.vertex_map.vertex_num(src_vertex_type);
         let dst_num = self.vertex_map.vertex_num(dst_vertex_type);
         let mut parser = LDBCEdgeParser::<G>::new(src_vertex_type, dst_vertex_type, edge_type);
+        parser.with_endpoint_col_id(src_col_id, dst_col_id);
 
-        if is_static_vertex(src_vertex_type) && is_static_vertex(dst_vertex_type) {
-            parser.with_endpoint_col_id(src_col_id - 1, dst_col_id - 1);
+        if is_src_static && is_dst_static {
             for result in rdr.records() {
                 if let Ok(record) = result {
                     let edge_meta = parser.parse_edge_meta(&record);
-                    if let Ok(properties) =
-                        parse_properties_beta(&record, input_header, selected.as_slice())
-                    {
+                    if let Ok(properties) = parse_properties(&record, input_header, selected.as_slice()) {
                         let src_lid = self
                             .vertex_map
                             .add_corner_vertex(edge_meta.src_global_id, src_vertex_type);
@@ -292,14 +246,11 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                     }
                 }
             }
-        } else if is_static_vertex(src_vertex_type) && !is_static_vertex(dst_vertex_type) {
-            parser.with_endpoint_col_id(src_col_id - 1, dst_col_id - 1);
+        } else if is_src_static && !is_dst_static {
             for result in rdr.records() {
                 if let Ok(record) = result {
                     let edge_meta = parser.parse_edge_meta(&record);
-                    if let Ok(properties) =
-                        parse_properties_beta(&record, input_header, selected.as_slice())
-                    {
+                    if let Ok(properties) = parse_properties(&record, input_header, selected.as_slice()) {
                         if keep_vertex(edge_meta.src_global_id, self.peers, self.work_id)
                             || keep_vertex(edge_meta.dst_global_id, self.peers, self.work_id)
                         {
@@ -320,14 +271,11 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                     }
                 }
             }
-        } else if !is_static_vertex(src_vertex_type) && is_static_vertex(dst_vertex_type) {
-            parser.with_endpoint_col_id(src_col_id, dst_col_id);
+        } else if !is_src_static && is_dst_static {
             for result in rdr.records() {
                 if let Ok(record) = result {
                     let edge_meta = parser.parse_edge_meta(&record);
-                    if let Ok(properties) =
-                        parse_properties_beta(&record, input_header, selected.as_slice())
-                    {
+                    if let Ok(properties) = parse_properties(&record, input_header, selected.as_slice()) {
                         if keep_vertex(edge_meta.src_global_id, self.peers, self.work_id) {
                             let src_lid = self
                                 .vertex_map
@@ -347,13 +295,10 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                 }
             }
         } else {
-            parser.with_endpoint_col_id(src_col_id, dst_col_id);
             for result in rdr.records() {
                 if let Ok(record) = result {
                     let edge_meta = parser.parse_edge_meta(&record);
-                    if let Ok(properties) =
-                        parse_properties_beta(&record, input_header, selected.as_slice())
-                    {
+                    if let Ok(properties) = parse_properties(&record, input_header, selected.as_slice()) {
                         if keep_vertex(edge_meta.src_global_id, self.peers, self.work_id)
                             || keep_vertex(edge_meta.dst_global_id, self.peers, self.work_id)
                         {
@@ -377,7 +322,7 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
         }
     }
 
-    pub fn load_beta(&mut self) -> GDBResult<()> {
+    pub fn load(&mut self) -> GDBResult<()> {
         create_dir_all(&self.partition_dir)?;
 
         let v_label_num = self.graph_schema.vertex_type_to_id.len() as LabelId;
@@ -411,7 +356,12 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                         .flexible(true)
                         .has_headers(false)
                         .from_reader(BufReader::new(File::open(&vertex_file).unwrap()));
-                    self.load_vertices(v_label_i, rdr, &mut table);
+                    self.load_vertices(
+                        v_label_i,
+                        rdr,
+                        &mut table,
+                        self.graph_schema.is_static_vertex(v_label_i),
+                    );
                 } else if vertex_file
                     .clone()
                     .to_str()
@@ -425,7 +375,12 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                         .flexible(true)
                         .has_headers(false)
                         .from_reader(BufReader::new(GzReader::from_path(&vertex_file).unwrap()));
-                    self.load_vertices(v_label_i, rdr, &mut table);
+                    self.load_vertices(
+                        v_label_i,
+                        rdr,
+                        &mut table,
+                        self.graph_schema.is_static_vertex(v_label_i),
+                    );
                 }
             }
 
@@ -480,6 +435,8 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                                     src_label_i,
                                     dst_label_i,
                                     e_label_i,
+                                    self.graph_schema.is_static_vertex(src_label_i),
+                                    self.graph_schema.is_static_vertex(dst_label_i),
                                     rdr,
                                     &mut idegree,
                                     &mut odegree,
@@ -502,6 +459,8 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                                     src_label_i,
                                     dst_label_i,
                                     e_label_i,
+                                    self.graph_schema.is_static_vertex(src_label_i),
+                                    self.graph_schema.is_static_vertex(dst_label_i),
                                     rdr,
                                     &mut idegree,
                                     &mut odegree,

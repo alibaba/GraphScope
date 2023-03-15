@@ -106,7 +106,6 @@ fn main() {
         b'|'
     };
 
-    // Copy graph schema to graph_data_dir/graph_schema/schema.json if no there
     let out_dir = PathBuf::from(format!("{}/{}", graph_data_dir, DIR_GRAPH_SCHEMA));
     if !out_dir.exists() {
         std::fs::create_dir_all(&out_dir).expect("Create graph schema directory error");
@@ -119,14 +118,13 @@ fn main() {
 
     let mut handles = Vec::with_capacity(partition_num);
     let raw_dir = raw_data_dir.clone();
-    // let graph_dir = graph_data_dir.clone();
     let graph_schema_f = graph_schema_file.clone();
     let input_schema_f = input_schema_file.clone();
 
     let cur_out_dir = graph_data_dir.clone();
 
     let handle = std::thread::spawn(move || {
-        let mut laser: GraphLoader = GraphLoader::new(
+        let mut loader: GraphLoader = GraphLoader::new(
             raw_dir,
             cur_out_dir.as_str(),
             input_schema_f,
@@ -134,9 +132,9 @@ fn main() {
             partition_index,
             partition_num,
         );
-        laser = laser.with_delimiter(delimiter);
+        loader = loader.with_delimiter(delimiter);
 
-        laser.load_beta().expect("Load error");
+        loader.load().expect("Load error");
     });
 
     handles.push(handle);

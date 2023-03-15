@@ -130,7 +130,6 @@ fn main() {
     let mut handles = Vec::with_capacity(thread_num);
     for i in 0..thread_num {
         let raw_dir = raw_data_dir.clone();
-        // let graph_dir = graph_data_dir.clone();
         let graph_schema_f = graph_schema_file.clone();
         let input_schema_f = input_schema_file.clone();
 
