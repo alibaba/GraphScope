@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.integration.pattern;
+package com.alibaba.graphscope.gremlin.integration.suite.pattern;
 
-import com.alibaba.graphscope.gremlin.antlr4.__;
+import com.alibaba.graphscope.gremlin.integration.suite.utils.__;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 
 import org.apache.tinkerpop.gremlin.process.AbstractGremlinProcessTest;

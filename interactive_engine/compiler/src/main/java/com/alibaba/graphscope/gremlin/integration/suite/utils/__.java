@@ -23,8 +23,9 @@
  * under the License.
  */
 
-package com.alibaba.graphscope.gremlin.antlr4;
+package com.alibaba.graphscope.gremlin.integration.suite.utils;
 
+import com.alibaba.graphscope.gremlin.antlr4.GremlinAntlrToJava;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;

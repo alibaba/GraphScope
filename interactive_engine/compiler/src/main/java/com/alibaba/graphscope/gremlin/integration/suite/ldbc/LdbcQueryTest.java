@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.integration.ldbc;
+package com.alibaba.graphscope.gremlin.integration.suite.ldbc;
 
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 import com.google.common.collect.Sets;

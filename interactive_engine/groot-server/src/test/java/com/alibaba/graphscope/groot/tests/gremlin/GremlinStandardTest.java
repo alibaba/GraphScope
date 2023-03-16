@@ -15,9 +15,11 @@
  */
 package com.alibaba.graphscope.groot.tests.gremlin;
 
+import com.alibaba.graphscope.gremlin.integration.suite.standard.IrGremlinTestSuite;
+
 import org.apache.tinkerpop.gremlin.GraphProviderClass;
 import org.junit.runner.RunWith;
 
-@RunWith(GremlinStandardTestSuite.class)
+@RunWith(IrGremlinTestSuite.class)
 @GraphProviderClass(provider = GrootGraphProvider.class, graph = GrootGraph.class)
 public class GremlinStandardTest {}

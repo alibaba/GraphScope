@@ -15,12 +15,13 @@
  */
 package com.alibaba.graphscope.function.test.gremlin;
 
-import com.alibaba.graphscope.function.test.RemoteTestGraph;
 import com.alibaba.graphscope.function.test.RemoteTestGraphProvider;
+import com.alibaba.graphscope.gremlin.integration.graph.RemoteTestGraph;
+import com.alibaba.graphscope.gremlin.integration.suite.standard.additional.IrAdditionalGraphTestSuite;
 
 import org.apache.tinkerpop.gremlin.GraphProviderClass;
 import org.junit.runner.RunWith;
 
-@RunWith(OtherGraphTestSuite.class)
+@RunWith(IrAdditionalGraphTestSuite.class)
 @GraphProviderClass(provider = RemoteTestGraphProvider.class, graph = RemoteTestGraph.class)
-public class GremlinOptionTest {}
+public class GremlinAdditionalTest {}

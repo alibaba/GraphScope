@@ -13,32 +13,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package com.alibaba.graphscope.integration.pattern;
+package com.alibaba.graphscope.gremlin.integration.suite.standard.additional;
 
 import org.apache.tinkerpop.gremlin.AbstractGremlinSuite;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalEngine;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
 
-public class IrPatternTestSuite extends AbstractGremlinSuite {
-
+/**
+ * add tests based on {sink, crew, grateful} graph data
+ */
+public class IrAdditionalGraphTestSuite extends AbstractGremlinSuite {
     private static final Class<?>[] allTests =
             new Class<?>[] {
-                PatternQueryTest.Traversals.class,
+                SinkProcessTest.Traversals.class,
+                CrewProcessTest.Traversals.class,
+                GratefulProcessTest.Traversals.class
             };
 
     private static final Class<?>[] testsToEnforce =
             new Class<?>[] {
-                PatternQueryTest.Traversals.class,
+                SinkProcessTest.Traversals.class,
+                CrewProcessTest.Traversals.class,
+                GratefulProcessTest.Traversals.class
             };
 
-    public IrPatternTestSuite(final Class<?> klass, final RunnerBuilder builder)
+    /**
+     * This constructor is used by JUnit and will run this suite with its concrete implementations of the
+     * {@code testsToEnforce}.
+     */
+    public IrAdditionalGraphTestSuite(final Class<?> klass, final RunnerBuilder builder)
             throws InitializationError {
         super(klass, builder, allTests, testsToEnforce, false, TraversalEngine.Type.STANDARD);
     }
 
-    public IrPatternTestSuite(
+    /**
+     * This constructor is used by Gremlin flavor implementers who supply their own implementations of the
+     * {@code testsToEnforce}.
+     */
+    public IrAdditionalGraphTestSuite(
             final Class<?> klass, final RunnerBuilder builder, final Class<?>[] testsToExecute)
             throws InitializationError {
         super(klass, builder, testsToExecute, testsToEnforce, true, TraversalEngine.Type.STANDARD);

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.integration.ldbc;
+package com.alibaba.graphscope.gremlin.integration.suite.ldbc;
 
 import org.apache.tinkerpop.gremlin.AbstractGremlinSuite;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalEngine;
