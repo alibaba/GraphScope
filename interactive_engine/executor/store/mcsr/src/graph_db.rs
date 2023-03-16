@@ -56,19 +56,11 @@ impl<'a, G: IndexType + Sync + Send, I: IndexType + Sync + Send> LocalVertex<'a,
     }
 
     pub fn get_id(&self) -> G {
-        let mut index = self.index.index();
-        if self.label == 1 || self.label == 5 {
-            index = self.index.index() & (1_usize << 32) - 1_usize;
-        }
+        let index = self.index.index();
         if index < self.id_list.len() {
             self.id_list[index]
         } else {
-            // should use graph schema to get label id of "PERSON" and "ORGANISATION"
-            if self.label == 1 || self.label == 5 {
-                self.corner_id_list[I::new((1_usize << 32) - 1_usize).index() - index - 1]
-            } else {
-                self.corner_id_list[<I as IndexType>::max().index() - index - 1]
-            }
+            self.corner_id_list[<I as IndexType>::max().index() - index - 1]
         }
     }
 

@@ -51,14 +51,18 @@ impl<'a> From<&'a str> for DataType {
         info!("token = {}", _token);
         let token_str = _token.to_uppercase();
         let token = token_str.as_str();
-        if token == "STRING" {
-            DataType::String
-        } else if token == "LONG" {
-            DataType::Int64
-        } else if token == "INT32" {
+        if token == "INT32" {
             DataType::Int32
+        } else if token == "UINT32" {
+            DataType::UInt32
+        } else if token == "INT64" {
+            DataType::Int64
+        } else if token == "UINT64" {
+            DataType::UInt64
         } else if token == "DOUBLE" {
             DataType::Double
+        } else if token == "STRING" {
+            DataType::String
         } else if token == "DATE" {
             DataType::Date
         } else if token == "DATETIME" {

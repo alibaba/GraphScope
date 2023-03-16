@@ -46,10 +46,6 @@ pub struct GraphPartitioner<G: FromStr + Send + Sync + IndexType = DefaultId> {
     _marker: PhantomData<G>,
 }
 
-fn is_static_vertex(_vertex_type: LabelId) -> bool {
-    false
-}
-
 impl<G: FromStr + Send + Sync + IndexType + Eq> GraphPartitioner<G> {
     pub fn new<D: AsRef<Path>>(
         input_dir: D, output_path: &str, input_schema_file: D, graph_schema_file: D, work_id: usize,
@@ -90,7 +86,7 @@ impl<G: FromStr + Send + Sync + IndexType + Eq> GraphPartitioner<G> {
     }
 
     fn load_vertices<R: Read, W: Write>(
-        &mut self, vertex_type: LabelId, mut rdr: Reader<R>, wtr: &mut Writer<W>,
+        &mut self, vertex_type: LabelId, mut rdr: Reader<R>, wtr: &mut Writer<W>, is_static_vertex: bool,
     ) {
         let header = self
             .input_schema
@@ -100,7 +96,7 @@ impl<G: FromStr + Send + Sync + IndexType + Eq> GraphPartitioner<G> {
         let id_field = header.iter().position(|x| x.0 == "id").unwrap();
         let parser = LDBCVertexParser::<G>::new(vertex_type, id_field);
         info!("loading vertex-{}", vertex_type);
-        if is_static_vertex(vertex_type) {
+        if is_static_vertex {
             for result in rdr.records() {
                 if let Ok(record) = result {
                     wtr.write_record(record.iter()).unwrap();
@@ -120,7 +116,7 @@ impl<G: FromStr + Send + Sync + IndexType + Eq> GraphPartitioner<G> {
 
     fn load_edges<R: Read, W: Write>(
         &mut self, src_vertex_type: LabelId, dst_vertex_type: LabelId, edge_type: LabelId,
-        mut rdr: Reader<R>, mut wtr: Writer<W>,
+        is_src_static: bool, is_dst_static: bool, mut rdr: Reader<R>, mut wtr: Writer<W>,
     ) {
         info!("loading edge-{}", edge_type);
         let header = self
@@ -138,13 +134,13 @@ impl<G: FromStr + Send + Sync + IndexType + Eq> GraphPartitioner<G> {
             .unwrap();
         let mut parser = LDBCEdgeParser::<G>::new(src_vertex_type, dst_vertex_type, edge_type);
         parser.with_endpoint_col_id(src_id_field, dst_id_field);
-        if is_static_vertex(src_vertex_type) && is_static_vertex(dst_vertex_type) {
+        if is_src_static && is_dst_static {
             for result in rdr.records() {
                 if let Ok(record) = result {
                     wtr.write_record(record.iter()).unwrap();
                 }
             }
-        } else if is_static_vertex(src_vertex_type) && !is_static_vertex(dst_vertex_type) {
+        } else if is_src_static && !is_dst_static {
             for result in rdr.records() {
                 if let Ok(record) = result {
                     let edge_meta = parser.parse_edge_meta(&record);
@@ -153,7 +149,7 @@ impl<G: FromStr + Send + Sync + IndexType + Eq> GraphPartitioner<G> {
                     }
                 }
             }
-        } else if !is_static_vertex(src_vertex_type) && is_static_vertex(dst_vertex_type) {
+        } else if !is_src_static && is_dst_static {
             for result in rdr.records() {
                 if let Ok(record) = result {
                     let edge_meta = parser.parse_edge_meta(&record);
@@ -242,7 +238,12 @@ impl<G: FromStr + Send + Sync + IndexType + Eq> GraphPartitioner<G> {
                     let mut wtr = WriterBuilder::new()
                         .delimiter(self.delim)
                         .from_writer(BufWriter::new(File::create(&output_path).unwrap()));
-                    self.load_vertices(v_label_i, rdr, &mut wtr);
+                    self.load_vertices(
+                        v_label_i,
+                        rdr,
+                        &mut wtr,
+                        self.graph_schema.is_static_vertex(v_label_i),
+                    );
                 } else if vertex_file
                     .clone()
                     .to_str()
@@ -285,7 +286,12 @@ impl<G: FromStr + Send + Sync + IndexType + Eq> GraphPartitioner<G> {
                     let mut wtr = WriterBuilder::new()
                         .delimiter(self.delim)
                         .from_writer(BufWriter::new(File::create(&output_path).unwrap()));
-                    self.load_vertices(v_label_i, rdr, &mut wtr);
+                    self.load_vertices(
+                        v_label_i,
+                        rdr,
+                        &mut wtr,
+                        self.graph_schema.is_static_vertex(v_label_i),
+                    );
                 }
             }
         }
@@ -344,7 +350,15 @@ impl<G: FromStr + Send + Sync + IndexType + Eq> GraphPartitioner<G> {
                                 let wtr = WriterBuilder::new()
                                     .delimiter(self.delim)
                                     .from_writer(BufWriter::new(File::create(&output_path).unwrap()));
-                                self.load_edges(src_label_i, dst_label_i, e_label_i, rdr, wtr);
+                                self.load_edges(
+                                    src_label_i,
+                                    dst_label_i,
+                                    e_label_i,
+                                    self.graph_schema.is_static_vertex(src_label_i),
+                                    self.graph_schema.is_static_vertex(dst_label_i),
+                                    rdr,
+                                    wtr,
+                                );
                             } else if edge_file
                                 .clone()
                                 .to_str()
@@ -383,7 +397,15 @@ impl<G: FromStr + Send + Sync + IndexType + Eq> GraphPartitioner<G> {
                                 let wtr = WriterBuilder::new()
                                     .delimiter(self.delim)
                                     .from_writer(BufWriter::new(File::create(&output_path).unwrap()));
-                                self.load_edges(src_label_i, dst_label_i, e_label_i, rdr, wtr);
+                                self.load_edges(
+                                    src_label_i,
+                                    dst_label_i,
+                                    e_label_i,
+                                    self.graph_schema.is_static_vertex(src_label_i),
+                                    self.graph_schema.is_static_vertex(dst_label_i),
+                                    rdr,
+                                    wtr,
+                                );
                             }
                         }
                     }
