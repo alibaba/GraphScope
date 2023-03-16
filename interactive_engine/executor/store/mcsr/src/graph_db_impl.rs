@@ -700,6 +700,82 @@ where
         }
     }
 
+    pub fn get_partitioned_edges(
+        &self, labels: Option<&Vec<LabelId>>, worker_id: u32, worker_num: u32,
+    ) -> Iter<LocalEdge<G, I>> {
+        let local_id = (worker_id % worker_num) as usize;
+        let mut iters = vec![];
+        let mut got_labels = vec![];
+        if labels.is_none() {
+            for src_label in 0..self.vertex_label_num {
+                for dst_label in 0..self.vertex_label_num {
+                    for edge_label in 0..self.edge_label_num {
+                        let index = self.edge_label_to_index(
+                            src_label as LabelId,
+                            dst_label as LabelId,
+                            edge_label as LabelId,
+                            Direction::Outgoing,
+                        );
+
+                        if self.oe[index].edge_num() != 0 {
+                            let edge_count = self.oe[index].edge_num();
+                            let partial_count =
+                                (edge_count + worker_num as usize - 1) / worker_num as usize;
+                            iters.push(
+                                Iter::from_iter_box(self.oe[index].get_all_edges())
+                                    .skip(local_id * partial_count)
+                                    .take(partial_count),
+                            );
+                            got_labels.push((
+                                src_label as LabelId,
+                                dst_label as LabelId,
+                                edge_label as LabelId,
+                            ));
+                        }
+                    }
+                }
+            }
+        } else {
+            for src_label in 0..self.vertex_label_num {
+                for dst_label in 0..self.vertex_label_num {
+                    for edge_label in labels.unwrap() {
+                        let index = self.edge_label_to_index(
+                            src_label as LabelId,
+                            dst_label as LabelId,
+                            *edge_label,
+                            Direction::Outgoing,
+                        );
+
+                        if self.oe[index].edge_num() != 0 {
+                            let edge_count = self.oe[index].edge_num();
+                            let partial_count =
+                                (edge_count + worker_num as usize - 1) / worker_num as usize;
+                            iters.push(
+                                Iter::from_iter_box(self.oe[index].get_all_edges())
+                                    .skip(local_id * partial_count)
+                                    .take(partial_count),
+                            );
+                            got_labels.push((src_label as LabelId, dst_label as LabelId, *edge_label));
+                        }
+                    }
+                }
+            }
+        }
+        Iter::from_iter(LabeledIterator::new(got_labels, iters).map(
+            move |((src_label, dst_label, edge_label), (src_lid, e))| {
+                self.edge_ref_to_local_edge(
+                    src_label,
+                    src_lid,
+                    dst_label,
+                    e.neighbor,
+                    edge_label,
+                    Direction::Outgoing,
+                    e.offset,
+                )
+            },
+        ))
+    }
+
     pub fn is_single_oe_csr(&self, src_label: LabelId, dst_label: LabelId, edge_label: LabelId) -> bool {
         self.graph_schema
             .is_single_oe(src_label, edge_label, dst_label)

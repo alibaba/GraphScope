@@ -93,10 +93,23 @@ impl ReadGraph for CSRStore {
         ))?
     }
 
-    fn scan_edge(&self, _params: &QueryParams) -> GraphProxyResult<Box<dyn Iterator<Item = Edge> + Send>> {
-        Err(GraphProxyError::unsupported_error(
-            "Experiment storage does not support index_scan_vertex for now",
-        ))?
+    fn scan_edge(&self, params: &QueryParams) -> GraphProxyResult<Box<dyn Iterator<Item = Edge> + Send>> {
+        let label_ids = encode_storage_label(&params.labels);
+        let props = params.columns.clone();
+
+        let worker_id = pegasus::get_current_worker_checked()
+            .map(|worker| worker.index)
+            .unwrap_or(0);
+        let workers_num = pegasus::get_current_worker_checked()
+            .map(|worker| worker.local_peers)
+            .unwrap_or(1);
+        let partition_id = self.store.partition as u8;
+
+        let result = self
+            .store
+            .get_partitioned_edges(label_ids.as_ref(), worker_id, workers_num)
+            .map(move |e| to_runtime_edge(e, None, props.clone(), partition_id));
+        Ok(filter_sample_limit!(result, params.filter, params.sample_ratio, params.limit))
     }
 
     fn get_vertex(
@@ -157,7 +170,7 @@ impl ReadGraph for CSRStore {
                 Direction::In => graph.get_in_edges(v as DefaultId, edge_label_ids.as_ref()),
                 Direction::Both => graph.get_both_edges(v as DefaultId, edge_label_ids.as_ref()),
             }
-            .map(move |e| to_runtime_edge(e, v, props.clone(), partition_id));
+            .map(move |e| to_runtime_edge(e, Some(v), props.clone(), partition_id));
             Ok(filter_limit!(iter, filter, limit))
         });
         Ok(stmt)
@@ -196,7 +209,8 @@ fn to_empty_vertex(v: LocalVertex<'static, DefaultId, DefaultId>) -> Vertex {
 
 #[inline]
 fn to_runtime_edge(
-    e: LocalEdge<'static, DefaultId, DefaultId>, v: ID, prop_keys: Option<Vec<NameOrId>>, partition_id: u8,
+    e: LocalEdge<'static, DefaultId, DefaultId>, v: Option<ID>, prop_keys: Option<Vec<NameOrId>>,
+    partition_id: u8,
 ) -> Edge {
     let src_id = e.get_src_id() as u64;
     let dst_id = e.get_dst_id() as u64;
@@ -209,7 +223,7 @@ fn to_runtime_edge(
         + ((label as u64) << 40)
         + (dst_label << 32)
         + offset;
-    if v == src_id {
+    if v.is_none() || v.unwrap() == src_id {
         Edge::new(
             edge_id,
             Some(encode_runtime_label(label)),
