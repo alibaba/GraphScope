@@ -15,6 +15,7 @@ package com.alibaba.graphscope.groot.tests.gremlin;
 
 import com.alibaba.graphscope.compiler.api.exception.GrootException;
 import com.alibaba.graphscope.gremlin.integration.graph.RemoteTestGraph;
+import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.GremlinConfig;
@@ -232,7 +233,7 @@ public class GrootGraph extends RemoteTestGraph {
     @Override
     public GraphTraversalSource traversal() {
         GraphTraversalSource source =
-                AnonymousTraversalSource.traversal(GraphTraversalSource.class)
+                AnonymousTraversalSource.traversal(IrCustomizedTraversalSource.class)
                         .withRemote(remoteConnection);
         source.getStrategies().removeStrategies(ProfileStrategy.class, FilterRankingStrategy.class);
         return source;

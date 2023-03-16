@@ -76,7 +76,6 @@ jobs:
       run: |
         source ${HOME}/.graphscope_env
         cd interactive_engine/groot-server
-        sleep 1000000
         mvn test -P gremlin-test
 
     - name: Build GraphScope Store
