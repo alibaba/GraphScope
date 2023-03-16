@@ -20,7 +20,7 @@ and the vineyard store that offers efficient in-memory data transfers.
 .. toctree::
    :maxdepth: 2
    :caption: Overview
-   
+
    overview/intro
    overview/getting_started
    overview/graph_analytics_workloads
@@ -44,7 +44,7 @@ and the vineyard store that offers efficient in-memory data transfers.
 .. toctree::
    :maxdepth: 2
    :caption: Graph Analytical Engine
-   
+
    analytical_engine/getting_started
    analytical_engine/deployment
    analytical_engine/design_of_gae
@@ -52,16 +52,16 @@ and the vineyard store that offers efficient in-memory data transfers.
    analytical_engine/dev_and_test
    analytical_engine/apis
    analytical_engine/faqs
-   
+
 
 .. toctree::
    :maxdepth: 2
    :caption: Graph Interactive Engine
 
-   getting_started_gie
-   design_of_gie
-   user_guide_and_examples_of_gie
-   faqs_of_gie
+   interactive_engine/getting_started
+   interactive_engine/design_of_gie
+   interactive_engine/user_guide_and_examples
+   interactive_engine/supported_gremlin_steps
 
 .. toctree::
    :maxdepth: 2
