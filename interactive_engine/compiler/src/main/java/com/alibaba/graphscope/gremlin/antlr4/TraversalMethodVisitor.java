@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.gremlin.antlr4;
 
 import com.alibaba.graphscope.gremlin.Utils;
+import com.alibaba.graphscope.gremlin.exception.InvalidGremlinScriptException;
 import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
 import com.alibaba.graphscope.gremlin.plugin.step.ExprStep;
 import com.alibaba.graphscope.gremlin.plugin.step.PathExpandStep;
@@ -34,6 +35,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSo
 import org.apache.tinkerpop.gremlin.process.traversal.step.ByModulating;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupGlobalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeGlobalStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.map.EdgeVertexStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.GraphStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderGlobalStep;
 import org.apache.tinkerpop.gremlin.structure.Column;
@@ -76,17 +78,10 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
 
     @Override
     public Traversal visitTraversalMethod_hasId(GremlinGSParser.TraversalMethod_hasIdContext ctx) {
-        if (ctx.getChildCount() == 4) {
-            return graphTraversal.hasId(
-                    GenericLiteralVisitor.getInstance().visitIntegerLiteral(ctx.integerLiteral()));
-        } else if (ctx.integerLiteral() != null && ctx.integerLiteralList() != null) {
-            return graphTraversal.hasId(
-                    GenericLiteralVisitor.getInstance().visitIntegerLiteral(ctx.integerLiteral()),
-                    GenericLiteralVisitor.getIntegerLiteralList(ctx.integerLiteralList()));
-        } else {
-            throw new UnsupportedEvalException(
-                    ctx.getClass(), "supported pattern is [hasId(1)] or hasId(1, 2, ...)");
-        }
+        return graphTraversal.hasId(
+                GenericLiteralVisitor.getInstance()
+                        .visitIntegerLiteralExpr(
+                                ctx.nonEmptyIntegerLiteralList().integerLiteralExpr()));
     }
 
     @Override
@@ -262,6 +257,12 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
 
     @Override
     public Traversal visitTraversalMethod_endV(GremlinGSParser.TraversalMethod_endVContext ctx) {
+        Step endStep = graphTraversal.asAdmin().getEndStep();
+        if (endStep == null || !(endStep instanceof PathExpandStep)) {
+            throw new InvalidGremlinScriptException(
+                    "endV should follow a path expand operator [out('$1..$2'), in('$1..$2'),"
+                            + " both('$1..$2')]");
+        }
         IrCustomizedTraversal traversal = (IrCustomizedTraversal) graphTraversal;
         return traversal.endV();
     }
@@ -702,6 +703,12 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     @Override
     public Traversal visitTraversalMethod_subgraph(
             final GremlinGSParser.TraversalMethod_subgraphContext ctx) {
+        Step endStep = graphTraversal.asAdmin().getEndStep();
+        if (endStep == null || !(endStep instanceof EdgeVertexStep)) {
+            throw new InvalidGremlinScriptException(
+                    "edge induced subgraph should follow an edge expand operator [inE, outE,"
+                            + " bothE]");
+        }
         return graphTraversal.subgraph(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
     }
 
