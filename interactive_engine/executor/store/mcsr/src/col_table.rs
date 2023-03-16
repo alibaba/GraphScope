@@ -166,15 +166,36 @@ impl ColTable {
                         .unwrap()
                         .serialize(&mut f);
                 }
-                DataType::DateTime => {
-                    f.write_u8(6).unwrap();
+                DataType::UInt32 => {
+                    f.write_u8(1).unwrap();
                     col.as_any()
-                        .downcast_ref::<DateTimeColumn>()
+                        .downcast_ref::<UInt32Column>()
+                        .unwrap()
+                        .serialize(&mut f);
+                }
+                DataType::Int64 => {
+                    f.write_u8(2).unwrap();
+                    col.as_any()
+                        .downcast_ref::<Int64Column>()
+                        .unwrap()
+                        .serialize(&mut f);
+                }
+                DataType::UInt64 => {
+                    f.write_u8(3).unwrap();
+                    col.as_any()
+                        .downcast_ref::<UInt64Column>()
+                        .unwrap()
+                        .serialize(&mut f);
+                }
+                DataType::Double => {
+                    f.write_u8(4).unwrap();
+                    col.as_any()
+                        .downcast_ref::<DoubleColumn>()
                         .unwrap()
                         .serialize(&mut f);
                 }
                 DataType::String => {
-                    f.write_u8(4).unwrap();
+                    f.write_u8(5).unwrap();
                     let string_array = &col
                         .as_any()
                         .downcast_ref::<StringColumn>()
@@ -191,17 +212,24 @@ impl ColTable {
                         .unwrap();
                     f.write(&string_column_bytes).unwrap();
                 }
-                DataType::LCString => {
-                    f.write_u8(11).unwrap();
+                DataType::Date => {
+                    f.write_u8(6).unwrap();
                     col.as_any()
-                        .downcast_ref::<LCStringColumn>()
+                        .downcast_ref::<DateColumn>()
                         .unwrap()
                         .serialize(&mut f);
                 }
-                DataType::Date => {
+                DataType::DateTime => {
+                    f.write_u8(7).unwrap();
+                    col.as_any()
+                        .downcast_ref::<DateTimeColumn>()
+                        .unwrap()
+                        .serialize(&mut f);
+                }
+                DataType::LCString => {
                     f.write_u8(8).unwrap();
                     col.as_any()
-                        .downcast_ref::<DateColumn>()
+                        .downcast_ref::<LCStringColumn>()
                         .unwrap()
                         .serialize(&mut f);
                 }
@@ -234,11 +262,23 @@ impl ColTable {
                 let mut col = Int32Column::new();
                 col.deserialize(&mut f);
                 self.columns.push(Box::new(col));
-            } else if t == 6 {
-                let mut col = DateTimeColumn::new();
+            } else if t == 1 {
+                let mut col = UInt32Column::new();
+                col.deserialize(&mut f);
+                self.columns.push(Box::new(col));
+            } else if t == 2 {
+                let mut col = Int64Column::new();
+                col.deserialize(&mut f);
+                self.columns.push(Box::new(col));
+            } else if t == 3 {
+                let mut col = UInt64Column::new();
                 col.deserialize(&mut f);
                 self.columns.push(Box::new(col));
             } else if t == 4 {
+                let mut col = DoubleColumn::new();
+                col.deserialize(&mut f);
+                self.columns.push(Box::new(col));
+            } else if t == 5 {
                 let mut col = StringColumn::new();
                 let string_array = &mut col.data;
                 let string_column_bytes_len = f.read_u64().unwrap() as usize;
@@ -250,12 +290,16 @@ impl ColTable {
                     string_array.push(String::read_from(&mut string_column_bytes_slice).unwrap());
                 }
                 self.columns.push(Box::new(col));
-            } else if t == 11 {
-                let mut col = LCStringColumn::new();
+            } else if t == 6 {
+                let mut col = DateColumn::new();
+                col.deserialize(&mut f);
+                self.columns.push(Box::new(col));
+            } else if t == 7 {
+                let mut col = DateTimeColumn::new();
                 col.deserialize(&mut f);
                 self.columns.push(Box::new(col));
             } else if t == 8 {
-                let mut col = DateColumn::new();
+                let mut col = LCStringColumn::new();
                 col.deserialize(&mut f);
                 self.columns.push(Box::new(col));
             } else {

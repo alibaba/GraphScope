@@ -41,8 +41,8 @@ pub enum DataType {
     String,
     Date,
     DateTime,
-    ID,
     LCString,
+    ID,
     NULL,
 }
 
@@ -455,6 +455,44 @@ impl UInt32Column {
     pub fn new() -> Self {
         Self { data: Vec::new() }
     }
+
+    pub fn serialize(&self, f: &mut File) {
+        let row_num = self.data.len();
+        f.write_u64(row_num as u64).unwrap();
+        unsafe {
+            let data_slice = slice::from_raw_parts(
+                self.data.as_ptr() as *const u8,
+                row_num * std::mem::size_of::<u32>(),
+            );
+            f.write_all(data_slice).unwrap();
+        }
+        f.flush().unwrap();
+    }
+
+    pub fn deserialize(&mut self, f: &mut File) {
+        let row_num = f.read_u64().unwrap() as usize;
+        self.data.resize(row_num, 0_u32);
+        unsafe {
+            let data_slice = slice::from_raw_parts_mut(
+                self.data.as_mut_ptr() as *mut u8,
+                row_num * std::mem::size_of::<u32>(),
+            );
+            f.read_exact(data_slice).unwrap();
+        }
+    }
+
+    pub fn is_same(&self, other: &Self) -> bool {
+        if self.data.len() != other.data.len() {
+            return false;
+        }
+        let num = self.data.len();
+        for k in 0..num {
+            if self.data[k] != other.data[k] {
+                return false;
+            }
+        }
+        return true;
+    }
 }
 
 impl Debug for UInt32Column {
@@ -525,6 +563,44 @@ impl Int64Column {
     pub fn new() -> Self {
         Self { data: Vec::new() }
     }
+
+    pub fn serialize(&self, f: &mut File) {
+        let row_num = self.data.len();
+        f.write_u64(row_num as u64).unwrap();
+        unsafe {
+            let data_slice = slice::from_raw_parts(
+                self.data.as_ptr() as *const u8,
+                row_num * std::mem::size_of::<i64>(),
+            );
+            f.write_all(data_slice).unwrap();
+        }
+        f.flush().unwrap();
+    }
+
+    pub fn deserialize(&mut self, f: &mut File) {
+        let row_num = f.read_u64().unwrap() as usize;
+        self.data.resize(row_num, 0_i64);
+        unsafe {
+            let data_slice = slice::from_raw_parts_mut(
+                self.data.as_mut_ptr() as *mut u8,
+                row_num * std::mem::size_of::<i64>(),
+            );
+            f.read_exact(data_slice).unwrap();
+        }
+    }
+
+    pub fn is_same(&self, other: &Self) -> bool {
+        if self.data.len() != other.data.len() {
+            return false;
+        }
+        let num = self.data.len();
+        for k in 0..num {
+            if self.data[k] != other.data[k] {
+                return false;
+            }
+        }
+        return true;
+    }
 }
 
 impl Debug for Int64Column {
@@ -594,6 +670,44 @@ pub struct UInt64Column {
 impl UInt64Column {
     pub fn new() -> Self {
         Self { data: Vec::new() }
+    }
+
+    pub fn serialize(&self, f: &mut File) {
+        let row_num = self.data.len();
+        f.write_u64(row_num as u64).unwrap();
+        unsafe {
+            let data_slice = slice::from_raw_parts(
+                self.data.as_ptr() as *const u8,
+                row_num * std::mem::size_of::<u64>(),
+            );
+            f.write_all(data_slice).unwrap();
+        }
+        f.flush().unwrap();
+    }
+
+    pub fn deserialize(&mut self, f: &mut File) {
+        let row_num = f.read_u64().unwrap() as usize;
+        self.data.resize(row_num, 0_u64);
+        unsafe {
+            let data_slice = slice::from_raw_parts_mut(
+                self.data.as_mut_ptr() as *mut u8,
+                row_num * std::mem::size_of::<u64>(),
+            );
+            f.read_exact(data_slice).unwrap();
+        }
+    }
+
+    pub fn is_same(&self, other: &Self) -> bool {
+        if self.data.len() != other.data.len() {
+            return false;
+        }
+        let num = self.data.len();
+        for k in 0..num {
+            if self.data[k] != other.data[k] {
+                return false;
+            }
+        }
+        return true;
     }
 }
 
@@ -742,6 +856,31 @@ pub struct DoubleColumn {
 impl DoubleColumn {
     pub fn new() -> Self {
         Self { data: Vec::new() }
+    }
+
+    pub fn serialize(&self, f: &mut File) {
+        let row_num = self.data.len();
+        f.write_u64(row_num as u64).unwrap();
+        unsafe {
+            let data_slice = slice::from_raw_parts(
+                self.data.as_ptr() as *const u8,
+                row_num * std::mem::size_of::<f64>(),
+            );
+            f.write_all(data_slice).unwrap();
+        }
+        f.flush().unwrap();
+    }
+
+    pub fn deserialize(&mut self, f: &mut File) {
+        let row_num = f.read_u64().unwrap() as usize;
+        self.data.resize(row_num, 0_f64);
+        unsafe {
+            let data_slice = slice::from_raw_parts_mut(
+                self.data.as_mut_ptr() as *mut u8,
+                row_num * std::mem::size_of::<f64>(),
+            );
+            f.read_exact(data_slice).unwrap();
+        }
     }
 }
 
