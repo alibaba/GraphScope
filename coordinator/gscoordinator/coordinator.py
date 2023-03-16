@@ -880,6 +880,15 @@ def parse_sys_args():
         default=9968,
         help="Coordinator prometheus exporter service port.",
     )
+    parser.add_argument(
+        "--dataset_proxy",
+        type=str,
+        nargs="?",
+        const="",
+        default="",
+        help="A json string specifies the dataset proxy info."
+        "Available options of proxy: http_proxy, https_proxy, no_proxy.",
+    )
     return parser.parse_args()
 
 
@@ -924,6 +933,7 @@ def get_launcher(args):
             waiting_for_delete=args.waiting_for_delete,
             with_mars=args.k8s_with_mars,
             enabled_engines=args.k8s_enabled_engines,
+            dataset_proxy=args.dataset_proxy,
         )
     elif args.cluster_type == "hosts":
         launcher = LocalLauncher(
