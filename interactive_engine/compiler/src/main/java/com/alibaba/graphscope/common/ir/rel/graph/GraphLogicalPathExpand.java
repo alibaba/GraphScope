@@ -101,7 +101,7 @@ public class GraphLogicalPathExpand extends SingleRel {
                 .itemIf("fetch", fetch, fetch != null)
                 .item("path_opt", getPathOpt())
                 .item("result_opt", getResultOpt())
-                .item("alias", getAliasName());
+                .item("alias", AliasInference.SIMPLE_NAME(getAliasName()));
     }
 
     public String getAliasName() {
