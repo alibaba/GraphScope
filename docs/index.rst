@@ -21,12 +21,13 @@ and the vineyard store that offers efficient in-memory data transfers.
    :maxdepth: 2
    :caption: Overview
 
-   graphscope_positioning
+   overview/intro
    overview/getting_started
    overview/graph_analytics_workloads
    overview/graph_interactive_workloads
    overview/graph_learning_workloads
    overview/design_of_graphscope
+   overview/positioning
    overview/glossary
    release_notes
    frequently_asked_questions
