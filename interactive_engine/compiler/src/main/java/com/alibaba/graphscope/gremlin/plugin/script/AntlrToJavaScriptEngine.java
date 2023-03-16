@@ -25,6 +25,7 @@
 
 package com.alibaba.graphscope.gremlin.plugin.script;
 
+import com.alibaba.graphscope.common.antlr4.SyntaxErrorListener;
 import com.alibaba.graphscope.gremlin.antlr4.GremlinAntlrToJava;
 
 import org.antlr.v4.runtime.*;
