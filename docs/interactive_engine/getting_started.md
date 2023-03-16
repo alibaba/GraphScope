@@ -21,7 +21,6 @@ python3 -m pip install graphscope --upgrade \
 ```
 ````
 
-
 ## Running GraphScope Interactive Engine on Local
 
 It's fairly straightforward to run interactive queries using the `graphscope` package on
@@ -68,8 +67,7 @@ As shown in the above example, it is very easy to use GraphScope to interactivel
 
 In addition to the above local-machine entr\'ee, we have prepared the following topics for your reference.
 
+- GIE can process LDBC interactive complex workloads. [A walk-through tutorial is here](./ldbc_tutorial)
 - GIE can work in a distributed environment to process very large graph. [How to do that?](./deployment)
-- GIE can process LDBC interactive complex workloads. [A full tutorial is here](./ldbc_tutorial)
-- Want to know more about the technical details of GIE. [This is the design and architecture of GIE](./design_of_gie)
 - GIE has supported a lot of standard Gremlin steps, together with many useful syntactic sugars. [Please look into the details](./supported_gremlin_steps)
-
+- Want to know more about the technical details of GIE. [This is the design and architecture of GIE](./design_of_gie)
