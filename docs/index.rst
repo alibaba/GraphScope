@@ -35,7 +35,7 @@ and the vineyard store that offers efficient in-memory data transfers.
    :maxdepth: 2
    :caption: Installation & Deployment
 
-   deploy_graphscope_on_local
+   install_on_local
    deploy_graphscope_on_self_managed_k8s
    deploy_graphscope_on_clouds
    deploy_graphscope_with_helm

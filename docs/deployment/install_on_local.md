@@ -1,4 +1,4 @@
-# Deploy GraphScope on Local
+# Install GraphScope on Local
 
 This guide will walk you through the process of installing GraphScope on your local machine.
 
@@ -8,12 +8,10 @@ This guide will walk you through the process of installing GraphScope on your lo
 - Python 3.7 ~ 3.11
 - OpenJDK 8 or later (If you want to use GIE)
 
-## Installation
-
-### Install from packages
+## Install from packages
 GraphScope is distributed via [Python wheels](https://pypi.org/project/graphscope), and could be installed by [pip](https://pip.pypa.io/en/stable/) directly.
 
-#### Install stable version of GraphScope
+### Install stable version of GraphScope
 You can use `pip` to install latest stable graphscope package
 
 ```bash
@@ -31,7 +29,7 @@ python3 -m pip install graphscope --upgrade \
 
 The above command will download all the components required for running GraphScope in standalone mode on your local machine.
 
-#### Install preview version of GraphScope
+### Install preview version of GraphScope
 If you wish to experience the latest features, you can install the preview version, which is built and released in a nightly manner.
 
 ```bash
@@ -48,11 +46,11 @@ apt-get update -y && apt-get install python3-pip default-jdk -y
 python3 -m pip install graphscope ipython tensorflow
 ```
 
-### Install from source
+## Install from source
 
 Optionally, You can build GraphScope from source and install it on your machine.
 
-#### Setup build environment for Linux and macOS
+### Setup build environment for Linux and macOS
 
 Build GraphScope from source needs many libraries and tools as dependencies. We provide a utility script `gs`
 to help you install all the dependencies.
@@ -66,7 +64,7 @@ cd graphscope
 # use --help to get more usage.
 ```
 
-#### Use dev image with all dependencies installed
+### Use dev image with all dependencies installed
 
 To make our life easier, we provide a pre-built docker image with all the dependencies installed. 
 You can use pull it and work in a container with this image to build GraphScope.
@@ -79,7 +77,7 @@ docker run --name dev -it --shm-size=4096m registry.cn-hongkong.aliyuncs.com/gra
 git clone https://github.com/alibaba/graphscope
 ```
 
-#### Build and install
+### Build and install
 
 After the dependencies are installed on your local or in the container, 
 you can build and install GraphScope in root directory of the source code.
