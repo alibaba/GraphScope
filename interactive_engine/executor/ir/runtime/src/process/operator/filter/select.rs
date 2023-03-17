@@ -55,7 +55,7 @@ impl FilterFuncGen for pb::Select {
 
 #[cfg(test)]
 mod tests {
-    use graph_proxy::apis::{Details, GraphElement};
+    use graph_proxy::apis::GraphElement;
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
     use pegasus::api::{Filter, Sink};
@@ -253,8 +253,6 @@ mod tests {
                 {
                     assert_eq!(
                         element
-                            .details()
-                            .unwrap()
                             .get_property(&"name".into())
                             .unwrap()
                             .try_to_owned()

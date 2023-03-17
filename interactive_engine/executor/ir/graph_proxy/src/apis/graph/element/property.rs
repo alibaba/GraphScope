@@ -99,16 +99,17 @@ impl Decode for PropKey {
     }
 }
 
+#[derive(Debug)]
 pub enum PropertyValue<'a> {
     Borrowed(BorrowObject<'a>),
     Owned(Object),
 }
 
 impl<'a> PropertyValue<'a> {
-    pub fn try_to_owned(&self) -> Option<Object> {
+    pub fn try_to_owned(self) -> Option<Object> {
         match self {
             PropertyValue::Borrowed(borrowed_obj) => borrowed_obj.try_to_owned(),
-            PropertyValue::Owned(obj) => Some(obj.clone()),
+            PropertyValue::Owned(obj) => Some(obj),
         }
     }
 }
