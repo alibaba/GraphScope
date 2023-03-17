@@ -308,39 +308,26 @@ impl Details for LazyVertexDetails {
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
         let mut all_props = HashMap::new();
-        if let Some(prop_keys) = self.prop_keys.as_ref() {
-            // the case of get_all_properties from vertex;
-            if prop_keys.is_empty() {
-                if let Some(ptr) = self.get_vertex_ptr() {
-                    unsafe {
-                        if let Some(prop_key_vals) = (*ptr).get_all_properties() {
-                            all_props = prop_key_vals
-                                .into_iter()
-                                .map(|(prop_key, prop_val)| (prop_key.into(), to_object(prop_val)))
-                                .collect();
-                        } else {
-                            return None;
-                        }
-                        let mask = (1_usize << LABEL_SHIFT_BITS) - 1;
-                        let original_id = ((*ptr).get_id() & mask) as i64;
-                        all_props.insert(
-                            NameOrId::Str("id".to_string()),
-                            Object::Primitive(Primitives::Long(original_id)),
-                        );
-                    }
+        // the case of get_all_properties from vertex;
+        if let Some(ptr) = self.get_vertex_ptr() {
+            unsafe {
+                if let Some(prop_key_vals) = (*ptr).get_all_properties() {
+                    all_props = prop_key_vals
+                        .into_iter()
+                        .map(|(prop_key, prop_val)| (prop_key.into(), to_object(prop_val)))
+                        .collect();
                 } else {
                     return None;
                 }
-            } else {
-                // the case of get_all_properties with prop_keys pre-specified
-                for key in prop_keys.iter() {
-                    if let Some(prop) = self.get_property(&key) {
-                        all_props.insert(key.clone(), prop.try_to_owned().unwrap());
-                    } else {
-                        all_props.insert(key.clone(), Object::None);
-                    }
-                }
+                let mask = (1_usize << LABEL_SHIFT_BITS) - 1;
+                let original_id = ((*ptr).get_id() & mask) as i64;
+                all_props.insert(
+                    NameOrId::Str("id".to_string()),
+                    Object::Primitive(Primitives::Long(original_id)),
+                );
             }
+        } else {
+            return None;
         }
         Some(all_props)
     }
@@ -417,34 +404,22 @@ impl Details for LazyEdgeDetails {
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
         let mut all_props = HashMap::new();
-        if let Some(prop_keys) = self.prop_keys.as_ref() {
-            // the case of get_all_properties from vertex;
-            if prop_keys.is_empty() {
-                if let Some(ptr) = self.get_edge_ptr() {
-                    unsafe {
-                        if let Some(prop_key_vals) = (*ptr).get_all_properties() {
-                            all_props = prop_key_vals
-                                .into_iter()
-                                .map(|(prop_key, prop_val)| (prop_key.into(), to_object(prop_val)))
-                                .collect();
-                        } else {
-                            return None;
-                        }
-                    }
+        // the case of get_all_properties from vertex;
+        if let Some(ptr) = self.get_edge_ptr() {
+            unsafe {
+                if let Some(prop_key_vals) = (*ptr).get_all_properties() {
+                    all_props = prop_key_vals
+                        .into_iter()
+                        .map(|(prop_key, prop_val)| (prop_key.into(), to_object(prop_val)))
+                        .collect();
                 } else {
                     return None;
                 }
-            } else {
-                // the case of get_all_properties with prop_keys pre-specified
-                for key in prop_keys.iter() {
-                    if let Some(prop) = self.get_property(&key) {
-                        all_props.insert(key.clone(), prop.try_to_owned().unwrap());
-                    } else {
-                        all_props.insert(key.clone(), Object::None);
-                    }
-                }
             }
+        } else {
+            return None;
         }
+
         Some(all_props)
     }
 }
