@@ -4,9 +4,9 @@
 
 image:
   registry: registry.cn-hongkong.aliyuncs.com
-  repository: graphscope/graphscope
+  repository: graphscope/gie-exp-runtime
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "ir_standalone"
+  tag: ""
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
   ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -40,13 +40,13 @@ commonLabels: {}
 javaOpts: ""
 
 ## Vineyard or Experimental Storage
-storageType: Vineyard 
+storageType: Experimental
 
 ## Store Config
 storeDataPath: "/tmp/data"
 
 ## Frontend Config
-schemaConfig: "v6d_modern_schema.json"
+schemaConfig: "expr_modern_schema.json"
 
 ## Pegasus Config
 pegasusWorkerNum: 2
@@ -91,7 +91,7 @@ serviceAccount:
 ## GraphScope Store parameters
 ##
 store:
-  replicaCount: 2 
+  replicaCount: 1
 
   ## updateStrategy for GraphScope Store statefulset
   ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
