@@ -113,8 +113,7 @@ def p2p_property_dir():
     return "/testingdata/property"
 
 
-# @pytest.mark.skipif("HDFS_HOST" not in os.environ, reason="HDFS not specified")
-@pytest.mark.skip(reason="Fix pyarrow version @siyuan0322")
+@pytest.mark.skipif("HDFS_HOST" not in os.environ, reason="HDFS not specified")
 def test_demo_on_hdfs(gs_session_distributed):
     graph = gs_session_distributed.g()
     graph = graph.add_vertices(

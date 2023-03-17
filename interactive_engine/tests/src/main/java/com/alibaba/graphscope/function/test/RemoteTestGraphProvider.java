@@ -15,6 +15,8 @@
  */
 package com.alibaba.graphscope.function.test;
 
+import com.alibaba.graphscope.gremlin.integration.graph.RemoteTestGraph;
+
 import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.AbstractGraphProvider;
 import org.apache.tinkerpop.gremlin.LoadGraphWith;

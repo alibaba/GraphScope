@@ -452,7 +452,7 @@ class OperationExecutor:
         return message_pb2.RunStepResponse(head=response_head), []
 
     def _execute_gremlin_query(self, op: op_def_pb2.OpDef):
-        logger.info("execute gremlin query")
+        logger.debug("execute gremlin query")
         message = op.attr[types_pb2.GIE_GREMLIN_QUERY_MESSAGE].s.decode()
         request_options = None
         if types_pb2.GIE_GREMLIN_REQUEST_OPTIONS in op.attr:
@@ -462,7 +462,7 @@ class OperationExecutor:
         object_id = op.attr[types_pb2.VINEYARD_ID].i
         gremlin_client = self._object_manager.get(object_id)
         rlt = gremlin_client.submit(message, request_options=request_options)
-        logger.info("put %s, client %s", op.key, gremlin_client)
+        logger.debug("put %s, client %s", op.key, gremlin_client)
         self._object_manager.put(op.key, GremlinResultSet(op.key, rlt))
         return op_def_pb2.OpResult(code=OK, key=op.key)
 
@@ -505,15 +505,24 @@ class OperationExecutor:
             instances = [key for key in vineyard_client.meta]
 
             # duplicate each instances for each thread per worker.
+            if len(instances) == num_workers:
+                local_stream_chunks = threads_per_executor
+            else:
+                assert (
+                    num_workers % len(instances) == 0
+                ), f"Unable to distribute {num_workers} workers to {len(instances)} instances"
+                local_stream_chunks = (
+                    num_workers // len(instances) * threads_per_executor
+                )
             chunk_instances = [
-                key for key in instances for _ in range(threads_per_executor)
+                key for key in instances for _ in range(local_stream_chunks)
             ]
 
             # build the vineyard::GlobalPGStream
             metadata = vineyard.ObjectMeta()
             metadata.set_global(True)
             metadata["typename"] = "vineyard::htap::GlobalPGStream"
-            metadata["local_stream_chunks"] = threads_per_executor
+            metadata["local_stream_chunks"] = local_stream_chunks
             metadata["total_stream_chunks"] = len(chunk_instances)
 
             # build the parallel stream for edge
@@ -656,15 +665,20 @@ class OperationExecutor:
             os.environ.get("THREADS_PER_WORKER", INTERACTIVE_ENGINE_THREADS_PER_WORKER)
         )
 
-        if self._launcher.type() == types_pb2.HOSTS:
-            # only 1 GIE executor on local cluster
+        if (
+            self._launcher.type() == types_pb2.HOSTS
+            and os.environ.get("PARALLEL_INTERACTIVE_EXECUTOR_ON_VINEYARD", "OFF")
+            != "ON"
+        ):
             executor_workers_num = 1
             threads_per_executor = self._launcher.num_workers * threads_per_worker
-            engine_config = self.get_analytical_engine_config()
-            vineyard_rpc_endpoint = engine_config["vineyard_rpc_endpoint"]
         else:
             executor_workers_num = self._launcher.num_workers
             threads_per_executor = threads_per_worker
+        if self._launcher.type() == types_pb2.HOSTS:
+            engine_config = self.get_analytical_engine_config()
+            vineyard_rpc_endpoint = engine_config["vineyard_rpc_endpoint"]
+        else:
             vineyard_rpc_endpoint = self._launcher.vineyard_internal_endpoint
         total_builder_chunks = executor_workers_num * threads_per_executor
 

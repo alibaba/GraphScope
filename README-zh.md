@@ -123,9 +123,7 @@ sub_graph = sub_graph.add_column(ret2, {"tc": "r"})
 ```python
 
 # define the features for learning
-paper_features = []
-for i in range(128):
-    paper_features.append("feat_" + str(i))
+paper_features = [f"feat_{i}" for i in range(128)]
 
 paper_features.append("kcore")
 paper_features.append("tc")

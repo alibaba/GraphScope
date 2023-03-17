@@ -1,9 +1,22 @@
 1. Get the application URL by running these commands:
 
 {{- if contains "NodePort" .Values.frontend.service.type }}
-  export NODE_IP=$(kubectl -n {{ .Release.Namespace }} get pod {{ include "graphscope-store.frontend.fullname" . }}-0  -o jsonpath="{.status.hostIP}")
+
+  export IP=$(kubectl -n {{ .Release.Namespace }} get pod {{ include "graphscope-store.frontend.fullname" . }}-0  -o jsonpath="{.status.hostIP}")
+
+{{- else if contains "LoadBalancer" .Values.frontend.service.type }}
+
+  It may take a few minutes for the LoadBalancer IP to be available.
+  You can watch the status by executing 
+
+    kubectl --namespace {{ .Release.Namespace }} get services -o wide -w {{ include "graphscope-store.frontend.fullname" . }}
+
+  After the EXTERNAL_IP is available, executing these commands:
+
+  export IP=$(kubectl -n {{ .Release.Namespace }} get svc {{ include "graphscope-store.frontend.fullname" . }} -ojsonpath="{.status.loadBalancer.ingress[0].ip}")
+
+{{- end }}
   export GRPC_PORT=$(kubectl -n {{ .Release.Namespace }} get services {{ include "graphscope-store.frontend.fullname" . }} -o jsonpath="{.spec.ports[0].nodePort}")
   export GREMLIN_PORT=$(kubectl -n {{ .Release.Namespace }} get services {{ include "graphscope-store.frontend.fullname" . }} -o jsonpath="{.spec.ports[1].nodePort}")
-  echo "GRPC endpoint is: ${NODE_IP}:${GRPC_PORT}"
-  echo "GREMLIN endpoint is: ${NODE_IP}:${GREMLIN_PORT}"
-{{- end }}
+  echo "GRPC endpoint is: ${IP}:${GRPC_PORT}"
+  echo "GREMLIN endpoint is: ${IP}:${GREMLIN_PORT}"
