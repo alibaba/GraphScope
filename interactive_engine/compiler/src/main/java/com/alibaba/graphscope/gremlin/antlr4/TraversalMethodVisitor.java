@@ -35,9 +35,9 @@ import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSo
 import org.apache.tinkerpop.gremlin.process.traversal.step.ByModulating;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupGlobalStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeGlobalStep;
-import org.apache.tinkerpop.gremlin.process.traversal.step.map.EdgeVertexStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.GraphStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderGlobalStep;
+import org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexStep;
 import org.apache.tinkerpop.gremlin.structure.Column;
 import org.apache.tinkerpop.gremlin.structure.T;
 
@@ -714,7 +714,7 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     // steps which have edge type as output, i.e. E(), inE(), outE(), bothE()
     private boolean isEdgeOutputStep(Step step) {
         if (step == null) return false;
-        return step instanceof EdgeVertexStep
+        return step instanceof VertexStep
                 || step instanceof GraphStep && ((GraphStep) step).returnsEdge();
     }
 
