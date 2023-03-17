@@ -1,98 +1,121 @@
-# IR Standalone Deployment
+# GIE Standalone Deployment
 ## Directory Structure
 ```
-├── ir-standalone
-│   ├── Chart.yaml
-│   ├── README.md
+./gie-standalone/
+├── Chart.yaml
+├── README.md
+├── templates
+│   ├── configmap.yaml
+│   ├── frontend
+│   │   ├── statefulset.yaml
+│   │   └── svc.yaml
+│   ├── _helpers.tpl
+│   ├── serviceaccount.yaml
+│   └── store
+│       ├── statefulset.yaml
+│       └── svc-headless.yaml
+├── tools
 │   ├── etcd.yaml
-│   ├── pvc.yaml
-│   ├── templates
-│   │   ├── _helpers.tpl
-│   │   ├── configmap.yaml
-│   │   ├── frontend
-│   │   │   ├── statefulset.yaml
-│   │   │   └── svc.yaml
-│   │   ├── serviceaccount.yaml
-│   │   └── store
-│   │       ├── statefulset.yaml
-│   │       └── svc-headless.yaml
-│   └── values.yaml
-└── role_and_binding.yaml
+│   └── pvc.yaml
+└── values.yaml
 ```
-## Prepare Dependencies (just initialize once)
-### rbac authorization
-```
-kubectl apply -f role_and_binding.yaml
-```
+## Prerequisite
 ### etcd
 ```
 cd GraphScope/charts
-kubectl apply -f ir-standalone/tools/etcd.yaml
+kubectl apply -f gie-standalone/tools/etcd.yaml
 ```
 ### prepare graph data
-- prepare raw data
+- experimental
 ```
-# for vineyard store (there are some sample data for tests under the `resource` directory, just copy them to the target directory)
-cp -r GraphScope/interactive_engine/tests/src/main/resources/ /tmp/data/
-
-# for experimental store (experimental storage will create modern graph for tests by default, prepare your own raw data under the directories of graph_schema and graph_data_bin if you need other graph data for benchmark)
+# experimental storage will create modern graph for tests by default,
+# prepare your own data under the directories of `graph_schema` and `graph_data_bin` if needed.
 cp -r graph_schema /tmp/data/
 cp -r graph_data_bin /tmp/data
 ```
-- config `ir-standalone/pvc.yaml`
+- vineyard
+```
+# there are some sample data for tests under the `resource` directory, just copy them to the target directory
+# prepare your own data under the directories of /tmp/data, and config mappings to load graph in the file `gie-standalone/templates/configmap.yaml`.
+cp -r GraphScope/interactive_engine/tests/src/main/resources/* /tmp/data/
+```
+### prepare k8s volume
+- config `gie-standalone/tools/pvc.yaml`
 ```
 hostPath:
-  path: /tmp/data # be consistent with the directory where the graph data is stored
+  path: /tmp/data # keep consistent with the directory where the graph data is located
 ```
 - create pvc and pv
 ```
-kubectl apply -f ir-standalone/tools/pvc.yaml
+kubectl apply -f gie-standalone/tools/pvc.yaml
 ```
 ## Getting Started
-### config `ir-standalone/values.yaml`
+### config `gie-standalone/values.yaml`
+- experimental
 ```
 # docker artifacts
 image:
+  # for experimental store
   registry: registry.cn-hongkong.aliyuncs.com
   repository: graphscope/gie-exp-runtime
   tag: ""
-
-# store num
-store:
-    replicaCount: 1
-
-# storage type: Experimental or Vineyard
+ 
+# storage type
 storageType: Experimental
 
-# need by compiler service to access meta, the concrete content is in ir-standalone/templates/configmap.yaml
-schemaConfig: "exp_modern_schema.json"
+# schema needed by compiler, config in `gie-standalone/templates/configmap.yaml`
+schemaConfig: "expr_modern_schema.json"
+```
+- vineyard
+```
+# docker artifacts
+image:
+  # for vineyard store
+  registry: registry.cn-hongkong.aliyuncs.com
+  repository: graphscope/graphscope
+  tag: "ir_standalone"
+  
+# storage type
+storageType: Vineyard
 
-# gremlin service port
-gremlinPort: 12312
+# schema needed by compiler, config in `gie-standalone/templates/configmap.yaml`
+schemaConfig: "v6d_modern_schema.json"
 
-# Pegasus Config
+# mappings from csv to v6d data type for graph loading, config in `gie-standalone/templates/configmap.yaml`
+htapLoaderConfig: "v6d_modern_loader.json" 
+```
+- common
+```
+frontend:
+  replicaCount: 1 # frontend num
+    service:
+      gremlinPort: 8182 # gremlin service port
+    
+store:
+  replicaCount: 1 # store num
+
+# job config
 pegasusWorkerNum: 2
 pegasusTimeout: 240000
 pegasusBatchSize: 1024
 pegasusOutputCapacity: 16
 
-# pvc used by pod instance (default is the pvc created above)
+# k8s volume to store graph data
 existingClaim: "test-graphscope-store-pvc"
-
-# extra configurations if based on vineyard storage
-htapLoaderConfig: "v6d_modern_loader.json" # need by vineyard instance to load raw data into in-memory graph structure, the concrete content is in ir-standalone/templates/configmap.yaml
 ```
-### start ir deployment
+### start gie deployment
 ```
-helm install <your-release-name> ir-standalone
+helm install <your-release-name> gie-standalone
 ```
-### stop ir deployment
+### stop gie deployment
 ```
 helm delete <your-release-name>
 ```
 ### get service endpoint
 ```
-minikube tunnel # execute in advance if in minikube environment
-
-kubectl get svc | grep frontend # EXTERNAL-IP:12312
+# execute in advance if in minikube environment
+minikube tunnel 
+# external ip
+kubectl get svc | grep frontend | grep <your-release-name>
+# external port is the configuration of `gremlinPort`
 ```
