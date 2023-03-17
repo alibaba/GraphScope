@@ -84,6 +84,7 @@ pub struct GraphLoader<
     delim: u8,
     input_schema: Arc<InputSchema>,
     graph_schema: Arc<CsrGraphSchema>,
+    skip_header: bool,
 
     vertex_map: VertexMap<G, I>,
 }
@@ -116,6 +117,7 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
             delim: b'|',
             input_schema: Arc::new(input_schema),
             graph_schema: Arc::new(graph_schema),
+            skip_header: false,
 
             vertex_map,
         }
@@ -125,6 +127,10 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
     pub fn with_delimiter(mut self, delim: u8) -> Self {
         self.delim = delim;
         self
+    }
+
+    pub fn skip_header(&mut self) {
+        self.skip_header = true;
     }
 
     fn load_vertices<R: Read>(
@@ -354,7 +360,7 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                         .buffer_capacity(4096)
                         .comment(Some(b'#'))
                         .flexible(true)
-                        .has_headers(false)
+                        .has_headers(self.skip_header)
                         .from_reader(BufReader::new(File::open(&vertex_file).unwrap()));
                     self.load_vertices(
                         v_label_i,
@@ -373,7 +379,7 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                         .buffer_capacity(4096)
                         .comment(Some(b'#'))
                         .flexible(true)
-                        .has_headers(false)
+                        .has_headers(self.skip_header)
                         .from_reader(BufReader::new(GzReader::from_path(&vertex_file).unwrap()));
                     self.load_vertices(
                         v_label_i,
@@ -429,7 +435,7 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                                     .buffer_capacity(4096)
                                     .comment(Some(b'#'))
                                     .flexible(true)
-                                    .has_headers(false)
+                                    .has_headers(self.skip_header)
                                     .from_reader(BufReader::new(File::open(&edge_file).unwrap()));
                                 self.load_edges(
                                     src_label_i,
@@ -453,7 +459,7 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                                     .buffer_capacity(4096)
                                     .comment(Some(b'#'))
                                     .flexible(true)
-                                    .has_headers(false)
+                                    .has_headers(self.skip_header)
                                     .from_reader(BufReader::new(GzReader::from_path(&edge_file).unwrap()));
                                 self.load_edges(
                                     src_label_i,

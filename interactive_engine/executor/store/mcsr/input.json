@@ -493,29 +493,6 @@
     },
     {
       "src_label": "FORUM",
-      "dst_label": "PERSON",
-      "label": "HASMODERATOR",
-      "columns": [
-        {
-          "name": "creationDate",
-          "data_type": "DateTime"
-        },
-        {
-          "name": "start_id",
-          "data_type": "ID"
-        },
-        {
-          "name": "end_id",
-          "data_type": "ID"
-        }
-      ],
-      "files": [
-        "dynamic/Forum_hasModerator_Person/*.csv",
-        "dynamic/Forum_hasModerator_Person/*.csv.gz"
-      ]
-    },
-    {
-      "src_label": "FORUM",
       "dst_label": "TAG",
       "label": "HASTAG",
       "columns": [

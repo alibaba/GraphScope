@@ -17,8 +17,7 @@ use std::path::PathBuf;
 
 use clap::{App, Arg};
 use env_logger;
-// use mcsr::graph_las::GraphLAS;
-use mcsr::graph_partitioner::GraphPartitioner;
+use mcsr::graph_loader::GraphLoader;
 use mcsr::schema::CsrGraphSchema;
 use mcsr::types::*;
 
@@ -58,16 +57,16 @@ fn main() {
                 .short("i")
                 .long_help("The index of partitions")
                 .takes_value(true),
-            Arg::with_name("thread_num")
-                .short("t")
-                .long_help("The number of threads")
-                .takes_value(true),
             Arg::with_name("delimiter")
-                .short("d")
+                .short("t")
                 .long_help(
                     "The delimiter of the raw data [comma|semicolon|pipe]. pipe (|) is the default option",
                 )
                 .takes_value(true),
+            Arg::with_name("skip_header")
+                .long("skip_header")
+                .long_help("Whether skip the first line in input file")
+                .takes_value(false),
         ])
         .get_matches();
 
@@ -97,16 +96,13 @@ fn main() {
         .unwrap_or("0")
         .parse::<usize>()
         .expect(&format!("Specify invalid partition number"));
-    let thread_num = matches
-        .value_of("thread_num")
-        .unwrap_or("1")
-        .parse::<usize>()
-        .expect(&format!("Specify invalid thread number"));
 
     let delimiter_str = matches
         .value_of("delimiter")
         .unwrap_or("pipe")
         .to_uppercase();
+
+    let skip_header = matches.is_present("skip_header");
 
     let delimiter = if delimiter_str.as_str() == "COMMA" {
         b','
@@ -116,7 +112,6 @@ fn main() {
         b'|'
     };
 
-    // Copy graph schema to graph_data_dir/graph_schema/schema.json if no there
     let out_dir = PathBuf::from(format!("{}/{}", graph_data_dir, DIR_GRAPH_SCHEMA));
     if !out_dir.exists() {
         std::fs::create_dir_all(&out_dir).expect("Create graph schema directory error");
@@ -127,31 +122,32 @@ fn main() {
         .to_json_file(&out_dir.join(FILE_SCHEMA))
         .expect("Write graph schema error!");
 
-    let mut handles = Vec::with_capacity(thread_num);
-    for i in 0..thread_num {
-        let raw_dir = raw_data_dir.clone();
-        let graph_schema_f = graph_schema_file.clone();
-        let input_schema_f = input_schema_file.clone();
+    let mut handles = Vec::with_capacity(partition_num);
+    let raw_dir = raw_data_dir.clone();
+    let graph_schema_f = graph_schema_file.clone();
+    let input_schema_f = input_schema_file.clone();
 
-        let cur_out_dir = graph_data_dir.clone();
-        let handle = std::thread::spawn(move || {
-            let mut laser: GraphPartitioner = GraphPartitioner::new(
-                raw_dir,
-                cur_out_dir.as_str(),
-                input_schema_f,
-                graph_schema_f,
-                partition_index,
-                partition_num,
-                i,
-                thread_num,
-            );
-            laser = laser.with_delimiter(delimiter);
+    let cur_out_dir = graph_data_dir.clone();
 
-            laser.load().expect("Load error");
-        });
+    let handle = std::thread::spawn(move || {
+        let mut loader: GraphLoader = GraphLoader::new(
+            raw_dir,
+            cur_out_dir.as_str(),
+            input_schema_f,
+            graph_schema_f,
+            partition_index,
+            partition_num,
+        );
+        loader = loader.with_delimiter(delimiter);
+        if skip_header {
+            loader.skip_header();
+        }
 
-        handles.push(handle);
-    }
+        loader.load().expect("Load error");
+    });
+
+    handles.push(handle);
+
     for handle in handles {
         handle.join().unwrap();
     }
