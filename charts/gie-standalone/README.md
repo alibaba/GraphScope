@@ -35,7 +35,15 @@ cp -r graph_data_bin /tmp/data
 ```
 - vineyard
 ```
-# there are some sample data for tests under the `resource` directory, just copy them to the target directory
+# there are some sample data for tests under the `resource` directory, just copy them to the target directory,
+
+GraphScope/interactive_engine/tests/src/main/resources
+├── modern_graph
+│   ├── created.csv
+│   ├── knows.csv
+│   ├── person.csv
+│   └── software.csv
+
 # prepare your own data under the directories of /tmp/data, and config mappings to load graph in the file `gie-standalone/templates/configmap.yaml`.
 cp -r GraphScope/interactive_engine/tests/src/main/resources/* /tmp/data/
 ```
