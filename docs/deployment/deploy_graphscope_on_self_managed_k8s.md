@@ -36,7 +36,7 @@ python3 -m pip install graphscope-client
 Use Aliyun mirror to accelerate downloading if in need.
 
 ```bash
-python3 -m pip install graphscope -i http://mirrors.aliyun.com/pypi/simple/ \
+python3 -m pip install graphscope-client -i http://mirrors.aliyun.com/pypi/simple/ \
     --trusted-host=mirrors.aliyun.com
 ```
 ````
@@ -58,7 +58,8 @@ Then, start the minikube by
 minikube start
 ```
 
-On macOS, you can just use [Docker Desktop](https://docs.docker.com/desktop/kubernetes/), which includes a standalone Kubernetes server and client.
+On macOS, you can just use [Docker Desktop](https://docs.docker.com/desktop/kubernetes/), which includes a 
+standalone Kubernetes server and client.
 
 Using this command to verify minikube is running. 
 
@@ -66,8 +67,22 @@ Using this command to verify minikube is running.
 minikube status
 ```
 
-The output should indicate that the cluster is running and the kubectl context is set to the minikube context.
-The default location of the kubeconfig file is `~/.kube/config`, which should looks like this
+A normal status should looks like this
+
+```bash
+$ minikube status
+minikube
+type: Control Plane
+host: Running
+kubelet: Running
+apiserver: Running
+kubeconfig: Configured
+```
+
+The output should show that the cluster is running, and the kubectl context is set to the minikube context. 
+Once started, minikube generates a [kubeconfig](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) file for users to communicate and interact with the cluster. 
+
+The default location of this file is `~/.kube/config`, which should look like this:
 
 ```yaml
 apiVersion: v1
@@ -125,7 +140,10 @@ As shown above, a session can easily launch a cluster on k8s.
 
 #### Customize image URI
 
-You can configure the image URIs for the engines using a set of image-related parameters.
+Considering that users may want to use a different tag other than the default, or deploy in an intranet environment without internet access, they might need to customize the image URIs.
+
+Users can configure the image URIs for the engines using a set of image-related parameters. The default configurations are as follows:
+
 ```python
 sess = graphscope.session(
     k8s_image_registry="registry.cn-hongkong.aliyuncs.com",
@@ -138,15 +156,24 @@ see more details in [Session](https://graphscope.io/docs/reference/session.html#
 
 #### Specify the number of workers
 
-Use the `num_workers` parameter to achieve this:
+GraphScope is designed to handle extremely large-scale graphs that cannot fit in the memory of a single worker. 
+To process such graphs, users can increase the number of workers, as well as the CPU and memories of workers.
+
+To achieve this, use the `num_workers` parameter:
 
 ```python
-sess = graphscope.session(num_workers=4)
+sess = graphscope.session(
+    num_workers=4,
+    k8s_engine_cpu=32,
+    k8s_engine_mem="256Gi",
+    vineyard_shared_mem="256Gi",
+)
 ```
 
 #### Provide a kubeconfig file other than default
 
-You could also specify the path of kubeconfig file manually by
+If users want to deploy on a pre-existing cluster with a kubeconfig file located in a non-default location,
+they can manually specify the path to the kubeconfig file as follows:
 
 ```python
 sess = graphscope.session(k8s_client_config='/path/to/config')
@@ -159,12 +186,6 @@ Sometimes users may want to use their dataset on the local disk, in this case, w
 Assume we want to mount `~/test_data` in the host machine to `/testingdata` in pods, we can define a `dict` as follows, then pass it as `k8s_volumes` in session constructor.
 
 Note that the host path is relative to the kubernetes node, that is, if you have a cluster created by a VM driver, then you need to copy that directory to the minikube VM, or mount that path to minikube VM. See more details [here](https://minikube.sigs.k8s.io/docs/handbook/mount/).
-
-You could also create a cluster by [none driver](https://minikube.sigs.k8s.io/docs/drivers/none/). 
-
-```bash
-minikube start --driver=none
-```
 
 ```python
 import os
@@ -185,6 +206,14 @@ k8s_volumes = {
 
 sess = graphscope.session(k8s_volumes=k8s_volumes)
 ```
+
+````{tip}
+You could also create a cluster by [none driver](https://minikube.sigs.k8s.io/docs/drivers/none/). 
+
+```bash
+minikube start --driver=none
+```
+````
 
 ### Inspect the deployment
 
