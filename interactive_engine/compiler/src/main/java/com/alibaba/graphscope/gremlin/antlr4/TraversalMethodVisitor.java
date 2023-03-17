@@ -79,9 +79,8 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     @Override
     public Traversal visitTraversalMethod_hasId(GremlinGSParser.TraversalMethod_hasIdContext ctx) {
         return graphTraversal.hasId(
-                GenericLiteralVisitor.getInstance()
-                        .visitIntegerLiteralExpr(
-                                ctx.nonEmptyIntegerLiteralList().integerLiteralExpr()));
+                GenericLiteralVisitor.getIntegerLiteralExpr(
+                        ctx.nonEmptyIntegerLiteralList().integerLiteralExpr()));
     }
 
     @Override
@@ -704,12 +703,19 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     public Traversal visitTraversalMethod_subgraph(
             final GremlinGSParser.TraversalMethod_subgraphContext ctx) {
         Step endStep = graphTraversal.asAdmin().getEndStep();
-        if (endStep == null || !(endStep instanceof EdgeVertexStep)) {
+        if (!isEdgeOutputStep(endStep)) {
             throw new InvalidGremlinScriptException(
-                    "edge induced subgraph should follow an edge expand operator [inE, outE,"
+                    "edge induced subgraph should follow an edge output operator [E, inE, outE,"
                             + " bothE]");
         }
         return graphTraversal.subgraph(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
+    }
+
+    // steps which have edge type as output, i.e. E(), inE(), outE(), bothE()
+    private boolean isEdgeOutputStep(Step step) {
+        if (step == null) return false;
+        return step instanceof EdgeVertexStep
+                || step instanceof GraphStep && ((GraphStep) step).returnsEdge();
     }
 
     @Override
