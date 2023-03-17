@@ -2,41 +2,41 @@
 
 ## What is GraphScope
 
-GraphScope is a unified graph computing platform that provides a one-stop solution for graph computing. It provides a unified programming model for both graph analytics and graph neural networks, and supports a variety of graph data formats, including property graphs, heterogeneous graphs, and relational graphs. GraphScope also provides a unified runtime engine that can run both graph analytics and graph neural networks on a single cluster.
+GraphScope is a comprehensive distributed graph computing platform that offers a user-friendly Python interface for performing various graph operations on a cluster of computers. By integrating key Alibaba technologies such as GRAPE, MaxGraph, Graph-Learn (GL), and Vineyard, GraphScope simplifies multi-stage processing of large-scale graph data on compute clusters. These technologies enable analytics, interactive, and graph neural networks (GNN) computation, while Vineyard provides efficient in-memory data transfers.
 
 ## Why use GraphScope
 
 GraphScope has several advantages:
 
-- **Performance:** GraphScope outperforms other state-of-the-art systems by 2X to magnitudes. Additionally, it provides a set of optimized built-in graph algorithms for out-of-the-box use. 
+- **Performance:** GraphScope significantly outperforms other state-of-the-art systems, offering up to 2X or higher performance improvements. Moreover, it includes a collection of optimized built-in graph algorithms for immediate use.
 
 - **Compatibility**: It supports Gremlin and Cypher(coming soon) for quering graph, and NetworkX compatible APIs for graph analytcis.
 
-- **Integration to PyData:** GraphScope provides a user-friendly Python interface, making it easy to integrate with other PyData frameworks and manage complex workflows that involve multiple stages beyond graph processing. 
+- **PyData Integration:** GraphScope offers a user-friendly Python interface, allowing seamless integration with PyData frameworks and management of complex workflows involving multiple stages beyond graph processing.
 
-- **Cloud Native:** which enabling it to be easily deployed on Kubernetes and providing good elasticity and scalability. 
+- **Cloud Native:** GraphScope is designed for easy deployment on Kubernetes, offering excellent elasticity and scalability.
 
 
 ## What are the Use Cases
 
-GraphScope can be used for various purposes:
+GraphScope is versatile and can be used for:
 
-- **For Offline Graph Analytical Jobs:** These jobs are usually iterative graph computation jobs that require multiple rounds of computation, e.g., pagerank, centrality, community detection, and graph clustering. You can use either built-in algorithms or plug-in customized algorithms, and run them over large graphs.
+- **Offline Graph Analytical Jobs:** Iterative graph computations like pagerank, centrality, community detection, and graph clustering. Utilize built-in algorithms or custom ones for large graphs.
 
-- **For Online Graph BI Analysis:** You can use GraphScope for interactive graph analysis, which usually complex graph queries written in Gremlin or Cypher, the concurrency is unlikely to be high, but the latency for complex queries is the key concern. 
+- **Online Graph BI Analysis:** Perform interactive graph analysis with complex Gremlin or Cypher queries, focusing on low latency.
 
-- **For High QPS Graph Queries:** You can also process graph queries coming at an extremely high rate and demand high throughput.
+- **High QPS Graph Queries:** Process high-rate graph queries with exceptional throughput.
 
-- **For Graph Neural Network Training and Inference:** GraphScope supports large-scale GNN and easily integrates with PyG/TensorFlow.
+- **Graph Neural Network Training and Inference:** Support large-scale GNNs and integrate seamlessly with PyG/TensorFlow.
 
-- **One-stop Graph Processing**: For a complex workflow that involves multiple stages of graph analytics, graph queries and GNNs, even beyond graph processing.
+- **One-stop Graph Processing**: Manage complex workflows involving multiple stages of graph analytics, queries, GNNs, and beyond.
 
 
 ## What are the Limitations
 
-- **GraphScope is not a graph database:** A graph database stores and manages data in a graph format, and provides ACID and transactions. While GraphScope focuses on analyzing and computing large-scale graphs using distributed computing. Refer to [Positioning of GraphScope](overview/positioning.md) for more details.
+- **GraphScope is not a graph database:** GraphScope focuses on analyzing and computing large-scale graphs using distributed computing, rather than storing and managing data in a graph format with ACID and transactions. See [Positioning of GraphScope](overview/positioning.md) for more information.
 
-- **Security issue:** Currently, GraphScope lacks important security features such as authentication and encryption.
+- **Security limitations:** GraphScope currently lacks essential security features, such as authentication and encryption.
 
 ## What are the Next
 
