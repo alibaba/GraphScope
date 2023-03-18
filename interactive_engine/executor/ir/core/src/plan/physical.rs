@@ -259,15 +259,19 @@ impl AsPhysical for pb::GetV {
             if params.predicate.is_some() {
                 let auxilia = pb::GetV {
                     tag: None,
-                    opt: 4,
+                    opt: 4, //ItSelf
                     params: Some(params.clone()),
                     alias: getv.alias,
                     meta_data: None,
                 };
                 params.predicate.take();
                 getv.alias = None;
-                // GetV(Adj)
-                builder.get_v(getv);
+                // opt = 4 means applying the filter to the vertex itself
+                // It only happens when previous EdgeExpand is ExpandV
+                // Therefore, GetV(Adj) only when opt != 4
+                if getv.opt != 4 {
+                    builder.get_v(getv);
+                }
                 // Suffle + GetV(Self)
                 if plan_meta.is_partition() {
                     builder.shuffle(None);
@@ -660,8 +664,9 @@ impl AsPhysical for LogicalPlan {
 // 1. the last ops in intersect's sub_plans are the ones to intersect;
 // 2. the intersect op can be:
 //     1) EdgeExpand with Opt = ExpandV, which is to expand and intersect on id-only vertices; (supported currently)
-//     2) EdgeExpand with Opt = ExpandE, which is to expand and intersect on edges (although, not considered in Pattern yet);
-// and 3) GetV with Opt = Self, which is to expand and intersect on vertices, while there may be some filters on the intersected vertices. (TODO e2e)
+//     2) EdgeExpand with Opt = ExpandE followed by GetV with Opt = End, which is to expand and intersect on id-only vertices; (supported currently)
+//     3) EdgeExpand with Opt = ExpandE, which is to expand and intersect on edges (although, not considered in Pattern yet);
+// and 4) GetV with Opt = Self, which is to expand and intersect on vertices, while there may be some filters on the intersected vertices. (TODO e2e)
 
 fn add_intersect_job_builder(
     builder: &mut JobBuilder, plan_meta: &mut PlanMeta, intersect_opr: &pb::Intersect,
@@ -675,16 +680,58 @@ fn add_intersect_job_builder(
         .ok_or(IrError::ParsePbError("Empty tag in `Intersect` opr".into()))?;
     let mut intersect_plans: Vec<Plan> = vec![];
     for subplan in subplans {
-        // subplan would be like: 1. vec![EdgeExpand] for edge expand to intersect; 2. vec![PathExpand, GetV, EdgeExpand] for path expand to intersect
+        // subplan would be like: 1. vec![EdgeExpand(GetV)] for edge expand to intersect; 2. vec![PathExpand, GetV, EdgeExpand(GetV)] for path expand to intersect
         let len = subplan.len();
         let mut sub_bldr = JobBuilder::new(builder.conf.clone());
         for (idx, (_, opr)) in subplan.nodes.iter().enumerate() {
-            if idx != len - 1 {
+            if idx + 2 < len {
                 opr.add_job_builder(builder, plan_meta)?;
+            }
+            // Handle outE + GetV
+            else if idx + 2 == len {
+                // idx >= 0, len >= 1, so unwrap is safe here
+                let last_opr = subplan.get_last_node().unwrap();
+                // check whether the last two operators are ExpandExpand and GetV
+                if let (Some(Edge(edgexpd)), Some(Vertex(get_v))) =
+                    (opr.borrow().opr.opr.as_ref(), last_opr.borrow().opr.opr.as_ref())
+                {
+                    // Check whether ExpandExpand and GetV's Opt are ExpandE and End
+                    if edgexpd.expand_opt == pb::edge_expand::ExpandOpt::Edge as i32
+                        && get_v.opt == pb::get_v::VOpt::End as i32
+                    {
+                        if get_v.alias.is_none() || !get_v.alias.as_ref().unwrap().eq(intersect_tag) {
+                            Err(IrError::InvalidPattern("Cannot intersect on different tags".to_string()))?
+                        }
+                        if plan_meta.is_partition() {
+                            sub_bldr.shuffle(edgexpd.v_tag.clone());
+                        }
+                        let mut edgexpd = edgexpd.clone();
+                        edgexpd.expand_opt = pb::edge_expand::ExpandOpt::Vertex as i32;
+                        edgexpd.alias = get_v.alias.clone();
+                        if plan_meta.is_partition() {
+                            sub_bldr.shuffle(edgexpd.v_tag.clone());
+                        }
+                        sub_bldr.edge_expand(edgexpd);
+                        break;
+                    } else {
+                        Err(IrError::Unsupported(format!(
+                            "Should be `EdgeExpand` opr on Vertex for intersection, but the opr is {:?}",
+                            opr
+                        )))?
+                    }
+                } else {
+                    opr.add_job_builder(builder, plan_meta)?;
+                };
             } else {
                 // the last node in subplan should be the one to intersect.
                 if let Some(Edge(edgexpd)) = opr.borrow().opr.opr.as_ref() {
                     let edgexpd = edgexpd.clone();
+                    if edgexpd.expand_opt != pb::edge_expand::ExpandOpt::Vertex as i32 {
+                        Err(IrError::Unsupported(format!(
+                            "Should be `EdgeExpand` opr on Vertex for intersection, but the opr is {:?}",
+                            opr
+                        )))?
+                    }
                     if edgexpd.alias.is_none()
                         || !edgexpd
                             .alias
@@ -700,7 +747,7 @@ fn add_intersect_job_builder(
                     sub_bldr.edge_expand(edgexpd);
                 } else {
                     Err(IrError::Unsupported(format!(
-                        "Should be `EdgeExpand` opr for intersection, but the opr is {:?}",
+                        "Should be `EdgeExpand` opr on Vertex for intersection, but the opr is {:?}",
                         opr
                     )))?
                 }

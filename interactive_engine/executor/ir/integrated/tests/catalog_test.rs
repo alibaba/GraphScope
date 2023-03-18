@@ -430,16 +430,6 @@ mod test {
         Pattern::from_pb_pattern(&pattern, &mut PlanMeta::default())
     }
 
-    fn get_source_of_pattern() -> pb::Scan {
-        pb::Scan {
-            scan_opt: 0,
-            alias: None,
-            params: Some(query_params(vec![], vec![], None)),
-            idx_predicate: None,
-            meta_data: None,
-        }
-    }
-
     fn get_sink_of_pattern(pattern: &Pattern) -> pb::Sink {
         let max_tag_id = pattern.get_max_tag_id() as i32;
         let tags = (0..max_tag_id)
@@ -457,8 +447,6 @@ mod test {
 
     fn get_patmat_logical_plan(pattern: &Pattern, pb_plan: pb::LogicalPlan) -> LogicalPlan {
         let mut plan = LogicalPlan::default();
-        plan.append_operator_as_node(get_source_of_pattern().into(), vec![])
-            .unwrap();
         plan.append_plan(pb_plan.into(), vec![0])
             .unwrap();
         plan.append_operator_as_node(get_sink_of_pattern(pattern).into(), vec![plan.get_max_node_id() - 1])

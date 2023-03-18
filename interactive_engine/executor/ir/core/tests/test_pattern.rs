@@ -40,7 +40,7 @@ mod tests {
         let vertex_0 = pattern_case0.get_vertex(0).unwrap();
         assert_eq!(vertex_0.get_id(), 0);
         assert_eq!(vertex_0.get_labels()[0], 0);
-        assert_eq!(pattern_case0.get_vertex_degree(0), 0);
+        assert_eq!(pattern_case0.get_vertex_degree(0).unwrap(), 0);
         let mut vertex_0_adjacent_edges_iter = pattern_case0.adjacencies_iter(0);
         assert!(vertex_0_adjacent_edges_iter.next().is_none())
     }
@@ -76,7 +76,7 @@ mod tests {
         let vertex_0 = pattern_case1.get_vertex(0).unwrap();
         assert_eq!(vertex_0.get_id(), 0);
         assert_eq!(vertex_0.get_labels()[0], 0);
-        assert_eq!(pattern_case1.get_vertex_degree(0), 2);
+        assert_eq!(pattern_case1.get_vertex_degree(0).unwrap(), 2);
         let mut vertex_0_adjacent_edges_iter = pattern_case1.adjacencies_iter(0);
         let vertex_0_adjacency_0 = vertex_0_adjacent_edges_iter.next().unwrap();
         assert_eq!(vertex_0_adjacency_0.get_edge_id(), 0);
@@ -89,7 +89,7 @@ mod tests {
         let vertex_1 = pattern_case1.get_vertex(1).unwrap();
         assert_eq!(vertex_1.get_id(), 1);
         assert_eq!(vertex_1.get_labels()[0], 0);
-        assert_eq!(pattern_case1.get_vertex_degree(1), 2);
+        assert_eq!(pattern_case1.get_vertex_degree(1).unwrap(), 2);
         let mut vertex_1_adjacent_edges_iter = pattern_case1.adjacencies_iter(1);
         let vertex_1_adjacency_0 = vertex_1_adjacent_edges_iter.next().unwrap();
         let vertex_1_adjacency_1 = vertex_1_adjacent_edges_iter.next().unwrap();

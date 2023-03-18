@@ -18,6 +18,9 @@ use std::collections::HashMap;
 
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
+use ir_common::KeyId;
+
+use crate::glogue::error::IrPatternResult;
 
 pub type PatternId = usize;
 pub type PatternLabelId = ir_common::LabelId;
@@ -44,11 +47,15 @@ pub(crate) fn query_params(
     }
 }
 
+pub(crate) fn query_params_to_get_v(params: Option<pb::QueryParams>, alias: KeyId, opt: i32) -> pb::GetV {
+    pb::GetV { tag: None, opt, params, alias: Some(alias.into()), meta_data: None }
+}
+
 pub trait PatternOrderTrait<D> {
-    fn compare(&self, left: &D, right: &D) -> Ordering;
+    fn compare(&self, left: &D, right: &D) -> IrPatternResult<Ordering>;
 }
 
 pub trait PatternWeightTrait<W: PartialOrd> {
-    fn get_vertex_weight(&self, vid: PatternId) -> W;
-    fn get_adjacencies_weight(&self, vid: PatternId) -> W;
+    fn get_vertex_weight(&self, vid: PatternId) -> IrPatternResult<W>;
+    fn get_adjacencies_weight(&self, vid: PatternId) -> IrPatternResult<W>;
 }

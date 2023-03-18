@@ -256,6 +256,8 @@ message GetV {
     Other = 2;
     // Getting both vertices of the edge
     Both = 3;
+    // Apply prediate to the current vertex
+    ItSelf = 4;
   }
   // The tag that refers to the edge/path where the end vertex will be retrieved
   common.NameOrId tag = 1;

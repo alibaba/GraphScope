@@ -14,13 +14,14 @@
 //! limitations under the License.
 
 use std::cmp::Ordering;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::iter::FromIterator;
 
 use ir_common::error::ParsePbError;
 use ir_common::expr_parse::str_to_expr_pb;
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
+use ir_common::KeyId;
 use vec_map::VecMap;
 
 use crate::glogue::error::{IrPatternError, IrPatternResult};
@@ -72,8 +73,8 @@ struct PatternVertexData {
     adjacencies: Vec<Adjacency>,
     /// Tag (alias) assigned to this vertex by user
     tag: Option<TagId>,
-    /// Predicate(filter or other expressions) this vertex has
-    data: pb::Select,
+    /// Parameters of the vertex
+    parameters: Vec<pb::QueryParams>,
 }
 
 impl PatternVertexData {
@@ -182,7 +183,7 @@ impl PbEdgeOrPath {
 struct PatternEdgeData {
     /// Tag (alias) assigned to this edge by user
     tag: Option<TagId>,
-    /// Predicate(filter or other expressions) this edge has
+    /// This edge is either edge expand(only) or path expand
     data: PbEdgeOrPath,
 }
 
@@ -313,9 +314,11 @@ impl Pattern {
         // record the label for each vertex from the pb pattern
         let mut id_labels_map: BTreeMap<PatternId, BTreeSet<PatternLabelId>> = BTreeMap::new();
         // record the vertex data from the pb pattern, i.e., pb::Select
-        let mut vertex_data_map: BTreeMap<PatternId, pb::Select> = BTreeMap::new();
+        let mut vertex_params_map: BTreeMap<PatternId, Vec<pb::QueryParams>> = BTreeMap::new();
         // record the edge data from the pb pattern, i.e., pb::Edge or pb::Path
         let mut edge_data_map: BTreeMap<PatternId, PbEdgeOrPath> = BTreeMap::new();
+        // record all the vertices after outE without being closed by GetV
+        let mut edge_expands_to_close = HashSet::new();
         for sentence in &pb_pattern.sentences {
             if sentence.binders.is_empty() {
                 return Err(
@@ -384,14 +387,16 @@ impl Pattern {
                                     "PathExpand::base in Pattern".to_string(),
                                 ))?
                         } else if let Some(BinderItem::Edge(edge_expand)) = binder.item.as_ref() {
+                            if edge_expand.expand_opt == pb::edge_expand::ExpandOpt::Degree as i32 {
+                                return Err(IrPatternError::Unsupported(
+                                    "Expand Degree hasn't been supported in pattern match".to_string(),
+                                ))?;
+                            }
                             edge_data_map.insert(edge_id, PbEdgeOrPath::from(edge_expand.clone()));
                             edge_expand
                         } else {
                             unreachable!()
                         };
-                        if edge_expand.expand_opt != pb::edge_expand::ExpandOpt::Vertex as i32 {
-                            return Err(IrPatternError::Unsupported("Expand edge in pattern".to_string()));
-                        }
                         // get edge label's id
                         let edge_labels = get_edge_expand_labels(edge_expand)?;
                         // get edge direction
@@ -406,6 +411,9 @@ impl Pattern {
                             edge_expand,
                             &mut next_vertex_id,
                         )?;
+                        if edge_expand.expand_opt == pb::edge_expand::ExpandOpt::Edge as i32 {
+                            edge_expands_to_close.insert(dst_vertex_id);
+                        }
                         pre_dst_vertex_id = dst_vertex_id;
                         // assign vertices labels
                         // check which label candidate can connect to the previous determined partial pattern
@@ -443,10 +451,25 @@ impl Pattern {
                         // Be carefully that we assume `Select` denotes a filter for vertices;
                         // Otherwise, it should be fused into `EdgeExpand` (if it is a filter for edges).
                         // TODO: it's better to extract vertex label filter in `Select` if exists, to update id_labels_map
-                        vertex_data_map.insert(pre_dst_vertex_id, select.clone());
+                        vertex_params_map
+                            .entry(pre_dst_vertex_id)
+                            .or_default()
+                            .push(query_params(vec![], vec![], select.predicate.clone()));
                     }
-                    Some(BinderItem::Vertex(_get_v)) => {
+                    Some(BinderItem::Vertex(get_v)) => {
                         // GetV() when path().endV(); ignore endV() here, and add endV() back when build_logical_plan()
+                        if edge_expands_to_close.remove(&pre_dst_vertex_id) {
+                            if let Some(vertex_param) = &get_v.params {
+                                vertex_params_map
+                                    .entry(pre_dst_vertex_id)
+                                    .or_default()
+                                    .push(vertex_param.clone());
+                            }
+                        } else {
+                            return Err(IrPatternError::ParsePbError(ParsePbError::ParseError(
+                                "GetV doesn't follow corresponding Edge Expand Only Operator".to_string(),
+                            )))?;
+                        }
                     }
                     None => {
                         return Err(
@@ -456,19 +479,27 @@ impl Pattern {
                 }
             }
         }
+        if edge_expands_to_close.len() > 0 {
+            Err(IrPatternError::Unsupported(
+                "Some Expand Edge Only Operator doesn't followed by GetV to close".to_string(),
+            ))?
+        }
         let mut pattern = if !pattern_edges.is_empty() {
             Pattern::from(pattern_edges)
         } else {
-            if vertex_data_map.is_empty() {
+            if vertex_params_map.is_empty() {
                 Err(IrPatternError::InvalidExtendPattern("Empty Pattern".to_string()))?
-            } else if vertex_data_map.len() == 1 {
-                Pattern::from(PatternVertex::new(vertex_data_map.iter().next().unwrap().0.clone()))
+            } else if vertex_params_map.len() == 1 {
+                let vertex_id = *vertex_params_map.iter().last().unwrap().0;
+                Pattern::from(PatternVertex::new(vertex_id))
             } else {
                 Err(IrPatternError::InvalidExtendPattern("The pattern is not connected".to_string()))?
             }
         };
-        for (v_id, vertex_data) in vertex_data_map {
-            pattern.set_vertex_data(v_id, vertex_data);
+        for (v_id, vertex_params_vec) in vertex_params_map {
+            for vertex_params in vertex_params_vec {
+                pattern.add_vertex_params(v_id, query_params(vec![], vec![], vertex_params.predicate));
+            }
         }
         for (e_id, edge_data) in edge_data_map {
             pattern.set_edge_data(e_id, edge_data);
@@ -501,7 +532,8 @@ impl Pattern {
                 break;
             } else {
                 // Sort the vertices in a heuristic way, e.g., vertices with filters should be expanded first.
-                all_vertex_ids.sort_by(|&v1_id, &v2_id| trace_pattern.compare(&v1_id, &v2_id));
+                // Unwrap here as we ensure that all the vertices are in the pattern
+                all_vertex_ids.sort_by(|&v1_id, &v2_id| trace_pattern.compare(&v1_id, &v2_id).unwrap());
                 // Ensure the selected vertex won't break the pattern.
                 let mut select_vertex_id = usize::MAX;
                 for id in all_vertex_ids {
@@ -533,147 +565,59 @@ fn build_logical_plan(
     origin_pattern: &Pattern, mut exact_extend_steps: Vec<ExactExtendStep>,
 ) -> IrPatternResult<pb::LogicalPlan> {
     let mut match_plan = pb::LogicalPlan::default();
-    let mut child_offset: i32 = 1;
-    let source_extend = match exact_extend_steps.pop() {
-        Some(src_extend) => src_extend,
-        None => {
-            return Err(IrPatternError::InvalidExtendPattern(
-                "Build logical plan error: from empty extend steps!".to_string(),
-            ))
-        }
-    };
-    let source_vertex_id = source_extend.get_target_vertex_id();
-    let source_vertex_label = origin_pattern
-        .get_vertex(source_vertex_id)
-        .ok_or(IrPatternError::MissingPatternVertex(source_vertex_id))?
-        .get_labels()
-        .clone()
-        .into_iter()
-        .map(|label| common_pb::NameOrId::from(label))
-        .collect();
-    let source_vertex_filter = origin_pattern
-        .get_vertex_data(source_vertex_id)
-        .cloned()
-        .and_then(|select| select.predicate);
-    // Fuse `source_vertex_label` into source, for efficiently scan
-    // TODO: However, we may still have `hasLabel(xx)` in predicate of source_vertex_filter, which is not necessary.
-    let query_param = query_params(source_vertex_label, vec![], source_vertex_filter);
-    let source_opr = pb::Scan {
-        scan_opt: 0,
-        alias: Some((source_vertex_id as i32).into()),
-        params: Some(query_param),
-        idx_predicate: None,
-        meta_data: None,
-    };
-    let mut pre_node = pb::logical_plan::Node { opr: Some(source_opr.into()), children: vec![] };
+    let source_extend = exact_extend_steps
+        .pop()
+        .ok_or(IrPatternError::InvalidExtendPattern(
+            "Build logical plan error: from empty extend steps!".to_string(),
+        ))?;
+    for source_opr in generate_source_operators(origin_pattern, &source_extend)? {
+        append_opr(&mut match_plan, source_opr)?;
+    }
     for exact_extend_step in exact_extend_steps.into_iter().rev() {
         let edge_expands_num = exact_extend_step.len();
-        // the case that needs intersection;
-        if edge_expands_num > 1 {
-            let mut expand_child_offset = child_offset;
-            // record the opr ids that are pre_node's children
-            let mut expand_ids = vec![];
-            // record the opr ids that are intersect's parents
-            let mut intersect_ids = vec![];
-            // record the oprs to expand. e.g., [[EdgeExpand], [PathExpand, GetV, EdgeExpand]]
-            let mut expand_oprs = vec![vec![]];
-            for exact_extend_edge in exact_extend_step.iter() {
-                let edge_id = exact_extend_edge.get_edge_id();
-                let edge_data = origin_pattern
-                    .get_edge_data(edge_id)
-                    .cloned()
-                    .ok_or(IrPatternError::MissingPatternEdge(edge_id))?;
-                match edge_data {
-                    PbEdgeOrPath::Edge(edge_expand) => {
-                        expand_ids.push(expand_child_offset);
-                        intersect_ids.push(expand_child_offset);
-                        let edge_expand_opr =
-                            exact_extend_step.generate_edge_expand(exact_extend_edge, edge_expand)?;
-                        expand_oprs.push(vec![edge_expand_opr]);
-                        expand_child_offset += 1;
-                    }
-                    PbEdgeOrPath::Path(path_expand) => {
-                        let path_expand_oprs =
-                            exact_extend_step.generate_path_expand(exact_extend_edge, path_expand, true)?;
-                        let path_expand_oprs_num = path_expand_oprs.len() as i32;
-                        // pre_node's child should be the id of the first op in path_expand_oprs
-                        expand_ids.push(expand_child_offset);
-                        // intersect's parent should be the id of the last op in path_expand_oprs
-                        let last_expand_id = expand_child_offset + path_expand_oprs_num - 1;
-                        intersect_ids.push(last_expand_id);
-                        expand_oprs.push(path_expand_oprs);
-                        expand_child_offset += path_expand_oprs_num;
-                    }
-                }
+        // store all the expand operators in a 2D vector
+        // each 1D vector represent the expand operators correspond to a expand operator
+        let expand_oprs_vec =
+            exact_extend_step.generate_expand_operators_vec(origin_pattern, edge_expands_num > 1)?;
+        // store the current length of the match plan
+        let child_offset = match_plan.nodes.len();
+        // record the opr ids that are pre_node's children
+        let expand_chidren = get_expand_children(&expand_oprs_vec, child_offset);
+        // record the opr ids that are intersect's parents
+        let intersect_parents = get_intersect_parents(&expand_oprs_vec, child_offset);
+        // the id of the intersect operator
+        let intersect_id = get_intersect_id(&expand_oprs_vec, child_offset);
+        // add all the expand operators to the match plan
+        for expand_oprs in expand_oprs_vec {
+            for expand_opr in expand_oprs {
+                append_opr(&mut match_plan, expand_opr)?;
             }
-            for &i in expand_ids.iter() {
-                pre_node.children.push(i);
-            }
-            match_plan.nodes.push(pre_node);
-
-            let intersect_opr_id = expand_child_offset;
-            for expand_opr_vec in expand_oprs {
-                let expand_opr_vec_len = expand_opr_vec.len();
-                for (idx, expand_opr) in expand_opr_vec.into_iter().enumerate() {
-                    child_offset += 1;
-                    let node = if idx == expand_opr_vec_len - 1 {
-                        // the last node is the one to intersect
-                        pb::logical_plan::Node { opr: Some(expand_opr), children: vec![intersect_opr_id] }
-                    } else {
-                        pb::logical_plan::Node { opr: Some(expand_opr), children: vec![child_offset] }
-                    };
-                    match_plan.nodes.push(node);
-                }
-            }
-            let intersect = exact_extend_step.generate_intersect_operator(intersect_ids)?;
-            pre_node = pb::logical_plan::Node { opr: Some(intersect), children: vec![] };
-            child_offset += 1;
-        } else if edge_expands_num == 1 {
-            let exact_extend_edge =
-                exact_extend_step
-                    .iter()
-                    .last()
-                    .ok_or(IrPatternError::InvalidExtendPattern(format!(
-                        "Empty exact_extend_step in exact_extend_step, the exact_extend_step is {:?}",
-                        exact_extend_step
-                    )))?;
-            let edge_id = exact_extend_edge.get_edge_id();
-            let edge_data = origin_pattern
-                .get_edge_data(edge_id)
-                .cloned()
-                .ok_or(IrPatternError::MissingPatternEdge(edge_id))?;
-            match edge_data {
-                PbEdgeOrPath::Edge(edge_expand) => {
-                    let edge_expand_opr =
-                        exact_extend_step.generate_edge_expand(exact_extend_edge, edge_expand)?;
-                    append_opr(&mut match_plan, &mut pre_node, edge_expand_opr, &mut child_offset);
-                }
-                PbEdgeOrPath::Path(path_expand) => {
-                    let path_expand_oprs =
-                        exact_extend_step.generate_path_expand(exact_extend_edge, path_expand, false)?;
-                    for opr in path_expand_oprs {
-                        append_opr(&mut match_plan, &mut pre_node, opr, &mut child_offset);
-                    }
-                }
-            }
-        } else {
-            return Err(IrPatternError::InvalidExtendPattern(
-                "Build logical plan error: extend step is not source but has 0 edges".to_string(),
-            ));
         }
-        if let Some(filter) = exact_extend_step.generate_vertex_filter_operator(origin_pattern)? {
-            append_opr(&mut match_plan, &mut pre_node, filter, &mut child_offset);
+        // if expand num > 1, means it needs to add intersect operator, and reorganize nodes' children
+        if edge_expands_num > 1 {
+            // add intersect operator to the match plan
+            let intersect_opr = exact_extend_step.generate_intersect_operator(intersect_parents.clone())?;
+            append_opr(&mut match_plan, intersect_opr)?;
+            // reset the children of the previous nodes before this exact extend step
+            set_node_children_at_index(&mut match_plan, expand_chidren, child_offset - 1)?;
+            // reset all intersect's parents' children as the id of the intersect operator
+            for parent_id in intersect_parents {
+                set_node_children_at_index(&mut match_plan, vec![intersect_id], parent_id as usize)?;
+            }
+        }
+        for get_v_filter in exact_extend_step.generate_get_v_filters(origin_pattern)? {
+            append_opr(&mut match_plan, get_v_filter)?;
         }
     }
     // Finally, if the results contain any pattern vertices with system-given aliases,
     // we additional project the user-given aliases, i.e., those may be referred later.
     // Here, origin_pattern.vertices.len() indicates total number of pattern vertices;
     // and origin_pattern.tag_vertex_map.len() indicates the number of pattern vertices with user-given aliases
-    let max_tag_id = origin_pattern.get_max_tag_id() as i32;
+    let max_tag_id = origin_pattern.get_max_tag_id() as KeyId;
     let max_vertex_id = origin_pattern
         .get_max_vertex_id()
         .ok_or(IrPatternError::InvalidExtendPattern(format!("Empty pattern {:?}", origin_pattern)))?
-        as i32;
+        as KeyId;
     if max_vertex_id >= max_tag_id {
         let mut mappings = Vec::with_capacity(max_tag_id as usize);
         for tag_id in 0..max_tag_id {
@@ -683,25 +627,132 @@ fn build_logical_plan(
         }
         // TODO: the meta_data of project is identical with the meta_data of "Pattern"
         let project = pb::Project { mappings, is_append: false, meta_data: vec![] }.into();
-        append_opr(&mut match_plan, &mut pre_node, project, &mut child_offset);
+        append_opr(&mut match_plan, project)?;
     }
     // and append the final op
-    pre_node.children.push(child_offset);
-    match_plan.nodes.push(pre_node);
+    let child_offset = match_plan.nodes.len();
+    set_last_node_children(&mut match_plan, vec![child_offset as KeyId])?;
     Ok(match_plan)
+}
+
+fn generate_vertex_table(
+    pattern: &Pattern, vertex_id: PatternId,
+) -> IrPatternResult<Vec<common_pb::NameOrId>> {
+    Ok(pattern
+        .get_vertex(vertex_id)?
+        .get_labels()
+        .clone()
+        .into_iter()
+        .map(|label| common_pb::NameOrId::from(label))
+        .collect())
+}
+
+fn generate_source_operators(
+    pattern: &Pattern, source_extend: &ExactExtendStep,
+) -> IrPatternResult<Vec<pb::logical_plan::Operator>> {
+    let mut source_operators = vec![];
+    let source_vertex_id = source_extend.get_target_vertex_id();
+    let source_vertex_table = generate_vertex_table(pattern, source_vertex_id)?;
+    // Fuse `source_vertex_label` into source, for efficiently scan
+    let source_vertex_param = if let Some(vertex_param) = pattern
+        .get_vertex_parameters(source_vertex_id)?
+        .first()
+    {
+        let mut first_vertex_param = vertex_param.clone();
+        first_vertex_param.tables = source_vertex_table;
+        first_vertex_param
+    } else {
+        query_params(source_vertex_table, vec![], None)
+    };
+    let source_scan = pb::Scan {
+        scan_opt: 0,
+        alias: Some((source_vertex_id as KeyId).into()),
+        params: Some(source_vertex_param),
+        idx_predicate: None,
+        meta_data: None,
+    };
+    source_operators.push(source_scan.into());
+    for source_filter in source_extend
+        .generate_get_v_filters(pattern)?
+        .into_iter()
+        .skip(1)
+    {
+        source_operators.push(source_filter);
+    }
+    Ok(source_operators)
 }
 
 /// Append opr into match_plan in a traversal way (i.e., a->b->c->d ...).
 /// Specifically, append pre_node into match_plan after set its child as the new_opr; and then update pre_node as the new_opr.
 fn append_opr(
-    match_plan: &mut pb::LogicalPlan, pre_node: &mut pb::logical_plan::Node,
-    new_opr: pb::logical_plan::Operator, child_offset: &mut i32,
-) {
-    let new_opr_id = *child_offset;
-    pre_node.children.push(new_opr_id);
-    (*match_plan).nodes.push(pre_node.clone());
-    *pre_node = pb::logical_plan::Node { opr: Some(new_opr), children: vec![] };
-    *child_offset += 1;
+    match_plan: &mut pb::LogicalPlan, new_opr: pb::logical_plan::Operator,
+) -> IrPatternResult<()> {
+    let match_plan_len = match_plan.nodes.len();
+    if match_plan_len > 0 {
+        set_last_node_children(match_plan, vec![match_plan_len as KeyId])?;
+    }
+    match_plan
+        .nodes
+        .push(pb::logical_plan::Node { opr: Some(new_opr), children: vec![] });
+    Ok(())
+}
+
+fn get_expand_children(
+    expand_oprs_vec: &Vec<Vec<pb::logical_plan::Operator>>, child_offset: usize,
+) -> Vec<KeyId> {
+    let mut pre_id = child_offset as KeyId;
+    let mut expand_ids = vec![];
+    for expand_oprs_num in expand_oprs_vec
+        .iter()
+        .map(|expand_oprs| expand_oprs.len())
+    {
+        expand_ids.push(pre_id);
+        pre_id += expand_oprs_num as KeyId;
+    }
+    expand_ids
+}
+
+fn get_intersect_parents(
+    expand_oprs_vec: &Vec<Vec<pb::logical_plan::Operator>>, child_offset: usize,
+) -> Vec<KeyId> {
+    let mut pre_id = (child_offset as KeyId) - 1;
+    let mut intersect_ids = vec![];
+    for expand_oprs_num in expand_oprs_vec
+        .iter()
+        .map(|expand_oprs| expand_oprs.len())
+    {
+        pre_id += (expand_oprs_num) as KeyId;
+        intersect_ids.push(pre_id);
+    }
+    intersect_ids
+}
+
+fn get_intersect_id(expand_oprs_vec: &Vec<Vec<pb::logical_plan::Operator>>, child_offset: usize) -> KeyId {
+    (expand_oprs_vec
+        .iter()
+        .map(|expand_oprs| expand_oprs.len())
+        .sum::<usize>()
+        + child_offset) as KeyId
+}
+
+fn set_node_children_at_index(
+    match_plan: &mut pb::LogicalPlan, children: Vec<KeyId>, index: usize,
+) -> IrPatternResult<()> {
+    if let Some(node) = match_plan.nodes.get_mut(index) {
+        node.children = children;
+        Ok(())
+    } else {
+        Err(IrPatternError::InvalidExtendPattern(format!("Fail to get plan node at index {}", index)))
+    }
+}
+
+fn set_last_node_children(match_plan: &mut pb::LogicalPlan, children: Vec<KeyId>) -> IrPatternResult<()> {
+    if match_plan.nodes.len() == 0 {
+        Err(IrPatternError::InvalidExtendPattern(format!("Fail to get plan node at index {}", 0)))
+    } else {
+        let last_index = match_plan.nodes.len() - 1;
+        set_node_children_at_index(match_plan, children, last_index)
+    }
 }
 
 /// Generate pattern matching order in a heuristic way:
@@ -710,15 +761,15 @@ fn append_opr(
 ///  3. vertex adjacent to more path_expand should be extended later;
 ///  4. vertex with larger degree will be extended later
 impl PatternOrderTrait<PatternId> for Pattern {
-    fn compare(&self, v1: &PatternId, v2: &PatternId) -> Ordering {
-        let v1_weight = self.get_vertex_weight(*v1);
-        let v2_weight = self.get_vertex_weight(*v2);
+    fn compare(&self, v1: &PatternId, v2: &PatternId) -> IrPatternResult<Ordering> {
+        let v1_weight = self.get_vertex_weight(*v1)?;
+        let v2_weight = self.get_vertex_weight(*v2)?;
         let vertex_order = v1_weight
             .partial_cmp(&v2_weight)
             .unwrap_or(Ordering::Equal);
         if Ordering::Equal == vertex_order {
-            let v1_adjacencies_weight = self.get_adjacencies_weight(*v1);
-            let v2_adjacencies_weight = self.get_adjacencies_weight(*v2);
+            let v1_adjacencies_weight = self.get_adjacencies_weight(*v1)?;
+            let v2_adjacencies_weight = self.get_adjacencies_weight(*v2)?;
             let adj_order = v1_adjacencies_weight
                 .partial_cmp(&v2_adjacencies_weight)
                 .unwrap_or(Ordering::Equal);
@@ -732,59 +783,61 @@ impl PatternOrderTrait<PatternId> for Pattern {
                     .filter(|adj| self.is_pathxpd_data(adj.get_edge_id()))
                     .count();
                 if v1_path_data_num > v2_path_data_num {
-                    Ordering::Less
+                    Ok(Ordering::Less)
                 } else if v1_path_data_num < v2_path_data_num {
-                    Ordering::Greater
+                    Ok(Ordering::Greater)
                 } else {
                     let degree_order = self
-                        .get_vertex_degree(*v1)
-                        .cmp(&self.get_vertex_degree(*v2));
+                        .get_vertex_degree(*v1)?
+                        .cmp(&self.get_vertex_degree(*v2)?);
                     if let Ordering::Equal = degree_order {
-                        self.get_vertex_out_degree(*v1)
-                            .cmp(&self.get_vertex_out_degree(*v2))
+                        Ok(self
+                            .get_vertex_out_degree(*v1)?
+                            .cmp(&self.get_vertex_out_degree(*v2)?))
                     } else {
-                        degree_order
+                        Ok(degree_order)
                     }
                 }
             } else {
-                adj_order
+                Ok(adj_order)
             }
         } else {
-            vertex_order
+            Ok(vertex_order)
         }
     }
 }
 
 impl PatternWeightTrait<f64> for Pattern {
-    fn get_vertex_weight(&self, vid: PatternId) -> f64 {
+    fn get_vertex_weight(&self, vid: PatternId) -> IrPatternResult<f64> {
         // VERTEX_EQ_WEIGHT has the first priority
         const PREDICATE_EQ_WEIGHT: f64 = 10.0;
         const VERTEX_PREDICATE_WEIGHT: f64 = 1.0;
-        let mut vertex_weight = 0.0;
-        if let Some(vertex_data) = self.get_vertex_data(vid) {
-            if let Some(predicate) = &vertex_data.predicate {
+        let mut vertex_weight = VERTEX_PREDICATE_WEIGHT;
+        let vertex_params = self.get_vertex_parameters(vid)?;
+        for param in vertex_params.iter() {
+            if let Some(predicate) = &param.predicate {
                 if has_expr_eq(predicate) {
                     vertex_weight = PREDICATE_EQ_WEIGHT;
-                } else {
-                    vertex_weight = VERTEX_PREDICATE_WEIGHT;
                 }
             }
         }
-        vertex_weight
+        Ok(vertex_weight)
     }
 
-    fn get_adjacencies_weight(&self, vid: PatternId) -> f64 {
+    fn get_adjacencies_weight(&self, vid: PatternId) -> IrPatternResult<f64> {
         // PREDICATE_EQ_WEIGHT has the first priority
         // Besides, EdgeExpand with predicates is in prior to PathExpand with predicates,
         // since PathExpand is assumed to expand more intermediate results.
         const PREDICATE_EQ_WEIGHT: f64 = 10.0;
         const EDGE_PREDICATE_WEIGHT: f64 = 1.0;
         const PATH_PREDICATE_WEIGHT: f64 = 0.9;
-        self.adjacencies_iter(vid)
+        self.get_vertex(vid)?;
+        Ok(self
+            .adjacencies_iter(vid)
             .map(|adj| {
                 let edge_data = self.get_edge_data(adj.get_edge_id());
                 let mut edge_weight = 0.0;
-                if let Some(edge_data) = edge_data {
+                if let Ok(edge_data) = edge_data {
                     let hop_num = if let Some(path) = edge_data.get_path() {
                         path.hop_range.as_ref().unwrap().lower as u32
                     } else {
@@ -804,7 +857,7 @@ impl PatternWeightTrait<f64> for Pattern {
                 }
                 edge_weight
             })
-            .sum()
+            .sum())
     }
 }
 
@@ -1020,8 +1073,10 @@ fn assign_src_dst_vertex_labels(
 impl Pattern {
     /// Get a PatternEdge struct from an edge id
     #[inline]
-    pub fn get_edge(&self, edge_id: PatternId) -> Option<&PatternEdge> {
-        self.edges.get(edge_id)
+    pub fn get_edge(&self, edge_id: PatternId) -> IrPatternResult<&PatternEdge> {
+        self.edges
+            .get(edge_id)
+            .ok_or(IrPatternError::MissingPatternEdge(edge_id))
     }
 
     /// Get the total number of edges in the pattern
@@ -1050,17 +1105,19 @@ impl Pattern {
 
     /// Get a PatternEdge's Tag info
     #[inline]
-    pub fn get_edge_tag(&self, edge_id: PatternId) -> Option<TagId> {
+    pub fn get_edge_tag(&self, edge_id: PatternId) -> IrPatternResult<Option<TagId>> {
         self.edges_data
             .get(edge_id)
-            .and_then(|edge_data| edge_data.tag)
+            .ok_or(IrPatternError::MissingPatternEdge(edge_id))
+            .map(|edge_data| edge_data.tag)
     }
 
     /// Get the data of a PatternEdge
     #[inline]
-    pub fn get_edge_data(&self, edge_id: PatternId) -> Option<&PbEdgeOrPath> {
+    pub fn get_edge_data(&self, edge_id: PatternId) -> IrPatternResult<&PbEdgeOrPath> {
         self.edges_data
             .get(edge_id)
+            .ok_or(IrPatternError::MissingPatternEdge(edge_id))
             .map(|edge_data| &edge_data.data)
     }
 
@@ -1075,8 +1132,10 @@ impl Pattern {
 
     /// Get a PatternVertex struct from a vertex id
     #[inline]
-    pub fn get_vertex(&self, vertex_id: PatternId) -> Option<&PatternVertex> {
-        self.vertices.get(vertex_id)
+    pub fn get_vertex(&self, vertex_id: PatternId) -> IrPatternResult<&PatternVertex> {
+        self.vertices
+            .get(vertex_id)
+            .ok_or(IrPatternError::MissingPatternVertex(vertex_id))
     }
 
     /// Get the total number of vertices in the pattern
@@ -1103,38 +1162,43 @@ impl Pattern {
 
     /// Get a PatternVertex's Tag info
     #[inline]
-    pub fn get_vertex_tag(&self, vertex_id: PatternId) -> Option<TagId> {
+    pub fn get_vertex_tag(&self, vertex_id: PatternId) -> IrPatternResult<Option<TagId>> {
         self.vertices_data
             .get(vertex_id)
-            .and_then(|vertex_data| vertex_data.tag)
+            .ok_or(IrPatternError::MissingPatternVertex(vertex_id))
+            .map(|vertex_data| vertex_data.tag)
     }
 
-    /// Get the data of a PatternVertex
+    /// Get the parameters of a PatternVertex
     #[inline]
-    pub fn get_vertex_data(&self, vertex_id: PatternId) -> Option<&pb::Select> {
+    pub fn get_vertex_parameters(&self, vertex_id: PatternId) -> IrPatternResult<&Vec<pb::QueryParams>> {
         self.vertices_data
             .get(vertex_id)
-            .map(|vertex_data| &vertex_data.data)
+            .ok_or(IrPatternError::MissingPatternVertex(vertex_id))
+            .map(|vertex_data| &vertex_data.parameters)
     }
 
     /// Count how many outgoing edges connect to this vertex
     #[inline]
-    pub fn get_vertex_out_degree(&self, vertex_id: PatternId) -> usize {
-        let vertex_data = self.vertices_data.get(vertex_id).unwrap();
-        vertex_data
+    pub fn get_vertex_out_degree(&self, vertex_id: PatternId) -> IrPatternResult<usize> {
+        let vertex_data = self
+            .vertices_data
+            .get(vertex_id)
+            .ok_or(IrPatternError::MissingPatternVertex(vertex_id))?;
+        Ok(vertex_data
             .adjacencies
             .iter()
             .filter(|adj| adj.direction.eq(&PatternDirection::Out))
-            .count()
+            .count())
     }
 
     /// Count how many edges connect to this vertex
     #[inline]
-    pub fn get_vertex_degree(&self, vertex_id: PatternId) -> usize {
+    pub fn get_vertex_degree(&self, vertex_id: PatternId) -> IrPatternResult<usize> {
         self.vertices_data
             .get(vertex_id)
+            .ok_or(IrPatternError::MissingPatternVertex(vertex_id))
             .map(|vertex_data| vertex_data.adjacencies.len())
-            .unwrap_or(0)
     }
 
     pub fn get_max_tag_id(&self) -> TagId {
@@ -1199,9 +1263,9 @@ impl Pattern {
     }
 
     /// Set predicate requirement of a PatternVertex
-    pub fn set_vertex_data(&mut self, vertex_id: PatternId, opr: pb::Select) {
+    pub fn add_vertex_params(&mut self, vertex_id: PatternId, opr: pb::QueryParams) {
         if let Some(vertex_data) = self.vertices_data.get_mut(vertex_id) {
-            vertex_data.data = opr;
+            vertex_data.parameters.push(opr)
         }
     }
 }
@@ -1210,34 +1274,31 @@ impl Pattern {
 impl Pattern {
     /// Remove a vertex with all its adjacent edges in the current pattern
     pub fn remove_vertex(&mut self, vertex_id: PatternId) -> IrPatternResult<()> {
-        if self.get_vertex(vertex_id).is_some() {
-            let adjacencies: Vec<Adjacency> = self
-                .adjacencies_iter(vertex_id)
-                .cloned()
-                .collect();
-            // delete target vertex
-            // delete in vertices
-            self.vertices.remove(vertex_id);
-            // delete in vertices data
-            self.vertices_data.remove(vertex_id);
-            for adjacency in adjacencies {
-                let adjacent_vertex_id = adjacency.get_adj_vertex().get_id();
-                let adjacent_edge_id = adjacency.get_edge_id();
-                // delete adjacent edges
-                // delete in edges
-                self.edges.remove(adjacent_edge_id);
-                // delete in edges data
-                self.edges_data.remove(adjacent_edge_id);
-                // update adjacent vertices' info
-                self.vertices_data
-                    .get_mut(adjacent_vertex_id)
-                    .ok_or(IrPatternError::MissingPatternVertex(adjacent_vertex_id))?
-                    .remove_adjacency(adjacent_edge_id)
-            }
-
-            Ok(())
-        } else {
-            Err(IrPatternError::MissingPatternVertex(vertex_id))
+        self.get_vertex(vertex_id)?;
+        let adjacencies: Vec<Adjacency> = self
+            .adjacencies_iter(vertex_id)
+            .cloned()
+            .collect();
+        // delete target vertex
+        // delete in vertices
+        self.vertices.remove(vertex_id);
+        // delete in vertices data
+        self.vertices_data.remove(vertex_id);
+        for adjacency in adjacencies {
+            let adjacent_vertex_id = adjacency.get_adj_vertex().get_id();
+            let adjacent_edge_id = adjacency.get_edge_id();
+            // delete adjacent edges
+            // delete in edges
+            self.edges.remove(adjacent_edge_id);
+            // delete in edges data
+            self.edges_data.remove(adjacent_edge_id);
+            // update adjacent vertices' info
+            self.vertices_data
+                .get_mut(adjacent_vertex_id)
+                .ok_or(IrPatternError::MissingPatternVertex(adjacent_vertex_id))?
+                .remove_adjacency(adjacent_edge_id)
         }
+
+        Ok(())
     }
 }
