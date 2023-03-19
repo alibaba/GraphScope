@@ -1,8 +1,9 @@
 # Getting Started
 
-This tutorial will give you a quick tour of GraphScope's features. 
-To get started, we’ll start by installing GraphScope. Most of the examples in this guide are based on Python on your local machine, 
-but we will also show you how to deploy and run GraphScope on a k8s cluster.
+This tutorial provides a quick overview of GraphScope's features. 
+To begin, we will install GraphScope on your local machine using Python. 
+Although most examples in this guide are based on local Python installation, 
+it also works on a Kubernetes cluster.
 
 ```bash
 pip3 install graphscope
@@ -10,16 +11,16 @@ pip3 install graphscope
 
 ## One-stop Graph Processing
 
-We will use a walking-through example to show you how to use GraphScope to 
+We will use a walking-through example to demonstrate how to use GraphScope to 
 process various graph computation tasks in a one-stop manner.
 
-The example is targeting node classification on a citation network.
+The example targets node classification on a citation network.
 
-ogbn-mag is a heterogeneous network composed of a subset of the Microsoft Academic Graph. It contains 4 types of entities(i.e., papers, authors, institutions, and fields of study), as well as four types of directed relations connecting two entities.
+ogbn-mag is a heterogeneous network composed of a subset of the Microsoft Academic Graph. It contains 4 types of entities (i.e., papers, authors, institutions, and fields of study), as well as four types of directed relations connecting two entities.
 
 Given the heterogeneous ogbn-mag data, the task is to predict the class of each paper. Node classification can identify papers in multiple venues, which represent different groups of scientific work on different topics. We apply both the attribute and structural information to classify papers. In the graph, each paper node contains a 128-dimensional word2vec vector representing its content, which is obtained by averaging the embeddings of words in its title and abstract. The embeddings of individual words are pre-trained. The structural information is computed on-the-fly.
 
-GraphScope models graph data as property graph, in which the edges/vertices are labeled and have many properties. Taking ogbn-mag as example, the figure below shows the model of the property graph.
+GraphScope models graph data as property graph, in which the edges/vertices are labeled and have many properties. Taking ogbn-mag as an example, the figure below shows the model of the property graph.
 
 :::{figure-md}
 
@@ -30,10 +31,9 @@ GraphScope models graph data as property graph, in which the edges/vertices are 
 Sample of property graph 
 :::
 
-This graph has four kinds of vertices, labeled as paper, author, institution and field_of_study. There are four kinds of edges connecting them, each kind of edges has a label and specifies the vertex labels for its two ends. For example, cites edges connect two vertices labeled paper. Another example is writes, it requires the source vertex is labeled author and the destination is a paper vertex. All the vertices and edges may have properties. e.g., paper vertices have properties like features, publish year, subject label, etc.
+This graph has four kinds of vertices, labeled as paper, author, institution, and field_of_study. There are four kinds of edges connecting them, each kind of edge has a label and specifies the vertex labels for its two ends. For example, cites edges connect two vertices labeled paper. Another example is writes, it requires the source vertex is labeled author and the destination is a paper vertex. All the vertices and edges may have properties. e.g., paper vertices have properties like features, publish year, subject label, etc.
 
 ````{dropdown} Import GraphScope and load a graph
-
 To load this graph to GraphScope with our retrieval module, please use these code.
 
 ```python
@@ -44,7 +44,7 @@ g = load_ogbn_mag()
 ```
 ````
 
-Interactive queries allow users to directly explore, examine, and present graph data in an exploratory manner in order to locate specific or in-depth information in time. GraphScope adopts a high-level language called Gremlin for graph traversal, and provides efficient execution at scale.
+Interactive queries enable users to explore, examine, and present graph data in a flexible and in-depth manner, allowing them to find specific information quickly. GraphScope utilizes Gremlin, a high-level graph traversal language, for interactive queries and offers efficient execution at scale.
 
 
 ````{dropdown} Run interactive queries with Gremlin
@@ -61,14 +61,13 @@ papers = interactive.execute("g.V().has('author', 'id', 2).out('writes').where(_
 ```
 ````
 
-Graph analytics is widely used in real world. Many algorithms, like community detection, paths and connectivity, centrality are proven to be very useful in various businesses. GraphScope ships with a set of built-in algorithms, enables users easily analysis their graph data.
+Graph analytics is widely used in the real world. Many algorithms, like community detection, paths and connectivity, and centrality, have proven to be very useful in various businesses. GraphScope comes with a set of built-in algorithms, enabling users to easily analyze their graph data.
 
+````{dropdown} Run analytical algorithms on the graph
 
-````{dropdown} Run analytical algorithms over graph
+Continuing our example, we first derive a subgraph by extracting publications within a specific time range from the entire graph (using Gremlin!). Then, we run k-core decomposition and triangle counting to generate the structural features of each paper node.
 
-Continuing our example, below we first derive a subgraph by extracting publications in specific time out of the entire graph (using Gremlin!), and then run k-core decomposition and triangle counting to generate the structural features of each paper node.
-
-Please note that many algorithms may only work on homogeneous graphs, and therefore, to evaluate these algorithms over a property graph, we need to project it into a simple graph at first.
+Please note that many algorithms may only work on homogeneous graphs. Therefore, to evaluate these algorithms on a property graph, we need to project it into a simple graph first.
 
 ```python
 # extract a subgraph of publication within a time range
@@ -91,14 +90,11 @@ Graph neural networks (GNNs) combines superiority of both graph analytics and ma
 
 ````{dropdown} Prepare data and engine for learning
 
-
-In our example, we train a GCN model to classify the nodes (papers) into 349 categories, each of which represents a venue (e.g. pre-print and conference). To achieve this, first we launch a learning engine and build a graph with features following the last step.
+In our example, we train a Graph Convolutional Network (GCN) model to classify the nodes (papers) into 349 categories, each representing a venue (e.g., pre-print or conference). To accomplish this, we first launch a learning engine and construct a graph with features, following the previous step.
 
 ```python
 # define the features for learning
-paper_features = []
-for i in range(128):
-    paper_features.append("feat_" + str(i))
+paper_features = [f"feat_{i}" for i in range(128)]
 
 paper_features.append("kcore")
 paper_features.append("tc")

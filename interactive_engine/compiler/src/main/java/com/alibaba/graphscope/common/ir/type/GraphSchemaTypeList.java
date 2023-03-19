@@ -18,9 +18,11 @@ package com.alibaba.graphscope.common.ir.type;
 
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 
+import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.commons.lang3.ObjectUtils;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * A list of {@code IrSchemaType}, to denote fuzzy conditions in a vertex or an edge, i.e. g.V() or g.V().hasLabel("person", "software")
@@ -28,8 +30,11 @@ import java.util.*;
 public class GraphSchemaTypeList extends GraphSchemaType implements List<GraphSchemaType> {
     private List<GraphSchemaType> schemaTypes;
 
-    protected GraphSchemaTypeList(GraphOpt.Source scanOpt, List<GraphSchemaType> schemaTypes) {
-        super(scanOpt);
+    protected GraphSchemaTypeList(
+            GraphOpt.Source scanOpt,
+            List<GraphSchemaType> schemaTypes,
+            List<RelDataTypeField> fields) {
+        super(scanOpt, fields);
         this.schemaTypes = schemaTypes;
     }
 
@@ -37,14 +42,17 @@ public class GraphSchemaTypeList extends GraphSchemaType implements List<GraphSc
         ObjectUtils.requireNonEmpty(list);
         GraphOpt.Source scanOpt = list.get(0).getScanOpt();
         List<String> labelOpts = new ArrayList<>();
+        List<RelDataTypeField> fields = new ArrayList<>();
         for (GraphSchemaType type : list) {
             labelOpts.add("{label=" + type.labelType.getLabel() + ", opt=" + type.scanOpt + "}");
             if (type.getScanOpt() != scanOpt) {
                 throw new IllegalArgumentException(
                         "fuzzy label types should have the same opt, but is " + labelOpts);
             }
+            fields.addAll(type.getFieldList());
         }
-        return new GraphSchemaTypeList(scanOpt, list);
+        return new GraphSchemaTypeList(
+                scanOpt, list, fields.stream().distinct().collect(Collectors.toList()));
     }
 
     @Override

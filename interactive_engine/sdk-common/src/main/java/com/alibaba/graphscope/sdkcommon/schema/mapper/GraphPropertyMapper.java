@@ -15,8 +15,10 @@ package com.alibaba.graphscope.sdkcommon.schema.mapper;
 
 import com.alibaba.graphscope.compiler.api.schema.DataType;
 import com.alibaba.graphscope.compiler.api.schema.GraphProperty;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class GraphPropertyMapper {
     private int id;
     private String name;

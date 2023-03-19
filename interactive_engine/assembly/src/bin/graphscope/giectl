@@ -265,7 +265,7 @@ create_gremlin_instance_on_k8s() {
   declare -r frontend_port=$8
   declare -r coordinator_name=$9 # deployment name of coordinator
 
-  instance_id=${coordinator_name##*-}
+  instance_id=${coordinator_name#*-}
 
   pod_ips=$(kubectl get pod -lapp.kubernetes.io/component=engine,app.kubernetes.io/instance=${instance_id} -o jsonpath='{.items[*].status.podIP}')
   pegasus_hosts=""

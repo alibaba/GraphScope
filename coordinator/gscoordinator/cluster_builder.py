@@ -383,6 +383,8 @@ class EngineCluster:
         )
 
         container.volume_mounts = volume_mounts
+        if self._dataset_proxy and self._dataset_proxy is not None:
+            container.env = self.get_dataset_proxy_env()
 
         container.security_context = kube_client.V1SecurityContext(privileged=True)
         return container
