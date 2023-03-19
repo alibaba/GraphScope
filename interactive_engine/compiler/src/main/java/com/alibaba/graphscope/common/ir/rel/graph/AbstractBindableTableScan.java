@@ -126,7 +126,7 @@ public abstract class AbstractBindableTableScan extends TableScan {
     public RelWriter explainTerms(RelWriter pw) {
         return pw.itemIf("input", input, !Objects.isNull(input))
                 .item("tableConfig", tableConfig)
-                .item("alias", getAliasName())
+                .item("alias", AliasInference.SIMPLE_NAME(getAliasName()))
                 .itemIf("fusedProject", project, !ObjectUtils.isEmpty(project))
                 .itemIf("fusedFilter", filters, !ObjectUtils.isEmpty(filters));
     }
