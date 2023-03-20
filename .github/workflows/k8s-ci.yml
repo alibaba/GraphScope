@@ -402,7 +402,7 @@ jobs:
 
           # create a kubernetes cluster with 2 nodes
           minikube start --base-image='registry-vpc.cn-hongkong.aliyuncs.com/graphscope/kicbase:v0.0.32' \
-                         --nodes 2 --cpus='6' --memory='30000mb' --disk-size='40000mb' \
+                         --nodes 2 --cpus='6' --memory='16000mb' --disk-size='20000mb' \
                          --mount=true --mount-string="${GS_TEST_DIR}:${GS_TEST_DIR}"
 
           export GS_REGISTRY=""

@@ -444,7 +444,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         stateful_set = self._engine_cluster.get_engine_stateful_set()
         if self.vineyard_deployment_exists():
             # schedule engine statefulset to the same node with vineyard deployment
-            stateful_set = self._add_podAffinity_for_vineyard_deployment(
+            stateful_set = self._add_pod_affinity_for_vineyard_deployment(
                 workload=stateful_set
             )
 
@@ -608,13 +608,8 @@ class KubernetesClusterLauncher(AbstractLauncher):
     #             values:
     #             - graphscope-system-vineyard-deployment # [vineyard deployment namespace]-[vineyard deployment name]
     #         topologyKey: kubernetes.io/hostname
-    def _add_podAffinity_for_vineyard_deployment(self, workload):
-        try:
-            import vineyard
-        except ImportError:
-            raise RuntimeError(
-                "vineyard is not installed, please install vineyard first."
-            )
+    def _add_pod_affinity_for_vineyard_deployment(self, workload):
+        import vineyard
 
         workload_json = json.dumps(
             self._api_client.sanitize_for_serialization(workload)
