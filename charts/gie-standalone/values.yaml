@@ -2,24 +2,6 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-image:
-  registry: registry.cn-hongkong.aliyuncs.com
-  repository: graphscope/gie-exp-runtime
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
-  ## Specify a imagePullPolicy
-  ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
-  ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
-  ##
-  pullPolicy: IfNotPresent
-  ## Optionally specify an array of imagePullSecrets (secrets must be manually created in the namespace)
-  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-  ## Example:
-  ## pullSecrets:
-  ##   - myRegistryKeySecretName
-  ##
-  pullSecrets: []
-
 nameOverride: ""
 
 fullnameOverride: ""
@@ -91,6 +73,24 @@ serviceAccount:
 ## GraphScope Store parameters
 ##
 store:
+  image:
+    registry: registry.cn-hongkong.aliyuncs.com
+    repository: graphscope/gie-exp-runtime
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: ""
+    ## Specify a imagePullPolicy
+    ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+    ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+    ##
+    pullPolicy: IfNotPresent
+    ## Optionally specify an array of imagePullSecrets (secrets must be manually created in the namespace)
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+    ## Example:
+    ## pullSecrets:
+    ##   - myRegistryKeySecretName
+    ##
+    pullSecrets: [ ]
+
   replicaCount: 1
 
   ## updateStrategy for GraphScope Store statefulset
@@ -256,6 +256,24 @@ store:
 ## GraphScope Frontend parameters
 ##
 frontend:
+  image:
+    registry: registry.cn-hongkong.aliyuncs.com
+    repository: graphscope/gie-exp-runtime
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: ""
+    ## Specify a imagePullPolicy
+    ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+    ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+    ##
+    pullPolicy: IfNotPresent
+    ## Optionally specify an array of imagePullSecrets (secrets must be manually created in the namespace)
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+    ## Example:
+    ## pullSecrets:
+    ##   - myRegistryKeySecretName
+    ##
+    pullSecrets: [ ]
+
   replicaCount: 1
 
   ## updateStrategy for GraphScope Store statefulset

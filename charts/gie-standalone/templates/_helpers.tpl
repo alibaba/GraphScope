@@ -71,10 +71,54 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-Return the proper graphscope-store image name
+Return the proper graphscope-store frontend image name
 */}}
-{{- define "graphscope-store.image" -}}
-{{ include "graphscope-store.images.image" . }}
+{{- define "graphscope-store.frontend.image" -}}
+{{- $tag := .Chart.AppVersion | toString -}}
+{{- with .Values.frontend.image -}}
+{{- if .tag -}}
+{{- $tag = .tag | toString -}}
+{{- end -}}
+{{- if .registry -}}
+{{- printf "%s/%s:%s" .registry .repository $tag -}}
+{{- else -}}
+{{- printf "%s:%s" .repository $tag -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Return the proper graphscope-store store image name
+*/}}
+{{- define "graphscope-store.store.image" -}}
+{{- $tag := .Chart.AppVersion | toString -}}
+{{- with .Values.store.image -}}
+{{- if .tag -}}
+{{- $tag = .tag | toString -}}
+{{- end -}}
+{{- if .registry -}}
+{{- printf "%s/%s:%s" .registry .repository $tag -}}
+{{- else -}}
+{{- printf "%s:%s" .repository $tag -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Return the proper graphscope-store store image name
+*/}}
+{{- define "graphscope-store.frontend.image" -}}
+{{- $tag := .Chart.AppVersion | toString -}}
+{{- with .Values.frontend.image -}}
+{{- if .tag -}}
+{{- $tag = .tag | toString -}}
+{{- end -}}
+{{- if .registry -}}
+{{- printf "%s/%s:%s" .registry .repository $tag -}}
+{{- else -}}
+{{- printf "%s:%s" .repository $tag -}}
+{{- end -}}
+{{- end -}}
 {{- end -}}
 
 {{/*
@@ -121,25 +165,6 @@ Usage:
     {{- else }}
         {{- tpl (.value | toYaml) .context }}
     {{- end }}
-{{- end -}}
-
-
-{{/*
-Return the proper image name
-{{ include "graphscope-store.images.image" . }}
-*/}}
-{{- define "graphscope-store.images.image" -}}
-{{- $tag := .Chart.AppVersion | toString -}}
-{{- with .Values.image -}}
-{{- if .tag -}}
-{{- $tag = .tag | toString -}}
-{{- end -}}
-{{- if .registry -}}
-{{- printf "%s/%s:%s" .registry .repository $tag -}}
-{{- else -}}
-{{- printf "%s:%s" .repository $tag -}}
-{{- end -}}
-{{- end -}}
 {{- end -}}
 
 
