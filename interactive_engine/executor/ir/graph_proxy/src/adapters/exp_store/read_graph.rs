@@ -18,7 +18,7 @@ use std::path::Path;
 use std::sync::atomic::{AtomicPtr, Ordering};
 use std::sync::Arc;
 
-use ahash::{HashMap, HashMapExt};
+use ahash::HashMap;
 use dyn_type::{object, Object};
 use graph_store::common::LabelId as StoreLabelId;
 use graph_store::config::{JsonConf, DIR_GRAPH_SCHEMA, FILE_SCHEMA};
@@ -483,36 +483,24 @@ impl Details for LazyVertexDetails {
     }
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
-        let mut all_props = HashMap::new();
-        if let Some(prop_keys) = self.prop_keys.as_ref() {
-            // the case of get_all_properties from vertex;
-            if prop_keys.is_empty() {
-                if let Some(ptr) = self.get_vertex_ptr() {
-                    unsafe {
-                        if let Some(prop_key_vals) = (*ptr).clone_all_properties() {
-                            all_props = prop_key_vals
-                                .into_iter()
-                                .map(|(prop_key, prop_val)| (prop_key.into(), prop_val as Object))
-                                .collect();
-                        } else {
-                            return None;
-                        }
-                    }
-                } else {
-                    return None;
-                }
-            } else {
-                // the case of get_all_properties with prop_keys pre-specified
-                for key in prop_keys.iter() {
-                    if let Some(prop) = self.get_property(&key) {
-                        all_props.insert(key.clone(), prop.try_to_owned().unwrap());
-                    } else {
-                        all_props.insert(key.clone(), Object::None);
-                    }
-                }
+        if let Some(ptr) = self.get_vertex_ptr() {
+            unsafe {
+                (*ptr)
+                    .clone_all_properties()
+                    .map(|prop_key_vals| {
+                        prop_key_vals
+                            .into_iter()
+                            .map(|(prop_key, prop_val)| (prop_key.into(), prop_val as Object))
+                            .collect()
+                    })
             }
+        } else {
+            None
         }
-        Some(all_props)
+    }
+
+    fn get_property_keys(&self) -> Option<&Vec<NameOrId>> {
+        self.prop_keys.as_ref()
     }
 }
 
@@ -586,37 +574,24 @@ impl Details for LazyEdgeDetails {
     }
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
-        let mut all_props = HashMap::new();
-        if let Some(prop_keys) = self.prop_keys.as_ref() {
-            // the case of get_all_properties from vertex;
-            if prop_keys.is_empty() {
-                let ptr = self.get_edge_ptr();
-                if let Some(ptr) = ptr {
-                    unsafe {
-                        if let Some(prop_key_vals) = (*ptr).clone_all_properties() {
-                            all_props = prop_key_vals
-                                .into_iter()
-                                .map(|(prop_key, prop_val)| (prop_key.into(), prop_val as Object))
-                                .collect();
-                        } else {
-                            return None;
-                        }
-                    }
-                } else {
-                    return None;
-                }
-            } else {
-                // the case of get_all_properties with prop_keys pre-specified
-                for key in prop_keys.iter() {
-                    if let Some(prop) = self.get_property(&key) {
-                        all_props.insert(key.clone(), prop.try_to_owned().unwrap());
-                    } else {
-                        all_props.insert(key.clone(), Object::None);
-                    }
-                }
+        if let Some(ptr) = self.get_edge_ptr() {
+            unsafe {
+                (*ptr)
+                    .clone_all_properties()
+                    .map(|prop_key_vals| {
+                        prop_key_vals
+                            .into_iter()
+                            .map(|(prop_key, prop_val)| (prop_key.into(), prop_val as Object))
+                            .collect()
+                    })
             }
+        } else {
+            None
         }
-        Some(all_props)
+    }
+
+    fn get_property_keys(&self) -> Option<&Vec<NameOrId>> {
+        self.prop_keys.as_ref()
     }
 }
 

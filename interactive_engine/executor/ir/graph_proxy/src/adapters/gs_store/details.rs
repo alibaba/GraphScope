@@ -16,7 +16,7 @@
 use std::fmt;
 use std::sync::atomic::{AtomicPtr, Ordering};
 
-use ahash::{HashMap, HashMapExt};
+use ahash::HashMap;
 use dyn_type::Object;
 use dyn_type::Primitives;
 use global_query::store_api::prelude::Property;
@@ -68,7 +68,7 @@ where
     // excluding the ones used only when local property fetching.
     // Specifically, in graphscope store, None means we do not need any property,
     // and Some(vec![]) means we need all properties
-    prop_keys: Option<Vec<PropId>>,
+    prop_keys: Option<Vec<NameOrId>>,
     inner: AtomicPtr<V>,
 }
 
@@ -76,7 +76,7 @@ impl<V> LazyVertexDetails<V>
 where
     V: StoreVertex + 'static,
 {
-    pub fn new(v: V, prop_keys: Option<Vec<PropId>>) -> Self {
+    pub fn new(v: V, prop_keys: Option<Vec<NameOrId>>) -> Self {
         let ptr = Box::into_raw(Box::new(v));
         LazyVertexDetails { prop_keys, inner: AtomicPtr::new(ptr) }
     }
@@ -125,34 +125,22 @@ where
     }
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
-        let mut all_props = HashMap::new();
-        if let Some(prop_keys) = self.prop_keys.as_ref() {
-            if prop_keys.is_empty() {
-                // the case of get_all_properties from vertex;
-                if let Some(ptr) = self.get_vertex_ptr() {
-                    unsafe {
-                        all_props = (*ptr)
-                            .get_properties()
-                            .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val))
-                            .collect();
-                    }
-                } else {
-                    return None;
-                }
-            } else {
-                let prop_keys = self.prop_keys.as_ref().unwrap();
-                // the case of get_all_properties with prop_keys pre-specified
-                for key in prop_keys.iter() {
-                    let key = NameOrId::Id(*key as KeyId);
-                    if let Some(prop) = self.get_property(&key) {
-                        all_props.insert(key.clone(), prop.try_to_owned().unwrap());
-                    } else {
-                        all_props.insert(key.clone(), Object::None);
-                    }
-                }
+        if let Some(ptr) = self.get_vertex_ptr() {
+            unsafe {
+                Some(
+                    (*ptr)
+                        .get_properties()
+                        .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val))
+                        .collect(),
+                )
             }
+        } else {
+            None
         }
-        Some(all_props)
+    }
+
+    fn get_property_keys(&self) -> Option<&Vec<NameOrId>> {
+        self.prop_keys.as_ref()
     }
 }
 
@@ -301,6 +289,11 @@ where
         };
         lazy_props
     }
+
+    fn get_property_keys(&self) -> Option<&Vec<NameOrId>> {
+        // todo
+        None
+    }
 }
 
 /// LazyEdgeDetails is used for local property fetching optimization.
@@ -314,7 +307,7 @@ where
     // excluding the ones used only when local property fetching.
     // Specifically, in graphscope store, None means we do not need any property,
     // and Some(vec![]) means we need all properties
-    prop_keys: Option<Vec<PropId>>,
+    prop_keys: Option<Vec<NameOrId>>,
     inner: AtomicPtr<E>,
 }
 
@@ -322,7 +315,7 @@ impl<E> LazyEdgeDetails<E>
 where
     E: StoreEdge + 'static,
 {
-    pub fn new(e: E, prop_keys: Option<Vec<PropId>>) -> Self {
+    pub fn new(e: E, prop_keys: Option<Vec<NameOrId>>) -> Self {
         let ptr = Box::into_raw(Box::new(e));
         LazyEdgeDetails { prop_keys, inner: AtomicPtr::new(ptr) }
     }
@@ -371,34 +364,23 @@ where
     }
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
-        let mut all_props = HashMap::new();
-        if let Some(prop_keys) = self.prop_keys.as_ref() {
-            if prop_keys.is_empty() {
-                // the case of get_all_properties from vertex;
-                if let Some(ptr) = self.get_edge_ptr() {
-                    unsafe {
-                        all_props = (*ptr)
-                            .get_properties()
-                            .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val))
-                            .collect();
-                    }
-                } else {
-                    return None;
-                }
-            } else {
-                let prop_keys = self.prop_keys.as_ref().unwrap();
-                // the case of get_all_properties with prop_keys pre-specified
-                for key in prop_keys.iter() {
-                    let key = NameOrId::Id(*key as KeyId);
-                    if let Some(prop) = self.get_property(&key) {
-                        all_props.insert(key.clone(), prop.try_to_owned().unwrap());
-                    } else {
-                        all_props.insert(key.clone(), Object::None);
-                    }
-                }
+        // the case of get_all_properties from vertex;
+        if let Some(ptr) = self.get_edge_ptr() {
+            unsafe {
+                Some(
+                    (*ptr)
+                        .get_properties()
+                        .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val))
+                        .collect(),
+                )
             }
+        } else {
+            None
         }
-        Some(all_props)
+    }
+
+    fn get_property_keys(&self) -> Option<&Vec<NameOrId>> {
+        self.prop_keys.as_ref()
     }
 }
 
@@ -546,5 +528,10 @@ where
             });
         };
         lazy_props
+    }
+
+    fn get_property_keys(&self) -> Option<&Vec<NameOrId>> {
+        // todo
+        None
     }
 }

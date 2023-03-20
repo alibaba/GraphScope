@@ -103,11 +103,11 @@ where
             let (condition, row_filter_exists_but_not_pushdown) =
                 encode_storage_row_filter_condition(row_filter.as_ref(), self.row_filter_pushdown);
 
-            // props that will be used in futher compute
-            let cache_prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
             let column_filter_pushdown = self.column_filter_pushdown;
             // props that will be returned by storage layer
             let prop_ids = if column_filter_pushdown {
+                // props that will be used in futher compute
+                let cache_prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
                 if row_filter_exists_but_not_pushdown {
                     // need to call filter_limit!, so get columns in row_filter and params.columns
                     extract_needed_columns(row_filter.as_ref(), cache_prop_ids.as_ref())?
@@ -126,6 +126,7 @@ where
                 .map(|pid| *pid as PartitionId)
                 .collect();
 
+            let columns = params.columns.clone();
             let result = store
                 .get_all_vertices(
                     si,
@@ -144,7 +145,7 @@ where
                     if column_filter_pushdown {
                         to_hybrid_runtime_vertex(v)
                     } else {
-                        to_runtime_vertex(v, cache_prop_ids.clone())
+                        to_runtime_vertex(v, columns.clone())
                     }
                 });
 
@@ -216,9 +217,9 @@ where
             let (condition, row_filter_exists_but_not_pushdown) =
                 encode_storage_row_filter_condition(row_filter.as_ref(), self.row_filter_pushdown);
 
-            let cache_prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
             let column_filter_pushdown = self.column_filter_pushdown;
             let prop_ids = if column_filter_pushdown {
+                let cache_prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
                 if row_filter_exists_but_not_pushdown {
                     extract_needed_columns(row_filter.as_ref(), cache_prop_ids.as_ref())?
                 } else {
@@ -241,7 +242,7 @@ where
                 0,
                 partitions.as_ref(),
             );
-            let iter = RuntimeEdgeIter::new(result, true, column_filter_pushdown, cache_prop_ids.clone());
+            let iter = RuntimeEdgeIter::new(result, true, column_filter_pushdown, params.columns.clone());
 
             if row_filter_exists_but_not_pushdown {
                 Ok(filter_sample_limit!(iter, row_filter, params.sample_ratio, params.limit))
@@ -265,11 +266,11 @@ where
             })
             .unwrap_or(DEFAULT_SNAPSHOT_ID);
 
-        // props that will be used in futher compute
-        let cache_prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
         let column_filter_pushdown = self.column_filter_pushdown;
         // also need props in filter, because `filter_limit!`
         let prop_ids = if column_filter_pushdown {
+            // props that will be used in futher compute
+            let cache_prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
             extract_needed_columns(params.filter.as_ref(), cache_prop_ids.as_ref())?
         } else {
             // column filter not pushdown, ir assume that it can get all props locally
@@ -280,13 +281,14 @@ where
         let partition_label_vertex_ids =
             get_partition_label_vertex_ids(ids, self.partition_manager.clone());
 
+        let columns = params.columns.clone();
         let result = store
             .get_vertex_properties(si, partition_label_vertex_ids.clone(), prop_ids.as_ref())
             .map(move |v| {
                 if column_filter_pushdown {
                     to_hybrid_runtime_vertex(v)
                 } else {
-                    to_runtime_vertex(v, cache_prop_ids.clone())
+                    to_runtime_vertex(v, columns.clone())
                 }
             });
 
@@ -393,9 +395,9 @@ where
         let (condition, row_filter_exists_but_not_pushdown) =
             encode_storage_row_filter_condition(row_filter.as_ref(), self.row_filter_pushdown);
 
-        let cache_prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
         let column_filter_pushdown = self.column_filter_pushdown;
         let prop_ids = if column_filter_pushdown {
+            let cache_prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
             if row_filter_exists_but_not_pushdown {
                 extract_needed_columns(row_filter.as_ref(), cache_prop_ids.as_ref())?
             } else {
@@ -406,6 +408,7 @@ where
         };
 
         let limit = params.limit.clone();
+        let columns = params.columns.clone();
         let edge_label_ids = encode_storage_labels(params.labels.as_ref())?;
 
         let stmt = from_fn(move |v: ID| {
@@ -422,8 +425,7 @@ where
                         limit.unwrap_or(0),
                     );
                     if let Some(ei) = res_iter.next().map(|(_src, ei)| ei) {
-                        let iter =
-                            RuntimeEdgeIter::new(ei, true, column_filter_pushdown, cache_prop_ids.clone());
+                        let iter = RuntimeEdgeIter::new(ei, true, column_filter_pushdown, columns.clone());
                         IterList::new(vec![iter])
                     } else {
                         IterList::new(vec![])
@@ -440,8 +442,7 @@ where
                         limit.unwrap_or(0),
                     );
                     if let Some(ei) = res_iter.next().map(|(_dst, ei)| ei) {
-                        let iter =
-                            RuntimeEdgeIter::new(ei, false, column_filter_pushdown, cache_prop_ids.clone());
+                        let iter = RuntimeEdgeIter::new(ei, false, column_filter_pushdown, columns.clone());
                         IterList::new(vec![iter])
                     } else {
                         IterList::new(vec![])
@@ -468,13 +469,11 @@ where
                     );
                     let mut iters = vec![];
                     if let Some(ei) = res_out_iter.next().map(|(_src, ei)| ei) {
-                        let iter =
-                            RuntimeEdgeIter::new(ei, true, column_filter_pushdown, cache_prop_ids.clone());
+                        let iter = RuntimeEdgeIter::new(ei, true, column_filter_pushdown, columns.clone());
                         iters.push(iter);
                     }
                     if let Some(ei) = res_in_iter.next().map(|(_dst, ei)| ei) {
-                        let iter =
-                            RuntimeEdgeIter::new(ei, false, column_filter_pushdown, cache_prop_ids.clone());
+                        let iter = RuntimeEdgeIter::new(ei, false, column_filter_pushdown, columns.clone());
                         iters.push(iter);
                     }
                     IterList::new(iters)
@@ -498,7 +497,7 @@ where
 }
 
 #[inline]
-fn to_runtime_vertex<V>(v: V, prop_keys: Option<Vec<PropId>>) -> Vertex
+fn to_runtime_vertex<V>(v: V, prop_keys: Option<Vec<NameOrId>>) -> Vertex
 where
     V: 'static + StoreVertex,
 {
@@ -534,7 +533,7 @@ where
     iter: EI,
     from_src: bool,
     column_filter_pushdown: bool,
-    prop_keys: Option<Vec<PropId>>,
+    prop_keys: Option<Vec<NameOrId>>,
 }
 
 impl<E, EI> RuntimeEdgeIter<E, EI>
@@ -543,7 +542,7 @@ where
     EI: Iterator<Item = E> + 'static,
 {
     pub fn new(
-        iter: EI, from_src: bool, column_filter_pushdown: bool, prop_keys: Option<Vec<PropId>>,
+        iter: EI, from_src: bool, column_filter_pushdown: bool, prop_keys: Option<Vec<NameOrId>>,
     ) -> Self {
         RuntimeEdgeIter { iter, from_src, column_filter_pushdown, prop_keys }
     }
@@ -570,7 +569,7 @@ where
 }
 
 #[inline]
-fn to_runtime_edge<E>(e: E, prop_keys: Option<Vec<PropId>>, from_src: bool) -> Edge
+fn to_runtime_edge<E>(e: E, prop_keys: Option<Vec<NameOrId>>, from_src: bool) -> Edge
 where
     E: 'static + StoreEdge,
 {
