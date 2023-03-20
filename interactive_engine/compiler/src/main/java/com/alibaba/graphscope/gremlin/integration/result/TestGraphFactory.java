@@ -78,10 +78,10 @@ public enum TestGraphFactory implements GraphProperties {
         }
     },
     MCSR {
-            @Override
-            public Map<String, Object> getProperties() {
-                String json =
-                        "{\n"
+        @Override
+        public Map<String, Object> getProperties() {
+            String json =
+                    "{\n"
                             + "  \"vertex_properties\": {\n"
                             + "    \"1\": {\n"
                             + "      \"name\": \"marko\",\n"
@@ -129,9 +129,9 @@ public enum TestGraphFactory implements GraphProperties {
                             + "    }\n"
                             + "  }\n"
                             + "}";
-                return JsonUtils.fromJson(json, new TypeReference<Map<String, Object>>() {});
-            }
-        },
+            return JsonUtils.fromJson(json, new TypeReference<Map<String, Object>>() {});
+        }
+    },
     GROOT {
         @Override
         public Map<String, Object> getProperties() {
