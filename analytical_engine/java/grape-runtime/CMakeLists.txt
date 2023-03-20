@@ -31,6 +31,7 @@ if (APPLE)
     endif()
 endif ()
 
+include(CheckCXXCompilerFlag)
 
 #Check compiler is clang or gnu
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -48,7 +49,19 @@ else()
     message(STATUS "Your compiler is ${CMAKE_CXX_COMPILER}")
 endif()
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -std=gnu++14 -flto")
+if(NOT "${CMAKE_CXX_STANDARD}")
+    check_cxx_compiler_flag(-std=c++14 HAVE_FLAG_STD_CXX14)
+    check_cxx_compiler_flag(-std=c++17 HAVE_FLAG_STD_CXX17)
+    if(HAVE_FLAG_STD_CXX17)
+        set(CMAKE_CXX_STANDARD 17)
+    elseif(HAVE_FLAG_STD_CXX14)
+        set(CMAKE_CXX_STANDARD 14)
+    else()
+        set(CMAKE_CXX_STANDARD 11)
+    endif()
+endif()
+
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -flto")
 
 file(GLOB SOURCES "target/generated-sources/annotations/*.cc" "src/main/native/*.cc")
 
@@ -70,7 +83,7 @@ find_package(libgrapelite REQUIRED)
 include_directories(SYSTEM ${LIBGRAPELITE_INCLUDE_DIRS})
 
 # find vineyard ---------------------------------------------
-find_package(vineyard 0.8.2 REQUIRED)
+find_package(vineyard 0.14.0 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 
 add_library(grape-jni SHARED ${SOURCES})
@@ -78,4 +91,4 @@ target_compile_definitions(grape-jni PUBLIC ENABLE_JAVA_SDK)
 target_include_directories(grape-jni PRIVATE "${PROJECT_SOURCE_DIR}/../../")
 target_link_libraries(grape-jni ${CMAKE_JNI_LINKER_FLAGS}  ${LIBGRAPELITE_LIBRARIES} ${Boost_LIBRARIES} ${VINEYARD_LIBRARIES})
 set_target_properties(grape-jni PROPERTIES LINKER_LANGUAGE CXX)
-target_compile_features(grape-jni PRIVATE cxx_std_14)
+target_compile_features(grape-jni PRIVATE "cxx_std_${CMAKE_CXX_STANDARD}")

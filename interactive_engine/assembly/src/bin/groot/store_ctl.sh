@@ -100,13 +100,13 @@ start_load_tools() {
 # start groot server
 start_server() {
   _setup_env
-
   java_opt="-server
             -Djava.awt.headless=true
             -Dfile.encoding=UTF-8
             -Dsun.jnu.encoding=UTF-8
             -XX:+UseG1GC
             -XX:ConcGCThreads=2
+            -XX:+IgnoreUnrecognizedVMOptions
             -XX:ParallelGCThreads=5
             -XX:MaxGCPauseMillis=50
             -XX:InitiatingHeapOccupancyPercent=20

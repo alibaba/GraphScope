@@ -297,7 +297,7 @@ class CoordinatorDeployment:
         self._limits = {"cpu": 0.5, "memory": "512Mi"}
 
     def get_lifecycle(self):
-        pre_stop = ["/opt/rh/rh-python38/root/usr/bin/python3", "-m", "gscoordinator.hook.prestop"]
+        pre_stop = ["python3", "-m", "gscoordinator.hook.prestop"]
         _exec = ResourceBuilder.get_exec_action(pre_stop)
         lifecycle_handler = ResourceBuilder.get_lifecycle_handler(_exec)
         lifecycle = ResourceBuilder.get_lifecycle(pre_stop=lifecycle_handler)

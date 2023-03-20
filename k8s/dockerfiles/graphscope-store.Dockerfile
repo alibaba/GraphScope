@@ -14,24 +14,25 @@ COPY --chown=graphscope:graphscope ./interactive_engine/assembly/src/conf/maven.
 USER graphscope
 
 RUN cd /home/graphscope/graphscope \
-    && source ~/.graphscope_env \
+    && . ~/.graphscope_env \
     && cd /home/graphscope/graphscope/interactive_engine \
     && mvn clean package -P groot,groot-assembly -DskipTests --quiet -Drust.compile.mode="$profile" \
     && tar xzf /home/graphscope/graphscope/interactive_engine/assembly/target/groot.tar.gz -C /home/graphscope/
 
-FROM centos:7.9.2009
+FROM ubuntu:22.04
 
-RUN yum install -y sudo java-1.8.0-openjdk bind-utils \
-    && yum clean all \
-    && rm -rf /var/cache/yum
+RUN sudo apt-get update -y && \
+    sudo apt-get install -y default-jdk && \
+    sudo apt-get clean -y && \
+    sudo rm -rf /var/lib/apt/lists/*
+
+ENV GRAPHSCOPE_HOME=/usr/local
+ENV JAVA_HOME=/usr/lib/jvm/default-java
 
 COPY --from=builder /home/graphscope/groot/bin /usr/local/groot/bin
 COPY --from=builder /home/graphscope/groot/conf /usr/local/groot/conf
 COPY --from=builder /home/graphscope/groot/lib /usr/local/groot/lib
 COPY --from=builder /home/graphscope/groot/native /usr/local/groot/native
-
-# RUN curl -L -o /usr/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.19.2/bin/linux/amd64/kubectl
-# RUN chmod +x /usr/bin/kubectl
 
 RUN useradd -m graphscope -u 1001 \
     && echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
@@ -43,5 +44,3 @@ WORKDIR /home/graphscope
 # init log directory
 RUN sudo mkdir /var/log/graphscope \
   && sudo chown -R $(id -u):$(id -g) /var/log/graphscope
-
-ENV GRAPHSCOPE_HOME=/usr/local

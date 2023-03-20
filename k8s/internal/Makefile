@@ -37,7 +37,7 @@ GRAPHSCOPE_HOME ?= /usr/local
 INSTALL_PREFIX ?= /opt/graphscope
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.13.4
+VINEYARD_VERSION ?= v0.14.0
 PROFILE ?= release
 CI ?= false
 
@@ -128,7 +128,7 @@ graphscope-manylinux2014-py3:
 	docker pull ${REGISTRY}/graphscope/graphscope-dev:wheel
 	docker run --rm -v $(WORKING_DIR)/../..:/work \
 		${REGISTRY}/graphscope/graphscope-dev:wheel \
-		bash -c 'source ~/.graphscope_env && \
+		bash -c '. ~/.graphscope_env && \
 			cd /work/k8s/internal && \
 			make graphscope-manylinux2014-py3-nodocker GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} INSTALL_PREFIX=${INSTALL_PREFIX}'
 
@@ -195,4 +195,4 @@ graphscope-client-manylinux2014-py3:
 	docker pull ${REGISTRY}/graphscope/graphscope-dev:wheel
 	docker run --rm -v $(WORKING_DIR)/../..:/work \
 		${REGISTRY}/graphscope/graphscope-dev:wheel \
-		bash -c 'source ~/.graphscope_env && cd /work/k8s/internal && make graphscope-client-manylinux2014-py3-nodocker GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME}'
+		bash -c '. ~/.graphscope_env && cd /work/k8s/internal && make graphscope-client-manylinux2014-py3-nodocker GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME}'

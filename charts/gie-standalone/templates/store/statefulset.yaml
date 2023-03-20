@@ -93,7 +93,6 @@ spec:
                 ### Begin preprocessing data
                 # ingest any files other than local files into vineyard object
                 . /home/graphscope/.profile
-                . /opt/rh/rh-python38/enable
                 export config_new_path=/tmp/config_new
                 graphctl.py ${VINEYARD_IPC_SOCKET} {{ .Release.Namespace }}:${pod_names} $config_path/$HTAP_LOADER_CONFIG $config_new_path
 
@@ -163,7 +162,7 @@ spec:
             - /bin/bash
             - -c
             - |
-              RUST_LOG=info DATA_PATH=${STORE_DATA_PATH} /opt/GraphScope/interactive_engine/executor/ir/target/release/start_rpc_server_k8s
+              RUST_LOG=info DATA_PATH=${STORE_DATA_PATH} /opt/graphscope/interactive_engine/executor/ir/target/release/start_rpc_server_k8s
           {{- end }}
           env:
             - name: GAIA_RPC_PORT

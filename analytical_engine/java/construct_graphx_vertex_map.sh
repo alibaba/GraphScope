@@ -45,7 +45,7 @@ fi
 
 GRAPHX_RUNNER=${GRAPHSCOPE_HOME}/bin/graphx_runner
 MPIRUN_EXECUTABLE=${GRAPHSCOPE_HOME}/openmpi/bin/mpirun
-source  ${GRAPHSCOPE_HOME}/conf/grape_jvm_opts
+.  ${GRAPHSCOPE_HOME}/conf/grape_jvm_opts
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${GRAPHSCOPE_HOME}/lib/:${GRAPHSCOPE_HOME}/lib64
 
 if [ -f "${GRAPHX_RUNNER}" ]; then
