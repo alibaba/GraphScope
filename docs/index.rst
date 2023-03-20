@@ -80,7 +80,7 @@ and the vineyard store that offers efficient in-memory data transfers.
    storage_engine/getting_started
    storage_engine/grin
    storage_engine/groot
-
+   storage_engine/vineyard
 
 .. toctree::
    :maxdepth: 2
