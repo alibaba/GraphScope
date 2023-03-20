@@ -56,7 +56,7 @@ jobs:
         source ${HOME}/.graphscope_env
         cd ${GITHUB_WORKSPACE}/interactive_engine/executor && ./check_format.sh
 
-    - name: Build Ir on Experimental Store
+    - name: Build Ir on Experimental Store and Csr Store
       run: |
         source ${HOME}/.graphscope_env
         cd ${GITHUB_WORKSPACE}/interactive_engine/compiler

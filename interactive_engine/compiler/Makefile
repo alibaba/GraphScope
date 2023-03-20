@@ -13,14 +13,16 @@ UNAME_M := $(shell uname -m)
 
 graph.schema:=
 
-rpc.target:=start_rpc_server
+rpc.exp.target:=start_rpc_server
+rpc.csr.target:=start_rpc_server_csr
 
 target.revision:=0.0.1-SNAPSHOT
 
 build:
 	cd $(CUR_DIR)/.. && \
 		mvn clean install -DskipTests -Drevision=${target.revision} -Pexperimental --quiet && \
-		cd $(CUR_DIR)/../executor/ir/integrated && cargo build --release --bin $(rpc.target)
+		cd $(CUR_DIR)/../executor/ir/integrated && cargo build --release --bin $(rpc.exp.target) \
+		--bin $(rpc.csr.target)
 
 clean:
 	cd $(CUR_DIR)/../executor/engine/pegasus/clients/java/client && mvn clean && \

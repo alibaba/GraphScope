@@ -43,6 +43,8 @@ pub struct GraphPartitioner<G: FromStr + Send + Sync + IndexType = DefaultId> {
     thread_id: usize,
     thread_num: usize,
 
+    skip_header: bool,
+
     _marker: PhantomData<G>,
 }
 
@@ -75,6 +77,8 @@ impl<G: FromStr + Send + Sync + IndexType + Eq> GraphPartitioner<G> {
             thread_id,
             thread_num,
 
+            skip_header: false,
+
             _marker: PhantomData,
         }
     }
@@ -83,6 +87,10 @@ impl<G: FromStr + Send + Sync + IndexType + Eq> GraphPartitioner<G> {
     pub fn with_delimiter(mut self, delim: u8) -> Self {
         self.delim = delim;
         self
+    }
+
+    pub fn skip_header(&mut self) {
+        self.skip_header = true;
     }
 
     fn load_vertices<R: Read, W: Write>(
