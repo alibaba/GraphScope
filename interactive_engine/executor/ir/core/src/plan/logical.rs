@@ -1133,7 +1133,12 @@ impl AsLogical for pb::PathExpand {
         let curr_node = plan_meta.get_curr_node();
         plan_meta.refer_to_nodes(curr_node, vec![curr_node]);
         if let Some(base) = self.base.as_mut() {
-            base.preprocess(meta, plan_meta)?;
+            if let Some(edge_expand) = base.edge_expand.as_mut() {
+                edge_expand.preprocess(meta, plan_meta)?;
+            }
+            if let Some(get_v) = base.edge_expand.as_mut() {
+                get_v.preprocess(meta, plan_meta)?;
+            }
         }
         if let Some(alias) = self.alias.as_mut() {
             let tag_id = get_or_set_tag_id(alias, plan_meta)?;

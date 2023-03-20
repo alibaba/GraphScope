@@ -302,6 +302,12 @@ message EdgeExpand {
 }
 
 message PathExpand {
+  // The expand base of PathExpand
+  message ExpandBase {
+    // Can either be a single EdgeExpand (with ExpandOpt = Vertex), or EdgeExpand (with ExpandOpt = Edge) + GetV
+    EdgeExpand edge_expand = 1;
+    GetV get_V = 2;
+  }
   enum PathOpt {
     // an arbitrary path, in which both vertex/edge may duplicate
     Arbitrary = 0;
@@ -316,8 +322,8 @@ message PathExpand {
      // all vertices of this path are required for this expansion.
      AllV = 1;
   }
-  // A path expansion has a base of edge expansion
-  EdgeExpand base = 1;
+  // A path expansion has a base expansion
+  ExpandBase base = 1;
   // The tag that refers to the starting vertex
   common.NameOrId start_tag = 2;
   // An optional alias for the object of the expansion

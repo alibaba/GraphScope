@@ -515,9 +515,9 @@ impl IRJobAssembly {
                     stream = stream.flat_map_with_name("EdgeExpand", move |input| func.exec(input))?;
                 }
                 OpKind::Path(path) => {
-                    let base =
+                    let mut base =
                         path.base
-                            .as_ref()
+                            .clone()
                             .ok_or(FnGenError::from(ParsePbError::EmptyFieldError(
                                 "pb::PathExpand::base".to_string(),
                             )))?;
@@ -539,6 +539,14 @@ impl IRJobAssembly {
                         .filter_map_with_name("PathStart", move |input| path_start_func.exec(input))?;
                     // path base expand
                     let mut base_expand_plan = vec![];
+                    if let Some(edge_expand) = base.edge_expand.take() {
+                        base_expand_plan.push(edge_expand.into());
+                    } else {
+                        Err(FnGenError::from(ParsePbError::ParseError(format!(
+                            "empty EdgeExpand of ExpandBase in PathExpand Operator {:?}",
+                            base
+                        ))))?;
+                    }
                     if let OpKind::Repartition(_) = &prev_op_kind {
                         // the case when base expand needs repartition
                         base_expand_plan.push(
@@ -550,7 +558,9 @@ impl IRJobAssembly {
                             .into(),
                         );
                     }
-                    base_expand_plan.push(base.clone().into());
+                    if let Some(getv) = base.get_v.take() {
+                        base_expand_plan.push(getv.clone().into());
+                    }
 
                     for _ in 0..range.lower {
                         stream = self.install(stream, &base_expand_plan)?;
