@@ -680,6 +680,10 @@ class OperationExecutor:
             vineyard_rpc_endpoint = engine_config["vineyard_rpc_endpoint"]
         else:
             vineyard_rpc_endpoint = self._launcher.vineyard_internal_endpoint
+            if self._launcher.vineyard_deployment_exists():
+                vineyard_rpc_endpoint = self._launcher._vineyard_service_endpoint
+            else:
+                vineyard_rpc_endpoint = self._launcher._vineyard_internal_endpoint
         total_builder_chunks = executor_workers_num * threads_per_executor
 
         (
@@ -749,7 +753,7 @@ class OperationExecutor:
         if self._launcher.type() == types_pb2.HOSTS:
             vineyard_endpoint = engine_config["vineyard_rpc_endpoint"]
         else:
-            vineyard_endpoint = self._launcher.vineyard_internal_endpoint
+            vineyard_endpoint = self._launcher._vineyard_internal_endpoint
         vineyard_ipc_socket = engine_config["vineyard_socket"]
         deployment, hosts = self._launcher.get_vineyard_stream_info()
         dfstream = vineyard.io.open(
@@ -848,7 +852,10 @@ class OperationExecutor:
         if self._launcher.type() == types_pb2.HOSTS:
             vineyard_endpoint = engine_config["vineyard_rpc_endpoint"]
         else:
-            vineyard_endpoint = self._launcher.vineyard_internal_endpoint
+            if self._launcher.vineyard_deployment_exists():
+                vineyard_endpoint = self._launcher._vineyard_service_endpoint
+            else:
+                vineyard_endpoint = self._launcher._vineyard_internal_endpoint
         vineyard_ipc_socket = engine_config["vineyard_socket"]
 
         for loader in op.large_attr.chunk_meta_list.items:
