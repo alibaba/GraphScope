@@ -93,6 +93,17 @@ jobs:
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git
         cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && ./ir_exprimental_pattern_ci.sh
 
+    - name: Ir Integration Test on Csr Store
+      run: |
+        source ${HOME}/.graphscope_env
+        cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && ./ir_csr_ci.sh
+
+    - name: Ir Integration Pattern Test on Csr Store
+      run: |
+        source ${HOME}/.graphscope_env
+        cd ${GITHUB_WORKSPACE}
+        cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && ./ir_csr_pattern_ci.sh
+
     - name: Upload GIE log
       if: failure()
       uses: actions/upload-artifact@v3
