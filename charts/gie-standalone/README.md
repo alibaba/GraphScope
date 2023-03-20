@@ -61,12 +61,19 @@ kubectl apply -f gie-standalone/tools/pvc.yaml
 ### config `gie-standalone/values.yaml`
 - experimental
 ```
-# docker artifacts
-image:
-  # for experimental store
-  registry: registry.cn-hongkong.aliyuncs.com
-  repository: graphscope/gie-exp-runtime
-  tag: ""
+# docker artifacts for experimental store
+store:
+  image:
+    registry: registry.cn-hongkong.aliyuncs.com
+    repository: graphscope/gie-exp-runtime
+    tag: ""
+
+# docker artifacts for frontend
+frontend:
+  image:
+    registry: registry.cn-hongkong.aliyuncs.com
+    repository: graphscope/gie-exp-runtime
+    tag: ""
  
 # storage type
 storageType: Experimental
@@ -76,12 +83,19 @@ schemaConfig: "expr_modern_schema.json"
 ```
 - vineyard
 ```
-# docker artifacts
-image:
-  # for vineyard store
-  registry: registry.cn-hongkong.aliyuncs.com
-  repository: graphscope/graphscope
-  tag: "ir_standalone"
+# docker artifacts for vineyard store
+store:
+  image:
+    registry: registry.cn-hongkong.aliyuncs.com
+    repository: graphscope/interactive-executor
+    tag: "0.20.0"
+
+# docker artifacts for frontend
+frontend:
+  image:
+    registry: registry.cn-hongkong.aliyuncs.com
+    repository: graphscope/interactive-frontend
+    tag: "0.20.0"
   
 # storage type
 storageType: Vineyard
