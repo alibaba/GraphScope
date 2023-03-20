@@ -29,7 +29,7 @@ use global_query::{
 use graph_store::utils::IterList;
 use ir_common::{KeyId, LabelId, NameOrId, OneOrMany};
 
-use super::details::{HybridEdgeDetails, HybridVertexDetails, LazyEdgeDetails, LazyVertexDetails};
+use super::details::{LazyEdgeDetails, LazyVertexDetails};
 use crate::apis::graph::PKV;
 use crate::apis::{
     from_fn, register_graph, Direction, DynDetails, Edge, QueryParams, ReadGraph, Statement, Vertex, ID,
@@ -141,13 +141,7 @@ where
                     // Each worker will scan the partitions pre-allocated in source operator. Same as follows.
                     partitions.as_ref(),
                 )
-                .map(move |v| {
-                    if column_filter_pushdown {
-                        to_hybrid_runtime_vertex(v)
-                    } else {
-                        to_runtime_vertex(v, columns.clone())
-                    }
-                });
+                .map(move |v| to_runtime_vertex(v, columns.clone()));
 
             if row_filter_exists_but_not_pushdown {
                 // fall back to call filter_limit! to do row filter
@@ -242,7 +236,7 @@ where
                 0,
                 partitions.as_ref(),
             );
-            let iter = RuntimeEdgeIter::new(result, true, column_filter_pushdown, params.columns.clone());
+            let iter = RuntimeEdgeIter::new(result, true, params.columns.clone());
 
             if row_filter_exists_but_not_pushdown {
                 Ok(filter_sample_limit!(iter, row_filter, params.sample_ratio, params.limit))
@@ -284,13 +278,7 @@ where
         let columns = params.columns.clone();
         let result = store
             .get_vertex_properties(si, partition_label_vertex_ids.clone(), prop_ids.as_ref())
-            .map(move |v| {
-                if column_filter_pushdown {
-                    to_hybrid_runtime_vertex(v)
-                } else {
-                    to_runtime_vertex(v, columns.clone())
-                }
-            });
+            .map(move |v| to_runtime_vertex(v, columns.clone()));
 
         Ok(filter_limit!(result, filter, None))
     }
@@ -425,7 +413,7 @@ where
                         limit.unwrap_or(0),
                     );
                     if let Some(ei) = res_iter.next().map(|(_src, ei)| ei) {
-                        let iter = RuntimeEdgeIter::new(ei, true, column_filter_pushdown, columns.clone());
+                        let iter = RuntimeEdgeIter::new(ei, true, columns.clone());
                         IterList::new(vec![iter])
                     } else {
                         IterList::new(vec![])
@@ -442,7 +430,7 @@ where
                         limit.unwrap_or(0),
                     );
                     if let Some(ei) = res_iter.next().map(|(_dst, ei)| ei) {
-                        let iter = RuntimeEdgeIter::new(ei, false, column_filter_pushdown, columns.clone());
+                        let iter = RuntimeEdgeIter::new(ei, false, columns.clone());
                         IterList::new(vec![iter])
                     } else {
                         IterList::new(vec![])
@@ -469,11 +457,11 @@ where
                     );
                     let mut iters = vec![];
                     if let Some(ei) = res_out_iter.next().map(|(_src, ei)| ei) {
-                        let iter = RuntimeEdgeIter::new(ei, true, column_filter_pushdown, columns.clone());
+                        let iter = RuntimeEdgeIter::new(ei, true, columns.clone());
                         iters.push(iter);
                     }
                     if let Some(ei) = res_in_iter.next().map(|(_dst, ei)| ei) {
-                        let iter = RuntimeEdgeIter::new(ei, false, column_filter_pushdown, columns.clone());
+                        let iter = RuntimeEdgeIter::new(ei, false, columns.clone());
                         iters.push(iter);
                     }
                     IterList::new(iters)
@@ -508,17 +496,6 @@ where
 }
 
 #[inline]
-fn to_hybrid_runtime_vertex<V>(v: V) -> Vertex
-where
-    V: 'static + StoreVertex,
-{
-    let id = v.get_id() as ID;
-    let label = encode_runtime_v_label(&v);
-    let details = HybridVertexDetails::new(v);
-    Vertex::new(id, Some(label), DynDetails::lazy(details))
-}
-
-#[inline]
 fn to_empty_vertex<V: StoreVertex>(v: &V) -> Vertex {
     let id = v.get_id() as ID;
     let label = encode_runtime_v_label(v);
@@ -532,7 +509,6 @@ where
 {
     iter: EI,
     from_src: bool,
-    column_filter_pushdown: bool,
     prop_keys: Option<Vec<NameOrId>>,
 }
 
@@ -541,10 +517,8 @@ where
     E: StoreEdge + 'static,
     EI: Iterator<Item = E> + 'static,
 {
-    pub fn new(
-        iter: EI, from_src: bool, column_filter_pushdown: bool, prop_keys: Option<Vec<NameOrId>>,
-    ) -> Self {
-        RuntimeEdgeIter { iter, from_src, column_filter_pushdown, prop_keys }
+    pub fn new(iter: EI, from_src: bool, prop_keys: Option<Vec<NameOrId>>) -> Self {
+        RuntimeEdgeIter { iter, from_src, prop_keys }
     }
 }
 
@@ -557,11 +531,7 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(next) = self.iter.next() {
-            if self.column_filter_pushdown {
-                Some(to_hybrid_runtime_edge(next, self.from_src))
-            } else {
-                Some(to_runtime_edge(next, self.prop_keys.clone(), self.from_src))
-            }
+            Some(to_runtime_edge(next, self.prop_keys.clone(), self.from_src))
         } else {
             None
         }
@@ -580,26 +550,6 @@ where
     let src_label_id = e.get_src_label_id() as LabelId;
     let dst_label_id = e.get_dst_label_id() as LabelId;
     let details = LazyEdgeDetails::new(e, prop_keys);
-
-    let mut edge =
-        Edge::with_from_src(id, Some(label), src_id, dst_id, from_src, DynDetails::lazy(details));
-    edge.set_src_label(src_label_id);
-    edge.set_dst_label(dst_label_id);
-    edge
-}
-
-#[inline]
-fn to_hybrid_runtime_edge<E>(e: E, from_src: bool) -> Edge
-where
-    E: 'static + StoreEdge,
-{
-    let id = e.get_edge_id() as ID;
-    let label = encode_runtime_e_label(&e);
-    let src_id = e.get_src_id() as ID;
-    let dst_id = e.get_dst_id() as ID;
-    let src_label_id = e.get_src_label_id() as LabelId;
-    let dst_label_id = e.get_dst_label_id() as LabelId;
-    let details = HybridEdgeDetails::new(e);
 
     let mut edge =
         Edge::with_from_src(id, Some(label), src_id, dst_id, from_src, DynDetails::lazy(details));
