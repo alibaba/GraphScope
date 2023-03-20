@@ -475,7 +475,8 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
         // fuzzy pattern
         @Override
         public Traversal<Vertex, Long> get_pattern_11_test() {
-            return g.V().match(__.as("a").out("KNOWS").as("b"), __.as("a").out("KNOWS").as("c")).count();
+            return g.V().match(__.as("a").out("KNOWS").as("b"), __.as("a").out("KNOWS").as("c"))
+                    .count();
         }
 
         // fuzzy pattern
