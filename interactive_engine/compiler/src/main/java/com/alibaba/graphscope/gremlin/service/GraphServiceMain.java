@@ -21,9 +21,9 @@ import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.gremlin.integration.result.TestGraphFactory;
 
 public class GraphServiceMain {
-    public final static String GRAPH_STORE_KEY = "graph.store";
-    public final static String EXPERIMENTAL = "exp";
-    public final static String CSR = "csr";
+    public static final String GRAPH_STORE_KEY = "graph.store";
+    public static final String EXPERIMENTAL = "exp";
+    public static final String CSR = "csr";
 
     public static void main(String[] args) throws Exception {
         Configs configs = new Configs("conf/ir.compiler.properties", FileLoadType.RELATIVE_PATH);
