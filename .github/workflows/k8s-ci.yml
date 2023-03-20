@@ -400,10 +400,14 @@ jobs:
           # download dataset
           git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
 
+          minikube start --base-image='registry-vpc.cn-hongkong.aliyuncs.com/graphscope/kicbase:v0.0.30' \
+                         --cpus='12' --memory='32000mb' --disk-size='40000mb' \
+
           # create a kubernetes cluster with 2 nodes
-          minikube start --base-image='registry-vpc.cn-hongkong.aliyuncs.com/graphscope/kicbase:v0.0.32' \
-                         --nodes 2 --cpus='6' --memory='16000mb' --disk-size='20000mb' \
-                         --mount=true --mount-string="${GS_TEST_DIR}:${GS_TEST_DIR}"
+          #TODO(caoye)
+          #minikube start --base-image='registry-vpc.cn-hongkong.aliyuncs.com/graphscope/kicbase:v0.0.32' \
+          #               --nodes 2 --cpus='6' --memory='16000mb' --disk-size='20000mb' \
+          #               --mount=true --mount-string="${GS_TEST_DIR}:${GS_TEST_DIR}"
 
           export GS_REGISTRY=""
           export GS_TAG=${SHORT_SHA}
