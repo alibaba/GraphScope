@@ -104,22 +104,6 @@ Return the proper graphscope-store store image name
 {{- end -}}
 {{- end -}}
 
-{{/*
-Return the proper graphscope-store store image name
-*/}}
-{{- define "graphscope-store.frontend.image" -}}
-{{- $tag := .Chart.AppVersion | toString -}}
-{{- with .Values.frontend.image -}}
-{{- if .tag -}}
-{{- $tag = .tag | toString -}}
-{{- end -}}
-{{- if .registry -}}
-{{- printf "%s/%s:%s" .registry .repository $tag -}}
-{{- else -}}
-{{- printf "%s:%s" .repository $tag -}}
-{{- end -}}
-{{- end -}}
-{{- end -}}
 
 {{/*
 Create the name of the service account to use

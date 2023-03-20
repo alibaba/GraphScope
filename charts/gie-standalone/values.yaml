@@ -22,13 +22,13 @@ commonLabels: {}
 javaOpts: ""
 
 ## Vineyard or Experimental Storage
-storageType: Experimental
+storageType: Vineyard
 
 ## Store Config
 storeDataPath: "/tmp/data"
 
 ## Frontend Config
-schemaConfig: "expr_modern_schema.json"
+schemaConfig: "v6d_modern_schema.json"
 
 ## Pegasus Config
 pegasusWorkerNum: 2
@@ -75,9 +75,9 @@ serviceAccount:
 store:
   image:
     registry: registry.cn-hongkong.aliyuncs.com
-    repository: graphscope/gie-exp-runtime
+    repository: graphscope/interactive-executor
     # Overrides the image tag whose default is the chart appVersion.
-    tag: ""
+    tag: "0.20.0"
     ## Specify a imagePullPolicy
     ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
     ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -258,9 +258,9 @@ store:
 frontend:
   image:
     registry: registry.cn-hongkong.aliyuncs.com
-    repository: graphscope/gie-exp-runtime
+    repository: graphscope/interactive-frontend
     # Overrides the image tag whose default is the chart appVersion.
-    tag: ""
+    tag: "0.20.0"
     ## Specify a imagePullPolicy
     ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
     ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images

@@ -52,8 +52,8 @@ spec:
         {{- end }}
       containers:
         - name: frontend
-          image: {{ include "graphscope-store.image" . }}
-          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          image: {{ include "graphscope-store.frontend.image" . }}
+          imagePullPolicy: {{ .Values.frontend.image.pullPolicy | quote }}
           command:
           {{- if (eq "Vineyard" .Values.storageType) }}
             - /bin/bash

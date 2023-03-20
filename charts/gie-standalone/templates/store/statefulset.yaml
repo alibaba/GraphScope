@@ -52,17 +52,14 @@ spec:
         {{- end }}
       containers:
         - name: engine
-          image: {{ include "graphscope-store.image" . }}
-          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          image: {{ include "graphscope-store.store.image" . }}
+          imagePullPolicy: {{ .Values.store.image.pullPolicy | quote }}
           command:
           {{- if (eq "Vineyard" .Values.storageType) }}
             - /bin/bash
             - -c
             - |
               sleep 5s
-
-              chmod +x $GRAPHSCOPE_HOME/bin/kube_ssh
-              sudo cp $GRAPHSCOPE_HOME/bin/kube_ssh /usr/bin/kube_ssh
 
               hosts=/tmp/hosts_of_nodes
               rm -rf $hosts && touch $hosts
@@ -80,15 +77,12 @@ spec:
               export VINEYARD_IPC_SOCKET=/tmp/vineyard.sock
               if [ $SERVERSSIZE -eq 1 ]
               then
-                $GRAPHSCOPE_HOME/../vineyard/vineyardd --socket=${VINEYARD_IPC_SOCKET} --meta=local &
+                vineyardd --socket=${VINEYARD_IPC_SOCKET} --meta=local &
               else
-                $GRAPHSCOPE_HOME/../vineyard/vineyardd --socket=${VINEYARD_IPC_SOCKET} --etcd_endpoint=$ETCD_ENDPOINT &
+                vineyardd --socket=${VINEYARD_IPC_SOCKET} --etcd_endpoint=$ETCD_ENDPOINT &
               fi
 
               # load vineyard graph
-              export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(python3 -c "import os; import vineyard; print(os.path.dirname(vineyard.__file__))")
-              export OPAL_PREFIX=$(python3 -c "import os; import graphscope; print(os.path.abspath(os.path.dirname(graphscope.__file__) + '/../graphscope.runtime/openmpi'))")
-
               config_path=/etc/groot/config
 
               [[ `hostname` =~ -([0-9]+)$ ]] || exit 1
@@ -101,7 +95,7 @@ spec:
                   -x OPAL_PREFIX=$OPAL_PREFIX \
                   -x VINEYARD_IPC_SOCKET=$VINEYARD_IPC_SOCKET \
                   -x config_path=$config_path \
-                    $GRAPHSCOPE_HOME/bin/vineyard_htap_loader --config $config_path/$HTAP_LOADER_CONFIG
+                    vineyard-graph-loader --config $config_path/$HTAP_LOADER_CONFIG
                 if [ $? -ne 0 ]
                 then
                   echo "load vineyard graph fail"
