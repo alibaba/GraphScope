@@ -18,7 +18,7 @@ use std::fmt;
 use std::sync::atomic::{AtomicPtr, Ordering};
 use std::sync::Arc;
 
-use ahash::{HashMap, HashMapExt};
+use ahash::HashMap;
 use dyn_type::{BorrowObject, Object, Primitives};
 use ir_common::{KeyId, LabelId, NameOrId};
 use mcsr::columns::RefItem;
@@ -212,15 +212,15 @@ fn to_runtime_edge(
     e: LocalEdge<'static, DefaultId, DefaultId>, v: Option<ID>, prop_keys: Option<Vec<NameOrId>>,
     partition_id: u8,
 ) -> Edge {
-    let src_id = e.get_src_id() as u64;
-    let dst_id = e.get_dst_id() as u64;
-    let src_label = e.get_src_label() as u64;
-    let dst_label = e.get_dst_label() as u64;
+    let src_id = e.get_src_id() as i64;
+    let dst_id = e.get_dst_id() as i64;
+    let src_label = e.get_src_label() as i64;
+    let dst_label = e.get_dst_label() as i64;
     let label = e.get_label();
-    let offset = e.get_offset() as u64;
-    let edge_id = ((partition_id as u64) << 56)
+    let offset = e.get_offset() as i64;
+    let edge_id = ((partition_id as i64) << 56)
         + (src_label << 48)
-        + ((label as u64) << 40)
+        + ((label as i64) << 40)
         + (dst_label << 32)
         + offset;
     if v.is_none() || v.unwrap() == src_id {
@@ -307,29 +307,29 @@ impl Details for LazyVertexDetails {
     }
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
-        let mut all_props = HashMap::new();
         // the case of get_all_properties from vertex;
-        if let Some(ptr) = self.get_vertex_ptr() {
+        let props = if let Some(ptr) = self.get_vertex_ptr() {
             unsafe {
                 if let Some(prop_key_vals) = (*ptr).get_all_properties() {
-                    all_props = prop_key_vals
+                    let mut all_props: HashMap<NameOrId, Object> = prop_key_vals
                         .into_iter()
                         .map(|(prop_key, prop_val)| (prop_key.into(), to_object(prop_val)))
                         .collect();
+                    let mask = (1_usize << LABEL_SHIFT_BITS) - 1;
+                    let original_id = ((*ptr).get_id() & mask) as i64;
+                    all_props.insert(
+                        NameOrId::Str("id".to_string()),
+                        Object::Primitive(Primitives::Long(original_id)),
+                    );
+                    Some(all_props)
                 } else {
-                    return None;
+                    None
                 }
-                let mask = (1_usize << LABEL_SHIFT_BITS) - 1;
-                let original_id = ((*ptr).get_id() & mask) as i64;
-                all_props.insert(
-                    NameOrId::Str("id".to_string()),
-                    Object::Primitive(Primitives::Long(original_id)),
-                );
             }
         } else {
-            return None;
-        }
-        Some(all_props)
+            None
+        };
+        props
     }
 }
 
@@ -403,24 +403,23 @@ impl Details for LazyEdgeDetails {
     }
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
-        let mut all_props = HashMap::new();
         // the case of get_all_properties from vertex;
-        if let Some(ptr) = self.get_edge_ptr() {
+        let props = if let Some(ptr) = self.get_edge_ptr() {
             unsafe {
                 if let Some(prop_key_vals) = (*ptr).get_all_properties() {
-                    all_props = prop_key_vals
+                    let all_props: HashMap<NameOrId, Object> = prop_key_vals
                         .into_iter()
                         .map(|(prop_key, prop_val)| (prop_key.into(), to_object(prop_val)))
                         .collect();
+                    Some(all_props)
                 } else {
-                    return None;
+                    None
                 }
             }
         } else {
-            return None;
-        }
-
-        Some(all_props)
+            None
+        };
+        props
     }
 }
 
