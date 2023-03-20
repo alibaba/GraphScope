@@ -52,6 +52,14 @@ jobs:
     steps:
     # For push it's necessary to checkout the code
     - uses: actions/checkout@v3
+
+    - name: Detect the tmate session
+      run: |
+        if grep -v "grep" .github/workflows/k8s-ci.yml | grep "action-tmate"; then
+          echo 'WARNING!!!the self-hosted machine can not run tmate session, please debug it manually'
+          exit 1
+        fi
+
     # For pull requests it's not necessary to checkout the code
     - uses: dorny/paths-filter@v2
       id: filter
@@ -220,6 +228,7 @@ jobs:
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
     - uses: actions/checkout@v3
+
     - uses: actions/cache@v3
       with:
         path: ~/.m2/repository
@@ -253,6 +262,7 @@ jobs:
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
     - uses: actions/checkout@v3
+
     - uses: actions/cache@v3
       with:
         path: ~/.m2/repository
@@ -438,10 +448,6 @@ jobs:
                           --cov-report=term --exitfirst -s -vvv --log-cli-level=INFO \
                           ./graphscope/tests/kubernetes
 
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: false
-
       - name: Upload Coverage
         uses: codecov/codecov-action@v3
         with:
@@ -594,6 +600,7 @@ jobs:
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
       - uses: actions/checkout@v3
+
       - uses: actions/download-artifact@v3
         with:
           name: gie-experimental
