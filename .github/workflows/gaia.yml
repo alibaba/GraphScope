@@ -61,6 +61,7 @@ jobs:
         source ${HOME}/.graphscope_env
         cd ${GITHUB_WORKSPACE}/interactive_engine/compiler
         make build
+        make build rpc.target=start_rpc_server_csr
 
     - name: Ir Unit Test
       run: |
