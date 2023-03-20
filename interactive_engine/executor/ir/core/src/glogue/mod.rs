@@ -47,8 +47,61 @@ pub(crate) fn query_params(
     }
 }
 
-pub(crate) fn query_params_to_get_v(params: Option<pb::QueryParams>, alias: KeyId, opt: i32) -> pb::GetV {
-    pb::GetV { tag: None, opt, params, alias: Some(alias.into()), meta_data: None }
+pub(crate) fn query_params_to_get_v(
+    params: Option<pb::QueryParams>, alias: Option<KeyId>, opt: i32,
+) -> pb::GetV {
+    pb::GetV { tag: None, opt, params, alias: alias.map(|id| id.into()), meta_data: None }
+}
+
+pub(crate) fn connect_query_params(params1: pb::QueryParams, params2: pb::QueryParams) -> pb::QueryParams {
+    let mut params = params1;
+    params.tables.extend(params2.tables);
+    params.columns.extend(params2.columns);
+    params.is_all_columns &= params2.is_all_columns;
+    params.limit = {
+        let limit1 = params.limit;
+        let limit2 = params2.limit;
+        limit1.and_then(|range1| {
+            limit2.map(|range2| pb::Range {
+                lower: std::cmp::max(range1.lower, range2.lower),
+                upper: std::cmp::min(range1.upper, range2.upper),
+            })
+        })
+    };
+    params.predicate = {
+        let predicate1 = params.predicate;
+        let predicate2 = params2.predicate;
+        predicate1.and_then(|expr1| predicate2.map(|expr2| connect_exprs(expr1, expr2)))
+    };
+    if params2.sample_ratio < params.sample_ratio {
+        params.sample_ratio = params2.sample_ratio
+    }
+    params.extra.extend(params2.extra);
+    params
+}
+
+fn connect_exprs(expr1: common_pb::Expression, expr2: common_pb::Expression) -> common_pb::Expression {
+    let left_brace = common_pb::ExprOpr {
+        node_type: None,
+        item: Some(common_pb::expr_opr::Item::Brace(common_pb::expr_opr::Brace::LeftBrace as i32)),
+    };
+    let right_brace = common_pb::ExprOpr {
+        node_type: None,
+        item: Some(common_pb::expr_opr::Item::Brace(common_pb::expr_opr::Brace::RightBrace as i32)),
+    };
+    let and_opr = common_pb::ExprOpr {
+        node_type: None,
+        item: Some(common_pb::expr_opr::Item::Logical(common_pb::Logical::And as i32)),
+    };
+    // (expr1) and (expr2)
+    let mut expr_oprs = vec![left_brace.clone()];
+    expr_oprs.extend(expr1.operators);
+    expr_oprs.push(right_brace.clone());
+    expr_oprs.push(and_opr);
+    expr_oprs.push(left_brace);
+    expr_oprs.extend(expr2.operators);
+    expr_oprs.push(right_brace);
+    common_pb::Expression { operators: expr_oprs }
 }
 
 pub trait PatternOrderTrait<D> {

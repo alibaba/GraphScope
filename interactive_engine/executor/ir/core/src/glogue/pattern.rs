@@ -27,8 +27,8 @@ use vec_map::VecMap;
 use crate::glogue::error::{IrPatternError, IrPatternResult};
 use crate::glogue::extend_step::ExactExtendStep;
 use crate::glogue::{
-    query_params, DynIter, PatternDirection, PatternId, PatternLabelId, PatternOrderTrait,
-    PatternWeightTrait,
+    connect_query_params, query_params, DynIter, PatternDirection, PatternId, PatternLabelId,
+    PatternOrderTrait, PatternWeightTrait,
 };
 use crate::plan::meta::{PlanMeta, TagId, STORE_META};
 
@@ -74,7 +74,7 @@ struct PatternVertexData {
     /// Tag (alias) assigned to this vertex by user
     tag: Option<TagId>,
     /// Parameters of the vertex
-    parameters: Vec<pb::QueryParams>,
+    parameters: Option<pb::QueryParams>,
 }
 
 impl PatternVertexData {
@@ -498,11 +498,11 @@ impl Pattern {
         };
         for (v_id, vertex_params_vec) in vertex_params_map {
             for vertex_params in vertex_params_vec {
-                pattern.add_vertex_params(v_id, query_params(vec![], vec![], vertex_params.predicate));
+                pattern.add_vertex_params(v_id, query_params(vec![], vec![], vertex_params.predicate))?;
             }
         }
         for (e_id, edge_data) in edge_data_map {
-            pattern.set_edge_data(e_id, edge_data);
+            pattern.set_edge_data(e_id, edge_data)?;
         }
         pattern.set_max_tag_id(plan_meta.get_max_tag_id());
         Ok(pattern)
@@ -570,9 +570,7 @@ fn build_logical_plan(
         .ok_or(IrPatternError::InvalidExtendPattern(
             "Build logical plan error: from empty extend steps!".to_string(),
         ))?;
-    for source_opr in generate_source_operators(origin_pattern, &source_extend)? {
-        append_opr(&mut match_plan, source_opr)?;
-    }
+    append_opr(&mut match_plan, generate_source_operator(origin_pattern, &source_extend)?)?;
     for exact_extend_step in exact_extend_steps.into_iter().rev() {
         let edge_expands_num = exact_extend_step.len();
         // store all the expand operators in a 2D vector
@@ -605,81 +603,14 @@ fn build_logical_plan(
                 set_node_children_at_index(&mut match_plan, vec![intersect_id], parent_id as usize)?;
             }
         }
-        for get_v_filter in exact_extend_step.generate_get_v_filters(origin_pattern)? {
-            append_opr(&mut match_plan, get_v_filter)?;
-        }
     }
-    // Finally, if the results contain any pattern vertices with system-given aliases,
-    // we additional project the user-given aliases, i.e., those may be referred later.
-    // Here, origin_pattern.vertices.len() indicates total number of pattern vertices;
-    // and origin_pattern.tag_vertex_map.len() indicates the number of pattern vertices with user-given aliases
-    let max_tag_id = origin_pattern.get_max_tag_id() as KeyId;
-    let max_vertex_id = origin_pattern
-        .get_max_vertex_id()
-        .ok_or(IrPatternError::InvalidExtendPattern(format!("Empty pattern {:?}", origin_pattern)))?
-        as KeyId;
-    if max_vertex_id >= max_tag_id {
-        let mut mappings = Vec::with_capacity(max_tag_id as usize);
-        for tag_id in 0..max_tag_id {
-            let expr = str_to_expr_pb(format!("@{}", tag_id)).ok();
-            let mapping = pb::project::ExprAlias { expr, alias: Some(tag_id.into()) };
-            mappings.push(mapping);
-        }
-        // TODO: the meta_data of project is identical with the meta_data of "Pattern"
-        let project = pb::Project { mappings, is_append: false, meta_data: vec![] }.into();
-        append_opr(&mut match_plan, project)?;
+    if let Some(project_opr) = generate_project_operator(origin_pattern)? {
+        append_opr(&mut match_plan, project_opr)?;
     }
     // and append the final op
     let child_offset = match_plan.nodes.len();
     set_last_node_children(&mut match_plan, vec![child_offset as KeyId])?;
     Ok(match_plan)
-}
-
-fn generate_vertex_table(
-    pattern: &Pattern, vertex_id: PatternId,
-) -> IrPatternResult<Vec<common_pb::NameOrId>> {
-    Ok(pattern
-        .get_vertex(vertex_id)?
-        .get_labels()
-        .clone()
-        .into_iter()
-        .map(|label| common_pb::NameOrId::from(label))
-        .collect())
-}
-
-fn generate_source_operators(
-    pattern: &Pattern, source_extend: &ExactExtendStep,
-) -> IrPatternResult<Vec<pb::logical_plan::Operator>> {
-    let mut source_operators = vec![];
-    let source_vertex_id = source_extend.get_target_vertex_id();
-    let source_vertex_table = generate_vertex_table(pattern, source_vertex_id)?;
-    // Fuse `source_vertex_label` into source, for efficiently scan
-    let source_vertex_param = if let Some(vertex_param) = pattern
-        .get_vertex_parameters(source_vertex_id)?
-        .first()
-    {
-        let mut first_vertex_param = vertex_param.clone();
-        first_vertex_param.tables = source_vertex_table;
-        first_vertex_param
-    } else {
-        query_params(source_vertex_table, vec![], None)
-    };
-    let source_scan = pb::Scan {
-        scan_opt: 0,
-        alias: Some((source_vertex_id as KeyId).into()),
-        params: Some(source_vertex_param),
-        idx_predicate: None,
-        meta_data: None,
-    };
-    source_operators.push(source_scan.into());
-    for source_filter in source_extend
-        .generate_get_v_filters(pattern)?
-        .into_iter()
-        .skip(1)
-    {
-        source_operators.push(source_filter);
-    }
-    Ok(source_operators)
 }
 
 /// Append opr into match_plan in a traversal way (i.e., a->b->c->d ...).
@@ -695,6 +626,68 @@ fn append_opr(
         .nodes
         .push(pb::logical_plan::Node { opr: Some(new_opr), children: vec![] });
     Ok(())
+}
+
+fn generate_vertex_table(
+    pattern: &Pattern, vertex_id: PatternId,
+) -> IrPatternResult<Vec<common_pb::NameOrId>> {
+    Ok(pattern
+        .get_vertex(vertex_id)?
+        .get_labels()
+        .clone()
+        .into_iter()
+        .map(|label| common_pb::NameOrId::from(label))
+        .collect())
+}
+
+fn generate_source_operator(
+    pattern: &Pattern, source_extend: &ExactExtendStep,
+) -> IrPatternResult<pb::logical_plan::Operator> {
+    let source_vertex_id = source_extend.get_target_vertex_id();
+    let source_vertex_table = generate_vertex_table(pattern, source_vertex_id)?;
+    // Fuse `source_vertex_label` into source, for efficiently scan
+    let source_vertex_param = if let Some(mut vertex_param) = pattern
+        .get_vertex_parameters(source_vertex_id)?
+        .cloned()
+    {
+        vertex_param.tables = source_vertex_table;
+        vertex_param
+    } else {
+        query_params(source_vertex_table, vec![], None)
+    };
+    let source_scan = pb::Scan {
+        scan_opt: 0,
+        alias: Some((source_vertex_id as KeyId).into()),
+        params: Some(source_vertex_param),
+        idx_predicate: None,
+        meta_data: None,
+    };
+    Ok(source_scan.into())
+}
+
+/// Finally, if the results contain any pattern vertices with system-given aliases,
+/// we additional project the user-given aliases, i.e., those may be referred later.
+///
+/// Here, origin_pattern.vertices.len() indicates total number of pattern vertices;
+/// and origin_pattern.tag_vertex_map.len() indicates the number of pattern vertices with user-given aliases
+fn generate_project_operator(pattern: &Pattern) -> IrPatternResult<Option<pb::logical_plan::Operator>> {
+    let max_tag_id = pattern.get_max_tag_id() as KeyId;
+    let max_vertex_id = pattern
+        .get_max_vertex_id()
+        .ok_or(IrPatternError::InvalidExtendPattern(format!("Empty pattern {:?}", pattern)))?
+        as KeyId;
+    if max_vertex_id >= max_tag_id {
+        let mut mappings = Vec::with_capacity(max_tag_id as usize);
+        for tag_id in 0..max_tag_id {
+            let expr = str_to_expr_pb(format!("@{}", tag_id)).ok();
+            let mapping = pb::project::ExprAlias { expr, alias: Some(tag_id.into()) };
+            mappings.push(mapping);
+        }
+        // TODO: the meta_data of project is identical with the meta_data of "Pattern"
+        Ok(Some(pb::Project { mappings, is_append: false, meta_data: vec![] }.into()))
+    } else {
+        Ok(None)
+    }
 }
 
 fn get_expand_children(
@@ -1171,11 +1164,11 @@ impl Pattern {
 
     /// Get the parameters of a PatternVertex
     #[inline]
-    pub fn get_vertex_parameters(&self, vertex_id: PatternId) -> IrPatternResult<&Vec<pb::QueryParams>> {
+    pub fn get_vertex_parameters(&self, vertex_id: PatternId) -> IrPatternResult<Option<&pb::QueryParams>> {
         self.vertices_data
             .get(vertex_id)
             .ok_or(IrPatternError::MissingPatternVertex(vertex_id))
-            .map(|vertex_data| &vertex_data.parameters)
+            .map(|vertex_data| vertex_data.parameters.as_ref())
     }
 
     /// Count how many outgoing edges connect to this vertex
@@ -1251,10 +1244,13 @@ impl Pattern {
 /// Setters of fields of Pattern
 impl Pattern {
     /// Set predicate requirement of a PatternEdge
-    pub fn set_edge_data(&mut self, edge_id: PatternId, opr: PbEdgeOrPath) {
-        if let Some(edge_data) = self.edges_data.get_mut(edge_id) {
-            edge_data.data = opr;
-        }
+    pub fn set_edge_data(&mut self, edge_id: PatternId, opr: PbEdgeOrPath) -> IrPatternResult<()> {
+        let edge_data = self
+            .edges_data
+            .get_mut(edge_id)
+            .ok_or(IrPatternError::MissingPatternEdge(edge_id))?;
+        edge_data.data = opr;
+        Ok(())
     }
 
     /// Set max_tag_id, which is the max user-given alias
@@ -1263,10 +1259,21 @@ impl Pattern {
     }
 
     /// Set predicate requirement of a PatternVertex
-    pub fn add_vertex_params(&mut self, vertex_id: PatternId, opr: pb::QueryParams) {
-        if let Some(vertex_data) = self.vertices_data.get_mut(vertex_id) {
-            vertex_data.parameters.push(opr)
+    pub fn add_vertex_params(
+        &mut self, vertex_id: PatternId, params: pb::QueryParams,
+    ) -> IrPatternResult<()> {
+        let mut vertex_data = self
+            .vertices_data
+            .remove(vertex_id)
+            .ok_or(IrPatternError::MissingPatternVertex(vertex_id))?;
+        if let Some(existed_params) = vertex_data.parameters {
+            vertex_data.parameters = Some(connect_query_params(existed_params, params));
+        } else {
+            vertex_data.parameters = Some(params);
         }
+        self.vertices_data
+            .insert(vertex_id, vertex_data);
+        Ok(())
     }
 }
 

@@ -27,6 +27,7 @@ use ir_common::KeyId;
 use ir_physical_client::physical_builder::{JobBuilder, Plan};
 
 use crate::error::{IrError, IrResult};
+use crate::glogue::query_params_to_get_v;
 use crate::plan::logical::{LogicalPlan, NodeType};
 use crate::plan::meta::PlanMeta;
 
@@ -663,10 +664,9 @@ impl AsPhysical for LogicalPlan {
 // Thus, after build intersect, the physical plan looks like:
 // 1. the last ops in intersect's sub_plans are the ones to intersect;
 // 2. the intersect op can be:
-//     1) EdgeExpand with Opt = ExpandV, which is to expand and intersect on id-only vertices; (supported currently)
-//     2) EdgeExpand with Opt = ExpandE followed by GetV with Opt = End, which is to expand and intersect on id-only vertices; (supported currently)
-//     3) EdgeExpand with Opt = ExpandE, which is to expand and intersect on edges (although, not considered in Pattern yet);
-// and 4) GetV with Opt = Self, which is to expand and intersect on vertices, while there may be some filters on the intersected vertices. (TODO e2e)
+//     1) EdgeExpand with Opt = ExpandE followed by GetV with Opt = End, which is to expand and intersect on id-only vertices; (supported currently)
+//     2) EdgeExpand with Opt = ExpandE, which is to expand and intersect on edges (although, not considered in Pattern yet);
+// and 3) GetV with Opt = Self, which is to expand and intersect on vertices, while there may be some filters on the intersected vertices. (TODO e2e)
 
 fn add_intersect_job_builder(
     builder: &mut JobBuilder, plan_meta: &mut PlanMeta, intersect_opr: &pb::Intersect,
@@ -678,10 +678,18 @@ fn add_intersect_job_builder(
         .key
         .as_ref()
         .ok_or(IrError::ParsePbError("Empty tag in `Intersect` opr".into()))?;
+    let mut vertex_params: Option<pb::QueryParams> = None;
     let mut intersect_plans: Vec<Plan> = vec![];
     for subplan in subplans {
-        // subplan would be like: 1. vec![EdgeExpand(GetV)] for edge expand to intersect; 2. vec![PathExpand, GetV, EdgeExpand(GetV)] for path expand to intersect
+        // subplan would be like:
+        // 1. vec![ExpandE, GetV] for edge expand to intersect;
+        // 2. vec![PathExpand, GetV, ExpandE, GetV] for path expand to intersect
         let len = subplan.len();
+        if len < 2 {
+            Err(IrError::InvalidPattern(
+                "Subplan of Intersect at least has two operators: ExpandE + GetV".to_string(),
+            ))?
+        }
         let mut sub_bldr = JobBuilder::new(builder.conf.clone());
         for (idx, (_, opr)) in subplan.nodes.iter().enumerate() {
             if idx + 2 < len {
@@ -695,65 +703,33 @@ fn add_intersect_job_builder(
                 if let (Some(Edge(edgexpd)), Some(Vertex(get_v))) =
                     (opr.borrow().opr.opr.as_ref(), last_opr.borrow().opr.opr.as_ref())
                 {
-                    // Check whether ExpandExpand and GetV's Opt are ExpandE and End
-                    if edgexpd.expand_opt == pb::edge_expand::ExpandOpt::Edge as i32
-                        && get_v.opt == pb::get_v::VOpt::End as i32
-                    {
-                        if get_v.alias.is_none() || !get_v.alias.as_ref().unwrap().eq(intersect_tag) {
-                            Err(IrError::InvalidPattern("Cannot intersect on different tags".to_string()))?
-                        }
-                        if plan_meta.is_partition() {
-                            sub_bldr.shuffle(edgexpd.v_tag.clone());
-                        }
-                        let mut edgexpd = edgexpd.clone();
-                        edgexpd.expand_opt = pb::edge_expand::ExpandOpt::Vertex as i32;
-                        edgexpd.alias = get_v.alias.clone();
-                        if plan_meta.is_partition() {
-                            sub_bldr.shuffle(edgexpd.v_tag.clone());
-                        }
-                        sub_bldr.edge_expand(edgexpd);
-                        break;
-                    } else {
-                        Err(IrError::Unsupported(format!(
-                            "Should be `EdgeExpand` opr on Vertex for intersection, but the opr is {:?}",
-                            opr
-                        )))?
-                    }
-                } else {
-                    opr.add_job_builder(builder, plan_meta)?;
-                };
-            } else {
-                // the last node in subplan should be the one to intersect.
-                if let Some(Edge(edgexpd)) = opr.borrow().opr.opr.as_ref() {
-                    let edgexpd = edgexpd.clone();
-                    if edgexpd.expand_opt != pb::edge_expand::ExpandOpt::Vertex as i32 {
-                        Err(IrError::Unsupported(format!(
-                            "Should be `EdgeExpand` opr on Vertex for intersection, but the opr is {:?}",
-                            opr
-                        )))?
-                    }
-                    if edgexpd.alias.is_none()
-                        || !edgexpd
-                            .alias
-                            .as_ref()
-                            .unwrap()
-                            .eq(intersect_tag)
-                    {
+                    if get_v.alias.is_none() || !get_v.alias.as_ref().unwrap().eq(intersect_tag) {
                         Err(IrError::InvalidPattern("Cannot intersect on different tags".to_string()))?
+                    }
+                    if let Some(params) = get_v.params.as_ref() {
+                        vertex_params = Some(params.clone());
                     }
                     if plan_meta.is_partition() {
                         sub_bldr.shuffle(edgexpd.v_tag.clone());
                     }
+                    let mut edgexpd = edgexpd.clone();
+                    edgexpd.expand_opt = pb::edge_expand::ExpandOpt::Vertex as i32;
+                    edgexpd.alias = get_v.alias.clone();
+                    if plan_meta.is_partition() {
+                        sub_bldr.shuffle(edgexpd.v_tag.clone());
+                    }
                     sub_bldr.edge_expand(edgexpd);
+                    break;
                 } else {
                     Err(IrError::Unsupported(format!(
                         "Should be `EdgeExpand` opr on Vertex for intersection, but the opr is {:?}",
                         opr
                     )))?
-                }
+                };
             }
         }
         let sub_plan = sub_bldr.take_plan();
+        println!("{:?}\n", sub_plan);
         intersect_plans.push(sub_plan);
     }
     builder.intersect(intersect_plans, intersect_tag.clone());
@@ -763,6 +739,10 @@ fn add_intersect_job_builder(
         meta_data: None,
     };
     unfold.add_job_builder(builder, plan_meta)?;
+    if vertex_params.is_some() {
+        let get_v_filter = query_params_to_get_v(vertex_params, None, 4);
+        get_v_filter.add_job_builder(builder, plan_meta)?;
+    }
     Ok(())
 }
 
@@ -1741,56 +1721,89 @@ mod test {
         let source_opr = pb::Scan {
             scan_opt: 0,
             alias: Some(0.into()),
-            params: Some(query_params(vec![], vec![])),
+            params: None,
             idx_predicate: None,
             meta_data: None,
         };
 
         // extend 0->1
-        let expand_ab_opr = pb::EdgeExpand {
+        let expand_ab_opr_edge = pb::EdgeExpand {
             v_tag: Some(0.into()),
             direction: 0,
-            params: Some(query_params(vec![], vec![])),
-            expand_opt: 0,
+            params: None,
+            expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
+            alias: None,
+            meta_data: None,
+        };
+
+        let get_b = pb::GetV {
+            tag: None,
+            opt: pb::get_v::VOpt::End as i32,
+            params: None,
             alias: Some(1.into()),
             meta_data: None,
         };
 
         // extend 0->2, 1->2, and intersect on 2
-        let expand_ac_opr = pb::EdgeExpand {
+        let expand_ac_opr_edge = pb::EdgeExpand {
             v_tag: Some(0.into()),
             direction: 0,
-            params: Some(query_params(vec![], vec![])),
-            expand_opt: 0,
-            alias: Some(2.into()),
+            params: None,
+            expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
+            alias: None,
             meta_data: None,
         };
 
-        let expand_bc_opr = pb::EdgeExpand {
+        let mut expand_ac_opr_vertex = expand_ac_opr_edge.clone();
+        expand_ac_opr_vertex.expand_opt = pb::edge_expand::ExpandOpt::Vertex as i32;
+        expand_ac_opr_vertex.alias = Some(2.into());
+
+        let expand_bc_opr_edge = pb::EdgeExpand {
             v_tag: Some(1.into()),
             direction: 0,
-            params: Some(query_params(vec!["knows".into()], vec![])),
-            expand_opt: 0,
+            params: None,
+            expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
+            alias: None,
+            meta_data: None,
+        };
+
+        let mut expand_bc_opr_vertex = expand_bc_opr_edge.clone();
+        expand_bc_opr_vertex.expand_opt = pb::edge_expand::ExpandOpt::Vertex as i32;
+        expand_bc_opr_vertex.alias = Some(2.into());
+
+        let get_c = pb::GetV {
+            tag: None,
+            opt: pb::get_v::VOpt::End as i32,
+            params: None,
             alias: Some(2.into()),
             meta_data: None,
         };
 
         // parents are expand_ac_opr and expand_bc_opr
-        let intersect_opr = pb::Intersect { parents: vec![2, 3], key: Some(2.into()) };
+        let intersect_opr = pb::Intersect { parents: vec![4, 6], key: Some(2.into()) };
 
         let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr.clone().into()));
         logical_plan
-            .append_operator_as_node(expand_ab_opr.clone().into(), vec![0])
+            .append_operator_as_node(expand_ab_opr_edge.clone().into(), vec![0])
             .unwrap(); // node 1
         logical_plan
-            .append_operator_as_node(expand_ac_opr.clone().into(), vec![1])
+            .append_operator_as_node(get_b.clone().into(), vec![1])
             .unwrap(); // node 2
         logical_plan
-            .append_operator_as_node(expand_bc_opr.clone().into(), vec![1])
+            .append_operator_as_node(expand_ac_opr_edge.clone().into(), vec![2])
             .unwrap(); // node 3
         logical_plan
-            .append_operator_as_node(intersect_opr.clone().into(), vec![2, 3])
+            .append_operator_as_node(get_c.clone().into(), vec![3])
             .unwrap(); // node 4
+        logical_plan
+            .append_operator_as_node(expand_bc_opr_edge.clone().into(), vec![2])
+            .unwrap(); // node 5
+        logical_plan
+            .append_operator_as_node(get_c.clone().into(), vec![5])
+            .unwrap(); // node 6
+        logical_plan
+            .append_operator_as_node(intersect_opr.clone().into(), vec![4, 6])
+            .unwrap(); // node 7
         let mut builder = JobBuilder::default();
         let mut plan_meta = PlanMeta::default();
         logical_plan
@@ -1801,12 +1814,13 @@ mod test {
 
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_scan_source(source_opr);
-        expected_builder.edge_expand(expand_ab_opr);
+        expected_builder.edge_expand(expand_ab_opr_edge);
+        expected_builder.get_v(get_b);
 
         let mut sub_builder_1 = JobBuilder::default();
         let mut sub_builder_2 = JobBuilder::default();
-        sub_builder_1.edge_expand(expand_ac_opr.clone());
-        sub_builder_2.edge_expand(expand_bc_opr.clone());
+        sub_builder_1.edge_expand(expand_ac_opr_vertex.clone());
+        sub_builder_2.edge_expand(expand_bc_opr_vertex.clone());
         expected_builder.intersect(vec![sub_builder_1.take_plan(), sub_builder_2.take_plan()], 2.into());
         expected_builder.unfold(unfold_opr);
         assert_eq!(builder, expected_builder);
@@ -1817,56 +1831,93 @@ mod test {
         let source_opr = pb::Scan {
             scan_opt: 0,
             alias: Some(0.into()),
-            params: Some(query_params(vec![], vec![])),
+            params: None,
             idx_predicate: None,
             meta_data: None,
         };
 
         // extend 0->1
-        let expand_ab_opr = pb::EdgeExpand {
+        let expand_ab_opr_edge = pb::EdgeExpand {
             v_tag: Some(0.into()),
             direction: 0,
-            params: Some(query_params(vec![], vec![])),
-            expand_opt: 0,
+            params: None,
+            expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
+            alias: None,
+            meta_data: None,
+        };
+
+        let get_b = pb::GetV {
+            tag: None,
+            opt: pb::get_v::VOpt::End as i32,
+            params: None,
             alias: Some(1.into()),
             meta_data: None,
         };
 
-        // extend 0->2, 1->2, and intersect on 2 (where 2 has required columns)
-        let expand_ac_opr = pb::EdgeExpand {
+        // extend 0->2, 1->2, and intersect on 2
+        let expand_ac_opr_edge = pb::EdgeExpand {
             v_tag: Some(0.into()),
             direction: 0,
             params: Some(query_params(vec![], vec!["id".into()])),
-            expand_opt: 0,
-            alias: Some(2.into()),
+            expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
+            alias: None,
             meta_data: None,
         };
 
-        let expand_bc_opr = pb::EdgeExpand {
+        let mut expand_ac_opr_vertex = expand_ac_opr_edge.clone();
+        expand_ac_opr_vertex.expand_opt = pb::edge_expand::ExpandOpt::Vertex as i32;
+        expand_ac_opr_vertex.alias = Some(2.into());
+
+        let expand_bc_opr_edge = pb::EdgeExpand {
             v_tag: Some(1.into()),
             direction: 0,
             params: Some(query_params(vec!["knows".into()], vec!["name".into()])),
-            expand_opt: 0,
+            expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
+            alias: None,
+            meta_data: None,
+        };
+
+        let mut expand_bc_opr_vertex = expand_bc_opr_edge.clone();
+        expand_bc_opr_vertex.expand_opt = pb::edge_expand::ExpandOpt::Vertex as i32;
+        expand_bc_opr_vertex.alias = Some(2.into());
+
+        let get_c = pb::GetV {
+            tag: None,
+            opt: pb::get_v::VOpt::End as i32,
+            params: Some(query_params(vec!["person".into()], vec![])),
             alias: Some(2.into()),
             meta_data: None,
         };
 
+        let mut get_c_filter = get_c.clone();
+        get_c_filter.opt = 4;
+        get_c_filter.alias = None;
+
         // parents are expand_ac_opr and expand_bc_opr
-        let intersect_opr = pb::Intersect { parents: vec![2, 3], key: Some(2.into()) };
+        let intersect_opr = pb::Intersect { parents: vec![4, 6], key: Some(2.into()) };
 
         let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr.clone().into()));
         logical_plan
-            .append_operator_as_node(expand_ab_opr.clone().into(), vec![0])
+            .append_operator_as_node(expand_ab_opr_edge.clone().into(), vec![0])
             .unwrap(); // node 1
         logical_plan
-            .append_operator_as_node(expand_ac_opr.clone().into(), vec![1])
+            .append_operator_as_node(get_b.clone().into(), vec![1])
             .unwrap(); // node 2
         logical_plan
-            .append_operator_as_node(expand_bc_opr.clone().into(), vec![1])
+            .append_operator_as_node(expand_ac_opr_edge.clone().into(), vec![2])
             .unwrap(); // node 3
         logical_plan
-            .append_operator_as_node(intersect_opr.clone().into(), vec![2, 3])
+            .append_operator_as_node(get_c.clone().into(), vec![3])
             .unwrap(); // node 4
+        logical_plan
+            .append_operator_as_node(expand_bc_opr_edge.clone().into(), vec![2])
+            .unwrap(); // node 5
+        logical_plan
+            .append_operator_as_node(get_c.clone().into(), vec![5])
+            .unwrap(); // node 6
+        logical_plan
+            .append_operator_as_node(intersect_opr.clone().into(), vec![4, 6])
+            .unwrap(); // node 7
         let mut builder = JobBuilder::default();
         let mut plan_meta = PlanMeta::default();
         logical_plan
@@ -1877,13 +1928,16 @@ mod test {
 
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_scan_source(source_opr);
-        expected_builder.edge_expand(expand_ab_opr);
+        expected_builder.edge_expand(expand_ab_opr_edge);
+        expected_builder.get_v(get_b);
+
         let mut sub_builder_1 = JobBuilder::default();
         let mut sub_builder_2 = JobBuilder::default();
-        sub_builder_1.edge_expand(expand_ac_opr.clone());
-        sub_builder_2.edge_expand(expand_bc_opr.clone());
+        sub_builder_1.edge_expand(expand_ac_opr_vertex.clone());
+        sub_builder_2.edge_expand(expand_bc_opr_vertex.clone());
         expected_builder.intersect(vec![sub_builder_1.take_plan(), sub_builder_2.take_plan()], 2.into());
         expected_builder.unfold(unfold_opr);
+        expected_builder.get_v(get_c_filter);
         assert_eq!(builder, expected_builder);
     }
 }

@@ -201,31 +201,14 @@ impl ExactExtendStep {
     }
 
     /// Generate a getV operator to close the outE
-    /// This getV doesn't contain any params, as it only used for close outE
     pub fn generate_get_v_operator(
         &self, origin_pattern: &Pattern,
     ) -> IrPatternResult<pb::logical_plan::Operator> {
         let target_v_id = self.target_vertex_id;
-        origin_pattern.get_vertex(target_v_id)?;
-        Ok(query_params_to_get_v(None, target_v_id as KeyId, pb::get_v::VOpt::End as i32).into())
-    }
-
-    /// Generate the getV filters for ExactExtendStep's target vertex if it has parameters
-    pub fn generate_get_v_filters(
-        &self, origin_pattern: &Pattern,
-    ) -> IrPatternResult<Vec<pb::logical_plan::Operator>> {
-        let target_v_id = self.target_vertex_id;
-        Ok(origin_pattern
+        let vertex_params = origin_pattern
             .get_vertex_parameters(target_v_id)?
-            .into_iter()
-            .map(|params| {
-                query_params_to_get_v(
-                    Some(params.clone()),
-                    target_v_id as KeyId,
-                    pb::get_v::VOpt::ItSelf as i32,
-                )
-                .into()
-            })
-            .collect())
+            .cloned();
+        Ok(query_params_to_get_v(vertex_params, Some(target_v_id as KeyId), pb::get_v::VOpt::End as i32)
+            .into())
     }
 }
