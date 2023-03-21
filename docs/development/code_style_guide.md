@@ -58,6 +58,7 @@ For Python:
     $ python3 -m black --check --diff .
     $ python3 -m flake8 .
     $ popd
+    $ pushd coordinator
     $ python3 -m isort --check --diff .
     $ python3 -m black --check --diff .
     $ python3 -m flake8 .
