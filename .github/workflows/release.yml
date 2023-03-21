@@ -90,7 +90,7 @@ jobs:
         ossutil64 -i "${oss_accesskey_id}" \
                   -k "${oss_accesskey_secret}" \
                   -e ${{ env.OSS_ENDPOINT }} \
-                  cp -r oss://graphscope/charts ./
+                  cp -r oss://graphscope/charts ./charts
 
     - name: Package Charts
       run: |
