@@ -105,12 +105,6 @@ impl From<KeyId> for NameOrId {
     }
 }
 
-impl From<u32> for NameOrId {
-    fn from(id: u32) -> Self {
-        Self::Id(id as KeyId)
-    }
-}
-
 impl From<String> for NameOrId {
     fn from(str: String) -> Self {
         Self::Str(str)

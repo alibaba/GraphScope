@@ -124,7 +124,9 @@ pub trait Details: std::fmt::Debug + Send + Sync + AsAny {
     /// get_property_keys returns the pre-cached prop_keys.
     /// Specifically, prop_keys of `Some(vec![])` indicates all properties,
     /// and prop_keys of `None` indicates no pre-cached property.
-    fn get_property_keys(&self) -> Option<&Vec<NameOrId>>;
+    // TODO: Compiler will give all the prop keys when need to get_all_properties().
+    // After that, we can use a Vector to specify the cached_properties.
+    fn get_property_keys(&self) -> Option<Vec<NameOrId>>;
 }
 
 /// Properties in Runtime, including:
@@ -170,15 +172,15 @@ impl Details for DynDetails {
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
         match self {
             DynDetails::Empty => None,
-            DynDetails::Default(default) => Some(default.clone()), // should be unreachable
+            DynDetails::Default(default) => Some(default.clone()),
             DynDetails::Lazy(lazy) => lazy.get_all_properties(),
         }
     }
 
-    fn get_property_keys(&self) -> Option<&Vec<NameOrId>> {
+    fn get_property_keys(&self) -> Option<Vec<NameOrId>> {
         match self {
             DynDetails::Empty => None,
-            DynDetails::Default(_) => None, // should be unreachable
+            DynDetails::Default(_) => unreachable!(),
             DynDetails::Lazy(lazy) => lazy.get_property_keys(),
         }
     }
@@ -222,7 +224,7 @@ impl Encode for DynDetails {
                         writer.write_u64(prop_keys.len() as u64)?;
                         for k in prop_keys {
                             let v = self
-                                .get_property(k)
+                                .get_property(&k)
                                 .map(|prop| prop.try_to_owned())
                                 .unwrap_or(None)
                                 .unwrap_or(Object::None);

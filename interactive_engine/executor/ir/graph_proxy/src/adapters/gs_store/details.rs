@@ -139,8 +139,8 @@ where
         }
     }
 
-    fn get_property_keys(&self) -> Option<&Vec<NameOrId>> {
-        self.prop_keys.as_ref()
+    fn get_property_keys(&self) -> Option<Vec<NameOrId>> {
+        self.prop_keys.clone()
     }
 }
 
@@ -254,8 +254,8 @@ where
         }
     }
 
-    fn get_property_keys(&self) -> Option<&Vec<NameOrId>> {
-        self.prop_keys.as_ref()
+    fn get_property_keys(&self) -> Option<Vec<NameOrId>> {
+        self.prop_keys.clone()
     }
 }
 
