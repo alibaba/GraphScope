@@ -29,7 +29,7 @@ TBF
 
 ## Bug Report
 
-If you find a bug in GraphAr, first make sure that you are testing against the [latest version of GraphScope](https://github.com/alibaba/GraphAr/tree/main), 
+If you find a bug in GraphAr, first make sure that you are testing against the [latest version of GraphScope](https://github.com/alibaba/GraphScope/tree/main), 
 your issue may already have been fixed. If not, search our [issues list](https://github.com/alibaba/GraphScope/issues)
 on GitHub in case a similar issue has already been opened.
 
