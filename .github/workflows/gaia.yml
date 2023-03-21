@@ -56,11 +56,12 @@ jobs:
         source ${HOME}/.graphscope_env
         cd ${GITHUB_WORKSPACE}/interactive_engine/executor && ./check_format.sh
 
-    - name: Build Ir on Experimental Store
+    - name: Build Ir on Experimental Store and Csr Store
       run: |
         source ${HOME}/.graphscope_env
         cd ${GITHUB_WORKSPACE}/interactive_engine/compiler
         make build
+        make build rpc.target=start_rpc_server_csr
 
     - name: Ir Unit Test
       run: |
@@ -92,6 +93,17 @@ jobs:
         cd ${GITHUB_WORKSPACE}
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git
         cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && ./ir_exprimental_pattern_ci.sh
+
+    - name: Ir Integration Test on Csr Store
+      run: |
+        source ${HOME}/.graphscope_env
+        cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && ./ir_csr_ci.sh
+
+    - name: Ir Integration Pattern Test on Csr Store
+      run: |
+        source ${HOME}/.graphscope_env
+        cd ${GITHUB_WORKSPACE}
+        cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && ./ir_csr_pattern_ci.sh
 
     - name: Upload GIE log
       if: failure()

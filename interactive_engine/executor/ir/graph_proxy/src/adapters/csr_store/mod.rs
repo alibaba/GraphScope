@@ -1,5 +1,5 @@
 //
-//! Copyright 2022 Alibaba Group Holding Limited.
+//! Copyright 2021 Alibaba Group Holding Limited.
 //!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
@@ -13,10 +13,8 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-mod assemble;
-pub use assemble::{QueryCsrGraph, QueryExpGraph, QueryGrootGraph, QueryVineyard};
-use runtime::IRJobAssembly;
+mod partitioner;
+mod read_graph;
 
-pub trait InitializeJobAssembly {
-    fn initialize_job_assembly(&self) -> IRJobAssembly;
-}
+pub use partitioner::CsrPartition;
+pub use read_graph::create_csr_store;
