@@ -18,8 +18,8 @@ package com.alibaba.graphscope.common.ir.rel.graph;
 
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
-import com.alibaba.graphscope.common.ir.type.GraphArrayType;
 import com.alibaba.graphscope.common.ir.type.GraphPxdElementType;
+import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptUtil;
@@ -28,7 +28,12 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.hint.RelHint;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
+import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.type.ArraySqlType;
+import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
@@ -64,9 +69,6 @@ public class GraphLogicalPathExpand extends SingleRel {
         this.getV = Objects.requireNonNull(getV);
         this.offset = offset;
         this.fetch = fetch;
-        this.rowType =
-                new GraphArrayType(
-                        new GraphPxdElementType(this.expand.getRowType(), this.getV.getRowType()));
         this.resultOpt = resultOpt;
         this.pathOpt = pathOpt;
         this.aliasName =
@@ -99,7 +101,7 @@ public class GraphLogicalPathExpand extends SingleRel {
                 .itemIf("fetch", fetch, fetch != null)
                 .item("path_opt", getPathOpt())
                 .item("result_opt", getResultOpt())
-                .item("alias", getAliasName());
+                .item("alias", AliasInference.SIMPLE_NAME(getAliasName()));
     }
 
     public String getAliasName() {
@@ -132,5 +134,33 @@ public class GraphLogicalPathExpand extends SingleRel {
 
     public @Nullable RexNode getFetch() {
         return fetch;
+    }
+
+    @Override
+    protected RelDataType deriveRowType() {
+        ObjectUtils.requireNonEmpty(
+                this.expand.getRowType().getFieldList(),
+                "data type of expand operator should have at least one column field");
+        ObjectUtils.requireNonEmpty(
+                this.getV.getRowType().getFieldList(),
+                "data type of getV operator should have at least one column field");
+        return new RelRecordType(
+                ImmutableList.of(
+                        new RelDataTypeFieldImpl(
+                                getAliasName(),
+                                getAliasId(),
+                                new ArraySqlType(
+                                        new GraphPxdElementType(
+                                                this.expand
+                                                        .getRowType()
+                                                        .getFieldList()
+                                                        .get(0)
+                                                        .getType(),
+                                                this.getV
+                                                        .getRowType()
+                                                        .getFieldList()
+                                                        .get(0)
+                                                        .getType()),
+                                        false))));
     }
 }

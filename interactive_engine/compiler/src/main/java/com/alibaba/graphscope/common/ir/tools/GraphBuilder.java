@@ -23,9 +23,14 @@ import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
+import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
+import com.alibaba.graphscope.common.ir.rel.type.group.GraphGroupKeys;
+import com.alibaba.graphscope.common.ir.rel.type.order.GraphFieldCollation;
+import com.alibaba.graphscope.common.ir.rel.type.order.GraphRelCollations;
 import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.rex.RexVariableAliasChecker;
+import com.alibaba.graphscope.common.ir.rex.RexVariableConverter;
 import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
 import com.alibaba.graphscope.common.ir.tools.config.*;
@@ -40,6 +45,8 @@ import com.google.common.collect.Lists;
 import org.apache.calcite.plan.*;
 import org.apache.calcite.rel.*;
 import org.apache.calcite.rel.core.Filter;
+import org.apache.calcite.rel.core.Project;
+import org.apache.calcite.rel.core.Sort;
 import org.apache.calcite.rel.type.*;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlAggFunction;
@@ -494,11 +501,10 @@ public class GraphBuilder extends RelBuilder {
                             ImmutableList.of(tableScan.getAliasId(), AliasInference.DEFAULT_ID));
             // fuze all conditions into table scan
             if (condition.accept(checker)) {
-                // pop the filter from the inner stack
-                builder.pop();
                 // add the condition in table scan
                 tableScan.setFilters(ImmutableList.of(condition));
-                push(tableScan);
+                // pop the filter from the inner stack
+                replaceTop(tableScan);
             }
         }
         return builder;
@@ -620,7 +626,7 @@ public class GraphBuilder extends RelBuilder {
      * @return
      */
     private GroupKey groupKey_(List<RexNode> variables, List<@Nullable String> aliases) {
-        return null;
+        return new GraphGroupKeys(variables, aliases);
     }
 
     // build aggregate functions
@@ -632,7 +638,38 @@ public class GraphBuilder extends RelBuilder {
      * @return
      */
     public AggCall collect(boolean distinct, @Nullable String alias, RexNode... operands) {
-        return null;
+        return aggregateCall(
+                GraphStdOperatorTable.COLLECT,
+                distinct,
+                false,
+                false,
+                null,
+                null,
+                ImmutableList.of(),
+                alias,
+                ImmutableList.copyOf(operands));
+    }
+
+    public AggCall collect(
+            boolean distinct, @Nullable String alias, Iterable<? extends RexNode> operands) {
+        return aggregateCall(
+                GraphStdOperatorTable.COLLECT,
+                distinct,
+                false,
+                false,
+                null,
+                null,
+                ImmutableList.of(),
+                alias,
+                ImmutableList.copyOf(operands));
+    }
+
+    public AggCall collect(RexNode... operands) {
+        return collect(false, null, operands);
+    }
+
+    public AggCall collect(Iterable<? extends RexNode> operands) {
+        return collect(false, null, operands);
     }
 
     @Override
@@ -646,11 +683,73 @@ public class GraphBuilder extends RelBuilder {
             ImmutableList<RexNode> orderKeys,
             @Nullable String alias,
             ImmutableList<RexNode> operands) {
-        return null;
+        // if operands of the aggregate call is empty, set a variable with (alias = null) by default
+        return new GraphAggCall(
+                        getCluster(),
+                        aggFunction,
+                        ObjectUtils.isNotEmpty(operands)
+                                ? operands
+                                : ImmutableList.of(this.variable((String) null)))
+                .as(alias)
+                .distinct(distinct);
     }
 
     @Override
-    public GraphBuilder aggregate(GroupKey groupKey, AggCall... aggCalls) {
+    public GraphBuilder aggregate(GroupKey groupKey, Iterable<AggCall> aggCalls) {
+        Objects.requireNonNull(groupKey);
+        Objects.requireNonNull(aggCalls);
+
+        RelNode input = requireNonNull(peek(), "frame stack is empty");
+
+        Registrar registrar = new Registrar(this, input, true);
+        List<RexNode> registerKeys =
+                registrar.registerExpressions(((GraphGroupKeys) groupKey).getVariables());
+
+        List<List<RexNode>> registerCallsList = new ArrayList<>();
+        for (AggCall call : aggCalls) {
+            registerCallsList.add(
+                    registrar.registerExpressions(((GraphAggCall) call).getOperands()));
+        }
+
+        List<GraphAggCall> aggCallList = new ArrayList<>();
+        // need to project in advance
+        if (!registrar.getExtraNodes().isEmpty()) {
+            project(registrar.getExtraNodes(), registrar.getExtraAliases(), registrar.isAppend());
+            RexVariableConverter converter = new RexVariableConverter(true, this);
+            groupKey =
+                    new GraphGroupKeys(
+                            registerKeys.stream()
+                                    .map(k -> k.accept(converter))
+                                    .collect(Collectors.toList()),
+                            ((GraphGroupKeys) groupKey).getAliases());
+            int i = 0;
+            for (AggCall call : aggCalls) {
+                GraphAggCall call1 = (GraphAggCall) call;
+                aggCallList.add(
+                        new GraphAggCall(
+                                        call1.getCluster(),
+                                        call1.getAggFunction(),
+                                        registerCallsList.get(i).stream()
+                                                .map(k -> k.accept(converter))
+                                                .collect(Collectors.toList()))
+                                .as(call1.getAlias())
+                                .distinct(call1.isDistinct()));
+                ++i;
+            }
+            input = requireNonNull(peek(), "frame stack is empty");
+        } else {
+            for (AggCall aggCall : aggCalls) {
+                aggCallList.add((GraphAggCall) aggCall);
+            }
+        }
+        RelNode aggregate =
+                GraphLogicalAggregate.create(
+                        (GraphOptCluster) this.getCluster(),
+                        ImmutableList.of(),
+                        input,
+                        (GraphGroupKeys) groupKey,
+                        aggCallList);
+        replaceTop(aggregate);
         return this;
     }
 
@@ -663,11 +762,137 @@ public class GraphBuilder extends RelBuilder {
      * @return
      */
     @Override
-    public RelBuilder sortLimit(
+    public GraphBuilder sortLimit(
             @Nullable RexNode offsetNode,
             @Nullable RexNode fetchNode,
             Iterable<? extends RexNode> nodes) {
+        if (offsetNode != null && !(offsetNode instanceof RexLiteral)) {
+            throw new IllegalArgumentException("OFFSET node must be RexLiteral");
+        }
+        if (offsetNode != null && !(offsetNode instanceof RexLiteral)) {
+            throw new IllegalArgumentException("FETCH node must be RexLiteral");
+        }
+
+        RelNode input = requireNonNull(peek(), "frame stack is empty");
+
+        List<RelDataTypeField> originalFields = input.getRowType().getFieldList();
+
+        Registrar registrar = new Registrar(this, input, true);
+        List<RexNode> registerNodes = registrar.registerExpressions(ImmutableList.copyOf(nodes));
+
+        // expressions need to be projected in advance
+        if (!registrar.getExtraNodes().isEmpty()) {
+            project(registrar.getExtraNodes(), registrar.getExtraAliases(), registrar.isAppend());
+            RexVariableConverter converter = new RexVariableConverter(true, this);
+            registerNodes =
+                    registerNodes.stream()
+                            .map(k -> k.accept(converter))
+                            .collect(Collectors.toList());
+            input = requireNonNull(peek(), "frame stack is empty");
+        }
+
+        List<RelFieldCollation> fieldCollations = fieldCollations(registerNodes);
+        Config config = Utils.getFieldValue(RelBuilder.class, this, "config");
+
+        // limit 0 -> return empty value
+        if ((fetchNode != null && RexLiteral.intValue(fetchNode) == 0) && config.simplifyLimit()) {
+            return (GraphBuilder) empty();
+        }
+
+        // output all results without any order -> skip
+        if (offsetNode == null && fetchNode == null && fieldCollations.isEmpty()) {
+            return this; // sort is trivial
+        }
+        // sortLimit is actually limit if collations are empty
+        if (fieldCollations.isEmpty()) {
+            // fuse limit with the previous sort operator
+            // order + limit -> topK
+            if (input instanceof Sort) {
+                Sort sort2 = (Sort) input;
+                // output all results without any limitations
+                if (sort2.offset == null && sort2.fetch == null) {
+                    RelNode sort =
+                            GraphLogicalSort.create(
+                                    sort2.getInput(), sort2.collation, offsetNode, fetchNode);
+                    replaceTop(sort);
+                    return this;
+                }
+            }
+            // order + project + limit -> topK + project
+            if (input instanceof Project) {
+                Project project = (Project) input;
+                if (project.getInput() instanceof Sort) {
+                    Sort sort2 = (Sort) project.getInput();
+                    if (sort2.offset == null && sort2.fetch == null) {
+                        RelNode sort =
+                                GraphLogicalSort.create(
+                                        sort2.getInput(), sort2.collation, offsetNode, fetchNode);
+                        replaceTop(
+                                GraphLogicalProject.create(
+                                        (GraphOptCluster) project.getCluster(),
+                                        project.getHints(),
+                                        sort,
+                                        project.getProjects(),
+                                        project.getRowType(),
+                                        ((GraphLogicalProject) project).isAppend()));
+                        return this;
+                    }
+                }
+            }
+        }
+        RelNode sort =
+                GraphLogicalSort.create(
+                        input, GraphRelCollations.of(fieldCollations), offsetNode, fetchNode);
+        replaceTop(sort);
+        // to remove the extra columns we have added
+        if (!registrar.getExtraAliases().isEmpty()) {
+            List<RexNode> originalExprs = new ArrayList<>();
+            List<String> originalAliases = new ArrayList<>();
+            for (RelDataTypeField field : originalFields) {
+                originalExprs.add(variable(field.getName()));
+                originalAliases.add(field.getName());
+            }
+            project(originalExprs, originalAliases, false);
+        }
         return this;
+    }
+
+    /**
+     * create a list of {@code RelFieldCollation} by order keys
+     *
+     * @param nodes keys to order by
+     * @return
+     */
+    private List<RelFieldCollation> fieldCollations(Iterable<? extends RexNode> nodes) {
+        Objects.requireNonNull(nodes);
+        Iterator<? extends RexNode> iterator = nodes.iterator();
+        List<RelFieldCollation> collations = new ArrayList<>();
+        while (iterator.hasNext()) {
+            collations.add(fieldCollation(iterator.next(), RelFieldCollation.Direction.ASCENDING));
+        }
+        return collations;
+    }
+
+    /**
+     * create {@code RelFieldCollation} for each order key
+     *
+     * @param node
+     * @param direction
+     * @return
+     */
+    private RelFieldCollation fieldCollation(RexNode node, RelFieldCollation.Direction direction) {
+        if (node instanceof RexGraphVariable) {
+            return new GraphFieldCollation((RexGraphVariable) node, direction);
+        }
+        switch (node.getKind()) {
+            case DESCENDING:
+                return fieldCollation(
+                        ((RexCall) node).getOperands().get(0),
+                        RelFieldCollation.Direction.DESCENDING);
+            default:
+                throw new UnsupportedOperationException(
+                        "type " + node.getType() + " can not be converted to collation");
+        }
     }
 
     protected void pop() {

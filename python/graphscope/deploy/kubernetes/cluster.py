@@ -75,7 +75,7 @@ class KubernetesClusterLauncher(Launcher):
         k8s_image_pull_policy=None,
         k8s_image_pull_secrets=None,
         k8s_vineyard_image=None,
-        k8s_vineyard_daemonset=None,
+        k8s_vineyard_deployment=None,
         k8s_vineyard_cpu=None,
         k8s_vineyard_mem=None,
         vineyard_shared_mem=None,
@@ -419,11 +419,11 @@ class KubernetesClusterLauncher(Launcher):
                     f"{self.base64_encode(json.dumps(volumes))}",
                 ]
             )
-        if self._saved_locals["k8s_vineyard_daemonset"] is not None:
+        if self._saved_locals["k8s_vineyard_deployment"] is not None:
             args.extend(
                 [
-                    "--k8s_vineyard_daemonset",
-                    str(self._saved_locals["k8s_vineyard_daemonset"]),
+                    "--k8s_vineyard_deployment",
+                    str(self._saved_locals["k8s_vineyard_deployment"]),
                 ]
             )
 
@@ -528,7 +528,9 @@ class KubernetesClusterLauncher(Launcher):
 
             self._create_services()
             time.sleep(1)
+
             self._waiting_for_services_ready()
+
             self._coordinator_endpoint = self._get_coordinator_endpoint()
             logger.info(
                 "Coordinator pod start successful with address %s, connecting to service ...",

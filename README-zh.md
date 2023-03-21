@@ -123,9 +123,7 @@ sub_graph = sub_graph.add_column(ret2, {"tc": "r"})
 ```python
 
 # define the features for learning
-paper_features = []
-for i in range(128):
-    paper_features.append("feat_" + str(i))
+paper_features = [f"feat_{i}" for i in range(128)]
 
 paper_features.append("kcore")
 paper_features.append("tc")
@@ -367,7 +365,6 @@ GraphScope 遵循 [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2
 ## 论文
 - Wenfei Fan, Tao He, Longbin Lai, Xue Li, Yong Li, Zhao Li, Zhengping Qian, Chao Tian, Lei Wang, Jingbo Xu, Youyang Yao, Qiang Yin, Wenyuan Yu, Jingren Zhou, Diwen Zhu, Rong Zhu. [GraphScope: A Unified Engine For Big Graph Processing](http://vldb.org/pvldb/vol14/p2879-qian.pdf). The 47th International Conference on Very Large Data Bases (VLDB), industry, 2021.
 - Jingbo Xu, Zhanning Bai, Wenfei Fan, Longbin Lai, Xue Li, Zhao Li, Zhengping Qian, Lei Wang, Yanyan Wang, Wenyuan Yu, Jingren Zhou. [GraphScope: A One-Stop Large Graph Processing System](http://vldb.org/pvldb/vol14/p2703-xu.pdf). The 47th International Conference on Very Large Data Bases (VLDB), demo, 2021
-
 
 ## 贡献
 

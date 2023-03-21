@@ -68,6 +68,11 @@ from gscoordinator.version import __version__
 logger = logging.getLogger("graphscope")
 
 
+class FakeKubeResponse:
+    def __init__(self, obj):
+        self.data = json.dumps(obj)
+
+
 class KubernetesClusterLauncher(AbstractLauncher):
     def __init__(
         self,
@@ -95,7 +100,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         service_type=None,
         timeout_seconds=None,
         vineyard_cpu=None,
-        vineyard_daemonset=None,
+        vineyard_deployment=None,
         vineyard_image=None,
         vineyard_mem=None,
         vineyard_shared_mem=None,
@@ -131,15 +136,18 @@ class KubernetesClusterLauncher(AbstractLauncher):
 
         self._num_workers = num_workers
 
-        self._vineyard_daemonset = vineyard_daemonset
-        if vineyard_daemonset is not None:
+        self._vineyard_deployment = vineyard_deployment
+
+        if self.vineyard_deployment_exists():
             try:
-                self._apps_api.read_namespaced_daemon_set(
-                    vineyard_daemonset, self._namespace
+                self._apps_api.read_namespaced_deployment(
+                    vineyard_deployment, self._namespace
                 )
             except K8SApiException:
-                logger.error(f"Vineyard daemonset {vineyard_daemonset} not found")
-                self._vineyard_daemonset = None
+                logger.exception(
+                    f"Vineyard deployment {self._namespace}/{vineyard_deployment} not found"
+                )
+                self._vineyard_deployment = None
 
         self._engine_cpu = engine_cpu
         self._engine_mem = engine_mem
@@ -230,7 +238,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
             preemptive=preemptive,
             service_type=service_type,
             vineyard_cpu=vineyard_cpu,
-            vineyard_daemonset=vineyard_daemonset,
+            vineyard_deployment=vineyard_deployment,
             vineyard_image=vineyard_image,
             vineyard_mem=vineyard_mem,
             vineyard_shared_mem=vineyard_shared_mem,
@@ -244,7 +252,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         )
 
         self._vineyard_service_endpoint = None
-        self.vineyard_internal_service_endpoint = None
+        self._vineyard_internal_service_endpoint = None
         self._mars_service_endpoint = None
         if self._with_mars:
             self._mars_cluster = MarsCluster(
@@ -256,6 +264,9 @@ class KubernetesClusterLauncher(AbstractLauncher):
 
     def type(self):
         return types_pb2.K8S
+
+    def vineyard_deployment_exists(self):
+        return self._vineyard_deployment is not None
 
     def get_coordinator_owner_references(self):
         owner_references = []
@@ -429,7 +440,14 @@ class KubernetesClusterLauncher(AbstractLauncher):
         response = self._core_api.create_namespaced_service(self._namespace, service)
         self._resource_object.append(response)
         logger.info("Creating engine pods...")
+
         stateful_set = self._engine_cluster.get_engine_stateful_set()
+        if self.vineyard_deployment_exists():
+            # schedule engine statefulset to the same node with vineyard deployment
+            stateful_set = self._add_pod_affinity_for_vineyard_deployment(
+                workload=stateful_set
+            )
+
         stateful_set.metadata.owner_references = self._owner_references
         response = self._apps_api.create_namespaced_stateful_set(
             self._namespace, stateful_set
@@ -486,7 +504,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         if self._with_mars:
             # scheduler used by Mars
             self._create_mars_scheduler()
-        if self._vineyard_daemonset is None:
+        if self._vineyard_deployment is None:
             self._create_vineyard_service()
 
     def _waiting_for_services_ready(self):
@@ -560,7 +578,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         self._vineyard_service_endpoint = (
             self._engine_cluster.get_vineyard_service_endpoint(self._api_client)
         )
-        self.vineyard_internal_endpoint = (
+        self._vineyard_internal_endpoint = (
             f"{self._pod_ip_list[0]}:{self._engine_cluster._vineyard_service_port}"
         )
 
@@ -574,6 +592,39 @@ class KubernetesClusterLauncher(AbstractLauncher):
                 self._api_client
             )
             logger.info("Mars service endpoint: %s", self._mars_service_endpoint)
+
+    # the function will add the podAffinity to the engine workload so that the workload
+    # will be scheduled to the same node with vineyard deployment.
+    # e.g. the vineyard deployment is named "vineyard-deployment" and the namespace is "graphscope-system",
+    # the podAffinity will be added to the engine workload as below:
+    # spec:
+    #   affinity:
+    #     podAffinity:
+    #       requiredDuringSchedulingIgnoredDuringExecution:
+    #       - labelSelector:
+    #           matchExpressions:
+    #           - key: app.kubernetes.io/instance
+    #             operator: In
+    #             values:
+    #             - graphscope-system-vineyard-deployment # [vineyard deployment namespace]-[vineyard deployment name]
+    #         topologyKey: kubernetes.io/hostname
+    def _add_pod_affinity_for_vineyard_deployment(self, workload):
+        import vineyard
+
+        workload_json = json.dumps(
+            self._api_client.sanitize_for_serialization(workload)
+        )
+        new_workload_json = vineyard.deploy.vineyardctl.schedule.workload(
+            resource=workload_json,
+            vineyardd_name=self._vineyard_deployment,
+            vineyardd_namespace=self._namespace,
+            capture=True,
+        )
+
+        normalized_workload_json = json.loads(new_workload_json)
+        fake_kube_response = FakeKubeResponse(normalized_workload_json)
+        new_workload = self._api_client.deserialize(fake_kube_response, type(workload))
+        return new_workload
 
     def _dump_resource_object(self):
         resource = {}
