@@ -25,16 +25,14 @@
 
 package com.alibaba.graphscope.gremlin.plugin.script;
 
+import com.alibaba.graphscope.common.antlr4.SyntaxErrorListener;
 import com.alibaba.graphscope.grammar.GremlinGSLexer;
 import com.alibaba.graphscope.grammar.GremlinGSParser;
 import com.alibaba.graphscope.gremlin.antlr4.GremlinAntlrToJava;
-import com.alibaba.graphscope.gremlin.exception.InvalidGremlinScriptException;
 
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.PredictionMode;
-import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.apache.commons.lang3.NotImplementedException;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngine;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngineFactory;
 import org.apache.tinkerpop.gremlin.process.traversal.Bytecode;
@@ -43,9 +41,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSo
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.PrintWriter;
 import java.io.Reader;
-import java.io.StringWriter;
 
 import javax.script.*;
 
@@ -59,57 +55,19 @@ public class AntlrGremlinScriptEngine extends AbstractScriptEngine implements Gr
         Bindings globalBindings = ctx.getBindings(ScriptContext.ENGINE_SCOPE);
         GraphTraversalSource g = (GraphTraversalSource) globalBindings.get("g");
         GremlinAntlrToJava antlrToJava = GremlinAntlrToJava.getInstance(g);
-        try {
-            GremlinGSLexer lexer = new GremlinGSLexer(CharStreams.fromString(script));
-            lexer.removeErrorListeners();
-            lexer.addErrorListener(
-                    new BaseErrorListener() {
-                        @Override
-                        public void syntaxError(
-                                final Recognizer<?, ?> recognizer,
-                                final Object offendingSymbol,
-                                final int line,
-                                final int charPositionInLine,
-                                final String msg,
-                                final RecognitionException e) {
-                            throw new ParseCancellationException();
-                        }
-                    });
-            // setup error handler on parser
-            final GremlinGSParser parser = new GremlinGSParser(new CommonTokenStream(lexer));
-            parser.setErrorHandler(new BailErrorStrategy());
-            parser.getInterpreter().setPredictionMode(PredictionMode.LL);
-            return antlrToJava.visit(parser.query());
-        } catch (ParseCancellationException e) {
-            Throwable t = ExceptionUtils.getRootCause(e);
-            // todo: return user-friendly errors from different exceptions
-            String error =
-                    String.format(
-                            "query [%s] is invalid, check the grammar in GremlinGS.g4, ", script);
-            if (t instanceof LexerNoViableAltException) {
-                error +=
-                        String.format(
-                                "failed at index: %s.",
-                                ((LexerNoViableAltException) t).getStartIndex());
-            } else if (t instanceof NoViableAltException) {
-                error +=
-                        String.format(
-                                "token: %s.",
-                                ((NoViableAltException) t).getStartToken().toString());
-            } else {
-                if (t == null) {
-                    StringWriter sw = new StringWriter();
-                    PrintWriter pw = new PrintWriter(sw);
-                    e.printStackTrace(pw);
-                    error +=
-                            String.format(
-                                    "message: %s, stacktrace: %s.", e.toString(), sw.toString());
-                } else {
-                    error += String.format("message: %s.", t.getMessage());
-                }
-            }
-            throw new InvalidGremlinScriptException(error);
-        }
+
+        GremlinGSLexer lexer = new GremlinGSLexer(CharStreams.fromString(script));
+        // reset error listeners on lexer
+        lexer.removeErrorListeners();
+        lexer.addErrorListener(new SyntaxErrorListener());
+        final GremlinGSParser parser = new GremlinGSParser(new CommonTokenStream(lexer));
+        // setup error handler on parser
+        parser.setErrorHandler(new DefaultErrorStrategy());
+        // reset error listeners on parser
+        parser.removeErrorListeners();
+        parser.addErrorListener(new SyntaxErrorListener());
+        parser.getInterpreter().setPredictionMode(PredictionMode.LL);
+        return antlrToJava.visit(parser.query());
     }
 
     @Override

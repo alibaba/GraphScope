@@ -86,6 +86,6 @@ public class GraphLogicalMultiMatch extends AbstractLogicalMatch {
     }
 
     public List<RelNode> getSentences() {
-        return sentences;
+        return Collections.unmodifiableList(sentences);
     }
 }

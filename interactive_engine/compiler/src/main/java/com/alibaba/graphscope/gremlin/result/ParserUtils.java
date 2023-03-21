@@ -20,7 +20,6 @@ import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.IrResult;
-import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.alibaba.graphscope.gremlin.exception.GremlinResultParserException;
 
 import org.apache.tinkerpop.gremlin.structure.Edge;
@@ -133,7 +132,7 @@ public class ParserUtils {
         return new HashMap<>();
     }
 
-    public static String getKeyName(OuterExpression.NameOrId key, FfiKeyType type) {
+    public static String getKeyName(Common.NameOrId key, FfiKeyType type) {
         switch (key.getItemCase()) {
             case NAME:
                 return key.getName();

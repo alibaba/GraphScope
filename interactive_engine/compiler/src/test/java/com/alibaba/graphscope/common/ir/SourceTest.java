@@ -35,7 +35,7 @@ public class SourceTest {
                 new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"));
         RelNode source = builder.source(sourceConfig).build();
         Assert.assertEquals(
-                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
                         + " opt=[VERTEX])",
                 source.explain().trim());
     }
@@ -56,6 +56,7 @@ public class SourceTest {
                 source.explain().trim());
     }
 
+    // g.V().hasLabel("person", "knows") -> person and knows have different opt type, throw errors
     @Test
     public void multiple_labels_opt_test() {
         try {

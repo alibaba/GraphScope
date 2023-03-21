@@ -52,6 +52,16 @@ jobs:
     steps:
     # For push it's necessary to checkout the code
     - uses: actions/checkout@v3
+
+    - name: Detect the tmate session
+      run: |
+        # hack here: get all field of build-wheels which run on self-hosted machine
+        if sed -n '/self-hosted/,/mini-test/ p' .github/workflows/local-ci.yml | \
+          grep -v "grep" - | grep "action-tmate"; then
+          echo 'WARNING!!!the self-hosted machine can not run tmate session, please debug it manually'
+          exit 1
+        fi
+
     # For pull requests it's not necessary to checkout the code
     - uses: dorny/paths-filter@v2
       id: filter
@@ -232,6 +242,8 @@ jobs:
         git submodule update --init
         mkdir -p build && cd build
         cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard \
+                 -DCMAKE_PREFIX_PATH=/opt/graphscope \
+                 -DOPENSSL_ROOT_DIR=/opt/graphscope \
                  -DUSE_EXTERNAL_ETCD_LIBS=OFF \
                  -DBUILD_SHARED_LIBS=ON \
                  -DBUILD_VINEYARD_TESTS=OFF
@@ -239,7 +251,7 @@ jobs:
         sudo make install
 
         # copy to /usr/local, keep the same logic as gsvineyard.Dockerfile
-        sudo cp -r /opt/vineyard/* ${GRAPHSCOPE_HOME}/
+        sudo rsync -av /opt/vineyard/ ${GRAPHSCOPE_HOME}/
 
     - name: Build Wheels
       run: |

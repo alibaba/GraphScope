@@ -28,6 +28,10 @@ import java.util.Objects;
 
 /**
  * maintain the necessary info to create a {@code RexGraphVariable}
+ * i.e. group().by().by(sum("@.age + 1")):
+ * "@.age + 1" need to be projected in advance and is aliased as an inner name (supposing '$f0'), the latter aggregate function will apply on the variable('$f0');
+ * However, we cannot generate an actual variable('$f0') at this point in that the name '$f0' does not exist until `project("@.age + 1")` is appended in the {@code GraphBuilder}.
+ * {@code RexTmpVariable} is used to cache alias or property names to build an actual {@code RexGraphVariable} in the future.
  */
 public class RexTmpVariable extends RexInputRef {
     private final @Nullable String alias;

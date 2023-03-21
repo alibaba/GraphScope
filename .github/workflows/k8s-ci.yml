@@ -52,6 +52,14 @@ jobs:
     steps:
     # For push it's necessary to checkout the code
     - uses: actions/checkout@v3
+
+    - name: Detect the tmate session
+      run: |
+        if grep -v "grep" .github/workflows/k8s-ci.yml | grep "action-tmate"; then
+          echo 'WARNING!!!the self-hosted machine can not run tmate session, please debug it manually'
+          exit 1
+        fi
+
     # For pull requests it's not necessary to checkout the code
     - uses: dorny/paths-filter@v2
       id: filter
@@ -220,6 +228,7 @@ jobs:
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
     - uses: actions/checkout@v3
+
     - uses: actions/cache@v3
       with:
         path: ~/.m2/repository
@@ -253,6 +262,7 @@ jobs:
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
     - uses: actions/checkout@v3
+
     - uses: actions/cache@v3
       with:
         path: ~/.m2/repository
@@ -394,6 +404,12 @@ jobs:
                          --cpus='12' --memory='32000mb' --disk-size='40000mb' \
                          --mount=true --mount-string="${GS_TEST_DIR}:${GS_TEST_DIR}"
 
+          # create a kubernetes cluster with 2 nodes
+          #TODO(caoye)
+          #minikube start --base-image='registry-vpc.cn-hongkong.aliyuncs.com/graphscope/kicbase:v0.0.32' \
+          #               --nodes 2 --cpus='6' --memory='16000mb' --disk-size='20000mb' \
+          #               --mount=true --mount-string="${GS_TEST_DIR}:${GS_TEST_DIR}"
+
           export GS_REGISTRY=""
           export GS_TAG=${SHORT_SHA}
           minikube image load graphscope/coordinator:${SHORT_SHA}
@@ -437,10 +453,6 @@ jobs:
                           --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
                           --cov-report=term --exitfirst -s -vvv --log-cli-level=INFO \
                           ./graphscope/tests/kubernetes
-
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: false
 
       - name: Upload Coverage
         uses: codecov/codecov-action@v3
@@ -594,6 +606,7 @@ jobs:
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
       - uses: actions/checkout@v3
+
       - uses: actions/download-artifact@v3
         with:
           name: gie-experimental

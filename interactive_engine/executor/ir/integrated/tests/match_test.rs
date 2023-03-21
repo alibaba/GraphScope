@@ -55,6 +55,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
             idx_predicate: None,
+            meta_data: None,
         };
 
         let out_knows = pb::EdgeExpand {
@@ -63,6 +64,7 @@ mod test {
             params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: None,
+            meta_data: None,
         };
 
         let out_created = pb::EdgeExpand {
@@ -75,6 +77,7 @@ mod test {
             )),
             expand_opt: 0,
             alias: None,
+            meta_data: None,
         };
 
         let pattern = pb::Pattern {
@@ -104,6 +107,7 @@ mod test {
                     join_kind: 0,
                 },
             ],
+            meta_data: vec![],
         };
 
         let sink = pb::Sink {
@@ -146,6 +150,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
             idx_predicate: None,
+            meta_data: None,
         };
 
         let out_knows = pb::EdgeExpand {
@@ -154,6 +159,7 @@ mod test {
             params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: None,
+            meta_data: None,
         };
 
         let out_created = pb::EdgeExpand {
@@ -162,6 +168,7 @@ mod test {
             params: Some(query_params(vec![CREATED_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: None,
+            meta_data: None,
         };
 
         let pattern = pb::Pattern {
@@ -191,6 +198,7 @@ mod test {
                     join_kind: 0,
                 },
             ],
+            meta_data: vec![],
         };
 
         let sink = pb::Sink {

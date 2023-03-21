@@ -600,10 +600,11 @@ void GlobalPGStream::Construct(const ObjectMeta& meta) {
   LOG(INFO) << "local stream chunk size: " << local_streams_.size();
 }
 
-std::shared_ptr<Object> GlobalPGStreamBuilder::_Seal(Client& client) {
+Status GlobalPGStreamBuilder::_Seal(Client& client, std::shared_ptr<Object>&object) {
   VINEYARD_CHECK_OK(this->Build(client));
 
   auto gstream = std::make_shared<GlobalPGStream>();
+  object = gstream;
   gstream->total_stream_chunks_ = total_stream_chunks_;
   gstream->meta_.SetTypeName(type_name<GlobalPGStream>());
   gstream->meta_.SetGlobal(true);
@@ -615,7 +616,7 @@ std::shared_ptr<Object> GlobalPGStreamBuilder::_Seal(Client& client) {
   }
 
   VINEYARD_CHECK_OK(client.CreateMetaData(gstream->meta_, gstream->id_));
-  return std::dynamic_pointer_cast<Object>(gstream);
+  return Status::OK();
 }
 
 }  // namespace htap

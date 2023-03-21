@@ -15,7 +15,8 @@
               "sample_ratio": 1.0,
               "extra": {}
             },
-            "idx_predicate": null
+            "idx_predicate": null,
+            "meta_data": null
           }
         }
       },
@@ -39,7 +40,8 @@
               "extra": {}
             },
             "alias": null,
-            "expand_opt": 2
+            "expand_opt": 2,
+            "meta_data": null
           }
         }
       },
@@ -76,7 +78,8 @@
                       "Id": 0
                     }
                   },
-                  "property": null
+                  "property": null,
+                  "node_type": null
                 },
                 "alias": {
                   "item": {
@@ -90,7 +93,8 @@
                 "vars": [
                   {
                     "tag": null,
-                    "property": null
+                    "property": null,
+                    "node_type": null
                   }
                 ],
                 "aggregate": 5,
@@ -100,7 +104,8 @@
                   }
                 }
               }
-            ]
+            ],
+            "meta_data": []
           }
         }
       },

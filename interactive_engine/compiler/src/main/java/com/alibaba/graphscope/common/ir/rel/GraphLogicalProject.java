@@ -30,6 +30,9 @@ import org.apache.calcite.rex.RexNode;
 
 import java.util.List;
 
+/**
+ * extend {@link Project} in calcite to implement append=true/false
+ */
 public class GraphLogicalProject extends Project {
     private boolean isAppend;
 

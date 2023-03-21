@@ -208,11 +208,11 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
                     GraphAggCall original = (GraphAggCall) item.getAggCalls().get(0);
                     aggCalls.add(
                             new GraphAggCall(
-                                    original.getCluster(),
-                                    original.getAggFunction(),
-                                    original.isDistinct(),
-                                    alias,
-                                    original.getOperands()));
+                                            original.getCluster(),
+                                            original.getAggFunction(),
+                                            original.getOperands())
+                                    .as(alias)
+                                    .distinct(original.isDistinct()));
                 } else {
                     throw new IllegalArgumentException("invalid expr visit result");
                 }
