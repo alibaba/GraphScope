@@ -729,7 +729,7 @@ fn add_intersect_job_builder(
     for subplan in subplans {
         // subplan would be like:
         // 1. vec![ExpandE, GetV] for edge expand to intersect;
-        // 2. vec![PathExpand, GetV, ExpandE, GetV] for path expand to intersect
+        // 2. vec![PathExpand, ExpandE, GetV] for path expand to intersect
         let len = subplan.len();
         if len < 2 {
             Err(IrError::InvalidPattern(
@@ -1460,6 +1460,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec!["person".into()], vec![])),
             idx_predicate: None,
+            meta_data: None,
         };
 
         let edge_expand = pb::EdgeExpand {
@@ -1468,6 +1469,7 @@ mod test {
             params: Some(query_params(vec!["knows".into()], vec![])),
             expand_opt: 1, // expand edge
             alias: None,
+            meta_data: None,
         };
 
         let getv = pb::GetV {
@@ -1475,6 +1477,7 @@ mod test {
             opt: 1, // inV()
             params: None,
             alias: None,
+            meta_data: None,
         };
 
         let path_opr = pb::PathExpand {
@@ -1492,6 +1495,7 @@ mod test {
             params: Some(query_params(vec!["knows".into()], vec![])),
             expand_opt: 0, // expand vertex
             alias: None,
+            meta_data: None,
         };
         let fused_path_opr = pb::PathExpand {
             base: Some(fused_edge_expand.into()),
@@ -1543,6 +1547,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec!["person".into()], vec![])),
             idx_predicate: None,
+            meta_data: None,
         };
 
         let edge_expand = pb::EdgeExpand {
@@ -1551,6 +1556,7 @@ mod test {
             params: Some(query_params(vec!["knows".into()], vec![])),
             expand_opt: 1, // expand edge
             alias: None,
+            meta_data: None,
         };
 
         let getv = pb::GetV {
@@ -1566,6 +1572,7 @@ mod test {
                 extra: HashMap::new(),
             }),
             alias: None,
+            meta_data: None,
         };
 
         let path_opr = pb::PathExpand {
@@ -1583,6 +1590,7 @@ mod test {
             params: Some(query_params(vec!["knows".into()], vec![])),
             expand_opt: 0, // expand vertex
             alias: None,
+            meta_data: None,
         };
         let fused_getv_with_filter = pb::GetV {
             tag: None,
@@ -1597,6 +1605,7 @@ mod test {
                 extra: HashMap::new(),
             }),
             alias: None,
+            meta_data: None,
         };
         let expected_path_opr = pb::PathExpand {
             base: Some((fused_edge_expand, fused_getv_with_filter).into()),

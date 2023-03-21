@@ -162,7 +162,10 @@ impl PbEdgeOrPath {
     fn get_predicates(&self) -> Option<&common_pb::Expression> {
         let edge_expand = match self {
             PbEdgeOrPath::Edge(e) => Some(e),
-            PbEdgeOrPath::Path(p) => p.base.as_ref(),
+            PbEdgeOrPath::Path(p) => p
+                .base
+                .as_ref()
+                .and_then(|expand_base| expand_base.edge_expand.as_ref()),
         };
         edge_expand
             .and_then(|e| e.params.as_ref())
@@ -363,40 +366,8 @@ impl Pattern {
                     Some(BinderItem::Edge(_)) | Some(BinderItem::Path(_)) => {
                         // assign the new pattern edge with a new id
                         let edge_id = assign_id(&mut next_edge_id);
-                        let edge_expand = if let Some(BinderItem::Path(path_expand)) = binder.item.as_ref()
-                        {
-                            let hop_range =
-                                path_expand
-                                    .hop_range
-                                    .as_ref()
-                                    .ok_or(ParsePbError::EmptyFieldError(
-                                        "pb::PathExpand::hop_range".to_string(),
-                                    ))?;
-                            if hop_range.lower < 1 {
-                                // The path with range from 0 cannot be translated to oprs that can be intersected.
-                                return Err(IrPatternError::Unsupported(format!(
-                                    "PathExpand in Pattern with lower range of {:?}",
-                                    hop_range.lower
-                                )))?;
-                            }
-                            edge_data_map.insert(edge_id, PbEdgeOrPath::from(path_expand.clone()));
-                            path_expand
-                                .base
-                                .as_ref()
-                                .ok_or(ParsePbError::EmptyFieldError(
-                                    "PathExpand::base in Pattern".to_string(),
-                                ))?
-                        } else if let Some(BinderItem::Edge(edge_expand)) = binder.item.as_ref() {
-                            if edge_expand.expand_opt == pb::edge_expand::ExpandOpt::Degree as i32 {
-                                return Err(IrPatternError::Unsupported(
-                                    "Expand Degree hasn't been supported in pattern match".to_string(),
-                                ))?;
-                            }
-                            edge_data_map.insert(edge_id, PbEdgeOrPath::from(edge_expand.clone()));
-                            edge_expand
-                        } else {
-                            unreachable!()
-                        };
+                        let edge_expand = get_edge_expand_from_binder(binder, edge_id, &mut edge_data_map)?;
+                        let get_v = get_vertex_parameters_from_binder(binder);
                         // get edge label's id
                         let edge_labels = get_edge_expand_labels(edge_expand)?;
                         // get edge direction
@@ -413,6 +384,12 @@ impl Pattern {
                         )?;
                         if edge_expand.expand_opt == pb::edge_expand::ExpandOpt::Edge as i32 {
                             edge_expands_to_close.insert(dst_vertex_id);
+                        }
+                        if let Some(vertex_params) = get_v {
+                            vertex_params_map
+                                .entry(dst_vertex_id)
+                                .or_default()
+                                .push(vertex_params);
                         }
                         pre_dst_vertex_id = dst_vertex_id;
                         // assign vertices labels
@@ -447,23 +424,25 @@ impl Pattern {
 
                         pattern_edges.push(new_pattern_edge);
                     }
-                    Some(BinderItem::Select(select)) => {
+                    Some(BinderItem::Select(_select)) => {
                         // Be carefully that we assume `Select` denotes a filter for vertices;
                         // Otherwise, it should be fused into `EdgeExpand` (if it is a filter for edges).
                         // TODO: it's better to extract vertex label filter in `Select` if exists, to update id_labels_map
-                        vertex_params_map
-                            .entry(pre_dst_vertex_id)
-                            .or_default()
-                            .push(query_params(vec![], vec![], select.predicate.clone()));
+                        if let Some(vertex_params) = get_vertex_parameters_from_binder(binder) {
+                            vertex_params_map
+                                .entry(pre_dst_vertex_id)
+                                .or_default()
+                                .push(vertex_params)
+                        };
                     }
-                    Some(BinderItem::Vertex(get_v)) => {
+                    Some(BinderItem::Vertex(_get_v)) => {
                         // GetV() when path().endV(); ignore endV() here, and add endV() back when build_logical_plan()
                         if edge_expands_to_close.remove(&pre_dst_vertex_id) {
-                            if let Some(vertex_param) = &get_v.params {
+                            if let Some(vertex_param) = get_vertex_parameters_from_binder(binder) {
                                 vertex_params_map
                                     .entry(pre_dst_vertex_id)
                                     .or_default()
-                                    .push(vertex_param.clone());
+                                    .push(vertex_param);
                             }
                         } else {
                             return Err(IrPatternError::ParsePbError(ParsePbError::ParseError(
@@ -864,6 +843,70 @@ fn has_expr_eq(expr: &common_pb::Expression) -> bool {
         }
     }
     false
+}
+
+/// Pick up EdgeExpand Operator from a binder in pb::Pattern's sentences
+fn get_edge_expand_from_binder<'a, 'b>(
+    binder: &'a pb::pattern::Binder, edge_id: PatternId,
+    edge_data_map: &'b mut BTreeMap<PatternId, PbEdgeOrPath>,
+) -> IrPatternResult<&'a pb::EdgeExpand> {
+    use pb::pattern::binder::Item as BinderItem;
+    if let Some(BinderItem::Path(path_expand)) = binder.item.as_ref() {
+        let hop_range = path_expand
+            .hop_range
+            .as_ref()
+            .ok_or(ParsePbError::EmptyFieldError("pb::PathExpand::hop_range".to_string()))?;
+        if hop_range.lower < 1 {
+            // The path with range from 0 cannot be translated to oprs that can be intersected.
+            return Err(IrPatternError::Unsupported(format!(
+                "PathExpand in Pattern with lower range of {:?}",
+                hop_range.lower
+            )))?;
+        }
+        edge_data_map.insert(edge_id, PbEdgeOrPath::from(path_expand.clone()));
+        let edge_expand = path_expand
+            .base
+            .as_ref()
+            .ok_or(ParsePbError::EmptyFieldError("PathExpand::base in Pattern".to_string()))?
+            .edge_expand
+            .as_ref()
+            .ok_or(ParsePbError::EmptyFieldError("PathExpand::base in Pattern".to_string()))?;
+        Ok(edge_expand)
+    } else if let Some(BinderItem::Edge(edge_expand)) = binder.item.as_ref() {
+        if edge_expand.expand_opt == pb::edge_expand::ExpandOpt::Degree as i32 {
+            Err(IrPatternError::Unsupported(
+                "Expand Degree hasn't been supported in pattern match".to_string(),
+            ))?
+        }
+        edge_data_map.insert(edge_id, PbEdgeOrPath::from(edge_expand.clone()));
+        Ok(edge_expand)
+    } else {
+        Err(IrPatternError::InvalidExtendPattern(
+            "Only can pick up `EdgeExpand` from BinderItem::Path and BinderItem::Edge".to_string(),
+        ))?
+    }
+}
+
+/// Pick up pb::QueryParams for vertex from a binder in pb::Pattern's sentences
+fn get_vertex_parameters_from_binder(binder: &pb::pattern::Binder) -> Option<pb::QueryParams> {
+    use pb::pattern::binder::Item as BinderItem;
+    if let Some(BinderItem::Path(path_expand)) = binder.item.as_ref() {
+        path_expand
+            .base
+            .as_ref()
+            .and_then(|expand_base| expand_base.get_v.as_ref())
+            .and_then(|get_v| get_v.params.as_ref())
+            .cloned()
+    } else if let Some(BinderItem::Select(select)) = binder.item.as_ref() {
+        select
+            .predicate
+            .as_ref()
+            .map(|expr| query_params(vec![], vec![], Some(expr.clone())))
+    } else if let Some(BinderItem::Vertex(get_v)) = binder.item.as_ref() {
+        get_v.params.clone()
+    } else {
+        None
+    }
 }
 
 /// check if the pattern is still connected by removing `vertex_to_remove`

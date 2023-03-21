@@ -17,9 +17,9 @@ use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as pb;
 use ir_common::KeyId;
 
-use crate::glogue::error::IrPatternResult;
+use crate::glogue::error::{IrPatternError, IrPatternResult};
 use crate::glogue::pattern::{Pattern, PbEdgeOrPath};
-use crate::glogue::{query_params, query_params_to_get_v, DynIter, PatternDirection, PatternId};
+use crate::glogue::{query_params_to_get_v, DynIter, PatternDirection, PatternId};
 
 /// An ExactExtendEdge denotes an edge to be extended during the pattern matching.
 /// Given a ExactExtendEdge, we can uniquely locate an edge with dir in the pattern
@@ -74,10 +74,21 @@ impl ExactExtendEdge {
 
         path_opr.start_tag = start_tag.clone();
         path_opr.alias = None;
-        let mut base_edge_expand = path_opr
+        let path_expand_base = path_opr
             .base
             .as_mut()
             .ok_or(ParsePbError::EmptyFieldError("PathExpand::base in Pattern".to_string()))?;
+        let get_v = path_expand_base.get_v.clone();
+        let mut base_edge_expand = path_expand_base
+            .edge_expand
+            .as_mut()
+            .ok_or(ParsePbError::EmptyFieldError("PathExpand::base::edge_expand in Pattern".to_string()))?;
+        // Ensure the base is ExpandV or ExpandE + GetV
+        if get_v == None && base_edge_expand.expand_opt == pb::edge_expand::ExpandOpt::Edge as i32 {
+            Err(IrPatternError::Unsupported(
+                "Edge Only PathExpand in Pattern has not been supported yet".to_string(),
+            ))?;
+        }
         (*base_edge_expand).direction = direction;
         (*base_edge_expand).expand_opt = pb::edge_expand::ExpandOpt::Edge as i32;
         if !is_intersect {
@@ -101,16 +112,6 @@ impl ExactExtendEdge {
                 hop_range.upper -= 1;
 
                 expand_operators.push(path_opr.into());
-                expand_operators.push(
-                    pb::GetV {
-                        tag: None,
-                        opt: pb::get_v::VOpt::End as i32,
-                        params: Some(query_params(vec![], vec![], None)),
-                        alias: None,
-                        meta_data: None,
-                    }
-                    .into(),
-                );
                 expand_operators.push(last_edge_expand.into());
             }
         }

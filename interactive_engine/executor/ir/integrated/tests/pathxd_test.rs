@@ -147,6 +147,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
             idx_predicate: None,
+            meta_data: None,
         };
 
         let edge_expand = pb::EdgeExpand {
@@ -155,6 +156,7 @@ mod test {
             params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: None,
+            meta_data: None,
         };
 
         let getv = pb::GetV {
@@ -162,6 +164,7 @@ mod test {
             opt: 4,
             params: Some(query_params(vec![], vec![], str_to_expr_pb("@.age >28".to_string()).ok())),
             alias: None,
+            meta_data: None,
         };
 
         let path_expand_opr = pb::PathExpand {
