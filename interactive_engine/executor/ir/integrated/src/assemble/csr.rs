@@ -13,10 +13,25 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-mod assemble;
-pub use assemble::{QueryCsrGraph, QueryExpGraph, QueryGrootGraph, QueryVineyard};
+use graph_proxy::{create_csr_store, CsrPartition};
 use runtime::IRJobAssembly;
 
-pub trait InitializeJobAssembly {
-    fn initialize_job_assembly(&self) -> IRJobAssembly;
+use crate::InitializeJobAssembly;
+
+pub struct QueryCsrGraph {
+    num_servers: usize,
+}
+
+impl QueryCsrGraph {
+    pub fn new(num_servers: usize) -> Self {
+        QueryCsrGraph { num_servers }
+    }
+}
+
+impl InitializeJobAssembly for QueryCsrGraph {
+    fn initialize_job_assembly(&self) -> IRJobAssembly {
+        create_csr_store();
+        let partitioner = CsrPartition { num_servers: self.num_servers };
+        IRJobAssembly::new(partitioner)
+    }
 }

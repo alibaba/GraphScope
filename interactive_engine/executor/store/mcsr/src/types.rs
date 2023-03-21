@@ -1,5 +1,5 @@
 //
-//! Copyright 2022 Alibaba Group Holding Limited.
+//! Copyright 2020 Alibaba Group Holding Limited.
 //!
 //! Licensed under the Apache License, Version 2.0 (the "License");
 //! you may not use this file except in compliance with the License.
@@ -13,10 +13,16 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-mod assemble;
-pub use assemble::{QueryCsrGraph, QueryExpGraph, QueryGrootGraph, QueryVineyard};
-use runtime::IRJobAssembly;
+pub type DefaultId = usize;
+pub type InternalId = usize;
+pub type LabelId = u8;
 
-pub trait InitializeJobAssembly {
-    fn initialize_job_assembly(&self) -> IRJobAssembly;
-}
+pub static INVALID_LABEL_ID: LabelId = 0xff;
+pub static VERSION: &str = env!("CARGO_PKG_VERSION");
+pub static NAME: &str = env!("CARGO_PKG_NAME");
+
+pub const FILE_SCHEMA: &'static str = "schema.json";
+pub const DIR_GRAPH_SCHEMA: &'static str = "graph_schema";
+
+pub const DIR_BINARY_DATA: &'static str = "graph_data_bin";
+pub const DIR_SPLIT_RAW_DATA: &'static str = "graph_split_raw";
