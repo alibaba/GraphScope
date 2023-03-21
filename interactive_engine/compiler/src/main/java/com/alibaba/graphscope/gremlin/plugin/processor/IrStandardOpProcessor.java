@@ -365,7 +365,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                                 new CypherResultProcessor(ctx, topNode),
                                                 jobId,
                                                 script,
-                                                irMeta);
+                                                irMeta,
+                                                ctx);
                                     }
                                 }
                             } catch (Exception e) {
@@ -422,7 +423,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
             ResultProcessor resultProcessor,
             long jobId,
             String script,
-            IrMeta irMeta)
+            IrMeta irMeta,
+            Context ctx)
             throws Exception {
         try (LogicalPlan<Pointer, byte[]> logicalPlan =
                 new LogicalPlanConverter<>(
@@ -431,28 +433,41 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                 new FfiLogicalPlan(optCluster, irMeta, getPlanHints(irMeta)))
                         .go(topNode)) {
             String jobName = "ir_plan_" + jobId;
-            byte[] physicalPlanBytes = logicalPlan.toPhysical();
-            // print script and jobName with ir plan
-            logger.info(
-                    "gremlin query \"{}\", job conf name \"{}\", ir plan {}",
-                    script,
-                    jobName,
-                    logicalPlan.explain());
-            PegasusClient.JobRequest request =
-                    PegasusClient.JobRequest.parseFrom(physicalPlanBytes);
-            PegasusClient.JobConfig jobConfig =
-                    PegasusClient.JobConfig.newBuilder()
-                            .setJobId(jobId)
-                            .setJobName(jobName)
-                            .setWorkers(PegasusConfig.PEGASUS_WORKER_NUM.get(configs))
-                            .setBatchSize(PegasusConfig.PEGASUS_BATCH_SIZE.get(configs))
-                            .setMemoryLimit(PegasusConfig.PEGASUS_MEMORY_LIMIT.get(configs))
-                            .setBatchCapacity(PegasusConfig.PEGASUS_OUTPUT_CAPACITY.get(configs))
-                            .setTimeLimit(PegasusConfig.PEGASUS_TIMEOUT.get(configs))
-                            .setAll(PegasusClient.Empty.newBuilder().build())
-                            .build();
-            request = request.toBuilder().setConf(jobConfig).build();
-            broadcastProcessor.broadcast(request, resultProcessor);
+            if (logicalPlan.isReturnEmpty()) {
+                logger.info(
+                        "gremlin query \"{}\", job conf name \"{}\", relNode plan\n {}",
+                        script,
+                        jobName,
+                        topNode.explain());
+                // return empty results to the client
+                RequestMessage msg = ctx.getRequestMessage();
+                ctx.writeAndFlush(
+                        ResponseMessage.build(msg).code(ResponseStatusCode.NO_CONTENT).create());
+            } else {
+                byte[] physicalPlanBytes = logicalPlan.toPhysical();
+                // print script and jobName with ir plan
+                logger.info(
+                        "gremlin query \"{}\", job conf name \"{}\", ir plan {}",
+                        script,
+                        jobName,
+                        logicalPlan.explain());
+                PegasusClient.JobRequest request =
+                        PegasusClient.JobRequest.parseFrom(physicalPlanBytes);
+                PegasusClient.JobConfig jobConfig =
+                        PegasusClient.JobConfig.newBuilder()
+                                .setJobId(jobId)
+                                .setJobName(jobName)
+                                .setWorkers(PegasusConfig.PEGASUS_WORKER_NUM.get(configs))
+                                .setBatchSize(PegasusConfig.PEGASUS_BATCH_SIZE.get(configs))
+                                .setMemoryLimit(PegasusConfig.PEGASUS_MEMORY_LIMIT.get(configs))
+                                .setBatchCapacity(
+                                        PegasusConfig.PEGASUS_OUTPUT_CAPACITY.get(configs))
+                                .setTimeLimit(PegasusConfig.PEGASUS_TIMEOUT.get(configs))
+                                .setAll(PegasusClient.Empty.newBuilder().build())
+                                .build();
+                request = request.toBuilder().setConf(jobConfig).build();
+                broadcastProcessor.broadcast(request, resultProcessor);
+            }
         }
     }
 
