@@ -331,6 +331,10 @@ impl Details for LazyVertexDetails {
         };
         props
     }
+
+    fn get_property_keys(&self) -> Option<Vec<NameOrId>> {
+        self.prop_keys.clone()
+    }
 }
 
 impl Drop for LazyVertexDetails {
@@ -420,6 +424,10 @@ impl Details for LazyEdgeDetails {
             None
         };
         props
+    }
+
+    fn get_property_keys(&self) -> Option<Vec<NameOrId>> {
+        self.prop_keys.clone()
     }
 }
 
