@@ -256,7 +256,7 @@ impl AsPhysical for pb::GetV {
         let mut getv = self.clone();
         // If GetV(Adj) with filter, translate GetV into GetV(GetAdj) + Shuffle (if on distributed storage) + GetV(Self)
         if let Some(params) = getv.params.as_mut() {
-            if params.predicate.is_some() {
+            if params.predicate.is_some() || params.is_all_columns || !params.columns.is_empty() {
                 let auxilia = pb::GetV {
                     tag: None,
                     opt: 4,
@@ -265,6 +265,8 @@ impl AsPhysical for pb::GetV {
                     meta_data: None,
                 };
                 params.predicate.take();
+                params.is_all_columns = false;
+                params.columns.clear();
                 getv.alias = None;
                 // GetV(Adj)
                 builder.get_v(getv);
