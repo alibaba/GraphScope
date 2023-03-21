@@ -25,6 +25,7 @@ import java.util.List;
 
 public abstract class LogicalPlan<T, R> extends AbstractRelNode implements AutoCloseable {
     protected final List<RelHint> hints;
+    protected boolean returnEmpty;
 
     protected LogicalPlan(RelOptCluster cluster, List<RelHint> hints) {
         super(cluster, RelTraitSet.createEmpty());
@@ -47,4 +48,12 @@ public abstract class LogicalPlan<T, R> extends AbstractRelNode implements AutoC
      * @return
      */
     public abstract R toPhysical();
+
+    public void setReturnEmpty(boolean returnEmpty) {
+        this.returnEmpty = returnEmpty;
+    }
+
+    public boolean isReturnEmpty() {
+        return returnEmpty;
+    }
 }
