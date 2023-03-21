@@ -44,6 +44,14 @@ jobs:
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
     - uses: actions/checkout@v3
+
+    - name: Detect the tmate session
+      run: |
+        if grep -v "grep" .github/workflows/gss.yml | grep "action-tmate"; then
+          echo 'WARNING!!!the self-hosted machine can not run tmate session, please debug it manually'
+          exit 1
+        fi
+
     - uses: actions/cache@v3
       with:
         path: ~/.m2/repository
@@ -109,6 +117,13 @@ jobs:
     - uses: actions/checkout@v3
       with:
         submodules: true
+
+    - name: Detect the tmate session
+      run: |
+        if grep -v "grep" .github/workflows/gss.yml | grep "action-tmate"; then
+          echo 'WARNING!!!the self-hosted machine can not run tmate session, please debug it manually'
+          exit 1
+        fi
 
     - uses: actions/download-artifact@v3
       with:

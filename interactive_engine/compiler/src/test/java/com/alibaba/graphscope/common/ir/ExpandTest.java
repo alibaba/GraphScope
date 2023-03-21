@@ -40,10 +40,10 @@ public class ExpandTest {
                                         new LabelConfig(false).addLabel("knows")))
                         .build();
         Assert.assertEquals(
-                "GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[~DEFAULT],"
+                "GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[DEFAULT],"
                         + " opt=[OUT])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[~DEFAULT], opt=[VERTEX])",
+                        + " alias=[DEFAULT], opt=[VERTEX])",
                 expand.explain().trim());
     }
 
@@ -66,7 +66,7 @@ public class ExpandTest {
                 "GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[x],"
                         + " opt=[OUT])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[~DEFAULT], opt=[VERTEX])",
+                        + " alias=[DEFAULT], opt=[VERTEX])",
                 expand.explain().trim());
     }
 
@@ -105,13 +105,13 @@ public class ExpandTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
-                        + " tables=[knows]}], alias=[~DEFAULT], opt=[OUT])\n"
+                        + " tables=[knows]}], alias=[DEFAULT], opt=[OUT])\n"
                         + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[~DEFAULT], fusedFilter=[[=(DEFAULT.age, 10)]], opt=[END])\n"
+                        + " alias=[DEFAULT], fusedFilter=[[=(DEFAULT.age, 10)]], opt=[END])\n"
                         + "], offset=[1], fetch=[3], path_opt=[SIMPLE], result_opt=[AllV],"
-                        + " alias=[~DEFAULT])\n"
+                        + " alias=[DEFAULT])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[~DEFAULT], opt=[VERTEX])",
+                        + " alias=[DEFAULT], opt=[VERTEX])",
                 pathExpand.explain().trim());
     }
 }

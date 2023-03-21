@@ -13,10 +13,12 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+mod csr_store;
 mod exp_store;
 mod gs_store;
 mod vineyard_store;
 
+pub use csr_store::{create_csr_store, CsrPartition};
 pub use exp_store::{create_exp_store, SimplePartition};
 pub use gs_store::{create_gs_store, GrootMultiPartition, VineyardMultiPartition};
 pub use vineyard_store::VineyardGraphWriter;

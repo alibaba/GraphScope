@@ -1,6 +1,45 @@
 # Graph Learning Workloads
 
-The learning engine in GraphScope (GLE) drives from 
+## What is Graph Neural Network
+Graph neural networks (GNNs) are a type of neural network designed to work with 
+graph data structures, consisting of nodes and edges. GNNs learn to represent 
+each node in the graph by aggregating information from its neighboring nodes in 
+multiple hops, which allows the model to capture complex relationships between 
+nodes in the graph. This involves a process of message passing between nodes, 
+where each node receives messages from its neighboring nodes and updates its 
+representation based on the aggregated information. By iteratively performing 
+this process, GNNs can learn to capture not only the local features of a node 
+but also its global position in the graph, making them particularly useful for 
+tasks such as node classification, link prediction, and graph classification.
+
+- Node classification is a task (GNNs) where the goal is to predict the label 
+of each node in a graph. In other words, given a graph with nodes and edges, 
+the task is to assign a category or class to each node based on the features 
+of the node and its connections to other nodes. This is an important task in 
+many applications such as social network analysis and drug discovery. 
+GNNs are particularly suited for node classification as 
+they can capture the structural information and relationships between nodes 
+in a graph, which can be used to improve the accuracy of the classification.
+
+- Link prediction is a key task in GNNs that aims to predict the existence 
+or likelihood of a link between two nodes in a graph. This task is important 
+in various applications, such as recommendation systems and biology network analysis, where 
+predicting the relationships between nodes can provide valuable insights. 
+GNNs can effectively capture the structural information and features of the 
+nodes to improve the accuracy of link prediction. The task is typically framed 
+as a binary classification problem where the model predicts the probability 
+of a link existing between two nodes.
+
+- Graph classification is another GNN task that aims to classify an entire 
+graph into one or more classes based on its structure and features. This task is 
+used in various domains, such as bioinformatics, social network analysis, and 
+chemical structure analysis. The task is typically framed as a multi-class 
+classification problem where the model predicts the probability of the graph 
+belonging to each class. GNNs have shown promising results in graph classification 
+tasks and have outperformed traditional machine learning models.
+
+
+The learning engine in GraphScope (GLE) is driven by 
 [Graph-Learn](https://github.com/alibaba/graph-learn), 
 a distributed framework designed for development and training 
 of large-scale graph neural networks (GNNs). 
@@ -9,21 +48,43 @@ the development of graph neural network models,
 and has been widely applied in many scenarios within Alibaba, 
 such as search recommendation, network security and knowledge graphs.
 
-Next, we will briefly rewind the basic concept of GNN, 
+<!-- Next, we will briefly rewind the basic concept of GNN, 
 introduce the model paradigms of **GLE**, 
 and walk through a quick-start tutorial on how to build 
-a user-defined GNN model using **GLE**.
+a user-defined GNN model using **GLE**. -->
 
-## Graph Neural Networks
-
-Let's start by rewinding the the basic concept of GNN and the workflow of 
-mini-batch GNNs training.
-
+## Typical GNN Models
+First, let's briefly rewind the concept of GNN.
 Given a graph $G = (V,E)$, where each vertex is associated with a vector 
 of data as its feature. Graph Neural Networks(GNNs) learn a low-dimensional 
 embedding for each target vertex by stacking multiple GNNs layers $L$. 
 For each layer, every vertex updates its activation by aggregating features 
 or hidden activations of its neighbors $N(v),v \in V$.
+
+There are several types of GNN models used for various tasks, such as 
+node classification, link prediction, and graph classification. Here are some 
+of the most common types of GNN models:
+
+- Graph Convolutional Networks (GCN): GCN is a popular GNN model used for 
+node classification and graph classification tasks. It applies a series of 
+convolutional operations to the graph structure, allowing the model to 
+learn representations of nodes and their neighborhoods.
+
+- Graph Attention Networks (GAT): GAT is another popular GNN model that 
+uses attention mechanisms to weigh the importance of neighboring nodes when 
+computing node representations. It has been shown to outperform GCN on 
+several benchmark datasets.
+
+- GraphSAGE: GraphSAGE is a variant of GCN that uses a neighborhood aggregation 
+strategy to generate node embeddings. It allows the model to capture high-order 
+neighborhood information and scalable to large graphs.
+
+There are also many other types of GNN models, such as Graph Isomorphism 
+Networks (GIN), Relational Graph Convolutional Network (R-GCN), and many more. 
+The choice of GNN model depends on the specific task and the characteristics 
+of the input graph data.
+
+## Paradigm of Model Training
 
 In general, there are two ways to train a GNN model: (1) whole graph 
 training and (2) mini-batch training. Whole graph training is to compute 
@@ -36,32 +97,48 @@ is used to generate mini-batches, allowing sampling-based GNN models to
 handle unseen vertices. GraphSAGE is a typical example of mini-batch 
 training. The following figure illustrates the workflow of 2-hop GraphSAGE training.
 
-![The workflow of 2-hop GraphSAGE training.](./images/graphsage.png)
-
-<!-- The workflow of GraphSAGE training follows a vertex-centric computation 
-paradigm including the following steps: 
-   - Select a mini-batch of training vertices from the training set.
-   - Sample the multiple hops of fixed-size neighbors for each training vertex.
-   - Extract the features of the sub-graph consisting of the training vertices 
-      and their neighbors to generate the mini-batch training data.
-   - Aggregate and update features through topological relations of the training 
-      data, and execute the forward and backward propagation to update the model parameters. -->
+![The workflow of 2-hop GraphSAGE training.](../images/graphsage.png)
 
 
-## Graph Learning Models
+### Steps of Model Training
+The process of training a GNN involves several steps, which are described below.
 
-**GLE** is designed for large-scale graph neural networks. It consists of an 
-efficient graph engine, a set of user-friendly APIs, and a rich set of built-in GNN 
-models. The graph engine stores the graph topology and attributes distributedly, 
-and supports efficient graph sampling and query. 
-GLE can work with popular tensor engines including TensorFlow and PyTorch.
+- Data Preparation: The first step in training a GNN is to prepare the input data. 
+This involves creating a graph representation of the data, where nodes represent 
+entities and edges represent the relationships between them. The graph can be 
+represented using an adjacency matrix or an edge list. The features of the 
+original graph data may be complex and cannot be directly accessed for model 
+training. For example, the node features “id=123456, age=28, city=Beijing” 
+and other plain texts need to be processed into continuous features by embedding lookup. 
+The type, value space, and dimension of each feature after vectorization should 
+be clearly described when adding vertex or edge data sources. 
 
-![An overview of the algorithm framework in GLE.](./images/gle_algo_framework.png)
+- Model Initialization: After the data is prepared, the next step is to 
+initialize the GNN model. This involves selecting an appropriate architecture 
+for the model and setting the initial values of the model parameters.
 
-## Subgraph Sampling
+- Forward and Backward Pass: During the forward pass, the GNN model takes the 
+input graph(sampled subgraphs in mini-batch training) and propagates 
+information through the graph, updating the embedding 
+of each node based on the embedding of its neighbors. The difference between 
+the predicted output and the ground truth is measured by the loss 
+function. In the backward pass, the gradients of the loss function with 
+respect to the model parameters are computed, and are used to update the model 
+parameters.
 
-To build and train a model, **GLE** usually samples subgraphs as the training data,
-and performs batch training with it. In practical industrial applications, the size of 
+- Iteration: Step 3 is repeated iteratively until the model converges to a 
+satisfactory level of performance. During each iteration, the model parameters 
+are updated based on the gradients of the loss function, and the quality of the 
+model prediction is evaluated using a validation set.
+
+- Evaluation: After the model is trained, it is evaluated using a test set of 
+data to measure its performance on unseen data. Various evaluation metrics such 
+as accuracy, precision, recall, and F1 score can be used to assess the 
+performance of the model.
+
+### Subgraph Sampling
+
+In practical industrial applications, the size of 
 the graph is often relatively large and the features on the nodes and edges of the graph 
 are complex (there may be both discrete and continuous features). Thus it is not possible 
 to perform message passing/neighbor aggregation directly on the original graph. A feasible 
@@ -76,176 +153,71 @@ of row index and column index of edges), generally using full neighbor. The conv
 based on SubGraph generally uses the sparse NN operator. The examples of EgoGraph and 
 SubGraph are shown in the following figure.
 
-![The examples of EgoGraph.](./images/ego_sub.png)
+![The examples of EgoGraph.](../images/ego_sub.png)
 
-For models using EgoGraph sampling, the message aggregation path is determined by 
-the potential relationship between the ego and its neighbors. For models using 
-SubGraph sampling, the message passing path (forward computation path) can be 
-determined directly by the ``edge_index``.
+## Challenges of Applying GNNs on Large Graphs
+Based on our experience, applying GNN to industrial-scale large graphs requires 
+addressing the following challenges:
 
-## Developing Your Own Model
- Next, we introduce how to use the basic APIs provided by **GLE** to cooperate 
- with deep learning engines to build graph learning algorithms. 
- We demonstrate the GraphSAGE model as an example. In the following example, 
- the model implementation is based on TensorFlow.
+- Data irregularity: One of the challenges of GNN is to handle various forms of 
+unstructured data, such as sparse, directed, undirected, homogeneous, and 
+heterogeneous data, as well as node and edge attributes. These data types may 
+require different graph processing methods and algorithms.
 
-In general, it requires the following four steps to build a GNN model.
+- Scalability: In industrial scenarios, graph data is usually very large, 
+containing a large number of nodes and edges. This leads to problems with 
+computation and storage, as well as the problem of exponential data expansion 
+through sampling.
 
-- Specifying the sampling query. Graph sampling broadly consists of several categories:
-  ``Traversal`` sampling that obtains point or edge data of a batch from the graph;
-  ``Relational`` sampling, which obtains the N-hop neighborhood of 
-   points or generate a subgraph composed of points for constructing training samples; 
-   and ``Negative`` sampling, which is generally used by unsupervised training to 
-   generate negative example samples. We abstract above sampling operations 
-   into a set of interfaces, called [GSL](https://graph-learn.readthedocs.io/en/latest/en/gl/graph/gsl.html). 
-   GSL supports heterogeneous attribute graphs, and the syntax is designed close 
-   to the [Gremlin](https://tinkerpop.apache.org/gremlin.html) style for easy understanding.
-   For example, for the heterogeneous graph  “users clicking on products”, the sampling 
-   query “randomly sample 64 users and sample 10 related products for each user by the 
-   weight of the edges” can be written as: `g.V("user").batch(64).outV("click").sample(10).by("edge_weight")`
+- Computational complexity: GNN has a very high computational complexity because 
+it requires the execution of multiple operators, including graph convolution, 
+pooling, activation, etc. These operators require efficient algorithms and 
+hardware support to enable GNN to run quickly on large-scale graphs.
 
-- Transforming outputs of the GSL query into the tensor format. The outputs of GSL is in the
-  Numpy format, while the model based on TensorFlow or PyTorch needs that data are in the
-  tensor format. Thus we need to convert the data format before training. In addition, 
-  the features of the original graph data may be complex and cannot be directly accessed 
-  for model training. For example, the node features “id=123456, age=28, city=Beijing” 
-  and other plain texts need to be processed into continuous features by embedding lookup. 
-  We need to describe clearly the type, value space, and dimension of each feature after 
-  vectorization when adding vertex or edge data sources. Based on these information,  **GLE**
-  provides a convenient interface to convert the raw feature data into vector format.
+- Dynamic graph: In industrial scenarios, the graph structure and 
+attributes may undergo real-time changes, which may cause GNN models to fail to 
+perceive and adapt to these changes in time.
 
-- Model construction. **GLE** encapsulates EgoGraph/SubGraph based layers and models, 
-  which can be used to build a GNNs model after selecting a model paradigm that suits 
-  your needs. The GNNs model takes EgoGraph or BatchGraph (SubGraph of mini-batch) as 
-  input and outputs the embedding of the nodes.
+Overall, the application of GNN in industrial scenarios has many challenges and 
+requires research and optimization of algorithms, computation, storage, and 
+data, etc., in order to better meet practical application needs.
 
-- Design loss functions. The loss function should be designed according to the specific 
-  application scenario, which in general can be classified into two categories: ``node classification`` 
-  and ``link prediction``. Take link prediction as an example, we need “embedding of source 
-  vertex, embedding of destination vertex, embedding of target vertex with negative sampling” 
-  as the training input, and output the loss, and then optimize the loss by iterating through 
-  the trainer. **GLE** encapsulates some common [loss functions](https://graph-learn.readthedocs.io/en/latest/en/gl/algo/tf/tf_loss.html).  Users can also customize the loss functions, optimizers and the training process.
+## What can GraphScope Do 
+
+In GraphScope, Graph Learning Engine (GLE) addresses the aforementioned 
+challenges in the following ways:
+
+- **Managing graph data in a distributed way**
+
+    In GraphScope, graph data is represented as property graph model. To support 
+    large-scale graph, GraphScope automatically partitions the whole graph into 
+    several subgraphs (fragments) distributed into multiple machines in a cluster. 
+    Meanwhile, GraphScope provides user-friendly interfaces for loading graphs 
+    to allow users to manage graph data easily. More detials about how to manage 
+    large-scale graphs can refer to [this](https://graphscope.io/docs/latest/graph_formats.html).
+    GLE performs graph-related computations, such as distributed graph sampling and feature 
+    collection, on this distributed graph storage.
 
 
-Next, we introduce how to implement a GraphSAGE model following the above steps.
+- **Built-in GNN models and PyG compatible**
 
-### Sampling & Output Transformation
-We use the Cora dataset for the node classification example. We provide a
-simple data conversion script ``cora.py`` to convert the original Cora data
-to the format required by **GLE**. The script generates following 5
-files: node_table, edge_table_with_self_loop, train_table, val_table and
-test_table. They are the node table, the edge table, and the nodes
-tables used to distinguish training, validation, and testing sets.
-The format transformation of the feature data is also performed in this script.
+    GLE comes with a rich set of built-in [GNN models](https://github.com/alibaba/graph-learn/tree/master/graphlearn/examples/tf), like GCN, GAT, GraphSAGE, and SEAL, and provides a set of paradigms and processes to ease the development of customized models. GLE is compatible with [PyG](https://github.com/pyg-team/pytorch_geometric), e.g., this [example](https://github.com/alibaba/graph-learn/tree/master/graphlearn/examples/pytorch/gcn) shows that a PyG model can be trained using GLE with very minor modifications. Users can flexibly choose [TensorFlow](https://github.com/tensorflow/tensorflow) or [PyTorch](https://github.com/pytorch/pytorch) as the training backend.
 
-Then, we can construct the graph using the following code snippet. 
-The inputs of the ```load_graph(args)``` function are a set of user-defined 
-arguments including the path of the source files, the types of the node and 
-edge in the graph, etc.
+    <!-- The following figure shows an overview of the algorithm framework in GLE. -->
 
-```python
-    def load_graph(args):
-      dataset_folder = args.dataset_folder
-      node_type = args.node_type
-      edge_type = args.edge_type
-      g = gl.Graph()                                                           \
-            .node(dataset_folder + "node_table", node_type=node_type,
-                  decoder=gl.Decoder(labeled=True,
-                                    attr_types=["float"] * args.features_num,
-                                    attr_delimiter=":"))                       \
-            .edge(dataset_folder + "edge_table",
-                  edge_type=(node_type, node_type, edge_type),
-                  decoder=gl.Decoder(weighted=True), directed=False)           \
-            .node(dataset_folder + "train_table", node_type=node_type,
-                  decoder=gl.Decoder(weighted=True), mask=gl.Mask.TRAIN)       \
-            .node(dataset_folder + "val_table", node_type=node_type,
-                  decoder=gl.Decoder(weighted=True), mask=gl.Mask.VAL)         \
-            .node(dataset_folder + "test_table", node_type=node_type,
-                  decoder=gl.Decoder(weighted=True), mask=gl.Mask.TEST)
-      return g
-```
-Next, the graph is loaded into memory by calling ``g.init()``. The
-logics of output transforming for EgoGraph are abstracted as class 
-[EgoDataLoader](https://github.com/alibaba/graph-learn/blob/master/graphlearn/examples/tf/ego_data_loader.py), which will transform the outputs of subgraph sampling 
-from the numpy format into the tensor format. For each model on EgoGraph, 
-we further implement a specific dataloader that inherits ```EgoDataLoader```.
-For the model in this tutorial, we use the class [EgoSAGESupervisedDataLoader](https://github.com/alibaba/graph-learn/blob/master/graphlearn/examples/tf/ego_sage/ego_sage_data_loader.py)
-to specify sampling arguments such as the sampling strategy, 
-number of hops and the number of sampled neighbours in each hop. For example, 
-the following code prepares the training dataset.
+    <!-- ![An overview of the algorithm framework in GLE.](../images/gle_algo_framework.png) -->
 
-```python
-    train_data = EgoSAGESupervisedDataLoader(graph=g, 
-                                             mask=gl.Mask.TRAIN, 
-                                             sampler='random', 
-                                             neg_sampler='random'
-                                             batch_size=args.train_batch_size, 
-                                             node_type=args.node_type, 
-                                             edge_type=args.edge_type,
-                                             nbrs_num=args.nbrs_num, 
-                                             hops_num=args.hops_num)
-```
-The test dataset can be prepared by changing ``gl.Mask.TRAIN`` into ``gl.Mask.TEST``. 
+- **Inference on dynamic graph**
 
-### Model
-We use the ``EgoSAGEConv`` to specify the aggregation process from neighbors 
-of one k+1 hop to neighbors of k hop. For an ``EgoGraph`` consisting of 
-ego and K-hop neighbors, a full-graph messaging needs to perform EgoSAGEConv 
-forward operations on all adjacent neighbor pairs in the EgoGraph.
-We use ``EgoLayer`` to denote the message-passing process of such a single 
-EgoGraph that consists of multiple 1-hop neighbor aggregations' conv.
-Check [Model Layers](https://graph-learn.readthedocs.io/en/latest/en/gl/algo/tf/tf_model_layer.html) 
-for more detailed descriptions on conv and layer.
+    To support online inference on dynamic graphs, we propose Dynamic
+     Graph Service ([DGS](https://graph-learn.readthedocs.io/en/latest/en/dgs/intro.html)) 
+     in GLE to facilitate real-time sampling on dynamic graphs. 
+     The sampled subgraph can be fed into the serving modules 
+     (e.g., [TensorFlow Serving](https://github.com/tensorflow/serving)) to 
+     obtain the inference results. 
+     This [document](https://graph-learn.readthedocs.io/en/latest/en/dgs/tutorial.html#prepare-data) 
+     is organized to provide a detailed, step-by-step tutorial specifically 
+     demonstrating the use of GLE for offline training and online inference.
 
 
-```python
-    class EgoGraphSAGE(tfg.EgoGNN):
-      def __init__(self,
-                  dims,
-                  agg_type=,
-                  bn_func=None,
-                  act_func=tf.nn.relu,
-                  dropout=0.0,
-                  **kwargs):
-        assert len(dims) > 1
 
-        layers = []
-        for i in range(len(dims) - 1):
-          conv = tfg.EgoSAGEConv("homo_" + str(i),
-                                in_dim=dims[i],
-                                out_dim=dims[i + 1],
-                                agg_type=agg_type)
-          layer = tfg.EgoLayer([conv] * (len(dims) - 1 - i))
-          layers.append(layer)
-
-        super(EgoGraphSAGE, self).__init__(layers, bn_func, act_func, dropout)
-```
-
-### Loss Function and Training Process
-
-For the Cora node classification model, we can select the corresponding
-classification loss function in TensorFlow. In this example, we use
-``tf.nn.sparse_softmax_cross_entropy_with_logits``. 
-
-```python
-    def supervised_loss(logits, labels):
-        loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=labels, logits=logits)
-      return tf.reduce_mean(loss)
-```
-
-Next, we use ``LocalTFTrainer`` to train on a single-machine.
-
-```python
-    trainer = LocalTrainer()
-    trainer.train(train_data.iterator, loss, optimizer, epochs=args.epochs)
-    trainer.test(test_data.iterator, test_acc)
-```
-In the end, the the training process is finished by calling ``g.close()``
-
-The above example concludes some key steps to build a GraphSAGE model. 
-Please refer to the 
-[ego_sage example](https://github.com/alibaba/graph-learn/blob/master/graphlearn/examples/tf/ego_sage/train_supervised.py) 
-for the complete code. We have implemented a rich set of 
-popular models, including GraphSage, Bipartite GraphSage, 
-GAT, RGCN, Ultra GCN, SEAL, etc. These models can be used 
-as a starting point for building similar models.

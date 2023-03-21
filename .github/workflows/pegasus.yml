@@ -52,6 +52,13 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Detect the tmate session
+      run: |
+        if grep -v "grep" .github/workflows/pegasus.yml | grep "action-tmate"; then
+          echo 'WARNING!!!the self-hosted machine can not run tmate session, please debug it manually'
+          exit 1
+        fi
+
     - name : Prepare Image
       run: |
         docker pull registry-vpc.cn-hongkong.aliyuncs.com/graphscope/pegasus-base:latest

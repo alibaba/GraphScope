@@ -452,7 +452,7 @@ class OperationExecutor:
         return message_pb2.RunStepResponse(head=response_head), []
 
     def _execute_gremlin_query(self, op: op_def_pb2.OpDef):
-        logger.info("execute gremlin query")
+        logger.debug("execute gremlin query")
         message = op.attr[types_pb2.GIE_GREMLIN_QUERY_MESSAGE].s.decode()
         request_options = None
         if types_pb2.GIE_GREMLIN_REQUEST_OPTIONS in op.attr:
@@ -462,7 +462,7 @@ class OperationExecutor:
         object_id = op.attr[types_pb2.VINEYARD_ID].i
         gremlin_client = self._object_manager.get(object_id)
         rlt = gremlin_client.submit(message, request_options=request_options)
-        logger.info("put %s, client %s", op.key, gremlin_client)
+        logger.debug("put %s, client %s", op.key, gremlin_client)
         self._object_manager.put(op.key, GremlinResultSet(op.key, rlt))
         return op_def_pb2.OpResult(code=OK, key=op.key)
 
@@ -679,7 +679,11 @@ class OperationExecutor:
             engine_config = self.get_analytical_engine_config()
             vineyard_rpc_endpoint = engine_config["vineyard_rpc_endpoint"]
         else:
-            vineyard_rpc_endpoint = self._launcher.vineyard_internal_endpoint
+            vineyard_rpc_endpoint = self._launcher._vineyard_internal_endpoint
+            if self._launcher.vineyard_deployment_exists():
+                vineyard_rpc_endpoint = self._launcher._vineyard_service_endpoint
+            else:
+                vineyard_rpc_endpoint = self._launcher._vineyard_internal_endpoint
         total_builder_chunks = executor_workers_num * threads_per_executor
 
         (
@@ -749,7 +753,7 @@ class OperationExecutor:
         if self._launcher.type() == types_pb2.HOSTS:
             vineyard_endpoint = engine_config["vineyard_rpc_endpoint"]
         else:
-            vineyard_endpoint = self._launcher.vineyard_internal_endpoint
+            vineyard_endpoint = self._launcher._vineyard_internal_endpoint
         vineyard_ipc_socket = engine_config["vineyard_socket"]
         deployment, hosts = self._launcher.get_vineyard_stream_info()
         dfstream = vineyard.io.open(
@@ -848,7 +852,10 @@ class OperationExecutor:
         if self._launcher.type() == types_pb2.HOSTS:
             vineyard_endpoint = engine_config["vineyard_rpc_endpoint"]
         else:
-            vineyard_endpoint = self._launcher.vineyard_internal_endpoint
+            if self._launcher.vineyard_deployment_exists():
+                vineyard_endpoint = self._launcher._vineyard_service_endpoint
+            else:
+                vineyard_endpoint = self._launcher._vineyard_internal_endpoint
         vineyard_ipc_socket = engine_config["vineyard_socket"]
 
         for loader in op.large_attr.chunk_meta_list.items:

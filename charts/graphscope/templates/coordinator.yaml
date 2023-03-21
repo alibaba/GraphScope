@@ -82,9 +82,9 @@ spec:
           - {{ printf "%s-%s" "coordinator" $fullname | quote }}
           - "--k8s_coordinator_service_name"
           - {{ printf "%s-%s" "coordinator-service" $fullname | quote }}
-          {{- if .Values.vineyard.daemonset }}
-          - "--k8s_vineyard_daemonset"
-          - {{ .Values.vineyard.daemonset }}
+          {{- if .Values.vineyard.deployment }}
+          - "--k8s_vineyard_deployment"
+          - {{ .Values.vineyard.deployment }}
           {{- end }}
           - "--k8s_vineyard_image"
           - {{ .Values.vineyard.image.name }}:{{ .Values.vineyard.image.tag }}
