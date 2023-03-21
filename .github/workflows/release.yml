@@ -104,6 +104,8 @@ jobs:
         helm package ./graphscope
         # package graphscope-store
         helm package --dependency-update ./graphscope-store
+        # package gie-standalone
+        helm package --dependency-update ./gie-standalone
         # generate index.yaml
         helm repo index . --url ${{ env.HELM_CHARTS_URL }}
 
@@ -122,4 +124,5 @@ jobs:
         assets: |
           charts/graphscope-${{ steps.tag.outputs.TAG }}.tgz:/charts/graphscope-${{ steps.tag.outputs.TAG }}.tgz
           charts/graphscope-store-${{ steps.tag.outputs.TAG }}.tgz:/charts/graphscope-store-${{ steps.tag.outputs.TAG }}.tgz
+          charts/gie-standalone-${{ steps.tag.outputs.TAG }}.tgz:/charts/gie-standalone-${{ steps.tag.outputs.TAG }}.tgz
           charts/index.yaml:/charts/index.yaml
