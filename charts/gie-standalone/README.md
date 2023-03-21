@@ -126,8 +126,14 @@ pegasusOutputCapacity: 16
 existingClaim: "test-graphscope-store-pvc"
 ```
 ### start gie deployment
+- from local
 ```
 helm install <your-release-name> gie-standalone
+```
+- from remote
+```
+helm repo update
+helm install <your-release-name> graphscope/gie-standalone
 ```
 ### stop gie deployment
 ```
