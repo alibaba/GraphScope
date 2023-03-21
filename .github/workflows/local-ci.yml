@@ -52,6 +52,16 @@ jobs:
     steps:
     # For push it's necessary to checkout the code
     - uses: actions/checkout@v3
+
+    - name: Detect the tmate session
+      run: |
+        # hack here: get all field of build-wheels which run on self-hosted machine
+        if sed -n '/self-hosted/,/mini-test/ p' .github/workflows/local-ci.yml | \
+          grep -v "grep" - | grep "action-tmate"; then
+          echo 'WARNING!!!the self-hosted machine can not run tmate session, please debug it manually'
+          exit 1
+        fi
+
     # For pull requests it's not necessary to checkout the code
     - uses: dorny/paths-filter@v2
       id: filter

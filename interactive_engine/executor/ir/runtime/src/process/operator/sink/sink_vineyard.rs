@@ -13,14 +13,12 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use std::convert::TryInto;
 use std::fmt::Debug;
 use std::sync::{Arc, Mutex};
 
 use graph_proxy::apis::{get_graph, GraphElement, WriteGraphProxy};
 use graph_proxy::{GraphProxyError, VineyardGraphWriter};
 use ir_common::error::ParsePbError;
-use ir_common::generated::common as common_pb;
 use ir_common::generated::schema as schema_pb;
 use ir_common::KeyId;
 
@@ -182,7 +180,7 @@ mod tests {
             match pkv {
                 OneOrMany::One(pkv) => {
                     let pk_value = &pkv[0].1;
-                    pk_value.as_u64().unwrap()
+                    pk_value.as_i64().unwrap()
                 }
                 OneOrMany::Many(_) => unreachable!(),
             }

@@ -18,6 +18,7 @@ package com.alibaba.graphscope.integration.pattern;
 
 import com.alibaba.graphscope.gremlin.integration.graph.RemoteTestGraph;
 import com.alibaba.graphscope.gremlin.integration.graph.RemoteTestGraphProvider;
+import com.alibaba.graphscope.gremlin.integration.suite.pattern.IrPatternTestSuite;
 
 import org.apache.tinkerpop.gremlin.GraphProviderClass;
 import org.junit.runner.RunWith;
