@@ -86,7 +86,6 @@ jobs:
         sudo chmod +x /usr/bin/ossutil64
 
         # download released charts
-        cd ${GITHUB_WORKSPACE}/charts
         ossutil64 -i "${oss_accesskey_id}" \
                   -k "${oss_accesskey_secret}" \
                   -e ${{ env.OSS_ENDPOINT }} \
