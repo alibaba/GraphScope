@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.ir.runtime.type.LogicalPlan;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelVisitor;
+import org.apache.calcite.rel.logical.LogicalValues;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Objects;
@@ -43,7 +44,12 @@ public class LogicalPlanConverter<T, R> extends RelVisitor {
     @Override
     public void visit(RelNode node, int ordinal, @Nullable RelNode parent) {
         super.visit(node, ordinal, parent);
-        this.logicalPlan.appendNode((LogicalNode) node.accept(rexShuttle));
+        if (node instanceof LogicalValues) {
+            this.logicalPlan.setReturnEmpty(true);
+        }
+        if (!this.logicalPlan.isReturnEmpty()) {
+            this.logicalPlan.appendNode((LogicalNode) node.accept(rexShuttle));
+        }
     }
 
     @Override
