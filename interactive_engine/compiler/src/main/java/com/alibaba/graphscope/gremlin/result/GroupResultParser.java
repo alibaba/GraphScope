@@ -16,8 +16,8 @@
 
 package com.alibaba.graphscope.gremlin.result;
 
+import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.IrResult;
-import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.exception.GremlinResultParserException;
 import com.alibaba.graphscope.gremlin.plugin.step.GroupCountStep;
@@ -86,8 +86,8 @@ public class GroupResultParser implements GremlinResultParser {
         List<Object> keys = new ArrayList<>();
         List<Object> values = new ArrayList<>();
         for (IrResult.Column column : record.getColumnsList()) {
-            OuterExpression.NameOrId columnName = column.getNameOrId();
-            if (columnName.getItemCase() != OuterExpression.NameOrId.ItemCase.NAME) {
+            Common.NameOrId columnName = column.getNameOrId();
+            if (columnName.getItemCase() != Common.NameOrId.ItemCase.NAME) {
                 throw new GremlinResultParserException(
                         "column key in group should be ItemCase.NAME");
             }

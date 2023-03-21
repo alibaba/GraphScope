@@ -58,10 +58,11 @@
         </classes>
     </test>
 
-    <test name="gremlin standard query test" junit="true">
+    <test name="gremlin standard and additional query test" junit="true">
 
         <classes>
 	        <class name="com.alibaba.graphscope.function.test.gremlin.GremlinStandardTest"/>
+            <class name="com.alibaba.graphscope.function.test.gremlin.GremlinAdditionalTest"/>
         </classes>
     </test>
 

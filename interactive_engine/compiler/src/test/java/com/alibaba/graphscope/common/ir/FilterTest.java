@@ -43,7 +43,7 @@ public class FilterTest {
                                 builder.literal(10));
         RelNode filter = builder.filter(equal).build();
         Assert.assertEquals(
-                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
                         + " fusedFilter=[[=(DEFAULT.age, 10)]], opt=[VERTEX])",
                 filter.explain().trim());
     }
@@ -68,6 +68,7 @@ public class FilterTest {
                 filter.explain().trim());
     }
 
+    // g.V().hasLabel("person").where(expr("@.age > 10"))
     @Test
     public void greater_1_test() {
         GraphBuilder builder = Utils.mockGraphBuilder();
@@ -81,7 +82,7 @@ public class FilterTest {
                                 builder.literal(10));
         RelNode filter = builder.filter(greater).build();
         Assert.assertEquals(
-                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
                         + " fusedFilter=[[>(DEFAULT.age, 10)]], opt=[VERTEX])",
                 filter.explain().trim());
     }
@@ -100,7 +101,7 @@ public class FilterTest {
                                 builder.literal(10));
         RelNode filter = builder.filter(greater).build();
         Assert.assertEquals(
-                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
                         + " opt=[VERTEX])",
                 filter.explain().trim());
     }
@@ -126,6 +127,7 @@ public class FilterTest {
         Assert.assertEquals(filter.getRowType(), previous.getRowType());
     }
 
+    // test fuzzy conditions: g.V().has("age", gt(10))
     @Test
     public void greater_4_test() {
         GraphBuilder builder = Utils.mockGraphBuilder();
@@ -139,10 +141,11 @@ public class FilterTest {
         RelNode filter = builder.filter(greater).build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
-                        + " alias=[~DEFAULT], fusedFilter=[[>(DEFAULT.age, 10)]], opt=[VERTEX])",
+                        + " alias=[DEFAULT], fusedFilter=[[>(DEFAULT.age, 10)]], opt=[VERTEX])",
                 filter.explain().trim());
     }
 
+    // g.V().hasLabel("person").where(expr("@.age > 20 and @.name == marko"))
     @Test
     public void and_1_test() {
         GraphBuilder builder = Utils.mockGraphBuilder();
@@ -161,7 +164,7 @@ public class FilterTest {
                         builder.literal("marko"));
         RelNode filter = builder.filter(condition1, condition2).build();
         Assert.assertEquals(
-                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
                         + " fusedFilter=[[AND(>(DEFAULT.age, 20), =(DEFAULT.name, 'marko'))]],"
                         + " opt=[VERTEX])",
                 filter.explain().trim());
@@ -187,7 +190,7 @@ public class FilterTest {
                 builder.filter(builder.call(GraphStdOperatorTable.AND, condition1, condition2))
                         .build();
         Assert.assertEquals(
-                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
                     + " fusedFilter=[[AND(>(DEFAULT.age, 20), <(DEFAULT.age, 30))]], opt=[VERTEX])",
                 filter.explain().trim());
     }

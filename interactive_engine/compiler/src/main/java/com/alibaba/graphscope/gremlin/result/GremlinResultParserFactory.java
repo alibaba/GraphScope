@@ -19,7 +19,6 @@ package com.alibaba.graphscope.gremlin.result;
 import com.alibaba.graphscope.common.jna.type.FfiKeyType;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.IrResult;
-import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.alibaba.graphscope.gremlin.exception.GremlinResultParserException;
 import com.alibaba.graphscope.gremlin.transform.alias.AliasManager;
 
@@ -124,8 +123,8 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
         // a_1 -> a, i.e. g.V().as("a").select("a")
         // name_1 -> name, i.e. g.V().values("name")
         // a_name_1 -> a, i.e. g.V().as("a").select("a").by("name")
-        private String getColumnKeyAsResultKey(OuterExpression.NameOrId columnKey) {
-            if (columnKey.getItemCase() == OuterExpression.NameOrId.ItemCase.ITEM_NOT_SET) {
+        private String getColumnKeyAsResultKey(Common.NameOrId columnKey) {
+            if (columnKey.getItemCase() == Common.NameOrId.ItemCase.ITEM_NOT_SET) {
                 return "";
             }
             switch (columnKey.getItemCase()) {
@@ -143,7 +142,7 @@ public enum GremlinResultParserFactory implements GremlinResultParser {
 
         // propertyId is in String format, i.e. "1"
         private String getPropertyName(String nameOrId) {
-            OuterExpression.NameOrId.Builder builder = OuterExpression.NameOrId.newBuilder();
+            Common.NameOrId.Builder builder = Common.NameOrId.newBuilder();
             if (nameOrId.matches("^[0-9]+$")) {
                 builder.setId(Integer.valueOf(nameOrId));
             } else {

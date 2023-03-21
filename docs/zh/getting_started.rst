@@ -196,9 +196,8 @@ GraphScope 内建了一组预置常用算法，方便用户可以轻松分析图
 .. code:: python
 
     # define the features for learning
-    paper_features = []
-    for i in range(128):
-        paper_features.append("feat_" + str(i))
+    paper_features = [f"feat_{i}" for i in range(128)]
+
     paper_features.append("kcore")
     paper_features.append("tc")
 

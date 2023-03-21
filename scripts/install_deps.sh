@@ -14,8 +14,8 @@ readonly GREEN="\033[0;32m"
 readonly NC="\033[0m" # No Color
 
 readonly GRAPE_BRANCH="master" # libgrape-lite branch
-readonly V6D_VERSION="0.12.2"  # vineyard version
-readonly V6D_BRANCH="v0.12.2" # vineyard branch
+readonly V6D_VERSION="0.13.3"  # vineyard version
+readonly V6D_BRANCH="v0.13.3" # vineyard branch
 
 readonly OUTPUT_ENV_FILE="${HOME}/.graphscope_env"
 IS_IN_WSL=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && IS_IN_WSL=true

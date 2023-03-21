@@ -55,7 +55,7 @@ def test_compatible_with_dynamic_graph(dynamic_property_graph):
     # bfs
     with pytest.raises(
         InvalidArgumentError,
-        match="Not compatible for arrow_property dynamic_property type",
+        match="isn't compatible for",
     ):
         bfs(dynamic_property_graph, src=4)
 
@@ -395,11 +395,11 @@ def test_app_on_undirected_graph(
     assert is_simple_path(p2p_project_undirected_graph, [1, 10])
 
 
-def test_run_app_on_string_oid_graph(p2p_project_directed_graph_string):
-    ctx = sssp(p2p_project_directed_graph_string, src="6")
+def test_run_app_on_string_oid_graph(p2p_project_undirected_graph_string):
+    ctx = sssp(p2p_project_undirected_graph_string, src="6")
     r1 = ctx.to_dataframe({"node": "v.id", "r": "r"})
     assert r1[r1["node"] == "6"].r.values[0] == 0.0
-    ctx = wcc(p2p_project_directed_graph_string)
+    ctx = wcc(p2p_project_undirected_graph_string)
     r1 = ctx.to_dataframe({"node": "v.id", "r": "r"})
 
 
@@ -445,12 +445,12 @@ def test_app_on_local_vm_graph(
     assert r2 is not None
 
 
-def test_wcc_on_flatten_graph(arrow_modern_graph):
-    ctx = graphscope.wcc_auto(arrow_modern_graph)
+def test_wcc_on_flatten_graph(arrow_modern_graph_undirected):
+    ctx = graphscope.wcc_auto(arrow_modern_graph_undirected)
     df = ctx.to_dataframe({"node": "v.id", "r": "r"})
     # The component id is all 1
     assert sum(df.r.values) == 6
-    ctx = graphscope.wcc_projected(arrow_modern_graph)
+    ctx = graphscope.wcc_projected(arrow_modern_graph_undirected)
     df = ctx.to_dataframe({"node": "v.id", "r": "r"})
     # The component id is all 0
     assert sum(df.r.values) == 0
@@ -463,3 +463,39 @@ def test_louvain_on_projected_graph(arrow_property_graph_undirected):
         )
         ctx = louvain(g)
         ctx.to_dataframe({"node": "v.id", "r": "r"})
+
+
+def test_pagerank_on_projected_projected(ldbc_graph):
+    pg1 = ldbc_graph.project(
+        vertices={"post": [], "tag": [], "tagclass": []},
+        edges={"hasTag": [], "isSubclassOf": []},
+    )
+    pg2 = pg1.project(vertices={"tagclass": []}, edges={"isSubclassOf": []})
+    pr_context = graphscope.pagerank_nx(pg2, alpha=0.85, max_iter=100, tol=1e-06)
+    df = pr_context.to_dataframe(selector={"id": "v.id", "dist": "r"})
+    assert df.shape == (71, 2)  # V(tagclass)
+
+    # check existence of OIDs
+    for oid in [349, 211, 239, 0, 98, 233, 41, 243, 242, 67]:
+        assert oid in df["id"].values
+
+
+def test_pagerank_on_flatten(ldbc_graph):
+    pg = ldbc_graph.project(vertices={"post": [], "tag": []}, edges={"hasTag": []})
+    pr_context = graphscope.pagerank_nx(pg, alpha=0.85, max_iter=100, tol=1e-06)
+    df = pr_context.to_dataframe(selector={"id": "v.id", "dist": "r"})
+    assert df.shape == (95056, 2)  # V(post) + V(tag)
+
+    # check existence of OIDs
+    for oid in [
+        618475290624,
+        3,
+        412316860420,
+        412316860421,
+        412316860422,
+        16075,
+        16076,
+        16077,
+        16078,
+    ]:
+        assert oid in df["id"].values

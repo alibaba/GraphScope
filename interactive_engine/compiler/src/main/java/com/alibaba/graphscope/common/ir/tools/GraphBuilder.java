@@ -697,13 +697,13 @@ public class GraphBuilder extends RelBuilder {
             ImmutableList<RexNode> operands) {
         // if operands of the aggregate call is empty, set a variable with (alias = null) by default
         return new GraphAggCall(
-                getCluster(),
-                aggFunction,
-                distinct,
-                alias,
-                ObjectUtils.isNotEmpty(operands)
-                        ? operands
-                        : ImmutableList.of(this.variable((String) null)));
+                        getCluster(),
+                        aggFunction,
+                        ObjectUtils.isNotEmpty(operands)
+                                ? operands
+                                : ImmutableList.of(this.variable((String) null)))
+                .as(alias)
+                .distinct(distinct);
     }
 
     @Override
@@ -739,13 +739,13 @@ public class GraphBuilder extends RelBuilder {
                 GraphAggCall call1 = (GraphAggCall) call;
                 aggCallList.add(
                         new GraphAggCall(
-                                call1.getCluster(),
-                                call1.getAggFunction(),
-                                call1.isDistinct(),
-                                call1.getAlias(),
-                                registerCallsList.get(i).stream()
-                                        .map(k -> k.accept(converter))
-                                        .collect(Collectors.toList())));
+                                        call1.getCluster(),
+                                        call1.getAggFunction(),
+                                        registerCallsList.get(i).stream()
+                                                .map(k -> k.accept(converter))
+                                                .collect(Collectors.toList()))
+                                .as(call1.getAlias())
+                                .distinct(call1.isDistinct()));
                 ++i;
             }
             input = requireNonNull(peek(), "frame stack is empty");
@@ -770,7 +770,7 @@ public class GraphBuilder extends RelBuilder {
      *
      * @param offsetNode
      * @param fetchNode
-     * @param nodes      build limit() if empty
+     * @param nodes build limit() if empty
      * @return
      */
     @Override

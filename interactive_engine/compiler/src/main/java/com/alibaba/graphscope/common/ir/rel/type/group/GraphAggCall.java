@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.common.ir.rel.type.group;
 
 import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
+import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.plan.RelOptCluster;
@@ -25,6 +26,7 @@ import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlAggFunction;
+import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.util.Litmus;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -36,26 +38,90 @@ import java.util.Objects;
 /**
  * maintain each aggregate function with alias
  */
-public class GraphAggCall extends AbstractAggCall {
+public class GraphAggCall implements RelBuilder.AggCall {
     private final RelDataType type;
-    private final boolean distinct;
+    // primary parameters
+    private final RelOptCluster cluster;
     private final List<RexNode> operands; // may be empty
     private final SqlAggFunction aggFunction;
-    private final @Nullable String alias;
-    private final RelOptCluster cluster;
+    // optional parameters
+    private @Nullable String alias;
+    private boolean distinct;
+    private boolean approximate;
+    private boolean ignoreNulls;
+    private @Nullable RexNode filter;
+    private @Nullable ImmutableList<RexNode> distinctKeys;
+    private @Nullable ImmutableList<RexNode> orderKeys;
 
-    public GraphAggCall(
-            RelOptCluster cluster,
-            SqlAggFunction aggFunction,
-            boolean distinct,
-            @Nullable String alias,
-            List<RexNode> operands) {
+    public GraphAggCall(RelOptCluster cluster, SqlAggFunction aggFunction, List<RexNode> operands) {
         this.cluster = Objects.requireNonNull(cluster);
         this.aggFunction = aggFunction;
-        this.distinct = distinct;
-        this.alias = alias;
         this.operands = ObjectUtils.requireNonEmpty(operands);
         this.type = validateThenDerive(aggFunction, operands);
+    }
+
+    @Override
+    public GraphAggCall as(@Nullable String alias) {
+        this.alias = alias;
+        return this;
+    }
+
+    @Override
+    public GraphAggCall distinct(boolean distinct) {
+        this.distinct = distinct;
+        return this;
+    }
+
+    @Override
+    public GraphAggCall approximate(boolean approximate) {
+        this.approximate = approximate;
+        return this;
+    }
+
+    @Override
+    public GraphAggCall ignoreNulls(boolean ignoreNulls) {
+        this.ignoreNulls = ignoreNulls;
+        return this;
+    }
+
+    @Override
+    public GraphAggCall filter(RexNode rexNode) {
+        this.filter = Objects.requireNonNull(rexNode);
+        return this;
+    }
+
+    @Override
+    public GraphAggCall sort(Iterable<RexNode> orderKeys) {
+        this.orderKeys = ImmutableList.copyOf(ObjectUtils.requireNonEmpty(orderKeys));
+        return this;
+    }
+
+    @Override
+    public GraphAggCall unique(@Nullable Iterable<RexNode> distinctKeys) {
+        this.distinctKeys = ImmutableList.copyOf(ObjectUtils.requireNonEmpty(distinctKeys));
+        return this;
+    }
+
+    @Override
+    public RelBuilder.OverCall over() {
+        throw new UnsupportedOperationException("over in AggCall is unsupported yet");
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        return builder.append("{")
+                .append("operands=")
+                .append(operands)
+                .append(", aggFunction=")
+                .append(aggFunction)
+                .append(", alias='")
+                .append(AliasInference.SIMPLE_NAME(alias))
+                .append('\'')
+                .append(", distinct=")
+                .append(distinct)
+                .append('}')
+                .toString();
     }
 
     private RelDataType validateThenDerive(SqlAggFunction aggFunction, List<RexNode> operands) {
@@ -103,24 +169,8 @@ public class GraphAggCall extends AbstractAggCall {
     }
 
     public GraphAggCall copy(String alias) {
-        return new GraphAggCall(
-                this.cluster,
-                this.aggFunction,
-                this.distinct,
-                Objects.requireNonNull(alias),
-                this.operands);
-    }
-
-    @Override
-    public String toString() {
-        return "{"
-                + "operands="
-                + operands
-                + ", aggFunction="
-                + aggFunction
-                + ", alias='"
-                + alias
-                + '\''
-                + '}';
+        return new GraphAggCall(this.cluster, this.aggFunction, this.operands)
+                .as(alias)
+                .distinct(this.distinct);
     }
 }

@@ -16,6 +16,8 @@
 
 package com.alibaba.graphscope.common.ir.rel.type.group;
 
+import com.alibaba.graphscope.common.ir.tools.AliasInference;
+
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.tools.RelBuilder;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -23,6 +25,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * maintains group keys and aliases
@@ -56,6 +59,13 @@ public class GraphGroupKeys implements RelBuilder.GroupKey {
 
     @Override
     public String toString() {
-        return "{" + "variables=" + variables + ", aliases=" + aliases + '}';
+        return "{"
+                + "variables="
+                + variables
+                + ", aliases="
+                + aliases.stream()
+                        .map(k -> AliasInference.SIMPLE_NAME(k))
+                        .collect(Collectors.toList())
+                + '}';
     }
 }

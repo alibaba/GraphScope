@@ -268,6 +268,16 @@ class GSLogger(object):
         logger.propagate = False
         GSLogger.update()
 
+        # nice traceback
+        try:
+            import rich.pretty
+            import rich.traceback
+
+            rich.traceback.install()
+            rich.pretty.install()
+        except ImportError:
+            pass
+
     @staticmethod
     def update():
         if gs_config.show_log:

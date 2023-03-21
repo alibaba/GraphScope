@@ -41,7 +41,7 @@ public class OrderLimitTest {
         Assert.assertEquals(
                 "GraphLogicalSort(sort0=[DEFAULT.name], dir0=[ASC])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[~DEFAULT], opt=[VERTEX])",
+                        + " alias=[DEFAULT], opt=[VERTEX])",
                 sort.explain().trim());
     }
 
@@ -59,7 +59,7 @@ public class OrderLimitTest {
         Assert.assertEquals(
                 "GraphLogicalSort(sort0=[DEFAULT.name], dir0=[DESC])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[~DEFAULT], opt=[VERTEX])",
+                        + " alias=[DEFAULT], opt=[VERTEX])",
                 sort.explain().trim());
     }
 
@@ -78,7 +78,7 @@ public class OrderLimitTest {
         Assert.assertEquals(
                 "GraphLogicalSort(sort0=[DEFAULT.name], dir0=[DESC], offset=[1], fetch=[2])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[~DEFAULT], opt=[VERTEX])",
+                        + " alias=[DEFAULT], opt=[VERTEX])",
                 sort.explain().trim());
     }
 
@@ -96,7 +96,7 @@ public class OrderLimitTest {
         Assert.assertEquals(
                 "GraphLogicalSort(offset=[1], fetch=[2])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[~DEFAULT], opt=[VERTEX])",
+                        + " alias=[DEFAULT], opt=[VERTEX])",
                 limit.explain().trim());
     }
 
@@ -122,7 +122,7 @@ public class OrderLimitTest {
                         + "  GraphLogicalSort(sort0=[$f0], dir0=[DESC])\n"
                         + "    GraphLogicalProject($f0=[+(DEFAULT.age, 1)], isAppend=[true])\n"
                         + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[~DEFAULT], opt=[VERTEX])",
+                        + " alias=[DEFAULT], opt=[VERTEX])",
                 sort.explain().trim());
     }
 }

@@ -28,7 +28,7 @@ use ir_physical_client::physical_builder::{JobBuilder, Plan};
 
 use crate::error::{IrError, IrResult};
 use crate::plan::logical::{LogicalPlan, NodeType};
-use crate::plan::meta::{ColumnsOpt, PlanMeta, TagId};
+use crate::plan::meta::PlanMeta;
 
 /// A trait for building physical plan (pegasus) from the logical plan
 pub trait AsPhysical {
@@ -72,7 +72,8 @@ fn post_process_vars(
             if columns_opt.len() > 0 {
                 let tag_pb = tag.map(|tag_id| (tag_id as KeyId).into());
                 builder.shuffle(tag_pb.clone());
-                let auxilia = pb::GetV { tag: tag_pb.clone(), opt: 4, params: None, alias: tag_pb };
+                let auxilia =
+                    pb::GetV { tag: tag_pb.clone(), opt: 4, params: None, alias: tag_pb, meta_data: None };
                 builder.get_v(auxilia);
             }
         } else if len != 0 {
@@ -99,6 +100,7 @@ fn post_process_vars(
                         opt: 4,
                         params: Some(params),
                         alias: tag_pb.clone(),
+                        meta_data: None,
                     };
                     builder.get_v(auxilia);
                 }
@@ -149,7 +151,13 @@ impl AsPhysical for pb::Select {
                     sample_ratio: 1.0,
                     extra: Default::default(),
                 };
-                let auxilia = pb::GetV { tag: tag_pb.clone(), opt: 4, params: Some(params), alias: tag_pb };
+                let auxilia = pb::GetV {
+                    tag: tag_pb.clone(),
+                    opt: 4,
+                    params: Some(params),
+                    alias: tag_pb,
+                    meta_data: None,
+                };
                 builder.get_v(auxilia);
                 return Ok(());
             }
@@ -249,8 +257,13 @@ impl AsPhysical for pb::GetV {
         // If GetV(Adj) with filter, translate GetV into GetV(GetAdj) + Shuffle (if on distributed storage) + GetV(Self)
         if let Some(params) = getv.params.as_mut() {
             if params.predicate.is_some() {
-                let auxilia =
-                    pb::GetV { tag: None, opt: 4, params: Some(params.clone()), alias: getv.alias };
+                let auxilia = pb::GetV {
+                    tag: None,
+                    opt: 4,
+                    params: Some(params.clone()),
+                    alias: getv.alias,
+                    meta_data: None,
+                };
                 params.predicate.take();
                 getv.alias = None;
                 // GetV(Adj)
@@ -277,6 +290,7 @@ impl AsPhysical for pb::As {
                 alias: self.alias.clone(),
             }],
             is_append: true,
+            meta_data: vec![],
         };
         builder.project(project_new_alias);
         Ok(())
@@ -529,6 +543,7 @@ impl AsPhysical for LogicalPlan {
                                 alias: Some(new_tag.into()),
                             }],
                             is_append: true,
+                            meta_data: vec![],
                         });
                         builder.edge_expand(expand_degree);
                         builder.project(pb::Project {
@@ -537,6 +552,7 @@ impl AsPhysical for LogicalPlan {
                                 alias: None,
                             }],
                             is_append: true,
+                            meta_data: vec![],
                         });
                     } else {
                         subplan.add_job_builder(&mut sub_bldr, plan_meta)?;
@@ -694,7 +710,11 @@ fn add_intersect_job_builder(
         intersect_plans.push(sub_plan);
     }
     builder.intersect(intersect_plans, intersect_tag.clone());
-    let unfold = pb::Unfold { tag: Some(intersect_tag.clone()), alias: Some(intersect_tag.clone()) };
+    let unfold = pb::Unfold {
+        tag: Some(intersect_tag.clone()),
+        alias: Some(intersect_tag.clone()),
+        meta_data: None,
+    };
     unfold.add_job_builder(builder, plan_meta)?;
     Ok(())
 }
@@ -733,6 +753,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], columns)),
             idx_predicate: None,
+            meta_data: None,
         }
     }
 
@@ -747,12 +768,13 @@ mod test {
             params: Some(query_params(vec![], columns)),
             alias,
             expand_opt,
+            meta_data: None,
         }
     }
 
     #[allow(dead_code)]
     fn build_getv(alias: Option<common_pb::NameOrId>) -> pb::GetV {
-        pb::GetV { tag: None, opt: 1, params: Some(query_params(vec![], vec![])), alias }
+        pb::GetV { tag: None, opt: 1, params: Some(query_params(vec![], vec![])), alias, meta_data: None }
     }
 
     #[allow(dead_code)]
@@ -764,14 +786,14 @@ mod test {
     fn build_auxilia_with_predicates(expr: &str) -> pb::GetV {
         let mut params = query_params(vec![], vec![]);
         params.predicate = str_to_expr_pb(expr.to_string()).ok();
-        pb::GetV { tag: None, opt: 4, params: Some(params), alias: None }
+        pb::GetV { tag: None, opt: 4, params: Some(params), alias: None, meta_data: None }
     }
 
     #[allow(dead_code)]
     fn build_auxilia_with_params(
         params: Option<pb::QueryParams>, alias: Option<common_pb::NameOrId>,
     ) -> pb::GetV {
-        pb::GetV { tag: None, opt: 4, params, alias }
+        pb::GetV { tag: None, opt: 4, params, alias, meta_data: None }
     }
 
     #[allow(dead_code)]
@@ -780,10 +802,10 @@ mod test {
         columns: Vec<common_pb::NameOrId>,
     ) -> pb::GetV {
         if columns.is_empty() {
-            pb::GetV { tag, opt: 4, params: None, alias }
+            pb::GetV { tag, opt: 4, params: None, alias, meta_data: None }
         } else {
             let params = query_params(vec![], columns);
-            pb::GetV { tag, opt: 4, params: Some(params), alias }
+            pb::GetV { tag, opt: 4, params: Some(params), alias, meta_data: None }
         }
     }
 
@@ -795,6 +817,7 @@ mod test {
                 alias: None,
             }],
             is_append: false,
+            meta_data: vec![],
         }
     }
 
@@ -1020,6 +1043,7 @@ mod test {
             opt: 4,
             params: None,
             alias: Some(0.into()),
+            meta_data: None,
         });
         expected_builder.project(build_project("{@0.name, @0.id, @0.age}"));
         expected_builder.sink(build_sink());
@@ -1180,6 +1204,7 @@ mod test {
                     extra: Default::default(),
                 }),
                 alias: None,
+                meta_data: None,
             }
             .into(),
             vec![1],
@@ -1209,6 +1234,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec!["person".into()], vec![])),
             idx_predicate: None,
+            meta_data: None,
         };
         let select_opr = pb::Select { predicate: str_to_expr_pb("@.id == 10".to_string()).ok() };
         let expand_opr = pb::EdgeExpand {
@@ -1217,6 +1243,7 @@ mod test {
             params: Some(query_params(vec!["knows".into()], vec![])),
             expand_opt: 0,
             alias: None,
+            meta_data: None,
         };
         let limit_opr = pb::Limit { range: Some(pb::Range { lower: 10, upper: 11 }) };
 
@@ -1260,6 +1287,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec!["person".into()], vec![])),
             idx_predicate: None,
+            meta_data: None,
         };
 
         let project_opr = pb::Project {
@@ -1271,6 +1299,7 @@ mod test {
                 ExprAlias { expr: Some(str_to_expr_pb("@.age - 1".to_string()).unwrap()), alias: None },
             ],
             is_append: false,
+            meta_data: vec![],
         };
 
         let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr.clone().into()));
@@ -1296,6 +1325,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec!["person".into()], vec![])),
             idx_predicate: None,
+            meta_data: None,
         };
 
         let edge_expand = pb::EdgeExpand {
@@ -1304,6 +1334,7 @@ mod test {
             params: Some(query_params(vec!["knows".into()], vec![])),
             expand_opt: 0,
             alias: None,
+            meta_data: None,
         };
 
         let path_opr = pb::PathExpand {
@@ -1356,6 +1387,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            meta_data: None,
         };
 
         let topby_opr = pb::OrderBy { pairs: vec![], limit: Some(pb::Range { lower: 10, upper: 11 }) };
@@ -1387,6 +1419,7 @@ mod test {
             alias: Some(0.into()),
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            meta_data: None,
         };
 
         let opr_id = plan
@@ -1400,6 +1433,7 @@ mod test {
             params: Some(query_params(vec![], vec![])),
             expand_opt: 0,
             alias: Some(1.into()),
+            meta_data: None,
         };
 
         let root_id = plan
@@ -1422,6 +1456,7 @@ mod test {
                 alias: None,
             }],
             is_append: true,
+            meta_data: vec![],
         };
         plan.append_operator_as_node(project.clone().into(), vec![opr_id])
             .unwrap();
@@ -1471,6 +1506,7 @@ mod test {
             alias: Some(0.into()),
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            meta_data: None,
         };
 
         let opr_id = plan
@@ -1503,6 +1539,7 @@ mod test {
                 alias: Some(2.into()),
             }],
             is_append: true,
+            meta_data: vec![],
         });
 
         expand.alias = Some(1.into()); // must carry `Apply`'s alias
@@ -1513,6 +1550,7 @@ mod test {
                 alias: None,
             }],
             is_append: true,
+            meta_data: vec![],
         });
 
         assert_eq!(expected_builder, builder);
@@ -1531,6 +1569,7 @@ mod test {
             alias: Some(0.into()),
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            meta_data: None,
         };
 
         let opr_id = plan
@@ -1544,6 +1583,7 @@ mod test {
                 alias: None,
             }],
             is_append: true,
+            meta_data: vec![],
         };
         let mut expand = build_edgexpd(2, vec![], None);
         let subplan_id = plan
@@ -1573,6 +1613,7 @@ mod test {
                 alias: Some(2.into()),
             }],
             is_append: true,
+            meta_data: vec![],
         });
         expand.v_tag = Some(0.into());
         expand.alias = Some(1.into()); // must carry `Apply`'s alias
@@ -1583,6 +1624,7 @@ mod test {
                 alias: None,
             }],
             is_append: true,
+            meta_data: vec![],
         });
 
         assert_eq!(expected_builder, builder);
@@ -1595,6 +1637,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            meta_data: None,
         };
         let expand_opr = pb::EdgeExpand {
             v_tag: None,
@@ -1602,6 +1645,7 @@ mod test {
             params: Some(query_params(vec![], vec![])),
             expand_opt: 0,
             alias: None,
+            meta_data: None,
         };
         let join_opr = pb::Join { left_keys: vec![], right_keys: vec![], kind: 0 };
         let limit_opr = pb::Limit { range: Some(pb::Range { lower: 10, upper: 11 }) };
@@ -1652,6 +1696,7 @@ mod test {
             alias: Some(0.into()),
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            meta_data: None,
         };
 
         // extend 0->1
@@ -1661,6 +1706,7 @@ mod test {
             params: Some(query_params(vec![], vec![])),
             expand_opt: 0,
             alias: Some(1.into()),
+            meta_data: None,
         };
 
         // extend 0->2, 1->2, and intersect on 2
@@ -1670,6 +1716,7 @@ mod test {
             params: Some(query_params(vec![], vec![])),
             expand_opt: 0,
             alias: Some(2.into()),
+            meta_data: None,
         };
 
         let expand_bc_opr = pb::EdgeExpand {
@@ -1678,6 +1725,7 @@ mod test {
             params: Some(query_params(vec!["knows".into()], vec![])),
             expand_opt: 0,
             alias: Some(2.into()),
+            meta_data: None,
         };
 
         // parents are expand_ac_opr and expand_bc_opr
@@ -1702,7 +1750,7 @@ mod test {
             .add_job_builder(&mut builder, &mut plan_meta)
             .unwrap();
 
-        let unfold_opr = pb::Unfold { tag: Some(2.into()), alias: Some(2.into()) };
+        let unfold_opr = pb::Unfold { tag: Some(2.into()), alias: Some(2.into()), meta_data: None };
 
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_scan_source(source_opr);
@@ -1724,6 +1772,7 @@ mod test {
             alias: Some(0.into()),
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            meta_data: None,
         };
 
         // extend 0->1
@@ -1733,6 +1782,7 @@ mod test {
             params: Some(query_params(vec![], vec![])),
             expand_opt: 0,
             alias: Some(1.into()),
+            meta_data: None,
         };
 
         // extend 0->2, 1->2, and intersect on 2 (where 2 has required columns)
@@ -1742,6 +1792,7 @@ mod test {
             params: Some(query_params(vec![], vec!["id".into()])),
             expand_opt: 0,
             alias: Some(2.into()),
+            meta_data: None,
         };
 
         let expand_bc_opr = pb::EdgeExpand {
@@ -1750,6 +1801,7 @@ mod test {
             params: Some(query_params(vec!["knows".into()], vec!["name".into()])),
             expand_opt: 0,
             alias: Some(2.into()),
+            meta_data: None,
         };
 
         // parents are expand_ac_opr and expand_bc_opr
@@ -1774,7 +1826,7 @@ mod test {
             .add_job_builder(&mut builder, &mut plan_meta)
             .unwrap();
 
-        let unfold_opr = pb::Unfold { tag: Some(2.into()), alias: Some(2.into()) };
+        let unfold_opr = pb::Unfold { tag: Some(2.into()), alias: Some(2.into()), meta_data: None };
 
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_scan_source(source_opr);

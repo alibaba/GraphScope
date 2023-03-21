@@ -46,14 +46,16 @@ public class GroupTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalAggregate(keys=[{variables=[DEFAULT.name, DEFAULT.age], aliases=[a,"
-                        + " b]}], values=[[{operands=[DEFAULT], aggFunction=COUNT, alias='c'}]])\n"
+                        + " b]}], values=[[{operands=[DEFAULT], aggFunction=COUNT, alias='c',"
+                        + " distinct=false}]])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[~DEFAULT], opt=[VERTEX])",
+                        + " alias=[DEFAULT], opt=[VERTEX])",
                 aggregate.explain().trim());
     }
 
-    // group by HEAD.name, count(HEAD.age+1, 'x') -> project({HEAD.age+1 as '$f0'}, isAppend = true)
-    // + aggregate(keys={HEAD.name}, calls=[count($f0) as 'x'])
+    // group().by("name").by(sum("@.age+1").as('X')) -> project({HEAD.age+1 as '$f0'}, isAppend =
+    // true)
+    // + aggregate(keys={HEAD.name}, calls=[sum($f0) as 'x'])
     @Test
     public void group_2_test() {
         GraphBuilder builder = Utils.mockGraphBuilder();
@@ -64,8 +66,8 @@ public class GroupTest {
                                         new LabelConfig(false).addLabel("person")))
                         .aggregate(
                                 builder.groupKey(builder.variable(null, "name")),
-                                builder.count(
-                                        true,
+                                builder.sum(
+                                        false,
                                         "x",
                                         builder.call(
                                                 GraphStdOperatorTable.PLUS,
@@ -74,13 +76,15 @@ public class GroupTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalAggregate(keys=[{variables=[DEFAULT.name], aliases=[name]}],"
-                        + " values=[[{operands=[$f0], aggFunction=COUNT, alias='x'}]])\n"
-                        + "  GraphLogicalProject($f0=[+(DEFAULT.age, 1)], isAppend=[true])\n"
-                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[~DEFAULT], opt=[VERTEX])",
+                    + " values=[[{operands=[$f0], aggFunction=SUM, alias='x', distinct=false}]])\n"
+                    + "  GraphLogicalProject($f0=[+(DEFAULT.age, 1)], isAppend=[true])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[DEFAULT], opt=[VERTEX])",
                 aggregate.explain().trim());
     }
 
+    // g.V().hasLabel("person").group().by(values("name").as("a"),
+    // values("age").as("b")).by(fold().as("c"))
     @Test
     public void group_3_test() {
         GraphBuilder builder = Utils.mockGraphBuilder();
@@ -99,9 +103,59 @@ public class GroupTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalAggregate(keys=[{variables=[DEFAULT.name, DEFAULT.age], aliases=[a,"
-                    + " b]}], values=[[{operands=[DEFAULT], aggFunction=COLLECT, alias='c'}]])\n"
-                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[~DEFAULT], opt=[VERTEX])",
+                        + " b]}], values=[[{operands=[DEFAULT], aggFunction=COLLECT, alias='c',"
+                        + " distinct=false}]])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[DEFAULT], opt=[VERTEX])",
                 aggregate.explain().trim());
+    }
+
+    // g.V().hasLabel("person").group().by("@.age+1").by(count().as("c"))
+    @Test
+    public void group_4_test() {
+        GraphBuilder builder = Utils.mockGraphBuilder();
+        RelNode aggregate =
+                builder.source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person")))
+                        .aggregate(
+                                builder.groupKey(
+                                        builder.call(
+                                                GraphStdOperatorTable.PLUS,
+                                                builder.variable(null, "age"),
+                                                builder.literal(1))),
+                                builder.count(false, "c", ImmutableList.of()))
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalAggregate(keys=[{variables=[$f0], aliases=[$f0]}],"
+                        + " values=[[{operands=[DEFAULT], aggFunction=COUNT, alias='c',"
+                        + " distinct=false}]])\n"
+                        + "  GraphLogicalProject($f0=[+(DEFAULT.age, 1)], isAppend=[true])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[DEFAULT], opt=[VERTEX])",
+                aggregate.explain().trim());
+    }
+
+    // invalid query: g.group().by("@.age+1")
+    @Test
+    public void group_5_test() {
+        GraphBuilder builder = Utils.mockGraphBuilder();
+        try {
+            RelNode aggregate =
+                    builder.aggregate(
+                                    builder.groupKey(
+                                            builder.call(
+                                                    GraphStdOperatorTable.PLUS,
+                                                    builder.variable(null, "age"),
+                                                    builder.literal(1))),
+                                    builder.count(false, "c", ImmutableList.of()))
+                            .build();
+        } catch (IllegalArgumentException e) {
+            Assert.assertEquals(
+                    "{alias=DEFAULT} not found; expected aliases are: []", e.getMessage());
+            return;
+        }
+        Assert.fail("alias=DEFAULT does not exist");
     }
 }

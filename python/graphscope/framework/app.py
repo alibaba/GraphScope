@@ -120,20 +120,23 @@ def not_compatible_for(*graph_types):
                 == graph_def_pb2.DYNAMIC_PROJECTED,
                 "arrow_flattened": graph.graph_type == graph_def_pb2.ARROW_FLATTENED,
                 "directed": graph.is_directed(),
-                "undirected": graph.is_directed() is False,
+                "undirected": not graph.is_directed(),
             }
-            match = False
+            matched, tag = False, ""
             try:
                 for t in graph_types:
-                    match = match or terms[t]
+                    if terms[t]:
+                        matched, tag = True, t
+                        break
             except KeyError:
                 raise InvalidArgumentError(
                     "Use one or more of arrow_property,dynamic_property,"
                     "arrow_projected,dynamic_projected,arrow_flattened,directed,undirected",
                 )
-            if match:
+            if matched:
                 raise InvalidArgumentError(
-                    "Not compatible for %s type" % " ".join(graph_types)
+                    "Algorithm '%s' isn't compatible for '%s' graphs"
+                    % (not_compatible_for_func.__name__, tag)
                 )
             else:
                 return not_compatible_for_func(*args, **kwargs)

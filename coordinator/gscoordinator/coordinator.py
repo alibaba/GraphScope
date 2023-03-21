@@ -107,8 +107,11 @@ def config_logging(log_level):
     """
     logging.basicConfig(level=logging.CRITICAL)
 
-    if log_level:
-        log_level = log_level.upper()
+    # `NOTSET` is special as it doesn't show log in Python
+    if isinstance(log_level, str):
+        log_level = getattr(logging, log_level.upper())
+    if log_level == logging.NOTSET:
+        log_level = logging.DEBUG
 
     logger = logging.getLogger("graphscope")
     logger.setLevel(log_level)
@@ -332,7 +335,9 @@ class CoordinatorServiceServicer(
             except grpc.RpcError as exc:
                 # Not raised by graphscope, maybe socket closed, etc.
                 context.set_code(exc.code())
-                context.set_details(exc.details())
+                context.set_details(
+                    f"{exc.details()}. The traceback is: {traceback.format_exc()}"
+                )
 
                 # stop yield to raise the grpc errors to the client, as the
                 # client may consume nothing if error happens
@@ -341,13 +346,17 @@ class CoordinatorServiceServicer(
             except GremlinServerError as exc:
                 response_head = responses[0]
                 response_head.head.code = error_code
-                response_head.head.error_msg = f"Error occurred during RunStep, The traceback is: {traceback.format_exc()}"
+                response_head.head.error_msg = f"Error occurred during RunStep. The traceback is: {traceback.format_exc()}"
+                if hasattr(exc, "status_message"):
+                    exc_message = exc.status_message
+                else:
+                    exc_message = str(exc)
                 response_head.head.full_exception = pickle.dumps(
                     (
                         GremlinServerError,
                         {
                             "code": exc.status_code,
-                            "message": exc.status_message,
+                            "message": exc_message,
                             "attributes": exc.status_attributes,
                         },
                     )
@@ -378,7 +387,10 @@ class CoordinatorServiceServicer(
             except queue.Empty:
                 info_message, error_message = "", ""
             except Exception as e:
-                info_message, error_message = f"WARNING: failed to read log: {e}", ""
+                info_message, error_message = (
+                    f"WARNING: failed to read log: {e}. The traceback is: {traceback.format_exc()}",
+                    "",
+                )
 
             if info_message or error_message:
                 if self._streaming_logs:
@@ -406,10 +418,15 @@ class CoordinatorServiceServicer(
             logger.warning("Analytical engine is not enabled.")
         except grpc.RpcError as e:
             context.set_code(e.code())
-            context.set_details("Get engine config failed: " + e.details())
+            context.set_details(
+                f"Get engine config failed: {e.details()}. The traceback is: {traceback.format_exc()}"
+            )
             return message_pb2.CreateAnalyticalInstanceResponse()
         except Exception as e:
-            context.abort(grpc.StatusCode.ABORTED, str(e))
+            context.abort(
+                grpc.StatusCode.ABORTED,
+                f"${e}. The traceback is: {traceback.format_exc()}",
+            )
             return message_pb2.CreateAnalyticalInstanceResponse()
         return message_pb2.CreateAnalyticalInstanceResponse(
             engine_config=json.dumps(engine_config),
@@ -455,7 +472,9 @@ class CoordinatorServiceServicer(
                 )
         except Exception as e:
             context.set_code(grpc.StatusCode.ABORTED)
-            context.set_details("Create interactive instance failed: " + str(e))
+            context.set_details(
+                f"Create interactive instance failed: ${e}. The traceback is: {traceback.format_exc()}"
+            )
             self._launcher.close_interactive_instance(object_id)
             self._object_manager.pop(object_id)
             return message_pb2.CreateInteractiveInstanceResponse()
@@ -477,7 +496,9 @@ class CoordinatorServiceServicer(
             self._object_manager.put(object_id, LearningInstanceManager(object_id))
         except Exception as e:
             context.set_code(grpc.StatusCode.ABORTED)
-            context.set_details("Create learning instance failed: " + str(e))
+            context.set_details(
+                f"Create learning instance failed: ${e}. The traceback is: {traceback.format_exc()}"
+            )
             self._launcher.close_learning_instance(object_id)
             self._object_manager.pop(object_id)
             return message_pb2.CreateLearningInstanceResponse()
@@ -498,7 +519,9 @@ class CoordinatorServiceServicer(
                 self._launcher.close_interactive_instance(object_id)
             except Exception as e:
                 context.set_code(grpc.StatusCode.ABORTED)
-                context.set_details("Close interactive instance failed: " + str(e))
+                context.set_details(
+                    f"Close interactive instance failed: ${e}. The traceback is: {traceback.format_exc()}"
+                )
         return message_pb2.CloseInteractiveInstanceResponse()
 
     def CloseLearningInstance(self, request, context):
@@ -510,7 +533,9 @@ class CoordinatorServiceServicer(
                 self._launcher.close_learning_instance(object_id)
             except Exception as e:
                 context.set_code(grpc.StatusCode.ABORTED)
-                context.set_details("Close learning instance failed: " + str(e))
+                context.set_details(
+                    f"Close learning instance failed: ${e}. The traceback is: {traceback.format_exc()}"
+                )
         return message_pb2.CloseLearningInstanceResponse()
 
     @Monitor.cleanup
@@ -543,9 +568,10 @@ class CoordinatorServiceServicer(
                     self._operation_executor.run_step(dag_def, [])
                 except grpc.RpcError as e:
                     logger.error(
-                        "Cleanup failed, code: %s, details: %s",
+                        "Cleanup failed, code: %s, details: %s. The traceback is: %s",
                         e.code().name,
                         e.details(),
+                        traceback.format_exc(),
                     )
 
         self._object_manager.clear()
@@ -671,6 +697,12 @@ def parse_sys_args():
         help="Service type, choose from 'NodePort' or 'LoadBalancer'.",
     )
     parser.add_argument(
+        "--k8s_vineyard_deployment",
+        type=str,
+        default=None,
+        help="The name of vineyard deployment, it should exist as expected.",
+    )
+    parser.add_argument(
         "--k8s_coordinator_name",
         type=str,
         default="",
@@ -693,12 +725,6 @@ def parse_sys_args():
         type=str,
         default="",
         help="A list of comma separated secrets to pull image.",
-    )
-    parser.add_argument(
-        "--k8s_vineyard_daemonset",
-        type=str,
-        default=None,
-        help="Use the existing vineyard DaemonSet with name 'k8s_vineyard_daemonset'.",
     )
     parser.add_argument(
         "--k8s_vineyard_cpu",
@@ -854,6 +880,15 @@ def parse_sys_args():
         default=9968,
         help="Coordinator prometheus exporter service port.",
     )
+    parser.add_argument(
+        "--dataset_proxy",
+        type=str,
+        nargs="?",
+        const="",
+        default="",
+        help="A json string specifies the dataset proxy info."
+        "Available options of proxy: http_proxy, https_proxy, no_proxy.",
+    )
     return parser.parse_args()
 
 
@@ -890,7 +925,7 @@ def get_launcher(args):
             service_type=args.k8s_service_type,
             timeout_seconds=args.timeout_seconds,
             vineyard_cpu=args.k8s_vineyard_cpu,
-            vineyard_daemonset=args.k8s_vineyard_daemonset,
+            vineyard_deployment=args.k8s_vineyard_deployment,
             vineyard_image=args.k8s_vineyard_image,
             vineyard_mem=args.k8s_vineyard_mem,
             vineyard_shared_mem=args.vineyard_shared_mem,
@@ -898,6 +933,7 @@ def get_launcher(args):
             waiting_for_delete=args.waiting_for_delete,
             with_mars=args.k8s_with_mars,
             enabled_engines=args.k8s_enabled_engines,
+            dataset_proxy=args.dataset_proxy,
         )
     elif args.cluster_type == "hosts":
         launcher = LocalLauncher(

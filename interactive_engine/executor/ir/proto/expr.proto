@@ -20,6 +20,7 @@ option java_package = "com.alibaba.graphscope.gaia.proto";
 option java_outer_classname = "OuterExpression";
 
 import "common.proto";
+import "type.proto";
 
 message IdKey {}
 
@@ -29,18 +30,9 @@ message LengthKey {}
 
 message AllKey {}
 
-// A indicator of an attribute or further its properties, which may present as a string-type name
-// or be encoded as a name identifier
-message NameOrId {
-  oneof item {
-    string name = 1;
-    int32 id = 2;
-  }
-}
-
 // Use `NameOrId` as key item, which is the same as `Option<NameOrId>`
 message NameOrIdKey {
-  NameOrId key = 1;
+  common.NameOrId key = 1;
 }
 
 message Property {
@@ -54,7 +46,7 @@ message Property {
     // Get all properties
     AllKey all = 5;
     // Get property of key from the entity
-    NameOrId key = 6;
+    common.NameOrId key = 6;
   }
 }
 
@@ -114,9 +106,11 @@ enum Arithmetic {
 
 message Variable {
   // The alias of a graph relation, which is required for a variable
-  NameOrId tag = 1;
+  common.NameOrId tag = 1;
   // The property of a nested attribute (vertex/edge) of a graph relation, r.a.key, optional
   Property property = 2;
+  // The data of type of Property
+  common.IrDataType node_type = 3;
 }
 
 message VariableKeys {
@@ -138,6 +132,8 @@ message ExprOpr {
     VariableKeys vars = 7;
     VariableKeys var_map = 8;
   }
+  // The data of type of ExprOpr
+  common.IrDataType node_type = 9;
 }
 
 // An inner representation of an expression

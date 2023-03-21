@@ -20,7 +20,6 @@ option java_package = "com.alibaba.graphscope.gaia.proto";
 option java_outer_classname = "DataType";
 
 import "common.proto";
-import "expr.proto";
 import "google/protobuf/wrappers.proto";
 
 

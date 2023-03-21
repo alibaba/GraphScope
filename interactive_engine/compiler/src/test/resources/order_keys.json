@@ -16,7 +16,8 @@
                         }
                       }
                     }
-                  }
+                  },
+                  "node_type": null
                 },
                 "order": 1
               },
@@ -31,7 +32,8 @@
                         }
                       }
                     }
-                  }
+                  },
+                  "node_type": null
                 },
                 "order": 2
               }
