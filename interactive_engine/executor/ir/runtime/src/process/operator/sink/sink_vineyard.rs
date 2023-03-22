@@ -56,7 +56,7 @@ impl Accumulator<Record, Record> for GraphSinkEncoder {
                     )))?;
                 loop {
                     if let Ok(mut graph_writer_guard) = self.graph_writer.try_lock() {
-                        graph_writer_guard.add_vertex(label.clone(), vertex_pk, v.details().cloned())?;
+                        graph_writer_guard.add_vertex(label.clone(), vertex_pk, v.get_details().clone())?;
                         break;
                     }
                 }
@@ -99,7 +99,7 @@ impl Accumulator<Record, Record> for GraphSinkEncoder {
                             src_vertex_pk,
                             dst_label.clone(),
                             dst_vertex_pk,
-                            e.details().cloned(),
+                            e.get_details().clone(),
                         )?;
                         break;
                     }
@@ -195,10 +195,10 @@ mod tests {
 
     impl WriteGraphProxy for TestGraphWriter {
         fn add_vertex(
-            &mut self, label: LabelId, vertex_pk: PKV, properties: Option<DynDetails>,
+            &mut self, label: LabelId, vertex_pk: PKV, properties: DynDetails,
         ) -> GraphProxyResult<()> {
             let vid = self.encode_id(vertex_pk);
-            let vertex = Vertex::new(vid, Some(label.clone()), properties.unwrap().clone());
+            let vertex = Vertex::new(vid, Some(label.clone()), properties);
             self.vertices
                 .lock()
                 .map_err(|_e| GraphProxyError::write_graph_error("add_vertex failed"))?
@@ -208,12 +208,12 @@ mod tests {
 
         fn add_edge(
             &mut self, label: LabelId, src_vertex_label: LabelId, src_vertex_pk: PKV,
-            dst_vertex_label: LabelId, dst_vertex_pk: PKV, properties: Option<DynDetails>,
+            dst_vertex_label: LabelId, dst_vertex_pk: PKV, properties: DynDetails,
         ) -> GraphProxyResult<()> {
             let src_id = self.encode_id(src_vertex_pk);
             let dst_id = self.encode_id(dst_vertex_pk);
             let eid = encode_eid(src_id, dst_id);
-            let mut edge = Edge::new(eid, Some(label.clone()), src_id, dst_id, properties.unwrap().clone());
+            let mut edge = Edge::new(eid, Some(label.clone()), src_id, dst_id, properties);
             edge.set_src_label(src_vertex_label.clone());
             edge.set_src_label(dst_vertex_label.clone());
             self.edges
@@ -259,7 +259,7 @@ mod tests {
             let entry = next.take(None).unwrap();
             if let Some(v) = entry.as_vertex() {
                 let pk = get_primary_key(&v.id());
-                self.add_vertex(v.label().unwrap().clone(), pk, v.details().cloned())?;
+                self.add_vertex(v.label().unwrap().clone(), pk, v.get_details().clone())?;
             } else if let Some(e) = entry.as_edge() {
                 let src_pk = get_primary_key(&e.src_id);
                 let dst_pk = get_primary_key(&e.dst_id);
@@ -269,7 +269,7 @@ mod tests {
                     src_pk,
                     e.get_dst_label().unwrap().clone(),
                     dst_pk,
-                    e.details().cloned(),
+                    e.get_details().clone(),
                 )?;
             }
 

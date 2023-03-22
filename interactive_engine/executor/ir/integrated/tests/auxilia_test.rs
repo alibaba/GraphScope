@@ -23,7 +23,7 @@ mod test {
 
     use dyn_type::object;
     use dyn_type::Object;
-    use graph_proxy::apis::{Details, GraphElement};
+    use graph_proxy::apis::GraphElement;
     use graph_proxy::{create_exp_store, SimplePartition};
     use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::physical as pb;
@@ -132,8 +132,6 @@ mod test {
                 result_ids_with_prop.push((
                     element.id(),
                     element
-                        .details()
-                        .unwrap()
                         .get_property(&NameOrId::Str("name".to_string()))
                         .unwrap()
                         .try_to_owned()
@@ -185,8 +183,6 @@ mod test {
                 result_ids_with_prop.push((
                     element.id(),
                     element
-                        .details()
-                        .unwrap()
                         .get_property(&NameOrId::Str("name".to_string()))
                         .unwrap()
                         .try_to_owned()
@@ -242,8 +238,6 @@ mod test {
                 result_ids_with_prop.push((
                     element.id(),
                     element
-                        .details()
-                        .unwrap()
                         .get_property(&NameOrId::Str("name".to_string()))
                         .unwrap()
                         .try_to_owned()
@@ -346,14 +340,13 @@ mod test {
         let mut results: Vec<(Object, Object)> = vec![];
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record.get(None).unwrap().as_vertex() {
-                let details = element.details().unwrap();
                 results.push((
-                    details
+                    element
                         .get_property(&"id".to_string().into())
                         .unwrap()
                         .try_to_owned()
                         .unwrap(),
-                    details
+                    element
                         .get_property(&"name".to_string().into())
                         .unwrap()
                         .try_to_owned()
@@ -402,9 +395,8 @@ mod test {
         let mut results: Vec<Object> = vec![];
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record.get(None).unwrap().as_vertex() {
-                let details = element.details().unwrap();
                 results.push(
-                    details
+                    element
                         .get_property(&"name".to_string().into())
                         .unwrap()
                         .try_to_owned()
@@ -460,9 +452,8 @@ mod test {
         let mut results: Vec<Object> = vec![];
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record.get(None).unwrap().as_vertex() {
-                let details = element.details().unwrap();
                 results.push(
-                    details
+                    element
                         .get_property(&"name".to_string().into())
                         .unwrap()
                         .try_to_owned()
