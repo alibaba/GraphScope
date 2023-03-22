@@ -1136,8 +1136,6 @@ impl AsLogical for pb::PathExpand {
             base.preprocess(meta, plan_meta)?;
         }
         if let Some(pred) = self.condition.as_mut() {
-            // the columns will be added to the current node rather than tagged nodes
-            // thus, can lazy fetched the columns upon filtering
             preprocess_expression(pred, meta, plan_meta, false)?;
             process_columns_meta(plan_meta, true)?;
         }

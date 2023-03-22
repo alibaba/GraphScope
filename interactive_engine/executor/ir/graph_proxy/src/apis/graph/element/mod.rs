@@ -22,7 +22,6 @@ pub use property::{Details, DynDetails, PropKey, PropertyValue};
 pub use vertex::Vertex;
 
 use crate::apis::ID;
-use ahash::HashMap;
 
 mod edge;
 mod path;

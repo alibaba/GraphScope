@@ -84,7 +84,7 @@ fn post_process_vars(
             } else if len != 0 {
                 for (tag, columns_opt) in tag_columns.into_iter() {
                     if columns_opt.len() > 0 {
-                        let tag_pb = tag.map(|tag_id| (tag_id as i32).into());
+                        let tag_pb = tag.map(|tag_id| (tag_id as KeyId).into());
                         builder.shuffle(tag_pb.clone());
                         let params = pb::QueryParams {
                             tables: vec![],

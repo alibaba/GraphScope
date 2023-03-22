@@ -230,7 +230,7 @@ impl GraphElement for DynEntry {
             EntryType::Vertex | EntryType::Edge | EntryType::Path => {
                 self.inner.as_graph_element().unwrap().label()
             }
-            _ => None,
+            _ => unreachable!(),
         }
     }
 
@@ -241,7 +241,7 @@ impl GraphElement for DynEntry {
                 .as_graph_element()
                 .unwrap()
                 .get_property(key),
-            _ => None,
+            _ => unreachable!(),
         }
     }
 
@@ -252,7 +252,7 @@ impl GraphElement for DynEntry {
                 .as_graph_element()
                 .unwrap()
                 .get_all_properties(),
-            _ => None,
+            _ => unreachable!(),
         }
     }
 }
