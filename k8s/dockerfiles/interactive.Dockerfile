@@ -51,8 +51,13 @@ WORKDIR /home/graphscope
 ############### RUNTIME: executor #######################
 FROM $REGISTRY/graphscope/vineyard-runtime:$RUNTIME_VERSION AS executor
 
+# kubectl v1.19.2
+RUN sudo curl -L -o /usr/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.19.2/bin/linux/amd64/kubectl
+RUN sudo chmod +x /usr/bin/kubectl
+
 ENV GRAPHSCOPE_HOME=/opt/graphscope
-ENV PATH=$PATH:$GRAPHSCOPE_HOME/bin LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GRAPHSCOPE_HOME/lib
+ENV PATH=$PATH:$GRAPHSCOPE_HOME/bin:${GRAPHSCOPE_HOME}/../openmpi/bin:${GRAPHSCOPE_HOME}/../vineyard/bin
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GRAPHSCOPE_HOME/lib
 ENV RUST_BACKTRACE=1
 
 # gaia_executor, giectl
@@ -60,8 +65,14 @@ COPY --from=builder /home/graphscope/install/bin /opt/graphscope/bin
 # vineyard.executor.properties, log configuration files
 COPY --from=builder /home/graphscope/install/conf /opt/graphscope/conf
 
+COPY ./k8s/utils/kube_ssh /usr/local/bin/kube_ssh
+RUN sudo chmod +x /usr/local/bin/kube_ssh
+
 RUN sudo chmod +x /opt/graphscope/bin/*
 RUN sudo chmod a+wrx /tmp
+
+ENV OPAL_PREFIX=${GRAPHSCOPE_HOME}/../openmpi
+ENV OMPI_MCA_plm_rsh_agent=/usr/local/bin/kube_ssh
 
 USER graphscope
 WORKDIR /home/graphscope
