@@ -180,7 +180,7 @@ mod tests {
             match pkv {
                 OneOrMany::One(pkv) => {
                     let pk_value = &pkv[0].1;
-                    pk_value.as_u64().unwrap()
+                    pk_value.as_i64().unwrap()
                 }
                 OneOrMany::Many(_) => unreachable!(),
             }

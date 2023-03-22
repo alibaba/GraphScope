@@ -697,6 +697,12 @@ def parse_sys_args():
         help="Service type, choose from 'NodePort' or 'LoadBalancer'.",
     )
     parser.add_argument(
+        "--k8s_vineyard_deployment",
+        type=str,
+        default=None,
+        help="The name of vineyard deployment, it should exist as expected.",
+    )
+    parser.add_argument(
         "--k8s_coordinator_name",
         type=str,
         default="",
@@ -719,12 +725,6 @@ def parse_sys_args():
         type=str,
         default="",
         help="A list of comma separated secrets to pull image.",
-    )
-    parser.add_argument(
-        "--k8s_vineyard_daemonset",
-        type=str,
-        default=None,
-        help="Use the existing vineyard DaemonSet with name 'k8s_vineyard_daemonset'.",
     )
     parser.add_argument(
         "--k8s_vineyard_cpu",
@@ -880,6 +880,15 @@ def parse_sys_args():
         default=9968,
         help="Coordinator prometheus exporter service port.",
     )
+    parser.add_argument(
+        "--dataset_proxy",
+        type=str,
+        nargs="?",
+        const="",
+        default="",
+        help="A json string specifies the dataset proxy info."
+        "Available options of proxy: http_proxy, https_proxy, no_proxy.",
+    )
     return parser.parse_args()
 
 
@@ -916,7 +925,7 @@ def get_launcher(args):
             service_type=args.k8s_service_type,
             timeout_seconds=args.timeout_seconds,
             vineyard_cpu=args.k8s_vineyard_cpu,
-            vineyard_daemonset=args.k8s_vineyard_daemonset,
+            vineyard_deployment=args.k8s_vineyard_deployment,
             vineyard_image=args.k8s_vineyard_image,
             vineyard_mem=args.k8s_vineyard_mem,
             vineyard_shared_mem=args.vineyard_shared_mem,
@@ -924,6 +933,7 @@ def get_launcher(args):
             waiting_for_delete=args.waiting_for_delete,
             with_mars=args.k8s_with_mars,
             enabled_engines=args.k8s_enabled_engines,
+            dataset_proxy=args.dataset_proxy,
         )
     elif args.cluster_type == "hosts":
         launcher = LocalLauncher(

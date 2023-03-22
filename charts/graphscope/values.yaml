@@ -70,6 +70,10 @@ engines:
     enabled: False
     image:
       name: dataset
+  # Running Behind a Forward Proxy
+  # Environment variables that get added to the dataset container
+  # Available options of proxy: http_proxy, https_proxy, no_proxy
+    proxy:
 
   resources:
     requests:
@@ -80,16 +84,16 @@ engines:
       memory: 2Gi
 
 vineyard:
-  # When `vineyard.daemonset` is set to the Helm release name, the coordinator will
-  # tries to discover the vineyard DaemonSet in current namespace, then use it if
+  # When `vineyard.deployment` is set to the Helm release name,
+  # the coordinator will try to discover the vineyard deployment in current namespace, then use it if
   # found, and fallback to bundled vineyard container otherwise.
   #
-  # The vineyard IPC socket is placed on host at /var/run/vineyard-{namespace}-{release}.
-  daemonset: ""
+  # The vineyard IPC socket is placed on host at /var/run/vineyard-kubernetes/{namespace}/{deployment}.
+  deployment: ""
   image:
     name: vineyardcloudnative/vineyardd
     # Overrides the image tag whose default is the chart appVersion.
-    tag: v0.13.0
+    tag: v0.13.3
   resources:
     requests:
       cpu: 0.5

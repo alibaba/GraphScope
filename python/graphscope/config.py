@@ -68,8 +68,8 @@ class GSConfig(object):
 
     # vineyard resource configuration
     # image for vineyard container
-    k8s_vineyard_image = "vineyardcloudnative/vineyardd:v0.13.0"
-    k8s_vineyard_daemonset = None
+    k8s_vineyard_image = "vineyardcloudnative/vineyardd:v0.13.3"
+    k8s_vineyard_deployment = None
     k8s_vineyard_cpu = 0.5
     k8s_vineyard_mem = "512Mi"
     vineyard_shared_mem = "4Gi"

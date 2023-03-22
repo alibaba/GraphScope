@@ -107,7 +107,7 @@ traversalMethod_hasLabel
 
 // hasId(1, 2, 3)
 traversalMethod_hasId
-    : 'hasId' LPAREN integerLiteral (COMMA integerLiteralList)? RPAREN
+    : 'hasId' LPAREN nonEmptyIntegerLiteralList RPAREN
     ;
 
 // has("str", y), has("str", eq/neq/gt/gte/lt/lte(y))
@@ -503,6 +503,12 @@ integerLiteral
 integerLiteralList
     : integerLiteralExpr?
     | LBRACK integerLiteralExpr? RBRACK
+    ;
+
+// should be at least one integer in the list
+nonEmptyIntegerLiteralList
+    : integerLiteralExpr
+    | LBRACK integerLiteralExpr RBRACK
     ;
 
 integerLiteralExpr

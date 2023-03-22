@@ -25,10 +25,13 @@ import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSo
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.finalization.ProfileStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.strategy.optimization.FilterRankingStrategy;
 import org.apache.tinkerpop.gremlin.structure.Graph;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-@Graph.OptIn("com.alibaba.graphscope.integration.IrGremlinTestSuite")
-@Graph.OptIn("com.alibaba.graphscope.integration.ldbc.IrLdbcTestSuite")
-@Graph.OptIn("com.alibaba.graphscope.integration.pattern.IrPatternTestSuite")
+@Graph.OptIn(
+        "com.alibaba.graphscope.gremlin.integration.suite.standard.additional.IrAdditionalGraphTestSuite")
+@Graph.OptIn("com.alibaba.graphscope.gremlin.integration.suite.standard.IrGremlinTestSuite")
+@Graph.OptIn("com.alibaba.graphscope.gremlin.integration.suite.ldbc.IrLdbcTestSuite")
+@Graph.OptIn("com.alibaba.graphscope.gremlin.integration.suite.pattern.IrPatternTestSuite")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.DedupTest",
         method = "g_V_groupCount_selectXvaluesX_unfold_dedup",
@@ -1482,20 +1485,48 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         method = "g_V_both_hasLabelXpersonX_order_byXage_descX_limitX5X_name",
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderTest",
         reason = "Projection may introduce additional shuffling that can break the order.")
+
+// cases unsupported in groot
+// @Graph.OptOut(
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+//        method = "g_VX1X_out_hasXid_2_3X",
+//        reason = "unsupported")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+        method = "g_V_hasXp_neqXvXX",
+        reason = "unsupported")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+        method = "g_V_hasXblahX",
+        reason = "unsupported")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+        method = "g_VX1X_hasXcircumferenceX",
+        reason = "unsupported")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
+        method = "g_EX11X",
+        reason = "unsupported")
+// @Graph.OptOut(
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ValueMapTest",
+//        method = "g_V_valueMapXname_ageX",
+//        reason = "unsupported")
 public class RemoteTestGraph extends DummyGraph {
     public static final String GRAPH_NAME = "test.graph.name";
     private RemoteGremlinConnection remoteGremlinConnection;
 
-    public RemoteTestGraph(final Configuration configuration) {
+    public RemoteTestGraph(@Nullable final Configuration configuration) {
         try {
-            String gremlinEndpoint = configuration.getString(GRAPH_NAME);
-            this.remoteGremlinConnection = new RemoteGremlinConnection(gremlinEndpoint);
+            if (configuration != null) {
+                String gremlinEndpoint = configuration.getString(GRAPH_NAME);
+                this.remoteGremlinConnection = new RemoteGremlinConnection(gremlinEndpoint);
+            }
         } catch (Exception e) {
             throw new RuntimeException("initiate remote test graph fail " + e);
         }
     }
 
-    public static RemoteTestGraph open(final Configuration configuration) {
+    public static RemoteTestGraph open(final Configuration configuration) throws Exception {
         return new RemoteTestGraph(configuration);
     }
 

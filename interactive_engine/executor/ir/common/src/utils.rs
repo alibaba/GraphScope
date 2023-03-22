@@ -598,11 +598,13 @@ impl pb::logical_plan::Operator {
 }
 
 impl pb::QueryParams {
-    fn is_queryable(&self) -> bool {
+    pub fn is_queryable(&self) -> bool {
         !(self.tables.is_empty()
             && self.predicate.is_none()
             && self.limit.is_none()
-            && self.sample_ratio == 1.0)
+            && self.sample_ratio == 1.0
+            && self.columns.is_empty()
+            && !self.is_all_columns)
     }
 }
 

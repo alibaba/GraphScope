@@ -82,9 +82,9 @@ spec:
           - {{ printf "%s-%s" "coordinator" $fullname | quote }}
           - "--k8s_coordinator_service_name"
           - {{ printf "%s-%s" "coordinator-service" $fullname | quote }}
-          {{- if .Values.vineyard.daemonset }}
-          - "--k8s_vineyard_daemonset"
-          - {{ .Values.vineyard.daemonset }}
+          {{- if .Values.vineyard.deployment }}
+          - "--k8s_vineyard_deployment"
+          - {{ .Values.vineyard.deployment }}
           {{- end }}
           - "--k8s_vineyard_image"
           - {{ .Values.vineyard.image.name }}:{{ .Values.vineyard.image.tag }}
@@ -114,6 +114,10 @@ spec:
           - {{ .Values.engines.enabled_engines }}
           - "--k8s_with_dataset"
           - {{ .Values.engines.dataset.enabled | quote }}
+          {{- if and .Values.engines.dataset.enabled .Values.engines.dataset.proxy }}
+          - "--dataset_proxy"
+          - {{ mustToJson .Values.engines.dataset.proxy | b64enc | quote }}
+          {{- end }}
 
       {{- if .Values.withJupyter }}
       - name: jupyter

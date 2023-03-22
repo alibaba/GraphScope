@@ -119,13 +119,14 @@ pub trait Details: std::fmt::Debug + Send + Sync + AsAny {
     fn get_property(&self, key: &NameOrId) -> Option<PropertyValue>;
 
     /// get_all_properties returns all properties. None means that we failed in getting the properties.
-    /// Specifically, it returns all properties of Vertex/Edge saved in RUNTIME rather than STORAGE.
-    /// it may be used in two situations:
-    /// (1) if no prop_keys are provided when querying the vertex/edge which indicates that all properties are necessary,
-    /// then we can get all properties of the vertex/edge in storage; e.g., g.V().valueMap()
-    /// (2) if some prop_keys are provided when querying the vertex/edge which indicates that only these properties are necessary,
-    /// then we can only get all pre-specified properties of the vertex/edge.
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>>;
+
+    /// get_property_keys returns the pre-cached prop_keys.
+    /// Specifically, prop_keys of `Some(vec![])` indicates all properties,
+    /// and prop_keys of `None` indicates no pre-cached property.
+    // TODO: Compiler will give all the prop keys when need to get_all_properties().
+    // After that, we can use a Vector to specify the cached_properties.
+    fn get_property_keys(&self) -> Option<Vec<NameOrId>>;
 }
 
 /// Properties in Runtime, including:
@@ -171,8 +172,16 @@ impl Details for DynDetails {
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
         match self {
             DynDetails::Empty => None,
-            DynDetails::Default(default) => Some(default.clone()), // should be unreachable
+            DynDetails::Default(default) => Some(default.clone()),
             DynDetails::Lazy(lazy) => lazy.get_all_properties(),
+        }
+    }
+
+    fn get_property_keys(&self) -> Option<Vec<NameOrId>> {
+        match self {
+            DynDetails::Empty => None,
+            DynDetails::Default(_) => unreachable!(),
+            DynDetails::Lazy(lazy) => lazy.get_property_keys(),
         }
     }
 }
@@ -192,22 +201,39 @@ impl Encode for DynDetails {
                 }
             }
             DynDetails::Lazy(lazy) => {
-                if let Some(all_props) = lazy.get_all_properties() {
-                    let len = all_props.len();
-                    if len == 0 {
-                        // If no properties required, hint as Empty DynDetails
-                        writer.write_u8(0)?;
+                if let Some(prop_keys) = lazy.get_property_keys() {
+                    if prop_keys.is_empty() {
+                        // If all properties required, try to get all properties
+                        let all_props = self.get_all_properties().unwrap_or_default();
+                        let len = all_props.len();
+                        if len == 0 {
+                            // If no properties fetched, hint as Empty DynDetails
+                            writer.write_u8(0)?;
+                        } else {
+                            // Otherwise, hint as Default DynDetails
+                            writer.write_u8(1)?;
+                            writer.write_u64(len as u64)?;
+                            for (k, v) in all_props {
+                                k.write_to(writer)?;
+                                v.write_to(writer)?;
+                            }
+                        }
                     } else {
-                        // Otherwise, hint as DefaultDetails
+                        // If some specific properties required, try to get these properties; and hint as Default DynDetails
                         writer.write_u8(1)?;
-                        writer.write_u64(len as u64)?;
-                        for (k, v) in all_props {
+                        writer.write_u64(prop_keys.len() as u64)?;
+                        for k in prop_keys {
+                            let v = self
+                                .get_property(&k)
+                                .map(|prop| prop.try_to_owned())
+                                .unwrap_or(None)
+                                .unwrap_or(Object::None);
                             k.write_to(writer)?;
                             v.write_to(writer)?;
                         }
                     }
                 } else {
-                    // if fetching None, hint as Empty DynDetails
+                    // If no properties required, hint as Empty DynDetails
                     writer.write_u8(0)?;
                 }
             }

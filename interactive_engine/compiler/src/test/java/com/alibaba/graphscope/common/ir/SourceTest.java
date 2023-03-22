@@ -35,7 +35,7 @@ public class SourceTest {
                 new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"));
         RelNode source = builder.source(sourceConfig).build();
         Assert.assertEquals(
-                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
                         + " opt=[VERTEX])",
                 source.explain().trim());
     }

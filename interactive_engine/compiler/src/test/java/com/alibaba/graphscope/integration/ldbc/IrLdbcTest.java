@@ -18,6 +18,7 @@ package com.alibaba.graphscope.integration.ldbc;
 
 import com.alibaba.graphscope.gremlin.integration.graph.RemoteTestGraph;
 import com.alibaba.graphscope.gremlin.integration.graph.RemoteTestGraphProvider;
+import com.alibaba.graphscope.gremlin.integration.suite.ldbc.IrLdbcTestSuite;
 
 import org.apache.tinkerpop.gremlin.GraphProviderClass;
 import org.junit.runner.RunWith;

@@ -17,7 +17,6 @@
 package com.alibaba.graphscope.common.ir.type;
 
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
-import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -35,8 +34,8 @@ public class GraphSchemaType extends RelRecordType {
     protected GraphOpt.Source scanOpt;
     protected GraphLabelType labelType;
 
-    protected GraphSchemaType(GraphOpt.Source scanOpt) {
-        this(scanOpt, GraphLabelType.DEFAULT, ImmutableList.of());
+    protected GraphSchemaType(GraphOpt.Source scanOpt, List<RelDataTypeField> fields) {
+        this(scanOpt, GraphLabelType.DEFAULT, fields);
     }
 
     /**

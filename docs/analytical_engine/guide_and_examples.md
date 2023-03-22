@@ -8,8 +8,7 @@ hidden:
 ---
 tutorial_run_builtin_algo
 tutorial_networkx_operations
-tutotial_networkx_algorithms
-tutorial_run_builtin_algo
+tutorial_networkx_algorithms
 tutorial_dev_algo_cpp_pie
 tutorial_dev_algo_cpp_flash
 tutorial_dev_algo_python

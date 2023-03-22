@@ -95,14 +95,10 @@ Here we give a list of most frequently used parameters.
 | Name | Description | Value |
 |---|---|---|
 | store.replicaCount | Number of nodes | 2 |
-| store.updateStrategy | Update strategy for the store | RollingUpdate |
 | frontend.replicaCount | Number of nodes | 1 |
-| frontend.updateStrategy | Update strategy for the frontend | RollingUpdate |
 | frontend.service.type| Kubernetes Service type| NodePort |
 | ingestor.replicaCount | Number of nodes | 1 |
-| ingestor.updateStrategy | Update strategy for the ingestor | RollingUpdate |
 | coordinator.replicaCount | Number of nodes | 1 |
-| coordinator.updateStrategy | Update strategy for the coordinator | RollingUpdate |
 
 ### Kafka chart parameters
 
