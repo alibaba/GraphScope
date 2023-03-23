@@ -124,7 +124,7 @@ Each message is passed along crossing edges from nodes that are both  InnerVerte
 SyncOnOuterVertexAsTarget
 """""""""""""""""""""""""
 
-It is applied in company with the OnlyOut loading strategy. Here each fragment $F_i$ sends the states of its “mirror” node of OuterVertex v to $F_j$ that v resides, if there exists edge (v', v) and v' is “local” node of $F_i$, for synchronizing different states of v. For instance, the state of “mirror” node 3 is sent from $F_1$ to F0 for synchronization at F0. 
+It is applied in company with the OnlyOut loading strategy. Here each fragment $F_i$ sends the states of its “mirror” node of OuterVertex v to $F_j$ that v resides, if there exists edge (v', v) and v' is “local” node of $F_i$, for synchronizing different states of v. For instance, the state of “mirror” node 3 is sent from $F_1$ to $F_0$ for synchronization at $F_0$. 
 
 .. image:: ../images/sync1.png
   :alt: SyncOnOuterVertexAsTarget
@@ -132,7 +132,7 @@ It is applied in company with the OnlyOut loading strategy. Here each fragment $
 SyncOnOuterVertexAsSource
 """""""""""""""""""""""""
 
-It is applied together with the OnlyIn loading strategy. Similar to **SyncStateOnOuterVertexAsTarget**, each fragment $F_i$ sends the states of its “mirror” nodes v to the corresponding fragments for synchronization. The difference is that for each such “mirror”, there exists outgoing edge (v, v') to certain “local” node v' of $F_i$. For example, the states of “mirror” nodes 1, 9, and 12 are sent from $F_1$ to F0 and F2 for synchronization with other states.
+It is applied together with the OnlyIn loading strategy. Similar to **SyncStateOnOuterVertexAsTarget**, each fragment $F_i$ sends the states of its “mirror” nodes v to the corresponding fragments for synchronization. The difference is that for each such “mirror”, there exists outgoing edge (v, v') to certain “local” node v' of $F_i$. For example, the states of “mirror” nodes 1, 9, and 12 are sent from $F_1$ to $F_0$ and $F_2$ for synchronization with other states.
 
 .. image:: ../images/sync2.png
   :alt: SyncOnOuterVertexAsSource
@@ -140,7 +140,7 @@ It is applied together with the OnlyIn loading strategy. Similar to **SyncStateO
 SyncOnOuterVertex
 """""""""""""""""
 
-This is applied together with the BothInOut loading strategy. Under this case, each fragment $F_i$ sends the states of all its “mirror” nodes v to the corresponding fragments for synchronization, regardless of the directions of edges adjacent to v, e.g., the states of “mirror” nodes 1, 3, 9 and 12 are sent from F1 to F0 and F2 for further synchronization. 
+This is applied together with the BothInOut loading strategy. Under this case, each fragment $F_i$ sends the states of all its “mirror” nodes v to the corresponding fragments for synchronization, regardless of the directions of edges adjacent to v, e.g., the states of “mirror” nodes 1, 3, 9 and 12 are sent from $F_1$ to $F_0$ and $F_2$ for further synchronization. 
 
 .. image:: ../images/sync3.png
   :alt: SyncOnOuterVertex
