@@ -20,7 +20,7 @@ class YourApp : public FlashAppBase<FRAG_T, V_TYPE> {
   bool sync_all_ = false; // true or false
 
   V_RES_TYPE* Res(V_TYPE* v) {
-    // return the result on the vertex
+  // return the result on the vertex
   }
 
   void Run(const fragment_t& graph, const std::shared_ptr<fw_t> fw,
@@ -42,7 +42,7 @@ class YourApp : public FlashAppBase<FRAG_T, V_TYPE> {
   bool sync_all_ = false; // true or false
 
   G_RES_TYPE Res() {
-  	// return the global result
+  // return the global result
   }
 
   void Run(const fragment_t& graph, const std::shared_ptr<fw_t> fw,

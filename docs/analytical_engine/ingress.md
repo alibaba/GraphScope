@@ -55,7 +55,7 @@ Although aggregate supports only two input parameters for simplicity, we also pr
 
 ```cpp
 template <class D, class W> 
-interface IteratorKernel{
+interface IteratorKernel {
   virtual void init_m(Vertex v, D m) = 0; 
   virtual void init_v(Vertex v, D d) = 0; 
   virtual D aggregate(D m1, D m2) = 0; 
@@ -67,7 +67,7 @@ interface IteratorKernel{
 Using this API, the implementation of the batch SSSP algorithm is as below:
 
 ```cpp
-class SSSPKernel: public IteratorKernel{
+class SSSPKernel: public IteratorKernel {
   void init_m(Vertex v, double m) { m = DBL_MAX; } 
   void init_v(Vertex v, double d) {
     v.d = ((v.id == source) ? 0 : DBL_MAX); 
