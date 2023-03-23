@@ -27,6 +27,7 @@ This template exists as a way to implement a language menu just as what
   gtag('config', 'G-4TMYCGJ0X2');
 </script>
 
+<!-- Baidu analytics -->
 <script>
   var _hmt = _hmt || [];
   (function() {
@@ -35,6 +36,22 @@ This template exists as a way to implement a language menu just as what
     var s = document.getElementsByTagName("script")[0];
     s.parentNode.insertBefore(hm, s);
   })();
+</script>
+
+<!-- MathJax rendering -->
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+  },
+  svg: {
+    fontCache: 'global'
+  }
+};
+</script>
+<script
+  type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
 </script>
 
 {% endblock %}
