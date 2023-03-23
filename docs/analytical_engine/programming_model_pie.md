@@ -94,6 +94,6 @@ algorithm on the sub-graph (fragment) where the `source` resides in to obtain a 
 
 In the `IncEval` function, each fragment first receives messages through the [message manager](https://graphscope.io/docs/latest/analytical_engine/key_concepts.html#messagemanager-and-messagestrategy), then executes incremental evaluation based on received messages to update the partial result. If the partial result is updated, each fragment needs to execute the `SyncStateOnOuterVertex` function to synchronize the latest partial result of [outer vertices](https://graphscope.io/docs/latest/analytical_engine/key_concepts.html#outervertex) with other fragments to trigger next round of `IncEval`. Please checkout the following tutorials for more details about how to develop graph applications with the PIE model.
 
--[Tutorial: Develop your Algorithm in C++ with PIE Model](https://graphscope.io/docs/latest/analytical_engine/tutorial_dev_algo_cpp_pie.html)
--[Tutorial: Develop your Algorithm in Java with PIE Model](https://graphscope.io/docs/latest/analytical_engine/tutorial_dev_algo_java.html)
--[Tutorial: Develop algorithms in Python](https://graphscope.io/docs/latest/analytical_engine/tutorial_dev_algo_python.html#writing-your-own-algorithms-in-pie)
+- [Tutorial: Develop your Algorithm in C++ with PIE Model](https://graphscope.io/docs/latest/analytical_engine/tutorial_dev_algo_cpp_pie.html)
+- [Tutorial: Develop your Algorithm in Java with PIE Model](https://graphscope.io/docs/latest/analytical_engine/tutorial_dev_algo_java.html)
+- [Tutorial: Develop algorithms in Python](https://graphscope.io/docs/latest/analytical_engine/tutorial_dev_algo_python.html#writing-your-own-algorithms-in-pie)
