@@ -91,10 +91,11 @@ InnerVertexWithIncomingEdge of fragment $F_i$ if it is maintained in $F_i$ has a
 .. image:: ../images/invertexin.png
   :alt: InnerVertexWithIncomingEdge
 
-MessageStrategy
+MessageManager and MessageStrategy
 ^^^^^^^^^^^^^^^
+In each graph application in GAE, a MessageManager is created to manage the messages passed between different fragments. Considering the diversity of graph applications, we provide many message passing strategies, which are defined in MessageStrategy.  
 
-Below are some message passing and synchronization strategies adopted by GraphScope analytical engine.  
+Below are message passing and synchronization strategies supported by GAE.  
 
 AlongOutgoingEdgeToOuterVertex
 """"""""""""""""""""""""""""""
