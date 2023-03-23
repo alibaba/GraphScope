@@ -48,126 +48,114 @@ data:
     }
   v6d_modern_schema.json: |-
     {
-      "partitionNum": 1,
-      "types": [
+      "partitionNum":1,
+      "types":[
         {
-          "id": 0,
-          "indexes": [],
-          "label": "person",
-          "mapping": "[4,0,0,0,0,0]",
-          "propertyDefList": [
+          "id":0,
+          "indexes":[],
+          "label":"person",
+          "mapping":"[3,0,0,0,0]",
+          "propertyDefList":[
             {
-              "data_type": "STRING",
-              "id": 4,
-              "name": "name"
+              "data_type":"STRING",
+              "id":3,
+              "name":"name"
             },
             {
-              "data_type": "LONG",
-              "id": 0,
-              "name": "age"
+              "data_type":"LONG",
+              "id":0,
+              "name":"age"
             }
           ],
-          "rawRelationShips": [],
-          "reverse_mapping": "[1,0,0,0,0,0]",
-          "type": "VERTEX",
-          "valid_properties": [
+          "rawRelationShips":[],
+          "reverse_mapping":"[1,0,0,0,0]",
+          "type":"VERTEX",
+          "valid_properties":[
             1,
             1
           ]
         },
         {
-          "id": 1,
-          "indexes": [],
-          "label": "software",
-          "mapping": "[4,3,0,0,0,0]",
-          "propertyDefList": [
+          "id":1,
+          "indexes":[],
+          "label":"software",
+          "mapping":"[3,2,0,0,0]",
+          "propertyDefList":[
             {
-              "data_type": "STRING",
-              "id": 4,
-              "name": "name"
+              "data_type":"STRING",
+              "id":3,
+              "name":"name"
             },
             {
-              "data_type": "STRING",
-              "id": 3,
-              "name": "lang"
+              "data_type":"STRING",
+              "id":2,
+              "name":"lang"
             }
           ],
-          "rawRelationShips": [],
-          "reverse_mapping": "[0,0,0,1,0,0]",
-          "type": "VERTEX",
-          "valid_properties": [
+          "rawRelationShips":[],
+          "reverse_mapping":"[0,0,1,0,0]",
+          "type":"VERTEX",
+          "valid_properties":[
             1,
             1
           ]
         },
         {
-          "id": 2,
-          "indexes": [],
-          "label": "knows",
-          "mapping": "[2,1,5,0,0,0]",
-          "propertyDefList": [
+          "id":2,
+          "indexes":[],
+          "label":"knows",
+          "mapping":"[1,4,0,0,0]",
+          "propertyDefList":[
             {
-              "data_type": "LONG",
-              "id": 2,
-              "name": "eid"
+              "data_type":"LONG",
+              "id":1,
+              "name":"eid"
             },
             {
-              "data_type": "LONG",
-              "id": 1,
-              "name": "edge_id"
-            },
-            {
-              "data_type": "DOUBLE",
-              "id": 5,
-              "name": "weight"
+              "data_type":"DOUBLE",
+              "id":4,
+              "name":"weight"
             }
           ],
-          "rawRelationShips": [
+          "rawRelationShips":[
             {
-              "dstVertexLabel": "person",
-              "srcVertexLabel": "person"
+              "dstVertexLabel":"person",
+              "srcVertexLabel":"person"
             }
           ],
-          "reverse_mapping": "[0,1,0,0,0,2]",
-          "type": "EDGE",
-          "valid_properties": [
-            1,
+          "reverse_mapping":"[0,0,0,0,1]",
+          "type":"EDGE",
+          "valid_properties":[
             1,
             1
           ]
         },
         {
-          "id": 3,
-          "indexes": [],
-          "label": "created",
-          "mapping": "[2,1,5,0,0,0]",
-          "propertyDefList": [
+          "id":3,
+          "indexes":[],
+          "label":"created",
+          "mapping":"[1,4,0,0,0]",
+          "propertyDefList":[
             {
-              "data_type": "LONG",
-              "id": 2,
-              "name": "eid"
+              "data_type":"LONG",
+              "id":1,
+              "name":"eid"
             },
             {
-              "data_type": "LONG",
-              "id": 1,
-              "name": "edge_id"
-            },
-            {
-              "data_type": "DOUBLE",
-              "id": 5,
-              "name": "weight"
+              "data_type":"DOUBLE",
+              "id":4,
+              "name":"weight"
             }
           ],
-          "rawRelationShips": [
+          "rawRelationShips":[
             {
-              "dstVertexLabel": "software",
-              "srcVertexLabel": "person"
+              "dstVertexLabel":"software",
+              "srcVertexLabel":"person"
             }
           ],
-          "reverse_mapping": "[0,1,0,0,0,2]",
-          "type": "EDGE",
-          "valid_properties": [
-            1,
+          "reverse_mapping":"[0,0,0,0,1]",
+          "type":"EDGE",
+          "valid_properties":[
             1,
             1
           ]
