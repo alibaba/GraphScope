@@ -12,7 +12,7 @@ There are three ways to maintain the nodes crossing different fragments in Graph
 OnlyOut
 """""""
 
-Each fragment $F_i$ maintains “local” nodes v and a set of “mirrors” for nodes v' in other fragments such that there exists an edge (v, v'). For instance, in addition to local nodes {4, 5, 6, 7}, $F_1$ in graph G also stores a “mirror” node 3 and the edge (5, 3) when using OnlyOut strategy, as shown below.
+Each fragment $F_{i}$ maintains “local” nodes v and a set of “mirrors” for nodes v' in other fragments such that there exists an edge (v, v'). For instance, in addition to local nodes {4, 5, 6, 7}, $F_{1}$ in graph G also stores a “mirror” node 3 and the edge (5, 3) when using OnlyOut strategy, as shown below.
 
 .. image:: ../images/onlyout.png
   :alt: OnlyOut
@@ -20,7 +20,7 @@ Each fragment $F_i$ maintains “local” nodes v and a set of “mirrors” for
 OnlyIn 
 """"""
 
-Under this case, each fragment $F_i$ maintains “local” nodes v and a set of “mirrors” for nodes v' in other fragments such that there exists an edge (v', v). In graph G, $F_1$ maintains “mirror” nodes {1, 9, 12} besides its local nodes.
+Under this case, each fragment $F_{i}$ maintains “local” nodes v and a set of “mirrors” for nodes v' in other fragments such that there exists an edge (v', v). In graph G, $F_{1}$ maintains “mirror” nodes {1, 9, 12} besides its local nodes.
 
 .. image:: ../images/onlyin.png
   :alt: OnlyIn
@@ -28,7 +28,7 @@ Under this case, each fragment $F_i$ maintains “local” nodes v and a set of 
 BothInOut
 """""""""
 
-Each fragment $F_i$ maintains “local” nodes v and a set of “mirrors” for nodes v' in other fragments such that there exists an edge (v, v') or (v', v). Hence, in graph G, “mirror” nodes {1, 3, 9, 12} are stored in $F_1$ when BothInOut is applied.
+Each fragment $F_{i}$ maintains “local” nodes v and a set of “mirrors” for nodes v' in other fragments such that there exists an edge (v, v') or (v', v). Hence, in graph G, “mirror” nodes {1, 3, 9, 12} are stored in $F_{1}$ when BothInOut is applied.
 
 .. image:: ../images/inandout.png
   :alt: BothInOut
@@ -62,7 +62,7 @@ A node v is referred to as an
 OuterVertex
 """""""""""
 
-OuterVertex of fragment $F_i$ if it resides at another fragment $F_j$ and there exists a node v' in $F_i$ such that (v, v') or (v', v) is an edge; e.g., nodes {1, 3, 9, 12} are OuterVertex of fragment $F_1$ in graph G;
+OuterVertex of fragment $F_{i}$ if it resides at another fragment $F_{j}$ and there exists a node v' in $F_{i}$ such that (v, v') or (v', v) is an edge; e.g., nodes {1, 3, 9, 12} are OuterVertex of fragment $F_{1}$ in graph G;
 
 .. image:: ../images/outvertex.png
   :alt: OuterVertex
@@ -70,7 +70,7 @@ OuterVertex of fragment $F_i$ if it resides at another fragment $F_j$ and there 
 InnerVertex
 """""""""""
 
-InnerVertex of fragment $F_i$ if it is distributed to $F_i$; e.g. nodes {4, 5, 6, 7} are InnerVertex of fragment $F_1$ in G;
+InnerVertex of fragment $F_{i}$ if it is distributed to $F_{i}$; e.g. nodes {4, 5, 6, 7} are InnerVertex of fragment $F_{1}$ in G;
 
 .. image:: ../images/invertex.png
   :alt: InnerVertex 
@@ -78,7 +78,7 @@ InnerVertex of fragment $F_i$ if it is distributed to $F_i$; e.g. nodes {4, 5, 6
 InnerVertexWithOutgoingEdge
 """""""""""""""""""""""""""
 
-InnerVertexWithOutgoingEdge of fragment $F_i$ if it is stored in $F_i$ and has an adjacent edge (v, v') outcoming to a node v' in another fragment $F_j$; e.g., node 5 is an InnerVertexWithOutgoingEdge of $F_1$ in G with the outgoing edge (5, 3);
+InnerVertexWithOutgoingEdge of fragment $F_{i}$ if it is stored in $F_{i}$ and has an adjacent edge (v, v') outcoming to a node v' in another fragment $F_{j}$; e.g., node 5 is an InnerVertexWithOutgoingEdge of $F_{1}$ in G with the outgoing edge (5, 3);
 
 .. image:: ../images/invertexout.png
   :alt: InnerVertexWithOutgoingEdge
@@ -86,7 +86,7 @@ InnerVertexWithOutgoingEdge of fragment $F_i$ if it is stored in $F_i$ and has a
 InnerVertexWithIncomingEdge
 """""""""""""""""""""""""""
 
-InnerVertexWithIncomingEdge of fragment $F_i$ if it is maintained in $F_i$ has an adjacent edge (v', v) incoming from a node v' in another fragment $F_j$; e.g., nodes {4, 5, 7} are InnerVertexWithIncomingEdge of $F_1$ in G, and (1, 4), (9, 5), and (12, 7) are corresponding incoming edges.
+InnerVertexWithIncomingEdge of fragment $F_{i}$ if it is maintained in $F_{i}$ has an adjacent edge (v', v) incoming from a node v' in another fragment $F_{j}$; e.g., nodes {4, 5, 7} are InnerVertexWithIncomingEdge of $F_{1}$ in G, and (1, 4), (9, 5), and (12, 7) are corresponding incoming edges.
 
 .. image:: ../images/invertexin.png
   :alt: InnerVertexWithIncomingEdge
@@ -124,7 +124,7 @@ Each message is passed along crossing edges from nodes that are both  InnerVerte
 SyncOnOuterVertexAsTarget
 """""""""""""""""""""""""
 
-It is applied in company with the OnlyOut loading strategy. Here each fragment $F_i$ sends the states of its “mirror” node of OuterVertex v to $F_j$ that v resides, if there exists edge (v', v) and v' is “local” node of $F_i$, for synchronizing different states of v. For instance, the state of “mirror” node 3 is sent from $F_1$ to $F_0$ for synchronization at $F_0$. 
+It is applied in company with the OnlyOut loading strategy. Here each fragment $F_{i}$ sends the states of its “mirror” node of OuterVertex v to $F_{j}$ that v resides, if there exists edge (v', v) and v' is “local” node of $F_{i}$, for synchronizing different states of v. For instance, the state of “mirror” node 3 is sent from $F_{1}$ to $F_{0}$ for synchronization at $F_{0}$. 
 
 .. image:: ../images/sync1.png
   :alt: SyncOnOuterVertexAsTarget
@@ -132,7 +132,7 @@ It is applied in company with the OnlyOut loading strategy. Here each fragment $
 SyncOnOuterVertexAsSource
 """""""""""""""""""""""""
 
-It is applied together with the OnlyIn loading strategy. Similar to **SyncStateOnOuterVertexAsTarget**, each fragment $F_i$ sends the states of its “mirror” nodes v to the corresponding fragments for synchronization. The difference is that for each such “mirror”, there exists outgoing edge (v, v') to certain “local” node v' of $F_i$. For example, the states of “mirror” nodes 1, 9, and 12 are sent from $F_1$ to $F_0$ and $F_2$ for synchronization with other states.
+It is applied together with the OnlyIn loading strategy. Similar to **SyncStateOnOuterVertexAsTarget**, each fragment $F_{i}$ sends the states of its “mirror” nodes v to the corresponding fragments for synchronization. The difference is that for each such “mirror”, there exists outgoing edge (v, v') to certain “local” node v' of $F_{i}$. For example, the states of “mirror” nodes 1, 9, and 12 are sent from $F_{1}$ to $F_{0}$ and $F_{2}$ for synchronization with other states.
 
 .. image:: ../images/sync2.png
   :alt: SyncOnOuterVertexAsSource
@@ -140,7 +140,7 @@ It is applied together with the OnlyIn loading strategy. Similar to **SyncStateO
 SyncOnOuterVertex
 """""""""""""""""
 
-This is applied together with the BothInOut loading strategy. Under this case, each fragment $F_i$ sends the states of all its “mirror” nodes v to the corresponding fragments for synchronization, regardless of the directions of edges adjacent to v, e.g., the states of “mirror” nodes 1, 3, 9 and 12 are sent from $F_1$ to $F_0$ and $F_2$ for further synchronization. 
+This is applied together with the BothInOut loading strategy. Under this case, each fragment $F_{i}$ sends the states of all its “mirror” nodes v to the corresponding fragments for synchronization, regardless of the directions of edges adjacent to v, e.g., the states of “mirror” nodes 1, 3, 9 and 12 are sent from $F_{1}$ to $F_{0}$ and $F_{2}$ for further synchronization. 
 
 .. image:: ../images/sync3.png
   :alt: SyncOnOuterVertex
