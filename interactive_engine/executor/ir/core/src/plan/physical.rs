@@ -775,7 +775,6 @@ fn add_intersect_job_builder(
             }
         }
         let sub_plan = sub_bldr.take_plan();
-        println!("{:?}\n", sub_plan);
         intersect_plans.push(sub_plan);
     }
     builder.intersect(intersect_plans, intersect_tag.clone());

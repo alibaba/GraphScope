@@ -14,7 +14,7 @@
 //! limitations under the License.
 
 use std::cmp::Ordering;
-use std::collections::{BTreeMap, BTreeSet, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::iter::FromIterator;
 
 use ir_common::error::ParsePbError;
@@ -307,7 +307,8 @@ impl Pattern {
         // i.e., for any tag_id that < max_tag_id is a user-given tags
         // next (system-given) vertex id assign to the vertex picked from the pb pattern
         // notice that the next_vertex_id (system-given) is the max_tag_id after processing all user-given alias in pattern
-        let mut next_vertex_id = plan_meta.get_max_tag_id() as PatternId;
+        let max_tag_id = plan_meta.get_max_tag_id();
+        let mut next_vertex_id = max_tag_id as PatternId;
         // next (system-given) edge id assign to the edge picked from the pb pattern
         // Notice that we start next_edge_id from 0 because we have not support expanding edges only yet (in Intersection),
         // so we assume no user-given alias for expanding edges. i.e., g.V().match(__.as("a").outE().as("b")) is not supported.
@@ -315,13 +316,14 @@ impl Pattern {
         // pattern edges picked from the pb pattern
         let mut pattern_edges = vec![];
         // record the label for each vertex from the pb pattern
-        let mut id_labels_map: BTreeMap<PatternId, BTreeSet<PatternLabelId>> = BTreeMap::new();
+        let mut vertex_labels_map: BTreeMap<PatternId, BTreeSet<PatternLabelId>> = BTreeMap::new();
         // record the vertex data from the pb pattern, i.e., pb::Select
         let mut vertex_params_map: BTreeMap<PatternId, Vec<pb::QueryParams>> = BTreeMap::new();
         // record the edge data from the pb pattern, i.e., pb::Edge or pb::Path
         let mut edge_data_map: BTreeMap<PatternId, PbEdgeOrPath> = BTreeMap::new();
-        // record all the vertices after outE without being closed by GetV
-        let mut edge_expands_to_close = HashSet::new();
+        // record all the vertices after outE that haven't been closed by GetV
+        // its expand direction is also recorded to check whether the futural GetV is meaningless
+        let mut edge_expands_to_close = HashMap::new();
         for sentence in &pb_pattern.sentences {
             if sentence.binders.is_empty() {
                 return Err(
@@ -341,7 +343,7 @@ impl Pattern {
             // just use the start tag id as its pattern vertex id
             let start_tag_v_id = start_tag as PatternId;
             // check whether the start tag label is already determined or not
-            let start_tag_label = id_labels_map.get(&start_tag_v_id).cloned();
+            let start_tag_label = vertex_labels_map.get(&start_tag_v_id).cloned();
             // it is allowed that the pb pattern sentence doesn't have an end tag
             let end_tag: Option<TagId> = sentence
                 .end
@@ -351,7 +353,7 @@ impl Pattern {
             // if the end tag exists, just use the end tag id as its pattern vertex id
             let end_tag_v_id = end_tag.map(|tag| tag as PatternId);
             // check the end tag label is already determined or not
-            let end_tag_label = end_tag_v_id.and_then(|v_id| id_labels_map.get(&v_id).cloned());
+            let end_tag_label = end_tag_v_id.and_then(|v_id| vertex_labels_map.get(&v_id).cloned());
             // record previous pattern edge's destinated vertex's id
             // init as start vertex's id
             let mut pre_dst_vertex_id: PatternId = start_tag_v_id;
@@ -367,7 +369,7 @@ impl Pattern {
                         // assign the new pattern edge with a new id
                         let edge_id = assign_id(&mut next_edge_id);
                         let edge_expand = get_edge_expand_from_binder(binder, edge_id, &mut edge_data_map)?;
-                        let get_v = get_vertex_parameters_from_binder(binder);
+                        let vertex_params = get_vertex_parameters_from_binder(binder);
                         // get edge label's id
                         let edge_labels = get_edge_expand_labels(edge_expand)?;
                         // get edge direction
@@ -382,14 +384,16 @@ impl Pattern {
                             edge_expand,
                             &mut next_vertex_id,
                         )?;
-                        if edge_expand.expand_opt == pb::edge_expand::ExpandOpt::Edge as i32 {
-                            edge_expands_to_close.insert(dst_vertex_id);
+                        if let Some(BinderItem::Edge(_)) = binder.item.as_ref() {
+                            if edge_expand.expand_opt == pb::edge_expand::ExpandOpt::Edge as i32 {
+                                edge_expands_to_close.insert(dst_vertex_id, edge_direction);
+                            }
                         }
-                        if let Some(vertex_params) = get_v {
+                        if let Some(params) = vertex_params {
                             vertex_params_map
                                 .entry(dst_vertex_id)
                                 .or_default()
-                                .push(vertex_params);
+                                .push(params);
                         }
                         pre_dst_vertex_id = dst_vertex_id;
                         // assign vertices labels
@@ -404,8 +408,8 @@ impl Pattern {
                             required_src_vertex_label,
                             required_dst_vertex_label,
                         )?;
-                        id_labels_map.insert(src_vertex_id, src_vertex_label.clone());
-                        id_labels_map.insert(dst_vertex_id, dst_vertex_label.clone());
+                        vertex_labels_map.insert(src_vertex_id, src_vertex_label.clone());
+                        vertex_labels_map.insert(dst_vertex_id, dst_vertex_label.clone());
                         pre_dst_vertex_label = Some(dst_vertex_label.clone());
                         // generate the new pattern edge and add to the pattern_edges_collection
                         let new_pattern_edge = PatternEdge::new(
@@ -435,9 +439,30 @@ impl Pattern {
                                 .push(vertex_params)
                         };
                     }
-                    Some(BinderItem::Vertex(_get_v)) => {
-                        // GetV() when path().endV(); ignore endV() here, and add endV() back when build_logical_plan()
-                        if edge_expands_to_close.remove(&pre_dst_vertex_id) {
+                    Some(BinderItem::Vertex(get_v)) => {
+                        // check whether the GetV's opt can match edge direction
+                        // (OutE <-> EndV), (InE <-> StartV), (BothE <-> BothV)
+                        if let Some(edge_direction) = edge_expands_to_close.remove(&pre_dst_vertex_id) {
+                            if (edge_direction as i32 == 0 && get_v.opt != 1)
+                                || (edge_direction as i32 == 1 && get_v.opt != 0)
+                                || (edge_direction as i32 == 2 && get_v.opt != 2)
+                            {
+                                Err(IrPatternError::Unsupported(
+                                    "Meaningless GetV choosing the original source vertex".to_string(),
+                                ))?
+                            }
+                            if Some(pre_dst_vertex_id) != end_tag_v_id {
+                                if let Some(new_vertex_id) = pick_vertex_id_from_get_v(get_v) {
+                                    edit_vertex_id_in_translation(
+                                        new_vertex_id,
+                                        pre_dst_vertex_id,
+                                        &mut pattern_edges,
+                                        &mut vertex_labels_map,
+                                        &mut vertex_params_map,
+                                    );
+                                    pre_dst_vertex_id = new_vertex_id;
+                                }
+                            }
                             if let Some(vertex_param) = get_vertex_parameters_from_binder(binder) {
                                 vertex_params_map
                                     .entry(pre_dst_vertex_id)
@@ -445,9 +470,9 @@ impl Pattern {
                                     .push(vertex_param);
                             }
                         } else {
-                            return Err(IrPatternError::ParsePbError(ParsePbError::ParseError(
+                            Err(IrPatternError::ParsePbError(ParsePbError::ParseError(
                                 "GetV doesn't follow corresponding Edge Expand Only Operator".to_string(),
-                            )))?;
+                            )))?
                         }
                     }
                     None => {
@@ -483,7 +508,7 @@ impl Pattern {
         for (e_id, edge_data) in edge_data_map {
             pattern.set_edge_data(e_id, edge_data)?;
         }
-        pattern.set_max_tag_id(plan_meta.get_max_tag_id());
+        pattern.set_max_tag_id(max_tag_id);
         Ok(pattern)
     }
 }
@@ -863,14 +888,21 @@ fn get_edge_expand_from_binder<'a, 'b>(
                 hop_range.lower
             )))?;
         }
-        edge_data_map.insert(edge_id, PbEdgeOrPath::from(path_expand.clone()));
-        let edge_expand = path_expand
+        let expand_base = path_expand
             .base
             .as_ref()
-            .ok_or(ParsePbError::EmptyFieldError("PathExpand::base in Pattern".to_string()))?
+            .ok_or(ParsePbError::EmptyFieldError("PathExpand::base in Pattern".to_string()))?;
+        expand_base
+            .get_v
+            .as_ref()
+            .ok_or(IrPatternError::Unsupported(
+                "PathExpand::base in Pattern doesn't have GetV".to_string(),
+            ))?;
+        let edge_expand = expand_base
             .edge_expand
             .as_ref()
-            .ok_or(ParsePbError::EmptyFieldError("PathExpand::base in Pattern".to_string()))?;
+            .ok_or(ParsePbError::EmptyFieldError("PathExpand::base::EdgeExpand in Pattern".to_string()))?;
+        edge_data_map.insert(edge_id, PbEdgeOrPath::from(path_expand.clone()));
         Ok(edge_expand)
     } else if let Some(BinderItem::Edge(edge_expand)) = binder.item.as_ref() {
         if edge_expand.expand_opt == pb::edge_expand::ExpandOpt::Degree as i32 {
@@ -983,7 +1015,7 @@ fn get_edge_expand_labels(edge_expand: &pb::EdgeExpand) -> IrPatternResult<Vec<P
             .map(|label| pb_name_or_id_to_id(label).map(|l| l as PatternLabelId))
             .collect::<Result<_, _>>()
     } else {
-        Err(ParsePbError::EmptyFieldError("pb::EdgeExpand.params".to_string()).into())
+        Ok(vec![])
     }
 }
 
@@ -1015,7 +1047,7 @@ fn assign_expand_dst_vertex_id(
         } else {
             Ok(assign_id(next_vertex_id))
         }
-    } else {
+    } else if edge_expand.expand_opt == pb::edge_expand::ExpandOpt::Vertex as i32 {
         let dst_vertex_tag: Option<TagId> = edge_expand
             .alias
             .as_ref()
@@ -1028,6 +1060,8 @@ fn assign_expand_dst_vertex_id(
         } else {
             Ok(assign_id(next_vertex_id))
         }
+    } else {
+        Ok(assign_id(next_vertex_id))
     }
 }
 
@@ -1103,6 +1137,48 @@ fn assign_src_dst_vertex_labels(
     }
 
     Ok((candi_src_vertex_labels, candi_dst_vertex_labels))
+}
+
+/// If the GetV operator have alias, pick it out and use at as the vertex's id
+fn pick_vertex_id_from_get_v(get_v: &pb::GetV) -> Option<PatternId> {
+    get_v
+        .alias
+        .as_ref()
+        .and_then(|name_or_id| name_or_id.item.as_ref())
+        .and_then(|item| {
+            if let common_pb::name_or_id::Item::Id(id) = item {
+                Some(*id as PatternId)
+            } else {
+                None
+            }
+        })
+}
+
+/// When GetV has alias, the vertex is corresponds to may have already been assigned an id
+///
+/// We use this function to edit the vertex's id during the translation
+fn edit_vertex_id_in_translation(
+    new_id: PatternId, old_id: PatternId, pattern_edges: &mut Vec<PatternEdge>,
+    vertex_labels_map: &mut BTreeMap<PatternId, BTreeSet<PatternLabelId>>,
+    vertex_params_map: &mut BTreeMap<PatternId, Vec<pb::QueryParams>>,
+) {
+    // Edit vertex id in pattern edges
+    for pattern_edge in pattern_edges.iter_mut() {
+        if pattern_edge.start_vertex.id == old_id {
+            pattern_edge.start_vertex.id = new_id
+        }
+        if pattern_edge.end_vertex.id == old_id {
+            pattern_edge.end_vertex.id = new_id
+        }
+    }
+    // Move the labels of the old id to the new id
+    if let Some(labels) = vertex_labels_map.remove(&old_id) {
+        vertex_labels_map.insert(new_id, labels);
+    }
+    // Move the params of the old id to the new id
+    if let Some(params) = vertex_params_map.remove(&old_id) {
+        vertex_params_map.insert(new_id, params);
+    }
 }
 
 /// Getters of fields of Pattern

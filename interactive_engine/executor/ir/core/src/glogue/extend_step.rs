@@ -92,7 +92,7 @@ impl ExactExtendEdge {
         (*base_edge_expand).direction = direction;
         (*base_edge_expand).expand_opt = pb::edge_expand::ExpandOpt::Edge as i32;
         if !is_intersect {
-            // if not intersect, build as path_expand + endV()
+            // if not intersect, build as pure path_expand
             expand_operators.push(path_opr.into());
         } else {
             let mut last_edge_expand = base_edge_expand.clone();
@@ -110,8 +110,12 @@ impl ExactExtendEdge {
                 // out(low..high) = out(low-1..high-1) + endV() + out()
                 hop_range.lower -= 1;
                 hop_range.upper -= 1;
-
+                // pick end vertex out from path collections
+                let mut end_v = pb::GetV::default();
+                end_v.opt = pb::get_v::VOpt::End as i32;
+                // add path expand + endV + last edge expand
                 expand_operators.push(path_opr.into());
+                expand_operators.push(end_v.into());
                 expand_operators.push(last_edge_expand.into());
             }
         }
@@ -174,19 +178,24 @@ impl ExactExtendStep {
         &self, origin_pattern: &Pattern, is_intersect: bool,
     ) -> IrPatternResult<Vec<Vec<pb::logical_plan::Operator>>> {
         let mut expand_oprs_vec = vec![];
-        let get_v = self.generate_get_v_operator(origin_pattern)?;
         for extend_edge in self.iter() {
             let edge_id = extend_edge.get_edge_id();
             let edge_data = origin_pattern.get_edge_data(edge_id)?.clone();
+            let mut is_pure_path = false;
             let mut expand_oprs = match edge_data {
                 PbEdgeOrPath::Edge(edge_opr) => {
                     vec![extend_edge.generate_edge_expand(edge_opr)?]
                 }
                 PbEdgeOrPath::Path(path_opr) => {
+                    // For path expansion that doesn't have further intersection,
+                    // it is a pure path expansion
+                    is_pure_path = !is_intersect;
                     extend_edge.generate_path_expands(path_opr, is_intersect)?
                 }
             };
             // every exapand should followed by an getV operator to close
+            let get_v =
+                self.generate_get_v_operator(origin_pattern, extend_edge.get_direction(), is_pure_path)?;
             expand_oprs.push(get_v.clone());
             expand_oprs_vec.push(expand_oprs);
         }
@@ -203,13 +212,22 @@ impl ExactExtendStep {
 
     /// Generate a getV operator to close the outE
     pub fn generate_get_v_operator(
-        &self, origin_pattern: &Pattern,
+        &self, origin_pattern: &Pattern, expand_direction: PatternDirection, is_pure_path: bool,
     ) -> IrPatternResult<pb::logical_plan::Operator> {
         let target_v_id = self.target_vertex_id;
         let vertex_params = origin_pattern
             .get_vertex_parameters(target_v_id)?
             .cloned();
-        Ok(query_params_to_get_v(vertex_params, Some(target_v_id as KeyId), pb::get_v::VOpt::End as i32)
-            .into())
+        // when meet pure path expand, the VOpt should always be EndV
+        let get_v_opt = if is_pure_path {
+            pb::get_v::VOpt::End as i32
+        } else {
+            match expand_direction {
+                PatternDirection::Out => pb::get_v::VOpt::End as i32,
+                PatternDirection::In => pb::get_v::VOpt::Start as i32,
+                PatternDirection::Both => pb::get_v::VOpt::Both as i32,
+            }
+        };
+        Ok(query_params_to_get_v(vertex_params, Some(target_v_id as KeyId), get_v_opt).into())
     }
 }
