@@ -72,7 +72,7 @@ serviceAccount:
 
 ## GraphScope Store parameters
 ##
-store:
+executor:
   image:
     registry: registry.cn-hongkong.aliyuncs.com
     repository: graphscope/interactive-executor

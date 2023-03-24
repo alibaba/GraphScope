@@ -17,21 +17,21 @@ metadata:
   annotations: {{- include "graphscope-store.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
   {{- end }}
 spec:
-  replicas: {{ .Values.store.replicaCount }}
+  replicas: {{ .Values.executor.replicaCount }}
   selector:
     matchLabels: {{ include "graphscope-store.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: store
   serviceName: {{ include "graphscope-store.store.fullname" . }}-headless
   updateStrategy:
-    type: {{ .Values.store.updateStrategy }}
-    {{- if (eq "Recreate" .Values.store.updateStrategy) }}
+    type: {{ .Values.executor.updateStrategy }}
+    {{- if (eq "Recreate" .Values.executor.updateStrategy) }}
     rollingUpdate: null
     {{- end }}
   template:
     metadata:
       annotations:
-        {{- if .Values.store.podAnnotations }}
-        {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.store.podAnnotations "context" $) | nindent 8 }}
+        {{- if .Values.executor.podAnnotations }}
+        {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.executor.podAnnotations "context" $) | nindent 8 }}
         {{- end }}
       labels: {{- include "graphscope-store.labels" . | nindent 8 }}
         app.kubernetes.io/component: store
@@ -43,17 +43,17 @@ spec:
       imagePullSecrets: {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "graphscope-store.serviceAccountName" . }}
-      {{- if .Values.store.affinity }}
-      affinity: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.store.affinity "context" $) | nindent 8 }}
+      {{- if .Values.executor.affinity }}
+      affinity: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.executor.affinity "context" $) | nindent 8 }}
       {{- end }}
       initContainers:
-        {{- if .Values.store.initContainers }}
-        {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.store.initContainers "context" $) | nindent 8 }}
+        {{- if .Values.executor.initContainers }}
+        {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.executor.initContainers "context" $) | nindent 8 }}
         {{- end }}
       containers:
         - name: engine
           image: {{ include "graphscope-store.store.image" . }}
-          imagePullPolicy: {{ .Values.store.image.pullPolicy | quote }}
+          imagePullPolicy: {{ .Values.executor.image.pullPolicy | quote }}
           command:
           {{- if (eq "Vineyard" .Values.storageType) }}
             - /bin/bash
@@ -152,15 +152,15 @@ spec:
           {{- end }}
           env:
             - name: GAIA_RPC_PORT
-              value: {{ .Values.store.service.gaiaRpc | quote }}
+              value: {{ .Values.executor.service.gaiaRpc | quote }}
             - name: GAIA_ENGINE_PORT
-              value: {{ .Values.store.service.gaiaEngine | quote }}
+              value: {{ .Values.executor.service.gaiaEngine | quote }}
             - name: STORE_DATA_PATH
-              value: {{ .Values.storeDataPath | quote }}
+              value: {{ .Values.executorDataPath | quote }}
             - name: DNS_NAME_PREFIX_STORE
               value: {{ $storeFullname }}-{}.{{ $storeFullname }}-headless.{{ $releaseNamespace }}.svc.{{ $clusterDomain }}
             - name: SERVERSSIZE
-              value: {{ .Values.store.replicaCount | quote }}
+              value: {{ .Values.executor.replicaCount | quote }}
             {{- if (eq "Vineyard" .Values.storageType) }}
             - name: ETCD_ENDPOINT
               value: {{ .Values.etcdEndpoint | quote }}
@@ -171,16 +171,16 @@ spec:
             {{- end }}
           ports:
             - name: gaia-rpc
-              containerPort: {{ .Values.store.service.gaiaRpc }}
+              containerPort: {{ .Values.executor.service.gaiaRpc }}
             - name: gaia-engine
-              containerPort: {{ .Values.store.service.gaiaEngine }}
-          {{- if .Values.store.resources }}
-          resources: {{- toYaml .Values.store.resources | nindent 12 }}
+              containerPort: {{ .Values.executor.service.gaiaEngine }}
+          {{- if .Values.executor.resources }}
+          resources: {{- toYaml .Values.executor.resources | nindent 12 }}
           {{- end }}
           volumeMounts:
-            {{- if eq (hasPrefix "hdfs" .Values.storeDataPath) false }}
+            {{- if eq (hasPrefix "hdfs" .Values.executorDataPath) false }}
             - name: data
-              mountPath: {{ .Values.storeDataPath }}
+              mountPath: {{ .Values.executorDataPath }}
             {{- end }}
             - name: config
               mountPath: /etc/groot/config
@@ -188,33 +188,33 @@ spec:
         - name: config
           configMap:
             name: {{ include "graphscope-store.configmapName" . }}
-  {{- if and .Values.store.persistence.enabled .Values.store.persistence.existingClaim }}
+  {{- if and .Values.executor.persistence.enabled .Values.executor.persistence.existingClaim }}
         - name: data
           persistentVolumeClaim:
-            claimName: {{ tpl .Values.store.persistence.existingClaim . }}
-  {{- else if not .Values.store.persistence.enabled }}
+            claimName: {{ tpl .Values.executor.persistence.existingClaim . }}
+  {{- else if not .Values.executor.persistence.enabled }}
         - name: data
           emptyDir: {}
-  {{- else if and .Values.store.persistence.enabled (not .Values.store.persistence.existingClaim) }}
+  {{- else if and .Values.executor.persistence.enabled (not .Values.executor.persistence.existingClaim) }}
   volumeClaimTemplates:
     - metadata:
         name: data
         labels: {{ include "graphscope-store.selectorLabels" . | nindent 10 }}
           app.kubernetes.io/component: store
-      {{- if .Values.store.persistence.annotations }}
+      {{- if .Values.executor.persistence.annotations }}
         annotations:
-          {{- toYaml .Values.store.persistence.annotations | nindent 10 }}
+          {{- toYaml .Values.executor.persistence.annotations | nindent 10 }}
       {{- end }}
       spec:
         accessModes:
-          {{- range .Values.store.persistence.accessModes }}
+          {{- range .Values.executor.persistence.accessModes }}
           - {{ . | quote }}
           {{- end }}
         resources:
           requests:
-            storage: {{ .Values.store.persistence.size | quote }}
-        {{ include "graphscope-store.storage.class" .Values.store.persistence }}
-        {{- if .Values.store.persistence.selector }}
-        selector: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.store.persistence.selector "context" $) | nindent 10 }}
+            storage: {{ .Values.executor.persistence.size | quote }}
+        {{ include "graphscope-store.storage.class" .Values.executor.persistence }}
+        {{- if .Values.executor.persistence.selector }}
+        selector: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.executor.persistence.selector "context" $) | nindent 10 }}
         {{- end -}}
   {{- end }}

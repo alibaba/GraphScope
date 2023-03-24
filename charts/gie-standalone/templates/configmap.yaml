@@ -1019,5 +1019,5 @@ data:
       "is_table_id": true,
       "is_column_id": false
     }
-{{ (.Files.Glob "schema/**").AsConfig | indent 2 }}
+{{ (.Files.Glob "config/**").AsConfig | indent 2 }}
 {{- end -}}
