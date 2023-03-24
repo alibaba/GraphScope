@@ -62,7 +62,7 @@ The next step is try to run some Gremlin queries.
    ```
    kubectl get svc | grep frontend | grep [YOUR_RELEASE_NAME]
    ```
-   You should see the ip address of the GIE frontend service. The port is 8182 by default, but can also be configurable. 
+   You should see the endpoint as `<ip>:<gremlinPort>` of the GIE frontend service.
    
 7. Connect to the GIE frontend service using the official Python SDKs or Gremlin console.
 
@@ -88,7 +88,11 @@ The next step is try to run some Gremlin queries.
 
 
 ## Deploy on Actual Cluster
-With K8s, it's also convenient to deploy GIE in a cluster with multiple machines:
+In K8s, it’s convenient to deploy GIE in a cluster with multiple machines.
+You don’t need to be aware of the physical machines, but simply configure the number of executors
+to make GIE scalable. These GIE executors will be seemlessly assigned by K8s to the physical machines. 
+
+You simply set the number of executors as:
 ```
 helm install [YOUR_RELEASE_NAME] graphscope/gie-standalone --set executor.replicaCount=3
 ```
