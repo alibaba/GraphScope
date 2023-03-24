@@ -100,13 +100,13 @@ spec:
           {{- end }}
           env:
             - name: GAIA_RPC_PORT
-              value: {{ .Values.store.service.gaiaRpc | quote }}
+              value: {{ .Values.executor.service.gaiaRpc | quote }}
             - name: GREMLIN_SERVER_PORT
               value: {{ .Values.frontend.service.gremlinPort | quote }}
             - name: DNS_NAME_PREFIX_STORE
               value: {{ $storeFullname }}-{}.{{ $storeFullname }}-headless.{{ $releaseNamespace }}.svc.{{ $clusterDomain }}
             - name: SERVERSSIZE
-              value: {{ .Values.store.replicaCount | quote }}
+              value: {{ .Values.executor.replicaCount | quote }}
             {{- if (eq "Experimental" .Values.storageType) }}
             - name: GRAPH_SCHEMA
               value: {{ .Values.schemaConfig | quote }}

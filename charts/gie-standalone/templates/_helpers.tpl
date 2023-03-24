@@ -92,7 +92,7 @@ Return the proper graphscope-store store image name
 */}}
 {{- define "graphscope-store.store.image" -}}
 {{- $tag := .Chart.AppVersion | toString -}}
-{{- with .Values.store.image -}}
+{{- with .Values.executor.image -}}
 {{- if .tag -}}
 {{- $tag = .tag | toString -}}
 {{- end -}}

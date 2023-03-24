@@ -156,7 +156,7 @@ spec:
             - name: GAIA_ENGINE_PORT
               value: {{ .Values.executor.service.gaiaEngine | quote }}
             - name: STORE_DATA_PATH
-              value: {{ .Values.executorDataPath | quote }}
+              value: {{ .Values.storeDataPath | quote }}
             - name: DNS_NAME_PREFIX_STORE
               value: {{ $storeFullname }}-{}.{{ $storeFullname }}-headless.{{ $releaseNamespace }}.svc.{{ $clusterDomain }}
             - name: SERVERSSIZE
@@ -178,9 +178,9 @@ spec:
           resources: {{- toYaml .Values.executor.resources | nindent 12 }}
           {{- end }}
           volumeMounts:
-            {{- if eq (hasPrefix "hdfs" .Values.executorDataPath) false }}
+            {{- if eq (hasPrefix "hdfs" .Values.storeDataPath) false }}
             - name: data
-              mountPath: {{ .Values.executorDataPath }}
+              mountPath: {{ .Values.storeDataPath }}
             {{- end }}
             - name: config
               mountPath: /etc/groot/config
