@@ -2,7 +2,6 @@
 ## Prerequisite
 ### etcd
 ```
-cd GraphScope/charts
 # TODO: the link need to be updated after merging to main
 kubectl apply -f https://raw.githubusercontent.com/shirly121/GraphScope/add_gie_deploy/charts/gie-standalone/tools/etcd.yaml
 ```
