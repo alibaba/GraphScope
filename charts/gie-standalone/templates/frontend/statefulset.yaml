@@ -73,10 +73,15 @@ spec:
               done
               runtime_hosts=${runtime_hosts:1}
 
-              config_path=/etc/groot/config
+              json_file=`ls /tmp/*.json`
+              while [ $? -ne 0 ]
+              do
+                sleep 1s
+                json_file=`ls /tmp/*.json`
+              done
 
               $GRAPHSCOPE_HOME/bin/giectl start_frontend ${GRAPHSCOPE_RUNTIME} ${object_id} \
-                  $config_path/$GRAPH_SCHEMA $runtime_hosts $GREMLIN_SERVER_PORT $EXTRA_CONFIG
+                  $json_file $runtime_hosts $GREMLIN_SERVER_PORT $EXTRA_CONFIG
 
               exit_code=$?
               while [ $exit_code -eq 0 ]
@@ -102,8 +107,10 @@ spec:
               value: {{ $storeFullname }}-{}.{{ $storeFullname }}-headless.{{ $releaseNamespace }}.svc.{{ $clusterDomain }}
             - name: SERVERSSIZE
               value: {{ .Values.store.replicaCount | quote }}
+            {{- if (eq "Experimental" .Values.storageType) }}
             - name: GRAPH_SCHEMA
               value: {{ .Values.schemaConfig | quote }}
+            {{- end }}
             - name: EXTRA_CONFIG
               value: {{ .Values.extraConfig | quote }}
             - name: WORKER_NUM

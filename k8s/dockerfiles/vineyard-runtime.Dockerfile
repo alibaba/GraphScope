@@ -11,7 +11,6 @@ RUN mkdir artifacts && \
     cp $GRAPHSCOPE_HOME/bin/vineyard-graph-loader bin/ && \
     cp -P $GRAPHSCOPE_HOME/lib/lib* lib/ && \
     cp -P $GRAPHSCOPE_HOME/lib64/lib* lib64/ && \
-    rm -f lib/libgrpc* && \
     tar czf artifacts.tar.gz ./*
 
 FROM centos:7 AS runtime

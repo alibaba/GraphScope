@@ -27,8 +27,11 @@ storageType: Vineyard
 ## Store Config
 storeDataPath: "/tmp/data"
 
-## Frontend Config
-schemaConfig: "v6d_modern_schema.json"
+## schema needed by compiler when using experimental store
+schemaConfig: "expr_modern_schema.json"
+
+## mappings from csv to data type in vineyard store
+htapLoaderConfig: "v6d_modern_loader.json"
 
 ## Pegasus Config
 pegasusWorkerNum: 2
@@ -38,9 +41,6 @@ pegasusTimeout: 240000
 pegasusBatchSize: 1024
 
 pegasusOutputCapacity: 16
-
-## the following configurations are necessary when using vineyard store
-htapLoaderConfig: "v6d_modern_loader.json"
 
 ## need by vineyard in distributed env
 etcdEndpoint: "etcd-for-vineyard.default.svc.cluster.local:2379"

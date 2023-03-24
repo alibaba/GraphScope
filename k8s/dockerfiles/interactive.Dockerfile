@@ -49,11 +49,41 @@ USER graphscope
 WORKDIR /home/graphscope
 
 ############### RUNTIME: executor #######################
+FROM $REGISTRY/graphscope/manylinux2014:2022-12-12-ext AS ext
 FROM $REGISTRY/graphscope/vineyard-runtime:$RUNTIME_VERSION AS executor
 
 ENV GRAPHSCOPE_HOME=/opt/graphscope
 ENV PATH=$PATH:$GRAPHSCOPE_HOME/bin LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GRAPHSCOPE_HOME/lib
+ENV PATH=$PATH:/home/graphscope/.local/bin
 ENV RUST_BACKTRACE=1
+
+RUN sudo yum install -y java-1.8.0-openjdk && \
+    sudo yum clean all -y --enablerepo='*' && \
+    sudo rm -rf /var/cache/yum
+
+ENV JAVA_HOME=/usr/lib/jvm/java HADOOP_HOME=/opt/hadoop-3.3.0 
+ENV HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_HOME/lib/native
+ENV HADOOP_YARN_HOME=$HADOOP_HOME HADOOP_MAPRED_HOME=$HADOOP_HOME
+COPY --from=ext /opt/hadoop-3.3.0 /opt/hadoop-3.3.0
+RUN sudo chmod +x /opt/hadoop-3.3.0/bin/*
+
+# set the CLASSPATH for hadoop, must run after install java
+RUN bash -l -c 'echo export CLASSPATH="$($HADOOP_HOME/bin/hdfs classpath --glob)" >> /home/graphscope/.profile'
+
+
+RUN sudo yum install -y centos-release-scl-rh sudo && \
+    INSTALL_PKGS="rh-python38-python-pip" && \
+    sudo yum install -y --setopt=tsflags=nodocs $INSTALL_PKGS && \
+    sudo rpm -V $INSTALL_PKGS && \
+    sudo yum -y clean all --enablerepo='*' && \
+    sudo rm -rf /var/cache/yum
+
+SHELL ["/usr/bin/scl", "enable", "rh-python38" ]
+RUN python3 -m pip install --no-cache-dir --user vineyard vineyard-io
+COPY ./k8s/utils/graphctl.py /usr/local/bin/graphctl.py
+
+RUN curl -L -o /usr/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.19.2/bin/linux/amd64/kubectl
+RUN chmod +x /usr/bin/kubectl
 
 # gaia_executor, giectl
 COPY --from=builder /home/graphscope/install/bin /opt/graphscope/bin
@@ -65,3 +95,4 @@ RUN sudo chmod a+wrx /tmp
 
 USER graphscope
 WORKDIR /home/graphscope
+

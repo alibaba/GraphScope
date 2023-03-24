@@ -84,6 +84,8 @@ spec:
 
               # load vineyard graph
               config_path=/etc/groot/config
+              source /home/graphscope/.profile
+
 
               [[ `hostname` =~ -([0-9]+)$ ]] || exit 1
               server_id=${BASH_REMATCH[1]}
@@ -110,6 +112,16 @@ spec:
                 json_file=`ls /tmp/*.json`
               done
               object_id=${json_file//[^0-9]/}
+
+              # write schema json to remote frontend
+              if [ $server_id -eq 0 ]
+              then
+                frontend_pods=`kubectl get pod -lapp.kubernetes.io/component=frontend,app.kubernetes.io/instance=$INSTANCE_NAME --no-headers -o custom-columns=":metadata.name"`
+                for pod in $(echo $frontend_pods)
+                do
+                  kubectl cp $json_file $pod:$json_file
+                done
+              fi
 
               # start engine service
               pegasus_hosts=""
@@ -166,8 +178,10 @@ spec:
           resources: {{- toYaml .Values.store.resources | nindent 12 }}
           {{- end }}
           volumeMounts:
+            {{- if eq (hasPrefix "hdfs" .Values.storeDataPath) false }}
             - name: data
               mountPath: {{ .Values.storeDataPath }}
+            {{- end }}
             - name: config
               mountPath: /etc/groot/config
       volumes:
