@@ -63,9 +63,8 @@ helm delete <your-release-name>
 ```
 # execute in advance if in minikube environment
 minikube tunnel 
-# external ip
-kubectl get svc | grep frontend | grep <your-release-name>
-# external port is the configuration of `gremlinPort`
+# gremlin endpoint
+kubectl describe svc <your-release-name>-gie-standalone-frontend | grep "Endpoints:" | awk -F' ' '{print $2}'
 ```
 ## Customized Config
 ### download helm package
@@ -98,7 +97,7 @@ gie-standalone
 - docker artifacts
 ```
 # docker artifacts for vineyard store
-store:
+executor:
   image:
     registry: registry.cn-hongkong.aliyuncs.com
     repository: graphscope/interactive-executor
@@ -128,8 +127,8 @@ frontend:
     service:
       gremlinPort: 8182 # gremlin service port
     
-store:
-  replicaCount: 1 # store num
+executor:
+  replicaCount: 1 # executor num
 
 # job config
 pegasusWorkerNum: 2
@@ -148,7 +147,7 @@ storeDataPath: "/tmp/data"
 #### experimental
 ```
 # docker artifacts for experimental store
-store:
+executor:
   image:
     registry: registry.cn-hongkong.aliyuncs.com
     repository: graphscope/gie-exp-runtime
