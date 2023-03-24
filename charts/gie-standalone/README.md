@@ -8,7 +8,7 @@ kubectl apply -f https://raw.githubusercontent.com/shirly121/GraphScope/add_gie_
 ### prepare graph data
 - vineyard
 ```
-# there are some sample data for tests under the `resource` directory, just copy them to the target directory.
+# there are some sample data for tests under the `gie-standalone` directory, just copy them to the target directory
 
 data
 └── modern_graph
@@ -17,6 +17,7 @@ data
     ├── person.csv
     └── software.csv
 
+helm pull graphscope/gie-standalone --untar
 cp -r gie-standalone/data/ /tmp/data/
 ```
 - experimental
@@ -51,7 +52,7 @@ helm install <your-release-name> graphscope/gie-standalone
 - from local (for customized config)
 ```
 # download helm package
-helm pull graphscope/gie-standalone --untar 
+helm pull graphscope/gie-standalone --untar
 helm install <your-release-name> gie-standalone
 ```
 ### stop gie deployment
@@ -70,18 +71,23 @@ kubectl describe svc <your-release-name>-gie-standalone-frontend | grep "Endpoin
 ```
 helm pull graphscope/gie-standalone --untar 
 
-gie-standalone
+gie-standalone/
 ├── Chart.yaml
-├── README.md
-├── pvc.yaml
-├── schema
+├── config
 │   └── v6d_modern_loader.json
+├── data
+│   └── modern_graph
+│       ├── created.csv
+│       ├── knows.csv
+│       ├── person.csv
+│       └── software.csv
+├── README.md
 ├── templates
-│   ├── _helpers.tpl
 │   ├── configmap.yaml
 │   ├── frontend
 │   │   ├── statefulset.yaml
 │   │   └── svc.yaml
+│   ├── _helpers.tpl
 │   ├── serviceaccount.yaml
 │   └── store
 │       ├── statefulset.yaml
@@ -111,9 +117,9 @@ frontend:
 ```
 - load your own graph data
 ```
-# add your graph loader config under `gie-standalone/schema`
+# add your graph loader config under `gie-standalone/config`
 
-schema
+config
 └── v6d_modern_loader.json
 
 # config the file name in `gie-standalone/values.yaml`
