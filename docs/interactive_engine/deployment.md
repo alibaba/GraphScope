@@ -10,6 +10,7 @@ For your reference, we've tested the tutorial on Ubuntu 20.04.
 If you do not have a K8s cluster to work on, don't worry. We have three simple ways for you to create one and get started with the deployment:
 
 - Use a K8s cluster from Cloud Providers like [ACK](https://www.aliyun.com/product/kubernetes) from Alibaba Cloud.
+- Create a K8s cluster using [kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/).
 - Create a local K8s cluster using [minikube](https://minikube.sigs.k8s.io/docs/start/):
   ```Bash
   # Install `minikube` on your platform
@@ -39,25 +40,27 @@ deployment and management of applications. To deploy GIE standalone using Helm, 
    ```
 4. Install the GIE chart:
    ```
-   helm install test-gie graphscope/gie-standalone
+   helm install [YOUR_RELEASE_NAME] graphscope/gie-standalone
    ```
 
    ````{tip}
-   This command will deploy the GIE chart with the default configuration,
-   using [modern graph](https://tinkerpop.apache.org/docs/3.6.2/tutorials/getting-started/) to quickly demo some use cases.
-   We will later show options that you can customize, including the graph data and its schema. 
+   This command will deploy the GIE chart with the default configuration.
+   using [modern graph](https://tinkerpop.apache.org/docs/3.6.2/tutorials/getting-started/) for demo purpose.
+   We will later show how you can customize your own graph data, and other useful options.
    ````
 5. Verify that the GIE service is running:
    ```
    kubectl get pods
    ```
-   You should see the `test-gie-gie-standalone-frontend-0` and `test-gie-gie-standalone-store-0` pods running.
+   You should see the `[YOUR_RELEASE_NAME]-gie-standalone-frontend-0` and `[YOUR_RELEASE_NAME]-gie-standalone-store-0` pods running.
 
-That's it! You have successfully deployed GIE standalone using Helm. The next step is try to run some Gremlin queries. 
+That's it! You have successfully deployed GIE standalone using Helm. 
+
+The next step is try to run some Gremlin queries. 
 
 6. Get the endpoint of the GIE frontend service:
    ```
-   kubectl get svc | grep frontend | grep test-gie
+   kubectl get svc | grep frontend | grep [YOUR_RELEASE_NAME]
    ```
    You should see the ip address of the GIE frontend service. The port is 8182 by default, but can also be configurable. 
    
@@ -81,10 +84,37 @@ That's it! You have successfully deployed GIE standalone using Helm. The next st
    assert res == 6
    ```
 
-### Using Your Own Data
+## Using Your Own Data
 
-### Useful Configurations
 
 ## Deploy on Actual Cluster
+With K8s, it's also convenient to deploy GIE in a cluster with multiple machines:
+```
+helm install [YOUR_RELEASE_NAME] graphscope/gie-standalone --set executor.replicaCount=3
+```
+
+This instruction deploys the GIE chart using 3 executors that process graph partitions in v6d. The number of
+replicas can be modified according to your needs, but better be less than the number of CPUs in your cluster. 
+When specifying the number of executors, v6d loads data from the specified location and partitions graph data automatically for each executor.
+It is recommended to store data in a distributed file system like HDFS for convenience. To configure the HDFS data source in helm,
+simply use the `hdfs://` scheme for the data source.
+
+
+## Other Useful Configurations
+Extra configurations can be set as:
+```bash
+helm install [YOUR_RELEASE_NAME] graphscope/gie-standalone --set [key1]=[value1],[key2]=[value2]
+```
+We've listed useful configuration keys in the following:
+
+- gremlinPort: the port for accessing the Gremlin service (Default: 8182).
+- pegasusWorkerNum: the number of working threads per each executor (Default: 2).
+  Obviously, the total number of working threads is: 'executor.replicaCount x pegasusWorkerNum' .
+- pegasusTimeout: The maximum dueration in `ms` you allow each query to run (Default: 24,000).
+
+## Uninstall the Chart
+```bash
+helm uninstall [YOUR_RELEASE_NAME]
+```
 
 
