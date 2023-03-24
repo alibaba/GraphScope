@@ -44,123 +44,181 @@ data:
             }
         ],
         "directed": 1,
+        "retain_oid": 1,
         "generate_eid": 1
     }
   v6d_modern_schema.json: |-
     {
-      "partitionNum":1,
-      "types":[
-        {
-          "id":0,
-          "indexes":[],
-          "label":"person",
-          "mapping":"[3,0,0,0,0]",
-          "propertyDefList":[
+        "partitionNum": 1,
+        "types": [
             {
-              "data_type":"STRING",
-              "id":3,
-              "name":"name"
+                "id": 0,
+                "indexes": [
+                    {
+                        "propertyNames": [
+                            "id"
+                        ]
+                    }
+                ],
+                "label": "person",
+                "mapping": "[6,1,4]",
+                "propertyDefList": [
+                    {
+                        "data_type": "STRING",
+                        "id": 6,
+                        "name": "name"
+                    },
+                    {
+                        "data_type": "LONG",
+                        "id": 1,
+                        "name": "age"
+                    },
+                    {
+                        "data_type": "LONG",
+                        "id": 4,
+                        "name": "id"
+                    }
+                ],
+                "rawRelationShips": [],
+                "reverse_mapping": "[-1,1,-1,-1,2,-1,0,-1]",
+                "type": "VERTEX",
+                "valid_properties": [
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1
+                ]
             },
             {
-              "data_type":"LONG",
-              "id":0,
-              "name":"age"
-            }
-          ],
-          "rawRelationShips":[],
-          "reverse_mapping":"[1,0,0,0,0]",
-          "type":"VERTEX",
-          "valid_properties":[
-            1,
-            1
-          ]
-        },
-        {
-          "id":1,
-          "indexes":[],
-          "label":"software",
-          "mapping":"[3,2,0,0,0]",
-          "propertyDefList":[
-            {
-              "data_type":"STRING",
-              "id":3,
-              "name":"name"
+                "id": 1,
+                "indexes": [
+                    {
+                        "propertyNames": [
+                            "id"
+                        ]
+                    }
+                ],
+                "label": "software",
+                "mapping": "[6,5,4]",
+                "propertyDefList": [
+                    {
+                        "data_type": "STRING",
+                        "id": 6,
+                        "name": "name"
+                    },
+                    {
+                        "data_type": "STRING",
+                        "id": 5,
+                        "name": "lang"
+                    },
+                    {
+                        "data_type": "LONG",
+                        "id": 4,
+                        "name": "id"
+                    }
+                ],
+                "rawRelationShips": [],
+                "reverse_mapping": "[-1,-1,-1,-1,2,1,0,-1]",
+                "type": "VERTEX",
+                "valid_properties": [
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1
+                ]
             },
             {
-              "data_type":"STRING",
-              "id":2,
-              "name":"lang"
-            }
-          ],
-          "rawRelationShips":[],
-          "reverse_mapping":"[0,0,1,0,0]",
-          "type":"VERTEX",
-          "valid_properties":[
-            1,
-            1
-          ]
-        },
-        {
-          "id":2,
-          "indexes":[],
-          "label":"knows",
-          "mapping":"[1,4,0,0,0]",
-          "propertyDefList":[
-            {
-              "data_type":"LONG",
-              "id":1,
-              "name":"eid"
+                "id": 2,
+                "indexes": [],
+                "label": "knows",
+                "mapping": "[3,2,7]",
+                "propertyDefList": [
+                    {
+                        "data_type": "LONG",
+                        "id": 3,
+                        "name": "eid"
+                    },
+                    {
+                        "data_type": "LONG",
+                        "id": 2,
+                        "name": "edge_id"
+                    },
+                    {
+                        "data_type": "DOUBLE",
+                        "id": 7,
+                        "name": "weight"
+                    }
+                ],
+                "rawRelationShips": [
+                    {
+                        "dstVertexLabel": "person",
+                        "srcVertexLabel": "person"
+                    }
+                ],
+                "reverse_mapping": "[-1,-1,1,0,-1,-1,-1,2]",
+                "type": "EDGE",
+                "valid_properties": [
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1
+                ]
             },
             {
-              "data_type":"DOUBLE",
-              "id":4,
-              "name":"weight"
+                "id": 3,
+                "indexes": [],
+                "label": "created",
+                "mapping": "[3,2,7]",
+                "propertyDefList": [
+                    {
+                        "data_type": "LONG",
+                        "id": 3,
+                        "name": "eid"
+                    },
+                    {
+                        "data_type": "LONG",
+                        "id": 2,
+                        "name": "edge_id"
+                    },
+                    {
+                        "data_type": "DOUBLE",
+                        "id": 7,
+                        "name": "weight"
+                    }
+                ],
+                "rawRelationShips": [
+                    {
+                        "dstVertexLabel": "software",
+                        "srcVertexLabel": "person"
+                    }
+                ],
+                "reverse_mapping": "[-1,-1,1,0,-1,-1,-1,2]",
+                "type": "EDGE",
+                "valid_properties": [
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1,
+                    1
+                ]
             }
-          ],
-          "rawRelationShips":[
-            {
-              "dstVertexLabel":"person",
-              "srcVertexLabel":"person"
-            }
-          ],
-          "reverse_mapping":"[0,0,0,0,1]",
-          "type":"EDGE",
-          "valid_properties":[
-            1,
-            1
-          ]
-        },
-        {
-          "id":3,
-          "indexes":[],
-          "label":"created",
-          "mapping":"[1,4,0,0,0]",
-          "propertyDefList":[
-            {
-              "data_type":"LONG",
-              "id":1,
-              "name":"eid"
-            },
-            {
-              "data_type":"DOUBLE",
-              "id":4,
-              "name":"weight"
-            }
-          ],
-          "rawRelationShips":[
-            {
-              "dstVertexLabel":"software",
-              "srcVertexLabel":"person"
-            }
-          ],
-          "reverse_mapping":"[0,0,0,0,1]",
-          "type":"EDGE",
-          "valid_properties":[
-            1,
-            1
-          ]
-        }
-      ]
+        ],
+        "uniquePropertyNames": "[\"age\",\"edge_id\",\"eid\",\"id\",\"lang\",\"name\",\"weight\"]"
     }
   expr_modern_schema.json: |-
     {
