@@ -2,157 +2,143 @@
 
 **Thanks for your interest in the GraphScope project.**
 
-GraphScope is a large project and may seem overwhelming when you’re first getting involved. Contributing code is great,
-but that’s probably not the first place to start. There are lots of ways to make valuable contributions to the project and community, 
-from improving the documentation, submitting bug reports and feature requests or writing code which can be incorporated into GraphAr itself.
+GraphScope is an open-source project focused on large-scale graph computation with a friendly community of developers eager to help new contributors.
+We welcome contributions of all types, from code improvements to documentation.
 
 ## Code of Conduct
 
-Please read our [Code of Conduct][1] before contributing or engaging in our community.
+Before contributing to or engaging with our community, please read our [Code of Conduct](https://github.com/alibaba/GraphScope/blob/main/CODE_OF_CONDUCT.md).
 
 ## Community
 
-A good first step to getting involved in the GraphScope project is to join us and participate in discussions where you can. there are several ways to connect with us.
+A good first step to getting involved in the GraphScope project is to participate in our discussions and join us in our different communication channels.
+Here are several ways to connect with us:
 
 ### GitHub Discussion
 
-We use [GitHub Discussion](https://github.com/alibaba/GraphScope/discussions) as a way to ask questions. Feel free to ask qustion if you have questions about
-GraphScope or issues with your own code.
+We use [GitHub Discussion](https://github.com/alibaba/GraphScope/discussions) to ask and answer questions. Feel free to ask any questions you may have about GraphScope or issues you've encountered with your own code.
 
 ### Slack
 
-TBF
+Join in the [Slack channel](http://slack.graphscope.io) for discussion.
 
-### DingTalk
+## Reporting Bugs
 
-TBF
+If you find a bug in GraphScope, first test against the [latest version of GraphScope](https://github.com/alibaba/GraphScope/tree/main) 
+to ensure your issue hasn't already been fixed. If not, search our [issues list](https://github.com/alibaba/GraphScope/issues)
+on GitHub to see if a similar issue has already been opened.
 
-## Bug Report
+If you confirm that the bug hasn't already been reported [file a bug issue](https://github.com/alibaba/GraphScope/issues/new?assignees=&labels=&template=bug_report.md&title=%5BBUG%5D+) 
+before writing any code. When submitting an issue, please include a clear and concise description of the problem,
+relevant code or error messages, and steps to reproduce the issue.
 
-If you find a bug in GraphAr, first make sure that you are testing against the [latest version of GraphScope](https://github.com/alibaba/GraphScope/tree/main), 
-your issue may already have been fixed. If not, search our [issues list](https://github.com/alibaba/GraphScope/issues)
-on GitHub in case a similar issue has already been opened.
+## Requesting Features
 
-If you get confirmation of your bug, [file a bug issue](https://github.com/alibaba/GraphScope/issues/new?assignees=&labels=&template=bug_report.md&title=%5BBUG%5D+) before starting to code. When submitting an issue, please include a clear and concise description of the problem, any relevant code or error messages, and steps to reproduce the issue.
+If you find yourself wishing for a feature that doesn't exist in GraphScope, please open [a feature request issue](https://github.com/alibaba/GraphScope/issues/new?assignees=&labels=&template=feature_request.md&title=)
+on GitHub to describe the feature, why it's needed, and how it should work. Other users may share similar needs,
+and many of GraphScope's features were added because users saw a need.
 
-## Request Feature
+## Improving Documentation
 
-If you find yourself wishing for a feature that doesn't exist in GraphScope, you are probably not alone.
-There are bound to be others out there with similar needs. Many of the features that GraphScope has today
-have been added because our users saw the need.
+A great way to contribute to the project is by improving documentation. If you find any incomplete or inaccurate documentation, 
+please share your knowledge with the community.
 
-[Open a feature request issue](https://github.com/alibaba/GraphScope/issues/new?assignees=&labels=&template=feature_request.md&title=) on GitHub which describes the feature you would
-like to see, why you need it, and how it should work.
-
-## Improve Documentation
-
-A great way to contribute to the project is to improve documentation. If you found some docs to be incomplete or inaccurate, share your hard-earned knowledge with the rest of the community.
-
-Documentation improvements are also a great way to gain some experience with our submission and review process, discussed below, without requiring a lot of local development environment setup. In fact, many documentation-only changes can be made directly in the GitHub web interface by clicking the “edit” button. This will handle making a fork and a pull request for you.
+Documentation improvements are also a great way to gain some experience with our submission and review process, discussed below, without requiring a lot of local development environment setup. 
+In fact, many documentation-only changes can be made directly in the [GraphScope document pages](https://graphscope.io/docs/) by clicking the “Edit On Github” button. This will handle making a fork and a pull request for you.
 
 TBF: add a link to how to helping with documentation
 TBF: add a link to how to build the documentation
 
 
-## Contributing code and documentation changes
+## Contributing Code and Documentation Changes
 
-If you would like to contribute a new feature or a bug fix to GraphScope,
-please discuss your idea first on the GitHub issue. If there is no GitHub issue
-for your idea, please open one. It may be that somebody is already working on
-it, or that there are particular complexities that you should know about before
-starting the implementation. There are often a number of ways to fix a problem
-and it is important to find the right approach before spending time on a PR
-that cannot be merged.
+If you would like to contribute a new feature or a bug fix to GraphScope, please first discuss your idea on a GitHub issue.
+If there isn't an issue for it, create one. There may be someone already working on it, or it may have particular complexities
+that you should be aware of before starting to code. There are often several ways to fix a problem, so it's important to find
+the right approach before spending time on a PR that can't be merged.
 
 ### Install pre-commit
 
 GraphScope use `pre-commit`_ to ensure no secrets are accidentally committed
-into the Git repository, you could first install  `pre-commit`_ by
+into the Git repository. Before contributing, install `pre-commit` by typing:
 
 ```bash
-    $ pip3 install pre-commit
+$ pip3 install pre-commit
 ```
 
-The configure the necessary pre-commit hooks with
+Configure the necessary pre-commit hooks with:
 
 ```bash
-    $ pre-commit install  --install-hooks
+$ pre-commit install  --install-hooks
 ```
 
 ### Minor Fixes
 
-Any functionality change should have a GitHub issue opened. For minor changes that
-affect documentation, you do not need to open up a GitHub issue. Instead you can
-prefix the title of your PR with "[MINOR] " if meets the following guidelines:
+For minor changes that affect documentation, you don't need to open a GitHub issue. Instead,
+add the prefix "[MINOR]" to the title of your PR if it meets the following guidelines:
 
 *  Grammar, usage and spelling fixes that affect no more than 2 files
 *  Documentation updates affecting no more than 2 files and not more
    than 500 words.
 
-### Fork & create a branch
+### Fork and Create a Branch
 
-You will need to fork the main GraphScope code and clone it to your local machine. See
-[github help page](https://help.github.com/articles/fork-a-repo) for help.
+Fork the main GraphScope code and clone it to your local machine. See
+[GitHub help page](https://help.github.com/articles/fork-a-repo) for help.
 
-Then you need to create a branch with a descriptive name.
+Create a branch with a descriptive name.
 
 A good branch name would be (where issue #42 is the ticket you're working on):
 
 ```bash
-    $ git checkout -b 42-add-chinese-translations
+$ git checkout -b 42-add-chinese-translations
 ```
 
-### Get the test suite running
+### Get the Test Suite Running
 
-See [how to test](./how_to_test.md) for detail.
+See [our how-to guide on testing](./how_to_test.md) for help.
 
-### Implement your fix or feature
+### Implement Your Fix or Feature
 
-At this point, you're ready to make your changes! Feel free to ask for help;
-everyone is a beginner at first :smile_cat:
+At this point, you're ready to make the changes. Feel free to ask for help because everyone is a beginner at first!
 
-### Get the code format & style right
+### Get the Code Format and Style Right
 
-Your patch should follow the same conventions & pass the same code quality
-checks as the rest of the project. Please follw [the code style guide](code_style_guide.md) to get the code format and style right.
+Your patch should follow the same conventions and pass the same code quality checks as the rest of the project.
+Follow [our code style guide](./code_style_guide.md) to attain the proper code format and style.
 
-### Submitting your changes
+### Submitting Your Changes
 
-See [How to submit pull request](how_to_submit_pr)
+See [our guide on how to submit a pull request](./how_to_submit_pr.md).
 
-### Discussing and keeping your Pull Request updated
+### Discussing and Keeping Your Pull Request Updated
 
-You will probably get feedback or requests for changes to your pull request.
-This is a big part of the submission process so don't be discouraged!
-It is a necessary part of the process in order to evaluate whether the changes
-are correct and necessary.
+You will probably receive feedback or requests for changes to your pull request.
+This is big part of the submission process and is necessary to evaluate your changes correctly,
+so don't be discouraged!
 
-If a maintainer asks you to "rebase" your PR, they're saying that a lot of code
-has changed, and that you need to update your branch so it's easier to merge.
-
-To learn more about rebasing in Git, there are a lot of [good](http://git-scm.com/book/en/Git-Branching-Rebasing)
- [resources](https://help.github.com/en/github/using-git/about-git-rebase), but here's the suggested workflow:
+If a maintainer asks you to "rebase" your pull request, it means that a lot of code has changed and
+you need to update your branch so it's easier to merge. To learn more about rebasing in Git, refer to the recommended workflow:
 
 ```bash
-    $ git checkout 42-add-chinese-translations
-    $ git pull --rebase upstream main
-    $ git push --force-with-lease 42-add-chinese-translations
+$ git checkout 42-add-chinese-translations
+$ git pull --rebase upstream main
+$ git push --force-with-lease 42-add-chinese-translations
 ```
 
-Feel free to post a comment in the pull request to ping reviewers if you are awaiting an answer
-on something. If you encounter words or acronyms that seem unfamiliar, refer to this [glossary](https://chromium.googlesource.com/chromiumos/docs/+/HEAD/glossary.md).
+Feel free to comment in the pull request to ping reviewers if you're awaiting a response.
+If you encounter unfamiliar words or acronyms, refer to this [glossary](https://chromium.googlesource.com/chromiumos/docs/+/HEAD/glossary.md).
 
 ### Merging a PR (maintainers only)
 
-A PR can only be merged into main by a maintainer if:
+A pull request can only be merged into main by a maintainer if:
 
 * It is passing CI.
-* It has been approved by at least two maintainers. If it was a maintainer who
-  opened the PR, only one extra approval is needed.
-* It has no requested changes.
+* At least two maintainers have approved it. If a maintainer opened the PR, only one extra approval is needed.
+* There are no requested changes.
 * It is up to date with current main.
 
-### Shipping a release (maintainers only)
+### Shipping a Release (maintainers only)
 
 TODO(dongze): TBF
 
@@ -174,11 +160,8 @@ All pull requests that contain changes to code must be run through
 continuous integration (CI) testing at [Github Actions](https://github.com/alibaba/GarphScope/actions)
 
 The pull request change will trigger a CI testing run. Ideally, the code change
-will pass ("be green") on all platform configurations supported by GraphAr.
+will pass ("be green") on all platform configurations supported by GraphScope.
 This means that all tests pass and there are no linting errors. In reality,
 however, it is not uncommon for the CI infrastructure itself to fail on specific
 platforms ("be red"). It is vital to visually inspect the results of all failed ("red") tests
 to determine whether the failure was caused by the changes in the pull request.
-
-[1]: https://github.com/alibaba/GraphScope/blob/main/CODE_OF_CONDUCT.md
-

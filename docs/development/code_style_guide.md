@@ -9,7 +9,7 @@ We follow the [Google C++ Style Guide](https://google.github.io/styleguide/cppgu
 
 ## Python Style
 
-We follow the [black](https://github.com/psf/black) code style for Python coding standards.
+We follow the [black](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html) code style for Python coding standards.
 
 ## Rust Style
 
@@ -39,10 +39,10 @@ Below are the commands to check the code style in each language:
 For C++, format and lint the code by the MakeFile command:
 
 ```bash
-    # format
-    $ make graphscope_clformat
-    # lint
-    $ make graphscope_cpplint
+# format
+$ make graphscope_clformat
+# lint
+$ make graphscope_cpplint
 ```
 
 For Python:
@@ -50,28 +50,28 @@ For Python:
 - Install dependencies first:
 
 ```bash
-    $ pip3 install -r coordinator/requirements-dev.txt
+$ pip3 install -r coordinator/requirements-dev.txt
 ```
 
 - Check the style:
 
 ```bash
-    pushd python
-    python3 -m isort --check --diff .
-    python3 -m black --check --diff .
-    python3 -m flake8 .
-    popd
-    pushd coordinator
-    python3 -m isort --check --diff .
-    python3 -m black --check --diff .
-    python3 -m flake8 .
+$ pushd python
+$ python3 -m isort --check --diff .
+$ python3 -m black --check --diff .
+$ python3 -m flake8 .
+$ popd
+$ pushd coordinator
+$ python3 -m isort --check --diff .
+$ python3 -m black --check --diff .
+$ python3 -m flake8 .
 ```
 
 For Rust, we provide a shell script to do the format check:
 
 ```bash
-    $ cd interactive_engine/executor
-    $ ./check_format.sh
+$ cd interactive_engine/executor
+$ ./check_format.sh
 ```
 
 For Java:
@@ -79,12 +79,12 @@ For Java:
 -  Download the google-java-format tool: 
 
 ```bash
-    $ wget https://github.com/google/google-java-format/releases/download/v1.13.0/google-java-format-1.13.0-all-deps.jar
+$ wget https://github.com/google/google-java-format/releases/download/v1.13.0/google-java-format-1.13.0-all-deps.jar
 ```
 
 - Check the style:
 
 ```bash
-    $ files_to_format=$(git ls-files *.java)
-    $ java -jar google-java-format-1.13.0-all-deps.jar --aosp --skip-javadoc-formatting -i $files_to_format
+$ files_to_format=$(git ls-files *.java)
+$ java -jar google-java-format-1.13.0-all-deps.jar --aosp --skip-javadoc-formatting -i $files_to_format
 ```
