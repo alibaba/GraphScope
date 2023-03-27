@@ -1,5 +1,5 @@
 # LDBC Gremlin Tutorial
-It is important to note that [LDBC](https://ldbcouncil.org/) is a highly
+Prior to beginning, it is important to note that [LDBC](https://ldbcouncil.org/) is a highly
 regarded organization in the realm of graph databases/systems benchmark standards and audit testing.
 LDBC has developed several benchmark toolsuits, with GIE primarily focusing on the
 [Social Network Benchmark (SNB)](https://ldbcouncil.org/benchmarks/snb/). This benchmark defines
@@ -21,10 +21,10 @@ For this tutorial, we will use the [LDBC social network](https://ldbcouncil.org/
 :::{figure-md}
 
 <img src="../images/LDBC_Schema.png"
-     alt="The schema of the LDBC social network"
+     alt="The schema of the LDBC graph"
      width="65%">
 
-Figure 1. The schema of the LDBC social network (referred to LDBC [SNB](https://ldbcouncil.org/benchmarks/snb/)).
+Figure 1. The schema of the LDBC graph (referred to LDBC [SNB](https://ldbcouncil.org/benchmarks/snb/)).
 :::
 
 LDBC graph is one of the built-in dataset of GraphScope, so it can be easily loaded through:
@@ -35,7 +35,7 @@ from graphscope.dataset.ldbc import load_ldbc
 graph = load_ldbc()
 ```
 
-This will load the LDBC social network with the scale factor 1.
+This will load the LDBC social network with the scale factor (sf) 1.
 
 Currently, GIE supports Gremlin as its query language.
 After loading the LDBC graph and initializing the engine, we can submit gremlin queries to GIE through `g.execute(GREMLIN_QUERIES)` easily.
@@ -67,7 +67,7 @@ Then the output should be:
 [787074]
 ```
 
-It suggests that there are 190376 vertices and 787074 edges in the LDBC graph.
+It suggests that there are 190376 vertices and 787074 edges in the LDBC sf1 graph.
 
 ## Basic Vertex/Edge Query
 
@@ -173,7 +173,7 @@ The output should be like:
 v[360287970189718653], ......, v[360287970189718655]]
 ```
 
-From the LDBC schema shown in tutorial 1, you can see that vertices with label 'person', 'forum',  'post' and 'comment' all have property 'creationDate'. Therefore, the above query sentence is equivalent to:
+From the LDBC schema shown above, you can see that vertices with label 'person', 'forum',  'post' and 'comment' all have property 'creationDate'. Therefore, the above query sentence is equivalent to:
 
 ```python
 # Retrieve vertices having label 'person' or 'forum' or 'message'
@@ -260,6 +260,8 @@ plt.show()
 <img src="../images/comments_length_histogram.png"
      alt="The_histogram"
      width="65%">
+
+ Figure 2. The histogram of the comments' length in the ldbc social network.
 :::
 
 We can also draw a pie chart about the gender ratio in the social network.
@@ -298,6 +300,8 @@ plt.show()
 <img src="../images/gender_ratio.png"
      alt="The_pie_chart"
      width="60%">
+
+Figure 3. The pie chart of person's gender in the ldbc social network.
 :::
 
 ## Basic Traversal Query
@@ -330,6 +334,8 @@ Here is a local subgraph extracted from the LDBC Graph, which is formed by a cen
 <img src="../images/loacal_graph_example.png"
      alt="loacal_graph_example"
      width="33%">
+
+Figure 5. A local graph around a given person vertex.
 :::
 
 #### out(), in() and both()
@@ -362,7 +368,7 @@ This figure illustrates the execution process of `q1`, `q2` and `q3`:
      alt="out_in_both"
      width="95%">
 
-Figure 4. The examples of out/in/both steps.
+Figure 6. The examples of `out`/`in`/`both` steps.
 :::
 
 Therefore, the output of the above codes should be like:
@@ -376,7 +382,7 @@ Therefore, the output of the above codes should be like:
 [v[432345564227569033], v[288230376151712472], v[144115188075856168], v[144115188075860911], v[72057594037934114]]
 ```
 
-In addition, the three steps all support using edge labels as its parameters to further limit the traversal edges, like `out/in.both(label1, label2, ...)`, which means it only can traverse through the edges whose label is one of {label 1, label 2, ..., label n}. For example:
+In addition, the three steps all support using edge labels as its parameters to further limit the traversal edges, like `out`/`in`/`both(label1, label2, ...)`, which means it only can traverse through the edges whose label is one of {label 1, label 2, ..., label n}. For example:
 
 ```python
 # Traverse from the vertex to its adjacent vertices through its incoming edges, and the edge label should be 'hasModerator'
@@ -396,6 +402,8 @@ This figure illustrates the execution process of `q1`, `q2` and `q3`:
 <img src="../images/out_in_both_labels.png"
      alt="out_in_both_labels"
      width="95%">
+
+Figure 7. The examples of `out`/`in`/`both` steps from given labels.
 :::
 
 
@@ -439,6 +447,8 @@ This figure illustrates the execution process of `q1`, `q2` and `q3`:
 <img src="../images/outE_inE_bothE.png"
      alt="The current states of graph queries"
      width="95%">
+
+Figure 8. The examples of `outE`/`inE`/`bothE` steps.
 :::
 
 Therefore, the output of the above codes should be like:
@@ -473,6 +483,7 @@ This figure illustrates the execution process of `q1`, `q2` and `q3`:
      alt="outE_inE_bothE_labels"
      width="95%">
 
+Figure 9. The examples of `outE`/`inE`/`bothE` steps from given labels.
 :::
 
 Therefore, the output of the above codes should like:
@@ -494,6 +505,8 @@ When reaching an edge during the traversal, you may be interested in its inciden
 <img src="../images/out_in_vertices.png"
      alt="out_in_vertices"
      width="50%">
+
+Figure 10. The examples of outgoing/incoming vertex of an edge.
 :::
 
 
@@ -525,6 +538,8 @@ This figure illustrates the execution process of `q1`, `q2` and `q3`:
 <img src="../images/outV_inV_bothV.png"
      alt="outV_inV_bothV"
      width="95%">
+
+Figure 11. The examples of outV/inV/bothV steps.
 :::
 
 Therefore, the output of the above codes should like:
@@ -564,6 +579,8 @@ The figure illustrates the execution process of this gremlin sentence:
 <img src="../images/outE_then_inV.png"
      alt="outE_then_inV"
      width="70%">
+
+Figure 12. The examples of `outE` followed by `inV`.
 :::
 
 During the traversal, it firstly start from the source vertex 'person', and get to the 'isLocatedIn' edge. Then it starts from the 'isLocatedIn' edge, and get to the 'place' vertex. Thus the traversal ends, the 'place' vertex is the end of this traversal, and the 'isLocatedIn' edge can be regarded as the intermediate process of the traversal.
@@ -588,6 +605,8 @@ This figure illustrates the execution process:
 <img src="../images/out_out_predicate.png"
      alt="out_out_predicate"
      width="40%">
+
+Figure 13. The examples of two-hop outgoing vertices.
 :::
 
 Therefore, the output of the gremlin sentence should be like:
@@ -630,6 +649,8 @@ The explain it more clear, let's firstly look at a much simpler situation: start
 <img src="../images/two_local_graphs.png"
      alt="two_local_graphs"
      width="80%">
+
+Figure 14. The examples of two local graphs.
 :::
 
 In addition, we further limit the starting points of the traversal to be exactly the two person vertices. Therefore, we can write the following gremlin sentence in GIE:
@@ -647,6 +668,8 @@ The figure illustrates the execution process of `q1`:
 <img src="../images/out_two_starting_points.png"
      alt="two_local_graphs"
      width="80%">
+
+Figure 15. The results of outgoing neighbors from two given vertices.
 :::
 
 The traversal starts from the two person vertices, and then the `out()` step map the two source vertices both to their outgoing adjacent vertices. Therefore, the output should be like:
@@ -691,6 +714,8 @@ This figure illustrates the overview of the traverser transformation during the 
 <img src="../images/traversers_transformation_overview.png"
      alt="traversers_transformation_overview"
      width="50%">
+
+Figure 16. The overview of traversers' transformation.
 :::
 
 In addition, this figure shows the details of the traverser's change after every expansion step and `as(TAG)` step during the execution of gremlin sentence `g.V().as('a').out().as('b').in().as('c')`.
@@ -699,6 +724,8 @@ In addition, this figure shows the details of the traverser's change after every
 <img src="../images/traversers_transformation_details.png"
      alt="traversers_transformation_details"
      width="70%">
+
+Figure 17. The mapping details of the above traversers' transformation.
 :::
 
 
@@ -773,21 +800,21 @@ q1 = g.execute('g.V().where(outE().count().is(gte(5)))')
 print(q1.all())
 ```
 
-### Path Expansion
+### Path Expansion (Syntactic Sugar)
 
 Until now, we can use expansion steps, filter steps and auxiliary steps like `as(TAG)` to write complicated gremlin sentences to traverse the graph. However, there are still two shortcomings:
 
-- If we want to find a vertex which is 10-hop(edges) away from the current vertex, we need to write expansion step 10 times. It is very redundant.
-- The number of hops from the source to the destination is fixed. Therefore, if we want to find all vertices which can be reached from a source vertex within 3-hops, it can not be solved by already introduced steps.
+- If we want to find a vertex which is 10-hop(edges) away from the current vertex, we need to write expansion step 10 times, which is very cost-ineffective.
+- The number of hops from the source to the destination is arbitrary. For example, if we want to find all vertices which can be reached from a source vertex within 3-hops, it can not be solved by already introduced steps.
 
-Therefore, we would like to introduce path expansion to solve the two problems, which can be regarded as the syntactic sugars of expansion steps `out()`, `in()` and `both()`.
+Therefore, we would like to introduce path expansion to solve the two problems, which extends the expansion steps `out()`, `in()` and `both()` as the [syntactic sugar](./supported_gremlin_steps.md).
 
 In the three expansion steps, you can now write as `out/in/both(lower..upper, label1, label2...)`, where `lower` is the minimum number of hops in the path, and `upper-1` is the maximum number of hops in the path. For example, `out(3..5)` means expansion through the outgoing edges 3 or 4 times. Therefore,  `lower <= upper - 1`, otherwise the sentence is illegal.
 
 Path expansion is very flexible. Therefore, we design the `with()` step followed by path expansion step to provide two options for user to configure the corresponding behaviors of the path expansion step:
 
 - `PATH_OPT`: Since path expansion allows expand the same step multiple times, it is likely to have duplicate vertices in the path. If the `PATH_OPT` is set to `ARBITRARY`, paths having duplicate vertices will be kept in the traversers; otherwise, if the `PATH_OPT` is set to `SIMPLE_PATH`, paths having duplicate vertices will be filtered.
-- `RESULT_OPT`: Sometimes, you may be interested in all the vertices in the path, but sometimes you may be only interested in the last vertex of the path. Therefore, when the `RESULT_OPT` is set to `ALL_V`，all the vertices in the path will be kept to the output. Instead, when the `RESULT_OPT` is set to `END_V`， only the last vertex of the path will be kept.
+- `RESULT_OPT`: Sometimes, you may be interested in all the vertices in the path, but sometimes you may be only interested in the last vertex of the path. Therefore, when the `RESULT_OPT` is set to `ALL_V`, all the vertices in the path will be kept to the output. Instead, when the `RESULT_OPT` is set to `END_V`, only the last vertex of the path will be kept.
 
 At last, we would like to introduce `endV()` step in path expansion. Since a path may contain many vertices, all kept vertices are stored in a path collection by default. Therefore, `endV()` is used to unfold the path collection. For example, if the traversers after path expansion is `[[v[1], v[2], v[3]]`, where the inner `[v[1], v[2], v[3]]` is the path collection.   With the `endV()`, `v[1]`, `v[2]` and `v[3]` are picked out from the path collection, and the traversers becomes `[v[1], v[2], v[3]]`
 
@@ -795,4 +822,6 @@ At last, we would like to introduce `endV()` step in path expansion. Since a pat
 <img src="../images/path_expansion_explanation.png"
      alt="path_expansion_explanation"
      width="70%">
+
+Figure 18. The examples of path expansion.
 :::
