@@ -1,5 +1,5 @@
 # LDBC Gremlin Tutorial
-Prior to beginning, it is important to note that [LDBC](https://ldbcouncil.org/) is a highly
+It is important to note that [LDBC](https://ldbcouncil.org/) is a highly
 regarded organization in the realm of graph databases/systems benchmark standards and audit testing.
 LDBC has developed several benchmark toolsuits, with GIE primarily focusing on the
 [Social Network Benchmark (SNB)](https://ldbcouncil.org/benchmarks/snb/). This benchmark defines
