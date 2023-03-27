@@ -88,7 +88,7 @@ jobs:
             - '.github/workflows/ci.yml'
           gie-k8s-failover-test:
             - 'interactive_engine/**'
-            - 'charts/ir-standalone/**'
+            - 'charts/gie-standalone/**'
 
     - name: Cpp Format and Lint Check
       run: |
@@ -647,13 +647,13 @@ jobs:
         run: |
           cd ${GITHUB_WORKSPACE}/charts
           # create local persistent volume which contains graph data for test
-          kubectl apply -f ./ir-standalone/tools/pvc.yaml
+          kubectl apply -f ./gie-standalone/tools/pvc.yaml
           # create gie instance (compiler & executor & exp storage)
-          helm install test ./ir-standalone \
+          helm install test ./gie-standalone \
               --set image.repository=graphscope/interactive-experimental \
               --set image.tag=${SHORT_SHA} --set storageType=Experimental \
               --set schemaConfig=expr_modern_schema.json \
-              --set store.replicaCount=2 \
+              --set executor.replicaCount=2 \
               --set frontend.service.type=NodePort
           # run failover test
           cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && ./ir_k8s_failover_ci.sh default test-graphscope-store 2 1
