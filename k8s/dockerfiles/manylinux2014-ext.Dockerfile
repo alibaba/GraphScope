@@ -22,7 +22,8 @@ RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
       tar xzf hadoop-3.3.0.tar.gz -C /opt/; \
     fi && \
     rm -rf hadoop-3.3.0* && \
-    rm -rf /opt/hadoop-3.3.0/share/doc
+    cd /opt/hadoop-3.3.0/share/ && \
+    rm -rf doc hadoop/client  hadoop/mapreduce  hadoop/tools  hadoop/yarn
 
 FROM centos:7
 
