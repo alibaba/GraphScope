@@ -12,11 +12,11 @@ ENV profile=$profile
 COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 
 RUN cd /home/graphscope/GraphScope/ && \
-    if [ "${CI}" == "true" ]; then \
+    if [ "${CI}" = "true" ]; then \
         cp -r artifacts/interactive /home/graphscope/install; \
     else \
         mkdir /home/graphscope/install; \
-        source /home/graphscope/.graphscope_env; \
+        . /home/graphscope/.graphscope_env; \
         make interactive-install BUILD_TYPE="$profile" INSTALL_PREFIX=/home/graphscope/install; \
     fi
 
