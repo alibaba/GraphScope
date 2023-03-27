@@ -20,10 +20,10 @@ use graph_proxy::apis::{get_graph, DynDetails, QueryParams, Vertex};
 use ir_common::error::ParsePbError;
 use ir_common::generated::physical as pb;
 use ir_common::generated::physical::get_v::VOpt;
-use ir_common::KeyId;
+use ir_common::{KeyId, LabelId};
 use pegasus::api::function::{FilterMapFunction, FnResult};
 
-use crate::error::{FnExecError, FnGenResult};
+use crate::error::{FnExecError, FnGenError, FnGenResult};
 use crate::process::entry::{DynEntry, Entry, EntryType};
 use crate::process::operator::map::FilterMapFuncGen;
 use crate::process::record::Record;
@@ -56,6 +56,68 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                         .clone();
                     input.append(path_end, self.alias.clone());
                     Ok(Some(input))
+                } else {
+                    Err(FnExecError::unsupported_error(
+                        "Only support `GetV` with VOpt::End on a path entry",
+                    ))?
+                }
+            } else {
+                Err(FnExecError::unexpected_data_error(
+                    "Can only apply `GetV` (`Auxilia` instead) on an edge or path entry",
+                ))?
+            }
+        } else {
+            Ok(None)
+        }
+    }
+}
+
+#[derive(Debug)]
+struct GetVertexWithLabelOperator {
+    start_tag: Option<KeyId>,
+    opt: VOpt,
+    alias: Option<KeyId>,
+    labels: Vec<LabelId>,
+}
+
+impl FilterMapFunction<Record, Record> for GetVertexWithLabelOperator {
+    fn exec(&self, mut input: Record) -> FnResult<Option<Record>> {
+        if let Some(entry) = input.get(self.start_tag) {
+            if let Some(e) = entry.as_edge() {
+                let (id, label) = match self.opt {
+                    VOpt::Start => (e.src_id, e.get_src_label()),
+                    VOpt::End => (e.dst_id, e.get_dst_label()),
+                    VOpt::Other => (e.get_other_id(), e.get_other_label()),
+                    _ => unreachable!(),
+                };
+                let label = label.ok_or(FnExecError::UnExpectedData(format!(
+                    "Label is None in GetVertexWithLabelOperator, Record {:?} with Opr {:?}",
+                    input, self,
+                )))?;
+                if self.labels.contains(label) {
+                    let vertex = Vertex::new(id, Some(*label), DynDetails::default());
+                    input.append(vertex, self.alias.clone());
+                    Ok(Some(input))
+                } else {
+                    Ok(None)
+                }
+            } else if let Some(graph_path) = entry.as_graph_path() {
+                if let VOpt::End = self.opt {
+                    let path_end = graph_path
+                        .get_path_end()
+                        .ok_or(FnExecError::unexpected_data_error("Get path_end failed in path expand"))?;
+                    let label = path_end
+                        .label()
+                        .ok_or(FnExecError::UnExpectedData(format!(
+                            "Label is None in GetVertexWithLabelOperator, Record {:?} with Opr {:?}",
+                            input, self,
+                        )))?;
+                    if self.labels.contains(&label) {
+                        input.append(path_end.clone(), self.alias.clone());
+                        Ok(Some(input))
+                    } else {
+                        Ok(None)
+                    }
                 } else {
                     Err(FnExecError::unsupported_error(
                         "Only support `GetV` with VOpt::End on a path entry",
@@ -144,19 +206,44 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
 impl FilterMapFuncGen for pb::GetV {
     fn gen_filter_map(self) -> FnGenResult<Box<dyn FilterMapFunction<Record, Record>>> {
         let opt: VOpt = unsafe { ::std::mem::transmute(self.opt) };
-        let query_params: QueryParams = self.params.try_into()?;
         match opt {
             VOpt::Both => Err(ParsePbError::from(
                 "the `GetV` operator is not a `FilterMap`, which has GetV::VOpt::Both",
             ))?,
             VOpt::Start | VOpt::End | VOpt::Other => {
-                let get_vertex_operator = GetVertexOperator { start_tag: self.tag, opt, alias: self.alias };
-                if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
-                    debug!("Runtime get_vertex operator: {:?}", get_vertex_operator);
+                if self.params.is_some() && self.params.as_ref().unwrap().is_queryable() {
+                    let mut params = self.params.clone().unwrap();
+                    let labels = params
+                        .tables
+                        .clone()
+                        .into_iter()
+                        .map(|label| label.try_into())
+                        .collect::<Result<Vec<_>, _>>()?;
+                    params.tables.clear();
+                    // Can only support table filtering in GetV (when Opt!=Self)
+                    if params.is_queryable() {
+                        Err(FnGenError::unsupported_error(&format!(
+                            "QueryParams in GetV {:?}",
+                            self.params
+                        )))?
+                    }
+                    let get_vertex_with_label_operator =
+                        GetVertexWithLabelOperator { start_tag: self.tag, opt, alias: self.alias, labels };
+                    if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
+                        debug!("Runtime GetVertexWithLabelOperator: {:?}", get_vertex_with_label_operator);
+                    }
+                    Ok(Box::new(get_vertex_with_label_operator))
+                } else {
+                    let get_vertex_operator =
+                        GetVertexOperator { start_tag: self.tag, opt, alias: self.alias };
+                    if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
+                        debug!("Runtime GetVertexOperator: {:?}", get_vertex_operator);
+                    }
+                    Ok(Box::new(get_vertex_operator))
                 }
-                Ok(Box::new(get_vertex_operator))
             }
             VOpt::Itself => {
+                let query_params: QueryParams = self.params.try_into()?;
                 let auxilia_operator = AuxiliaOperator { tag: self.tag, query_params, alias: self.alias };
                 if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
                     debug!("Runtime AuxiliaOperator: {:?}", auxilia_operator);
