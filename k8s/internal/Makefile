@@ -17,6 +17,9 @@ ifeq ($(UNAME_S), Linux)
 	XARGS_EMPTY_FLAG := --no-run-if-empty
 endif
 
+# x86_64 or arm64
+ARCH := $(shell uname -m)
+
 BUILD_PROGRESS    = auto
 
 # Default null
@@ -34,7 +37,7 @@ GRAPHSCOPE_HOME ?= /usr/local
 INSTALL_PREFIX ?= /opt/graphscope
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.13.3
+VINEYARD_VERSION ?= v0.13.4
 PROFILE ?= release
 CI ?= false
 
@@ -84,15 +87,15 @@ graphscope-darwin-py3:
 		sudo strip ${INSTALL_PREFIX}/bin/gaia_executor && \
 		export DYLD_LIBRARY_PATH=/usr/local/lib:$$DYLD_LIBRARY_PATH && \
 		install_name_tool -add_rpath /usr/local/lib ${INSTALL_PREFIX}/bin/gaia_executor && \
-		package_name=gs-include python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
+		package_name=gs-include python3 setup.py bdist_wheel --plat=macosx_10_9_${ARCH} && \
 		rm -rf build && \
-		package_name=gs-apps python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
+		package_name=gs-apps python3 setup.py bdist_wheel --plat=macosx_10_9_${ARCH} && \
 		rm -rf build && \
-		package_name=gs-engine python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
+		package_name=gs-engine python3 setup.py bdist_wheel --plat=macosx_10_9_${ARCH} && \
 		rm -rf build && \
-		package_name=gs-coordinator python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
+		package_name=gs-coordinator python3 setup.py bdist_wheel --plat=macosx_10_9_${ARCH} && \
 		rm -rf build && \
-		package_name=graphscope python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
+		package_name=graphscope python3 setup.py bdist_wheel --plat=macosx_10_9_${ARCH} && \
 		pip3 install delocate && \
 		for wheel in `ls dist/*.whl`; do \
 			delocate-listdeps -a -d $$wheel; \
@@ -125,7 +128,7 @@ graphscope-manylinux2014-py3-nodocker:
 	package_name=graphscope python3 setup.py bdist_wheel && \
 	cd dist && \
 	for wheel in `ls ./*.whl`; do \
-		(auditwheel repair $$wheel --plat=manylinux2014_x86_64 && rm $$wheel) || true; \
+		(auditwheel repair $$wheel --plat=manylinux2014_${ARCH} && rm $$wheel) || true; \
 	done
 
 graphscope-manylinux2014-py3:
@@ -191,7 +194,7 @@ graphscope-client-darwin-py3:
 			pip3 install "numpy==1.18.5" "pandas" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" delocate wheel; \
 		fi; \
 		rm -rf build dist/*.whl || true && \
-		python3 setup.py bdist_wheel --plat=macosx_10_9_x86_64 && \
+		python3 setup.py bdist_wheel --plat=macosx_10_9_${ARCH} && \
 		for wheel in `ls dist/*.whl`; do \
 			delocate-wheel -w dist/wheelhouse -v $$wheel && rm $$wheel; \
 		done

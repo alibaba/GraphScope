@@ -47,7 +47,7 @@ WORKDIR /home/graphscope
 
 COPY ./gs ./gs
 ARG VINEYARD_VERSION=main
-RUN ./gs install-deps dev --v6d-version=$VINEYARD_VERSION -j 2 && \
+RUN ./gs install-deps dev --v6d-version=$VINEYARD_VERSION -j $(nproc) && \
     sudo yum clean all -y && \
     sudo rm -fr /var/cache/yum
 

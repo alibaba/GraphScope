@@ -42,13 +42,6 @@ all: learning client coordinator analytical interactive
 graphscope: all
 
 install: analytical-install interactive-install learning-install client coordinator
-    # client
-	pip3 install --user --editable $(CLIENT_DIR)
-	rm -rf $(CLIENT_DIR)/*.egg-info
-    # coordinator
-	pip3 install --user --editable $(COORDINATOR_DIR)
-	rm -rf $(COORDINATOR_DIR)/*.egg-info
-
 	echo "Run the following command to correctly set environment variable"
 	echo "export GRAPHSCOPE_HOME=$(INSTALL_PREFIX)"
 
@@ -61,6 +54,7 @@ clean:
 	rm -rf $(INTERACTIVE_DIR)/executor/ir/target
 
 	rm -rf $(LEARNING_BUILD_DIR) $(LEARNING_DIR)/proto/*.h $(LEARNING_DIR)/proto/*.cc
+	rm -rf $(LEARNING_DIR)/graphlearn/built
 
 	cd $(CLIENT_DIR) && python3 setup.py clean --all
 
@@ -74,11 +68,15 @@ client: learning
 	cd $(CLIENT_DIR) && \
 	pip3 install -r requirements.txt -r requirements-dev.txt --user && \
 	python3 setup.py build_ext --inplace --user
+	pip3 install --user --editable $(CLIENT_DIR)
+	rm -rf $(CLIENT_DIR)/*.egg-info
 
 coordinator: client
 	cd $(COORDINATOR_DIR) && \
 	pip3 install -r requirements.txt -r requirements-dev.txt --user && \
 	python3 setup.py build_builtin
+	pip3 install --user --editable $(COORDINATOR_DIR)
+	rm -rf $(COORDINATOR_DIR)/*.egg-info
 
 # We deliberately make $(ENGINE) depends on a file, and $(ENGINE)-install depends on $(ENGINE),
 # so that when we execute `make $(ENGINE)-install` after `make $(ENGINE)`, it will not

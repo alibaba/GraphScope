@@ -16,7 +16,7 @@
 use std::fmt;
 use std::sync::atomic::{AtomicPtr, Ordering};
 
-use ahash::{HashMap, HashMapExt};
+use ahash::HashMap;
 use dyn_type::Object;
 use dyn_type::Primitives;
 use global_query::store_api::prelude::Property;
@@ -68,7 +68,7 @@ where
     // excluding the ones used only when local property fetching.
     // Specifically, in graphscope store, None means we do not need any property,
     // and Some(vec![]) means we need all properties
-    prop_keys: Option<Vec<PropId>>,
+    prop_keys: Option<Vec<NameOrId>>,
     inner: AtomicPtr<V>,
 }
 
@@ -76,7 +76,7 @@ impl<V> LazyVertexDetails<V>
 where
     V: StoreVertex + 'static,
 {
-    pub fn new(v: V, prop_keys: Option<Vec<PropId>>) -> Self {
+    pub fn new(v: V, prop_keys: Option<Vec<NameOrId>>) -> Self {
         let ptr = Box::into_raw(Box::new(v));
         LazyVertexDetails { prop_keys, inner: AtomicPtr::new(ptr) }
     }
@@ -125,34 +125,22 @@ where
     }
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
-        let mut all_props = HashMap::new();
-        if let Some(prop_keys) = self.prop_keys.as_ref() {
-            if prop_keys.is_empty() {
-                // the case of get_all_properties from vertex;
-                if let Some(ptr) = self.get_vertex_ptr() {
-                    unsafe {
-                        all_props = (*ptr)
-                            .get_properties()
-                            .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val))
-                            .collect();
-                    }
-                } else {
-                    return None;
-                }
-            } else {
-                let prop_keys = self.prop_keys.as_ref().unwrap();
-                // the case of get_all_properties with prop_keys pre-specified
-                for key in prop_keys.iter() {
-                    let key = NameOrId::Id(*key as KeyId);
-                    if let Some(prop) = self.get_property(&key) {
-                        all_props.insert(key.clone(), prop.try_to_owned().unwrap());
-                    } else {
-                        all_props.insert(key.clone(), Object::None);
-                    }
-                }
+        if let Some(ptr) = self.get_vertex_ptr() {
+            unsafe {
+                Some(
+                    (*ptr)
+                        .get_properties()
+                        .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val))
+                        .collect(),
+                )
             }
+        } else {
+            None
         }
-        Some(all_props)
+    }
+
+    fn get_property_keys(&self) -> Option<Vec<NameOrId>> {
+        self.prop_keys.clone()
     }
 }
 
@@ -183,126 +171,6 @@ where
     }
 }
 
-/// HybridVertexDetails supports both materialized cached props and lazily accessed props
-pub struct HybridVertexDetails<V>
-where
-    V: StoreVertex + 'static,
-{
-    lazy: AtomicPtr<V>,
-    cached: Option<HashMap<PropId, Object>>,
-}
-
-impl<V> HybridVertexDetails<V>
-where
-    V: StoreVertex + 'static,
-{
-    pub fn new(v: V) -> Self {
-        let ptr = Box::into_raw(Box::new(v));
-        HybridVertexDetails { lazy: AtomicPtr::new(ptr), cached: None }
-    }
-
-    fn get_vertex_ptr(&self) -> Option<*mut V> {
-        let ptr = self.lazy.load(Ordering::SeqCst);
-        if ptr.is_null() {
-            None
-        } else {
-            Some(ptr)
-        }
-    }
-}
-
-impl<V> fmt::Debug for HybridVertexDetails<V>
-where
-    V: StoreVertex + 'static,
-{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("gs_store HybridVertexDetails")
-            .field("lazy", &self.lazy)
-            .field("cached", &self.cached)
-            .finish()
-    }
-}
-
-impl<V> AsAny for HybridVertexDetails<V>
-where
-    V: StoreVertex + 'static,
-{
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
-    }
-
-    fn as_any_ref(&self) -> &dyn Any {
-        self
-    }
-}
-
-impl<V> Drop for HybridVertexDetails<V>
-where
-    V: StoreVertex + 'static,
-{
-    fn drop(&mut self) {
-        let ptr = self.lazy.load(Ordering::SeqCst);
-        if !ptr.is_null() {
-            unsafe {
-                std::ptr::drop_in_place(ptr);
-            }
-        }
-    }
-}
-
-impl<V> Details for HybridVertexDetails<V>
-where
-    V: StoreVertex + 'static,
-{
-    fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
-        if let NameOrId::Id(key) = key {
-            if let Some(ref cached) = self.cached {
-                if let Some(obj) = cached.get(&(*key as PropId)) {
-                    return Some(PropertyValue::Owned(obj.clone()));
-                }
-            }
-            if let Some(ptr) = self.get_vertex_ptr() {
-                unsafe {
-                    (*ptr)
-                        .get_property(*key as PropId)
-                        .map(|prop| PropertyValue::Owned(encode_runtime_prop_val(prop)))
-                }
-            } else {
-                None
-            }
-        } else {
-            info!("Have not support getting property by prop_name in gs_store yet");
-            None
-        }
-    }
-
-    fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
-        // note that column filter is pushed down, so just return all props
-        let lazy_props: Option<HashMap<NameOrId, Object>> = if let Some(ptr) = self.get_vertex_ptr() {
-            unsafe {
-                let props = (*ptr)
-                    .get_properties()
-                    .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val))
-                    .collect();
-                Some(props)
-            }
-        } else {
-            None
-        };
-        if let Some(ref cached) = self.cached {
-            let cached_props: HashMap<NameOrId, Object> = cached
-                .iter()
-                .map(|(k, v)| (NameOrId::Id(*k as KeyId), v.clone()))
-                .collect();
-            return lazy_props.map(|mut lazyed| {
-                lazyed.extend(cached_props.into_iter());
-                lazyed
-            });
-        };
-        lazy_props
-    }
-}
-
 /// LazyEdgeDetails is used for local property fetching optimization.
 /// That is, the required properties will not be materialized until LazyEdgeDetails need to be shuffled.
 #[allow(dead_code)]
@@ -314,7 +182,7 @@ where
     // excluding the ones used only when local property fetching.
     // Specifically, in graphscope store, None means we do not need any property,
     // and Some(vec![]) means we need all properties
-    prop_keys: Option<Vec<PropId>>,
+    prop_keys: Option<Vec<NameOrId>>,
     inner: AtomicPtr<E>,
 }
 
@@ -322,7 +190,7 @@ impl<E> LazyEdgeDetails<E>
 where
     E: StoreEdge + 'static,
 {
-    pub fn new(e: E, prop_keys: Option<Vec<PropId>>) -> Self {
+    pub fn new(e: E, prop_keys: Option<Vec<NameOrId>>) -> Self {
         let ptr = Box::into_raw(Box::new(e));
         LazyEdgeDetails { prop_keys, inner: AtomicPtr::new(ptr) }
     }
@@ -371,34 +239,23 @@ where
     }
 
     fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
-        let mut all_props = HashMap::new();
-        if let Some(prop_keys) = self.prop_keys.as_ref() {
-            if prop_keys.is_empty() {
-                // the case of get_all_properties from vertex;
-                if let Some(ptr) = self.get_edge_ptr() {
-                    unsafe {
-                        all_props = (*ptr)
-                            .get_properties()
-                            .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val))
-                            .collect();
-                    }
-                } else {
-                    return None;
-                }
-            } else {
-                let prop_keys = self.prop_keys.as_ref().unwrap();
-                // the case of get_all_properties with prop_keys pre-specified
-                for key in prop_keys.iter() {
-                    let key = NameOrId::Id(*key as KeyId);
-                    if let Some(prop) = self.get_property(&key) {
-                        all_props.insert(key.clone(), prop.try_to_owned().unwrap());
-                    } else {
-                        all_props.insert(key.clone(), Object::None);
-                    }
-                }
+        // the case of get_all_properties from vertex;
+        if let Some(ptr) = self.get_edge_ptr() {
+            unsafe {
+                Some(
+                    (*ptr)
+                        .get_properties()
+                        .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val))
+                        .collect(),
+                )
             }
+        } else {
+            None
         }
-        Some(all_props)
+    }
+
+    fn get_property_keys(&self) -> Option<Vec<NameOrId>> {
+        self.prop_keys.clone()
     }
 }
 
@@ -426,125 +283,5 @@ where
                 std::ptr::drop_in_place(ptr);
             }
         }
-    }
-}
-
-/// HybridEdgeDetails supports both materialized cached props and lazily accessed props
-pub struct HybridEdgeDetails<E>
-where
-    E: StoreEdge + 'static,
-{
-    lazy: AtomicPtr<E>,
-    cached: Option<HashMap<PropId, Object>>,
-}
-
-impl<E> HybridEdgeDetails<E>
-where
-    E: StoreEdge + 'static,
-{
-    pub fn new(e: E) -> Self {
-        let ptr = Box::into_raw(Box::new(e));
-        HybridEdgeDetails { lazy: AtomicPtr::new(ptr), cached: None }
-    }
-
-    fn get_edge_ptr(&self) -> Option<*mut E> {
-        let ptr = self.lazy.load(Ordering::SeqCst);
-        if ptr.is_null() {
-            None
-        } else {
-            Some(ptr)
-        }
-    }
-}
-
-impl<E> fmt::Debug for HybridEdgeDetails<E>
-where
-    E: StoreEdge + 'static,
-{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("gs_store HybridEdgeDetails")
-            .field("lazy", &self.lazy)
-            .field("cached", &self.cached)
-            .finish()
-    }
-}
-
-impl<E> AsAny for HybridEdgeDetails<E>
-where
-    E: StoreEdge + 'static,
-{
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
-    }
-
-    fn as_any_ref(&self) -> &dyn Any {
-        self
-    }
-}
-
-impl<E> Drop for HybridEdgeDetails<E>
-where
-    E: StoreEdge + 'static,
-{
-    fn drop(&mut self) {
-        let ptr = self.lazy.load(Ordering::SeqCst);
-        if !ptr.is_null() {
-            unsafe {
-                std::ptr::drop_in_place(ptr);
-            }
-        }
-    }
-}
-
-impl<E> Details for HybridEdgeDetails<E>
-where
-    E: StoreEdge + 'static,
-{
-    fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
-        if let NameOrId::Id(key) = key {
-            if let Some(ref cached) = self.cached {
-                if let Some(obj) = cached.get(&(*key as PropId)) {
-                    return Some(PropertyValue::Owned(obj.clone()));
-                }
-            }
-            if let Some(ptr) = self.get_edge_ptr() {
-                unsafe {
-                    (*ptr)
-                        .get_property(*key as PropId)
-                        .map(|prop| PropertyValue::Owned(encode_runtime_prop_val(prop)))
-                }
-            } else {
-                None
-            }
-        } else {
-            info!("Have not support getting property by prop_name in gs_store yet");
-            None
-        }
-    }
-
-    fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
-        // note that column filter is pushed down, so just return all props
-        let lazy_props: Option<HashMap<NameOrId, Object>> = if let Some(ptr) = self.get_edge_ptr() {
-            unsafe {
-                let props = (*ptr)
-                    .get_properties()
-                    .map(|(prop_id, prop_val)| encode_runtime_property(prop_id, prop_val))
-                    .collect();
-                Some(props)
-            }
-        } else {
-            None
-        };
-        if let Some(ref cached) = self.cached {
-            let cached_props: HashMap<NameOrId, Object> = cached
-                .iter()
-                .map(|(k, v)| (NameOrId::Id(*k as KeyId), v.clone()))
-                .collect();
-            return lazy_props.map(|mut lazyed| {
-                lazyed.extend(cached_props.into_iter());
-                lazyed
-            });
-        };
-        lazy_props
     }
 }
