@@ -84,8 +84,6 @@ spec:
 
               # load vineyard graph
               config_path=/etc/groot/config
-              source /home/graphscope/.profile
-
 
               [[ `hostname` =~ -([0-9]+)$ ]] || exit 1
               server_id=${BASH_REMATCH[1]}
