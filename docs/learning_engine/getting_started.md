@@ -22,7 +22,7 @@ you also need to install the tensorflow.
 
 ```bash
 # Installing the latest version of tensorflow may cause dependency
-# conflicts with GraphScope, we use 2.8.0 here.
+# conflicts with GraphScope, we use v2.8.0 here.
 python3 -m pip install tensorflow==2.8.0
 ```
 
