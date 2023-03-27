@@ -643,8 +643,6 @@ jobs:
           # install python gremlin client
           pip install gremlinpython
 
-          sleep 5000000s
-
       - name: Run K8S Failover Test
         run: |
           cd ${GITHUB_WORKSPACE}/charts
@@ -652,10 +650,13 @@ jobs:
           kubectl apply -f ./gie-standalone/tools/pvc.yaml
           # create gie instance (compiler & executor & exp storage)
           helm install test ./gie-standalone \
-              --set image.repository=graphscope/interactive-experimental \
-              --set image.tag=${SHORT_SHA} --set storageType=Experimental \
+              --set frontend.image.repository=graphscope/interactive-experimental \
+              --set frontend.image.tag=${SHORT_SHA} \
+              --set executor.image.repository=graphscope/interactive-experimental \
+              --set executor.image.tag=${SHORT_SHA} \
+              --set storageType=Experimental \
               --set schemaConfig=expr_modern_schema.json \
               --set executor.replicaCount=2 \
               --set frontend.service.type=NodePort
           # run failover test
-          cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && ./ir_k8s_failover_ci.sh default test-graphscope-store 2 1
+          cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && ./ir_k8s_failover_ci.sh default test-gie-standalone 2 1
