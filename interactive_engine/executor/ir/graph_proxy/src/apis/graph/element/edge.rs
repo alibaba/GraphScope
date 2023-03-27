@@ -13,13 +13,14 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use ahash::HashMap;
 use std::any::Any;
 use std::cmp::Ordering;
 use std::convert::{TryFrom, TryInto};
 use std::hash::{Hash, Hasher};
 use std::io;
 
-use dyn_type::BorrowObject;
+use dyn_type::{BorrowObject, Object};
 use ir_common::error::ParsePbError;
 use ir_common::generated::results as result_pb;
 use ir_common::{LabelId, NameOrId};
@@ -27,7 +28,7 @@ use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 use pegasus_common::downcast::*;
 use pegasus_common::impl_as_any;
 
-use crate::apis::{read_id, write_id, DynDetails, Element, GraphElement, ID};
+use crate::apis::{read_id, write_id, Details, DynDetails, Element, GraphElement, PropertyValue, ID};
 use crate::utils::expr::eval::Context;
 
 #[derive(Clone, Debug)]
@@ -66,8 +67,11 @@ impl GraphElement for Edge {
     fn label(&self) -> Option<LabelId> {
         self.label
     }
-    fn details(&self) -> Option<&DynDetails> {
-        Some(&self.details)
+    fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
+        self.details.get_property(key)
+    }
+    fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
+        self.details.get_all_properties()
     }
 }
 
@@ -125,6 +129,10 @@ impl Edge {
 
     pub fn get_details_mut(&mut self) -> &mut DynDetails {
         &mut self.details
+    }
+
+    pub fn get_details(&self) -> &DynDetails {
+        &self.details
     }
 }
 
