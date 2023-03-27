@@ -909,6 +909,7 @@ install_vineyard() {
   make install
   strip "${V6D_PREFIX}"/bin/vineyard* "${V6D_PREFIX}"/lib/libvineyard*
   python3 setup.py bdist_wheel
+  python3 setup_bdist.py bdist_wheel
   python3 setup_io.py bdist_wheel
   pip3 install --no-cache dist/* --user
   cp -rs "${V6D_PREFIX}"/* "${install_prefix}"/
