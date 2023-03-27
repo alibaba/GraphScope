@@ -1,5 +1,5 @@
 
-# Persistent Graph Store - Groot
+# Groot: Persistent Graph Store
 
 ## Overview
 In addition to Vineyard, the in-memory columnar graph store supported in GraphScope, we also have a disk-based, row-oriented, multi-versioned, persistent graph store. While Vineyard focuses on great support for in-memory whole graph analytics workloads, the persistent graph store is geared towards better supporting continuous graph data management services that frequently update the graph and answer traversal queries.
@@ -411,8 +411,6 @@ The loading process contains three steps:
 
 ##### Build: Building a partitioned graph
 Build data by running the hadoop map-reduce job with following command.
-
-1. 
 
 ```bash
 ./data_load/bin/load_tool.sh hadoop-build <path/to/config/file>
