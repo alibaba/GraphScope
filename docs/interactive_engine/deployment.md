@@ -3,7 +3,7 @@
 We have demonstrated [how to execute interactive queries](./getting_started.md) easily by installing Graphscope via `pip` on a local machine. However, in real-life applications, graphs are often too large to fit on a single machine. In such cases, Graphscope can be deployed on a cluster, such as a [self-managed k8s cluster](../deploy_graphscope_on_self_managed_k8s.md), for processing large-scale graphs. But you may wonder, "what if I only need the GIE engine and not the whole package that includes GAE and GLE?" This tutorial will walk you through the process of standalone deployment of GIE on a self-managed k8s cluster.
 
 Throughout the tutorial, we assume all machines are running Linux system.
-We donot guarantee that it works as smoothly as Linux on the other platform.
+We do not guarantee that it works as smoothly as Linux on the other platform.
 For your reference, we've tested the tutorial on Ubuntu 20.04.
 
 ## The K8s Cluster
@@ -30,40 +30,57 @@ deployment and management of applications. To deploy GIE standalone using Helm, 
 
 1. Install Helm on your local machine if you do not have it by following the
    instructions on the [official Helm website](https://helm.sh/docs/intro/install/).
-2. Add the GraphScope Helm repository to your local Helm client:
+2. Pull the Helm repository to your local disk:
+   ```bash
+   helm pull graphscope/gie-standalone --untar
    ```
-   helm repo add graphscope https://graphscope.oss-cn-hongkong.aliyuncs.com/chart
+3. Prepare the `etcd` pod.
+   ```bash
+   kubectl apply -f gie-standalone/tools/etcd.yaml
    ```
-3. Update the Helm repository:
+4. Prepare graph data
    ```
-   helm repo update
+   cp -r gie-standalone/data /tmp/data/
    ```
-4. Install the GIE chart:
+   Check whether the raw data is there:
    ```
-   helm install [YOUR_RELEASE_NAME] graphscope/gie-standalone
+   ls -l /tmp/data
    ```
+   You should be able to see the raw data of the [modern graph](https://tinkerpop.apache.org/docs/3.6.2/tutorials/getting-started/).
+   ```
+   data
+   └── modern_graph
+      ├── created.csv
+      ├── knows.csv
+      ├── person.csv
+      └── software.csv
+   ```
+   Then create k8s persistent volume (PV) and persistent volume claim (PVC).
+   ```bash
+   kubectl apply -f gie-standalone/tools/pvc.yaml
+   ```
+   The modern graph raw data in `/tmp/data` will be automatically loaded into the GIE graph store (by default on [Vineyard](https://v6d.io))
 
-   ````{tip}
-   This command will deploy the GIE chart with the default configuration.
-   using [modern graph](https://tinkerpop.apache.org/docs/3.6.2/tutorials/getting-started/) for demo purpose.
-   We will later show how you can customize your own graph data, and other useful options.
-   ````
-5. Verify that the GIE service is running:
+5. Install the GIE chart:
+   ```
+   helm install [YOUR_RELEASE_NAME] gie-standalone
+   ```
+6. Verify that the GIE service is running:
    ```
    kubectl get pods
    ```
    You should see the `[YOUR_RELEASE_NAME]-gie-standalone-frontend-0` and `[YOUR_RELEASE_NAME]-gie-standalone-store-0` pods running.
 
-That's it! You have successfully deployed GIE standalone using Helm. 
+That's it! You have successfully deployed GIE standalone using Helm.
 
-The next step is try to run some Gremlin queries. 
+The next step is try to run some Gremlin queries.
 
-6. Get the endpoint of the GIE frontend service:
+6. Get the endpoint of the GIE Frontend service:
    ```
-   kubectl get svc | grep frontend | grep [YOUR_RELEASE_NAME]
+   kubectl describe svc [YOUR_RELEASE_NAME]-gie-standalone-frontend | grep "Endpoints:" | awk -F' ' '{print $2}'
    ```
-   You should see the endpoint as `<ip>:<gremlinPort>` of the GIE frontend service.
-   
+   You should see the GIE Frontend service endpoint as `<ip>:<gremlinPort>`.
+
 7. Connect to the GIE frontend service using the official Python SDKs or Gremlin console.
 
    The following codes show how you can submit Gremlin queries in GIE.
@@ -85,12 +102,16 @@ The next step is try to run some Gremlin queries.
    ```
 
 ## Using Your Own Data
+Currently, a single instance of GIE can only handle one set of graph data. This means that you must indicate which raw data should be uploaded into GIE's graph repository, and all subsequent queries made through the GIE instance will pertain to the uploaded graph.
+
+The above tutorial uses modern graph to demonstrate the launching procedural.
+However, it's very straightforward to specify your own data with different schema.
 
 
-## Deploy on Actual Cluster
+## Deploy on a Cluster
 In K8s, it’s convenient to deploy GIE in a cluster with multiple machines.
 You don’t need to be aware of the physical machines, but simply configure the number of executors
-to make GIE scalable. These GIE executors will be seemlessly assigned by K8s to the physical machines. 
+to make GIE scalable. These GIE executors will be seemlessly assigned by K8s to the physical machines.
 
 You simply set the number of executors as:
 ```
@@ -98,7 +119,7 @@ helm install [YOUR_RELEASE_NAME] graphscope/gie-standalone --set executor.replic
 ```
 
 This instruction deploys the GIE chart using 3 executors that process graph partitions in v6d. The number of
-replicas can be modified according to your needs, but better be less than the number of CPUs in your cluster. 
+replicas can be modified according to your needs, but better be less than the number of CPUs in your cluster.
 When specifying the number of executors, v6d loads data from the specified location and partitions graph data automatically for each executor.
 It is recommended to store data in a distributed file system like HDFS for convenience. To configure the HDFS data source in helm,
 simply use the `hdfs://` scheme for the data source.
