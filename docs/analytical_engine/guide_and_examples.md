@@ -4,7 +4,7 @@
 ---
 caption: TOC
 maxdepth: 1
-hidden: 
+hidden:
 ---
 tutorial_run_builtin_algo
 tutorial_networkx_operations
@@ -24,7 +24,7 @@ This section contains a guide to the analytical engine and a number of examples.
 We assume you has read the [getting_started](getting_started.md) section and know how to launch a GraphScope session.
 ```
 
-The analytcial engine of GraphScope can handles various scenarios, .... In most cases, the built-in algorithms are sufficient for your needs.
+The analytical engine of GraphScope can handles various scenarios, .... In most cases, the built-in algorithms are sufficient for your needs.
 
 ````{panels}
 :header: text-center
@@ -45,16 +45,16 @@ If you are a scientist familiar with NetworkX, you may find GraphScope works wel
 :column: col-lg-12 p-2
 
 ```{link-button} tutorial_networkx_operations.html
-:text: Toturial
-:classes: btn-block stretched-link 
+:text: Tutorial
+:classes: btn-block stretched-link
 ```
 ^^^^^^^^^^^^^^
 Using NetworkX to manipulate graph and run algorithms.
----- 
+----
 
 ```{link-button} tutorial_networkx_algorithms.html
-:text: Toturial
-:classes: btn-block stretched-link 
+:text: Tutorial
+:classes: btn-block stretched-link
 ```
 ^^^^^^^^^^^^^^
 Running NetworkX Algorithms on GraphScope
@@ -68,31 +68,31 @@ If the built-in algorithms are not sufficient for your needs, you can implement 
 
 ```{link-button} tutorial_dev_algo_cpp_pie.html
 :text: Tutorial
-:classes: btn-block stretched-link 
+:classes: btn-block stretched-link
 ```
 ^^^^^^^^^^^^^^
 Write and run customized PageRank in C++ with PIE model
----- 
+----
 
 ```{link-button} tutorial_dev_algo_cpp_flash.html
 :text: Tutorial
-:classes: btn-block stretched-link 
+:classes: btn-block stretched-link
 ```
 ^^^^^^^^^^^^^^
 Write and run SSSP in C++ with FLASH model
----- 
+----
 
 ```{link-button} tutorial_dev_algo_python.html
 :text: Tutorial
-:classes: btn-block stretched-link 
+:classes: btn-block stretched-link
 ```
 ^^^^^^^^^^^^^^
 Write and run algorithms in Python
----- 
+----
 
 ```{link-button} tutorial_dev_algo_java.html
 :text: Tutorial
-:classes: btn-block stretched-link 
+:classes: btn-block stretched-link
 ```
 ^^^^^^^^^^^^^^
 Write and run algorithms in Java with PIE and Pregel model
@@ -106,7 +106,7 @@ Better still, if you already have your application running on Giraph or GraphX, 
 
 ```{link-button} tutorial_run_giraph_apps.html
 :text: Tutorial
-:classes: btn-block stretched-link 
+:classes: btn-block stretched-link
 ```
 ^^^^^^^^^^^^^^
 Develop and run (existing) Giraph applications on GraphScope
@@ -115,7 +115,7 @@ Develop and run (existing) Giraph applications on GraphScope
 
 ```{link-button} tutorial_run_graphx_apps.html
 :text: Tutorial
-:classes: btn-block stretched-link 
+:classes: btn-block stretched-link
 ```
 ^^^^^^^^^^^^^^
 Develop and run (existing) GraphX applications on GraphScope
