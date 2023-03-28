@@ -104,10 +104,7 @@ public class GraphLogicalAggregate extends Aggregate {
             for (int i = 0; i < rexNodes.size(); ++i) {
                 String aliasName = aliasList.get(i);
                 RelOptCluster cluster = getCluster();
-                int aliasId =
-                        ((GraphOptCluster) cluster)
-                                .getIdGenerator()
-                                .generate(aliasName, this.getInput(0));
+                int aliasId = ((GraphOptCluster) cluster).getIdGenerator().generate(aliasName);
                 fields.add(new RelDataTypeFieldImpl(aliasName, aliasId, rexNodes.get(i).getType()));
             }
             // update aliases in groupKey

@@ -68,6 +68,26 @@ public class FilterTest {
                 filter.explain().trim());
     }
 
+    // source([person]).as('x').filter('x.age == 10') are fused
+    @Test
+    public void equal_3_test() {
+        GraphBuilder builder = Utils.mockGraphBuilder();
+        SourceConfig sourceConfig =
+                new SourceConfig(
+                        GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"), "x");
+        RexNode equal =
+                builder.source(sourceConfig)
+                        .call(
+                                GraphStdOperatorTable.EQUALS,
+                                builder.variable("x", "age"),
+                                builder.literal(10));
+        RelNode filter = builder.filter(equal).build();
+        Assert.assertEquals(
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[x],"
+                        + " fusedFilter=[[=(DEFAULT.age, 10)]], opt=[VERTEX])",
+                filter.explain().trim());
+    }
+
     // g.V().hasLabel("person").where(expr("@.age > 10"))
     @Test
     public void greater_1_test() {
