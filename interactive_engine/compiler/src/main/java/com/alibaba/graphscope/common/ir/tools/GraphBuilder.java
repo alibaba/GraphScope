@@ -27,10 +27,8 @@ import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphGroupKeys;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphFieldCollation;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphRelCollations;
+import com.alibaba.graphscope.common.ir.rex.*;
 import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
-import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
-import com.alibaba.graphscope.common.ir.rex.RexVariableAliasChecker;
-import com.alibaba.graphscope.common.ir.rex.RexVariableConverter;
 import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
 import com.alibaba.graphscope.common.ir.tools.config.*;
@@ -244,16 +242,15 @@ public class GraphBuilder extends RelBuilder {
         }
     }
 
-    /**
+    /** f
      * generate a new alias id for the given alias name
      *
      * @param alias
-     * @param input
      * @return
      */
-    private int generateAliasId(@Nullable String alias, @Nullable RelNode input) {
+    private int generateAliasId(@Nullable String alias) {
         RelOptCluster cluster = getCluster();
-        return ((GraphOptCluster) cluster).getIdGenerator().generate(alias, input);
+        return ((GraphOptCluster) cluster).getIdGenerator().generate(alias);
     }
 
     /**
@@ -408,17 +405,22 @@ public class GraphBuilder extends RelBuilder {
      */
     private RelDataTypeField getAliasField(String alias) {
         Objects.requireNonNull(alias);
-        List<String> aliases = new ArrayList<>();
+        Set<String> aliases = new HashSet<>();
+        int nodeIdx = 0;
         for (int inputOrdinal = 0; inputOrdinal < size(); ++inputOrdinal) {
             List<RelNode> inputQueue = Lists.newArrayList(peek(inputOrdinal));
             while (!inputQueue.isEmpty()) {
                 RelNode cur = inputQueue.remove(0);
                 List<RelDataTypeField> fields = cur.getRowType().getFieldList();
-                if (alias == AliasInference.DEFAULT_NAME && fields.size() == 1) {
-                    return fields.get(0);
+                // to support `head` in gremlin
+                if (nodeIdx++ == 0 && alias == AliasInference.DEFAULT_NAME && fields.size() == 1) {
+                    return new RelDataTypeFieldImpl(
+                            AliasInference.DEFAULT_NAME,
+                            AliasInference.DEFAULT_ID,
+                            fields.get(0).getType());
                 }
                 for (RelDataTypeField field : fields) {
-                    if (field.getName().equals(alias)) {
+                    if (alias != AliasInference.DEFAULT_NAME && field.getName().equals(alias)) {
                         return field;
                     }
                     aliases.add(AliasInference.SIMPLE_NAME(field.getName()));
@@ -513,6 +515,13 @@ public class GraphBuilder extends RelBuilder {
                             ImmutableList.of(tableScan.getAliasId(), AliasInference.DEFAULT_ID));
             // fuze all conditions into table scan
             if (condition.accept(checker)) {
+                condition =
+                        condition.accept(
+                                new RexVariableAliasConverter(
+                                        true,
+                                        this,
+                                        AliasInference.SIMPLE_NAME(AliasInference.DEFAULT_NAME),
+                                        AliasInference.DEFAULT_ID));
                 // add the condition in table scan
                 tableScan.setFilters(ImmutableList.of(condition));
                 // pop the filter from the inner stack
@@ -604,9 +613,7 @@ public class GraphBuilder extends RelBuilder {
             String aliasName = aliasList.get(i);
             fields.add(
                     new RelDataTypeFieldImpl(
-                            aliasName,
-                            generateAliasId(aliasName, input),
-                            nodeList.get(i).getType()));
+                            aliasName, generateAliasId(aliasName), nodeList.get(i).getType()));
         }
         return new RelRecordType(StructKind.FULLY_QUALIFIED, fields);
     }
@@ -727,7 +734,7 @@ public class GraphBuilder extends RelBuilder {
         // need to project in advance
         if (!registrar.getExtraNodes().isEmpty()) {
             project(registrar.getExtraNodes(), registrar.getExtraAliases(), registrar.isAppend());
-            RexVariableConverter converter = new RexVariableConverter(true, this);
+            RexTmpVariableConverter converter = new RexTmpVariableConverter(true, this);
             groupKey =
                     new GraphGroupKeys(
                             registerKeys.stream()
@@ -795,7 +802,7 @@ public class GraphBuilder extends RelBuilder {
         // expressions need to be projected in advance
         if (!registrar.getExtraNodes().isEmpty()) {
             project(registrar.getExtraNodes(), registrar.getExtraAliases(), registrar.isAppend());
-            RexVariableConverter converter = new RexVariableConverter(true, this);
+            RexTmpVariableConverter converter = new RexTmpVariableConverter(true, this);
             registerNodes =
                     registerNodes.stream()
                             .map(k -> k.accept(converter))

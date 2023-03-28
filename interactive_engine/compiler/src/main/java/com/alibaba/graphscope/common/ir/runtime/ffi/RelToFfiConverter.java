@@ -53,14 +53,20 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * convert a {@code RelNode} to {@code LogicalNode} in ir_core
  */
 public class RelToFfiConverter implements GraphRelShuttle {
+    private static final Logger logger = LoggerFactory.getLogger(RelToFfiConverter.class);
     private static final IrCoreLibrary LIB = IrCoreLibrary.INSTANCE;
     private final boolean isColumnId;
 
@@ -154,7 +160,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
                 logicalFilter.getCondition().accept(new RexToProtoConverter(true, isColumnId));
         Pointer ptrFilter = LIB.initSelectOperator();
         checkFfiResult(
-                LIB.setSelectPredicateWithPb(
+                LIB.setSelectPredicatePb(
                         ptrFilter, new FfiPbPointer.ByValue(exprProto.toByteArray())));
         return new LogicalNode(logicalFilter, ptrFilter);
     }
@@ -172,7 +178,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
                             ? ArgUtils.asNoneAlias()
                             : ArgUtils.asAlias(aliasId);
             checkFfiResult(
-                    LIB.addProjectExprAliasWithPb(
+                    LIB.addProjectExprPbAlias(
                             ptrProject,
                             new FfiPbPointer.ByValue(expression.toByteArray()),
                             ffiAlias));
@@ -208,7 +214,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
                             ? ArgUtils.asNoneAlias()
                             : ArgUtils.asAlias(aliasId);
             checkFfiResult(
-                    LIB.addGroupbyKeyAliasWithPb(
+                    LIB.addGroupbyKeyPbAlias(
                             ptrGroup, new FfiPbPointer.ByValue(var.toByteArray()), ffiAlias));
         }
         for (int i = 0; i < groupCalls.size(); ++i) {
@@ -237,7 +243,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
                             .getOperators(0)
                             .getVar();
             checkFfiResult(
-                    LIB.addGroupbyAggFnWithPb(
+                    LIB.addGroupbyAggFnPb(
                             ptrGroup,
                             new FfiPbPointer.ByValue(var.toByteArray()),
                             ffiAggOpt,
@@ -259,7 +265,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
                                 .getOperators(0)
                                 .getVar();
                 checkFfiResult(
-                        LIB.addOrderbyPairWithPb(
+                        LIB.addOrderbyPairPb(
                                 ptrNode,
                                 new FfiPbPointer.ByValue(var.toByteArray()),
                                 Utils.ffiOrderOpt(collations.get(i).direction)));
@@ -278,31 +284,20 @@ public class RelToFfiConverter implements GraphRelShuttle {
     }
 
     private Pointer ffiQueryParams(AbstractBindableTableScan tableScan) {
-        List<RelDataTypeField> fields = tableScan.getRowType().getFieldList();
-        Preconditions.checkArgument(
-                !fields.isEmpty() && fields.get(0).getType() instanceof GraphSchemaType,
-                "data type of graph operators should be %s ",
-                GraphSchemaType.class);
-        GraphSchemaType schemaType = (GraphSchemaType) fields.get(0).getType();
-        List<GraphLabelType> labelTypes = new ArrayList<>();
-        if (schemaType instanceof GraphSchemaTypeList) {
-            ((GraphSchemaTypeList) schemaType)
-                    .forEach(
-                            k -> {
-                                labelTypes.add(k.getLabelType());
-                            });
-        } else {
-            labelTypes.add(schemaType.getLabelType());
-        }
+        Set<Integer> uniqueLabelIds =
+                getGraphLabels(tableScan).stream()
+                        .map(k -> k.getLabelId())
+                        .collect(Collectors.toSet());
         Pointer params = LIB.initQueryParams();
-        for (GraphLabelType type : labelTypes) {
-            checkFfiResult(LIB.addParamsTable(params, ArgUtils.asNameOrId(type.getLabelId())));
-        }
+        uniqueLabelIds.forEach(
+                k -> {
+                    checkFfiResult(LIB.addParamsTable(params, ArgUtils.asNameOrId(k)));
+                });
         if (ObjectUtils.isNotEmpty(tableScan.getFilters())) {
             OuterExpression.Expression expression =
                     tableScan.getFilters().get(0).accept(new RexToProtoConverter(true, isColumnId));
             checkFfiResult(
-                    LIB.setParamsPredicateWithPb(
+                    LIB.setParamsPredicatePb(
                             params, new FfiPbPointer.ByValue(expression.toByteArray())));
         }
         return params;
@@ -381,16 +376,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
                 throw new IllegalArgumentException("start binder should have a given tag");
             }
             checkFfiResult(LIB.setSentenceStart(ptrSentence, ArgUtils.asNameOrId(aliasId)));
-            List<RexNode> filters = source.getFilters();
-            if (ObjectUtils.isNotEmpty(filters)) {
-                OuterExpression.Expression exprProto =
-                        filters.get(0).accept(new RexToProtoConverter(true, isColumnId));
-                Pointer ptrFilter = LIB.initSelectOperator();
-                checkFfiResult(
-                        LIB.setSelectPredicateWithPb(
-                                ptrFilter, new FfiPbPointer.ByValue(exprProto.toByteArray())));
-                checkFfiResult(LIB.addSentenceBinder(ptrSentence, ptrFilter, FfiBinderOpt.Select));
-            }
+            addFilterToFfiBinder(ptrSentence, source);
         } else {
             addFfiBinder(ptrSentence, binder.getInput(0), false);
             if (binder instanceof AbstractBindableTableScan) {
@@ -423,6 +409,54 @@ public class RelToFfiConverter implements GraphRelShuttle {
                         "invalid type " + binder.getClass() + " in match sentence");
             }
         }
+    }
+
+    private void addFilterToFfiBinder(Pointer ptrSentence, AbstractBindableTableScan tableScan) {
+        Set<Integer> uniqueLabelIds =
+                getGraphLabels(tableScan).stream()
+                        .map(k -> k.getLabelId())
+                        .collect(Collectors.toSet());
+        // add labels as select operator
+        if (ObjectUtils.isNotEmpty(uniqueLabelIds)) {
+            Pointer ptrFilter = LIB.initSelectOperator();
+            StringBuilder predicateBuilder = new StringBuilder();
+            int i = 0;
+            for (Iterator<Integer> it = uniqueLabelIds.iterator(); it.hasNext(); ++i) {
+                if (i > 0) {
+                    predicateBuilder.append(" || ");
+                }
+                predicateBuilder.append("@.~label == " + it.next());
+            }
+            checkFfiResult(LIB.setSelectPredicate(ptrFilter, predicateBuilder.toString()));
+            checkFfiResult(LIB.addSentenceBinder(ptrSentence, ptrFilter, FfiBinderOpt.Select));
+        }
+        // add predicates as select operator
+        List<RexNode> filters = tableScan.getFilters();
+        if (ObjectUtils.isNotEmpty(filters)) {
+            OuterExpression.Expression exprProto =
+                    filters.get(0).accept(new RexToProtoConverter(true, isColumnId));
+            Pointer ptrFilter = LIB.initSelectOperator();
+            checkFfiResult(
+                    LIB.setSelectPredicatePb(
+                            ptrFilter, new FfiPbPointer.ByValue(exprProto.toByteArray())));
+            checkFfiResult(LIB.addSentenceBinder(ptrSentence, ptrFilter, FfiBinderOpt.Select));
+        }
+    }
+
+    private List<GraphLabelType> getGraphLabels(AbstractBindableTableScan tableScan) {
+        List<RelDataTypeField> fields = tableScan.getRowType().getFieldList();
+        Preconditions.checkArgument(
+                !fields.isEmpty() && fields.get(0).getType() instanceof GraphSchemaType,
+                "data type of graph operators should be %s ",
+                GraphSchemaType.class);
+        GraphSchemaType schemaType = (GraphSchemaType) fields.get(0).getType();
+        List<GraphLabelType> labelTypes = new ArrayList<>();
+        if (schemaType instanceof GraphSchemaTypeList) {
+            ((GraphSchemaTypeList) schemaType).forEach(k -> labelTypes.add(k.getLabelType()));
+        } else {
+            labelTypes.add(schemaType.getLabelType());
+        }
+        return labelTypes;
     }
 
     private void checkFfiResult(FfiResult res) {
