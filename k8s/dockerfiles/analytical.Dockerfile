@@ -11,12 +11,12 @@ ARG CI=false
 COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 
 RUN cd /home/graphscope/GraphScope/ && \
-    if [ "${CI}" == "true" ]; then \
+    if [ "${CI}" = "true" ]; then \
         cp -r artifacts/analytical /home/graphscope/install; \
     else \
         export INSTALL_DIR=/home/graphscope/install; \
         mkdir ${INSTALL_DIR}; \
-        source /home/graphscope/.graphscope_env; \
+        . /home/graphscope/.graphscope_env; \
         make analytical-install INSTALL_PREFIX=${INSTALL_DIR}; \
         strip ${INSTALL_DIR}/bin/grape_engine; \
         strip ${INSTALL_DIR}/lib/*.so; \
@@ -47,12 +47,12 @@ FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION AS builder-java
 COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 
 RUN cd /home/graphscope/GraphScope/ && \
-    if [ "${CI}" == "true" ]; then \
+    if [ "${CI}" = "true" ]; then \
         cp -r artifacts/analytical-java /home/graphscope/install; \
     else \
         export INSTALL_DIR=/home/graphscope/install; \
         mkdir ${INSTALL_DIR}; \
-        source /home/graphscope/.graphscope_env; \
+        . /home/graphscope/.graphscope_env; \
         make analytical-java-install INSTALL_PREFIX=${INSTALL_DIR}; \
         strip ${INSTALL_DIR}/bin/grape_engine; \
         strip ${INSTALL_DIR}/lib/*.so; \
