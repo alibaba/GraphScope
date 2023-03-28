@@ -76,7 +76,7 @@ public abstract class AbstractBindableTableScan extends TableScan {
         this.aliasName =
                 AliasInference.inferDefault(
                         aliasName, AliasInference.getUniqueAliasList(input, true));
-        this.aliasId = cluster.getIdGenerator().generate(this.aliasName);
+        this.aliasId = cluster.getIdGenerator().generate(this.aliasName, input);
     }
 
     protected AbstractBindableTableScan(

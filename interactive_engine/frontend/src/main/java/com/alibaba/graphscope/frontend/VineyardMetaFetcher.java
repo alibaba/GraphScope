@@ -16,7 +16,6 @@
 
 package com.alibaba.graphscope.frontend;
 
-import com.alibaba.graphscope.common.ir.schema.GraphSchemaWrapper;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
@@ -26,14 +25,13 @@ import com.alibaba.graphscope.groot.common.util.IrSchemaParser;
 import java.util.Optional;
 
 public class VineyardMetaFetcher implements IrMetaFetcher {
-    private final IrMeta irMeta;
+    private IrMeta irMeta;
 
     public VineyardMetaFetcher(String schemaPath) {
         IrSchemaParser parser = IrSchemaParser.getInstance();
         JsonFileSchemaFetcher fetcher = new JsonFileSchemaFetcher(schemaPath);
         GraphSchema graphSchema = fetcher.getSchemaSnapshotPair().getLeft();
-        this.irMeta =
-                new IrMeta(new GraphSchemaWrapper(graphSchema, true), parser.parse(graphSchema));
+        this.irMeta = new IrMeta(parser.parse(graphSchema));
     }
 
     @Override

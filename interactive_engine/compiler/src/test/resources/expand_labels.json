@@ -10,7 +10,7 @@
               "tables": [
                 {
                   "item": {
-                    "Id": 0
+                    "Name": "knows"
                   }
                 }
               ],

@@ -52,6 +52,9 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 
+/**
+ * build ffi logical plan in ir core by jna invocation
+ */
 public class FfiLogicalPlan extends LogicalPlan<Pointer, byte[]> {
     private static final IrCoreLibrary LIB = IrCoreLibrary.INSTANCE;
 
@@ -61,7 +64,7 @@ public class FfiLogicalPlan extends LogicalPlan<Pointer, byte[]> {
 
     public FfiLogicalPlan(RelOptCluster cluster, IrMeta irMeta, List<RelHint> hints) {
         super(cluster, hints);
-        checkFfiResult(LIB.setSchema(irMeta.getSchemaJson()));
+        checkFfiResult(LIB.setSchema(irMeta.getSchema()));
         this.ptrPlan = LIB.initLogicalPlan();
         this.lastIdx = -1;
     }

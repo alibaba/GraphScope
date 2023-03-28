@@ -18,25 +18,22 @@ package com.alibaba.graphscope.common.store;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.GraphConfig;
-import com.alibaba.graphscope.common.ir.schema.GraphSchemaWrapper;
 import com.alibaba.graphscope.gremlin.Utils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
-import java.util.*;
+import java.util.Optional;
 
 public class ExperimentalMetaFetcher implements IrMetaFetcher {
-    private final IrMeta meta;
+    private static final Logger logger = LoggerFactory.getLogger(ExperimentalMetaFetcher.class);
+    private IrMeta meta;
 
     public ExperimentalMetaFetcher(Configs configs) throws IOException {
         String schemaFilePath = GraphConfig.GRAPH_SCHEMA.get(configs);
-        String schemaJson = Utils.readStringFromFile(schemaFilePath);
-        this.meta =
-                new IrMeta(
-                        new GraphSchemaWrapper(
-                                com.alibaba.graphscope.common.ir.schema.Utils.buildSchemaFromJson(
-                                        schemaJson),
-                                false),
-                        schemaJson);
+        String schema = Utils.readStringFromFile(schemaFilePath);
+        this.meta = new IrMeta(schema);
     }
 
     @Override

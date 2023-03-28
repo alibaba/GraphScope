@@ -62,7 +62,7 @@ public class GraphLogicalMultiMatch extends AbstractLogicalMatch {
 
     @Override
     public RelWriter explainTerms(RelWriter pw) {
-        Map<String, String> strMap = new LinkedHashMap<>();
+        Map<String, String> strMap = new HashMap<>();
         for (int i = 0; i < sentences.size(); ++i) {
             strMap.put(
                     String.format("s%d", i),

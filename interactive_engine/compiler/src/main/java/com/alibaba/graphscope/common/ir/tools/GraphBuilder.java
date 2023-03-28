@@ -75,12 +75,6 @@ public class GraphBuilder extends RelBuilder {
     protected GraphBuilder(
             @Nullable Context context, GraphOptCluster cluster, RelOptSchema relOptSchema) {
         super(context, cluster, relOptSchema);
-        Utils.setFieldValue(
-                RelBuilder.class,
-                this,
-                "simplifier",
-                new GraphRexSimplify(
-                        cluster.getRexBuilder(), RelOptPredicateList.EMPTY, RexUtil.EXECUTOR));
     }
 
     /**
@@ -242,15 +236,16 @@ public class GraphBuilder extends RelBuilder {
         }
     }
 
-    /** f
+    /**
      * generate a new alias id for the given alias name
      *
      * @param alias
+     * @param input
      * @return
      */
-    private int generateAliasId(@Nullable String alias) {
+    private int generateAliasId(@Nullable String alias, @Nullable RelNode input) {
         RelOptCluster cluster = getCluster();
-        return ((GraphOptCluster) cluster).getIdGenerator().generate(alias);
+        return ((GraphOptCluster) cluster).getIdGenerator().generate(alias, input);
     }
 
     /**
@@ -405,22 +400,17 @@ public class GraphBuilder extends RelBuilder {
      */
     private RelDataTypeField getAliasField(String alias) {
         Objects.requireNonNull(alias);
-        Set<String> aliases = new HashSet<>();
-        int nodeIdx = 0;
+        List<String> aliases = new ArrayList<>();
         for (int inputOrdinal = 0; inputOrdinal < size(); ++inputOrdinal) {
             List<RelNode> inputQueue = Lists.newArrayList(peek(inputOrdinal));
             while (!inputQueue.isEmpty()) {
                 RelNode cur = inputQueue.remove(0);
                 List<RelDataTypeField> fields = cur.getRowType().getFieldList();
-                // to support `head` in gremlin
-                if (nodeIdx++ == 0 && alias == AliasInference.DEFAULT_NAME && fields.size() == 1) {
-                    return new RelDataTypeFieldImpl(
-                            AliasInference.DEFAULT_NAME,
-                            AliasInference.DEFAULT_ID,
-                            fields.get(0).getType());
+                if (alias == AliasInference.DEFAULT_NAME && fields.size() == 1) {
+                    return fields.get(0);
                 }
                 for (RelDataTypeField field : fields) {
-                    if (alias != AliasInference.DEFAULT_NAME && field.getName().equals(alias)) {
+                    if (field.getName().equals(alias)) {
                         return field;
                     }
                     aliases.add(AliasInference.SIMPLE_NAME(field.getName()));
@@ -515,13 +505,6 @@ public class GraphBuilder extends RelBuilder {
                             ImmutableList.of(tableScan.getAliasId(), AliasInference.DEFAULT_ID));
             // fuze all conditions into table scan
             if (condition.accept(checker)) {
-                condition =
-                        condition.accept(
-                                new RexVariableAliasConverter(
-                                        true,
-                                        this,
-                                        AliasInference.SIMPLE_NAME(AliasInference.DEFAULT_NAME),
-                                        AliasInference.DEFAULT_ID));
                 // add the condition in table scan
                 tableScan.setFilters(ImmutableList.of(condition));
                 // pop the filter from the inner stack
@@ -613,7 +596,9 @@ public class GraphBuilder extends RelBuilder {
             String aliasName = aliasList.get(i);
             fields.add(
                     new RelDataTypeFieldImpl(
-                            aliasName, generateAliasId(aliasName), nodeList.get(i).getType()));
+                            aliasName,
+                            generateAliasId(aliasName, input),
+                            nodeList.get(i).getType()));
         }
         return new RelRecordType(StructKind.FULLY_QUALIFIED, fields);
     }
