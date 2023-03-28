@@ -20,9 +20,9 @@ By defining the GRIN interfaces in C, it can be easily integrated with various p
 ## Unified Graph Retrieval
 As previously mentioned, GRIN offers computing engines a consistent method for accessing graphs stored in various storage engines through a set of common operations for graph traversal, data retrieval, and conditional filtering. These operations are defined as C functions, and their return values and parameters are typically handlers for graph concepts, such as vertices and edges.
 
-Here is an example showing how to handle a graph query using GRIN APIs. The data types with the prefix GRIN_ are handlers, while the functions with the prefix grin_ are the APIs in GRIN. Moreover, macros that start with GRIN_ are provided by GRIN to reflect storage features. Each storage engine that implements GRIN APIs can set up these macros based on their own features, such as graph partition strategies and list retrieval styles. The storage provider for this example is Vineyard.
+Here is an example showing how to handle a graph query using GRIN APIs. The data types with the prefix `GRIN_` are handlers, while the functions with the prefix `grin_` are the APIs in GRIN. Moreover, macros that start with `GRIN_` are provided by GRIN to reflect storage features. Each storage engine that implements GRIN APIs can set up these macros based on their own features, such as graph partition strategies and list retrieval styles. The storage provider for this example is Vineyard.
 
-The example demonstrates how to synchronize property values of vertices associated with a specific edge type. The input parameters are partitioned_graph, the local partition, edge_type_name (e.g., likes), and vertex_property_name (e.g., features). The task is to find all the destination vertices of "boundary edges" with a type named "likes", and the vertices must have a property named "features". Here, a boundary edge is an edge whose source vertex is a master vertex, and the destination is a mirror vertex, given the context of the "edge-cut" partition strategy that the underlying storage uses. For each of these vertices, we send the value of the "features" property to its master partition.
+The example demonstrates how to synchronize property values of vertices associated with a specific edge type. The input parameters are `partitioned_graph`, the local `partition`, `edge_type_name` (e.g., likes), and `vertex_property_name` (e.g., features). The task is to find all the destination vertices of "boundary edges" with a type named "likes", and the vertices must have a property named "features". Here, a boundary edge is an edge whose source vertex is a master vertex, and the destination is a mirror vertex, given the context of the "edge-cut" partition strategy that the underlying storage uses. For each of these vertices, we send the value of the "features" property to its master partition.
 
 ```CPP
     void sync_property(GRIN_PARTITIONED_GRAPH partitioned_graph, GRIN_PARTITION partition, const char* edge_type_name, const char* vertex_property_name) {
@@ -112,10 +112,10 @@ The benefit is two-fold:
 What follows is an example of predefined macros regarding the locally completeness of vertex properties.
 
 - Four macros are provided:
-    1. GRIN_ASSUME_ALL_VERTEX_PROPERTY_LOCAL_COMPLETE
-    2. GRIN_ASSUME_MASTER_VERTEX_PROPERTY_LOCAL_COMPLETE
-    3. GRIN_ASSUME_BY_TYPE_ALL_VERTEX_PROPERTY_LOCAL_COMPLETE
-    4. GRIN_ASSUME_BY_TYPE_MASTER_VERTEX_PROPERTY_LOCAL_COMPLETE
+    1. `GRIN_ASSUME_ALL_VERTEX_PROPERTY_LOCAL_COMPLETE`
+    2. `GRIN_ASSUME_MASTER_VERTEX_PROPERTY_LOCAL_COMPLETE`
+    3. `GRIN_ASSUME_BY_TYPE_ALL_VERTEX_PROPERTY_LOCAL_COMPLETE`
+    4. `GRIN_ASSUME_BY_TYPE_MASTER_VERTEX_PROPERTY_LOCAL_COMPLETE`
 - Some assumptions may dominate others, which means that some assumptions apply in a wider range than others. Therefore, storage providers should be careful when setting these assumptions. Here, 1 dominates the others, which means that 2 to 4 are undefined when 1 is defined. Additionally, 2 dominates 4, and 3 dominates 4.
 - GRIN provides different APIs under different assumptions. Suppose only 3 is defined; it means that vertices of certain types have all the properties locally complete, regardless of whether the vertex is master or mirror. In this case, GRIN provides an API to return these locally complete vertex types. 
 - In the case that none of these four macros is defined, GRIN will provide a per-vertex API to tell whether the vertex property is locally complete.
@@ -145,7 +145,7 @@ GRIN makes the following assumptions for its property graph model.
 - Vertices have types, as do edges. 
 - The relationship between edge types and pairs of vertex types is many-to-many.
 - Properties are bound to vertex and edge types, but some properties may have the same name.
-- Labels can be assigned to vertices and edges (NOT their types) primarily for query filtering, and labels have no properties.
+- Labels can be assigned to vertices and edges (**NOT** their types) primarily for query filtering, and labels have no properties.
 
 
 ## Implementation Guideline
@@ -153,22 +153,22 @@ GRIN makes the following assumptions for its property graph model.
 ### For computing engine
 
 - Get GRIN APIs from [GRIN](https://github.com/GraphScope/GRIN)
-- Implement a wrapper class (normally grin_fragment or grin_graph) using GRIN APIs.
+- Implement a wrapper class (normally `grin_fragment` or `grin_graph`) using GRIN APIs.
 - When you find some function is hard or inefficient to implement, discuss with GRIN designers.
-- Write or modify apps using the wrapper class (e.g., grin_fragment).
+- Write or modify apps using the wrapper class (e.g., `grin_fragment`).
 - Find a storage implementation to set up an end-to-end test.
 
 ### For storage engine
 - Make a grin folder in your system, and navigate into the grin folder.
-- Add GRIN as a submodule and copy the predefine.template out as the predefine.h 
+- Add GRIN as a submodule and copy the `predefine.template` out as the `predefine.h` 
 ```console
     $ git submodule add https://github.com/GraphScope/GRIN.git include
 
     $ cp include/predefine.template predefine.h
 ```
-- Modify the StorageSpecific part in the predefine.h based on the features of the storage.
+- Modify the StorageSpecific part in the `predefine.h` based on the features of the storage.
 - Implement the headers as much as possible in another folder (e.g., src) under grin. 
-If you find the time complexity of some function is NOT sub-linear to the graph size,
+If you find the time complexity of some function is **NOT** sub-linear to the graph size,
 discuss with GRIN designers.
 - Write a storage-specific method to get a graph handler from your storage.
 - Run a graph traversal test.
@@ -181,16 +181,16 @@ discuss with GRIN designers.
 - For example, GRIN uses the type Vertex to represent the type of a vertex handler, instead of using VertexHandler for clean code.
 
 ### Edge
-- For any directed edge (u, v) where the direction goes from u to v, u is the source vertex, whereas v is the destination vertex.
+- For any directed edge `(u, v)` where the direction goes from `u` to `v`, `u` is the source vertex, whereas `v` is the destination vertex.
 
 ### List
-GRIN provides two alternative approaches, namely array-style retrieval and iterator, for list retrieval of GRIN_VERTEX_LIST, GRIN_EDGE_LIST, and GRIN_ADJACENT_LIST. 
+GRIN provides two alternative approaches, namely array-style retrieval and iterator, for list retrieval of `GRIN_VERTEX_LIST`, `GRIN_EDGE_LIST`, and `GRIN_ADJACENT_LIST`. 
 
-For other schema-level lists like GRIN_VERTEX_TYPE_LIST or GRIN_PARTITION_LIST, GRIN generally assume the array-style list retrieval, and does NOT provide a ENALBE_ macro for these lists.
+For other schema-level lists like `GRIN_VERTEX_TYPE_LIST` or `GRIN_PARTITION_LIST`, GRIN generally assume the array-style list retrieval, and does **NOT** provide a `GRIN_ENABLE_` macro for these lists.
 
 #### Array-style Retrieval
 - The array-style retrieval of a list handler is available to the user only if the storage can provide the size of the list, and an element retrieval API by position (i.e., index of array). Otherwise, the storage should provide a list iterator, see next section.
-- Usually the array-style retrieval is controlled by the macros ended with _LIST_ARRAY
+- Usually the array-style retrieval is controlled by the macros ended with `_LIST_ARRAY`
 - A vertex list array-style retrieval example
 
     ```CPP
@@ -217,7 +217,7 @@ For other schema-level lists like GRIN_VERTEX_TYPE_LIST or GRIN_PARTITION_LIST, 
 
 #### List Iterator
 - A list iterator handler is provided to caller if the list size is unknown or for sequential scan efficiency. 
-- Usually the iterators are enabled by macros ended with _LIST_ITERATOR
+- Usually the iterators are enabled by macros ended with `_LIST_ITERATOR`
 - A vertex list iterator example
 
     ```CPP
@@ -273,7 +273,7 @@ different data types in the underlying storage for efficiency concerns (e.g., sh
     ```
 
 ### Label
-- GRIN does NOT distinguish label on vertices and edges, that means a vertex and an edge may have a same label.
+- GRIN does **NOT** distinguish label on vertices and edges, that means a vertex and an edge may have a same label.
 - However the storage can tell GRIN whether labels are enabled in vertices or edges seperatedly with macros of `WITH_VERTEX_LABEL` and `WITH_EDGE_LABEL` respectively.
 
 ### Order
@@ -284,7 +284,7 @@ different data types in the underlying storage for efficiency concerns (e.g., sh
 ### Reference
 - GRIN introduces the reference concept in partitioned graph. It stands for the reference of an instance that can
 be recognized in partitions other than the current partition where the instance is accessed.
-- For example, a `GRIN_VERTEX_REF` is a reference of a `Vertex` that can be recognized in other partitions.
+- For example, a `GRIN_VERTEX_REF` is a reference of a `GRIN_VERTEX` that can be recognized in other partitions.
 
     ```CPP
         /* grin/partition/partition.h */
@@ -328,8 +328,8 @@ aggregation purpose to share a common centural node for every one.
 - The concept of local complete is with repect to whether a graph component adhere to a vertex or an edge is locally complete within the partition.
 - Take vertex and properties as example. GRIN considers the vertex is "property local complete" if it can get all the properties of the vertex locally in the partition.
 - There are concepts like "edge property local complete", "vertex neighbor local complete" and so on.
-- GRIN does NOT assume any local complete on master vertices. Since in some extremely cases, master vertices
-may NOT contain all the data or properties locally.
+- GRIN does **NOT** assume any local complete on master vertices. Since in some extremely cases, master vertices
+may **NOT** contain all the data or properties locally.
 - GRIN currently provides vertex-level/edge-level local complete judgement APIs, while the introduction of type-level judgement APIs is open for discussion.
 
 ### Natural ID Trait
