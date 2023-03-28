@@ -12,6 +12,8 @@ GLE (Graph Learning Engine) is a distributed framework to develop and implement 
      alt="graphlearn architecture."
      width="80%">
 
+:::
+
 # Graph Sampling
 
 ## Introduction
@@ -66,6 +68,8 @@ As shown in the figure below, starting from a vertex of type user, sample its 2-
 <img src="../images/../docs/images/2_hop_sampling.png"
      alt="graphlearn architecture."
      width="45%">
+
+:::
 
 ```python
 s = g.neighbor_sampler(["buy", "i2i"], expand_factor=[2, 2])
@@ -167,6 +171,8 @@ EgoGraph consists of ego and neighbors, and the message aggregation path is dete
      alt="egograph."
      width="80%">
 
+:::
+
 ### SubGraph-based graph message passing
 Unlike EgoGraph, SubGraph contains the edge_index of the graph topology, so the message passing path (forward computation path) can be determined directly by the edge_index, and the implementation of the conv layer can be done directly by the edge_index and the nodes/edges data. In addition, SubGraph is fully compatible with the Data in PyG, so the model part of PyG can be reused.
 
@@ -179,6 +185,8 @@ A GNN training/prediction task usually consists of the following steps.
 <img src="../images/../docs/images/gle_pipeline.png"
      alt="egograph."
      width="90%">
+
+:::
 
 The first step in using GraphLearn is to prepare the graph data according to the application scenario. Graph data exists in the form of a vertex table and an edge table, and an application scenario will usually involve multiple types of vertices and edges. These can be added one by one using the interface provided by GraphLearn. The construction of graph data is a critical part of the process as it determines the upper limit of algorithm learning. It is important to generate reasonable edge data and choose appropriate features that are consistent with business goals.
 

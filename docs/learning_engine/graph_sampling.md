@@ -50,8 +50,10 @@ As shown in the figure below, starting from a vertex of type user, sample its 2-
 :::{figure-md}
 
 <img src="../../images/../docs/images/2_hop_sampling.png"
-     alt="graphlearn architecture."
+     alt="2 hop sampling."
      width="45%">
+
+:::
 
 ```python
 s = g.neighbor_sampler(["buy", "i2i"], expand_factor=[2, 2])
