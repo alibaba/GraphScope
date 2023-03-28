@@ -94,8 +94,8 @@ As shown in the above example, it is very easy to use GraphScope to interactivel
 
 In addition to the above local-machine entr\'ee, we have prepared the following topics for your reference.
 
-- Want to learn more use cases of GIE, such as how it can be used to handle the complex LDBC
-  business intelligence workloads. [A walk-through tutorial is here](./guide_and_examples)
-- GIE can work in a distributed environment to process very large graph. [How to do that?](./deployment)
-- GIE has supported a lot of standard Gremlin steps, together with many useful syntactic sugars. [Please look into the details](./supported_gremlin_steps)
-- Want to know more about the technical details of GIE. [This is the design and architecture of GIE](./design_of_gie)
+- GIE can handle much complex cases, for example, the complex LDBC
+  business intelligence workloads. [A walk-through tutorial is here!](./guide_and_examples)
+- GIE can be deployed in a distributed environment to process very large graph. [How to do that?](./deployment)
+- GIE has supported a lot of standard Gremlin steps, together with many useful syntactic sugars. [Please look into the details!](./supported_gremlin_steps)
+- Want to learn more about the technique details of GIE. [This is the design and architecture of GIE!](./design_of_gie)
