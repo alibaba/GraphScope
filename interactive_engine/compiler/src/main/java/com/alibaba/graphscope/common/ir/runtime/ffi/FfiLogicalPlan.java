@@ -64,7 +64,7 @@ public class FfiLogicalPlan extends LogicalPlan<Pointer, byte[]> {
 
     public FfiLogicalPlan(RelOptCluster cluster, IrMeta irMeta, List<RelHint> hints) {
         super(cluster, hints);
-        checkFfiResult(LIB.setSchema(irMeta.getSchema()));
+        checkFfiResult(LIB.setSchema(irMeta.getSchemaJson()));
         this.ptrPlan = LIB.initLogicalPlan();
         this.lastIdx = -1;
     }
