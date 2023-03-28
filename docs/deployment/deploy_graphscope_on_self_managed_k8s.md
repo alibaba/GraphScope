@@ -2,7 +2,7 @@
 
 To processing large-scale graph distributedly, GraphScope is designed to be deployed on a Kubernetes(K8s) cluster. 
 
-As shown in the figure, users deploy and manage the workloads of GraphScope through a python client, which communicates with the 
+As shown in the figure, you could deploy and manage the workloads of GraphScope through a python client, which communicates with the 
 GraphScope engines on the K8s cluster through a gRPC service. 
 
 :::{figure-md}
@@ -80,7 +80,7 @@ kubeconfig: Configured
 ```
 
 The output should show that the cluster is running, and the kubectl context is set to the minikube context. 
-Once started, minikube generates a [kubeconfig](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) file for users to communicate and interact with the cluster. 
+Once started, minikube generates a [kubeconfig](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) file for you to communicate and interact with the cluster. 
 
 The default location of this file is `~/.kube/config`, which should look like this:
 
@@ -125,7 +125,7 @@ users:
 ### Launch with default parameters
 The engines of GraphScope are distributed as a docker image. The graphscope python client will pull the image if they are not present. If you run GraphScope on a k8s cluster, make sure the cluster is able to access the public registry.
 
-A session encapsulates the control and state of the GraphScope engines. It serves as the entrance in the python client to GraphScope. A session allows users to deploy and connect GraphScope on a k8s cluster.
+A session encapsulates the control and state of the GraphScope engines. It serves as the entrance in the python client to GraphScope. A session allows you to deploy and connect GraphScope on a k8s cluster.
 
 ```python
 import graphscope
@@ -140,9 +140,9 @@ As shown above, a session can easily launch a cluster on k8s.
 
 #### Customize image URI
 
-Considering that users may want to use a different tag other than the default, or deploy in an intranet environment without internet access, they might need to customize the image URIs.
+Considering that you may want to use a different tag other than the default, or deploy in an intranet environment without internet access, they might need to customize the image URIs.
 
-Users can configure the image URIs for the engines using a set of image-related parameters. The default configurations are as follows:
+You can configure the image URIs for the engines using a set of image-related parameters. The default configurations are as follows:
 
 ```python
 sess = graphscope.session(
@@ -157,7 +157,7 @@ see more details in [Session](https://graphscope.io/docs/reference/session.html#
 #### Specify the number of workers
 
 GraphScope is designed to handle extremely large-scale graphs that cannot fit in the memory of a single worker. 
-To process such graphs, users can increase the number of workers, as well as the CPU and memories of workers.
+To process such graphs, you can increase the number of workers, as well as the CPU and memories of workers.
 
 To achieve this, use the `num_workers` parameter:
 
@@ -172,7 +172,7 @@ sess = graphscope.session(
 
 #### Provide a kubeconfig file other than default
 
-If users want to deploy on a pre-existing cluster with a kubeconfig file located in a non-default location,
+If you want to deploy on a pre-existing cluster with a kubeconfig file located in a non-default location,
 they can manually specify the path to the kubeconfig file as follows:
 
 ```python
@@ -181,7 +181,7 @@ sess = graphscope.session(k8s_client_config='/path/to/config')
 
 #### Mount volumes
 
-Sometimes users may want to use their dataset on the local disk, in this case, we provide options to mount a host directory to the cluster.
+Sometimes you may want to use their dataset on the local disk, in this case, we provide options to mount a host directory to the cluster.
 
 Assume we want to mount `~/test_data` in the host machine to `/testingdata` in pods, we can define a `dict` as follows, then pass it as `k8s_volumes` in session constructor.
 
@@ -244,13 +244,13 @@ You can further inspect the status of pods using `kubectl describe pod <pod-name
 That's it! You now have a running instance of GraphScope in a Kubernetes cluster.
 
 You can use GraphScope to analyze graphs as usual. 
-Check out the [getting started](../overview/getting_started.md) guide for more information.
+Check out the [Getting Started](../overview/getting_started.md) guide for more information.
 
 
 
 ## Cleaning Up
 
-When you are done with the GraphScope, you can delete the deployment by running this command.
+When you have finished using GraphScope, you can remove the deployment by executing the following command.
 
 ```python
 sess.close()
@@ -264,7 +264,7 @@ kubectl get statefulsets
 kubectl get svc
 ```
 
-If there are still resources, you may need to delete them manually by:
+If there are still resources left, you may need to delete them manually by:
 
 ```bash
 kubectl delete deployment <deployment-name>

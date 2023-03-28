@@ -4,12 +4,23 @@ This guide gives you a quick start to use GraphScope for graph interactive tasks
 
 ## Installation
 
-We’ll start by installing GraphScope with a single-line command.
+GIE works as the core component of GraphScope. Therefore, you should install GraphScope at first to use GIE.
+
+GraphScope provides python interface which requires:
+
+- Python3.7 ~ 3.9
+- gcc 7.1+ or Apple Clang
+
+And it is tested on the following 64-bit operating systems:
+
+- Ubuntu 18.04 or later
+- CentOS 7 or later
+- macOS 11.2.1 (Big Sur) or later, with both Intel chip and Apple M1 chip
+
+If your environment satisfies the above requirement, you can easily install GraphScope through pip:
 
 ```bash
-
 python3 -m pip install graphscope --upgrade
-
 ```
 
 ````{tip}
@@ -20,6 +31,23 @@ python3 -m pip install graphscope --upgrade \
     -i http://mirrors.aliyun.com/pypi/simple/ --trusted-host=mirrors.aliyun.com
 ```
 ````
+
+However, GraphScope requires specific versions for some packages, so you may meet some conflicts and errors during the installation. Therefore, we strongly recommend you to **install GraphScope in a clean Python virtual environment with Python 3.9**.
+
+We refer you to [the official guide](https://docs.python.org/3.9/tutorial/venv.html) for Python virtual environment, and the following is a step by step instruction:
+
+```bash
+# Create a new virtual environment
+python3.9 -m venv tutorial-env
+# Activate the virtual environment
+source tutorial-env/bin/activate
+# Install GraphScope
+python3.9 -m pip install graphscope
+# Use Graphscope
+python3.9
+>>> import graphscope as gs
+>>> ......
+```
 
 ## Running GraphScope Interactive Engine on Local
 
@@ -67,7 +95,7 @@ As shown in the above example, it is very easy to use GraphScope to interactivel
 
 In addition to the above local-machine entr\'ee, we have prepared the following topics for your reference.
 
-- GIE can process LDBC interactive complex workloads. [A walk-through tutorial is here](./ldbc_tutorial)
+- GIE can process complex workloads such as the LDBC business intelligence workloads. [A walk-through tutorial is here](./ldbc_tutorial)
 - GIE can work in a distributed environment to process very large graph. [How to do that?](./deployment)
 - GIE has supported a lot of standard Gremlin steps, together with many useful syntactic sugars. [Please look into the details](./supported_gremlin_steps)
 - Want to know more about the technical details of GIE. [This is the design and architecture of GIE](./design_of_gie)

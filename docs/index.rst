@@ -60,8 +60,8 @@ and the vineyard store that offers efficient in-memory data transfers.
 
    interactive_engine/getting_started
    interactive_engine/deployment
+   interactive_engine/guide_and_examples
    interactive_engine/design_of_gie
-   interactive_engine/user_guide_and_examples
    interactive_engine/supported_gremlin_steps
 
 .. toctree::
