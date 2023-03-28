@@ -41,29 +41,29 @@ The example demonstrates how to synchronize property values of vertices associat
             GRIN_VERTEX_TYPE dst_vtype = grin_get_vertex_type_from_list(g, dst_vtypes, i);  // get dst type
 
             GRIN_VERTEX_PROPERTY dst_vp = grin_get_vertex_property_by_name(g, dst_vtype, vertex_property_name);  // get the property called "features" under dst type
-            if (dst_vp == GRIN_NULL_VERTEX_PROPERTY) continue;  // filter out the pairs whose dst type does NOT have such a property called "features"
+            if (dst_vp == GRIN_NULL_VERTEX_PROPERTY) continue;  // select out the pairs whose dst type does NOT have such a property called "features"
             
             GRIN_VERTEX_PROPERTY_TABLE dst_vpt = grin_get_vertex_property_table_by_type(g, dst_vtype);  // prepare property table of dst vertex type for later use
             GRIN_DATATYPE dst_vp_dt = grin_get_vertex_property_data_type(g, dst_vp); // prepare property type for later use
 
             GRIN_VERTEX_LIST __src_vl = grin_get_vertex_list(g);  // get the vertex list
-            GRIN_VERTEX_LIST _src_vl = grin_filter_type_for_vertex_list(g, src_vtype, __src_vl);  // filter the vertex of source type
-            GRIN_VERTEX_LIST src_vl = grin_filter_master_for_vertex_list(g, _src_vl);  // filter master vertices under source type
+            GRIN_VERTEX_LIST _src_vl = grin_select_type_for_vertex_list(g, src_vtype, __src_vl);  // select the vertex of source type
+            GRIN_VERTEX_LIST src_vl = grin_select_master_for_vertex_list(g, _src_vl);  // select master vertices under source type
             
             size_t src_vl_num = grin_get_vertex_list_size(g, src_vl);
             for (size_t j = 0; j < src_vl_num; ++j) { // iterate the src vertex
                 GRIN_VERTEX v = grin_get_vertex_from_list(g, src_vl, j);
 
-            #ifdef GRIN_TRAIT_FILTER_EDGE_TYPE_FOR_ADJACENT_LIST
+            #ifdef GRIN_TRAIT_SELECT_EDGE_TYPE_FOR_ADJACENT_LIST
                 GRIN_ADJACENT_LIST _adj_list = grin_get_adjacent_list(g, GRIN_DIRECTION::OUT, v);  // get the outgoing adjacent list of v
-                GRIN_ADJACENT_LIST adj_list = grin_filter_edge_type_for_adjacent_list(g, etype, _adj_list);  // filter edges under etype
+                GRIN_ADJACENT_LIST adj_list = grin_select_edge_type_for_adjacent_list(g, etype, _adj_list);  // select edges under etype
             #else
                 GRIN_ADJACENT_LIST adj_lsit = grin_get_adjacent_list(g, GRIN_DIRECTION::OUT, v);  // get the outgoing adjacent list of v
             #endif
 
                 size_t al_sz = grin_get_adjacent_list_size(g, adj_list);
                 for (size_t k = 0; k < al_sz; ++k) {
-            #ifndef GRIN_TRAIT_FILTER_EDGE_TYPE_FOR_ADJACENT_LIST
+            #ifndef GRIN_TRAIT_SELECT_EDGE_TYPE_FOR_ADJACENT_LIST
                     GRIN_EDGE edge = grin_get_edge_from_adjacent_list(g, adj_list, k);
                     GRIN_EDGE_TYPE edge_type = grin_get_edge_type(g, edge);
                     if (!grin_equal_edge_type(g, edge_type, etype)) continue;
