@@ -705,7 +705,7 @@ mod test {
         let path_expand = pb::PathExpand {
             base: Some(pb::path_expand::ExpandBase {
                 edge_expand: Some(expand_opr_out),
-                get_v: Some(get_v),
+                get_v: Some(get_v.clone()),
             }),
             start_tag: None,
             hop_range: Some(pb::Range { lower: 2, upper: 3 }),
@@ -716,9 +716,12 @@ mod test {
         let pattern = pb::Pattern {
             sentences: vec![pb::pattern::Sentence {
                 start: Some(TAG_A.into()),
-                binders: vec![pb::pattern::Binder {
-                    item: Some(pb::pattern::binder::Item::Path(path_expand.clone())),
-                }],
+                binders: vec![
+                    pb::pattern::Binder {
+                        item: Some(pb::pattern::binder::Item::Path(path_expand.clone())),
+                    },
+                    pb::pattern::Binder { item: Some(pb::pattern::binder::Item::Vertex(get_v)) },
+                ],
                 end: Some(TAG_B.into()),
                 join_kind: 0,
             }],
@@ -1195,6 +1198,42 @@ mod test {
         Pattern::from_pb_pattern(&pattern, &mut plan_meta)
     }
 
+    // match(__.as(A).out().hasLabel('software').as(B))
+    pub fn build_modern_pattern_case10_predicate() -> IrPatternResult<Pattern> {
+        let expand_opr = pb::EdgeExpand {
+            v_tag: None,
+            direction: 0, // out
+            params: None,
+            expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
+            alias: None,
+            meta_data: None,
+        };
+        let get_v_software = pb::GetV {
+            tag: None,
+            opt: pb::get_v::VOpt::End as i32,
+            params: Some(query_params(vec![1.into()], vec![], None)),
+            alias: None,
+            meta_data: None,
+        };
+        let pattern = pb::Pattern {
+            sentences: vec![pb::pattern::Sentence {
+                start: Some(TAG_A.into()),
+                binders: vec![
+                    pb::pattern::Binder { item: Some(pb::pattern::binder::Item::Edge(expand_opr.clone())) },
+                    pb::pattern::Binder {
+                        item: Some(pb::pattern::binder::Item::Vertex(get_v_software.clone())),
+                    },
+                ],
+                end: Some(TAG_B.into()),
+                join_kind: 0,
+            }],
+            meta_data: vec![],
+        };
+        let mut plan_meta = PlanMeta::default();
+        plan_meta.set_max_tag_id(TAG_B as u32 + 1);
+        Pattern::from_pb_pattern(&pattern, &mut plan_meta)
+    }
+
     // Pattern from ldbc schema file and build from pb::Pattern message
     //           Person
     //     knows/      \knows
@@ -1612,6 +1651,7 @@ mod test {
                 .generate_simple_extend_match_plan()
                 .unwrap(),
         );
+        println!("{:?}", plan);
         let mut job_builder = JobBuilder::default();
         let mut plan_meta = plan.get_meta().clone();
         plan.add_job_builder(&mut job_builder, &mut plan_meta)
@@ -1643,8 +1683,8 @@ mod test {
 
     #[test]
     fn test_generate_simple_matching_plan_for_modern_case1() {
-        let modern_pattern = build_modern_pattern_case1().unwrap();
         set_modern_graph_schema();
+        let modern_pattern = build_modern_pattern_case1().unwrap();
         let result_ids_set = get_simple_match_result_ids_set(&modern_pattern, vec![TAG_A, TAG_B, TAG_C]);
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
         let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
@@ -1656,8 +1696,8 @@ mod test {
 
     #[test]
     fn test_generate_simple_matching_plan_for_modern_case1_predicate() {
-        let modern_pattern = build_modern_pattern_case1_predicate().unwrap();
         set_modern_graph_schema();
+        let modern_pattern = build_modern_pattern_case1_predicate().unwrap();
         let result_ids_set = get_simple_match_result_ids_set(&modern_pattern, vec![TAG_A, TAG_B, TAG_C]);
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
         let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
@@ -1668,8 +1708,8 @@ mod test {
 
     #[test]
     fn test_generate_simple_matching_plan_for_modern_case2() {
-        let modern_pattern = build_modern_pattern_case2().unwrap();
         set_modern_graph_schema();
+        let modern_pattern = build_modern_pattern_case2().unwrap();
         let result_ids_set = get_simple_match_result_ids_set(&modern_pattern, vec![TAG_A, TAG_B, TAG_C]);
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
         let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
@@ -1681,8 +1721,8 @@ mod test {
 
     #[test]
     fn test_generate_simple_matching_plan_for_modern_case2_predicate() {
-        let modern_pattern = build_modern_pattern_case2_predicate().unwrap();
         set_modern_graph_schema();
+        let modern_pattern = build_modern_pattern_case2_predicate().unwrap();
         let result_ids_set = get_simple_match_result_ids_set(&modern_pattern, vec![TAG_A, TAG_B, TAG_C]);
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
         let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
@@ -1694,8 +1734,8 @@ mod test {
 
     #[test]
     fn test_generate_simple_matching_plan_for_modern_case3() {
-        let modern_pattern = build_modern_pattern_case3().unwrap();
         set_modern_graph_schema();
+        let modern_pattern = build_modern_pattern_case3().unwrap();
         let result_ids_set = get_simple_match_result_ids_set(&modern_pattern, vec![TAG_A, TAG_B, TAG_C]);
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
@@ -1717,8 +1757,8 @@ mod test {
 
     #[test]
     fn test_generate_simple_matching_plan_for_modern_case3_predicate() {
-        let modern_pattern = build_modern_pattern_case3_predicate().unwrap();
         set_modern_graph_schema();
+        let modern_pattern = build_modern_pattern_case3_predicate().unwrap();
         let result_ids_set = get_simple_match_result_ids_set(&modern_pattern, vec![TAG_A, TAG_B, TAG_C]);
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
@@ -1737,8 +1777,8 @@ mod test {
 
     #[test]
     fn test_generate_simple_matching_plan_for_modern_case4() {
-        let modern_pattern = build_modern_pattern_case4().unwrap();
         set_modern_graph_schema();
+        let modern_pattern = build_modern_pattern_case4().unwrap();
         let result_ids_set = get_simple_match_result_ids_set(&modern_pattern, vec![TAG_A, TAG_B, TAG_C]);
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
@@ -1760,8 +1800,8 @@ mod test {
 
     #[test]
     fn test_generate_simple_matching_plan_for_modern_case4_predicate() {
-        let modern_pattern = build_modern_pattern_case4_predicate().unwrap();
         set_modern_graph_schema();
+        let modern_pattern = build_modern_pattern_case4_predicate().unwrap();
         let result_ids_set = get_simple_match_result_ids_set(&modern_pattern, vec![TAG_A, TAG_B, TAG_C]);
         let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
         let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
@@ -1772,8 +1812,8 @@ mod test {
 
     #[test]
     fn test_generate_simple_matching_plan_for_modern_case5() {
-        let modern_pattern = build_modern_pattern_case5().unwrap();
         set_modern_graph_schema();
+        let modern_pattern = build_modern_pattern_case5().unwrap();
         let result_ids_set = get_simple_match_result_ids_set(&modern_pattern, vec![TAG_A, TAG_B, TAG_C]);
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
         let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
@@ -1784,8 +1824,8 @@ mod test {
 
     #[test]
     fn test_generate_simple_matching_plan_for_modern_case5_predicate() {
-        let modern_pattern = build_modern_pattern_case5_predicate().unwrap();
         set_modern_graph_schema();
+        let modern_pattern = build_modern_pattern_case5_predicate().unwrap();
         let result_ids_set = get_simple_match_result_ids_set(&modern_pattern, vec![TAG_A, TAG_B, TAG_C]);
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
         let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
@@ -1796,9 +1836,8 @@ mod test {
 
     #[test]
     fn test_generate_simple_matching_plan_for_modern_case6() {
-        let modern_pattern = build_modern_pattern_case6().unwrap();
         set_modern_graph_schema();
-        initialize();
+        let modern_pattern = build_modern_pattern_case6().unwrap();
         let result_ids_set = get_simple_match_result_ids_set(&modern_pattern, vec![TAG_A, TAG_B]);
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
         let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
@@ -1809,8 +1848,8 @@ mod test {
 
     #[test]
     fn test_generate_simple_matching_plan_for_modern_case7() {
-        let modern_pattern = build_modern_pattern_case7().unwrap();
         set_modern_graph_schema();
+        let modern_pattern = build_modern_pattern_case7().unwrap();
         let result_ids_set = get_simple_match_result_ids_set(&modern_pattern, vec![TAG_A, TAG_B]);
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
         let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
@@ -1820,8 +1859,8 @@ mod test {
 
     #[test]
     fn test_generate_simple_matching_plan_for_modern_case7_predicate() {
-        let modern_pattern = build_modern_pattern_case7_predicate().unwrap();
         set_modern_graph_schema();
+        let modern_pattern = build_modern_pattern_case7_predicate().unwrap();
         let result_ids_set = get_simple_match_result_ids_set(&modern_pattern, vec![TAG_A, TAG_B]);
         let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
         let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
@@ -1831,15 +1870,15 @@ mod test {
 
     #[test]
     fn test_generate_simple_matching_plan_for_modern_case8() {
-        let modern_pattern = build_modern_pattern_case8().unwrap();
         set_modern_graph_schema();
+        let modern_pattern = build_modern_pattern_case8().unwrap();
         get_simple_match_result_ids_set(&modern_pattern, vec![TAG_A, TAG_B]);
     }
 
     #[test]
     fn test_generate_simple_matching_plan_for_modern_case8_predicate() {
-        let modern_pattern = build_modern_pattern_case8_predicate().unwrap();
         set_modern_graph_schema();
+        let modern_pattern = build_modern_pattern_case8_predicate().unwrap();
         let result_ids_set = get_simple_match_result_ids_set(&modern_pattern, vec![TAG_A, TAG_B]);
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
         let v5: DefaultId = LDBCVertexParser::to_global_id(5, 1);
@@ -1849,21 +1888,44 @@ mod test {
 
     #[test]
     fn test_generate_simple_matching_plan_for_modern_case9() {
-        let modern_pattern = build_modern_pattern_case9().unwrap();
         set_modern_graph_schema();
+        let modern_pattern = build_modern_pattern_case9().unwrap();
         get_simple_match_result_ids_set(&modern_pattern, vec![TAG_A, TAG_B, TAG_C]);
     }
 
     #[test]
     fn test_generate_simple_matching_plan_for_modern_case9_predicate() {
-        let modern_pattern = build_modern_pattern_case9_predicate().unwrap();
         set_modern_graph_schema();
+        let modern_pattern = build_modern_pattern_case9_predicate().unwrap();
         let result_ids_set = get_simple_match_result_ids_set(&modern_pattern, vec![TAG_A, TAG_B, TAG_C]);
         let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
         let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
         let v5: DefaultId = LDBCVertexParser::to_global_id(5, 1);
         let expected_result_ids_set = BTreeSet::from_iter([vec![v2, v5, v3]]);
         assert_eq!(result_ids_set, expected_result_ids_set)
+    }
+
+    #[test]
+    fn test_generate_simple_matching_plan_for_modern_case10_predicate() {
+        set_modern_graph_schema();
+        let modern_pattern = build_modern_pattern_case10_predicate().unwrap();
+        assert_eq!(
+            modern_pattern
+                .get_vertex_parameters(1)
+                .unwrap()
+                .unwrap()
+                .tables[0],
+            1.into()
+        );
+        // let result_ids_set = get_simple_match_result_ids_set(&modern_pattern, vec![TAG_A, TAG_B]);
+        // let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
+        // let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
+        // let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
+        // let v5: DefaultId = LDBCVertexParser::to_global_id(5, 1);
+        // let v6: DefaultId = LDBCVertexParser::to_global_id(6, 0);
+        // let expected_result_ids_set =
+        //     BTreeSet::from_iter([vec![v1, v3], vec![v4, v3], vec![v6, v3], vec![v4, v5]]);
+        // assert_eq!(result_ids_set, expected_result_ids_set)
     }
 
     #[test]

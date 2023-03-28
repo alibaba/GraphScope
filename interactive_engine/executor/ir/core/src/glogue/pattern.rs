@@ -388,6 +388,8 @@ impl Pattern {
                             if edge_expand.expand_opt == pb::edge_expand::ExpandOpt::Edge as i32 {
                                 edge_expands_to_close.insert(dst_vertex_id, edge_direction);
                             }
+                        } else if let Some(BinderItem::Path(_)) = binder.item.as_ref() {
+                            edge_expands_to_close.insert(dst_vertex_id, edge_direction);
                         }
                         if let Some(params) = vertex_params {
                             vertex_params_map
@@ -502,7 +504,7 @@ impl Pattern {
         };
         for (v_id, vertex_params_vec) in vertex_params_map {
             for vertex_params in vertex_params_vec {
-                pattern.add_vertex_params(v_id, query_params(vec![], vec![], vertex_params.predicate))?;
+                pattern.add_vertex_params(v_id, vertex_params)?;
             }
         }
         for (e_id, edge_data) in edge_data_map {
