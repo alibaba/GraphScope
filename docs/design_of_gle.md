@@ -86,7 +86,7 @@ EgoGraph consists of ego and neighbors, and the message aggregation path is dete
 
 :::{figure-md}
 
-<img src="../images/../docs/images/egograph.png"
+<img src="../images/../docs/images/egolayer.png"
      alt="egograph."
      width="80%">
 
