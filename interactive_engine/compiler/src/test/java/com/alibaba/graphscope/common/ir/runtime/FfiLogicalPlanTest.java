@@ -25,18 +25,21 @@ import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.jna.type.FfiData;
+import com.alibaba.graphscope.common.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.sun.jna.Pointer;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.hint.RelHint;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.List;
 
 public class FfiLogicalPlanTest {
+    // Match (x:person)-[:knows*1..3 {weight: 10.0}]->(:person {age: 10})
     @Test
-    public void ffi_test() throws Exception {
+    public void logical_plan_test() throws Exception {
         GraphBuilder builder = Utils.mockGraphBuilder();
         PathExpandConfig.Builder pxdBuilder = PathExpandConfig.newBuilder(builder);
         PathExpandConfig pxdConfig =
@@ -70,11 +73,6 @@ public class FfiLogicalPlanTest {
                                         new LabelConfig(false).addLabel("person"),
                                         "x"))
                         .pathExpand(pxdConfig)
-                        .getV(
-                                new GetVConfig(
-                                        GraphOpt.GetV.END,
-                                        new LabelConfig(false).addLabel("person"),
-                                        "z"))
                         .build();
         RelNode aggregate =
                 builder.match(node, GraphOpt.Match.INNER)
@@ -86,7 +84,8 @@ public class FfiLogicalPlanTest {
                                 new FfiLogicalPlan(
                                         builder.getCluster(), Utils.schemaMeta, getMockPlanHints()))
                         .go(aggregate)) {
-            System.out.println(ffiPlan.explain());
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource("ffi_logical_plan.json"), ffiPlan.explain());
         }
     }
 
