@@ -59,7 +59,7 @@ and the vineyard store that offers efficient in-memory data transfers.
    :caption: Graph Interactive Engine
 
    interactive_engine/getting_started
-   interactive_engine/ldbc_tutorial
+   interactive_engine/guide_and_examples
    interactive_engine/design_of_gie
    interactive_engine/supported_gremlin_steps
 
