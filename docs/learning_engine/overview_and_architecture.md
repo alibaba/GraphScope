@@ -6,11 +6,4 @@ GLE (Graph Learning Engine) is a distributed framework to develop and implement 
 
 ## Architecture
 
-:::{figure-md}
-
-<img src="../../images/../docs/images/gle_arch.png"
-     alt="graphlearn architecture."
-     width="80%">
-
-Architecture of GLE
-:::
+![graphlearn architecture](../../images/../docs/images/gle_arch.png)

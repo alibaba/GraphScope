@@ -47,13 +47,8 @@ Next is an example for neighbor sampling:
 
 As shown in the figure below, starting from a vertex of type user, sample its 2-hop neighbors, and return the result as layers, which contains layer1 and layer2. layer’s index starts from 1, i.e. 1-hop neighbor is layer1 and 2-hop neighbor is layer2.
 
-:::{figure-md}
+![2 hop sampling](../../images/../docs/images/2_hop_sampling.png)
 
-<img src="../../images/../docs/images/2_hop_sampling.png"
-     alt="2 hop sampling."
-     width="45%">
-
-:::
 
 ```python
 s = g.neighbor_sampler(["buy", "i2i"], expand_factor=[2, 2])

@@ -6,13 +6,8 @@ GLE (Graph Learning Engine) is a distributed framework to develop and implement 
 
 ## Architecture
 
-:::{figure-md}
+![graphlearn architecture](../images/../docs/images/gle_arch.png)
 
-<img src="../images/../docs/images/gle_arch.png"
-     alt="graphlearn architecture."
-     width="80%">
-
-:::
 
 # Graph Sampling
 
@@ -63,13 +58,7 @@ Next is an example for neighbor sampling:
 
 As shown in the figure below, starting from a vertex of type user, sample its 2-hop neighbors, and return the result as layers, which contains layer1 and layer2. layer’s index starts from 1, i.e. 1-hop neighbor is layer1 and 2-hop neighbor is layer2.
 
-:::{figure-md}
-
-<img src="../images/../docs/images/2_hop_sampling.png"
-     alt="graphlearn architecture."
-     width="45%">
-
-:::
+![graphlearn architecture](../images/../docs/images/2_hop_sampling.png)
 
 ```python
 s = g.neighbor_sampler(["buy", "i2i"], expand_factor=[2, 2])
@@ -165,13 +154,7 @@ Next, we introduce two different computational paradigms based on EgoGraph and S
 ### EgoGraph-based node-centric aggregation
 EgoGraph consists of ego and neighbors, and the message aggregation path is determined by the potential relationship between ego and neighbors. k-hop neighbors only need to aggregate the messages of k+1-hop neighbors, and the whole message passing process is carried out along the directed meta-path from neighbors to themselves. In this approach, the number of sampled neighbor hops and the number of layers of the neural network need to be exactly the same. The following figure illustrates the computation of a 2-hop neighbor model of GNNs. The vector of original nodes is noted as h(0); the first layer forward process needs to aggregate 2-hop neighbors to 1-hop neighbors and 1-hop neighbors to itself, the types of different hop neighbors may be different, so the first layer needs two different conv layers (for homogeneous graphs, these two conv layers are the same), and the features of nodes after the first layer are updated to h(1) as the input of the second layer; at the second layer, it needs to aggregate the h(1) of 1-hop neighbors to update the ego node features, and the final output node features h(2) as the embedding of the final output ego node.
 
-:::{figure-md}
-
-<img src="../images/../docs/images/egolayer.png"
-     alt="egograph."
-     width="80%">
-
-:::
+![egograph](../images/../docs/images/egolayer.png)
 
 ### SubGraph-based graph message passing
 Unlike EgoGraph, SubGraph contains the edge_index of the graph topology, so the message passing path (forward computation path) can be determined directly by the edge_index, and the implementation of the conv layer can be done directly by the edge_index and the nodes/edges data. In addition, SubGraph is fully compatible with the Data in PyG, so the model part of PyG can be reused.
@@ -180,13 +163,8 @@ Unlike EgoGraph, SubGraph contains the edge_index of the graph topology, so the 
 
 A GNN training/prediction task usually consists of the following steps.
 
-:::{figure-md}
+![pipeline](../images/../docs/images/gle_pipeline.png)
 
-<img src="../images/../docs/images/gle_pipeline.png"
-     alt="egograph."
-     width="90%">
-
-:::
 
 The first step in using GraphLearn is to prepare the graph data according to the application scenario. Graph data exists in the form of a vertex table and an edge table, and an application scenario will usually involve multiple types of vertices and edges. These can be added one by one using the interface provided by GraphLearn. The construction of graph data is a critical part of the process as it determines the upper limit of algorithm learning. It is important to generate reasonable edge data and choose appropriate features that are consistent with business goals.
 
