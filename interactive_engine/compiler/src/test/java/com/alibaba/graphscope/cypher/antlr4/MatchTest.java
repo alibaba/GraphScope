@@ -47,4 +47,26 @@ public class MatchTest {
                     + "], matchOpt=[INNER])",
                 source.explain().trim());
     }
+
+    @Test
+    public void match_3_test() {
+        RelNode match = Utils.eval("Match (a)-[]->(b), (b)-[]->(c) Return a, b, c").build();
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], b=[b], c=[c], isAppend=[false])\n"
+                    + "  GraphLogicalMultiMatch(input=[null],"
+                    + " sentences=[{s0=[GraphLogicalGetV(tableConfig=[{isAll=true,"
+                    + " tables=[software, person]}], alias=[b], opt=[END])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[OUT])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[a], opt=[VERTEX])\n"
+                    + "], s1=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[c], opt=[END])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[OUT])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[b], opt=[VERTEX])\n"
+                    + "]}])",
+                match.explain().trim());
+    }
 }

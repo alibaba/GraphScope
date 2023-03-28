@@ -17,7 +17,7 @@
 package com.alibaba.graphscope.cypher.antlr4.visitor;
 
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
-import com.alibaba.graphscope.common.ir.rex.RexVariableConverter;
+import com.alibaba.graphscope.common.ir.rex.RexTmpVariableConverter;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.config.*;
@@ -55,12 +55,9 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
         int childCnt = ctx.oC_Pattern().getChildCount();
         List<RelNode> sentences = new ArrayList<>();
         for (int i = 0; i < childCnt; ++i) {
-            if (ctx.oC_Pattern().getChild(i) == null) continue;
-            sentences.add(
-                    visitOC_PatternPart(
-                                    (CypherGSParser.OC_PatternPartContext)
-                                            ctx.oC_Pattern().getChild(i))
-                            .build());
+            CypherGSParser.OC_PatternPartContext partCtx = ctx.oC_Pattern().oC_PatternPart(i);
+            if (partCtx == null) continue;
+            sentences.add(visitOC_PatternPart(partCtx).build());
         }
         if (sentences.size() == 1) {
             builder.match(sentences.get(0), GraphOpt.Match.INNER);
@@ -160,7 +157,7 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
             }
             builder.aggregate(groupKey, aggCalls);
             if (!extraExprs.isEmpty()) {
-                RexVariableConverter converter = new RexVariableConverter(true, builder);
+                RexTmpVariableConverter converter = new RexTmpVariableConverter(true, builder);
                 extraExprs =
                         extraExprs.stream()
                                 .map(k -> k.accept(converter))
