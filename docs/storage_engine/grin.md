@@ -7,7 +7,7 @@ GRIN is defined in C, making it portable to systems written in different program
 * Filter: filtering data structures based on partitioning or property conditions
 
 The latest version of headers can be found in [GRIN](https://github.com/GraphScope/GRIN).
-A Vineyard implementation for both computing and storage can be found in [Vineyard](https://github.com/v6d-io/v6d/tree/dev/grin/modules/graph/grin/include).
+A Vineyard implementation for both computing and storage can be found in [Vineyard](https://github.com/v6d-io/v6d/tree/dev/grin/modules/graph/grin).
 
 ## Motivations
 The motivations behind GRIN are driven by the need for a common standard for accessing graph data for the computing engines of GraphScope. There are several factors that have contributed to this need:
@@ -18,7 +18,6 @@ The motivations behind GRIN are driven by the need for a common standard for acc
 By defining the GRIN interfaces in C, it can be easily integrated with various programming languages, including Java, Python, and Rust, using foreign function interfaces (FFIs) that enable these languages to call C functions. Moreover, GRIN becomes a language-agnostic standard that can be utilized across different programming environments without requiring each environment to have its own implementation of the standard. This greatly simplifies the development and maintenance of graph computing systems relying on GRIN, as it allows developers to use their preferred programming languages and tools while still being able to access and process graph data using a common standard.
 
 ## Unified Graph Retrieval
-
 As previously mentioned, GRIN offers computing engines a consistent method for accessing graphs stored in various storage engines through a set of common operations for graph traversal, data retrieval, and conditional filtering. These operations are defined as C functions, and their return values and parameters are typically handlers for graph concepts, such as vertices and edges.
 
 Here is an example showing how to handle a graph query using GRIN APIs. The data types with the prefix GRIN_ are handlers, while the functions with the prefix grin_ are the APIs in GRIN. Moreover, macros that start with GRIN_ are provided by GRIN to reflect storage features. Each storage engine that implements GRIN APIs can set up these macros based on their own features, such as graph partition strategies and list retrieval styles. The storage provider for this example is Vineyard.
