@@ -37,6 +37,12 @@ graph = load_ldbc()
 
 This will load the LDBC social network with the scale factor (sf) 1.
 
+```{tip}
+We do permit loading much larger LDBC graphs, such as sf 3k.
+To handle such large graphs, you're recommended using the [standalone deployment of GIE](./deployment.md)
+in a large cluster.
+```
+
 Currently, GIE supports Gremlin as its query language.
 After loading the LDBC graph and initializing the engine, we can submit gremlin queries to GIE through `g.execute(GREMLIN_QUERIES)` easily.
 
