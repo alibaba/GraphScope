@@ -264,7 +264,9 @@ impl AsPhysical for pb::GetV {
                     alias: getv.alias,
                     meta_data: None,
                 };
-                getv.params = None;
+                params.predicate.take();
+                params.is_all_columns = false;
+                params.columns.clear();
                 getv.alias = None;
                 // GetV(Adj)
                 builder.get_v(getv);

@@ -211,24 +211,26 @@ impl FilterMapFuncGen for pb::GetV {
                 "the `GetV` operator is not a `FilterMap`, which has GetV::VOpt::Both",
             ))?,
             VOpt::Start | VOpt::End | VOpt::Other => {
-                if self.params.is_some() && self.params.as_ref().unwrap().is_queryable() {
-                    let mut params = self.params.clone().unwrap();
-                    let labels = params
-                        .tables
-                        .clone()
-                        .into_iter()
-                        .map(|label| label.try_into())
-                        .collect::<Result<Vec<_>, _>>()?;
-                    params.tables.clear();
-                    // Can only support table filtering in GetV (when Opt!=Self)
+                let mut tables_condition: Vec<LabelId> = vec![];
+                if let Some(params) = self.params {
                     if params.is_queryable() {
-                        Err(FnGenError::unsupported_error(&format!(
-                            "QueryParams in GetV {:?}",
-                            self.params
-                        )))?
+                        Err(FnGenError::unsupported_error(&format!("QueryParams in GetV {:?}", params)))?
+                    } else {
+                        tables_condition = params
+                            .tables
+                            .into_iter()
+                            .map(|label| label.try_into())
+                            .collect::<Result<Vec<_>, _>>()?;
                     }
-                    let get_vertex_with_label_operator =
-                        GetVertexWithLabelOperator { start_tag: self.tag, opt, alias: self.alias, labels };
+                }
+
+                if !tables_condition.is_empty() {
+                    let get_vertex_with_label_operator = GetVertexWithLabelOperator {
+                        start_tag: self.tag,
+                        opt,
+                        alias: self.alias,
+                        labels: tables_condition,
+                    };
                     if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
                         debug!("Runtime GetVertexWithLabelOperator: {:?}", get_vertex_with_label_operator);
                     }
