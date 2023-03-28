@@ -13,10 +13,12 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+mod csr;
 mod exp;
 mod groot;
 mod vineyard;
 
+pub use csr::QueryCsrGraph;
 pub use exp::QueryExpGraph;
 pub use groot::QueryGrootGraph;
 pub use vineyard::QueryVineyard;

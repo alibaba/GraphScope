@@ -12,6 +12,7 @@ UNAME_S := $(shell uname -s)
 UNAME_M := $(shell uname -m)
 
 graph.schema:=
+graph.store:=
 
 rpc.target:=start_rpc_server
 
@@ -49,6 +50,7 @@ run:
 	  -cp ".:./target/libs/*:./target/compiler-0.0.1-SNAPSHOT.jar" \
 	  -Djna.library.path=../executor/ir/target/release \
 	  -Dgraph.schema=${graph.schema} \
+	  -Dgraph.store=${graph.store} \
 	  -Dpegasus.hosts=${pegasus.hosts} \
 	  com.alibaba.graphscope.gremlin.service.GraphServiceMain
 
