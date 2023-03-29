@@ -761,6 +761,7 @@ impl From<pb::PathExpand> for physical_pb::PathExpand {
             hop_range: path.hop_range,
             path_opt: path.path_opt,
             result_opt: path.result_opt,
+            condition: path.condition,
         }
     }
 }

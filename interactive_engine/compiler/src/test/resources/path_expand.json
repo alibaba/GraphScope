@@ -30,7 +30,8 @@
               "upper": 5
             },
             "path_opt": 1,
-            "result_opt": 1
+            "result_opt": 1,
+            "condition": null
           }
         }
       },

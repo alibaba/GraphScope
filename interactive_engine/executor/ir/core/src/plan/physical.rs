@@ -59,50 +59,56 @@ fn post_process_vars(
     builder: &mut JobBuilder, plan_meta: &mut PlanMeta, is_order_or_group: bool,
 ) -> IrResult<()> {
     if plan_meta.is_partition() {
-        let node_meta = plan_meta.get_curr_node_meta().unwrap();
-        let tag_columns = node_meta.get_tag_columns();
-        let len = tag_columns.len();
-        if len == 1 && !is_order_or_group {
-            // There are minor differences between `Order`, `Group` (group_values, actually) with other operators:
-            // For `Order`, we need to carry the properties for global ordering;
-            // and for `Group` (group_values), we need to carry the properties after `Keyed` for Aggregation.
-            // While for other operators, we can shuffle to the partition where the vertex locates,
-            // and directly query the properties (without saving the properties).
-            let (tag, columns_opt) = tag_columns.into_iter().next().unwrap();
-            if columns_opt.len() > 0 {
-                let tag_pb = tag.map(|tag_id| (tag_id as KeyId).into());
-                builder.shuffle(tag_pb.clone());
-                let auxilia =
-                    pb::GetV { tag: tag_pb.clone(), opt: 4, params: None, alias: tag_pb, meta_data: None };
-                builder.get_v(auxilia);
-            }
-        } else if len != 0 {
-            for (tag, columns_opt) in tag_columns.into_iter() {
+        if let Some(node_meta) = plan_meta.get_curr_node_meta() {
+            let tag_columns = node_meta.get_tag_columns();
+            let len = tag_columns.len();
+            if len == 1 && !is_order_or_group {
+                // There are minor differences between `Order`, `Group` (group_values, actually) with other operators:
+                // For `Order`, we need to carry the properties for global ordering;
+                // and for `Group` (group_values), we need to carry the properties after `Keyed` for Aggregation.
+                // While for other operators, we can shuffle to the partition where the vertex locates,
+                // and directly query the properties (without saving the properties).
+                let (tag, columns_opt) = tag_columns.into_iter().next().unwrap();
                 if columns_opt.len() > 0 {
-                    let tag_pb = tag.map(|tag_id| (tag_id as i32).into());
+                    let tag_pb = tag.map(|tag_id| (tag_id as KeyId).into());
                     builder.shuffle(tag_pb.clone());
-                    let params = pb::QueryParams {
-                        tables: vec![],
-                        columns: columns_opt
-                            .get()
-                            .into_iter()
-                            .map(|column| column.into())
-                            .collect(),
-                        is_all_columns: columns_opt.is_all(),
-                        limit: None,
-                        predicate: None,
-                        sample_ratio: 1.0,
-                        extra: Default::default(),
-                    };
-                    // opt = 4 denotes that to get vertex itself. The same as the followings.
                     let auxilia = pb::GetV {
                         tag: tag_pb.clone(),
                         opt: 4,
-                        params: Some(params),
-                        alias: tag_pb.clone(),
+                        params: None,
+                        alias: tag_pb,
                         meta_data: None,
                     };
                     builder.get_v(auxilia);
+                }
+            } else if len != 0 {
+                for (tag, columns_opt) in tag_columns.into_iter() {
+                    if columns_opt.len() > 0 {
+                        let tag_pb = tag.map(|tag_id| (tag_id as KeyId).into());
+                        builder.shuffle(tag_pb.clone());
+                        let params = pb::QueryParams {
+                            tables: vec![],
+                            columns: columns_opt
+                                .get()
+                                .into_iter()
+                                .map(|column| column.into())
+                                .collect(),
+                            is_all_columns: columns_opt.is_all(),
+                            limit: None,
+                            predicate: None,
+                            sample_ratio: 1.0,
+                            extra: Default::default(),
+                        };
+                        // opt = 4 denotes that to get vertex itself. The same as the followings.
+                        let auxilia = pb::GetV {
+                            tag: tag_pb.clone(),
+                            opt: 4,
+                            params: Some(params),
+                            alias: tag_pb.clone(),
+                            meta_data: None,
+                        };
+                        builder.get_v(auxilia);
+                    }
                 }
             }
         }
@@ -281,6 +287,7 @@ impl AsPhysical for pb::PathExpand {
     }
 
     fn post_process(&mut self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
+        post_process_vars(builder, plan_meta, false)?;
         if plan_meta.is_partition() {
             builder.shuffle(self.start_tag.clone());
         }
@@ -1417,6 +1424,7 @@ mod test {
             hop_range: Some(pb::Range { lower: 1, upper: 4 }),
             path_opt: 0,
             result_opt: 0,
+            condition: None,
         };
 
         let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr.clone().into()));

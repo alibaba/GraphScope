@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use ahash::HashMap;
 use dyn_type::{BorrowObject, Object};
 pub use edge::Edge;
 use ir_common::{LabelId, NameOrId};
@@ -21,7 +22,6 @@ pub use property::{Details, DynDetails, PropKey, PropertyValue};
 pub use vertex::Vertex;
 
 use crate::apis::ID;
-use ahash::HashMap;
 
 mod edge;
 mod path;

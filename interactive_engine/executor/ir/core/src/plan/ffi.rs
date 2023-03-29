@@ -840,6 +840,11 @@ fn set_predicate(ptr: *const c_void, cstr_predicate: *const c_char, opt: InnerOp
                 params.predicate = predicate_pb.ok();
                 std::mem::forget(params);
             }
+            InnerOpt::PathExpand => {
+                let mut path = unsafe { Box::from_raw(ptr as *mut pb::PathExpand) };
+                path.condition = predicate_pb.ok();
+                std::mem::forget(path);
+            }
             _ => unreachable!(),
         }
         FfiResult::success()
@@ -2189,6 +2194,7 @@ mod graph {
             hop_range: None,
             path_opt: unsafe { std::mem::transmute::<PathOpt, i32>(path_opt) },
             result_opt: unsafe { std::mem::transmute::<PathResultOpt, i32>(result_opt) },
+            condition: None,
         });
 
         Box::into_raw(pathxpd) as *const c_void
@@ -2211,6 +2217,7 @@ mod graph {
             hop_range: None,
             path_opt: unsafe { std::mem::transmute::<PathOpt, i32>(path_opt) },
             result_opt: unsafe { std::mem::transmute::<PathResultOpt, i32>(result_opt) },
+            condition: None,
         });
 
         Box::into_raw(pathxpd) as *const c_void
@@ -2232,6 +2239,14 @@ mod graph {
     #[no_mangle]
     pub extern "C" fn set_pathxpd_hops(ptr_pathxpd: *const c_void, lower: i32, upper: i32) -> FfiResult {
         set_range(ptr_pathxpd, lower, upper, InnerOpt::PathExpand)
+    }
+
+    /// To set a path expand operator's condition, which is a predicate represented as a c-string.
+    #[no_mangle]
+    pub extern "C" fn set_pathxpd_condition(
+        ptr_pathxpd: *const c_void, cstr_predicate: *const c_char,
+    ) -> FfiResult {
+        set_predicate(ptr_pathxpd, cstr_predicate, InnerOpt::PathExpand)
     }
 
     /// Append an path-expand operator to the logical plan
