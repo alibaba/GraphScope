@@ -1031,4 +1031,48 @@ mod test {
         expected_ids.sort();
         assert_eq!(result_ids, expected_ids)
     }
+
+    // g.V().outE().inV().hasLabel('person')
+    #[test]
+    fn expand_ine_outv_label_filter_test() {
+        let expand_opr = pb::EdgeExpand {
+            v_tag: None,
+            direction: 0, // OutE
+            params: Some(query_params(vec![], vec![], None)),
+            expand_opt: 1,
+            alias: None,
+        };
+
+        let getv_opr = pb::GetV {
+            tag: None,
+            opt: 1, // EndV
+            params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
+            alias: None,
+        };
+
+        let conf = JobConf::new("expand_ine_outv_haslabel_test");
+        let mut result = pegasus::run(conf, || {
+            let expand = expand_opr.clone();
+            let getv = getv_opr.clone();
+            |input, output| {
+                let mut stream = input.input_from(source_gen(None))?;
+                let flatmap_func = expand.gen_flat_map().unwrap();
+                stream = stream.flat_map(move |input| flatmap_func.exec(input))?;
+                let filter_map_func = getv.gen_filter_map().unwrap();
+                stream = stream.filter_map(move |input| filter_map_func.exec(input))?;
+                stream.sink_into(output)
+            }
+        })
+        .expect("build job failure");
+
+        let expected_ids = vec![2, 4];
+        let mut result_ids = vec![];
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record.get(None) {
+                result_ids.push(element.id() as usize);
+            }
+        }
+        result_ids.sort();
+        assert_eq!(result_ids, expected_ids)
+    }
 }
