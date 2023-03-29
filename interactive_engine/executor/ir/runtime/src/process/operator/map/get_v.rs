@@ -100,9 +100,7 @@ impl FilterMapFunction<Record, Record> for GetVertexWithLabelOperator {
                 }
             } else if let Some(graph_path) = entry.as_graph_path() {
                 if let VOpt::End = self.opt {
-                    let path_end = graph_path
-                        .get_path_end()
-                        .ok_or(FnExecError::unexpected_data_error("Get path_end failed in path expand"))?;
+                    let path_end = graph_path.get_path_end();
                     let label = path_end
                         .label()
                         .ok_or(FnExecError::UnExpectedData(format!(
