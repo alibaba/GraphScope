@@ -27,7 +27,6 @@ use ir_common::KeyId;
 use ir_physical_client::physical_builder::{JobBuilder, Plan};
 
 use crate::error::{IrError, IrResult};
-use crate::glogue::query_params_to_get_v;
 use crate::plan::logical::{LogicalPlan, NodeType};
 use crate::plan::meta::PlanMeta;
 
@@ -248,12 +247,12 @@ impl AsPhysical for pb::PathExpand {
                 let edge_expand = edge_expand.unwrap();
                 let getv = getv.unwrap();
                 if edge_expand.expand_opt == pb::edge_expand::ExpandOpt::Edge as i32 {
-                    let has_predicate = if let Some(params) = getv.params.as_ref() {
-                        params.predicate.is_some()
+                    let has_getv_filter = if let Some(params) = getv.params.as_ref() {
+                        params.is_queryable() || !params.tables.is_empty()
                     } else {
                         false
                     };
-                    if has_predicate {
+                    if has_getv_filter {
                         // The case of EdgeExpand(Opt=Edge) + GetV(Filter)
                         // --> EdgeExpand(Opt=Vertex) + GetV(Self with Filter)
                         edge_expand.expand_opt = pb::edge_expand::ExpandOpt::Vertex as i32;
@@ -315,13 +314,9 @@ impl AsPhysical for pb::GetV {
                 params.is_all_columns = false;
                 params.columns.clear();
                 getv.alias = None;
-                // opt = 4 means applying the filter to the vertex itself
-                // It only happens when previous EdgeExpand is ExpandV
-                // Therefore, GetV(Adj) only when opt != 4
-                if getv.opt != 4 {
-                    builder.get_v(getv);
-                }
-                // Suffle + GetV(Self)
+                // GetV(Adj)
+                builder.get_v(getv);
+                // Shuffle + GetV(Self)
                 if plan_meta.is_partition() {
                     builder.shuffle(None);
                 }
@@ -726,7 +721,7 @@ fn add_intersect_job_builder(
         .key
         .as_ref()
         .ok_or(IrError::ParsePbError("Empty tag in `Intersect` opr".into()))?;
-    let mut vertex_params: Option<pb::QueryParams> = None;
+    let mut auxilia: Option<pb::GetV> = None;
     let mut intersect_plans: Vec<Plan> = vec![];
     for subplan in subplans {
         // subplan would be like:
@@ -734,9 +729,10 @@ fn add_intersect_job_builder(
         // 2. vec![PathExpand, ExpandE, GetV] for path expand to intersect
         let len = subplan.len();
         if len < 2 {
-            Err(IrError::InvalidPattern(
-                "Subplan of Intersect at least has two operators: ExpandE + GetV".to_string(),
-            ))?
+            Err(IrError::InvalidPattern(format!(
+                "Subplan of Intersect at least has two operators: ExpandE + GetV, while it is {:?}",
+                subplan
+            )))?
         }
         let mut sub_bldr = JobBuilder::new(builder.conf.clone());
         for (idx, (_, opr)) in subplan.nodes.iter().enumerate() {
@@ -754,12 +750,7 @@ fn add_intersect_job_builder(
                     if get_v.alias.is_none() || !get_v.alias.as_ref().unwrap().eq(intersect_tag) {
                         Err(IrError::InvalidPattern("Cannot intersect on different tags".to_string()))?
                     }
-                    if let Some(params) = get_v.params.as_ref() {
-                        vertex_params = Some(params.clone());
-                    }
-                    if plan_meta.is_partition() {
-                        sub_bldr.shuffle(edgexpd.v_tag.clone());
-                    }
+                    // translate `outE` + `getV` into `out`, and process getV's filter (if exists) after intersection.
                     let mut edgexpd = edgexpd.clone();
                     edgexpd.expand_opt = pb::edge_expand::ExpandOpt::Vertex as i32;
                     edgexpd.alias = get_v.alias.clone();
@@ -767,6 +758,14 @@ fn add_intersect_job_builder(
                         sub_bldr.shuffle(edgexpd.v_tag.clone());
                     }
                     sub_bldr.edge_expand(edgexpd);
+                    if let Some(params) = get_v.params.as_ref() {
+                        // the case that we need to further process getV's filter.
+                        if params.is_queryable() || !params.tables.is_empty() {
+                            let mut get_v = get_v.clone();
+                            get_v.opt = 4;
+                            auxilia = Some(get_v.clone());
+                        }
+                    }
                     break;
                 } else {
                     Err(IrError::Unsupported(format!(
@@ -786,9 +785,9 @@ fn add_intersect_job_builder(
         meta_data: None,
     };
     unfold.add_job_builder(builder, plan_meta)?;
-    if vertex_params.is_some() {
-        let get_v_filter = query_params_to_get_v(vertex_params, None, 4);
-        get_v_filter.add_job_builder(builder, plan_meta)?;
+    if let Some(mut auxilia) = auxilia {
+        auxilia.tag = Some(intersect_tag.clone());
+        builder.get_v(auxilia);
     }
     Ok(())
 }
@@ -2134,8 +2133,8 @@ mod test {
         };
 
         let mut get_c_filter = get_c.clone();
+        get_c_filter.tag = Some(2.into());
         get_c_filter.opt = 4;
-        get_c_filter.alias = None;
 
         // parents are expand_ac_opr and expand_bc_opr
         let intersect_opr = pb::Intersect { parents: vec![4, 6], key: Some(2.into()) };
