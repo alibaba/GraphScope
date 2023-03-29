@@ -225,7 +225,7 @@ impl ExactExtendStep {
             match expand_direction {
                 PatternDirection::Out => pb::get_v::VOpt::End as i32,
                 PatternDirection::In => pb::get_v::VOpt::Start as i32,
-                PatternDirection::Both => pb::get_v::VOpt::Both as i32,
+                PatternDirection::Both => pb::get_v::VOpt::Other as i32,
             }
         };
         Ok(query_params_to_get_v(vertex_params, Some(target_v_id as KeyId), get_v_opt).into())
