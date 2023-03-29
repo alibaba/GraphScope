@@ -15,12 +15,13 @@
 
 use dyn_type::{BorrowObject, Object};
 pub use edge::Edge;
-use ir_common::LabelId;
+use ir_common::{LabelId, NameOrId};
 pub use path::GraphPath;
 pub use property::{Details, DynDetails, PropKey, PropertyValue};
 pub use vertex::Vertex;
 
 use crate::apis::ID;
+use ahash::HashMap;
 
 mod edge;
 mod path;
@@ -45,11 +46,8 @@ pub trait Element {
 pub trait GraphElement: Element {
     fn id(&self) -> ID;
     fn label(&self) -> Option<LabelId>;
-    /// To obtain the data maintained by the graph_element, mostly is a hash-table with key-value mappings,
-    /// `None` by default, if there is no data.
-    fn details(&self) -> Option<&DynDetails> {
-        None
-    }
+    fn get_property(&self, key: &NameOrId) -> Option<PropertyValue>;
+    fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>>;
 }
 
 impl Element for () {

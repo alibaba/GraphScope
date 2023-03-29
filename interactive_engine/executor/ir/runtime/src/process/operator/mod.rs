@@ -29,7 +29,7 @@ pub mod subtask;
 use std::convert::TryFrom;
 
 use dyn_type::Object;
-use graph_proxy::apis::{Details, Element, PropKey};
+use graph_proxy::apis::{Element, PropKey};
 use ir_common::error::ParsePbError;
 use ir_common::generated::common as common_pb;
 use ir_common::{KeyId, NameOrId};
@@ -74,13 +74,7 @@ impl TagKey {
                         .unwrap_or(Object::None),
                     PropKey::Len => unreachable!(),
                     PropKey::All => {
-                        let details = element
-                            .details()
-                            .ok_or(FnExecError::unexpected_data_error(&format!(
-                                "Get `PropKey::All` on {:?}",
-                                entry,
-                            )))?;
-                        if let Some(properties) = details.get_all_properties() {
+                        if let Some(properties) = element.get_all_properties() {
                             properties
                                 .into_iter()
                                 .map(|(key, value)| {
@@ -97,13 +91,7 @@ impl TagKey {
                         }
                     }
                     PropKey::Key(key) => {
-                        let details = element
-                            .details()
-                            .ok_or(FnExecError::unexpected_data_error(&format!(
-                                "Get `PropKey::Key` of {:?} on {:?}",
-                                key, entry,
-                            )))?;
-                        if let Some(properties) = details.get_property(key) {
+                        if let Some(properties) = element.get_property(key) {
                             properties
                                 .try_to_owned()
                                 .ok_or(FnExecError::unexpected_data_error(

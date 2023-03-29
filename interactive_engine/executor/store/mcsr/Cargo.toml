@@ -1,0 +1,27 @@
+[package]
+name = "mcsr"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_derive = "1.0"
+serde_json = "1.0"
+dyn_type = { path = "../../common/dyn_type" }
+log = "0.4"
+bincode = "1.0.1"
+pegasus_common = { path = "../../engine/pegasus/common" }
+itertools = "0.9"
+csv = "1.1"
+abomonation = "0.7.3"
+abomonation_derive = "0.5"
+flate2 = "0.2.19"
+rust-htslib = "0.39.5"
+regex = "1.7.1"
+env_logger = "0.7.1"
+clap = "2.32.0"
+chrono = "0.4"
+titlecase = "1.1.0"
+fnv = "1.0.3"

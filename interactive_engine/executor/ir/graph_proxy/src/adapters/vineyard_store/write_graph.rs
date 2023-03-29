@@ -70,10 +70,8 @@ impl VineyardGraphWriter {
         }
     }
 
-    fn encode_details(&self, details: Option<DynDetails>) -> GraphProxyResult<Vec<WriteNativeProperty>> {
-        let properties = details
-            .map(|details| details.get_all_properties())
-            .unwrap_or(None);
+    fn encode_details(&self, details: DynDetails) -> GraphProxyResult<Vec<WriteNativeProperty>> {
+        let properties = details.get_all_properties();
         let mut native_properties: Vec<WriteNativeProperty> = vec![];
         if let Some(mut properties) = properties {
             for (prop_key, prop_val) in properties.drain() {
@@ -88,7 +86,7 @@ impl VineyardGraphWriter {
 
 impl WriteGraphProxy for VineyardGraphWriter {
     fn add_vertex(
-        &mut self, label: LabelId, vertex_pk: PKV, properties: Option<DynDetails>,
+        &mut self, label: LabelId, vertex_pk: PKV, properties: DynDetails,
     ) -> GraphProxyResult<()> {
         let vertex_id = self.encode_ffi_id(vertex_pk)?;
         let label_id = self.encode_ffi_label(label)?;
@@ -107,7 +105,7 @@ impl WriteGraphProxy for VineyardGraphWriter {
 
     fn add_edge(
         &mut self, label: LabelId, src_vertex_label: LabelId, src_vertex_pk: PKV,
-        dst_vertex_label: LabelId, dst_vertex_pk: PKV, properties: Option<DynDetails>,
+        dst_vertex_label: LabelId, dst_vertex_pk: PKV, properties: DynDetails,
     ) -> GraphProxyResult<()> {
         let edge_label = self.encode_ffi_label(label)?;
         let src_id = self.encode_ffi_id(src_vertex_pk)?;

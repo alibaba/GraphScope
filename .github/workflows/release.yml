@@ -86,11 +86,10 @@ jobs:
         sudo chmod +x /usr/bin/ossutil64
 
         # download released charts
-        cd ${GITHUB_WORKSPACE}/charts
         ossutil64 -i "${oss_accesskey_id}" \
                   -k "${oss_accesskey_secret}" \
                   -e ${{ env.OSS_ENDPOINT }} \
-                  cp -r oss://graphscope/charts ./
+                  cp -r oss://graphscope/charts ./charts
 
     - name: Package Charts
       run: |
@@ -104,6 +103,8 @@ jobs:
         helm package ./graphscope
         # package graphscope-store
         helm package --dependency-update ./graphscope-store
+        # package gie-standalone
+        helm package --dependency-update ./gie-standalone
         # generate index.yaml
         helm repo index . --url ${{ env.HELM_CHARTS_URL }}
 
@@ -122,4 +123,5 @@ jobs:
         assets: |
           charts/graphscope-${{ steps.tag.outputs.TAG }}.tgz:/charts/graphscope-${{ steps.tag.outputs.TAG }}.tgz
           charts/graphscope-store-${{ steps.tag.outputs.TAG }}.tgz:/charts/graphscope-store-${{ steps.tag.outputs.TAG }}.tgz
+          charts/gie-standalone-${{ steps.tag.outputs.TAG }}.tgz:/charts/gie-standalone-${{ steps.tag.outputs.TAG }}.tgz
           charts/index.yaml:/charts/index.yaml

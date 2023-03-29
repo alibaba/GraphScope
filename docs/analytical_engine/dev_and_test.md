@@ -26,10 +26,10 @@ We provided a docker image `graphscope-dev` with all tools and dependices includ
 
 ```bash
 # Use a mirror in HK aliyun to speed up the download if in need.
-# export REGISTRY=registry.cn-hongkong.aliyuncs.com/
+# export REGISTRY="registry.cn-hongkong.aliyuncs.com/"
 # TODO(yuansi): make it works
 
-docker run --rm -it --shm-size=4096m REGISTRY/graphscope/graphscope-dev:latest
+docker run --rm -it --shm-size=4096m ${REGISTRY}graphscope/graphscope-dev:latest
 ```
 Since we are going to build GraphScope within the container, here we assign `shm-size` of 4G, which refers to the amount of shared memory
  allocated to a docker container. More options about `docker` command can be found [here](https://docs.docker.com/engine/reference/commandline/cli/).

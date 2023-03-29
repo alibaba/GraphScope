@@ -1,0 +1,33 @@
+{
+    "vertices": [
+        {
+            "data_path": "$STORE_DATA_PATH/modern_graph/person.csv",
+            "label": "person",
+            "options": "header_row=true&delimiter=|"
+        },
+        {
+            "data_path": "$STORE_DATA_PATH/modern_graph/software.csv",
+            "label": "software",
+            "options": "header_row=true&delimiter=|"
+        }
+    ],
+    "edges": [
+        {
+            "data_path": "$STORE_DATA_PATH/modern_graph/knows.csv",
+            "label": "knows",
+            "src_label": "person",
+            "dst_label": "person",
+            "options": "header_row=true&delimiter=|"
+        },
+        {
+            "data_path": "$STORE_DATA_PATH/modern_graph/created.csv",
+            "label": "created",
+            "src_label": "person",
+            "dst_label": "software",
+            "options": "header_row=true&delimiter=|"
+        }
+    ],
+    "directed": 1,
+    "retain_oid": 1,
+    "generate_eid": 1
+}

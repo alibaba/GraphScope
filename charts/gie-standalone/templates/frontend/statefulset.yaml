@@ -52,8 +52,8 @@ spec:
         {{- end }}
       containers:
         - name: frontend
-          image: {{ include "graphscope-store.image" . }}
-          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          image: {{ include "graphscope-store.frontend.image" . }}
+          imagePullPolicy: {{ .Values.frontend.image.pullPolicy | quote }}
           command:
           {{- if (eq "Vineyard" .Values.storageType) }}
             - /bin/bash
@@ -73,10 +73,15 @@ spec:
               done
               runtime_hosts=${runtime_hosts:1}
 
-              config_path=/etc/groot/config
+              json_file=`ls /tmp/*.json`
+              while [ $? -ne 0 ]
+              do
+                sleep 1s
+                json_file=`ls /tmp/*.json`
+              done
 
               $GRAPHSCOPE_HOME/bin/giectl start_frontend ${GRAPHSCOPE_RUNTIME} ${object_id} \
-                  $config_path/$GRAPH_SCHEMA $runtime_hosts $GREMLIN_SERVER_PORT $EXTRA_CONFIG
+                  $json_file $runtime_hosts $GREMLIN_SERVER_PORT $EXTRA_CONFIG
 
               exit_code=$?
               while [ $exit_code -eq 0 ]
@@ -95,15 +100,17 @@ spec:
           {{- end }}
           env:
             - name: GAIA_RPC_PORT
-              value: {{ .Values.store.service.gaiaRpc | quote }}
+              value: {{ .Values.executor.service.gaiaRpc | quote }}
             - name: GREMLIN_SERVER_PORT
               value: {{ .Values.frontend.service.gremlinPort | quote }}
             - name: DNS_NAME_PREFIX_STORE
               value: {{ $storeFullname }}-{}.{{ $storeFullname }}-headless.{{ $releaseNamespace }}.svc.{{ $clusterDomain }}
             - name: SERVERSSIZE
-              value: {{ .Values.store.replicaCount | quote }}
+              value: {{ .Values.executor.replicaCount | quote }}
+            {{- if (eq "Experimental" .Values.storageType) }}
             - name: GRAPH_SCHEMA
               value: {{ .Values.schemaConfig | quote }}
+            {{- end }}
             - name: EXTRA_CONFIG
               value: {{ .Values.extraConfig | quote }}
             - name: WORKER_NUM
