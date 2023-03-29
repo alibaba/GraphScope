@@ -40,8 +40,7 @@ deployment and management of applications. To deploy GIE standalone using Helm, 
    ```
 - Prepare graph data
    ```
-   mkdir /tmp/data && \
-   cp -r gie-standalone/data/modern_graph /tmp/data/
+   cp -r gie-standalone/data/ /tmp/data
    ```
    Check whether the raw data is there:
    ```
