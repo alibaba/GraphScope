@@ -40,7 +40,7 @@ deployment and management of applications. To deploy GIE standalone using Helm, 
    ```
 - Prepare graph data
    ```
-   cp -r gie-standalone/data /tmp/data/
+   cp -r gie-standalone/data/modern_graph /tmp/data/
    ```
    Check whether the raw data is there:
    ```
@@ -107,18 +107,15 @@ deployment and management of applications. To deploy GIE standalone using Helm, 
    Download Gremlin console and unpack to your local directory.
    ```bash
    curl -LO https://dlcdn.apache.org/tinkerpop/3.6.2/apache-tinkerpop-gremlin-console-3.6.2-bin.zip && \
-   unzip apache-tinkerpop-gremlin-console-3.6.2-bin.zip
+   unzip apache-tinkerpop-gremlin-console-3.6.2-bin.zip && \
+   cd apache-tinkerpop-gremlin-console-3.6.2
    ```
 
-   Modify the `hosts` and `port` to the GIE Frontend Service endpoint in
-   ```bash
-   apache-tinkerpop-gremlin-console-3.6.2-bin/conf/remote.yaml
-   ```
-
+   Modify the `hosts` and `port` in `conf/remote.yaml` to the GIE Frontend Service endpoint.
    Then open the Gremlin console
    ```bash
-   chmod +x apache-tinkerpop-gremlin-console-3.6.2-bin/bin/gremlin.sh
-   apache-tinkerpop-gremlin-console-3.6.2-bin/bin/gremlin.sh
+   chmod +x bin/gremlin.sh
+   bin/gremlin.sh
    ```
 
    Type in the following:
@@ -130,7 +127,7 @@ deployment and management of applications. To deploy GIE standalone using Helm, 
    gremlin>
    ```
 
-   You are now ready to commit any Gremlin queries via either the Python SDK or Gremlin console.
+   You are now ready to submit any Gremlin queries via either the Python SDK or Gremlin console.
 
 ## Remove the GIE Service
 ```bash
@@ -178,10 +175,8 @@ Let's look into the specification of modern graph in `gie-standalone/config/v6d_
         }
     ],
     "directed": 1,
+    "retain_oid": 1,
     "generate_eid": 1,
-    "string_oid": 0,
-    "local_vertex_map": 0,
-    "print_normalized_schema": 1
 }
 ```
 
