@@ -1,5 +1,6 @@
 name: NetworkX Forward algorithm CI
 
+# on: [push, pull_request]
 on:
   workflow_dispatch:
   schedule:
@@ -16,7 +17,7 @@ jobs:
       run:
         shell: bash --noprofile --norc -eo pipefail {0}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.12.2
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.13.4
       options:
         --shm-size 4096m
 
@@ -26,6 +27,7 @@ jobs:
     - name: Build GAE and coordinator
       run: |
         pushd ${GITHUB_WORKSPACE}
+        source /home/graphscope/.graphscope_env
         install_prefix=/opt/graphscope
         sudo mkdir -p ${install_prefix}
         sudo make analytical-install BUILD_TEST=OFF NUMPROC=1 INSTALL_PREFIX=${install_prefix}
@@ -38,6 +40,7 @@ jobs:
         DEPLOYMENT: 'standalone'
       run: |
         cd ${GITHUB_WORKSPACE}/python
+        source /home/graphscope/.graphscope_env
         export GRAPHSCOPE_HOME=/opt/graphscope
         python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
           --cov-report=term -s -v -m "not slow" graphscope/nx/algorithms/tests/forward

@@ -17,7 +17,6 @@
 package com.alibaba.graphscope.common.ir.type;
 
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
-import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -33,10 +32,10 @@ import java.util.Objects;
  */
 public class GraphSchemaType extends RelRecordType {
     protected GraphOpt.Source scanOpt;
-    protected LabelType labelType;
+    protected GraphLabelType labelType;
 
-    protected GraphSchemaType(GraphOpt.Source scanOpt) {
-        this(scanOpt, LabelType.DEFAULT, ImmutableList.of());
+    protected GraphSchemaType(GraphOpt.Source scanOpt, List<RelDataTypeField> fields) {
+        this(scanOpt, GraphLabelType.DEFAULT, fields);
     }
 
     /**
@@ -45,7 +44,7 @@ public class GraphSchemaType extends RelRecordType {
      * @param fields    attribute fields, each field denoted by {@link RelDataTypeField} which consist of property name, property id and type
      */
     public GraphSchemaType(
-            GraphOpt.Source scanOpt, LabelType labelType, List<RelDataTypeField> fields) {
+            GraphOpt.Source scanOpt, GraphLabelType labelType, List<RelDataTypeField> fields) {
         super(StructKind.NONE, fields, false);
         this.scanOpt = scanOpt;
         this.labelType = labelType;
@@ -55,7 +54,7 @@ public class GraphSchemaType extends RelRecordType {
         return scanOpt;
     }
 
-    public LabelType getLabelType() {
+    public GraphLabelType getLabelType() {
         return labelType;
     }
 

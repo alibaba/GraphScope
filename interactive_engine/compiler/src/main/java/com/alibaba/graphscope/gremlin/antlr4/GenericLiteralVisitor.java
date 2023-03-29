@@ -116,7 +116,12 @@ public class GenericLiteralVisitor extends GremlinGSBaseVisitor<Object> {
         if (integerLiteralList == null || integerLiteralList.integerLiteralExpr() == null) {
             return new Object[0];
         }
-        return integerLiteralList.integerLiteralExpr().integerLiteral().stream()
+        return getIntegerLiteralExpr(integerLiteralList.integerLiteralExpr());
+    }
+
+    public static Object[] getIntegerLiteralExpr(
+            GremlinGSParser.IntegerLiteralExprContext integerLiteralExpr) {
+        return integerLiteralExpr.integerLiteral().stream()
                 .filter(Objects::nonNull)
                 .map(integerLiteral -> getInstance().visitIntegerLiteral(integerLiteral))
                 .toArray(Object[]::new);

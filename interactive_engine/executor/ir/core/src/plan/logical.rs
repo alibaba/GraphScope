@@ -1012,7 +1012,7 @@ impl AsLogical for pb::Project {
                 let curr_node = plan_meta.get_curr_node();
                 preprocess_expression(expr, meta, plan_meta, false)?;
                 if expr.operators.len() == 1 {
-                    if let common_pb::ExprOpr { item: Some(Item::Var(var)) } =
+                    if let common_pb::ExprOpr { item: Some(Item::Var(var)), .. } =
                         expr.operators.get_mut(0).unwrap()
                     {
                         if let Some(tag) = var.tag.as_mut() {
@@ -1134,6 +1134,10 @@ impl AsLogical for pb::PathExpand {
         plan_meta.refer_to_nodes(curr_node, vec![curr_node]);
         if let Some(base) = self.base.as_mut() {
             base.preprocess(meta, plan_meta)?;
+        }
+        if let Some(pred) = self.condition.as_mut() {
+            preprocess_expression(pred, meta, plan_meta, false)?;
+            process_columns_meta(plan_meta, true)?;
         }
         if let Some(alias) = self.alias.as_mut() {
             let tag_id = get_or_set_tag_id(alias, plan_meta)?;
@@ -1817,6 +1821,7 @@ mod test {
                 extra: HashMap::new(),
             }),
             idx_predicate: Some(vec!["software".to_string()].into()),
+            meta_data: None,
         };
         scan.preprocess(&meta, &mut plan_meta).unwrap();
         assert_eq!(scan.clone().params.unwrap().tables[0], 0.into());
@@ -1895,6 +1900,7 @@ mod test {
                 extra: HashMap::new(),
             }),
             idx_predicate: None,
+            meta_data: None,
         };
 
         scan.preprocess(&meta, &mut plan_meta).unwrap();
@@ -1926,6 +1932,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![])
             .unwrap();
@@ -1957,6 +1964,7 @@ mod test {
                 alias: None,
             }],
             is_append: false,
+            meta_data: vec![],
         };
         plan.append_operator_as_node(project.into(), vec![2])
             .unwrap();
@@ -1979,6 +1987,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![])
             .unwrap();
@@ -1991,6 +2000,7 @@ mod test {
             params: Some(query_params(vec![], vec![])),
             expand_opt: 0,
             alias: Some("here".into()),
+            meta_data: None,
         };
         plan.append_operator_as_node(expand.into(), vec![0])
             .unwrap();
@@ -2016,6 +2026,7 @@ mod test {
                 alias: None,
             }],
             is_append: true,
+            meta_data: vec![],
         };
         plan.append_operator_as_node(project.into(), vec![2])
             .unwrap();
@@ -2028,6 +2039,7 @@ mod test {
                 alias: None,
             }],
             is_append: true,
+            meta_data: vec![],
         };
         plan.append_operator_as_node(project.into(), vec![3])
             .unwrap();
@@ -2052,6 +2064,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![])
             .unwrap();
@@ -2064,6 +2077,7 @@ mod test {
             params: Some(query_params(vec![], vec![])),
             expand_opt: 1,
             alias: Some("e".into()),
+            meta_data: None,
         };
         plan.append_operator_as_node(expand.into(), vec![0])
             .unwrap();
@@ -2077,6 +2091,7 @@ mod test {
             opt: 1,
             params: Some(query_params(vec![], vec![])),
             alias: Some("v".into()),
+            meta_data: None,
         };
         plan.append_operator_as_node(getv.into(), vec![1])
             .unwrap();
@@ -2091,6 +2106,7 @@ mod test {
                 alias: Some("project_e".into()),
             }],
             is_append: true,
+            meta_data: vec![],
         };
         plan.append_operator_as_node(project.into(), vec![2])
             .unwrap();
@@ -2104,6 +2120,7 @@ mod test {
                     property: Some(common_pb::Property {
                         item: Some(common_pb::property::Item::Key("weight".into())),
                     }),
+                    node_type: None,
                 }),
                 order: 1,
             }],
@@ -2127,6 +2144,7 @@ mod test {
                 alias: Some("project_v".into()),
             }],
             is_append: true,
+            meta_data: vec![],
         };
         plan.append_operator_as_node(project.into(), vec![4])
             .unwrap();
@@ -2139,6 +2157,7 @@ mod test {
                 alias: Some("name".into()),
             }],
             is_append: true,
+            meta_data: vec![],
         };
         plan.append_operator_as_node(project.into(), vec![5])
             .unwrap();
@@ -2166,6 +2185,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec!["person".into()], vec![])),
             idx_predicate: None,
+            meta_data: None,
         };
         let mut opr_id = plan
             .append_operator_as_node(scan.into(), vec![])
@@ -2202,6 +2222,7 @@ mod test {
             params: Some(query_params(vec!["knows".into()], vec![])),
             expand_opt: 1,
             alias: Some("b".into()),
+            meta_data: None,
         };
         opr_id = plan
             .append_operator_as_node(expand.into(), vec![opr_id as NodeId])
@@ -2216,6 +2237,7 @@ mod test {
             opt: 2,
             params: Some(query_params(vec![], vec![])),
             alias: Some("c".into()),
+            meta_data: None,
         };
         opr_id = plan
             .append_operator_as_node(getv.into(), vec![opr_id as NodeId])
@@ -2245,6 +2267,7 @@ mod test {
                 alias: None,
             }],
             is_append: true,
+            meta_data: vec![],
         };
         opr_id = plan
             .append_operator_as_node(project.into(), vec![opr_id as NodeId])
@@ -2265,6 +2288,7 @@ mod test {
                 alias: None,
             }],
             is_append: true,
+            meta_data: vec![],
         };
         opr_id = plan
             .append_operator_as_node(project.into(), vec![opr_id as NodeId])
@@ -2299,6 +2323,7 @@ mod test {
                 extra: Default::default(),
             }),
             idx_predicate: None,
+            meta_data: None,
         };
 
         plan.append_operator_as_node(scan.into(), vec![])
@@ -2326,6 +2351,7 @@ mod test {
                 extra: Default::default(),
             }),
             idx_predicate: None,
+            meta_data: None,
         };
 
         let opr_id = plan
@@ -2338,6 +2364,7 @@ mod test {
                 alias: None,
             }],
             is_append: true,
+            meta_data: vec![],
         };
 
         plan.append_operator_as_node(project.into(), vec![opr_id])
@@ -2361,6 +2388,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![])
             .unwrap();
@@ -2373,6 +2401,7 @@ mod test {
             params: Some(query_params(vec![], vec![])),
             expand_opt: 0,
             alias: Some("a".into()),
+            meta_data: None,
         };
         plan.append_operator_as_node(expand.into(), vec![0])
             .unwrap();
@@ -2385,6 +2414,7 @@ mod test {
             params: Some(query_params(vec![], vec![])),
             expand_opt: 0,
             alias: None,
+            meta_data: None,
         };
         plan.append_operator_as_node(expand.into(), vec![1])
             .unwrap();
@@ -2397,6 +2427,7 @@ mod test {
                 alias: Some("b".into()),
             }],
             is_append: true,
+            meta_data: vec![],
         };
         plan.append_operator_as_node(project.into(), vec![2])
             .unwrap();
@@ -2409,6 +2440,7 @@ mod test {
                 alias: None,
             }],
             is_append: true,
+            meta_data: vec![],
         };
         plan.append_operator_as_node(project.into(), vec![3])
             .unwrap();
@@ -2433,6 +2465,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![])
             .unwrap();
@@ -2444,6 +2477,7 @@ mod test {
             params: Some(query_params(vec![], vec![])),
             expand_opt: 0,
             alias: None,
+            meta_data: None,
         };
         let oprid = plan
             .append_operator_as_node(expand.into(), vec![])
@@ -2469,6 +2503,7 @@ mod test {
                 alias: None,
             }],
             is_append: false,
+            meta_data: vec![],
         };
         plan.append_operator_as_node(project.into(), vec![oprid])
             .unwrap();
@@ -2493,6 +2528,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![])
             .unwrap();
@@ -2500,7 +2536,7 @@ mod test {
 
         let group = pb::GroupBy {
             mappings: vec![pb::group_by::KeyAlias {
-                key: Some(common_pb::Variable { tag: None, property: None }),
+                key: Some(common_pb::Variable { tag: None, property: None, node_type: None }),
                 alias: Some("~keys_2_0".into()),
             }],
             functions: vec![pb::group_by::AggFunc {
@@ -2508,6 +2544,7 @@ mod test {
                 aggregate: 3,
                 alias: Some("~values_2_0".into()),
             }],
+            meta_data: vec![],
         };
         plan.append_operator_as_node(group.into(), vec![0])
             .unwrap();
@@ -2521,6 +2558,7 @@ mod test {
                     property: Some(common_pb::Property {
                         item: Some(common_pb::property::Item::Key("name".into())),
                     }),
+                    node_type: None,
                 }),
                 order: 0,
             }],
@@ -2548,6 +2586,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![])
             .unwrap();
@@ -2555,7 +2594,7 @@ mod test {
 
         let group = pb::GroupBy {
             mappings: vec![pb::group_by::KeyAlias {
-                key: Some(common_pb::Variable { tag: None, property: None }),
+                key: Some(common_pb::Variable { tag: None, property: None, node_type: None }),
                 alias: Some("~keys_2_0".into()),
             }],
             functions: vec![pb::group_by::AggFunc {
@@ -2563,6 +2602,7 @@ mod test {
                 aggregate: 3,
                 alias: Some("~values_2_0".into()),
             }],
+            meta_data: vec![],
         };
         plan.append_operator_as_node(group.into(), vec![0])
             .unwrap();
@@ -2576,6 +2616,7 @@ mod test {
                 alias: None,
             }],
             is_append: true,
+            meta_data: vec![],
         };
         plan.append_operator_as_node(project.into(), vec![1])
             .unwrap();
@@ -2592,6 +2633,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![])
             .unwrap();
@@ -2604,6 +2646,7 @@ mod test {
                     property: Some(common_pb::Property {
                         item: Some(common_pb::property::Item::Key("name".into())),
                     }),
+                    node_type: None,
                 }),
                 alias: Some("a".into()),
             }],
@@ -2612,6 +2655,7 @@ mod test {
                 aggregate: 5,
                 alias: Some("~values_0_1".into()),
             }],
+            meta_data: vec![],
         };
         plan.append_operator_as_node(group.into(), vec![0])
             .unwrap();
@@ -2632,6 +2676,7 @@ mod test {
                 alias: None,
             }],
             is_append: true,
+            meta_data: vec![],
         };
         plan.append_operator_as_node(project.into(), vec![1])
             .unwrap();
@@ -2647,6 +2692,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![])
             .unwrap();
@@ -2659,6 +2705,7 @@ mod test {
             params: Some(query_params(vec![], vec![])),
             expand_opt: 1,
             alias: None,
+            meta_data: None,
         };
         let subtask = plan
             .append_operator_as_node(expand.into(), vec![])
@@ -2672,6 +2719,7 @@ mod test {
                 aggregate: 3,
                 alias: Some("~values_0_1".into()),
             }],
+            meta_data: vec![],
         };
         plan.append_operator_as_node(group.into(), vec![subtask])
             .unwrap();
@@ -2693,7 +2741,11 @@ mod test {
 
         let group = pb::GroupBy {
             mappings: vec![pb::group_by::KeyAlias {
-                key: Some(common_pb::Variable { tag: Some("~apply".into()), property: None }),
+                key: Some(common_pb::Variable {
+                    tag: Some("~apply".into()),
+                    property: None,
+                    node_type: None,
+                }),
                 alias: Some("~apply".into()),
             }],
             functions: vec![pb::group_by::AggFunc {
@@ -2702,10 +2754,12 @@ mod test {
                     property: Some(common_pb::Property {
                         item: Some(common_pb::property::Item::Key("name".into())),
                     }),
+                    node_type: None,
                 }],
                 aggregate: 5,
                 alias: Some("~values_0_1".into()),
             }],
+            meta_data: vec![],
         };
         plan.append_operator_as_node(group.into(), vec![3])
             .unwrap();
@@ -2729,6 +2783,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![])
             .unwrap();
@@ -2740,6 +2795,7 @@ mod test {
                 alias: Some("a".into()),
             }],
             is_append: true,
+            meta_data: vec![],
         };
         plan.append_operator_as_node(project.into(), vec![0])
             .unwrap();
@@ -2753,7 +2809,7 @@ mod test {
 
         let order = pb::OrderBy {
             pairs: vec![pb::order_by::OrderingPair {
-                key: Some(common_pb::Variable { tag: Some("a".into()), property: None }),
+                key: Some(common_pb::Variable { tag: Some("a".into()), property: None, node_type: None }),
                 order: 0,
             }],
             limit: None,
@@ -2773,6 +2829,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![])
             .unwrap();
@@ -2783,6 +2840,7 @@ mod test {
             params: Some(query_params(vec![], vec![])),
             expand_opt: 0,
             alias: None,
+            meta_data: None,
         };
         let filter = pb::Select { predicate: Some(str_to_expr_pb("@.age > 10".to_string()).unwrap()) };
 
@@ -2819,6 +2877,7 @@ mod test {
                 alias: None,
             }],
             is_append: false,
+            meta_data: vec![],
         };
         plan.append_operator_as_node(project.into(), vec![opr_id])
             .unwrap();
@@ -2847,6 +2906,7 @@ mod test {
                 alias: None,
             }],
             is_append: false,
+            meta_data: vec![],
         };
         // visiting a non-existing tag does not return error
         let result = plan.append_operator_as_node(project.into(), vec![0]);
@@ -2865,6 +2925,7 @@ mod test {
             alias: Some("v".into()),
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            meta_data: None,
         };
 
         let opr_id = plan
@@ -2878,6 +2939,7 @@ mod test {
             params: Some(query_params(vec![], vec![])),
             expand_opt: 0,
             alias: Some("o".into()),
+            meta_data: None,
         };
 
         let root_id = plan
@@ -2900,6 +2962,7 @@ mod test {
                 alias: None,
             }],
             is_append: true,
+            meta_data: vec![],
         };
         plan.append_operator_as_node(project.into(), vec![opr_id])
             .unwrap();
@@ -2941,6 +3004,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            meta_data: None,
         };
 
         plan.append_operator_as_node(scan.into(), vec![])
@@ -2952,6 +3016,7 @@ mod test {
             params: Some(query_params(vec![], vec![])),
             expand_opt: 0,
             alias: None,
+            meta_data: None,
         };
         let root_id = plan
             .append_operator_as_node(expand.into(), vec![])
@@ -2967,6 +3032,7 @@ mod test {
                 alias: Some("name".into()),
             }],
             is_append: true,
+            meta_data: vec![],
         };
         plan.append_operator_as_node(project.into(), vec![2])
             .unwrap();

@@ -12,7 +12,8 @@
                     "item": {
                       "Label": {}
                     }
-                  }
+                  },
+                  "node_type": null
                 },
                 "order": 1
               }

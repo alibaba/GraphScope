@@ -16,10 +16,11 @@
 
 package com.alibaba.graphscope.common.ir.rex;
 
-import com.alibaba.graphscope.common.ir.type.NameOrId;
+import com.alibaba.graphscope.common.ir.type.GraphProperty;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexInputRef;
+import org.apache.calcite.rex.RexVisitor;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -30,10 +31,11 @@ import java.util.Objects;
  */
 public class RexGraphVariable extends RexInputRef {
     private int aliasId;
+
     // null -> get object referred by the given alias, i.e. 'a'
     // not null -> get object referred by the given alias and get the given property from it, i.e.
     // 'a.name'
-    private @Nullable NameOrId property;
+    private @Nullable GraphProperty property;
 
     protected RexGraphVariable(int aliasId, @Nullable String name, RelDataType type) {
         this(name, type);
@@ -41,10 +43,10 @@ public class RexGraphVariable extends RexInputRef {
     }
 
     protected RexGraphVariable(
-            int aliasId, NameOrId property, @Nullable String name, RelDataType type) {
+            int aliasId, GraphProperty property, @Nullable String name, RelDataType type) {
         this(name, type);
         this.aliasId = aliasId;
-        this.property = property;
+        this.property = Objects.requireNonNull(property);
     }
 
     protected RexGraphVariable(@Nullable String name, RelDataType type) {
@@ -72,16 +74,16 @@ public class RexGraphVariable extends RexInputRef {
      * @return
      */
     public static RexGraphVariable of(
-            int aliasId, NameOrId property, @Nullable String name, RelDataType type) {
+            int aliasId, GraphProperty property, @Nullable String name, RelDataType type) {
         return new RexGraphVariable(aliasId, property, name, type);
     }
 
-    public @Nullable int getAliasId() {
-        return aliasId;
-    }
-
-    public @Nullable NameOrId getProperty() {
-        return property;
+    @Override
+    public <R> R accept(RexVisitor<R> rexVisitor) {
+        return (rexVisitor instanceof RexVariableAliasChecker
+                        || rexVisitor instanceof RexVariableConverter)
+                ? rexVisitor.visitInputRef(this)
+                : null;
     }
 
     @Override
@@ -101,5 +103,13 @@ public class RexGraphVariable extends RexInputRef {
     @Override
     public String getName() {
         return this.digest;
+    }
+
+    public @Nullable int getAliasId() {
+        return aliasId;
+    }
+
+    public @Nullable GraphProperty getProperty() {
+        return property;
     }
 }

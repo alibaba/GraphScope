@@ -16,39 +16,26 @@
 
 package com.alibaba.graphscope.common.ir;
 
-import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
-import com.alibaba.graphscope.common.ir.schema.GraphSchemaWrapper;
-import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.tools.config.LabelConfig;
 import com.alibaba.graphscope.common.ir.tools.config.SourceConfig;
-import com.alibaba.graphscope.common.utils.FileUtils;
-import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
-import com.alibaba.graphscope.compiler.schema.DefaultGraphSchema;
 
-import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
-import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.rex.RexBuilder;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class SourceTest {
-    private static final RelDataTypeFactory typeFactory = new JavaTypeFactoryImpl();
-    private static final RexBuilder rexBuilder = new RexBuilder(typeFactory);
-    private static final StatisticSchema schema = new GraphSchemaWrapper(mockGraphSchema(), true);
 
     // g.V().hasLabel("person")
     @Test
     public void single_label_test() {
-        GraphBuilder builder = mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         SourceConfig sourceConfig =
                 new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"));
         RelNode source = builder.source(sourceConfig).build();
         Assert.assertEquals(
-                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[~DEFAULT],"
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
                         + " opt=[VERTEX])",
                 source.explain().trim());
     }
@@ -56,7 +43,7 @@ public class SourceTest {
     // g.V().hasLabel("person", "software").as("a")
     @Test
     public void multiple_labels_test() {
-        GraphBuilder builder = mockGraphBuilder();
+        GraphBuilder builder = Utils.mockGraphBuilder();
         SourceConfig sourceConfig =
                 new SourceConfig(
                         GraphOpt.Source.VERTEX,
@@ -69,10 +56,11 @@ public class SourceTest {
                 source.explain().trim());
     }
 
+    // g.V().hasLabel("person", "knows") -> person and knows have different opt type, throw errors
     @Test
     public void multiple_labels_opt_test() {
         try {
-            GraphBuilder builder = mockGraphBuilder();
+            GraphBuilder builder = Utils.mockGraphBuilder();
             SourceConfig sourceConfig =
                     new SourceConfig(
                             GraphOpt.Source.VERTEX,
@@ -83,16 +71,5 @@ public class SourceTest {
             return;
         }
         Assert.fail("person and knows have different opt types, should have thrown errors");
-    }
-
-    public static final GraphBuilder mockGraphBuilder() {
-        GraphOptCluster cluster = GraphOptCluster.create(rexBuilder);
-        return GraphBuilder.create(null, cluster, new GraphOptSchema(cluster, schema));
-    }
-
-    private static GraphSchema mockGraphSchema() {
-        String inputJson = FileUtils.readJsonFromResource("schema/modern.json");
-        GraphSchema graphSchema = DefaultGraphSchema.buildSchemaFromJson(inputJson);
-        return graphSchema;
     }
 }

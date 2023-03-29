@@ -1,49 +1,40 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: {{ include "graphscope-store.frontend.fullname" . }}-test-grpc-service
-  annotations:
-    "helm.sh/hook": test
-spec:
-  {{- if .Values.tolerations }}
-  tolerations: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.tolerations "context" $) | nindent 4 }}
-  {{- end }}
-  containers:
-    - name: python
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:python-3.9.9-alpine3.14
-      env:
-        - name: frontend
-          value: {{ include "graphscope-store.frontend.fullname" . }}.{{ .Release.Namespace }}
-      command:
-        - /bin/sh
-        - -c
-        - while sleep 3 && ! python3 -c 'import socket; import os; socket.create_connection((os.getenv("frontend"), 55556))';
-            do echo -n .;
-          done
-
-  restartPolicy: Never
-
----
-apiVersion: v1
-kind: Pod
-metadata:
   name: {{ include "graphscope-store.frontend.fullname" . }}-test-gremlin-service
+  labels:
+    {{- if .Values.podLabels }}
+    {{- include "common.tplvalues.render" (dict "value" .Values.podLabels "context" $) | nindent 4 }}
+    {{- end }}
   annotations:
     "helm.sh/hook": test
+    {{- if .Values.podAnnotations }}
+    {{- include "common.tplvalues.render" (dict "value" .Values.podAnnotations "context" $) | nindent 4 }}
+    {{- end }}
 spec:
   {{- if .Values.tolerations }}
-  tolerations: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.tolerations "context" $) | nindent 4 }}
+  tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.tolerations "context" $) | nindent 4 }}
+  {{- end }}
+  {{- if .Values.schedulerName }}
+  schedulerName: {{ .Values.schedulerName | quote }}
+  {{- end }}
+  {{- if .Values.dnsPolicy }}
+  dnsPolicy: {{ .Values.dnsPolicy | quote }}
+  {{- end }}
+  {{- if .Values.dnsConfig }}
+  dnsConfig: {{- include "common.tplvalues.render" (dict "value" .Values.dnsConfig "context" $) | nindent 8 }}
   {{- end }}
   containers:
     - name: python
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-store:python-3.9.9-alpine3.14
+      image: {{ include "graphscope-store.test.image" . }}
       env:
         - name: frontend
-          value: {{ include "graphscope-store.frontend.fullname" . }}.{{ .Release.Namespace }}
+          value: {{ include "graphscope-store.frontend.fullname" . }}
       command:
         - /bin/sh
         - -c
-        - while sleep 3 && ! python3 -c 'import socket; import os; socket.create_connection((os.getenv("frontend"), 12312))';
+        - while sleep 3 && ! python3 -c 'import os;from gremlin_python.driver.client import Client;ip=os.getenv("frontend");graph_url = f"ws://{ip}:12312/gremlin"; username, password = "{{ .Values.auth.username }}", "{{ .Values.auth.password }}"; client = Client(graph_url, "g", username=username, password=password); ret = client.submit("g.V().limit(1)").all().result(); client.close();';
             do echo -n .;
           done
   restartPolicy: Never
+

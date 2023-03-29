@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: {{ include "graphscope-store.frontend.fullname" . }}
   namespace: {{ .Release.Namespace }}
-  labels: {{- include "graphscope-store.labels" . | nindent 4 }}
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
     app.kubernetes.io/component: frontend
     {{- if .Values.commonLabels }}
     {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
@@ -14,15 +14,17 @@ metadata:
     {{- end }}
 spec:
   type: {{ .Values.frontend.service.type }}
-  {{- if and (eq .Values.frontend.service.type "ClusterIP") .Values.frontend.service.clusterIP }}
+  {{- if and .Values.frontend.service.clusterIP (eq .Values.frontend.service.type "ClusterIP") }}
   clusterIP: {{ .Values.frontend.service.clusterIP }}
   {{- end }}
-  {{- if and .Values.frontend.service.loadBalancerIP (eq .Values.frontend.service.type "LoadBalancer") }}
-  loadBalancerIP: {{ .Values.frontend.service.loadBalancerIP }}
+  {{- if or (eq .Values.frontend.service.type "LoadBalancer") (eq .Values.frontend.service.type "NodePort") }}
   externalTrafficPolicy: {{ .Values.frontend.service.externalTrafficPolicy | quote }}
   {{- end }}
-  {{- if and (eq .Values.frontend.service.type "LoadBalancer") .Values.frontend.service.loadBalancerSourceRanges }}
-  loadBalancerSourceRanges: {{- toYaml .Values.frontend.service.loadBalancerSourceRanges | nindent 4 }}
+  {{- if and (eq .Values.frontend.service.type "LoadBalancer") (not (empty .Values.frontend.service.loadBalancerSourceRanges)) }}
+  loadBalancerSourceRanges: {{ .Values.frontend.service.loadBalancerSourceRanges }}
+  {{- end }}
+  {{- if and (eq .Values.frontend.service.type "LoadBalancer") (not (empty .Values.frontend.service.loadBalancerIP)) }}
+  loadBalancerIP: {{ .Values.frontend.service.loadBalancerIP }}
   {{- end }}
   ports:
     - name: grpc
@@ -45,5 +47,5 @@ spec:
       nodePort: null
       {{- end }}
       {{- end }}
-  selector: {{ include "graphscope-store.selectorLabels" . | nindent 4 }}
+  selector: {{- include "common.labels.matchLabels" . | nindent 4 }}
     app.kubernetes.io/component: frontend

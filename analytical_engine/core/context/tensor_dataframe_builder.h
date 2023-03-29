@@ -55,30 +55,32 @@ class MPIGlobalTensorBuilder : public vineyard::GlobalTensorBuilder,
 
   void AddChunks(std::vector<vineyard::ObjectID> const& chunk_ids) {
     for (auto& chunk_id : chunk_ids) {
-      this->local_chunk_ids_.emplace_back(chunk_id);
+      this->AddChunk(chunk_id);
     }
   }
 
-  std::shared_ptr<vineyard::Object> _Seal(vineyard::Client& client) override {
-    std::shared_ptr<vineyard::GlobalTensor> tensor;
+  vineyard::Status _Seal(vineyard::Client& client,
+                         std::shared_ptr<vineyard::Object>& object) override {
     vineyard::ObjectID id = vineyard::InvalidObjectID();
+    this->SetGlobal();
     if (comm_spec_.worker_id() == 0) {
-      tensor = std::dynamic_pointer_cast<vineyard::GlobalTensor>(
-          vineyard::GlobalTensorBuilder::_Seal(client));
-      id = tensor->id();
+      RETURN_ON_ERROR(vineyard::GlobalTensorBuilder::_Seal(client, object));
+      id = object->id();
+      RETURN_ON_ERROR(client_.Persist(id));
     } else {
-      VINEYARD_CHECK_OK(this->Build(client));
+      RETURN_ON_ERROR(this->Build(client));
     }
     SyncGlobalObjectID(comm_spec_, id);  // this sync can be seen as a barrier
     if (comm_spec_.worker_id() != 0) {
-      // FIXME: the aim of `Construct` is to fillup the ObjectSet, needs better
+      // FIXME: the aim of `Construct` is to fill up the ObjectSet, needs better
       // design.
-      tensor = std::make_shared<vineyard::GlobalTensor>();
+      auto tensor = std::make_shared<vineyard::GlobalTensor>();
       vineyard::ObjectMeta meta;
-      VINEYARD_CHECK_OK(client.GetMetaData(id, meta, true));
+      RETURN_ON_ERROR(client.GetMetaData(id, meta, true));
       tensor->Construct(meta);
+      object = std::static_pointer_cast<vineyard::Object>(tensor);
     }
-    return tensor;
+    return vineyard::Status::OK();
   }
 
   vineyard::Status Build(vineyard::Client& client) override {
@@ -114,28 +116,30 @@ class MPIGlobalDataFrameBuilder : public vineyard::GlobalDataFrameBuilder,
 
   void AddChunks(std::vector<vineyard::ObjectID> const& chunk_ids) {
     for (auto& chunk_id : chunk_ids) {
-      this->local_chunk_ids_.emplace_back(chunk_id);
+      this->AddChunk(chunk_id);
     }
   }
 
-  std::shared_ptr<vineyard::Object> _Seal(vineyard::Client& client) override {
-    std::shared_ptr<vineyard::GlobalDataFrame> df;
+  vineyard::Status _Seal(vineyard::Client& client,
+                         std::shared_ptr<vineyard::Object>& object) override {
     vineyard::ObjectID id = vineyard::InvalidObjectID();
+    this->SetGlobal();
     if (comm_spec_.worker_id() == 0) {
-      df = std::dynamic_pointer_cast<vineyard::GlobalDataFrame>(
-          vineyard::GlobalDataFrameBuilder::_Seal(client));
-      id = df->id();
+      RETURN_ON_ERROR(vineyard::GlobalDataFrameBuilder::_Seal(client, object));
+      id = object->id();
+      RETURN_ON_ERROR(client_.Persist(id));
     } else {
-      VINEYARD_CHECK_OK(this->Build(client));
+      RETURN_ON_ERROR(this->Build(client));
     }
     SyncGlobalObjectID(comm_spec_, id);  // this sync can be seen as a barrier
     if (comm_spec_.worker_id() != 0) {
-      df = std::make_shared<vineyard::GlobalDataFrame>();
+      auto df = std::make_shared<vineyard::GlobalDataFrame>();
       vineyard::ObjectMeta meta;
-      VINEYARD_CHECK_OK(client.GetMetaData(id, meta, true));
+      RETURN_ON_ERROR(client.GetMetaData(id, meta, true));
       df->Construct(meta);
+      object = std::static_pointer_cast<vineyard::Object>(df);
     }
-    return df;
+    return vineyard::Status::OK();
   }
 
   vineyard::Status Build(vineyard::Client& client) override {

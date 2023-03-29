@@ -563,6 +563,7 @@ fn build_logical_plan(
         alias: Some((source_vertex_id as i32).into()),
         params: Some(query_param),
         idx_predicate: None,
+        meta_data: None,
     };
     let mut pre_node = pb::logical_plan::Node { opr: Some(source_opr.into()), children: vec![] };
     for exact_extend_step in exact_extend_steps.into_iter().rev() {
@@ -680,7 +681,8 @@ fn build_logical_plan(
             let mapping = pb::project::ExprAlias { expr, alias: Some(tag_id.into()) };
             mappings.push(mapping);
         }
-        let project = pb::Project { mappings, is_append: false }.into();
+        // TODO: the meta_data of project is identical with the meta_data of "Pattern"
+        let project = pb::Project { mappings, is_append: false, meta_data: vec![] }.into();
         append_opr(&mut match_plan, &mut pre_node, project, &mut child_offset);
     }
     // and append the final op
@@ -807,10 +809,15 @@ impl PatternWeightTrait<f64> for Pattern {
 }
 
 fn has_expr_eq(expr: &common_pb::Expression) -> bool {
-    let equal_opr = common_pb::ExprOpr {
-        item: Some(common_pb::expr_opr::Item::Logical(0)) // eq
-    };
-    expr.operators.contains(&equal_opr)
+    for opr in &expr.operators {
+        if opr
+            .item
+            .eq(&Some(common_pb::expr_opr::Item::Logical(common_pb::Logical::Eq as i32)))
+        {
+            return true;
+        }
+    }
+    false
 }
 
 /// check if the pattern is still connected by removing `vertex_to_remove`

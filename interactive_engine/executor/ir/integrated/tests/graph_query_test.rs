@@ -37,6 +37,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![PERSON_LABEL.into()], vec!["id".into()], None)),
             idx_predicate: None,
+            meta_data: None,
         };
         let select_opr = pb::Select { predicate: Some(str_to_expr_pb("@.id == 1".to_string()).unwrap()) };
         let expand_opr = pb::EdgeExpand {
@@ -45,6 +46,7 @@ mod test {
             params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: None,
+            meta_data: None,
         };
 
         let mut job_builder = JobBuilder::default();
@@ -98,6 +100,7 @@ mod test {
             alias: None,
             params: Some(query_params_all_columns(vec![PERSON_LABEL.into()], vec![], None)),
             idx_predicate: None,
+            meta_data: None,
         };
 
         let project_opr = pb::Project {
@@ -106,6 +109,7 @@ mod test {
                 alias: None,
             }],
             is_append: true,
+            meta_data: vec![],
         };
 
         let mut job_builder = JobBuilder::default();
@@ -122,6 +126,7 @@ mod test {
             alias: Some(TAG_A.into()),
             params: Some(query_params_all_columns(vec![], vec![], None)),
             idx_predicate: None,
+            meta_data: None,
         };
 
         let expand_opr = pb::EdgeExpand {
@@ -130,6 +135,7 @@ mod test {
             params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
             expand_opt: 0,
             alias: None,
+            meta_data: None,
         };
 
         let project_opr = pb::Project {
@@ -138,6 +144,7 @@ mod test {
                 alias: None,
             }],
             is_append: true,
+            meta_data: vec![],
         };
 
         let mut job_builder = JobBuilder::default();

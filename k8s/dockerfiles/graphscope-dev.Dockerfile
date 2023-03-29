@@ -37,21 +37,23 @@ RUN chmod +x /opt/graphscope/bin/* /opt/openmpi/bin/*
 RUN useradd -m graphscope -u 1001 \
     && echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
-RUN chown -R graphscope:graphscope /opt/graphscope /opt/openmpi
 RUN yum install -y sudo vim && \
     yum clean all -y --enablerepo='*' && \
     rm -rf /var/cache/yum
-RUN mkdir /opt/vineyard && chown -R graphscope:graphscope /opt/vineyard
+RUN mkdir -p /opt/graphscope /opt/vineyard && chown -R graphscope:graphscope /opt/graphscope /opt/vineyard
 USER graphscope
 WORKDIR /home/graphscope
 
 COPY ./gs ./gs
 ARG VINEYARD_VERSION=main
-RUN ./gs install-deps dev --v6d-version=$VINEYARD_VERSION -j 2 && \
+RUN ./gs install-deps dev --v6d-version=$VINEYARD_VERSION -j $(nproc) && \
     sudo yum clean all -y && \
     sudo rm -fr /var/cache/yum
 
 SHELL [ "/usr/bin/scl", "enable", "rh-python38" ]
 
-RUN python3 -m pip --no-cache install pyyaml --user
-ENTRYPOINT ["/bin/bash", "-c", "source scl_source enable devtoolset-8 rh-python38 && $0 $@"]
+RUN python3 -m pip --no-cache install pyyaml ipython --user
+# Uncomment this line will results in a weird error when using the image together with commands, like
+# docker run --rm graphscope/graphscope-dev:latest bash -c 'echo xxx && ls -la'
+# The output of `ls -la` would not be shown.
+# ENTRYPOINT ["/bin/bash", "-c", "source scl_source enable devtoolset-8 rh-python38 && $0 $@"]

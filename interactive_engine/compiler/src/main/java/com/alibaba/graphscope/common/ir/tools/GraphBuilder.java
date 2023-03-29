@@ -18,28 +18,43 @@ package com.alibaba.graphscope.common.ir.tools;
 
 import static java.util.Objects.requireNonNull;
 
+import com.alibaba.graphscope.common.ir.rel.*;
 import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
+import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
+import com.alibaba.graphscope.common.ir.rel.type.group.GraphGroupKeys;
+import com.alibaba.graphscope.common.ir.rel.type.order.GraphFieldCollation;
+import com.alibaba.graphscope.common.ir.rel.type.order.GraphRelCollations;
 import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
+import com.alibaba.graphscope.common.ir.rex.RexVariableAliasChecker;
+import com.alibaba.graphscope.common.ir.rex.RexVariableConverter;
 import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
 import com.alibaba.graphscope.common.ir.tools.config.*;
+import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
+import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
-import com.alibaba.graphscope.common.ir.type.NameOrId;
+import com.alibaba.graphscope.gremlin.Utils;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 import org.apache.calcite.plan.*;
 import org.apache.calcite.rel.*;
-import org.apache.calcite.rel.hint.RelHint;
+import org.apache.calcite.rel.core.Filter;
+import org.apache.calcite.rel.core.Project;
+import org.apache.calcite.rel.core.Sort;
 import org.apache.calcite.rel.type.*;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.type.ArraySqlType;
+import org.apache.calcite.sql.type.BasicSqlType;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.util.Litmus;
 import org.apache.commons.lang3.ObjectUtils;
@@ -90,12 +105,13 @@ public class GraphBuilder extends RelBuilder {
      */
     public GraphBuilder source(SourceConfig config) {
         String aliasName = AliasInference.inferDefault(config.getAlias(), new HashSet<>());
-        int aliasId = generateAliasId(aliasName, null);
         RelNode source =
                 GraphLogicalSource.create(
                         (GraphOptCluster) cluster,
-                        getHints(config.getOpt().name(), aliasName, aliasId),
-                        getTableConfig(config.getLabels(), config.getOpt()));
+                        ImmutableList.of(),
+                        config.getOpt(),
+                        getTableConfig(config.getLabels(), config.getOpt()),
+                        aliasName);
         push(source);
         return this;
     }
@@ -108,15 +124,14 @@ public class GraphBuilder extends RelBuilder {
      */
     public GraphBuilder expand(ExpandConfig config) {
         RelNode input = requireNonNull(peek(), "frame stack is empty");
-        String aliasName =
-                AliasInference.inferDefault(config.getAlias(), uniqueNameList(input, true));
-        int aliasId = generateAliasId(aliasName, input);
         RelNode expand =
                 GraphLogicalExpand.create(
                         (GraphOptCluster) cluster,
-                        getHints(config.getOpt().name(), aliasName, aliasId),
+                        ImmutableList.of(),
                         input,
-                        getTableConfig(config.getLabels(), GraphOpt.Source.EDGE));
+                        config.getOpt(),
+                        getTableConfig(config.getLabels(), GraphOpt.Source.EDGE),
+                        config.getAlias());
         replaceTop(expand);
         return this;
     }
@@ -129,15 +144,14 @@ public class GraphBuilder extends RelBuilder {
      */
     public GraphBuilder getV(GetVConfig config) {
         RelNode input = requireNonNull(peek(), "frame stack is empty");
-        String aliasName =
-                AliasInference.inferDefault(config.getAlias(), uniqueNameList(input, true));
-        int aliasId = generateAliasId(aliasName, input);
         RelNode getV =
                 GraphLogicalGetV.create(
                         (GraphOptCluster) cluster,
-                        getHints(config.getOpt().name(), aliasName, aliasId),
+                        ImmutableList.of(),
                         input,
-                        getTableConfig(config.getLabels(), GraphOpt.Source.VERTEX));
+                        config.getOpt(),
+                        getTableConfig(config.getLabels(), GraphOpt.Source.VERTEX),
+                        config.getAlias());
         replaceTop(getV);
         return this;
     }
@@ -145,30 +159,35 @@ public class GraphBuilder extends RelBuilder {
     /**
      * build an algebra structure of {@code GraphLogicalPathExpand}
      *
-     * @param config
+     * @param pxdConfig
      * @return
      */
-    public GraphBuilder pathExpand(PathExpandConfig config) {
+    public GraphBuilder pathExpand(PathExpandConfig pxdConfig) {
         RelNode input = requireNonNull(peek(), "frame stack is empty");
-        String aliasName =
-                AliasInference.inferDefault(config.getAlias(), uniqueNameList(input, true));
-        RexNode offsetNode = config.getOffset() <= 0 ? null : literal(config.getOffset());
-        RexNode fetchNode = config.getFetch() < 0 ? null : literal(config.getFetch());
-        RelNode expand = Objects.requireNonNull(config.getExpand());
-        RelNode getV = Objects.requireNonNull(config.getGetV());
+
+        RexNode offsetNode = pxdConfig.getOffset() <= 0 ? null : literal(pxdConfig.getOffset());
+        RexNode fetchNode = pxdConfig.getFetch() < 0 ? null : literal(pxdConfig.getFetch());
+
+        Config config = Utils.getFieldValue(RelBuilder.class, this, "config");
+        // fetch == 0 -> return empty value
+        if ((fetchNode != null && RexLiteral.intValue(fetchNode) == 0) && config.simplifyLimit()) {
+            return (GraphBuilder) empty();
+        }
+
+        RelNode expand = Objects.requireNonNull(pxdConfig.getExpand());
+        RelNode getV = Objects.requireNonNull(pxdConfig.getGetV());
         RelNode pathExpand =
                 GraphLogicalPathExpand.create(
                         (GraphOptCluster) cluster,
-                        getHints(
-                                config.getPathOpt().name(),
-                                config.getResultOpt().name(),
-                                aliasName,
-                                generateAliasId(aliasName, input)),
+                        ImmutableList.of(),
                         input,
                         expand,
                         getV,
                         offsetNode,
-                        fetchNode);
+                        fetchNode,
+                        pxdConfig.getResultOpt(),
+                        pxdConfig.getPathOpt(),
+                        pxdConfig.getAlias());
         replaceTop(pathExpand);
         return this;
     }
@@ -217,65 +236,6 @@ public class GraphBuilder extends RelBuilder {
                         .map(k -> ImmutableList.of(k.getLabel()))
                         .collect(Collectors.toList());
         }
-    }
-
-    public List<RelHint> getHints(String optName, String aliasName, int aliasId) {
-        RelHint optHint = RelHint.builder("opt").hintOption(optName).build();
-        RelHint aliasHint =
-                RelHint.builder("alias")
-                        .hintOption("name", Objects.requireNonNull(aliasName))
-                        .hintOption("id", String.valueOf(aliasId))
-                        .build();
-        return ImmutableList.of(optHint, aliasHint);
-    }
-
-    private List<RelHint> getHints(
-            String pathOptName, String resultOptName, String aliasName, int aliasId) {
-        RelHint optHint =
-                RelHint.builder("opt")
-                        .hintOption("path", pathOptName)
-                        .hintOption("result", resultOptName)
-                        .build();
-        RelHint aliasHint =
-                RelHint.builder("alias")
-                        .hintOption("name", aliasName)
-                        .hintOption("id", String.valueOf(aliasId))
-                        .build();
-        return ImmutableList.of(optHint, aliasHint);
-    }
-
-    /**
-     * get all aliases stored by previous operators, to avoid duplicate alias creation
-     *
-     * @param input    the input operator
-     * @param isAppend if the current {@code RelNode} need keep the history
-     * @return
-     */
-    public Set<String> uniqueNameList(@Nullable RelNode input, boolean isAppend) {
-        Set<String> uniqueNames = new HashSet<>();
-        if (!isAppend || input == null) return uniqueNames;
-        List<RelNode> inputsQueue = Lists.newArrayList(input);
-        while (!inputsQueue.isEmpty()) {
-            RelNode cur = inputsQueue.remove(0);
-            for (RelDataTypeField field : cur.getRowType().getFieldList()) {
-                uniqueNames.add(field.getName());
-            }
-            if (removeHistory(cur)) {
-                break;
-            }
-            inputsQueue.addAll(cur.getInputs());
-        }
-        return uniqueNames;
-    }
-
-    /**
-     * current node will remove history and generate new columns
-     *
-     * @param node
-     * @return
-     */
-    private boolean removeHistory(RelNode node) {
-        return false;
     }
 
     /**
@@ -357,14 +317,50 @@ public class GraphBuilder extends RelBuilder {
     public RexGraphVariable variable(@Nullable String alias, String property) {
         alias = (alias == null) ? AliasInference.DEFAULT_NAME : alias;
         Objects.requireNonNull(property);
+        String varName = AliasInference.SIMPLE_NAME(alias) + AliasInference.DELIMITER + property;
         RelDataTypeField aliasField = getAliasField(alias);
+        if (property.equals(GraphProperty.LEN_KEY)) {
+            if (!(aliasField.getType() instanceof ArraySqlType)) {
+                throw new ClassCastException(
+                        "cannot get property='len' from type class ["
+                                + aliasField.getType().getClass()
+                                + "], should be ["
+                                + ArraySqlType.class
+                                + "]");
+            } else {
+                return RexGraphVariable.of(
+                        aliasField.getIndex(),
+                        new GraphProperty(GraphProperty.Opt.LEN),
+                        varName,
+                        getTypeFactory().createSqlType(SqlTypeName.INTEGER));
+            }
+        }
         if (!(aliasField.getType() instanceof GraphSchemaType)) {
             throw new ClassCastException(
-                    "cannot get property from type class ["
+                    "cannot get property=['id', 'label', 'all', 'key'] from type class ["
                             + aliasField.getType().getClass()
                             + "], should be ["
                             + GraphOptSchema.class
                             + "]");
+        }
+        if (property.equals(GraphProperty.LABEL_KEY)) {
+            return RexGraphVariable.of(
+                    aliasField.getIndex(),
+                    new GraphProperty(GraphProperty.Opt.LABEL),
+                    varName,
+                    getTypeFactory().createSqlType(SqlTypeName.CHAR));
+        } else if (property.equals(GraphProperty.ID_KEY)) {
+            return RexGraphVariable.of(
+                    aliasField.getIndex(),
+                    new GraphProperty(GraphProperty.Opt.ID),
+                    varName,
+                    getTypeFactory().createSqlType(SqlTypeName.BIGINT));
+        } else if (property.equals(GraphProperty.ALL_KEY)) {
+            return RexGraphVariable.of(
+                    aliasField.getIndex(),
+                    new GraphProperty(GraphProperty.Opt.ALL),
+                    varName,
+                    getTypeFactory().createSqlType(SqlTypeName.ANY));
         }
         GraphSchemaType graphType = (GraphSchemaType) aliasField.getType();
         List<String> properties = new ArrayList<>();
@@ -377,9 +373,9 @@ public class GraphBuilder extends RelBuilder {
                 return RexGraphVariable.of(
                         aliasField.getIndex(),
                         isColumnId
-                                ? new NameOrId(pField.getIndex())
-                                : new NameOrId(pField.getName()),
-                        AliasInference.SIMPLE_NAME(alias) + AliasInference.DELIMITER + property,
+                                ? new GraphProperty(new GraphNameOrId(pField.getIndex()))
+                                : new GraphProperty(new GraphNameOrId(pField.getName())),
+                        varName,
                         pField.getType());
             }
             properties.add(pField.getName());
@@ -405,17 +401,17 @@ public class GraphBuilder extends RelBuilder {
             List<RelNode> inputQueue = Lists.newArrayList(peek(inputOrdinal));
             while (!inputQueue.isEmpty()) {
                 RelNode cur = inputQueue.remove(0);
-                RelRecordType rowType = (RelRecordType) cur.getRowType();
-                if (alias == AliasInference.DEFAULT_NAME && rowType.getFieldList().size() == 1) {
-                    return rowType.getFieldList().get(0);
+                List<RelDataTypeField> fields = cur.getRowType().getFieldList();
+                if (alias == AliasInference.DEFAULT_NAME && fields.size() == 1) {
+                    return fields.get(0);
                 }
-                for (RelDataTypeField field : rowType.getFieldList()) {
+                for (RelDataTypeField field : fields) {
                     if (field.getName().equals(alias)) {
                         return field;
                     }
                     aliases.add(AliasInference.SIMPLE_NAME(field.getName()));
                 }
-                if (removeHistory(cur)) {
+                if (AliasInference.removeAlias(cur)) {
                     break;
                 }
                 inputQueue.addAll(cur.getInputs());
@@ -438,7 +434,15 @@ public class GraphBuilder extends RelBuilder {
      */
     @Override
     public RexNode call(SqlOperator operator, RexNode... operands) {
-        List<RexNode> operandList = ImmutableList.copyOf(operands);
+        return call_(operator, ImmutableList.copyOf(operands));
+    }
+
+    @Override
+    public RexNode call(SqlOperator operator, Iterable<? extends RexNode> operands) {
+        return call_(operator, ImmutableList.copyOf(operands));
+    }
+
+    private RexNode call_(SqlOperator operator, List<RexNode> operandList) {
         if (!isCurrentSupported(operator)) {
             throw new UnsupportedOperationException(
                     "operator " + operator.getKind().name() + " not supported");
@@ -473,7 +477,59 @@ public class GraphBuilder extends RelBuilder {
 
     @Override
     public GraphBuilder filter(Iterable<? extends RexNode> conditions) {
-        return this;
+        ObjectUtils.requireNonEmpty(conditions);
+        // make sure all conditions have the Boolean return type
+        for (RexNode condition : conditions) {
+            RelDataType type = condition.getType();
+            if (!(type instanceof BasicSqlType) || type.getSqlTypeName() != SqlTypeName.BOOLEAN) {
+                throw new IllegalArgumentException(
+                        "filter condition "
+                                + condition
+                                + " should return Boolean value, but is "
+                                + type);
+            }
+        }
+        GraphBuilder builder = (GraphBuilder) super.filter(ImmutableSet.of(), conditions);
+        // fuse filter with the previous table scan if meets the conditions
+        Filter filter;
+        AbstractBindableTableScan tableScan;
+        if ((filter = topFilter()) != null && (tableScan = inputTableScan(filter)) != null) {
+            RexNode condition = filter.getCondition();
+            RexVariableAliasChecker checker =
+                    new RexVariableAliasChecker(
+                            true,
+                            ImmutableList.of(tableScan.getAliasId(), AliasInference.DEFAULT_ID));
+            // fuze all conditions into table scan
+            if (condition.accept(checker)) {
+                // add the condition in table scan
+                tableScan.setFilters(ImmutableList.of(condition));
+                // pop the filter from the inner stack
+                replaceTop(tableScan);
+            }
+        }
+        return builder;
+    }
+
+    // return the top node if its type is Filter, otherwise null
+    private Filter topFilter() {
+        if (this.size() > 0 && this.peek() instanceof Filter) {
+            return (Filter) this.peek();
+        } else {
+            return null;
+        }
+    }
+
+    // return the input node of the Filter if its type is TableScan, otherwise null
+    private AbstractBindableTableScan inputTableScan(RelNode filter) {
+        Objects.requireNonNull(filter);
+        List<RelNode> inputs = filter.getInputs();
+        if (inputs != null
+                && inputs.size() == 1
+                && inputs.get(0) instanceof AbstractBindableTableScan) {
+            return (AbstractBindableTableScan) inputs.get(0);
+        } else {
+            return null;
+        }
     }
 
     @Override
@@ -486,7 +542,61 @@ public class GraphBuilder extends RelBuilder {
             Iterable<? extends RexNode> nodes,
             Iterable<? extends @Nullable String> aliases,
             boolean isAppend) {
+        RelNode input = requireNonNull(peek(), "frame stack is empty");
+        Config config = Utils.getFieldValue(RelBuilder.class, this, "config");
+        RexSimplify simplifier = Utils.getFieldValue(RelBuilder.class, this, "simplifier");
+
+        List<RexNode> nodeList = Lists.newArrayList(nodes);
+        List<@Nullable String> fieldNameList = Lists.newArrayList(aliases);
+
+        // Simplify expressions.
+        if (config.simplify()) {
+            for (int i = 0; i < nodeList.size(); i++) {
+                nodeList.set(i, simplifier.simplifyPreservingType(nodeList.get(i)));
+            }
+        }
+        fieldNameList =
+                AliasInference.inferProject(
+                        nodeList,
+                        fieldNameList,
+                        AliasInference.getUniqueAliasList(input, isAppend));
+        RelNode project =
+                GraphLogicalProject.create(
+                        (GraphOptCluster) getCluster(),
+                        ImmutableList.of(),
+                        input,
+                        nodeList,
+                        deriveType(nodeList, fieldNameList, input, isAppend),
+                        isAppend);
+        replaceTop(project);
         return this;
+    }
+
+    /**
+     * derive {@code RelDataType} of project operators
+     *
+     * @param nodeList
+     * @param aliasList
+     * @param input
+     * @param isAppend
+     * @return
+     */
+    private RelDataType deriveType(
+            List<RexNode> nodeList,
+            List<String> aliasList,
+            @Nullable RelNode input,
+            boolean isAppend) {
+        assert nodeList.size() == aliasList.size();
+        List<RelDataTypeField> fields = new ArrayList<>();
+        for (int i = 0; i < aliasList.size(); ++i) {
+            String aliasName = aliasList.get(i);
+            fields.add(
+                    new RelDataTypeFieldImpl(
+                            aliasName,
+                            generateAliasId(aliasName, input),
+                            nodeList.get(i).getType()));
+        }
+        return new RelRecordType(StructKind.FULLY_QUALIFIED, fields);
     }
 
     // build group keys
@@ -516,7 +626,7 @@ public class GraphBuilder extends RelBuilder {
      * @return
      */
     private GroupKey groupKey_(List<RexNode> variables, List<@Nullable String> aliases) {
-        return null;
+        return new GraphGroupKeys(variables, aliases);
     }
 
     // build aggregate functions
@@ -528,7 +638,38 @@ public class GraphBuilder extends RelBuilder {
      * @return
      */
     public AggCall collect(boolean distinct, @Nullable String alias, RexNode... operands) {
-        return null;
+        return aggregateCall(
+                GraphStdOperatorTable.COLLECT,
+                distinct,
+                false,
+                false,
+                null,
+                null,
+                ImmutableList.of(),
+                alias,
+                ImmutableList.copyOf(operands));
+    }
+
+    public AggCall collect(
+            boolean distinct, @Nullable String alias, Iterable<? extends RexNode> operands) {
+        return aggregateCall(
+                GraphStdOperatorTable.COLLECT,
+                distinct,
+                false,
+                false,
+                null,
+                null,
+                ImmutableList.of(),
+                alias,
+                ImmutableList.copyOf(operands));
+    }
+
+    public AggCall collect(RexNode... operands) {
+        return collect(false, null, operands);
+    }
+
+    public AggCall collect(Iterable<? extends RexNode> operands) {
+        return collect(false, null, operands);
     }
 
     @Override
@@ -542,11 +683,73 @@ public class GraphBuilder extends RelBuilder {
             ImmutableList<RexNode> orderKeys,
             @Nullable String alias,
             ImmutableList<RexNode> operands) {
-        return null;
+        // if operands of the aggregate call is empty, set a variable with (alias = null) by default
+        return new GraphAggCall(
+                        getCluster(),
+                        aggFunction,
+                        ObjectUtils.isNotEmpty(operands)
+                                ? operands
+                                : ImmutableList.of(this.variable((String) null)))
+                .as(alias)
+                .distinct(distinct);
     }
 
     @Override
-    public GraphBuilder aggregate(GroupKey groupKey, AggCall... aggCalls) {
+    public GraphBuilder aggregate(GroupKey groupKey, Iterable<AggCall> aggCalls) {
+        Objects.requireNonNull(groupKey);
+        Objects.requireNonNull(aggCalls);
+
+        RelNode input = requireNonNull(peek(), "frame stack is empty");
+
+        Registrar registrar = new Registrar(this, input, true);
+        List<RexNode> registerKeys =
+                registrar.registerExpressions(((GraphGroupKeys) groupKey).getVariables());
+
+        List<List<RexNode>> registerCallsList = new ArrayList<>();
+        for (AggCall call : aggCalls) {
+            registerCallsList.add(
+                    registrar.registerExpressions(((GraphAggCall) call).getOperands()));
+        }
+
+        List<GraphAggCall> aggCallList = new ArrayList<>();
+        // need to project in advance
+        if (!registrar.getExtraNodes().isEmpty()) {
+            project(registrar.getExtraNodes(), registrar.getExtraAliases(), registrar.isAppend());
+            RexVariableConverter converter = new RexVariableConverter(true, this);
+            groupKey =
+                    new GraphGroupKeys(
+                            registerKeys.stream()
+                                    .map(k -> k.accept(converter))
+                                    .collect(Collectors.toList()),
+                            ((GraphGroupKeys) groupKey).getAliases());
+            int i = 0;
+            for (AggCall call : aggCalls) {
+                GraphAggCall call1 = (GraphAggCall) call;
+                aggCallList.add(
+                        new GraphAggCall(
+                                        call1.getCluster(),
+                                        call1.getAggFunction(),
+                                        registerCallsList.get(i).stream()
+                                                .map(k -> k.accept(converter))
+                                                .collect(Collectors.toList()))
+                                .as(call1.getAlias())
+                                .distinct(call1.isDistinct()));
+                ++i;
+            }
+            input = requireNonNull(peek(), "frame stack is empty");
+        } else {
+            for (AggCall aggCall : aggCalls) {
+                aggCallList.add((GraphAggCall) aggCall);
+            }
+        }
+        RelNode aggregate =
+                GraphLogicalAggregate.create(
+                        (GraphOptCluster) this.getCluster(),
+                        ImmutableList.of(),
+                        input,
+                        (GraphGroupKeys) groupKey,
+                        aggCallList);
+        replaceTop(aggregate);
         return this;
     }
 
@@ -559,11 +762,137 @@ public class GraphBuilder extends RelBuilder {
      * @return
      */
     @Override
-    public RelBuilder sortLimit(
+    public GraphBuilder sortLimit(
             @Nullable RexNode offsetNode,
             @Nullable RexNode fetchNode,
             Iterable<? extends RexNode> nodes) {
+        if (offsetNode != null && !(offsetNode instanceof RexLiteral)) {
+            throw new IllegalArgumentException("OFFSET node must be RexLiteral");
+        }
+        if (offsetNode != null && !(offsetNode instanceof RexLiteral)) {
+            throw new IllegalArgumentException("FETCH node must be RexLiteral");
+        }
+
+        RelNode input = requireNonNull(peek(), "frame stack is empty");
+
+        List<RelDataTypeField> originalFields = input.getRowType().getFieldList();
+
+        Registrar registrar = new Registrar(this, input, true);
+        List<RexNode> registerNodes = registrar.registerExpressions(ImmutableList.copyOf(nodes));
+
+        // expressions need to be projected in advance
+        if (!registrar.getExtraNodes().isEmpty()) {
+            project(registrar.getExtraNodes(), registrar.getExtraAliases(), registrar.isAppend());
+            RexVariableConverter converter = new RexVariableConverter(true, this);
+            registerNodes =
+                    registerNodes.stream()
+                            .map(k -> k.accept(converter))
+                            .collect(Collectors.toList());
+            input = requireNonNull(peek(), "frame stack is empty");
+        }
+
+        List<RelFieldCollation> fieldCollations = fieldCollations(registerNodes);
+        Config config = Utils.getFieldValue(RelBuilder.class, this, "config");
+
+        // limit 0 -> return empty value
+        if ((fetchNode != null && RexLiteral.intValue(fetchNode) == 0) && config.simplifyLimit()) {
+            return (GraphBuilder) empty();
+        }
+
+        // output all results without any order -> skip
+        if (offsetNode == null && fetchNode == null && fieldCollations.isEmpty()) {
+            return this; // sort is trivial
+        }
+        // sortLimit is actually limit if collations are empty
+        if (fieldCollations.isEmpty()) {
+            // fuse limit with the previous sort operator
+            // order + limit -> topK
+            if (input instanceof Sort) {
+                Sort sort2 = (Sort) input;
+                // output all results without any limitations
+                if (sort2.offset == null && sort2.fetch == null) {
+                    RelNode sort =
+                            GraphLogicalSort.create(
+                                    sort2.getInput(), sort2.collation, offsetNode, fetchNode);
+                    replaceTop(sort);
+                    return this;
+                }
+            }
+            // order + project + limit -> topK + project
+            if (input instanceof Project) {
+                Project project = (Project) input;
+                if (project.getInput() instanceof Sort) {
+                    Sort sort2 = (Sort) project.getInput();
+                    if (sort2.offset == null && sort2.fetch == null) {
+                        RelNode sort =
+                                GraphLogicalSort.create(
+                                        sort2.getInput(), sort2.collation, offsetNode, fetchNode);
+                        replaceTop(
+                                GraphLogicalProject.create(
+                                        (GraphOptCluster) project.getCluster(),
+                                        project.getHints(),
+                                        sort,
+                                        project.getProjects(),
+                                        project.getRowType(),
+                                        ((GraphLogicalProject) project).isAppend()));
+                        return this;
+                    }
+                }
+            }
+        }
+        RelNode sort =
+                GraphLogicalSort.create(
+                        input, GraphRelCollations.of(fieldCollations), offsetNode, fetchNode);
+        replaceTop(sort);
+        // to remove the extra columns we have added
+        if (!registrar.getExtraAliases().isEmpty()) {
+            List<RexNode> originalExprs = new ArrayList<>();
+            List<String> originalAliases = new ArrayList<>();
+            for (RelDataTypeField field : originalFields) {
+                originalExprs.add(variable(field.getName()));
+                originalAliases.add(field.getName());
+            }
+            project(originalExprs, originalAliases, false);
+        }
         return this;
+    }
+
+    /**
+     * create a list of {@code RelFieldCollation} by order keys
+     *
+     * @param nodes keys to order by
+     * @return
+     */
+    private List<RelFieldCollation> fieldCollations(Iterable<? extends RexNode> nodes) {
+        Objects.requireNonNull(nodes);
+        Iterator<? extends RexNode> iterator = nodes.iterator();
+        List<RelFieldCollation> collations = new ArrayList<>();
+        while (iterator.hasNext()) {
+            collations.add(fieldCollation(iterator.next(), RelFieldCollation.Direction.ASCENDING));
+        }
+        return collations;
+    }
+
+    /**
+     * create {@code RelFieldCollation} for each order key
+     *
+     * @param node
+     * @param direction
+     * @return
+     */
+    private RelFieldCollation fieldCollation(RexNode node, RelFieldCollation.Direction direction) {
+        if (node instanceof RexGraphVariable) {
+            return new GraphFieldCollation((RexGraphVariable) node, direction);
+        }
+        switch (node.getKind()) {
+            case DESCENDING:
+                return fieldCollation(
+                        ((RexCall) node).getOperands().get(0),
+                        RelFieldCollation.Direction.DESCENDING);
+            default:
+                throw new UnsupportedOperationException(
+                        "type " + node.getType() + " can not be converted to collation");
+        }
     }
 
     protected void pop() {

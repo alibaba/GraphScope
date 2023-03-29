@@ -27,6 +27,9 @@ pub struct QueryVineyard<V, VI, E, EI> {
     graph_query: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>,
     graph_partitioner: Arc<dyn GraphPartitionManager>,
     partition_server_index_mapping: HashMap<u32, u32>,
+    // computed partition ids after split fragments on same vineyard instance to
+    // multiple GIE worker processes
+    computed_process_partition_list: Vec<u32>,
 }
 
 #[allow(dead_code)]
@@ -34,9 +37,14 @@ impl<V, VI, E, EI> QueryVineyard<V, VI, E, EI> {
     pub fn new(
         graph_query: Arc<dyn GlobalGraphQuery<V = V, VI = VI, E = E, EI = EI>>,
         graph_partitioner: Arc<dyn GraphPartitionManager>,
-        partition_server_index_mapping: HashMap<u32, u32>,
+        partition_server_index_mapping: HashMap<u32, u32>, computed_process_partition_list: Vec<u32>,
     ) -> Self {
-        QueryVineyard { graph_query, graph_partitioner, partition_server_index_mapping }
+        QueryVineyard {
+            graph_query,
+            graph_partitioner,
+            partition_server_index_mapping,
+            computed_process_partition_list,
+        }
     }
 }
 
@@ -53,6 +61,7 @@ where
         let partitioner = VineyardMultiPartition::new(
             self.graph_partitioner.clone(),
             self.partition_server_index_mapping.clone(),
+            self.computed_process_partition_list.clone(),
         );
         IRJobAssembly::new(partitioner)
     }

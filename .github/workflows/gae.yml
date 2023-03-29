@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.12.2
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.13.4
       options:
         --shm-size 4096m
     steps:
@@ -38,19 +38,20 @@ jobs:
     - name: Install latest vineyard
       if: false
       run: |
+        source /home/graphscope/.graphscope_env
+        sudo pip3 install libclang
         git clone --single-branch --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
         cd /tmp/v6d
         git submodule update --init
         mkdir -p build && cd build
-        cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard \
+        cmake .. -DCMAKE_PREFIX_PATH=/opt/graphscope \
+                 -DCMAKE_INSTALL_PREFIX=/opt/graphscope \
+                 -DOPENSSL_ROOT_DIR=/opt/graphscope \
                  -DUSE_EXTERNAL_ETCD_LIBS=OFF \
                  -DBUILD_SHARED_LIBS=ON \
                  -DBUILD_VINEYARD_TESTS=OFF
         make -j$(nproc)
         sudo make install
-
-        # copy to /usr/local, keep the same logic as gsvineyard.Dockerfile
-        sudo cp -r /opt/vineyard/* /usr/local/
 
     - name: Build
       env:
@@ -83,7 +84,7 @@ jobs:
         export USER_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-demo/target/grape-demo-${version}-shaded.jar
         # for giraph test
         export GIRAPH_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-giraph/target/grape-giraph-${version}-shaded.jar
-        
+
         cd ${GITHUB_WORKSPACE}/analytical_engine/build
         ../test/app_tests.sh --test_dir ${GS_TEST_DIR}
 

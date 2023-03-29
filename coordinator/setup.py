@@ -141,7 +141,9 @@ def _get_extra_data():
             f"{GRAPHSCOPE_HOME}/include/string_view": os.path.join(
                 RUNTIME_ROOT, "include"
             ),
-            "/opt/vineyard/include/": os.path.join(RUNTIME_ROOT, "include"),
+            f"{GRAPHSCOPE_HOME}/include/vineyard": os.path.join(
+                RUNTIME_ROOT, "include"
+            ),
             f"{GRAPHSCOPE_HOME}/include/arrow": os.path.join(RUNTIME_ROOT, "include"),
             f"{GRAPHSCOPE_HOME}/include/boost": os.path.join(RUNTIME_ROOT, "include"),
             f"{GRAPHSCOPE_HOME}/include/glog": os.path.join(RUNTIME_ROOT, "include"),
@@ -370,6 +372,8 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
     ],
     keywords="GraphScope, Graph Computations",
     use_scm_version={

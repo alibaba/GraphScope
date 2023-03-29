@@ -16,7 +16,8 @@
                         }
                       }
                     }
-                  }
+                  },
+                  "node_type": null
                 },
                 "order": 1
               }

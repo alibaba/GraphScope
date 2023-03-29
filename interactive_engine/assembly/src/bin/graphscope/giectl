@@ -157,16 +157,16 @@ start_executor() {
       -e "s@SERVER_SIZE@${server_size}@g" \
       -e "s@NETWORK_SERVERS@${network_servers}@g" \
       -e "s@THREADS_PER_WORKER@${threads_per_worker}@g" \
-      ${GRAPHSCOPE_HOME}/conf/executor.vineyard.properties > ${config_dir}/executor.vineyard.properties
+      ${GRAPHSCOPE_HOME}/conf/executor.vineyard.properties > ${config_dir}/executor.$server_id.vineyard.properties
 
   cp ${GRAPHSCOPE_HOME}/conf/log4rs.yml  ${config_dir}/log4rs.yml
 
   declare executor_binary="gaia_executor"
 
   # launch executor
-  declare flag="gaia_${object_id}executor"  # Flag is used to kill process
-  RUST_BACKTRACE=full ${GRAPHSCOPE_HOME}/bin/gaia_executor ${config_dir}/log4rs.yml ${config_dir}/executor.vineyard.properties ${flag} \
-    >> ${log_dir}/executor.log 2>&1 &
+  declare flag="gaia_${object_id}executor.${server_id}"  # Flag is used to kill process
+  RUST_BACKTRACE=full ${GRAPHSCOPE_HOME}/bin/gaia_executor ${config_dir}/log4rs.yml ${config_dir}/executor.$server_id.vineyard.properties ${flag} \
+    >> ${log_dir}/executor.$server_id.log 2>&1 &
   echo $! >> ${pid_dir}/executor.pid
 }
 
@@ -188,7 +188,7 @@ create_gremlin_instance_on_local() {
   declare -r GRAPHSCOPE_RUNTIME=$1
   declare -r object_id=$2
   declare -r schema_path=$3
-  declare -r server_id=$4
+  declare -r server_size=$4
   declare -r executor_port=$5
   declare -r executor_rpc_port=$6
   declare -r frontend_port=$7
@@ -210,18 +210,30 @@ create_gremlin_instance_on_local() {
   unlink ${GS_LOG}/current || true
   ln -s ${log_dir} ${GS_LOG}/current
 
-  server_size="1"
   # Frontend use executor rpc port
-  pegasus_hosts="127.0.0.1:${executor_rpc_port}"
+  network_servers=""
+  pegasus_hosts=""
+  for server_id in $(seq 0 $(($server_size - 1))); do
+    current_executor_port=$(($executor_port + 2 * $server_id))
+    current_executor_rpc_port=$(($executor_rpc_port + 2 * $server_id))
+    network_servers="${network_servers},127.0.0.1:$current_executor_port"
+    pegasus_hosts="${pegasus_hosts},127.0.0.1:$current_executor_rpc_port"
+  done
+  network_servers=${network_servers:1}
+  pegasus_hosts=${pegasus_hosts:1}
 
   start_frontend ${GRAPHSCOPE_RUNTIME} ${object_id} ${schema_path} ${pegasus_hosts} \
                  ${frontend_port}
 
   log "FRONTEND_ENDPOINT:127.0.0.1:${frontend_port}"
+
   # executor use executor inner port
-  network_servers="127.0.0.1:${executor_port}"
-  start_executor ${GRAPHSCOPE_RUNTIME} ${object_id} ${server_id} ${server_size} ${executor_rpc_port} \
-                 ${network_servers}
+  for server_id in $(seq 0 $(($server_size - 1))); do
+    current_executor_port=$(($executor_port + 2 * $server_id))
+    current_executor_rpc_port=$(($executor_rpc_port + 2 * $server_id))
+    start_executor ${GRAPHSCOPE_RUNTIME} ${object_id} ${server_id} ${server_size} ${current_executor_rpc_port} \
+                   ${network_servers}
+  done
 }
 
 ##########################
@@ -253,7 +265,7 @@ create_gremlin_instance_on_k8s() {
   declare -r frontend_port=$8
   declare -r coordinator_name=$9 # deployment name of coordinator
 
-  instance_id=${coordinator_name##*-}
+  instance_id=${coordinator_name#*-}
 
   pod_ips=$(kubectl get pod -lapp.kubernetes.io/component=engine,app.kubernetes.io/instance=${instance_id} -o jsonpath='{.items[*].status.podIP}')
   pegasus_hosts=""

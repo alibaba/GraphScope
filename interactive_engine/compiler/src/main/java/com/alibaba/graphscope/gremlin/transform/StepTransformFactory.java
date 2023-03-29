@@ -238,6 +238,9 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             PathExpandStep pathStep = (PathExpandStep) step;
             op.setLower(new OpArg(Integer.valueOf(pathStep.getLower())));
             op.setUpper(new OpArg(Integer.valueOf(pathStep.getUpper())));
+            if (pathStep.getUntilCondition() != null) {
+                op.setUntilCondition(new OpArg(pathStep.getUntilCondition()));
+            }
             op.setPathOpt(pathStep.getPathOpt());
             op.setResultOpt(pathStep.getResultOpt());
             return op;

@@ -44,6 +44,14 @@ jobs:
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
     - uses: actions/checkout@v3
+
+    - name: Detect the tmate session
+      run: |
+        if grep -v "grep" .github/workflows/gss.yml | grep "action-tmate"; then
+          echo 'WARNING!!!the self-hosted machine can not run tmate session, please debug it manually'
+          exit 1
+        fi
+
     - uses: actions/cache@v3
       with:
         path: ~/.m2/repository
@@ -109,6 +117,13 @@ jobs:
     - uses: actions/checkout@v3
       with:
         submodules: true
+
+    - name: Detect the tmate session
+      run: |
+        if grep -v "grep" .github/workflows/gss.yml | grep "action-tmate"; then
+          echo 'WARNING!!!the self-hosted machine can not run tmate session, please debug it manually'
+          exit 1
+        fi
 
     - uses: actions/download-artifact@v3
       with:
@@ -189,12 +204,13 @@ jobs:
         python3 -m pytest -s -vvv graphscope/tests/kubernetes/test_store_service.py -k test_demo_fresh
         # restart helm and run demo with the PersistentVolume
         helm uninstall ci
+        sleep 30
         cd ${GITHUB_WORKSPACE}/charts
         helm install ci --set image.tag=${SHORT_SHA} ./graphscope-store
         # helm test and python test on the restarted store
         export GRPC_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services ci-graphscope-store-frontend)
         export GREMLIN_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[1].nodePort}" services ci-graphscope-store-frontend)
         export NODE_IP=$(kubectl get nodes --namespace default -o jsonpath="{.items[0].status.addresses[0].address}")
-        helm test ci --timeout 5m0s
+        helm test ci --timeout 10m0s
         cd ${GITHUB_WORKSPACE}/python
         python3 -m pytest -s -vvv graphscope/tests/kubernetes/test_store_service.py -k test_demo_after_restart

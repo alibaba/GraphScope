@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::convert::TryInto;
 use std::sync::Arc;
 
 use graph_proxy::apis::Partitioner;
@@ -31,7 +32,6 @@ use pegasus::{BuildJobError, Worker};
 use pegasus_server::job::{JobAssembly, JobDesc};
 use pegasus_server::job_pb as server_pb;
 use prost::Message;
-use std::convert::TryInto;
 
 use crate::error::{FnExecError, FnGenError, FnGenResult};
 use crate::process::functions::{ApplyGen, CompareFunction, FoldGen, GroupGen, JoinKeyGen, KeyFunction};
@@ -538,6 +538,7 @@ impl IRJobAssembly {
                         .filter_map_with_name("PathStart", move |input| path_start_func.exec(input))?;
                     // path base expand
                     let mut base_expand_plan = vec![];
+                    base_expand_plan.push(base.clone().into());
                     if let OpKind::Repartition(_) = &prev_op_kind {
                         // the case when base expand needs repartition
                         base_expand_plan.push(
@@ -549,17 +550,25 @@ impl IRJobAssembly {
                             .into(),
                         );
                     }
-                    base_expand_plan.push(base.clone().into());
-
                     for _ in 0..range.lower {
                         stream = self.install(stream, &base_expand_plan)?;
                     }
                     let times = range.upper - range.lower - 1;
                     if times > 0 {
-                        let until = IterCondition::max_iters(times as u32);
-                        stream = stream.iterate_emit_until(until, EmitKind::Before, |start| {
-                            self.install(start, &base_expand_plan[..])
-                        })?;
+                        let mut until = IterCondition::max_iters(times as u32);
+                        if let Some(condition) = path.condition.as_ref() {
+                            let func = self
+                                .udf_gen
+                                .gen_filter(algebra_pb::Select { predicate: Some(condition.clone()) })?;
+                            until.set_until(func);
+                            // Notice that if UNTIL condition set, we expand path without `Emit`
+                            stream = stream
+                                .iterate_until(until, |start| self.install(start, &base_expand_plan[..]))?;
+                        } else {
+                            stream = stream.iterate_emit_until(until, EmitKind::Before, |start| {
+                                self.install(start, &base_expand_plan[..])
+                            })?;
+                        }
                     }
                     // path end
                     let path_end_func = self.udf_gen.gen_path_end(path)?;

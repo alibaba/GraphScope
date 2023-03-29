@@ -85,7 +85,7 @@ impl TryFrom<algebra_pb::OrderBy> for RecordCompare {
 mod tests {
     use ahash::HashMap;
     use dyn_type::Object;
-    use graph_proxy::apis::{Details, DynDetails, GraphElement, Vertex};
+    use graph_proxy::apis::{DynDetails, GraphElement, Vertex};
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
     use ir_common::NameOrId;
@@ -121,7 +121,7 @@ mod tests {
     fn sort_simple_ascending_test() {
         let sort_opr = pb::OrderBy {
             pairs: vec![pb::order_by::OrderingPair {
-                key: Some(common_pb::Variable { tag: None, property: None }),
+                key: Some(common_pb::Variable { tag: None, property: None, node_type: None }),
                 order: 1, // ascending
             }],
             limit: None,
@@ -142,7 +142,7 @@ mod tests {
     fn sort_simple_descending_test() {
         let sort_opr = pb::OrderBy {
             pairs: vec![pb::order_by::OrderingPair {
-                key: Some(common_pb::Variable { tag: None, property: None }),
+                key: Some(common_pb::Variable { tag: None, property: None, node_type: None }),
                 order: 2, // descending
             }],
             limit: None,
@@ -174,8 +174,6 @@ mod tests {
             if let Some(element) = record.get(None).unwrap().as_vertex() {
                 result_name.push(
                     element
-                        .details()
-                        .unwrap()
                         .get_property(&"name".into())
                         .unwrap()
                         .try_to_owned()
@@ -215,14 +213,13 @@ mod tests {
         let mut result_name_ages = vec![];
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record.get(None).unwrap().as_vertex() {
-                let details = element.details().unwrap();
                 result_name_ages.push((
-                    details
+                    element
                         .get_property(&"name".into())
                         .unwrap()
                         .try_to_owned()
                         .unwrap(),
-                    details
+                    element
                         .get_property(&"age".into())
                         .unwrap()
                         .try_to_owned()

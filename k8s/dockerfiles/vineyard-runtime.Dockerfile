@@ -11,7 +11,6 @@ RUN mkdir artifacts && \
     cp $GRAPHSCOPE_HOME/bin/vineyard-graph-loader bin/ && \
     cp -P $GRAPHSCOPE_HOME/lib/lib* lib/ && \
     cp -P $GRAPHSCOPE_HOME/lib64/lib* lib64/ && \
-    rm -f lib/libgrpc* && \
     tar czf artifacts.tar.gz ./*
 
 FROM centos:7 AS runtime
@@ -25,6 +24,7 @@ ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:/usr/local/lib64
 RUN yum install -y sudo libunwind-devel libgomp && \
     yum clean all -y --enablerepo='*' && \
     rm -rf /var/cache/yum
+RUN sudo chmod a+wrx /tmp
 
 RUN useradd -m graphscope -u 1001 \
     && echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers

@@ -232,13 +232,15 @@ message PathExpand {
   PathOpt path_opt = 5;
   // Result option, including to take end vertex (EndV), or whole path (AllV), for this expansion
   ResultOpt result_opt = 6;
+  // A condition formulated as an expression predicate
+  common.Expression condition = 7;
 }
 
 message Sink {
   message OptTag {
      google.protobuf.Int32Value tag = 1;
   }
-  // Define the tags of columns to sink
+  // Define the tags of columns to sink. If no tags given, sink all **tagged** columns by default.
   repeated OptTag tags = 1;
   // Define the target of sink, e.g., to Client as default, to Graph such as Vineyard etc.
   algebra.Sink.SinkTarget sink_target = 2;
@@ -289,7 +291,7 @@ message PhysicalOpr {
   // The node's operator
   Operator opr = 1;
   // The meta data of outputs of operator
-  repeated MetaData op_meta = 2;
+  repeated MetaData meta_data = 2;
 }
 
 message PhysicalPlan {

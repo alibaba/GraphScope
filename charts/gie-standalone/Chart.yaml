@@ -1,0 +1,18 @@
+annotations:
+  category: Database
+  licenses: Apache-2.0
+apiVersion: v2
+appVersion: 3.4.0
+description: Chart to Deploy GIE on Vineyard Storage
+home: https://graphscope.io
+icon: https://graphscope.io/assets/images/graphscope-logo.svg
+keywords:
+  - GraphScope
+  - database
+  - cluster
+name: gie-standalone
+sources:
+  - https://github.com/alibaba/GraphScope/tree/main/interactive_engine/
+version: 0.20.0
+
+dependencies:
