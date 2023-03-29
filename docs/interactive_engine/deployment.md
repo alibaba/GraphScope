@@ -40,15 +40,16 @@ deployment and management of applications. To deploy GIE standalone using Helm, 
    ```
 - Prepare graph data
    ```
+   mkdir /tmp/data && \
    cp -r gie-standalone/data/modern_graph /tmp/data/
    ```
    Check whether the raw data is there:
    ```
-   ls -l /tmp/data
+   tree /tmp/data
    ```
    You should be able to see the raw data of the [modern graph](https://tinkerpop.apache.org/docs/3.6.2/tutorials/getting-started/).
    ```
-   data
+   /tmp/data
    └── modern_graph
       ├── created.csv
       ├── knows.csv
