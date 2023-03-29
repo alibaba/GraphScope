@@ -427,7 +427,6 @@ mod test {
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record.get(None) {
                 result_ids.push(element.id() as usize);
-                //      assert!(element.get_property(&"name".into()).is_none())
             }
         }
         result_ids.sort();
@@ -472,7 +471,6 @@ mod test {
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record.get(None) {
                 result_ids.push(element.id() as usize);
-                //       assert!(element.get_property(&"name".into()).is_none())
             }
         }
         result_ids.sort();
@@ -517,7 +515,6 @@ mod test {
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record.get(None) {
                 result_ids.push(element.id() as usize);
-                //           assert!(element.get_property(&"name".into()).is_none())
             }
         }
         result_ids.sort();
@@ -562,7 +559,6 @@ mod test {
         while let Some(Ok(record)) = result.next() {
             if let Some(element) = record.get(None) {
                 result_ids.push(element.id() as usize);
-                //       assert!(element.get_property(&"name".into()).is_none())
             }
         }
         result_ids.sort();

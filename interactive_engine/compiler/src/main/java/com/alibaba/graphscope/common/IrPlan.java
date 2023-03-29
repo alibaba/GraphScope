@@ -355,10 +355,24 @@ public class IrPlan implements Closeable {
 
                 Pointer expand = EXPAND_OP.apply(baseOp);
                 // todo: make isWholePath configurable
+                // todo: add until condition here
                 Pointer pathExpand =
                         irCoreLib.initPathxpdOperator(
                                 expand, pathOp.getPathOpt(), pathOp.getResultOpt());
                 irCoreLib.setPathxpdHops(pathExpand, lower, upper);
+
+                Optional<OpArg> condition = pathOp.getUntilCondition();
+                if (condition.isPresent()) {
+                    FfiResult res =
+                            irCoreLib.setPathxpdCondition(
+                                    pathExpand, (String) condition.get().applyArg());
+                    if (res.code != ResultCode.Success) {
+                        throw new InterOpIllegalArgException(
+                                baseOp.getClass(),
+                                "setPathxpdCondition",
+                                res.code + ", " + res.msg);
+                    }
+                }
 
                 Optional<OpArg> aliasOpt = baseOp.getAlias();
                 if (aliasOpt.isPresent()) {

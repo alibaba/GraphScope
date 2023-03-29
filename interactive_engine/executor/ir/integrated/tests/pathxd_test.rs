@@ -20,6 +20,7 @@ mod common;
 #[cfg(test)]
 mod test {
     use graph_proxy::apis::{GraphElement, ID};
+    use ir_common::expr_parse::str_to_expr_pb;
     use ir_common::generated::algebra as pb;
     use ir_physical_client::physical_builder::*;
     use pegasus_server::JobRequest;
@@ -27,9 +28,9 @@ mod test {
 
     use crate::common::test::*;
 
-    // g.V().hasLabel("person").both("1..3", "knows")
+    // g.V().hasLabel("person").both("lower..upper", "knows")
     // result_opt: 0: EndV, 1: AllV;  path_opt: 0: Arbitrary, 1: Simple
-    fn init_path_expand_request(result_opt: i32, path_opt: i32) -> JobRequest {
+    fn init_path_expand_request(range: pb::Range, result_opt: i32, path_opt: i32) -> JobRequest {
         let source_opr = pb::Scan {
             scan_opt: 0,
             alias: None,
@@ -51,9 +52,10 @@ mod test {
             base: Some(edge_expand),
             start_tag: None,
             alias: None,
-            hop_range: Some(pb::Range { lower: 1, upper: 3 }),
+            hop_range: Some(range),
             path_opt,
             result_opt,
+            condition: None,
         };
 
         let mut job_builder = JobBuilder::default();
@@ -67,43 +69,18 @@ mod test {
 
     // g.V().hasLabel("person").both("2..3", "knows")
     fn init_path_expand_exactly_request(is_whole_path: bool) -> JobRequest {
-        let source_opr = pb::Scan {
-            scan_opt: 0,
-            alias: None,
-            params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
-            idx_predicate: None,
-            meta_data: None,
-        };
-
-        let edge_expand = pb::EdgeExpand {
-            v_tag: None,
-            direction: 2,
-            params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
-            expand_opt: 0,
-            alias: None,
-            meta_data: None,
-        };
-
-        let path_expand_opr = pb::PathExpand {
-            base: Some(edge_expand),
-            start_tag: None,
-            alias: None,
-            hop_range: Some(pb::Range { lower: 2, upper: 3 }),
-            path_opt: 0,
-            result_opt: if is_whole_path { 1 } else { 0 },
-        };
-
-        let mut job_builder = JobBuilder::default();
-        job_builder.add_scan_source(source_opr);
-        job_builder.shuffle(None);
-        job_builder.path_expand(path_expand_opr);
-        job_builder.sink(default_sink_pb());
-
-        job_builder.build().unwrap()
+        let result_opt = if is_whole_path { 1 } else { 0 };
+        init_path_expand_request(pb::Range { lower: 2, upper: 3 }, result_opt, 0)
     }
 
     // g.V().hasLabel("person").both("0..3", "knows")
     fn init_path_expand_range_from_zero_request(is_whole_path: bool) -> JobRequest {
+        let result_opt = if is_whole_path { 1 } else { 0 };
+        init_path_expand_request(pb::Range { lower: 0, upper: 3 }, result_opt, 0)
+    }
+
+    // g.V().hasLabel("person").both("lower..upper", "knows").with("UNTIL", "@.name == \"marko\"")
+    fn init_path_expand_with_until_request(range: pb::Range) -> JobRequest {
         let source_opr = pb::Scan {
             scan_opt: 0,
             alias: None,
@@ -125,9 +102,10 @@ mod test {
             base: Some(edge_expand),
             start_tag: None,
             alias: None,
-            hop_range: Some(pb::Range { lower: 0, upper: 3 }),
+            hop_range: Some(range),
             path_opt: 0,
-            result_opt: if is_whole_path { 1 } else { 0 },
+            result_opt: 1,
+            condition: str_to_expr_pb("@.name == \"marko\"".to_string()).ok(),
         };
 
         let mut job_builder = JobBuilder::default();
@@ -139,9 +117,10 @@ mod test {
         job_builder.build().unwrap()
     }
 
+    // both(1..3)
     fn path_expand_whole_query(worker_num: u32) {
         initialize();
-        let request = init_path_expand_request(1, 0);
+        let request = init_path_expand_request(pb::Range { lower: 1, upper: 3 }, 1, 0);
         let mut results = submit_query(request, worker_num);
         let mut result_collection: Vec<Vec<ID>> = vec![];
         let mut expected_result_paths = vec![
@@ -193,7 +172,7 @@ mod test {
 
     fn path_expand_end_query(num_workers: u32) {
         initialize();
-        let request = init_path_expand_request(0, 0);
+        let request = init_path_expand_request(pb::Range { lower: 1, upper: 3 }, 0, 0);
         let mut results = submit_query(request, num_workers);
         let mut result_collection = vec![];
         let expected_result_path_ends = vec![1, 1, 1, 1, 2, 2, 2, 4, 4, 4];
@@ -202,7 +181,7 @@ mod test {
                 Ok(res) => {
                     let entry = parse_result(res).unwrap();
                     if let Some(path) = entry.get(None).unwrap().as_graph_path() {
-                        result_collection.push(path.get_path_end().unwrap().id());
+                        result_collection.push(path.get_path_end().id());
                     }
                 }
                 Err(e) => {
@@ -263,7 +242,7 @@ mod test {
 
     #[test]
     fn path_expand_exactly_whole_query_w2_test() {
-        path_expand_exactly_whole_query(1)
+        path_expand_exactly_whole_query(2)
     }
 
     fn path_expand_exactly_end_query(worker_num: u32) {
@@ -277,7 +256,7 @@ mod test {
                 Ok(res) => {
                     let entry = parse_result(res).unwrap();
                     if let Some(path) = entry.get(None).unwrap().as_graph_path() {
-                        result_collection.push(path.get_path_end().unwrap().id());
+                        result_collection.push(path.get_path_end().id());
                     }
                 }
                 Err(e) => {
@@ -357,7 +336,7 @@ mod test {
 
     fn simple_path_expand_whole_query(worker_num: u32) {
         initialize();
-        let request = init_path_expand_request(1, 1);
+        let request = init_path_expand_request(pb::Range { lower: 1, upper: 3 }, 1, 1);
         let mut results = submit_query(request, worker_num);
         let mut result_collection: Vec<Vec<ID>> = vec![];
         let mut expected_result_paths =
@@ -399,7 +378,7 @@ mod test {
 
     fn simple_path_expand_end_query(num_workers: u32) {
         initialize();
-        let request = init_path_expand_request(0, 1);
+        let request = init_path_expand_request(pb::Range { lower: 1, upper: 3 }, 0, 1);
         let mut results = submit_query(request, num_workers);
         let mut result_collection = vec![];
         let mut expected_result_path_ends = vec![2, 4, 1, 1, 4, 2];
@@ -408,7 +387,7 @@ mod test {
                 Ok(res) => {
                     let entry = parse_result(res).unwrap();
                     if let Some(path) = entry.get(None).unwrap().as_graph_path() {
-                        result_collection.push(path.get_path_end().unwrap().id());
+                        result_collection.push(path.get_path_end().id());
                     }
                 }
                 Err(e) => {
@@ -429,5 +408,132 @@ mod test {
     #[test]
     fn simple_path_expand_end_query_w2_test() {
         simple_path_expand_end_query(2)
+    }
+
+    // both(1..3).until()
+    fn path_expand_whole_with_until_query(worker_num: u32) {
+        initialize();
+        let request = init_path_expand_with_until_request(pb::Range { lower: 1, upper: 3 });
+        let mut results = submit_query(request, worker_num);
+        let mut result_collection: Vec<Vec<ID>> = vec![];
+        let mut expected_result_paths = vec![vec![2, 1], vec![4, 1], vec![1, 2, 1], vec![1, 4, 1]];
+        while let Some(result) = results.next() {
+            match result {
+                Ok(res) => {
+                    let entry = parse_result(res).unwrap();
+                    if let Some(path) = entry.get(None).unwrap().as_graph_path() {
+                        result_collection.push(
+                            path.clone()
+                                .take_path()
+                                .unwrap()
+                                .into_iter()
+                                .map(|v| v.id())
+                                .collect(),
+                        );
+                    }
+                }
+                Err(e) => {
+                    panic!("err result {:?}", e);
+                }
+            }
+        }
+        expected_result_paths.sort();
+        result_collection.sort();
+        assert_eq!(result_collection, expected_result_paths)
+    }
+
+    #[test]
+    fn path_expand_whole_with_until_query_test() {
+        path_expand_whole_with_until_query(1)
+    }
+
+    #[test]
+    fn path_expand_whole_with_until_query_w2_test() {
+        path_expand_whole_with_until_query(2)
+    }
+
+    // both(2..3).until()
+    fn path_expand_exactly_whole_with_until_query(worker_num: u32) {
+        initialize();
+        let request = init_path_expand_with_until_request(pb::Range { lower: 2, upper: 3 });
+        let mut results = submit_query(request, worker_num);
+        let mut result_collection: Vec<Vec<ID>> = vec![];
+        let mut expected_result_paths =
+            vec![vec![1, 2, 1], vec![1, 4, 1], vec![2, 1, 2], vec![2, 1, 4], vec![4, 1, 2], vec![4, 1, 4]];
+        while let Some(result) = results.next() {
+            match result {
+                Ok(res) => {
+                    let entry = parse_result(res).unwrap();
+                    if let Some(path) = entry.get(None).unwrap().as_graph_path() {
+                        result_collection.push(
+                            path.clone()
+                                .take_path()
+                                .unwrap()
+                                .into_iter()
+                                .map(|v| v.id())
+                                .collect(),
+                        );
+                    }
+                }
+                Err(e) => {
+                    panic!("err result {:?}", e);
+                }
+            }
+        }
+        expected_result_paths.sort();
+        result_collection.sort();
+        assert_eq!(result_collection, expected_result_paths)
+    }
+
+    #[test]
+    fn path_expand_exactly_whole_with_until_query_test() {
+        path_expand_exactly_whole_with_until_query(1)
+    }
+
+    #[test]
+    fn path_expand_exactly_whole_with_until_query_w2_test() {
+        path_expand_exactly_whole_with_until_query(2)
+    }
+
+    // both(0..3).until()
+    fn path_expand_range_from_zero_with_until_query(worker_num: u32) {
+        initialize();
+        let request = init_path_expand_with_until_request(pb::Range { lower: 0, upper: 3 });
+        let mut results = submit_query(request, worker_num);
+        let mut result_collection: Vec<Vec<ID>> = vec![];
+        let mut expected_result_paths = vec![vec![1], vec![2, 1], vec![4, 1]];
+        while let Some(result) = results.next() {
+            match result {
+                Ok(res) => {
+                    let entry = parse_result(res).unwrap();
+                    if let Some(path) = entry.get(None).unwrap().as_graph_path() {
+                        result_collection.push(
+                            path.clone()
+                                .take_path()
+                                .unwrap()
+                                .into_iter()
+                                .map(|v| v.id())
+                                .collect(),
+                        );
+                    }
+                }
+                Err(e) => {
+                    panic!("err result {:?}", e);
+                }
+            }
+        }
+        expected_result_paths.sort();
+        result_collection.sort();
+        assert_eq!(result_collection, expected_result_paths)
+    }
+
+    #[test]
+    fn path_expand_range_from_zero_with_until_query_test() {
+        path_expand_range_from_zero_with_until_query(1)
+    }
+
+    #[test]
+    fn path_expand_range_from_zero_with_until_query_w2_test() {
+        path_expand_range_from_zero_with_until_query(2)
     }
 }
