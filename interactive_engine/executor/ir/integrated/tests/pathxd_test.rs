@@ -118,6 +118,7 @@ mod test {
     }
 
     // g.V().hasLabel("person").both("1..3", "knows") with vertex's filter "@.age>28"
+    // Notice that, this is not equivalent to g.V().hasLabel("person").both("1..3", "knows").has("@.age>28").
     fn init_path_expand_with_filter_request(is_whole_path: bool) -> JobRequest {
         let source_opr = pb::Scan {
             scan_opt: 0,
@@ -151,6 +152,7 @@ mod test {
             hop_range: Some(pb::Range { lower: 1, upper: 3 }),
             path_opt: 0,
             result_opt: if is_whole_path { 1 } else { 0 },
+            condition: None,
         };
 
         let mut job_builder = JobBuilder::default();

@@ -712,6 +712,7 @@ mod test {
             alias: None,
             path_opt: pb::path_expand::PathOpt::Simple as i32,
             result_opt: pb::path_expand::ResultOpt::EndV as i32,
+            condition: None,
         };
         let pattern = pb::Pattern {
             sentences: vec![pb::pattern::Sentence {
@@ -759,6 +760,7 @@ mod test {
             alias: None,
             path_opt: pb::path_expand::PathOpt::Simple as i32,
             result_opt: pb::path_expand::ResultOpt::EndV as i32,
+            condition: None,
         };
         let pattern = pb::Pattern {
             sentences: vec![
@@ -825,6 +827,7 @@ mod test {
             alias: None,
             path_opt: pb::path_expand::PathOpt::Simple as i32,
             result_opt: pb::path_expand::ResultOpt::EndV as i32,
+            condition: None,
         };
         let pattern = pb::Pattern {
             sentences: vec![

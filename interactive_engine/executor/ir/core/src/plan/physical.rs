@@ -1495,6 +1495,7 @@ mod test {
             hop_range: Some(pb::Range { lower: 1, upper: 4 }),
             path_opt: 0,
             result_opt: 0,
+            condition: None,
         };
 
         let fused_edge_expand = pb::EdgeExpand {
@@ -1512,6 +1513,7 @@ mod test {
             hop_range: Some(pb::Range { lower: 1, upper: 4 }),
             path_opt: 0,
             result_opt: 0,
+            condition: None,
         };
 
         let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr.clone().into()));
@@ -1590,6 +1592,7 @@ mod test {
             hop_range: Some(pb::Range { lower: 1, upper: 4 }),
             path_opt: 0,
             result_opt: 0,
+            condition: None,
         };
 
         let fused_edge_expand = pb::EdgeExpand {
@@ -1622,6 +1625,7 @@ mod test {
             hop_range: Some(pb::Range { lower: 1, upper: 4 }),
             path_opt: 0,
             result_opt: 0,
+            condition: None,
         };
 
         let mut logical_plan = LogicalPlan::with_root(Node::new(0, source_opr.clone().into()));
