@@ -531,8 +531,7 @@ public class GraphBuilder extends RelBuilder {
                     tableScan.setFilters(
                             ImmutableList.of(
                                     RexUtil.composeConjunction(
-                                            this.getRexBuilder(),
-                                            listBuilder.build())));
+                                            this.getRexBuilder(), listBuilder.build())));
                 }
                 // pop the filter from the inner stack
                 replaceTop(tableScan);

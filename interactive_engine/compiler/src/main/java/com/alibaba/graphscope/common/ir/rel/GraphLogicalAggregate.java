@@ -61,7 +61,8 @@ public class GraphLogicalAggregate extends Aggregate {
             RelNode input,
             GraphGroupKeys groupKey,
             List<GraphAggCall> aggCalls) {
-        return new GraphLogicalAggregate(cluster, RelTraitSet.createEmpty(), hints, input, groupKey, aggCalls);
+        return new GraphLogicalAggregate(
+                cluster, RelTraitSet.createEmpty(), hints, input, groupKey, aggCalls);
     }
 
     @Override

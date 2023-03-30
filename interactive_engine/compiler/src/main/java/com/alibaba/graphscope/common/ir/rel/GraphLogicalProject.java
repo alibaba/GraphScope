@@ -55,7 +55,8 @@ public class GraphLogicalProject extends Project {
             List<? extends RexNode> projects,
             RelDataType dataType,
             boolean isAppend) {
-        return new GraphLogicalProject(cluster, RelTraitSet.createEmpty(), hints, input, projects, dataType, isAppend);
+        return new GraphLogicalProject(
+                cluster, RelTraitSet.createEmpty(), hints, input, projects, dataType, isAppend);
     }
 
     public boolean isAppend() {
@@ -65,7 +66,14 @@ public class GraphLogicalProject extends Project {
     @Override
     public Project copy(
             RelTraitSet traitSet, RelNode input, List<RexNode> projects, RelDataType rowType) {
-        return new GraphLogicalProject(getCluster(), traitSet, ImmutableList.of(), input, projects, rowType, this.isAppend);
+        return new GraphLogicalProject(
+                getCluster(),
+                traitSet,
+                ImmutableList.of(),
+                input,
+                projects,
+                rowType,
+                this.isAppend);
     }
 
     @Override

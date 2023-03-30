@@ -83,7 +83,13 @@ public class FilterMatchRule<C extends FilterMatchRule.Config> extends RelRule<C
                     RelDataType rowType = candidate.getRowType();
                     for (RelDataTypeField field : rowType.getFieldList()) {
                         if (aliasId != AliasInference.DEFAULT_ID && field.getIndex() == aliasId) {
-                            RexNode transform = condition.accept(new RexVariableAliasConverter(true, graphBuilder, AliasInference.DEFAULT_NAME, AliasInference.DEFAULT_ID));
+                            RexNode transform =
+                                    condition.accept(
+                                            new RexVariableAliasConverter(
+                                                    true,
+                                                    graphBuilder,
+                                                    AliasInference.DEFAULT_NAME,
+                                                    AliasInference.DEFAULT_ID));
                             if (ObjectUtils.isEmpty(candidate.getFilters())) {
                                 candidate.setFilters(ImmutableList.of(transform));
                             } else {

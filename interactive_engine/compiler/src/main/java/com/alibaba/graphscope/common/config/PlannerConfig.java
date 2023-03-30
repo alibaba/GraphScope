@@ -11,7 +11,8 @@ import java.util.Objects;
 
 public class PlannerConfig {
     private static final String GRAPH_PLANNER = "graph.planner";
-    private static final PlannerConfig DEFAULT = new PlannerConfig(false, Opt.RBO, Lists.newArrayList());
+    private static final PlannerConfig DEFAULT =
+            new PlannerConfig(false, Opt.RBO, Lists.newArrayList());
 
     private final boolean isOn;
     private final Opt opt;
