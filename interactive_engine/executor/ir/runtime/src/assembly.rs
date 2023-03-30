@@ -202,26 +202,25 @@ impl IRJobAssembly {
                         .ok_or(FnGenError::from(ParsePbError::EmptyFieldError(
                             "pb::Limit::range".to_string(),
                         )))?;
-                    // e.g., `limit(10)` would be translate as `Range{lower=1, upper=11}`
-                    if range.upper <= range.lower || range.lower != 1 {
+                    // e.g., `limit(10)` would be translate as `Range{lower=0, upper=10}`
+                    if range.upper <= range.lower || range.lower != 0 {
                         Err(FnGenError::from(ParsePbError::ParseError(format!(
                             "range {:?} in Limit Operator",
                             range
                         ))))?;
                     }
-                    stream = stream.limit((range.upper - 1) as u32)?;
+                    stream = stream.limit(range.upper as u32)?;
                 }
                 OpKind::OrderBy(order) => {
                     let cmp = self.udf_gen.gen_cmp(order.clone())?;
                     if let Some(range) = order.limit {
-                        if range.upper <= range.lower || range.lower != 1 {
+                        if range.upper <= range.lower || range.lower != 0 {
                             Err(FnGenError::from(ParsePbError::ParseError(format!(
                                 "range {:?} in Order Operator",
                                 range
                             ))))?;
                         }
-                        stream = stream
-                            .sort_limit_by((range.upper - 1) as u32, move |a, b| cmp.compare(a, b))?;
+                        stream = stream.sort_limit_by(range.upper as u32, move |a, b| cmp.compare(a, b))?;
                     } else {
                         stream = stream.sort_by(move |a, b| cmp.compare(a, b))?;
                     }

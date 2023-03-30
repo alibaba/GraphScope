@@ -54,7 +54,7 @@ mod test {
         job_builder.select(select_opr);
         job_builder.shuffle(None);
         job_builder.edge_expand(expand_opr);
-        job_builder.limit(pb::Limit { range: Some(pb::Range { lower: 1, upper: 11 }) });
+        job_builder.limit(pb::Limit { range: Some(pb::Range { lower: 0, upper: 10 }) });
         job_builder.sink(default_sink_pb());
 
         job_builder.build().unwrap()
