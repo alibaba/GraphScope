@@ -29,7 +29,9 @@ import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.client.*;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PegasusConfig;
+import com.alibaba.graphscope.common.config.PlannerConfig;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
+import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
 import com.alibaba.graphscope.common.ir.rel.GraphRelShuttleWrapper;
 import com.alibaba.graphscope.common.ir.runtime.LogicalPlanConverter;
 import com.alibaba.graphscope.common.ir.runtime.ffi.FfiLogicalPlan;
@@ -58,6 +60,10 @@ import com.sun.jna.Pointer;
 
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.plan.GraphOptCluster;
+import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.hep.HepPlanner;
+import org.apache.calcite.plan.hep.HepProgram;
+import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rex.RexBuilder;
@@ -101,6 +107,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
     protected Graph graph;
     protected GraphTraversalSource g;
     protected Configs configs;
+    protected PlannerConfig plannerConfig;
     protected RpcBroadcastProcessor broadcastProcessor;
     protected IrMetaFetcher irMetaFetcher;
     protected IrMetaQueryCallback metaQueryCallback;
@@ -117,6 +124,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         this.graph = graph;
         this.g = g;
         this.configs = configs;
+        this.plannerConfig = PlannerConfig.create(this.configs);
         this.irMetaFetcher = irMetaFetcher;
         this.broadcastProcessor = new RpcBroadcastProcessor(fetcher);
         this.metaQueryCallback = metaQueryCallback;
@@ -125,7 +133,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         this.graphBuilderGenerator =
                 (StatisticSchema schema) -> {
                     Objects.requireNonNull(schema);
-                    GraphOptCluster optCluster = GraphOptCluster.create(rexBuilder);
+                    GraphOptCluster optCluster = GraphOptCluster.create(getRelOptPlanner(), rexBuilder);
                     return GraphBuilder.create(
                             null, optCluster, new GraphOptSchema(optCluster, schema));
                 };
@@ -352,8 +360,16 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                             irMeta);
                                 } else if (o != null && o instanceof GraphBuilder) {
                                     GraphBuilder builder = (GraphBuilder) o;
+                                    GraphOptCluster optCluster = (GraphOptCluster) builder.getCluster();
                                     RelNode topNode = builder.build();
-                                    logger.info("topNode {}", topNode.explain());
+                                    logger.info("before topNode {}", topNode.explain());
+                                    // apply optimizations
+                                    if (this.plannerConfig.isOn()) {
+                                        RelOptPlanner planner = optCluster.getPlanner();
+                                        planner.setRoot(topNode);
+                                        topNode = planner.findBestExp();
+                                        logger.info("after topNode {}", topNode.explain());
+                                    }
                                     if (language.equals(
                                             AntlrGremlinScriptEngineFactory.LANGUAGE_NAME)) {
                                         // todo: handle gremlin results
@@ -361,7 +377,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                             AntlrCypherScriptEngineFactory.LANGUAGE_NAME)) {
                                         processRelNode(
                                                 topNode,
-                                                (GraphOptCluster) builder.getCluster(),
+                                                optCluster,
                                                 new CypherResultProcessor(ctx, topNode),
                                                 jobId,
                                                 script,
@@ -496,5 +512,29 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         strategies.add(InlineFilterStrategy.instance());
         strategies.add(ExpandFusionStepStrategy.instance());
         traversal.asAdmin().applyStrategies();
+    }
+
+    private RelOptPlanner getRelOptPlanner() {
+        if (this.plannerConfig.isOn()) {
+            PlannerConfig.Opt opt = this.plannerConfig.getOpt();
+            switch (opt) {
+                case RBO:
+                    HepProgramBuilder hepBuilder = HepProgram.builder();
+                    this.plannerConfig.getRules().forEach(k -> {
+                        if (k.equals(FilterMatchRule.class.getSimpleName())) {
+                            hepBuilder.addRuleInstance(FilterMatchRule.Config.DEFAULT.toRule());
+                        } else {
+                            // todo: add more rules
+                        }
+                    });
+                    return new HepPlanner(hepBuilder.build());
+                case CBO:
+                default:
+                    throw new UnsupportedOperationException("planner type " + opt.name() + " is unsupported yet");
+            }
+        } else {
+            // return HepPlanner with empty rules if optimization is turned off
+            return new HepPlanner(HepProgram.builder().build());
+        }
     }
 }

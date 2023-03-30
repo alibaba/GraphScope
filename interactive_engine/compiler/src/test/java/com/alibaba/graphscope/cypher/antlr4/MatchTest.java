@@ -16,6 +16,9 @@
 
 package com.alibaba.graphscope.cypher.antlr4;
 
+import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.rel.RelNode;
 import org.junit.Assert;
 import org.junit.Test;
@@ -67,6 +70,77 @@ public class MatchTest {
                     + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
                     + " person]}], alias=[b], opt=[VERTEX])\n"
                     + "]}])",
+                match.explain().trim());
+    }
+
+    @Test
+    public void match_4_test() {
+        RelNode match =
+                Utils.eval(
+                                "Match (a:person)-[b:knows*1..3 {weight:1.0}]->(c:person {name:"
+                                        + " 'marko'}) Return a, b")
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], b=[b], isAppend=[false])\n"
+                    + "  GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[c], fusedFilter=[[=(DEFAULT.name, 'marko')]], opt=[END])\n"
+                    + "  GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[knows]}], alias=[b], fusedFilter=[[=(DEFAULT.weight, 1.0E0)]],"
+                    + " opt=[OUT])\n"
+                    + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[c], opt=[END])\n"
+                    + "], offset=[1], fetch=[2], path_opt=[ARBITRARY], result_opt=[EndV],"
+                    + " alias=[b])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[a], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
+                match.explain().trim());
+    }
+
+    @Test
+    public void match_5_test() {
+        RelNode match =
+                Utils.eval("Match(n:person {name: 'ad'})-[:knows]->(x:person) Where n.age > 10 Return n Limit 1")
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], b=[b], isAppend=[false])\n"
+                        + "  GraphLogicalSingleMatch(input=[null],"
+                        + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[c], fusedFilter=[[=(DEFAULT.name, 'marko')]], opt=[END])\n"
+                        + "  GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
+                        + " tables=[knows]}], alias=[b], fusedFilter=[[=(DEFAULT.weight, 1.0E0)]],"
+                        + " opt=[OUT])\n"
+                        + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[c], opt=[END])\n"
+                        + "], offset=[1], fetch=[2], path_opt=[ARBITRARY], result_opt=[EndV],"
+                        + " alias=[b])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[a], opt=[VERTEX])\n"
+                        + "], matchOpt=[INNER])",
+                match.explain().trim());
+    }
+
+    @Test
+    public void match_6_test() {
+        RelNode match =
+                Utils.eval("Match (n) with n.id, count(n) as cnt Return cnt")
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], b=[b], isAppend=[false])\n"
+                        + "  GraphLogicalSingleMatch(input=[null],"
+                        + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[c], fusedFilter=[[=(DEFAULT.name, 'marko')]], opt=[END])\n"
+                        + "  GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
+                        + " tables=[knows]}], alias=[b], fusedFilter=[[=(DEFAULT.weight, 1.0E0)]],"
+                        + " opt=[OUT])\n"
+                        + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[c], opt=[END])\n"
+                        + "], offset=[1], fetch=[2], path_opt=[ARBITRARY], result_opt=[EndV],"
+                        + " alias=[b])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[a], opt=[VERTEX])\n"
+                        + "], matchOpt=[INNER])",
                 match.explain().trim());
     }
 }

@@ -324,7 +324,7 @@ public class GraphBuilder extends RelBuilder {
      * @return
      */
     public RexGraphVariable variable(@Nullable String alias, String property) {
-        alias = (alias == null) ? AliasInference.DEFAULT_NAME : alias;
+         alias = (alias == null) ? AliasInference.DEFAULT_NAME : alias;
         Objects.requireNonNull(property);
         String varName = AliasInference.SIMPLE_NAME(alias) + AliasInference.DELIMITER + property;
         RelDataTypeField aliasField = getAliasField(alias);
@@ -509,12 +509,12 @@ public class GraphBuilder extends RelBuilder {
         AbstractBindableTableScan tableScan;
         if ((filter = topFilter()) != null && (tableScan = inputTableScan(filter)) != null) {
             RexNode condition = filter.getCondition();
-            RexVariableAliasChecker checker =
-                    new RexVariableAliasChecker(
-                            true,
-                            ImmutableList.of(tableScan.getAliasId(), AliasInference.DEFAULT_ID));
+            List<Integer> aliasIds =
+                    condition.accept(
+                            new RexVariableAliasCollector<>(true, RexGraphVariable::getAliasId));
             // fuze all conditions into table scan
-            if (condition.accept(checker)) {
+            if (ImmutableList.of(AliasInference.DEFAULT_ID, tableScan.getAliasId())
+                    .containsAll(aliasIds)) {
                 condition =
                         condition.accept(
                                 new RexVariableAliasConverter(
@@ -522,8 +522,18 @@ public class GraphBuilder extends RelBuilder {
                                         this,
                                         AliasInference.SIMPLE_NAME(AliasInference.DEFAULT_NAME),
                                         AliasInference.DEFAULT_ID));
-                // add the condition in table scan
-                tableScan.setFilters(ImmutableList.of(condition));
+                // add condition into table scan
+                if (ObjectUtils.isEmpty(tableScan.getFilters())) {
+                    tableScan.setFilters(ImmutableList.of(condition));
+                } else {
+                    ImmutableList.Builder listBuilder = new ImmutableList.Builder();
+                    listBuilder.addAll(tableScan.getFilters()).add(condition);
+                    tableScan.setFilters(
+                            ImmutableList.of(
+                                    RexUtil.composeConjunction(
+                                            this.getRexBuilder(),
+                                            listBuilder.build())));
+                }
                 // pop the filter from the inner stack
                 replaceTop(tableScan);
             }
@@ -702,15 +712,11 @@ public class GraphBuilder extends RelBuilder {
             ImmutableList<RexNode> orderKeys,
             @Nullable String alias,
             ImmutableList<RexNode> operands) {
-        // if operands of the aggregate call is empty, set a variable with (alias = null) by default
-        return new GraphAggCall(
-                        getCluster(),
-                        aggFunction,
-                        ObjectUtils.isNotEmpty(operands)
-                                ? operands
-                                : ImmutableList.of(this.variable((String) null)))
-                .as(alias)
-                .distinct(distinct);
+        if (ObjectUtils.isEmpty(operands) && (distinct || aggFunction.getKind() != SqlKind.COUNT)) {
+            throw new IllegalArgumentException(
+                    "empty operands is not permitted when the call is not COUNT(distinct=false)");
+        }
+        return new GraphAggCall(getCluster(), aggFunction, operands).as(alias).distinct(distinct);
     }
 
     @Override

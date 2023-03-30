@@ -17,6 +17,7 @@
 package org.apache.calcite.rex;
 
 import org.apache.calcite.plan.RelOptPredicateList;
+import org.apache.calcite.sql.SqlKind;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class GraphRexSimplify extends RexSimplify {
@@ -36,6 +37,15 @@ public class GraphRexSimplify extends RexSimplify {
     @Override
     RexNode simplifyAnd(RexCall e, RexUnknownAs unknownAs) {
         return e;
+    }
+
+    @Override
+    RexNode simplify(RexNode e, RexUnknownAs unknownAs) {
+        if (e.getKind() == SqlKind.AND || e.getKind() == SqlKind.OR) {
+            return e;
+        } else {
+            return super.simplify(e, unknownAs);
+        }
     }
 
     @Override

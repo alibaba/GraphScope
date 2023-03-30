@@ -19,7 +19,6 @@ package com.alibaba.graphscope.cypher.antlr4.visitor;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rex.RexTmpVariableConverter;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.cypher.antlr4.type.ExprVisitorResult;
 import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
@@ -82,9 +81,11 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
             // extract the end vertex from path_expand results
             if (ctx.oC_NodePattern() != null) {
                 GetVConfig getVConfig = Utils.getVConfig(ctx.oC_NodePattern());
-                return builder.getV(
+                builder.getV(
                         new GetVConfig(
                                 GraphOpt.GetV.END, getVConfig.getLabels(), getVConfig.getAlias()));
+                // fuse filter with endV
+                return visitOC_Properties(ctx.oC_NodePattern().oC_Properties());
             } else {
                 return builder;
             }
@@ -113,7 +114,9 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
 
     @Override
     public GraphBuilder visitOC_Properties(CypherGSParser.OC_PropertiesContext ctx) {
-        return (ctx == null) ? builder : builder.filter(propertyFilters(ctx));
+        return (ctx == null)
+                ? builder
+                : builder.filter(Utils.propertyFilters(this.builder, this.expressionVisitor, ctx));
     }
 
     @Override
@@ -241,25 +244,12 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
                                         ctx.oC_IntegerLiteral()));
     }
 
-    protected List<RexNode> propertyFilters(CypherGSParser.OC_PropertiesContext ctx) {
-        CypherGSParser.OC_MapLiteralContext mapCtx = ctx.oC_MapLiteral();
-        List<RexNode> filters = new ArrayList<>();
-        for (int i = 0; i < mapCtx.oC_PropertyKeyName().size(); ++i) {
-            RexNode variable = builder.variable(null, mapCtx.oC_PropertyKeyName(i).getText());
-            filters.add(
-                    builder.call(
-                            GraphStdOperatorTable.EQUALS,
-                            variable,
-                            expressionVisitor
-                                    .visitOC_StringListNullPredicateExpression(
-                                            mapCtx.oC_StringListNullPredicateExpression(i))
-                                    .getExpr()));
-        }
-        return filters;
+    public GraphBuilder getGraphBuilder() {
+        return builder;
     }
 
-    public GraphBuilder getBuilder() {
-        return builder;
+    public ExpressionVisitor getExpressionVisitor() {
+        return expressionVisitor;
     }
 
     public String inferAlias() {

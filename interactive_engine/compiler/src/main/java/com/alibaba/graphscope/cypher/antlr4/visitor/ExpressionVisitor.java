@@ -39,7 +39,7 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
 
     public ExpressionVisitor(GraphBuilderVisitor parent) {
         this.parent = parent;
-        this.builder = Objects.requireNonNull(parent).getBuilder();
+        this.builder = Objects.requireNonNull(parent).getGraphBuilder();
     }
 
     @Override

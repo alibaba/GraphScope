@@ -46,26 +46,9 @@ public class GraphLogicalAggregate extends Aggregate {
             RelTraitSet traitSet,
             List<RelHint> hints,
             RelNode input,
-            ImmutableBitSet groupSet,
-            @Nullable List<ImmutableBitSet> groupSets,
-            List<AggregateCall> aggCalls) {
-        super(cluster, traitSet, hints, input, groupSet, groupSets, aggCalls);
-    }
-
-    protected GraphLogicalAggregate(
-            GraphOptCluster cluster,
-            List<RelHint> hints,
-            RelNode input,
             GraphGroupKeys groupKey,
             List<GraphAggCall> aggCalls) {
-        this(
-                cluster,
-                RelTraitSet.createEmpty(),
-                hints,
-                input,
-                ImmutableBitSet.of(),
-                null,
-                ImmutableList.of());
+        super(cluster, traitSet, hints, input, ImmutableBitSet.of(), null, ImmutableList.of());
         Objects.requireNonNull(input);
         this.groupKey = Objects.requireNonNull(groupKey);
         // if empty -> the aggregate operator is a dedup
@@ -78,7 +61,7 @@ public class GraphLogicalAggregate extends Aggregate {
             RelNode input,
             GraphGroupKeys groupKey,
             List<GraphAggCall> aggCalls) {
-        return new GraphLogicalAggregate(cluster, hints, input, groupKey, aggCalls);
+        return new GraphLogicalAggregate(cluster, RelTraitSet.createEmpty(), hints, input, groupKey, aggCalls);
     }
 
     @Override
@@ -131,7 +114,7 @@ public class GraphLogicalAggregate extends Aggregate {
             @Nullable List<ImmutableBitSet> groupSets,
             List<AggregateCall> aggCalls) {
         return new GraphLogicalAggregate(
-                getCluster(), traitSet, ImmutableList.of(), input, groupSet, groupSets, aggCalls);
+                getCluster(), traitSet, getHints(), input, this.groupKey, this.aggCalls);
     }
 
     @Override

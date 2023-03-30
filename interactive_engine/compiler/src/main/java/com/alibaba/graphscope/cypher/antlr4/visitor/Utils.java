@@ -16,12 +16,14 @@
 
 package com.alibaba.graphscope.cypher.antlr4.visitor;
 
+import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.grammar.CypherGSParser;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlOperator;
 
 import java.util.ArrayList;
@@ -95,7 +97,7 @@ public abstract class Utils {
     public static GraphOpt.GetV getVOpt(CypherGSParser.OC_RelationshipPatternContext ctx) {
         if (ctx.oC_LeftArrowHead() == null && ctx.oC_RightArrowHead() == null
                 || ctx.oC_LeftArrowHead() != null && ctx.oC_RightArrowHead() != null) {
-            return GraphOpt.GetV.BOTH;
+            return GraphOpt.GetV.OTHER;
         } else if (ctx.oC_RightArrowHead() != null) {
             return GraphOpt.GetV.END;
         } else {
@@ -158,5 +160,25 @@ public abstract class Utils {
             }
         }
         return operators;
+    }
+
+    public static final List<RexNode> propertyFilters(
+            GraphBuilder builder,
+            ExpressionVisitor expressionVisitor,
+            CypherGSParser.OC_PropertiesContext ctx) {
+        CypherGSParser.OC_MapLiteralContext mapCtx = ctx.oC_MapLiteral();
+        List<RexNode> filters = new ArrayList<>();
+        for (int i = 0; i < mapCtx.oC_PropertyKeyName().size(); ++i) {
+            RexNode variable = builder.variable(null, mapCtx.oC_PropertyKeyName(i).getText());
+            filters.add(
+                    builder.call(
+                            GraphStdOperatorTable.EQUALS,
+                            variable,
+                            expressionVisitor
+                                    .visitOC_StringListNullPredicateExpression(
+                                            mapCtx.oC_StringListNullPredicateExpression(i))
+                                    .getExpr()));
+        }
+        return filters;
     }
 }

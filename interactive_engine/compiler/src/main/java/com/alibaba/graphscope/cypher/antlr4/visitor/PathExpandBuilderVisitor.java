@@ -30,7 +30,7 @@ public class PathExpandBuilderVisitor extends CypherGSBaseVisitor<PathExpandConf
     public PathExpandBuilderVisitor(GraphBuilderVisitor parent) {
         this.parent = Objects.requireNonNull(parent);
         // PATH_OPT = ARBITRARY and RESULT_OPT = END_V are set by default
-        this.builder = PathExpandConfig.newBuilder(parent.getBuilder());
+        this.builder = PathExpandConfig.newBuilder(parent.getGraphBuilder());
     }
 
     @Override
@@ -52,14 +52,18 @@ public class PathExpandBuilderVisitor extends CypherGSBaseVisitor<PathExpandConf
     @Override
     public PathExpandConfig.Builder visitOC_NodePattern(CypherGSParser.OC_NodePatternContext ctx) {
         // set getV base in path_expand
-        builder.getV(Utils.getVConfig(ctx));
-        // fuse filters with getV base in path_expand
-        return visitOC_Properties(ctx.oC_Properties());
+        return builder.getV(Utils.getVConfig(ctx));
     }
 
     @Override
     public PathExpandConfig.Builder visitOC_Properties(CypherGSParser.OC_PropertiesContext ctx) {
-        return (ctx == null) ? builder : builder.filter(parent.propertyFilters(ctx));
+        return (ctx == null)
+                ? builder
+                : builder.filter(
+                        Utils.propertyFilters(
+                                this.builder.getInnerBuilder(),
+                                this.parent.getExpressionVisitor(),
+                                ctx));
     }
 
     @Override

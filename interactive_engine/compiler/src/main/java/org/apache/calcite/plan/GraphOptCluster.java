@@ -16,7 +16,6 @@
 
 package org.apache.calcite.plan;
 
-import com.alibaba.graphscope.common.ir.planner.GraphHepPlanner;
 import com.alibaba.graphscope.common.ir.tools.AliasIdGenerator;
 
 import org.apache.calcite.rel.RelNode;
@@ -46,9 +45,9 @@ public class GraphOptCluster extends RelOptCluster {
         this.idGenerator = idGenerator;
     }
 
-    public static GraphOptCluster create(RexBuilder rexBuilder) {
+    public static GraphOptCluster create(RelOptPlanner planner, RexBuilder rexBuilder) {
         return new GraphOptCluster(
-                GraphHepPlanner.DEFAULT,
+                planner,
                 rexBuilder.getTypeFactory(),
                 rexBuilder,
                 new AtomicInteger(0),
