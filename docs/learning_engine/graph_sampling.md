@@ -1,6 +1,5 @@
 # Graph Sampling
 
-## Introduction
 Graph sampling is an effective technique for managing large graphs and is widely used in programming paradigms represented by the GraphSAGE framework. Sampling reduces data size and facilitates efficient processing by Tensor-Based computing frameworks through data alignment.
 
 Before sampling, we are required to provide seeds, which can be either nodes or edges. Correspondingly, GLE provides graph traversal operators to prepare the seeds for batch-sampling:
@@ -106,7 +105,7 @@ for i in range(5):
 For usage and interfaces of negative sampling, please check [the negative sampling part of GLE](https://graph-learn.readthedocs.io/en/latest/en/gl/graph/graph_operator/negative_sampling.html) for more details.
 
 
-## GSL Introduction
+## GSL
 GLE abstracts sampling operations into a set of interfaces, called GSL (Graph Sampling Language). Generally, graph sampling consists of several categories as follows.
 
 - Traversal type (Traverse), which obtains point or edge data of a batch from the graph.
