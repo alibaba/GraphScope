@@ -99,7 +99,7 @@ public class GroupTest {
                                                 builder.variable(null, "name"),
                                                 builder.variable(null, "age")),
                                         ImmutableList.of("a", "b")),
-                                builder.collect(false, "c", builder.variable((String) null)))
+                                builder.collect(false, "c", ImmutableList.of()))
                         .build();
         Assert.assertEquals(
                 "GraphLogicalAggregate(keys=[{variables=[DEFAULT.name, DEFAULT.age], aliases=[a,"
