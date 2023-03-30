@@ -19,10 +19,13 @@
 //! protobuf structure.
 //!
 
+use std::convert::TryInto;
+
 use ir_common::expr_parse::str_to_expr_pb;
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
 use ir_common::generated::common::expr_opr::Item;
+use ir_common::generated::physical as physical_pb;
 use ir_common::KeyId;
 use ir_physical_client::physical_builder::{JobBuilder, Plan};
 
@@ -245,9 +248,10 @@ impl AsPhysical for pb::PathExpand {
             if edge_expand.is_some() && getv.is_none() {
                 // Must be the case of EdgeExpand with Opt=Vertex
                 if edge_expand.unwrap().expand_opt != pb::edge_expand::ExpandOpt::Vertex as i32 {
-                    return Err(IrError::Unsupported(
-                        "Single EdgeExpand with Opt not Vertex in PathExpand".to_string(),
-                    ));
+                    return Err(IrError::Unsupported(format!(
+                        "ExpandBase in PathExpand {:?}",
+                        expand_base
+                    )));
                 }
             } else if edge_expand.is_some() && getv.is_some() {
                 let edge_expand = edge_expand.unwrap();
@@ -295,6 +299,52 @@ impl AsPhysical for pb::PathExpand {
     }
 }
 
+// Try to apply the optimize rule: ExpandE + GetV = ExpandV, it it satisfies:
+// 1. the previous op is ExpandE, and with no alias (which means that the edges won't be accessed later).
+// 2. `GetV` is GetV(Adj) (i.e., opt=Start/End/Other) without any filters or further query semantics.
+// 3. the direction should be: outE + inV = out; inE + outV = in; and bothE + otherV = both
+fn build_and_try_fuse_get_v(builder: &mut JobBuilder, mut get_v: pb::GetV) -> IrResult<()> {
+    if get_v.opt == 4 {
+        return Err(IrError::Unsupported("Try to fuse GetV with Opt=Self into ExpandE".to_string()));
+    }
+    if let Some(params) = get_v.params.as_mut() {
+        if params.is_queryable() {
+            return Err(IrError::Unsupported("Try to fuse GetV with predicates into ExpandE".to_string()));
+        } else if !params.tables.is_empty() {
+            // although this doesn't need query, it cannot be fused into ExpandExpand since we cannot specify vertex labels in ExpandV
+            builder.get_v(get_v);
+            return Ok(());
+        }
+    }
+    // Try to fuse: ExpandE + GetV(Adj) = ExpandV
+    if let Some(last_op) = builder.get_last_op_mut() {
+        let op_kind = last_op
+            .opr
+            .as_mut()
+            .ok_or(IrError::MissingData(format!("PhysicalOpr")))?
+            .op_kind
+            .as_mut()
+            .ok_or(IrError::MissingData(format!("PhysicalOpr OpKind")))?;
+        if let physical_pb::physical_opr::operator::OpKind::Edge(ref mut edge) = op_kind {
+            if edge.alias.is_none() {
+                // outE + inV || inE + outV || bothE + otherV
+                if (edge.direction == 0 && get_v.opt == 1)
+                    || (edge.direction == 1 && get_v.opt == 0)
+                    || (edge.direction == 2 && get_v.opt == 2)
+                {
+                    edge.alias = get_v
+                        .alias
+                        .map(|alias| alias.try_into().unwrap());
+                    edge.expand_opt = 0; // expandV
+                    return Ok(());
+                }
+            }
+        }
+    }
+    builder.get_v(get_v);
+    Ok(())
+}
+
 impl AsPhysical for pb::GetV {
     fn add_job_builder(&self, builder: &mut JobBuilder, plan_meta: &mut PlanMeta) -> IrResult<()> {
         // Currently, the case of `g.V().out().has(xxx)` would be translated into `Source + EdgeExpand(ExpandV) + Filter` in logical plan.
@@ -317,12 +367,13 @@ impl AsPhysical for pb::GetV {
                     alias: getv.alias,
                     meta_data: None,
                 };
+                params.tables.clear();
                 params.predicate.take();
                 params.is_all_columns = false;
                 params.columns.clear();
                 getv.alias = None;
-                // GetV(Adj)
-                builder.get_v(getv);
+                // GetV(Adj) and try to fuse it with ExpandE
+                build_and_try_fuse_get_v(builder, getv)?;
                 // Shuffle + GetV(Self)
                 if plan_meta.is_partition() {
                     builder.shuffle(None);
@@ -331,8 +382,8 @@ impl AsPhysical for pb::GetV {
                 return Ok(());
             }
         }
-        // Otherwise, fetches adjacent vertex ids from an edge directly.
-        builder.get_v(getv);
+        // Otherwise, fetches adjacent vertex ids from an edge directly; and try to fuse it with ExpandE
+        build_and_try_fuse_get_v(builder, getv)?;
         Ok(())
     }
 }
@@ -1232,8 +1283,8 @@ mod test {
 
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_scan_source(build_scan(vec![]));
-        expected_builder.edge_expand(build_edgexpd(1, vec![], None));
-        expected_builder.get_v(build_getv(Some(0.into())));
+        // a fused ExpandV
+        expected_builder.edge_expand(build_edgexpd(0, vec![], Some(0.into())));
         expected_builder.project(build_project("{@0.name, @0.id, @0.age}"));
         expected_builder.sink(build_sink());
 
@@ -1248,8 +1299,8 @@ mod test {
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_scan_source(build_scan(vec![]));
         expected_builder.shuffle(None);
-        expected_builder.edge_expand(build_edgexpd(1, vec![], None));
-        expected_builder.get_v(build_getv(Some(0.into())));
+        // a fused ExpandV
+        expected_builder.edge_expand(build_edgexpd(0, vec![], Some(0.into())));
         expected_builder.shuffle(Some(0.into()));
         expected_builder.get_v(build_auxilia_with_tag_alias_columns(
             Some(0.into()),
@@ -1299,8 +1350,8 @@ mod test {
 
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_scan_source(build_scan(vec![]));
-        expected_builder.edge_expand(build_edgexpd(1, vec![], None));
-        expected_builder.get_v(build_getv(None));
+        // a fused ExpandV
+        expected_builder.edge_expand(build_edgexpd(0, vec![], None));
         expected_builder.get_v(build_auxilia_with_predicates("@.age > 10"));
         expected_builder.sink(build_sink());
         assert_eq!(job_builder, expected_builder);
@@ -2066,11 +2117,18 @@ mod test {
             .unwrap();
 
         let unfold_opr = pb::Unfold { tag: Some(2.into()), alias: Some(2.into()), meta_data: None };
-
+        // extend 0->1
+        let fused_expand_ab_opr_vertex = pb::EdgeExpand {
+            v_tag: Some(0.into()),
+            direction: 0,
+            params: None,
+            expand_opt: pb::edge_expand::ExpandOpt::Vertex as i32,
+            alias: Some(1.into()),
+            meta_data: None,
+        };
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_scan_source(source_opr);
-        expected_builder.edge_expand(expand_ab_opr_edge);
-        expected_builder.get_v(get_b);
+        expected_builder.edge_expand(fused_expand_ab_opr_vertex);
 
         let mut sub_builder_1 = JobBuilder::default();
         let mut sub_builder_2 = JobBuilder::default();
@@ -2180,11 +2238,18 @@ mod test {
             .unwrap();
 
         let unfold_opr = pb::Unfold { tag: Some(2.into()), alias: Some(2.into()), meta_data: None };
-
+        // extend 0->1
+        let fused_expand_ab_opr_vertex = pb::EdgeExpand {
+            v_tag: Some(0.into()),
+            direction: 0,
+            params: None,
+            expand_opt: pb::edge_expand::ExpandOpt::Vertex as i32,
+            alias: Some(1.into()),
+            meta_data: None,
+        };
         let mut expected_builder = JobBuilder::default();
         expected_builder.add_scan_source(source_opr);
-        expected_builder.edge_expand(expand_ab_opr_edge);
-        expected_builder.get_v(get_b);
+        expected_builder.edge_expand(fused_expand_ab_opr_vertex);
 
         let mut sub_builder_1 = JobBuilder::default();
         let mut sub_builder_2 = JobBuilder::default();
