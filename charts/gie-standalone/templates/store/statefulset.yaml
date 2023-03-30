@@ -17,21 +17,21 @@ metadata:
   annotations: {{- include "graphscope-store.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
   {{- end }}
 spec:
-  replicas: {{ .Values.store.replicaCount }}
+  replicas: {{ .Values.executor.replicaCount }}
   selector:
     matchLabels: {{ include "graphscope-store.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: store
   serviceName: {{ include "graphscope-store.store.fullname" . }}-headless
   updateStrategy:
-    type: {{ .Values.store.updateStrategy }}
-    {{- if (eq "Recreate" .Values.store.updateStrategy) }}
+    type: {{ .Values.executor.updateStrategy }}
+    {{- if (eq "Recreate" .Values.executor.updateStrategy) }}
     rollingUpdate: null
     {{- end }}
   template:
     metadata:
       annotations:
-        {{- if .Values.store.podAnnotations }}
-        {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.store.podAnnotations "context" $) | nindent 8 }}
+        {{- if .Values.executor.podAnnotations }}
+        {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.executor.podAnnotations "context" $) | nindent 8 }}
         {{- end }}
       labels: {{- include "graphscope-store.labels" . | nindent 8 }}
         app.kubernetes.io/component: store
@@ -43,17 +43,17 @@ spec:
       imagePullSecrets: {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "graphscope-store.serviceAccountName" . }}
-      {{- if .Values.store.affinity }}
-      affinity: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.store.affinity "context" $) | nindent 8 }}
+      {{- if .Values.executor.affinity }}
+      affinity: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.executor.affinity "context" $) | nindent 8 }}
       {{- end }}
       initContainers:
-        {{- if .Values.store.initContainers }}
-        {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.store.initContainers "context" $) | nindent 8 }}
+        {{- if .Values.executor.initContainers }}
+        {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.executor.initContainers "context" $) | nindent 8 }}
         {{- end }}
       containers:
         - name: engine
-          image: {{ include "graphscope-store.image" . }}
-          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          image: {{ include "graphscope-store.store.image" . }}
+          imagePullPolicy: {{ .Values.executor.image.pullPolicy | quote }}
           command:
           {{- if (eq "Vineyard" .Values.storageType) }}
             - /bin/bash
@@ -61,12 +61,9 @@ spec:
             - |
               sleep 5s
 
-              chmod +x $GRAPHSCOPE_HOME/bin/kube_ssh
-              sudo cp $GRAPHSCOPE_HOME/bin/kube_ssh /usr/bin/kube_ssh
-
               hosts=/tmp/hosts_of_nodes
               rm -rf $hosts && touch $hosts
-              pod_ips=`kubectl get pod -lapp.kubernetes.io/component=store -o jsonpath='{.items[*].status.podIP}'`
+              pod_ips=`kubectl get pod -lapp.kubernetes.io/component=store,app.kubernetes.io/instance=$INSTANCE_NAME -o jsonpath='{.items[*].status.podIP}'`
               pod_names=""
               for ip in `echo $pod_ips`
               do
@@ -80,15 +77,12 @@ spec:
               export VINEYARD_IPC_SOCKET=/tmp/vineyard.sock
               if [ $SERVERSSIZE -eq 1 ]
               then
-                $GRAPHSCOPE_HOME/../vineyard/vineyardd --socket=${VINEYARD_IPC_SOCKET} --meta=local &
+                vineyardd --socket=${VINEYARD_IPC_SOCKET} --meta=local &
               else
-                $GRAPHSCOPE_HOME/../vineyard/vineyardd --socket=${VINEYARD_IPC_SOCKET} --etcd_endpoint=$ETCD_ENDPOINT &
+                vineyardd --socket=${VINEYARD_IPC_SOCKET} --etcd_endpoint=$ETCD_ENDPOINT &
               fi
 
               # load vineyard graph
-              export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(python3 -c "import os; import vineyard; print(os.path.dirname(vineyard.__file__))")
-              export OPAL_PREFIX=$(python3 -c "import os; import graphscope; print(os.path.abspath(os.path.dirname(graphscope.__file__) + '/../graphscope.runtime/openmpi'))")
-
               config_path=/etc/groot/config
 
               [[ `hostname` =~ -([0-9]+)$ ]] || exit 1
@@ -101,7 +95,7 @@ spec:
                   -x OPAL_PREFIX=$OPAL_PREFIX \
                   -x VINEYARD_IPC_SOCKET=$VINEYARD_IPC_SOCKET \
                   -x config_path=$config_path \
-                    $GRAPHSCOPE_HOME/bin/vineyard_htap_loader --config $config_path/$HTAP_LOADER_CONFIG
+                    vineyard-graph-loader --config $config_path/$HTAP_LOADER_CONFIG
                 if [ $? -ne 0 ]
                 then
                   echo "load vineyard graph fail"
@@ -116,6 +110,16 @@ spec:
                 json_file=`ls /tmp/*.json`
               done
               object_id=${json_file//[^0-9]/}
+
+              # write schema json to remote frontend
+              if [ $server_id -eq 0 ]
+              then
+                frontend_pods=`kubectl get pod -lapp.kubernetes.io/component=frontend,app.kubernetes.io/instance=$INSTANCE_NAME --no-headers -o custom-columns=":metadata.name"`
+                for pod in $(echo $frontend_pods)
+                do
+                  kubectl cp $json_file $pod:$json_file
+                done
+              fi
 
               # start engine service
               pegasus_hosts=""
@@ -146,65 +150,69 @@ spec:
           {{- end }}
           env:
             - name: GAIA_RPC_PORT
-              value: {{ .Values.store.service.gaiaRpc | quote }}
+              value: {{ .Values.executor.service.gaiaRpc | quote }}
             - name: GAIA_ENGINE_PORT
-              value: {{ .Values.store.service.gaiaEngine | quote }}
+              value: {{ .Values.executor.service.gaiaEngine | quote }}
             - name: STORE_DATA_PATH
               value: {{ .Values.storeDataPath | quote }}
             - name: DNS_NAME_PREFIX_STORE
               value: {{ $storeFullname }}-{}.{{ $storeFullname }}-headless.{{ $releaseNamespace }}.svc.{{ $clusterDomain }}
             - name: SERVERSSIZE
-              value: {{ .Values.store.replicaCount | quote }}
+              value: {{ .Values.executor.replicaCount | quote }}
             {{- if (eq "Vineyard" .Values.storageType) }}
             - name: ETCD_ENDPOINT
               value: {{ .Values.etcdEndpoint | quote }}
             - name: HTAP_LOADER_CONFIG
               value: {{ .Values.htapLoaderConfig | quote }}
+            - name: INSTANCE_NAME
+              value: {{ .Release.Name | quote }}
             {{- end }}
           ports:
             - name: gaia-rpc
-              containerPort: {{ .Values.store.service.gaiaRpc }}
+              containerPort: {{ .Values.executor.service.gaiaRpc }}
             - name: gaia-engine
-              containerPort: {{ .Values.store.service.gaiaEngine }}
-          {{- if .Values.store.resources }}
-          resources: {{- toYaml .Values.store.resources | nindent 12 }}
+              containerPort: {{ .Values.executor.service.gaiaEngine }}
+          {{- if .Values.executor.resources }}
+          resources: {{- toYaml .Values.executor.resources | nindent 12 }}
           {{- end }}
           volumeMounts:
+            {{- if eq (hasPrefix "hdfs" .Values.storeDataPath) false }}
             - name: data
               mountPath: {{ .Values.storeDataPath }}
+            {{- end }}
             - name: config
               mountPath: /etc/groot/config
       volumes:
         - name: config
           configMap:
             name: {{ include "graphscope-store.configmapName" . }}
-  {{- if and .Values.store.persistence.enabled .Values.store.persistence.existingClaim }}
+  {{- if and .Values.executor.persistence.enabled .Values.executor.persistence.existingClaim }}
         - name: data
           persistentVolumeClaim:
-            claimName: {{ tpl .Values.store.persistence.existingClaim . }}
-  {{- else if not .Values.store.persistence.enabled }}
+            claimName: {{ tpl .Values.executor.persistence.existingClaim . }}
+  {{- else if not .Values.executor.persistence.enabled }}
         - name: data
           emptyDir: {}
-  {{- else if and .Values.store.persistence.enabled (not .Values.store.persistence.existingClaim) }}
+  {{- else if and .Values.executor.persistence.enabled (not .Values.executor.persistence.existingClaim) }}
   volumeClaimTemplates:
     - metadata:
         name: data
         labels: {{ include "graphscope-store.selectorLabels" . | nindent 10 }}
           app.kubernetes.io/component: store
-      {{- if .Values.store.persistence.annotations }}
+      {{- if .Values.executor.persistence.annotations }}
         annotations:
-          {{- toYaml .Values.store.persistence.annotations | nindent 10 }}
+          {{- toYaml .Values.executor.persistence.annotations | nindent 10 }}
       {{- end }}
       spec:
         accessModes:
-          {{- range .Values.store.persistence.accessModes }}
+          {{- range .Values.executor.persistence.accessModes }}
           - {{ . | quote }}
           {{- end }}
         resources:
           requests:
-            storage: {{ .Values.store.persistence.size | quote }}
-        {{ include "graphscope-store.storage.class" .Values.store.persistence }}
-        {{- if .Values.store.persistence.selector }}
-        selector: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.store.persistence.selector "context" $) | nindent 10 }}
+            storage: {{ .Values.executor.persistence.size | quote }}
+        {{ include "graphscope-store.storage.class" .Values.executor.persistence }}
+        {{- if .Values.executor.persistence.selector }}
+        selector: {{- include "graphscope-store.tplvalues.render" (dict "value" .Values.executor.persistence.selector "context" $) | nindent 10 }}
         {{- end -}}
   {{- end }}

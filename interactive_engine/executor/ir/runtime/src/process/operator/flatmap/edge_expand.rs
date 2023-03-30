@@ -80,11 +80,7 @@ impl<E: Entry + 'static> FlatMapFunction<Record, Record> for EdgeExpandOperator<
                     let graph_path = entry
                         .as_graph_path()
                         .ok_or(FnExecError::Unreachable)?;
-                    let path_end = graph_path
-                        .get_path_end()
-                        .ok_or(FnExecError::unexpected_data_error("Get path_end failed in path expand"))?;
-                    let id = path_end.id();
-                    let iter = self.stmt.exec(id)?;
+                    let iter = self.stmt.exec(graph_path.get_path_end().id())?;
                     let curr_path = graph_path.clone();
                     Ok(Box::new(RecordPathExpandIter::new(input, curr_path, iter)))
                 }

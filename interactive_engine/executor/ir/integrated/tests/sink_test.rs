@@ -25,12 +25,12 @@ mod test {
     use graph_store::ldbc::LDBCVertexParser;
     use ir_common::generated::algebra as pb;
     use ir_common::generated::common as common_pb;
-    use runtime::process::entry::Entry;
-
-    use crate::common::test::*;
     use ir_common::KeyId;
     use ir_physical_client::physical_builder::JobBuilder;
     use pegasus_server::JobRequest;
+    use runtime::process::entry::Entry;
+
+    use crate::common::test::*;
 
     fn init_sink_request(
         source_alias: Option<KeyId>, sink_keys: Vec<common_pb::NameOrIdKey>,

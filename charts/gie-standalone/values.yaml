@@ -2,24 +2,6 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-image:
-  registry: registry.cn-hongkong.aliyuncs.com
-  repository: graphscope/gie-exp-runtime
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
-  ## Specify a imagePullPolicy
-  ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
-  ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
-  ##
-  pullPolicy: IfNotPresent
-  ## Optionally specify an array of imagePullSecrets (secrets must be manually created in the namespace)
-  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-  ## Example:
-  ## pullSecrets:
-  ##   - myRegistryKeySecretName
-  ##
-  pullSecrets: []
-
 nameOverride: ""
 
 fullnameOverride: ""
@@ -40,13 +22,16 @@ commonLabels: {}
 javaOpts: ""
 
 ## Vineyard or Experimental Storage
-storageType: Experimental
+storageType: Vineyard
 
 ## Store Config
 storeDataPath: "/tmp/data"
 
-## Frontend Config
+## schema needed by compiler when using experimental store
 schemaConfig: "expr_modern_schema.json"
+
+## mappings from csv to data type in vineyard store
+htapLoaderConfig: "v6d_modern_loader.json"
 
 ## Pegasus Config
 pegasusWorkerNum: 2
@@ -56,9 +41,6 @@ pegasusTimeout: 240000
 pegasusBatchSize: 1024
 
 pegasusOutputCapacity: 16
-
-## the following configurations are necessary when using vineyard store
-htapLoaderConfig: "v6d_modern_loader.json"
 
 ## need by vineyard in distributed env
 etcdEndpoint: "etcd-for-vineyard.default.svc.cluster.local:2379"
@@ -90,7 +72,25 @@ serviceAccount:
 
 ## GraphScope Store parameters
 ##
-store:
+executor:
+  image:
+    registry: registry.cn-hongkong.aliyuncs.com
+    repository: graphscope/interactive-executor
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "0.20.0"
+    ## Specify a imagePullPolicy
+    ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+    ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+    ##
+    pullPolicy: IfNotPresent
+    ## Optionally specify an array of imagePullSecrets (secrets must be manually created in the namespace)
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+    ## Example:
+    ## pullSecrets:
+    ##   - myRegistryKeySecretName
+    ##
+    pullSecrets: [ ]
+
   replicaCount: 1
 
   ## updateStrategy for GraphScope Store statefulset
@@ -256,6 +256,24 @@ store:
 ## GraphScope Frontend parameters
 ##
 frontend:
+  image:
+    registry: registry.cn-hongkong.aliyuncs.com
+    repository: graphscope/interactive-frontend
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "0.20.0"
+    ## Specify a imagePullPolicy
+    ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+    ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+    ##
+    pullPolicy: IfNotPresent
+    ## Optionally specify an array of imagePullSecrets (secrets must be manually created in the namespace)
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+    ## Example:
+    ## pullSecrets:
+    ##   - myRegistryKeySecretName
+    ##
+    pullSecrets: [ ]
+
   replicaCount: 1
 
   ## updateStrategy for GraphScope Store statefulset
