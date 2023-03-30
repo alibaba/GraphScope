@@ -80,10 +80,7 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
                     new PathExpandBuilderVisitor(this).visitOC_PatternElementChain(ctx).build());
             // extract the end vertex from path_expand results
             if (ctx.oC_NodePattern() != null) {
-                GetVConfig getVConfig = Utils.getVConfig(ctx.oC_NodePattern());
-                builder.getV(
-                        new GetVConfig(
-                                GraphOpt.GetV.END, getVConfig.getLabels(), getVConfig.getAlias()));
+                builder.getV(Utils.getVConfig(ctx.oC_NodePattern()));
                 // fuse filter with endV
                 return visitOC_Properties(ctx.oC_NodePattern().oC_Properties());
             } else {
