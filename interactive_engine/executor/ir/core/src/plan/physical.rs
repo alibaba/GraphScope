@@ -835,7 +835,6 @@ fn add_intersect_job_builder(
                 }
                 let mut last_edge_expand = base_edge_expand.clone();
                 last_edge_expand.v_tag = None;
-                last_edge_expand.alias = None;
                 let hop_range = path_expand
                     .hop_range
                     .as_mut()
@@ -867,7 +866,7 @@ fn add_intersect_job_builder(
                     auxilia = Some(get_v.clone());
                 }
             }
-        };
+        }
         let sub_plan = sub_bldr.take_plan();
         intersect_plans.push(sub_plan);
     }

@@ -433,7 +433,7 @@ impl Pattern {
                                     .entry(pre_dst_vertex_id)
                                     .or_default()
                                     .push(vertex_params)
-                            };
+                            }
                         }
                     }
                     Some(BinderItem::Vertex(get_v)) => {
@@ -653,7 +653,9 @@ fn generate_source_operator(
         .get_vertex_parameters(source_vertex_id)?
         .cloned()
     {
-        vertex_param.tables = source_vertex_table;
+        if source_vertex_table.len() > 0 {
+            vertex_param.tables = source_vertex_table;
+        }
         vertex_param
     } else {
         query_params(source_vertex_table, vec![], None)
@@ -913,14 +915,7 @@ fn get_edge_expand_from_binder<'a, 'b>(
 /// Pick up pb::QueryParams for vertex from a binder in pb::Pattern's sentences
 fn get_vertex_parameters_from_binder(binder: &pb::pattern::Binder) -> Option<pb::QueryParams> {
     use pb::pattern::binder::Item as BinderItem;
-    if let Some(BinderItem::Path(path_expand)) = binder.item.as_ref() {
-        path_expand
-            .base
-            .as_ref()
-            .and_then(|expand_base| expand_base.get_v.as_ref())
-            .and_then(|get_v| get_v.params.as_ref())
-            .cloned()
-    } else if let Some(BinderItem::Select(select)) = binder.item.as_ref() {
+    if let Some(BinderItem::Select(select)) = binder.item.as_ref() {
         select
             .predicate
             .as_ref()

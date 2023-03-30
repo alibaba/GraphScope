@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 use std::fmt;
 use std::ops::Deref;
@@ -620,7 +621,15 @@ impl pb::QueryParams {
     }
 
     pub fn is_empty(&self) -> bool {
-        self.eq(&pb::QueryParams::default())
+        self.eq(&pb::QueryParams {
+            tables: vec![],
+            columns: vec![],
+            is_all_columns: false,
+            limit: None,
+            predicate: None,
+            sample_ratio: 1.0,
+            extra: HashMap::new(),
+        })
     }
 }
 

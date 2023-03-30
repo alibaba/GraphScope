@@ -71,7 +71,15 @@ pub fn combine_query_params(params1: pb::QueryParams, params2: pb::QueryParams) 
     params.predicate = {
         let predicate1 = params.predicate;
         let predicate2 = params2.predicate;
-        predicate1.and_then(|expr1| predicate2.map(|expr2| combine_exprs(expr1, expr2)))
+        if predicate1.is_some() && predicate2.is_some() {
+            predicate1.and_then(|expr1| predicate2.map(|expr2| combine_exprs(expr1, expr2)))
+        } else if predicate1.is_some() {
+            predicate1
+        } else if predicate2.is_some() {
+            predicate2
+        } else {
+            None
+        }
     };
     if params2.sample_ratio < params.sample_ratio {
         params.sample_ratio = params2.sample_ratio
