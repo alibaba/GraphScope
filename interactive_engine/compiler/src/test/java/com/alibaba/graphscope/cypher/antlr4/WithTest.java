@@ -40,7 +40,7 @@ public class WithTest {
                 "GraphLogicalProject(name=[a.name], d=[b], isAppend=[false])\n"
                     + "  GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
-                    + " person]}], alias=[~DEFAULT], opt=[END])\n"
+                    + " person]}], alias=[DEFAULT], opt=[END])\n"
                     + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
                     + " alias=[b], opt=[OUT])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
@@ -57,7 +57,7 @@ public class WithTest {
                 "GraphLogicalProject(c=[+(a.age, -(10, b.weight))], isAppend=[false])\n"
                     + "  GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
-                    + " person]}], alias=[~DEFAULT], opt=[BOTH])\n"
+                    + " person]}], alias=[DEFAULT], opt=[OTHER])\n"
                     + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
                     + " alias=[b], opt=[BOTH])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
@@ -72,7 +72,8 @@ public class WithTest {
         RelNode aggregate = Utils.eval("Match (a) Return a.name, count(a.name) as b").build();
         Assert.assertEquals(
                 "GraphLogicalAggregate(keys=[{variables=[a.name], aliases=[name]}],"
-                    + " values=[[{operands=[a.name], aggFunction=COUNT, alias='b'}]])\n"
+                    + " values=[[{operands=[a.name], aggFunction=COUNT, alias='b',"
+                    + " distinct=false}]])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[a], opt=[VERTEX])",
                 aggregate.explain().trim());
@@ -86,7 +87,8 @@ public class WithTest {
         Assert.assertEquals(
                 "GraphLogicalProject(name=[EXPR$1], d=[+(EXPR$0, 1)], isAppend=[false])\n"
                         + "  GraphLogicalAggregate(keys=[{variables=[a.name], aliases=[EXPR$1]}],"
-                        + " values=[[{operands=[a.name], aggFunction=COUNT, alias='EXPR$0'}]])\n"
+                        + " values=[[{operands=[a.name], aggFunction=COUNT, alias='EXPR$0',"
+                        + " distinct=false}]])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
                         + " person]}], alias=[a], opt=[VERTEX])",
                 project.explain().trim());

@@ -133,7 +133,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         this.graphBuilderGenerator =
                 (StatisticSchema schema) -> {
                     Objects.requireNonNull(schema);
-                    GraphOptCluster optCluster = GraphOptCluster.create(getRelOptPlanner(), rexBuilder);
+                    GraphOptCluster optCluster =
+                            GraphOptCluster.create(getRelOptPlanner(), rexBuilder);
                     return GraphBuilder.create(
                             null, optCluster, new GraphOptSchema(optCluster, schema));
                 };
@@ -360,15 +361,14 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                             irMeta);
                                 } else if (o != null && o instanceof GraphBuilder) {
                                     GraphBuilder builder = (GraphBuilder) o;
-                                    GraphOptCluster optCluster = (GraphOptCluster) builder.getCluster();
+                                    GraphOptCluster optCluster =
+                                            (GraphOptCluster) builder.getCluster();
                                     RelNode topNode = builder.build();
-                                    logger.info("before topNode {}", topNode.explain());
                                     // apply optimizations
                                     if (this.plannerConfig.isOn()) {
                                         RelOptPlanner planner = optCluster.getPlanner();
                                         planner.setRoot(topNode);
                                         topNode = planner.findBestExp();
-                                        logger.info("after topNode {}", topNode.explain());
                                     }
                                     if (language.equals(
                                             AntlrGremlinScriptEngineFactory.LANGUAGE_NAME)) {
@@ -520,17 +520,22 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
             switch (opt) {
                 case RBO:
                     HepProgramBuilder hepBuilder = HepProgram.builder();
-                    this.plannerConfig.getRules().forEach(k -> {
-                        if (k.equals(FilterMatchRule.class.getSimpleName())) {
-                            hepBuilder.addRuleInstance(FilterMatchRule.Config.DEFAULT.toRule());
-                        } else {
-                            // todo: add more rules
-                        }
-                    });
+                    this.plannerConfig
+                            .getRules()
+                            .forEach(
+                                    k -> {
+                                        if (k.equals(FilterMatchRule.class.getSimpleName())) {
+                                            hepBuilder.addRuleInstance(
+                                                    FilterMatchRule.Config.DEFAULT.toRule());
+                                        } else {
+                                            // todo: add more rules
+                                        }
+                                    });
                     return new HepPlanner(hepBuilder.build());
                 case CBO:
                 default:
-                    throw new UnsupportedOperationException("planner type " + opt.name() + " is unsupported yet");
+                    throw new UnsupportedOperationException(
+                            "planner type " + opt.name() + " is unsupported yet");
             }
         } else {
             // return HepPlanner with empty rules if optimization is turned off

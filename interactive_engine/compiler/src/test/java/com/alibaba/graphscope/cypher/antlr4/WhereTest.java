@@ -54,8 +54,8 @@ public class WhereTest {
         Assert.assertEquals(
                 "GraphLogicalProject(a=[a], isAppend=[false])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
-                    + " alias=[a], fusedFilter=[[AND(=(a.name, 'kli'), OR(=(+(a.age, 1), 29),"
-                    + " =(a.name, 'marko')))]], opt=[VERTEX])",
+                    + " alias=[a], fusedFilter=[[AND(=(DEFAULT.name, 'kli'), OR(=(+(DEFAULT.age,"
+                    + " 1), 29), =(DEFAULT.name, 'marko')))]], opt=[VERTEX])",
                 where.explain().trim());
     }
 }

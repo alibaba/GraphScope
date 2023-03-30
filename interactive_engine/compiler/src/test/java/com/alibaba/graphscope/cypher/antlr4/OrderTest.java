@@ -43,7 +43,7 @@ public class OrderTest {
                     + "  GraphLogicalProject(a=[a], b=[b], isAppend=[false])\n"
                     + "    GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
-                    + " person]}], alias=[~DEFAULT], opt=[BOTH])\n"
+                    + " person]}], alias=[DEFAULT], opt=[OTHER])\n"
                     + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
                     + " alias=[b], opt=[BOTH])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
