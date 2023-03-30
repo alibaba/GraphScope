@@ -17,7 +17,7 @@ use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as pb;
 use ir_common::KeyId;
 
-use crate::glogue::error::{IrPatternError, IrPatternResult};
+use crate::glogue::error::IrPatternResult;
 use crate::glogue::pattern::{Pattern, PbEdgeOrPath};
 use crate::glogue::{query_params_to_get_v, DynIter, PatternDirection, PatternId};
 
@@ -61,66 +61,21 @@ impl ExactExtendEdge {
         Ok(edge_opr.into())
     }
 
-    /// Use the ExactExtendEdge to generate corresponding path_expand related operators
-    /// Specifically, path_expand will be translated to:
-    /// If path_expand is the one to be intersected, translate path_expand(l,h) to path_expand(l-1, h-1) + endV() + edge_expand
-    /// Otherwise, treat path_expand as the same as edge_expand (except add endV() back for path_expand)
+    /// Use the ExactExtendEdge to generate corresponding path_expand operators
     pub fn generate_path_expands(
-        &self, mut path_opr: pb::PathExpand, is_intersect: bool,
-    ) -> IrPatternResult<Vec<pb::logical_plan::Operator>> {
-        let mut expand_operators = vec![];
-        let start_tag = Some((self.src_vertex_id as KeyId).into());
-        let direction = self.dir as i32;
-
-        path_opr.start_tag = start_tag.clone();
+        &self, mut path_opr: pb::PathExpand,
+    ) -> IrPatternResult<pb::logical_plan::Operator> {
+        path_opr.start_tag = Some((self.src_vertex_id as KeyId).into());
         path_opr.alias = None;
-        let path_expand_base = path_opr
+        path_opr
             .base
             .as_mut()
-            .ok_or(ParsePbError::EmptyFieldError("PathExpand::base in Pattern".to_string()))?;
-        let get_v = path_expand_base.get_v.clone();
-        let mut base_edge_expand = path_expand_base
+            .ok_or(ParsePbError::EmptyFieldError("PathExpand::base in Pattern".to_string()))?
             .edge_expand
             .as_mut()
-            .ok_or(ParsePbError::EmptyFieldError("PathExpand::base::edge_expand in Pattern".to_string()))?;
-        // Ensure the base is ExpandV or ExpandE + GetV
-        if get_v == None && base_edge_expand.expand_opt == pb::edge_expand::ExpandOpt::Edge as i32 {
-            Err(IrPatternError::Unsupported(
-                "Edge Only PathExpand in Pattern has not been supported yet".to_string(),
-            ))?;
-        }
-        (*base_edge_expand).direction = direction;
-        (*base_edge_expand).expand_opt = pb::edge_expand::ExpandOpt::Edge as i32;
-        if !is_intersect {
-            // if not intersect, build as pure path_expand
-            expand_operators.push(path_opr.into());
-        } else {
-            let mut last_edge_expand = base_edge_expand.clone();
-            last_edge_expand.v_tag = None;
-            last_edge_expand.alias = None;
-            let hop_range = path_opr
-                .hop_range
-                .as_mut()
-                .ok_or(ParsePbError::EmptyFieldError("pb::PathExpand::hop_range".to_string()))?;
-            // out(1..2) = out()
-            if hop_range.lower == 1 && hop_range.upper == 2 {
-                last_edge_expand.v_tag = start_tag;
-                expand_operators.push(last_edge_expand.into());
-            } else {
-                // out(low..high) = out(low-1..high-1) + endV() + out()
-                hop_range.lower -= 1;
-                hop_range.upper -= 1;
-                // pick end vertex out from path collections
-                let mut end_v = pb::GetV::default();
-                end_v.opt = pb::get_v::VOpt::End as i32;
-                // add path expand + endV + last edge expand
-                expand_operators.push(path_opr.into());
-                expand_operators.push(end_v.into());
-                expand_operators.push(last_edge_expand.into());
-            }
-        }
-
-        Ok(expand_operators)
+            .ok_or(ParsePbError::EmptyFieldError("PathExpand::base in Pattern".to_string()))?
+            .direction = self.dir as i32;
+        Ok(path_opr.into())
     }
 }
 
@@ -190,7 +145,7 @@ impl ExactExtendStep {
                     // For path expansion that doesn't have further intersection,
                     // it is a pure path expansion
                     is_pure_path = !is_intersect;
-                    extend_edge.generate_path_expands(path_opr, is_intersect)?
+                    vec![extend_edge.generate_path_expands(path_opr)?]
                 }
             };
             // every exapand should followed by an getV operator to close

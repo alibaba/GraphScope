@@ -53,7 +53,7 @@ pub(crate) fn query_params_to_get_v(
     pb::GetV { tag: None, opt, params, alias: alias.map(|id| id.into()), meta_data: None }
 }
 
-pub(crate) fn connect_query_params(params1: pb::QueryParams, params2: pb::QueryParams) -> pb::QueryParams {
+pub fn combine_query_params(params1: pb::QueryParams, params2: pb::QueryParams) -> pb::QueryParams {
     let mut params = params1;
     params.tables.extend(params2.tables);
     params.columns.extend(params2.columns);
@@ -71,7 +71,7 @@ pub(crate) fn connect_query_params(params1: pb::QueryParams, params2: pb::QueryP
     params.predicate = {
         let predicate1 = params.predicate;
         let predicate2 = params2.predicate;
-        predicate1.and_then(|expr1| predicate2.map(|expr2| connect_exprs(expr1, expr2)))
+        predicate1.and_then(|expr1| predicate2.map(|expr2| combine_exprs(expr1, expr2)))
     };
     if params2.sample_ratio < params.sample_ratio {
         params.sample_ratio = params2.sample_ratio
@@ -80,7 +80,7 @@ pub(crate) fn connect_query_params(params1: pb::QueryParams, params2: pb::QueryP
     params
 }
 
-fn connect_exprs(expr1: common_pb::Expression, expr2: common_pb::Expression) -> common_pb::Expression {
+pub fn combine_exprs(expr1: common_pb::Expression, expr2: common_pb::Expression) -> common_pb::Expression {
     let left_brace = common_pb::ExprOpr {
         node_type: None,
         item: Some(common_pb::expr_opr::Item::Brace(common_pb::expr_opr::Brace::LeftBrace as i32)),
@@ -102,6 +102,18 @@ fn connect_exprs(expr1: common_pb::Expression, expr2: common_pb::Expression) -> 
     expr_oprs.extend(expr2.operators);
     expr_oprs.push(right_brace);
     common_pb::Expression { operators: expr_oprs }
+}
+
+pub fn combine_get_v_by_query_params(get_v_1: pb::GetV, get_v_2: pb::GetV) -> pb::GetV {
+    let mut get_v = get_v_1;
+    if let Some(params2) = get_v_2.params {
+        if let Some(params1) = get_v.params {
+            get_v.params = Some(combine_query_params(params1, params2));
+        } else {
+            get_v.params = Some(params2)
+        }
+    }
+    get_v
 }
 
 pub trait PatternOrderTrait<D> {

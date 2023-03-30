@@ -27,7 +27,7 @@ use vec_map::VecMap;
 use crate::glogue::error::{IrPatternError, IrPatternResult};
 use crate::glogue::extend_step::ExactExtendStep;
 use crate::glogue::{
-    connect_query_params, query_params, DynIter, PatternDirection, PatternId, PatternLabelId,
+    combine_query_params, query_params, DynIter, PatternDirection, PatternId, PatternLabelId,
     PatternOrderTrait, PatternWeightTrait,
 };
 use crate::plan::meta::{PlanMeta, TagId, STORE_META};
@@ -369,7 +369,6 @@ impl Pattern {
                         // assign the new pattern edge with a new id
                         let edge_id = assign_id(&mut next_edge_id);
                         let edge_expand = get_edge_expand_from_binder(binder, edge_id, &mut edge_data_map)?;
-                        let vertex_params = get_vertex_parameters_from_binder(binder);
                         // get edge label's id
                         let edge_labels = get_edge_expand_labels(edge_expand)?;
                         // get edge direction
@@ -390,12 +389,6 @@ impl Pattern {
                             }
                         } else if let Some(BinderItem::Path(_)) = binder.item.as_ref() {
                             edge_expands_to_close.insert(dst_vertex_id, edge_direction);
-                        }
-                        if let Some(params) = vertex_params {
-                            vertex_params_map
-                                .entry(dst_vertex_id)
-                                .or_default()
-                                .push(params);
                         }
                         pre_dst_vertex_id = dst_vertex_id;
                         // assign vertices labels
@@ -435,11 +428,13 @@ impl Pattern {
                         // Otherwise, it should be fused into `EdgeExpand` (if it is a filter for edges).
                         // TODO: it's better to extract vertex label filter in `Select` if exists, to update id_labels_map
                         if let Some(vertex_params) = get_vertex_parameters_from_binder(binder) {
-                            vertex_params_map
-                                .entry(pre_dst_vertex_id)
-                                .or_default()
-                                .push(vertex_params)
-                        };
+                            if !vertex_params.is_empty() {
+                                vertex_params_map
+                                    .entry(pre_dst_vertex_id)
+                                    .or_default()
+                                    .push(vertex_params)
+                            };
+                        }
                     }
                     Some(BinderItem::Vertex(get_v)) => {
                         // check whether the GetV's opt can match edge direction
@@ -466,10 +461,12 @@ impl Pattern {
                                 }
                             }
                             if let Some(vertex_param) = get_vertex_parameters_from_binder(binder) {
-                                vertex_params_map
-                                    .entry(pre_dst_vertex_id)
-                                    .or_default()
-                                    .push(vertex_param);
+                                if !vertex_param.is_empty() {
+                                    vertex_params_map
+                                        .entry(pre_dst_vertex_id)
+                                        .or_default()
+                                        .push(vertex_param);
+                                }
                             }
                         } else {
                             Err(IrPatternError::ParsePbError(ParsePbError::ParseError(
@@ -585,20 +582,20 @@ fn build_logical_plan(
             exact_extend_step.generate_expand_operators_vec(origin_pattern, edge_expands_num > 1)?;
         // store the current length of the match plan
         let child_offset = match_plan.nodes.len();
-        // record the opr ids that are pre_node's children
-        let expand_chidren = get_expand_children(&expand_oprs_vec, child_offset);
-        // record the opr ids that are intersect's parents
-        let intersect_parents = get_intersect_parents(&expand_oprs_vec, child_offset);
-        // the id of the intersect operator
-        let intersect_id = get_intersect_id(&expand_oprs_vec, child_offset);
         // add all the expand operators to the match plan
-        for expand_oprs in expand_oprs_vec {
-            for expand_opr in expand_oprs {
-                append_opr(&mut match_plan, expand_opr)?;
+        for expand_oprs in expand_oprs_vec.iter() {
+            for expand_opr in expand_oprs.iter() {
+                append_opr(&mut match_plan, expand_opr.clone())?;
             }
         }
         // if expand num > 1, means it needs to add intersect operator, and reorganize nodes' children
         if edge_expands_num > 1 {
+            // record the opr ids that are pre_node's children
+            let expand_chidren = get_expand_children(&expand_oprs_vec, child_offset);
+            // record the opr ids that are intersect's parents
+            let intersect_parents = get_intersect_parents(&expand_oprs_vec, child_offset);
+            // the id of the intersect operator
+            let intersect_id = get_intersect_id(&expand_oprs_vec, child_offset);
             // add intersect operator to the match plan
             let intersect_opr = exact_extend_step.generate_intersect_operator(intersect_parents.clone())?;
             append_opr(&mut match_plan, intersect_opr)?;
@@ -813,11 +810,9 @@ impl PatternWeightTrait<f64> for Pattern {
         const VERTEX_PREDICATE_WEIGHT: f64 = 1.0;
         let mut vertex_weight = VERTEX_PREDICATE_WEIGHT;
         let vertex_params = self.get_vertex_parameters(vid)?;
-        for param in vertex_params.iter() {
-            if let Some(predicate) = &param.predicate {
-                if has_expr_eq(predicate) {
-                    vertex_weight = PREDICATE_EQ_WEIGHT;
-                }
+        if let Some(predicate) = vertex_params.and_then(|params| params.predicate.as_ref()) {
+            if has_expr_eq(predicate) {
+                vertex_weight = PREDICATE_EQ_WEIGHT;
             }
         }
         Ok(vertex_weight)
@@ -894,12 +889,6 @@ fn get_edge_expand_from_binder<'a, 'b>(
             .base
             .as_ref()
             .ok_or(ParsePbError::EmptyFieldError("PathExpand::base in Pattern".to_string()))?;
-        expand_base
-            .get_v
-            .as_ref()
-            .ok_or(IrPatternError::Unsupported(
-                "PathExpand::base in Pattern doesn't have GetV".to_string(),
-            ))?;
         let edge_expand = expand_base
             .edge_expand
             .as_ref()
@@ -1388,7 +1377,7 @@ impl Pattern {
             .remove(vertex_id)
             .ok_or(IrPatternError::MissingPatternVertex(vertex_id))?;
         if let Some(existed_params) = vertex_data.parameters {
-            vertex_data.parameters = Some(connect_query_params(existed_params, params));
+            vertex_data.parameters = Some(combine_query_params(existed_params, params));
         } else {
             vertex_data.parameters = Some(params);
         }
