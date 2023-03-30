@@ -459,6 +459,11 @@ impl JobBuilder {
         self.plan
     }
 
+    /// get the last appended op
+    pub fn get_last_op_mut(&mut self) -> Option<&mut pb::PhysicalOpr> {
+        self.plan.plan.last_mut()
+    }
+
     pub fn build(self) -> Result<pegasus_pb::JobRequest, BuildJobError> {
         let conf = pegasus_pb::JobConfig {
             job_id: self.conf.job_id,
