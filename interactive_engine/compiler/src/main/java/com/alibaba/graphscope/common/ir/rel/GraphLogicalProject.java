@@ -42,18 +42,9 @@ public class GraphLogicalProject extends Project {
             List<RelHint> hints,
             RelNode input,
             List<? extends RexNode> projects,
-            RelDataType rowType) {
-        super(cluster, traits, hints, input, projects, rowType);
-    }
-
-    protected GraphLogicalProject(
-            GraphOptCluster cluster,
-            List<RelHint> hints,
-            RelNode input,
-            List<? extends RexNode> projects,
-            RelDataType dataType,
+            RelDataType rowType,
             boolean isAppend) {
-        this(cluster, RelTraitSet.createEmpty(), hints, input, projects, dataType);
+        super(cluster, traits, hints, input, projects, rowType);
         this.isAppend = isAppend;
     }
 
@@ -64,7 +55,7 @@ public class GraphLogicalProject extends Project {
             List<? extends RexNode> projects,
             RelDataType dataType,
             boolean isAppend) {
-        return new GraphLogicalProject(cluster, hints, input, projects, dataType, isAppend);
+        return new GraphLogicalProject(cluster, RelTraitSet.createEmpty(), hints, input, projects, dataType, isAppend);
     }
 
     public boolean isAppend() {
@@ -74,8 +65,7 @@ public class GraphLogicalProject extends Project {
     @Override
     public Project copy(
             RelTraitSet traitSet, RelNode input, List<RexNode> projects, RelDataType rowType) {
-        return new GraphLogicalProject(
-                getCluster(), traitSet, ImmutableList.of(), input, projects, rowType);
+        return new GraphLogicalProject(getCluster(), traitSet, ImmutableList.of(), input, projects, rowType, this.isAppend);
     }
 
     @Override

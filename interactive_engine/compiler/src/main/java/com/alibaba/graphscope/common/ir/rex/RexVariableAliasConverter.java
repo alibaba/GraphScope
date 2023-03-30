@@ -52,8 +52,8 @@ public class RexVariableAliasConverter extends RexVisitorImpl<RexNode> {
         int delimPos = variable.getName().indexOf(AliasInference.DELIMITER);
         String targetVarName =
                 (delimPos < 0)
-                        ? targetAliasName
-                        : targetAliasName
+                        ? AliasInference.SIMPLE_NAME(targetAliasName)
+                        : AliasInference.SIMPLE_NAME(targetAliasName)
                                 + AliasInference.DELIMITER
                                 + variable.getName().substring(delimPos + 1);
         return RexGraphVariable.of(

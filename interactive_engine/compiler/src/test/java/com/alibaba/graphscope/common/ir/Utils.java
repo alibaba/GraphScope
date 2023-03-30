@@ -26,6 +26,11 @@ import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.plan.GraphOptCluster;
+import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.RelRule;
+import org.apache.calcite.plan.hep.HepPlanner;
+import org.apache.calcite.plan.hep.HepProgram;
+import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexBuilder;
 
@@ -37,9 +42,19 @@ public class Utils {
     public static final IrMeta schemaMeta = mockSchemaMeta();
 
     public static final GraphBuilder mockGraphBuilder() {
-        GraphOptCluster cluster = GraphOptCluster.create(rexBuilder);
+        GraphOptCluster cluster = GraphOptCluster.create(mockPlanner(), rexBuilder);
         return GraphBuilder.create(
                 null, cluster, new GraphOptSchema(cluster, schemaMeta.getSchema()));
+    }
+
+    public static final RelOptPlanner mockPlanner(RelRule... rules) {
+        HepProgramBuilder hepBuilder = HepProgram.builder();
+        if (rules.length > 0) {
+            for (RelRule rule : rules) {
+                hepBuilder.addRuleInstance(rule);
+            }
+        }
+        return new HepPlanner(hepBuilder.build());
     }
 
     private static IrMeta mockSchemaMeta() {

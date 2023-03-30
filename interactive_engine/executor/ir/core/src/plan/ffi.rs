@@ -1328,49 +1328,57 @@ mod groupby {
         Avg = 7,
     }
 
-    /*
-    #[repr(C)]
-    pub struct FfiAggFn {
-        vars: *const FfiVariable,
-        aggregate: FfiAggOpt,
-        alias: FfiAlias,
-    }
-
-    impl TryFrom<FfiAggFn> for pb::group_by::AggFunc {
-        type Error = FfiResult;
-
-        fn try_from(value: FfiAggFn) -> Result<Self, Self::Error> {
-            let mut agg_fn_pb = pb::group_by::AggFunc {
-                vars: vec![],
-                aggregate: unsafe { std::mem::transmute::<FfiAggOpt, i32>(value.aggregate) },
-                alias: None,
-            };
-            let (vars, alias) = (value.vars as *mut Vec<FfiVariable>, value.alias);
-            let vars: Box<Vec<FfiVariable>> = unsafe { Box::from_raw(vars) };
-            for var in vars.into_iter() {
-                agg_fn_pb.vars.push(var.try_into()?)
-            }
-            agg_fn_pb.alias = alias.try_into()?;
-
-            Ok(agg_fn_pb)
-        }
-    }
-
     /// Initialize an aggregate function with empty value to aggregate.
     /// To add value to aggregate, call `add_agg_value()`
     #[no_mangle]
-    pub extern "C" fn init_agg_fn(aggregate: FfiAggOpt, alias: FfiAlias) -> FfiAggFn {
-        let vars: Box<Vec<FfiVariable>> = Box::new(vec![]);
-        FfiAggFn { vars: Box::into_raw(vars) as *const FfiVariable, aggregate, alias }
+    pub extern "C" fn init_agg_fn(aggregate: FfiAggOpt, alias: FfiAlias) -> *const c_void {
+        let agg_fn = Box::new(pb::group_by::AggFunc {
+            vars: vec![],
+            aggregate: unsafe { std::mem::transmute::<FfiAggOpt, i32>(aggregate) },
+            alias: alias.try_into().unwrap(),
+        });
+        Box::into_raw(agg_fn) as *const c_void
     }
 
     #[no_mangle]
-    pub extern "C" fn add_agg_value(agg_fn: *const FfiAggFn, agg_var: FfiVariable) {
-        let mut vars = unsafe { Box::from_raw(agg_fn.vars as *mut Vec<FfiVariable>) };
-        vars.push(agg_var);
-        std::mem::forget(vars);
+    pub extern "C" fn add_agg_value(ptr_aggfn: *const c_void, agg_var: FfiVariable) -> FfiResult {
+        let mut result = FfiResult::success();
+        let mut agg_fn = unsafe { Box::from_raw(ptr_aggfn as *mut pb::group_by::AggFunc) };
+        let var_pb = agg_var.try_into();
+        match var_pb {
+            Ok(var_pb) => agg_fn.vars.push(var_pb),
+            Err(e) => result = e,
+        }
+        std::mem::forget(agg_fn);
+
+        result
     }
-     */
+
+    #[no_mangle]
+    pub extern "C" fn add_groupby_agg_fn1(
+        ptr_groupby: *const c_void, ptr_aggfn: *const c_void,
+    ) -> FfiResult {
+        let mut groupby = unsafe { Box::from_raw(ptr_groupby as *mut pb::GroupBy) };
+        let agg_fn = unsafe { Box::from_raw(ptr_aggfn as *mut pb::group_by::AggFunc) };
+        groupby.functions.push(agg_fn.as_ref().clone());
+        std::mem::forget(groupby);
+
+        FfiResult::success()
+    }
+
+    #[no_mangle]
+    pub extern "C" fn add_agg_value_pb(ptr_aggfn: *const c_void, agg_var: FfiPbPointer) -> FfiResult {
+        let mut result = FfiResult::success();
+        let mut agg_fn = unsafe { Box::from_raw(ptr_aggfn as *mut pb::group_by::AggFunc) };
+        let var_pb = ptr_to_pb::<common_pb::Variable>(agg_var);
+        match var_pb {
+            Ok(var_pb) => agg_fn.vars.push(var_pb),
+            Err(e) => result = e,
+        }
+        std::mem::forget(agg_fn);
+
+        result
+    }
 
     /// Add the key (and its alias if any) according to which the grouping is conducted
     #[no_mangle]

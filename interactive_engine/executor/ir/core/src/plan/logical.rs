@@ -435,27 +435,14 @@ impl LogicalPlan {
                     } else {
                         Err(IrPatternError::Unsupported("pattern source is not whole graph".to_string()))
                     };
-                    match extend_strategy {
-                        Ok(extend_strategy) => {
-                            debug!("pattern matching by ExtendStrategy");
-                            let plan = extend_strategy.build_logical_plan()?;
-                            let new_node_id = self.append_plan(plan, parent_ids.clone())?;
-                            // As we have added a new source op to scan with label efficiently in extend_strategy,
-                            // we remove the old source op.
-                            self.nodes.remove(0);
-                            Ok(new_node_id)
-                        }
-                        Err(err) => match err {
-                            IrPatternError::Unsupported(_) => {
-                                // if is not supported in ExtendStrategy, try NaiveStrategy
-                                debug!("pattern matching by NaiveStrategy");
-                                let naive_strategy = NaiveStrategy::try_from(pattern.clone())?;
-                                let plan = naive_strategy.build_logical_plan()?;
-                                self.append_plan(plan, parent_ids.clone())
-                            }
-                            _ => Err(err.into()),
-                        },
-                    }
+                    let extend_strategy = extend_strategy?;
+                    print!("pattern matching by ExtendStrategy");
+                    let plan = extend_strategy.build_logical_plan()?;
+                    let new_node_id = self.append_plan(plan, parent_ids.clone())?;
+                    // As we have added a new source op to scan with label efficiently in extend_strategy,
+                    // we remove the old source op.
+                    self.nodes.remove(0);
+                    Ok(new_node_id)
                 } else {
                     Err(IrError::Unsupported(
                         "only one single parent is supported for the `Pattern` operator".to_string(),

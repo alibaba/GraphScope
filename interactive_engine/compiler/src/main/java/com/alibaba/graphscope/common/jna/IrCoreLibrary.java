@@ -227,4 +227,12 @@ public interface IrCoreLibrary extends Library {
     FfiResult.ByValue addParamsExtra(Pointer params, String key, String value);
 
     Pointer initSinkGraphOperator(String graphName);
+
+    Pointer initAggFn(FfiAggOpt aggOpt, FfiAlias.ByValue alias);
+
+    FfiResult.ByValue addAggValue(Pointer ptrAggFn, FfiVariable.ByValue var);
+
+    FfiResult.ByValue addAggValuePb(Pointer ptrAggFn, FfiPbPointer.ByValue varPb);
+
+    FfiResult.ByValue addGroupbyAggFn1(Pointer ptrGroup, Pointer ptrAggFn);
 }
