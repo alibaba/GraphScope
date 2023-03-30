@@ -75,6 +75,7 @@ A normal status should looks like this
      alt="Minikube Status"
      width="60%">
 
+minikube status
 :::
 
 The output should show that the cluster is running, and the kubectl context is set to the minikube context. 
@@ -233,6 +234,7 @@ The output should show the status of the GraphScope pods.  Here's an example
      alt="Pods of GraphScope"
      width="60%">
 
+Pods of GraphScope
 :::
 
 Wait until all pods are running before proceeding.
