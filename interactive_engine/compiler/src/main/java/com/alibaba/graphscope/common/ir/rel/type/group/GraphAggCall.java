@@ -56,8 +56,7 @@ public class GraphAggCall implements RelBuilder.AggCall {
     public GraphAggCall(RelOptCluster cluster, SqlAggFunction aggFunction, List<RexNode> operands) {
         this.cluster = Objects.requireNonNull(cluster);
         this.aggFunction = aggFunction;
-        //        this.operands = ObjectUtils.requireNonEmpty(operands);
-        this.operands = operands;
+        this.operands = ObjectUtils.requireNonEmpty(operands);
         this.type = validateThenDerive(aggFunction, operands);
     }
 
