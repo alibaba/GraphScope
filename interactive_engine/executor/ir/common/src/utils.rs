@@ -598,9 +598,9 @@ impl pb::logical_plan::Operator {
 }
 
 impl pb::QueryParams {
+    // is_queryable doesn't consider tables as we assume that the table info can be inferred directly from current data.
     pub fn is_queryable(&self) -> bool {
-        !(self.tables.is_empty()
-            && self.predicate.is_none()
+        !(self.predicate.is_none()
             && self.limit.is_none()
             && self.sample_ratio == 1.0
             && self.columns.is_empty()
@@ -736,6 +736,7 @@ impl From<pb::PathExpand> for physical_pb::PathExpand {
             hop_range: path.hop_range,
             path_opt: path.path_opt,
             result_opt: path.result_opt,
+            condition: path.condition,
         }
     }
 }

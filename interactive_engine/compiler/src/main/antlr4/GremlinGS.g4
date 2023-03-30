@@ -163,6 +163,7 @@ traversalMethod_bothE
 // case-insensitive
 // with('PATH_OPT', 'SIMPLE' | 'ARBITRARY')
 // with('RESULT_OPT', 'ALL_V' | 'END_V')
+// with('UNTIL', expression)
 traversalMethod_with
     : 'with' LPAREN stringLiteral COMMA stringLiteral RPAREN
     ;
