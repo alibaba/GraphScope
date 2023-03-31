@@ -86,60 +86,7 @@
                   "columns": [],
                   "is_all_columns": false,
                   "limit": null,
-                  "predicate": {
-                    "operators": [
-                      {
-                        "node_type": {
-                          "type": {
-                            "DataType": 3
-                          }
-                        },
-                        "item": {
-                          "Var": {
-                            "tag": null,
-                            "property": {
-                              "item": {
-                                "Key": {
-                                  "item": {
-                                    "Name": "weight"
-                                  }
-                                }
-                              }
-                            },
-                            "node_type": {
-                              "type": {
-                                "DataType": 3
-                              }
-                            }
-                          }
-                        }
-                      },
-                      {
-                        "node_type": {
-                          "type": {
-                            "DataType": 0
-                          }
-                        },
-                        "item": {
-                          "Logical": 0
-                        }
-                      },
-                      {
-                        "node_type": {
-                          "type": {
-                            "DataType": 3
-                          }
-                        },
-                        "item": {
-                          "Const": {
-                            "item": {
-                              "F64": 10.0
-                            }
-                          }
-                        }
-                      }
-                    ]
-                  },
+                  "predicate": null,
                   "sample_ratio": 1.0,
                   "extra": {}
                 },
@@ -161,60 +108,7 @@
                   "columns": [],
                   "is_all_columns": false,
                   "limit": null,
-                  "predicate": {
-                    "operators": [
-                      {
-                        "node_type": {
-                          "type": {
-                            "DataType": 1
-                          }
-                        },
-                        "item": {
-                          "Var": {
-                            "tag": null,
-                            "property": {
-                              "item": {
-                                "Key": {
-                                  "item": {
-                                    "Name": "age"
-                                  }
-                                }
-                              }
-                            },
-                            "node_type": {
-                              "type": {
-                                "DataType": 1
-                              }
-                            }
-                          }
-                        }
-                      },
-                      {
-                        "node_type": {
-                          "type": {
-                            "DataType": 0
-                          }
-                        },
-                        "item": {
-                          "Logical": 0
-                        }
-                      },
-                      {
-                        "node_type": {
-                          "type": {
-                            "DataType": 1
-                          }
-                        },
-                        "item": {
-                          "Const": {
-                            "item": {
-                              "I32": 10
-                            }
-                          }
-                        }
-                      }
-                    ]
-                  },
+                  "predicate": null,
                   "sample_ratio": 1.0,
                   "extra": {}
                 },
@@ -233,7 +127,8 @@
               "upper": 4
             },
             "path_opt": 1,
-            "result_opt": 1
+            "result_opt": 1,
+            "condition": null
           }
         }
       },
@@ -248,7 +143,13 @@
             "tag": null,
             "opt": 1,
             "params": {
-              "tables": [],
+              "tables": [
+                {
+                  "item": {
+                    "Id": 0
+                  }
+                }
+              ],
               "columns": [],
               "is_all_columns": false,
               "limit": null,

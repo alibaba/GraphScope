@@ -37,31 +37,20 @@ import org.junit.Test;
 import java.util.List;
 
 public class FfiLogicalPlanTest {
-    // Match (x:person)-[:knows*1..3 {weight: 10.0}]->(:person {age: 10})
+    // Match (x:person)-[:knows*1..3]->(:person {age: 10})
     @Test
     public void logical_plan_test() throws Exception {
         GraphBuilder builder = Utils.mockGraphBuilder();
         PathExpandConfig.Builder pxdBuilder = PathExpandConfig.newBuilder(builder);
+        GetVConfig getVConfig =
+                new GetVConfig(GraphOpt.GetV.END, new LabelConfig(false).addLabel("person"));
         PathExpandConfig pxdConfig =
                 pxdBuilder
                         .expand(
                                 new ExpandConfig(
                                         GraphOpt.Expand.OUT,
                                         new LabelConfig(false).addLabel("knows")))
-                        .filter(
-                                pxdBuilder.call(
-                                        GraphStdOperatorTable.EQUALS,
-                                        pxdBuilder.variable(null, "weight"),
-                                        pxdBuilder.literal(10.0)))
-                        .getV(
-                                new GetVConfig(
-                                        GraphOpt.GetV.END,
-                                        new LabelConfig(false).addLabel("person")))
-                        .filter(
-                                pxdBuilder.call(
-                                        GraphStdOperatorTable.EQUALS,
-                                        pxdBuilder.variable(null, "age"),
-                                        pxdBuilder.literal(10)))
+                        .getV(getVConfig)
                         .range(1, 3)
                         .pathOpt(GraphOpt.PathExpandPath.SIMPLE)
                         .resultOpt(GraphOpt.PathExpandResult.AllV)
@@ -73,6 +62,12 @@ public class FfiLogicalPlanTest {
                                         new LabelConfig(false).addLabel("person"),
                                         "x"))
                         .pathExpand(pxdConfig)
+                        .getV(getVConfig)
+                        .filter(
+                                builder.call(
+                                        GraphStdOperatorTable.EQUALS,
+                                        pxdBuilder.variable(null, "age"),
+                                        pxdBuilder.literal(10)))
                         .build();
         RelNode aggregate =
                 builder.match(node, GraphOpt.Match.INNER)
