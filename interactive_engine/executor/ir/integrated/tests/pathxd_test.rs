@@ -49,7 +49,7 @@ mod test {
         };
 
         let path_expand_opr = pb::PathExpand {
-            base: Some(edge_expand),
+            base: Some(edge_expand.into()),
             start_tag: None,
             alias: None,
             hop_range: Some(range),
@@ -99,13 +99,60 @@ mod test {
         };
 
         let path_expand_opr = pb::PathExpand {
-            base: Some(edge_expand),
+            base: Some(edge_expand.into()),
             start_tag: None,
             alias: None,
             hop_range: Some(range),
             path_opt: 0,
             result_opt: 1,
             condition: str_to_expr_pb("@.name == \"marko\"".to_string()).ok(),
+        };
+
+        let mut job_builder = JobBuilder::default();
+        job_builder.add_scan_source(source_opr);
+        job_builder.shuffle(None);
+        job_builder.path_expand(path_expand_opr);
+        job_builder.sink(default_sink_pb());
+
+        job_builder.build().unwrap()
+    }
+
+    // g.V().hasLabel("person").both("1..3", "knows") with vertex's filter "@.age>28"
+    // Notice that, this is not equivalent to g.V().hasLabel("person").both("1..3", "knows").has("@.age>28").
+    fn init_path_expand_with_filter_request(is_whole_path: bool) -> JobRequest {
+        let source_opr = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
+            idx_predicate: None,
+            meta_data: None,
+        };
+
+        let edge_expand = pb::EdgeExpand {
+            v_tag: None,
+            direction: 2,
+            params: Some(query_params(vec![KNOWS_LABEL.into()], vec![], None)),
+            expand_opt: 0,
+            alias: None,
+            meta_data: None,
+        };
+
+        let getv = pb::GetV {
+            tag: None,
+            opt: 4,
+            params: Some(query_params(vec![], vec![], str_to_expr_pb("@.age >28".to_string()).ok())),
+            alias: None,
+            meta_data: None,
+        };
+
+        let path_expand_opr = pb::PathExpand {
+            base: Some((edge_expand, getv).into()),
+            start_tag: None,
+            alias: None,
+            hop_range: Some(pb::Range { lower: 1, upper: 3 }),
+            path_opt: 0,
+            result_opt: if is_whole_path { 1 } else { 0 },
+            condition: None,
         };
 
         let mut job_builder = JobBuilder::default();
@@ -535,5 +582,47 @@ mod test {
     #[test]
     fn path_expand_range_from_zero_with_until_query_w2_test() {
         path_expand_range_from_zero_with_until_query(2)
+    }
+
+    fn path_expand_with_filter_query(worker_num: u32) {
+        initialize();
+        let request = init_path_expand_with_filter_request(true);
+        let mut results = submit_query(request, worker_num);
+        let mut result_collection: Vec<Vec<ID>> = vec![];
+        let mut expected_result_paths =
+            vec![vec![1, 4], vec![2, 1], vec![4, 1], vec![1, 4, 1], vec![2, 1, 4], vec![4, 1, 4]];
+        while let Some(result) = results.next() {
+            match result {
+                Ok(res) => {
+                    let entry = parse_result(res).unwrap();
+                    if let Some(path) = entry.get(None).unwrap().as_graph_path() {
+                        result_collection.push(
+                            path.clone()
+                                .take_path()
+                                .unwrap()
+                                .into_iter()
+                                .map(|v| v.id())
+                                .collect(),
+                        );
+                    }
+                }
+                Err(e) => {
+                    panic!("err result {:?}", e);
+                }
+            }
+        }
+        expected_result_paths.sort();
+        result_collection.sort();
+        assert_eq!(result_collection, expected_result_paths)
+    }
+
+    #[test]
+    fn path_expand_with_filter_query_test() {
+        path_expand_with_filter_query(1)
+    }
+
+    #[test]
+    fn path_expand_with_filter_query_w2_test() {
+        path_expand_with_filter_query(2)
     }
 }

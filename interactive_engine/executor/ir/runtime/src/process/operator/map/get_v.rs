@@ -186,6 +186,22 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                         }
                     }
                 }
+                EntryType::Path => {
+                    // Auxilia for vertices in Path is for filtering.
+                    let graph_path = entry
+                        .as_graph_path()
+                        .ok_or(FnExecError::Unreachable)?;
+                    let path_end = graph_path.get_path_end();
+                    let graph = get_graph().ok_or(FnExecError::NullGraphError)?;
+                    let id = path_end.id();
+                    if graph
+                        .get_vertex(&[id], &self.query_params)?
+                        .next()
+                        .is_none()
+                    {
+                        return Ok(None);
+                    }
+                }
                 _ => Err(FnExecError::unexpected_data_error(&format!(
                     "neither Vertex nor Edge entry is accessed in `Auxilia` operator, the entry is {:?}",
                     entry
