@@ -49,15 +49,10 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                 input.append(vertex, self.alias.clone());
                 Ok(Some(input))
             } else if let Some(graph_path) = entry.as_graph_path() {
-                if let VOpt::End = self.opt {
-                    let path_end = graph_path.get_path_end().clone();
-                    input.append(path_end, self.alias.clone());
-                    Ok(Some(input))
-                } else {
-                    Err(FnExecError::unsupported_error(
-                        "Only support `GetV` with VOpt::End on a path entry",
-                    ))?
-                }
+                // TODO: we do not check VOpt here, and we treat all cases as to get the end vertex of the path.
+                let path_end = graph_path.get_path_end().clone();
+                input.append(path_end, self.alias.clone());
+                Ok(Some(input))
             } else {
                 Err(FnExecError::unexpected_data_error(
                     "Can only apply `GetV` (`Auxilia` instead) on an edge or path entry",
