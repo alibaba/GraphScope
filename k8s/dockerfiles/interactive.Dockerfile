@@ -67,7 +67,7 @@ RUN sudo yum install -y centos-release-scl-rh java-1.8.0-openjdk  && \
 SHELL ["/usr/bin/scl", "enable", "rh-python38" ]
 RUN python3 -m pip install --no-cache-dir --user vineyard vineyard-io
 
-ENV JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk HADOOP_HOME=/opt/hadoop-3.3.0
+ENV JAVA_HOME=/usr/lib/jvm/jre-openjdk HADOOP_HOME=/opt/hadoop-3.3.0
 ENV HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_HOME/lib/native
 ENV HADOOP_YARN_HOME=$HADOOP_HOME HADOOP_MAPRED_HOME=$HADOOP_HOME
 COPY --from=ext /opt/hadoop-3.3.0 /opt/hadoop-3.3.0
@@ -76,9 +76,8 @@ RUN sudo chmod +x /opt/hadoop-3.3.0/bin/*
 # set the CLASSPATH for hadoop, must run after install java
 RUN bash -l -c 'echo export CLASSPATH="$($HADOOP_HOME/bin/hdfs classpath --glob)" >> /home/graphscope/.profile'
 
-
-RUN curl -L -o /usr/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.19.2/bin/linux/amd64/kubectl
-RUN chmod +x /usr/bin/kubectl
+RUN sudo curl -L -o /usr/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.19.2/bin/linux/amd64/kubectl
+RUN sudo chmod +x /usr/bin/kubectl
 
 # gaia_executor, giectl
 COPY --from=builder /home/graphscope/install/bin /opt/graphscope/bin

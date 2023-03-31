@@ -17,8 +17,13 @@
 #
 
 import json
+import os
 import sys
+import logging
 
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger("vineyard")
+logger.setLevel(logging.DEBUG)
 
 def spawn_vineyard_io_stream(
     source: str,
@@ -42,6 +47,7 @@ def spawn_vineyard_io_stream(
 
 
 def maybe_ingest_to_vineyard(source, socket, hosts):
+    source = os.path.expandvars(os.path.expanduser(source))
     if "://" in source:
         protocol = source.split("://")[0]
     else:
@@ -57,22 +63,29 @@ def maybe_ingest_to_vineyard(source, socket, hosts):
         )
     ):
         new_protocol, new_source = spawn_vineyard_io_stream(source, socket, hosts)
-        print(
-            f"original uri = {source}, new_protocol = {new_protocol}, new_source = {new_source}"
+        logger.info(
+            "original uri = %s, new_protocol = %s, new_source = %s", source, new_protocol, new_source
         )
         return f"{new_protocol}://{new_source}"
     else:
         return source
 
-
 def replace_data_path(json_str, socket, hosts):
     json_obj = json.loads(json_str)
     for vertex in json_obj["vertices"]:
+        data_path = vertex["data_path"] + "#label=" + vertex["label"]
+        if "options" in vertex:
+            data_path += "#" + vertex["options"]
         vertex["data_path"] = maybe_ingest_to_vineyard(
-            vertex["data_path"], socket, hosts
+            data_path, socket, hosts
         )
     for edge in json_obj["edges"]:
-        edge["data_path"] = maybe_ingest_to_vineyard(edge["data_path"], socket, hosts)
+        data_path = edge["data_path"] + "#label=" + edge["label"]
+        data_path += "#src_label=" + edge["src_label"]
+        data_path += "#dst_label=" + edge["dst_label"]
+        if "options" in edge:
+            data_path += "#" + edge["options"]
+        edge["data_path"] = maybe_ingest_to_vineyard(data_path, socket, hosts)
     return json.dumps(json_obj)
 
 
@@ -95,4 +108,4 @@ For example: python3 grootctl.py ./sock name1,name2 config config.new"""
     new_config_str = replace_data_path(config_str, ipc_socket, hosts)
     with open(dest_cfg, "w") as f:
         f.write(new_config_str)
-    print("Ingest data to vineyard success!")
+    logger.info("Ingest data to vineyard success!")
