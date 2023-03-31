@@ -98,10 +98,6 @@ spec:
                 echo "graphctl.py ${VINEYARD_IPC_SOCKET} {{ .Release.Namespace }}:${pod_names} $config_path/$HTAP_LOADER_CONFIG $config_new_path"
                 graphctl.py ${VINEYARD_IPC_SOCKET} {{ .Release.Namespace }}:${pod_names} $config_path/$HTAP_LOADER_CONFIG $config_new_path
 
-                echo "New config are:"
-                cat $config_new_path
-                echo ""
-                sleep infinity
                 # copy new config to other store pods.
                 store_pods=`kubectl get pod -lapp.kubernetes.io/component=store,app.kubernetes.io/instance=$INSTANCE_NAME --no-headers -o custom-columns=":metadata.name"`
                 for pod in $(echo $store_pods)
