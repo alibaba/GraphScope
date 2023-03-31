@@ -16,12 +16,11 @@
 
 package com.alibaba.graphscope.gremlin.result.processor;
 
-import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
+import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.gremlin.result.parser.CypherResultParser;
 import com.google.common.collect.Lists;
 
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelRecordType;
@@ -48,17 +47,11 @@ public class CypherResultProcessor extends AbstractResultProcessor {
         while (!inputQueue.isEmpty()) {
             RelNode cur = inputQueue.remove(0);
             outputFields.addAll(cur.getRowType().getFieldList());
-            if (removeHistory(cur)) {
+            if (AliasInference.removeAlias(cur)) {
                 break;
             }
             inputQueue.addAll(cur.getInputs());
         }
         return new RelRecordType(StructKind.FULLY_QUALIFIED, outputFields);
-    }
-
-    private static boolean removeHistory(RelNode node) {
-        return (node instanceof Aggregate)
-                || (node instanceof GraphLogicalProject)
-                        && ((GraphLogicalProject) node).isAppend() == false;
     }
 }
