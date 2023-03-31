@@ -202,26 +202,25 @@ impl IRJobAssembly {
                         .ok_or(FnGenError::from(ParsePbError::EmptyFieldError(
                             "pb::Limit::range".to_string(),
                         )))?;
-                    // e.g., `limit(10)` would be translate as `Range{lower=1, upper=11}`
-                    if range.upper <= range.lower || range.lower != 1 {
+                    // e.g., `limit(10)` would be translate as `Range{lower=0, upper=10}`
+                    if range.upper <= range.lower || range.lower != 0 {
                         Err(FnGenError::from(ParsePbError::ParseError(format!(
                             "range {:?} in Limit Operator",
                             range
                         ))))?;
                     }
-                    stream = stream.limit((range.upper - 1) as u32)?;
+                    stream = stream.limit(range.upper as u32)?;
                 }
                 OpKind::OrderBy(order) => {
                     let cmp = self.udf_gen.gen_cmp(order.clone())?;
                     if let Some(range) = order.limit {
-                        if range.upper <= range.lower || range.lower != 1 {
+                        if range.upper <= range.lower || range.lower != 0 {
                             Err(FnGenError::from(ParsePbError::ParseError(format!(
                                 "range {:?} in Order Operator",
                                 range
                             ))))?;
                         }
-                        stream = stream
-                            .sort_limit_by((range.upper - 1) as u32, move |a, b| cmp.compare(a, b))?;
+                        stream = stream.sort_limit_by(range.upper as u32, move |a, b| cmp.compare(a, b))?;
                     } else {
                         stream = stream.sort_by(move |a, b| cmp.compare(a, b))?;
                     }
@@ -539,6 +538,7 @@ impl IRJobAssembly {
                         .filter_map_with_name("PathStart", move |input| path_start_func.exec(input))?;
                     // path base expand
                     let mut base_expand_plan = vec![];
+                    base_expand_plan.push(base.clone().into());
                     if let OpKind::Repartition(_) = &prev_op_kind {
                         // the case when base expand needs repartition
                         base_expand_plan.push(
@@ -550,17 +550,25 @@ impl IRJobAssembly {
                             .into(),
                         );
                     }
-                    base_expand_plan.push(base.clone().into());
-
                     for _ in 0..range.lower {
                         stream = self.install(stream, &base_expand_plan)?;
                     }
                     let times = range.upper - range.lower - 1;
                     if times > 0 {
-                        let until = IterCondition::max_iters(times as u32);
-                        stream = stream.iterate_emit_until(until, EmitKind::Before, |start| {
-                            self.install(start, &base_expand_plan[..])
-                        })?;
+                        let mut until = IterCondition::max_iters(times as u32);
+                        if let Some(condition) = path.condition.as_ref() {
+                            let func = self
+                                .udf_gen
+                                .gen_filter(algebra_pb::Select { predicate: Some(condition.clone()) })?;
+                            until.set_until(func);
+                            // Notice that if UNTIL condition set, we expand path without `Emit`
+                            stream = stream
+                                .iterate_until(until, |start| self.install(start, &base_expand_plan[..]))?;
+                        } else {
+                            stream = stream.iterate_emit_until(until, EmitKind::Before, |start| {
+                                self.install(start, &base_expand_plan[..])
+                            })?;
+                        }
                     }
                     // path end
                     let path_end_func = self.udf_gen.gen_path_end(path)?;

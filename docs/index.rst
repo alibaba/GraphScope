@@ -59,19 +59,20 @@ and the vineyard store that offers efficient in-memory data transfers.
    :caption: Graph Interactive Engine
 
    interactive_engine/getting_started
+   interactive_engine/deployment
+   interactive_engine/guide_and_examples
    interactive_engine/design_of_gie
-   interactive_engine/user_guide_and_examples
    interactive_engine/supported_gremlin_steps
 
 .. toctree::
    :maxdepth: 2
    :caption: Graph Learning Engine
 
-   getting_started_gle
+   getting_started
    design_of_gle
+   graph_sampling
    user_guide_and_examples_of_gie
-   apis_of_gle
-   faqs_of_gle
+   dev_and_test
 
 .. toctree::
    :maxdepth: 2

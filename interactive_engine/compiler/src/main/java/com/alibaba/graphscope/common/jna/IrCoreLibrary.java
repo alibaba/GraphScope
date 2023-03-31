@@ -156,6 +156,8 @@ public interface IrCoreLibrary extends Library {
 
     FfiResult.ByValue setPathxpdHops(Pointer pathXpd, int lower, int upper);
 
+    FfiResult.ByValue setPathxpdCondition(Pointer pathXpd, String predicate);
+
     FfiResult.ByValue appendPathxpdOperator(
             Pointer plan, Pointer pathXpd, int parent, IntByReference oprIdx);
 

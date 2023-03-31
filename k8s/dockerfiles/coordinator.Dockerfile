@@ -9,9 +9,10 @@ ARG CI=false
 COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 
 RUN cd /home/graphscope/GraphScope/ && \
-    if [ "${CI}" == "true" ]; then \
+    if [ "${CI}" = "true" ]; then \
         cp -r artifacts/learning /home/graphscope/install; \
     else \
+        . /home/graphscope/.graphscope_env; \
         mkdir /home/graphscope/install; \
         make learning-install INSTALL_PREFIX=/home/graphscope/install; \
         source /home/graphscope/.graphscope_env; \

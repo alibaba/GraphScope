@@ -181,7 +181,7 @@ message Range {
 }
 
 message Limit {
-  // The limit range
+  // The limit range, e.g., limit(10) will be represented by Range {lower = 0, upper = 10}
   Range range = 1;
 }
 
@@ -329,6 +329,8 @@ message PathExpand {
   PathOpt path_opt = 5;
   // Result option, including to take end vertex (EndV), or whole path (AllV), for this expansion
   ResultOpt result_opt = 6;
+  // A condition formulated as an expression predicate
+  common.Expression condition = 7;
 }
 
 /*
