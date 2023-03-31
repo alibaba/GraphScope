@@ -1133,7 +1133,16 @@ impl AsLogical for pb::PathExpand {
         let curr_node = plan_meta.get_curr_node();
         plan_meta.refer_to_nodes(curr_node, vec![curr_node]);
         if let Some(base) = self.base.as_mut() {
-            base.preprocess(meta, plan_meta)?;
+            if let Some(edge_expand) = base.edge_expand.as_mut() {
+                edge_expand.preprocess(meta, plan_meta)?;
+            }
+            if let Some(get_v) = base.edge_expand.as_mut() {
+                get_v.preprocess(meta, plan_meta)?;
+            }
+        }
+        if let Some(pred) = self.condition.as_mut() {
+            preprocess_expression(pred, meta, plan_meta, false)?;
+            process_columns_meta(plan_meta, true)?;
         }
         if let Some(alias) = self.alias.as_mut() {
             let tag_id = get_or_set_tag_id(alias, plan_meta)?;
@@ -1332,10 +1341,7 @@ impl AsLogical for pb::Pattern {
             if let Some(alias) = sentence.start.as_mut() {
                 let tag_id = get_or_set_tag_id(alias, plan_meta)?;
                 if plan_meta.has_tag(tag_id) {
-                    return Err(IrError::InvalidPattern(format!(
-                        "`pb::Pattern` cannot reference existing tag: {:?}",
-                        alias
-                    )));
+                    warn!("`pb::Pattern` reference existing tag: {:?}", alias);
                 }
             } else {
                 return Err(IrError::InvalidPattern(
@@ -1345,10 +1351,7 @@ impl AsLogical for pb::Pattern {
             if let Some(alias) = sentence.end.as_mut() {
                 let tag_id = get_or_set_tag_id(alias, plan_meta)?;
                 if plan_meta.has_tag(tag_id) {
-                    return Err(IrError::InvalidPattern(format!(
-                        "`pb::Pattern` cannot reference existing tag: {:?}",
-                        alias
-                    )));
+                    warn!("`pb::Pattern` reference existing tag: {:?}", alias);
                 }
             }
             for binder_opt in &mut sentence.binders {

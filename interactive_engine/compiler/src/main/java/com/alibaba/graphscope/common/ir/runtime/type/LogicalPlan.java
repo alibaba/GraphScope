@@ -23,6 +23,11 @@ import org.apache.calcite.rel.hint.RelHint;
 
 import java.util.List;
 
+/**
+ * define interfaces to build a logical plan, {@link com.alibaba.graphscope.common.ir.runtime.ffi.FfiLogicalPlan} is one of implementations
+ * @param <T>
+ * @param <R>
+ */
 public abstract class LogicalPlan<T, R> extends AbstractRelNode implements AutoCloseable {
     protected final List<RelHint> hints;
     protected boolean returnEmpty;

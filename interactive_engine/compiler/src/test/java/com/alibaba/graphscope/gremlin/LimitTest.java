@@ -36,7 +36,7 @@ public class LimitTest {
         Traversal traversal = g.V().limit(1);
         Step limitStep = traversal.asAdmin().getEndStep();
         LimitOp op = (LimitOp) StepTransformFactory.LIMIT_STEP.apply(limitStep);
-        Assert.assertEquals(2, op.getUpper().get().applyArg());
+        Assert.assertEquals(1, op.getUpper().get().applyArg());
     }
 
     @Test
@@ -44,7 +44,7 @@ public class LimitTest {
         Traversal traversal = g.V().range(0, 1);
         Step limitStep = traversal.asAdmin().getEndStep();
         LimitOp op = (LimitOp) StepTransformFactory.LIMIT_STEP.apply(limitStep);
-        Assert.assertEquals(2, op.getUpper().get().applyArg());
-        Assert.assertEquals(1, op.getLower().get().applyArg());
+        Assert.assertEquals(1, op.getUpper().get().applyArg());
+        Assert.assertEquals(0, op.getLower().get().applyArg());
     }
 }

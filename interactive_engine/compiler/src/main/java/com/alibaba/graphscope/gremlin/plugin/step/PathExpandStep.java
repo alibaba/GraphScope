@@ -21,15 +21,18 @@ import com.alibaba.graphscope.common.jna.type.ResultOpt;
 import com.alibaba.graphscope.gremlin.exception.ExtendGremlinStepException;
 import com.google.common.base.Objects;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeGlobalStep;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class PathExpandStep extends ExpandFusionStep<Vertex> {
     private Traversal rangeTraversal;
     private PathOpt pathOpt;
     private ResultOpt resultOpt;
+    private @Nullable String untilCondition;
 
     public PathExpandStep(
             final Traversal.Admin traversal,
@@ -73,6 +76,10 @@ public class PathExpandStep extends ExpandFusionStep<Vertex> {
         return resultOpt;
     }
 
+    public @Nullable String getUntilCondition() {
+        return untilCondition;
+    }
+
     @Override
     public void configure(final Object... keyValues) {
         String originalKey = (String) keyValues[0];
@@ -98,11 +105,14 @@ public class PathExpandStep extends ExpandFusionStep<Vertex> {
                                 + originalVal
                                 + " is invalid, use ALL_V or END_V instead (case insensitive)");
             }
+        } else if (key.equals("Until")) {
+            this.untilCondition = ObjectUtils.requireNonEmpty(originalVal);
         } else {
             throw new ExtendGremlinStepException(
                     "key "
                             + originalKey
-                            + " is invalid, use PATH_OPT or RESULT_OPT instead (case insensitive)");
+                            + " is invalid, use PATH_OPT or RESULT_OPT or UNTIL instead (case"
+                            + " insensitive)");
         }
     }
 

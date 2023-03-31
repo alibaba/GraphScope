@@ -52,6 +52,9 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 
+/**
+ * build ffi logical plan in ir core by jna invocation
+ */
 public class FfiLogicalPlan extends LogicalPlan<Pointer, byte[]> {
     private static final IrCoreLibrary LIB = IrCoreLibrary.INSTANCE;
 

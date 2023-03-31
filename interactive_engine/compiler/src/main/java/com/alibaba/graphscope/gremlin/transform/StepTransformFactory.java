@@ -183,8 +183,8 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         @Override
         public InterOpBase apply(Step step) {
             RangeGlobalStep limitStep = (RangeGlobalStep) step;
-            int lower = (int) limitStep.getLowRange() + 1;
-            int upper = (int) limitStep.getHighRange() + 1;
+            int lower = (int) limitStep.getLowRange();
+            int upper = (int) limitStep.getHighRange();
             LimitOp op = new LimitOp();
             op.setLower(new OpArg(Integer.valueOf(lower)));
             op.setUpper(new OpArg(Integer.valueOf(upper)));
@@ -238,6 +238,9 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             PathExpandStep pathStep = (PathExpandStep) step;
             op.setLower(new OpArg(Integer.valueOf(pathStep.getLower())));
             op.setUpper(new OpArg(Integer.valueOf(pathStep.getUpper())));
+            if (pathStep.getUntilCondition() != null) {
+                op.setUntilCondition(new OpArg(pathStep.getUntilCondition()));
+            }
             op.setPathOpt(pathStep.getPathOpt());
             op.setResultOpt(pathStep.getResultOpt());
             return op;

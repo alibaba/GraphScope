@@ -18,16 +18,18 @@ use std::cmp::Ordering;
 use std::convert::{TryFrom, TryInto};
 use std::hash::{Hash, Hasher};
 
-use dyn_type::BorrowObject;
+use ahash::HashMap;
+use dyn_type::{BorrowObject, Object};
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra::path_expand::PathOpt;
 use ir_common::generated::algebra::path_expand::ResultOpt;
 use ir_common::generated::results as result_pb;
+use ir_common::{LabelId, NameOrId};
 use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 use pegasus_common::downcast::*;
 use pegasus_common::impl_as_any;
 
-use crate::apis::{Element, GraphElement, Vertex, ID};
+use crate::apis::{Element, GraphElement, PropertyValue, Vertex, ID};
 
 #[derive(Clone, Debug)]
 pub enum GraphPath {
@@ -88,10 +90,10 @@ impl GraphPath {
         }
     }
 
-    pub fn get_path_end(&self) -> Option<&Vertex> {
+    pub fn get_path_end(&self) -> &Vertex {
         match self {
-            GraphPath::AllV(ref p) | GraphPath::SimpleAllV(ref p) => p.last(),
-            GraphPath::EndV((ref e, _)) | GraphPath::SimpleEndV((ref e, _)) => Some(e),
+            GraphPath::AllV(ref p) | GraphPath::SimpleAllV(ref p) => p.last().unwrap(),
+            GraphPath::EndV((ref e, _)) | GraphPath::SimpleEndV((ref e, _)) => e,
         }
     }
 
@@ -105,7 +107,7 @@ impl GraphPath {
 
 impl Element for GraphPath {
     fn as_graph_element(&self) -> Option<&dyn GraphElement> {
-        None
+        Some(self)
     }
 
     // the path len is the number of edges in the path;
@@ -119,6 +121,27 @@ impl Element for GraphPath {
 
     fn as_borrow_object(&self) -> BorrowObject {
         BorrowObject::None
+    }
+}
+
+// When take `GraphPath` as GraphElement, we actually take the PathEnd Vertex.
+// This is always used we have condition in PathExpand,
+// on which case we need to evaluate the GraphPath to see if the end vertex satisfies specific conditions.
+impl GraphElement for GraphPath {
+    fn id(&self) -> ID {
+        self.get_path_end().id()
+    }
+
+    fn label(&self) -> Option<LabelId> {
+        self.get_path_end().label()
+    }
+
+    fn get_property(&self, key: &NameOrId) -> Option<PropertyValue> {
+        self.get_path_end().get_property(key)
+    }
+
+    fn get_all_properties(&self) -> Option<HashMap<NameOrId, Object>> {
+        self.get_path_end().get_all_properties()
     }
 }
 
