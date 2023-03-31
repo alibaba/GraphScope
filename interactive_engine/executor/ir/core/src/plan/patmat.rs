@@ -160,7 +160,15 @@ impl TryFrom<pb::pattern::Sentence> for BaseSentence {
                         if let Some(range) = &p.hop_range {
                             num_hops += range.upper as usize;
                             if let Some(base) = &p.base {
-                                num_filters += detect_filters(base.params.as_ref()) * range.upper as usize;
+                                num_filters += (detect_filters(
+                                    base.edge_expand
+                                        .as_ref()
+                                        .and_then(|expand| expand.params.as_ref()),
+                                ) + detect_filters(
+                                    base.get_v
+                                        .as_ref()
+                                        .and_then(|get_v| get_v.params.as_ref()),
+                                )) * range.upper as usize;
                             }
                         }
                         Ok(p.into())
@@ -318,7 +326,11 @@ impl BasicSentence for BaseSentence {
                             edge.direction = reverse_dir(edge.direction);
                         }
                         Opr::Path(path) => {
-                            if let Some(base) = path.base.as_mut() {
+                            if let Some(base) = path
+                                .base
+                                .as_mut()
+                                .and_then(|expand_base| expand_base.edge_expand.as_mut())
+                            {
                                 base.direction = reverse_dir(base.direction);
                             }
                         }
