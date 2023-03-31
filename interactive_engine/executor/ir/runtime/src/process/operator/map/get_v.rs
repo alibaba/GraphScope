@@ -146,6 +146,17 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
             // e.g., for g.V().out().as("a").has("name", "marko"), we should compile as:
             // g.V().out().auxilia(as("a"))... where we give alias in auxilia,
             //     then we set tag=None and alias="a" in auxilia
+            // 1. filter by labels.
+            if !self.query_params.labels.is_empty() && entry.label().is_some() {
+                if !self
+                    .query_params
+                    .labels
+                    .contains(&entry.label().unwrap())
+                {
+                    return Ok(None);
+                }
+            }
+            // 2. further fetch properties, e.g., filter by columns.
             match entry.get_type() {
                 EntryType::Vertex => {
                     let graph = get_graph().ok_or(FnExecError::NullGraphError)?;
