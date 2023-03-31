@@ -68,7 +68,7 @@ spec:
               for ip in `echo $pod_ips`
               do
                 pod_name=`kubectl get pods -o custom-columns=:metadata.name --no-headers=true --field-selector status.podIP=$ip`
-                # echo $ip $pod_name >> $hosts
+                echo $ip $pod_name >> $hosts
                 pod_names="${pod_names},${pod_name}"
               done
               pod_names=${pod_names:1}
@@ -95,7 +95,6 @@ spec:
                 . /home/graphscope/.profile
                 . /opt/rh/rh-python38/enable
                 export config_new_path=/tmp/config_new
-                echo "graphctl.py ${VINEYARD_IPC_SOCKET} {{ .Release.Namespace }}:${pod_names} $config_path/$HTAP_LOADER_CONFIG $config_new_path"
                 graphctl.py ${VINEYARD_IPC_SOCKET} {{ .Release.Namespace }}:${pod_names} $config_path/$HTAP_LOADER_CONFIG $config_new_path
 
                 # copy new config to other store pods.

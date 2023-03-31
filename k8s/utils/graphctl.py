@@ -23,7 +23,8 @@ import logging
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("vineyard")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
+
 
 def spawn_vineyard_io_stream(
     source: str,
@@ -64,11 +65,15 @@ def maybe_ingest_to_vineyard(source, socket, hosts):
     ):
         new_protocol, new_source = spawn_vineyard_io_stream(source, socket, hosts)
         logger.info(
-            "original uri = %s, new_protocol = %s, new_source = %s", source, new_protocol, new_source
+            "original uri = %s, new_protocol = %s, new_source = %s",
+            source,
+            new_protocol,
+            new_source,
         )
         return f"{new_protocol}://{new_source}"
     else:
         return source
+
 
 def replace_data_path(json_str, socket, hosts):
     json_obj = json.loads(json_str)
@@ -76,9 +81,7 @@ def replace_data_path(json_str, socket, hosts):
         data_path = vertex["data_path"] + "#label=" + vertex["label"]
         if "options" in vertex:
             data_path += "#" + vertex["options"]
-        vertex["data_path"] = maybe_ingest_to_vineyard(
-            data_path, socket, hosts
-        )
+        vertex["data_path"] = maybe_ingest_to_vineyard(data_path, socket, hosts)
     for edge in json_obj["edges"]:
         data_path = edge["data_path"] + "#label=" + edge["label"]
         data_path += "#src_label=" + edge["src_label"]
