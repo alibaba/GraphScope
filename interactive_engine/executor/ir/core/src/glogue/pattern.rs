@@ -889,17 +889,6 @@ fn get_edge_expand_from_binder<'a, 'b>(
 ) -> IrPatternResult<&'a pb::EdgeExpand> {
     use pb::pattern::binder::Item as BinderItem;
     if let Some(BinderItem::Path(path_expand)) = binder.item.as_ref() {
-        let hop_range = path_expand
-            .hop_range
-            .as_ref()
-            .ok_or(ParsePbError::EmptyFieldError("pb::PathExpand::hop_range".to_string()))?;
-        if hop_range.lower < 1 {
-            // The path with range from 0 cannot be translated to oprs that can be intersected.
-            return Err(IrPatternError::Unsupported(format!(
-                "PathExpand in Pattern with lower range of {:?}",
-                hop_range.lower
-            )))?;
-        }
         let expand_base = path_expand
             .base
             .as_ref()
