@@ -647,18 +647,31 @@ fn generate_source_operator(
     pattern: &Pattern, source_extend: &ExactExtendStep,
 ) -> IrPatternResult<pb::logical_plan::Operator> {
     let source_vertex_id = source_extend.get_target_vertex_id();
-    let source_vertex_table = generate_vertex_table(pattern, source_vertex_id)?;
+    let inferred_vertex_table = generate_vertex_table(pattern, source_vertex_id)?;
     // Fuse `source_vertex_label` into source, for efficiently scan
     let source_vertex_param = if let Some(mut vertex_param) = pattern
         .get_vertex_parameters(source_vertex_id)?
         .cloned()
     {
-        if source_vertex_table.len() > 0 {
-            vertex_param.tables = source_vertex_table;
+        // if user given vertex table is empty, using the inferred vertex table
+        // and vise versa
+        if vertex_param.tables.len() == 0 {
+            vertex_param.tables = inferred_vertex_table;
+        }
+        // if the two tables are both not empty
+        // intersect user given labels and inferred labels
+        else if inferred_vertex_table.len() > 0 {
+            let user_given_vertex_table = vertex_param.tables;
+            vertex_param.tables = vec![];
+            for inferred_vertex_label in inferred_vertex_table {
+                if user_given_vertex_table.contains(&inferred_vertex_label) {
+                    vertex_param.tables.push(inferred_vertex_label)
+                }
+            }
         }
         vertex_param
     } else {
-        query_params(source_vertex_table, vec![], None)
+        query_params(inferred_vertex_table, vec![], None)
     };
     let source_scan = pb::Scan {
         scan_opt: 0,
@@ -876,17 +889,6 @@ fn get_edge_expand_from_binder<'a, 'b>(
 ) -> IrPatternResult<&'a pb::EdgeExpand> {
     use pb::pattern::binder::Item as BinderItem;
     if let Some(BinderItem::Path(path_expand)) = binder.item.as_ref() {
-        let hop_range = path_expand
-            .hop_range
-            .as_ref()
-            .ok_or(ParsePbError::EmptyFieldError("pb::PathExpand::hop_range".to_string()))?;
-        if hop_range.lower < 1 {
-            // The path with range from 0 cannot be translated to oprs that can be intersected.
-            return Err(IrPatternError::Unsupported(format!(
-                "PathExpand in Pattern with lower range of {:?}",
-                hop_range.lower
-            )))?;
-        }
         let expand_base = path_expand
             .base
             .as_ref()
