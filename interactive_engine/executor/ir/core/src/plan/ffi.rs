@@ -1063,7 +1063,7 @@ mod project {
     /// To add a mapping for the project operator, which maps a pb pointer to represent an
     /// expression, and a `NameOrId` parameter that represents an alias.
     #[no_mangle]
-    pub extern "C" fn add_project_expr_pb_alia(
+    pub extern "C" fn add_project_expr_pb_alias(
         ptr_project: *const c_void, pb_expr: FfiPbPointer, alias: FfiAlias,
     ) -> FfiResult {
         let mut result = FfiResult::success();
