@@ -27,18 +27,13 @@ public class GraphRexSimplify extends RexSimplify {
     }
 
     /**
-     * default implementation in calcite will try to simplify {@code AND} conditions to single {@code SEARCH} condition,
+     * default implementation in calcite will try to simplify {@code AND} or {@code OR} conditions to single {@code SEARCH} condition,
      * i.e. a.age > 10 and a.age < 20 --> a.age SEARCH range(10, 20).
      * we override the function to skip the simplification for {@code SEARCH} operator is unsupported yet in physical layer.
      * @param e
      * @param unknownAs
      * @return
      */
-    @Override
-    RexNode simplifyAnd(RexCall e, RexUnknownAs unknownAs) {
-        return e;
-    }
-
     @Override
     RexNode simplify(RexNode e, RexUnknownAs unknownAs) {
         if (e.getKind() == SqlKind.AND || e.getKind() == SqlKind.OR) {

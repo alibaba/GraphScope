@@ -190,6 +190,7 @@ public class FilterTest {
                 filter.explain().trim());
     }
 
+    // g.V().hasLabel("person").where(expr("@.age > 20 and @.age < 30"))
     @Test
     public void and_2_test() {
         GraphBuilder builder = Utils.mockGraphBuilder();
