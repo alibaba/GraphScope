@@ -18,10 +18,10 @@ spec:
   publishNotReadyAddresses: true
   ports:
     - name: gaia-rpc
-      port: {{ .Values.store.service.gaiaRpc }}
+      port: {{ .Values.executor.service.gaiaRpc }}
       targetPort: gaia-rpc
     - name: gaia-engine
-      port: {{ .Values.store.service.gaiaEngine }}
+      port: {{ .Values.executor.service.gaiaEngine }}
       targetPort: gaia-engine
   selector: {{- include "graphscope-store.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: store

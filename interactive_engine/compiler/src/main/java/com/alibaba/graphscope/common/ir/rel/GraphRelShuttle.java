@@ -26,6 +26,9 @@ import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.LogicalFilter;
 
+/**
+ * interface to visit each {@code RelNode}
+ */
 public interface GraphRelShuttle {
     RelNode visit(GraphLogicalSource source);
 

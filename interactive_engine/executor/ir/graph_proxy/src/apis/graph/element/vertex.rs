@@ -13,11 +13,12 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
-use crate::apis::{
-    get_graph, read_id, write_id, Details, DynDetails, Element, GraphElement, PropertyValue, QueryParams,
-    ID,
-};
-use crate::utils::expr::eval::Context;
+use std::any::Any;
+use std::cmp::Ordering;
+use std::convert::{TryFrom, TryInto};
+use std::hash::{Hash, Hasher};
+use std::io;
+
 use ahash::HashMap;
 use dyn_type::{BorrowObject, Object};
 use ir_common::error::ParsePbError;
@@ -26,11 +27,12 @@ use ir_common::{LabelId, NameOrId};
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 use pegasus_common::downcast::*;
 use pegasus_common::impl_as_any;
-use std::any::Any;
-use std::cmp::Ordering;
-use std::convert::{TryFrom, TryInto};
-use std::hash::{Hash, Hasher};
-use std::io;
+
+use crate::apis::{
+    get_graph, read_id, write_id, Details, DynDetails, Element, GraphElement, PropertyValue, QueryParams,
+    ID,
+};
+use crate::utils::expr::eval::Context;
 
 #[derive(Clone, Debug, Default)]
 pub struct Vertex {

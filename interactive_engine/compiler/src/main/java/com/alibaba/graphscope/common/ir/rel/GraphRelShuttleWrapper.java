@@ -26,6 +26,9 @@ import org.apache.calcite.rel.RelShuttleImpl;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.logical.LogicalFilter;
 
+/**
+ * a wrapper of {@code GraphRelShuttle} and re-implement {@code RelShuttleImpl} to visit our self-defined operators ({@code GraphLogicalXX})
+ */
 public class GraphRelShuttleWrapper extends RelShuttleImpl {
     protected final GraphRelShuttle relShuttle;
 
