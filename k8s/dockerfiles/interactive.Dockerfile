@@ -64,9 +64,6 @@ RUN sudo yum install -y centos-release-scl-rh java-1.8.0-openjdk  && \
     sudo yum -y clean all --enablerepo='*' && \
     sudo rm -rf /var/cache/yum
 
-SHELL ["/usr/bin/scl", "enable", "rh-python38" ]
-RUN python3 -m pip install --no-cache-dir --user vineyard vineyard-io
-
 ENV JAVA_HOME=/usr/lib/jvm/jre-openjdk HADOOP_HOME=/opt/hadoop-3.3.0
 ENV HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_HOME/lib/native
 ENV HADOOP_YARN_HOME=$HADOOP_HOME HADOOP_MAPRED_HOME=$HADOOP_HOME
@@ -91,3 +88,7 @@ RUN sudo chmod a+wrx /tmp
 
 USER graphscope
 WORKDIR /home/graphscope
+
+SHELL ["/usr/bin/scl", "enable", "rh-python38" ]
+RUN python3 -m pip install --no-cache-dir --user vineyard vineyard-io
+
