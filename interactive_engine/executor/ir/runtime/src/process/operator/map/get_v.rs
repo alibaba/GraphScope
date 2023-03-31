@@ -49,15 +49,10 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                 input.append(vertex, self.alias.clone());
                 Ok(Some(input))
             } else if let Some(graph_path) = entry.as_graph_path() {
-                if let VOpt::End = self.opt {
-                    let path_end = graph_path.get_path_end().clone();
-                    input.append(path_end, self.alias.clone());
-                    Ok(Some(input))
-                } else {
-                    Err(FnExecError::unsupported_error(
-                        "Only support `GetV` with VOpt::End on a path entry",
-                    ))?
-                }
+                // TODO: we do not check VOpt here, and we treat all cases as to get the end vertex of the path.
+                let path_end = graph_path.get_path_end().clone();
+                input.append(path_end, self.alias.clone());
+                Ok(Some(input))
             } else {
                 Err(FnExecError::unexpected_data_error(
                     "Can only apply `GetV` (`Auxilia` instead) on an edge or path entry",
@@ -146,6 +141,17 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
             // e.g., for g.V().out().as("a").has("name", "marko"), we should compile as:
             // g.V().out().auxilia(as("a"))... where we give alias in auxilia,
             //     then we set tag=None and alias="a" in auxilia
+            // 1. filter by labels.
+            if !self.query_params.labels.is_empty() && entry.label().is_some() {
+                if !self
+                    .query_params
+                    .labels
+                    .contains(&entry.label().unwrap())
+                {
+                    return Ok(None);
+                }
+            }
+            // 2. further fetch properties, e.g., filter by columns.
             match entry.get_type() {
                 EntryType::Vertex => {
                     let graph = get_graph().ok_or(FnExecError::NullGraphError)?;
