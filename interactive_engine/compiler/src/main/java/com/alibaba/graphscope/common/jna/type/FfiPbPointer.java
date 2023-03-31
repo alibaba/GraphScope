@@ -17,21 +17,27 @@
 package com.alibaba.graphscope.common.jna.type;
 
 import com.alibaba.graphscope.common.jna.IrTypeMapper;
+import com.sun.jna.Memory;
+import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
 
-@Structure.FieldOrder({"code", "msg"})
-public class FfiResult extends Structure {
-    public FfiResult() {
+@Structure.FieldOrder({"ptr", "len"})
+public class FfiPbPointer extends Structure {
+
+    public FfiPbPointer() {
         super(IrTypeMapper.INSTANCE);
     }
 
-    public static class ByValue extends FfiResult implements Structure.ByValue {}
-
-    public ResultCode code;
-    public String msg;
-
-    @Override
-    public String toString() {
-        return "FfiResult{" + "code=" + code + ", msg='" + msg + '\'' + '}';
+    public static class ByValue extends FfiPbPointer implements Structure.ByValue {
+        public ByValue(byte[] bytes) {
+            this.len = bytes.length;
+            if (this.len > 0) {
+                this.ptr = new Memory(this.len);
+                this.ptr.write(0, bytes, 0, (int) this.len);
+            }
+        }
     }
+
+    public Pointer ptr;
+    public long len;
 }

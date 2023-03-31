@@ -56,6 +56,13 @@ public class ArgUtils {
         return ffiName;
     }
 
+    public static FfiNameOrId.ByValue asNameOrId(int tag) {
+        FfiNameOrId.ByValue ffiName = new FfiNameOrId.ByValue();
+        ffiName.nameId = tag;
+        ffiName.opt = FfiNameIdOpt.Id;
+        return ffiName;
+    }
+
     public static FfiNameOrId.ByValue asNoneNameOrId() {
         return new FfiNameOrId.ByValue();
     }
@@ -97,6 +104,13 @@ public class ArgUtils {
         FfiAlias.ByValue ffiAlias = new FfiAlias.ByValue();
         ffiAlias.alias = asNameOrId(aliasName);
         ffiAlias.isQueryGiven = isQueryGiven;
+        return ffiAlias;
+    }
+
+    public static FfiAlias.ByValue asAlias(int aliasId) {
+        FfiAlias.ByValue ffiAlias = new FfiAlias.ByValue();
+        ffiAlias.alias = asNameOrId(aliasId);
+        ffiAlias.isQueryGiven = true;
         return ffiAlias;
     }
 

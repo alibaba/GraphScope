@@ -27,10 +27,8 @@ import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphGroupKeys;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphFieldCollation;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphRelCollations;
+import com.alibaba.graphscope.common.ir.rex.*;
 import com.alibaba.graphscope.common.ir.rex.RexCallBinding;
-import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
-import com.alibaba.graphscope.common.ir.rex.RexVariableAliasChecker;
-import com.alibaba.graphscope.common.ir.rex.RexVariableConverter;
 import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
 import com.alibaba.graphscope.common.ir.tools.config.*;
@@ -263,10 +261,16 @@ public class GraphBuilder extends RelBuilder {
      */
     public GraphBuilder match(RelNode single, GraphOpt.Match opt) {
         RelNode input = size() > 0 ? peek() : null;
-        RelNode match =
-                GraphLogicalSingleMatch.create((GraphOptCluster) cluster, null, input, single, opt);
-        if (size() > 0) pop();
-        push(match);
+        // there is only one source operator in the sentence -> skip match
+        if (input == null && single.getInputs().isEmpty()) {
+            push(single);
+        } else {
+            RelNode match =
+                    GraphLogicalSingleMatch.create(
+                            (GraphOptCluster) cluster, null, input, single, opt);
+            if (size() > 0) pop();
+            push(match);
+        }
         return this;
     }
 
@@ -715,7 +719,7 @@ public class GraphBuilder extends RelBuilder {
         // need to project in advance
         if (!registrar.getExtraNodes().isEmpty()) {
             project(registrar.getExtraNodes(), registrar.getExtraAliases(), registrar.isAppend());
-            RexVariableConverter converter = new RexVariableConverter(true, this);
+            RexTmpVariableConverter converter = new RexTmpVariableConverter(true, this);
             groupKey =
                     new GraphGroupKeys(
                             registerKeys.stream()
@@ -783,7 +787,7 @@ public class GraphBuilder extends RelBuilder {
         // expressions need to be projected in advance
         if (!registrar.getExtraNodes().isEmpty()) {
             project(registrar.getExtraNodes(), registrar.getExtraAliases(), registrar.isAppend());
-            RexVariableConverter converter = new RexVariableConverter(true, this);
+            RexTmpVariableConverter converter = new RexTmpVariableConverter(true, this);
             registerNodes =
                     registerNodes.stream()
                             .map(k -> k.accept(converter))

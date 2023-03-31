@@ -24,10 +24,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 // build from RexTmpVariable to RexGraphVariable
-public class RexVariableConverter extends RexVisitorImpl<RexNode> {
+public class RexTmpVariableConverter extends RexVisitorImpl<RexNode> {
     private GraphBuilder builder;
 
-    public RexVariableConverter(boolean deep, GraphBuilder builder) {
+    public RexTmpVariableConverter(boolean deep, GraphBuilder builder) {
         super(deep);
         this.builder = builder;
     }

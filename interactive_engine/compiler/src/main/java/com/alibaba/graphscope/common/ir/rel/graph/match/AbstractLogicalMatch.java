@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableList;
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelVisitor;
 import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rel.type.RelDataType;
@@ -55,6 +56,13 @@ public abstract class AbstractLogicalMatch extends SingleRel {
             if (!field.getName().equals(AliasInference.DEFAULT_NAME)) {
                 addTo.add(field);
             }
+        }
+    }
+
+    @Override
+    public void childrenAccept(RelVisitor visitor) {
+        if (this.input != null) {
+            visitor.visit(this.input, 0, this);
         }
     }
 }
