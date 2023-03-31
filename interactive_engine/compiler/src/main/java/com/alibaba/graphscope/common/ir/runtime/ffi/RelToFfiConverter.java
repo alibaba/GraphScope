@@ -420,13 +420,15 @@ public class RelToFfiConverter implements GraphRelShuttle {
         if (ObjectUtils.isNotEmpty(uniqueLabelIds)) {
             Pointer ptrFilter = LIB.initSelectOperator();
             StringBuilder predicateBuilder = new StringBuilder();
+            predicateBuilder.append("@.~label within [");
             int i = 0;
             for (Iterator<Integer> it = uniqueLabelIds.iterator(); it.hasNext(); ++i) {
                 if (i > 0) {
-                    predicateBuilder.append(" || ");
+                    predicateBuilder.append(",");
                 }
-                predicateBuilder.append("@.~label == " + it.next());
+                predicateBuilder.append(it.next());
             }
+            predicateBuilder.append("]");
             checkFfiResult(LIB.setSelectPredicate(ptrFilter, predicateBuilder.toString()));
             checkFfiResult(LIB.addSentenceBinder(ptrSentence, ptrFilter, FfiBinderOpt.Select));
         }

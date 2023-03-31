@@ -73,6 +73,22 @@ public class FfiLogicalPlanTest {
                 builder.match(node, GraphOpt.Match.INNER)
                         .aggregate(builder.groupKey(), builder.count(builder.variable("x")))
                         .build();
+        Assert.assertEquals(
+                "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}], values=[[{operands=[x],"
+                    + " aggFunction=COUNT, alias='$f0', distinct=false}]])\n"
+                    + "  GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[DEFAULT], fusedFilter=[[=(DEFAULT.age, 10)]], opt=[END])\n"
+                    + "  GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[knows]}], alias=[DEFAULT], opt=[OUT])\n"
+                    + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[DEFAULT], opt=[END])\n"
+                    + "], offset=[1], fetch=[3], path_opt=[SIMPLE], result_opt=[AllV],"
+                    + " alias=[DEFAULT])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[x], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
+                aggregate.explain().trim());
         try (LogicalPlan<Pointer, FfiData.ByValue> ffiPlan =
                 new LogicalPlanConverter(
                                 new GraphRelShuttleWrapper(new RelToFfiConverter(true)),

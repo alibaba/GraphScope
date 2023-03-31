@@ -7,141 +7,9 @@
             "scan_opt": 0,
             "alias": {
               "item": {
-                "Id": 0
+                "Id": 1
               }
             },
-            "params": {
-              "tables": [
-                {
-                  "item": {
-                    "Id": 0
-                  }
-                }
-              ],
-              "columns": [],
-              "is_all_columns": false,
-              "limit": null,
-              "predicate": {
-                "operators": [
-                  {
-                    "node_type": null,
-                    "item": {
-                      "Var": {
-                        "tag": null,
-                        "property": {
-                          "item": {
-                            "Label": {}
-                          }
-                        },
-                        "node_type": null
-                      }
-                    }
-                  },
-                  {
-                    "node_type": null,
-                    "item": {
-                      "Logical": 0
-                    }
-                  },
-                  {
-                    "node_type": null,
-                    "item": {
-                      "Const": {
-                        "item": {
-                          "I64": 0
-                        }
-                      }
-                    }
-                  }
-                ]
-              },
-              "sample_ratio": 1.0,
-              "extra": {}
-            },
-            "idx_predicate": null,
-            "meta_data": null
-          }
-        }
-      },
-      "children": [
-        1
-      ]
-    },
-    {
-      "opr": {
-        "opr": {
-          "Path": {
-            "base": {
-              "edge_expand": {
-                "v_tag": null,
-                "direction": 0,
-                "params": {
-                  "tables": [
-                    {
-                      "item": {
-                        "Id": 0
-                      }
-                    }
-                  ],
-                  "columns": [],
-                  "is_all_columns": false,
-                  "limit": null,
-                  "predicate": null,
-                  "sample_ratio": 1.0,
-                  "extra": {}
-                },
-                "alias": null,
-                "expand_opt": 1,
-                "meta_data": null
-              },
-              "get_v": {
-                "tag": null,
-                "opt": 1,
-                "params": {
-                  "tables": [
-                    {
-                      "item": {
-                        "Id": 0
-                      }
-                    }
-                  ],
-                  "columns": [],
-                  "is_all_columns": false,
-                  "limit": null,
-                  "predicate": null,
-                  "sample_ratio": 1.0,
-                  "extra": {}
-                },
-                "alias": null,
-                "meta_data": null
-              }
-            },
-            "start_tag": {
-              "item": {
-                "Id": 0
-              }
-            },
-            "alias": null,
-            "hop_range": {
-              "lower": 1,
-              "upper": 4
-            },
-            "path_opt": 1,
-            "result_opt": 1,
-            "condition": null
-          }
-        }
-      },
-      "children": [
-        2
-      ]
-    },
-    {
-      "opr": {
-        "opr": {
-          "Vertex": {
-            "tag": null,
-            "opt": 1,
             "params": {
               "tables": [
                 {
@@ -210,9 +78,139 @@
               "sample_ratio": 1.0,
               "extra": {}
             },
-            "alias": {
+            "idx_predicate": null,
+            "meta_data": null
+          }
+        }
+      },
+      "children": [
+        1
+      ]
+    },
+    {
+      "opr": {
+        "opr": {
+          "Path": {
+            "base": {
+              "edge_expand": {
+                "v_tag": null,
+                "direction": 1,
+                "params": {
+                  "tables": [
+                    {
+                      "item": {
+                        "Id": 0
+                      }
+                    }
+                  ],
+                  "columns": [],
+                  "is_all_columns": false,
+                  "limit": null,
+                  "predicate": null,
+                  "sample_ratio": 1.0,
+                  "extra": {}
+                },
+                "alias": null,
+                "expand_opt": 1,
+                "meta_data": null
+              },
+              "get_v": {
+                "tag": null,
+                "opt": 1,
+                "params": {
+                  "tables": [
+                    {
+                      "item": {
+                        "Id": 0
+                      }
+                    }
+                  ],
+                  "columns": [],
+                  "is_all_columns": false,
+                  "limit": null,
+                  "predicate": null,
+                  "sample_ratio": 1.0,
+                  "extra": {}
+                },
+                "alias": null,
+                "meta_data": null
+              }
+            },
+            "start_tag": {
               "item": {
                 "Id": 1
+              }
+            },
+            "alias": null,
+            "hop_range": {
+              "lower": 1,
+              "upper": 4
+            },
+            "path_opt": 1,
+            "result_opt": 1,
+            "condition": null
+          }
+        }
+      },
+      "children": [
+        2
+      ]
+    },
+    {
+      "opr": {
+        "opr": {
+          "Vertex": {
+            "tag": null,
+            "opt": 1,
+            "params": {
+              "tables": [],
+              "columns": [],
+              "is_all_columns": false,
+              "limit": null,
+              "predicate": {
+                "operators": [
+                  {
+                    "node_type": null,
+                    "item": {
+                      "Var": {
+                        "tag": null,
+                        "property": {
+                          "item": {
+                            "Label": {}
+                          }
+                        },
+                        "node_type": null
+                      }
+                    }
+                  },
+                  {
+                    "node_type": null,
+                    "item": {
+                      "Logical": 6
+                    }
+                  },
+                  {
+                    "node_type": null,
+                    "item": {
+                      "Const": {
+                        "item": {
+                          "I64Array": {
+                            "item": [
+                              0
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              "sample_ratio": 1.0,
+              "extra": {}
+            },
+            "alias": {
+              "item": {
+                "Id": 0
               }
             },
             "meta_data": null

@@ -16,38 +16,30 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.type.RelDataTypeField;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class AliasIdGenerator {
     private final AtomicInteger idGenerator;
+    private Map<String, Integer> aliasNameToIdMap;
 
     public AliasIdGenerator() {
         this.idGenerator = new AtomicInteger();
+        this.aliasNameToIdMap = new HashMap<>();
     }
 
-    public int generate(@Nullable String aliasName, @Nullable RelNode input) {
+    public int generate(@Nullable String aliasName) {
         if (aliasName == null || aliasName == AliasInference.DEFAULT_NAME) {
             return AliasInference.DEFAULT_ID;
         }
-        List<RelNode> inputsQueue = new ArrayList<>();
-        if (input != null) {
-            inputsQueue.add(input);
+        Integer aliasId = aliasNameToIdMap.get(aliasName);
+        if (aliasId == null) {
+            aliasId = idGenerator.getAndIncrement();
+            aliasNameToIdMap.put(aliasName, aliasId);
         }
-        while (!inputsQueue.isEmpty()) {
-            RelNode cur = inputsQueue.remove(0);
-            for (RelDataTypeField field : cur.getRowType().getFieldList()) {
-                if (aliasName.equals(field.getName())) {
-                    return field.getIndex();
-                }
-            }
-            inputsQueue.addAll(cur.getInputs());
-        }
-        return idGenerator.getAndIncrement();
+        return aliasId;
     }
 }
