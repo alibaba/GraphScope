@@ -86,9 +86,10 @@ COPY ./k8s/utils/graphctl.py /usr/local/bin/graphctl.py
 RUN sudo chmod +x /opt/graphscope/bin/*
 RUN sudo chmod a+wrx /tmp
 
+SHELL ["/usr/bin/scl", "enable", "rh-python38" ]
+RUN python3 -m pip install --no-cache-dir vineyard vineyard-io
+
 USER graphscope
 WORKDIR /home/graphscope
 
-SHELL ["/usr/bin/scl", "enable", "rh-python38" ]
-RUN python3 -m pip install --no-cache-dir --user vineyard vineyard-io
 
