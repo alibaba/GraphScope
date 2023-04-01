@@ -1,1 +1,2 @@
-com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngineFactory
+com.alibaba.graphscope.gremlin.plugin.script.AntlrGremlinScriptEngineFactory
+com.alibaba.graphscope.gremlin.plugin.script.AntlrCypherScriptEngineFactory

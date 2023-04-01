@@ -25,11 +25,11 @@
 
 package com.alibaba.graphscope.gremlin.antlr4;
 
+import com.alibaba.graphscope.grammar.GremlinGSBaseVisitor;
+import com.alibaba.graphscope.grammar.GremlinGSParser;
 import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
 
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSBaseVisitor;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.TextP;
 

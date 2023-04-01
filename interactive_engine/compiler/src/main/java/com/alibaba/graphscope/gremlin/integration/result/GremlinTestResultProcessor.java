@@ -16,11 +16,11 @@
 
 package com.alibaba.graphscope.gremlin.integration.result;
 
-import com.alibaba.graphscope.common.client.ResultParser;
-import com.alibaba.graphscope.gremlin.result.GremlinResultProcessor;
+import com.alibaba.graphscope.gremlin.result.processor.GremlinResultProcessor;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.tinkerpop.gremlin.process.remote.traversal.DefaultRemoteTraverser;
+import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.server.Context;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
@@ -42,14 +42,14 @@ public class GremlinTestResultProcessor extends GremlinResultProcessor {
     private static String EDGE_PROPERTIES = "edge_properties";
 
     public GremlinTestResultProcessor(
-            Context writeResult, ResultParser resultParser, GraphProperties testGraph) {
-        super(writeResult, resultParser);
+            Context writeResult, Traversal traversal, GraphProperties testGraph) {
+        super(writeResult, traversal);
         this.cachedProperties = testGraph.getProperties();
     }
 
     @Override
-    protected void formatResultIfNeed() {
-        super.formatResultIfNeed();
+    protected void aggregateResults() {
+        super.aggregateResults();
         List<Object> testTraversers =
                 resultCollectors.stream()
                         .map(
