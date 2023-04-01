@@ -73,6 +73,7 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
                     // send back a page of results if batch size is met and then reset the
                     // resultCollectors
                     if (this.resultCollectors.size() >= this.resultCollectorsBatchSize) {
+                        aggregateResults();
                         writeResultList(
                                 writeResult, resultCollectors, ResponseStatusCode.PARTIAL_CONTENT);
                         this.resultCollectors.clear();
