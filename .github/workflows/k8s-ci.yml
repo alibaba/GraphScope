@@ -550,7 +550,6 @@ jobs:
           cd ${GITHUB_WORKSPACE}/interactive_engine && mvn clean install --quiet -DskipTests -Drust.compile.skip=true -P graphscope,graphscope-assembly
           cd ${GITHUB_WORKSPACE}/interactive_engine/tests
           # ./function_test.sh 8111 1
-          sleep 5000000s
           ./function_test.sh 8112 2
 
   build-gie-experimental:
