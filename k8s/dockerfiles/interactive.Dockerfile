@@ -87,7 +87,7 @@ RUN sudo chmod +x /opt/graphscope/bin/*
 RUN sudo chmod a+wrx /tmp /var/tmp
 
 SHELL ["/usr/bin/scl", "enable", "rh-python38" ]
-RUN python3 -m pip install --no-cache-dir vineyard vineyard-io
+RUN python3 -m pip install --no-cache-dir vineyard vineyard-io --user
 
 USER graphscope
 WORKDIR /home/graphscope
