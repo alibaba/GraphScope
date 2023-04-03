@@ -90,12 +90,29 @@ spec:
 
               if [ $server_id -eq 0 ]
               then
+                ### Begin preprocessing data
+                # ingest any files other than local files into vineyard object
+                . /home/graphscope/.profile
+                . /opt/rh/rh-python38/enable
+                export config_new_path=/tmp/config_new
+                graphctl.py ${VINEYARD_IPC_SOCKET} {{ .Release.Namespace }}:${pod_names} $config_path/$HTAP_LOADER_CONFIG $config_new_path
+
+                # copy new config to other store pods.
+                store_pods=`kubectl get pod -lapp.kubernetes.io/component=store,app.kubernetes.io/instance=$INSTANCE_NAME --no-headers -o custom-columns=":metadata.name"`
+                for pod in $(echo $store_pods)
+                do
+                  kubectl cp $config_new_path $pod:$config_new_path
+                done
+                echo "Copy config succeed"
+                ### End preprocessing data
+
+                # Load data
                 mpirun --host $pod_names \
                   -x LD_LIBRARY_PATH=$LD_LIBRARY_PATH \
                   -x OPAL_PREFIX=$OPAL_PREFIX \
                   -x VINEYARD_IPC_SOCKET=$VINEYARD_IPC_SOCKET \
-                  -x config_path=$config_path \
-                    vineyard-graph-loader --config $config_path/$HTAP_LOADER_CONFIG
+                  -x config_new_path=$config_new_path \
+                    vineyard-graph-loader --config $config_new_path
                 if [ $? -ne 0 ]
                 then
                   echo "load vineyard graph fail"
