@@ -114,13 +114,15 @@ class WCCProperty : public PropertyAppBase<FRAG_T, WCCPropertyContext<FRAG_T>> {
             }
           }
 
-          es = frag.GetIncomingAdjList(v, j);
-          for (auto& e : es) {
-            auto u = e.neighbor();
-            label_id_t u_label = frag.vertex_label(u);
-            if (ctx.comp_id[u_label][u] > cid) {
-              ctx.comp_id[u_label][u] = cid;
-              ctx.next_modified[u_label][u] = true;
+          if (frag.directed()) {
+            es = frag.GetIncomingAdjList(v, j);
+            for (auto& e : es) {
+              auto u = e.neighbor();
+              label_id_t u_label = frag.vertex_label(u);
+              if (ctx.comp_id[u_label][u] > cid) {
+                ctx.comp_id[u_label][u] = cid;
+                ctx.next_modified[u_label][u] = true;
+              }
             }
           }
         }
@@ -178,13 +180,15 @@ class WCCProperty : public PropertyAppBase<FRAG_T, WCCPropertyContext<FRAG_T>> {
             }
           }
 
-          es = frag.GetIncomingAdjList(v, j);
-          for (auto& e : es) {
-            auto u = e.neighbor();
-            label_id_t u_label = frag.vertex_label(u);
-            if (ctx.comp_id[u_label][u] > cid) {
-              ctx.comp_id[u_label][u] = cid;
-              ctx.next_modified[u_label][u] = true;
+          if (frag.directed()) {
+            es = frag.GetIncomingAdjList(v, j);
+            for (auto& e : es) {
+              auto u = e.neighbor();
+              label_id_t u_label = frag.vertex_label(u);
+              if (ctx.comp_id[u_label][u] > cid) {
+                ctx.comp_id[u_label][u] = cid;
+                ctx.next_modified[u_label][u] = true;
+              }
             }
           }
         }
