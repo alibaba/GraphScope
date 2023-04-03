@@ -124,12 +124,14 @@ class AutoWCCProperty
             }
           }
 
-          es = frag.GetIncomingAdjList(v, j);
-          for (auto& e : es) {
-            auto u = e.neighbor();
-            label_id_t u_label = frag.vertex_label(u);
-            if (ctx.partial_result[u_label][u] > cid) {
-              ctx.partial_result[u_label].SetValue(u, cid);
+          if (frag.directed()) {
+            es = frag.GetIncomingAdjList(v, j);
+            for (auto& e : es) {
+              auto u = e.neighbor();
+              label_id_t u_label = frag.vertex_label(u);
+              if (ctx.partial_result[u_label][u] > cid) {
+                ctx.partial_result[u_label].SetValue(u, cid);
+              }
             }
           }
         }
@@ -156,12 +158,14 @@ class AutoWCCProperty
             }
           }
 
-          es = frag.GetIncomingAdjList(v, j);
-          for (auto& e : es) {
-            auto u = e.neighbor();
-            label_id_t u_label = frag.vertex_label(u);
-            if (ctx.partial_result[u_label][u] > cid) {
-              ctx.partial_result[u_label].SetValue(u, cid);
+          if (frag.directed()) {
+            es = frag.GetIncomingAdjList(v, j);
+            for (auto& e : es) {
+              auto u = e.neighbor();
+              label_id_t u_label = frag.vertex_label(u);
+              if (ctx.partial_result[u_label][u] > cid) {
+                ctx.partial_result[u_label].SetValue(u, cid);
+              }
             }
           }
         }
