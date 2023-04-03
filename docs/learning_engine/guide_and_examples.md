@@ -38,7 +38,7 @@ GraphScope is designed for processing large graphs, which are usually hard to fi
 :header: text-center
 :column: col-lg-12 p-2
 
-```{link-button} tutorial_node_classification_local_k8s.html
+```{link-button} tutorial_node_classification_k8s.html
 :text: Tutorial
 :classes: btn-block stretched-link
 ```

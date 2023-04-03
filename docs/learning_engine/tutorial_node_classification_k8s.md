@@ -1,4 +1,4 @@
-# Tutorial: Training A Node Classification Model on K8s Cluster
+# Tutorial: Training a Node Classification Model on K8s Cluster
 
 GraphScope is designed for processing large graphs, which are usually hard to 
 fit in the memory of a single machine. With vineyard as the distributed in-memory 
