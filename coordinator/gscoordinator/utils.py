@@ -1758,7 +1758,7 @@ def parse_as_glog_level(log_level):
         else:
             log_level = getattr(logging, log_level.upper())
     python_to_glog = {0: 100, 10: 10, 20: 1}
-    return python_to_glog.get(log_level, 1)
+    return python_to_glog.get(log_level, 0)
 
 
 def str2bool(s):
