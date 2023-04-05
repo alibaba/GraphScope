@@ -19,7 +19,13 @@ COPY --from=builder /opt/openmpi /opt/openmpi
 COPY --from=builder /opt/vineyard /opt/vineyard
 RUN tar xzf /root/artifacts.tar.gz -C /usr/local/ && rm /root/artifacts.tar.gz
 
+ENV GRAPHSCOPE_HOME=/opt/graphscope
+ENV PATH=$PATH:$GRAPHSCOPE_HOME/bin:/opt/openmpi/bin:/opt/vineyard/bin
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:/usr/local/lib64
+ENV OPAL_PREFIX=/opt/openmpi
+ENV OMPI_MCA_plm_rsh_agent=/usr/local/bin/kube_ssh
+
+COPY ./utils/kube_ssh /usr/local/bin/kube_ssh
 
 RUN yum install -y sudo libunwind-devel libgomp && \
     yum clean all -y --enablerepo='*' && \
