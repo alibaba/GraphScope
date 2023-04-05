@@ -67,7 +67,7 @@ Using this command to verify minikube is running.
 minikube status
 ```
 
-A normal status should looks like this
+A normal status should look like this
 
 ```bash
 $ minikube status

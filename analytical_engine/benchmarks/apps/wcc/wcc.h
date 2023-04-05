@@ -81,12 +81,15 @@ class WCC : public grape::ParallelAppBase<FRAG_T, WCCContext<FRAG_T>>,
                   ctx.next_modified.Insert(u);
                 }
               }
-              es = frag.GetIncomingAdjList(v);
-              for (auto& e : es) {
-                auto u = e.get_neighbor();
-                if (ctx.comp_id[u] > cid) {
-                  grape::atomic_min(ctx.comp_id[u], cid);
-                  ctx.next_modified.Insert(u);
+
+              if (frag.directed()) {
+                es = frag.GetIncomingAdjList(v);
+                for (auto& e : es) {
+                  auto u = e.get_neighbor();
+                  if (ctx.comp_id[u] > cid) {
+                    grape::atomic_min(ctx.comp_id[u], cid);
+                    ctx.next_modified.Insert(u);
+                  }
                 }
               }
             });
@@ -123,12 +126,15 @@ class WCC : public grape::ParallelAppBase<FRAG_T, WCCContext<FRAG_T>>,
           ctx.next_modified.Insert(u);
         }
       }
-      es = frag.GetIncomingAdjList(v);
-      for (auto& e : es) {
-        auto u = e.get_neighbor();
-        if (ctx.comp_id[u] > cid) {
-          grape::atomic_min(ctx.comp_id[u], cid);
-          ctx.next_modified.Insert(u);
+
+      if (frag.directed()) {
+        es = frag.GetIncomingAdjList(v);
+        for (auto& e : es) {
+          auto u = e.get_neighbor();
+          if (ctx.comp_id[u] > cid) {
+            grape::atomic_min(ctx.comp_id[u], cid);
+            ctx.next_modified.Insert(u);
+          }
         }
       }
     });
