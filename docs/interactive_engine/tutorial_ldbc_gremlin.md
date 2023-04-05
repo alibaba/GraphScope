@@ -860,8 +860,12 @@ plt.ylabel('Comments Count')
 plt.title('Comment Length Histogram for comments from China')
 plt.show()
 ```
+
 :::{figure-md}
-![comments_length_histogram_china](../images/comments_length_histogram_china.png)
+<img src="../images/comments_length_histogram_china.png"
+     alt="comments_length_histogram_china"
+     width="50%">
+
 Figure 19. Comments length histogram in China.
 :::
 
@@ -891,19 +895,23 @@ browser_counts = Counter(browsers_used)
 plt.pie(x=[browser_counts[browser] for browser in browser_list], labels=browser_list, autopct='%1.1f%%')
 plt.show()
 ```
+
 :::{figure-md}
-![estimated_japan_brower_market_share](../images/estimated_japan_brower_market_share.png)
-Figure 20. Estimated Browser Market Share in Japan.
+<img src="../images/estimated_japan_brower_market_share.png"
+     alt="estimated_japan_brower_market_share"
+     width="50%">
+
+Figure 20. Estimated Japan Browser Market Share
 :::
 
 ## Pattern Match
 
-Suppose you want to find two `persons` and the `universities` they `studyAt` in the Property Graph that:
+Suppose you want to find two `persons` and the `universities` they `studyAt` in the graph that:
 
 1. The two `person` `know` each other
 2. The two `person` `studyAt` the same `university`
 
-With the previously taught knowledge, you may write the following code in GIE to achieve this purpose:
+With the method taught previously , you can write the following code in GIE to achieve this purpose:
 
 ```python
 q1 = g.execute('g.V().hasLabel(\'person\').as(\'person1\').both(\'knows\').as(\'person2\')\
@@ -914,10 +922,10 @@ q1 = g.execute('g.V().hasLabel(\'person\').as(\'person1\').both(\'knows\').as(\'
 print(q1.all())
 ```
 
-- At first, you find all pairs of `person1` and `person2` they know each other
-- Then you find `person1's` university as `university1`, and `person2`'s university as `university2`.
-- Then you use `where(...)` step to check whether `university1` is equal to `university2`, and filter out those unequal ones.
-- Finally, you use `select(...)` step to project `person1`, `person2` and `university1` (now `university1` is the same as `university1`)
+- First, you find all pairs of `person1` and `person2` who know each other.
+- Then, you find `person1`'s university as `university1` and `person2`'s university as `university2`.
+- Next, you use the `where(...)` step to check whether `university1` is equal to `university2` and filter out those that are not equal.
+- Finally, you use the `select(...)` step to project `person1`, `person2`, and `university1` (now `university1` is the same as `university2`).
 
 The output of should be like:
 
@@ -956,32 +964,43 @@ The output of should be like:
   'university1': v[144115188075862429]}]
 ```
 
-Actually, such kind of problem is called pattern match. It means, you define a pattern at first. The pattern can be either described by the natural language:
+Actually, such kind of problem is called graph pattern matching. It means, you define a pattern at first. The pattern can be either described by the natural language:
 
-- "Find two `persons` and the `universities` they `studyAt` in the Property Graph that the two `person` `know` each other and the two `person` `studyAt` the same `university`"
+- "Find two `persons` and the `universities` they `studyAt` in the graph that the two `person` `know` each other and the two `person` `studyAt` the same `university`"
 
-or can be illustrated as a figure:
+or can be illustrated as a graph pattern as shown in the following.
 
 :::{figure-md}
-<img src="../images/pattern_person_person_university.png" alt="pattern_person_person_university" style="zoom: 50%;" />
+<img src="../images/pattern_person_person_university.png"
+     alt="pattern_person_person_university"
+     width="35%">
+
 Figure 21. Pattern: two person know each other and study at the same university.
 :::
 
-Then you aim to find all the matched subgraphs of the Property Graph that are isomorphic to the pattern. For example, this is a sub-local-graph of university vertex(id = 144115188075858884) in the LDBC Graph: 
+Then you aim to find all the matched subgraphs that are [isomorphic](https://en.wikipedia.org/wiki/Graph_isomorphism) to the pattern. Under graph isomorphism, a subgraph and the pattern are matched if, when there is an edge between vertices in the pattern, there is an equivalent edge between two matched vertices in the subgraph. In addition, a vertex in the subgraph cannot match multiple pattern vertices. 
+
+For example, this is a local graph of university vertex(id = 144115188075858884) in the LDBC Graph: 
 
 :::{figure-md}
-<img src="../images/local_person_person_university.png" alt="local_person_person_university" style="zoom:50%;" />
-Figure 22. sub-local-graph of a university vertex. 
+<img src="../images/local_person_person_university.png"
+     alt="local_person_person_university"
+     width="50%">
+
+Figure 22. Local graph of a university vertex. 
 :::
 
-and here are the matched subgraphs in this sub-local-graph:
+and here are the matched subgraphs in this local graph:
 
 :::{figure-md}
-<img src="../images/matched_person_person_university.png" alt="matched_person_person_university" style="zoom:50%;" />
-Figure 23. Three matched subgraphs. 
+<img src="../images/matched_person_person_university.png"
+     alt="matched_person_person_university"
+     width="50%">
+
+Figure 23. Three matched subgraphs in the local graph. 
 :::
 
-Here are the matched instances in the sub-local-graph: 
+The matched instances in the local graph are:
 
 - `{person1: v[216172782113784192], person2: v[216172782113784107], university: v[144115188075858884]}`
 - `{person1: v[216172782113784107], person2: v[216172782113784192], university: v[144115188075858884]}`
@@ -990,24 +1009,24 @@ Here are the matched instances in the sub-local-graph:
 - `{person1: v[216172782113784279], person2: v[216172782113784171], university: v[144115188075858884]}`
 - `{person1: v[216172782113784171], person2: v[216172782113784279], university: v[144115188075858884]}`
 
-There are totally 6 matched instances(compared with 3 subgraphs) because changing the position of `person1` and `person2` leads to a new matched instance. 
+There are a total of 6 matched instances (compared to 3 subgraphs) because changing the position of `person1` and `person2` leads to a new matched instance.
 
-As shown at the very beginning of this section, you can write regular gremlin sentence to conduct the pattern matching. However,  it has two shortcomings:
+As shown at the beginning of this section, you can write a regular Gremlin query to conduct pattern matching. However, it has two shortcomings:
 
-1. The query sentence is complex: you write such a long query sentence for this simple triangle pattern, what about the pattern is more complicated like square, butterfly or cliques?
-2. There's almost no optimization: the speed of the patter matching largely depends on how you write the query sentence. 
+1. The query sentence is complex. If you write such a long query sentence for this simple triangle pattern, what about more complicated patterns like squares, butterflies, or cliques?
+2. There's almost no optimization. The speed of pattern matching largely depends on how you write the query sentence.
 
-To solve the two problems, GIE supports `match(...)` step in gremlin, which is specifically designed for pattern matching. 
+To solve these two problems, GIE supports the `match(...)` step in Gremlin, which is specifically designed for pattern matching.
 
-The `match()`-step provides a more declarative form of graph querying based on the notion of pattern matching: 
+The `match()` step provides a more declarative form of graph querying based on the notion of pattern matching:
 
-- Every `match()`-step is a collection of `sentences`, and every `sentence` is a regular gremlin traverser sentence but starts and ends with given tags. 
-- Then GIE use the underlying MatchAnalyticsAlgorithm to connect all the `sentences` together to form a pattern structure based on those start and end tags. 
-- Finally, GIE applies its MatchOptimizationAlgorithm to generate an optimized matching strategy of the formed pattern and conduct the pattern matching. 
+- Every `match()` step is a collection of `sentences`, and every `sentence` is a regular Gremlin traverser sentence but starts and ends with given tags.
+- Then, GIE uses the underlying MatchAnalyticsAlgorithm to connect all the `sentences` together to form a pattern structure based on those start and end tags.
+- Finally, GIE applies its MatchOptimizationAlgorithm to generate an optimized matching strategy for the formed pattern and conduct the pattern matching.
 
-Therefore, it is much more efficient to solve pattern matching problems by gremlin's built-in `match()` step. 
+Therefore, it is much more efficient to solve pattern matching problems using Gremlin's built-in `match()` step.
 
-As for pattern shown at the very beginning of this section: two person know each other and study at the same university, you can write in GIE with `match()` step as:
+As for the pattern shown at the beginning of this section (two persons who know each other and study at the same university), you can write the following code in GIE using the `match()` step:
 
 ```python
 # Person1 and 2 know each other and study at the same university
@@ -1053,15 +1072,18 @@ The output should be the same as the previous self-written pattern matching sent
   'university': v[144115188075858708]}]
 ```
 
-Let me raise a more complex pattern matching example, we want to kind two `persons` A and B：
+Let's present a more complex pattern matching example: we want to find two `persons` A and B such that:
 
 - they know each other
-- `person` A creates a `message`, which is replied by a `comment` created by `person` B
+- `person` A creates a `message`, which is replied to by a `comment` created by `person` B
 
 This figure illustrates the pattern:
 
 :::{figure-md}
-<img src="../images/bi19_right_lower_corner.png" alt="bi19_right_lower_corner" style="zoom: 67%;" />
+<img src="../images/bi19_right_lower_corner.png"
+     alt="bi19_right_lower_corner"
+     width="50%">
+
 Figure 24. Pattern: two person know each other, and one person creates a comment replying a message created by the other. 
 :::
 
@@ -1100,16 +1122,15 @@ The output should be like:
 ```bash
 [{'pA': v[216172782113783812], 'pB': v[216172782113783882], 'c': v[36], 'm': v[360287970189640010]}, {'pA': v[216172782113783812], 'pB': v[216172782113783882], 'c': v[37], 'm': v[360287970189640010]}, {'pA': v[216172782113783812], 'pB': v[216172782113784105], 'c': v[38], 'm': v[360287970189640010]}, {'pA': v[216172782113783812], 'pB': v[216172782113783882], 'c': v[41], 'm': v[360287970189640010]}, {'pA': v[216172782113784105], 'pB': v[216172782113783882], 'c': v[43], 'm': v[42]}, {'pA': v[216172782113783814], 'pB': v[216172782113783962], 'c': v[50], 'm': v[360287970189640135]}, {'pA': v[216172782113783814], 'pB': v[216172782113784171], 'c': v[52], 'm': v[360287970189640135]}, {'pA': v[216172782113784481], 'pB': v[216172782113784199], 'c': v[54], 'm': v[49]}, {'pA': v[216172782113783814], 'pB': v[216172782113784038], 'c': v[56], 'm': v[360287970189640135]}, {'pA': v[216172782113783816], 'pB': v[216172782113784144], 'c': v[175], 'm': v[360287970189640462], ......, }]
 ```
+## Relational Operations
 
-## Advanced Techniques
-
-Then we would like to introduce some advanced techniques of gremlin steps that GIE supports. 
+Then we would like to introduce more relational operations of gremlin steps that GIE supports. 
 
 ### Filter Steps
 
 #### `hasId()`
 
-In previous tutorial, we have introduced that you can use `g.V(id)` to pick out the vertex having specific required global id from the Property Graph. But, what if we want to apply filters based on global id during the traversal? 
+In previous tutorial, we have introduced that you can use `g.V(id)` to pick out the vertex having specific required global id from the graph. But, what if we want to apply filters based on global id during the traversal? 
 
 You can use the `hasId(id)` step to achieve the purpose. For example, if you want the expanded vertex exactly having global id 144115188075861858, you can write the following codes in GIE:
 
@@ -1205,10 +1226,10 @@ q1 = g.execute('g.V().hasLabel(\'place\').has(\'name\', \'India\')\
 print(q1.all())
 ```
 
-The output is `[8248]`. It seems to have no problem. However, how many forums are there in the Property Graph?
+The output is `[8248]`. It seems to have no problem. However, how many forums are there in the graph?
 
 ```python
-# Count how many forums are there in the Property Graph 
+# Count how many forums are there in the graph 
 q1 = g.execute('g.V().hasLabel(\'forum\').count()')
 print(q1.all())
 ```
@@ -1238,10 +1259,10 @@ print(q1)
 
 The output is also `[2822]`. 
 
-In addition, we can `dedup(TAG1, TAG2, ...)` to remove duplicates by the composition of several tagged entires. For example, the following gremlin sentence counts there are how many different related `(country, forum)` pairs in the Property Graph.
+In addition, we can `dedup(TAG1, TAG2, ...)` to remove duplicates by the composition of several tagged entires. For example, the following gremlin sentence counts there are how many different related `(country, forum)` pairs in the graph.
 
 ```python
-# Count how many different related (country, forum) pairs in the Property Graph
+# Count how many different related (country, forum) pairs in the graph
 q1 = g.execute('g.V().hasLabel(\'place\').as(\'a\')\
                  .in(\'isPartOf\').in(\'isLocatedIn\')\
                  .in(\'hasMember\').as(\'b\').dedup(\'a\', \'b\').count()')
@@ -1250,10 +1271,10 @@ print(q1.all())
 
 The output is `[37164]`
 
-Furthermore, just like previously introduced `where()` step, we can add `by(...)` after `dedup(...)` step to remove duplicates based on the property values. For example, if you want to count there are how many different `firstNames` of `persons` in the Property graph, you can write in GIE as:
+Furthermore, just like previously introduced `where()` step, we can add `by(...)` after `dedup(...)` step to remove duplicates based on the property values. For example, if you want to count there are how many different `firstNames` of `persons` in the graph, you can write in GIE as:
 
 ```python
-# Count how many different firstName are there in the Property Graph
+# Count how many different firstName are there in the graph
 q1 = g.execute('g.V().hasLabel(\'person\').dedup().by(\'firstName\').count()')
 print(q1)
 ```
@@ -1521,7 +1542,7 @@ Therefore, it is strongly suggested to add meaningful group key in the `by()` st
 
 Sometimes, we only care about there are how many entities in the group. Therefore, it is unnecessary to use `group()` step to get the complete group with every entities inside it.  
 
-We can simply use `groupCount()` step to achieve this purpose. The usage of `groupCount()` step is almost the same as `group()` step, but it will return the count instead of the complete group. For example, the following code calculates there are how many males and females in the Property Graph. 
+We can simply use `groupCount()` step to achieve this purpose. The usage of `groupCount()` step is almost the same as `group()` step, but it will return the count instead of the complete group. For example, the following code calculates there are how many males and females in the graph. 
 
 ```python
 # Count the number of males and females
@@ -1594,7 +1615,7 @@ The output should be like:
 
 Gremlin sentences always generate a lot of traversers, but sometimes we only need some of them. Therefore, gremlin provides `limit()` step to filter the objects in the traversal by the number of them to pass through the stream, where only the first n objects are allowed as defined by the limit argument. 
 
-For example, if you want to extract 10 person vertices from the Property Graph, you can write:
+For example, if you want to extract 10 person vertices from the graph, you can write:
 
 ```python
 # Extract 10 person vertices
@@ -1622,20 +1643,137 @@ The output should be like:
 [v[216172782113784601], v[216172782113784315], v[216172782113784011], v[216172782113784374], v[216172782113783971], v[216172782113784431], v[216172782113784333], v[216172782113784154], v[216172782113784381], v[216172782113783933]]
 ```
 
+### Expression(Syntax Sugar)
+
+Currently, it is still kind of complicated when we need to apply many predicates together to the traversers. 
+
+For example, if you want to find all `male` `persons` that are `created` after `2012-01-01`, you may need two `has(...)` steps. The first `has()` step keeps all the `persons` whose `gender` property has value `male`, and the second `has()` step filters out all the `persons` whose `creationDate` property has value earlier than `2012-01-01`. 
+
+```python
+# Find all male persons that are created after 2012-01-01
+q1 = g.execute('g.V().hasLabel(\'person\').has(\'gender\', \'male\').has(\'creationDate\', gt(\'2012-01-01\'))')
+print(q1.all())
+```
+
+How can we combine many predicates together in a single filter operation? GIE supports a syntax sugar, **writing expressions directly in the filter operators **, to solve the problem!
+
+**Expression** is introduced to denote property-based calculations or filters, which consists of the following basic entries:
+
+- `@`: the value of the current entry
+- `@.name`: the property value of `name` of the current entry
+- `@a`: the value of the entry `a`
+- `@a.name`: the property value of `name` of the entry `a`
+
+And related operations can be performed based on these entries, including:
+
+- arithmetic
+
+  ```bash
+  @.age + 10
+  @.age * 10
+  (@.age + 4) / 10 + (@.age - 5)
+  ```
+
+- logic comparison
+
+  ```bash
+  @.name == "marko"
+  @.age != 10
+  @.age > 10
+  @.age < 10
+  @.age >= 10
+  @.weight <= 10.0
+  ```
+
+- logic connector
+
+  ```bash
+  @.age > 10 && @.age < 20
+  @.age < 10 || @.age > 20
+  ```
+
+- bit manipulation
+
+  ```bash
+  @.num | 2
+  @.num & 2
+  @.num ^ 2
+  @.num >> 2
+  @.num << 2
+  ```
+
+- exponentiation
+
+  ```bash
+  @.num ^^ 3
+  @.num ^^ -3
+  ```
+
+We can write expressions in project(`select`) or filter(`where`) operators:
+
+- filter: `where(expr(“…”))`, for example:
+
+  ```bash
+  g.V().where(expr("@.name == \"marko\"")) # = g.V().has("name", "marko")
+  g.V().where(expr("@.age > 10")) # = g.V().has("age", P.gt(10))
+  g.V().as("a").out().where(expr("@.name == \"marko\" || (@a.age > 10)"))
+  ```
+
+- project: `select(expr(“…”))`
+
+  ```bash
+  g.V().select(expr("@.name")) # = g.V().values("name")
+  ```
+
+Now, to find all  `male` `persons` that are `created` after `2012-01-01`, you only need to write:
+
+```bash
+# Find all male persons that are created after 2012-01-01
+q1 = g.execute("g.V().hasLabel('person').where(expr('@.gender == \"male\" && @.creationDate > \"2012-01-01\"'))")
+print(q1.all())
+```
+
+The output should be like:
+
+```bash
+[v[216172782113783813], v[216172782113783819], v[216172782113783826], v[216172782113783836], ..., ]
+```
+
 ## Complex Queries
 
-Finally, we will discuss how to use GIE with gremlin sentences to make some complex queries. The queries we choose are mainly from LDBC BI Workload.
+In this tutorial, we will mainly discuss how to use GIE with gremlin sentences to make some complex queries. The queries we choose are mainly from LDBC BI Workload.
 
 ### LDBC BI2
 
 :::{figure-md}
-![bi2](../images/bi2.png)
+<img src="../images/bi2.png"
+     alt="bi2"
+     width="80%">
+
 Figure 25. LDBC BI Query2.
 :::
 
 This figure illustrates LDBC BI2 query. This query aims to find the `Tags` under a given `TagClass` that were used in `Messages` during in the 100-day time window starting at date and compare it with the 100-day time window that follows. For the `Tags` and for both time windows, compute the count of `Messages`. 
 
-The key to this query is creating two sub execution branches to count the two windows separately. We can use gremlin's `by()` step to achieve the purpose. Assume the `TagClass's name='Actor'` `$date='2012-01-01'`, `$date+100='2012-04-09'$` and `$date+200='2012-07-18'`, we can write in GIE as:
+The key to this query is creating two sub execution branches to count the two windows separately. We can use gremlin's `by()` step to achieve the purpose. Assume the `TagClass's name='Actor'` `$date='2012-01-01'`, `$date+100='2012-04-09'$` and `$date+200='2012-07-18'`:
+
+1. Firstly, we have to find all `Tags` related to the given `TagClass`
+
+   `g.V().has(\'tagclass\', \'name\', \'Actor\').in(\'hasType\').as(\'tag\')`
+
+2. Then, we need to count for the first window: all the messages created from `2012-01-01` to `2012-04-09` and having the specific `Tag`. Since there are two separate counting tasks, we have to use `select()` followed by `by(...)` step to create a new sub branch to execute the task. 
+
+   `.select("tag").by(__.in(\'hasTag\').hasLabel(\'comment\').has(\'creationDate\', inside(\'2012-01-01\', \'2012-04-09\')).dedup().count()).as(\'count1\')`
+
+3. Next, we need to count for the second window: all the messages created from `2012-04-09` to `2012-07-18` and having the specific `Tag`. Still, we use `select()` followed by `by(...)` step to create a new sub branch to execute the task. 
+
+   `.select("tag").by(__.in(\'hasTag\').hasLabel(\'comment\').has(\'creationDate\', inside(\'2012-04-09\', \'2012-07-18\')).dedup().count()).as(\'count2\')\`
+
+4. Finally, we select `tag's name`, `count1` and `count2`  from the traversers as the output
+
+   `.select(\'tag\', \'count1\', \'count2\').by(\'name\').by().by()')`
+
+Combine these procedures together, we can write the following code in GIE to make the LDBC BI2 query:
 
 ```python
 q1 = g.execute('g.V().has(\'tagclass\', \'name\', \'Actor\').in(\'hasType\').as(\'tag\')\
@@ -1667,7 +1805,10 @@ The output should be like:
 ### LDBC BI3
 
 :::{figure-md}
-<img src="../images/bi3.png" alt="bi3" style="zoom:67%;" />
+<img src="../images/bi3.png"
+     alt="bi3"
+     width="65%">
+
 Figure 26. LDBC BI Query3.
 :::
 
@@ -1733,7 +1874,10 @@ The output should be like:
 ### LDBC BI4(Left Part)
 
 :::{figure-md}
-<img src="../images/bi4(left_part).png" alt="bi4(left_part)" style="zoom: 67%;" />
+<img src="../images/bi4(left_part).png"
+     alt="bi4(left_part)"
+     width="30%">
+
 Figure 27. LDBC BI Query4(Left Part).
 :::
 
@@ -1818,7 +1962,10 @@ The result of LDBC BI Query 4(Left Part) should be like:
 ### LDBC BI11
 
 :::{figure-md}
-![bi11](../images/bi11.png)
+<img src="../images/bi11.png"
+     alt="bi11"
+     width="80%">
+
 Figure 28. LDBC BI Query11.
 :::
 
@@ -1859,7 +2006,10 @@ The output should be like:
 ### LDBC BI14
 
 :::{figure-md}
-![bi14](../images/bi14.png)
+<img src="../images/bi14.png"
+     alt="bi14"
+     width="80%">
+
 Figure 29. LDBC BI Query14.
 :::
 
