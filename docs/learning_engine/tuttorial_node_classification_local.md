@@ -1,39 +1,20 @@
-# Getting Started
+# Tutorial: Training a Node Classification Model on Your Local Machine
 
-This guide gives you a quick start to use GraphScope for graph learning tasks on your local machine.
+This tutorial presents an end-to-end example that illustrates how GraphScope 
+trains the EgoGraphSAGE model for a node classification task. To demonstrate 
+this, we utilize the ogbn-mag dataset, which is a heterogeneous academic citation 
+network that constitutes a subset of the larger Microsoft Academic Graph. This 
+dataset encompasses four types of entities, including papers, authors, 
+institutions, and fields of study. Additionally, it comprises four types of directed relations.
 
-## Installation
+Regarding the heterogeneous ogbn-mag data, the GNN task aims to predict the 
+class of a paper. To accomplish this, we employ both attribute and structural 
+information to classify papers. Specifically, in the graph, each paper node 
+features a 128-dimensional word2vec vector that represents its content. This 
+vector is obtained by averaging the embeddings of words in the paper's title 
+and abstract. It's worth noting that the embeddings of individual words are pre-trained.
 
-We’ll start by installing GraphScope with a single-line command.
-
-```bash
-python3 -m pip install graphscope --upgrade
-```
-
-If you occur a very low downloading speed, try to use a mirror site for the pip.
-
-```bash
-python3 -m pip install graphscope --upgrade \
-    -i http://mirrors.aliyun.com/pypi/simple/ --trusted-host=mirrors.aliyun.com
-```
-
-By default, GraphScope Learning Engine uses `TensorFlow` as its NN backend,
-you also need to install the tensorflow.
-
-```bash
-# Installing the latest version of tensorflow may cause dependency
-# conflicts with GraphScope, we use v2.8.0 here.
-python3 -m pip install tensorflow==2.8.0
-```
-
-## Running GraphScope Learning Engine on Local
-
-The `graphscope` package includes everything you need to train GNN models 
-on your local machine. Now you may import it in a Python session and start your job.
-Use the following example to training train an EgoGraphSAGE model to classify 
-the nodes (papers) into 349 categories, each of which represents a venue 
-(e.g. pre-print and conference).
-
+## Load Graph
 ```python
 try:
     # https://www.tensorflow.org/guide/migrate
@@ -48,9 +29,19 @@ from graphscope.learning.examples import EgoGraphSAGE
 from graphscope.learning.examples import EgoSAGESupervisedDataLoader
 from graphscope.learning.examples.tf.trainer import LocalTrainer
 
+# Enable logging
 gs.set_option(show_log=True)
 
-# Define the training process of EgoGraphSAGE
+# load the obgn-mag graph as example.
+g = load_ogbn_mag()
+
+# print the schema of the graph
+print(graph)
+```
+
+## Define the Training Process for the EgoGraphSAGE Model
+
+```python
 def train(graph, node_type, edge_type, class_num, features_num,
               hops_num=2, nbrs_num=[25, 10], epochs=2,
               hidden_dim=256, in_drop_rate=0.5, learning_rate=0.01
@@ -60,7 +51,7 @@ def train(graph, node_type, edge_type, class_num, features_num,
     dimensions = [features_num] + [hidden_dim] * (hops_num - 1) + [class_num]
     model = EgoGraphSAGE(dimensions, act_func=tf.nn.relu, dropout=in_drop_rate)
 
-    # prepare training dataset
+    # prepare the training dataset
     train_data = EgoSAGESupervisedDataLoader(
         graph, gs.learning.Mask.TRAIN,
         node_type=node_type, edge_type=edge_type,
@@ -75,7 +66,7 @@ def train(graph, node_type, edge_type, class_num, features_num,
     )
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
 
-    # prepare test dataset
+    # prepare the test dataset
     test_data = EgoSAGESupervisedDataLoader(
         graph, gs.learning.Mask.TEST,
         node_type=node_type, edge_type=edge_type,
@@ -93,37 +84,32 @@ def train(graph, node_type, edge_type, class_num, features_num,
     trainer = LocalTrainer()
     trainer.train(train_data.iterator, loss, optimizer, epochs=epochs)
     trainer.test(test_data.iterator, test_acc)
+```
 
-# load the obgn-mag graph as example.
-g = load_ogbn_mag()
+## Launch the Learning Engine
+```python
+# define the features for learning, we chose the original 128-dimension feature
+i_features = []
+for i in range(128):
+    i_features.append("feat_" + str(i))
 
-# define the features for learning.
-paper_features = [f"feat_{i}" for i in range(128)]
-
-# launch a learning engine.
-lg = gs.graphlearn(
-    g,
-    nodes=[("paper", paper_features)],
+# launch a learning engine, here we split the dataset, 75% as train, 10% as validation and 15% as test.
+lg = sess.graphlearn(
+    graph,
+    nodes=[("paper", i_features)],
     edges=[("paper", "cites", "paper")],
     gen_labels=[
         ("train", "paper", 100, (0, 75)),
         ("val", "paper", 100, (75, 85)),
-        ("test", "paper", 100, (85, 100))
-    ]
+        ("test", "paper", 100, (85, 100)),
+    ],
 )
+```
 
+## Train the Model
+```python
 train(lg, node_type="paper", edge_type="cites",
           class_num=349,  # output dimension
           features_num=128,  # input dimension
 )
 ```
-
-## What's the Next
-
-As shown in the above example, it is very easy to use GraphScope to train your 
-GNN model on your local machine. Next, you may want to learn more about the following topics:
-
-Next, you may want to learn more about the following topics:
-
-- [Design of the learning engine of GraphScope and its technical details.](learning_engine/design_of_gle)
-- [A set of examples with advanced usage, including deploying GLE in a K8s cluster.](learning_engine/guide_and_exmaples)

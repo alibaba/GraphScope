@@ -69,11 +69,11 @@ and the vineyard store that offers efficient in-memory data transfers.
    :maxdepth: 2
    :caption: Graph Learning Engine
 
-   getting_started
-   design_of_gle
-   graph_sampling
-   user_guide_and_examples_of_gie
-   dev_and_test
+   learning_engine/getting_started
+   learning_engine/design_of_gle
+   learning_engine/graph_sampling
+   learning_engine/guide_and_examples
+   learning_engine/dev_and_test
 
 .. toctree::
    :maxdepth: 2
