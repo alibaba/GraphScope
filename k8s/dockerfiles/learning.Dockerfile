@@ -10,9 +10,10 @@ ARG CI=false
 COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 
 RUN cd /home/graphscope/GraphScope/ && \
-    if [ "${CI}" == "true" ]; then \
+    if [ "${CI}" = "true" ]; then \
         cp -r artifacts/learning /home/graphscope/install; \
     else \
+        . /home/graphscope/.graphscope_env; \
         mkdir /home/graphscope/install; \
         make learning-install INSTALL_PREFIX=/home/graphscope/install; \
         source /home/graphscope/.graphscope_env; \
@@ -43,10 +44,9 @@ RUN sudo chmod a+wrx /tmp
 SHELL [ "/usr/bin/scl", "enable", "rh-python38" ]
 
 ENV GRAPHSCOPE_HOME=/opt/graphscope
-ENV PATH=$PATH:$GRAPHSCOPE_HOME/bin LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GRAPHSCOPE_HOME/lib
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GRAPHSCOPE_HOME/lib
 
-COPY --from=builder /home/graphscope/install /opt/graphscope
-RUN python3 -m pip install --no-cache-dir /opt/graphscope/*.whl && rm -rf /opt/graphscope/*.whl
+RUN sudo chmod a+wrx /tmp
 
 USER graphscope
 WORKDIR /home/graphscope

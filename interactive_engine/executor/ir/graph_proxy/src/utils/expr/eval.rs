@@ -26,7 +26,7 @@ use ir_common::expr_parse::to_suffix_expr;
 use ir_common::generated::common as common_pb;
 use ir_common::{NameOrId, ALL_KEY, ID_KEY, LABEL_KEY, LENGTH_KEY};
 
-use crate::apis::{Details, Element, PropKey};
+use crate::apis::{Element, PropKey};
 use crate::utils::expr::eval_pred::EvalPred;
 use crate::utils::expr::{ExprEvalError, ExprEvalResult};
 
@@ -476,8 +476,6 @@ impl Evaluate for Operand {
                                         .ok_or(ExprEvalError::GetNoneFromContext)?,
                                     PropKey::Len => unreachable!(),
                                     PropKey::All => graph_element
-                                        .details()
-                                        .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?
                                         .get_all_properties()
                                         .map(|obj| {
                                             obj.into_iter()
@@ -493,8 +491,6 @@ impl Evaluate for Operand {
                                         })
                                         .ok_or(ExprEvalError::GetNoneFromContext)?,
                                     PropKey::Key(key) => graph_element
-                                        .details()
-                                        .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?
                                         .get_property(key)
                                         .ok_or(ExprEvalError::GetNoneFromContext)?
                                         .try_to_owned()

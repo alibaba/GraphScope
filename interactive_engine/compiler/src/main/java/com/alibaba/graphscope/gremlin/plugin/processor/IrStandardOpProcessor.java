@@ -29,22 +29,44 @@ import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.client.*;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PegasusConfig;
+import com.alibaba.graphscope.common.config.PlannerConfig;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
+import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
+import com.alibaba.graphscope.common.ir.rel.GraphRelShuttleWrapper;
+import com.alibaba.graphscope.common.ir.runtime.LogicalPlanConverter;
+import com.alibaba.graphscope.common.ir.runtime.ffi.FfiLogicalPlan;
+import com.alibaba.graphscope.common.ir.runtime.ffi.RelToFfiConverter;
+import com.alibaba.graphscope.common.ir.runtime.type.LogicalPlan;
+import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
+import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
+import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.common.store.IrMetaFetcher;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
 import com.alibaba.graphscope.gremlin.Utils;
-import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngineFactory;
+import com.alibaba.graphscope.gremlin.plugin.script.AntlrCypherScriptEngineFactory;
+import com.alibaba.graphscope.gremlin.plugin.script.AntlrGremlinScriptEngineFactory;
 import com.alibaba.graphscope.gremlin.plugin.strategy.ExpandFusionStepStrategy;
 import com.alibaba.graphscope.gremlin.plugin.strategy.RemoveUselessStepStrategy;
 import com.alibaba.graphscope.gremlin.plugin.strategy.ScanFusionStepStrategy;
-import com.alibaba.graphscope.gremlin.result.GremlinResultAnalyzer;
-import com.alibaba.graphscope.gremlin.result.GremlinResultProcessor;
+import com.alibaba.graphscope.gremlin.result.processor.CypherResultProcessor;
+import com.alibaba.graphscope.gremlin.result.processor.GremlinResultProcessor;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
+import com.google.common.collect.ImmutableList;
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.sun.jna.Pointer;
 
+import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
+import org.apache.calcite.plan.GraphOptCluster;
+import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.hep.HepPlanner;
+import org.apache.calcite.plan.hep.HepProgram;
+import org.apache.calcite.plan.hep.HepProgramBuilder;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.hint.RelHint;
+import org.apache.calcite.rex.RexBuilder;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
@@ -72,9 +94,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
-import javax.script.Bindings;
 import javax.script.SimpleBindings;
 
 public class IrStandardOpProcessor extends StandardOpProcessor {
@@ -85,9 +107,12 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
     protected Graph graph;
     protected GraphTraversalSource g;
     protected Configs configs;
+    protected PlannerConfig plannerConfig;
     protected RpcBroadcastProcessor broadcastProcessor;
     protected IrMetaFetcher irMetaFetcher;
     protected IrMetaQueryCallback metaQueryCallback;
+
+    protected final Function<StatisticSchema, GraphBuilder> graphBuilderGenerator;
 
     public IrStandardOpProcessor(
             Configs configs,
@@ -99,9 +124,20 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         this.graph = graph;
         this.g = g;
         this.configs = configs;
+        this.plannerConfig = PlannerConfig.create(this.configs);
         this.irMetaFetcher = irMetaFetcher;
         this.broadcastProcessor = new RpcBroadcastProcessor(fetcher);
         this.metaQueryCallback = metaQueryCallback;
+
+        RexBuilder rexBuilder = new RexBuilder(new JavaTypeFactoryImpl());
+        this.graphBuilderGenerator =
+                (StatisticSchema schema) -> {
+                    Objects.requireNonNull(schema);
+                    GraphOptCluster optCluster =
+                            GraphOptCluster.create(getRelOptPlanner(), rexBuilder);
+                    return GraphBuilder.create(
+                            null, optCluster, new GraphOptSchema(optCluster, schema));
+                };
     }
 
     @Override
@@ -115,18 +151,21 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         GremlinExecutor gremlinExecutor = gremlinExecutorSupplier.get();
         Map<String, Object> args = msg.getArgs();
         String script = (String) args.get("gremlin");
+
         // replace with antlr parser
-        String language = AntlrToJavaScriptEngineFactory.ENGINE_NAME;
-        Bindings bindings = new SimpleBindings();
+        String language = getLanguageFromRequest(msg);
 
         long jobId = JOB_ID_COUNTER.incrementAndGet();
+        IrMeta irMeta = metaQueryCallback.beforeExec();
         GremlinExecutor.LifeCycle lifeCycle =
-                createLifeCycle(ctx, gremlinExecutorSupplier, bindingsSupplier, jobId, script);
+                createLifeCycle(
+                        ctx, gremlinExecutorSupplier, bindingsSupplier, jobId, script, irMeta);
         try {
             CompletableFuture<Object> evalFuture =
-                    gremlinExecutor.eval(script, language, bindings, lifeCycle);
+                    gremlinExecutor.eval(script, language, new SimpleBindings(), lifeCycle);
             evalFuture.handle(
                     (v, t) -> {
+                        metaQueryCallback.afterExec(irMeta);
                         long elapsed = timerContext.stop();
                         logger.info(
                                 "query \"{}\" total execution time is {} ms",
@@ -244,12 +283,34 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         }
     }
 
+    protected String getLanguageFromRequest(RequestMessage msg) {
+        Map<String, Object> args = msg.getArgs();
+        if (args.containsKey("bindings")) {
+            Map<String, Object> bindings = (Map<String, Object>) args.get("bindings");
+            if (bindings.containsKey("language")) {
+                return (String) bindings.get("language");
+            }
+        }
+        // hack ways to get language opt from gremlin console, for this is the only remote
+        // configurations can be set in the console
+        if (args.containsKey("aliases")) {
+            Map<String, String> aliases = (Map<String, String>) args.get("aliases");
+            for (Map.Entry<String, String> alias : aliases.entrySet()) {
+                if (alias.getValue().equals("graph")) {
+                    return alias.getKey();
+                }
+            }
+        }
+        return AntlrGremlinScriptEngineFactory.LANGUAGE_NAME;
+    }
+
     protected GremlinExecutor.LifeCycle createLifeCycle(
             Context ctx,
             Supplier<GremlinExecutor> gremlinExecutorSupplier,
             BindingSupplier bindingsSupplier,
             long jobId,
-            String script) {
+            String script,
+            IrMeta irMeta) {
         final RequestMessage msg = ctx.getRequestMessage();
         final Settings settings = ctx.getSettings();
         final Map<String, Object> args = msg.getArgs();
@@ -257,7 +318,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                 args.containsKey("evaluationTimeout")
                         ? ((Number) args.get("evaluationTimeout")).longValue()
                         : settings.getEvaluationTimeout();
-
+        // replace with antlr parser
+        String language = getLanguageFromRequest(msg);
         return GremlinExecutor.LifeCycle.build()
                 .evaluationTimeoutOverride(seto)
                 .beforeEval(
@@ -266,6 +328,15 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                 b.putAll(bindingsSupplier.get());
                                 b.put("graph", graph);
                                 b.put("g", g);
+                                if (language.equals(
+                                        AntlrGremlinScriptEngineFactory.LANGUAGE_NAME)) {
+                                    // todo: prepare configs to parse gremlin
+                                } else if (language.equals(
+                                        AntlrCypherScriptEngineFactory.LANGUAGE_NAME)) {
+                                    b.put(
+                                            "graph.builder",
+                                            graphBuilderGenerator.apply(irMeta.getSchema()));
+                                }
                             } catch (OpProcessorException ope) {
                                 throw new RuntimeException(ope);
                             }
@@ -284,14 +355,37 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                     Traversal traversal = (Traversal) o;
                                     processTraversal(
                                             traversal,
-                                            new GremlinResultProcessor(
-                                                    ctx, GremlinResultAnalyzer.analyze(traversal)),
+                                            new GremlinResultProcessor(ctx, traversal),
                                             jobId,
-                                            script);
+                                            script,
+                                            irMeta);
+                                } else if (o != null && o instanceof GraphBuilder) {
+                                    GraphBuilder builder = (GraphBuilder) o;
+                                    GraphOptCluster optCluster =
+                                            (GraphOptCluster) builder.getCluster();
+                                    RelNode topNode = builder.build();
+                                    // apply optimizations
+                                    if (this.plannerConfig.isOn()) {
+                                        RelOptPlanner planner = optCluster.getPlanner();
+                                        planner.setRoot(topNode);
+                                        topNode = planner.findBestExp();
+                                    }
+                                    if (language.equals(
+                                            AntlrGremlinScriptEngineFactory.LANGUAGE_NAME)) {
+                                        // todo: handle gremlin results
+                                    } else if (language.equals(
+                                            AntlrCypherScriptEngineFactory.LANGUAGE_NAME)) {
+                                        processRelNode(
+                                                topNode,
+                                                optCluster,
+                                                new CypherResultProcessor(ctx, topNode),
+                                                jobId,
+                                                script,
+                                                irMeta,
+                                                ctx);
+                                    }
                                 }
-                            } catch (InvalidProtocolBufferException e) {
-                                throw new RuntimeException(e);
-                            } catch (IOException e) {
+                            } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }
                         })
@@ -300,10 +394,12 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
 
     // add script argument to print with ir plan
     protected void processTraversal(
-            Traversal traversal, ResultProcessor resultProcessor, long jobId, String script)
+            Traversal traversal,
+            ResultProcessor resultProcessor,
+            long jobId,
+            String script,
+            IrMeta irMeta)
             throws InvalidProtocolBufferException, IOException, RuntimeException {
-        IrMeta irMeta = metaQueryCallback.beforeExec();
-
         InterOpCollection opCollection = (new InterOpCollectionBuilder(traversal)).build();
         // fuse order with limit to topK
         InterOpCollection.applyStrategies(opCollection);
@@ -335,8 +431,71 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                         .build();
         request = request.toBuilder().setConf(jobConfig).build();
         broadcastProcessor.broadcast(request, resultProcessor);
+    }
 
-        metaQueryCallback.afterExec(irMeta);
+    protected void processRelNode(
+            RelNode topNode,
+            GraphOptCluster optCluster,
+            ResultProcessor resultProcessor,
+            long jobId,
+            String script,
+            IrMeta irMeta,
+            Context ctx)
+            throws Exception {
+        try (LogicalPlan<Pointer, byte[]> logicalPlan =
+                new LogicalPlanConverter<>(
+                                new GraphRelShuttleWrapper(
+                                        new RelToFfiConverter(irMeta.getSchema().isColumnId())),
+                                new FfiLogicalPlan(optCluster, irMeta, getPlanHints(irMeta)))
+                        .go(topNode)) {
+            String jobName = "ir_plan_" + jobId;
+            if (logicalPlan.isReturnEmpty()) {
+                logger.info(
+                        "gremlin query \"{}\", job conf name \"{}\", relNode plan\n {}",
+                        script,
+                        jobName,
+                        topNode.explain());
+                // return empty results to the client
+                RequestMessage msg = ctx.getRequestMessage();
+                ctx.writeAndFlush(
+                        ResponseMessage.build(msg).code(ResponseStatusCode.NO_CONTENT).create());
+            } else {
+                byte[] physicalPlanBytes = logicalPlan.toPhysical();
+                // print script and jobName with ir plan
+                logger.info(
+                        "gremlin query \"{}\", job conf name \"{}\", ir plan {}",
+                        script,
+                        jobName,
+                        logicalPlan.explain());
+                PegasusClient.JobRequest request =
+                        PegasusClient.JobRequest.parseFrom(physicalPlanBytes);
+                PegasusClient.JobConfig jobConfig =
+                        PegasusClient.JobConfig.newBuilder()
+                                .setJobId(jobId)
+                                .setJobName(jobName)
+                                .setWorkers(PegasusConfig.PEGASUS_WORKER_NUM.get(configs))
+                                .setBatchSize(PegasusConfig.PEGASUS_BATCH_SIZE.get(configs))
+                                .setMemoryLimit(PegasusConfig.PEGASUS_MEMORY_LIMIT.get(configs))
+                                .setBatchCapacity(
+                                        PegasusConfig.PEGASUS_OUTPUT_CAPACITY.get(configs))
+                                .setTimeLimit(PegasusConfig.PEGASUS_TIMEOUT.get(configs))
+                                .setAll(PegasusClient.Empty.newBuilder().build())
+                                .build();
+                request = request.toBuilder().setConf(jobConfig).build();
+                broadcastProcessor.broadcast(request, resultProcessor);
+            }
+        }
+    }
+
+    protected List<RelHint> getPlanHints(IrMeta irMeta) {
+        int servers = PegasusConfig.PEGASUS_HOSTS.get(configs).split(",").length;
+        int workers = PegasusConfig.PEGASUS_WORKER_NUM.get(configs);
+        return ImmutableList.of(
+                RelHint.builder("plan")
+                        .hintOption("servers", String.valueOf(servers))
+                        .hintOption("workers", String.valueOf(workers))
+                        .hintOption("isColumnId", String.valueOf(irMeta.getSchema().isColumnId()))
+                        .build());
     }
 
     public static void applyStrategies(Traversal traversal) {
@@ -353,5 +512,34 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         strategies.add(InlineFilterStrategy.instance());
         strategies.add(ExpandFusionStepStrategy.instance());
         traversal.asAdmin().applyStrategies();
+    }
+
+    private RelOptPlanner getRelOptPlanner() {
+        if (this.plannerConfig.isOn()) {
+            PlannerConfig.Opt opt = this.plannerConfig.getOpt();
+            switch (opt) {
+                case RBO:
+                    HepProgramBuilder hepBuilder = HepProgram.builder();
+                    this.plannerConfig
+                            .getRules()
+                            .forEach(
+                                    k -> {
+                                        if (k.equals(FilterMatchRule.class.getSimpleName())) {
+                                            hepBuilder.addRuleInstance(
+                                                    FilterMatchRule.Config.DEFAULT.toRule());
+                                        } else {
+                                            // todo: add more rules
+                                        }
+                                    });
+                    return new HepPlanner(hepBuilder.build());
+                case CBO:
+                default:
+                    throw new UnsupportedOperationException(
+                            "planner type " + opt.name() + " is unsupported yet");
+            }
+        } else {
+            // return HepPlanner with empty rules if optimization is turned off
+            return new HepPlanner(HepProgram.builder().build());
+        }
     }
 }

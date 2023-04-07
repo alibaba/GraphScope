@@ -840,6 +840,11 @@ fn set_predicate(ptr: *const c_void, cstr_predicate: *const c_char, opt: InnerOp
                 params.predicate = predicate_pb.ok();
                 std::mem::forget(params);
             }
+            InnerOpt::PathExpand => {
+                let mut path = unsafe { Box::from_raw(ptr as *mut pb::PathExpand) };
+                path.condition = predicate_pb.ok();
+                std::mem::forget(path);
+            }
             _ => unreachable!(),
         }
         FfiResult::success()
@@ -1058,7 +1063,7 @@ mod project {
     /// To add a mapping for the project operator, which maps a pb pointer to represent an
     /// expression, and a `NameOrId` parameter that represents an alias.
     #[no_mangle]
-    pub extern "C" fn add_project_expr_pb_alia(
+    pub extern "C" fn add_project_expr_pb_alias(
         ptr_project: *const c_void, pb_expr: FfiPbPointer, alias: FfiAlias,
     ) -> FfiResult {
         let mut result = FfiResult::success();
@@ -2172,22 +2177,50 @@ mod graph {
         AllV = 1,
     }
 
-    /// To initialize an path expand operator from an expand base
+    /// To initialize an path expand operator from an edge_expand base
+    // TODO: this function would be removed.
     #[no_mangle]
     pub extern "C" fn init_pathxpd_operator(
         ptr_expand: *const c_void, path_opt: PathOpt, result_opt: PathResultOpt,
     ) -> *const c_void {
         let expand = unsafe { Box::from_raw(ptr_expand as *mut pb::EdgeExpand) };
-        let edgexpd = Box::new(pb::PathExpand {
-            base: Some(expand.as_ref().clone()),
+        let pathxpd = Box::new(pb::PathExpand {
+            base: Some(pb::path_expand::ExpandBase {
+                edge_expand: Some(expand.as_ref().clone()),
+                get_v: None,
+            }),
             start_tag: None,
             alias: None,
             hop_range: None,
             path_opt: unsafe { std::mem::transmute::<PathOpt, i32>(path_opt) },
             result_opt: unsafe { std::mem::transmute::<PathResultOpt, i32>(result_opt) },
+            condition: None,
         });
 
-        Box::into_raw(edgexpd) as *const c_void
+        Box::into_raw(pathxpd) as *const c_void
+    }
+
+    /// To initialize an path expand operator from an expand base
+    #[no_mangle]
+    pub extern "C" fn init_pathxpd_operator_with_expand_base(
+        ptr_expand: *const c_void, ptr_getv: *const c_void, path_opt: PathOpt, result_opt: PathResultOpt,
+    ) -> *const c_void {
+        let expand = unsafe { Box::from_raw(ptr_expand as *mut pb::EdgeExpand) };
+        let getv = unsafe { Box::from_raw(ptr_getv as *mut pb::GetV) };
+        let pathxpd = Box::new(pb::PathExpand {
+            base: Some(pb::path_expand::ExpandBase {
+                edge_expand: Some(expand.as_ref().clone()),
+                get_v: Some(getv.as_ref().clone()),
+            }),
+            start_tag: None,
+            alias: None,
+            hop_range: None,
+            path_opt: unsafe { std::mem::transmute::<PathOpt, i32>(path_opt) },
+            result_opt: unsafe { std::mem::transmute::<PathResultOpt, i32>(result_opt) },
+            condition: None,
+        });
+
+        Box::into_raw(pathxpd) as *const c_void
     }
 
     /// Set path alias of this path expansion
@@ -2206,6 +2239,14 @@ mod graph {
     #[no_mangle]
     pub extern "C" fn set_pathxpd_hops(ptr_pathxpd: *const c_void, lower: i32, upper: i32) -> FfiResult {
         set_range(ptr_pathxpd, lower, upper, InnerOpt::PathExpand)
+    }
+
+    /// To set a path expand operator's condition, which is a predicate represented as a c-string.
+    #[no_mangle]
+    pub extern "C" fn set_pathxpd_condition(
+        ptr_pathxpd: *const c_void, cstr_predicate: *const c_char,
+    ) -> FfiResult {
+        set_predicate(ptr_pathxpd, cstr_predicate, InnerOpt::PathExpand)
     }
 
     /// Append an path-expand operator to the logical plan

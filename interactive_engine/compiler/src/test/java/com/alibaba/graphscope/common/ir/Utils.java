@@ -16,30 +16,61 @@
 
 package com.alibaba.graphscope.common.ir;
 
+import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.GraphConfig;
 import com.alibaba.graphscope.common.ir.schema.GraphOptSchema;
-import com.alibaba.graphscope.common.ir.schema.GraphSchemaWrapper;
-import com.alibaba.graphscope.common.ir.schema.StatisticSchema;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-import com.alibaba.graphscope.common.utils.FileUtils;
+import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
+import com.alibaba.graphscope.common.store.IrMeta;
+import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.plan.GraphOptCluster;
+import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.RelRule;
+import org.apache.calcite.plan.hep.HepPlanner;
+import org.apache.calcite.plan.hep.HepProgram;
+import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexBuilder;
+
+import java.net.URL;
 
 public class Utils {
     public static final RelDataTypeFactory typeFactory = new JavaTypeFactoryImpl();
     public static final RexBuilder rexBuilder = new RexBuilder(typeFactory);
-    public static final StatisticSchema schema = mockSchemaMeta();
+    public static final IrMeta schemaMeta = mockSchemaMeta();
 
     public static final GraphBuilder mockGraphBuilder() {
-        GraphOptCluster cluster = GraphOptCluster.create(rexBuilder);
-        return GraphBuilder.create(null, cluster, new GraphOptSchema(cluster, schema));
+        GraphOptCluster cluster = GraphOptCluster.create(mockPlanner(), rexBuilder);
+        return GraphBuilder.create(
+                null, cluster, new GraphOptSchema(cluster, schemaMeta.getSchema()));
     }
 
-    private static StatisticSchema mockSchemaMeta() {
-        String json = FileUtils.readJsonFromResource("schema/modern.json");
-        return new GraphSchemaWrapper(
-                com.alibaba.graphscope.common.ir.schema.Utils.buildSchemaFromJson(json), false);
+    public static final RelOptPlanner mockPlanner(RelRule... rules) {
+        HepProgramBuilder hepBuilder = HepProgram.builder();
+        if (rules.length > 0) {
+            for (RelRule rule : rules) {
+                hepBuilder.addRuleInstance(rule);
+            }
+        }
+        return new HepPlanner(hepBuilder.build());
+    }
+
+    private static IrMeta mockSchemaMeta() {
+        try {
+            URL schemaResource =
+                    Thread.currentThread()
+                            .getContextClassLoader()
+                            .getResource("schema/modern.json");
+            Configs configs =
+                    new Configs(
+                            ImmutableMap.of(
+                                    GraphConfig.GRAPH_SCHEMA.getKey(),
+                                    schemaResource.toURI().getPath()));
+            return new ExperimentalMetaFetcher(configs).fetch().get();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

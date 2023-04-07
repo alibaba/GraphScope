@@ -679,7 +679,7 @@ class OperationExecutor:
             engine_config = self.get_analytical_engine_config()
             vineyard_rpc_endpoint = engine_config["vineyard_rpc_endpoint"]
         else:
-            vineyard_rpc_endpoint = self._launcher.vineyard_internal_endpoint
+            vineyard_rpc_endpoint = self._launcher._vineyard_internal_endpoint
             if self._launcher.vineyard_deployment_exists():
                 vineyard_rpc_endpoint = self._launcher._vineyard_service_endpoint
             else:

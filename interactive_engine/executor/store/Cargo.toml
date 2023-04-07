@@ -1,6 +1,7 @@
 [workspace]
 
 members = [
+    "mcsr",
     "global_query",
     "groot",
     "exp_store"

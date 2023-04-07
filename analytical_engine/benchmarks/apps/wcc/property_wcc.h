@@ -88,12 +88,15 @@ class PropertyWCC
                   ctx.next_modified.Insert(u);
                 }
               }
-              es = frag.GetIncomingAdjList(v, 0);
-              for (auto& e : es) {
-                auto u = e.get_neighbor();
-                if (ctx.comp_id[u] > cid) {
-                  grape::atomic_min(ctx.comp_id[u], cid);
-                  ctx.next_modified.Insert(u);
+
+              if (frag.directed()) {
+                es = frag.GetIncomingAdjList(v, 0);
+                for (auto& e : es) {
+                  auto u = e.get_neighbor();
+                  if (ctx.comp_id[u] > cid) {
+                    grape::atomic_min(ctx.comp_id[u], cid);
+                    ctx.next_modified.Insert(u);
+                  }
                 }
               }
             });
@@ -130,12 +133,15 @@ class PropertyWCC
           ctx.next_modified.Insert(u);
         }
       }
-      es = frag.GetIncomingAdjList(v, 0);
-      for (auto& e : es) {
-        auto u = e.get_neighbor();
-        if (ctx.comp_id[u] > cid) {
-          grape::atomic_min(ctx.comp_id[u], cid);
-          ctx.next_modified.Insert(u);
+
+      if (frag.directed()) {
+        es = frag.GetIncomingAdjList(v, 0);
+        for (auto& e : es) {
+          auto u = e.get_neighbor();
+          if (ctx.comp_id[u] > cid) {
+            grape::atomic_min(ctx.comp_id[u], cid);
+            ctx.next_modified.Insert(u);
+          }
         }
       }
     });

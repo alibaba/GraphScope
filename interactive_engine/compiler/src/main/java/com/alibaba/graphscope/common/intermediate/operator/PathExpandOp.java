@@ -26,6 +26,8 @@ public class PathExpandOp extends ExpandOp {
 
     private Optional<OpArg> upper;
 
+    private Optional<OpArg> untilCondition;
+
     private PathOpt pathOpt;
 
     private ResultOpt resultOpt;
@@ -34,6 +36,7 @@ public class PathExpandOp extends ExpandOp {
         super();
         this.lower = Optional.empty();
         this.upper = Optional.empty();
+        this.untilCondition = Optional.empty();
         this.pathOpt = PathOpt.Arbitrary;
         this.resultOpt = ResultOpt.EndV;
     }
@@ -62,12 +65,20 @@ public class PathExpandOp extends ExpandOp {
         return upper;
     }
 
+    public Optional<OpArg> getUntilCondition() {
+        return untilCondition;
+    }
+
     public void setLower(OpArg lower) {
         this.lower = Optional.of(lower);
     }
 
     public void setUpper(OpArg upper) {
         this.upper = Optional.of(upper);
+    }
+
+    public void setUntilCondition(OpArg untilCondition) {
+        this.untilCondition = Optional.of(untilCondition);
     }
 
     public PathOpt getPathOpt() {
