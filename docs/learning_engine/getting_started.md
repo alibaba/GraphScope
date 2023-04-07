@@ -28,10 +28,11 @@ python3 -m pip install tensorflow==2.8.0
 
 ## Running GraphScope Learning Engine on Local
 
-The `graphscope` package includes everything you need to train GNN models on your local machine.
-Now you may import it in a Python session and start your job.
-Use the following example to training train a GCN model to classify the nodes (papers) into 349 categories,
-each of which represents a venue (e.g. pre-print and conference).
+The `graphscope` package includes everything you need to train GNN models 
+on your local machine. Now you may import it in a Python session and start your job.
+Use the following example to training train an EgoGraphSAGE model to classify 
+the nodes (papers) into 349 categories, each of which represents a venue 
+(e.g. pre-print and conference).
 
 ```python
 try:
@@ -49,8 +50,8 @@ from graphscope.learning.examples.tf.trainer import LocalTrainer
 
 gs.set_option(show_log=True)
 
-# supervised GCN.
-def train_gcn(graph, node_type, edge_type, class_num, features_num,
+# Define the training process of EgoGraphSAGE
+def train(graph, node_type, edge_type, class_num, features_num,
               hops_num=2, nbrs_num=[25, 10], epochs=2,
               hidden_dim=256, in_drop_rate=0.5, learning_rate=0.01
 ):
@@ -59,7 +60,7 @@ def train_gcn(graph, node_type, edge_type, class_num, features_num,
     dimensions = [features_num] + [hidden_dim] * (hops_num - 1) + [class_num]
     model = EgoGraphSAGE(dimensions, act_func=tf.nn.relu, dropout=in_drop_rate)
 
-    # prepare train dataset
+    # prepare training dataset
     train_data = EgoSAGESupervisedDataLoader(
         graph, gs.learning.Mask.TRAIN,
         node_type=node_type, edge_type=edge_type,
@@ -111,7 +112,7 @@ lg = gs.graphlearn(
     ]
 )
 
-train_gcn(lg, node_type="paper", edge_type="cites",
+train(lg, node_type="paper", edge_type="cites",
           class_num=349,  # output dimension
           features_num=128,  # input dimension
 )
@@ -119,7 +120,10 @@ train_gcn(lg, node_type="paper", edge_type="cites",
 
 ## What's the Next
 
-As shown in the above example, it is very easy to use GraphScope to train your GNN model on your local machine.
+As shown in the above example, it is very easy to use GraphScope to train your 
+GNN model on your local machine. Next, you may want to learn more about the following topics:
+
 Next, you may want to learn more about the following topics:
 
-TODO
+- [Design of the learning engine of GraphScope and its technical details.](learning_engine/design_of_gle)
+- [A set of examples with advanced usage, including deploying GLE in a K8s cluster.](learning_engine/guide_and_exmaples)

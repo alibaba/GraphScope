@@ -223,7 +223,7 @@ fn to_runtime_edge(
         + ((label as i64) << 40)
         + (dst_label << 32)
         + offset;
-    if v.is_none() || v.unwrap() == src_id {
+    let mut e = if v.is_none() || v.unwrap() == src_id {
         Edge::new(
             edge_id,
             Some(encode_runtime_label(label)),
@@ -240,7 +240,10 @@ fn to_runtime_edge(
             false,
             DynDetails::lazy(LazyEdgeDetails::new(e, prop_keys)),
         )
-    }
+    };
+    e.set_src_label(encode_runtime_label(src_label as StoreLabelId));
+    e.set_dst_label(encode_runtime_label(dst_label as StoreLabelId));
+    e
 }
 
 /// LazyVertexDetails is used for local property fetching optimization.

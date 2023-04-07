@@ -76,6 +76,6 @@ public class GraphLogicalSort extends Sort {
             @Nullable RexNode offset,
             @Nullable RexNode fetch) {
         return new GraphLogicalSort(
-                getCluster(), traitSet, hints, newInput, newCollation, offset, fetch);
+                getCluster(), traitSet, getHints(), newInput, newCollation, offset, fetch);
     }
 }

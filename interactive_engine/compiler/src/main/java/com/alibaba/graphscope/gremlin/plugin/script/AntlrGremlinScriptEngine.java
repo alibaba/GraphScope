@@ -26,6 +26,8 @@
 package com.alibaba.graphscope.gremlin.plugin.script;
 
 import com.alibaba.graphscope.common.antlr4.SyntaxErrorListener;
+import com.alibaba.graphscope.grammar.GremlinGSLexer;
+import com.alibaba.graphscope.grammar.GremlinGSParser;
 import com.alibaba.graphscope.gremlin.antlr4.GremlinAntlrToJava;
 
 import org.antlr.v4.runtime.*;
@@ -33,8 +35,6 @@ import org.antlr.v4.runtime.atn.PredictionMode;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngine;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngineFactory;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSLexer;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
 import org.apache.tinkerpop.gremlin.process.traversal.Bytecode;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
@@ -45,13 +45,13 @@ import java.io.Reader;
 
 import javax.script.*;
 
-public class AntlrToJavaScriptEngine extends AbstractScriptEngine implements GremlinScriptEngine {
-    private Logger logger = LoggerFactory.getLogger(AntlrToJavaScriptEngine.class);
-    private volatile AntlrToJavaScriptEngineFactory factory;
+public class AntlrGremlinScriptEngine extends AbstractScriptEngine implements GremlinScriptEngine {
+    private Logger logger = LoggerFactory.getLogger(AntlrGremlinScriptEngine.class);
+    private volatile AntlrGremlinScriptEngineFactory factory;
 
     @Override
     public Object eval(String script, ScriptContext ctx) {
-        logger.debug("antlr start to eval \"{}\"", script);
+        logger.debug("antlr-gremlin start to eval \"{}\"", script);
         Bindings globalBindings = ctx.getBindings(ScriptContext.ENGINE_SCOPE);
         GraphTraversalSource g = (GraphTraversalSource) globalBindings.get("g");
         GremlinAntlrToJava antlrToJava = GremlinAntlrToJava.getInstance(g);
@@ -90,7 +90,7 @@ public class AntlrToJavaScriptEngine extends AbstractScriptEngine implements Gre
         if (this.factory == null) {
             synchronized (this) {
                 if (this.factory == null) {
-                    this.factory = new AntlrToJavaScriptEngineFactory();
+                    this.factory = new AntlrGremlinScriptEngineFactory();
                 }
             }
         }

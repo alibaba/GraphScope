@@ -67,17 +67,16 @@ Using this command to verify minikube is running.
 minikube status
 ```
 
-A normal status should looks like this
+A normal status should look like this
 
-```bash
-$ minikube status
-minikube
-type: Control Plane
-host: Running
-kubelet: Running
-apiserver: Running
-kubeconfig: Configured
-```
+:::{figure-md}
+
+<img src="../images/minikube_status.png"
+     alt="Minikube Status"
+     width="60%">
+
+minikube status
+:::
 
 The output should show that the cluster is running, and the kubectl context is set to the minikube context. 
 Once started, minikube generates a [kubeconfig](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) file for you to communicate and interact with the cluster. 
@@ -229,13 +228,14 @@ kubectl get pods
 
 The output should show the status of the GraphScope pods.  Here's an example
 
-```
-$ kubectl -n demo get po
-NAME                                            READY   STATUS              RESTARTS   AGE
-coordinator-demo-549cf6695f-86pkx               2/2     Running             0          10s
-gs-engine-demo-0                                0/4     ContainerCreating   0          6s
-gs-interactive-frontend-demo-648487488f-bpls5   0/1     ContainerCreating   0          6s
-```
+:::{figure-md}
+
+<img src="../images/kubectl_get_po_gs.png"
+     alt="Pods of GraphScope"
+     width="60%">
+
+Pods of GraphScope
+:::
 
 Wait until all pods are running before proceeding.
 

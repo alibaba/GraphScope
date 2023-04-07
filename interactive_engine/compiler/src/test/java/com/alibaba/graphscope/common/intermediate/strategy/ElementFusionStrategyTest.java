@@ -18,7 +18,7 @@ package com.alibaba.graphscope.common.intermediate.strategy;
 
 import com.alibaba.graphscope.common.IrPlan;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
-import com.alibaba.graphscope.common.store.IrMeta;
+import com.alibaba.graphscope.common.ir.Utils;
 import com.alibaba.graphscope.common.utils.FileUtils;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
 import com.alibaba.graphscope.gremlin.integration.suite.utils.__;
@@ -44,7 +44,7 @@ public class ElementFusionStrategyTest {
         Traversal traversal = g.V().group().by(__.outE().count());
         IrStandardOpProcessor.applyStrategies(traversal);
         InterOpCollection opCollection = (new InterOpCollectionBuilder(traversal)).build();
-        irPlan = new IrPlan(new IrMeta(""), opCollection);
+        irPlan = new IrPlan(Utils.schemaMeta, opCollection);
         String actual = irPlan.getPlanAsJson();
         Assert.assertEquals(FileUtils.readJsonFromResource("group_key_out_count.json"), actual);
     }
@@ -55,7 +55,7 @@ public class ElementFusionStrategyTest {
         Traversal traversal = g.V().group().by(__.outE().has("name", "marko").count());
         IrStandardOpProcessor.applyStrategies(traversal);
         InterOpCollection opCollection = (new InterOpCollectionBuilder(traversal)).build();
-        irPlan = new IrPlan(new IrMeta(""), opCollection);
+        irPlan = new IrPlan(Utils.schemaMeta, opCollection);
         String actual = irPlan.getPlanAsJson();
         Assert.assertEquals(FileUtils.readJsonFromResource("group_key_out_has_count.json"), actual);
     }
@@ -66,7 +66,7 @@ public class ElementFusionStrategyTest {
         Traversal traversal = g.V().group().by(__.out().count());
         IrStandardOpProcessor.applyStrategies(traversal);
         InterOpCollection opCollection = (new InterOpCollectionBuilder(traversal)).build();
-        irPlan = new IrPlan(new IrMeta(""), opCollection);
+        irPlan = new IrPlan(Utils.schemaMeta, opCollection);
         String actual = irPlan.getPlanAsJson();
         Assert.assertEquals(FileUtils.readJsonFromResource("group_key_out_count.json"), actual);
     }

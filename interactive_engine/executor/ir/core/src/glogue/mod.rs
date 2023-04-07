@@ -18,6 +18,9 @@ use std::collections::HashMap;
 
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
+use ir_common::KeyId;
+
+use crate::glogue::error::IrPatternResult;
 
 pub type PatternId = usize;
 pub type PatternLabelId = ir_common::LabelId;
@@ -44,11 +47,88 @@ pub(crate) fn query_params(
     }
 }
 
+pub(crate) fn query_params_to_get_v(
+    params: Option<pb::QueryParams>, alias: Option<KeyId>, opt: i32,
+) -> pb::GetV {
+    pb::GetV { tag: None, opt, params, alias: alias.map(|id| id.into()), meta_data: None }
+}
+
+pub fn combine_query_params(params1: pb::QueryParams, params2: pb::QueryParams) -> pb::QueryParams {
+    let mut params = params1;
+    params.tables.extend(params2.tables);
+    params.columns.extend(params2.columns);
+    params.is_all_columns &= params2.is_all_columns;
+    params.limit = {
+        let limit1 = params.limit;
+        let limit2 = params2.limit;
+        limit1.and_then(|range1| {
+            limit2.map(|range2| pb::Range {
+                lower: std::cmp::max(range1.lower, range2.lower),
+                upper: std::cmp::min(range1.upper, range2.upper),
+            })
+        })
+    };
+    params.predicate = {
+        let predicate1 = params.predicate;
+        let predicate2 = params2.predicate;
+        if predicate1.is_some() && predicate2.is_some() {
+            predicate1.and_then(|expr1| predicate2.map(|expr2| combine_exprs(expr1, expr2)))
+        } else if predicate1.is_some() {
+            predicate1
+        } else if predicate2.is_some() {
+            predicate2
+        } else {
+            None
+        }
+    };
+    if params2.sample_ratio < params.sample_ratio {
+        params.sample_ratio = params2.sample_ratio
+    }
+    params.extra.extend(params2.extra);
+    params
+}
+
+pub fn combine_exprs(expr1: common_pb::Expression, expr2: common_pb::Expression) -> common_pb::Expression {
+    let left_brace = common_pb::ExprOpr {
+        node_type: None,
+        item: Some(common_pb::expr_opr::Item::Brace(common_pb::expr_opr::Brace::LeftBrace as i32)),
+    };
+    let right_brace = common_pb::ExprOpr {
+        node_type: None,
+        item: Some(common_pb::expr_opr::Item::Brace(common_pb::expr_opr::Brace::RightBrace as i32)),
+    };
+    let and_opr = common_pb::ExprOpr {
+        node_type: None,
+        item: Some(common_pb::expr_opr::Item::Logical(common_pb::Logical::And as i32)),
+    };
+    // (expr1) and (expr2)
+    let mut expr_oprs = vec![left_brace.clone()];
+    expr_oprs.extend(expr1.operators);
+    expr_oprs.push(right_brace.clone());
+    expr_oprs.push(and_opr);
+    expr_oprs.push(left_brace);
+    expr_oprs.extend(expr2.operators);
+    expr_oprs.push(right_brace);
+    common_pb::Expression { operators: expr_oprs }
+}
+
+pub fn combine_get_v_by_query_params(get_v_1: pb::GetV, get_v_2: pb::GetV) -> pb::GetV {
+    let mut get_v = get_v_1;
+    if let Some(params2) = get_v_2.params {
+        if let Some(params1) = get_v.params {
+            get_v.params = Some(combine_query_params(params1, params2));
+        } else {
+            get_v.params = Some(params2)
+        }
+    }
+    get_v
+}
+
 pub trait PatternOrderTrait<D> {
-    fn compare(&self, left: &D, right: &D) -> Ordering;
+    fn compare(&self, left: &D, right: &D) -> IrPatternResult<Ordering>;
 }
 
 pub trait PatternWeightTrait<W: PartialOrd> {
-    fn get_vertex_weight(&self, vid: PatternId) -> W;
-    fn get_adjacencies_weight(&self, vid: PatternId) -> W;
+    fn get_vertex_weight(&self, vid: PatternId) -> IrPatternResult<W>;
+    fn get_adjacencies_weight(&self, vid: PatternId) -> IrPatternResult<W>;
 }

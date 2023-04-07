@@ -13,6 +13,7 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 
+use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 use std::fmt;
 use std::ops::Deref;
@@ -576,6 +577,18 @@ impl From<Object> for common_pb::Value {
     }
 }
 
+impl From<pb::EdgeExpand> for pb::path_expand::ExpandBase {
+    fn from(opr: pb::EdgeExpand) -> Self {
+        pb::path_expand::ExpandBase { edge_expand: Some(opr), get_v: None }
+    }
+}
+
+impl From<(pb::EdgeExpand, pb::GetV)> for pb::path_expand::ExpandBase {
+    fn from(opr: (pb::EdgeExpand, pb::GetV)) -> Self {
+        pb::path_expand::ExpandBase { edge_expand: Some(opr.0), get_v: Some(opr.1) }
+    }
+}
+
 impl pb::logical_plan::Operator {
     pub fn is_whole_graph(&self) -> bool {
         if let Some(opr) = &self.opr {
@@ -605,6 +618,18 @@ impl pb::QueryParams {
             && self.sample_ratio == 1.0
             && self.columns.is_empty()
             && !self.is_all_columns)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.eq(&pb::QueryParams {
+            tables: vec![],
+            columns: vec![],
+            is_all_columns: false,
+            limit: None,
+            predicate: None,
+            sample_ratio: 1.0,
+            extra: HashMap::new(),
+        })
     }
 }
 
@@ -641,6 +666,13 @@ impl From<physical_pb::Repartition> for physical_pb::PhysicalOpr {
 impl From<physical_pb::EdgeExpand> for physical_pb::PhysicalOpr {
     fn from(expand: physical_pb::EdgeExpand) -> Self {
         let op_kind = physical_pb::physical_opr::operator::OpKind::Edge(expand);
+        op_kind.into()
+    }
+}
+
+impl From<physical_pb::GetV> for physical_pb::PhysicalOpr {
+    fn from(getv: physical_pb::GetV) -> Self {
+        let op_kind = physical_pb::physical_opr::operator::OpKind::Vertex(getv);
         op_kind.into()
     }
 }
@@ -728,7 +760,13 @@ impl From<pb::EdgeExpand> for physical_pb::EdgeExpand {
 impl From<pb::PathExpand> for physical_pb::PathExpand {
     fn from(path: pb::PathExpand) -> Self {
         physical_pb::PathExpand {
-            base: path.base.map(|base| base.into()),
+            base: path.base.map(|base| {
+                let edge_expand = base
+                    .edge_expand
+                    .map(|edge_expand| edge_expand.into());
+                let get_v = base.get_v.map(|get_v| get_v.into());
+                physical_pb::path_expand::ExpandBase { edge_expand, get_v }
+            }),
             start_tag: path
                 .start_tag
                 .map(|tag| tag.try_into().unwrap()),

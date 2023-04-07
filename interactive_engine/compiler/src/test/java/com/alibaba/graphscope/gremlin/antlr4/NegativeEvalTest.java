@@ -17,7 +17,7 @@
 package com.alibaba.graphscope.gremlin.antlr4;
 
 import com.alibaba.graphscope.gremlin.exception.InvalidGremlinScriptException;
-import com.alibaba.graphscope.gremlin.plugin.script.AntlrToJavaScriptEngine;
+import com.alibaba.graphscope.gremlin.plugin.script.AntlrGremlinScriptEngine;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 
 import org.antlr.v4.runtime.misc.ParseCancellationException;
@@ -34,7 +34,7 @@ import javax.script.SimpleBindings;
 import javax.script.SimpleScriptContext;
 
 public class NegativeEvalTest {
-    private AntlrToJavaScriptEngine scriptEngine;
+    private AntlrGremlinScriptEngine scriptEngine;
     private ScriptContext context;
 
     @Before
@@ -45,7 +45,7 @@ public class NegativeEvalTest {
         globalBindings.put("g", g);
         context = new SimpleScriptContext();
         context.setBindings(globalBindings, ScriptContext.ENGINE_SCOPE);
-        scriptEngine = new AntlrToJavaScriptEngine();
+        scriptEngine = new AntlrGremlinScriptEngine();
     }
 
     @Test

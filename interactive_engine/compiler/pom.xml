@@ -255,13 +255,13 @@
                         <configuration>
                             <arguments>
                                 <argument>-package</argument>
-                                <argument>org.apache.tinkerpop.gremlin.language.grammar</argument>
+                                <argument>com.alibaba.graphscope.grammar</argument>
                                 <argument>-encoding</argument>
                                 <argument>utf-8</argument>
                             </arguments>
                             <visitor>true</visitor>
                             <outputDirectory>
-                                ${project.build.directory}/generated-sources/antlr4/org/apache/tinkerpop/gremlin/language/grammar/
+                                ${project.build.directory}/generated-sources/antlr4/com/alibaba/graphscope/grammar
                             </outputDirectory>
                         </configuration>
                     </execution>

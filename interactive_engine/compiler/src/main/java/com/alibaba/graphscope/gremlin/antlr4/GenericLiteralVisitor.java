@@ -25,9 +25,10 @@
 
 package com.alibaba.graphscope.gremlin.antlr4;
 
+import com.alibaba.graphscope.grammar.GremlinGSBaseVisitor;
+import com.alibaba.graphscope.grammar.GremlinGSParser;
+
 import org.apache.commons.text.StringEscapeUtils;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSBaseVisitor;
-import org.apache.tinkerpop.gremlin.language.grammar.GremlinGSParser;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 
 import java.math.BigDecimal;

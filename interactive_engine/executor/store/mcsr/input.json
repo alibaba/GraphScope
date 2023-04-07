@@ -631,7 +631,7 @@
     },
     {
       "src_label": "PERSON",
-      "dst_label": "ORGANISARION",
+      "dst_label": "ORGANISATION",
       "label": "STUDYAT",
       "columns": [
         {

@@ -892,6 +892,26 @@
             "id": 7,
             "name": "TAG"
           }
+        },
+        {
+          "src": {
+            "id": 3,
+            "name": "POST"
+          },
+          "dst": {
+            "id": 7,
+            "name": "TAG"
+          }
+        },
+        {
+          "src": {
+            "id": 2,
+            "name": "COMMENT"
+          },
+          "dst": {
+            "id": 7,
+            "name": "TAG"
+          }
         }
       ],
       "columns": []
