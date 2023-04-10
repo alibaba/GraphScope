@@ -3,7 +3,7 @@ Graph interactive workloads primarily focus on exploring complex graph structure
 **interative** manner. There're two common interactive workloads, namely
 - Graph traversal: This type of workload involves traversing the graph from a set of source vertices
   while satisfying the constraints on the vertices and edges that the traversal passes. Graph
-  traversal differs from the [analytics](https://graphscope.io/docs/latest/graph_analytics_workloads.html) workload as it typically accesses a small
+  traversal differs from the [analytics](./graph_analytics_workloads.md) workload as it typically accesses a small
   portion of the graph rather than the whole graph.
 - Pattern Matching: Given a pattern that is a small graph, graph pattern matching aims to compute
   all occurrences (or instances) of the pattern in the graph. Pattern matching often involves relational operations to project, order and group the matched instances.
@@ -55,7 +55,7 @@ First, the source operator `V` (with the `has()` filter) returns all the account
 traversers but introduces a name (`s` in this case) for later references. Second, it traverses
 the outgoing `transfer` edges for exact `k-1` times using an `out()` step with a range of lower bound `k-1` (included)
 and upper bound `k` (excluded), while skipping any repeated vertices `with()` the `SIMPLE` path option.
-Such a multi-hop [path expansion](./supported_gremlin_steps.md) is a syntactic sugar we
+Such a multi-hop [path expansion](../interactive_engine/supported_gremlin_steps.md) is a syntactic sugar we
 introduce for easily handling the path-related applications.
 Third, the `where` operator checks if the starting vertex s can be reached by one more step, that is,
 whether a cycle of length `k` is formed. Finally, the `limit()` operator at the end indicates that
@@ -95,12 +95,12 @@ more succinct expression. However, because of the distributed nature and practic
 
 - Functionalities
   - Graph mutations.
-  - Lambda and Groovy expressions and functions, such as the `.map{<expression>}`, the `.by{<expression>}`, and the `.filter{<expression>}` functions, and `System.currentTimeMillis()`, etc. By the way, we have provided the `expr()` [syntactic sugar](./supported_gremlin_steps.md) to handle complex expressions.
+  - Lambda and Groovy expressions and functions, such as the `.map{<expression>}`, the `.by{<expression>}`, and the `.filter{<expression>}` functions, and `System.currentTimeMillis()`, etc. By the way, we have provided the `expr()` [syntactic sugar](../interactive_engine/supported_gremlin_steps.md) to handle complex expressions.
   - Gremlin traversal strategies.
   - Transactions.
   - Secondary index isn’t currently available. Primary keys will be automatically indexed.
 
-- Gremlin Steps: See [here](./supported_gremlin_steps.md) for a complete supported/unsupported list of Gremlin.
+- Gremlin Steps: See [here](../interactive_engine/supported_gremlin_steps.md) for a complete supported/unsupported list of Gremlin.
 
 ## Property Graph Constraints
 The current release of GIE supports two graph stores: one leverages [Vineyard](https://v6d.io/) to supply an in-memory store for immutable
