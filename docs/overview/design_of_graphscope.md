@@ -149,7 +149,7 @@ a distributed data-parallel compute engine based on the cyclic dataflow computat
 In the storage layer, a dynamic graph store is deployed and responsible for storing the graph data. 
 With this combination, GraphScope provides a high-performance and interactive query answering service for BI analysis.
 
-[Read more about GraphScope for traversal queries](graphscope_for_traversal_queries.md)
+[Read more about GraphScope for traversal queries](../interactive_engine/tutorial_ldbc_gremlin.md)
 
 
 ### GraphScope for high QPS queries
