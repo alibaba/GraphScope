@@ -36,7 +36,7 @@ class MyAppContext : public grape::VertexDataContext<FRAG_T, uint64_t> {
 };
 ```
 
-As shown in the code. Respectively, The `MyAppContext` class defines two member variables called `step` and `param1` to store the current superstep and algorithm-specific parameter. And also defines a member variable named `result` with `uint64_t` type to store the the degree for each vertex in the fragment. The `Init` method is used to initialize the context of the computation. In current example, we initialize the `step` and `param1` variables to zero and the algorithm-specific parameter. We also set the result to zero for each vertex.
+As shown in the code, the MyAppContext class defines two member variables called `step` and `param1` to store the current superstep and algorithm-specific parameter, respectively. And we also define a member variable named `result` with `uint64_t` type to store the the degree for each vertex in the fragment. The `Init` method is used to initialize the context of the computation. In current example, we initialize the `step` and `param1` variables to zero and the algorithm-specific parameter. We also set the result to zero for each vertex.
 
 ## Step 2: Define the Algorithm class
 
