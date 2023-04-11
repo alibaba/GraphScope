@@ -263,3 +263,514 @@ app:
       - grape::ImmutableEdgecutFragment
       - gs::ArrowProjectedFragment
       - gs::DynamicProjectedFragment
+  - algo: flash_pagerank
+    type: cpp_flash
+    class_name: gs::PRFlash
+    src: apps/flash/ranking/pagerank.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_articlerank
+    type: cpp_flash
+    class_name: gs::ArticleRankFlash
+    src: apps/flash/ranking/articlerank.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_ppr
+    type: cpp_flash
+    class_name: gs::PPRFlash
+    src: apps/flash/ranking/ppr.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_hits
+    type: cpp_flash
+    class_name: gs::HITSFlash
+    src: apps/flash/ranking/hits.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_kcore
+    type: cpp_flash
+    class_name: gs::CoreFlash
+    src: apps/flash/core/core.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_kcore_2
+    type: cpp_flash
+    class_name: gs::Core2Flash
+    src: apps/flash/core/core-2.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_kcore_search
+    type: cpp_flash
+    class_name: gs::KCoreSearchFlash
+    src: apps/flash/core/k-core-search.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_degeneracy
+    type: cpp_flash
+    class_name: gs::DegeneracyFlash
+    src: apps/flash/core/degeneracy-ordering.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_onion
+    type: cpp_flash
+    class_name: gs::OnionFlash
+    src: apps/flash/core/onion-layer-ordering.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_mm
+    type: cpp_flash
+    class_name: gs::MMFlash
+    src: apps/flash/matching/mm.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_mm_opt
+    type: cpp_flash
+    class_name: gs::MMOptFlash
+    src: apps/flash/matching/mm-opt.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_mm_opt_2
+    type: cpp_flash
+    class_name: gs::MMOpt2Flash
+    src: apps/flash/matching/mm-opt-2.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_mis
+    type: cpp_flash
+    class_name: gs::MISFlash
+    src: apps/flash/matching/mis.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_mis_2
+    type: cpp_flash
+    class_name: gs::MIS2Flash
+    src: apps/flash/matching/mis-2.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_min_dominating_set
+    type: cpp_flash
+    class_name: gs::MinDominatingSetFlash
+    src: apps/flash/matching/min-dominating-set.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_min_dominating_set_2
+    type: cpp_flash
+    class_name: gs::MinDominatingSet2Flash
+    src: apps/flash/matching/min-dominating-set-2.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_min_edge_cover
+    type: cpp_flash
+    class_name: gs::MinEdgeCoverFlash
+    src: apps/flash/matching/min-edge-cover.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_min_cover
+    type: cpp_flash
+    class_name: gs::MinCoverFlash
+    src: apps/flash/matching/min-cover.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_min_cover_greedy
+    type: cpp_flash
+    class_name: gs::MinCoverGreedyFlash
+    src: apps/flash/matching/min-cover-greedy.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_min_cover_greedy_2
+    type: cpp_flash
+    class_name: gs::MinCoverGreedy2Flash
+    src: apps/flash/matching/min-cover-greedy-2.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_msf
+    type: cpp_flash
+    class_name: gs::MSFFlash
+    src: apps/flash/measurement/msf.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_msf_block
+    type: cpp_flash
+    class_name: gs::MSFBlockFlash
+    src: apps/flash/measurement/msf-block.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_diameter_approx
+    type: cpp_flash
+    class_name: gs::DiameterApproxFlash
+    src: apps/flash/measurement/diameter-approx.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_diameter_approx_2
+    type: cpp_flash
+    class_name: gs::DiameterApprox2Flash
+    src: apps/flash/measurement/diameter-approx-2.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_k_center
+    type: cpp_flash
+    class_name: gs::KCenterFlash
+    src: apps/flash/measurement/k-center.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_3_path
+    type: cpp_flash
+    class_name: gs::ThreePathFlash
+    src: apps/flash/subgraph/3-path.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_triangle
+    type: cpp_flash
+    class_name: gs::TriangleFlash
+    src: apps/flash/subgraph/triangle.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_tailed_triangle
+    type: cpp_flash
+    class_name: gs::TailedTriangleFlash
+    src: apps/flash/subgraph/tailed-triangle.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_acyclic_triangle
+    type: cpp_flash
+    class_name: gs::AcyclicTriangleFlash
+    src: apps/flash/subgraph/acyclic-triangle.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_cyclic_triangle
+    type: cpp_flash
+    class_name: gs::CyclicTriangleFlash
+    src: apps/flash/subgraph/cyclic-triangle.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_cycle_plus_triangle
+    type: cpp_flash
+    class_name: gs::CyclePlusTriangleFlash
+    src: apps/flash/subgraph/cycle-plus-triangle.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_in_triangle
+    type: cpp_flash
+    class_name: gs::InTriangleFlash
+    src: apps/flash/subgraph/in-triangle.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_out_triangle
+    type: cpp_flash
+    class_name: gs::OutTriangleFlash
+    src: apps/flash/subgraph/out-triangle.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_rectangle
+    type: cpp_flash
+    class_name: gs::RectangleFlash
+    src: apps/flash/subgraph/rectangle.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_diamond
+    type: cpp_flash
+    class_name: gs::DiamondFlash
+    src: apps/flash/subgraph/diamond.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_k_clique
+    type: cpp_flash
+    class_name: gs::KCliqueFlash
+    src: apps/flash/subgraph/k-clique.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_k_clique_2
+    type: cpp_flash
+    class_name: gs::KClique2Flash
+    src: apps/flash/subgraph/k-clique-2.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_densest_sub_2_approx
+    type: cpp_flash
+    class_name: gs::DensestFlash
+    src: apps/flash/subgraph/densest-sub-2-approx.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_bc
+    type: cpp_flash
+    class_name: gs::BCFlash
+    src: apps/flash/centrality/bc.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_closeness
+    type: cpp_flash
+    class_name: gs::ClosenessFlash
+    src: apps/flash/centrality/closeness.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_eigenvec
+    type: cpp_flash
+    class_name: gs::EigenvecFlash
+    src: apps/flash/centrality/eigenvec.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_harmonic
+    type: cpp_flash
+    class_name: gs::HarmonicFlash
+    src: apps/flash/centrality/harmonic.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_katz
+    type: cpp_flash
+    class_name: gs::KATZFlash
+    src: apps/flash/centrality/katz.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_clustering_coeff
+    type: cpp_flash
+    class_name: gs::ClusteringCoeffFlash
+    src: apps/flash/clustering/clustering-coeff.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_fluid_community
+    type: cpp_flash
+    class_name: gs::FluidCommunityFlash
+    src: apps/flash/clustering/fluid-community.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_fluid_by_color
+    type: cpp_flash
+    class_name: gs::FluidByColorFlash
+    src: apps/flash/clustering/fluid-by-color.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_color
+    type: cpp_flash
+    class_name: gs::ColorFlash
+    src: apps/flash/clustering/color.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_lpa
+    type: cpp_flash
+    class_name: gs::LPAFlash
+    src: apps/flash/clustering/lpa.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_lpa_by_color
+    type: cpp_flash
+    class_name: gs::LPAByColorFlash
+    src: apps/flash/clustering/lpa-by-color.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_bfs
+    type: cpp_flash
+    class_name: gs::BFSFlash
+    src: apps/flash/traversal/bfs.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_bfs_push
+    type: cpp_flash
+    class_name: gs::BFSPushFlash
+    src: apps/flash/traversal/bfs-push.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_bfs_pull
+    type: cpp_flash
+    class_name: gs::BFSPullFlash
+    src: apps/flash/traversal/bfs-pull.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_bfs_undirected
+    type: cpp_flash
+    class_name: gs::BFSUndirectedFlash
+    src: apps/flash/traversal/bfs-undirected.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_random_multi_bfs
+    type: cpp_flash
+    class_name: gs::RandomMultiBFSFlash
+    src: apps/flash/traversal/random-multi-bfs.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_sssp
+    type: cpp_flash
+    class_name: gs::SSSPFlash
+    src: apps/flash/traversal/sssp.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_sssp_undirected
+    type: cpp_flash
+    class_name: gs::SSSPUndirectedFlash
+    src: apps/flash/traversal/sssp-undirected.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_sssp_dlt_step
+    type: cpp_flash
+    class_name: gs::SSSPDltStepFlash
+    src: apps/flash/traversal/sssp-dlt-step.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_sssp_dlt_step_undirected
+    type: cpp_flash
+    class_name: gs::SSSPDltStepUndirectedFlash
+    src: apps/flash/traversal/sssp-dlt-step-undirected.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_cc
+    type: cpp_flash
+    class_name: gs::CCFlash
+    src: apps/flash/connectivity/cc.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_cc_push
+    type: cpp_flash
+    class_name: gs::CCPushFlash
+    src: apps/flash/connectivity/cc-push.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_cc_pull
+    type: cpp_flash
+    class_name: gs::CCPullFlash
+    src: apps/flash/connectivity/cc-pull.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_cc_opt
+    type: cpp_flash
+    class_name: gs::CCOptFlash
+    src: apps/flash/connectivity/cc-opt.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_cc_log
+    type: cpp_flash
+    class_name: gs::CCLogFlash
+    src: apps/flash/connectivity/cc-log.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_cc_block
+    type: cpp_flash
+    class_name: gs::CCBlockFlash
+    src: apps/flash/connectivity/cc-block.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_cc_union
+    type: cpp_flash
+    class_name: gs::CCUnionFlash
+    src: apps/flash/connectivity/cc-union.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_bcc
+    type: cpp_flash
+    class_name: gs::BCCFlash
+    src: apps/flash/connectivity/bcc.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_bcc_2
+    type: cpp_flash
+    class_name: gs::BCC2Flash
+    src: apps/flash/connectivity/bcc-2.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_scc
+    type: cpp_flash
+    class_name: gs::SCCFlash
+    src: apps/flash/connectivity/scc.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_scc_2
+    type: cpp_flash
+    class_name: gs::SCC2Flash
+    src: apps/flash/connectivity/scc-2.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_bridge
+    type: cpp_flash
+    class_name: gs::BridgeFlash
+    src: apps/flash/connectivity/bridge.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_bridge_2
+    type: cpp_flash
+    class_name: gs::Bridge2Flash
+    src: apps/flash/connectivity/bridge-2.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_cut_point
+    type: cpp_flash
+    class_name: gs::CutPointFlash
+    src: apps/flash/connectivity/cut-point.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment
+  - algo: flash_cut_point_2
+    type: cpp_flash
+    class_name: gs::CutPoint2Flash
+    src: apps/flash/connectivity/cut-point-2.h
+    compatible_graph:
+      - grape::ImmutableEdgecutFragment
+      - gs::ArrowProjectedFragment

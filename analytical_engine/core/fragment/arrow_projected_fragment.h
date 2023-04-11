@@ -1002,6 +1002,12 @@ class ArrowProjectedFragment
     return grape::DestList(iodoffset_[offset], iodoffset_[offset + 1]);
   }
 
+  inline std::shared_ptr<vertex_map_t> GetVertexMap() { return vm_ptr_; }
+
+  inline const std::shared_ptr<vertex_map_t> GetVertexMap() const {
+    return vm_ptr_;
+  }
+
   inline bool directed() const { return directed_; }
 
   inline const nbr_unit_t* get_out_edges_ptr() const { return oe_ptr_; }
