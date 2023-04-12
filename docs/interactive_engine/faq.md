@@ -42,7 +42,7 @@ In traditional Gremlin, it can only be represented as follows:
 g.V().hasLabel('PERSON').has('name', 'marko').or().has('age', 27)
 ```
 It is equivalent to the following SQL-like expression:
-```
+```scss
 SELECT *
 FROM PERSON
 WHERE name = 'marko' OR age = 27;
@@ -100,7 +100,7 @@ Please refer to [Aggregate](https://github.com/alibaba/GraphScope/blob/main/docs
 GIE supports various indexing options such as vertex label index, primary key index, and edge label index. Properly defining and using indexes can significantly improve query performance.
 
 For example, in the LDBC schema, we define the property ID as the primary key for the entity type 'PERSON' and maintain the corresponding primary key index in the storage. This allows us to directly index specific 'PERSON' instances using \<Label, Property ID\>, without scanning all vertices and filtering based on property key-value. This can be expressed in a Gremlin query as follows:
-```
+```scss
 g.V().hasLabel('PERSON').has('id', propertyIdValue)
 ```
 Where 'id' is the property ID, and 'propertyIdValue' is the value of the property key. By directly using the primary key index, query performance can be significantly improved, avoiding full table scans and property value filtering, thereby optimizing query performance.
@@ -111,7 +111,7 @@ Subgraph in GIE is edge-induced, which means it is formed by selecting a subset 
 
 Therefore, You can only perform subgraph operations after edge-output operators like E(), outE(), inE() or bothE(). Here's an example:
 
-```
+```scss
 g.V().outE().limit(10).subgraph('sub_graph').count()
 ```
 Please refer to [Subgraph](https://github.com/alibaba/GraphScope/blob/main/docs/interactive_engine/supported_gremlin_steps.md#subgraph) for more usage.
