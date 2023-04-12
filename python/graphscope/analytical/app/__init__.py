@@ -16,6 +16,8 @@
 # limitations under the License.
 #
 
+from graphscope.analytical.app import flash
+
 # fmt: off
 from graphscope.analytical.app.attribute_assortativity import \
     attribute_assortativity_coefficient
