@@ -1014,7 +1014,7 @@ install_vineyard() {
         -DCMAKE_INSTALL_PREFIX="${V6D_PREFIX}" \
         -DBUILD_VINEYARD_TESTS=OFF \
         -DBUILD_SHARED_LIBS=ON \
-        -DBUILD_VINEYARD_PYTHON_BINDINGS=ON  \
+        -DBUILD_VINEYARD_PYTHON_BINDINGS=ON \
         -DBUILD_VINEYARD_GRAPH_WITH_GAR=ON
   make -j"${jobs}"
   make install
@@ -1462,6 +1462,7 @@ gs_install_deps_command() {
     "librdkafka-dev"
     "protobuf-compiler-grpc"
     "rapidjson-dev"
+    "libcurl4-openssl-dev"
   )
 
   ANALYTICAL_CENTOS_7=("librdkafka-devel" "msgpack-devel" "rapidjson-devel")

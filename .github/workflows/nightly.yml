@@ -43,10 +43,10 @@ jobs:
         fi
         sudo mkdir /opt/graphscope
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
-        ./gs install-deps dev --v6d-version v0.14.0
+        ./gs install-deps dev --v6d-version v0.14.2
 
     - name: Setup tmate session
-      if: false 
+      if: false
       uses: mxschmitt/action-tmate@v2
 
     - name: Build GraphScope
