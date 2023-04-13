@@ -41,18 +41,8 @@ As previously mentioned, each logical vertex/edge table is divided into multiple
 
 See [Gar Information Files](https://alibaba.github.io/GraphAr/user-guide/getting-started.html#gar-information-files) and [Gar Data Files](https://alibaba.github.io/GraphAr/user-guide/getting-started.html#gar-data-files) for an example.
 
-#### Built-in data types
-GraphAr provides a set of built-in data types that are common in real use cases and supported by most file types (CSV, ORC, Parquet), includes:
 
-- bool
-- int32
-- int64
-- float
-- double
-- string
-
-More built-in data types will be added in GraphAr, and self-defined data types will be supported.
-
+More details about the GraphAr file format can be found in the [GraphAr File Format](https://alibaba.github.io/GraphAr/user-guide/file-format.html).
 
 ## GraphAr in GraphScope
 
@@ -64,13 +54,13 @@ To load GraphAr formatted data into GraphScope:
 
 1. Define the graph meta files with YAML. The meta files describe the properties of vertices and edges, and where the data files are stored.
 
-2. Load the graph data using the GraphScope client (Python) with graphscope.load_from(graph_yaml_path) function. Here's an example:
+2. Load the graph data using the GraphScope client (Python) with graphscope.load_from_gar(graph_yaml_path) function. Here's an example:
 
 ```python
 import graphscope
 
 graph_yaml_path = "file:///path-yaml/demo.graph.yml"
-g = graphscope.load_from(graph_yaml_path)
+g = graphscope.load_from_gar(graph_yaml_path)
 g.schema()
 ```
 
@@ -80,7 +70,7 @@ To archive the graph data in GraphAr format:
 
 1. Define the graph meta files with YAML.
 
-2. Call the g.archive(graph_yaml_path) function, where g is the GraphScope graph object, and graph_yaml_path is the file path. Here's an example:
+2. Call the g.archive(graph_yaml_path) function, where g is the GraphScope graph object, and graph_yaml_path is the graph info file path. Here's an example:
 
 ```python
 import graphscope
