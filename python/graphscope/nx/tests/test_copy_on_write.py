@@ -292,7 +292,6 @@ class TestBuiltinCopyOnWrite:
                 "{}/p2p-31-sssp".format(os.path.expandvars("${GS_TEST_DIR}")),
                 sep=" ",
                 header=None,
-                prefix="",
             ).values
         )
 

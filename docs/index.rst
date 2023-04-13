@@ -93,7 +93,6 @@ and the vineyard store that offers efficient in-memory data transfers.
    utilities/monitoring
    utilities/gs
    utilities/error_codes
-   utilities/bulk_loader
 
 .. toctree::
    :maxdepth: 2
@@ -104,6 +103,7 @@ and the vineyard store that offers efficient in-memory data transfers.
    development/how_to_test
    development/how_to_contribute
    development/how_to_debugging
+   development/how_to_install_in_offline_mode
 
 .. toctree::
    :maxdepth: 2

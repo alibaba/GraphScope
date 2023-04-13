@@ -34,7 +34,7 @@ GraphScope is versatile and can be used for:
 
 ## What are the Limitations
 
-- **GraphScope is not a graph database:** GraphScope focuses on analyzing and computing large-scale graphs using distributed computing, rather than storing and managing data in a graph format with ACID and transactions. See [Positioning of GraphScope](overview/positioning.md) for more information.
+- **GraphScope is not a graph database:** GraphScope focuses on analyzing and computing large-scale graphs using distributed computing, rather than storing and managing data in a graph format with ACID and transactions. See [Positioning of GraphScope](positioning.md) for more information.
 
 - **Security limitations:** GraphScope currently lacks essential security features, such as authentication and encryption.
 
@@ -42,5 +42,5 @@ GraphScope is versatile and can be used for:
 
 You may want to
 
-- [Get Started](overview/getting_started.md) with GraphScope;
-- Learn more about the [Design of GraphScope](overview/design_of_graphscope.md);
+- [Get Started](getting_started.md) with GraphScope;
+- Learn more about the [Design of GraphScope](design_of_graphscope.md);

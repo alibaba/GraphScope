@@ -17,9 +17,9 @@ Most large-scale graph processing systems, including [PowerGraph](https://github
 Our [empirical studies](./performance_and_benchmark.md) via the LDBC [Graphalytics](http://graphalytics.org/) benchmark
 have demonstrated that GraphScope outperforms these systems in all algorithms.
 Furthermore, GraphScope has the added advantages of supporting a range of SDKs and programming interfaces for graph analytics:
-- It offers data scientists a [Python SDK](./python_tutorials.md) to quickly integrate graph processing into their existing data analytics ecosystem.
+- It offers data scientists a [Python SDK](../python_tutorials.md) to quickly integrate graph processing into their existing data analytics ecosystem.
 - It allows Java users of [Giraph](https://giraph.apache.org/) and [GraphX](https://spark.apache.org/graphx/) to seamlessly
-  [migrate the existing code](./java_tutorials.md) (without changing a line) to GraphScope, enabling them to enjoy automatic performance improvements.
+  [migrate the existing code](../java_tutorials.md) (without changing a line) to GraphScope, enabling them to enjoy automatic performance improvements.
 
 ## Compare with Graph Databases
 Graph databases, such as [Neo4j](https://neo4j.com/), [JanusGraph](http://www.janusgraph.cn/) and [Nebula](https://www.nebula-graph.com.cn/),
@@ -61,18 +61,18 @@ the end-to-end throughput.
 Given various types of graph workloads, existing systems have proposed two solutions.
 
 - One System: This solution is often referred to as ``in-database
-  analytics'', and has been adopted by graph databases such as Neo4j and Nebular. It aims to
+  analytics``, and has been adopted by graph databases such as Neo4j and Nebular. It aims to
   extend the capabilities of analytical processing and graph learning on top of the existing
   engine, mainly for graph queries. However, due to the differing computing patterns of these graph
   workloads, this one-system design may experience performance degradation when adapting the
   graph-query-oriented engine for other types of workloads.
 - Multi System: Given the performance issue of the one-system solution, the multi-system solution
   attempts to adopt multiple independent systems, each processing the corresponding workloads.
-  The main [issue](./overview.md) with this solution is that it requires users to manually compose the complex
+  The main [issue](design_of_graphscope.md) with this solution is that it requires users to manually compose the complex
   pipeline using a script language. Additionally, the requirement
   for data movement among different systems may introduce significant overhead.
 
-In comparison, GraphScope has a [loosely-coupled](./overview.md) design, which integrates three
+In comparison, GraphScope has a [loosely-coupled](design_of_graphscope.md) design, which integrates three
 engines - GAE for analytical processing, GIE for graph queries, and GLE for learning.
 The non-trivial integration features a common programming interface on top for easily implement
 a complex graph pipeline that can involve

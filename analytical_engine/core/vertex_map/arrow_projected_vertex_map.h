@@ -136,9 +136,23 @@ class ArrowProjectedVertexMap
     return false;
   }
 
+  vid_t Offset2Lid(const vid_t& offset) {
+    return id_parser_.GenerateId(label_id_, offset);
+  }
+
+  vid_t GetOffsetFromLid(vid_t lid) { return id_parser_.GetOffset(lid); }
+
   size_t GetTotalVerticesNum() const {
     return vertex_map_->GetTotalNodesNum(label_id_);
   }
+
+  VID_T GetInnerVertexSize(fid_t fid) const {
+    return vertex_map_->GetInnerVertexSize(fid, label_id_);
+  }
+
+  VID_T GetLidFromGid(vid_t gid) const { return id_parser_.GetLid(gid); }
+
+  fid_t GetFidFromGid(vid_t gid) const { return id_parser_.GetFid(gid); }
 
  private:
   fid_t fnum_;

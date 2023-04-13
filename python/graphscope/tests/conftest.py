@@ -261,6 +261,13 @@ def arrow_property_graph_undirected(graphscope_session):
 
 
 @pytest.fixture(scope="module")
+def arrow_property_graph_directed(graphscope_session):
+    g = load_arrow_property_graph(graphscope_session, directed=True)
+    yield g
+    del g
+
+
+@pytest.fixture(scope="module")
 def arrow_property_graph_only_from_efile(graphscope_session):
     g = graphscope_session.load_from(
         edges={
@@ -660,7 +667,6 @@ def hits_result():
         "{}/../p2p-31-hits-directed".format(property_dir),
         sep="\t",
         header=None,
-        prefix="",
     )
     ret["hub"] = df.iloc[:, [0, 1]].to_numpy(dtype=float)
     ret["auth"] = df.iloc[:, [0, 2]].to_numpy(dtype=float)
