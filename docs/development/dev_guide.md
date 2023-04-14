@@ -61,7 +61,8 @@ This would build all targets sequentially, here we
 You may found the built artifacts in several places according to each components.
 
 - analytical engine: `analytical_engine/build`
-- interactive engine: `interactive_engine/
+- interactive engine: `interactive_engine/assembly/target`
+- learning engine: `learning_engine/graph-learn/graphlearn/cmake-build`
 
 And you could install them to one place by
 
