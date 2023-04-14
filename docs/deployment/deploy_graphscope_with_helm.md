@@ -29,7 +29,9 @@ For more information on the `repo` command, see the [*helm repo*](https://helm.s
 Once you have added the chart to your repository, you can install it by running the following command:
 
 ```shell
-helm install <release-name> graphscope/graphscope
+# helm install <release-name> graphscope/graphscope
+# Replace <release-name> to the name of this release, use `my-gs` for illustration.
+helm install my-gs graphscope/graphscope
 ```
 
 For more information on the `install` command, see the [*helm install*](https://helm.sh/docs/helm/helm_install/) documentation.
@@ -38,7 +40,7 @@ Note that it may take a few minutes to pull the image the first time you run thi
 
 ```shell
 # After installation, you can check service availability by:
-helm test <release-name>
+helm test my-gs
 ```
 
 
@@ -47,15 +49,15 @@ After which you could copy and paste the instructions to save the connection inf
 You could also get the endpoints of GraphScope by
 
 ```shell
-helm status <release-name>
+helm status my-gs
 ```
 
 When the service type is `NotePort`, a sample output will be 
 
 ```shell
-$ export NODE_IP=$(kubectl --namespace [NAMESPACE] get pod -o jsonpath="{.status.hostIP}" coordinator-[GRAPHSCOPE-FULLNAME])
-$ export NODE_PORT=$(kubectl --namespace [NAMESPACE] get services -o jsonpath="{.spec.ports[0].nodePort}" coordinator-service-[GRAPHSCOPE-FULLNAME])
-$ echo "GraphScope service is listen on ${NODE_IP}:${NODE_PORT}"
+ export NODE_IP=$(kubectl --namespace default  get pod -l graphscope.coordinator.name=coordinator-my-gs -ojsonpath="{.items[0].status.hostIP}")
+  export NODE_PORT=$(kubectl --namespace default get services coordinator-service-my-gs  -ojsonpath="{.spec.ports[0].nodePort}")
+  echo "GraphScope service listen on ${NODE_IP}:${NODE_PORT}"
 ```
 
 ## Connect to GraphScope
@@ -100,7 +102,7 @@ See [*create a session*](https://graphscope.io/docs/reference/session.html) for 
 ## Uninstall the release
 
 ```shell
-helm uninstall [RELEASE_NAME]
+helm uninstall my-gs
 ```
 This removes all the Kubernetes components associated with the chart and deletes the release.
 See [*helm uninstall*](https://helm.sh/docs/helm/helm_uninstall/) for `helm uninstall` command documentation.
@@ -135,7 +137,7 @@ Then, copy the package to the server, unzip, and install graphscope charts.
 
 ```shell
 tar zxvf graphscope-0.20.0.tgz
-helm install <release-name> ./graphscope
+helm install my-gs ./graphscope
 ```
 
 2. You could clone the repo of GraphScope to get the source code of the charts
@@ -143,5 +145,5 @@ helm install <release-name> ./graphscope
 ```shell
 git clone https://github.com/alibaba/GraphScope
 cd GraphScope/charts
-helm install <release-name> ./graphscope
+helm install my-gs ./graphscope
 ```

@@ -40,7 +40,9 @@ g = sess.g()
 You could customize options on the command line parameters passed to the `helm install`. For example:
 
 ```shell
-helm install <my-release> graphscope --set enabled_engines="gae"
+# helm install <release-name> graphscope/graphscope
+# Replace <release-name> to the name of this release, use `my-gs` for illustration.
+helm install my-gs graphscope/graphscope --set enabled_engines="gae"
 ```
 
 Then use python client to connect to the service. See more details in the [deploy graphscope with helm](../deployment/deploy_graphscope_with_helm.md)
@@ -67,4 +69,4 @@ The only difference is the elimination of extraneous resources, resulting in les
 
 When deployed with Python SDK, you need to use `sess.close()` to close the session and free the resources.
 
-When deployed with helm, you would use `helm uninstall <my-release>` to delete the release and free the resources.
+When deployed with helm, you would use `helm uninstall my-gs` to delete the release and free the resources.
