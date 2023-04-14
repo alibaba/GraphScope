@@ -17,6 +17,9 @@ Please refer to [Dev Environment](../development/dev_guide.md#dev-environment) t
 With `gs` command-line utility, you can build analytical engine of GraphScope with a single command.
 
 ```bash
+# Clone a repo if needed
+# git clone https://github.com/alibaba/graphscope
+# cd graphscope
 ./gs make analytical
 ```
 
@@ -70,6 +73,13 @@ Take a look at this file if you want to investigate more of the analytical engin
 ## How to Test
 
 You could easily test with the new artifacts with a single command:
+
+Here we set the working directory to local repo.
+```bash
+export GRAPHSCOPE_HOME=`pwd`
+# Here the `pwd` is the root path of GraphScope repository
+```
+See more about `GRAPHSCOPE_HOME` in [run tests](../development/how_to_test.md#run-tests)
 
 ```bash
 ./gs test analytical
