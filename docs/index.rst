@@ -64,6 +64,7 @@ and the vineyard store that offers efficient in-memory data transfers.
    interactive_engine/guide_and_examples
    interactive_engine/design_of_gie
    interactive_engine/supported_gremlin_steps
+   interactive_engine/faq.md
 
 .. toctree::
    :maxdepth: 2
