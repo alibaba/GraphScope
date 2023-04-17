@@ -179,11 +179,36 @@ train_gcn(lg, node_type="paper", edge_type="cites",
 
 ## Graph Interactive Query Quick Start
 
-TBF
 
-## Graph Analytics Quick Start
+The installed `graphscope` package includes everything you need to analyze a graph on your local machine. If you have a graph analytical job that needs to run iterative algorithms, it works well with `graphscope`.
 
-TBF
+
+````{dropdown} Example: Running iterative algorithm (SSSP) in GraphScope
+```python
+
+import graphscope as gs
+from graphscope.dataset.modern_graph import load_modern_graph
+
+gs.set_option(show_log=True)
+
+# load the modern graph as example.
+#(modern graph is an example property graph for Gremlin queries given by Apache at https://tinkerpop.apache.org/docs/current/tutorials/getting-started/)
+graph = load_modern_graph()
+
+# triggers label propagation algorithm(LPA)
+# on the modern graph(property graph) and print the result.
+ret = gs.lpa(graph)
+print(ret.to_dataframe(selector={'id': 'v.id', 'label': 'r'}))
+
+
+# project a modern graph (property graph) to a homogeneous graph
+# and run single source shortest path(SSSP) algorithm on it, with assigned source=1.
+pg = graph.project(vertices={'person': None}, edges={'knows': ['weight']})
+ret = gs.sssp(pg, src=1)
+print(ret.to_dataframe(selector={'id': 'v.id', 'distance': 'r'})
+
+```
+````
 
 ## Graph Learning Quick Start
 

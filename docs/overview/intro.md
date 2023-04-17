@@ -43,4 +43,4 @@ GraphScope is versatile and can be used for:
 You may want to
 
 - [Get Started](getting_started.md) with GraphScope;
-- Learn more about the [Design of GraphScope](design_of_graphscope.md);
+- Learn more about the [Design of GraphScope](design_of_graphscope.md).
