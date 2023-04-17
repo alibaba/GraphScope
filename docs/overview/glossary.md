@@ -52,7 +52,12 @@ Groot is the code name of the persistent storage in GraphScope. It was named aft
 
 
 #### GUM
-TODO(mengke)
+
+GUM is a highly efficient multi-GPU graph analytics engine that employs a work-stealing mechanism to tackle both dynamic load imbalances and long-tail issues. It does so by utilizing the high-speed NVLinks found in modern multi-GPU servers. Additionally, GUM is acutely aware of the asymmetric topology of GPU connections and generates an optimal task-stealing plan from a holistic perspective during each iteration. With this innovative approach, GUM can offer a significant order-of-magnitude improvement in performance.
+
+GUM serves as an GPU-speedup module for GRAPE when applicable.
+
+Read more: [Paper on ICDE2023](#), [Code](https://github.com/alibaba/libgrape-lite/tree/gum)
 
 
 #### MaxGraph (deprecated)
