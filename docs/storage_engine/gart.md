@@ -34,7 +34,7 @@ Loading Logs to GART Storage
 
 Considering the diversity of log formats in different OLTP systems, GART proposes a unified log format. 
 Logs from OLTP systems need to be converted into the unified log format before they can be used. 
-If you are using MySQL as your OLTP system, you can use Maxwell to convert binlogs into JSON format. 
+If you are using MySQL as your OLTP system, you can use [Maxwell](https://maxwells-daemon.io/config/#file-producer) to convert binlogs into JSON format. 
 Then, GART provides a tool to further convert the JSON format into the unified format. 
 When the conversion tool receives logs, it will extract both data and metadata updates from relational data sources in order to generate unified logs that are compatible with different log formats.
 
