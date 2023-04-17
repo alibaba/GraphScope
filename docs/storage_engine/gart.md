@@ -19,7 +19,7 @@ GART leverages the logs to convert relational data into graph data and stores th
      alt="Architecture of GART."
      width="70%">
 
-Architecture of GAE. 
+Architecture of GART. 
 :::
 
 Defining Graph Mapping in GART
