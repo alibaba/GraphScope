@@ -85,6 +85,7 @@ and the vineyard store that offers efficient in-memory data transfers.
    storage_engine/groot
    storage_engine/vineyard
    storage_engine/graphar
+   storage_engine/gart
 
 .. toctree::
    :maxdepth: 2
