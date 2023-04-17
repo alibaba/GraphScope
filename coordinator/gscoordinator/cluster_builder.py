@@ -337,40 +337,6 @@ class EngineCluster:
         ]
         return container
 
-    def get_vineyard_container(self, volume_mounts):
-        name = self.vineyard_container_name
-        image = self._vineyard_image
-        sts_name = self.engine_stateful_set_name
-        svc_name = sts_name + "-headless"
-        pod0_dns = f"{sts_name}-0.{svc_name}.{self._namespace}.svc.cluster.local"
-        vineyard_cmd = (
-            f"vineyardd -size {self._vineyard_shared_mem} -socket {self._sock}"
-        )
-        args = f"""
-            [[ `hostname` =~ -([0-9]+)$ ]] || exit 1;
-            ordinal=${{BASH_REMATCH[1]}};
-            if (( $ordinal == 0 )); then
-                {vineyard_cmd} -etcd_endpoint http://0.0.0.0:{self._etcd_port}
-            else
-                until nslookup {pod0_dns}; do sleep 1; done;
-                {vineyard_cmd} -etcd_endpoint http://{pod0_dns}:{self._etcd_port}
-            fi;
-            """
-        args = ["bash", "-c", args]
-        container = self.get_engine_container_helper(
-            name,
-            image,
-            args,
-            volume_mounts,
-            self._vineyard_requests,
-            self._vineyard_requests,
-        )
-        container.ports = [
-            kube_client.V1ContainerPort(container_port=self._vineyard_service_port),
-            kube_client.V1ContainerPort(container_port=self._etcd_port),
-        ]
-        return container
-
     def get_mars_container(self):
         _ = self.mars_container_name
         return
@@ -396,11 +362,9 @@ class EngineCluster:
         containers = []
         volumes = []
 
-        socket_volume = self.get_vineyard_socket_volume()
         shm_volume = self.get_shm_volume()
-        volumes.extend([socket_volume[0], shm_volume[0]])
-
-        engine_volume_mounts = [socket_volume[2], shm_volume[2]]
+        volumes = [shm_volume[0]]
+        engine_volume_mounts = [shm_volume[2]]
 
         if self._volumes and self._volumes is not None:
             udf_volumes = ResourceBuilder.get_user_defined_volumes(self._volumes)
@@ -426,13 +390,6 @@ class EngineCluster:
         if self._with_learning:
             containers.append(
                 self.get_learning_container(volume_mounts=engine_volume_mounts)
-            )
-
-        if self._vineyard_deployment is None:
-            containers.append(
-                self.get_vineyard_container(
-                    volume_mounts=[socket_volume[1], shm_volume[1]]
-                )
             )
 
         if self._with_dataset:
@@ -481,6 +438,7 @@ class EngineCluster:
         service_spec = ResourceBuilder.get_service_spec(
             "ClusterIP", ports, self._engine_labels, None
         )
+
         # Necessary, create a headless service for statefulset
         service_spec.cluster_ip = "None"
         service = ResourceBuilder.get_service(
@@ -530,7 +488,7 @@ class EngineCluster:
 
     @property
     def vineyard_service_name(self):
-        return f"{self._vineyard_prefix}{self._instance_id}"
+        return self.engine_stateful_set_name + "-vineyard-sidecar-rpc"
 
     def get_vineyard_service_endpoint(self, api_client):
         # return f"{self.vineyard_service_name}:{self._vineyard_service_port}"
