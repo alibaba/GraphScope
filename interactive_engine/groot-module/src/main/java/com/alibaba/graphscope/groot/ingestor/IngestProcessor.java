@@ -259,10 +259,10 @@ public class IngestProcessor implements MetricsAgent {
 
     private void updateMetrics() {
         long currentTime = System.nanoTime();
-        long propcessed = this.totalProcessed;
+        long processed = this.totalProcessed;
         long interval = currentTime - this.lastUpdateTime;
         this.writeRecordsPerSecond =
-                1000000000 * (propcessed - this.lastUpdateProcessed) / interval;
+                1000000000 * (processed - this.lastUpdateProcessed) / interval;
         long walBlockTime = this.walBlockTimeNano;
         this.walBlockPerSecondMs =
                 1000 * (walBlockTime - this.lastUpdateWalBlockTimeNano) / interval;
@@ -272,7 +272,7 @@ public class IngestProcessor implements MetricsAgent {
 
         this.lastUpdateStoreBlockTimeNano = storeBlockTime;
         this.lastUpdateWalBlockTimeNano = walBlockTime;
-        this.lastUpdateProcessed = propcessed;
+        this.lastUpdateProcessed = processed;
         this.lastUpdateTime = currentTime;
     }
 
