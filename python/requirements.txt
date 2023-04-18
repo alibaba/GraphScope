@@ -1,4 +1,4 @@
-Cython==3.0a6
+Cython=3.0a6
 gremlinpython=3.6.3rc1
 grpcio;python_version>="3.11"
 grpcio<=1.43.0,>=1.40.0;python_version<"3.11"
