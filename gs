@@ -34,11 +34,12 @@ gs_usage() {
   echo
   # :command.usage_commands
   printf "Commands:\n"
-  echo "  build          Build GraphScope on local."
-  echo "  build-image    Build GraphScope docker images."
+  echo "  make           Build GraphScope on local."
+  echo "  make-image     Build GraphScope docker images."
   echo "  dev            Open a develop environment with docker."
   echo "  test           Run tests of graphscope"
   echo "  install-deps   Install dependencies on local machine."
+  echo "  format         "
   echo
 
   # :command.long_usage
@@ -75,64 +76,20 @@ gs_usage() {
 }
 
 # :command.usage
-gs_build_usage() {
+gs_make_usage() {
   if [[ -n $long_usage ]]; then
-    printf "gs build - Build GraphScope on local.\n"
+    printf "gs make - Build GraphScope on local.\n"
     echo
 
   else
-    printf "gs build - Build GraphScope on local.\n"
+    printf "gs make - Build GraphScope on local.\n"
     echo
 
   fi
-
-  printf "Alias: b\n"
-  echo
 
   printf "Usage:\n"
-  printf "  gs build [COMPONENT]\n"
-  printf "  gs build --help | -h\n"
-  echo
-
-  # :command.long_usage
-  if [[ -n $long_usage ]]; then
-    printf "Options:\n"
-
-    # :command.usage_fixed_flags
-    echo "  --help, -h"
-    printf "    Show this help\n"
-    echo
-
-    # :command.usage_args
-    printf "Arguments:\n"
-
-    # :argument.usage
-    echo "  COMPONENT"
-    printf "    component to build.\n"
-    printf "    Allowed: all, analytical, interactive, learning, client, coordinator\n"
-    echo
-
-  fi
-}
-
-# :command.usage
-gs_build_image_usage() {
-  if [[ -n $long_usage ]]; then
-    printf "gs build-image - Build GraphScope docker images.\n"
-    echo
-
-  else
-    printf "gs build-image - Build GraphScope docker images.\n"
-    echo
-
-  fi
-
-  printf "Alias: bi\n"
-  echo
-
-  printf "Usage:\n"
-  printf "  gs build-image IMAGE [OPTIONS]\n"
-  printf "  gs build-image --help | -h\n"
+  printf "  gs make [COMPONENT] [OPTIONS]\n"
+  printf "  gs make --help | -h\n"
   echo
 
   # :command.long_usage
@@ -146,8 +103,76 @@ gs_build_image_usage() {
 
     # :command.usage_flags
     # :flag.usage
+    echo "  --install-prefix PREFIX"
+    printf "    Install dependency files to [prefix]. By default, './gs make install' will\n    install all the files in '/opt/graphscope/bin', '/opt/graphscope/lib' etc.\n    You can specify an installation prefix other than '/opt/graphscope' using\n    '--install-prefix', for instance '--install-prefix=\$HOME'.\n"
+    printf "    Default: /opt/graphscope\n"
+    echo
+
+    # :command.usage_args
+    printf "Arguments:\n"
+
+    # :argument.usage
+    echo "  COMPONENT"
+    printf "    component to build.\n"
+    printf "    Allowed: all, install, analytical, analytical-java, interactive, learning, analytical-install, analytical-java-install, interactive-install, learning-install, client, coordinator, clean\n"
+    printf "    Default: all\n"
+    echo
+
+    # :command.usage_examples
+    printf "Examples:\n"
+    printf "  gs make analytical\n"
+    printf "  gs make interactive -DskipTests\n"
+    printf "  gs make install\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+gs_make_image_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "gs make-image - Build GraphScope docker images.\n"
+    echo
+
+  else
+    printf "gs make-image - Build GraphScope docker images.\n"
+    echo
+
+  fi
+
+  printf "Alias: mi\n"
+  echo
+
+  printf "Usage:\n"
+  printf "  gs make-image IMAGE [OPTIONS]\n"
+  printf "  gs make-image --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "Options:\n"
+
+    # :command.usage_fixed_flags
+    echo "  --help, -h"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_flags
+    # :flag.usage
+    echo "  --registry REGISTRY"
+    printf "    registry name\n"
+    printf "    Default: docker.io\n"
+    echo
+
+    # :flag.usage
+    echo "  --tag TAG"
+    printf "    image tag name to build\n"
+    printf "    Default: latest\n"
+    echo
+
+    # :flag.usage
     echo "  --cn CN"
-    printf "    Whether to use CN located mirrors to speed up download.\n"
+    printf "    Whether to use CN located mirrors to speed up download. [Not implemented]\n"
     echo
 
     # :command.usage_args
@@ -156,14 +181,13 @@ gs_build_image_usage() {
     # :argument.usage
     echo "  IMAGE"
     printf "    Images to build.\n"
-    printf "    Allowed: all, graphscope-dev-base, graphscope-dev, coordinator, analytical, analytical-java, interactive, interactive-frontend, interactive-executor, learning, vineyard-dev, vineyard-runtime\n"
+    printf "    Allowed: all, graphscope-dev, coordinator, analytical, analytical-java, interactive, interactive-frontend, interactive-executor, learning, vineyard-dev, vineyard-runtime\n"
     echo
 
     # :command.usage_examples
     printf "Examples:\n"
-    printf "  gs build-image graphscope-dev\n"
-    printf "  gs build-image graphscope-dev --cn\n"
-    printf "  gs build-image analytical\n"
+    printf "  gs make-image graphscope-dev\n"
+    printf "  gs make-image analytical --registry registry.cn-hongkong.aliyuncs.com\n"
     echo
 
   fi
@@ -229,7 +253,7 @@ gs_test_usage() {
   echo
 
   printf "Usage:\n"
-  printf "  gs test [OPTIONS]\n"
+  printf "  gs test [TYPE] [OPTIONS]\n"
   printf "  gs test --help | -h\n"
   echo
 
@@ -244,8 +268,33 @@ gs_test_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    echo "  --analytical, -a"
-    printf "    Run analytical tests\n"
+    echo "  --local"
+    printf "    Run local tests\n"
+    echo
+
+    # :flag.usage
+    echo "  --k8s"
+    printf "    Run k8s tests\n"
+    echo
+
+    # :flag.usage
+    echo "  --nx"
+    printf "    Run nx tests\n"
+    echo
+
+    # :flag.usage
+    echo "  --testdata DIRECTORY"
+    printf "    assign a custom test data location. This could be cloned from\n    https://github.com/graphscope/gstest\n"
+    printf "    Default: /tmp/gstest\n"
+    echo
+
+    # :command.usage_args
+    printf "Arguments:\n"
+
+    # :argument.usage
+    echo "  TYPE"
+    printf "    test a subset of the codebase, organized by components.\n"
+    printf "    Allowed: analytical, analytical-java, interactive, learning, local-e2e, k8s-e2e, groot\n"
     echo
 
   fi
@@ -336,6 +385,44 @@ gs_install_deps_usage() {
     printf "  gs install-deps dev --cn -j 6\n"
     printf "  gs install-deps dev --from-local ~/Downloads/gs-all-deps\n"
     printf "  gs install-deps dev --install-prefix ~/gs\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+gs_format_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "gs format\n"
+    echo
+
+  else
+    printf "gs format\n"
+    echo
+
+  fi
+
+  printf "Usage:\n"
+  printf "  gs format LANG\n"
+  printf "  gs format --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "Options:\n"
+
+    # :command.usage_fixed_flags
+    echo "  --help, -h"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "Arguments:\n"
+
+    # :argument.usage
+    echo "  LANG"
+    printf "    format which part of languages\n"
+    printf "    Allowed: cpp, java, python, rust\n"
     echo
 
   fi
@@ -833,39 +920,6 @@ install_maven() {
 }
 
 # src/lib/install_vineyard.sh
-install_grape() {
-  workdir=$1
-  install_prefix=$2
-  jobs=${3:-4} # $3:default=4
-
-  if [[ -f "${install_prefix}/include/grape/grape.h" ]]; then
-    log "libgrape-lite already installed, skip."
-    return 0
-  fi
-  directory="libgrape-lite"
-  branch="master"
-  file="${directory}-${branch}.tar.gz"
-  url="https://github.com/alibaba/libgrape-lite.git"
-  url=$(maybe_set_to_cn_url ${url})
-  log "Building and installing ${directory}."
-  pushd "${workdir}" || exit
-  if [[ ${url} == *.git ]]; then
-    clone_if_not_exists ${directory} ${file} "${url}" ${branch}
-  else
-    download_tar_and_untar_if_not_exists ${directory} ${file} "${url}"
-  fi
-  pushd ${directory} || exit
-
-  cmake . -DCMAKE_INSTALL_PREFIX="${install_prefix}" \
-          -DCMAKE_PREFIX_PATH="${install_prefix}"
-  make -j${jobs}
-  make install
-  strip "${install_prefix}/bin/run_app"
-  popd || exit
-  popd || exit
-  cleanup_files "${workdir}/${directory}" "${workdir}/${file}"
-}
-
 install_vineyard() {
   workdir=$1
   install_prefix=$2
@@ -877,6 +931,9 @@ install_vineyard() {
     log "vineyard already installed, skip."
     return 0
   fi
+
+  auditwheel_path=$(python3 -c "import auditwheel; print(auditwheel.__path__[0] + '/main_repair.py')")
+  sed -i 's/p.error/logger.warning/g' ${auditwheel_path}
 
   log "Building and installing v6d."
   pushd "${workdir}" || exit
@@ -904,14 +961,19 @@ install_vineyard() {
         -DCMAKE_INSTALL_PREFIX="${V6D_PREFIX}" \
         -DBUILD_VINEYARD_TESTS=OFF \
         -DBUILD_SHARED_LIBS=ON \
-        -DBUILD_VINEYARD_PYTHON_BINDINGS=ON
+        -DBUILD_VINEYARD_PYTHON_BINDINGS=ON  \
+        -DBUILD_VINEYARD_GRAPH_WITH_GAR=ON
   make -j"${jobs}"
   make install
   strip "${V6D_PREFIX}"/bin/vineyard* "${V6D_PREFIX}"/lib/libvineyard*
   python3 setup.py bdist_wheel
+  # This is output fixed wheels to wheelhouse/
+  auditwheel repair dist/*
+  rm -rf dist/*
   python3 setup_bdist.py bdist_wheel
   python3 setup_io.py bdist_wheel
-  pip3 install --no-cache dist/* --user
+  mv dist/*.whl wheelhouse/
+  pip3 install --no-cache wheelhouse/* --user
   cp -rs "${V6D_PREFIX}"/* "${install_prefix}"/
   popd || exit
   popd || exit
@@ -1007,25 +1069,146 @@ function maybe_set_to_cn_url {
 
 # :command.command_functions
 # :command.function
-gs_build_command() {
-  # src/build_command.sh
-  echo "# this file is located in 'src/build_command.sh'"
-  echo "# code for 'gs build' goes here"
+gs_make_command() {
+  # src/make_command.sh
+  echo "# this file is located in 'src/make_command.sh'"
+  echo "# code for 'gs make' goes here"
   echo "# you can edit it freely and regenerate (it will not be overwritten)"
   inspect_args
 
+  component=${args[component]}
+
+  log "Making component ${component}"
+
+  install_prefix=${args[--install-prefix]}
+
+  export INSTALL_PREFIX=${install_prefix}
+
+  make_all() {
+      make all
+  }
+
+  make_install() {
+      make install
+  }
+
+  make_analytical() {
+      make analytical
+  }
+
+  make_interactive() {
+      make interactive
+  }
+
+  make_learning() {
+      make learning
+  }
+
+  make_analytical-install() {
+      make analytical-install INSTALL_PREFIX=${install_prefix}
+  }
+
+  make_interactive-install() {
+      make interactive-install INSTALL_PREFIX=${install_prefix}
+  }
+
+  make_learning-install() {
+      make learning-install INSTALL_PREFIX=${install_prefix}
+  }
+
+  make_client() {
+      make client
+  }
+
+  make_coordinator() {
+      make coordinator
+  }
+
+  make_analytical-java() {
+      make analytical-java
+  }
+
+  make_analytical-java-install() {
+      make analytical-java-install INSTALL_PREFIX=${install_prefix}
+  }
+
+  make_clean() {
+      make clean
+  }
+
+  make_${component}
 }
 
 # :command.function
-gs_build_image_command() {
-  # src/build_image_command.sh
-  echo "# this file is located in 'src/build_image_command.sh'"
-  echo "# code for 'gs build-image' goes here"
+gs_make_image_command() {
+  # src/make_image_command.sh
+  echo "# this file is located in 'src/make_image_command.sh'"
+  echo "# code for 'gs make-image' goes here"
   echo "# you can edit it freely and regenerate (it will not be overwritten)"
   inspect_args
-  image_name=${args[image]}
 
-  log "image to be built: ${image_name}"
+  #     allowed: [all, graphscope-dev, coordinator, analytical, analytical-java, interactive, interactive-frontend, interactive-executor, learning, vineyard-dev, vineyard-runtime]
+
+  component=${args[component]}
+
+  log "Making image ${component}"
+
+  registry=${args[--registry]}
+  tag=${args[--tag]}
+
+  export INSTALL_PREFIX=${install_prefix}
+
+  make_all() {
+      cd k8s
+      make all
+  }
+
+  make_graphscope-dev() {
+      cd k8s
+      make graphscope-dev REGISTRY=${registry} VERSION=${tag}
+  }
+
+  make_analytical() {
+      cd k8s
+      make analytical REGISTRY=${registry} VERSION=${tag}
+  }
+
+  make_interactive() {
+      cd k8s
+      make interactive REGISTRY=${registry} VERSION=${tag}
+  }
+
+  make_interactive-frontend() {
+      cd k8s
+      make interactive-frontend REGISTRY=${registry} VERSION=${tag}
+  }
+
+  make_interactive-executor() {
+      cd k8s
+      make interactive-executor REGISTRY=${registry} VERSION=${tag}
+  }
+
+  make_learning() {
+      cd k8s
+      make learning REGISTRY=${registry} VERSION=${tag}
+  }
+
+  make_coordinator() {
+      cd k8s
+      make coordinator REGISTRY=${registry} VERSION=${tag}
+  }
+
+  make_vineyard-dev() {
+      cd k8s
+      make vineyard-dev REGISTRY=${registry} VERSION=${tag}
+  }
+
+  make_vineyard-runtime() {
+      cd k8s
+      make vineyard-runtime REGISTRY=${registry} VERSION=${tag}
+  }
+
+  make_${component}
 }
 
 # :command.function
@@ -1057,6 +1240,110 @@ gs_test_command() {
   echo "# code for 'gs test' goes here"
   echo "# you can edit it freely and regenerate (it will not be overwritten)"
   inspect_args
+
+  testdata=${args[--testdata]}
+  on_local=${args[--local]}
+  on_k8s=${args[--k8s]}
+  nx=${args[--nx]}
+  export GS_TEST_DIR=${testdata}
+
+  # analytical, analytical-java, interactive, learning, local-e2e, k8s-e2e, groot
+
+  type=${args[type]}
+
+  GS_SOURCE_DIR="$(dirname -- "$(readlink -f "${BASH_SOURCE}")")"
+  # GS_SOURCE_DIR=${GRAPHSCOPE_HOME}
+
+  # if [ "${GRAPHSCOPE_ENV:-dev}" == "dev" ]; then
+  #     log "Setting the environment for development.\n"
+  #     warning "GRAPHSCOPE_HOME will set to source root (${bash_source_dir}) for development."
+  #     warning "To use you assigned GRAPHSCOPE_HOME, export GRAPHSCOPE_ENV=prod.\n"
+  #     export GRAPHSCOPE_HOME="${bash_source_dir}"
+  # elif [ "${GRAPHSCOPE_ENV:-dev}" == "prod" ]; then
+  #     log "Setting the environment for production"
+  # else
+  #     err "Invalid GRAPHSCOPE_ENV. (should be dev or prod)"
+  #     exit 1
+  # fi
+
+  log "graphscope home is ${GRAPHSCOPE_HOME}"
+
+  function get_test_data {
+    if [[ ! -d ${GS_TEST_DIR} ]]; then
+      log "Downloading test data to ${testdata}"
+      git clone -b master --single-branch --depth=1 https://github.com/graphscope/gstest.git "${GS_TEST_DIR}"
+    fi
+  }
+
+  function test_analytical {
+    get_test_data
+    "${GS_SOURCE_DIR}"/analytical_engine/test/app_tests.sh --test_dir "${GS_TEST_DIR}"
+  }
+
+  function test_analytical-java {
+    get_test_data
+
+    pushd "${GS_SOURCE_DIR}"/analytical_engine/java || exit
+    mvn test -Dmaven.antrun.skip=true --quiet
+    popd || exit
+
+    version=$(cat "${GS_SOURCE_DIR}"/VERSION)
+    export RUN_JAVA_TESTS=ON
+    export USER_JAR_PATH="${GS_SOURCE_DIR}"/analytical_engine/java/grape-demo/target/grape-demo-${version}-shaded.jar
+    # for giraph test
+    export GIRAPH_JAR_PATH="${GS_SOURCE_DIR}"/analytical_engine/java/grape-giraph/target/grape-giraph-${version}-shaded.jar
+
+    "${GS_SOURCE_DIR}"/analytical_engine/test/app_tests.sh --test_dir "${GS_TEST_DIR}"
+  }
+
+  function test_interactive {
+    get_test_data
+    if [[ -n ${on_local} ]]; then
+      # IR unit test
+      cd interactive_engine/compiler && make test
+      # CommonType Unit Test
+      cd "${GS_SOURCE_DIR}"/interactive_engine/executor/common/dyn_type && cargo test
+      # Store Unit test
+      cd "${GS_SOURCE_DIR}"/interactive_engine/executor/store/exp_store && cargo test
+
+      # IR integration test
+      cd "${GS_SOURCE_DIR}"/interactive_engine/compiler && ./ir_exprimental_ci.sh
+      # IR integration pattern test
+      cd "${GS_SOURCE_DIR}"/interactive_engine/compiler && ./ir_exprimental_pattern_ci.sh
+    else
+      export PYTHONPATH="${GS_SOURCE_DIR}"/python:${PYTHONPATH}
+      cd "${GS_SOURCE_DIR}"/interactive_engine && mvn clean install --quiet -DskipTests -Drust.compile.skip=true -P graphscope,graphscope-assembly
+      cd "${GS_SOURCE_DIR}"/interactive_engine/tests || exit
+      ./function_test.sh 8112 2
+    fi
+  }
+  function test_learning {
+    get_test_data
+    err "Not implemented"
+    exit 1
+  }
+
+  function test_local-e2e {
+    get_test_data
+    cd "${GS_SOURCE_DIR}"/python || exit
+
+    # unittest
+    python3 -m pytest -s -vvv --exitfirst graphscope/tests/minitest/test_min.py
+  }
+
+  function test_k8s-e2e {
+    get_test_data
+    cd "${GS_SOURCE_DIR}"/python || exit
+    python3 -m pytest -s -vvv --exitfirst ./graphscope/tests/kubernetes/test_demo_script.py
+  }
+
+  function test_for_groot {
+    get_test_data
+    cd "${GS_SOURCE_DIR}"/python || exit
+    python3 -m pytest --exitfirst -s -vvv ./graphscope/tests/kubernetes/test_store_service.py
+  }
+
+  test_"${type}"
 
 }
 
@@ -1119,7 +1406,7 @@ gs_install_deps_command() {
 
   BASIC_PACKAGES_LINUX=("file" "curl" "wget" "git" "sudo")
 
-  BASIC_PACKAGES_UBUNTU=("${BASIC_PACKAGES_LINUX[@]}" "build-essential" "cmake" "libunwind-dev" "python3-pip")
+  BASIC_PACKAGES_UBUNTU=("${BASIC_PACKAGES_LINUX[@]}" "build-essential" "cmake" "libunwind-dev" "python3-pip" "patchelf")
 
   BASIC_PACKAGES_CENTOS_8=("${BASIC_PACKAGES_LINUX[@]}" "epel-release" "libunwind-devel" "perl" "which")
   BASIC_PACKAGES_CENTOS_7=("${BASIC_PACKAGES_CENTOS_8[@]}" "centos-release-scl-rh")
@@ -1264,12 +1551,11 @@ gs_install_deps_command() {
 
   install_grape_vineyard_universal() {
     if [[ "${OS_PLATFORM}" == *"Darwin"* ]]; then
-      brew install libgrape-lite vineyard
+      brew install vineyard
     else
       log "Installing python packages for vineyard codegen."
       pip3 --no-cache-dir install pip -U --user
-      pip3 --no-cache-dir install libclang wheel --user
-      install_grape "${deps_prefix}" "${install_prefix}" "${jobs}"
+      pip3 --no-cache-dir install libclang wheel auditwheel --user
       install_vineyard "${deps_prefix}" "${install_prefix}" "${v6d_version}" "${jobs}"
     fi
   }
@@ -1372,7 +1658,7 @@ gs_install_deps_command() {
           echo "export LIBCLANG_PATH=/opt/rh/llvm-toolset-7.0/root/usr/lib64/"
         fi
         if [ -z "${JAVA_HOME}" ]; then
-          echo "export JAVA_HOME=/usr/lib/jvm/java"
+          echo "export JAVA_HOME=/usr/lib/jvm/jre-openjdk"
         fi
       } >>"${OUTPUT_ENV_FILE}"
     fi
@@ -1425,7 +1711,7 @@ gs_install_deps_command() {
     # install python..
     # TODO: refine
     pip3 --no-cache-dir install -U pip --user
-    pip3 --no-cache-dir install auditwheel==5.0.0 daemons etcd-distro gremlinpython \
+    pip3 --no-cache-dir install auditwheel daemons etcd-distro gremlinpython \
       hdfs3 fsspec oss2 s3fs ipython kubernetes libclang networkx==2.4 numpy pandas parsec pycryptodome \
       pyorc pytest scipy scikit_learn wheel --user
     pip3 --no-cache-dir install Cython --pre -U --user
@@ -1433,6 +1719,84 @@ gs_install_deps_command() {
 
   # run subcommand with the type
   install_deps_for_"${type}"
+
+}
+
+# :command.function
+gs_format_command() {
+  # src/format_command.sh
+  echo "# this file is located in 'src/format_command.sh'"
+  echo "# code for 'gs format' goes here"
+  echo "# you can edit it freely and regenerate (it will not be overwritten)"
+  inspect_args
+
+  GS_SOURCE_DIR="$(dirname -- "$(readlink -f "${BASH_SOURCE}")")"
+
+  function format_cpp {
+    if ! [ -x "$(command -v clang-format)" ]; then
+      echo 'Downloading clang-format.' >&2
+      curl -L https://github.com/muttleyxd/clang-tools-static-binaries/releases/download/master-22538c65/clang-format-8_linux-amd64 --output ${GRAPHSCOPE_HOME}/bin/clang-format
+      chmod +x ${GRAPHSCOPE_HOME}/clang-format
+    fi
+    pushd "${GS_SOURCE_DIR}"/analytical_engine || exit
+    files=$(find ./apps ./benchmarks ./core ./frame ./misc ./test \( -name "*.h" -o -name "*.cc" \))
+
+    # run format
+    clang-format -i --style=file $(echo $files)
+    popd || exit
+  }
+
+  function lint_cpp {
+    pushd "${GS_SOURCE_DIR}"/analytical_engine || exit
+    files=$(find ./apps ./benchmarks ./core ./frame ./misc ./test \( -name "*.h" -o -name "*.cc" \))
+
+    ./misc/cpplint.py $(echo $files)
+    popd || exit
+  }
+
+  function format_java {
+    jarfile=google-java-format-1.13.0-all-deps.jar
+    if [[ ! -f ${jarfile} ]]; then
+      wget https://github.com/google/google-java-format/releases/download/v1.13.0/${jarfile}
+    fi
+    # run formatter in-place
+    java -jar ${jarfile} --aosp --skip-javadoc-formatting -i $(git ls-files *.java)
+
+  }
+
+  function format_python {
+    if ! [ -x "$(command -v black)" ]; then
+      pip3 install -r ${GS_SOURCE_DIR}/coordinator/requirements-dev.txt --user
+    fi
+    pushd python || exit
+    python3 -m isort --check --diff .
+    python3 -m black --check --diff .
+    python3 -m flake8 .
+    popd || exit
+    pushd coordinator || exit
+    python3 -m isort --check --diff .
+    python3 -m black --check --diff .
+    python3 -m flake8 .
+    popd || exit
+  }
+
+  function format_rust {
+
+    cd "${GS_SOURCE_DIR}"/interactive_engine/executor/assembly/groot
+    cargo +nightly fmt -- --check
+    cd "${GS_SOURCE_DIR}"/interactive_engine/executor/assembly/v6d
+    cargo +nightly fmt -- --check
+    cd "${GS_SOURCE_DIR}"/interactive_engine/executor/common/dyn_type/
+    cargo +nightly fmt -- --check
+    cd "${GS_SOURCE_DIR}"/interactive_engine/executor/engine/pegasus/
+    cargo +nightly fmt -- --check
+    cd "${GS_SOURCE_DIR}"/interactive_engine/executor/ir/
+    cargo +nightly fmt -- --check
+    cd "${GS_SOURCE_DIR}"/interactive_engine/executor/store/
+    cargo +nightly fmt -- --check
+  }
+
+  format_"${lang}"
 
 }
 
@@ -1474,17 +1838,17 @@ parse_requirements() {
   case $action in
     -*) ;;
 
-    build | b)
-      action="build"
+    make)
+      action="make"
       shift
-      gs_build_parse_requirements "$@"
+      gs_make_parse_requirements "$@"
       shift $#
       ;;
 
-    build-image | bi)
-      action="build-image"
+    make-image | mi)
+      action="make-image"
       shift
-      gs_build_image_parse_requirements "$@"
+      gs_make_image_parse_requirements "$@"
       shift $#
       ;;
 
@@ -1506,6 +1870,13 @@ parse_requirements() {
       action="install-deps"
       shift
       gs_install_deps_parse_requirements "$@"
+      shift $#
+      ;;
+
+    format)
+      action="format"
+      shift
+      gs_format_parse_requirements "$@"
       shift $#
       ;;
 
@@ -1546,13 +1917,13 @@ parse_requirements() {
 }
 
 # :command.parse_requirements
-gs_build_parse_requirements() {
+gs_make_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
     case "${1:-}" in
       --help | -h)
         long_usage=yes
-        gs_build_usage
+        gs_make_usage
         exit
         ;;
 
@@ -1564,12 +1935,26 @@ gs_build_parse_requirements() {
   done
 
   # :command.command_filter
-  action="build"
+  action="make"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --install-prefix)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--install-prefix']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--install-prefix requires an argument: --install-prefix PREFIX" >&2
+          exit 1
+        fi
+        ;;
 
       -?*)
         printf "invalid option: %s\n" "$key" >&2
@@ -1593,22 +1978,26 @@ gs_build_parse_requirements() {
     esac
   done
 
+  # :command.default_assignments
+  [[ -n ${args['component']:-} ]] || args['component']="all"
+  [[ -n ${args['--install-prefix']:-} ]] || args['--install-prefix']="/opt/graphscope"
+
   # :command.whitelist_filter
-  if [[ ! ${args['component']} =~ ^(all|analytical|interactive|learning|client|coordinator)$ ]]; then
-    printf "%s\n" "component must be one of: all, analytical, interactive, learning, client, coordinator" >&2
+  if [[ ! ${args['component']} =~ ^(all|install|analytical|analytical-java|interactive|learning|analytical-install|analytical-java-install|interactive-install|learning-install|client|coordinator|clean)$ ]]; then
+    printf "%s\n" "component must be one of: all, install, analytical, analytical-java, interactive, learning, analytical-install, analytical-java-install, interactive-install, learning-install, client, coordinator, clean" >&2
     exit 1
   fi
 
 }
 
 # :command.parse_requirements
-gs_build_image_parse_requirements() {
+gs_make_image_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
     case "${1:-}" in
       --help | -h)
         long_usage=yes
-        gs_build_image_usage
+        gs_make_image_usage
         exit
         ;;
 
@@ -1626,12 +2015,42 @@ gs_build_image_parse_requirements() {
   fi
 
   # :command.command_filter
-  action="build-image"
+  action="make-image"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --registry)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--registry']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--registry requires an argument: --registry REGISTRY" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --tag)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--tag']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--tag requires an argument: --tag TAG" >&2
+          exit 1
+        fi
+        ;;
+
       # :flag.case
       --cn)
 
@@ -1671,13 +2090,17 @@ gs_build_image_parse_requirements() {
 
   # :command.required_args_filter
   if [[ -z ${args['image']+x} ]]; then
-    printf "missing required argument: IMAGE\nusage: gs build-image IMAGE [OPTIONS]\n" >&2
+    printf "missing required argument: IMAGE\nusage: gs make-image IMAGE [OPTIONS]\n" >&2
     exit 1
   fi
 
+  # :command.default_assignments
+  [[ -n ${args['--registry']:-} ]] || args['--registry']="docker.io"
+  [[ -n ${args['--tag']:-} ]] || args['--tag']="latest"
+
   # :command.whitelist_filter
-  if [[ ! ${args['image']} =~ ^(all|graphscope-dev-base|graphscope-dev|coordinator|analytical|analytical-java|interactive|interactive-frontend|interactive-executor|learning|vineyard-dev|vineyard-runtime)$ ]]; then
-    printf "%s\n" "image must be one of: all, graphscope-dev-base, graphscope-dev, coordinator, analytical, analytical-java, interactive, interactive-frontend, interactive-executor, learning, vineyard-dev, vineyard-runtime" >&2
+  if [[ ! ${args['image']} =~ ^(all|graphscope-dev|coordinator|analytical|analytical-java|interactive|interactive-frontend|interactive-executor|learning|vineyard-dev|vineyard-runtime)$ ]]; then
+    printf "%s\n" "image must be one of: all, graphscope-dev, coordinator, analytical, analytical-java, interactive, interactive-frontend, interactive-executor, learning, vineyard-dev, vineyard-runtime" >&2
     exit 1
   fi
 
@@ -1704,7 +2127,6 @@ gs_dev_parse_requirements() {
   # :command.dependencies_filter
   if ! command -v docker >/dev/null 2>&1; then
     printf "missing dependency: docker\n" >&2
-    printf "%s\n" "see https://docker.com for installation instructions" >&2
     exit 1
   fi
 
@@ -1774,11 +2196,42 @@ gs_test_parse_requirements() {
     key="$1"
     case "$key" in
       # :flag.case
-      --analytical | -a)
+      --local)
 
         # :flag.case_no_arg
-        args['--analytical']=1
+        args['--local']=1
         shift
+        ;;
+
+      # :flag.case
+      --k8s)
+
+        # :flag.case_no_arg
+        args['--k8s']=1
+        shift
+        ;;
+
+      # :flag.case
+      --nx)
+
+        # :flag.case_no_arg
+        args['--nx']=1
+        shift
+        ;;
+
+      # :flag.case
+      --testdata)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--testdata']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--testdata requires an argument: --testdata DIRECTORY" >&2
+          exit 1
+        fi
         ;;
 
       -?*)
@@ -1789,13 +2242,28 @@ gs_test_parse_requirements() {
       *)
         # :command.parse_requirements_case
         # :command.parse_requirements_case_simple
-        printf "invalid argument: %s\n" "$key" >&2
-        exit 1
+        if [[ -z ${args['type']+x} ]]; then
+
+          args['type']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
 
         ;;
 
     esac
   done
+
+  # :command.default_assignments
+  [[ -n ${args['--testdata']:-} ]] || args['--testdata']="/tmp/gstest"
+
+  # :command.whitelist_filter
+  if [[ ! ${args['type']} =~ ^(analytical|analytical-java|interactive|learning|local-e2e|k8s-e2e|groot)$ ]]; then
+    printf "%s\n" "type must be one of: analytical, analytical-java, interactive, learning, local-e2e, k8s-e2e, groot" >&2
+    exit 1
+  fi
 
 }
 
@@ -1949,6 +2417,68 @@ gs_install_deps_parse_requirements() {
 
 }
 
+# :command.parse_requirements
+gs_format_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        gs_format_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="format"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        if [[ -z ${args['lang']+x} ]]; then
+
+          args['lang']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['lang']+x} ]]; then
+    printf "missing required argument: LANG\nusage: gs format LANG\n" >&2
+    exit 1
+  fi
+
+  # :command.whitelist_filter
+  if [[ ! ${args['lang']} =~ ^(cpp|java|python|rust)$ ]]; then
+    printf "%s\n" "lang must be one of: cpp, java, python, rust" >&2
+    exit 1
+  fi
+
+}
+
 # :command.initialize
 initialize() {
   version="0.1.0"
@@ -1986,21 +2516,21 @@ run() {
   parse_requirements "${input[@]}"
 
   case "$action" in
-    "build")
+    "make")
       if [[ ${args['--help']:-} ]]; then
         long_usage=yes
-        gs_build_usage
+        gs_make_usage
       else
-        gs_build_command
+        gs_make_command
       fi
       ;;
 
-    "build-image")
+    "make-image")
       if [[ ${args['--help']:-} ]]; then
         long_usage=yes
-        gs_build_image_usage
+        gs_make_image_usage
       else
-        gs_build_image_command
+        gs_make_image_command
       fi
       ;;
 
@@ -2028,6 +2558,15 @@ run() {
         gs_install_deps_usage
       else
         gs_install_deps_command
+      fi
+      ;;
+
+    "format")
+      if [[ ${args['--help']:-} ]]; then
+        long_usage=yes
+        gs_format_usage
+      else
+        gs_format_command
       fi
       ;;
 

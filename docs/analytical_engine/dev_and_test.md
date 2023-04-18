@@ -27,38 +27,10 @@ You may found the built artifacts in `analytical_engine/build/grape_engine`.
 
 Together with the `grape_engine` are shared libraries, or there may have a bunch of test binaries if you choose to build the tests.
 
-There are several build options that could be leveraged to control which part of the analytical engiens to be built.
-
-We give description for the most commonly used options:
-
-- Giraph/GraphX application compatiblity
-
-    if you need to build the analytical engine with Java support, e.g., if you need to run Giraph/GraphX apps on your built engine, or need to write your own applicalitions in Java, you may want to build the engine with a option `ENABLE_JAVA_SDK`.
-
-    ```bash
-    ./gs make analytcial -DENABLE_JAVA_SDK=ON
-    ```
-
-- Networkx compatiblity
-
-    GraphScope has implemented a bunch of networkx-compatible algorithms for users to seamlessly migrate from networkx, while gain the performance optmizations and the ability to process large-scale graphs.
-
-    ```bash
-    ./gs make analytcial -DNETWORKX=ON
-    ```
-
-- Tests
-
-    Build tests if you want to develop and run tests of the analytical engine.
-
-    ```bash
-    ./gs make analytcial -DBUILD_TESTS=ON
-    ```
-
-You could also pass several options all at once, for example:
+You could install it to a location by
 
 ```bash
-./gs make analytcial -DENABLE_JAVA_SDK=ON -DNETWORKX=ON -DBUILD_TESTS=ON
+./gs make analytcial-install --install-prefix /usr/local
 ```
 
 ````{note}
