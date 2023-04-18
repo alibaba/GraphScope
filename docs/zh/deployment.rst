@@ -111,7 +111,7 @@ Coordinator 作为 GraphScope 后端服务的入口，通过 grpc 接收来自 P
 * 安装 GraphScope 开发相关依赖
 .. code:: shell
 
-    ./gs install_deps dev
+    ./gs install-deps dev
 
 * 本地部署 GraphScope
 .. code:: shell
