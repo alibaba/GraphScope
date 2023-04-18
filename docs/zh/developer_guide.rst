@@ -106,7 +106,7 @@ macOS
 .. code:: bash
 
     cd GraphScope/k8s/internal
-    ./gs install_deps dev
+    ./gs install-deps dev
     source ~/.graphscope_env
 
 - 构建 GraphScope Server Wheels
