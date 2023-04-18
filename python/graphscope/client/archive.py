@@ -71,9 +71,15 @@ class OutArchive(object):
         """Peek a string.
         Get string's length first (stored as a size_t), then get number of bytes
         equivalents to the length.
+        Default using utf-8 to decode, if there is any bytes cannot be converted,
+        'errors="backslashreplace' inserts a escape sequence.So these special
+        bytes can be reserved.
+        Ref:https://docs.python.org/3/howto/unicode.html?highlight=bytes%20decode
         """
         size = self.get_size()
-        string = self.get_block(size).tobytes().decode("utf-8", errors="ignore")
+        string = (
+            self.get_block(size).tobytes().decode("utf-8", errors="backslashreplace")
+        )
         return string
 
     def get_int(self):
