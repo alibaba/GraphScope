@@ -35,16 +35,17 @@ With `gs` command-line utility, you can build all targets for GraphScope with a 
 Run a bunch of test cases that involves 3 engines
 
 ````{note}
+TODO(siyuan): Make sure this works
 `gs` could let you easily switch from production mode and development mode, where
 
 - production mode means you have installed graphscope to somewhere and you want to use the executable located at there.
 - development mode means you want to find your executables in local directory
 
-For example, execute `export GRAPHSCOPE_HOME=/opt/graphscope` to set working directory to `/opt/graphscope`, and execute `export GRAPHSCOPE_HOME=/path/to/local/gs` will set working directory to your local GraphScope repository.
+For example, execute `export GRAPHSCOPE_ENV=prod` to set working directory to `/opt/graphscope` (the default GRAPHSCOPE_HOME location), and execute `export GRAPHSCOPE_ENV=dev` will set working directory to your local GraphScope repository.
 ````
 
 ```bash
-export GRAPHSCOPE_HOME=/opt/graphscope
+export GRAPHSCOPE_ENV=prod
 ./gs test local-e2e
 ```
 
@@ -90,7 +91,5 @@ The tests would launch a couple of pods on your cluster, so you need to set appr
 Take our previous built image for example, which has an empty registry (or you could say it's `docker.io` by default), and tagged `latest`
 
 ```bash
-export GS_REGISTRY=""
-export GS_TAG="latest"
-./gs test k8s-e2e
+./gs test k8s-e2e --registry="" --tag="latest"
 ```
