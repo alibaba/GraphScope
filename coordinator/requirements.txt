@@ -1,5 +1,5 @@
 etcd-distro>=3.5.1
-graphscope-client>=0.19.0
+graphscope-client>=0.20.0
 grpcio;python_version>="3.11"
 grpcio<=1.43.0,>=1.40.0;python_version<"3.11"
 grpcio-tools;python_version>="3.11"
