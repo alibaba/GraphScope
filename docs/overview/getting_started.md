@@ -5,9 +5,35 @@ To begin, we will install GraphScope on your local machine using Python.
 Although most examples in this guide are based on local Python installation, 
 it also works on a Kubernetes cluster.
 
+You can easily install GraphScope through pip:
+
 ```bash
-pip3 install graphscope
+python3 -m pip install graphscope -U
 ```
+
+````{note}
+We recommend you to install GraphScope in a clean Python virtual environment with Python 3.9 with [miniconda](https://docs.conda.io/en/latest/miniconda.html) or [venv](https://docs.python.org/3.9/tutorial/venv.html).
+
+Take `venv` for an example, there's a step by step instruction to create a virtual environment, activate the environment and install GraphScope:
+
+```bash
+# Create a new virtual environment
+python3.9 -m venv tutorial-env
+
+# Activate the virtual environment
+source tutorial-env/bin/activate
+
+# Install GraphScope
+python3.9 -m pip install graphscope
+
+# Use Graphscope
+python3.9
+>>> import graphscope as gs
+>>> ......
+```
+
+````
+
 
 ## One-stop Graph Processing
 

@@ -8,7 +8,7 @@ GIE works as the core component of GraphScope. Therefore, you should install Gra
 
 GraphScope provides python interface which requires:
 
-- Python3.7 ~ 3.9
+- Python3.7 ~ 3.11
 - gcc 7.1+ or Apple Clang
 
 And it is tested on the following 64-bit operating systems:
