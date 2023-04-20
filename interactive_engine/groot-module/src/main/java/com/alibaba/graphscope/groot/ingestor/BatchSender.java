@@ -149,7 +149,11 @@ public class BatchSender implements MetricsAgent {
                 (storeId, batchBuilder) -> {
                     while (!shouldStop) {
                         try {
-                            storeSendBuffer.get(storeId).put(batchBuilder.build());
+                            BlockingQueue<StoreDataBatch> curBuffer = storeSendBuffer.get(storeId);
+                            if (curBuffer.remainingCapacity() == 0) {
+                                logger.warn("Buffer of store [" + storeId + "] is full");
+                            }
+                            curBuffer.put(batchBuilder.build());
                             break;
                         } catch (InterruptedException e) {
                             logger.warn("send buffer interrupted", e);
