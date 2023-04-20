@@ -1,0 +1,67 @@
+
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/javascript-node
+{
+	"name": "GraphScope",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"image": "registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:latest",
+
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	// "features": {},
+
+	// Configure tool-specific properties.
+	"customizations": {
+		// Configure properties specific to VS Code.
+		"vscode": {
+			"settings": {
+				"terminal.integrated.defaultProfile.linux": "bash", 
+				"terminal.integrated.profiles.linux": { 
+					"bash": { 
+						"path": "bash" 
+						} 
+					}
+			},
+			"extensions": [
+				"streetsidesoftware.code-spell-checker"
+			]
+		}
+	},
+
+	// Set `remoteUser` to `root` to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
+	"remoteUser": "graphscope"
+
+	// Uncomment this to enable debug C++ and Rust in containers
+	// "capAdd": ["SYS_PTRACE"],
+	// "securityOpt": ["seccomp=unconfined"],
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [3000],
+
+	// Use 'portsAttributes' to set default properties for specific forwarded ports. 
+	// More info: https://containers.dev/implementors/json_reference/#port-attributes
+	// "portsAttributes": {
+	// 	"9000": {
+	// 		"label": "Hello Remote World",
+	// 		"onAutoForward": "notify"
+	// 	}
+	// },
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	// "postCreateCommand": "yarn install"
+
+	// Improve performance
+	
+	// Uncomment these to mount your folder into the workspace
+	// https://code.visualstudio.com/remote/advancedcontainers/improve-performance#_use-a-targeted-named-volume
+	// "mounts": [
+    // 	"source=${localWorkspaceFolderBasename}-node_modules,target=${containerWorkspaceFolder}/node_modules,type=volume"
+	// ],
+	// "postCreateCommand": "sudo chown graphscope node_modules"
+
+
+	// Uncomment these to use a named volume for your entire source tree
+	// https://code.visualstudio.com/remote/advancedcontainers/improve-performance#_use-a-named-volume-for-your-entire-source-tree
+	// "workspaceMount": "source=gs,target=/workspace,type=volume",
+	// "workspaceFolder": "/workspace"
+	// "postCreateCommand": "sudo chown -R graphscope:graphscope /workspace"
+}
