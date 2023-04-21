@@ -40,7 +40,7 @@ deployment and management of applications. To deploy GIE standalone using Helm, 
    ```
 - Prepare graph data
    ```
-   cp -r gie-standalone/data/ /tmp/data
+   cp -r gie-standalone/data /tmp/
    ```
    Check whether the raw data is there:
    ```
@@ -231,6 +231,6 @@ We've listed useful configuration keys in the following:
 
 - gremlinPort: the port for accessing the Gremlin service (Default: 8182).
 - pegasusWorkerNum: the number of working threads per each executor (Default: 2).
-  Obviously, the total number of working threads is: 'executor.replicaCount x pegasusWorkerNum' .
-- pegasusTimeout: The maximum dueration in `ms` you allow each query to run (Default: 24,000).
+  Obviously, the total number of working threads is: 'executor.replicaCount x pegasusWorkerNum'.
+- pegasusTimeout: The maximum duration in `ms` you allow each query to run (Default: 24,000).
 
