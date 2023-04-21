@@ -52,11 +52,6 @@ jobs:
     - name: Build GraphScope
       run: |
         source ${HOME}/.graphscope_env
-        # Known bug of building wheels with python3.11,
-        # Caused by aiohttp <= 3.8.1, whereas gremlinpython 3.6.2 requires
-        # aiohttp <= 3.8.1. They have loosen the restrict in main, but still
-        # needs to wait for them releasing a newer version
-        # https://github.com/aio-libs/aiohttp/issues/6600
         make install INSTALL_PREFIX=/opt/graphscope
 
     - name: Run Python Test

@@ -31,25 +31,25 @@ spec:
     metadata:
       labels: {{- include "common.labels.standard" . | nindent 8 }}
         app.kubernetes.io/component: ingestor
-        {{- if .Values.podLabels }}
-        {{- include "common.tplvalues.render" (dict "value" .Values.podLabels "context" $) | nindent 8 }}
+        {{- if .Values.ingestor.podLabels }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.ingestor.podLabels "context" $) | nindent 8 }}
         {{- end }}
       annotations:
         {{- if (include "graphscope-store.createConfigmap" .) }}
         checksum/configuration: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
         {{- end }}
-        {{- if .Values.podAnnotations }}
-        {{- include "common.tplvalues.render" (dict "value" .Values.podAnnotations "context" $) | nindent 8 }}
+        {{- if .Values.ingestor.podAnnotations }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.ingestor.podAnnotations "context" $) | nindent 8 }}
         {{- end }}
     spec:
       {{- include "graphscope-store.imagePullSecrets" . | nindent 6 }}
-      {{- if .Values.hostAliases }}
-      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.hostAliases "context" $) | nindent 8 }}
+      {{- if .Values.ingestor.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.ingestor.hostAliases "context" $) | nindent 8 }}
       {{- end }}
-      hostNetwork: {{ .Values.hostNetwork }}
-      hostIPC: {{ .Values.hostIPC }}
-      {{- if .Values.schedulerName }}
-      schedulerName: {{ .Values.schedulerName | quote }}
+      hostNetwork: {{ .Values.ingestor.hostNetwork }}
+      hostIPC: {{ .Values.ingestor.hostIPC }}
+      {{- if .Values.ingestor.schedulerName }}
+      schedulerName: {{ .Values.ingestor.schedulerName | quote }}
       {{- end }}
       {{- if .Values.affinity }}
       affinity: {{- include "common.tplvalues.render" (dict "value" .Values.affinity "context" $) | nindent 8 }}

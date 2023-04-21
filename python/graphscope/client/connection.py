@@ -20,6 +20,7 @@
 """
 
 import base64
+import json
 
 import grpc
 from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
@@ -94,7 +95,8 @@ class Connection:
     def __init__(self, addr, gremlin_endpoint, username="", password="") -> None:
         self._addr = addr
         self._gremlin_endpoint = gremlin_endpoint
-        channel = grpc.insecure_channel(addr)
+        options = self._get_channel_options()
+        channel = grpc.insecure_channel(addr, options=options)
         self._ddl_service_stub = ddl_service_pb2_grpc.ClientDdlStub(channel)
         self._write_service_stub = write_service_pb2_grpc.ClientWriteStub(channel)
         self._client_id = None
@@ -103,6 +105,27 @@ class Connection:
         self._conn = DriverRemoteConnection(
             graph_url, "g", username=username, password=password
         )
+
+    def _get_channel_options(self):
+        json_config = json.dumps(
+            {
+                "methodConfig": [
+                    {
+                        "name": [{"service": "gs.rpc.ddl_service.v1.ClientDdl"}],
+                        "retryPolicy": {
+                            "maxAttempts": 5,
+                            "initialBackoff": "0.1s",
+                            "maxBackoff": "10s",
+                            "backoffMultiplier": 2,
+                            "retryableStatusCodes": ["UNAVAILABLE"],
+                        },
+                    }
+                ]
+            }
+        )
+
+        options = [("grpc.service_config", json_config)]
+        return options
 
     def __del__(self):
         self.close()

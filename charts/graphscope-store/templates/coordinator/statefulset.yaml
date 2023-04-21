@@ -31,25 +31,25 @@ spec:
     metadata:
       labels: {{- include "common.labels.standard" . | nindent 8 }}
         app.kubernetes.io/component: coordinator
-        {{- if .Values.podLabels }}
-        {{- include "common.tplvalues.render" (dict "value" .Values.podLabels "context" $) | nindent 8 }}
+        {{- if .Values.coordinator.podLabels }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.coordinator.podLabels "context" $) | nindent 8 }}
         {{- end }}
       annotations:
         {{- if (include "graphscope-store.createConfigmap" .) }}
         checksum/configuration: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
         {{- end }}
-        {{- if .Values.podAnnotations }}
-        {{- include "common.tplvalues.render" (dict "value" .Values.podAnnotations "context" $) | nindent 8 }}
+        {{- if .Values.coordinator.podAnnotations }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.coordinator.podAnnotations "context" $) | nindent 8 }}
         {{- end }}
     spec:
       {{- include "graphscope-store.imagePullSecrets" . | nindent 6 }}
-      {{- if .Values.hostAliases }}
-      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.hostAliases "context" $) | nindent 8 }}
+      {{- if .Values.coordinator.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.coordinator.hostAliases "context" $) | nindent 8 }}
       {{- end }}
-      hostNetwork: {{ .Values.hostNetwork }}
-      hostIPC: {{ .Values.hostIPC }}
-      {{- if .Values.schedulerName }}
-      schedulerName: {{ .Values.schedulerName | quote }}
+      hostNetwork: {{ .Values.coordinator.hostNetwork }}
+      hostIPC: {{ .Values.coordinator.hostIPC }}
+      {{- if .Values.coordinator.schedulerName }}
+      schedulerName: {{ .Values.coordinator.schedulerName | quote }}
       {{- end }}
       {{- if .Values.affinity }}
       affinity: {{- include "common.tplvalues.render" (dict "value" .Values.affinity "context" $) | nindent 8 }}
