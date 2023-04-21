@@ -2,7 +2,7 @@
 
 
 
-Real-life graph computation applications are often more complex than the examples we've seen so far, which highlights the need for a flexible and intelligent design for the graph processing system. In this section, we will introduce the modular design of GraphScope and how it addresses the diverse needs of graph computation workloads.
+Real-life graph computation applications are often more complex than the workloads we've seen so far, which highlights the need for a flexible and intelligent design for the graph processing system. In this section, we will introduce the modular design of GraphScope and how it addresses the diverse needs of graph computation workloads.
 
 
 ## Motivation
