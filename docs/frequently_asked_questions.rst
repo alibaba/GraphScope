@@ -1,7 +1,7 @@
 Frequently Asked Questions
 ==========================
 
-If you don't find an answer to your question here, feel free to file a `Issues`_ or post it to `Discussions`_.
+If you don't find an answer to your question here, feel free to file an `Issues`_ or post it to `Discussions`_.
 
 1. What are the minimum resources and system requirements required to run GraphScope?
 

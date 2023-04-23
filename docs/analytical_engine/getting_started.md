@@ -35,7 +35,7 @@ from graphscope.dataset.modern_graph import load_modern_graph
 gs.set_option(show_log=True)
 
 # load the modern graph as example.
-# TODO: refers to modern graph description.
+#(modern graph is an example property graph for Gremlin queries given by Apache at https://tinkerpop.apache.org/docs/current/tutorials/getting-started/)
 graph = load_modern_graph()
 
 # triggers label propagation algorithm(LPA)
