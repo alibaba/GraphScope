@@ -175,8 +175,11 @@ class LocalLauncher(AbstractLauncher):
 
     def create_interactive_instance(self, object_id: int, schema_path: str):
         # check java version
-        java_version = get_java_version()
-        logger.info("Java version: %s", java_version)
+        try:
+            java_version = get_java_version()
+            logger.info("Java version: %s", java_version)
+        except:  # noqa: E722
+            logger.exception("Cannot get version of java")
 
         env = os.environ.copy()
         env["GRAPHSCOPE_HOME"] = GRAPHSCOPE_HOME

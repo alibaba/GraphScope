@@ -178,6 +178,15 @@ class CoordinatorServiceServicer(
 
         self._operation_executor: OperationExecutor = None
 
+        self._session_id = self._generate_session_id()
+        self._launcher.set_session_workspace(self._session_id)
+
+        self._operation_executor = OperationExecutor(
+            self._session_id, self._launcher, self._object_manager
+        )
+        if not self._launcher.start():
+            raise RuntimeError("Coordinator launching instance failed.")
+
         # a lock that protects the coordinator
         self._lock = threading.RLock()
         atexit.register(self.cleanup)
@@ -233,19 +242,6 @@ class CoordinatorServiceServicer(
         # Session connected, fetch logs via gRPC.
         self._streaming_logs = True
         sys.stdout.drop(False)
-
-        if self._session_id is None:  # else reuse previous session.
-            self._session_id = self._generate_session_id()
-            self._launcher.set_session_workspace(self._session_id)
-
-            self._operation_executor = OperationExecutor(
-                self._session_id, self._launcher, self._object_manager
-            )
-            if not self._launcher.start():
-                # connect failed, more than one connection at the same time.
-                context.set_code(grpc.StatusCode.ABORTED)
-                context.set_details("Create GraphScope cluster failed")
-                return message_pb2.ConnectSessionResponse()
 
         return message_pb2.ConnectSessionResponse(
             session_id=self._session_id,
