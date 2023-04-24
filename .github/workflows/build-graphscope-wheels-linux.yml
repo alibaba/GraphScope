@@ -82,7 +82,6 @@ jobs:
         packages_dir: upload_pypi/
 
     - name: Publish distribution to PyPI
-      if: ${{ github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope' }}
       uses: pypa/gh-action-pypi-publish@v1.4.2
       with:
         user: __token__
@@ -163,7 +162,7 @@ jobs:
     strategy:
       matrix:
         # The protobuf version of tenorflow and grpcio is conflicts in python 3.11
-        python-version: ['3.8', '3.9', '3.10']
+        python-version: ['3.7', '3.8', '3.9', '3.10']
 
     steps:
     - uses: actions/download-artifact@v3

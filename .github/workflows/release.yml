@@ -112,7 +112,6 @@ jobs:
       id: tag
       run: echo "TAG=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
       
-
     - name: Upload Charts to OSS
       uses: tvrcgo/upload-to-oss@master
       with:
