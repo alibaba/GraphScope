@@ -63,6 +63,8 @@ wcc_result = graphscope.wcc(g)
 print(wcc_result.to_dataframe({'id': 'v.id', 'group': 'r'}))
 ```
 
+> **Tip:** If you encounter the error **Failed to project to simple graph as no vertex exists in this graph.**, it means that the graph is empty. You can import the loading method as `from graphscope.dataset import load_modern_graph` , then load the modern graph with current session, e.g. `g = load_modern_graph(sess, "path/to/your/graph")`, the "path/to/your/graph" is the path where the graph data is stored in the pod.
+
 The only difference is the elimination of extraneous resources, resulting in less complexity, fewer inconveniences, fewer resources required, and equivalent functionality.
 
 ## Uninstall deployment
