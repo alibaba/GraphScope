@@ -452,6 +452,7 @@ def compile_app(
         f"-DNETWORKX={engine_config['networkx']}",
         f"-DCMAKE_PREFIX_PATH='{GRAPHSCOPE_HOME};{OPAL_PREFIX}'",
     ]
+
     if types_pb2.CMAKE_EXTRA_OPTIONS in attr:
         extra_options = (
             attr[types_pb2.CMAKE_EXTRA_OPTIONS]
@@ -502,7 +503,7 @@ def compile_app(
             )
     elif app_type == "cpp_flash":
         cmake_commands += ["-DFLASH_APP=ON"]
-    elif app_type not in ("cpp_pie", "cpp_pregel"):
+    elif app_type not in ("cpp_pie", "cpp_pregel"):  # Cython
         if app_type == "cython_pregel":
             pxd_name = "pregel"
             cmake_commands += ["-DCYTHON_PREGEL_APP=ON"]
@@ -511,6 +512,13 @@ def compile_app(
         else:
             pxd_name = "pie"
             cmake_commands += ["-DCYTHON_PIE_APP=ON"]
+        if "Python_ROOT_DIR" in os.environ:
+            python3_path = os.path.join(os.environ["Python_ROOT_DIR"], "bin", "python3")
+        elif "CONDA_PREFIX" in os.environ:
+            python3_path = os.path.join(os.environ["CONDA_PREFIX"], "bin", "python3")
+        else:
+            python3_path = shutil.which("python3")
+        cmake_commands.append(f"-DPython3_EXECUTABLE={python3_path}")
 
         # Copy pxd file and generate cc file from pyx
         shutil.copyfile(
