@@ -4,7 +4,7 @@
 
 # :wrapper.bash3_bouncer
 if [[ "${BASH_VERSINFO:-0}" -lt 4 ]]; then
-  printf "bash version 4 or higher is required. If you are using macOS, please run `brew install bash && bash`.\n" >&2
+  printf "bash version 4 or higher is required. If you are using macOS, please run 'brew install bash && bash' to upgrade bash.\n" >&2
   exit 1
 fi
 
@@ -863,6 +863,33 @@ install_grpc() {
   cleanup_files "${workdir}/${directory}" "${workdir}/${file}"
 }
 
+install_patchelf() {
+  workdir=$1
+  install_prefix=$2
+
+  if [[ -f "${install_prefix}/bin/patchelf" ]]; then
+    log "patchelf already installed, skip."
+    return 0
+  fi
+
+  ARCH=$(uname -m)
+
+  directory="patchelf"  # patchelf doesn't have a folder
+  file="patchelf-0.14.5-${ARCH}.tar.gz"
+  url="https://github.com/NixOS/patchelf/releases/download/0.14.5"
+  url=$(maybe_set_to_cn_url ${url})
+  log "Building and installing ${directory}."
+  pushd "${workdir}" || exit
+  mkdir -p "${directory}"
+  pushd "${directory}" || exit
+  download_tar_and_untar_if_not_exists ${directory} ${file} "${url}"
+  mkdir -p ${install_prefix}/bin
+  mv bin/patchelf ${install_prefix}/bin/patchelf
+  popd || exit
+  popd || exit
+  cleanup_files "${workdir}/${directory}" "${workdir}/${file}"
+}
+
 install_cppkafka() {
   workdir=$1
   install_prefix=$2
@@ -968,7 +995,7 @@ install_vineyard() {
   strip "${V6D_PREFIX}"/bin/vineyard* "${V6D_PREFIX}"/lib/libvineyard*
   python3 setup.py bdist_wheel
   # This is output fixed wheels to wheelhouse/
-  auditwheel repair dist/*
+  python3 -m auditwheel repair dist/*
   rm -rf dist/*
   python3 setup_bdist.py bdist_wheel
   python3 setup_io.py bdist_wheel
@@ -1252,21 +1279,6 @@ gs_test_command() {
   type=${args[type]}
 
   GS_SOURCE_DIR="$(dirname -- "$(readlink -f "${BASH_SOURCE}")")"
-  # GS_SOURCE_DIR=${GRAPHSCOPE_HOME}
-
-  # if [ "${GRAPHSCOPE_ENV:-dev}" == "dev" ]; then
-  #     log "Setting the environment for development.\n"
-  #     warning "GRAPHSCOPE_HOME will set to source root (${bash_source_dir}) for development."
-  #     warning "To use you assigned GRAPHSCOPE_HOME, export GRAPHSCOPE_ENV=prod.\n"
-  #     export GRAPHSCOPE_HOME="${bash_source_dir}"
-  # elif [ "${GRAPHSCOPE_ENV:-dev}" == "prod" ]; then
-  #     log "Setting the environment for production"
-  # else
-  #     err "Invalid GRAPHSCOPE_ENV. (should be dev or prod)"
-  #     exit 1
-  # fi
-
-  log "graphscope home is ${GRAPHSCOPE_HOME}"
 
   function get_test_data {
     if [[ ! -d ${GS_TEST_DIR} ]]; then
@@ -1406,7 +1418,7 @@ gs_install_deps_command() {
 
   BASIC_PACKAGES_LINUX=("file" "curl" "wget" "git" "sudo")
 
-  BASIC_PACKAGES_UBUNTU=("${BASIC_PACKAGES_LINUX[@]}" "build-essential" "cmake" "libunwind-dev" "python3-pip" "patchelf")
+  BASIC_PACKAGES_UBUNTU=("${BASIC_PACKAGES_LINUX[@]}" "build-essential" "cmake" "libunwind-dev" "python3-pip")
 
   BASIC_PACKAGES_CENTOS_8=("${BASIC_PACKAGES_LINUX[@]}" "epel-release" "libunwind-devel" "perl" "which")
   BASIC_PACKAGES_CENTOS_7=("${BASIC_PACKAGES_CENTOS_8[@]}" "centos-release-scl-rh")
@@ -1441,6 +1453,7 @@ gs_install_deps_command() {
     "rapidjson"
     "msgpack-cxx"
     "librdkafka"
+    "patchelf"
   )
 
   _install_apache_arrow_ubuntu() {
@@ -1602,8 +1615,10 @@ gs_install_deps_command() {
     if [[ "${OS_PLATFORM}" == *"Darwin"* ]]; then
       _install_dependencies_analytical_macos
     elif [[ "${OS_PLATFORM}" == *"Ubuntu"* ]]; then
+      install_patchelf "${deps_prefix}" "${install_prefix}"
       _install_dependencies_analytical_ubuntu
     else
+      install_patchelf "${deps_prefix}" "${install_prefix}"
       if [[ "${OS_VERSION}" -eq "7" ]]; then
         _install_dependencies_analytical_centos7
         install_java_maven_universal
@@ -1622,6 +1637,7 @@ gs_install_deps_command() {
 
     {
       echo "export GRAPHSCOPE_HOME=${install_prefix}"
+      echo "export CMAKE_PREFIX_PATH=/opt/vineyard"
       echo "export PATH=${install_prefix}/bin:\$HOME/.cargo/bin:\$PATH"
       echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}"
       echo "export LIBRARY_PATH=${install_prefix}/lib:${install_prefix}/lib64"
@@ -2499,6 +2515,7 @@ initialize() {
       export GRAPHSCOPE_HOME="${bash_source_dir}"
   elif [ "${GRAPHSCOPE_ENV:-dev}" == "prod" ]; then
       log "Setting the environment for production"
+      export GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME}
   else
       err "Invalid GRAPHSCOPE_ENV. (should be dev or prod)"
       exit 1
