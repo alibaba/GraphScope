@@ -7,9 +7,220 @@
             "scan_opt": 0,
             "alias": {
               "item": {
-                "Id": 1
+                "Id": 0
               }
             },
+            "params": {
+              "tables": [
+                {
+                  "item": {
+                    "Id": 0
+                  }
+                }
+              ],
+              "columns": [],
+              "is_all_columns": false,
+              "limit": null,
+              "predicate": null,
+              "sample_ratio": 1.0,
+              "extra": {}
+            },
+            "idx_predicate": null,
+            "meta_data": {
+              "type": {
+                "type": {
+                  "GraphType": {
+                    "element_opt": 0,
+                    "graph_data_type": [
+                      {
+                        "label": {
+                          "label": 0,
+                          "src_label": null,
+                          "dst_label": null
+                        },
+                        "props": [
+                          {
+                            "prop_id": {
+                              "item": {
+                                "Name": "id"
+                              }
+                            },
+                            "type": 2
+                          },
+                          {
+                            "prop_id": {
+                              "item": {
+                                "Name": "name"
+                              }
+                            },
+                            "type": 4
+                          },
+                          {
+                            "prop_id": {
+                              "item": {
+                                "Name": "age"
+                              }
+                            },
+                            "type": 1
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              },
+              "alias": 0
+            }
+          }
+        }
+      },
+      "children": [
+        1
+      ]
+    },
+    {
+      "opr": {
+        "opr": {
+          "Path": {
+            "base": {
+              "edge_expand": {
+                "v_tag": null,
+                "direction": 0,
+                "params": {
+                  "tables": [
+                    {
+                      "item": {
+                        "Id": 0
+                      }
+                    }
+                  ],
+                  "columns": [],
+                  "is_all_columns": false,
+                  "limit": null,
+                  "predicate": null,
+                  "sample_ratio": 1.0,
+                  "extra": {}
+                },
+                "alias": null,
+                "expand_opt": 1,
+                "meta_data": {
+                  "type": {
+                    "type": {
+                      "GraphType": {
+                        "element_opt": 1,
+                        "graph_data_type": [
+                          {
+                            "label": {
+                              "label": 0,
+                              "src_label": 0,
+                              "dst_label": 0
+                            },
+                            "props": [
+                              {
+                                "prop_id": {
+                                  "item": {
+                                    "Name": "weight"
+                                  }
+                                },
+                                "type": 3
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "alias": -1
+                }
+              },
+              "get_v": {
+                "tag": null,
+                "opt": 1,
+                "params": {
+                  "tables": [
+                    {
+                      "item": {
+                        "Id": 0
+                      }
+                    }
+                  ],
+                  "columns": [],
+                  "is_all_columns": false,
+                  "limit": null,
+                  "predicate": null,
+                  "sample_ratio": 1.0,
+                  "extra": {}
+                },
+                "alias": null,
+                "meta_data": {
+                  "type": {
+                    "type": {
+                      "GraphType": {
+                        "element_opt": 0,
+                        "graph_data_type": [
+                          {
+                            "label": {
+                              "label": 0,
+                              "src_label": null,
+                              "dst_label": null
+                            },
+                            "props": [
+                              {
+                                "prop_id": {
+                                  "item": {
+                                    "Name": "id"
+                                  }
+                                },
+                                "type": 2
+                              },
+                              {
+                                "prop_id": {
+                                  "item": {
+                                    "Name": "name"
+                                  }
+                                },
+                                "type": 4
+                              },
+                              {
+                                "prop_id": {
+                                  "item": {
+                                    "Name": "age"
+                                  }
+                                },
+                                "type": 1
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "alias": -1
+                }
+              }
+            },
+            "start_tag": null,
+            "alias": null,
+            "hop_range": {
+              "lower": 1,
+              "upper": 4
+            },
+            "path_opt": 1,
+            "result_opt": 1,
+            "condition": null
+          }
+        }
+      },
+      "children": [
+        2
+      ]
+    },
+    {
+      "opr": {
+        "opr": {
+          "Vertex": {
+            "tag": null,
+            "opt": 1,
             "params": {
               "tables": [
                 {
@@ -78,187 +289,57 @@
               "sample_ratio": 1.0,
               "extra": {}
             },
-            "idx_predicate": null,
-            "meta_data": null
-          }
-        }
-      },
-      "children": [
-        1
-      ]
-    },
-    {
-      "opr": {
-        "opr": {
-          "Path": {
-            "base": {
-              "edge_expand": {
-                "v_tag": null,
-                "direction": 1,
-                "params": {
-                  "tables": [
-                    {
-                      "item": {
-                        "Id": 0
-                      }
-                    }
-                  ],
-                  "columns": [],
-                  "is_all_columns": false,
-                  "limit": null,
-                  "predicate": null,
-                  "sample_ratio": 1.0,
-                  "extra": {}
-                },
-                "alias": null,
-                "expand_opt": 1,
-                "meta_data": null
-              },
-              "get_v": {
-                "tag": null,
-                "opt": 1,
-                "params": {
-                  "tables": [
-                    {
-                      "item": {
-                        "Id": 0
-                      }
-                    }
-                  ],
-                  "columns": [],
-                  "is_all_columns": false,
-                  "limit": null,
-                  "predicate": null,
-                  "sample_ratio": 1.0,
-                  "extra": {}
-                },
-                "alias": null,
-                "meta_data": null
-              }
-            },
-            "start_tag": {
-              "item": {
-                "Id": 1
-              }
-            },
             "alias": null,
-            "hop_range": {
-              "lower": 1,
-              "upper": 4
-            },
-            "path_opt": 1,
-            "result_opt": 1,
-            "condition": null
-          }
-        }
-      },
-      "children": [
-        2
-      ]
-    },
-    {
-      "opr": {
-        "opr": {
-          "Vertex": {
-            "tag": null,
-            "opt": 1,
-            "params": {
-              "tables": [],
-              "columns": [],
-              "is_all_columns": false,
-              "limit": null,
-              "predicate": {
-                "operators": [
-                  {
-                    "node_type": null,
-                    "item": {
-                      "Var": {
-                        "tag": null,
-                        "property": {
-                          "item": {
-                            "Label": {}
-                          }
+            "meta_data": {
+              "type": {
+                "type": {
+                  "GraphType": {
+                    "element_opt": 0,
+                    "graph_data_type": [
+                      {
+                        "label": {
+                          "label": 0,
+                          "src_label": null,
+                          "dst_label": null
                         },
-                        "node_type": null
-                      }
-                    }
-                  },
-                  {
-                    "node_type": null,
-                    "item": {
-                      "Logical": 6
-                    }
-                  },
-                  {
-                    "node_type": null,
-                    "item": {
-                      "Const": {
-                        "item": {
-                          "I64Array": {
-                            "item": [
-                              0
-                            ]
+                        "props": [
+                          {
+                            "prop_id": {
+                              "item": {
+                                "Name": "id"
+                              }
+                            },
+                            "type": 2
+                          },
+                          {
+                            "prop_id": {
+                              "item": {
+                                "Name": "name"
+                              }
+                            },
+                            "type": 4
+                          },
+                          {
+                            "prop_id": {
+                              "item": {
+                                "Name": "age"
+                              }
+                            },
+                            "type": 1
                           }
-                        }
+                        ]
                       }
-                    }
+                    ]
                   }
-                ]
+                }
               },
-              "sample_ratio": 1.0,
-              "extra": {}
-            },
-            "alias": {
-              "item": {
-                "Id": 0
-              }
-            },
-            "meta_data": null
+              "alias": -1
+            }
           }
         }
       },
       "children": [
         3
-      ]
-    },
-    {
-      "opr": {
-        "opr": {
-          "Project": {
-            "mappings": [
-              {
-                "expr": {
-                  "operators": [
-                    {
-                      "node_type": null,
-                      "item": {
-                        "Var": {
-                          "tag": {
-                            "item": {
-                              "Id": 0
-                            }
-                          },
-                          "property": null,
-                          "node_type": null
-                        }
-                      }
-                    }
-                  ]
-                },
-                "alias": {
-                  "item": {
-                    "Id": 0
-                  }
-                }
-              }
-            ],
-            "is_append": false,
-            "meta_data": []
-          }
-        }
-      },
-      "children": [
-        4
       ]
     },
     {
@@ -291,7 +372,7 @@
                                 {
                                   "prop_id": {
                                     "item": {
-                                      "Id": -1
+                                      "Name": "id"
                                     }
                                   },
                                   "type": 2
@@ -299,7 +380,7 @@
                                 {
                                   "prop_id": {
                                     "item": {
-                                      "Id": -1
+                                      "Name": "name"
                                     }
                                   },
                                   "type": 4
@@ -307,7 +388,7 @@
                                 {
                                   "prop_id": {
                                     "item": {
-                                      "Id": -1
+                                      "Name": "age"
                                     }
                                   },
                                   "type": 1
@@ -328,12 +409,23 @@
                 }
               }
             ],
-            "meta_data": []
+            "meta_data": [
+              {
+                "type": {
+                  "type": {
+                    "DataType": 2
+                  }
+                },
+                "alias": 1
+              }
+            ]
           }
         }
       },
       "children": []
     }
   ],
-  "roots": []
+  "roots": [
+    0
+  ]
 }

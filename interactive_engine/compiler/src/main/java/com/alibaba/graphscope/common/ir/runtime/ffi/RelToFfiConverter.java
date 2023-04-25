@@ -85,6 +85,14 @@ public class RelToFfiConverter implements GraphRelShuttle {
         if (source.getAliasId() != AliasInference.DEFAULT_ID) {
             checkFfiResult(LIB.setScanAlias(ptrScan, ArgUtils.asAlias(source.getAliasId())));
         }
+        checkFfiResult(
+                LIB.setScanMeta(
+                        ptrScan,
+                        new FfiPbPointer.ByValue(
+                                com.alibaba.graphscope.common.ir.runtime.proto.Utils.protoRowType(
+                                                source.getRowType(), isColumnId)
+                                        .get(0)
+                                        .toByteArray())));
         return new LogicalNode(source, ptrScan);
     }
 
@@ -96,6 +104,14 @@ public class RelToFfiConverter implements GraphRelShuttle {
         if (expand.getAliasId() != AliasInference.DEFAULT_ID) {
             checkFfiResult(LIB.setEdgexpdAlias(ptrExpand, ArgUtils.asAlias(expand.getAliasId())));
         }
+        checkFfiResult(
+                LIB.setEdgexpdMeta(
+                        ptrExpand,
+                        new FfiPbPointer.ByValue(
+                                com.alibaba.graphscope.common.ir.runtime.proto.Utils.protoRowType(
+                                                expand.getRowType(), isColumnId)
+                                        .get(0)
+                                        .toByteArray())));
         return new LogicalNode(expand, ptrExpand);
     }
 
@@ -106,6 +122,14 @@ public class RelToFfiConverter implements GraphRelShuttle {
         if (getV.getAliasId() != AliasInference.DEFAULT_ID) {
             checkFfiResult(LIB.setGetvAlias(ptrGetV, ArgUtils.asAlias(getV.getAliasId())));
         }
+        checkFfiResult(
+                LIB.setGetvMeta(
+                        ptrGetV,
+                        new FfiPbPointer.ByValue(
+                                com.alibaba.graphscope.common.ir.runtime.proto.Utils.protoRowType(
+                                                getV.getRowType(), isColumnId)
+                                        .get(0)
+                                        .toByteArray())));
         return new LogicalNode(getV, ptrGetV);
     }
 
@@ -135,6 +159,15 @@ public class RelToFfiConverter implements GraphRelShuttle {
                 Pointer ptrSentence = LIB.initPatternSentence(FfiJoinKind.Inner);
                 addFfiBinder(ptrSentence, match.getSentence(), true);
                 checkFfiResult(LIB.addPatternSentence(ptrPattern, ptrSentence));
+                com.alibaba.graphscope.common.ir.runtime.proto.Utils.protoRowType(
+                                match.getRowType(), isColumnId)
+                        .forEach(
+                                k -> {
+                                    checkFfiResult(
+                                            LIB.addPatternMeta(
+                                                    ptrPattern,
+                                                    new FfiPbPointer.ByValue(k.toByteArray())));
+                                });
                 return new LogicalNode(match, ptrPattern);
             case OPTIONAL:
             case ANTI:
@@ -151,6 +184,14 @@ public class RelToFfiConverter implements GraphRelShuttle {
             addFfiBinder(ptrSentence, sentence, true);
             checkFfiResult(LIB.addPatternSentence(ptrPattern, ptrSentence));
         }
+        com.alibaba.graphscope.common.ir.runtime.proto.Utils.protoRowType(
+                        match.getRowType(), isColumnId)
+                .forEach(
+                        k -> {
+                            checkFfiResult(
+                                    LIB.addPatternMeta(
+                                            ptrPattern, new FfiPbPointer.ByValue(k.toByteArray())));
+                        });
         return new LogicalNode(match, ptrPattern);
     }
 
@@ -183,6 +224,14 @@ public class RelToFfiConverter implements GraphRelShuttle {
                             new FfiPbPointer.ByValue(expression.toByteArray()),
                             ffiAlias));
         }
+        com.alibaba.graphscope.common.ir.runtime.proto.Utils.protoRowType(
+                        project.getRowType(), isColumnId)
+                .forEach(
+                        k -> {
+                            checkFfiResult(
+                                    LIB.addProjectMeta(
+                                            ptrProject, new FfiPbPointer.ByValue(k.toByteArray())));
+                        });
         return new LogicalNode(project, ptrProject);
     }
 
@@ -249,6 +298,14 @@ public class RelToFfiConverter implements GraphRelShuttle {
                             ffiAggOpt,
                             ffiAlias));
         }
+        com.alibaba.graphscope.common.ir.runtime.proto.Utils.protoRowType(
+                        aggregate.getRowType(), isColumnId)
+                .forEach(
+                        k -> {
+                            checkFfiResult(
+                                    LIB.addGroupbyKeyValueMeta(
+                                            ptrGroup, new FfiPbPointer.ByValue(k.toByteArray())));
+                        });
         return new LogicalNode(aggregate, ptrGroup);
     }
 
