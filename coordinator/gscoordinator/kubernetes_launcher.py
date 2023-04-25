@@ -111,7 +111,6 @@ class KubernetesClusterLauncher(AbstractLauncher):
         dataset_proxy=None,
         **kwargs,
     ):
-
         super().__init__()
         self._api_client = resolve_api_client()
         self._core_api = kube_client.CoreV1Api(self._api_client)

@@ -22,7 +22,7 @@ from typing import Union
 
 try:
     import vineyard
-except ImportError:
+except (ImportError, TypeError):
     vineyard = None
 
 from graphscope.client.session import get_default_session

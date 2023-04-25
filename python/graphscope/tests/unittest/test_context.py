@@ -20,7 +20,6 @@ import os
 
 import pandas as pd
 import pytest
-import vineyard.io
 
 from graphscope import lpa_u2i
 from graphscope import sssp

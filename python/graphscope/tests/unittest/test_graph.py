@@ -21,7 +21,6 @@ import os
 
 import numpy as np
 import pytest
-import vineyard
 
 import graphscope
 from graphscope import Graph
@@ -87,6 +86,8 @@ def test_graph_schema_todict(p2p_property_graph):
 
 
 def test_load_graph_copy(graphscope_session, arrow_property_graph):
+    import vineyard
+
     g = arrow_property_graph
     g2 = graphscope_session.g(g)
     assert g.key != g2.key

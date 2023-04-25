@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools_scm", "grpcio<=1.43.0,>=1.40.0", "grpcio-tools<=1.43.0,>=1.40.0", "numpy", "wheel"]
+requires = ["setuptools_scm", "grpcio>=1.49", "grpcio-tools>=1.49", "numpy", "wheel"]
 
 [tool.black]
 line-length = 88

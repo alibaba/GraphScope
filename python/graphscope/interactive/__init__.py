@@ -14,11 +14,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-
-# The gremlinpython has a async event loop, which may conflicts with
-# jupyter notebook's event loop.
-
-import nest_asyncio
-
-nest_asyncio.apply()

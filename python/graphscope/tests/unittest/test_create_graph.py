@@ -20,7 +20,6 @@ import os
 
 import pandas as pd
 import pytest
-import vineyard
 
 import graphscope
 from graphscope.framework.errors import AnalyticalEngineInternalError
@@ -387,6 +386,8 @@ def test_errors_on_files(
     graphscope_session, one_column_file, double_type_id_file, empty_file
 ):
     with pytest.raises(AnalyticalEngineInternalError, match="Object not exists"):
+        import vineyard
+
         graphscope_session.g(vineyard.ObjectName("non_exist_vy_name"))
 
 

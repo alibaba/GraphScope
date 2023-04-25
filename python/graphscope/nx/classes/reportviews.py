@@ -84,7 +84,6 @@ class InEdgeDataView(_InEdgeDataView):
 
 @patch_docstring(_OutEdgeView)
 class OutEdgeView(_OutEdgeView):
-
     dataview = OutEdgeDataView
 
     # Set methods
@@ -105,7 +104,6 @@ class EdgeView(_EdgeView):
 
 @patch_docstring(_InEdgeView)
 class InEdgeView(_InEdgeView):
-
     dataview = InEdgeDataView
 
     # Set methods

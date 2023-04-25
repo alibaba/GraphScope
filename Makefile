@@ -161,23 +161,3 @@ prepare-client:
 
 graphscope-docs: prepare-client
 	$(MAKE) -C $(DOCS_DIR)/ html
-
-
-## Tests
-.PHONY: test unittest minitest k8stest
-
-test: unittest minitest k8stest
-
-unittest:
-	cd $(CLIENT_DIR) && \
-	python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml --cov-report=term -s -v ./graphscope/tests/unittest
-
-minitest:
-	pip3 install tensorflow==2.5.2 "pandas<1.5.0"
-	cd $(CLIENT_DIR) && \
-	python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml --cov-report=term -s -v ./graphscope/tests/minitest
-
-k8stest:
-	pip3 install tensorflow==2.5.2 "pandas<1.5.0"
-	cd $(CLIENT_DIR) && \
-	python3 -m pytest --cov=graphscope --cov-config=.coveragerc --cov-report=xml --cov-report=term -s -v ./graphscope/tests/kubernetes

@@ -18,6 +18,7 @@
 
 import logging
 import os
+import platform
 from abc import ABCMeta
 from abc import abstractmethod
 
@@ -30,13 +31,28 @@ def configure_environ():
     # add `${GRAPHSCOPE_HOME}/bin` to ${PATH}
     os.environ["PATH"] += os.pathsep + os.path.join(GRAPHSCOPE_HOME, "bin")
     # OPAL_PREFIX for openmpi
+    opal_prefix = None
     if os.path.isdir(os.path.join(GRAPHSCOPE_HOME, "openmpi")):
-        os.environ["OPAL_PREFIX"] = os.path.join(GRAPHSCOPE_HOME, "openmpi")
+        opal_prefix = os.path.join(GRAPHSCOPE_HOME, "openmpi")
     if os.path.isdir(os.path.join("/opt", "openmpi")):
-        os.environ["OPAL_PREFIX"] = os.path.join("/opt", "openmpi")
+        opal_prefix = os.path.join("/opt", "openmpi")
     # Darwin is open-mpi
     if os.path.isdir(os.path.join(GRAPHSCOPE_HOME, "open-mpi")):
-        os.environ["OPAL_PREFIX"] = os.path.join(GRAPHSCOPE_HOME, "open-mpi")
+        opal_prefix = os.path.join(GRAPHSCOPE_HOME, "open-mpi")
+    if opal_prefix is None:
+        logger.warning(
+            "Failed to resolve the openmpi path, moving towards the system-wide one"
+        )
+    else:
+        os.environ["OPAL_PREFIX"] = opal_prefix
+        if platform.system() == "Darwin":
+            # requires on MacOS, but break Kubernetes tests on Linux
+            os.environ["OPAL_BINDIR"] = os.path.join(opal_prefix, "bin")
+            os.environ["OPAL_LIBDIR"] = os.path.join(opal_prefix, "lib")
+            os.environ["OPAL_DATADIR"] = os.path.join(opal_prefix, "share")
+            os.environ["OMPI_MCA_mca_base_component_path"] = os.path.join(
+                opal_prefix, "lib", "openmpi"
+            )
     # add '${GRAPHSCOPE_HOME}/lib' to ${LD_LIBRARY_PATH} to find libvineyard_internal_registry.so(dylib)
     if "LD_LIBRARY_PATH" in os.environ:
         os.environ["LD_LIBRARY_PATH"] = (

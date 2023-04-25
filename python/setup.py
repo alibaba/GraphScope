@@ -17,6 +17,7 @@
 #
 
 import os
+import platform
 import site
 import subprocess
 import sys
@@ -36,6 +37,13 @@ from wheel.bdist_wheel import bdist_wheel
 site.ENABLE_USER_SITE = "--user" in sys.argv[1:]
 
 repo_root = os.path.dirname(os.path.abspath(__file__))
+
+if platform.system() == "Darwin":
+    # see also: https://github.com/python/cpython/issues/100420
+    if "arm" in platform.processor().lower():
+        os.environ["ARCHFLAGS"] = "-arch arm64"
+    else:
+        os.environ["ARCHFLAGS"] = "-arch x86_64"
 
 
 class BuildProto(Command):
@@ -123,7 +131,7 @@ class CustomSDist(sdist):
 
 class CustomBDistWheel(bdist_wheel):
     def finalize_options(self):
-        super(CustomBDistWheel, self).finalize_options()
+        bdist_wheel.finalize_options(self)
         self.root_is_pure = False
 
     def run(self):
@@ -181,7 +189,7 @@ def resolve_graphscope_package_dir():
     return package_dir
 
 
-def parsed_packge_data():
+def parsed_package_data():
     return {
         "graphscope": [
             "VERSION",
@@ -297,7 +305,7 @@ setup(
     ],
     package_dir=resolve_graphscope_package_dir(),
     packages=find_graphscope_packages(),
-    package_data=parsed_packge_data(),
+    package_data=parsed_package_data(),
     ext_modules=build_learning_engine(),
     cmdclass={
         "build_ext": CustomBuildExt,

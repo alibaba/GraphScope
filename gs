@@ -1729,7 +1729,7 @@ gs_install_deps_command() {
     pip3 --no-cache-dir install -U pip --user
     pip3 --no-cache-dir install auditwheel daemons etcd-distro gremlinpython \
       hdfs3 fsspec oss2 s3fs ipython kubernetes libclang networkx==2.4 numpy pandas parsec pycryptodome \
-      pyorc pytest scipy scikit_learn wheel --user
+      pyorc pytest wheel --user
     pip3 --no-cache-dir install Cython --pre -U --user
   }
 

@@ -106,7 +106,7 @@ class TestPageRank(object):
         M = nx.google_matrix(G, alpha=0.9, nodelist=sorted(G))
         e, ev = numpy.linalg.eig(M.T)
         p = numpy.array(ev[:, 0] / ev[:, 0].sum())[:, 0]
-        for (a, b) in zip(p, self.G.pagerank.values()):
+        for a, b in zip(p, self.G.pagerank.values()):
             assert almost_equal(a, b)
 
     @pytest.mark.skip(reason="pagerank not support personalization yet.")

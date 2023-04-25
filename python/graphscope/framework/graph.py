@@ -29,7 +29,7 @@ from typing import Union
 
 try:
     import vineyard
-except ImportError:
+except (ImportError, TypeError):
     vineyard = None
 
 from graphscope.framework import dag_utils

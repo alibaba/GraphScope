@@ -369,7 +369,7 @@ def complete_multipartite_graph(*subset_sizes):
     # add nodes with subset attribute
     # while checking that ints are not mixed with iterables
     try:
-        for (i, subset) in enumerate(subsets):
+        for i, subset in enumerate(subsets):
             G.add_nodes_from(subset, subset=i)
     except TypeError:
         raise NetworkXError("Arguments must be all ints or all iterables")
