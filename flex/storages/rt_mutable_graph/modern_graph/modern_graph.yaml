@@ -1,0 +1,49 @@
+graph:
+  graph_store: mutable_csr
+  vertex:
+    - label_name: person
+      properties:
+        - name: _ID
+          type: int64
+        - name: name
+          type: String
+        - name: age
+          type: int32
+      max_vertex_num: 100
+    - label_name: software
+      properties:
+        - name: _ID
+          type: int64
+        - name: name
+          type: String
+        - name: lang
+          type: String
+      max_vertex_num: 100
+  edge:
+    - src_label_name: person
+      dst_label_name: software
+      edge_label_name: created
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+        - name: weight
+          type: double
+      incoming_edge_strategy: None
+      outgoing_edge_strategy: Single
+    - src_label_name: person
+      dst_label_name: person
+      edge_label_name: knows
+      properties:
+        - name: _SRC
+          type: int64
+        - name: _DST
+          type: int64
+        - name: weight
+          type: double
+      incoming_edge_strategy: None
+      outgoing_edge_strategy: Multiple
+
+stored_procedures:
+  - libxxx.so

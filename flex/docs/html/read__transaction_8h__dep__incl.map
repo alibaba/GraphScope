@@ -1,0 +1,11 @@
+<map id="engines/graph_db/database/read_transaction.h" name="engines/graph_db/database/read_transaction.h">
+<area shape="rect" id="node1" title=" " alt="" coords="231,5,432,47"/>
+<area shape="rect" id="node2" href="$graph__db_8h.html" title=" " alt="" coords="5,95,207,136"/>
+<area shape="rect" id="node5" href="$graph__db__session_8h.html" title=" " alt="" coords="231,95,432,136"/>
+<area shape="rect" id="node9" href="$read__transaction_8cc.html" title=" " alt="" coords="456,95,657,136"/>
+<area shape="rect" id="node3" href="$graph__db_8cc.html" title=" " alt="" coords="188,273,389,315"/>
+<area shape="rect" id="node4" href="$graph__db__session_8cc.html" title=" " alt="" coords="49,184,251,225"/>
+<area shape="rect" id="node6" href="$app__base_8cc.html" title=" " alt="" coords="326,184,491,225"/>
+<area shape="rect" id="node7" href="$server__app_8h.html" title=" " alt="" coords="515,184,681,225"/>
+<area shape="rect" id="node8" href="$server__app_8cc.html" title=" " alt="" coords="515,273,681,315"/>
+</map>
