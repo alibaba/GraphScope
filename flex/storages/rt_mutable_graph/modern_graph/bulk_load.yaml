@@ -1,0 +1,23 @@
+graph:
+  vertex:
+    - label_name: person
+      files:
+        - path: person.csv
+          format: standard_csv
+    - label_name: software
+      files:
+        - path: software.csv
+          format: standard_csv
+  edge:
+    - src_label_name: person
+      dst_label_name: software
+      edge_label_name: created
+      files:
+        - path: person_created_software.csv
+          format: standard_csv
+    - src_label_name: person
+      dst_label_name: person
+      edge_label_name: knows
+      files:
+        - path: person_knows_person.csv
+          format: standard_csv
