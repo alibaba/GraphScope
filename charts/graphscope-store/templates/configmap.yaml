@@ -48,6 +48,7 @@ data:
     ## Kafka Config
     kafka.servers=KAFKA_SERVERS
     kafka.topic={{ .Values.kafkaTopic }}
+    kafka.producer.custom.configs={{ .Values.kafkaProducerCustomConfigs }}
 
     ## Frontend Config
     gremlin.server.port=12312
