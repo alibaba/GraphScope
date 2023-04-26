@@ -54,7 +54,7 @@ public class ChannelManager {
             Map<Integer, ManagedChannel> idxToChannel =
                     this.roleToChannels.computeIfAbsent(role, k -> new HashMap<>());
             int count =
-                    Integer.valueOf(
+                    Integer.parseInt(
                             this.configs.get(
                                     String.format(CommonConfig.NODE_COUNT_FORMAT, role.getName()),
                                     "0"));
@@ -105,15 +105,11 @@ public class ChannelManager {
                 for (int i = 0; i < count; i++) {
                     String host = hostTemplate.replace("{}", String.valueOf(i));
                     logger.info(
-                            "create channel to role ["
-                                    + role.getName()
-                                    + "] #["
-                                    + i
-                                    + "]. host ["
-                                    + host
-                                    + "], port ["
-                                    + port
-                                    + "]");
+                            "Creating channel to role {} #{}, host {}, port {}",
+                            role.getName(),
+                            i,
+                            host,
+                            port);
                     ManagedChannel channel =
                             ManagedChannelBuilder.forAddress(host, port)
                                     .maxInboundMessageSize(this.rpcMaxBytes)
@@ -123,7 +119,7 @@ public class ChannelManager {
                 }
             } else {
                 for (int i = 0; i < count; i++) {
-                    logger.debug("create channel to role [" + role.getName() + "] #[" + i + "]");
+                    logger.info("Create channel to role {} #{}", role.getName(), i);
                     String uri = SCHEME + "://" + role.getName() + "/" + i;
                     ManagedChannel channel =
                             ManagedChannelBuilder.forTarget(uri)
