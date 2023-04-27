@@ -88,6 +88,8 @@ Here we give a list of most frequently used parameters.
 | javaOpts | Java options | "" |
 | auth.username | Username | "" |
 | auth.password | Password | "" |
+| rpcMaxBytesMb | GRPC maximum message size | 4 |
+| kafkaProducerCustomConfigs | Kafka producer max request size | "max.request.size:1048576000" |
 
 
 ### Statefulset parameters
