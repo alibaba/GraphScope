@@ -16,3 +16,4 @@ prometheus-client>=0.14.1
 setuptools==65.7.0
 packaging
 tqdm
+urllib3>=1.24.2,<2.0.0
