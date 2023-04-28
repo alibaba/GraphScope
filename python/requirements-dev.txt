@@ -1,11 +1,10 @@
-black==22.3.0
+black>=23.3.0
 breathe>4.30
 docutils==0.16
 flake8==4.0.1
 furo        # sphinx theme
 isort==5.10.1
 linkify-it-py
-m2r2
 myst-parser>=0.13.0
 pylint
 pytest

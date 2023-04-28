@@ -314,7 +314,7 @@ jobs:
           popd
 
           # install tensorflow
-          python3 -m pip install pytest "tensorflow<=2.5.2" "pandas<1.5.0" --user
+          python3 -m pip install pytest "tensorflow" "pandas" --user
           # install java
           sudo apt update -y && sudo apt install openjdk-11-jdk -y
 

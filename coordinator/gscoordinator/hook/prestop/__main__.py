@@ -40,7 +40,7 @@ class KubernetesResources(object):
             pass
 
     def cleanup(self):
-        for (name, kind) in self._resources.items():
+        for name, kind in self._resources.items():
             cmd = ["kubectl", "delete", kind, name]
             try:
                 subprocess.check_call(cmd)

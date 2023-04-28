@@ -21,7 +21,14 @@ import io
 from functools import lru_cache
 
 import msgpack
-import simdjson
+
+try:
+    import simdjson as json
+except ImportError:
+    try:
+        import ujson as json
+    except ImportError:
+        import json
 
 from graphscope.framework import dag_utils
 from graphscope.nx.utils.misc import clear_mutation_cache
@@ -405,7 +412,7 @@ def get_neighbors(graph, n, pred=False):
         n = graph._convert_to_label_id_tuple(n)
     report_t = types_pb2.PREDS_BY_NODE if pred else types_pb2.SUCCS_BY_NODE
     op = dag_utils.report_graph(
-        graph, report_t, node=simdjson.dumps(n).encode("utf-8", errors="ignore")
+        graph, report_t, node=json.dumps(n).encode("utf-8", errors="ignore")
     )
     archive = op.eval()
     return msgpack.unpackb(archive.get_bytes(), use_list=False)
@@ -433,10 +440,10 @@ def get_neighbors_attr(graph, n, pred=False):
         n = graph._convert_to_label_id_tuple(n)
     report_t = types_pb2.PRED_ATTR_BY_NODE if pred else types_pb2.SUCC_ATTR_BY_NODE
     op = dag_utils.report_graph(
-        graph, report_t, node=simdjson.dumps(n).encode("utf-8", errors="ignore")
+        graph, report_t, node=json.dumps(n).encode("utf-8", errors="ignore")
     )
     archive = op.eval()
-    return simdjson.loads(archive.get_bytes())
+    return json.loads(archive.get_bytes())
 
 
 def get_node_data(graph, n):
@@ -476,7 +483,7 @@ def get_node_data(graph, n):
     op = dag_utils.report_graph(
         graph,
         types_pb2.NODE_DATA,
-        node=simdjson.dumps(n).encode("utf-8", errors="ignore"),
+        node=json.dumps(n).encode("utf-8", errors="ignore"),
     )
     archive = op.eval()
     return msgpack.loads(archive.get_bytes(), use_list=False)

@@ -119,7 +119,7 @@ include(GNUInstallDirs)
 # reference: https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling#always-full-rpath
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 if(APPLE)
-    # the LC_RPATH on Mac seems doesn't support multiple path (seperated with ':seperated with `:`)
+    # the LC_RPATH on Mac seems doesn't support multiple path (separated with ':separated with `:`)
     # fortunately, we just need to take care `lib` on Mac.
     set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 else()
@@ -153,8 +153,29 @@ if (APPLE)
     else()
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L/usr/local/lib")
     endif()
-endif ()
+endif()
 find_package(OpenMP REQUIRED)
+
+if (APPLE)
+    # If we're on OS X check for Homebrew's copy of OpenSSL instead of Apple's
+    if (NOT OpenSSL_DIR)
+        find_program(HOMEBREW brew)
+        if (HOMEBREW STREQUAL "HOMEBREW-NOTFOUND")
+            message(WARNING "Homebrew not found: not using Homebrew's OpenSSL")
+            if (NOT OPENSSL_ROOT_DIR)
+                message(WARNING "Use -DOPENSSL_ROOT_DIR for non-Apple OpenSSL")
+            endif()
+        else()
+            execute_process(COMMAND brew --prefix openssl
+                OUTPUT_VARIABLE OPENSSL_ROOT_DIR
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+        endif()
+    endif()
+endif()
+find_package(OpenSSL ${ARGN})
+if (OPENSSL_FOUND)
+    include_directories(SYSTEM ${OPENSSL_INCLUDE_DIR})
+endif()
 
 find_package(Boost REQUIRED COMPONENTS system filesystem
              # required by folly

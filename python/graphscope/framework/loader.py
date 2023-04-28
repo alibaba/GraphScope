@@ -35,7 +35,7 @@ from graphscope.proto import types_pb2
 
 try:
     import vineyard
-except ImportError:
+except (ImportError, TypeError):
     vineyard = None
 
 logger = logging.getLogger("graphscope")

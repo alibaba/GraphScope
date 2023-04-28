@@ -241,7 +241,6 @@ class DiGraph(Graph):
 
     @patch_docstring(Graph.__init__)
     def __init__(self, incoming_graph_data=None, default_label=None, **attr):
-
         self.graph_attr_dict_factory = self.graph_attr_dict_factory
         self.node_dict_factory = self.node_dict_factory
         self.adjlist_outer_dict_factory = self.adjlist_outer_dict_factory

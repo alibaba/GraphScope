@@ -59,23 +59,16 @@ graphscope-jupyter-manylinux2014-py3:
 graphscope-py3-package: $(TARGET_SERVER_PACKAGE)
 graphscope-client-py3-package: $(TARGET_CLIENT_PACKAGE)
 
+
+MAKE_INSTALL_COMMAND=sudo make install INSTALL_PREFIX=${INSTALL_PREFIX}
+
 graphscope-darwin-py3:
-	# Avoid copy vineyard library with the same basename by:
-	# 	1) reinstall vineyard to /usr/local and
-	# 	2) rm /opt/vineyard/lib
-	cd /tmp && git clone -b ${VINEYARD_VERSION} https://github.com/v6d-io/v6d.git --depth=1 && \
-		cd v6d && git submodule update --init && \
-		mkdir -p build && cd build && \
-		cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local && \
-		sudo make install -j`nproc` && \
-		sudo rm -rf /opt/vineyard/lib
-	sudo rm -rf /tmp/v6d /tmp/libgrape-lite
 	# build graphscope
 	cd $(WORKING_DIR)/../.. && \
 		python3 -m pip install --upgrade setuptools && \
-		make && \
 		export INSTALL_PREFIX=/opt/graphscope && \
-		sudo make install INSTALL_PREFIX=${INSTALL_PREFIX} && \
+		for _ in {1..5}; do if make; then break; fi; done && \
+		for _ in {1..5}; do if $(MAKE_INSTALL_COMMAND); then break; fi; done && \
 		sudo cp -rs ${INSTALL_PREFIX}/* /usr/local/ && \
 		python3 $(WORKING_DIR)/../utils/precompile.py --graph --app
 	# build and delocate wheel
@@ -104,8 +97,8 @@ graphscope-darwin-py3:
 
 graphscope-manylinux2014-py3-nodocker:
 	cd $(WORKING_DIR)/../.. && \
-	make && \
-	sudo make install INSTALL_PREFIX=${INSTALL_PREFIX} && \
+	for _ in {1..5}; do if make; then break; fi; done && \
+	for _ in {1..5}; do if $(MAKE_INSTALL_COMMAND); then break; fi; done && \
 	sudo cp -rs ${INSTALL_PREFIX}/* ${GRAPHSCOPE_HOME}/ && \
 	python3 $(WORKING_DIR)/../utils/precompile.py --graph --app && \
 	export WITH_EXTRA_DATA=ON && \
@@ -116,7 +109,7 @@ graphscope-manylinux2014-py3-nodocker:
 	sudo strip ${INSTALL_PREFIX}/bin/grape_engine && \
 	sudo strip ${INSTALL_PREFIX}/bin/gaia_executor && \
 	sudo strip ${INSTALL_PREFIX}/lib/*.so && \
-	strip /tmp/gs/builtin/*/*.so && \
+	(strip /tmp/gs/builtin/*/*.so || true) && \
 	package_name=gs-include python3 setup.py bdist_wheel && \
 	rm -rf build && \
 	package_name=gs-apps python3 setup.py bdist_wheel && \
@@ -158,11 +151,11 @@ graphscope-client-manylinux2014-py3-nodocker:
 		if [ "$$py" == "cp311-cp311" ]; then \
 			python3 -m pip install "numpy" "pandas" "grpcio" "grpcio-tools" wheel "auditwheel==5.0.0"; \
 		elif [ "$$py" == "cp310-cp310" ]; then \
-			 python3 -m pip install "numpy==1.21.6" "pandas" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" wheel "auditwheel==5.0.0"; \
+			 python3 -m pip install "numpy==1.21.6" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" wheel "auditwheel==5.0.0"; \
 		elif [ "$$py" == "cp39-cp39" ]; then \
-			python3 -m pip install "numpy==1.19.3" "pandas" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" wheel "auditwheel==5.0.0"; \
+			python3 -m pip install "numpy==1.19.3" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" wheel "auditwheel==5.0.0"; \
 		else \
-			python3 -m pip install "numpy==1.18.5" "pandas" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" wheel "auditwheel==5.0.0"; \
+			python3 -m pip install "numpy==1.18.5" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" wheel "auditwheel==5.0.0"; \
 		fi; \
 		sudo rm -rf build; \
 		sudo rm -rf dist/*.whl; \
@@ -188,9 +181,9 @@ graphscope-client-darwin-py3:
 		if [ "$$py" == "311" ]; then \
 			pip3 install "numpy" "pandas" "grpcio" "grpcio-tools" delocate wheel; \
 		elif [ "$$py" == "310" ]; then \
-			pip3 install "numpy==1.21.6" "pandas" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" delocate wheel; \
+			pip3 install "numpy==1.21.6" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
 		else \
-			pip3 install "numpy==1.18.5" "pandas" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" delocate wheel; \
+			pip3 install "numpy==1.18.5" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
 		fi; \
 		rm -rf build dist/*.whl || true && \
 		python3 setup.py bdist_wheel --plat=macosx_10_9_${ARCH} && \

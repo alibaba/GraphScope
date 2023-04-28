@@ -174,18 +174,19 @@ class CoordinatorServiceServicer(
         self._dangling_timeout_seconds = dangling_timeout_seconds
         self._dangling_detecting_timer = None
         self._cleanup_instance = False
-        self._set_dangling_timer(cleanup_instance=True)
-
-        self._operation_executor: OperationExecutor = None
 
         self._session_id = self._generate_session_id()
         self._launcher.set_session_workspace(self._session_id)
-
-        self._operation_executor = OperationExecutor(
-            self._session_id, self._launcher, self._object_manager
-        )
         if not self._launcher.start():
             raise RuntimeError("Coordinator launching instance failed.")
+
+        self._operation_executor: OperationExecutor = OperationExecutor(
+            self._session_id, self._launcher, self._object_manager
+        )
+
+        # the dangling timer should be initialized after the launcher started,
+        # otherwise there would be a deadlock if `self._launcher.start()` failed.
+        self._set_dangling_timer(cleanup_instance=True)
 
         # a lock that protects the coordinator
         self._lock = threading.RLock()

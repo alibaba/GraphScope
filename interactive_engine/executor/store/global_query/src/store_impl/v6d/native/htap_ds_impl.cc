@@ -94,7 +94,23 @@ void get_graph_handle(ObjectId id, PartitionId channel_num,
       LOG(INFO) << "begin construct fragment: " << pair.second << ", "
                 << meta.GetTypeName();
 #endif
-      if (meta.GetKeyValue("oid_type") == vineyard::type_name<OID_TYPE>()) {
+      std::string oid_type, vid_type;
+      if (meta.HasKey("oid_type")) {
+        oid_type = meta.GetKeyValue("oid_type");
+      } else if (meta.HasKey("oid_type_")) {
+        oid_type = meta.GetKeyValue("oid_type_");
+      } else {
+        LOG(FATAL) << "oid_type not found in meta: " << meta.ToString();
+      }
+      if (meta.HasKey("vid_type")) {
+        vid_type = meta.GetKeyValue("vid_type");
+      } else if (meta.HasKey("vid_type_")) {
+        vid_type = meta.GetKeyValue("vid_type_");
+      } else {
+        LOG(FATAL) << "vid_type not found in meta: " << meta.ToString();
+      }
+
+      if (oid_type == vineyard::type_name<OID_TYPE>()) {
         if (handle->fragments == nullptr) {
           handle->use_int64_oid = true;
           handle->use_int32_oid = false;
@@ -102,7 +118,7 @@ void get_graph_handle(ObjectId id, PartitionId channel_num,
           handle->fragments = new FRAGMENT_TYPE[total_frag_num];
         }
         handle->fragments[fid].Construct(meta);
-      } else if (meta.GetKeyValue("oid_type") == vineyard::type_name<INT32_OID_TYPE>()) {
+      } else if (oid_type == vineyard::type_name<INT32_OID_TYPE>()) {
         if (handle->int32_fragments == nullptr) {
           handle->use_int64_oid = false;
           handle->use_int32_oid = true;
@@ -110,7 +126,7 @@ void get_graph_handle(ObjectId id, PartitionId channel_num,
           handle->int32_fragments = new INT32_FRAGMENT_TYPE[total_frag_num];
         }
         handle->int32_fragments[fid].Construct(meta);
-      } else if (meta.GetKeyValue("oid_type") == vineyard::type_name<STRING_OID_TYPE>()) {
+      } else if (oid_type == vineyard::type_name<STRING_OID_TYPE>()) {
         if (handle->string_fragments == nullptr) {
           handle->use_int64_oid = false;
           handle->use_int32_oid = false;
@@ -120,8 +136,8 @@ void get_graph_handle(ObjectId id, PartitionId channel_num,
         handle->string_fragments[fid].Construct(meta);
       } else {
         LOG(FATAL) << "Unsupported fragment type: " << meta.GetTypeName()
-                   << ", with OID type " << meta.GetKeyValue("oid_type")
-                   << ", with VID type " << meta.GetKeyValue("vid_type");
+                   << ", with OID type " << oid_type
+                   << ", with VID type " << vid_type;
       }
 
       if (handle->vertex_map == nullptr && handle->int32_vertex_map == nullptr && handle->string_vertex_map == nullptr) {

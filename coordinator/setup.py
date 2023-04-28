@@ -76,34 +76,40 @@ def _get_extra_data():
     #   4) gs-engine: other runtime info such as 'conf', and *.jar
     #   5) gs-apps: precompiled builtin applications
 
+    def __unknown_platform(action, platform):
+        raise RuntimeError(f"Unknown platform '{platform}' to {action}")
+
+    def __get_homebrew_prefix(package):
+        return (
+            subprocess.check_output([shutil.which("brew"), "--prefix", package])
+            .decode("utf-8", errors="ignore")
+            .strip("\n")
+        )
+
     def __get_openmpi_prefix():
-        openmpi_prefix = ""
         if platform.system() == "Linux":
             # install "/opt/openmpi" in gsruntime image
-            openmpi_prefix = "/opt/openmpi"
+            return "/opt/openmpi"
         elif platform.system() == "Darwin":
-            openmpi_prefix = (
-                subprocess.check_output([shutil.which("brew"), "--prefix", "openmpi"])
-                .decode("utf-8", errors="ignore")
-                .strip("\n")
-            )
+            return __get_homebrew_prefix("openmpi")
         else:
-            raise RuntimeError(
-                "Get openmpi prefix failed on {0}".format(platform.system())
-            )
-        return openmpi_prefix
+            __unknown_platform("find openmpi", platform.system())
+
+    def __get_vineyard_prefix():
+        if platform.system() == "Linux":
+            return GRAPHSCOPE_HOME
+        elif platform.system() == "Darwin":
+            return __get_homebrew_prefix("vineyard")
+        else:
+            __unknown_platform("find vineyard", platform.system())
 
     def __get_lib_suffix():
-        suffix = ""
         if platform.system() == "Linux":
-            suffix = "so"
+            return "so"
         elif platform.system() == "Darwin":
-            suffix = "dylib"
+            return "dylib"
         else:
-            raise RuntimeError(
-                "Get library suffix failed on {0}".format(platform.system())
-            )
-        return suffix
+            __unknown_platform("resolve lib suffix", platform.system())
 
     name = os.environ.get("package_name", "gs-coordinator")
     RUNTIME_ROOT = "graphscope.runtime"
@@ -119,7 +125,7 @@ def _get_extra_data():
             f"{INSTALL_PREFIX}/bin/": os.path.join(RUNTIME_ROOT, "bin"),
             f"{INSTALL_PREFIX}/lib/": os.path.join(RUNTIME_ROOT, "lib"),
             f"{INSTALL_PREFIX}/lib64/": os.path.join(RUNTIME_ROOT, "lib64"),
-            f"{GRAPHSCOPE_HOME}/lib/libvineyard_internal_registry.{__get_lib_suffix()}": os.path.join(
+            f"{__get_vineyard_prefix()}/lib/libvineyard_internal_registry.{__get_lib_suffix()}": os.path.join(
                 RUNTIME_ROOT, "lib"
             ),
         }
@@ -141,7 +147,7 @@ def _get_extra_data():
             f"{GRAPHSCOPE_HOME}/include/string_view": os.path.join(
                 RUNTIME_ROOT, "include"
             ),
-            f"{GRAPHSCOPE_HOME}/include/vineyard": os.path.join(
+            f"{__get_vineyard_prefix()}/include/vineyard": os.path.join(
                 RUNTIME_ROOT, "include"
             ),
             f"{GRAPHSCOPE_HOME}/include/arrow": os.path.join(RUNTIME_ROOT, "include"),

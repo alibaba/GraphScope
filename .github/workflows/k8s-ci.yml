@@ -319,7 +319,7 @@ jobs:
         source ${HOME}/.graphscope_env
         mkdir install
         make learning-install INSTALL_PREFIX=${{ github.workspace }}/install
-        python3 -m pip install "numpy==1.18.5" "pandas<1.5.0" "grpcio<=1.43.0,>=1.40.0" "grpcio-tools<=1.43.0,>=1.40.0" wheel
+        python3 -m pip install "numpy==1.18.5" "pandas<1.5.0" "grpcio>=1.49" "grpcio-tools>=1.49" wheel
         cd ${{ github.workspace }}/python
         python3 setup.py bdist_wheel
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${{ github.workspace }}/learning_engine/graph-learn/graphlearn/built/lib
@@ -428,9 +428,9 @@ jobs:
           GS_TEST_DIR: ${{ github.workspace }}/gstest
         run: |
           cd charts
-          helm template graphscope --set image.registry="",image.tag="${SHORT_SHA}",withJupyter=false,volumes.enabled=true,volumes.items.data.field.path=${GS_TEST_DIR} \
+          helm template graphscope --set image.registry="",image.tag="${SHORT_SHA}",withJupyter=false,volumes.enabled=true,volumes.items.data.field.path=${GS_TEST_DIR},engines.log_level=DEBUG \
                                   ./graphscope
-          helm install graphscope --set image.registry="",image.tag="${SHORT_SHA}",withJupyter=false,volumes.enabled=true,volumes.items.data.field.path=${GS_TEST_DIR} \
+          helm install graphscope --set image.registry="",image.tag="${SHORT_SHA}",withJupyter=false,volumes.enabled=true,volumes.items.data.field.path=${GS_TEST_DIR},engines.log_level=DEBUG \
                                   ./graphscope
           helm test graphscope --timeout 5m0s
           export NODE_IP=$(kubectl get pod -lgraphscope.coordinator.name=coordinator-graphscope -ojsonpath="{.items[0].status.hostIP}")
@@ -553,6 +553,7 @@ jobs:
           ./function_test.sh 8112 2
 
   build-gie-experimental:
+    needs: [changes]
     # Require the user id of the self-hosted is 1001, which may need to be
     # configured manually when a new self-hosted runner is added.
     runs-on: [self-hosted, manylinux2014]

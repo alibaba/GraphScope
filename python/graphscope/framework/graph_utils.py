@@ -27,7 +27,7 @@ import pandas as pd
 
 try:
     import vineyard
-except ImportError:
+except (ImportError, TypeError):
     vineyard = None
 
 from graphscope.framework import utils

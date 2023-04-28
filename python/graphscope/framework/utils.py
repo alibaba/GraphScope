@@ -28,6 +28,7 @@ import subprocess
 import tempfile
 import threading
 import time
+from queue import Empty
 from queue import Queue
 
 import numpy as np
@@ -75,8 +76,18 @@ class PipeWatcher(object):
     def poll(self, block=True, timeout=None):
         return self._lines.get(block=block, timeout=timeout)
 
+    def poll_all(self):
+        while True:
+            try:
+                yield self._lines.get(block=False)
+            except Empty:
+                break
+
     def drop(self, drop=True):
         self._drop = drop
+
+    def suppress(self, suppressed=True):
+        self._suppressed = suppressed
 
     def add_filter(self, func):
         if not (func in self._filters):

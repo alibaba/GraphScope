@@ -144,25 +144,25 @@ class TestEigenvectorCentralityDirected(object):
     def test_eigenvector_centrality_weighted(self):
         G = self.G
         p = nx.builtin.eigenvector_centrality(G)
-        for (a, b) in zip(list(dict(sorted(p.items())).values()), self.G.evc):
+        for a, b in zip(list(dict(sorted(p.items())).values()), self.G.evc):
             assert almost_equal(a, b, places=4)
 
     def test_eigenvector_centrality_weighted_numpy(self):
         G = self.G
         p = nx.eigenvector_centrality_numpy(G, weight="weight")
-        for (a, b) in zip(list(dict(sorted(p.items())).values()), self.G.evc):
+        for a, b in zip(list(dict(sorted(p.items())).values()), self.G.evc):
             assert almost_equal(a, b, places=4)
 
     def test_eigenvector_centrality_unweighted(self):
         G = self.H
         p = nx.builtin.eigenvector_centrality(G)
-        for (a, b) in zip(list(dict(sorted(p.items())).values()), self.G.evc):
+        for a, b in zip(list(dict(sorted(p.items())).values()), self.G.evc):
             assert almost_equal(a, b, places=4)
 
     def test_eigenvector_centrality_unweighted_numpy(self):
         G = self.H
         p = nx.eigenvector_centrality_numpy(G)
-        for (a, b) in zip(list(dict(sorted(p.items())).values()), self.H.evc):
+        for a, b in zip(list(dict(sorted(p.items())).values()), self.H.evc):
             assert almost_equal(a, b, places=4)
 
 

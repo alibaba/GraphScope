@@ -501,7 +501,7 @@ class FragmentWrapper<vineyard::ArrowFragment<OID_T, VID_T, VERTEX_MAP_T>>
       for (fid_t i = 0; i < cur_fnum; ++i) {
         auto name =
             "o2g_" + std::to_string(i) + "_" + std::to_string(pair.first);
-        if (ctx_meta.Haskey(name) && cur_meta.Haskey(name)) {
+        if (ctx_meta.HasKey(name) && cur_meta.HasKey(name)) {
           auto id_in_ctx = ctx_meta.GetMemberMeta(name).GetId();
           auto id_in_cur = cur_meta.GetMemberMeta(name).GetId();
           if (id_in_ctx != id_in_cur) {

@@ -371,7 +371,7 @@ class LocalLauncher(AbstractLauncher):
         logger.info("Launch etcd with command: %s", " ".join(cmd))
         logger.info("Server is initializing etcd.")
 
-        self._etcd_process = subprocess.Popen(
+        process = subprocess.Popen(
             cmd,
             start_new_session=True,
             cwd=os.getcwd(),
@@ -379,11 +379,20 @@ class LocalLauncher(AbstractLauncher):
             encoding="utf-8",
             errors="replace",
             stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             universal_newlines=True,
             bufsize=1,
         )
+
+        stdout_watcher = PipeWatcher(
+            process.stdout,
+            sys.stdout,
+            drop=False,
+            suppressed=False,
+        )
+        setattr(process, "stdout_watcher", stdout_watcher)
+        self._etcd_process = process
 
         start_time = time.time()
         while is_free_port(self._etcd_client_port):
@@ -392,7 +401,11 @@ class LocalLauncher(AbstractLauncher):
                 self._etcd_process.kill()
                 _, errs = self._etcd_process.communicate()
                 logger.error("Start etcd timeout, %s", errs)
-                raise RuntimeError("Launch etcd service failed due to timeout.")
+                msg = "Launch etcd service failed due to timeout: "
+                msg += "\n".join([line for line in stdout_watcher.poll_all()])
+                raise RuntimeError(msg)
+        stdout_watcher.drop(True)
+        stdout_watcher.suppress(not logger.isEnabledFor(logging.DEBUG))
         logger.info("Etcd is ready, endpoint is %s", self._etcd_endpoint)
 
     def launch_vineyard(self):
@@ -412,7 +425,7 @@ class LocalLauncher(AbstractLauncher):
         self._vineyard_socket = f"{self._vineyard_socket_prefix}{ts}"
         self._vineyard_rpc_port = 9600 if is_free_port(9600) else get_free_port()
 
-        cmd.extend(self.find_vineyardd())
+        cmd.extend([sys.executable, "-m", "vineyard"])
         cmd.extend(["--socket", self.vineyard_socket])
         cmd.extend(["--rpc_socket_port", str(self._vineyard_rpc_port)])
         cmd.extend(["--size", self._shared_mem])
@@ -442,10 +455,10 @@ class LocalLauncher(AbstractLauncher):
         stdout_watcher = PipeWatcher(
             process.stdout,
             sys.stdout,
-            suppressed=(not logger.isEnabledFor(logging.DEBUG)),
+            drop=False,
+            suppressed=False,
         )
         setattr(process, "stdout_watcher", stdout_watcher)
-
         self._vineyardd_process = process
 
         start_time = time.time()
@@ -455,7 +468,8 @@ class LocalLauncher(AbstractLauncher):
             while not os.path.exists(self._vineyard_socket):
                 time.sleep(1)
                 if self._vineyardd_process.poll() is not None:
-                    msg = "Launch vineyardd failed."
+                    msg = "Launch vineyardd failed: "
+                    msg += "\n".join([line for line in stdout_watcher.poll_all()])
                     msg += "\nRerun with `graphscope.set_option(log_level='debug')`,"
                     msg += " to get verbosed vineyardd logs."
                     raise RuntimeError(msg)
@@ -464,6 +478,8 @@ class LocalLauncher(AbstractLauncher):
                     # outs, _ = self._vineyardd_process.communicate()
                     # logger.error("Start vineyardd timeout, %s", outs)
                     raise RuntimeError("Launch vineyardd failed due to timeout.")
+        stdout_watcher.drop(True)
+        stdout_watcher.suppress(not logger.isEnabledFor(logging.DEBUG))
         logger.info(
             "Vineyardd is ready, ipc socket is {0}".format(self._vineyard_socket)
         )
@@ -497,19 +513,6 @@ class LocalLauncher(AbstractLauncher):
         else:
             etcd = [etcd]
         return etcd
-
-    @staticmethod
-    def find_vineyardd() -> [str]:
-        vineyardd = None
-        if "VINEYARD_HOME" in os.environ:
-            vineyardd = os.path.expandvars("$VINEYARD_HOME/vineyardd")
-        if vineyardd is None:
-            vineyardd = shutil.which("vineyardd")
-        if vineyardd is None:
-            vineyardd = [sys.executable, "-m", "vineyard"]
-        else:
-            vineyardd = [vineyardd]
-        return vineyardd
 
     def configure_etcd_endpoint(self):
         if self._external_etcd_addr is None:
