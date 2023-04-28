@@ -687,6 +687,19 @@ class GraphDAGNode(DAGNode, GraphInterface):
                 A new graph projected from the property graph, evaluated in eager mode.
         """
         check_argument(self.graph_type == graph_def_pb2.ARROW_PROPERTY)
+        if isinstance(vertices, (list, set)) or isinstance(edges, (list, set)):
+            raise ValueError(
+                "\nThe project vertices or edges cannot be a set or a list, rather, a dict is expected, \n"
+                "where the key is the label name and the value is a list of property name. E.g.,\n"
+                "\n"
+                "    g.project(vertices={'person': ['name', 'age']},\n"
+                "              edges={'knows': ['weight']})\n"
+                "\n"
+                "The property list for vertices and edges can be empty if not needed, e.g.,\n"
+                "\n"
+                "    g.project(vertices={'person': []}, edges={'knows': []})\n"
+            )
+
         op = dag_utils.project_arrow_property_graph(
             self, json.dumps(vertices), json.dumps(edges)
         )
