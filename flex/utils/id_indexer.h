@@ -665,6 +665,27 @@ class IdIndexer {
                                LFIndexer<_INDEX_T>& output, double rate);
 };
 
+template <typename KEY_T, typename INDEX_T>
+grape::InArchive& operator<<(grape::InArchive& archive,
+                             const IdIndexer<KEY_T, INDEX_T>& indexer) {
+  archive << indexer.keys();
+  return archive;
+}
+
+template <typename KEY_T, typename INDEX_T>
+grape::OutArchive& operator>>(grape::OutArchive& archive,
+                              IdIndexer<KEY_T, INDEX_T>& indexer) {
+  typename id_indexer_impl::KeyBuffer<KEY_T>::type keys;
+  archive >> keys;
+  size_t size = keys.size();
+  for (size_t i = 0; i < size; ++i) {
+    INDEX_T j;
+    indexer.add(keys[i], j);
+    CHECK_EQ(static_cast<size_t>(j), i);
+  }
+  return archive;
+}
+
 template <class INDEX_T>
 void build_lf_indexer(const IdIndexer<int64_t, INDEX_T>& input,
                       LFIndexer<INDEX_T>& lf, double rate) {

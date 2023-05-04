@@ -23,43 +23,66 @@
 
 namespace gs {
 
-inline void serialize_field(grape::InArchive& arc, const Any& prop) {
-  switch (prop.type) {
+inline void serialize_field(grape::InArchive& arc, const Property& prop) {
+  switch (prop.type()) {
   case PropertyType::kInt32:
-    arc << prop.value.i;
+    arc << prop.get_value<int>();
     break;
   case PropertyType::kDate:
-    arc << prop.value.d.milli_second;
+    arc << prop.get_value<Date>().milli_second;
     break;
   case PropertyType::kString:
-    arc << prop.value.s;
+    arc << prop.get_value<std::string>();
+    break;
+  case PropertyType::kStringView:
+    arc << prop.get_value<std::string_view>();
     break;
   case PropertyType::kEmpty:
     break;
   case PropertyType::kInt64:
-    arc << prop.value.l;
+    arc << prop.get_value<int64_t>();
     break;
+  case PropertyType::kList:
+    arc << prop.get_value<std::vector<Property>>();
   default:
     LOG(FATAL) << "Unexpected property type";
   }
 }
 
-inline void deserialize_field(grape::OutArchive& arc, Any& prop) {
-  switch (prop.type) {
-  case PropertyType::kInt32:
-    arc >> prop.value.i;
-    break;
-  case PropertyType::kDate:
-    arc >> prop.value.d.milli_second;
-    break;
-  case PropertyType::kString:
-    arc >> prop.value.s;
-    break;
+inline void deserialize_field(grape::OutArchive& arc, Property& prop) {
+  switch (prop.type()) {
+  case PropertyType::kInt32: {
+    int val;
+    arc >> val;
+    prop.set_value<int>(val);
+  } break;
+  case PropertyType::kDate: {
+    Date val;
+    arc >> val.milli_second;
+    prop.set_value<Date>(val);
+  } break;
+  case PropertyType::kString: {
+    std::string val;
+    arc >> val;
+    prop.set_value<std::string>(val);
+  } break;
+  case PropertyType::kStringView: {
+    std::string_view val;
+    arc >> val;
+    prop.set_value<std::string_view>(val);
+  } break;
   case PropertyType::kEmpty:
     break;
-  case PropertyType::kInt64:
-    arc >> prop.value.l;
-    break;
+  case PropertyType::kInt64: {
+    int64_t val;
+    arc >> val;
+    prop.set_value<int64_t>(val);
+  } break;
+  case PropertyType::kList: {
+    std::vector<Property> content;
+    arc >> content;
+    prop.set_value<std::vector<Property>>(content);
+  } break;
   default:
     LOG(FATAL) << "Unexpected property type";
   }

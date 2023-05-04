@@ -47,26 +47,35 @@ class Table {
 
   const std::shared_ptr<ColumnBase> get_column(const std::string& name) const;
 
-  std::vector<Any> get_row(size_t row_id) const;
+  Property get_row(size_t row_id) const;
+
+  std::vector<Property> get_row_as_vec(size_t row_id) const;
 
   std::shared_ptr<ColumnBase> get_column_by_id(size_t index);
 
   const std::shared_ptr<ColumnBase> get_column_by_id(size_t index) const;
 
   size_t col_num() const;
+
   std::vector<std::shared_ptr<ColumnBase>>& columns();
 
-  void insert(size_t index, const std::vector<Any>& values);
+  const std::vector<std::shared_ptr<ColumnBase>>& columns() const;
+
+  void insert(size_t index, const std::vector<Property>& values);
+
+  void insert(size_t index, const Property& value);
 
   void Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer,
                  const std::string& prefix, size_t row_num);
 
+  void Serialize(const std::string& prefix, size_t row_num);
+
   void Deserialize(std::unique_ptr<grape::LocalIOAdaptor>& reader,
                    const std::string& prefix);
 
-  Any at(size_t row_id, size_t col_id);
+  void Deserialize(const std::string& prefix);
 
-  Any at(size_t row_id, size_t col_id) const;
+  Property at(size_t row_id, size_t col_id) const;
 
   void ingest(uint32_t index, grape::OutArchive& arc);
 

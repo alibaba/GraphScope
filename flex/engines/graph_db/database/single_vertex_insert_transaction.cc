@@ -36,8 +36,8 @@ SingleVertexInsertTransaction::SingleVertexInsertTransaction(
 }
 SingleVertexInsertTransaction::~SingleVertexInsertTransaction() { Abort(); }
 
-bool SingleVertexInsertTransaction::AddVertex(label_t label, oid_t id,
-                                              const std::vector<Any>& props) {
+bool SingleVertexInsertTransaction::AddVertex(
+    label_t label, oid_t id, const std::vector<Property>& props) {
   size_t arc_size = arc_.GetSize();
   arc_ << static_cast<uint8_t>(0) << label << id;
   const std::vector<PropertyType>& types =
@@ -53,13 +53,19 @@ bool SingleVertexInsertTransaction::AddVertex(label_t label, oid_t id,
   int col_num = props.size();
   for (int col_i = 0; col_i != col_num; ++col_i) {
     auto& prop = props[col_i];
-    if (prop.type != types[col_i]) {
-      arc_.Resize(arc_size);
-      std::string label_name = graph_.schema().get_vertex_label_name(label);
-      LOG(ERROR) << "Vertex [" << label_name << "][" << col_i
-                 << "] property type not match, expected " << types[col_i]
-                 << ", but got " << prop.type;
-      return false;
+    if (prop.type() != types[col_i]) {
+      if ((prop.type() == PropertyType::kString ||
+           prop.type() == PropertyType::kStringView) &&
+          (types[col_i] == PropertyType::kString ||
+           types[col_i] == PropertyType::kStringView)) {
+      } else {
+        arc_.Resize(arc_size);
+        std::string label_name = graph_.schema().get_vertex_label_name(label);
+        LOG(ERROR) << "Vertex [" << label_name << "][" << col_i
+                   << "] property type not match, expected " << types[col_i]
+                   << ", but got " << prop.type();
+        return false;
+      }
     }
     serialize_field(arc_, prop);
   }
@@ -71,7 +77,7 @@ bool SingleVertexInsertTransaction::AddVertex(label_t label, oid_t id,
 bool SingleVertexInsertTransaction::AddEdge(label_t src_label, oid_t src,
                                             label_t dst_label, oid_t dst,
                                             label_t edge_label,
-                                            const Any& prop) {
+                                            const Property& prop) {
   vid_t src_vid, dst_vid;
   if (src == added_vertex_id_ && src_label == added_vertex_label_) {
     if (!graph_.get_lid(dst_label, dst, dst_vid)) {
@@ -105,10 +111,14 @@ bool SingleVertexInsertTransaction::AddEdge(label_t src_label, oid_t src,
   }
   const PropertyType& type =
       graph_.schema().get_edge_property(src_label, dst_label, edge_label);
+<<<<<<< HEAD
   if (prop.type != type) {
     std::string label_name = graph_.schema().get_edge_label_name(edge_label);
     LOG(ERROR) << "Edge property " << label_name << " type not match, expected "
                << type << ", got " << prop.type;
+=======
+  if (prop.type() != type) {
+>>>>>>> 773cc8ee7 (Implemented supports for complex edge properties.)
     return false;
   }
   arc_ << static_cast<uint8_t>(1) << src_label << src << dst_label << dst

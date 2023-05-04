@@ -22,6 +22,7 @@
 
 #include "flex/storages/rt_mutable_graph/schema.h"
 
+#include "flex/storages/rt_mutable_graph/dual_csr.h"
 #include "flex/storages/rt_mutable_graph/mutable_csr.h"
 #include "flex/storages/rt_mutable_graph/types.h"
 #include "flex/utils/id_indexer.h"
@@ -48,6 +49,10 @@ class MutablePropertyFragment {
                   vid_t dst_lid, label_t edge_label, timestamp_t ts,
                   grape::OutArchive& arc, ArenaAllocator& alloc);
 
+  void PutEdge(label_t src_label, vid_t src_lid, label_t dst_label,
+               vid_t dst_lid, label_t edge_label, timestamp_t ts,
+               const Property& data, ArenaAllocator& alloc);
+
   const Schema& schema() const;
 
   void Serialize(const std::string& prefix);
@@ -66,29 +71,35 @@ class MutablePropertyFragment {
 
   vid_t add_vertex(label_t label, oid_t id);
 
-  std::shared_ptr<MutableCsrConstEdgeIterBase> get_outgoing_edges(
-      label_t label, vid_t u, label_t neighbor_label, label_t edge_label) const;
+  std::shared_ptr<GenericNbrIterator<vid_t>> get_outgoing_edges(
+      label_t label, vid_t u, label_t neighbor_label, label_t edge_label,
+      timestamp_t ts) const;
 
-  std::shared_ptr<MutableCsrConstEdgeIterBase> get_incoming_edges(
-      label_t label, vid_t u, label_t neighbor_label, label_t edge_label) const;
+  std::shared_ptr<GenericNbrIterator<vid_t>> get_incoming_edges(
+      label_t label, vid_t u, label_t neighbor_label, label_t edge_label,
+      timestamp_t ts) const;
 
-  std::shared_ptr<MutableCsrEdgeIterBase> get_outgoing_edges_mut(
-      label_t label, vid_t u, label_t neighbor_label, label_t edge_label);
+  std::shared_ptr<GenericNbrIteratorMut<vid_t>> get_outgoing_edges_mut(
+      label_t label, vid_t u, label_t neighbor_label, label_t edge_label,
+      timestamp_t ts);
 
-  std::shared_ptr<MutableCsrEdgeIterBase> get_incoming_edges_mut(
-      label_t label, vid_t u, label_t neighbor_label, label_t edge_label);
+  std::shared_ptr<GenericNbrIteratorMut<vid_t>> get_incoming_edges_mut(
+      label_t label, vid_t u, label_t neighbor_label, label_t edge_label,
+      timestamp_t ts);
 
-  MutableCsrBase* get_oe_csr(label_t label, label_t neighbor_label,
-                             label_t edge_label);
+  MutableCsrBase<vid_t, timestamp_t>* get_oe_csr(label_t label,
+                                                 label_t neighbor_label,
+                                                 label_t edge_label);
 
-  const MutableCsrBase* get_oe_csr(label_t label, label_t neighbor_label,
-                                   label_t edge_label) const;
+  const MutableCsrBase<vid_t, timestamp_t>* get_oe_csr(
+      label_t label, label_t neighbor_label, label_t edge_label) const;
 
-  MutableCsrBase* get_ie_csr(label_t label, label_t neighbor_label,
-                             label_t edge_label);
+  MutableCsrBase<vid_t, timestamp_t>* get_ie_csr(label_t label,
+                                                 label_t neighbor_label,
+                                                 label_t edge_label);
 
-  const MutableCsrBase* get_ie_csr(label_t label, label_t neighbor_label,
-                                   label_t edge_label) const;
+  const MutableCsrBase<vid_t, timestamp_t>* get_ie_csr(
+      label_t label, label_t neighbor_label, label_t edge_label) const;
 
   void parseVertexFiles(const std::string& vertex_label,
                         const std::vector<std::string>& filenames,
@@ -105,7 +116,8 @@ class MutablePropertyFragment {
 
   Schema schema_;
   std::vector<LFIndexer<vid_t>> lf_indexers_;
-  std::vector<MutableCsrBase*> ie_, oe_;
+  std::vector<MutableCsrBase<vid_t, timestamp_t>*> ie_, oe_;
+  std::vector<DualCsrBase<vid_t, timestamp_t>*> dual_csr_list_;
   std::vector<Table> vertex_data_;
 
   size_t vertex_label_num_, edge_label_num_;

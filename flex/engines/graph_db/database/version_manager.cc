@@ -93,7 +93,8 @@ uint32_t VersionManager::acquire_update_timestamp() {
   return write_ts_.fetch_add(1);
 }
 void VersionManager::release_update_timestamp(uint32_t ts) {
-  buf_.set_bit(ts & ring_index_mask);
+  CHECK_EQ(ts, read_ts_.load() + 1);
+  read_ts_++;
   pending_reqs_.store(0);
 }
 

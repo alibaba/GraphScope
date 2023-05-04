@@ -28,15 +28,15 @@ class TypedEmptyColumn : public ColumnBase {
 
   void init(size_t max_size) override {}
 
+  PropertyType type() const override { return AnyConverter<T>::type; }
+
   void set_value(size_t index, const T& val) {}
 
-  void set_any(size_t index, const Any& value) override {}
+  void set(size_t index, const Property& value) override {}
 
   T get_view(size_t index) const { T{}; }
 
-  PropertyType type() const override { return AnyConverter<T>::type; }
-
-  Any get(size_t index) const override { return Any(); }
+  Property get(size_t index) const override { return Property(); }
 
   void Serialize(const std::string& path, size_t size) override {}
 
@@ -79,7 +79,7 @@ std::shared_ptr<ColumnBase> CreateColumn(PropertyType type,
       return std::make_shared<LongColumn>(strategy);
     } else if (type == PropertyType::kDate) {
       return std::make_shared<DateColumn>(strategy);
-    } else if (type == PropertyType::kString) {
+    } else if (type == PropertyType::kString || type == PropertyType::kStringView) {
       return std::make_shared<StringColumn>(strategy);
     } else {
       LOG(FATAL) << "unexpected type to create column, "

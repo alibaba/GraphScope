@@ -33,9 +33,9 @@ class ColumnBase {
 
   virtual PropertyType type() const = 0;
 
-  virtual void set_any(size_t index, const Any& value) = 0;
+  virtual void set(size_t index, const Property& value) = 0;
 
-  virtual Any get(size_t index) const = 0;
+  virtual Property get(size_t index) const = 0;
 
   virtual void ingest(uint32_t index, grape::OutArchive& arc) = 0;
 
@@ -56,16 +56,19 @@ class TypedColumn : public ColumnBase {
 
   void set_value(size_t index, const T& val) { buffer_.insert(index, val); }
 
-  void set_any(size_t index, const Any& value) override {
-    set_value(index, AnyConverter<T>::from_any(value));
+  void set(size_t index, const Property& value) override {
+    CHECK_EQ(value.type(), type());
+    set_value(index, value.get_value<T>());
   }
 
   T get_view(size_t index) const { return buffer_[index]; }
 
   PropertyType type() const override { return AnyConverter<T>::type; }
 
-  Any get(size_t index) const override {
-    return AnyConverter<T>::to_any(buffer_[index]);
+  Property get(size_t index) const override {
+    Property ret;
+    ret.set_value<T>(buffer_[index]);
+    return ret;
   }
 
   void Serialize(const std::string& path, size_t size) override {
@@ -89,6 +92,61 @@ class TypedColumn : public ColumnBase {
 
  private:
   mmap_array<T> buffer_;
+  StorageStrategy strategy_;
+};
+
+template <>
+class TypedColumn<std::string_view> : public ColumnBase {
+ public:
+  TypedColumn(StorageStrategy strategy) : strategy_(strategy) {}
+  ~TypedColumn() {}
+
+  void init(size_t max_size) override { buffer_.resize(max_size); }
+
+  void set_value(size_t index, const std::string_view& val) { buffer_.insert(index, val); }
+  void set_value(size_t index, const std::string& val) { buffer_.insert(index, std::string_view(val)); }
+
+  void set(size_t index, const Property& value) override {
+    if (value.type() == PropertyType::kString) {
+      set_value(index, value.get_value<std::string>());
+    } else if (value.type() == PropertyType::kStringView) {
+      set_value(index, value.get_value<std::string_view>());
+    } else {
+      LOG(FATAL) << "Unexpected type of Property(" << value.type() << ") to be inserted into StringColumn";
+    }
+  }
+
+  std::string_view get_view(size_t index) const { return buffer_[index]; }
+
+  PropertyType type() const override { return PropertyType::kStringView; }
+
+  Property get(size_t index) const override {
+    Property ret;
+    ret.set_value<std::string_view>(buffer_[index]);
+    return ret;
+  }
+
+  void Serialize(const std::string& path, size_t size) override {
+    buffer_.dump_to_file(path, size);
+  }
+
+  void Deserialize(const std::string& path) override {
+    buffer_.open_for_read(path);
+  }
+
+  void ingest(uint32_t index, grape::OutArchive& arc) override {
+    std::string_view val;
+    arc >> val;
+    set_value(index, val);
+  }
+
+  StorageStrategy storage_strategy() const override { return strategy_; }
+
+  const mmap_array<std::string_view>& buffer() const { return buffer_; }
+  mmap_array<std::string_view>& buffer() { return buffer_; }
+
+ private:
+  mmap_array<std::string_view> buffer_;
   StorageStrategy strategy_;
 };
 

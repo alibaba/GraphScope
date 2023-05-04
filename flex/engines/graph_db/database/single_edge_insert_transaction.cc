@@ -39,7 +39,8 @@ SingleEdgeInsertTransaction::~SingleEdgeInsertTransaction() { Abort(); }
 
 bool SingleEdgeInsertTransaction::AddEdge(label_t src_label, oid_t src,
                                           label_t dst_label, oid_t dst,
-                                          label_t edge_label, const Any& prop) {
+                                          label_t edge_label,
+                                          const Property& prop) {
   if (!graph_.get_lid(src_label, src, src_vid_)) {
     std::string label_name = graph_.schema().get_vertex_label_name(src_label);
     LOG(ERROR) << "Source vertex " << label_name << "[" << src
@@ -54,10 +55,10 @@ bool SingleEdgeInsertTransaction::AddEdge(label_t src_label, oid_t src,
   }
   const PropertyType& type =
       graph_.schema().get_edge_property(src_label, dst_label, edge_label);
-  if (prop.type != type) {
+  if (prop.type() != type) {
     std::string label_name = graph_.schema().get_edge_label_name(edge_label);
     LOG(ERROR) << "Edge property " << label_name << " type not match, expected "
-               << type << ", got " << prop.type;
+               << type << ", got " << prop.type();
     return false;
   }
   src_label_ = src_label;

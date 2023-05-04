@@ -15,5 +15,8 @@ install(TARGETS flex_rt_mutable_graph
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/mutable_property_fragment.h
               ${CMAKE_CURRENT_SOURCE_DIR}/schema.h
               ${CMAKE_CURRENT_SOURCE_DIR}/mutable_csr.h
+              ${CMAKE_CURRENT_SOURCE_DIR}/mutable_csr_view.h
+              ${CMAKE_CURRENT_SOURCE_DIR}/mutable_csr_impl.h
+              ${CMAKE_CURRENT_SOURCE_DIR}/dual_csr.h
               ${CMAKE_CURRENT_SOURCE_DIR}/types.h
         DESTINATION include/flex/storages/rt_mutable_graph)

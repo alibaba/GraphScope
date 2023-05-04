@@ -35,7 +35,16 @@ InsertTransaction::InsertTransaction(MutablePropertyFragment& graph,
 InsertTransaction::~InsertTransaction() { Abort(); }
 
 bool InsertTransaction::AddVertex(label_t label, oid_t id,
-                                  const std::vector<Any>& props) {
+                                  const Property& props) {
+  if (props.type() == PropertyType::kList) {
+    std::vector<Property> flatten = props.get_value<std::vector<Property>>();
+    return AddVertex(label, id, flatten);
+  }
+  return false;
+}
+
+bool InsertTransaction::AddVertex(label_t label, oid_t id,
+                                  const std::vector<Property>& props) {
   size_t arc_size = arc_.GetSize();
   arc_ << static_cast<uint8_t>(0) << label << id;
   const std::vector<PropertyType>& types =
@@ -51,12 +60,12 @@ bool InsertTransaction::AddVertex(label_t label, oid_t id,
   int col_num = props.size();
   for (int col_i = 0; col_i != col_num; ++col_i) {
     auto& prop = props[col_i];
-    if (prop.type != types[col_i]) {
+    if (prop.type() != types[col_i]) {
       arc_.Resize(arc_size);
       std::string label_name = graph_.schema().get_vertex_label_name(label);
       LOG(ERROR) << "Vertex [" << label_name << "][" << col_i
                  << "] property type not match, expected " << types[col_i]
-                 << ", but got " << prop.type;
+                 << ", but got " << prop.type();
       return false;
     }
     serialize_field(arc_, prop);
@@ -67,7 +76,7 @@ bool InsertTransaction::AddVertex(label_t label, oid_t id,
 
 bool InsertTransaction::AddEdge(label_t src_label, oid_t src, label_t dst_label,
                                 oid_t dst, label_t edge_label,
-                                const Any& prop) {
+                                const Property& prop) {
   vid_t lid;
   if (!graph_.get_lid(src_label, src, lid)) {
     if (added_vertices_.find(std::make_pair(src_label, src)) ==
@@ -89,7 +98,7 @@ bool InsertTransaction::AddEdge(label_t src_label, oid_t src, label_t dst_label,
   }
   const PropertyType& type =
       graph_.schema().get_edge_property(src_label, dst_label, edge_label);
-  if (prop.type != type) {
+  if (prop.type() != type) {
     std::string label_name = graph_.schema().get_edge_label_name(edge_label);
     LOG(ERROR) << "Edge property " << label_name << " type not match, expected "
                << type << ", got " << prop.type;

@@ -40,7 +40,7 @@ inline void ParseString(const std::string_view& str, std::string_view& val) {
   val = str;
 }
 
-void ParseRecord(const char* line, std::vector<Any>& rec) {
+void ParseRecord(const char* line, std::vector<Property>& rec) {
   const char* cur = line;
   for (auto& item : rec) {
     const char* ptr = cur;
@@ -48,20 +48,34 @@ void ParseRecord(const char* line, std::vector<Any>& rec) {
       ++ptr;
     }
     std::string_view sv(cur, ptr - cur);
-    if (item.type == PropertyType::kInt32) {
-      ParseInt32(sv, item.value.i);
-    } else if (item.type == PropertyType::kInt64) {
-      ParseInt64(sv, item.value.l);
-    } else if (item.type == PropertyType::kDate) {
-      ParseDate(sv, item.value.d);
-    } else if (item.type == PropertyType::kString) {
-      ParseString(sv, item.value.s);
+    if (item.type() == PropertyType::kInt32) {
+      int val;
+      ParseInt32(sv, val);
+      item.set_value<int>(val);
+    } else if (item.type() == PropertyType::kInt64) {
+      int64_t val;
+      ParseInt64(sv, val);
+      item.set_value<int64_t>(val);
+    } else if (item.type() == PropertyType::kDate) {
+      Date val;
+      ParseDate(sv, val);
+      item.set_value<Date>(val);
+    } else if (item.type() == PropertyType::kStringView) {
+      std::string_view val;
+      ParseString(sv, val);
+      item.set_value<std::string_view>(val);
+    } else if (item.type() == PropertyType::kString) {
+      std::string val(sv);
+      item.set_value<std::string>(val);
+    } else {
+      LOG(FATAL) << "Unexpected property type: "
+                 << static_cast<int>(item.type()) << ".";
     }
     cur = ptr + 1;
   }
 }
 
-void ParseRecord(const char* line, int64_t& id, std::vector<Any>& rec) {
+void ParseRecord(const char* line, int64_t& id, std::vector<Property>& rec) {
   const char* cur = line;
   {
     const char* ptr = cur;
@@ -80,6 +94,14 @@ void ParseRecordX(const char* line, int64_t& src, int64_t& dst, int& prop) {
   sscanf(line, "%lld|%lld|%d", &src, &dst, &prop);
 #else
   sscanf(line, "%" SCNd64 "|%" SCNd64 "|%d", &src, &dst, &prop);
+#endif
+}
+
+void ParseRecordX(const char* line, int64_t& src, int64_t& dst, int64_t& prop) {
+#ifdef __APPLE__
+  sscanf(line, "%lld|%lld|%lld", &src, &dst, &prop);
+#else
+  sscanf(line, "%" SCNd64 "|%" SCNd64 "|%" SCNd64, &src, &dst, &prop);
 #endif
 }
 
@@ -102,45 +124,160 @@ void ParseRecordX(const char* line, int64_t& src, int64_t& dst,
 #endif
 }
 
-grape::InArchive& operator<<(grape::InArchive& in_archive, const Any& value) {
-  switch (value.type) {
+void ParseRecordX(const char* line, int64_t& src, int64_t& dst,
+                  std::vector<Property>& rec) {
+  const char* cur = line;
+  {
+    const char* ptr = cur;
+    while (*ptr != '\0' && *ptr != '|') {
+      ++ptr;
+    }
+    std::string_view src_sv(cur, ptr - cur);
+    ParseInt64(src_sv, src);
+    cur = ptr + 1;
+
+    ptr = cur;
+    while (*ptr != '\0' && *ptr != '|') {
+      ++ptr;
+    }
+    std::string_view dst_sv(cur, ptr - cur);
+    ParseInt64(dst_sv, dst);
+    cur = ptr + 1;
+  }
+  ParseRecord(cur, rec);
+}
+
+grape::InArchive& operator<<(grape::InArchive& in_archive,
+                             const Property& value) {
+  PropertyType type = value.type();
+  in_archive << type;
+  switch (type) {
+  case PropertyType::kEmpty:
+    break;
+  case PropertyType::kInt8:
+    in_archive << value.get_value<int8_t>();
+    break;
+  case PropertyType::kUInt8:
+    in_archive << value.get_value<uint8_t>();
+    break;
+  case PropertyType::kInt16:
+    in_archive << value.get_value<int16_t>();
+    break;
+  case PropertyType::kUInt16:
+    in_archive << value.get_value<uint16_t>();
+    break;
   case PropertyType::kInt32:
-    in_archive << value.type << value.value.i;
+    in_archive << value.get_value<int32_t>();
+    break;
+  case PropertyType::kUInt32:
+    in_archive << value.get_value<uint32_t>();
     break;
   case PropertyType::kInt64:
-    in_archive << value.type << value.value.l;
+    in_archive << value.get_value<int64_t>();
+    break;
+  case PropertyType::kUInt64:
+    in_archive << value.get_value<uint64_t>();
     break;
   case PropertyType::kDate:
-    in_archive << value.type << value.value.d.milli_second;
+    in_archive << value.get_value<Date>().milli_second;
+    break;
+  case PropertyType::kFloat:
+    in_archive << value.get_value<float>();
+    break;
+  case PropertyType::kDouble:
+    in_archive << value.get_value<double>();
     break;
   case PropertyType::kString:
-    in_archive << value.type << value.value.s;
+    in_archive << value.get_value<std::string>();
     break;
-  default:
-    in_archive << PropertyType::kEmpty;
+  case PropertyType::kStringView:
+    in_archive << value.get_value<std::string_view>();
+    break;
+  case PropertyType::kList:
+    in_archive << value.get_value<std::vector<Property>>();
     break;
   }
 
   return in_archive;
 }
 
-grape::OutArchive& operator>>(grape::OutArchive& out_archive, Any& value) {
-  out_archive >> value.type;
-  switch (value.type) {
+grape::OutArchive& operator>>(grape::OutArchive& out_archive, Property& value) {
+  PropertyType type;
+  out_archive >> type;
+  switch (type) {
+  case PropertyType::kEmpty:
+    value.set_value<grape::EmptyType>(grape::EmptyType());
+    break;
+  case PropertyType::kInt8:
+    int8_t i8;
+    out_archive >> i8;
+    value.set_value<int8_t>(i8);
+    break;
+  case PropertyType::kUInt8:
+    uint8_t ui8;
+    out_archive >> ui8;
+    value.set_value<uint8_t>(ui8);
+    break;
+  case PropertyType::kInt16:
+    int16_t i16;
+    out_archive >> i16;
+    value.set_value<int16_t>(i16);
+    break;
+  case PropertyType::kUInt16:
+    uint16_t ui16;
+    out_archive >> ui16;
+    value.set_value<uint16_t>(ui16);
+    break;
   case PropertyType::kInt32:
-    out_archive >> value.value.i;
+    int32_t i32;
+    out_archive >> i32;
+    value.set_value<int32_t>(i32);
+    break;
+  case PropertyType::kUInt32:
+    uint32_t ui32;
+    out_archive >> ui32;
+    value.set_value<uint32_t>(ui32);
     break;
   case PropertyType::kInt64:
-    out_archive >> value.value.l;
+    int64_t i64;
+    out_archive >> i64;
+    value.set_value<int64_t>(i64);
+    break;
+  case PropertyType::kUInt64:
+    uint64_t ui64;
+    out_archive >> ui64;
+    value.set_value<uint64_t>(ui64);
     break;
   case PropertyType::kDate:
-    out_archive >> value.value.d.milli_second;
+    Date date;
+    out_archive >> date.milli_second;
+    value.set_value<Date>(date);
     break;
-  case PropertyType::kString:
-    out_archive >> value.value.s;
+  case PropertyType::kFloat:
+    float f;
+    out_archive >> f;
+    value.set_value<float>(f);
     break;
-  default:
+  case PropertyType::kDouble:
+    double d;
+    out_archive >> d;
+    value.set_value<double>(d);
     break;
+  case PropertyType::kString: {
+    std::string s;
+    out_archive >> s;
+    value.set_value<std::string>(s);
+  } break;
+  case PropertyType::kStringView: {
+    std::string_view sv;
+    out_archive >> sv;
+    value.set_value<std::string_view>(sv);
+  } break;
+  case PropertyType::kList: {
+    std::vector<Property> list;
+    out_archive >> list;
+    value.set_value<std::vector<Property>>(list);
+  } break;
   }
 
   return out_archive;
@@ -166,6 +303,7 @@ inline static uint32_t str_2_to_number(const char* str) {
   return char_to_digit(str[0]) * 10u + char_to_digit(str[1]);
 }
 
+Date::Date(const Date& x) : milli_second(x.milli_second) {}
 Date::Date(int64_t x) : milli_second(x) {}
 Date::Date(const char* str) { reset(str); }
 
@@ -209,5 +347,14 @@ void Date::reset(const char* str) {
 }
 
 std::string Date::to_string() const { return std::to_string(milli_second); }
+
+grape::InArchive& operator<<(grape::InArchive& arc, const Date& v) {
+  arc << v.milli_second;
+  return arc;
+}
+grape::OutArchive& operator>>(grape::OutArchive& arc, Date& v) {
+  arc >> v.milli_second;
+  return arc;
+}
 
 }  // namespace gs

@@ -18,6 +18,7 @@ limitations under the License.
 
 #include <assert.h>
 
+#include <any>
 #include <istream>
 #include <ostream>
 #include <vector>
@@ -33,329 +34,308 @@ enum class StorageStrategy {
 };
 
 enum class PropertyType {
-  kInt32,
-  kDate,
-  kString,
   kEmpty,
+  kInt8,
+  kUInt8,
+  kInt16,
+  kUInt16,
+  kInt32,
+  kUInt32,
   kInt64,
+  kUInt64,
+  kDate,
+  kFloat,
+  kDouble,
+  kString,
+  kStringView,
+  kList,
+};
+
+template <typename T>
+struct AnyConverter {};
+
+template <>
+struct AnyConverter<grape::EmptyType> {
+  static constexpr PropertyType type = PropertyType::kEmpty;
+};
+
+template <>
+struct AnyConverter<int8_t> {
+  static constexpr PropertyType type = PropertyType::kInt8;
+};
+
+template <>
+struct AnyConverter<uint8_t> {
+  static constexpr PropertyType type = PropertyType::kUInt8;
+};
+
+template <>
+struct AnyConverter<int16_t> {
+  static constexpr PropertyType type = PropertyType::kInt16;
+};
+
+template <>
+struct AnyConverter<uint16_t> {
+  static constexpr PropertyType type = PropertyType::kUInt16;
+};
+
+template <>
+struct AnyConverter<int32_t> {
+  static constexpr PropertyType type = PropertyType::kInt32;
+};
+
+template <>
+struct AnyConverter<uint32_t> {
+  static constexpr PropertyType type = PropertyType::kUInt32;
+};
+
+template <>
+struct AnyConverter<int64_t> {
+  static constexpr PropertyType type = PropertyType::kInt64;
+};
+
+template <>
+struct AnyConverter<uint64_t> {
+  static constexpr PropertyType type = PropertyType::kUInt64;
 };
 
 struct Date {
   Date() = default;
   ~Date() = default;
+  Date(const Date& rhs);
   Date(int64_t x);
-  Date(const char *str);
+  Date(const char* str);
 
-  void reset(const char *str);
+  void reset(const char* str);
   std::string to_string() const;
 
   int64_t milli_second;
 };
 
-union AnyValue {
-  AnyValue() {}
-  ~AnyValue() {}
+grape::InArchive& operator<<(grape::InArchive& arc, const Date& v);
+grape::OutArchive& operator>>(grape::OutArchive& arc, Date& v);
 
-  int i;
-  int64_t l;
-  Date d;
-  std::string_view s;
+template <>
+struct AnyConverter<Date> {
+  static constexpr PropertyType type = PropertyType::kDate;
 };
 
-template <typename T> struct AnyConverter;
+template <>
+struct AnyConverter<float> {
+  static constexpr PropertyType type = PropertyType::kFloat;
+};
 
-struct Any {
-  Any() : type(PropertyType::kEmpty) {}
-  ~Any() {}
+template <>
+struct AnyConverter<double> {
+  static constexpr PropertyType type = PropertyType::kDouble;
+};
 
-  int64_t get_long() const {
-    assert(type == PropertyType::kInt64);
-    return value.l;
+template <>
+struct AnyConverter<std::string> {
+  static constexpr PropertyType type = PropertyType::kString;
+};
+
+template <>
+struct AnyConverter<std::string_view> {
+  static constexpr PropertyType type = PropertyType::kStringView;
+};
+
+class Property;
+
+template <>
+struct AnyConverter<std::vector<Property>> {
+  static constexpr PropertyType type = PropertyType::kList;
+};
+
+class Property {
+ public:
+  Property() : type_(PropertyType::kEmpty) {}
+  ~Property() {}
+
+  Property(const Property& rhs) : type_(rhs.type_), value_(rhs.value_) {}
+
+  Property(Property&& rhs) noexcept
+      : type_(rhs.type_), value_(std::move(rhs.value_)) {}
+
+  Property& operator=(const Property& rhs) {
+    type_ = rhs.type_;
+    value_ = rhs.value_;
+    return *this;
   }
 
-  void set_integer(int v) {
-    type = PropertyType::kInt32;
-    value.i = v;
+  Property& operator=(Property&& rhs) noexcept {
+    type_ = rhs.type_;
+    value_ = std::move(rhs.value_);
+    return *this;
   }
 
-  void set_long(int64_t v) {
-    type = PropertyType::kInt64;
-    value.l = v;
+  template <typename T>
+  Property& operator=(const T& val) {
+    set_value(val);
+    return *this;
   }
 
-  void set_date(int64_t v) {
-    type = PropertyType::kDate;
-    value.d.milli_second = v;
-  }
-  void set_date(Date v) {
-    type = PropertyType::kDate;
-    value.d = v;
+  template <typename T>
+  Property& operator=(T&& val) {
+    set_value(std::move(val));
+    return *this;
   }
 
-  void set_string(std::string_view v) {
-    type = PropertyType::kString;
-    value.s = v;
+  template <typename T, std::enable_if_t<!std::is_same_v<Property, T>, int> = 0>
+  void set_value(const T& val) {
+    type_ = AnyConverter<T>::type;
+    value_ = val;
   }
 
-  std::string to_string() const {
-    if (type == PropertyType::kInt32) {
-      return std::to_string(value.i);
-    } else if (type == PropertyType::kInt64) {
-      return std::to_string(value.l);
-    } else if (type == PropertyType::kString) {
-      return std::string(value.s.data(), value.s.size());
-      //      return value.s.to_string();
-    } else if (type == PropertyType::kDate) {
-      return value.d.to_string();
-    } else if (type == PropertyType::kEmpty) {
-      return "NULL";
-    } else {
-      LOG(FATAL) << "Unexpected property type: " << static_cast<int>(type);
-      return "";
+  template <typename T, std::enable_if_t<std::is_same_v<Property, T>, int> = 0>
+  void set_value(const T& val) {
+    type_ = val.type_;
+    value_ = val.value_;
+  }
+
+  template <typename T, std::enable_if_t<!std::is_same_v<Property, T>, int> = 0>
+  void set_value(T&& val) {
+    type_ = AnyConverter<T>::type;
+    value_ = std::move(val);
+  }
+
+  template <typename T, std::enable_if_t<std::is_same_v<Property, T>, int> = 0>
+  void set_value(T&& val) {
+    type_ = val.type_;
+    value_ = std::move(val.value_);
+  }
+
+  template <typename T>
+  static Property From(const T& val) {
+    Property ret;
+    ret.set_value(val);
+    return ret;
+  }
+
+  template <typename T>
+  T get_value() const {
+    return std::any_cast<T>(value_);
+  }
+
+  PropertyType type() const { return type_; }
+
+  void set_type(PropertyType type) { type_ = type; }
+
+  bool empty() const { return type_ == PropertyType::kEmpty; }
+
+  void clear() {
+    type_ = PropertyType::kEmpty;
+    value_ = std::any();
+  }
+
+  void swap(Property& rhs) {
+    std::swap(type_, rhs.type_);
+    std::swap(value_, rhs.value_);
+  }
+
+  bool operator==(const Property& rhs) const {
+    if (type_ != rhs.type_) {
+      return false;
+    }
+    switch (type_) {
+    case PropertyType::kEmpty:
+      return true;
+    case PropertyType::kUInt8:
+      return get_value<uint8_t>() == rhs.get_value<uint8_t>();
+    case PropertyType::kInt8:
+      return get_value<int8_t>() == rhs.get_value<int8_t>();
+    case PropertyType::kUInt16:
+      return get_value<uint16_t>() == rhs.get_value<uint16_t>();
+    case PropertyType::kInt16:
+      return get_value<int16_t>() == rhs.get_value<int16_t>();
+    case PropertyType::kUInt32:
+      return get_value<uint32_t>() == rhs.get_value<uint32_t>();
+    case PropertyType::kInt32:
+      return get_value<int32_t>() == rhs.get_value<int32_t>();
+    case PropertyType::kUInt64:
+      return get_value<uint64_t>() == rhs.get_value<uint64_t>();
+    case PropertyType::kInt64:
+      return get_value<int64_t>() == rhs.get_value<int64_t>();
+    case PropertyType::kDate:
+      return get_value<Date>().milli_second ==
+             rhs.get_value<Date>().milli_second;
+    case PropertyType::kFloat:
+      return get_value<float>() == rhs.get_value<float>();
+    case PropertyType::kDouble:
+      return get_value<double>() == rhs.get_value<double>();
+    case PropertyType::kString:
+      return get_value<std::string>() == rhs.get_value<std::string>();
+    case PropertyType::kStringView:
+      return get_value<std::string_view>() == rhs.get_value<std::string_view>();
+    case PropertyType::kList:
+      return get_value<std::vector<Property>>() ==
+             rhs.get_value<std::vector<Property>>();
+    default:
+      return false;
     }
   }
 
-  std::string AsString() const {
-    assert(type == PropertyType::kString);
-    return std::string(value.s);
-  }
+  bool operator!=(const Property& rhs) const { return !(*this == rhs); }
 
-  int64_t AsInt64() const {
-    assert(type == PropertyType::kInt64);
-    return value.l;
-  }
-
-  const std::string_view &AsStringView() const {
-    assert(type == PropertyType::kString);
-    return value.s;
-  }
-
-  const Date &AsDate() const {
-    assert(type == PropertyType::kDate);
-    return value.d;
-  }
-
-  template <typename T> static Any From(const T &value) {
-    return AnyConverter<T>::to_any(value);
-  }
-
-  PropertyType type;
-  AnyValue value;
+ private:
+  PropertyType type_;
+  std::any value_;
 };
 
-template <typename T> struct ConvertAny {
-  static void to(const Any &value, T &out) {
-    LOG(FATAL) << "Unexpected convert type...";
-  }
-};
+void ParseRecord(const char* line, std::vector<Property>& rec);
 
-template <> struct ConvertAny<int> {
-  static void to(const Any &value, int &out) {
-    CHECK(value.type == PropertyType::kInt32);
-    out = value.value.i;
-  }
-};
+void ParseRecord(const char* line, int64_t& id, std::vector<Property>& rec);
 
-template <> struct ConvertAny<int64_t> {
-  static void to(const Any &value, int64_t &out) {
-    CHECK(value.type == PropertyType::kInt64);
-    out = value.value.l;
-  }
-};
+void ParseRecordX(const char* line, int64_t& src, int64_t& dst, int& prop);
 
-template <> struct ConvertAny<Date> {
-  static void to(const Any &value, Date &out) {
-    CHECK(value.type == PropertyType::kDate);
-    out = value.value.d;
-  }
-};
+void ParseRecordX(const char* line, int64_t& src, int64_t& dst, int64_t& prop);
 
-template <> struct ConvertAny<grape::EmptyType> {
-  static void to(const Any &value, grape::EmptyType &out) {
-    CHECK(value.type == PropertyType::kEmpty);
-  }
-};
+void ParseRecordX(const char* line, int64_t& src, int64_t& dst, Date& prop);
 
-template <> struct ConvertAny<std::string> {
-  static void to(const Any &value, std::string &out) {
-    CHECK(value.type == PropertyType::kString);
-    out = std::string(value.value.s);
-  }
-};
+void ParseRecordX(const char* line, int64_t& src, int64_t& dst,
+                  grape::EmptyType& prop);
 
-template <typename T> struct AnyConverter {};
+void ParseRecordX(const char* line, int64_t& src, int64_t& dst,
+                  std::vector<Property>& rec);
 
-template <> struct AnyConverter<int> {
-  static constexpr PropertyType type = PropertyType::kInt32;
+grape::InArchive& operator<<(grape::InArchive& in_archive,
+                             const Property& value);
+grape::OutArchive& operator>>(grape::OutArchive& out_archive, Property& value);
 
-  static Any to_any(const int &value) {
-    Any ret;
-    ret.set_integer(value);
-    return ret;
-  }
-
-  static AnyValue to_any_value(const int &value) {
-    AnyValue ret;
-    ret.i = value;
-    return ret;
-  }
-
-  static const int &from_any(const Any &value) {
-    CHECK(value.type == PropertyType::kInt32);
-    return value.value.i;
-  }
-
-  static const int &from_any_value(const AnyValue &value) { return value.i; }
-};
-
-template <> struct AnyConverter<int64_t> {
-  static constexpr PropertyType type = PropertyType::kInt64;
-
-  static Any to_any(const int64_t &value) {
-    Any ret;
-    ret.set_long(value);
-    return ret;
-  }
-
-  static AnyValue to_any_value(const int64_t &value) {
-    AnyValue ret;
-    ret.l = value;
-    return ret;
-  }
-
-  static const int64_t &from_any(const Any &value) {
-    CHECK(value.type == PropertyType::kInt64);
-    return value.value.l;
-  }
-
-  static const int64_t &from_any_value(const AnyValue &value) {
-    return value.l;
-  }
-};
-
-template <> struct AnyConverter<Date> {
-  static constexpr PropertyType type = PropertyType::kDate;
-
-  static Any to_any(const Date &value) {
-    Any ret;
-    ret.set_date(value);
-    return ret;
-  }
-
-  static AnyValue to_any_value(const Date &value) {
-    AnyValue ret;
-    ret.d = value;
-    return ret;
-  }
-
-  static const Date &from_any(const Any &value) {
-    CHECK(value.type == PropertyType::kDate);
-    return value.value.d;
-  }
-
-  static const Date &from_any_value(const AnyValue &value) { return value.d; }
-};
-
-template <> struct AnyConverter<std::string_view> {
-  static constexpr PropertyType type = PropertyType::kString;
-
-  static Any to_any(const std::string_view &value) {
-    Any ret;
-    ret.set_string(value);
-    return ret;
-  }
-
-  static AnyValue to_any_value(const std::string_view &value) {
-    AnyValue ret;
-    ret.s = value;
-    return ret;
-  }
-
-  static const std::string_view &from_any(const Any &value) {
-    CHECK(value.type == PropertyType::kString);
-    return value.value.s;
-  }
-
-  static const std::string_view &from_any_value(const AnyValue &value) {
-    return value.s;
-  }
-};
-
-template <> struct AnyConverter<std::string> {
-  static constexpr PropertyType type = PropertyType::kString;
-
-  static Any to_any(const std::string &value) {
-    Any ret;
-    ret.set_string(value);
-    return ret;
-  }
-
-  static AnyValue to_any_value(const std::string &value) {
-    AnyValue ret;
-    ret.s = value;
-    return ret;
-  }
-
-  static std::string from_any(const Any &value) {
-    CHECK(value.type == PropertyType::kString);
-    return std::string(value.value.s);
-  }
-
-  static std::string from_any_value(const AnyValue &value) {
-    return std::string(value.s);
-  }
-};
-
-template <> struct AnyConverter<grape::EmptyType> {
-  static constexpr PropertyType type = PropertyType::kEmpty;
-
-  static Any to_any(const grape::EmptyType &value) {
-    Any ret;
-    return ret;
-  }
-
-  static AnyValue to_any_value(const grape::EmptyType &value) {
-    AnyValue ret;
-    return ret;
-  }
-
-  static grape::EmptyType from_any(const Any &value) {
-    CHECK(value.type == PropertyType::kEmpty);
-    return grape::EmptyType();
-  }
-
-  static grape::EmptyType from_any_value(const AnyValue &value) {
-    return grape::EmptyType();
-  }
-};
-
-void ParseRecord(const char *line, std::vector<Any> &rec);
-
-void ParseRecord(const char *line, int64_t &id, std::vector<Any> &rec);
-
-void ParseRecordX(const char *line, int64_t &src, int64_t &dst, int &prop);
-
-void ParseRecordX(const char *line, int64_t &src, int64_t &dst, Date &prop);
-
-void ParseRecordX(const char *line, int64_t &src, int64_t &dst,
-                  grape::EmptyType &prop);
-
-grape::InArchive &operator<<(grape::InArchive &in_archive, const Any &value);
-grape::OutArchive &operator>>(grape::OutArchive &out_archive, Any &value);
-
-} // namespace gs
+}  // namespace gs
 
 namespace std {
 
-inline ostream &operator<<(ostream &os, const gs::Date &dt) {
+inline ostream& operator<<(ostream& os, const gs::Date& dt) {
   os << dt.to_string();
   return os;
 }
 
-inline ostream &operator<<(ostream &os, gs::PropertyType pt) {
+inline ostream& operator<<(ostream& os, gs::PropertyType pt) {
   switch (pt) {
+  case gs::PropertyType::kEmpty:
+    os << "empty";
+    break;
+  case gs::PropertyType::kUInt8:
+    os << "uint8";
+    break;
+  case gs::PropertyType::kInt8:
+    os << "int8";
+    break;
+  case gs::PropertyType::kUInt16:
+    os << "uint16";
+    break;
+  case gs::PropertyType::kInt16:
+    os << "int16";
+    break;
+  case gs::PropertyType::kUInt32:
+    os << "uint32";
+    break;
   case gs::PropertyType::kInt32:
     os << "int32";
+    break;
+  case gs::PropertyType::kUInt64:
+    os << "uint64";
     break;
   case gs::PropertyType::kInt64:
     os << "int64";
@@ -363,19 +343,28 @@ inline ostream &operator<<(ostream &os, gs::PropertyType pt) {
   case gs::PropertyType::kDate:
     os << "Date";
     break;
-  case gs::PropertyType::kString:
-    os << "String";
+  case gs::PropertyType::kFloat:
+    os << "float";
     break;
-  case gs::PropertyType::kEmpty:
-    os << "Empty";
+  case gs::PropertyType::kDouble:
+    os << "double";
+    break;
+  case gs::PropertyType::kString:
+    os << "string";
+    break;
+  case gs::PropertyType::kStringView:
+    os << "string_view";
+    break;
+  case gs::PropertyType::kList:
+    os << "list";
     break;
   default:
-    os << "Unknown";
+    os << "Unrecoginzed type";
     break;
   }
   return os;
 }
 
-} // namespace std
+}  // namespace std
 
-#endif // GRAPHSCOPE_TYPES_H_
+#endif  // GRAPHSCOPE_TYPES_H_

@@ -28,98 +28,98 @@ namespace gs {
 class MutablePropertyFragment;
 class VersionManager;
 
-template <typename EDATA_T>
-class AdjListView {
-  class nbr_iterator {
-    using nbr_t = MutableNbr<EDATA_T>;
-
-   public:
-    nbr_iterator(const nbr_t* ptr, const nbr_t* end, timestamp_t timestamp)
-        : ptr_(ptr), end_(end), timestamp_(timestamp) {
-      while (ptr_->timestamp > timestamp_ && ptr_ != end_) {
-        ++ptr_;
-      }
-    }
-
-    const nbr_t& operator*() const { return *ptr_; }
-
-    const nbr_t* operator->() const { return ptr_; }
-
-    nbr_iterator& operator++() {
-      ++ptr_;
-      while (ptr_ != end_ && ptr_->timestamp > timestamp_) {
-        ++ptr_;
-      }
-      return *this;
-    }
-
-    bool operator==(const nbr_iterator& rhs) const {
-      return (ptr_ == rhs.ptr_);
-    }
-
-    bool operator!=(const nbr_iterator& rhs) const {
-      return (ptr_ != rhs.ptr_);
-    }
-
-   private:
-    const nbr_t* ptr_;
-    const nbr_t* end_;
-    timestamp_t timestamp_;
-  };
-
- public:
-  using slice_t = MutableNbrSlice<EDATA_T>;
-
-  AdjListView(const slice_t& slice, timestamp_t timestamp)
-      : edges_(slice), timestamp_(timestamp) {}
-
-  nbr_iterator begin() const {
-    return nbr_iterator(edges_.begin(), edges_.end(), timestamp_);
-  }
-  nbr_iterator end() const {
-    return nbr_iterator(edges_.end(), edges_.end(), timestamp_);
-  }
-
-  int estimated_degree() const { return edges_.size(); }
-
- private:
-  slice_t edges_;
-  timestamp_t timestamp_;
-};
-
-template <typename EDATA_T>
-class GraphView {
- public:
-  GraphView(const MutableCsr<EDATA_T>& csr, timestamp_t timestamp)
-      : csr_(csr), timestamp_(timestamp) {}
-
-  AdjListView<EDATA_T> get_edges(vid_t v) const {
-    return AdjListView<EDATA_T>(csr_.get_edges(v), timestamp_);
-  }
-
- private:
-  const MutableCsr<EDATA_T>& csr_;
-  timestamp_t timestamp_;
-};
-
-template <typename EDATA_T>
-class SingleGraphView {
- public:
-  SingleGraphView(const SingleMutableCsr<EDATA_T>& csr, timestamp_t timestamp)
-      : csr_(csr), timestamp_(timestamp) {}
-
-  bool exist(vid_t v) const {
-    return (csr_.get_edge(v).timestamp.load() <= timestamp_);
-  }
-
-  const MutableNbr<EDATA_T>& get_edge(vid_t v) const {
-    return csr_.get_edge(v);
-  }
-
- private:
-  const SingleMutableCsr<EDATA_T>& csr_;
-  timestamp_t timestamp_;
-};
+// template <typename EDATA_T>
+// class AdjListView {
+//   class nbr_iterator {
+//     using nbr_t = MutableNbr<EDATA_T>;
+// 
+//    public:
+//     nbr_iterator(const nbr_t* ptr, const nbr_t* end, timestamp_t timestamp)
+//         : ptr_(ptr), end_(end), timestamp_(timestamp) {
+//       while (ptr_->timestamp > timestamp_ && ptr_ != end_) {
+//         ++ptr_;
+//       }
+//     }
+// 
+//     const nbr_t& operator*() const { return *ptr_; }
+// 
+//     const nbr_t* operator->() const { return ptr_; }
+// 
+//     nbr_iterator& operator++() {
+//       ++ptr_;
+//       while (ptr_ != end_ && ptr_->timestamp > timestamp_) {
+//         ++ptr_;
+//       }
+//       return *this;
+//     }
+// 
+//     bool operator==(const nbr_iterator& rhs) const {
+//       return (ptr_ == rhs.ptr_);
+//     }
+// 
+//     bool operator!=(const nbr_iterator& rhs) const {
+//       return (ptr_ != rhs.ptr_);
+//     }
+// 
+//    private:
+//     const nbr_t* ptr_;
+//     const nbr_t* end_;
+//     timestamp_t timestamp_;
+//   };
+// 
+//  public:
+//   using slice_t = MutableNbrSlice<EDATA_T>;
+// 
+//   AdjListView(const slice_t& slice, timestamp_t timestamp)
+//       : edges_(slice), timestamp_(timestamp) {}
+// 
+//   nbr_iterator begin() const {
+//     return nbr_iterator(edges_.begin(), edges_.end(), timestamp_);
+//   }
+//   nbr_iterator end() const {
+//     return nbr_iterator(edges_.end(), edges_.end(), timestamp_);
+//   }
+// 
+//   int estimated_degree() const { return edges_.size(); }
+// 
+//  private:
+//   slice_t edges_;
+//   timestamp_t timestamp_;
+// };
+// 
+// template <typename EDATA_T>
+// class GraphView {
+//  public:
+//   GraphView(const MutableCsr<EDATA_T>& csr, timestamp_t timestamp)
+//       : csr_(csr), timestamp_(timestamp) {}
+// 
+//   AdjListView<EDATA_T> get_edges(vid_t v) const {
+//     return AdjListView<EDATA_T>(csr_.get_edges(v), timestamp_);
+//   }
+// 
+//  private:
+//   const MutableCsr<EDATA_T>& csr_;
+//   timestamp_t timestamp_;
+// };
+// 
+// template <typename EDATA_T>
+// class SingleGraphView {
+//  public:
+//   SingleGraphView(const SingleMutableCsr<EDATA_T>& csr, timestamp_t timestamp)
+//       : csr_(csr), timestamp_(timestamp) {}
+// 
+//   bool exist(vid_t v) const {
+//     return (csr_.get_edge(v).timestamp.load() <= timestamp_);
+//   }
+// 
+//   const MutableNbr<EDATA_T>& get_edge(vid_t v) const {
+//     return csr_.get_edge(v);
+//   }
+// 
+//  private:
+//   const SingleMutableCsr<EDATA_T>& csr_;
+//   timestamp_t timestamp_;
+// };
 
 class ReadTransaction {
  public:
@@ -146,7 +146,7 @@ class ReadTransaction {
     oid_t GetId() const;
     vid_t GetIndex() const;
 
-    Any GetField(int col_id) const;
+    Property GetField(int col_id) const;
     int FieldNum() const;
 
    private:
@@ -159,10 +159,10 @@ class ReadTransaction {
   class edge_iterator {
    public:
     edge_iterator(label_t neighbor_label, label_t edge_label,
-                  std::shared_ptr<MutableCsrConstEdgeIterBase> iter);
+                  std::shared_ptr<GenericNbrIterator<vid_t>> iter);
     ~edge_iterator();
 
-    Any GetData() const;
+    Property GetData() const;
 
     bool IsValid() const;
 
@@ -178,7 +178,7 @@ class ReadTransaction {
     label_t neighbor_label_;
     label_t edge_label_;
 
-    std::shared_ptr<MutableCsrConstEdgeIterBase> iter_;
+    std::shared_ptr<GenericNbrIterator<vid_t>> iter_;
   };
 
   vertex_iterator GetVertexIterator(label_t label) const;
@@ -199,58 +199,72 @@ class ReadTransaction {
                                   label_t neighnor_label,
                                   label_t edge_label) const;
 
-  template <typename EDATA_T>
-  AdjListView<EDATA_T> GetOutgoingEdges(label_t v_label, vid_t v,
-                                        label_t neighbor_label,
-                                        label_t edge_label) const {
-    auto csr = dynamic_cast<const TypedMutableCsrBase<EDATA_T>*>(
-        graph_.get_oe_csr(v_label, neighbor_label, edge_label));
-    return AdjListView<EDATA_T>(csr->get_edges(v), timestamp_);
-  }
+  // template <typename EDATA_T>
+  // AdjListView<EDATA_T> GetOutgoingEdges(label_t v_label, vid_t v,
+  //                                       label_t neighbor_label,
+  //                                       label_t edge_label) const {
+  //   auto csr = dynamic_cast<const TypedMutableCsrBase<EDATA_T>*>(
+  //       graph_.get_oe_csr(v_label, neighbor_label, edge_label));
+  //   return AdjListView<EDATA_T>(csr->get_edges(v), timestamp_);
+  // }
 
-  template <typename EDATA_T>
-  AdjListView<EDATA_T> GetIncomingEdges(label_t v_label, vid_t v,
-                                        label_t neighbor_label,
-                                        label_t edge_label) const {
-    auto csr = dynamic_cast<const TypedMutableCsrBase<EDATA_T>*>(
-        graph_.get_ie_csr(v_label, neighbor_label, edge_label));
-    return AdjListView<EDATA_T>(csr->get_edges(v), timestamp_);
-  }
+  // template <typename EDATA_T>
+  // AdjListView<EDATA_T> GetIncomingEdges(label_t v_label, vid_t v,
+  //                                       label_t neighbor_label,
+  //                                       label_t edge_label) const {
+  //   auto csr = dynamic_cast<const TypedMutableCsrBase<EDATA_T>*>(
+  //       graph_.get_ie_csr(v_label, neighbor_label, edge_label));
+  //   return AdjListView<EDATA_T>(csr->get_edges(v), timestamp_);
+  // }
 
   const Schema& schema() const;
 
   template <typename EDATA_T>
-  GraphView<EDATA_T> GetOutgoingGraphView(label_t v_label,
+  MutableCsrView<vid_t, EDATA_T, timestamp_t> GetOutgoingGraphView(label_t v_label,
                                           label_t neighbor_label,
                                           label_t edge_label) const {
-    auto csr = dynamic_cast<const MutableCsr<EDATA_T>*>(
+    auto csr = dynamic_cast<const MutableCsr<vid_t, EDATA_T, timestamp_t>*>(
         graph_.get_oe_csr(v_label, neighbor_label, edge_label));
-    return GraphView<EDATA_T>(*csr, timestamp_);
+    return csr->get_graph_view(timestamp_);
   }
 
   template <typename EDATA_T>
-  GraphView<EDATA_T> GetIncomingGraphView(label_t v_label,
+  MutableCsrView<vid_t, EDATA_T, timestamp_t> GetIncomingGraphView(label_t v_label,
                                           label_t neighbor_label,
                                           label_t edge_label) const {
-    auto csr = dynamic_cast<const MutableCsr<EDATA_T>*>(
+    auto csr = dynamic_cast<const MutableCsr<vid_t, EDATA_T, timestamp_t>*>(
         graph_.get_ie_csr(v_label, neighbor_label, edge_label));
-    return GraphView<EDATA_T>(*csr, timestamp_);
+    return csr->get_graph_view(timestamp_);
   }
 
   template <typename EDATA_T>
-  SingleGraphView<EDATA_T> GetOutgoingSingleGraphView(
+  SingleMutableCsrView<vid_t, EDATA_T, timestamp_t> GetOutgoingSingleGraphView(
       label_t v_label, label_t neighbor_label, label_t edge_label) const {
-    auto csr = dynamic_cast<const SingleMutableCsr<EDATA_T>*>(
+    auto csr = dynamic_cast<const SingleMutableCsr<vid_t, EDATA_T, timestamp_t>*>(
         graph_.get_oe_csr(v_label, neighbor_label, edge_label));
-    return SingleGraphView<EDATA_T>(*csr, timestamp_);
+    return csr->get_graph_view(timestamp_);
   }
 
   template <typename EDATA_T>
-  SingleGraphView<EDATA_T> GetIncomingSingleGraphView(
+  SingleMutableCsrView<vid_t, EDATA_T, timestamp_t> GetIncomingSingleGraphView(
       label_t v_label, label_t neighbor_label, label_t edge_label) const {
-    auto csr = dynamic_cast<const SingleMutableCsr<EDATA_T>*>(
+    auto csr = dynamic_cast<const SingleMutableCsr<vid_t, EDATA_T, timestamp_t>*>(
         graph_.get_ie_csr(v_label, neighbor_label, edge_label));
-    return SingleGraphView<EDATA_T>(*csr, timestamp_);
+    return csr->get_graph_view(timestamp_);
+  }
+
+  TableMutableCsrView<vid_t, timestamp_t> GetOutgoingTableGraphView(
+      label_t v_label, label_t neighbor_label, label_t edge_label) const {
+    auto csr = dynamic_cast<const TableMutableCsr<vid_t, timestamp_t>*>(
+        graph_.get_oe_csr(v_label, neighbor_label, edge_label));
+    return csr->get_graph_view(timestamp_);
+  }
+
+  TableMutableCsrView<vid_t, timestamp_t> GetIncomingTableGraphView(
+      label_t v_label, label_t neighbor_label, label_t edge_label) const {
+    auto csr = dynamic_cast<const TableMutableCsr<vid_t, timestamp_t>*>(
+        graph_.get_ie_csr(v_label, neighbor_label, edge_label));
+    return csr->get_graph_view(timestamp_);
   }
 
  private:

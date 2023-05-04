@@ -46,7 +46,7 @@ oid_t ReadTransaction::vertex_iterator::GetId() const {
 }
 vid_t ReadTransaction::vertex_iterator::GetIndex() const { return cur_; }
 
-Any ReadTransaction::vertex_iterator::GetField(int col_id) const {
+Property ReadTransaction::vertex_iterator::GetField(int col_id) const {
   return graph_.get_vertex_table(label_).get_column_by_id(col_id)->get(cur_);
 }
 
@@ -56,24 +56,24 @@ int ReadTransaction::vertex_iterator::FieldNum() const {
 
 ReadTransaction::edge_iterator::edge_iterator(
     label_t neighbor_label, label_t edge_label,
-    std::shared_ptr<MutableCsrConstEdgeIterBase> iter)
+    std::shared_ptr<GenericNbrIterator<vid_t>> iter)
     : neighbor_label_(neighbor_label),
       edge_label_(edge_label),
       iter_(std::move(iter)) {}
 ReadTransaction::edge_iterator::~edge_iterator() = default;
 
-Any ReadTransaction::edge_iterator::GetData() const {
-  return iter_->get_data();
+Property ReadTransaction::edge_iterator::GetData() const {
+  return iter_->GetGenericData();
 }
 
 bool ReadTransaction::edge_iterator::IsValid() const {
-  return iter_->is_valid();
+  return iter_->IsValid();
 }
 
-void ReadTransaction::edge_iterator::Next() { iter_->next(); }
+void ReadTransaction::edge_iterator::Next() { iter_->Next(); }
 
 vid_t ReadTransaction::edge_iterator::GetNeighbor() const {
-  return iter_->get_neighbor();
+  return iter_->GetNeighbor();
 }
 
 label_t ReadTransaction::edge_iterator::GetNeighborLabel() const {
@@ -115,13 +115,13 @@ oid_t ReadTransaction::GetVertexId(label_t label, vid_t index) const {
 ReadTransaction::edge_iterator ReadTransaction::GetOutEdgeIterator(
     label_t label, vid_t u, label_t neighnor_label, label_t edge_label) const {
   return {neighnor_label, edge_label,
-          graph_.get_outgoing_edges(label, u, neighnor_label, edge_label)};
+          graph_.get_outgoing_edges(label, u, neighnor_label, edge_label, timestamp_)};
 }
 
 ReadTransaction::edge_iterator ReadTransaction::GetInEdgeIterator(
     label_t label, vid_t u, label_t neighnor_label, label_t edge_label) const {
   return {neighnor_label, edge_label,
-          graph_.get_incoming_edges(label, u, neighnor_label, edge_label)};
+          graph_.get_incoming_edges(label, u, neighnor_label, edge_label, timestamp_)};
 }
 
 const Schema& ReadTransaction::schema() const { return graph_.schema(); }

@@ -92,11 +92,18 @@ const std::shared_ptr<ColumnBase> Table::get_column(
   return nullptr;
 }
 
-std::vector<Any> Table::get_row(size_t row_id) const {
-  std::vector<Any> ret;
+std::vector<Property> Table::get_row_as_vec(size_t row_id) const {
+  std::vector<Property> ret;
   for (auto ptr : columns_) {
     ret.push_back(ptr->get(row_id));
   }
+  return ret;
+}
+
+Property Table::get_row(size_t row_id) const {
+  auto vec = get_row_as_vec(row_id);
+  Property ret;
+  ret.set_value<std::vector<Property>>(vec);
   return ret;
 }
 
@@ -118,13 +125,25 @@ const std::shared_ptr<ColumnBase> Table::get_column_by_id(size_t index) const {
 
 size_t Table::col_num() const { return columns_.size(); }
 std::vector<std::shared_ptr<ColumnBase>>& Table::columns() { return columns_; }
+const std::vector<std::shared_ptr<ColumnBase>>& Table::columns() const { return columns_; }
 
-void Table::insert(size_t index, const std::vector<Any>& values) {
-  assert(values.size() == columns_.size());
+void Table::insert(size_t index, const Property& value) {
+  if (value.type() == PropertyType::kEmpty) {
+    CHECK_EQ(columns_.size(), 0);
+  } else if (value.type() == PropertyType::kList) {
+    auto list = value.get_value<std::vector<Property>>();
+    insert(index, list);
+  } else {
+    CHECK_EQ(columns_.size(), 1);
+    columns_[0]->set(index, value);
+  }
+}
+
+void Table::insert(size_t index, const std::vector<Property>& values) {
   CHECK_EQ(values.size(), columns_.size());
   size_t col_num = columns_.size();
   for (size_t i = 0; i < col_num; ++i) {
-    columns_[i]->set_any(index, values[i]);
+    columns_[i]->set(index, values[i]);
   }
 }
 
@@ -144,6 +163,28 @@ void Table::Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer,
   CHECK(writer->Write(types.data(), sizeof(PropertyType) * types.size()));
   CHECK(writer->Write(stategies.data(),
                       sizeof(StorageStrategy) * stategies.size()));
+  size_t col_id = 0;
+  for (auto col : columns_) {
+    col->Serialize(prefix + ".col_" + std::to_string(col_id), row_num);
+    ++col_id;
+  }
+}
+
+void Table::Serialize(const std::string& prefix, size_t row_num) {
+  grape::InArchive arc;
+  arc << col_id_indexer_;
+  CHECK_EQ(col_id_indexer_.size(), columns_.size())
+      << "col_id_indexer_.size() = " << col_id_indexer_.size()
+      << ", columns_.size() = " << columns_.size();
+  for (auto col : columns_) {
+    arc << col->type() << col->storage_strategy();
+  }
+  std::string meta_file_name = prefix + ".meta";
+  FILE* fmeta = fopen(meta_file_name.c_str(), "wb");
+  fwrite(arc.GetBuffer(), 1, arc.GetSize(), fmeta);
+  fflush(fmeta);
+  fclose(fmeta);
+
   size_t col_id = 0;
   for (auto col : columns_) {
     col->Serialize(prefix + ".col_" + std::to_string(col_id), row_num);
@@ -174,11 +215,36 @@ void Table::Deserialize(std::unique_ptr<grape::LocalIOAdaptor>& reader,
   buildColumnPtrs();
 }
 
-Any Table::at(size_t row_id, size_t col_id) {
-  return columns_[col_id]->get(row_id);
+void Table::Deserialize(const std::string& prefix) {
+  std::string meta_file_name = prefix + ".meta";
+  FILE* fmeta = fopen(meta_file_name.c_str(), "rb");
+  fseek(fmeta, 0, SEEK_END);
+  size_t meta_size = ftell(fmeta);
+  fseek(fmeta, 0, SEEK_SET);
+  grape::OutArchive arc(meta_size);
+  fread(arc.GetBuffer(), 1, meta_size, fmeta);
+  fclose(fmeta);
+
+  IdIndexer<std::string, int> new_col_id_indexer;
+  arc >> new_col_id_indexer;
+  col_id_indexer_.swap(new_col_id_indexer);
+  size_t col_num = col_id_indexer_.size();
+
+  columns_.clear();
+  columns_.resize(col_num);
+  for (size_t col_i = 0; col_i < col_num; ++col_i) {
+    PropertyType type;
+    StorageStrategy strategy;
+    arc >> type >> strategy;
+    auto ptr = CreateColumn(type, strategy);
+    ptr->Deserialize(prefix + ".col_" + std::to_string(col_i));
+    columns_[col_i] = ptr;
+  }
+
+  buildColumnPtrs();
 }
 
-Any Table::at(size_t row_id, size_t col_id) const {
+Property Table::at(size_t row_id, size_t col_id) const {
   return columns_[col_id]->get(row_id);
 }
 

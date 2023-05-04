@@ -48,10 +48,10 @@ class UpdateTransaction {
 
   void Abort();
 
-  bool AddVertex(label_t label, oid_t oid, const std::vector<Any>& props);
+  bool AddVertex(label_t label, oid_t oid, const std::vector<Property>& props);
 
   bool AddEdge(label_t src_label, oid_t src, label_t dst_label, oid_t dst,
-               label_t edge_label, const Any& value);
+               label_t edge_label, const Property& value);
 
   class vertex_iterator {
    public:
@@ -66,9 +66,9 @@ class UpdateTransaction {
 
     vid_t GetIndex() const;
 
-    Any GetField(int col_id) const;
+    Property GetField(int col_id) const;
 
-    bool SetField(int col_id, const Any& value);
+    bool SetField(int col_id, const Property& value);
 
    private:
     label_t label_;
@@ -82,13 +82,13 @@ class UpdateTransaction {
    public:
     edge_iterator(bool dir, label_t label, vid_t v, label_t neighbor_label,
                   label_t edge_label, const vid_t* aeb, const vid_t* aee,
-                  std::shared_ptr<MutableCsrConstEdgeIterBase> init_iter,
+                  std::shared_ptr<GenericNbrIteratorMut<vid_t>> init_iter,
                   UpdateTransaction* txn);
     ~edge_iterator();
 
-    Any GetData() const;
+    Property GetData() const;
 
-    void SetData(const Any& value);
+    void SetData(const Property& value);
 
     bool IsValid() const;
 
@@ -112,7 +112,7 @@ class UpdateTransaction {
     const vid_t* added_edges_cur_;
     const vid_t* added_edges_end_;
 
-    std::shared_ptr<MutableCsrConstEdgeIterBase> init_iter_;
+    std::shared_ptr<GenericNbrIteratorMut<vid_t>> init_iter_;
 
     UpdateTransaction* txn_;
   };
@@ -125,16 +125,17 @@ class UpdateTransaction {
   edge_iterator GetInEdgeIterator(label_t label, vid_t u,
                                   label_t neighnor_label, label_t edge_label);
 
-  Any GetVertexField(label_t label, vid_t lid, int col_id) const;
+  Property GetVertexField(label_t label, vid_t lid, int col_id) const;
 
-  bool SetVertexField(label_t label, vid_t lid, int col_id, const Any& value);
+  bool SetVertexField(label_t label, vid_t lid, int col_id,
+                      const Property& value);
 
   void SetEdgeData(bool dir, label_t label, vid_t v, label_t neighbor_label,
-                   vid_t nbr, label_t edge_label, const Any& value);
+                   vid_t nbr, label_t edge_label, const Property& value);
 
   bool GetUpdatedEdgeData(bool dir, label_t label, vid_t v,
                           label_t neighbor_label, vid_t nbr, label_t edge_label,
-                          Any& ret) const;
+                          Property& ret) const;
 
   static void IngestWal(MutablePropertyFragment& graph, uint32_t timestamp,
                         char* data, size_t length, ArenaAllocator& alloc);
@@ -175,7 +176,7 @@ class UpdateTransaction {
   std::vector<Table> extra_vertex_properties_;
 
   std::vector<ska::flat_hash_map<vid_t, std::vector<vid_t>>> added_edges_;
-  std::vector<ska::flat_hash_map<vid_t, ska::flat_hash_map<vid_t, Any>>>
+  std::vector<ska::flat_hash_map<vid_t, ska::flat_hash_map<vid_t, Property>>>
       updated_edge_data_;
 
   std::vector<std::string> sv_vec_;
