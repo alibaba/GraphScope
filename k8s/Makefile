@@ -15,7 +15,6 @@ RUNTIME_VERSION ?= $(VINEYARD_VERSION)
 PROFILE ?= release
 CI ?= false
 
-
 BUILD_PROGRESS  	= auto
 
 .PHONY: all graphscope
@@ -41,6 +40,8 @@ dev-wheel:
 	cd $(WORKING_DIR) && \
 	cp ../gs ./ && \
 	docker build  \
+		--build-arg REGISTRY=$(REGISTRY) \
+		--build-arg VINEYARD_VERSION=${VINEYARD_VERSION} \
 		-t graphscope/graphscope-dev:wheel \
 		-f $(DOCKERFILES_DIR)/manylinux2014.Dockerfile .
 

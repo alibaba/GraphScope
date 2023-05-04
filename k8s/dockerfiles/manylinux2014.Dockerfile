@@ -1,5 +1,7 @@
-# the graphscope-dev-base image is based on manylinux2014, including all necessary
+# the manylinux2014 image is based on manylinux2014, including all necessary
 # dependencies except vineyard for graphscope's wheel package.
+# It's tagged as the graphscope/graphscope-dev:wheel
+
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
 #FROM vineyardcloudnative/manylinux-llvm:2014-11.0.0 AS llvm
 FROM $REGISTRY/graphscope/manylinux2014:20230407-ext AS ext

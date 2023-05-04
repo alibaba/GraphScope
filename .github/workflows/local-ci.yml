@@ -235,21 +235,22 @@ jobs:
 
     - name: Build Wheels
       run: |
-        sleep infinity
+        # sleep infinity
         git submodule update --init
         cd ${GITHUB_WORKSPACE}/learning_engine/graph-learn && git submodule update --init third_party/pybind11
 
         # build graphscope wheels
         cd ${GITHUB_WORKSPACE}/k8s/internal
-        sudo -E -u runner make graphscope-py3-package GRAPHSCOPE_HOME=/opt/graphscope
-        # make graphscope-py3-package GRAPHSCOPE_HOME=/opt/graphscope
+        # sudo -E -u runner make graphscope-py3-package GRAPHSCOPE_HOME=/opt/graphscope
+        make graphscope-py3-package GRAPHSCOPE_HOME=/opt/graphscope REGISTRY=registry-vpc.cn-hongkong.aliyuncs.com
 
         # build client wheels
-        sudo -E -u runner make graphscope-client-py3-package GRAPHSCOPE_HOME=/opt/graphscope
-        # make graphscope-client-py3-package GRAPHSCOPE_HOME=/opt/graphscope
+        # sudo -E -u runner make graphscope-client-py3-package GRAPHSCOPE_HOME=/opt/graphscope
+        make graphscope-client-py3-package GRAPHSCOPE_HOME=/opt/graphscope REGISTRY=registry-vpc.cn-hongkong.aliyuncs.com
 
         # package
         cd ${GITHUB_WORKSPACE}
+        sudo chown $(id -u) -R .
         tar -zcf client.tar.gz python/dist/wheelhouse/*.whl
         tar -zcf graphscope.tar.gz coordinator/dist/
 
