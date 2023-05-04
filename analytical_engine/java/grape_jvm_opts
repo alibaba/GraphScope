@@ -13,9 +13,6 @@
 # limitations under the License.
 #
 
-SCRIPT_DIR=$( cd ${0%/*} && pwd -P )
-echo "The current directory is: $SCRIPT_DIR"
-
 if [ -z "$GRAPHSCOPE_HOME" ];
 then
     echo "No GRAPHSCOPE_HOME found, infer from python package"
