@@ -20,6 +20,7 @@ RUN cd /home/graphscope/GraphScope/ && \
         python3 setup.py bdist_wheel; \
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/graphscope/GraphScope/learning_engine/graph-learn/graphlearn/built/lib; \
         auditwheel repair dist/*.whl; \
+        python3 -m pip install wheelhouse/*.whl; \
         cp wheelhouse/*.whl /home/graphscope/install/; \
         cd /home/graphscope/GraphScope/coordinator; \
         python3 setup.py bdist_wheel; \
