@@ -100,8 +100,8 @@ graphscope-manylinux2014-py3-nodocker:
 	for _ in {1..5}; do if make INSTALL_PREFIX=${INSTALL_PREFIX}; then break; fi; done && \
 	for _ in {1..5}; do if $(MAKE_INSTALL_COMMAND); then break; fi; done && \
 	if [ ${INSTALL_PREFIX} != ${GRAPHSCOPE_HOME} ]; then sudo cp -rsn ${INSTALL_PREFIX}/* ${GRAPHSCOPE_HOME}/; fi && \
-	python3 $(WORKING_DIR)/../utils/precompile.py --graph --app && \
 	sed -i -i '199i\    vineyardctl_path = None' "/home/graphscope/.local/lib/python3.8/site-packages/vineyard/deploy/utils.py" && \
+	python3 $(WORKING_DIR)/../utils/precompile.py --graph --app && \
 	export WITH_EXTRA_DATA=ON && \
 	export GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} && \
 	export INSTALL_PREFIX=${INSTALL_PREFIX} && \

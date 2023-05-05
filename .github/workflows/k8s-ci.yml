@@ -325,6 +325,7 @@ jobs:
         sed -i 's/p.error/logger.warning/g' ${auditwheel_path}
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${{ github.workspace }}/learning_engine/graph-learn/graphlearn/built/lib
         auditwheel repair dist/*.whl
+        python3 -m pip install wheelhouse/*.whl; \
         cp wheelhouse/*.whl ${{ github.workspace }}/install/
         cd ${{ github.workspace }}/coordinator
         pip3 install -r requirements.txt -r requirements-dev.txt --user
