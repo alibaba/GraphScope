@@ -7,14 +7,13 @@ ifeq ($(REGISTRY),)
 endif
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.13.4
+VINEYARD_VERSION ?= v0.14.0
 # This is the version of builder base image in most cases, except for graphscope-dev
 BUILDER_VERSION ?= $(VINEYARD_VERSION)
 # This is the version of runtime base image
 RUNTIME_VERSION ?= $(VINEYARD_VERSION)
 PROFILE ?= release
 CI ?= false
-
 
 BUILD_PROGRESS  	= auto
 
@@ -37,11 +36,21 @@ interactive: interactive-frontend interactive-executor
 all: coordinator analytical interactive learning
 graphscope: all
 
+dev-wheel:
+	cd $(WORKING_DIR) && \
+	cp ../gs ./ && \
+	docker build  \
+		--build-arg REGISTRY=$(REGISTRY) \
+		--build-arg VINEYARD_VERSION=${VINEYARD_VERSION} \
+		-t graphscope/graphscope-dev:wheel \
+		-f $(DOCKERFILES_DIR)/manylinux2014.Dockerfile .
+
+
 manylinux2014-ext:
 	cd $(WORKING_DIR) && \
 	cp ../gs ./ && \
 	docker build \
-		-t graphscope/manylinux-ext:2023-01-20 \
+		-t graphscope/manylinux2014:20230407-ext \
 		-f $(DOCKERFILES_DIR)/manylinux2014-ext.Dockerfile .
 
 graphscope-dev:

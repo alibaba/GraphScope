@@ -71,7 +71,7 @@ jobs:
 
     - name: Build GraphScope Store With Column Filter Push Down
       run: |
-        source ${HOME}/.graphscope_env
+        . ${HOME}/.graphscope_env
         export SCCACHE_DIR=~/.cache/sccache
         export RUSTC_WRAPPER=/usr/local/bin/sccache
         sccache --start-server
@@ -82,13 +82,13 @@ jobs:
 
     - name: Gremlin Tests with Column Filter Push Down
       run: |
-        source ${HOME}/.graphscope_env
+        . ${HOME}/.graphscope_env
         cd interactive_engine/groot-server
         mvn test -P gremlin-test
 
     - name: Build GraphScope Store
       run: |
-        source ${HOME}/.graphscope_env
+        . ${HOME}/.graphscope_env
         export SCCACHE_DIR=~/.cache/sccache
         export RUSTC_WRAPPER=/usr/local/bin/sccache
         cd ${GITHUB_WORKSPACE}/interactive_engine
@@ -98,7 +98,7 @@ jobs:
 
     - name: Gremlin Test
       run: |
-        source ${HOME}/.graphscope_env
+        . ${HOME}/.graphscope_env
         cd interactive_engine/groot-server
         mvn test -P gremlin-test
 

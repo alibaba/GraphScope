@@ -1,17 +1,20 @@
 # build gie image with artifacts in local directory, skip the compile phase
 ############### RUNTIME: frontend && executor #######################
-FROM centos:7.9.2009
+FROM ubuntu:22.04
 
-ADD artifacts/artifacts.tar.gz /opt/GraphScope/
+ADD artifacts/artifacts.tar.gz /opt/graphscope/
 
-RUN yum install -y sudo java-1.8.0-openjdk-devel \
-    && yum clean all \
-    && rm -rf /var/cache/yum
+RUN apt-get update -y && \
+    apt-get install -y sudo default-jdk && \
+    apt-get clean -y && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV JAVA_HOME=/usr/lib/jvm/default-java
 
 RUN useradd -m graphscope -u 1001 \
     && echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+RUN chown -R graphscope:graphscope /opt/graphscope
+
 USER graphscope
-
-RUN sudo chown -R graphscope:graphscope /opt/GraphScope
-
 WORKDIR /home/graphscope

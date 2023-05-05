@@ -45,7 +45,7 @@ jobs:
       run: |
         # Essential cause glog installed by brew is broken and produce corrupted messages
         brew uninstall --ignore-dependencies glog
-        source ~/.graphscope_env
+        . ~/.graphscope_env
         git clone https://github.com/google/glog.git
         cd glog
         cmake . -DWITH_TLS=OFF -DWITH_SYMBOLIZE=OFF -DWITH_UNWIND=OFF
@@ -55,7 +55,7 @@ jobs:
     - name: Install latest libgrape-lite
       if: false
       run: |
-        source ~/.graphscope_env
+        . ~/.graphscope_env
         git clone --single-branch --depth=1 https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
         cd /tmp/libgrape-lite
         cmake . -DCMAKE_INSTALL_PREFIX=/usr/local
@@ -81,7 +81,7 @@ jobs:
     - name: Build Server Wheel
       run: |
         # source environment variable
-        source ~/.graphscope_env
+        . ~/.graphscope_env
         python3 -m pip install libclang
         echo ${CC}
 
@@ -148,7 +148,7 @@ jobs:
     - name: Install latest libgrape-lite
       if: false
       run: |
-        source ~/.graphscope_env
+        . ~/.graphscope_env
         git clone --single-branch --depth=1 https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
         cd /tmp/libgrape-lite
         cmake . -DCMAKE_INSTALL_PREFIX=/usr/local
@@ -158,9 +158,9 @@ jobs:
     - name: Install latest vineyard
       if: false
       run: |
-        source ~/.graphscope_env
+        . ~/.graphscope_env
         python3 -m pip install libclang
-        git clone --single-branch -b v0.13.4 --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
+        git clone --single-branch -b v0.14.0 --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
         cd /tmp/v6d
         git submodule update --init
         cmake .  -DCMAKE_INSTALL_PREFIX=/usr/local \
@@ -174,7 +174,7 @@ jobs:
     - name: Build Client Wheels
       run: |
         python3 -c "import sys; print(sys.version)"
-        source ~/.graphscope_env
+        . ~/.graphscope_env
 
         # change the version for nightly release
         # 0.15.0 -> 0.15.0a20220808

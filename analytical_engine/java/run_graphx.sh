@@ -78,7 +78,7 @@ prepare_enviroment() {
   fi
   # Check MPI installation
   get_mpi
-  source  ${GRAPHSCOPE_HOME}/conf/grape_jvm_opts
+  .  ${GRAPHSCOPE_HOME}/conf/grape_jvm_opts
   export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${GRAPHSCOPE_HOME}/lib/:${GRAPHSCOPE_HOME}/lib64
   GRAPHX_RUNNER=${GRAPHSCOPE_HOME}/bin/graphx_runner
 }

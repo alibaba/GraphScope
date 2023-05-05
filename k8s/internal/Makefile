@@ -37,7 +37,7 @@ GRAPHSCOPE_HOME ?= /usr/local
 INSTALL_PREFIX ?= /opt/graphscope
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.13.4
+VINEYARD_VERSION ?= v0.14.0
 PROFILE ?= release
 CI ?= false
 
@@ -60,14 +60,14 @@ graphscope-py3-package: $(TARGET_SERVER_PACKAGE)
 graphscope-client-py3-package: $(TARGET_CLIENT_PACKAGE)
 
 
-MAKE_INSTALL_COMMAND=sudo make install INSTALL_PREFIX=${INSTALL_PREFIX}
+MAKE_INSTALL_COMMAND=make install INSTALL_PREFIX=${INSTALL_PREFIX}
 
 graphscope-darwin-py3:
 	# build graphscope
 	cd $(WORKING_DIR)/../.. && \
 		python3 -m pip install --upgrade setuptools && \
 		export INSTALL_PREFIX=/opt/graphscope && \
-		for _ in {1..5}; do if make; then break; fi; done && \
+		for _ in {1..5}; do if make INSTALL_PREFIX=${INSTALL_PREFIX}; then break; fi; done && \
 		for _ in {1..5}; do if $(MAKE_INSTALL_COMMAND); then break; fi; done && \
 		sudo cp -rs ${INSTALL_PREFIX}/* /usr/local/ && \
 		python3 $(WORKING_DIR)/../utils/precompile.py --graph --app
@@ -94,12 +94,13 @@ graphscope-darwin-py3:
 			delocate-listdeps -a -d $$wheel; \
 			delocate-wheel -w dist/wheelhouse -v $$wheel && rm $$wheel; \
 		done
-
+# TODO(siyuan): Remove the sed
 graphscope-manylinux2014-py3-nodocker:
 	cd $(WORKING_DIR)/../.. && \
-	for _ in {1..5}; do if make; then break; fi; done && \
+	for _ in {1..5}; do if make INSTALL_PREFIX=${INSTALL_PREFIX}; then break; fi; done && \
 	for _ in {1..5}; do if $(MAKE_INSTALL_COMMAND); then break; fi; done && \
-	sudo cp -rs ${INSTALL_PREFIX}/* ${GRAPHSCOPE_HOME}/ && \
+	if [ ${INSTALL_PREFIX} != ${GRAPHSCOPE_HOME} ]; then sudo cp -rsn ${INSTALL_PREFIX}/* ${GRAPHSCOPE_HOME}/; fi && \
+	sed -i -i '199i\    vineyardctl_path = None' "/home/graphscope/.local/lib/python3.8/site-packages/vineyard/deploy/utils.py" && \
 	python3 $(WORKING_DIR)/../utils/precompile.py --graph --app && \
 	export WITH_EXTRA_DATA=ON && \
 	export GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} && \
@@ -128,7 +129,8 @@ graphscope-manylinux2014-py3:
 	docker pull ${REGISTRY}/graphscope/graphscope-dev:wheel
 	docker run --rm -v $(WORKING_DIR)/../..:/work \
 		${REGISTRY}/graphscope/graphscope-dev:wheel \
-		bash -c 'source ~/.graphscope_env && \
+		bash -c '. ~/.graphscope_env && \
+			sudo chown -R graphscope /work && \
 			cd /work/k8s/internal && \
 			make graphscope-manylinux2014-py3-nodocker GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} INSTALL_PREFIX=${INSTALL_PREFIX}'
 
@@ -195,4 +197,7 @@ graphscope-client-manylinux2014-py3:
 	docker pull ${REGISTRY}/graphscope/graphscope-dev:wheel
 	docker run --rm -v $(WORKING_DIR)/../..:/work \
 		${REGISTRY}/graphscope/graphscope-dev:wheel \
-		bash -c 'source ~/.graphscope_env && cd /work/k8s/internal && make graphscope-client-manylinux2014-py3-nodocker GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME}'
+		bash -c '. ~/.graphscope_env && \
+		    sudo chown -R graphscope /work && \
+		    cd /work/k8s/internal && \
+			make graphscope-client-manylinux2014-py3-nodocker GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME}'

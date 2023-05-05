@@ -21,6 +21,7 @@
 #include <string>
 
 #include "grape/utils/vertex_array.h"
+#include "vineyard/common/util/arrow.h"
 #include "vineyard/graph/fragment/arrow_fragment.h"
 #include "vineyard/graph/fragment/property_graph_types.h"
 #include "vineyard/graph/fragment/property_graph_utils.h"

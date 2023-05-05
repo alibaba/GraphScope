@@ -29,16 +29,14 @@ jobs:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.13.4
-      options:
-        --shm-size 4096m
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.14.0
     steps:
     - uses: actions/checkout@v3
 
     - name: Install latest vineyard
       if: false
       run: |
-        source /home/graphscope/.graphscope_env
+        . /home/graphscope/.graphscope_env
         sudo pip3 install libclang
         git clone --single-branch --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
         cd /tmp/v6d
@@ -57,12 +55,11 @@ jobs:
       env:
         RUN_JAVA_TESTS: ON
       run: |
-        source /home/graphscope/.graphscope_env
         # default install to "/opt/graphscope"
         make analytical-java BUILD_TEST=ON NUMPROC=1
         sudo make analytical-java-install
         # also make coordinator and client for python test
-        make client
+        python3 -m pip install --upgrade pip setuptools
         make coordinator
 
     - name: Run Cpp Test
@@ -71,8 +68,6 @@ jobs:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
         RUN_JAVA_TESTS: ON
       run: |
-        source /home/graphscope/.graphscope_env
-
         # download dataset
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
 
@@ -94,7 +89,6 @@ jobs:
         RUN_JAVA_TESTS: ON
         GRAPHSCOPE_HOME: /opt/graphscope
       run: |
-        source /home/graphscope/.graphscope_env
         version=$(cat ${GITHUB_WORKSPACE}/VERSION)
         export USER_JAR_PATH=${GITHUB_WORKSPACE}/analytical_engine/java/grape-demo/target/grape-demo-${version}-shaded.jar
 

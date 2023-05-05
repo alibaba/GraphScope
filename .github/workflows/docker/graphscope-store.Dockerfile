@@ -1,8 +1,11 @@
-FROM centos:7.9.2009
+FROM ubuntu:22.04
 
-RUN yum install -y sudo java-1.8.0-openjdk-devel bind-utils \
-    && yum clean all \
-    && rm -rf /var/cache/yum
+RUN apt-get update -y && \
+    apt-get install -y sudo default-jdk && \
+    apt-get clean -y && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV JAVA_HOME=/usr/lib/jvm/default-java
 
 ADD artifacts/groot.tar.gz /usr/local
 

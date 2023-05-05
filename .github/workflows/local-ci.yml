@@ -201,7 +201,7 @@ jobs:
   build-wheels:
     # Require the user id of the self-hosted is 1001, which may need to be
     # configured manually when a new self-hosted runner is added.
-    runs-on: [self-hosted, manylinux2014]
+    runs-on: [self-hosted, ubuntu2004]
     needs: [changes]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     steps:
@@ -233,45 +233,24 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-pip-
 
-    - name: Install latest vineyard
-      if: false
-      run: |
-        source ${HOME}/.graphscope_env
-        git clone --single-branch --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
-        cd /tmp/v6d
-        git submodule update --init
-        mkdir -p build && cd build
-        cmake .. -DCMAKE_INSTALL_PREFIX=/opt/vineyard \
-                 -DCMAKE_PREFIX_PATH=/opt/graphscope \
-                 -DOPENSSL_ROOT_DIR=/opt/graphscope \
-                 -DUSE_EXTERNAL_ETCD_LIBS=OFF \
-                 -DBUILD_SHARED_LIBS=ON \
-                 -DBUILD_VINEYARD_TESTS=OFF
-        make -j$(nproc)
-        sudo make install
-
-        # copy to /usr/local, keep the same logic as gsvineyard.Dockerfile
-        sudo rsync -av /opt/vineyard/ ${GRAPHSCOPE_HOME}/
-
     - name: Build Wheels
       run: |
-        source ${HOME}/.graphscope_env
+        # sleep infinity
+        git submodule update --init
+        cd ${GITHUB_WORKSPACE}/learning_engine/graph-learn && git submodule update --init third_party/pybind11
 
-        export SCCACHE_DIR=~/.cache/sccache
-        export RUSTC_WRAPPER=/usr/local/bin/sccache
-        sccache --start-server
-
-        cd ${GITHUB_WORKSPACE}/k8s/internal
         # build graphscope wheels
-        # GraphScope install location. Note this may different from location of GraphScope dependencies.
-        make graphscope-manylinux2014-py3-nodocker INSTALL_PREFIX=${GITHUB_WORKSPACE}/install
-        # build client wheels
-        make graphscope-client-manylinux2014-py3-nodocker
+        cd ${GITHUB_WORKSPACE}/k8s/internal
+        # sudo -E -u runner make graphscope-py3-package GRAPHSCOPE_HOME=/opt/graphscope
+        make graphscope-py3-package GRAPHSCOPE_HOME=/opt/graphscope REGISTRY=registry-vpc.cn-hongkong.aliyuncs.com
 
-        sccache --show-stats
+        # build client wheels
+        # sudo -E -u runner make graphscope-client-py3-package GRAPHSCOPE_HOME=/opt/graphscope
+        make graphscope-client-py3-package GRAPHSCOPE_HOME=/opt/graphscope REGISTRY=registry-vpc.cn-hongkong.aliyuncs.com
 
         # package
         cd ${GITHUB_WORKSPACE}
+        sudo chown $(id -u) -R .
         tar -zcf client.tar.gz python/dist/wheelhouse/*.whl
         tar -zcf graphscope.tar.gz coordinator/dist/
 

@@ -16,14 +16,14 @@ RUN cd /home/graphscope/GraphScope/ && \
         . /home/graphscope/.graphscope_env; \
         mkdir /home/graphscope/install; \
         make learning-install INSTALL_PREFIX=/home/graphscope/install; \
-        source /home/graphscope/.graphscope_env; \
-        python3 -m pip install "numpy==1.18.5" "pandas<1.5.0" "grpcio>=1.49" "grpcio-tools>=1.49" wheel; \
-        cd /home/graphscope/GraphScope/python; \
+        cd python; \
+        python3 -m pip install --user -r requirements.txt; \
         python3 setup.py bdist_wheel; \
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/graphscope/GraphScope/learning_engine/graph-learn/graphlearn/built/lib; \
-        auditwheel repair --plat=manylinux2014_x86_64 dist/*.whl; \
+        auditwheel repair dist/*.whl; \
+        python3 -m pip install wheelhouse/*.whl; \
         cp wheelhouse/*.whl /home/graphscope/install/; \
-        cd /home/graphscope/GraphScope/coordinator; \
+        cd ../coordinator; \
         python3 setup.py bdist_wheel; \
         cp dist/*.whl /home/graphscope/install/; \
     fi
@@ -31,24 +31,12 @@ RUN cd /home/graphscope/GraphScope/ && \
 ############### RUNTIME: GLE #######################
 FROM $REGISTRY/graphscope/vineyard-runtime:$RUNTIME_VERSION AS learning
 
-USER root
-
-RUN yum install -y centos-release-scl-rh sudo && \
-    INSTALL_PKGS="rh-python38-python-pip" && \
-    yum install -y --setopt=tsflags=nodocs $INSTALL_PKGS && \
-    rpm -V $INSTALL_PKGS && \
-    yum -y clean all --enablerepo='*' && \
-    rm -rf /var/cache/yum
-RUN sudo chmod a+wrx /tmp
-
-SHELL [ "/usr/bin/scl", "enable", "rh-python38" ]
-
-ENV GRAPHSCOPE_HOME=/opt/graphscope
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GRAPHSCOPE_HOME/lib
+RUN sudo apt-get update -y && \
+    sudo apt-get install -y python3-pip && \
+    sudo apt-get clean -y && \
+    sudo rm -rf /var/lib/apt/lists/*
 
 RUN sudo chmod a+wrx /tmp
 
-USER graphscope
-WORKDIR /home/graphscope
-
-ENTRYPOINT ["/bin/bash", "-c", "source scl_source enable rh-python38 && $0 $@"]
+COPY --from=builder /home/graphscope/install /opt/graphscope/
+RUN python3 -m pip install --no-cache-dir /opt/graphscope/*.whl && sudo rm -rf /opt/graphscope/*.whl

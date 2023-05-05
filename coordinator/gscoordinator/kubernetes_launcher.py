@@ -829,7 +829,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         self._learning_instance_processes[object_id] = []
         for pod_index, pod in enumerate(self._pod_name_list):
             container = self._engine_cluster.learning_container_name
-            sub_cmd = f"/opt/rh/rh-python38/root/usr/bin/python3 -m gscoordinator.learning {handle} {config} {pod_index}"
+            sub_cmd = f"python3 -m gscoordinator.learning {handle} {config} {pod_index}"
             cmd = f"kubectl -n {self._namespace} exec -it -c {container} {pod} -- {sub_cmd}"
             logging.debug("launching learning server: %s", " ".join(cmd))
             cmd = shlex.split(cmd)

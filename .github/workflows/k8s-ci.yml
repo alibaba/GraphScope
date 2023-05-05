@@ -205,7 +205,7 @@ jobs:
 
     - name: Build Artifact
       run: |
-        source ${HOME}/.graphscope_env
+        . ${HOME}/.graphscope_env
         export INSTALL_DIR=${{ github.workspace }}/install
         mkdir ${INSTALL_DIR}
         make analytical-install INSTALL_PREFIX=${INSTALL_DIR}
@@ -238,7 +238,7 @@ jobs:
 
     - name: Build Artifact
       run: |
-        source ${HOME}/.graphscope_env
+        . ${HOME}/.graphscope_env
         export INSTALL_DIR=${{ github.workspace }}/install
         mkdir ${INSTALL_DIR}
         make analytical-java-install INSTALL_PREFIX=${INSTALL_DIR}
@@ -282,7 +282,7 @@ jobs:
 
     - name: Build Artifact
       run: |
-        source ${HOME}/.graphscope_env
+        . ${HOME}/.graphscope_env
         mkdir install
         export SCCACHE_DIR=~/.cache/sccache
         export RUSTC_WRAPPER=/usr/local/bin/sccache
@@ -316,16 +316,19 @@ jobs:
 
     - name: Build Artifact
       run: |
-        source ${HOME}/.graphscope_env
         mkdir install
         make learning-install INSTALL_PREFIX=${{ github.workspace }}/install
-        python3 -m pip install "numpy==1.18.5" "pandas<1.5.0" "grpcio>=1.49" "grpcio-tools>=1.49" wheel
         cd ${{ github.workspace }}/python
+        pip3 install -r requirements.txt -r requirements-dev.txt --user
         python3 setup.py bdist_wheel
+        auditwheel_path=$(python3 -c "import auditwheel; print(auditwheel.__path__[0] + '/main_repair.py')")
+        sed -i 's/p.error/logger.warning/g' ${auditwheel_path}
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${{ github.workspace }}/learning_engine/graph-learn/graphlearn/built/lib
-        auditwheel repair --plat=manylinux2014_x86_64 dist/*.whl
+        auditwheel repair dist/*.whl
+        python3 -m pip install wheelhouse/*.whl; \
         cp wheelhouse/*.whl ${{ github.workspace }}/install/
         cd ${{ github.workspace }}/coordinator
+        pip3 install -r requirements.txt -r requirements-dev.txt --user
         python3 setup.py bdist_wheel
         cp dist/*.whl ${{ github.workspace }}/install/
 
@@ -580,7 +583,7 @@ jobs:
 
       - name: Build GIE Experimental Artifacts
         run: |
-          source ~/.graphscope_env
+          . ~/.graphscope_env
           export RPC_TARGET=start_rpc_server_k8s
           cd interactive_engine/compiler && make build rpc.target=${RPC_TARGET}
           cd ${GITHUB_WORKSPACE}
