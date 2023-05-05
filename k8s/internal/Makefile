@@ -94,7 +94,7 @@ graphscope-darwin-py3:
 			delocate-listdeps -a -d $$wheel; \
 			delocate-wheel -w dist/wheelhouse -v $$wheel && rm $$wheel; \
 		done
-
+# TODO(siyuan): Remove the sed
 graphscope-manylinux2014-py3-nodocker:
 	cd $(WORKING_DIR)/../.. && \
 	for _ in {1..5}; do if make INSTALL_PREFIX=${INSTALL_PREFIX}; then break; fi; done && \
