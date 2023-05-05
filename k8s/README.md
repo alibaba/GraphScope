@@ -101,3 +101,7 @@ Add this snippets
 - name: Set up QEMU
   uses: docker/setup-qemu-action@v1
 ```
+
+### Release new version of images.
+
+1. Bump up version of vineyard

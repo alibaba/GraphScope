@@ -60,7 +60,6 @@ jobs:
         sudo make analytical-java-install
         # also make coordinator and client for python test
         python3 -m pip install --upgrade pip setuptools
-        make client
         make coordinator
 
     - name: Run Cpp Test
