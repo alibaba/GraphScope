@@ -104,4 +104,15 @@ Add this snippets
 
 ### Release new version of images.
 
-1. Bump up version of vineyard
+1. Bump up version of vineyard, denote as <v6d-version>
+  - graphscope-dev:<v6d-version>
+  - vineyard-dev:<v6d-version>
+  - vineyard-runtime:<v6d-version>
+  - graphscope-dev:wheel
+
+2. Bump up version of graphscope, denote as <gs-version>
+  - analytical:<gs-version>
+  - interactive-frontend:<gs-version>
+  - interactive-executor:<gs-version>
+  - learning:<gs-version>
+  - coordinator:<gs-version>
