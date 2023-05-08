@@ -259,7 +259,7 @@ def download_file(  # noqa: C901
                     urlretrieve(origin, fpath, show_progress)
                 except urllib.error.HTTPError as e:
                     error_msg = error_msg_tpl.format(origin, e.code, e.msg)
-                    logger.warning("{0}, retry {1} times...".format(error_msg, retry))
+                    logger.warning("%s, retry %s times...", error_msg, retry)
                     if retry >= max_retries - 1:
                         raise Exception(error_msg)
                     time.sleep(backoff)
@@ -267,7 +267,7 @@ def download_file(  # noqa: C901
                     # `URLError` has been made a subclass of OSError since version 3.3
                     # https://docs.python.org/3/library/urllib.error.html
                     error_msg = error_msg_tpl.format(origin, e.errno, e.reason)
-                    logger.warning("{0}, retry {1} times...".format(error_msg, retry))
+                    logger.warning("%s, retry %s times...", error_msg, retry)
                     if retry >= max_retries - 1:
                         raise Exception(error_msg)
                     time.sleep(backoff)

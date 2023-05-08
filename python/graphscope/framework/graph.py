@@ -1156,16 +1156,16 @@ class Graph(GraphInterface):
         for instance in self._interactive_instance_list:
             try:
                 instance.close()
-            except Exception as e:  # pylint: disable=broad-except,invalid-name
-                logger.error("Failed to close interactive instances: %s", e)
+            except Exception:  # pylint: disable=broad-except
+                logger.exception("Failed to close interactive instances")
         self._interactive_instance_list.clear()
 
     def _close_learning_instances(self):
         for instance in self._learning_instance_list:
             try:
                 instance.close()
-            except Exception as e:  # pylint: disable=broad-except,invalid-name
-                logger.error("Failed to close interactive instances: %s", e)
+            except Exception:  # pylint: disable=broad-except
+                logger.exception("Failed to close interactive instances")
         self._learning_instance_list.clear()
 
 

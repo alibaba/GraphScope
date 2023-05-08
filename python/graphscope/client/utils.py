@@ -223,7 +223,7 @@ def suppress_grpc_error(fn):
                     exc.details(),
                 )
         except Exception as exc:  # noqa: F841
-            logger.warning("RPC call failed: %s", exc)
+            logger.warning("RPC call failed", exc_info=exc)
 
     return with_grpc_catch
 
@@ -386,7 +386,11 @@ def set_defaults(defaults):
                 if k == "self" or v.default is inspect.Parameter.empty:
                     continue
                 if hasattr(defaults, k):
-                    new_defaults.append(getattr(defaults, k))
+                    # don't fill None fields
+                    if v.default is None:
+                        new_defaults.append(None)
+                    else:
+                        new_defaults.append(getattr(defaults, k))
                 else:
                     new_defaults.append(v.default)
 

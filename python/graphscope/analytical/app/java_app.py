@@ -110,9 +110,10 @@ def _parse_user_app(java_app_class: str, java_jar_full_path: str):
         elif line.find("ContextType") != -1:
             _java_inner_context_type = line.split(":")[-1].strip()
     logger.info(
-        "Java app type: {}, frag type str: {}, ctx type: {}".format(
-            _java_app_type, _frag_param_str, _java_inner_context_type
-        )
+        "Java app type: %s, frag type str: %s, ctx type: %s",
+        _java_app_type,
+        _frag_param_str,
+        _java_inner_context_type,
     )
 
     parse_user_app_process.wait()
@@ -347,9 +348,7 @@ class JavaAppDagNode(AppDAGNode):
                 self._graph.template_str
             )
             logger.info(
-                "Set frag name to {}, {}".format(
-                    self._graph.template_str, frag_name_for_java
-                )
+                "Set frag name to %s, %s", self._graph.template_str, frag_name_for_java
             )
         else:
             frag_name_for_java = self._graph.template_str
@@ -360,7 +359,7 @@ class JavaAppDagNode(AppDAGNode):
             **kwargs,
         )
 
-        logger.info("dumping to json {}".format(json.dumps(kwargs_extend)))
+        logger.info("dumping to json %s", json.dumps(kwargs_extend))
         return create_context_node(
             self._app_assets.context_type, self, self._graph, json.dumps(kwargs_extend)
         )

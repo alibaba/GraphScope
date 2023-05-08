@@ -304,7 +304,7 @@ class Session(object):
         k8s_vineyard_deployment=gs_config.k8s_vineyard_deployment,
         k8s_vineyard_cpu=gs_config.k8s_vineyard_cpu,
         k8s_vineyard_mem=gs_config.k8s_vineyard_mem,
-        vineyard_shared_mem=gs_config.vineyard_shared_mem,
+        vineyard_shared_mem=None,
         k8s_engine_cpu=gs_config.k8s_engine_cpu,
         k8s_engine_mem=gs_config.k8s_engine_mem,
         k8s_mars_worker_cpu=gs_config.mars_worker_cpu,
@@ -381,7 +381,8 @@ class Session(object):
 
             k8s_vineyard_mem (str, optional): Minimum number of memory request for vineyard container. Defaults to '512Mi'.
 
-            vineyard_shared_mem (str, optional): Init size of vineyard shared memory. Defaults to '4Gi'.
+            vineyard_shared_mem (str, optional): Init size of vineyard shared memory. Defaults to '4Gi' for Kubernetes and
+                half of the total memory for local sessions.
 
             k8s_engine_cpu (float, optional): Minimum number of CPU cores request for engine container. Defaults to 0.5.
 
@@ -523,6 +524,14 @@ class Session(object):
 
         # supress the grpc warnings, see also grpc/grpc#29103
         os.environ["GRPC_ENABLE_FORK_SUPPORT"] = "false"
+
+        if vineyard_shared_mem is None:
+            if cluster_type == "k8s":
+                vineyard_shared_mem = gs_config.vineyard_shared_mem
+            else:
+                vineyard_shared_mem = gs_config._local_vineyard_shared_mem
+        if not isinstance(vineyard_shared_mem, str):
+            vineyard_shared_mem = str(vineyard_shared_mem)
 
         self._config_params = {}
         self._accessable_params = (
@@ -775,7 +784,7 @@ class Session(object):
                     self._grpc_client.send_heartbeat()
                 except Exception as exc:
                     if heartbeat_failure_count == 0:
-                        logger.warning(exc)
+                        logger.warning("Failed to send heartbeat message", exc_info=exc)
                     heartbeat_failure_count = heartbeat_failure_count + 1
                     if heartbeat_failure_count > self._heartbeat_maximum_failures:
                         logger.error(
@@ -1348,6 +1357,11 @@ def set_option(**kwargs):
 
     for k, v in kwargs.items():
         setattr(gs_config, k, v)
+
+        # use different default value for `vineyard_shared_memory` for
+        # different cluster types in pursuit of better user experience.
+        if k == "vineyard_shared_mem":
+            setattr("_local_vineyard_shared_mem", v)
 
     GSLogger.update()
 
