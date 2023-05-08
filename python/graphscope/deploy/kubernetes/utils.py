@@ -391,19 +391,19 @@ def delete_kubernetes_object(
                         getattr(k8s_api, "read_namespaced_{0}".format(kind))(**kwargs)
                     except K8SApiException as ex:
                         if ex.status != 404:
-                            logger.error(
-                                "Deleting {0} {1} failed: {2}".format(
-                                    kind, target.metadata.name, str(ex)
-                                )
+                            logger.exception(
+                                "Deleting %s, %s, failed",
+                                kind,
+                                target.metadata.name,
                             )
                         break
                     else:
                         time.sleep(1)
                         if time.time() - start_time > timeout_seconds:
                             logger.info(
-                                "Deleting {0} {1} timeout".format(
-                                    kind, target.metadata.name
-                                )
+                                "Deleting %s, %s, timeout",
+                                kind,
+                                target.metadata.name,
                             )
         if verbose:
             msg = "{0}/{1} deleted.".format(kind, target.metadata.name)

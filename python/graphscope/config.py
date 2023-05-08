@@ -72,7 +72,17 @@ class GSConfig(object):
     k8s_vineyard_deployment = None
     k8s_vineyard_cpu = 0.5
     k8s_vineyard_mem = "512Mi"
+
+    # the limits for vineyard shared memory, defaults to 4Gi for kubernetes
+    # and half of the total memory for local sessions.
     vineyard_shared_mem = "4Gi"
+
+    try:
+        import psutil
+
+        _local_vineyard_shared_mem = psutil.virtual_memory().total // 2
+    except:  # noqa: E722, pylint: disable=bare-except
+        _local_vineyard_shared_mem = vineyard_shared_mem
 
     # engine resource configuration
     k8s_engine_cpu = 0.2
