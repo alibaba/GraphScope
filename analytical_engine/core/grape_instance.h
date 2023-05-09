@@ -101,6 +101,8 @@ class GrapeInstance : public Subscriber {
 
   bl::result<void> unloadGraph(const rpc::GSParams& params);
 
+  bl::result<void> archiveGraph(const rpc::GSParams& params);
+
   bl::result<std::string> loadApp(const rpc::GSParams& params);
 
   bl::result<void> unloadApp(const rpc::GSParams& params);

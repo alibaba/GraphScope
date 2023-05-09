@@ -200,6 +200,7 @@ def add_labels_to_graph(graph, loader_op):
         types_pb2.VERTEX_MAP_TYPE: utils.i_to_attr(graph._vertex_map),
         types_pb2.VID_TYPE: utils.s_to_attr("uint64_t"),
         types_pb2.IS_FROM_VINEYARD_ID: utils.b_to_attr(False),
+        types_pb2.IS_FROM_GAR: utils.b_to_attr(False),
     }
     # inferred from the context of the dag.
     config.update({types_pb2.GRAPH_NAME: utils.s_to_attr("")})
@@ -1066,5 +1067,32 @@ def fetch_gremlin_result(result_set, fetch_type="one"):
         config=config,
         inputs=[result_set.op],
         output_types=types_pb2.RESULTS,
+    )
+    return op
+
+
+def archive_graph(graph, path):
+    """Archive a graph to a path.
+
+    Args:
+        graph (:class:`graphscope.framework.graph.GraphDAGNode`): Source graph.
+        path (str): The path to archive the graph.
+
+    Returns:
+        An op to archive the graph to a path.
+    """
+    config = {
+        types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph._graph_type),
+        types_pb2.OID_TYPE: utils.s_to_attr(graph._oid_type),
+        types_pb2.VID_TYPE: utils.s_to_attr("uint64_t"),
+        types_pb2.VERTEX_MAP_TYPE: utils.i_to_attr(graph._vertex_map),
+    }
+    config[types_pb2.GRAPH_INFO_PATH] = utils.s_to_attr(path)
+    op = Operation(
+        graph.session_id,
+        types_pb2.ARCHIVE_GRAPH,
+        config=config,
+        inputs=[graph.op],
+        output_types=types_pb2.NULL_OUTPUT,
     )
     return op

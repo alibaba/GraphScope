@@ -92,6 +92,9 @@ class GraphInterface(metaclass=ABCMeta):
     def load_from(cls, path, sess, **kwargs):
         raise NotImplementedError
 
+    def archive(self, path, **kwargs):
+        raise NotImplementedError
+
     @abstractmethod
     def project(self, vertices, edges):
         raise NotImplementedError
@@ -184,6 +187,7 @@ class GraphInterface(metaclass=ABCMeta):
         config[types_pb2.OID_TYPE] = utils.s_to_attr(self._oid_type)
         config[types_pb2.VID_TYPE] = utils.s_to_attr("uint64_t")
         config[types_pb2.IS_FROM_VINEYARD_ID] = utils.b_to_attr(False)
+        config[types_pb2.IS_FROM_GAR] = utils.b_to_attr(False)
         config[types_pb2.VERTEX_MAP_TYPE] = utils.i_to_attr(self._vertex_map)
         return dag_utils.create_graph(
             self.session_id, graph_def_pb2.ARROW_PROPERTY, inputs=None, attrs=config
@@ -397,6 +401,20 @@ class GraphDAGNode(DAGNode, GraphInterface):
         vertex_range = utils.transform_vertex_range(vertex_range)
         op = dag_utils.graph_to_dataframe(self, selector, vertex_range)
         return ResultDAGNode(self, op)
+
+    def archive(self, path):
+        """Archive the graph to a file.
+
+        Args:
+            path (str): The path to store the graph.
+            format (str, optional): The format of the archive file. Defaults to "arrow".
+
+        Raises:
+            ValueError: If the format is not supported.
+        """
+        check_argument(self.graph_type == graph_def_pb2.ARROW_PROPERTY)
+        op = dag_utils.archive_graph(self, path)
+        return ArchivedGraph(self._session, op)
 
     def to_directed(self):
         op = dag_utils.to_directed(self)
@@ -1008,7 +1026,7 @@ class Graph(GraphInterface):
     def save_to(self, path, **kwargs):
         """Serialize graph to a location.
         The meta and data of graph is dumped to specified location,
-        and can be restored by `Graph.deserialize` in other sessions.
+        and can be restored by `Graph.load_from` in other sessions.
 
         Each worker will write a `path_{worker_id}.meta` file and
         a `path_{worker_id}` file to storage.
@@ -1104,6 +1122,16 @@ class Graph(GraphInterface):
         )
         return sess._wrapper(GraphDAGNode(sess, vineyard.ObjectID(graph_id)))
 
+    def archive(self, path):
+        """Archive graph gar format files base on the graph info.
+        The meta and data of graph is dumped to specified location,
+        and can be restored by `Graph.deserialize` in other sessions.
+
+        Args:
+            path (str): supported storages are local, hdfs, oss, s3
+        """
+        return self._session._wrapper(self._graph_node.archive(path))
+
     def add_vertices(self, vertices, label="_", properties=None, vid_field=0):
         if not self.loaded():
             raise RuntimeError("The graph is not loaded")
@@ -1171,6 +1199,16 @@ class Graph(GraphInterface):
 
 class UnloadedGraph(DAGNode):
     """Unloaded graph node in a DAG."""
+
+    def __init__(self, session, op):
+        self._session = session
+        self._op = op
+        # add op to dag
+        self._session.dag.add_op(self._op)
+
+
+class ArchivedGraph(DAGNode):
+    """Archived graph node in a DAG"""
 
     def __init__(self, session, op):
         self._session = session

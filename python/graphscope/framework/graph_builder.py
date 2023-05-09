@@ -183,10 +183,42 @@ def load_from(
         types_pb2.RETAIN_OID: utils.b_to_attr(retain_oid),
         types_pb2.VID_TYPE: utils.s_to_attr("uint64_t"),
         types_pb2.IS_FROM_VINEYARD_ID: utils.b_to_attr(False),
+        types_pb2.IS_FROM_GAR: utils.b_to_attr(False),
         types_pb2.VERTEX_MAP_TYPE: utils.i_to_attr(vertex_map),
     }
     op = dag_utils.create_graph(
         sess.session_id, graph_def_pb2.ARROW_PROPERTY, inputs=[loader_op], attrs=config
+    )
+    graph = sess.g(op, vertex_map=vertex_map)
+    return graph
+
+
+def load_from_gar(
+    graph_info_path: str,
+    directed=True,
+    oid_type="int64_t",
+    vertex_map="global"
+) -> Graph:
+    sess = get_default_session()
+    oid_type = utils.normalize_data_type_str(oid_type)
+    if oid_type not in ("int32_t", "int64_t", "std::string"):
+        raise ValueError("oid_type can only be int32_t, int64_t or string.")
+    # generate and add a loader op to dag
+    vertex_map = utils.vertex_map_type_to_enum(vertex_map)
+    # construct create graph op
+    config = {
+        types_pb2.DIRECTED: utils.b_to_attr(directed),
+        types_pb2.OID_TYPE: utils.s_to_attr(oid_type),
+        types_pb2.GENERATE_EID: utils.b_to_attr(False),
+        types_pb2.RETAIN_OID: utils.b_to_attr(False),
+        types_pb2.VID_TYPE: utils.s_to_attr("uint64_t"),
+        types_pb2.IS_FROM_VINEYARD_ID: utils.b_to_attr(False),
+        types_pb2.IS_FROM_GAR: utils.b_to_attr(True),
+        types_pb2.VERTEX_MAP_TYPE: utils.i_to_attr(vertex_map),
+        types_pb2.GRAPH_INFO_PATH: utils.s_to_attr(graph_info_path),
+    }
+    op = dag_utils.create_graph(
+        sess.session_id, graph_def_pb2.ARROW_PROPERTY, inputs=[], attrs=config
     )
     graph = sess.g(op, vertex_map=vertex_map)
     return graph
