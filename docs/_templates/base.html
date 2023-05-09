@@ -48,9 +48,10 @@ MathJax = {
   src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
 </script>
 
-<!-- preload searchindex.js -->
-<script src='' id="searchindexjs" type="text/javascript"></script>
-
+<script
+  type="text/javascript"
+  src="{{ pathto('_static/searchtools.js', 1) }}">
+</script>
 {% endblock %}
 
 {% block body %}
@@ -75,8 +76,11 @@ MathJax = {
   }
 
   ready(function() {
-    let searchindexjs = document.getElementById("searchindexjs");
-    searchindexjs.src = "{{ pathto('searchindex.js', 1) }}";
+    // preload searchindex.js
+    let script = document.createElement("script");
+    script.src = "{{ pathto('searchindex.js', 1) }}";
+    script.type = "text/javascript";
+    document.getElementsByTagName("head")[0].appendChild(script);
   });
 </script>
 {% endblock %}
