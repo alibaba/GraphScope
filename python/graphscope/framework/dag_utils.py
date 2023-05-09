@@ -1072,7 +1072,7 @@ def fetch_gremlin_result(result_set, fetch_type="one"):
 
 
 def archive_graph(graph, path):
-    """Archive a graph to a path.
+    """Archive a graph to gar format with a path.
 
     Args:
         graph (:class:`graphscope.framework.graph.GraphDAGNode`): Source graph.

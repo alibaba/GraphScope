@@ -28,6 +28,7 @@ def test_load_from_gar(graphscope_session):
     print(graph_yaml)
     graph = graphscope_session.load_from_gar(graph_yaml)
     assert graph.schema is not None
+    del graph
 
 
 def test_archive_to_gar(ldbc_graph):

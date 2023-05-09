@@ -403,14 +403,10 @@ class GraphDAGNode(DAGNode, GraphInterface):
         return ResultDAGNode(self, op)
 
     def archive(self, path):
-        """Archive the graph to a file.
+        """Archive the graph to gar format with graph yaml file path.
 
         Args:
-            path (str): The path to store the graph.
-            format (str, optional): The format of the archive file. Defaults to "arrow".
-
-        Raises:
-            ValueError: If the format is not supported.
+            path (str): The graph yaml file path describe how to archive the graph.
         """
         check_argument(self.graph_type == graph_def_pb2.ARROW_PROPERTY)
         op = dag_utils.archive_graph(self, path)
@@ -1128,7 +1124,7 @@ class Graph(GraphInterface):
         and can be restored by `Graph.deserialize` in other sessions.
 
         Args:
-            path (str): supported storages are local, hdfs, oss, s3
+            path (str): the graph info file path.
         """
         return self._session._wrapper(self._graph_node.archive(path))
 
