@@ -83,7 +83,7 @@ find_package(libgrapelite REQUIRED)
 include_directories(SYSTEM ${LIBGRAPELITE_INCLUDE_DIRS})
 
 # find vineyard ---------------------------------------------
-find_package(vineyard 0.14.0 REQUIRED)
+find_package(vineyard 0.14.5 REQUIRED)
 include_directories(${VINEYARD_INCLUDE_DIRS})
 
 add_library(grape-jni SHARED ${SOURCES})
