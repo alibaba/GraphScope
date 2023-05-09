@@ -31,6 +31,7 @@ clean:
 test:
 	cd $(CUR_DIR)/../executor/ir && cargo test && \
 	cd $(CUR_DIR)/../executor/ir && cargo test --features with_v6d && \
+	cd $(CUR_DIR)/../executor/ir && cargo test --features with_global_query && \
 	cd $(CUR_DIR) && mvn test
 
 # start rpc server
