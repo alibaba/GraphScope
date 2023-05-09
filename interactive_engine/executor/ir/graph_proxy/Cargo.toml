@@ -10,7 +10,7 @@ log = "0.4"
 lazy_static = "1.3.0"
 mcsr = {path = "../../store/mcsr"}
 graph_store = {path = "../../store/exp_store"}
-global_query = {path = "../../store/global_query"}
+global_query = {path = "../../store/global_query", optional = true}
 dyn_type = { path = "../../common/dyn_type" }
 ir_common = {path = "../common"}
 pegasus = { path = "../../engine/pegasus/pegasus" }
@@ -21,4 +21,5 @@ rand = "0.8.5"
 [features]
 default = []
 proto_inplace = ["ir_common/proto_inplace"]
-with_v6d = ["global_query/with_v6d"]
+with_global_query = ["global_query"]
+with_v6d = ["global_query/with_v6d", "with_global_query"]

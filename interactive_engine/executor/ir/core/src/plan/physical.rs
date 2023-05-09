@@ -19,9 +19,9 @@
 //! protobuf structure.
 //!
 
-use ir_common::error::ParsePbError;
 use std::convert::TryInto;
 
+use ir_common::error::ParsePbError;
 use ir_common::expr_parse::str_to_expr_pb;
 use ir_common::generated::algebra as pb;
 use ir_common::generated::common as common_pb;
