@@ -47,17 +47,16 @@ MathJax = {
   type="text/javascript" id="MathJax-script" async
   src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
 </script>
-
-<script
-  type="text/javascript"
-  src="{{ pathto('_static/searchtools.js', 1) }}">
-</script>
 {% endblock %}
 
 {% block body %}
 <script>
   document.body.dataset.theme = "light";
 </script>
+{% endblock %}
+
+{% block script %}
+{{ super() }}
 
 <script>
   function ready(callback) {
@@ -77,10 +76,13 @@ MathJax = {
 
   ready(function() {
     // preload searchindex.js
-    let script = document.createElement("script");
-    script.src = "{{ pathto('searchindex.js', 1) }}";
-    script.type = "text/javascript";
-    document.getElementsByTagName("head")[0].appendChild(script);
+    let scripts = ["{{ pathto('_static/searchtools.js', 1) }}", "{{ pathto('searchindex.js', 1) }}"];
+    scripts.forEach(src => {
+      let script = document.createElement("script");
+      script.src = src;
+      script.type = "text/javascript";
+      document.getElementsByTagName("html")[0].appendChild(script);
+    });
   });
 </script>
 {% endblock %}
