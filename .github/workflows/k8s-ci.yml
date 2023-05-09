@@ -702,3 +702,19 @@ jobs:
               --set frontend.service.type=NodePort
           # run failover test
           cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && ./ir_k8s_failover_ci.sh default test-gie-standalone 2 1
+          mkdir -p ${{ github.workspace }}/k8s-failover-logs
+
+      - name: Export kubernetes logs
+        uses: dashanji/kubernetes-log-export-action@v3
+        if: ${{ failure() }}
+        env:
+          SHOW_TIMESTAMPS: 'true'
+          OUTPUT_DIR: ${{ github.workspace }}/k8s-failover-logs
+          NAMESPACES: default
+
+      - name: upload the k8s logs to artifact
+        uses: actions/upload-artifact@v2
+        if: ${{ failure() }}
+        with:
+          name: k8s-failover-logs
+          path: ${{ github.workspace }}/k8s-failover-logs
