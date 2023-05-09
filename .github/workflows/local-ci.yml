@@ -371,7 +371,7 @@ jobs:
       run: |
         # download dataset
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}
-        git clone -b main --single-branch --depth=1 https://github.com/acezen/gar-test.git ${GAR_TEST_DATA}
+        git clone -b main --single-branch --depth=1 https://github.com/GraphScope/gar-test.git ${GAR_TEST_DATA}
 
         python3 -m pytest -s -v --cov=graphscope --cov-config=python/.coveragerc \
                                 --cov-report=xml --cov-report=term --exitfirst \
