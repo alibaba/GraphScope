@@ -7,12 +7,6 @@ This template exists as a way to implement a language menu just as what
 
 #}
 
-{% block body %}
-  <script>
-    document.body.dataset.theme = "light";
-  </script>
-{% endblock %}
-
 {%- block extrahead %}
 
 {{ super() }}
@@ -53,5 +47,42 @@ MathJax = {
   type="text/javascript" id="MathJax-script" async
   src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
 </script>
+{% endblock %}
 
+{% block body %}
+<script>
+  document.body.dataset.theme = "light";
+</script>
+{% endblock %}
+
+{% block script %}
+{{ super() }}
+
+<script>
+  function ready(callback) {
+    if (document.readyState!='loading') {
+      // in case the document is already rendered
+      callback();
+    } else if (document.addEventListener) {
+      // modern browsers
+      document.addEventListener('DOMContentLoaded', callback);
+    } else document.attachEvent('onreadystatechange', function() {
+      // IE <= 8
+      if (document.readyState=='complete') {
+        callback();
+      }
+    });
+  }
+
+  ready(function() {
+    // preload searchindex.js
+    let scripts = ["{{ pathto('_static/searchtools.js', 1) }}", "{{ pathto('searchindex.js', 1) }}"];
+    scripts.forEach(src => {
+      let script = document.createElement("script");
+      script.src = src;
+      script.type = "text/javascript";
+      document.getElementsByTagName("html")[0].appendChild(script);
+    });
+  });
+</script>
 {% endblock %}

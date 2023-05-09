@@ -4,7 +4,7 @@ This guide will walk you through the process of installing GraphScope on your lo
 
 ## Prerequisites
 
-- Ubuntu 20.04 or later, CentOS 7 or later, or macOS 11.2.1 (Big Sur) or later
+- Ubuntu 20.04 or later, CentOS 7 or later, or macOS 11 (Intel) / macOS 12 (Apple silicon) or later
 - Python 3.7 ~ 3.11
 - OpenJDK 8 or later (If you want to use GIE)
 

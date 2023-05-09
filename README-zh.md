@@ -36,7 +36,7 @@ pip3 install graphscope
 
 注意 `graphscope` 的版本要求，需要 `Python` >= 3.7 及 `pip` >= 19.0.
 
-GraphScope 包在大多数流行的Linux发行版 （Ubuntu 18.04+ / Centos 7+) 与 macOS 10.15+ 上测试通过，对于 Windows 用户，需要在 WSL2 上安装 Ubuntu 来使用 GraphScope。
+GraphScope 包在大多数流行的Linux发行版 (Ubuntu 20.04+ / Centos 7+) 与 macOS 11+ (Intel) / macOS 12+ (Apple silicon) 上测试通过，对于 Windows 用户，需要在 WSL2 上安装 Ubuntu 来使用 GraphScope。
 
 接下来我们会用一个具体的例子，来演示 GraphScope 如何帮助数据科学家高效的分析、处理大规模图数据。
 

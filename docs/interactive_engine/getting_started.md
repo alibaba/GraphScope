@@ -15,7 +15,7 @@ And it is tested on the following 64-bit operating systems:
 
 - Ubuntu 18.04 or later
 - CentOS 7 or later
-- macOS 11.2.1 (Big Sur) or later, with both Intel chip and Apple M1 chip
+- macOS 11 (Intel) / macOS 12 (Apple silicon) or later, with both Intel chip and Apple M1 chip
 
 If your environment satisfies the above requirement, you can easily install GraphScope through pip:
 
