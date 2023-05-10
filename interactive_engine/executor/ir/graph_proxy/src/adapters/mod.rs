@@ -15,10 +15,14 @@
 
 mod csr_store;
 mod exp_store;
+#[cfg(feature = "with_global_query")]
 mod gs_store;
+#[cfg(feature = "with_global_query")]
 mod vineyard_store;
 
 pub use csr_store::{create_csr_store, CsrPartition};
 pub use exp_store::{create_exp_store, SimplePartition};
+#[cfg(feature = "with_global_query")]
 pub use gs_store::{create_gs_store, GrootMultiPartition, VineyardMultiPartition};
+#[cfg(feature = "with_global_query")]
 pub use vineyard_store::VineyardGraphWriter;

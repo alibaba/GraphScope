@@ -13,7 +13,7 @@ groot-store = { path = "../../store/groot" }
 gaia_pegasus = { path = "../../engine/pegasus/pegasus", package = "pegasus" }
 pegasus_network = { path = "../../engine/pegasus/network" }
 pegasus_server = { path = "../../engine/pegasus/server" }
-runtime_integration =  { path = "../../ir/integrated" }
+runtime_integration =  { path = "../../ir/integrated" , features = ["with_global_query"]}
 log = "0.4"
 log4rs = "1.2"
 tokio = { version = "1.24", features = ["macros", "sync"] }

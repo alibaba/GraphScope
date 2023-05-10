@@ -23,10 +23,11 @@ runtime = {path="../runtime"}
 graph_proxy = {path = "../graph_proxy"}
 graph_store = {path = "../../store/exp_store"}
 dyn_type = {path = "../../common/dyn_type"}
-global_query = {path = "../../store/global_query"}
+global_query = {path = "../../store/global_query", optional = true}
 
 [features]
 default = []
 proto_inplace = ["ir_common/proto_inplace", "pegasus_server/gcip"]
 with_v6d = ["runtime/with_v6d"]
+with_global_query = ["global_query", "graph_proxy/with_global_query"]
 column_filter_push_down = []
