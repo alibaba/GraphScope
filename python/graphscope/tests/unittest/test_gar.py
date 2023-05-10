@@ -21,7 +21,6 @@ import os
 gar_test_repo_dir = os.path.expandvars("${GAR_TEST_DATA}")
 
 
-"""
 def test_load_from_gar(graphscope_session):
     graph_yaml = os.path.join(
         gar_test_repo_dir, "ldbc_sample/parquet/ldbc_sample.graph.yml"
@@ -35,4 +34,3 @@ def test_load_from_gar(graphscope_session):
 def test_archive_to_gar(ldbc_graph):
     graph_yaml = os.path.join(gar_test_repo_dir, "ldbc/ldbc.graph.yml")
     ldbc_graph.archive(graph_yaml)
-"""
