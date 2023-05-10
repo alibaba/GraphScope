@@ -34,6 +34,7 @@ ifeq ($(UNAME),Darwin)
 	SUFFIX := dylib
 endif
 
+VERSION := $(shell cat $(WORKING_DIR)/VERSION)
 
 ## Common
 .PHONY: all graphscope install clean
@@ -134,7 +135,7 @@ interactive: $(INTERACTIVE_DIR)/assembly/target/graphscope.tar.gz
 
 $(INTERACTIVE_DIR)/assembly/target/graphscope.tar.gz:
 	cd $(INTERACTIVE_DIR) && \
-	mvn package -DskipTests -Drust.compile.mode=$(BUILD_TYPE) -P graphscope,graphscope-assembly --quiet
+	mvn package -DskipTests -Drust.compile.mode=$(BUILD_TYPE) -P graphscope,graphscope-assembly -Drevision=$(VERSION) --quiet
 
 learning-install: learning
 	mkdir -p $(INSTALL_PREFIX)

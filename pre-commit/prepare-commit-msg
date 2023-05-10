@@ -10,5 +10,5 @@ cat > ~/.config/git/hooks/prepare-commit-msg << EOF
 COMMIT_MSG_FILE=\$1
 echo "" >> "\$COMMIT_MSG_FILE"
 username=\$(git config --get user.name)
-echo "Commited by: \$username from Dev container" >> "\$COMMIT_MSG_FILE"
+echo "Committed-by: \$username from Dev container" >> "\$COMMIT_MSG_FILE"
 EOF
