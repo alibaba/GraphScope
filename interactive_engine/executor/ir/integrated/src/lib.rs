@@ -14,7 +14,9 @@
 //! limitations under the License.
 
 mod assemble;
-pub use assemble::{QueryCsrGraph, QueryExpGraph, QueryGrootGraph, QueryVineyard};
+pub use assemble::{QueryCsrGraph, QueryExpGraph};
+#[cfg(feature = "with_global_query")]
+pub use assemble::{QueryGrootGraph, QueryVineyard};
 use runtime::IRJobAssembly;
 
 pub trait InitializeJobAssembly {

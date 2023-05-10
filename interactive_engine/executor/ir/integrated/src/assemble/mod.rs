@@ -15,10 +15,14 @@
 
 mod csr;
 mod exp;
+#[cfg(feature = "with_global_query")]
 mod groot;
+#[cfg(feature = "with_global_query")]
 mod vineyard;
 
 pub use csr::QueryCsrGraph;
 pub use exp::QueryExpGraph;
+#[cfg(feature = "with_global_query")]
 pub use groot::QueryGrootGraph;
+#[cfg(feature = "with_global_query")]
 pub use vineyard::QueryVineyard;

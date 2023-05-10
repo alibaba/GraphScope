@@ -29,7 +29,7 @@ use global_query::{
 use graph_store::utils::IterList;
 use ir_common::{KeyId, LabelId, NameOrId, OneOrMany};
 
-use super::details::{LazyEdgeDetails, LazyVertexDetails};
+use crate::adapters::gs_store::details::{LazyEdgeDetails, LazyVertexDetails};
 use crate::apis::graph::PKV;
 use crate::apis::{
     from_fn, register_graph, Direction, DynDetails, Edge, QueryParams, ReadGraph, Statement, Vertex, ID,
@@ -609,7 +609,7 @@ fn extract_needed_columns(
 ) -> GraphProxyResult<Option<Vec<PropId>>> {
     use ahash::HashSet;
 
-    use super::translation::zip_option_vecs;
+    use crate::adapters::gs_store::translation::zip_option_vecs;
 
     // Some(vec[]) means need all props, so can't merge it with props needed in filter
     if let Some(out_columns) = out_columns {
