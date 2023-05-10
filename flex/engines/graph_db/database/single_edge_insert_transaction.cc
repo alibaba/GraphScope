@@ -25,12 +25,9 @@
 namespace gs {
 
 SingleEdgeInsertTransaction::SingleEdgeInsertTransaction(
-    MutablePropertyFragment& graph, ArenaAllocator& alloc, WalWriter& logger,
-    VersionManager& vm, timestamp_t timestamp)
-    : graph_(graph),
-      alloc_(alloc),
-      logger_(logger),
-      vm_(vm),
+    MutablePropertyFragment &graph, ArenaAllocator &alloc, WalWriter &logger,
+    VersionManager &vm, timestamp_t timestamp)
+    : graph_(graph), alloc_(alloc), logger_(logger), vm_(vm),
       timestamp_(timestamp) {
   arc_.Resize(sizeof(WalHeader));
 }
@@ -39,16 +36,25 @@ SingleEdgeInsertTransaction::~SingleEdgeInsertTransaction() { Abort(); }
 
 bool SingleEdgeInsertTransaction::AddEdge(label_t src_label, oid_t src,
                                           label_t dst_label, oid_t dst,
-                                          label_t edge_label, const Any& prop) {
+                                          label_t edge_label, const Any &prop) {
   if (!graph_.get_lid(src_label, src, src_vid_)) {
+    std::string label_name = graph_.schema().get_vertex_label_name(src_label);
+    LOG(ERROR) << "Source vertex " << label_name << "[" << src
+               << "] not found...";
     return false;
   }
   if (!graph_.get_lid(dst_label, dst, dst_vid_)) {
+    std::string label_name = graph_.schema().get_vertex_label_name(dst_label);
+    LOG(ERROR) << "Destination vertex " << label_name << "[" << dst
+               << "] not found...";
     return false;
   }
-  const PropertyType& type =
+  const PropertyType &type =
       graph_.schema().get_edge_property(src_label, dst_label, edge_label);
   if (prop.type != type) {
+    std::string label_name = graph_.schema().get_edge_label_name(edge_label);
+    LOG(ERROR) << "Edge property " << label_name << " type not match, expected "
+               << type << ", got " << prop.type;
     return false;
   }
   src_label_ = src_label;
@@ -77,7 +83,7 @@ void SingleEdgeInsertTransaction::Commit() {
   if (timestamp_ == std::numeric_limits<timestamp_t>::max()) {
     return;
   }
-  auto* header = reinterpret_cast<WalHeader*>(arc_.GetBuffer());
+  auto *header = reinterpret_cast<WalHeader *>(arc_.GetBuffer());
   header->length = arc_.GetSize() - sizeof(WalHeader);
   header->type = 0;
   header->timestamp = timestamp_;
@@ -98,4 +104,4 @@ void SingleEdgeInsertTransaction::clear() {
   timestamp_ = std::numeric_limits<timestamp_t>::max();
 }
 
-}  // namespace gs
+} // namespace gs

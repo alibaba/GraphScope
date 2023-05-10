@@ -75,27 +75,54 @@ std::vector<char> GraphDBSession::Eval(const std::string& input) {
   Decoder decoder(str_data, str_len);
   Encoder encoder(result_buffer);
 
+  AppBase* app = nullptr;
   if (likely(apps_[type] != nullptr)) {
-    if (!apps_[type]->Query(decoder, encoder)) {
-      LOG(ERROR) << "[Query-" + std::to_string((int) type) << "][Thread-"
-                 << thread_id_ << "] failed...";
-      result_buffer.clear();
-    }
+    app = apps_[type];
   } else {
     app_wrappers_[type] = db_.CreateApp(type, thread_id_);
     if (app_wrappers_[type].app() == NULL) {
       LOG(ERROR) << "[Query-" + std::to_string((int) type)
                  << "] is not registered...";
+      return result_buffer;
     } else {
       apps_[type] = app_wrappers_[type].app();
-      if (!apps_[type]->Query(decoder, encoder)) {
-        LOG(ERROR) << "[Query-" + std::to_string((int) type) << "][Thread-"
-                   << thread_id_ << "] failed...";
-        result_buffer.clear();
-      }
+      app = apps_[type];
     }
   }
 
+  if (app->Query(decoder, encoder)) {
+    return result_buffer;
+  }
+
+  LOG(INFO) << "[Query-" << (int) type << "][Thread-" << thread_id_ << "] retry - 1 / 3";
+  std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+  decoder.reset(str_data, str_len);
+  result_buffer.clear();
+  if (app->Query(decoder, encoder)) {
+    return result_buffer;
+  }
+
+  LOG(INFO) << "[Query-" << (int) type << "][Thread-" << thread_id_ << "] retry - 2 / 3";
+  std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+  decoder.reset(str_data, str_len);
+  result_buffer.clear();
+  if (app->Query(decoder, encoder)) {
+    return result_buffer;
+  }
+
+  LOG(INFO) << "[Query-" << (int) type << "][Thread-" << thread_id_ << "] retry - 3 / 3";
+  std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+  decoder.reset(str_data, str_len);
+  result_buffer.clear();
+  if (app->Query(decoder, encoder)) {
+    return result_buffer;
+  }
+  LOG(INFO) << "[Query-" << (int) type << "][Thread-" << thread_id_ << "] failed after 3 retries";
+
+  result_buffer.clear();
   return result_buffer;
 }
 

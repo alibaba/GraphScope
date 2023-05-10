@@ -21,13 +21,10 @@
 
 namespace gs {
 
-InsertTransaction::InsertTransaction(MutablePropertyFragment& graph,
-                                     ArenaAllocator& alloc, WalWriter& logger,
-                                     VersionManager& vm, timestamp_t timestamp)
-    : graph_(graph),
-      alloc_(alloc),
-      logger_(logger),
-      vm_(vm),
+InsertTransaction::InsertTransaction(MutablePropertyFragment &graph,
+                                     ArenaAllocator &alloc, WalWriter &logger,
+                                     VersionManager &vm, timestamp_t timestamp)
+    : graph_(graph), alloc_(alloc), logger_(logger), vm_(vm),
       timestamp_(timestamp) {
   arc_.Resize(sizeof(WalHeader));
 }
@@ -35,20 +32,28 @@ InsertTransaction::InsertTransaction(MutablePropertyFragment& graph,
 InsertTransaction::~InsertTransaction() { Abort(); }
 
 bool InsertTransaction::AddVertex(label_t label, oid_t id,
-                                  const std::vector<Any>& props) {
+                                  const std::vector<Any> &props) {
   size_t arc_size = arc_.GetSize();
   arc_ << static_cast<uint8_t>(0) << label << id;
-  const std::vector<PropertyType>& types =
+  const std::vector<PropertyType> &types =
       graph_.schema().get_vertex_properties(label);
   if (types.size() != props.size()) {
     arc_.Resize(arc_size);
+    std::string label_name = graph_.schema().get_vertex_label_name(label);
+    LOG(ERROR) << "Vertex [" << label_name
+               << "] properties size not match, expected " << types.size()
+               << ", but got " << props.size();
     return false;
   }
   int col_num = props.size();
   for (int col_i = 0; col_i != col_num; ++col_i) {
-    auto& prop = props[col_i];
+    auto &prop = props[col_i];
     if (prop.type != types[col_i]) {
       arc_.Resize(arc_size);
+      std::string label_name = graph_.schema().get_vertex_label_name(label);
+      LOG(ERROR) << "Vertex [" << label_name << "][" << col_i
+                 << "] property type not match, expected " << types[col_i]
+                 << ", but got " << prop.type;
       return false;
     }
     serialize_field(arc_, prop);
@@ -59,23 +64,32 @@ bool InsertTransaction::AddVertex(label_t label, oid_t id,
 
 bool InsertTransaction::AddEdge(label_t src_label, oid_t src, label_t dst_label,
                                 oid_t dst, label_t edge_label,
-                                const Any& prop) {
+                                const Any &prop) {
   vid_t lid;
   if (!graph_.get_lid(src_label, src, lid)) {
     if (added_vertices_.find(std::make_pair(src_label, src)) ==
         added_vertices_.end()) {
+      std::string label_name = graph_.schema().get_vertex_label_name(src_label);
+      LOG(ERROR) << "Source vertex " << label_name << "[" << src
+                 << "] not found...";
       return false;
     }
   }
   if (!graph_.get_lid(dst_label, dst, lid)) {
     if (added_vertices_.find(std::make_pair(dst_label, dst)) ==
         added_vertices_.end()) {
+      std::string label_name = graph_.schema().get_vertex_label_name(dst_label);
+      LOG(ERROR) << "Destination vertex " << label_name << "[" << dst
+                 << "] not found...";
       return false;
     }
   }
-  const PropertyType& type =
+  const PropertyType &type =
       graph_.schema().get_edge_property(src_label, dst_label, edge_label);
   if (prop.type != type) {
+    std::string label_name = graph_.schema().get_edge_label_name(edge_label);
+    LOG(ERROR) << "Edge property " << label_name << " type not match, expected "
+               << type << ", got " << prop.type;
     return false;
   }
   arc_ << static_cast<uint8_t>(1) << src_label << src << dst_label << dst
@@ -93,7 +107,7 @@ void InsertTransaction::Commit() {
     clear();
     return;
   }
-  auto* header = reinterpret_cast<WalHeader*>(arc_.GetBuffer());
+  auto *header = reinterpret_cast<WalHeader *>(arc_.GetBuffer());
   header->length = arc_.GetSize() - sizeof(WalHeader);
   header->type = 0;
   header->timestamp = timestamp_;
@@ -116,9 +130,9 @@ void InsertTransaction::Abort() {
 
 timestamp_t InsertTransaction::timestamp() const { return timestamp_; }
 
-void InsertTransaction::IngestWal(MutablePropertyFragment& graph,
-                                  uint32_t timestamp, char* data, size_t length,
-                                  ArenaAllocator& alloc) {
+void InsertTransaction::IngestWal(MutablePropertyFragment &graph,
+                                  uint32_t timestamp, char *data, size_t length,
+                                  ArenaAllocator &alloc) {
   grape::OutArchive arc;
   arc.SetSlice(data, length);
   while (!arc.Empty()) {
@@ -159,9 +173,9 @@ void InsertTransaction::clear() {
 
 #define likely(x) __builtin_expect(!!(x), 1)
 
-bool InsertTransaction::get_vertex_with_retries(MutablePropertyFragment& graph,
+bool InsertTransaction::get_vertex_with_retries(MutablePropertyFragment &graph,
                                                 label_t label, oid_t oid,
-                                                vid_t& lid) {
+                                                vid_t &lid) {
   if (likely(graph.get_lid(label, oid, lid))) {
     return true;
   }
@@ -178,4 +192,4 @@ bool InsertTransaction::get_vertex_with_retries(MutablePropertyFragment& graph,
 
 #undef likely
 
-}  // namespace gs
+} // namespace gs
