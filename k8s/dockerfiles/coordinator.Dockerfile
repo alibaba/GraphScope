@@ -55,4 +55,6 @@ USER graphscope
 WORKDIR /home/graphscope
 
 COPY --from=builder /home/graphscope/install /opt/graphscope/
-RUN python3 -m pip install --user --no-cache-dir /opt/graphscope/*.whl && sudo rm -rf /opt/graphscope/*.whl
+RUN python3 -m pip install --user --no-cache-dir \
+    /opt/graphscope/*cp$(python3 -c "import sys; print(f'{sys.version_info.major}{sys.version_info.minor}'.replace('.',''))")*.whl \
+    && sudo rm -rf /opt/graphscope/*.whl
