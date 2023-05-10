@@ -323,6 +323,10 @@ if (ENABLE_JAVA_SDK)
     target_compile_definitions(grape_engine PUBLIC ENABLE_JAVA_SDK)
 endif()
 
+if (BUILD_VINEYARD_GRAPH_WITH_GAR)
+    target_compile_definitions(grape_engine PRIVATE -DENABLE_GAR)
+endif()
+
 if (LET_IT_CRASH_ON_EXCEPTION)
     target_compile_definitions(grape_engine PRIVATE LET_IT_CRASH_ON_EXCEPTION)
 endif ()

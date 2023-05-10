@@ -155,6 +155,7 @@ class OperationExecutor:
                 or op.op == types_pb2.TRANSFORM_GRAPH
                 or op.op == types_pb2.PROJECT_TO_SIMPLE
                 or op.op == types_pb2.ADD_LABELS
+                or op.op == types_pb2.ARCHIVE_GRAPH
             ):
                 op = self._maybe_register_graph(op)
         return dag_def, dag_bodies

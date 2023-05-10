@@ -202,6 +202,21 @@ bl::result<void> GrapeInstance::unloadGraph(const rpc::GSParams& params) {
   return object_manager_.RemoveObject(graph_name);
 }
 
+bl::result<void> GrapeInstance::archiveGraph(const rpc::GSParams& params) {
+  if (params.HasKey(rpc::VINEYARD_ID)) {
+    BOOST_LEAF_AUTO(type_sig, params.Get<std::string>(rpc::TYPE_SIGNATURE));
+    BOOST_LEAF_AUTO(frag_group_id, params.Get<int64_t>(rpc::VINEYARD_ID));
+    BOOST_LEAF_AUTO(graph_utils,
+                    object_manager_.GetObject<PropertyGraphUtils>(type_sig));
+    bool exists = false;
+    VY_OK_OR_RAISE(client_->Exists(frag_group_id, exists));
+    if (exists) {
+      graph_utils->ArchiveGraph(frag_group_id, comm_spec_, *client_, params);
+    }
+  }
+  return {};
+}
+
 bl::result<std::string> GrapeInstance::loadApp(const rpc::GSParams& params) {
   BOOST_LEAF_AUTO(algo_name, params.Get<std::string>(rpc::APP_ALGO));
   std::string app_name = "app_" + algo_name + "_" + generateId();
@@ -1270,6 +1285,10 @@ bl::result<std::shared_ptr<DispatchResult>> GrapeInstance::OnReceive(
     BOOST_LEAF_AUTO(arc, reportGraph(params));
     r->set_data(*arc, DispatchResult::AggregatePolicy::kPickFirstNonEmpty,
                 true);
+    break;
+  }
+  case rpc::ARCHIVE_GRAPH: {
+    BOOST_LEAF_CHECK(archiveGraph(params));
     break;
   }
   case rpc::PROJECT_GRAPH: {

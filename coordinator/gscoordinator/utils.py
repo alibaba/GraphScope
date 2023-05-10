@@ -664,6 +664,8 @@ def op_pre_process(op, op_result_pool, key_to_op, **kwargs):  # noqa: C901
         _pre_process_for_add_column_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op == types_pb2.UNLOAD_GRAPH:
         _pre_process_for_unload_graph_op(op, op_result_pool, key_to_op, **kwargs)
+    if op.op == types_pb2.ARCHIVE_GRAPH:
+        _pre_process_for_archive_graph_op(op, op_result_pool, key_to_op, **kwargs)
     if op.op in (
         types_pb2.CONTEXT_TO_NUMPY,
         types_pb2.CONTEXT_TO_DATAFRAME,
@@ -1241,6 +1243,17 @@ def _pre_process_for_project_op(op, op_result_pool, key_to_op, **kwargs):
     op.attr[types_pb2.ARROW_PROPERTY_DEFINITION].CopyFrom(attr)
     del op.attr[types_pb2.VERTEX_COLLECTIONS]
     del op.attr[types_pb2.EDGE_COLLECTIONS]
+
+
+def _pre_process_for_archive_graph_op(op, op_result_pool, key_to_op, **kwargs):
+    assert len(op.parents) == 1
+    key_of_parent_op = op.parents[0]
+    result = op_result_pool[key_of_parent_op]
+    op.attr[types_pb2.GRAPH_NAME].CopyFrom(utils.s_to_attr(result.graph_def.key))
+    if result.graph_def.extension.Is(graph_def_pb2.VineyardInfoPb.DESCRIPTOR):
+        vy_info = graph_def_pb2.VineyardInfoPb()
+        result.graph_def.extension.Unpack(vy_info)
+        op.attr[types_pb2.VINEYARD_ID].CopyFrom(utils.i_to_attr(vy_info.vineyard_id))
 
 
 # Below are selector transformation part, which will transform label / property
