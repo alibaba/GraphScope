@@ -444,6 +444,7 @@ jobs:
         env:
           SHOW_TIMESTAMPS: 'true'
           OUTPUT_DIR: ${{ github.workspace }}/helm-installation-logs
+          # use wildcard here to match the namespaces that you want to export logs
           NAMESPACES: default
 
       - name: upload the k8s logs to artifact
@@ -710,6 +711,7 @@ jobs:
         env:
           SHOW_TIMESTAMPS: 'true'
           OUTPUT_DIR: ${{ github.workspace }}/k8s-failover-logs
+          # use wildcard here to match the namespaces that you want to export logs
           NAMESPACES: default
 
       - name: upload the k8s logs to artifact

@@ -113,6 +113,9 @@ jobs:
     runs-on: [self-hosted, ubuntu2004]
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     needs: [gremlin-test]
+    environment:
+      JAVA_HOME: /usr/lib/jvm/default-java
+      GS_TEST_DIR: ${{ github.workspace }}/gstest
     steps:
     - uses: actions/checkout@v3
       with:
@@ -149,9 +152,6 @@ jobs:
         sudo /etc/init.d/ssh start
 
     - name: Python Test with Helm Deployment
-      env:
-        JAVA_HOME: /usr/lib/jvm/default-java
-        GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
         # groot.tar.gz is needed for offline_load.sh
         # see .github/workflows/hadoop_scripts/offline_load.sh.template
@@ -173,7 +173,26 @@ jobs:
         cd ${GITHUB_WORKSPACE}/charts
         helm install ci --set image.tag=${SHORT_SHA} ./graphscope-store
         helm test ci --timeout 5m0s
+        mkdir -p ${{ github.workspace }}/helm-deployment-logs
 
+    - name: Export kubernetes logs
+      uses: dashanji/kubernetes-log-export-action@v3
+      if: ${{ failure() }}
+      env:
+        SHOW_TIMESTAMPS: 'true'
+        OUTPUT_DIR: ${{ github.workspace }}/helm-deployment-logs
+        # use wildcard here to match the namespaces that you want to export logs
+        NAMESPACES: default
+
+    - name: upload the k8s logs to artifact
+      uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: helm-deployment-logs
+        path: ${{ github.workspace }}/helm-deployment-logs
+
+    - name: Test the helm deployment
+      run: |
         # 1. get gss service endpoint
         export GRPC_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services ci-graphscope-store-frontend)
         export GREMLIN_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[1].nodePort}" services ci-graphscope-store-frontend)
@@ -207,6 +226,26 @@ jobs:
         sleep 30
         cd ${GITHUB_WORKSPACE}/charts
         helm install ci --set image.tag=${SHORT_SHA} ./graphscope-store
+        mkdir -p ${{ github.workspace }}/helm-deployment-with-pv-logs
+
+    - name: Export kubernetes logs
+      uses: dashanji/kubernetes-log-export-action@v3
+      if: ${{ failure() }}
+      env:
+        SHOW_TIMESTAMPS: 'true'
+        OUTPUT_DIR: ${{ github.workspace }}/helm-deployment-logs
+        # use wildcard here to match the namespaces that you want to export logs
+        NAMESPACES: default
+
+    - name: upload the k8s logs to artifact
+      uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: helm-deployment-logs
+        path: ${{ github.workspace }}/helm-deployment-logs
+
+    - name: Python Test with Helm Deployment and PersistentVolume
+      run: |
         # helm test and python test on the restarted store
         export GRPC_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services ci-graphscope-store-frontend)
         export GREMLIN_PORT=$(kubectl get --namespace default -o jsonpath="{.spec.ports[1].nodePort}" services ci-graphscope-store-frontend)
