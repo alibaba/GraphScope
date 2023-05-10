@@ -22,13 +22,15 @@
 			"settings": {},
 			"extensions": [
 				"streetsidesoftware.code-spell-checker",
-				"eamodio.gitlens"
+				"eamodio.gitlens",
+				"github.copilot",
+				"github.copilot-labs"
 			]
 		}
 	},
 
 	// Set `remoteUser` to `root` to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
-	"remoteUser": "graphscope"
+	"remoteUser": "graphscope",
 
 	// Uncomment this to enable C++ and Rust debugging in containers
 	// "capAdd": ["SYS_PTRACE"],
@@ -61,7 +63,7 @@
 
 	// Uncomment these to use a named volume for your entire source tree
 	// https://code.visualstudio.com/remote/advancedcontainers/improve-performance#_use-a-named-volume-for-your-entire-source-tree
-	// "workspaceMount": "source=gs,target=/workspace,type=volume",
-	// "workspaceFolder": "/workspace"
-	// "postCreateCommand": "sudo chown -R graphscope:graphscope /workspace"
+	// "workspaceMount": "source=gs,target=/workspaces,type=volume",
+	// "workspaceFolder": "/workspaces"
+	"postCreateCommand": "sudo chown -R graphscope /workspaces && bash pre-commit/install-hook.sh && bash pre-commit/prepare-commit-msg"
 }
