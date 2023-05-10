@@ -160,7 +160,7 @@ jobs:
       run: |
         . ~/.graphscope_env
         python3 -m pip install libclang
-        git clone --single-branch -b v0.14.0 --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
+        git clone --single-branch -b v0.14.5 --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
         cd /tmp/v6d
         git submodule update --init
         cmake .  -DCMAKE_INSTALL_PREFIX=/usr/local \
