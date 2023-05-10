@@ -426,7 +426,7 @@ jobs:
           minikube image load graphscope/learning:${SHORT_SHA}
           echo "loaded learning"
 
-      - name: Helm Test
+      - name: Helm Test of installation
         env:
           GS_TEST_DIR: ${{ github.workspace }}/gstest
         run: |
@@ -436,12 +436,51 @@ jobs:
           helm install graphscope --set image.registry="",image.tag="${SHORT_SHA}",withJupyter=false,volumes.enabled=true,volumes.items.data.field.path=${GS_TEST_DIR},engines.log_level=DEBUG \
                                   ./graphscope
           helm test graphscope --timeout 5m0s
+          mkdir -p ${{ github.workspace }}/helm-installation-logs
+
+      - name: Export kubernetes logs
+        uses: dashanji/kubernetes-log-export-action@v3
+        if: ${{ failure() }}
+        env:
+          SHOW_TIMESTAMPS: 'true'
+          OUTPUT_DIR: ${{ github.workspace }}/helm-installation-logs
+          # use wildcard here to match the namespaces that you want to export logs
+          NAMESPACES: default
+
+      - name: upload the k8s logs to artifact
+        uses: actions/upload-artifact@v2
+        if: ${{ failure() }}
+        with:
+          name: helm-installation-logs
+          path: ${{ github.workspace }}/helm-installation-logs
+
+      - name: Helm Test with pytest
+        run: |
           export NODE_IP=$(kubectl get pod -lgraphscope.coordinator.name=coordinator-graphscope -ojsonpath="{.items[0].status.hostIP}")
           export NODE_PORT=$(kubectl get services coordinator-service-graphscope -ojsonpath="{.spec.ports[0].nodePort}")
           echo "GraphScope service listen on ${NODE_IP}:${NODE_PORT}"
           export GS_ADDR=${NODE_IP}:${NODE_PORT}
           cd ${GITHUB_WORKSPACE}/python
           python3 -m pytest -s -vvv ./graphscope/tests/kubernetes/test_demo_script.py -k test_helm_installation
+          mkdir -p ${{ github.workspace }}/helm-pytest-logs
+
+      - name: Export kubernetes logs
+        uses: dashanji/kubernetes-log-export-action@v3
+        if: ${{ failure() }}
+        env:
+          SHOW_TIMESTAMPS: 'true'
+          OUTPUT_DIR: ${{ github.workspace }}/helm-pytest-logs
+          NAMESPACES: default
+
+      - name: upload the k8s logs to artifact
+        uses: actions/upload-artifact@v2
+        if: ${{ failure() }}
+        with:
+          name: helm-pytest-logs
+          path: ${{ github.workspace }}/helm-pytest-logs
+
+      - name: Delete Helm Cluster
+        run: |
           helm delete graphscope
 
       - name: Kubernetes Test
@@ -664,3 +703,20 @@ jobs:
               --set frontend.service.type=NodePort
           # run failover test
           cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && ./ir_k8s_failover_ci.sh default test-gie-standalone 2 1
+          mkdir -p ${{ github.workspace }}/k8s-failover-logs
+
+      - name: Export kubernetes logs
+        uses: dashanji/kubernetes-log-export-action@v3
+        if: ${{ failure() }}
+        env:
+          SHOW_TIMESTAMPS: 'true'
+          OUTPUT_DIR: ${{ github.workspace }}/k8s-failover-logs
+          # use wildcard here to match the namespaces that you want to export logs
+          NAMESPACES: default
+
+      - name: upload the k8s logs to artifact
+        uses: actions/upload-artifact@v2
+        if: ${{ failure() }}
+        with:
+          name: k8s-failover-logs
+          path: ${{ github.workspace }}/k8s-failover-logs
