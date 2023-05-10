@@ -1,3 +1,5 @@
+#!/bin/bash
+
 mkdir -p ~/.config/git/hooks/
 git config --global core.hooksPath ~/.config/git/hooks/
 touch ~/.config/git/hooks/pre-commit
