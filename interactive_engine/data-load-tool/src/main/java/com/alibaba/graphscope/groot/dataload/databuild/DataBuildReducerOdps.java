@@ -15,66 +15,51 @@
  */
 package com.alibaba.graphscope.groot.dataload.databuild;
 
-import com.alibaba.graphscope.groot.dataload.OSSFileObj;
+import com.alibaba.graphscope.groot.dataload.util.AbstractFileSystem;
+import com.alibaba.graphscope.groot.dataload.util.Constants;
+import com.alibaba.graphscope.groot.dataload.util.FSFactory;
 import com.aliyun.odps.data.Record;
 import com.aliyun.odps.mapred.ReducerBase;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.codec.binary.Hex;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 public class DataBuildReducerOdps extends ReducerBase {
-    private String ossAccessID = null;
-    private String ossAccessKey = null;
-    private String ossEndpoint = null;
-    private String ossBucketName = null;
-    private String ossObjectName = null;
-
     private SstRecordWriter sstRecordWriter = null;
+
     private String uniquePath = null;
     private String taskId = null;
     private String metaData = null;
-    private OSSFileObj ossFileObj = null;
+    private AbstractFileSystem fs = null;
     private String sstFileName = null;
     private String chkFileName = null;
-    private String metaFileName = "META";
-    private boolean sstFileEmpty;
+    private String metaFileName = Constants.META_FILE_NAME;
 
     @Override
     public void setup(TaskContext context) throws IOException {
-        this.ossAccessID = context.getJobConf().get(OfflineBuildOdps.OSS_ACCESS_ID);
-        this.ossAccessKey = context.getJobConf().get(OfflineBuildOdps.OSS_ACCESS_KEY);
-        this.ossEndpoint = context.getJobConf().get(OfflineBuildOdps.OSS_ENDPOINT);
-        this.ossBucketName = context.getJobConf().get(OfflineBuildOdps.OSS_BUCKET_NAME);
-        this.ossObjectName = context.getJobConf().get(OfflineBuildOdps.OSS_OBJECT_NAME);
-        this.metaData = context.getJobConf().get(OfflineBuildOdps.META_INFO);
-        this.uniquePath = context.getJobConf().get(OfflineBuildOdps.UNIQUE_PATH);
 
-        if (!ossEndpoint.startsWith("http")) {
-            ossEndpoint = "https://" + ossEndpoint;
-        }
+        metaData = context.getJobConf().get(Constants.META_INFO);
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map<String, String> metaMap =
+                objectMapper.readValue(metaData, new TypeReference<Map<String, String>>() {});
+
+        this.uniquePath = metaMap.get(Constants.UNIQUE_PATH);
 
         this.taskId = context.getTaskID().toString();
         taskId = taskId.substring(taskId.length() - 5);
         sstFileName = "part-r-" + taskId + ".sst";
         chkFileName = "part-r-" + taskId + ".chk";
 
-        Map<String, String> ossInfo = new HashMap<String, String>();
-        ossInfo.put(OfflineBuildOdps.OSS_ENDPOINT, ossEndpoint);
-        ossInfo.put(OfflineBuildOdps.OSS_ACCESS_ID, ossAccessID);
-        ossInfo.put(OfflineBuildOdps.OSS_ACCESS_KEY, ossAccessKey);
-
-        this.ossFileObj = new OSSFileObj(ossInfo);
-
+        this.fs = FSFactory.Create(context.getJobConf());
+        this.fs.open(context, "w");
         /*
         if ("00000".equals(taskId)) {
             try {
@@ -84,8 +69,6 @@ public class DataBuildReducerOdps extends ReducerBase {
             }
         }
         */
-
-        ossObjectName = Paths.get(ossObjectName, uniquePath).toString();
 
         try {
             this.sstRecordWriter = new SstRecordWriter(sstFileName, DataBuildMapperOdps.charSet);
@@ -99,46 +82,39 @@ public class DataBuildReducerOdps extends ReducerBase {
             throws IOException {
         while (values.hasNext()) {
             Record value = values.next();
-            try {
-                sstRecordWriter.write((String) key.get(0), (String) value.get(0));
-            } catch (IOException e) {
-                throw e;
-            }
+            sstRecordWriter.write((String) key.get(0), (String) value.get(0));
         }
+        context.progress();
     }
 
     @Override
     public void cleanup(TaskContext context) throws IOException {
-        this.sstFileEmpty = sstRecordWriter.empty();
+        boolean sstFileEmpty = sstRecordWriter.empty();
         try {
             sstRecordWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        String chkData = null;
-        if (sstFileEmpty) {
-            chkData = "0";
-        } else {
-            chkData = "1," + getFileMD5(sstFileName);
-        }
+        String chkData = sstFileEmpty ? "0" : "1," + getFileMD5(sstFileName);
         writeFile(chkFileName, chkData);
-        ossFileObj.uploadFile(ossBucketName, ossObjectName, chkFileName);
+
+        fs.copy(chkFileName, Paths.get(uniquePath, chkFileName).toString());
         if (!sstFileEmpty) {
-            ossFileObj.uploadFileWithCheckPoint(ossBucketName, ossObjectName, sstFileName);
+            fs.copy(sstFileName, Paths.get(uniquePath, sstFileName).toString());
         }
 
-        // Only the first task will write  the meta
+        // Only the first task will write the meta
         if ("00000".equals(taskId)) {
             try {
                 writeFile(metaFileName, metaData);
-                ossFileObj.uploadFile(ossBucketName, ossObjectName, metaFileName);
+                fs.copy(metaFileName, Paths.get(uniquePath, metaFileName).toString());
             } catch (IOException e) {
                 throw e;
             }
         }
 
-        ossFileObj.close();
+        fs.close();
     }
 
     public String getFileMD5(String fileName) throws IOException {
@@ -152,17 +128,11 @@ public class DataBuildReducerOdps extends ReducerBase {
                 MD5.update(buffer, 0, length);
             }
             return new String(Hex.encodeHex(MD5.digest()));
-        } catch (NoSuchAlgorithmException e) {
+        } catch (NoSuchAlgorithmException | IOException e) {
             throw new IOException(e);
-        } catch (IOException e) {
-            throw e;
         } finally {
-            try {
-                if (fis != null) {
-                    fis.close();
-                }
-            } catch (IOException e) {
-                throw e;
+            if (fis != null) {
+                fis.close();
             }
         }
     }

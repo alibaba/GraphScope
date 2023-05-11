@@ -178,7 +178,9 @@ public class GrootClient implements Closeable {
     public void ingestData(String path, Map<String, String> config) {
         IngestDataRequest.Builder builder = IngestDataRequest.newBuilder();
         builder.setDataPath(path);
-        builder.putAllConfig(config);
+        if (config != null) {
+            builder.putAllConfig(config);
+        }
         this.stub.ingestData(builder.build());
     }
 

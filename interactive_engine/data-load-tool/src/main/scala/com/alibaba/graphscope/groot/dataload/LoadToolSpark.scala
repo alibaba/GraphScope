@@ -24,19 +24,21 @@ object LoadToolSpark {
       .appName("LoadToolSpark")
       .getOrCreate()
 
-    val sc = spark.sparkContext
+//    val odps = CupidSession.get.odps
+//    val acc = odps.getAccount.asInstanceOf[AliyunAccount]
+//    println("Id " + acc.getAccessId)
+//    println("Key " + acc.getAccessKey)
 
     try {
       val command = args(0)
       val configPath = args(1)
-      val uniquePath = args(2)
       if ("ingest".equalsIgnoreCase(command)) {
-        LoadTool.ingest(configPath, true, uniquePath);
+        LoadTool.ingest(configPath)
       } else if ("commit".equalsIgnoreCase(command)) {
-        LoadTool.commit(configPath, true, uniquePath);
+        LoadTool.commit(configPath)
       } else if ("ingestAndCommit".equalsIgnoreCase(command)) {
-        LoadTool.ingest(configPath, true, uniquePath);
-        LoadTool.commit(configPath, true, uniquePath);
+        LoadTool.ingest(configPath)
+        LoadTool.commit(configPath)
       } else {
         throw new Exception("supported COMMAND: ingest / commit / ingestAndCommit");
       }

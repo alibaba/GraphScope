@@ -17,14 +17,20 @@ import com.alibaba.graphscope.compiler.api.schema.*;
 import com.alibaba.graphscope.compiler.api.schema.GraphEdge;
 import com.alibaba.graphscope.compiler.api.schema.GraphElement;
 import com.alibaba.graphscope.compiler.api.schema.GraphSchema;
-import com.alibaba.graphscope.groot.dataload.util.HttpClient;
+import com.alibaba.graphscope.groot.dataload.util.Constants;
+import com.alibaba.graphscope.groot.dataload.util.OSSFS;
+import com.alibaba.graphscope.groot.dataload.util.VolumeFS;
 import com.alibaba.graphscope.groot.sdk.GrootClient;
 import com.alibaba.graphscope.sdkcommon.common.DataLoadTarget;
 import com.alibaba.graphscope.sdkcommon.schema.GraphSchemaMapper;
 import com.alibaba.graphscope.sdkcommon.util.UuidUtils;
+import com.aliyun.odps.Odps;
+import com.aliyun.odps.account.Account;
+import com.aliyun.odps.account.AliyunAccount;
 import com.aliyun.odps.data.TableInfo;
 import com.aliyun.odps.mapred.JobClient;
 import com.aliyun.odps.mapred.conf.JobConf;
+import com.aliyun.odps.mapred.conf.SessionState;
 import com.aliyun.odps.mapred.utils.InputUtils;
 import com.aliyun.odps.mapred.utils.OutputUtils;
 import com.aliyun.odps.mapred.utils.SchemaUtils;
@@ -37,96 +43,31 @@ import org.slf4j.LoggerFactory;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.nio.file.Paths;
 import java.util.*;
 
 public class OfflineBuildOdps {
     private static final Logger logger = LoggerFactory.getLogger(OfflineBuildOdps.class);
 
-    public static final String GRAPH_ENDPOINT = "graph.endpoint";
-    public static final String SCHEMA_JSON = "schema.json";
-    public static final String SEPARATOR = "separator";
-    public static final String COLUMN_MAPPING_CONFIG = "column.mapping.config";
-    public static final String SPLIT_SIZE = "split.size";
-
-    public static final String COLUMN_MAPPINGS = "column.mappings";
-    public static final String SKIP_HEADER = "skip.header";
-
-    public static final String OUTPUT_TABLE = "output.table";
-    public static final String OSS_ACCESS_ID = "oss.access.id";
-    public static final String OSS_ACCESS_KEY = "oss.access.key";
-    public static final String OSS_ENDPOINT = "oss.endpoint";
-    public static final String OSS_BUCKET_NAME = "oss.bucket.name";
-    public static final String OSS_OBJECT_NAME = "oss.object.name";
-    public static final String OSS_INFO_URL = "oss.info.url";
-
-    public static final String META_INFO = "meta.info";
-    public static final String USER_NAME = "auth.username";
-    public static final String PASS_WORD = "auth.password";
-    public static final String UNIQUE_PATH = "unique.path";
-
-    private static HashMap<String, String> getOSSInfoFromURL(String URL) throws IOException {
-        HttpClient client = new HttpClient();
-        HttpURLConnection conn = null;
-        try {
-            conn = client.createConnection(URL);
-            conn.setConnectTimeout(5000);
-            conn.setReadTimeout(5000);
-            ObjectMapper mapper = new ObjectMapper();
-            TypeReference<HashMap<String, String>> typeRef =
-                    new TypeReference<HashMap<String, String>>() {};
-            return mapper.readValue(conn.getInputStream(), typeRef);
-        } finally {
-            if (conn != null) {
-                conn.disconnect();
-            }
-        }
-    }
+    private static Odps odps;
 
     public static void main(String[] args) throws IOException {
         String propertiesFile = args[0];
-        String uniquePath = UuidUtils.getBase64UUIDString();
-        // User can assign a unique path manually.
-        if (args.length > 1) {
-            uniquePath = args[1];
-        }
 
         Properties properties = new Properties();
         try (InputStream is = new FileInputStream(propertiesFile)) {
             properties.load(is);
         }
+        odps = SessionState.get().getOdps();
 
-        String outputTable = properties.getProperty(OUTPUT_TABLE);
-        String ossAccessID = properties.getProperty(OSS_ACCESS_ID);
-        String ossAccessKey = properties.getProperty(OSS_ACCESS_KEY);
-        String ossEndpoint = properties.getProperty(OSS_ENDPOINT);
-        String ossBucketName = properties.getProperty(OSS_BUCKET_NAME);
-        String ossObjectName = properties.getProperty(OSS_OBJECT_NAME);
+        String columnMappingConfigStr = properties.getProperty(Constants.COLUMN_MAPPING_CONFIG);
+        String graphEndpoint = properties.getProperty(Constants.GRAPH_ENDPOINT);
+        String username = properties.getProperty(Constants.USER_NAME, "");
+        String password = properties.getProperty(Constants.PASS_WORD, "");
 
-        if (ossAccessID == null || ossAccessID.isEmpty()) {
-            String URL = properties.getProperty(OSS_INFO_URL);
-            HashMap<String, String> o = getOSSInfoFromURL(URL);
-            ossAccessID = o.get("ossAccessID");
-            ossAccessKey = o.get("ossAccessKey");
-            ossEndpoint = o.get("ossEndpoint");
-            ossBucketName = o.get("ossBucketName");
-            ossObjectName = o.get("ossObjectName");
-        }
+        String uniquePath =
+                properties.getProperty(Constants.UNIQUE_PATH, UuidUtils.getBase64UUIDString());
 
-        // The table format is `project.table` or `table`;
-        // For partitioned table, the format is `project.table|p1=1/p2=2` or `table|p1=1/p2=2`
-        String columnMappingConfigStr = properties.getProperty(COLUMN_MAPPING_CONFIG);
-        String graphEndpoint = properties.getProperty(GRAPH_ENDPOINT);
-        String username = properties.getProperty(USER_NAME);
-        String password = properties.getProperty(PASS_WORD);
-
-        GrootClient client =
-                GrootClient.newBuilder()
-                        .setHosts(graphEndpoint)
-                        .setUsername(username)
-                        .setPassword(password)
-                        .build();
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, FileColumnMapping> columnMappingConfig =
                 objectMapper.readValue(
@@ -142,8 +83,17 @@ public class OfflineBuildOdps {
                             .setDstLabel(fileColumnMapping.getDstLabel())
                             .build());
         }
+
+        GrootClient client =
+                GrootClient.newBuilder()
+                        .setHosts(graphEndpoint)
+                        .setUsername(username)
+                        .setPassword(password)
+                        .build();
+
         GraphSchema schema = client.prepareDataLoad(targets);
         String schemaJson = GraphSchemaMapper.parseFromSchema(schema).toJsonString();
+        // number of reduce task
         int partitionNum = client.getPartitionNum();
 
         Map<String, GraphElement> tableType = new HashMap<>();
@@ -157,31 +107,21 @@ public class OfflineBuildOdps {
                     columnMappingInfos.put(getTableName(fileName), columnMappingInfo);
                     tableType.put(fileName, schema.getElement(columnMappingInfo.getLabelId()));
                 });
-        long splitSize = Long.valueOf(properties.getProperty(SPLIT_SIZE, "256"));
-        boolean skipHeader = properties.getProperty(SKIP_HEADER, "true").equalsIgnoreCase("true");
+        long splitSize = Long.parseLong(properties.getProperty(Constants.SPLIT_SIZE, "256"));
 
         JobConf job = new JobConf();
-        job.set(SCHEMA_JSON, schemaJson);
         String mappings = objectMapper.writeValueAsString(columnMappingInfos);
-        job.set(COLUMN_MAPPINGS, mappings);
-        job.set(SEPARATOR, properties.getProperty(SEPARATOR, "\\|"));
-        job.setBoolean(SKIP_HEADER, skipHeader);
-        job.set(GRAPH_ENDPOINT, graphEndpoint);
-
-        job.set(OSS_ACCESS_ID, ossAccessID);
-        job.set(OSS_ACCESS_KEY, ossAccessKey);
-        job.set(OSS_ENDPOINT, ossEndpoint);
-        job.set(OSS_BUCKET_NAME, ossBucketName);
-        job.set(OSS_OBJECT_NAME, ossObjectName);
 
         // Avoid java sandbox protection
         job.set("odps.isolation.session.enable", "true");
         // Don't introduce legacy jar files
         job.set("odps.sql.udf.java.retain.legacy", "false");
         // Default priority is 9
-        job.set("odps.instance.priority", "1");
+        job.setInstancePriority(0);
         job.set("odps.mr.run.mode", "sql");
         job.set("odps.mr.sql.group.enable", "true");
+        job.setFunctionTimeout(2400);
+        job.setMemoryForReducerJVM(2048);
 
         for (Map.Entry<String, GraphElement> entry : tableType.entrySet()) {
             if (entry.getValue() instanceof GraphVertex || entry.getValue() instanceof GraphEdge) {
@@ -198,53 +138,96 @@ public class OfflineBuildOdps {
         job.setMapOutputKeySchema(SchemaUtils.fromString("key:string"));
         job.setMapOutputValueSchema(SchemaUtils.fromString("value:string"));
 
-        OutputUtils.addTable(parseTableURL(outputTable), job);
-
-        String dataPath = Paths.get(ossBucketName, ossObjectName).toString();
+        String dataSinkType = properties.getProperty(Constants.DATA_SINK_TYPE, "VOLUME");
+        Map<String, String> config;
+        String fullQualifiedDataPath;
+        if (dataSinkType.equalsIgnoreCase("VOLUME")) {
+            try (VolumeFS fs = new VolumeFS(properties)) {
+                fs.setJobConf(job);
+                config = fs.setConfig(odps);
+                fullQualifiedDataPath = fs.getQualifiedPath();
+                fs.createVolumeIfNotExists(odps);
+                OutputUtils.addVolume(fs.getVolumeInfo(), job);
+            }
+        } else if (dataSinkType.equalsIgnoreCase("OSS")) {
+            try (OSSFS fs = new OSSFS(properties)) {
+                fs.setJobConf(job);
+                config = fs.getConfig();
+                fullQualifiedDataPath = fs.getQualifiedPath();
+            }
+            String outputTable = properties.getProperty(Constants.OUTPUT_TABLE);
+            OutputUtils.addTable(parseTableURL(outputTable), job);
+        } else if (dataSinkType.equalsIgnoreCase("HDFS")) {
+            throw new IOException("HDFS as a data sink is not supported in ODPS");
+        } else {
+            throw new IOException("Unsupported data sink: " + dataSinkType);
+        }
         Map<String, String> outputMeta = new HashMap<>();
-        outputMeta.put("endpoint", graphEndpoint);
-        outputMeta.put("schema", schemaJson);
-        outputMeta.put("mappings", mappings);
-        outputMeta.put("datapath", dataPath);
-        outputMeta.put("unique_path", uniquePath);
+        outputMeta.put(Constants.GRAPH_ENDPOINT, graphEndpoint);
+        outputMeta.put(Constants.SCHEMA_JSON, schemaJson);
+        outputMeta.put(Constants.COLUMN_MAPPINGS, mappings);
+        outputMeta.put(Constants.UNIQUE_PATH, uniquePath);
+        outputMeta.put(Constants.DATA_SINK_TYPE, dataSinkType);
 
-        job.set(META_INFO, objectMapper.writeValueAsString(outputMeta));
-        job.set(UNIQUE_PATH, uniquePath);
-
-        System.out.println("uniquePath is: " + uniquePath);
-
+        job.set(Constants.META_INFO, objectMapper.writeValueAsString(outputMeta));
+        job.set(Constants.DATA_SINK_TYPE, dataSinkType);
         try {
             JobClient.runJob(job);
         } catch (Exception e) {
             throw new IOException(e);
         }
+
+        boolean loadAfterBuild =
+                properties
+                        .getProperty(Constants.LOAD_AFTER_BUILD, "false")
+                        .equalsIgnoreCase("true");
+        if (loadAfterBuild) {
+            fullQualifiedDataPath = fullQualifiedDataPath + uniquePath;
+            logger.info("start ingesting data from " + fullQualifiedDataPath);
+            client.ingestData(fullQualifiedDataPath, config);
+
+            logger.info("start committing bulk load");
+            Map<Long, DataLoadTarget> tableToTarget = new HashMap<>();
+            for (ColumnMappingInfo columnMappingInfo : columnMappingInfos.values()) {
+                long tableId = columnMappingInfo.getTableId();
+                int labelId = columnMappingInfo.getLabelId();
+                GraphElement graphElement = schema.getElement(labelId);
+                String label = graphElement.getLabel();
+                DataLoadTarget.Builder builder = DataLoadTarget.newBuilder();
+                builder.setLabel(label);
+                if (graphElement instanceof GraphEdge) {
+                    builder.setSrcLabel(
+                            schema.getElement(columnMappingInfo.getSrcLabelId()).getLabel());
+                    builder.setDstLabel(
+                            schema.getElement(columnMappingInfo.getDstLabelId()).getLabel());
+                }
+                tableToTarget.put(tableId, builder.build());
+            }
+            client.commitDataLoad(tableToTarget, uniquePath);
+        }
+        client.close();
     }
 
     private static String getTableName(String tableFullName) {
-        String tableName;
-        if (tableFullName.contains(".")) {
-            String[] items = tableFullName.split("\\.");
-            tableName = items[1];
-        } else {
-            tableName = tableFullName;
-        }
-        if (tableName.contains("|")) {
-            String[] items = tableName.split("\\|");
-            tableName = items[0];
-        }
-        return tableName;
+        TableInfo info = parseTableURL(tableFullName);
+        return info.getTableName();
     }
 
-    private static TableInfo parseTableURL(String tableFullName) {
-        String projectName = null;
-        String tableName = null;
+    /**
+     * Parse table URL to @TableInfo
+     * @param url the pattern of [projectName.]tableName[|partitionSpec]
+     * @return TableInfo
+     */
+    private static TableInfo parseTableURL(String url) {
+        String projectName = odps.getDefaultProject();
+        String tableName;
         String partitionSpec = null;
-        if (tableFullName.contains(".")) {
-            String[] items = tableFullName.split("\\.");
+        if (url.contains(".")) {
+            String[] items = url.split("\\.");
             projectName = items[0];
             tableName = items[1];
         } else {
-            tableName = tableFullName;
+            tableName = url;
         }
         if (tableName.contains("|")) {
             String[] items = tableName.split("\\|");
@@ -253,9 +236,8 @@ public class OfflineBuildOdps {
         }
 
         TableInfo.TableInfoBuilder builder = TableInfo.builder();
-        if (projectName != null) {
-            builder.projectName(projectName);
-        }
+        builder.projectName(projectName);
+
         builder.tableName(tableName);
         if (partitionSpec != null) {
             builder.partSpec(partitionSpec);

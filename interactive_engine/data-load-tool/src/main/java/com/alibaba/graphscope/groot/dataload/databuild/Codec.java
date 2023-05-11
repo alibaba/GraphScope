@@ -30,11 +30,11 @@ import java.util.Map;
 public class Codec {
     private static final Logger logger = LoggerFactory.getLogger(Codec.class);
 
-    private int version;
-    private List<GraphProperty> propertyDefs;
-    private List<Integer> offsets;
-    private byte[] nullBytesHolder;
-    private int fixedPropertiesCount;
+    private final int version;
+    private final List<GraphProperty> propertyDefs;
+    private final List<Integer> offsets;
+    private final byte[] nullBytesHolder;
+    private final int fixedPropertiesCount;
 
     public Codec(GraphElement graphElement) {
         this.version = graphElement.getVersionId();

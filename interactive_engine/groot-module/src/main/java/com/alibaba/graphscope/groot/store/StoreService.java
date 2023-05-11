@@ -60,17 +60,16 @@ public class StoreService implements MetricsAgent {
 
     private static final String PARTITION_WRITE_PER_SECOND_MS = "partition.write.per.second.ms";
 
-    private Configs storeConfigs;
-    private int storeId;
-    private int writeThreadCount;
-    private int downloadThreadCount;
-    private MetaService metaService;
+    private final Configs storeConfigs;
+    private final int storeId;
+    private final int writeThreadCount;
+    private final MetaService metaService;
     private Map<Integer, GraphPartition> idToPartition;
     private ExecutorService writeExecutor;
     private ExecutorService ingestExecutor;
     private ExecutorService garbageCollectExecutor;
     private ExecutorService downloadExecutor;
-    private boolean enableGc;
+    private final boolean enableGc;
     private volatile boolean shouldStop = true;
 
     private volatile long lastUpdateTime;
@@ -128,11 +127,10 @@ public class StoreService implements MetricsAgent {
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "store-garbage-collect", logger));
         logger.info("StoreService started. storeId [" + this.storeId + "]");
-        this.downloadThreadCount = 8;
         this.downloadExecutor =
                 new ThreadPoolExecutor(
                         0,
-                        downloadThreadCount,
+                        8,
                         0L,
                         TimeUnit.MILLISECONDS,
                         new LinkedBlockingQueue<>(),
@@ -304,7 +302,7 @@ public class StoreService implements MetricsAgent {
             String path, Map<String, String> config, CompletionCallback<Void> callback) {
         String dataRoot = StoreConfig.STORE_DATA_PATH.get(storeConfigs);
         String downloadPath = Paths.get(dataRoot, "download").toString();
-        String[] items = path.split("\\/");
+        String[] items = path.split("/");
         // Get the  unique path  (uuid)
         String unique_path = items[items.length - 1];
         Path uniquePath = Paths.get(downloadPath, unique_path);
@@ -319,8 +317,8 @@ public class StoreService implements MetricsAgent {
         }
         this.ingestExecutor.execute(
                 () -> {
+                    logger.info("ingesting data [{}]", path);
                     try {
-                        logger.info("ingesting data [{}]", path);
                         ingestDataInternal(path, config, callback);
                     } catch (Exception e) {
                         logger.error("ingest data failed. path [" + path + "]", e);
@@ -328,6 +326,7 @@ public class StoreService implements MetricsAgent {
                     }
                     logger.info("ingest data [{}] complete", path);
                 });
+        logger.info("ingest all data complete");
     }
 
     private void ingestDataInternal(
@@ -348,6 +347,7 @@ public class StoreService implements MetricsAgent {
                         try {
                             partition.ingestExternalFile(externalStorage, fullPath);
                         } catch (Exception e) {
+                            logger.error("ingest external file failed.", e);
                             if (!finished.getAndSet(true)) {
                                 callback.onError(e);
                             }
@@ -366,7 +366,7 @@ public class StoreService implements MetricsAgent {
         try {
             logger.info("Clearing directory {}", downloadPath);
             FileUtils.forceDelete(downloadPath.toFile());
-        } catch (FileNotFoundException fnfe) {
+        } catch (FileNotFoundException e) {
             // Ignore
         }
         logger.info("cleared directory {}", downloadPath);
