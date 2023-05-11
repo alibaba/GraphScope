@@ -298,6 +298,9 @@ void ParseRecordX(const char* line, int64_t& src, int64_t& dst,
 void ParseRecordX(const char* line, int64_t& src, int64_t& dst,
                   std::vector<Property>& rec);
 
+void ParseRecordX(const char* line, int64_t& src, int64_t& dst,
+                  std::string_view& prop);
+
 grape::InArchive& operator<<(grape::InArchive& in_archive,
                              const Property& value);
 grape::OutArchive& operator>>(grape::OutArchive& out_archive, Property& value);

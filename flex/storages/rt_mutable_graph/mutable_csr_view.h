@@ -102,6 +102,33 @@ class ColumnNbrIterator : public NbrIterator<VID_T, EDATA_T> {
 };
 
 template <typename VID_T, typename TS_T>
+class StringNbrIterator : public NbrIterator<VID_T, std::string_view> {
+  using nbr_t = mutable_csr_impl::Nbr<VID_T, size_t, TS_T>;
+
+ public:
+  StringNbrIterator(const PackedNbrIterator<VID_T, size_t, TS_T>& nbr_iter,
+                    const StringColumn* col)
+      : nbr_iter_(nbr_iter), column_(col) {}
+  ~StringNbrIterator() {}
+
+  bool IsValid() const override { return nbr_iter_.IsValid(); }
+
+  void Next() override { nbr_iter_.Next(); }
+
+  VID_T GetNeighbor() const override { return nbr_iter_.GetNeighbor(); }
+
+  std::string_view GetData() const override {
+    return column_->get_view(nbr_iter_.GetData());
+  }
+
+  int estimated_degree() const { return nbr_iter_.estimated_degree(); }
+
+ private:
+  PackedNbrIterator<VID_T, size_t, TS_T> nbr_iter_;
+  const StringColumn* column_;
+};
+
+template <typename VID_T, typename TS_T>
 class TableNbrIterator : public NbrIterator<VID_T, Property> {
   using nbr_t = mutable_csr_impl::Nbr<VID_T, size_t, TS_T>;
 

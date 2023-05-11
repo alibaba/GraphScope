@@ -384,6 +384,137 @@ class SingleMutableCsr : public TypedMutableCsrBase<VID_T, EDATA_T, TS_T> {
 };
 
 template <typename VID_T, typename TS_T>
+class StringMutableCsrView
+    : public MutableCsrViewBase<VID_T, std::string_view> {
+ public:
+  StringMutableCsrView(const MutableCsr<VID_T, size_t, TS_T>& topo,
+                       const StringColumn* col, TS_T ts)
+      : rs_view_(topo.get_graph_view(ts)), column_(col) {}
+  ~StringMutableCsrView() {}
+
+  mutable_csr_view::StringNbrIterator<VID_T, TS_T> get_edges(VID_T src) const {
+    return mutable_csr_view::StringNbrIterator<VID_T, TS_T>(
+        rs_view_.get_edges(src), column_);
+  }
+
+  std::shared_ptr<NbrIterator<VID_T, Property>> get_basic_edges(
+      VID_T src) const override {
+    return std::make_shared<mutable_csr_view::StringNbrIterator<VID_T, TS_T>>(
+        rs_view_.get_edges(src), column_);
+  }
+
+  bool exist(VID_T src) const { return get_edges(src).IsValid(); }
+
+ private:
+  MutableCsrView<VID_T, size_t, TS_T> rs_view_;
+  const StringColumn* column_;
+};
+
+template <typename VID_T, typename TS_T>
+class StringMutableCsrNbrIterMut : public GenericNbrIteratorMut<VID_T> {
+  using nbr_t = mutable_csr_impl::Nbr<VID_T, size_t, TS_T>;
+
+ public:
+  StringMutableCsrNbrIterMut(
+      const MutableCsrNbrIterMut<VID_T, size_t, TS_T>& rs_iter,
+      StringColumn* col)
+      : rs_iter_(rs_iter), column_(col) {}
+  ~StringMutableCsrNbrIterMut() = default;
+
+  bool IsValid() const override { return rs_iter_.IsValid(); }
+
+  void Next() override { rs_iter_.Next(); }
+
+  std::string_view GetData() const override {
+    return column_->get_view(rs_iter_.GetTypedData());
+  }
+
+  VID_T GetNeighbor() const override { return rs_iter_.GetNeighbor(); }
+
+  void SetData(const std::string_view& value) override {
+    column_->set_value(rs_iter_.GetTypedData(), value);
+    rs_iter_.UpdateTimestamp();
+  }
+
+  void SetData(const std::string& value) {
+    column_->set_value(rs_iter_.GetTypedData(), value);
+    rs_iter_.UpdateTimestamp();
+  }
+
+ private:
+  MutableCsrNbrIterMut<VID_T, size_t, TS_T> rs_iter_;
+  StringColumn* column_;
+};
+
+template <typename VID_T, typename TS_T>
+class StringMutableCsr
+    : public TypedMutableCsrBase<VID_T, std::string_view, TS_T> {
+ public:
+  StringMutableCsr() : column_ptr_(nullptr), topology_() {}
+  ~StringMutableCsr() {}
+
+  void set_column(StringColumn* col) { column_ptr_ = col; }
+
+  StringColumn& get_column() { return *column_ptr_; }
+
+  const StringColumn& get_column() const { return *column_ptr_; }
+
+  void batch_init(VID_T vnum, const std::vector<int>& degrees) override {
+    topology_.batch_init(vnum, degrees);
+  }
+
+  void batch_put_edge_with_index(VID_T src, VID_T dst, size_t index, TS_T ts) {
+    topology_.batch_put_edge(src, dst, index, ts);
+  }
+
+  void put_edge_with_index(VID_T src, VID_T dst, size_t index, TS_T ts,
+                           ArenaAllocator& alloc) {
+    topology_.put_edge(src, dst, index, ts, alloc);
+  }
+
+  void batch_put_edge(VID_T src, VID_T dst, const std::string_view& prop,
+                      TS_T ts) override {
+    LOG(FATAL) << "Not implemented";
+  }
+
+  void put_edge(VID_T src, VID_T dst, const std::string_view& prop, TS_T ts,
+                ArenaAllocator& alloc) override {
+    LOG(FATAL) << "Not implemented";
+  }
+
+  int degree(VID_T i) const { return topology_.degree(i); }
+
+  void Serialize(const std::string& path) override;
+
+  void Deserialize(const std::string& path) override;
+
+  StringMutableCsrView<VID_T, TS_T> get_graph_view(TS_T ts) const {
+    return StringMutableCsrView<VID_T, TS_T>(topology_, column_ptr_, ts);
+  }
+
+  std::shared_ptr<MutableCsrViewBase<VID_T, Property>> get_basic_graph_view(
+      TS_T ts) const override {
+    return std::make_shared<StringMutableCsrView<VID_T, TS_T>>(topology_,
+                                                               column_ptr_, ts);
+  }
+
+  StringMutableCsrNbrIterMut<VID_T, TS_T> edge_iter_mut(VID_T src, TS_T ts) {
+    return StringMutableCsrNbrIterMut<VID_T, TS_T>(
+        topology_.edge_iter_mut(src, ts), column_ptr_);
+  }
+
+  std::shared_ptr<GenericNbrIteratorMut<VID_T>> generic_edge_iter_mut(
+      VID_T src, TS_T ts) override {
+    return std::make_shared<StringMutableCsrNbrIterMut<VID_T, TS_T>>(
+        topology_.edge_iter_mut(src, ts), column_ptr_);
+  }
+
+ private:
+  StringColumn* column_ptr_;
+  MutableCsr<VID_T, size_t, TS_T> topology_;
+};
+
+template <typename VID_T, typename TS_T>
 class TableMutableCsrView : public MutableCsrViewBase<VID_T, Property> {
  public:
   TableMutableCsrView(const MutableCsr<VID_T, size_t, TS_T>& topo,
@@ -491,8 +622,8 @@ class TableMutableCsr : public TypedMutableCsrBase<VID_T, Property, TS_T> {
   }
 
   TableMutableCsrNbrIterMut<VID_T, TS_T> edge_iter_mut(VID_T src, TS_T ts) {
-    return TableMutableCsrNbrIterMut<VID_T, TS_T>(topology_.edge_iter_mut(src, ts),
-                                                  table_ptr_);
+    return TableMutableCsrNbrIterMut<VID_T, TS_T>(
+        topology_.edge_iter_mut(src, ts), table_ptr_);
   }
 
   std::shared_ptr<GenericNbrIteratorMut<VID_T>> generic_edge_iter_mut(

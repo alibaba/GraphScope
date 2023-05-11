@@ -147,6 +147,32 @@ void ParseRecordX(const char* line, int64_t& src, int64_t& dst,
   ParseRecord(cur, rec);
 }
 
+void ParseRecordX(const char* line, int64_t& src, int64_t& dst,
+                  std::string_view& prop) {
+  const char* cur = line;
+  const char* ptr = cur;
+  while (*ptr != '\0' && *ptr != '|') {
+    ++ptr;
+  }
+  std::string_view src_sv(cur, ptr - cur);
+  ParseInt64(src_sv, src);
+  cur = ptr + 1;
+
+  ptr = cur;
+  while (*ptr != '\0' && *ptr != '|') {
+    ++ptr;
+  }
+  std::string_view dst_sv(cur, ptr - cur);
+  ParseInt64(dst_sv, dst);
+  cur = ptr + 1;
+
+  ptr = cur;
+  while (*ptr != '\0' && *ptr != '|') {
+    ++ptr;
+  }
+  prop = std::string_view(cur, ptr - cur);
+}
+
 grape::InArchive& operator<<(grape::InArchive& in_archive,
                              const Property& value) {
   PropertyType type = value.type();
