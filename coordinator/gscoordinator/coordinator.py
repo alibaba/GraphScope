@@ -243,6 +243,7 @@ class CoordinatorServiceServicer(
         # Session connected, fetch logs via gRPC.
         self._streaming_logs = True
         sys.stdout.drop(False)
+        sys.stderr.drop(False)
 
         return message_pb2.ConnectSessionResponse(
             session_id=self._session_id,
@@ -270,6 +271,7 @@ class CoordinatorServiceServicer(
 
         # Session closed, stop streaming logs
         sys.stdout.drop(True)
+        sys.stderr.drop(True)
         self._streaming_logs = False
         return message_pb2.CloseSessionResponse()
 
