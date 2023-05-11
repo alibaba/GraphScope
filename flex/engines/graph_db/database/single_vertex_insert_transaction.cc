@@ -111,14 +111,10 @@ bool SingleVertexInsertTransaction::AddEdge(label_t src_label, oid_t src,
   }
   const PropertyType& type =
       graph_.schema().get_edge_property(src_label, dst_label, edge_label);
-<<<<<<< HEAD
-  if (prop.type != type) {
+  if (prop.type() != type) {
     std::string label_name = graph_.schema().get_edge_label_name(edge_label);
     LOG(ERROR) << "Edge property " << label_name << " type not match, expected "
-               << type << ", got " << prop.type;
-=======
-  if (prop.type() != type) {
->>>>>>> 773cc8ee7 (Implemented supports for complex edge properties.)
+               << type << ", got " << prop.type();
     return false;
   }
   arc_ << static_cast<uint8_t>(1) << src_label << src << dst_label << dst
