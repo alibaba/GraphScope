@@ -94,7 +94,8 @@ std::vector<char> GraphDBSession::Eval(const std::string& input) {
     return result_buffer;
   }
 
-  LOG(INFO) << "[Query-" << (int) type << "][Thread-" << thread_id_ << "] retry - 1 / 3";
+  LOG(INFO) << "[Query-" << (int) type << "][Thread-" << thread_id_
+            << "] retry - 1 / 3";
   std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
   decoder.reset(str_data, str_len);
@@ -103,7 +104,8 @@ std::vector<char> GraphDBSession::Eval(const std::string& input) {
     return result_buffer;
   }
 
-  LOG(INFO) << "[Query-" << (int) type << "][Thread-" << thread_id_ << "] retry - 2 / 3";
+  LOG(INFO) << "[Query-" << (int) type << "][Thread-" << thread_id_
+            << "] retry - 2 / 3";
   std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
   decoder.reset(str_data, str_len);
@@ -112,7 +114,8 @@ std::vector<char> GraphDBSession::Eval(const std::string& input) {
     return result_buffer;
   }
 
-  LOG(INFO) << "[Query-" << (int) type << "][Thread-" << thread_id_ << "] retry - 3 / 3";
+  LOG(INFO) << "[Query-" << (int) type << "][Thread-" << thread_id_
+            << "] retry - 3 / 3";
   std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
   decoder.reset(str_data, str_len);
@@ -120,7 +123,8 @@ std::vector<char> GraphDBSession::Eval(const std::string& input) {
   if (app->Query(decoder, encoder)) {
     return result_buffer;
   }
-  LOG(INFO) << "[Query-" << (int) type << "][Thread-" << thread_id_ << "] failed after 3 retries";
+  LOG(INFO) << "[Query-" << (int) type << "][Thread-" << thread_id_
+            << "] failed after 3 retries";
 
   result_buffer.clear();
   return result_buffer;

@@ -25,19 +25,22 @@
 namespace gs {
 
 SingleVertexInsertTransaction::SingleVertexInsertTransaction(
-    MutablePropertyFragment &graph, ArenaAllocator &alloc, WalWriter &logger,
-    VersionManager &vm, timestamp_t timestamp)
-    : graph_(graph), alloc_(alloc), logger_(logger), vm_(vm),
+    MutablePropertyFragment& graph, ArenaAllocator& alloc, WalWriter& logger,
+    VersionManager& vm, timestamp_t timestamp)
+    : graph_(graph),
+      alloc_(alloc),
+      logger_(logger),
+      vm_(vm),
       timestamp_(timestamp) {
   arc_.Resize(sizeof(WalHeader));
 }
 SingleVertexInsertTransaction::~SingleVertexInsertTransaction() { Abort(); }
 
 bool SingleVertexInsertTransaction::AddVertex(label_t label, oid_t id,
-                                              const std::vector<Any> &props) {
+                                              const std::vector<Any>& props) {
   size_t arc_size = arc_.GetSize();
   arc_ << static_cast<uint8_t>(0) << label << id;
-  const std::vector<PropertyType> &types =
+  const std::vector<PropertyType>& types =
       graph_.schema().get_vertex_properties(label);
   if (types.size() != props.size()) {
     arc_.Resize(arc_size);
@@ -49,7 +52,7 @@ bool SingleVertexInsertTransaction::AddVertex(label_t label, oid_t id,
   }
   int col_num = props.size();
   for (int col_i = 0; col_i != col_num; ++col_i) {
-    auto &prop = props[col_i];
+    auto& prop = props[col_i];
     if (prop.type != types[col_i]) {
       arc_.Resize(arc_size);
       std::string label_name = graph_.schema().get_vertex_label_name(label);
@@ -68,7 +71,7 @@ bool SingleVertexInsertTransaction::AddVertex(label_t label, oid_t id,
 bool SingleVertexInsertTransaction::AddEdge(label_t src_label, oid_t src,
                                             label_t dst_label, oid_t dst,
                                             label_t edge_label,
-                                            const Any &prop) {
+                                            const Any& prop) {
   vid_t src_vid, dst_vid;
   if (src == added_vertex_id_ && src_label == added_vertex_label_) {
     if (!graph_.get_lid(dst_label, dst, dst_vid)) {
@@ -100,7 +103,7 @@ bool SingleVertexInsertTransaction::AddEdge(label_t src_label, oid_t src,
       return false;
     }
   }
-  const PropertyType &type =
+  const PropertyType& type =
       graph_.schema().get_edge_property(src_label, dst_label, edge_label);
   if (prop.type != type) {
     std::string label_name = graph_.schema().get_edge_label_name(edge_label);
@@ -125,7 +128,7 @@ void SingleVertexInsertTransaction::Commit() {
     clear();
     return;
   }
-  auto *header = reinterpret_cast<WalHeader *>(arc_.GetBuffer());
+  auto* header = reinterpret_cast<WalHeader*>(arc_.GetBuffer());
   header->length = arc_.GetSize() - sizeof(WalHeader);
   header->type = 0;
   header->timestamp = timestamp_;
@@ -154,7 +157,7 @@ void SingleVertexInsertTransaction::ingestWal() {
   grape::OutArchive arc;
   arc.SetSlice(arc_.GetBuffer() + sizeof(WalHeader),
                arc_.GetSize() - sizeof(WalHeader));
-  const vid_t *vid_ptr = parsed_endpoints_.data();
+  const vid_t* vid_ptr = parsed_endpoints_.data();
   while (!arc.Empty()) {
     uint8_t op_type;
     arc >> op_type;
@@ -196,4 +199,4 @@ void SingleVertexInsertTransaction::clear() {
   timestamp_ = std::numeric_limits<timestamp_t>::max();
 }
 
-} // namespace gs
+}  // namespace gs
