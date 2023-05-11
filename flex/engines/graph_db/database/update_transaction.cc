@@ -89,11 +89,15 @@ bool UpdateTransaction::AddVertex(label_t label, oid_t oid,
   const std::vector<PropertyType>& types =
       graph_.schema().get_vertex_properties(label);
   if (types.size() != props.size()) {
+    LOG(ERROR) << "Wrong number of fields when adding vertex, expected "
+               << types.size() << ", got " << props.size();
     return false;
   }
   int col_num = types.size();
   for (int col_i = 0; col_i != col_num; ++col_i) {
     if (props[col_i].type() != types[col_i]) {
+      LOG(ERROR) << "Property type of field " << col_i << " is wrong, expected "
+                 << types[col_i] << ", got " << props[col_i].type();
       return false;
     }
   }
@@ -123,14 +127,23 @@ bool UpdateTransaction::AddEdge(label_t src_label, oid_t src, label_t dst_label,
                                 const Property& value) {
   vid_t src_lid, dst_lid;
   if (!oid_to_lid(src_label, src, src_lid)) {
+    std::string label_name = graph_.schema().get_vertex_label_name(src_label);
+    LOG(ERROR) << "Source vertex " << label_name << "[" << src
+               << "] not found...";
     return false;
   }
   if (!oid_to_lid(dst_label, dst, dst_lid)) {
+    std::string label_name = graph_.schema().get_vertex_label_name(dst_label);
+    LOG(ERROR) << "Destination vertex " << label_name << "[" << dst
+               << "] not found...";
     return false;
   }
   PropertyType type =
       graph_.schema().get_edge_property(src_label, dst_label, edge_label);
   if (type != value.type()) {
+    std::string label_name = graph_.schema().get_edge_label_name(edge_label);
+    LOG(ERROR) << "Edge property " << label_name << " type not match, expected "
+               << type << ", got " << value.type();
     return false;
   }
   size_t in_csr_index = get_in_csr_index(src_label, dst_label, edge_label);
@@ -273,7 +286,7 @@ UpdateTransaction::edge_iterator UpdateTransaction::GetOutEdgeIterator(
           begin,
           end,
           graph_.get_outgoing_edges_mut(label, u, neighnor_label, edge_label,
-                                    timestamp_),
+                                        timestamp_),
           this};
 }
 
@@ -295,7 +308,7 @@ UpdateTransaction::edge_iterator UpdateTransaction::GetInEdgeIterator(
           begin,
           end,
           graph_.get_incoming_edges_mut(label, u, neighnor_label, edge_label,
-                                    timestamp_),
+                                        timestamp_),
           this};
 }
 
@@ -358,9 +371,9 @@ void UpdateTransaction::SetEdgeData(bool dir, label_t label, vid_t v,
                                     label_t edge_label, const Property& value) {
   size_t csr_index = dir ? get_out_csr_index(label, neighbor_label, edge_label)
                          : get_in_csr_index(label, neighbor_label, edge_label);
-  if (value.type() == PropertyType::kString) {
+  if (value.type() == PropertyType::kStringView) {
     size_t loc = sv_vec_.size();
-    sv_vec_.emplace_back(value.get_value<std::string>());
+    sv_vec_.emplace_back(value.get_value<std::string_view>());
     Property dup_value;
     dup_value.set_value<std::string>(sv_vec_[loc]);
     updated_edge_data_[csr_index][v].emplace(nbr, dup_value);
@@ -627,7 +640,8 @@ void UpdateTransaction::applyEdgesUpdates() {
           auto& edge_data = updated_edge_data_[oe_csr_index].at(v);
           for (auto u : add_list) {
             auto value = edge_data.at(u);
-	    graph_.PutEdge(src_label, v, dst_label, u, edge_label, timestamp_, value, alloc_);
+            graph_.PutEdge(src_label, v, dst_label, u, edge_label, timestamp_,
+                           value, alloc_);
           }
         }
       }

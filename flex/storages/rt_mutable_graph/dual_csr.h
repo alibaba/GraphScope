@@ -355,39 +355,6 @@ class DualTableCsr : public DualCsrBase<VID_T, TS_T> {
   std::vector<PropertyType> properties_;
 };
 
-#if 0
-template <typename VID_T, typename TS_T>
-class DualStringCsr : public DualTableCsr<VID_T, TS_T> {
- public:
-  using DualTableCsr<VID_T, TS_T>::in_csr_;
-  using DualTableCsr<VID_T, TS_T>::out_csr_;
-  using DualTableCsr<VID_T, TS_T>::table_index_;
-  using DualTableCsr<VID_T, TS_T>::table_;
-
-  DualStringCsr(const std::vector<PropertyType>& properties)
-      : DualTableCsr<VID_T, TS_T>(properties) {}
-
-  void IngestEdge(VID_T src, VID_T dst, TS_T timestamp, grape::OutArchive& oarc,
-                  ArenaAllocator& alloc) override {
-    std::string_view prop;
-    oarc >> prop;
-    size_t row_id = table_index_.fetch_add(1);
-    std::dynamic_pointer_cast<StringColumn>(table_.columns()[0])
-        ->set_value(row_id, prop);
-    in_csr_.put_edge_with_index(dst, src, row_id, timestamp, alloc);
-    out_csr_.put_edge_with_index(src, dst, row_id, timestamp, alloc);
-  }
-  void PutEdge(VID_T src, VID_T dst, TS_T timestamp, const Property& data,
-               ArenaAllocator& alloc) override {
-    std::string_view prop = data.get_value<std::string_view>();
-    size_t row_id = table_index_.fetch_add(1);
-    std::dynamic_pointer_cast<StringColumn>(table_.columns()[0])
-        ->set_value(row_id, prop);
-    in_csr_.put_edge_with_index(dst, src, row_id, timestamp, alloc);
-    out_csr_.put_edge_with_index(src, dst, row_id, timestamp, alloc);
-  }
-};
-#else
 template <typename VID_T, typename TS_T>
 class DualStringCsr : public DualCsrBase<VID_T, TS_T> {
  public:
@@ -504,70 +471,11 @@ class DualStringCsr : public DualCsrBase<VID_T, TS_T> {
   StringColumn column_;
   std::atomic<size_t> table_index_;
 };
-#endif
-
-template <typename VID_T, typename TS_T>
-class DualEmptyTableCsr : public DualTableCsr<VID_T, TS_T> {
- public:
-  using DualTableCsr<VID_T, TS_T>::in_csr_;
-  using DualTableCsr<VID_T, TS_T>::out_csr_;
-  using DualTableCsr<VID_T, TS_T>::table_index_;
-  using DualTableCsr<VID_T, TS_T>::table_;
-
-  DualEmptyTableCsr(const std::vector<PropertyType>& properties)
-      : DualTableCsr<VID_T, TS_T>(properties) {}
-
-  void IngestEdge(VID_T src, VID_T dst, TS_T timestamp, grape::OutArchive& oarc,
-                  ArenaAllocator& alloc) override {
-    size_t row_id = table_index_.fetch_add(1);
-    in_csr_.put_edge_with_index(dst, src, row_id, timestamp, alloc);
-    out_csr_.put_edge_with_index(src, dst, row_id, timestamp, alloc);
-  }
-  void PutEdge(VID_T src, VID_T dst, TS_T timestamp, const Property& prop,
-               ArenaAllocator& alloc) override {
-    size_t row_id = table_index_.fetch_add(1);
-    in_csr_.put_edge_with_index(dst, src, row_id, timestamp, alloc);
-    out_csr_.put_edge_with_index(src, dst, row_id, timestamp, alloc);
-  }
-};
-
-template <typename VID_T, typename EDATA_T, typename TS_T>
-class DualTypedTableCsr : public DualTableCsr<VID_T, TS_T> {
- public:
-  using DualTableCsr<VID_T, TS_T>::in_csr_;
-  using DualTableCsr<VID_T, TS_T>::out_csr_;
-  using DualTableCsr<VID_T, TS_T>::table_index_;
-  using DualTableCsr<VID_T, TS_T>::table_;
-
-  DualTypedTableCsr(const std::vector<PropertyType>& properties)
-      : DualTableCsr<VID_T, TS_T>(properties) {}
-
-  void IngestEdge(VID_T src, VID_T dst, TS_T timestamp, grape::OutArchive& oarc,
-                  ArenaAllocator& alloc) override {
-    EDATA_T val;
-    oarc >> val;
-    size_t row_id = table_index_.fetch_add(1);
-    std::dynamic_pointer_cast<TypedColumn<EDATA_T>>(table_.columns()[0])
-        ->set_value(row_id, val);
-    in_csr_.put_edge_with_index(dst, src, row_id, timestamp, alloc);
-    out_csr_.put_edge_with_index(src, dst, row_id, timestamp, alloc);
-  }
-  void PutEdge(VID_T src, VID_T dst, TS_T timestamp, const Property& prop,
-               ArenaAllocator& alloc) override {
-    EDATA_T val = prop.get_value<EDATA_T>();
-    size_t row_id = table_index_.fetch_add(1);
-    std::dynamic_pointer_cast<TypedColumn<EDATA_T>>(table_.columns()[0])
-        ->set_value(row_id, val);
-    in_csr_.put_edge_with_index(dst, src, row_id, timestamp, alloc);
-    out_csr_.put_edge_with_index(src, dst, row_id, timestamp, alloc);
-  }
-};
 
 template <typename VID_T, typename TS_T>
 DualCsrBase<VID_T, TS_T>* create_dual_csr(
     EdgeStrategy ies, EdgeStrategy oes,
     const std::vector<PropertyType>& properties) {
-#if 1
   if (properties.empty()) {
     return new DualTypedCsr<VID_T, grape::EmptyType, TS_T>(ies, oes,
                                                            properties);
@@ -589,28 +497,6 @@ DualCsrBase<VID_T, TS_T>* create_dual_csr(
   } else {
     return new DualTableCsr<VID_T, TS_T>(properties);
   }
-#else
-  if (properties.empty()) {
-    return new DualEmptyTableCsr<VID_T, TS_T>(properties);
-  } else if (properties.size() == 1) {
-    switch (properties[0]) {
-    case PropertyType::kInt32:
-      return new DualTypedTableCsr<VID_T, int32_t, TS_T>(properties);
-    case PropertyType::kDate:
-      return new DualTypedTableCsr<VID_T, Date, TS_T>(properties);
-    case PropertyType::kInt64:
-      return new DualTypedTableCsr<VID_T, int64_t, TS_T>(properties);
-    case PropertyType::kString:
-    case PropertyType::kStringView:
-      return new DualStringCsr<VID_T, TS_T>(properties);
-    default:
-      LOG(FATAL) << "Unsupported property type - " << properties[0];
-      return nullptr;
-    }
-  } else {
-    return new DualTableCsr<VID_T, TS_T>(properties);
-  }
-#endif
 }
 
 }  // namespace gs
