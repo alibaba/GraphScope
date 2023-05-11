@@ -88,6 +88,16 @@ void TableMutableCsr<VID_T, TS_T>::Deserialize(const std::string& path) {
   topology_.Deserialize(path + ".topo");
 }
 
+template <typename VID_T, typename TS_T>
+void StringMutableCsr<VID_T, TS_T>::Serialize(const std::string& path) {
+  topology_.Serialize(path + ".topo");
+}
+
+template <typename VID_T, typename TS_T>
+void StringMutableCsr<VID_T, TS_T>::Deserialize(const std::string& path) {
+  topology_.Deserialize(path + ".topo");
+}
+
 template class SingleMutableCsr<vid_t, grape::EmptyType, timestamp_t>;
 template class MutableCsr<vid_t, grape::EmptyType, timestamp_t>;
 
@@ -101,5 +111,6 @@ template class SingleMutableCsr<vid_t, int64_t, timestamp_t>;
 template class MutableCsr<vid_t, int64_t, timestamp_t>;
 
 template class TableMutableCsr<vid_t, timestamp_t>;
+template class StringMutableCsr<vid_t, timestamp_t>;
 
 }  // namespace gs

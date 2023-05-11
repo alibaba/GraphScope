@@ -149,7 +149,7 @@ struct AnyConverter<std::vector<Property>> {
 
 class Property {
  public:
-  Property() : type_(PropertyType::kEmpty) {}
+  Property() : type_(PropertyType::kEmpty), value_(grape::EmptyType()) {}
   ~Property() {}
 
   Property(const Property& rhs) : type_(rhs.type_), value_(rhs.value_) {}

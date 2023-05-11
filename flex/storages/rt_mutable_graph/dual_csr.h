@@ -391,7 +391,7 @@ class DualStringCsr : public DualTableCsr<VID_T, TS_T> {
 template <typename VID_T, typename TS_T>
 class DualStringCsr : public DualCsrBase<VID_T, TS_T> {
  public:
-  DualStringCsr() {
+  DualStringCsr() : column_(StorageStrategy::kMem) {
     column_.init(std::numeric_limits<int>::max());
     in_csr_.set_column(&column_);
     out_csr_.set_column(&column_);
@@ -567,7 +567,7 @@ template <typename VID_T, typename TS_T>
 DualCsrBase<VID_T, TS_T>* create_dual_csr(
     EdgeStrategy ies, EdgeStrategy oes,
     const std::vector<PropertyType>& properties) {
-#if 0
+#if 1
   if (properties.empty()) {
     return new DualTypedCsr<VID_T, grape::EmptyType, TS_T>(ies, oes,
                                                            properties);
@@ -581,7 +581,7 @@ DualCsrBase<VID_T, TS_T>* create_dual_csr(
       return new DualTypedCsr<VID_T, int64_t, TS_T>(ies, oes, properties);
     case PropertyType::kString:
     case PropertyType::kStringView:
-      return new DualStringCsr<VID_T, TS_T>(properties);
+      return new DualStringCsr<VID_T, TS_T>();
     default:
       LOG(FATAL) << "Unsupported property type - " << properties[0];
       return nullptr;

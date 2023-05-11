@@ -397,7 +397,7 @@ class StringMutableCsrView
         rs_view_.get_edges(src), column_);
   }
 
-  std::shared_ptr<NbrIterator<VID_T, Property>> get_basic_edges(
+  std::shared_ptr<NbrIterator<VID_T, std::string_view>> get_basic_edges(
       VID_T src) const override {
     return std::make_shared<mutable_csr_view::StringNbrIterator<VID_T, TS_T>>(
         rs_view_.get_edges(src), column_);
@@ -425,13 +425,26 @@ class StringMutableCsrNbrIterMut : public GenericNbrIteratorMut<VID_T> {
 
   void Next() override { rs_iter_.Next(); }
 
-  std::string_view GetData() const override {
-    return column_->get_view(rs_iter_.GetTypedData());
+  Property GetData() const override {
+    Property ret;
+    ret.set_value<std::string_view>(column_->get_view(rs_iter_.GetTypedData()));
+    return ret;
   }
 
   VID_T GetNeighbor() const override { return rs_iter_.GetNeighbor(); }
 
-  void SetData(const std::string_view& value) override {
+  void SetData(const Property& prop) override {
+    if (prop.type() == PropertyType::kString) {
+      SetData(prop.get_value<std::string>());
+    } else if (prop.type() == PropertyType::kStringView) {
+      SetData(prop.get_value<std::string_view>());
+    } else {
+      LOG(FATAL) << "Unexpected property type: " << prop.type() << ", while string or string_view is expected...";
+    }
+    rs_iter_.UpdateTimestamp();
+  }
+
+  void SetData(const std::string_view& value) {
     column_->set_value(rs_iter_.GetTypedData(), value);
     rs_iter_.UpdateTimestamp();
   }
@@ -492,7 +505,7 @@ class StringMutableCsr
     return StringMutableCsrView<VID_T, TS_T>(topology_, column_ptr_, ts);
   }
 
-  std::shared_ptr<MutableCsrViewBase<VID_T, Property>> get_basic_graph_view(
+  std::shared_ptr<MutableCsrViewBase<VID_T, std::string_view>> get_basic_graph_view(
       TS_T ts) const override {
     return std::make_shared<StringMutableCsrView<VID_T, TS_T>>(topology_,
                                                                column_ptr_, ts);
