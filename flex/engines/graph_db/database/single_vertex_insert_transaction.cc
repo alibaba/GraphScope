@@ -44,6 +44,10 @@ bool SingleVertexInsertTransaction::AddVertex(label_t label, oid_t id,
       graph_.schema().get_vertex_properties(label);
   if (types.size() != props.size()) {
     arc_.Resize(arc_size);
+    std::string label_name = graph_.schema().get_vertex_label_name(label);
+    LOG(ERROR) << "Vertex [" << label_name
+               << "] properties size not match, expected " << types.size()
+               << ", but got " << props.size();
     return false;
   }
   int col_num = props.size();
@@ -51,6 +55,10 @@ bool SingleVertexInsertTransaction::AddVertex(label_t label, oid_t id,
     auto& prop = props[col_i];
     if (prop.type != types[col_i]) {
       arc_.Resize(arc_size);
+      std::string label_name = graph_.schema().get_vertex_label_name(label);
+      LOG(ERROR) << "Vertex [" << label_name << "][" << col_i
+                 << "] property type not match, expected " << types[col_i]
+                 << ", but got " << prop.type;
       return false;
     }
     serialize_field(arc_, prop);
@@ -67,25 +75,40 @@ bool SingleVertexInsertTransaction::AddEdge(label_t src_label, oid_t src,
   vid_t src_vid, dst_vid;
   if (src == added_vertex_id_ && src_label == added_vertex_label_) {
     if (!graph_.get_lid(dst_label, dst, dst_vid)) {
+      std::string label_name = graph_.schema().get_vertex_label_name(dst_label);
+      LOG(ERROR) << "Destination vertex " << label_name << "[" << dst
+                 << "] not found...";
       return false;
     }
     src_vid = std::numeric_limits<vid_t>::max();
   } else if (dst == added_vertex_id_ && dst_label == added_vertex_label_) {
     if (!graph_.get_lid(src_label, src, src_vid)) {
+      std::string label_name = graph_.schema().get_vertex_label_name(src_label);
+      LOG(ERROR) << "Source vertex " << label_name << "[" << src
+                 << "] not found...";
       return false;
     }
     dst_vid = std::numeric_limits<vid_t>::max();
   } else {
     if (!graph_.get_lid(dst_label, dst, dst_vid)) {
+      std::string label_name = graph_.schema().get_vertex_label_name(dst_label);
+      LOG(ERROR) << "Destination vertex " << label_name << "[" << dst
+                 << "] not found...";
       return false;
     }
     if (!graph_.get_lid(src_label, src, src_vid)) {
+      std::string label_name = graph_.schema().get_vertex_label_name(src_label);
+      LOG(ERROR) << "Source vertex " << label_name << "[" << src
+                 << "] not found...";
       return false;
     }
   }
   const PropertyType& type =
       graph_.schema().get_edge_property(src_label, dst_label, edge_label);
   if (prop.type != type) {
+    std::string label_name = graph_.schema().get_edge_label_name(edge_label);
+    LOG(ERROR) << "Edge property " << label_name << " type not match, expected "
+               << type << ", got " << prop.type;
     return false;
   }
   arc_ << static_cast<uint8_t>(1) << src_label << src << dst_label << dst

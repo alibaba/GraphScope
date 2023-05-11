@@ -71,6 +71,8 @@ class Decoder {
 
   bool empty() const;
 
+  void reset(const char* ptr, size_t size);
+
  private:
   const char* data_;
   const char* end_;

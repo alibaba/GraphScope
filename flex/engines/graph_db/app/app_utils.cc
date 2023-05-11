@@ -116,4 +116,9 @@ const char* Decoder::data() const { return data_; }
 
 bool Decoder::empty() const { return data_ == end_; }
 
+void Decoder::reset(const char* p, size_t size) {
+  data_ = p;
+  end_ = p + size;
+}
+
 }  // namespace gs

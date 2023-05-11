@@ -64,11 +64,17 @@ void GraphDB::Init(
   if (!std::filesystem::exists(serial_path)) {
     if (!vertex_files.empty() || !edge_files.empty()) {
       LOG(INFO) << "Initializing graph db through bulk loading";
+      {
+        MutablePropertyFragment graph;
+        graph.Init(schema, vertex_files, edge_files, thread_num);
+        graph.Serialize(data_dir_path.string());
+      }
+      graph_.Deserialize(data_dir_path.string());
     } else {
       LOG(INFO) << "Initializing empty graph db";
+      graph_.Init(schema, vertex_files, edge_files, thread_num);
+      graph_.Serialize(data_dir_path.string());
     }
-    graph_.Init(schema, vertex_files, edge_files, thread_num);
-    graph_.Serialize(data_dir_path.string());
   } else {
     LOG(INFO) << "Initializing graph db from data files of work directory";
     if (!vertex_files.empty() || !edge_files.empty()) {
