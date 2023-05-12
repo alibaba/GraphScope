@@ -40,9 +40,9 @@ class ResourceBuilder:
         metadata = kube_client.V1ObjectMeta(name=name, namespace=namespace)
         metadata.labels = labels
         rule = kube_client.V1PolicyRule(
-            api_groups=api_groups.split(','),
-            resources=resources.split(','),
-            verbs=verbs.split(','),
+            api_groups=api_groups.split(","),
+            resources=resources.split(","),
+            verbs=verbs.split(","),
         )
         role = kube_client.V1Role(metadata=metadata, rules=[rule])
         return role
@@ -51,9 +51,9 @@ class ResourceBuilder:
     def get_cluster_role(name, api_groups, resources, verbs, labels):
         metadata = kube_client.V1ObjectMeta(name=name, labels=labels)
         rule = kube_client.V1PolicyRule(
-            api_groups=api_groups.split(','),
-            resources=resources.split(','),
-            verbs=verbs.split(','),
+            api_groups=api_groups.split(","),
+            resources=resources.split(","),
+            verbs=verbs.split(","),
         )
         role = kube_client.V1ClusterRole(metadata=metadata, rules=[rule])
         return role
@@ -74,7 +74,9 @@ class ResourceBuilder:
         return role_binding
 
     @staticmethod
-    def get_cluster_role_binding(name, namespace, role_name, service_account_name, labels):
+    def get_cluster_role_binding(
+        name, namespace, role_name, service_account_name, labels
+    ):
         metadata = kube_client.V1ObjectMeta(name=name, labels=labels)
         role_ref = kube_client.V1RoleRef(
             kind="ClusterRole", name=role_name, api_group="rbac.authorization.k8s.io"
@@ -102,7 +104,9 @@ class ResourceBuilder:
 
     @staticmethod
     def get_lifecycle_handler(_exec=None, http_get=None, tcp_socket=None):
-        handler = kube_client.V1LifecycleHandler(_exec=_exec, http_get=http_get, tcp_socket=tcp_socket)
+        handler = kube_client.V1LifecycleHandler(
+            _exec=_exec, http_get=http_get, tcp_socket=tcp_socket
+        )
         return handler
 
     @staticmethod
@@ -127,12 +131,14 @@ class ResourceBuilder:
     @staticmethod
     def get_user_defined_volumes(udf_volumes):
         """
+        .. code:: python
+
             {
                 name: {
                     "type": "",
                     "field": {},  # the keys are subject to volume type
                     "mounts": [ {"mountPath": "", "subPath": ""}, ... ]
-                    }
+                }
             }
         """
         if not udf_volumes:
@@ -141,37 +147,47 @@ class ResourceBuilder:
         for name, value in udf_volumes.items():
             volume = kube_client.V1Volume(name=name)
             field = value.get("field", {})
-            if value['type'] == 'hostPath':
-                volume.host_path = kube_client.V1HostPathVolumeSource(path=field['path'])
-                if 'type' in field:
-                    volume.host_path.type = field['type']
-            elif value['type'] == 'emptyDir':
+            if value["type"] == "hostPath":
+                volume.host_path = kube_client.V1HostPathVolumeSource(
+                    path=field["path"]
+                )
+                if "type" in field:
+                    volume.host_path.type = field["type"]
+            elif value["type"] == "emptyDir":
                 volume.empty_dir = kube_client.V1EmptyDirVolumeSource()
-                if 'medium' in field:
-                    volume.empty_dir.medium = field['medium']
-                if 'sizeLimit' in field:
-                    volume.empty_dir.size_limit = field['sizeLimit']
-            elif value['type'] == 'persistentVolumeClaim':
-                pvc = kube_client.V1PersistentVolumeClaimVolumeSource(claim_name=field['claimName'])
+                if "medium" in field:
+                    volume.empty_dir.medium = field["medium"]
+                if "sizeLimit" in field:
+                    volume.empty_dir.size_limit = field["sizeLimit"]
+            elif value["type"] == "persistentVolumeClaim":
+                pvc = kube_client.V1PersistentVolumeClaimVolumeSource(
+                    claim_name=field["claimName"]
+                )
                 volume.persistent_volume_claim = pvc
-                if 'readOnly' in field:
-                    volume.persistent_volume_claim.read_only = field['readOnly']
-            elif value['type'] == 'configMap':
-                volume.config_map = kube_client.V1ConfigMapVolumeSource(name=field['name'])
-            elif value['type'] == 'secret':
-                volume.secret = kube_client.V1SecretVolumeSource(secret_name=field['name'])
+                if "readOnly" in field:
+                    volume.persistent_volume_claim.read_only = field["readOnly"]
+            elif value["type"] == "configMap":
+                volume.config_map = kube_client.V1ConfigMapVolumeSource(
+                    name=field["name"]
+                )
+            elif value["type"] == "secret":
+                volume.secret = kube_client.V1SecretVolumeSource(
+                    secret_name=field["name"]
+                )
             else:
                 raise ValueError(f"Unsupported volume type: {value['type']}")
             volume_mounts = []
-            mounts_list = value['mounts']
+            mounts_list = value["mounts"]
             if not isinstance(mounts_list, list):
-                mounts_list = [value['mounts']]
+                mounts_list = [value["mounts"]]
             for udf_mount in mounts_list:
-                volume_mount = kube_client.V1VolumeMount(name=name, mount_path=udf_mount['mountPath'])
-                if 'subPath' in udf_mount:
-                    volume_mount.sub_path = udf_mount['subPath']
-                if 'readOnly' in udf_mount:
-                    volume_mount.read_only = udf_mount['readOnly']
+                volume_mount = kube_client.V1VolumeMount(
+                    name=name, mount_path=udf_mount["mountPath"]
+                )
+                if "subPath" in udf_mount:
+                    volume_mount.sub_path = udf_mount["subPath"]
+                if "readOnly" in udf_mount:
+                    volume_mount.read_only = udf_mount["readOnly"]
                 volume_mounts.append(volume_mount)
             volumes.append(volume)
             source_volume_mounts.extend(volume_mounts)
@@ -189,10 +205,17 @@ class ResourceBuilder:
         return resource_requirements
 
     @staticmethod
-    def get_pod_spec(containers: [kube_client.V1Container], image_pull_secrets=None, node_selector=None, volumes=None):
+    def get_pod_spec(
+        containers: [kube_client.V1Container],
+        image_pull_secrets=None,
+        node_selector=None,
+        volumes=None,
+    ):
         pod_spec = kube_client.V1PodSpec(containers=containers)
         if image_pull_secrets is not None and image_pull_secrets:
-            pod_spec.image_pull_secrets = ResourceBuilder.get_image_pull_secrets(image_pull_secrets)
+            pod_spec.image_pull_secrets = ResourceBuilder.get_image_pull_secrets(
+                image_pull_secrets
+            )
         if node_selector is not None and node_selector:
             pod_spec.node_selector = ResourceBuilder.get_node_selector(node_selector)
         if volumes is not None and volumes:
@@ -200,14 +223,21 @@ class ResourceBuilder:
         return pod_spec
 
     @staticmethod
-    def get_pod_template_spec(spec: kube_client.V1PodSpec, labels: dict, annotations=None, default_container=None):
+    def get_pod_template_spec(
+        spec: kube_client.V1PodSpec,
+        labels: dict,
+        annotations=None,
+        default_container=None,
+    ):
         pod_template_spec = kube_client.V1PodTemplateSpec()
         pod_template_spec.spec = spec
         if annotations is None:
             annotations = dict()
         if default_container is not None:
-            annotations['kubectl.kubernetes.io/default-container'] = default_container
-        pod_template_spec.metadata = kube_client.V1ObjectMeta(labels=labels, annotations=annotations)
+            annotations["kubectl.kubernetes.io/default-container"] = default_container
+        pod_template_spec.metadata = kube_client.V1ObjectMeta(
+            labels=labels, annotations=annotations
+        )
         return pod_template_spec
 
     @staticmethod
@@ -222,14 +252,18 @@ class ResourceBuilder:
         deployment = kube_client.V1Deployment()
         deployment.api_version = "apps/v1"
         deployment.kind = "Deployment"
-        deployment.metadata = kube_client.V1ObjectMeta(name=name, labels=labels, namespace=namespace)
+        deployment.metadata = kube_client.V1ObjectMeta(
+            name=name, labels=labels, namespace=namespace
+        )
         deployment.spec = spec
         return deployment
 
     @staticmethod
     def get_stateful_set_spec(template, replicas, labels, service_name):
         selector = kube_client.V1LabelSelector(match_labels=labels)
-        spec = kube_client.V1StatefulSetSpec(selector=selector, template=template, service_name=service_name)
+        spec = kube_client.V1StatefulSetSpec(
+            selector=selector, template=template, service_name=service_name
+        )
         spec.replicas = replicas
         return spec
 
@@ -238,7 +272,9 @@ class ResourceBuilder:
         statefulset = kube_client.V1StatefulSet()
         statefulset.api_version = "apps/v1"
         statefulset.kind = "StatefulSet"
-        statefulset.metadata = kube_client.V1ObjectMeta(name=name, labels=labels, namespace=namespace)
+        statefulset.metadata = kube_client.V1ObjectMeta(
+            name=name, labels=labels, namespace=namespace
+        )
         statefulset.spec = spec
         return statefulset
 
@@ -273,14 +309,28 @@ class ResourceBuilder:
         service.api_version = "v1"
         service.kind = "Service"
         service.spec = service_spec
-        metadata = kube_client.V1ObjectMeta(namespace=namespace, name=name, labels=labels, annotations=annotations)
+        metadata = kube_client.V1ObjectMeta(
+            namespace=namespace, name=name, labels=labels, annotations=annotations
+        )
         service.metadata = metadata
         return service
 
 
 class CoordinatorDeployment:
-    def __init__(self, namespace, name, image, args, labels, image_pull_secret,
-                 image_pull_policy, node_selector, env, host_network, port=None):
+    def __init__(
+        self,
+        namespace,
+        name,
+        image,
+        args,
+        labels,
+        image_pull_secret,
+        image_pull_policy,
+        node_selector,
+        env,
+        host_network,
+        port=None,
+    ):
         self._replicas = 1
         self._namespace = namespace
         self._name = name
@@ -306,7 +356,10 @@ class CoordinatorDeployment:
     def get_coordinator_container(self):
         resources = ResourceBuilder.get_resources(self._requests, self._limits)
         lifecycle = self.get_lifecycle()
-        env = [kube_client.V1EnvVar(name=key, value=value) for key, value in self._env.items()]
+        env = [
+            kube_client.V1EnvVar(name=key, value=value)
+            for key, value in self._env.items()
+        ]
         container = kube_client.V1Container(
             name="coordinator",
             image=self._image,
@@ -321,23 +374,26 @@ class CoordinatorDeployment:
             container_ports = [kube_client.V1ContainerPort(container_port=self._port)]
             container_ports.append(kube_client.V1ContainerPort(container_port=8000))
             container.ports = container_ports
-            container.readiness_probe = ResourceBuilder.get_tcp_probe(port=self._port,
-                                                                      timeout=15,
-                                                                      period=1,
-                                                                      failure_threshold=20)
+            container.readiness_probe = ResourceBuilder.get_tcp_probe(
+                port=self._port, timeout=15, period=1, failure_threshold=20
+            )
         return container
 
     def get_coordinator_pod_spec(self):
         container = self.get_coordinator_container()
-        pod_spec = ResourceBuilder.get_pod_spec(containers=[container],
-                                                image_pull_secrets=self._image_pull_secret,
-                                                node_selector=self._node_selector)
+        pod_spec = ResourceBuilder.get_pod_spec(
+            containers=[container],
+            image_pull_secrets=self._image_pull_secret,
+            node_selector=self._node_selector,
+        )
         pod_spec.host_network = self._host_network
         return pod_spec
 
     def get_coordinator_pod_template_spec(self):
         spec = self.get_coordinator_pod_spec()
-        return ResourceBuilder.get_pod_template_spec(spec, self._labels, default_container='coordinator')
+        return ResourceBuilder.get_pod_template_spec(
+            spec, self._labels, default_container="coordinator"
+        )
 
     def get_coordinator_deployment_spec(self, replicas):
         template = self.get_coordinator_pod_template_spec()
@@ -346,11 +402,17 @@ class CoordinatorDeployment:
 
     def get_coordinator_deployment(self):
         spec = self.get_coordinator_deployment_spec(self._replicas)
-        return ResourceBuilder.get_deployment(self._namespace, self._name, spec, self._labels)
+        return ResourceBuilder.get_deployment(
+            self._namespace, self._name, spec, self._labels
+        )
 
     def get_coordinator_service(self, service_type, port):
         ports = [kube_client.V1ServicePort(name="coordinator", port=port)]
         ports.append(kube_client.V1ServicePort(name="debug", port=8000))
-        service_spec = ResourceBuilder.get_service_spec(service_type, ports, self._labels, None)
-        service = ResourceBuilder.get_service(self._namespace, self._name, service_spec, self._labels)
+        service_spec = ResourceBuilder.get_service_spec(
+            service_type, ports, self._labels, None
+        )
+        service = ResourceBuilder.get_service(
+            self._namespace, self._name, service_spec, self._labels
+        )
         return service
