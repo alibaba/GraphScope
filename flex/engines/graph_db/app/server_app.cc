@@ -82,6 +82,53 @@ void generate_label_tuples(
   }
 }
 
+static std::string property_to_string(const Property& prop) {
+  switch (prop.type()) {
+  case PropertyType::kEmpty:
+    return "";
+  case PropertyType::kUInt8:
+    return std::to_string(prop.get_value<uint8_t>());
+  case PropertyType::kInt8:
+    return std::to_string(prop.get_value<int8_t>());
+  case PropertyType::kUInt16:
+    return std::to_string(prop.get_value<uint16_t>());
+  case PropertyType::kInt16:
+    return std::to_string(prop.get_value<int16_t>());
+  case PropertyType::kUInt32:
+    return std::to_string(prop.get_value<uint32_t>());
+  case PropertyType::kInt32:
+    return std::to_string(prop.get_value<int32_t>());
+  case PropertyType::kUInt64:
+    return std::to_string(prop.get_value<uint64_t>());
+  case PropertyType::kInt64:
+    return std::to_string(prop.get_value<int64_t>());
+  case PropertyType::kDate:
+    return std::to_string(prop.get_value<Date>().milli_second);
+  case PropertyType::kFloat:
+    return std::to_string(prop.get_value<float>());
+  case PropertyType::kDouble:
+    return std::to_string(prop.get_value<double>());
+  case PropertyType::kString:
+    return prop.get_value<std::string>();
+  case PropertyType::kStringView:
+    return std::string(prop.get_value<std::string_view>());
+  case PropertyType::kList:
+    {
+    std::string ret = "[";
+    std::vector<Property> content = prop.get_value<std::vector<Property>>();
+    for (auto& p : content) {
+      ret += property_to_string(p);
+      ret += ",";
+    }
+    ret += "]";
+    return ret;
+    }
+  default:
+    LOG(ERROR) << "Unexpected property type: " << prop.type();
+    return "";
+  }
+}
+
 bool ServerApp::Query(Decoder& input, Encoder& output) {
   std::string op = std::string(input.get_string());
   for (auto& c : op) {
@@ -103,7 +150,7 @@ bool ServerApp::Query(Decoder& input, Encoder& output) {
         output.put_int(1);
         int field_num = vit.FieldNum();
         for (int i = 0; i < field_num; ++i) {
-          output.put_string(vit.GetField(i).get_value<std::string>());
+          output.put_string(property_to_string(vit.GetField(i)));
         }
         return true;
       }
@@ -162,7 +209,7 @@ bool ServerApp::Query(Decoder& input, Encoder& output) {
           output.put_int(1);
           output.put_long(src_id);
           output.put_long(dst_id);
-          output.put_string(ieit.GetData().get_value<std::string>());
+          output.put_string(property_to_string(ieit.GetData()));
           return true;
         }
         ieit.Next();
@@ -179,7 +226,7 @@ bool ServerApp::Query(Decoder& input, Encoder& output) {
           output.put_int(1);
           output.put_long(src_id);
           output.put_long(dst_id);
-          output.put_string(oeit.GetData().get_value<std::string>());
+          output.put_string(property_to_string(oeit.GetData()));
           return true;
         }
         oeit.Next();
@@ -241,7 +288,7 @@ bool ServerApp::Query(Decoder& input, Encoder& output) {
             if (src_range.contains(u)) {
               int64_t u_oid = txn.GetVertexId(src_label_id, u);
               match_edges.emplace_back(u_oid, v_oid,
-                                       ieit.GetData().get_value<std::string>());
+                                       property_to_string(ieit.GetData()));
             }
             ieit.Next();
           }
@@ -256,7 +303,7 @@ bool ServerApp::Query(Decoder& input, Encoder& output) {
               if (dst_range.contains(v)) {
                 int64_t v_oid = txn.GetVertexId(dst_label_id, v);
                 match_edges.emplace_back(u_oid, v_oid,
-                                         oeit.GetData().get_value<std::string>());
+                                         property_to_string(oeit.GetData()));
               }
               oeit.Next();
             }
