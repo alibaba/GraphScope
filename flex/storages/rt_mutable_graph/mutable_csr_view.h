@@ -53,7 +53,7 @@ class PackedNbrIterator : public NbrIterator<VID_T, EDATA_T> {
  public:
   PackedNbrIterator(const nbr_t* begin, const nbr_t* end, TS_T timestamp)
       : ptr_(begin), end_(end), timestamp_(timestamp) {
-    while (ptr_->timestamp > timestamp_ && ptr_ != end_) {
+    while (ptr_ != end_ && ptr_->timestamp > timestamp_) {
       ++ptr_;
     }
   }
@@ -63,7 +63,7 @@ class PackedNbrIterator : public NbrIterator<VID_T, EDATA_T> {
 
   void Next() override {
     ++ptr_;
-    while (ptr_->timestamp > timestamp_ && ptr_ != end_) {
+    while (ptr_ != end_ && ptr_->timestamp > timestamp_) {
       ++ptr_;
     }
   }
