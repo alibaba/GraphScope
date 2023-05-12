@@ -189,7 +189,12 @@ def load_from(
     op = dag_utils.create_graph(
         sess.session_id, graph_def_pb2.ARROW_PROPERTY, inputs=[loader_op], attrs=config
     )
-    graph = sess.g(op, vertex_map=vertex_map)
+    graph = sess.g(op,
+                   oid_type=oid_type,
+                   directed=directed,
+                   generate_eid=generate_eid,
+                   retain_oid=retain_oid,
+                   vertex_map=vertex_map)
     return graph
 
 
@@ -220,5 +225,5 @@ def load_from_gar(
     op = dag_utils.create_graph(
         sess.session_id, graph_def_pb2.ARROW_PROPERTY, inputs=[], attrs=config
     )
-    graph = sess.g(op, vertex_map=vertex_map)
+    graph = sess.g(op, oid_type=oid_type, directed=directed, vertex_map=vertex_map)
     return graph
